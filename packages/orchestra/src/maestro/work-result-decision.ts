@@ -3,9 +3,10 @@ export * as WorkResultDecision from "./work-result-decision"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { ProjectTable } from "@orchestra/core/project/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { eq } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Cause, Effect, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Agent } from "@/agent/agent"
@@ -68,13 +69,85 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
   const target = yield* Schema.decodeUnknownEffect(Parameters)(input.target, { onExcessProperty: "error" }).pipe(
     Effect.mapError(() => new Denied({ reason: "invalid-target" })),
   )
-  const sessions = yield* Session.Service
   const callerID = yield* Schema.decodeUnknownEffect(SessionID)(input.sessionID).pipe(
     Effect.mapError(() => new Denied({ reason: "caller-session-invalid" })),
   )
+  // Agent resolution can initialize config/plugins. Capture native roles before any SQL transaction.
+  const backend = yield* agents.get("backend")
+  if (backend?.id !== "backend" || backend.native !== true) return yield* new Denied({ reason: "task-child-mismatch" })
+  const backendID = backend.id
+  const sessions = yield* Session.Service
+  const database = yield* Database.Service
+  const snapshot = () => targetSnapshot(callerID, target, backendID)
+  const prepared = yield* snapshot()
+  const wanted = prepared.data
+  const id = EventV2.ID.make(
+    `evt_maestro_work_result_decision_${hash([wanted.authoritySessionID, target.partID, wanted.workResultHash])}`,
+  )
+  const revalidate = snapshot().pipe(
+    Effect.catchCauseIf(
+      (cause) => !Cause.hasInterrupts(cause),
+      () => Effect.fail(new Denied({ reason: "stale-target" })),
+    ),
+    Effect.flatMap((current) =>
+      isDeepStrictEqual(current, prepared) ? Effect.void : Effect.fail(new Denied({ reason: "stale-target" })),
+    ),
+    Effect.provideService(Session.Service, sessions),
+    Effect.provideService(Database.Service, database),
+  )
+  const stored = () =>
+    database.db
+      .transaction(
+        () =>
+          Effect.gen(function* () {
+            yield* revalidate
+            const existing = yield* read(id)
+            return existing ? yield* reconcile(existing, wanted) : undefined
+          }),
+        { behavior: "immediate" },
+      )
+      .pipe(Effect.orDie)
+  // A retry still requires the current target. Edits produce a new hash/key; removal never admits a new decision.
+  if (yield* read(id)) {
+    const existing = yield* stored()
+    if (existing) return existing
+  }
+  const events = yield* EventV2Bridge.Service
+  return yield* events
+    .publish(MaestroEvent.WorkResult.Decided, wanted, {
+      id,
+      // Core invokes this inside the same IMMEDIATE transaction that inserts the event and advances its sequence.
+      commit: () => revalidate.pipe(Effect.orDie),
+    })
+    .pipe(
+      Effect.map((event) => ({ id: event.id, ...event.data })),
+      Effect.catchCause((cause) =>
+        Effect.gen(function* () {
+          const existing = yield* stored()
+          if (!existing) return yield* Effect.failCause(cause)
+          return existing
+        }),
+      ),
+    )
+})
+
+const targetSnapshot = Effect.fn("WorkResultDecision.targetSnapshot")(function* (
+  callerID: SessionID,
+  target: Schema.Schema.Type<typeof Parameters>,
+  backendID: string,
+) {
+  const sessions = yield* Session.Service
+  const database = yield* Database.Service
   const current = yield* sessions
     .get(callerID)
     .pipe(Effect.mapError(() => new Denied({ reason: "caller-session-missing" })))
+  const project = yield* database.db
+    .select({ id: ProjectTable.id })
+    .from(ProjectTable)
+    .where(eq(ProjectTable.id, current.projectID))
+    .get()
+    .pipe(Effect.orDie)
+  if (!project) return yield* new Denied({ reason: "session-project-missing" })
   const authority = SessionAuthority.make(sessions.get)
   const root = yield* authority(current.id, current.projectID).pipe(
     Effect.mapError((error) => new Denied({ reason: error.reason })),
@@ -90,6 +163,7 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
     partID: target.partID,
   })
   if (!part || part.type !== "tool" || part.tool !== "task") return yield* new Denied({ reason: "task-part-not-found" })
+  if (part.metadata?.providerExecuted === true) return yield* new Denied({ reason: "provider-executed-task" })
   if (part.state.status !== "completed" && part.state.status !== "error")
     return yield* new Denied({ reason: "task-part-not-final" })
   const metadata = yield* Schema.decodeUnknownEffect(HostMetadata)(part.state.metadata).pipe(
@@ -102,10 +176,8 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
   const child = yield* authority(metadata.sessionId, current.projectID).pipe(
     Effect.mapError((error) => new Denied({ reason: error.reason })),
   )
-  const worker = child.execution.agent ? yield* agents.get(child.execution.agent) : undefined
   if (
-    worker?.id !== "backend" ||
-    worker.native !== true ||
+    child.execution.agent !== backendID ||
     child.execution.parentID !== target.parentSessionID ||
     child.rootID !== current.id
   )
@@ -130,7 +202,7 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
     !target.reason?.trim()
   )
     return yield* new Denied({ reason: "override-reason-required" })
-  const wanted = {
+  const data = {
     projectID: current.projectID,
     memberID: result.memberId,
     taskId: binding.taskId,
@@ -148,23 +220,7 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
     terminalReason: result.terminal.reason,
     ...(target.reason !== undefined ? { reason: target.reason } : {}),
   }
-  const id = EventV2.ID.make(
-    `evt_maestro_work_result_decision_${hash([current.id, target.partID, wanted.workResultHash])}`,
-  )
-  const existing = yield* read(id)
-  if (existing) return yield* reconcile(existing, wanted)
-  const events = yield* EventV2Bridge.Service
-  return yield* events.publish(MaestroEvent.WorkResult.Decided, wanted, { id }).pipe(
-    Effect.map((event) => ({ id: event.id, ...event.data })),
-    Effect.catchCause((cause) =>
-      Effect.gen(function* () {
-        // Publication races reconcile the actual stored event, never an attempted payload or an overwrite.
-        const stored = yield* read(id)
-        if (!stored) return yield* Effect.failCause(cause)
-        return yield* reconcile(stored, wanted)
-      }),
-    ),
-  )
+  return { data, status: part.state.status }
 })
 
 type Data = Schema.Schema.Type<typeof MaestroEvent.WorkResult.Decided.data>
