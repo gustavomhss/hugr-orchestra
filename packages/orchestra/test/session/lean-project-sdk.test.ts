@@ -49,4 +49,14 @@ test("actual legacy SDK regeneration includes native Lean routes; unchanged Prot
       if (!property || !ts.isPropertySignature(property) || !nullable(property.type)) throw new Error(`Generated ${name}.${field} lost Schema.NullOr(null)`)
     }
   }
+  await run(["bun", "typecheck"], path.join(root, "packages/sdk/js"))
+  await run(["bun", "typecheck"], path.join(root, "packages/orchestra"))
+  const files = ["packages/sdk/js/src/v2/gen/types.gen.ts", "packages/sdk/js/src/v2/gen/sdk.gen.ts"]
+  const generated = await Promise.all(files.map(async (file) => ({ file,
+    sha256: createHash("sha256").update(await Bun.file(path.join(root, file)).bytes()).digest("hex"),
+    blob: (await run(["git", "hash-object", file])).trim(),
+  })))
+  console.log("LEAN_GENERATED_FILES " + JSON.stringify(generated))
+  for (const method of project.members.filter(ts.isMethodDeclaration).filter((method) => endpoints.some((endpoint) => endpoint.name === method.name.getText(ast))))
+    console.log("LEAN_PROJECT_METHOD " + method.getText(ast))
 }, 600000)
