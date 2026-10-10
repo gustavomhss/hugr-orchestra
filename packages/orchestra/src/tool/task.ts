@@ -28,6 +28,7 @@ import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AtlasResume } from "@/maestro/atlas-resume"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
+import { SessionAuthority } from "@/maestro/session-authority"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -301,12 +302,8 @@ export const TaskTool = Tool.define(
         reservedChildPermissions = reservation.permission
         replayReserved = reservation.replayReserved
       }
-      let current = parent
-      let depth = 0
-      while (current.parentID) {
-        depth++
-        current = yield* sessions.get(current.parentID)
-      }
+      const authority = yield* SessionAuthority.make(sessions.get)(parent.id, parent.projectID)
+      const depth = authority.ancestry.length - 1
       if (depth >= (cfg.subagent_depth ?? 1)) {
         return yield* Effect.fail(
           new Error(
@@ -428,7 +425,7 @@ export const TaskTool = Tool.define(
       }
 
       const logical = strictTask
-        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: ctx.sessionID,
+        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: authority.rootID,
             projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
         : undefined
       const shownID = logical?.taskId ?? nextSession.id

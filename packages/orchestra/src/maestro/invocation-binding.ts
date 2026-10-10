@@ -1,11 +1,12 @@
 import type { InvocationBinding } from "@orchestra/plugin"
 import { Database } from "@orchestra/core/database/database"
-import { SessionSchema } from "@orchestra/core/session/schema"
 import { SessionStore } from "@orchestra/core/session/store"
 import { Effect, Schema } from "effect"
 import { InstanceRef } from "@/effect/instance-ref"
 import type { Tool } from "@/tool/tool"
 import { LogicalTask } from "./logical-task"
+import { SessionAuthority } from "./session-authority"
+import { Session } from "@/session/session"
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("InvocationBindingDenied", {
   reason: Schema.String,
@@ -19,21 +20,8 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("InvocationBinding
 export const make = Effect.gen(function* () {
   const sessions = yield* SessionStore.Service
   const database = yield* Database.Service
-  const root = Effect.fn("InvocationBinding.root")(function* (
-    id: SessionSchema.ID,
-    projectId: string,
-    seen: Set<string>,
-  ): Effect.fn.Return<string, Denied> {
-    if (seen.has(id)) return yield* new Denied({ reason: "session-parent-cycle" })
-    seen.add(id)
-    const session = yield* sessions
-      .get(id)
-      .pipe(Effect.catchCause(() => Effect.fail(new Denied({ reason: "session-unreadable" }))))
-    if (!session) return yield* new Denied({ reason: "session-missing" })
-    if (session.projectID !== projectId) return yield* new Denied({ reason: "session-project-mismatch" })
-    if (!session.parentID) return session.id
-    return yield* root(session.parentID, projectId, seen)
-  })
+  const legacySessions = yield* Session.Service
+  const resolveAuthority = SessionAuthority.make(sessions.get)
 
   return Effect.fn("InvocationBinding.resolve")(function* (
     context: Pick<Tool.Context, "sessionID" | "messageID" | "callID" | "agentID">,
@@ -53,16 +41,13 @@ export const make = Effect.gen(function* () {
       if (required) return yield* new Denied({ reason: "placement-missing" })
       return undefined
     }
-    const id = yield* Schema.decodeUnknownEffect(SessionSchema.ID)(context.sessionID).pipe(
-      Effect.mapError(() => new Denied({ reason: "session-id-invalid" })),
+    const authority = yield* resolveAuthority(context.sessionID, instance.project.id).pipe(
+      Effect.mapError((error) => new Denied({ reason: error.reason })),
     )
-    const authoritySessionId = yield* root(id, instance.project.id, new Set())
-    const session = yield* sessions
-      .get(id)
-      .pipe(Effect.catchCause(() => Effect.fail(new Denied({ reason: "session-unreadable" }))))
-    if (!session) return yield* new Denied({ reason: "session-missing" })
+    const session = authority.execution
     const task = yield* LogicalTask.read(context.sessionID).pipe(
       Effect.provideService(Database.Service, database),
+      Effect.provideService(Session.Service, legacySessions),
       Effect.catchCause(() => Effect.fail(new Denied({ reason: "logical-task-unreadable" }))),
     )
     if (
@@ -70,7 +55,7 @@ export const make = Effect.gen(function* () {
       (task.projectID !== instance.project.id ||
         task.memberID !== context.agentID ||
         task.executionSessionID !== context.sessionID ||
-        task.authoritySessionID !== authoritySessionId)
+        task.authoritySessionID !== authority.rootID)
     )
       return yield* new Denied({ reason: "logical-task-mismatch" })
     return Object.freeze({
@@ -80,7 +65,7 @@ export const make = Effect.gen(function* () {
       ...(session.location.workspaceID ? { workspaceID: session.location.workspaceID } : {}),
       memberId: context.agentID,
       executionSessionId: context.sessionID,
-      authoritySessionId,
+      authoritySessionId: authority.rootID,
       assistantMessageID: context.messageID,
       callID: context.callID,
       ...(task ? { taskId: task.taskId } : {}),
