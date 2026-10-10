@@ -1,11 +1,10 @@
 # Session snapshot + handoff — the backend specialist
 
-Current closure: read **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first. Functional repairs, final epic CI, Cassandra proof and public bench evidence/protocol landed; the dated plan below is historical context.
+## Current state
 
-**Current execution snapshot:** read [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first,
-then [session-state-2026-10-08.md](session-state-2026-10-08.md) for the earlier compaction checkpoint.
-It records the merged seat framework, active failure-repair branches, cancelled-agent worktrees,
-verified follow-ups, partial rerun and the exact resume order. The phase status below is historical.
+Read [acceptance.md](acceptance.md) first. It is the current acceptance record (2026-10-10): which clauses are qualified, which are still landing (#253, #262) or open, and the declared limits. Everything below this heading is historical context from earlier sessions. Where it disagrees with `acceptance.md`, `acceptance.md` wins. Earlier closure notes live in the Landing update of [session-resume-2026-10-08.md](session-resume-2026-10-08.md) and the earlier compaction checkpoint in [session-state-2026-10-08.md](session-state-2026-10-08.md).
+
+## Historical: 2026-10-05 respawn snapshot
 
 Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude Code) reads this file first, then the listed sources, and continues from §7 without rediscovering prior decisions.
 
