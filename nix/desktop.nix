@@ -123,9 +123,9 @@ stdenv.mkDerivation (finalAttrs: {
       "$out/share/icons/hicolor/64x64/apps/ai.hugr.orchestra.png"
     install -Dm644 resources/icons/128x128.png \
       "$out/share/icons/hicolor/128x128/apps/ai.hugr.orchestra.png"
-    install -Dm644 resources/icons/128x128@2x.png \
+    install -Dm644 resources/icons/256x256.png \
       "$out/share/icons/hicolor/256x256/apps/ai.hugr.orchestra.png"
-    install -Dm644 resources/icons/icon.png \
+    install -Dm644 resources/icons/512x512.png \
       "$out/share/icons/hicolor/512x512/apps/ai.hugr.orchestra.png"
     install -Dm644 resources/ai.hugr.orchestra.metainfo.xml \
       "$out/share/metainfo/ai.hugr.orchestra.metainfo.xml"

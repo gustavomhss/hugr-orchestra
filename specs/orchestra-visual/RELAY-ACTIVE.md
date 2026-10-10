@@ -355,6 +355,16 @@ closure query activation: `experimental Nix feature 'nix-command' is disabled`.
 The candidate adds that feature only to the unchanged closure query. Diagnostics
 and static approval do not qualify production repairs or the new Archie identity.
 
+Fresh safe-template capture `38021020604` succeeded on all four natives and
+completion at `ad82b7847c406d0cb44a219abb911a1f0b484a11`. Cold-reviewed hash-only
+child `2203ab85f8` runs consumer attempt `38022138891`. Linux ARM artifact
+`11658759525` shows the compiled CLI now executes completions and passes install
+checks; Desktop also builds, then install refuses missing legacy icon filename
+`resources/icons/128x128@2x.png`. Current prod assets provide real 256x256 and
+512x512 PNGs; their headers were checked. The next recipe installs those exact
+files into the unchanged hicolor destinations rather than skipping icons.
+Darwin ARM job completed successfully; the complete four-system result is pending.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
