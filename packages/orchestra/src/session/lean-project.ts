@@ -13,6 +13,9 @@ import { Effect } from "effect"
 import { LeanProfilePreferences } from "./lean-profile-preferences"
 
 export const MAX_PARTS = 200_000
+// Decoder admits 4096 + 8*256 UTF-16 text units: at most 36,864 JSON-escaped bytes,
+// plus bounded keys/numbers/literals (<4 KiB). Unexpected larger encodings mark incomplete.
+export const MAX_METRICS_BYTES = 64 * 1024
 const COMMAND_LIMIT = 4096
 
 /** Only native instrumented legacy parts currently contain this provenance. No V2/SDK telemetry inference. */
@@ -33,7 +36,8 @@ const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Da
     exit: sql<unknown>`json_extract(${PartTable.data}, '$.state.metadata.exit')`,
     time: sql<unknown>`json_extract(${PartTable.data}, '$.state.time.end')`,
     created: MessageTable.time_created,
-    metrics: sql<string | null>`CASE WHEN length(CAST(json_extract(${PartTable.data}, '$.state.metadata.lean') AS BLOB)) <= 4096 THEN json_extract(${PartTable.data}, '$.state.metadata.lean') END`,
+    metrics: sql<string | null>`CASE WHEN length(CAST(json_extract(${PartTable.data}, '$.state.metadata.lean') AS BLOB)) <= ${MAX_METRICS_BYTES} THEN json_extract(${PartTable.data}, '$.state.metadata.lean') END`,
+    metricsOverbound: sql<number>`CASE WHEN length(CAST(json_extract(${PartTable.data}, '$.state.metadata.lean') AS BLOB)) > ${MAX_METRICS_BYTES} THEN 1 ELSE 0 END`,
     revertMessageID: sql<string | null>`CASE WHEN ${SessionTable.revert} IS NOT NULL THEN substr(json_extract(${SessionTable.revert}, '$.messageID'), 1, 256) END`,
     revertPartID: sql<string | null>`CASE WHEN ${SessionTable.revert} IS NOT NULL THEN substr(json_extract(${SessionTable.revert}, '$.partID'), 1, 256) END`,
     hasRevert: sql<number>`${SessionTable.revert} IS NOT NULL`,
@@ -72,6 +76,7 @@ export interface Row {
   readonly time: unknown
   readonly created: number
   readonly metrics: string | null
+  readonly metricsOverbound?: number
   readonly revert: { readonly messageID: string; readonly partID?: string } | null
   readonly boundaryTime: number | null
   readonly boundaryPart: string | null
@@ -80,14 +85,19 @@ export interface Row {
 /** Ownership is checked before grouping original executions; conflicting retries remove the whole call. */
 export function projectRows(scope: LeanDashboard.Scope, rows: readonly Row[], complete: boolean) {
   const calls = new Map<string, { signature: string; execution: LeanDashboard.Execution } | null>()
+  const coverage = { complete }
   for (const row of rows.toSorted((a, b) => a.created - b.created || compareID(a.messageID, b.messageID) || compareID(a.partID, b.partID))) {
+    if (row.metricsOverbound || (row.revert && (row.boundaryTime === null || (row.revert.partID !== undefined && row.boundaryPart === null))))
+      coverage.complete = false
     if (!visible(row) || (row.status !== "completed" && row.status !== "error") || typeof row.callID !== "string") continue
     const metrics = decodeMetrics(row.metrics)
     if (!metrics || metrics.owner.projectID !== scope.projectID || metrics.owner.location !== scope.directory
       || metrics.owner.sessionID !== row.sessionID || metrics.owner.callID !== row.callID) continue
     const truncated = row.commandLength !== null && row.commandLength > COMMAND_LIMIT
-    const itemID = metrics.itemID ?? (metrics.filterProfile ? LeanCoverage.forProfile(metrics.filterProfile) : undefined)
-      ?? (!truncated && typeof row.command === "string" ? identify(row.command) : undefined)
+    const profileItem = metrics.filterProfile ? LeanCoverage.forProfile(metrics.filterProfile) : undefined
+    const commandItem = !truncated && typeof row.command === "string" ? LeanProcessor.identify(row.command) : undefined
+    const itemID = metrics.itemID ?? profileItem ?? commandItem
+    if ((metrics.itemID && profileItem && metrics.itemID !== profileItem) || (commandItem && itemID && commandItem !== itemID)) continue
     if (!itemID || typeof row.command !== "string" || !integer(row.time) || row.time < 0) continue
     const execution: LeanDashboard.Execution = {
       sessionID: row.sessionID, messageID: row.messageID, partID: row.partID, callID: row.callID, itemID,
@@ -96,23 +106,23 @@ export function projectRows(scope: LeanDashboard.Scope, rows: readonly Row[], co
       bytesSaved: metrics.bytes.saved,
       tokensSaved: metrics.tokens.kind === "estimated" ? metrics.tokens.saved : null,
     }
-    const key = JSON.stringify([row.sessionID, row.callID])
+    const key = JSON.stringify([row.sessionID, row.messageID, row.callID])
     const signature = JSON.stringify([metrics, execution.command, execution.commandTruncated, execution.status, execution.exit, execution.time, itemID])
     const previous = calls.get(key)
     if (previous === null) continue
     if (previous && previous.signature !== signature) { calls.set(key, null); continue }
     if (!previous) calls.set(key, { signature, execution })
   }
-  return { complete, executions: [...calls.values()].flatMap((call) => call ? [call.execution] : []) }
+  return { complete: coverage.complete, executions: [...calls.values()].flatMap((call) => call ? [call.execution] : []) }
 }
 
 // Missing revert boundaries make the session uncertain. Keep only a proven prefix.
 function visible(row: Row) {
   if (!row.revert) return true
-  if (row.boundaryTime === null || (row.revert.partID !== undefined && row.boundaryPart === null)) return false
+  if (row.boundaryTime === null) return false
   if (row.created !== row.boundaryTime) return row.created < row.boundaryTime
   if (row.messageID !== row.revert.messageID) return row.messageID < row.revert.messageID
-  return row.revert.partID !== undefined && row.partID < row.revert.partID
+  return row.revert.partID !== undefined && row.boundaryPart !== null && row.partID < row.revert.partID
 }
 
 function integer(value: unknown): value is number {
@@ -121,24 +131,10 @@ function integer(value: unknown): value is number {
 
 function compareID(a: string, b: string) { return a === b ? 0 : a < b ? -1 : 1 }
 
-function identify(command: string): LeanCoverage.ItemID | undefined {
-  // P adds this frozen dependency later. No invented command parser while unavailable.
-  if (!("identify" in LeanProcessor) || typeof LeanProcessor.identify !== "function") return undefined
-  const id: unknown = LeanProcessor.identify(command)
-  return typeof id === "string" && LeanCoverage.ids.includes(id as LeanCoverage.ItemID) ? id as LeanCoverage.ItemID : undefined
-}
-
 function decodeMetrics(text: string | null): LeanMetrics.Decision | undefined {
   if (!text) return undefined
   try {
-    const value = JSON.parse(text)
-    if (typeof value !== "object" || value === null || !LeanEngine.accepted.includes(value.engine)) return undefined
-    const itemID: unknown = value.itemID
-    if (itemID !== undefined && (typeof itemID !== "string" || !LeanCoverage.ids.includes(itemID as LeanCoverage.ItemID))) return undefined
-    // Reuse the frozen numeric/provenance validation for accepted engines and optional new item attribution.
-    const { itemID: _, ...legacy } = value
-    const decoded = LeanMetrics.decode({ ...legacy, engine: LeanEngine.legacy })
-    return decoded ? { ...decoded, engine: value.engine, ...(itemID === undefined ? {} : { itemID: itemID as LeanCoverage.ItemID }) } : undefined
+    return LeanMetrics.decode(JSON.parse(text))
   } catch {
     return undefined
   }

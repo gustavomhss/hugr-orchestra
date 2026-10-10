@@ -6,6 +6,7 @@ import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { MessageTable, PartTable, SessionTable } from "@orchestra/core/session/sql"
 import { LeanEngine } from "@orchestra/schema/lean-engine"
+import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { Effect } from "effect"
 import { eq } from "drizzle-orm"
 import { LeanProject } from "../../src/session/lean-project"
@@ -39,6 +40,16 @@ test("containing owners precede retry dedup, conflicts and fork copies cannot ea
   expect(LeanProject.projectRows(scope, [original, row({}, { bytes: { before: 101, after: 20, saved: 81 } })], true).executions).toEqual([])
 })
 
+test("provider call IDs reused in distinct messages remain distinct executions, while same-message replays conflict or dedup", () => {
+  for (const metrics of [{}, { bytes: { before: 101, after: 20, saved: 81 } }]) {
+    const result = LeanProject.projectRows(scope, [row(), row({ messageID: "msg_next", partID: "prt_next", created: 11 }, metrics)], true)
+    expect(result.executions).toHaveLength(2)
+    expect(LeanProject.savings(result.executions).calls).toBe(2)
+  }
+  expect(LeanProject.projectRows(scope, [row(), row({ partID: "prt_retry" })], true).executions).toHaveLength(1)
+  expect(LeanProject.projectRows(scope, [row(), row({ partID: "prt_retry" }, { bytes: { before: 101, after: 20, saved: 81 } })], true).executions).toEqual([])
+})
+
 test("revert uses canonical time/message/part prefix, missing boundaries exclude uncertain history", () => {
   expect(LeanProject.projectRows(scope, [row({ revert: { messageID: "msg_a" }, boundaryTime: 11 })], true).executions).toHaveLength(1)
   expect(LeanProject.projectRows(scope, [row({ revert: { messageID: "msg_z", partID: "prt_b" }, boundaryTime: 10, boundaryPart: "prt_b" })], true).executions).toHaveLength(1)
@@ -48,10 +59,18 @@ test("revert uses canonical time/message/part prefix, missing boundaries exclude
     { revert: { messageID: "missing" } },
     { revert: { messageID: "msg_z", partID: "missing" }, boundaryTime: 10 },
   ]) expect(LeanProject.projectRows(scope, [row(patch)], true).executions).toEqual([])
+  const missingPart = LeanProject.projectRows(scope, [row({ messageID: "msg_old", created: 9, revert: { messageID: "msg_z", partID: "missing" }, boundaryTime: 10 }),
+    row({ messageID: "msg_a", revert: { messageID: "msg_z", partID: "missing" }, boundaryTime: 10 }),
+    row({ revert: { messageID: "msg_z", partID: "missing" }, boundaryTime: 10 })], true)
+  expect(missingPart.executions).toHaveLength(2)
+  expect(missingPart.complete).toBe(false)
+  const missingMessage = LeanProject.projectRows(scope, [row({ created: 9, revert: { messageID: "missing" } })], true)
+  expect(missingMessage.executions).toEqual([])
+  expect(missingMessage.complete).toBe(false)
 })
 
 test("new item IDs, signed tokens, missing estimates, overflow and disabled earned totals remain honest", () => {
-  const result = LeanProject.projectRows(scope, [row({}, { itemID: "cargo", tokens: { kind: "unavailable" } })], false)
+  const result = LeanProject.projectRows(scope, [row({ command: "cargo test", commandLength: 10 }, { itemID: "cargo", filterProfile: "cargo-test", tokens: { kind: "unavailable" } })], false)
   const info = LeanProject.dashboard({ scope, enabled: false, items: { cargo: false } }, true, result)
   expect(info.enabled).toBe(false)
   expect(info.complete).toBe(false)
@@ -66,6 +85,31 @@ test("new item IDs, signed tokens, missing estimates, overflow and disabled earn
   expect(history.executions).toHaveLength(50)
   expect(history.executions[0].time).toBe(50)
   expect(LeanProject.projectRows(scope, [row({ command: "x".repeat(4096), commandLength: 5000 })], true).executions[0].commandTruncated).toBe(true)
+})
+
+test("strict native attribution accepts consistent Cargo/current records and rejects metadata or actual-command contradictions", () => {
+  expect(LeanProject.projectRows(scope, [row({ command: "cargo test", commandLength: 10 }, { itemID: "cargo", filterProfile: "cargo-test", engine: LeanEngine.current })], true).executions[0].itemID).toBe("cargo")
+  for (const metric of [
+    { itemID: "cargo", filterProfile: "go-test-verbose" },
+    { itemID: "cargo", filterProfile: "cargo-test" },
+    { itemID: "cargo", filterProfile: undefined },
+    { engine: "unaccepted" },
+  ]) expect(LeanProject.projectRows(scope, [row({}, metric)], true).executions).toEqual([])
+  expect(LeanProject.projectRows(scope, [row({ command: "cargo test", commandLength: 10 })], true).executions).toEqual([])
+  expect(LeanProject.projectRows(scope, [row({ command: "go test -v " + "x".repeat(4085), commandLength: 5000 }, { itemID: undefined, filterProfile: undefined })], true).executions).toEqual([])
+})
+
+test("decoder-admitted maximum text is bounded in UTF-8 and JSON escape bytes", () => {
+  const text = "\u0001".repeat(256)
+  const metrics = JSON.parse(row().metrics!)
+  Object.assign(metrics, { reason: text, orchestraProfile: text, filterProfile: text, itemID: "go" })
+  metrics.owner = { projectID: text, sessionID: text, callID: text, location: "/" + "\u0001".repeat(4095) }
+  metrics.model = { provider: text, id: text }
+  expect(LeanMetrics.decode(metrics)).toBeDefined()
+  const bytes = Buffer.byteLength(JSON.stringify(metrics), "utf8")
+  expect(bytes).toBeGreaterThan(36_000)
+  expect(bytes).toBeLessThan(LeanProject.MAX_METRICS_BYTES)
+  console.log(`LEAN_DECODER_MAX_TEXT_SERIALIZED_BYTES ${bytes}`)
 })
 
 const it = testEffect(LayerNode.compile(Database.node))
@@ -103,4 +147,25 @@ it.live("SQL collector intersects native project and selected directory, bounds 
   yield* database.db.update(SessionTable).set({ revert: { messageID: "msg_lean_sql_0", partID: "missing" } as never })
     .where(eq(SessionTable.id, SessionID.make("ses_lean_sql_0"))).run()
   expect((yield* LeanProject.collect(scope)).executions).toEqual([])
+  expect((yield* LeanProject.collect(scope)).complete).toBe(false)
+  yield* database.db.update(SessionTable).set({ revert: null }).where(eq(SessionTable.id, SessionID.make("ses_lean_sql_0"))).run()
+  const metrics = JSON.parse(row().metrics!)
+  metrics.owner.sessionID = "ses_lean_sql_0"
+  metrics.owner.callID = "call0"
+  const text = "\u0001".repeat(256)
+  Object.assign(metrics, { reason: text, orchestraProfile: text, model: { provider: text, id: text } })
+  expect(LeanMetrics.decode(metrics)).toBeDefined()
+  expect(Buffer.byteLength(JSON.stringify(metrics), "utf8")).toBeGreaterThan(4096)
+  const data = (lean: unknown) => ({ type: "tool", callID: "call0", tool: "bash", state: { status: "completed",
+    input: { command: "go test -v ." }, time: { start: 1, end: 2 }, output: "saved", title: "saved", metadata: { exit: 0, lean } } })
+  yield* database.db.update(PartTable).set({ data: data(metrics) as never }).where(eq(PartTable.id, PartID.make("prt_lean_sql_0_0"))).run()
+  const escaped = yield* LeanProject.collect(scope)
+  expect(escaped.complete).toBe(true)
+  expect(escaped.executions).toHaveLength(2)
+  expect(LeanProject.savings(escaped.executions).bytesSaved).toBe(160)
+  yield* database.db.update(PartTable).set({ data: data({ ...metrics, reason: "x".repeat(LeanProject.MAX_METRICS_BYTES) }) as never })
+    .where(eq(PartTable.id, PartID.make("prt_lean_sql_0_0"))).run()
+  const overbound = yield* LeanProject.collect(scope)
+  expect(overbound.complete).toBe(false)
+  expect(overbound.executions).toHaveLength(1)
 }))
