@@ -4,7 +4,8 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 export async function typecheckCandidateProof() {
-  if (process.env.GITHUB_ACTIONS !== "true") throw new Error("LEAN_CANDIDATE_COMPILE_CI_REQUIRED")
+  // test-ci.yml deliberately sets GITHUB_ACTIONS=false; the native packaged gate does not.
+  if (process.env.CI !== "true" || !process.env.GITHUB_RUN_ID) throw new Error("LEAN_CANDIDATE_COMPILE_CI_REQUIRED")
   const desktop = path.resolve(import.meta.dir, "..")
   const recorder = new CandidateRecorder()
   recorder.protectPath(path.resolve(desktop, "../.."), "repository")
