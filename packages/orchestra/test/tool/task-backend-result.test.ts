@@ -255,7 +255,11 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
 // host gives a child that ran no command.
 const shell = await Effect.runPromise(ToolSafetySandbox.status())
 // Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
-const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
+const host = {
+  taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] },
+  memberId: "backend", executionSessionId: expect.stringMatching(/^ses_/), authoritySessionId: expect.stringMatching(/^ses_/),
+  mode: "delegated", acceptance: { state: "pending" }, verification: { state: "not-host-verified" },
+}
 // These child fixtures return/store text only: neither claimed file change nor claimed check has an actual tool call.
 const claimedEvidence = {
   changes: [{ index: 0, evidence: "unbound", callIDs: [] }],
