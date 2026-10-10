@@ -2,6 +2,10 @@ import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
   "lean.page.profile": "Orchestra profile · {{profile}}",
+  "lean.page.tokenCoverage": "Executions with estimates: {{measured}}/{{calls}}",
+  "lean.page.exactBytes": "Exact UTF-8 bytes: {{value}}",
+  "lean.page.plaintextPreserve": "Plaintext preserved",
+  "lean.page.plaintextPreserveNote": "Plaintext output stays intact. Terminal SGR formatting may be normalized.",
   "lean.page.history": "Execution history",
   "lean.page.preserveNote": "Exact preservation keeps output intact. This item does not reduce output.",
   "lean.page.close": "Close history",
