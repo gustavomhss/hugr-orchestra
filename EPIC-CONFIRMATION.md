@@ -108,3 +108,98 @@ After all five workflows and all 17 jobs completed, the ephemeral ref's target w
 All job logs, run/job metadata, complete local/remote manifests, capacity samples, altered-SHA proof, downloaded artifact archives, parsed JUnit/Playwright records, dispatch IDs, and cleanup verification remain in the external `jimmy-epic-confirm-operation` directory beside this worktree. The test run retains five JUnit artifacts for 14 days and three Playwright artifacts for 7 days. Original `EPIC-EVIDENCE.md` SHA-256 remains `ad4514b0f9a78434cbabe9d3849cc8621567e7b848d69b958a1de2a423d5775c`.
 
 Only this confirmation document was added to the evidence worktree. Principal HEAD/tree and source files remained frozen. No feature branch push, PR, workflow rerun, private evaluation, live-app interaction, or local product test execution was used for this confirmation. Remaining integration failures and skipped/missed stages keep the epic verdict RED.
+
+---
+
+## Final-source main-workflow checkpoint — October 10, 2026
+
+**RED: 11 of 12 jobs succeeded; one research browser assertion failed.** This section is an append-only checkpoint. All preceding counts, failures, source identities, and original RED evidence remain unchanged.
+
+### Final source and one-shot dispatch
+
+| Identity | Exact value |
+| --- | --- |
+| Frozen clean principal HEAD | `d94ccae525562786c39969faa11a922f571ed9be` |
+| Frozen product tree | `3e6bc8bde3e0ee3c832d5bf1328bf1ec4f964b57` |
+| Actual main workflow snapshot SHA | `e36304523c4d2a798b81952c29f88c690dd9ba7a` |
+| Snapshot tree with retained `.ci-run.json` | `6cb4dfb4e05d4090759f9f77a57d62a2cd4af141` |
+| Remote snapshot parent | `ff075118883c5027d7bdce128e576f50e93c0326` |
+| Parent product tree | `c7a2bde7124ca6631fb1566aa540864e3a799c47` |
+| Owned ephemeral ref | `refs/heads/jimmy-epic-final` |
+| Main workflow, attempt 1 | [38026385329](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38026385329) |
+
+The final snapshot was not present in the recent helper-run candidates at preparation time. Exactly two replacement blobs were uploaded through GitHub Git-object APIs: `packages/desktop/src/main/jimmy-desktop-cleanup.fixture.ts` (`532d3ff717834b1fd7b28c0582f097adb3a4aa58`) and `packages/desktop/src/main/jimmy-desktop-proof.test.ts` (`d5fcbe7a792a53bf1a1958dbeeb1fd3bf6c181a2`). No other source blob or new request blob was uploaded. The parent's existing core test request metadata was retained; the main workflow does not use that scoped request to select its epic jobs.
+
+The full recursive GitHub manifest matched the frozen local Git tree by every path, mode, object type, and SHA: 13,494 entries, including 11,531 tracked leaves. Excluding only the root `.ci-run.json` reproduced the exact product-tree hash. Altered SHA, mode, and path controls were detected by the comparator and rejected by independent Git-tree reconstruction. Empty and truncated manifests were also rejected. Complete manifests and controls were persisted before dispatch.
+
+Actual account jobs were enumerated across 23 authenticated owned repositories, with a known nonempty run as a positive control. Ten active jobs initially blocked dispatch. At 05:06:33 UTC, seven placed jobs and no queued jobs allowed the conservative 12-job reservation: `7 + 12 = 19`, within the cap of 20. The main workflow has 12 total jobs but measured peak **11**, because Atlas follows Atlas scope. No unrelated work was cancelled.
+
+Only `test.yml` was dispatched, once, at 05:06:35 UTC. Its run ID was persisted before monitoring. Creation → final update: **05:06:37 → 05:24:45 UTC**, 18m08s. The 30-minute operation deadline was 05:36:35 UTC. `windows_e2e` remained its default `false`. The earlier native `38022081085`, typecheck `38022083326`, Storybook `38022088731`, and Nix `38022093645` successes remain their original-source checkpoints; they were not rerun or represented as new executions on the final source.
+
+### Actual main jobs and artifact counters
+
+| Job | ID | Result | Actual reach |
+| --- | --- | --- | --- |
+| Atlas scope | `114138005247` | success | Manual dispatch selected the full Atlas suite |
+| Atlas | `114138068031` | success | Guards and full product suite: 4,168 pass, 17 skip, 3 TODO; 530 files passed, 2 skipped |
+| Linux orchestra 1/2 | `114138005213` | success | 1,693 pass, 14 skip, 1 TODO, 0 fail; 182 files |
+| Linux orchestra 2/2 | `114138005325` | success | 3,007 pass, 8 skip, 0 fail; 230 files |
+| Windows orchestra 1/3 | `114138005192` | success | 1,694 pass, 20 skip, 1 TODO, 0 fail; 181 files |
+| Windows orchestra 2/3 | `114138005188` | success | 1,188 pass, 15 skip, 0 fail; 115 files |
+| Windows orchestra 3/3 | `114138005303` | success | 1,827 pass, 34 skip, 0 fail; 116 files |
+| Linux other packages / godfile / HttpApi / Relay | `114138005211` | success | 20/20 Turbo unit/build tasks completed, 0 cached; generated checks and full HttpApi CLI gate executed; Python Relay 1,477 pass, 1 skip |
+| Windows other packages | `114138005111` | success | 19/19 Turbo unit/build tasks completed, 0 cached |
+| Linux e2e 1/3 | `114138005271` | success | 124 pass, 0 skip |
+| Linux e2e 2/3 | `114138005493` | success | 155 pass, 0 skip |
+| Linux e2e 3/3 | `114138005371` | failure | 189 pass, 1 fail, 1 skip; 0 flaky |
+
+All five orchestra shards and all three e2e shards missed previous-pass caches and actually ran. Neither other-package job replayed test tasks. The later HttpApi dependency-build step reused **4/4 cached build tasks** that had completed earlier in the same Linux job; that replay was not counted as new build execution or test coverage. Browser installation skipped because Chromium was cached, but browser tests executed.
+
+All eight artifacts were downloaded and parsed. The five JUnit artifacts contain **9,502 shard testcase records: 9,409 passed, 93 skipped including two TODO, zero failures**. These are summed platform/shard records, not a unique-test count. Three Playwright reports contain **470 logical tests: 468 expected, 1 unexpected, 1 skipped, 0 flaky**. Configured retries of the failing browser case are attempts within that single workflow run, not new workflow dispatches.
+
+| Artifact | ID |
+| --- | --- |
+| `junit-linux-orchestra-1-1` | `11659304920` |
+| `junit-linux-orchestra-2-1` | `11661005146` |
+| `junit-windows-orchestra-1-1` | `11661000533` |
+| `junit-windows-orchestra-2-1` | `11661165482` |
+| `junit-windows-orchestra-3-1` | `11660886747` |
+| `playwright-linux-1-1` | `11660511708` |
+| `playwright-linux-2-1` | `11660851493` |
+| `playwright-linux-3-1` | `11661275452` |
+
+### Previously blocked full HTTP gate now executed
+
+Linux completed `Run unit tests`, `Check generated client`, and `Build HttpApi exerciser dependencies`, then executed `bun run test:httpapi` from 05:12:27 to 05:17:51 UTC. Its chained coverage, auth, and effect commands all completed with `--fail-on-missing --fail-on-skip`.
+
+| CLI mode | Selected scenarios | Public routes | Pass | Fail | Skip | Missing | Extra |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| coverage | 271 | 233 | 271 | 0 | 0 | 0 | 0 |
+| auth | 271 | 233 | 271 | 0 | 0 | 0 | 0 |
+| effect | 271 | 233 | 271 | 0 | 0 | 0 | 0 |
+
+All **13 research artifact scenarios passed in every mode**: source, document, foreign-task, authority, unadmitted, unavailable, revision-not-admitted, cursor-invalid, and the five invalid revision spellings. Coverage mode proves registration/completeness; it does not issue the effect scenarios' requests. Auth mode exercised protected-route rejection and valid-credential admission. Effect mode exercised real production routes with isolated fixture storage, including UTF-8 source continuation and exact reconstruction, immutable receipts/revisions, wrong-artifact cursor rejection, document content, foreign/authority/unadmitted rejection, unavailable admitted bytes, and query validation. Runtime log rows were counted and reconciled against each mode's header and summary. There were no HTTP auth/effect skips or misses.
+
+The prior rename, app parity, client, and permission-deadline blockers now have completed suite execution in this main run. Core: Linux 1,496 pass/7 skip; Windows 1,478 pass/26 skip. App unit: Linux 1,324 pass/0 skip; Windows 1,299 pass/1 skip, plus 76 browser-unit passes on each platform. Client: 23 pass/0 skip on both. The permission/deadline testcase passed on Linux and Windows with two assertions in each JUnit record. Desktop Bun suites: Linux 527 pass/17 skip, Windows 400 pass/144 skip; its separate Node test passed once on each platform with zero skips. The earlier scoped proof and detecting-mutant run IDs remain separate evidence, not substitute execution here.
+
+### Sole failure: translated Arabic labels versus English-fallback assertion
+
+The complete failed [e2e shard-3 job log](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38026385329/job/114138005371) and all three failed-attempt error contexts were reviewed. Test `mixed Hebrew Arabic and code stay isolated in ar/rtl with English fallback` is declared at `packages/app/e2e/regression/session-research-result.spec.ts:302` and fails at **line 312** after waiting 10 seconds for exact English text `Research task ended`. It fails on the initial attempt and both existing configured retries. Its English/LTR and English/RTL profiles pass.
+
+Each retained page snapshot shows the research result region and paragraphs containing **`انتهت مهمة البحث`** and **`إجابة جزئية`**. Those are the final Arabic translations at `packages/ui/src/i18n/ar.ts:167` and `:173`. The test still expects English at lines 312 and 313; its source is unchanged from the preceding checkpoint. The locale-parity correction added Arabic research keys, exposing this stale fallback expectation. This is a feature test/translation integration mismatch, not a missing research result or a demonstrated RTL-layout defect. Assertions after line 312 did not execute in the failing Arabic profile. No source fix or blind rerun was performed.
+
+### All skip and miss accounting
+
+- Orchestra: **91 log skips plus two TODO**, with all 93 named JUnit records retained in `checked-evidence.json` and the five artifacts. Omissions include credential/live-model cases, StructuredOutput integration, disabled V2 projector cases, direct-footer UI cases, and platform-specific shell, PTY, worktree, scanner, and memory-admission cases.
+- Atlas: **17 skips and three TODO**; existing semantic/negation/model/scanner availability and individual product omissions remain as reported above.
+- Other-package unit suites: **56 Linux skips** (maestro-arsenal 1, LLM 30, Core 7, TUI 1, desktop 17); **325 Windows skips** (maestro-arsenal 1, Relay TypeScript 122, LLM 30, TUI 1, app 1, desktop 144, Core 26). Remaining completed unit suites report zero skips. Reporter-visible names are persisted with the job logs and parsed evidence; count-only summaries do not establish names they did not print.
+- The real Electron production Node-sidecar Jimmy proof, Linux App Dock integration, and real Docker/PTY access proofs remained environment-gated omissions in the main desktop unit suite. Separate desktop proof runs were not substituted for them. The desktop Node test reports 1 pass and 0 skips per platform.
+- Python Relay: **one skip**, unnamed by the existing `pytest -q` summary; benchmark-runtime tests explicitly excluded by the workflow. The documentation index check passed.
+- Playwright: **one skip**, `packages/app/e2e/orchestra/chapter-workspaces.spec.ts:371`, `Escape closes the dialog while a navigation tooltip still shows behind it`, marked `fixme`. No flaky tests were reported.
+- Windows e2e was not scheduled. Windows intentionally omits POSIX HttpApi codegen and Linux-only generated-boundary, godfile, full HttpApi CLI, and Python Relay steps. Atlas's PR-only product-change detector skipped on manual dispatch while its full suite ran. All three browser-install steps skipped due to browser cache hits. The failed e2e job skipped pass-record/save and its post-Node step. No whole job was skipped or cancelled, and no Linux generated-client/HTTP gate remained blocked.
+
+### Final checkpoint retention
+
+Only `jimmy-epic-final` was deleted, after its target SHA and completion of all 12 jobs were reverified. The matching-ref removal query detected `dev` as its positive control. Runs, all eight artifacts, other refs, and worktrees were retained. JUnit retention is 14 days; Playwright retention is seven days, including failure screenshots, videos, trace, and all three error-context snapshots.
+
+External `jimmy-epic-final-operation` retains run/job metadata, all twelve logs, manifest/control evidence, capacity samples, persisted dispatch ID, artifact archives, complete parsed skips and counters, HTTP mode reconciliation, failure contexts, and cleanup verification. Principal source remained frozen and clean. Only this document was appended and committed in the evidence worktree; no principal source edit, feature push, PR, extra workflow execution, private evaluation, or new model trial was performed. The full final main-workflow verdict remains **RED** until the recorded Arabic browser assertion mismatch is reconciled.
