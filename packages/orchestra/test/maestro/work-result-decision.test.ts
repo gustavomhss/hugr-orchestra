@@ -24,7 +24,7 @@ import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances, provideTmpdirInstance } from "../fixture/fixture"
-import { decisionFixture } from "../fixture/work-result-decision"
+import { decisionFixture, raceDecisions } from "../fixture/work-result-decision"
 import { NpmTest } from "../fake/npm"
 import { testEffect } from "../lib/effect"
 
@@ -187,13 +187,15 @@ describe("durable WorkResult decision", () => {
 
   it.instance("concurrent exact retries reconcile; concurrent contradictory decisions preserve winner", () => Effect.gen(function* () {
     const same = yield* decisionFixture()
-    const records = yield* Effect.all([WorkResultDecision.record(same.input), WorkResultDecision.record(same.input)], { concurrency: "unbounded" })
+    const records = (yield* raceDecisions([WorkResultDecision.record(same.input), WorkResultDecision.record(same.input)]))
+      .filter(Exit.isSuccess).map((exit) => exit.value)
+    expect(records).toHaveLength(2)
     expect(records[0]).toEqual(records[1])
     const fixture = yield* decisionFixture()
-    const raced = yield* Effect.all([
+    const raced = yield* raceDecisions([
       WorkResultDecision.record(fixture.input),
       WorkResultDecision.record({ ...fixture.input, target: { ...fixture.target, decision: "rejected" } }),
-    ].map(Effect.exit), { concurrency: "unbounded" })
+    ])
     expect(raced.filter(Exit.isSuccess)).toHaveLength(1)
     expect(raced.filter(Exit.isFailure)).toHaveLength(1)
     expect(raced.map(failure).join("\n")).toContain("WorkResultDecisionConflict")

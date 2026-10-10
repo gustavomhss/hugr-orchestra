@@ -1,8 +1,10 @@
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { EventV2 } from "@orchestra/core/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
-import { Effect, Schema } from "effect"
+import { Deferred, Effect, Ref, Schema } from "effect"
+import { EventV2Bridge } from "@/event-v2-bridge"
 import { LogicalTask } from "@/maestro/logical-task"
 import { WorkResultDecision } from "@/maestro/work-result-decision"
 import { MessageID, PartID } from "@/session/schema"
@@ -53,3 +55,22 @@ export const decisionFixture = Effect.fn("WorkResultDecisionTest.fixture")(funct
   return { root, parent, child, binding, part, result, target, context,
     input: { sessionID: root.id, agentID: "maestro", target } }
 })
+
+// Both calls must finish their pre-publication reads before either invokes the real durable publisher.
+export function raceDecisions<A, E, R>(effects: readonly Effect.Effect<A, E, R>[]) {
+  return Effect.gen(function* () {
+    const actual = yield* EventV2Bridge.Service
+    const arrived = yield* Ref.make(0)
+    const ready = yield* Deferred.make<void>()
+    const publish: EventV2.Interface["publish"] = (definition, data, options) => Effect.gen(function* () {
+      if (definition.type !== MaestroEvent.WorkResult.Decided.type) return yield* actual.publish(definition, data, options)
+      if ((yield* Ref.updateAndGet(arrived, (count) => count + 1)) === effects.length)
+        yield* Deferred.succeed(ready, undefined)
+      yield* Deferred.await(ready).pipe(Effect.timeout("5 seconds"))
+      return yield* actual.publish(definition, data, options)
+    }).pipe(Effect.orDie)
+    return yield* Effect.all(effects.map(Effect.exit), { concurrency: "unbounded" }).pipe(
+      Effect.provideService(EventV2Bridge.Service, EventV2Bridge.Service.of({ ...actual, publish })),
+    )
+  })
+}
