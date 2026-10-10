@@ -1,28 +1,29 @@
 #!/usr/bin/env bun
-// Ordinary authoring preparation only. No model may start while consumer provenance or trusted Task scope is unbound.
+import { Database } from "bun:sqlite"
 import { Option, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import { lstat, mkdir, mkdtemp, open, realpath, writeFile } from "node:fs/promises"
-import { isAbsolute, join, resolve } from "node:path"
+import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
+// One explicit pin-update surface for the lead's cold-reviewed successor; ca70 remains fix-first, not qualified.
+const consumerReview: { revision: string; status: "fix-first" | "approved" } = { revision: "ca70beecda61ba285651d3e012890e3b299f516f", status: "fix-first" }
+const inventoryDigest = "c3bf0ff8c07c22fef5d17d45d5588b963c3c699868f0accb7be1b4b0cb92c839"
 const guarded = [
   ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
   ["packages/orchestra/src/plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
   ["packages/orchestra/src/plugin/openai/siwc.ts", "203e07b88371a420db664c01e7796401cbad44df"],
   ["packages/core/src/auth/siwc.ts", "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3"],
+  // ca70beecda61ba285651d3e012890e3b299f516f: update only after the lead pins a reviewed successor.
+  ["packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts", "f3b96817833c270d1430a26ebc6fb1b204323f8e"],
+  ["packages/orchestra/src/plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
 ] as const
-// Lead must supply actual reviewed plugin + wiring paths and Git blob IDs. An empty list is a named execution blocker.
-const legacyPins: ReadonlyArray<{ role: "plugin" | "wiring"; file: string; blob: string }> = []
-const sourcePaths = [
-  "packages/orchestra/src/agent/agent.ts", "packages/orchestra/src/maestro/seats/walt.ts",
-  "packages/orchestra/src/tool/task.ts", "packages/orchestra/src/maestro/write-roots.ts",
-  "packages/orchestra/src/maestro/logical-task.ts", "packages/orchestra/src/maestro/backend-work.ts",
-  "packages/orchestra/src/tool/task-background.ts", "packages/orchestra/src/effect/app-runtime.ts",
-  "packages/orchestra/src/cli/cmd/run.ts",
-] as const
+const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/walt.ts",
+  "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "tool/task-background.ts",
+  "session/prompt-guard.ts", "session/task-prompt-ops.ts", "effect/app-runtime.ts", "cli/cmd/run.ts"]
+const deadline = 10 * 60_000
 class AuthoringError extends Error {}
 function requireAuthoring(value: unknown, code: string): asserts value { if (!value) throw new AuthoringError(code) }
 function decode<S extends Schema.ConstraintDecoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
@@ -57,61 +58,93 @@ async function main() {
   requireAuthoring(source === selectedAuth, "AUTHORING_OWNER_SELECTED_AUTH_SOURCE_REQUIRED")
   const sourceHashes = await Promise.all(guarded.map(async ([file, expected]) => {
     const bytes = await read(await canonical(join(candidate, file), false))
-    requireAuthoring(blob(bytes) === expected, "AUTHORING_OLD_AUTH_GUARD_CHANGED")
+    requireAuthoring(blob(bytes) === expected, "AUTHORING_AUTH_CONSUMER_PIN_MISMATCH")
     return { file, blob: expected, sha256: sha256(bytes) }
   }))
-  const nativeSourceHashes = await Promise.all(sourcePaths.map(async (file) => {
-    const bytes = await read(await canonical(join(candidate, file), false))
-    return { file, blob: blob(bytes), sha256: sha256(bytes) }
-  }))
+  const nativeSourceHashes = await Promise.all(sourcePaths.map(async (file) => ({ file,
+    sha256: sha256(await read(await canonical(join(candidate, "packages/orchestra/src", file), false))) })))
   const head = await gitHead(candidate)
   requireAuthoring(/^[a-f0-9]{40}$/.test(head), "AUTHORING_CANDIDATE_HEAD_INVALID")
-  const roles = legacyPins.map((pin) => pin.role)
-  const pinsAvailable = roles.includes("plugin") && roles.includes("wiring")
-  requireAuthoring(new Set(roles).size === roles.length && new Set(legacyPins.map((pin) => pin.file)).size === legacyPins.length, "AUTHORING_LEGACY_SOURCE_PINS_DUPLICATED")
-  const legacySourceHashes = await Promise.all(legacyPins.map(async (pin) => {
-    requireAuthoring(!isAbsolute(pin.file) && !pin.file.split(/[\\/]/).includes("..") && /^[a-f0-9]{40}$/.test(pin.blob), "AUTHORING_LEGACY_SOURCE_PIN_INVALID")
-    const bytes = await read(await canonical(join(candidate, pin.file), false))
-    requireAuthoring(blob(bytes) === pin.blob, "AUTHORING_LEGACY_SOURCE_PIN_MISMATCH")
-    return { ...pin, sha256: sha256(bytes) }
+  const packet = dirname(pilot)
+  const domainBytes = await read(await canonical(join(packet, "DOMAIN-SOURCE.json"), false))
+  const parsedDomain = decode(Schema.Record(Schema.String, Schema.Unknown), json(Buffer.from(domainBytes).toString("utf8")), "AUTHORING_DOMAIN_NOT_OBJECT")
+  const domain = decode(Schema.Struct({ nativeAssignmentBoundary: Schema.Struct({ projectRoot: Schema.String, soleProjectWrite: Schema.Literal("proposal.md") }),
+    inventoryDigest: Schema.Struct({ utf8ByteLength: Schema.Int, sha256: Schema.String }),
+    artifacts: Schema.Array(Schema.Struct({ id: Schema.String, role: Schema.String, path: Schema.String, regularFile: Schema.Literal(true), utf8ByteLength: Schema.Int,
+      sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)), baselineGitBlobSha1: Schema.optional(Schema.String.check(Schema.isPattern(/^[a-f0-9]{40}$/))), matchesBaselineBlob: Schema.optional(Schema.Literal(true)) })) }), parsedDomain, "AUTHORING_DOMAIN_INVENTORY_INVALID")
+  // Artifacts contain scalar fields only. Preserve all fields, sorted keys, array order, UTF-8, and no LF.
+  const originalArtifacts = decode(Schema.Array(Schema.Record(Schema.String, Schema.Unknown)), parsedDomain.artifacts, "AUTHORING_ORIGINAL_ARTIFACTS_INVALID")
+  const canonicalInventory = Buffer.from(JSON.stringify(originalArtifacts.map((item) => Object.fromEntries(Object.entries(item).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)))))
+  requireAuthoring(domain.inventoryDigest.sha256 === inventoryDigest && sha256(canonicalInventory) === inventoryDigest && canonicalInventory.length === domain.inventoryDigest.utf8ByteLength, "AUTHORING_INVENTORY_DIGEST_MISMATCH")
+  requireAuthoring(domain.nativeAssignmentBoundary.projectRoot === project && domain.artifacts.length > 0 && domain.artifacts.length <= 128 && new Set(domain.artifacts.map((item) => item.id)).size === domain.artifacts.length, "AUTHORING_DOMAIN_BOUNDARY_OR_MEMBERSHIP_INVALID")
+  const inventory = await Promise.all(domain.artifacts.map(async (item) => {
+    requireAuthoring(/^[a-f0-9]{64}$/.test(item.sha256) && item.utf8ByteLength >= 0, "AUTHORING_DOMAIN_DIGEST_INVALID")
+    const bytes = await read(await canonical(item.path, false))
+    requireAuthoring(bytes.length === item.utf8ByteLength && sha256(bytes) === item.sha256 && Buffer.from(new TextDecoder("utf-8", { fatal: true }).decode(bytes)).equals(bytes), "AUTHORING_DOMAIN_BYTES_CHANGED")
+    requireAuthoring(!item.baselineGitBlobSha1 || (item.matchesBaselineBlob === true && blob(bytes) === item.baselineGitBlobSha1), "AUTHORING_BASELINE_ARTIFACT_BLOB_MISMATCH")
+    return { ...item, bytes }
   }))
-  if (args.run) {
-    requireAuthoring(pinsAvailable, "AUTHORING_LEGACY_SOURCE_PINS_REQUIRED")
-    // No CLI --agent walt: RunCommand.localAgent rejects a subagent and falls back.
-    // A prompt alone cannot constrain Maestro's Task writePaths or attest native identity before its first model call.
-    throw new AuthoringError("AUTHORING_TRUSTED_NATIVE_TASK_PREFLIGHT_UNBOUND")
-  }
-  const demand = await read(await canonical(join(pilot, "demand.txt"), false))
-  requireAuthoring(demand.length > 0, "AUTHORING_DEMAND_EMPTY")
-  const domainBytes = await read(await canonical(join(pilot, "DOMAIN-SOURCE.json"), false))
-  decode(Schema.Record(Schema.String, Schema.Unknown), json(Buffer.from(domainBytes).toString("utf8")), "AUTHORING_DOMAIN_SOURCE_NOT_OBJECT")
-  const instructions = await read(await canonical(join(pilot, "AUTHORING-RUN-INPUT.md"), false))
+  const demand = inventory.find((item) => item.id === "fresh-demand")
+  const handoff = inventory.find((item) => item.id === "fresh-handoff")
+  requireAuthoring(demand?.path === join(pilot, "demand.txt") && handoff, "AUTHORING_OPERATIVE_INPUT_MISSING")
+  const instructions = await read(await canonical(join(packet, "AUTHORING-RUN-INPUT.md"), false))
   requireAuthoring(instructions.length > 0, "AUTHORING_RUN_INPUT_EMPTY")
-  // Schema inspection only: no JWT-claim inference, issued registration, Siwc calls, login or refresh.
-  const store = decode(Schema.Record(Schema.String, Schema.Unknown), json(Buffer.from(await read(source, true)).toString("utf8")), "AUTHORING_LEGACY_AUTH_STORE_INVALID")
-  const value = decode(Schema.Record(Schema.String, Schema.Unknown), store.openai, "AUTHORING_OPENAI_AUTH_MISSING")
-  requireAuthoring(!Object.hasOwn(value, "metadata"), "AUTHORING_LEGACY_AUTH_METADATA_MUST_BE_ABSENT")
-  const auth = decode(Schema.Struct({ type: Schema.Literal("oauth"), access: Schema.NonEmptyString, refresh: Schema.NonEmptyString,
-    expires: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)), accountId: Schema.optional(Schema.String), enterpriseUrl: Schema.optional(Schema.String),
-  }), value, "AUTHORING_LEGACY_OAUTH_INVALID")
-  requireAuthoring(auth.expires > Date.now() + 15 * 60_000, "AUTHORING_LEGACY_AUTH_EXPIRED_OR_TOO_SOON")
+  requireAuthoring(await lstat(join(project, "proposal.md")).then(() => false, (error: NodeJS.ErrnoException) => error.code === "ENOENT"), "AUTHORING_ORIGINAL_PROPOSAL_ALREADY_EXISTS")
   process.umask(0o077)
   const runtime = await mkdtemp(join(pilot, "ordinary-authoring-"))
   const env: Record<string, string> = Object.fromEntries(["HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "TMPDIR"].map((key) => [key, join(runtime, key.toLowerCase())]))
   await Promise.all(Object.values(env).map((path) => mkdir(path, { mode: 0o700 })))
   Object.assign(env, { ORCHESTRA_DB: join(runtime, "session.db"), ORCHESTRA_CONFIG: join(runtime, "config.json"),
-    ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_LEGACY_CODEX_READONLY: "1", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
-  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", permission: { "*": "deny", task: { "*": "deny", walt: "allow" } } }) + "\n", { flag: "wx", mode: 0o600 })
-  const report = { schema: 1, phase: "prepared-blocked", runtime, candidate, head, project, model,
-    sourceHashes, nativeSourceHashes, legacySourceHashes,
-    inputDocuments: [{ file: "demand.txt", sha256: sha256(demand) }, { file: "DOMAIN-SOURCE.json", sha256: sha256(domainBytes) }, { file: "AUTHORING-RUN-INPUT.md", sha256: sha256(instructions) }],
-    env, blockedBy: [...(!pinsAvailable ? ["AUTHORING_LEGACY_SOURCE_PINS_REQUIRED"] : []), "AUTHORING_TRUSTED_NATIVE_TASK_PREFLIGHT_UNBOUND", "AUTHORING_DOMAIN_INVENTORY_CONTRACT_UNBOUND"],
-    plannedExecutionBudget: { deadlineMs: 10 * 60_000, stdoutBytes: 32 * 1024 * 1024 },
-    runtimeNativeAttested: false, modelExecuted: false, semanticJudgment: "not-performed", proposalSha256: null,
-  }
-  // No auth values or auth-source digest enter configuration, report, process environment, stdout or errors.
+    ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_LEGACY_CODEX_READONLY: "1", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
+  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", walt: "allow" } } } }) + "\n", { flag: "wx", mode: 0o600 })
+  const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`
+  const job = { candidate, project, model, assignment }
+  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, consumerReview, inventoryDigest,
+    packetPointer: join(packet, "DOMAIN-SOURCE.json"), packetSha256: sha256(domainBytes), runInputSha256: sha256(instructions),
+    inventory: inventory.map(({ bytes, ...item }) => item), deadlineMs: deadline, stdoutBytes: 32 * 1024 * 1024, semanticJudgment: "not-performed" }
   await writeFile(join(runtime, "prepared.json"), JSON.stringify(report) + "\n", { flag: "wx", mode: 0o600 })
-  console.log(JSON.stringify({ code: "AUTHORING_PREPARED_BLOCKED", runtime, blockedBy: report.blockedBy }))
+  if (!args.run) { console.log(JSON.stringify({ code: "AUTHORING_PREPARED", runtime, head, consumerReview })); return }
+  requireAuthoring(consumerReview.status === "approved", "AUTHORING_REVIEWED_CONSUMER_SUCCESSOR_REQUIRED")
+  // Pure legacy shape inspection; never call Siwc, decode JWT claims, login, refresh, or infer issued scopes.
+  const store = decode(Schema.Record(Schema.String, Schema.Unknown), json(Buffer.from(await read(source, true)).toString("utf8")), "AUTHORING_LEGACY_AUTH_STORE_INVALID")
+  const value = decode(Schema.Record(Schema.String, Schema.Unknown), store.openai, "AUTHORING_OPENAI_AUTH_MISSING")
+  requireAuthoring(!Object.hasOwn(value, "metadata"), "AUTHORING_LEGACY_AUTH_METADATA_MUST_BE_ABSENT")
+  const auth = decode(Schema.Struct({ type: Schema.Literal("oauth"), access: Schema.NonEmptyString, refresh: Schema.NonEmptyString,
+    expires: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)), accountId: Schema.optional(Schema.String) }), value, "AUTHORING_LEGACY_OAUTH_INVALID")
+  requireAuthoring(auth.expires > Date.now() + 15 * 60_000, "AUTHORING_LEGACY_AUTH_EXPIRED_OR_TOO_SOON")
+  const secrets = [auth.access, auth.refresh].flatMap((text) => [text, JSON.stringify(text).slice(1, -1), encodeURIComponent(text), Buffer.from(text).toString("base64")]).sort((a, b) => b.length - a.length)
+  const redact = (text: string) => secrets.reduce((output, secret) => output.split(secret).join("[REDACTED]"), text)
+  const entry = join(runtime, "initializer.ts")
+  await writeFile(entry, initializer(job), { flag: "wx", mode: 0o600 })
+  const prompt = `Use exactly one existing foreground Task with subagent_type=walt, model=${model}, writePaths=["proposal.md"], and the exact following prompt. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch.\n${assignment}`
+  const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH, ORCHESTRA_AUTH_CONTENT: JSON.stringify({ openai: auth }) }, prompt)
+  const records = output.text.split("\n").flatMap<{ type: string; sessionID: string; projectID?: string; worktree?: string; timestamp?: number }>((line) => {
+    const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
+    if (Option.isNone(parsed)) return []
+    const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.String }))(parsed.value)
+    if (Option.isNone(event)) return []
+    if (event.value.type === "authoring_native_preflight") return [decode(Schema.Struct({ type: Schema.String, sessionID: Schema.String, projectID: Schema.String, worktree: Schema.String }), parsed.value, "AUTHORING_PREFLIGHT_RECORD_INVALID")]
+    const header = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literals(["tool_use", "step_start", "step_finish", "text", "error", "retry"]), sessionID: Schema.String, timestamp: Schema.Number }))(parsed.value)
+    return Option.isSome(header) ? [header.value] : []
+  })
+  await writeFile(join(runtime, "events.jsonl"), records.map((item) => redact(JSON.stringify(item))).join("\n") + "\n", { flag: "wx", mode: 0o600 })
+  await writeFile(join(runtime, "status.txt"), output.code ?? "AUTHORING_CHILD_COMPLETED", { flag: "wx", mode: 0o600 })
+  requireAuthoring(!output.code, output.code ?? "AUTHORING_CHILD_FAILED_STDERR_WITHHELD")
+  const preflight = records.filter((item) => item.type === "authoring_native_preflight")
+  requireAuthoring(preflight.length === 1, "AUTHORING_NATIVE_PREFLIGHT_NOT_OBSERVED")
+  requireAuthoring(preflight[0].worktree, "AUTHORING_ACTUAL_WORKTREE_NOT_OBSERVED")
+  const evidence = await verifyDatabase(env.ORCHESTRA_DB, preflight[0].sessionID, project, model, assignment, preflight[0].worktree)
+  const result = evidence.provenance
+  const proposal = await read(await canonical(join(project, "proposal.md"), false))
+  const returnedCard = Buffer.from(evidence.returnedText)
+  requireAuthoring(proposal.length > 0 && returnedCard.length > 0 && !secrets.some((secret) => Buffer.from(proposal).includes(Buffer.from(secret)) || returnedCard.includes(Buffer.from(secret))), "AUTHORING_ORIGINAL_OUTPUT_EMPTY_OR_SECRET_BEARING")
+  const returnedCardPath = join(runtime, "returned-assistant.txt")
+  await writeFile(returnedCardPath, returnedCard, { flag: "wx", mode: 0o600 })
+  await Promise.all(inventory.map(async (item) => requireAuthoring(sha256(await read(item.path)) === item.sha256, "AUTHORING_FROZEN_INPUT_CHANGED_DURING_RUN")))
+  requireAuthoring(await gitHead(candidate) === head, "AUTHORING_CANDIDATE_CHANGED_DURING_RUN")
+  const receipt = { ...report, ...result, proposalPath: join(project, "proposal.md"), proposalBytes: proposal.length, proposalSha256: sha256(proposal), returnedCardPath, returnedCardBytes: returnedCard.length, returnedCardSha256: sha256(returnedCard) }
+  await writeFile(join(runtime, "report.json"), JSON.stringify(receipt) + "\n", { flag: "wx", mode: 0o600 })
+  console.log(JSON.stringify({ code: "AUTHORING_RETURN_OBSERVED_NOT_DOMAIN_JUDGMENT", runtime, ...result, proposalSha256: receipt.proposalSha256 }))
 }
 
 async function canonical(value: string | undefined, directory: boolean) {
@@ -122,7 +155,6 @@ async function canonical(value: string | undefined, directory: boolean) {
   requireAuthoring((directory ? info.isDirectory() : info.isFile()) && info.uid === process.getuid?.() && !(info.mode & 0o022), "AUTHORING_PATH_NOT_OWNED_OR_REGULAR")
   return path
 }
-
 async function read(path: string, privateMode = false) {
   const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW)
   try {
@@ -134,13 +166,164 @@ async function read(path: string, privateMode = false) {
     return bytes
   } finally { await handle.close() }
 }
-
 async function gitHead(candidate: string) {
-  const child = Bun.spawn(["git", "--no-optional-locks", "-C", candidate, "rev-parse", "HEAD"], {
-    env: { PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" }, stdout: "pipe", stderr: "ignore",
-  })
+  const child = Bun.spawn(["git", "--no-optional-locks", "-C", candidate, "rev-parse", "HEAD"], { env: { PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" }, stdout: "pipe", stderr: "ignore" })
   const timer = setTimeout(() => child.kill("SIGKILL"), 10_000)
   const output = await Promise.all([child.exited, new Response(child.stdout).text()]).finally(() => clearTimeout(timer))
   requireAuthoring(output[0] === 0, "AUTHORING_CANDIDATE_GIT_UNAVAILABLE")
   return output[1].trim()
+}
+async function launch(entry: string, candidate: string, env: Record<string, string | undefined>, prompt: string) {
+  const child = Bun.spawn([process.execPath, entry], { cwd: join(candidate, "packages/orchestra"), env, stdin: new Blob([prompt]).stream(), stdout: "pipe", stderr: "pipe" })
+  const chunks: Uint8Array[] = []
+  const state: { bytes: number; failure?: string } = { bytes: 0 }
+  const readers = [child.stdout.getReader(), child.stderr.getReader()]
+  const stop = () => { if (child.exitCode === null) child.kill("SIGKILL"); readers.forEach((reader) => { void reader.cancel().catch(() => undefined) }) }
+  const abort = () => { state.failure = "AUTHORING_INTERRUPTED"; stop() }
+  process.once("SIGINT", abort); process.once("SIGTERM", abort)
+  const timer = setTimeout(() => { state.failure = "AUTHORING_DEADLINE"; stop() }, deadline)
+  try {
+    const drains = readers.map(async (reader, index) => {
+      while (true) {
+        const part = await reader.read()
+        if (part.done) return
+        if (index !== 0) continue
+        state.bytes += part.value.length
+        if (state.bytes > 32 * 1024 * 1024) { state.failure = "AUTHORING_OUTPUT_LIMIT"; stop(); return }
+        chunks.push(part.value)
+      }
+    })
+    const [status] = await Promise.all([child.exited, ...drains])
+    return { text: Buffer.concat(chunks).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
+  } finally { clearTimeout(timer); stop(); await child.exited; process.removeListener("SIGINT", abort); process.removeListener("SIGTERM", abort) }
+}
+
+function initializer(job: { candidate: string; project: string; model: string; assignment: string }) {
+  // Adapter uses the real candidate runtime and CLI command in one owned process; restores every wrapped method.
+  return `import { createRequire } from "node:module"
+import { relative } from "node:path"
+const job = ${JSON.stringify(job)}
+const { Effect } = await import(createRequire(job.candidate + "/package.json").resolve("effect"))
+const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
+const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
+const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
+const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
+const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
+const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
+const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
+const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats.ts")
+const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
+const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
+const { RunCommand } = await import(job.candidate + "/packages/orchestra/src/cli/cmd/run.ts")
+type TaskPromptOps = import(${JSON.stringify(job.candidate + "/packages/orchestra/src/tool/task.ts")}).TaskPromptOps
+function requireFact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
+function isOps(value: unknown): value is TaskPromptOps {
+  return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function" && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function"
+}
+const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
+  const store = yield* InstanceStore.Service
+  const ctx = yield* store.load({ directory: job.project })
+  const services = yield* Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    const sessions = yield* Session.Service
+    const prompts = yield* SessionPrompt.Service
+    const registry = yield* ToolRegistry.Service
+    const maestro = yield* agents.get("maestro")
+    const walt = yield* agents.get("walt")
+    const named = yield* registry.named()
+    requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && walt.id === "walt" && walt.native === true && walt.mode === "subagent" && Seats.find("walt")?.writeRoots === true && named.task.id === "task", "AUTHORING_NATIVE_REGISTRY_MISMATCH")
+    const denies = [{ permission: "edit", pattern: "*", action: "deny" as const }, { permission: "bash", pattern: "*", action: "deny" as const }]
+    const parent = yield* sessions.create({ agent: "maestro", title: "ordinary-walt-authoring", permission: denies })
+    yield* sessions.setPermission({ sessionID: parent.id, permission: denies })
+    return { agents, sessions, prompts, task: named.task, parent, denies }
+  }).pipe(Effect.provideService(InstanceRef, ctx))
+  return { store, ctx, ...services }
+}))
+const state = { calls: 0, parentChecks: 0, childChecks: 0 }
+const taskExecute = loaded.task.execute
+const realPrompt = loaded.prompts.prompt
+const proposalPattern = relative(loaded.ctx.worktree, job.project + "/proposal.md").split(String.fromCharCode(92)).join("/")
+const contextPattern = relative(loaded.ctx.worktree, job.project + "/README.md").split(String.fromCharCode(92)).join("/")
+const parentCheck = Effect.gen(function* () {
+  const maestro = yield* loaded.agents.get("maestro")
+  const walt = yield* loaded.agents.get("walt")
+  const parent = yield* loaded.sessions.get(loaded.parent.id)
+  requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && walt.id === "walt" && walt.native === true && walt.mode === "subagent" && parent.agent === "maestro" && parent.directory === job.project && !parent.parentID, "AUTHORING_PRE_MODEL_IDENTITY_CHANGED")
+  requireFact(Permission.evaluate("edit", "README.md", parent.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", parent.permission ?? []).action === "deny", "AUTHORING_PARENT_SESSION_PERMISSION_CHANGED")
+  state.parentChecks++
+}).pipe(Effect.provideService(InstanceRef, loaded.ctx))
+loaded.prompts.prompt = (request) => PromptGuard.provide(realPrompt(request), loaded.parent.id, parentCheck)
+loaded.task.execute = (params, ctx) => Effect.gen(function* () {
+  state.calls++
+  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "walt" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === '["proposal.md"]' && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
+  const ops = ctx.extra?.promptOps
+  requireFact(isOps(ops), "AUTHORING_REAL_TASK_PROMPT_OPS_MISSING")
+  return yield* taskExecute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
+    prompt: (request, options) => Effect.gen(function* () {
+      // Bind the inherited deny + exact allowance before prompt admission/tool selection, not after tools are built.
+      const child = yield* loaded.sessions.get(request.sessionID)
+      requireFact(child.parentID === loaded.parent.id && child.agent === "walt" && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
+      yield* loaded.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []), { permission: "edit", pattern: proposalPattern, action: "allow" }] })
+      const beforeModel = Effect.gen(function* () {
+        const walt = yield* loaded.agents.get("walt")
+        const child = yield* loaded.sessions.get(request.sessionID)
+        requireFact(walt.id === "walt" && walt.native === true && walt.mode === "subagent" && request.agent === "walt" && child.agent === "walt" && child.parentID === loaded.parent.id && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
+        const bound = yield* loaded.sessions.get(child.id)
+        requireFact(Permission.evaluate("edit", proposalPattern, walt.permission, bound.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, walt.permission, bound.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", walt.permission, bound.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
+        state.childChecks++
+      }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
+      return yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, beforeModel], { discard: true }) })
+    }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
+  } } })
+}).pipe(Effect.provideService(InstanceRef, loaded.ctx))
+try {
+  console.log(JSON.stringify({ type: "authoring_native_preflight", sessionID: loaded.parent.id, projectID: loaded.parent.projectID, worktree: loaded.ctx.worktree }))
+  requireFact(RunCommand.handler, "AUTHORING_REAL_CLI_HANDLER_MISSING")
+  await RunCommand.handler({ $0: "orchestra", _: ["run"], message: [], command: undefined, continue: false, session: loaded.parent.id, fork: false,
+    model: job.model, agent: "maestro", format: "json", file: undefined, title: undefined, attach: undefined, password: undefined, username: undefined,
+    dir: job.project, port: undefined, variant: undefined, thinking: false, mini: false, interactive: false, replay: undefined,
+    "replay-limit": undefined, replayLimit: undefined, auto: false, yolo: false, "dangerously-skip-permissions": false, dangerouslySkipPermissions: false, demo: false })
+  requireFact(state.calls === 1 && state.parentChecks > 0 && state.childChecks > 0, "AUTHORING_EXECUTION_GUARDS_NOT_OBSERVED")
+} catch (error) {
+  console.error(error instanceof Error && /^AUTHORING_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_OR_NATIVE_RUN_FAILED")
+  process.exitCode = 1
+} finally {
+  loaded.task.execute = taskExecute
+  loaded.prompts.prompt = realPrompt
+  await AppRuntime.dispose()
+}
+`
+}
+
+async function verifyDatabase(path: string, parentID: string, project: string, model: string, assignment: string, worktree: string) {
+  await canonical(path, false)
+  const db = new Database(path, { readonly: true, strict: true })
+  try {
+    const sessionRow = Schema.Struct({ id: Schema.String, project_id: Schema.String, parent_id: Schema.NullOr(Schema.String), directory: Schema.String, agent: Schema.NullOr(Schema.String), permission: Schema.String })
+    const parent = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(parentID), "AUTHORING_PARENT_DB_MISSING")
+    requireAuthoring(parent.parent_id === null && parent.directory === project && parent.agent === "maestro", "AUTHORING_PARENT_DB_BINDING_MISMATCH")
+    const rows = decode(Schema.Array(Schema.Struct({ id: Schema.String, message_id: Schema.String, data: Schema.String, message: Schema.String })), db.query("SELECT p.id,p.message_id,p.data,m.data AS message FROM part p JOIN message m ON m.id=p.message_id WHERE p.session_id=? AND m.session_id=? AND json_extract(p.data,'$.type')='tool' AND json_extract(p.data,'$.tool')='task'").all(parentID, parentID), "AUTHORING_TASK_DB_SCHEMA_INVALID")
+    requireAuthoring(rows.length === 1, "AUTHORING_TASK_DB_MISSING_OR_MULTIPLE")
+    const row = rows[0]
+    const task = decode(Schema.Struct({ callID: Schema.String, state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Record(Schema.String, Schema.Unknown), metadata: Schema.Struct({ sessionId: Schema.String, parentSessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String, author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }), writeRoots: Schema.Array(Schema.String) }) }) }) }), json(row.data), "AUTHORING_CAPTURED_TASK_RETURN_MISSING")
+    const author = task.state.metadata.workResult.author
+    requireAuthoring(task.state.input.subagent_type === "walt" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === '["proposal.md"]' && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === '["proposal.md"]', "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
+    decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro") }), json(row.message), "AUTHORING_TASK_CALLER_NOT_MAESTRO")
+    const child = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(author.executionSessionID), "AUTHORING_CHILD_DB_MISSING")
+    requireAuthoring(child.parent_id === parentID && child.project_id === parent.project_id && child.directory === project && child.agent === "walt", "AUTHORING_CHILD_DB_BINDING_MISMATCH")
+    const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(child.permission), "AUTHORING_CHILD_RULES_INVALID")
+    const roots = rules.filter((rule) => rule.permission === "tool_safety_write_root" && rule.action === "allow").map((rule) => rule.pattern)
+    const proposalPattern = relative(worktree, join(project, "proposal.md")).replaceAll("\\", "/")
+    requireAuthoring(JSON.stringify(roots) === JSON.stringify([join(project, "proposal.md")]) && rules.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "deny") && rules.findLast((rule) => rule.permission === "edit" && ["*", proposalPattern].includes(rule.pattern))?.action === "allow" && rules.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "deny"), "AUTHORING_PERSISTED_CHILD_SCOPE_MISMATCH")
+    const returned = decode(Schema.Struct({ session_id: Schema.String, data: Schema.String }), db.query("SELECT session_id,data FROM message WHERE id=?").get(author.messageID), "AUTHORING_CAPTURED_ASSISTANT_DB_MISSING")
+    const info = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("walt"), providerID: Schema.String, modelID: Schema.String }), json(returned.data), "AUTHORING_CAPTURED_ASSISTANT_NOT_WALT")
+    requireAuthoring(returned.session_id === child.id && `${info.providerID}/${info.modelID}` === model, "AUTHORING_CAPTURED_ASSISTANT_MODEL_OR_SESSION_MISMATCH")
+    const bindings = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM event WHERE aggregate_id=? AND type='maestro.task.bound.1'").all(child.id), "AUTHORING_LOGICAL_TASK_DB_INVALID")
+    requireAuthoring(bindings.length === 1, "AUTHORING_LOGICAL_TASK_MISSING_OR_AMBIGUOUS")
+    const bound = decode(Schema.Struct({ taskId: Schema.String, memberID: Schema.Literal("walt"), projectID: Schema.String, executionSessionID: Schema.String, authoritySessionID: Schema.String, source: Schema.Literal("host") }), json(bindings[0].data), "AUTHORING_ORDINARY_TASK_BINDING_INVALID")
+    requireAuthoring(bound.taskId === task.state.metadata.workResult.taskId && bound.executionSessionID === child.id && bound.authoritySessionID === parentID && bound.projectID === parent.project_id, "AUTHORING_LOGICAL_TASK_BINDING_MISMATCH")
+    const texts = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, author.messageID), "AUTHORING_CAPTURED_ASSISTANT_TEXT_MISSING")
+    const returnedText = texts.map((item) => decode(Schema.Struct({ type: Schema.Literal("text"), text: Schema.String }), json(item.data), "AUTHORING_CAPTURED_TEXT_INVALID").text).join("\n")
+    return { provenance: { parentSessionID: parentID, parentMessageID: row.message_id, parentCallID: task.callID, childSessionID: child.id, projectID: child.project_id, logicalTaskID: bound.taskId, returnedAssistantID: author.messageID, nativeMemberID: child.agent }, returnedText }
+  } finally { db.close() }
 }
