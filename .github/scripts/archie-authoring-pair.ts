@@ -52,7 +52,11 @@ export function requireSecretFree(value: unknown, secrets: readonly string[], de
   requireFact(!serializedEvidence(value, secrets, decodeJson).receipt.redacted, "PAIR_MODEL_INPUT_SECRET_BEARING")
 }
 export function serializedEvidence(value: unknown, secrets: readonly string[], decodeJson?: JsonDecoder) {
-  const original = JSON.stringify(value)
+  const original = (() => {
+    try { return JSON.stringify(value) }
+    catch { throw new PairError("PAIR_EVIDENCE_NOT_SERIALIZABLE") }
+  })()
+  requireFact(typeof original === "string", "PAIR_EVIDENCE_NOT_SERIALIZABLE")
   const redact = (text: string) => secrets.reduce((result, secret) => result.split(secret).join(""), text)
   const walk = (item: unknown): unknown => {
     if (typeof item === "string") {
@@ -73,6 +77,13 @@ export function serializedEvidence(value: unknown, secrets: readonly string[], d
   return { text, receipt: { redacted: text !== original + "\n", secretScanPerformed: secrets.length > 0, replacement: "empty-string",
     originalSha256: sha256(Buffer.from(original + "\n")), originalUtf8ByteLength: Buffer.byteLength(original + "\n"),
     writtenSha256: sha256(Buffer.from(text)), writtenUtf8ByteLength: Buffer.byteLength(text), originalDatabase: "retained-unmodified" } }
+}
+// Model-visible tool view only: provider tool objects carry closures and SDK internals that need not serialize.
+export async function modelToolProjection(tools: Record<string, unknown>) {
+  return Promise.all(Object.entries(tools).map(async ([name, tool]) => {
+    requireFact(tool && typeof tool === "object" && "inputSchema" in tool && tool.inputSchema && typeof tool.inputSchema === "object" && "jsonSchema" in tool.inputSchema, "PAIR_MODEL_TOOL_SCHEMA_UNAVAILABLE")
+    return { name, description: "description" in tool ? tool.description : undefined, schema: await tool.inputSchema.jsonSchema }
+  }))
 }
 export async function saveEvidence(path: string, value: unknown, secrets: readonly string[], decodeJson?: JsonDecoder) {
   const serialized = serializedEvidence(value, secrets, decodeJson)
@@ -129,7 +140,7 @@ export async function stageInventory(project: string, expected: readonly { file:
   return entries.map((entry) => entry.name).sort()
 }
 export function requireReadBoundary(input: { worktree: string; allowed: readonly string[]; forbidden: readonly string[]; operations: readonly string[];
-  evaluate: (permission: string, pattern: string) => string; tools?: readonly string[]; operationGrants: readonly { permission: string; pattern: string }[] }) {
+  evaluate: (permission: string, pattern: string) => string; tools: readonly string[]; operationGrants: readonly { permission: string; pattern: string }[] }) {
   requireFact(input.allowed.length > 0 && input.forbidden.length > 0 && input.operations.length > 0, "PAIR_BOUNDARY_CHECK_EMPTY")
   input.allowed.forEach((path) => requireFact(input.evaluate("read", relative(input.worktree, path).replaceAll("\\", "/")) === "allow", "PAIR_PINNED_READ_GRANT_MISSING"))
   input.forbidden.forEach((path) => requireFact(input.evaluate("read", relative(input.worktree, path).replaceAll("\\", "/")) === "deny", "PAIR_PRIVATE_READ_BOUNDARY_BYPASS"))
@@ -141,10 +152,19 @@ export function requireReadBoundary(input: { worktree: string; allowed: readonly
     requireFact(input.evaluate(permission, operation) === "allow", "PAIR_NATIVE_METHOD_GRANT_MISSING")))
   methods.forEach((permission) => requireFact(input.evaluate(permission, "workflow-execute") === "deny" && input.evaluate(permission, "*") === "deny", "PAIR_WORKFLOW_PERMISSION_BYPASS"))
   requireFact(input.operationGrants.every((grant) => methods.includes(grant.permission) && input.operations.includes(grant.pattern)), "PAIR_NATIVE_OPERATION_GRANT_BYPASS")
-  if (input.tools) requireFact(input.tools.every((tool) => ["read", "edit", "write", "apply_patch", "skill", "maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"].includes(tool)), "PAIR_NATIVE_TOOL_SURFACE_BYPASS")
+  requireFact(input.tools.length > 0 && input.tools.every((tool) => ["read", "edit", "write", "apply_patch", "skill", "maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"].includes(tool)), "PAIR_NATIVE_TOOL_SURFACE_BYPASS")
 }
 
-export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string) {
+export function requireStageObserved(observed: { calls: number; checks: number; turns: number; result?: unknown }) {
+  requireFact(observed.calls === 1 && observed.checks > 0 && observed.turns > 0 && observed.result, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+}
+// Native retries re-stream the same assistant message, so several records may name one message; none may be missing or foreign.
+export function requireTurnBoundaries(messageIDs: readonly string[], records: readonly { assistantMessageID: string; tools: readonly string[] }[]) {
+  requireFact(messageIDs.length > 0 && messageIDs.every((id) => records.some((record) => record.assistantMessageID === id)), "PAIR_PROVIDER_TURN_BOUNDARY_MISSING")
+  requireFact(records.every((record) => record.tools.length > 0 && messageIDs.includes(record.assistantMessageID)), "PAIR_PROVIDER_TURN_BOUNDARY_UNBOUND")
+}
+// The card may name the proposal relative to the dispatch base (as writePaths does) or to the child's project directory.
+export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string, base: string) {
   const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
   const { UpstreamResult } = await import(join(candidate, "packages/orchestra/src/maestro/upstream-result.ts"))
   const decoded = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.NonEmptyString,
@@ -158,7 +178,7 @@ export async function requireSuccessfulAuthoring(candidate: string, work: unknow
   requireFact(returned.value.parts.every((part) => part.type !== "tool" || (part.state && typeof part.state === "object" && "status" in part.state && part.state.status === "completed")), "PAIR_COMPLETED_ASSISTANT_TOOLS_REQUIRED")
   const text = returned.value.parts.filter((part) => part.type === "text").map((part) => part.text).join("\n")
   const card = UpstreamResult.parse(text)
-  requireFact(card && card.outcome === "done" && card.blockers.length === 0 && card.artifacts.some((artifact: { path?: string }) => artifact.path && resolve(dirname(proposal), artifact.path) === proposal), "PAIR_CANONICAL_PROPOSAL_CARD_REQUIRED")
+  requireFact(card && card.outcome === "done" && card.blockers.length === 0 && card.artifacts.some((artifact: { path?: string }) => artifact.path && [base, dirname(proposal)].some((root) => resolve(root, artifact.path ?? "") === proposal)), "PAIR_CANONICAL_PROPOSAL_CARD_REQUIRED")
   requireFact(decoded.value.author.messageID === returned.value.info.id && decoded.value.card.messageID === returned.value.info.id && decoded.value.author.executionSessionID === returned.value.info.sessionID
     && ["outcome", "artifacts", "blockers", "risks", "nextActions"].every((field) => JSON.stringify(Reflect.get(decoded.value, field)) === JSON.stringify(Reflect.get(card, field))), "PAIR_CANONICAL_WORK_RESULT_MISMATCH")
   return decoded.value
@@ -329,7 +349,7 @@ const requireCandidate = createRequire(job.candidate + "/packages/orchestra/pack
 const { Effect, ManagedRuntime, Option, Schema, Stream } = await import(requireCandidate.resolve("effect"))
 const driverPath = ${JSON.stringify(fileURLToPath(import.meta.url))}
 const driverSha256 = ${JSON.stringify(job.driverSha256)}
-const { secretForms, evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring } = await import(driverPath)
+const { secretForms, evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring, requireStageObserved, modelToolProjection } = await import(driverPath)
 const decodeJson = await evidenceDecoder(job.candidate)
 const authStore = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(process.env.ORCHESTRA_AUTH_CONTENT)
 fact(Option.isSome(authStore), "PAIR_AUTH_CONTENT_INVALID")
@@ -450,7 +470,7 @@ for (const arm of [job.arm]) {
     join(job.output, "session.db"), join(job.output, "config.json"), ${JSON.stringify(selectedAuth)}, ...["E", "P"].filter((other) => other !== arm).flatMap((other) => [join(job.output, "initializer-" + other + ".ts"), join(job.output, other, "project", "global.txt"), join(job.output, other, "project", "proposal.md"), ...job.packet.sources.map((source) => join(job.output, other, "project", source.file)),
       join(job.output, other), ...job.packet.stages.flatMap((_, index) => ["proposal.md", "native.json", "verified.json"].map((file) => join(job.output, other, "stage-" + (index + 1), file)))]),
     ...job.packet.sources.filter((source) => !revealed.has(source.id)).map((source) => join(project, source.file))]
-  const boundary = async (bound: { permission?: import(${JSON.stringify(join(job.candidate, "packages/core/src/v1/permission.ts"))}).PermissionV1.Ruleset }, tools?: string[]) => {
+  const boundary = async (bound: { permission?: import(${JSON.stringify(join(job.candidate, "packages/core/src/v1/permission.ts"))}).PermissionV1.Ruleset }, tools: string[]) => {
     requireArmTime(timing)
     await verifyInputs()
     const inventory = await stageInventory(project, expectedLocal())
@@ -460,18 +480,22 @@ for (const arm of [job.arm]) {
       operationGrants: [...services.archie.permission, ...(bound.permission ?? [])].filter((rule) => rule.action === "allow" && ["maestro_arsenal_describe", "maestro_arsenal_execute"].some((permission) => Wildcard.match(permission, rule.permission))),
       evaluate: (permission, path) => Permission.evaluate(permission, path, services.archie.permission, bound.permission ?? []).action, tools })
     job.assets.forEach((asset) => fact(Permission.evaluate("external_directory", join(dirname(asset.path), "*"), services.archie.permission, bound.permission ?? []).action === "allow", "PAIR_NATIVE_REFERENCE_EXTERNAL_GRANT_MISSING"))
-    state.checks++
     return inventory
   }
   const stream = services.llm.stream
   services.llm.stream = (input) => Stream.unwrap(Effect.gen(function* () {
     requireArmTime(timing)
-    requireSecretFree({ system: input.system, messages: input.messages, tools: input.tools, agentPrompt: input.agent.prompt }, secrets, decodeJson)
+    const toolView = yield* Effect.promise(() => modelToolProjection(input.tools))
+    requireSecretFree({ system: input.system, messages: input.messages, tools: toolView, agentPrompt: input.agent.prompt }, secrets, decodeJson)
     if (input.sessionID === state.child) {
+      // The processor persists the streamed assistant before calling stream; bind this turn to it and to this stage's prompt.
+      const stored = yield* services.sessions.messages({ sessionID: input.sessionID })
+      const assistant = stored.findLast((message) => message.info.role === "assistant" && message.info.parentID === state.childPromptID)
+      fact(input.user.id === state.childPromptID && assistant, "PAIR_PROVIDER_TURN_MESSAGE_UNBOUND")
       const bound = yield* services.sessions.get(input.sessionID)
       const inventory = yield* Effect.promise(() => boundary(bound, Object.keys(input.tools)))
       state.turns++
-      yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "provider-boundary-" + state.turns + ".json"), { checkedAt: Date.now(), timing, inventory, tools: Object.keys(input.tools), revealedSourceIDs: [...revealed], assets: job.assets, forbiddenPaths: blockedPaths() }))
+      yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "provider-boundary-" + state.turns + ".json"), { checkedAt: Date.now(), timing, assistantMessageID: assistant.info.id, inventory, tools: Object.keys(input.tools), revealedSourceIDs: [...revealed], assets: job.assets, forbiddenPaths: blockedPaths() }))
     }
     return stream(input)
   }).pipe(Effect.provideService(InstanceRef, placement)))
@@ -515,7 +539,8 @@ for (const arm of [job.arm]) {
             && Permission.evaluate("task", "archie", archie.permission, bound.permission ?? []).action === "deny"
             && Permission.evaluate("read", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "allow"
             && Permission.evaluate("read", relative(placement.worktree, job.packet.packetPath), archie.permission, bound.permission ?? []).action === "deny", "PAIR_CHILD_SCOPE_INVALID")
-          yield* Effect.promise(() => boundary(bound))
+          // Exposure, rule equality and tool surface are checked per provider turn by the stream wrapper, which runs before this.
+          state.checks++
         })
         const returned = yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, check], { discard: true }) })
         state.childReturned = returned
@@ -525,7 +550,7 @@ for (const arm of [job.arm]) {
     } } })
     yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "task-return.json"), result))
     const work = result.metadata.workResult
-    yield* Effect.promise(() => requireSuccessfulAuthoring(job.candidate, work, state.childReturned, proposal))
+    yield* Effect.promise(() => requireSuccessfulAuthoring(job.candidate, work, state.childReturned, proposal, base))
     fact(work && work.schema === "upstream-work-result-v1" && work.author?.memberId === "archie"
       && work.author.executionSessionID === state.child && work.author.messageID === work.card?.messageID
       && (!state.logical || state.logical === work.taskId), "PAIR_NATIVE_RETURN_BINDING_MISMATCH")
@@ -559,7 +584,8 @@ for (const arm of [job.arm]) {
       const returned = await run(services.prompts.prompt({ sessionID: services.parent.id, agent: "maestro", model: { providerID: "openai", modelID: "gpt-6.1-sol" }, parts: [{ type: "text", text: host }] }))
       await save(join(stageRoot, "parent-return.json"), returned)
       requireArmTime(timing)
-      fact(returned.info.role === "assistant" && !returned.info.error && state.calls === 1 && state.checks > 0 && state.result, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+      fact(returned.info.role === "assistant" && !returned.info.error, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+      requireStageObserved(state)
       const inputHashes = await verifyInputs()
       const bytes = await Bun.file(proposal).bytes()
       fact(bytes.length > 0 && (await realpath(proposal)) === proposal, "PAIR_PROPOSAL_MISSING_OR_ALIAS")
@@ -567,7 +593,7 @@ for (const arm of [job.arm]) {
       await writeFile(join(stageRoot, "proposal.md"), bytes, { flag: "wx", mode: 0o600 })
       await save(join(stageRoot, "native.json"), { arm, index, id: stage.id, parentSessionID: services.parent.id, parentMessageID: state.parentMessageID, callID: state.callID,
         childSessionID: state.child, childPromptMessageID: state.childPromptID, logicalTaskID: state.logical, worktree: placement.worktree, result: state.result, parentReturned: returned, proposalSha256: digest(bytes), proposalBytes: bytes.length, timing,
-        requestSha256: stage.request.sha256, assignment: state.prompt, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed], inputHashes, checks: state.checks })
+        requestSha256: stage.request.sha256, assignment: state.prompt, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed], inputHashes, checks: state.checks, turns: state.turns, dispatchBase: base })
       emit({ type: "pair_stage_end", arm, index, childSessionID: state.child, logicalTaskID: state.logical })
     }
   } finally { services.task.execute = execute; services.llm.stream = stream; await save(join(root, "arm-timing.json"), { ...timing, endedAt: Date.now(), elapsedMs: Date.now() - timing.startedAt }) }
@@ -785,7 +811,7 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         requireFact(!secrets.some((secret) => nativeBytes.includes(Buffer.from(secret))), "PAIR_RAW_RESULT_SECRET_BEARING")
         const native = decode(Schema.Struct({ parentSessionID: Schema.String, parentMessageID: Schema.String, callID: Schema.String,
           childSessionID: Schema.String, logicalTaskID: Schema.String, worktree: Schema.String, assignment: Schema.String, assignmentSha256: Schema.String,
-          childPromptMessageID: Schema.String, requestSha256: Schema.String, proposalSha256: Schema.String, proposalBytes: Schema.Int, revealedSourceIDs: Schema.Array(Schema.String) }), json(utf8(nativeBytes)), "PAIR_STAGE_RECEIPT_INVALID")
+          childPromptMessageID: Schema.String, turns: Schema.Int, dispatchBase: Schema.String, requestSha256: Schema.String, proposalSha256: Schema.String, proposalBytes: Schema.Int, revealedSourceIDs: Schema.Array(Schema.String) }), json(utf8(nativeBytes)), "PAIR_STAGE_RECEIPT_INVALID")
         requireFact(native.requestSha256 === stage.request.sha256 && native.assignment.endsWith(stage.request.text) && native.assignmentSha256 === sha256(Buffer.from(native.assignment)), "PAIR_STAGE_REQUEST_CHANGED")
         const parent = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.parentSessionID), "PAIR_PARENT_DB_MISSING")
         const child = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.childSessionID), "PAIR_CHILD_DB_MISSING")
@@ -822,7 +848,7 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         await saveEvidence(join(root, "stored-assistant-evidence.json"), assistant, secrets, decodeJson)
         requireFact(info.parentID === native.childPromptMessageID, "PAIR_STORED_CHILD_PROMPT_ID_MISMATCH")
         await requireStoredPrompt(candidate, db, child.id, info.parentID, native.assignment)
-        await requireSuccessfulAuthoring(candidate, decode(Schema.Struct({ state: Schema.Struct({ metadata: Schema.Struct({ workResult: Schema.Unknown }) }) }), json(taskRows[0].data), "PAIR_STORED_WORK_RESULT_MISSING").state.metadata.workResult, assistant, proposalPath)
+        await requireSuccessfulAuthoring(candidate, decode(Schema.Struct({ state: Schema.Struct({ metadata: Schema.Struct({ workResult: Schema.Unknown }) }) }), json(taskRows[0].data), "PAIR_STORED_WORK_RESULT_MISSING").state.metadata.workResult, assistant, proposalPath, native.dispatchBase)
         const texts = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, work.author.messageID), "PAIR_ASSISTANT_TEXT_ROWS_INVALID")
         const returned = texts.map((row) => decode(Schema.Struct({ text: Schema.String }), json(row.data), "PAIR_ASSISTANT_TEXT_INVALID").text).join("\n")
         requireFact(returned.length > 0 && !secrets.some((secret) => returned.includes(secret)), "PAIR_ASSISTANT_EMPTY_OR_SECRET_BEARING")
@@ -833,6 +859,10 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         // Collect every stored provider step belonging to this child prompt, including tool turns.
         const messages = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM message WHERE session_id=? AND json_extract(data,'$.role')='assistant' AND json_extract(data,'$.parentID')=? ORDER BY id").all(child.id, info.parentID), "PAIR_USAGE_MESSAGE_ROWS_INVALID")
         requireFact(messages.length > 0, "PAIR_STAGE_PROVIDER_MESSAGES_MISSING")
+        const boundaries = await Promise.all((await readdir(root)).filter((file) => /^provider-boundary-\d+\.json$/.test(file)).map(async (file) =>
+          decode(Schema.Struct({ assistantMessageID: Schema.String, tools: Schema.Array(Schema.String) }), json(utf8(await read(await canonical(join(root, file))))), "PAIR_PROVIDER_BOUNDARY_RECORD_INVALID")))
+        requireFact(boundaries.length === native.turns, "PAIR_PROVIDER_BOUNDARY_RECORD_COUNT_MISMATCH")
+        requireTurnBoundaries(messages.map((row) => row.id), boundaries)
         const steps = messages.flatMap((msg) => decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(child.id, msg.id), "PAIR_STEP_ROWS_INVALID").map((row) => {
           const stored = decode(Schema.Record(Schema.String, Schema.Unknown), json(row.data), "PAIR_STEP_DATA_INVALID")
           const tokens = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(stored.tokens)
