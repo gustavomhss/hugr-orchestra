@@ -76,6 +76,7 @@ export function mount(patch: Partial<LeanViewProps> = {}, locale: "en" | "br" = 
     host,
   )
   return {
+    props,
     host,
     set,
     close() {
