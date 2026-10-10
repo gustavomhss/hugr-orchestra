@@ -357,17 +357,17 @@ const claimedEvidence = {
   changes: [{ index: 0, evidence: "unbound", callIDs: [] }],
   checks: [{ index: 0, evidence: "unbound", callIDs: [] }],
 }
-const empty = {
+const upstreamEmpty = {
   changes: [],
   checks: [],
   blockers: [],
   risks: [],
   nextActions: [],
   writeRoots: [],
-  workerEvidence: { changes: [], checks: [] },
   ...host,
   ...shell,
 }
+const empty = { ...upstreamEmpty, workerEvidence: { changes: [], checks: [] } }
 
 describe("tool.task backend-result", () => {
   it.instance("upstream dispatch returns proposal claims with host-bound authorship", () =>
@@ -464,7 +464,7 @@ describe("tool.task backend-result", () => {
       const result = yield* dispatch("", { subagent: "archie", prompt: () => Effect.interrupt })
       expect(Exit.isFailure(result.exit)).toBe(true)
       expect(result.streamed.at(-1)?.workResult).toEqual({
-        schema: "upstream-work-result-v1", card: { parsed: false }, artifacts: [], ...empty,
+        schema: "upstream-work-result-v1", card: { parsed: false }, artifacts: [], ...upstreamEmpty,
         terminal: { reason: "interrupted", hostDetail: "Task cancelled" },
       })
     }),
@@ -543,7 +543,7 @@ describe("tool.task backend-result", () => {
       const result = yield* dispatch("", { subagent: "archie", background: true, prompt: () => Effect.never })
       if (!Exit.isSuccess(result.exit)) throw new Error("expected upstream background start")
       expect(workResult(result.exit.value.metadata)).toEqual({
-        schema: "upstream-work-result-v1", card: { parsed: false }, artifacts: [], ...empty,
+        schema: "upstream-work-result-v1", card: { parsed: false }, artifacts: [], ...upstreamEmpty,
         terminal: { reason: "running", hostDetail: "Background task started" },
       })
     }),
