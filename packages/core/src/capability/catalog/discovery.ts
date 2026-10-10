@@ -229,7 +229,7 @@ export function make(options: Options) {
 
     const find = Effect.fn("CapabilityDiscovery.find")(function* (
       context: Tool.Context, input: FindInput, materialization: ToolRegistry.Materialization,
-    ): Effect.fn.Return<Page, Capability.Failure> {
+    ): Effect.fn.Return<Page, CapabilityConnections.Error> {
       const supplied = { ...context }
       const binding = yield* CapabilityInvocation.require(supplied, placement)
       // Validate the durable root before inspecting caller-controlled selectors.
@@ -349,7 +349,7 @@ export function make(options: Options) {
 
     const describe = Effect.fn("CapabilityDiscovery.describe")(function* (
       context: Tool.Context, ref: Capability.DescriptorRef, materialization: ToolRegistry.Materialization,
-    ): Effect.fn.Return<Description, Capability.Failure> {
+    ): Effect.fn.Return<Description, CapabilityConnections.Error> {
       const supplied = { ...context }
       const binding = yield* CapabilityInvocation.require(supplied, placement)
       yield* policy.assert(supplied, { action: disclosureAction, resources: [disclosureAction] })

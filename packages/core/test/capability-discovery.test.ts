@@ -100,13 +100,15 @@ function fixture(options: Omit<CapabilityDiscovery.Options, "source"> = {}) {
   })
 }
 
-function expectCode<A, R>(effect: Effect.Effect<A, Capability.Failure, R>, code: Capability.ErrorCode) {
-  return effect.pipe(Effect.flip, Effect.map((error) => {
+function expectCode<A, R>(effect: Effect.Effect<A, CapabilityConnections.Error, R>, code: Capability.ErrorCode) {
+  return Effect.gen(function* () {
+    const error = yield* Effect.flip(effect)
     expect(error).toBeInstanceOf(Capability.Failure)
+    if (!(error instanceof Capability.Failure)) return yield* Effect.die(error)
     expect(error.code).toBe(code)
     expect(JSON.stringify(error)).not.toContain(secret)
     return error
-  }))
+  })
 }
 
 function ref(page: CapabilityDiscovery.Page) {
@@ -327,7 +329,11 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     yield* Deferred.succeed(release, undefined)
     const result = yield* Fiber.join(pending)
     expect(result._tag).toBe("Failure")
-    if (result._tag === "Failure") expect(result.failure.code).toBe("stale_descriptor")
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(Capability.Failure)
+      if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+      expect(result.failure.code).toBe("stale_descriptor")
+    }
     yield* Ref.set(f.transport, Effect.never)
     const interrupted = yield* f.find().pipe(Effect.forkChild)
     yield* Effect.yieldNow
@@ -349,7 +355,10 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(results.filter((result) => result._tag === "Success")).toHaveLength(1)
     const failures = results.filter((result) => result._tag === "Failure")
     expect(failures).toHaveLength(1)
-    expect(failures[0]?.failure.code).toBe("quota_exceeded")
+    const error = failures[0]?.failure
+    expect(error).toBeInstanceOf(Capability.Failure)
+    if (!(error instanceof Capability.Failure)) return yield* Effect.die(error)
+    expect(error.code).toBe("quota_exceeded")
   }))
 
   it.live("root settlement, policy revoke and identical registry replacement during acquisition prevent disclosure", () => Effect.gen(function* () {
@@ -375,8 +384,12 @@ describe("CapabilityDiscovery host metadata backbone", () => {
       yield* Deferred.succeed(release, undefined)
       const result = yield* Fiber.join(pending)
       expect(result._tag).toBe("Failure")
-      if (result._tag === "Failure") expect(result.failure.code).toBe(change === "root" ? "invocation_binding_mismatch"
-        : change === "policy" ? "target_denied" : "stale_descriptor")
+      if (result._tag === "Failure") {
+        expect(result.failure).toBeInstanceOf(Capability.Failure)
+        if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+        expect(result.failure.code).toBe(change === "root" ? "invocation_binding_mismatch"
+          : change === "policy" ? "target_denied" : "stale_descriptor")
+      }
       expect(yield* Ref.get(f.calls)).toHaveLength(1)
     }))
   }).pipe(Effect.timeout("15 seconds")))
@@ -496,7 +509,11 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     yield* f.permissions.reply({ requestID: asked.id, reply: "once" })
     const result = yield* Fiber.join(pending)
     expect(result._tag).toBe("Failure")
-    if (result._tag === "Failure") expect(result.failure.code).toBe("stale_descriptor")
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(Capability.Failure)
+      if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+      expect(result.failure.code).toBe("stale_descriptor")
+    }
   }).pipe(Effect.timeout("15 seconds")))
 
   it.live("denied malformed/deep/oversize schemas cannot fail permitted pages or alter visible catalog hashes", () => Effect.gen(function* () {
@@ -793,7 +810,7 @@ describe("CapabilityDiscovery host metadata backbone", () => {
   it.live("pending interruption at outer publication restoration removes returned-tuple refs, locators and cursor", () => Effect.forEach([2, 3], (count) => Effect.gen(function* () {
     const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
     yield* Ref.set(f.list, { tools: tools.slice(0, count), catalogGeneration: 1, coverage: "complete" })
-    const state: { fiber?: Fiber.Fiber<CapabilityDiscovery.Page, Capability.Failure>; injected: boolean } = { injected: false }
+    const state: { fiber?: Fiber.Fiber<CapabilityDiscovery.Page, CapabilityConnections.Error>; injected: boolean } = { injected: false }
     // Inject interruption at final synchronous publication, after the real batch tuple has arrived.
     yield* Ref.set(f.afterBatch, Effect.sync(() => {
       Object.defineProperty(f.clock, "time", { configurable: true, get: () => {

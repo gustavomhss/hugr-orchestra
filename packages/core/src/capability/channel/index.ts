@@ -23,6 +23,7 @@ export type MakeOptions = Options & {
   jobs: Effect.Success<typeof CapabilityJobs.make>
   artifacts: Effect.Success<ReturnType<typeof CapabilityArtifacts.make>>
 }
+export type Error = Failure | CapabilityConnections.Error | CapabilityArtifacts.Error
 
 /** Location producer only. The lead registers these canonical leaves through producedTools. */
 export const make = (options: MakeOptions) => Effect.gen(function* () {
@@ -93,7 +94,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
   })
 
   const read = Effect.fn("CapabilityChannels.read")(function* (input: Read, context: Tool.Context): Effect.fn.Return<Output,
-     Failure | CapabilityArtifacts.Error> {
+     Error> {
     const prepared = yield* prepare(context, input, "read", "channel_read")
     const adapter = yield* prepared.adapter
     const acquired = yield* adapter.read(input)
@@ -165,7 +166,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
 
   const mutate = Effect.fn("CapabilityChannels.mutate")(function* (
     input: Send | Update, context: Tool.Context, kind: "send" | "update",
-  ): Effect.fn.Return<Output, Capability.Failure | Failure | CapabilityArtifacts.Failure> {
+  ): Effect.fn.Return<Output, Error> {
     // Unsupported payloads fail before durable intent or HTTP mutation.
     if (input.provider === "slack" && "replyTo" in input && input.replyTo) return yield* failure("unsupported_operation")
     if (input.provider === "slack" && "emoji" in input && !/^[a-z0-9_+-]{1,80}(?![\s\S])/.test(input.emoji))
@@ -203,8 +204,8 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       )
       if (result._tag === "Failure") {
         const error = result.failure
-        const rejected = error instanceof Capability.Failure || (error.reason === "http" &&
-          (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) || (error.reason === "provider" && !error.ambiguous)
+        const rejected = error instanceof Capability.Failure || (error instanceof Failure && ((error.reason === "http" &&
+          (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) || (error.reason === "provider" && !error.ambiguous)))
         yield* observe(1, rejected ? "failed" : "unknown")
         if (rejected) return yield* error
         return undefined
@@ -253,10 +254,10 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         verification: "verified", artifactRefs } }
   })
 
-  const toolFailure = (error: Failure | CapabilityArtifacts.Error) => new Tool.Failure({
+  const toolFailure = (error: Error) => new Tool.Failure({
     message: error instanceof Failure ? `channel_${error.reason}` : "code" in error ? error.code : "artifact_storage_failed",
   })
-  const toolErrors = <A>(effect: Effect.Effect<A, Failure | CapabilityArtifacts.Error>) => effect.pipe(
+  const toolErrors = <A>(effect: Effect.Effect<A, Error>) => effect.pipe(
     Effect.exit,
     Effect.flatMap((exit) => Exit.isSuccess(exit) ? Effect.succeed(exit.value) : Effect.failCause(
       Cause.fromReasons<Tool.Failure>(exit.cause.reasons.flatMap((reason) => reason._tag === "Fail"
