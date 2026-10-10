@@ -244,7 +244,8 @@ at `rewriteSectionsExecutable()` with
 Artifacts `11650743142` (ARM) and `11651231069` (x64) preserve the exact failures.
 The ARM Darwin consumer independently passed the same prerequisite phases and built
 CLI successfully, then Desktop prebuild failed with `bun: command not found: codesign`;
-artifact `11650847862` preserves that failure. Intel Darwin remains in progress.
+artifact `11650847862` preserves that failure. Intel Darwin artifact `11651414104`
+then confirmed the same missing `codesign`; all four natives and completion failed.
 
 The next recipe candidate requires emitted Linux interpreter and nonempty RPATH to
 equal the native Nix compiler's paths without rewriting its compiled ELF sections.
@@ -253,6 +254,31 @@ Desktop Darwin adds the existing `darwin.sigtool` tool for its resource-signing 
 These are source candidates, not observed fixes. Relay retains sole Nix writer and
 monitor ownership. No consumer/product pass or model/auth/launcher/pilot execution
 is inferred from measurement success, source inspection or static approval.
+
+Reviewed recipe repair root `d77582ee32c1dcccf2d24e654db2db08d6e5264b` preserves
+that failed verification ancestry, with the next request inactive and original
+stale hash blob restored. Recipe blobs `2645a822b0c19b277fa5bf7f2d2ef96790cb61f7`
+(CLI) and `1d5e7c37f041e1526ed32f8de362674493cdef9d` (Desktop) received independent
+static approval. Declared dependency inputs still match qualified `791d7e1846`;
+the changed-updater AEC positive control detects the earlier source difference.
+
+Fresh request-only child `9d40371b263fb07d88c71e185e71cafad934bbe2` completed
+measurement **`38006364784`** successfully on all four systems and completion,
+attempt 1, source tree `1ff3beda87b218e54663c99e0032a0da262ef5c9`. Worker artifacts
+are `11652010566` (x86_64-linux), `11651783475` (aarch64-linux), `11652181898`
+(x86_64-darwin) and `11652405598` (aarch64-darwin); completion is `11652142022`.
+Fresh API identity, original candidate parsing, dependency fingerprint, byte-exact
+worker copies and named control records were checked. This remains measurement
+evidence only, with `COMPLETION_CONTROLS_OK`.
+
+Cold-reviewed hash/request-only direct child
+`8d3397212cd5443564456ff0f1ae7f920251f274`, tree
+`f72d5b263272f92f6ef64fedf15141d65732bf1d`, requests actual consumer verification
+**`38009229009`** for that measurement and attempt. Only four matching values and
+one request JSON line change; recipe, package and gate bytes are unchanged. That
+run is in progress. Source approval and measurement success do not qualify either
+recipe repair or distribution consumers. Archie upstream source/ABI handoff stays
+accepted independently; its authoring/domain execution is not gated on Nix builds.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
