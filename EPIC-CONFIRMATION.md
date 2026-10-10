@@ -203,3 +203,99 @@ Each retained page snapshot shows the research result region and paragraphs cont
 Only `jimmy-epic-final` was deleted, after its target SHA and completion of all 12 jobs were reverified. The matching-ref removal query detected `dev` as its positive control. Runs, all eight artifacts, other refs, and worktrees were retained. JUnit retention is 14 days; Playwright retention is seven days, including failure screenshots, videos, trace, and all three error-context snapshots.
 
 External `jimmy-epic-final-operation` retains run/job metadata, all twelve logs, manifest/control evidence, capacity samples, persisted dispatch ID, artifact archives, complete parsed skips and counters, HTTP mode reconciliation, failure contexts, and cleanup verification. Principal source remained frozen and clean. Only this document was appended and committed in the evidence worktree; no principal source edit, feature push, PR, extra workflow execution, private evaluation, or new model trial was performed. The full final main-workflow verdict remains **RED** until the recorded Arabic browser assertion mismatch is reconciled.
+
+---
+
+## Closing-source main checkpoint — October 10, 2026
+
+**RED: 11 of 12 jobs succeeded.** The Arabic browser assertion is now measured passing. A newly observed Linux plugin/SDK build failure prevents full main-workflow closure. This append retains every preceding RED checkpoint, source identity, count, and run ID without rewriting history.
+
+### Exact source and dispatch
+
+| Identity | Exact value |
+| --- | --- |
+| Frozen clean principal HEAD | `7f00a8bb6a035ed05405d0188b449aeab2a9060f` |
+| Product tree | `0d8c47cec34fcd05e3a6aeb6343d6980c7cbf0ba` |
+| Reused snapshot / actual main head SHA | `155746d06a1138d6db44d32450bdaf79df72b930` |
+| Snapshot tree with `.ci-run.json` | `2f36d7546e98e460847b326cc459ef41eebe4932` |
+| Snapshot parent | `73651a0e69a2912d9244dbb73e985c5828c03058` |
+| Owned ephemeral ref | `refs/heads/jimmy-epic-close` |
+| Main run, attempt 1 | [38028420071](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38028420071) |
+
+The delta from the preceding principal is one file, `packages/app/e2e/regression/session-research-result.spec.ts`, with exactly three replacement lines. The main workflow and Playwright configuration are unchanged. The existing successful scoped production run [38027999108](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38027999108) was verified as snapshot provenance. Its retained request selects that research e2e file with `e2e/playwright.production.config.ts`; the main workflow keeps its own existing suite/configuration rather than taking that scoped selection.
+
+Zero blobs or snapshot commits were uploaded. The complete recursive GitHub manifest matched the frozen local tree by every path, mode, object type, and SHA: **13,494 entries / 11,531 tracked leaves**. Removing only the root `.ci-run.json` reconstructed the exact product-tree hash. Altered SHA, executable mode, and path controls were detected and rejected; empty and truncated manifests were rejected too. All manifest/control evidence was persisted before dispatch.
+
+Actual account occupancy, across 23 authenticated owned repositories, was **seven placed jobs and zero unplaced jobs** at 05:42:30 UTC, not merely the anticipated single macOS job. Reserving the measured main-only peak of 11 gave `7 + 11 = 18`, within the account cap of 20. Enumeration detected the known scoped run as its positive control. No unrelated work was cancelled.
+
+Only `test.yml` was dispatched once, at 05:42:31 UTC, and the ID was persisted before monitoring. Creation → completion: **05:42:33 → 05:57:11 UTC**, **14m38s**. All 12 jobs completed; measured peak remained **11**, calibrated with overlapping/touching interval controls. The operation deadline was 06:12:31 UTC. `windows_e2e=false` and normal Playwright two-retry policy were preserved. None of the other four workflows was rerun.
+
+### All twelve outcomes
+
+| Job | Job ID | Outcome and measured reach |
+| --- | --- | --- |
+| Atlas scope | `114144091462` | success; manual-dispatch full selection |
+| Atlas | `114144156996` | success; guards and full product suite: 4,168 pass, 17 skip, 3 TODO |
+| Linux orchestra 1/2 | `114144091533` | success; 1,693 pass, 14 skip, 1 TODO, 0 fail |
+| Linux orchestra 2/2 | `114144091492` | success; 3,007 pass, 8 skip, 0 fail |
+| Windows orchestra 1/3 | `114144091518` | success; 1,694 pass, 20 skip, 1 TODO, 0 fail |
+| Windows orchestra 2/3 | `114144091476` | success; 1,188 pass, 15 skip, 0 fail |
+| Windows orchestra 3/3 | `114144091448` | success; 1,827 pass, 34 skip, 0 fail |
+| Linux other packages / godfile / HttpApi / Relay | `114144091437` | failure; generated Atlas boundary and 19 godfile self-tests plus godfile gate passed; plugin build failed; Turbo 2 successful / 10 tasks, 0 cached; Python Relay 1,477 pass, 1 skip and documentation index check passed |
+| Windows other packages | `114144091334` | success; 19/19 Turbo tasks completed, 0 cached |
+| Linux e2e 1/3 | `114144091472` | success; 124 pass |
+| Linux e2e 2/3 | `114144091563` | success; 155 pass |
+| Linux e2e 3/3 | `114144091475` | success; 190 pass, 1 skip, 0 flaky |
+
+Every orchestra and e2e previous-pass lookup missed, so all eight test steps executed. No prior-pass cache substituted for these results. Windows unit/build tasks also executed with zero cached tasks. Linux Turbo failed before reporting any completed package testcase suite: only HTTP-recorder and UI builds completed successfully. Six package test tasks printed cache-miss headers without completed testcase summaries before Turbo aborted; those starts are not credited as completed test suites.
+
+### Old Arabic blocker cleared in actual main execution
+
+The shard-3 Playwright report records all three profiles at `session-research-result.spec.ts:302` as expected, passing outcomes: **en/ltr**, **en/rtl**, and **ar/rtl**, with localized labels. Their durations were 2,394ms, 2,316ms, and 2,306ms respectively. They completed without a retry or flaky outcome. This replaces only the current observation; the earlier failed English-fallback assertion remains recorded above.
+
+Windows app unit tests completed with **1,299 pass / 1 skip**. Its separate browser-unit command **actually executed: 76 pass across 25 files**, and the app Turbo task completed. Windows client had 23 passes, Core 1,478 pass/26 skip, desktop Bun 400 pass/144 skip, and the desktop Node testcase 1 pass/0 skip. Linux app unit/browser-unit commands were not reached after the prerequisite build failure; the three standalone Linux Chromium e2e jobs did execute.
+
+### Sole failed-job log: SDK generated types unavailable during plugin compile
+
+The complete failed [Linux other-package log](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38028420071/job/114144091437) was reviewed. `@orchestra/plugin#build` ran `tsc` and exited **2**, producing **37 compiler diagnostics**, not a failing application testcase. Representative exact errors are `src/index.ts(13,15): error TS2305: Module '"@orchestra/sdk/v2"' has no exported member 'Provider'.` and `../sdk/js/src/v2/client.ts(1,15): error TS2307: Cannot find module './gen/types.gen.js' or its corresponding type declarations.`
+
+| Diagnostic source | Lines |
+| --- | --- |
+| `packages/plugin/src/index.ts` | 13: Provider, Model, Auth exports |
+| `packages/plugin/src/tui.ts` | 2, 4–17: SDK type exports |
+| `packages/plugin/src/v2/effect/agent.ts`, `aisdk.ts`, `catalog.ts`, `command.ts`, `event.ts`, `filesystem.ts`, `reference.ts`, `skill.ts` | 1, 2, 1, 1, 1, 1, 1, 1 respectively: SDK `/v2/types` imports |
+| `packages/plugin/src/v2/effect/integration.ts` | 11: SDK `/v2/types` import |
+| `packages/plugin/src/v2/promise/aisdk.ts`, `integration.ts` | 2; 2, 9, 11: SDK `/v2/types` imports |
+| `packages/sdk/js/src/v2/client.ts` | 1, 2: generated types; 6: generated SDK |
+| `packages/sdk/js/src/v2/data.ts`, `server.ts` | 1; 2: dependent types |
+
+The frozen manifest contains both generated SDK files before execution. The same failure log shows the SDK producer running `bun ./script/build.ts`, generating into `src/v2/gen`, and printing generated output alongside the plugin failure. The SDK producer sets **`clean: true` at `packages/sdk/js/script/build.ts:53`**, while **`turbo.json:8` sets build `dependsOn: []`** despite the plugin's SDK dependency at `packages/plugin/package.json:25`. This is an unsequenced producer/consumer build boundary consistent with the observed generated-files gap. The job log does not trace individual filesystem operations, so this confirmation does not claim a deterministic race reproduction. These producer, consumer, and scheduling files are unchanged by the three-line e2e correction. No source repair or rerun was performed.
+
+### Actual HTTP/codegen/generated-client reach and misses
+
+**Closing-run full HTTP CLI modes executed: zero.** Linux `Check generated client`, `Build HttpApi exerciser dependencies`, and `Run HttpApi exerciser gates` all skipped after the build failure. Linux HttpApi-codegen tests emitted a cache-miss task header but no completed test summary. Windows excludes POSIX HttpApi-codegen by the existing workflow filter; its generated-client and full HttpApi steps are Linux-only and skipped by platform policy.
+
+The historical main run `38026385329` still contains actual coverage/auth/effect execution with 271 passing scenarios and 13 research scenarios per mode, as recorded above. Those historical counters are **not** credited as newly executed closing-run HTTP evidence. The closing browser research profiles and orchestra suites passed, but the newly blocked CLI stages keep the full main workflow RED.
+
+### Closing artifacts, skips, and retention
+
+All eight artifacts were downloaded and parsed. Five JUnit artifacts contain **9,502 summed shard records: 9,409 pass, 93 skip including two TODO, zero failure**. Three Playwright reports contain **470 logical tests: 469 expected, one skipped, zero unexpected, zero flaky**. The single Playwright omission remains the `fixme` at `packages/app/e2e/orchestra/chapter-workspaces.spec.ts:371`.
+
+| Artifact | ID |
+| --- | --- |
+| `junit-linux-orchestra-1-1` | `11660554890` |
+| `junit-linux-orchestra-2-1` | `11660714974` |
+| `junit-windows-orchestra-1-1` | `11661820486` |
+| `junit-windows-orchestra-2-1` | `11661775428` |
+| `junit-windows-orchestra-3-1` | `11661945454` |
+| `playwright-linux-1-1` | `11660982651` |
+| `playwright-linux-2-1` | `11660489868` |
+| `playwright-linux-3-1` | `11661640224` |
+
+Skip accounting: orchestra **91 log skips + two TODO**; Atlas **17 skips + three TODO**; completed Windows other-package suites **325 skips** (maestro-arsenal 1, Relay TypeScript 122, LLM 30, TUI 1, app 1, desktop 144, Core 26); Python Relay **one unnamed skip**; Chromium **one fixme**. Windows e2e stayed unscheduled; Relay benchmark-runtime tests stayed explicitly excluded. Main desktop real-Electron/Linux App Dock/Docker/PTY integration omissions were not filled by separate runs. No Linux Turbo unit-suite skips or passes were inferred from its interrupted starts. Every reporter-visible skip name and all five JUnit omission lists remain in the parsed external evidence.
+
+All three browser-install steps skipped due to cached Chromium, while browser tests ran. Atlas's PR-only detector skipped while its full suite ran. Windows platform-only gate omissions and the Linux post-Python step are retained in the job metadata. No whole job was skipped or cancelled. Original RED evidence and every earlier confirmation prefix remain byte-for-byte preserved.
+
+After all twelve outcomes, only `jimmy-epic-close` was deleted, following exact target-SHA verification. The same matching-ref query detected `dev` as its positive control. Runs, artifacts, other refs, and worktrees were retained. External `jimmy-epic-close-operation` contains all twelve logs, compiler-diagnostic inventory, source manifests and controls, capacity samples, persisted dispatch ID, parsed artifacts/omissions/profile results, and cleanup verification. JUnit retention remains 14 days; Playwright retention seven days.
+
+Only this append was committed in the evidence worktree. No principal source edit, additional main dispatch, other-workflow rerun, private evaluation, or new model study was performed. This is epic CI confirmation, not release approval; the owner's **35/42 blocked study** status remains unchanged. Full main closure remains **RED** on the measured plugin/SDK build boundary.
