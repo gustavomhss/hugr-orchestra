@@ -20,6 +20,20 @@ function child(cmd: string[], env = process.env, cwd = orchestra) {
     return stdout + stderr
   } }
 }
+type Resource = { label: string; close: () => unknown | Promise<unknown>; expire?: () => void }
+async function cleanup(resources: Resource[], errors: unknown[]) {
+  for (const resource of resources.reverse()) {
+    const deadline = Promise.withResolvers<never>()
+    const timer = setTimeout(() => {
+      deadline.reject(new Error(`${resource.label} cleanup timed out after 10000 ms`))
+      try { resource.expire?.() } catch (error) { errors.push(error) }
+    }, 10000)
+    const closing = Promise.resolve().then(resource.close).catch((error) => { errors.push(error) })
+    try { await Promise.race([closing, deadline.promise]) }
+    catch (error) { errors.push(error) }
+    finally { clearTimeout(timer) }
+  }
+}
 
 if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
   test("production Node native Lean HTTP persistence reaches real Solid consumers", async () => {
@@ -29,6 +43,23 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
   test("combined Schema/Core/Orchestra/app/session-ui/ui types in CI", async () => {
     for (const pkg of ["schema", "core", "orchestra", "app", "session-ui", "ui"])
       console.log(`${pkg}: ${await child([process.execPath, "typecheck"], process.env, path.resolve(orchestra, "..", pkg)).finish()}`)
+  }, 600000)
+  test("native product proof file typechecks through standard app script in CI", async () => {
+    const errors: unknown[] = []
+    const resources: Resource[] = []
+    try {
+      const dir = await mkdtemp(path.join(os.tmpdir(), "lean-proof-types-"))
+      resources.push({ label: "typecheck scratch", close: () => rm(dir, { recursive: true, force: true }) })
+      const app = path.resolve(import.meta.dir, "..")
+      const config = path.join(dir, "tsconfig.json")
+      await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
+        compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
+        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
+      }))
+      console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
+    } catch (error) { errors.push(error) }
+    await cleanup(resources, errors)
+    if (errors.length) throw new AggregateError(errors, "Proof typecheck primary and cleanup errors")
   }, 600000)
 } else {
   const { createComponent, createRoot, createMemo, createStore, render } = await import("./lean-project-metrics.test-helper")
@@ -47,45 +78,50 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
 
   test("real Node Go30: durable owners/bytes/estimates, shell DOM, replay, privacy and persisted disable", async () => {
     if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Package builds require CI")
-    const buildEnv = { ...process.env, MODELS_DEV_API_JSON: path.join(orchestra, "test/tool/fixtures/models-api.json"), ORCHESTRA_CHANNEL: "dev", ORCHESTRA_VERSION: "1.18.27" }
-    console.log(await child(["bun", "run", "script/build-node.ts"], buildEnv).finish())
-    const artifact = path.join(orchestra, "dist/node/node.js")
-    await mkdir(path.join(orchestra, "dist/node/node_modules/@lydell"), { recursive: true })
-    const pty = createRequire(path.join(orchestra, "../core/package.json")).resolve("@lydell/node-pty/package.json")
-    await symlink(path.dirname(pty), path.join(orchestra, "dist/node/node_modules/@lydell/node-pty"), "junction")
-    const manifest = await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean/manifest.json")).json()
-    expect(manifest).toMatchObject({ version: "0.2.0", commit: "cfe14329cc98f0a2778acdd148e66dbf5a0dd668", sha256: "4e46ae0534937bdfedd46f667292d9904f2446a0fe01479ea0e6c71a74862af6" })
-    console.log(`Node artifact sha256=${createHash("sha256").update(new Uint8Array(await Bun.file(artifact).arrayBuffer())).digest("hex")} Lean=${JSON.stringify(manifest)}`)
-    const home = await realpath(await mkdtemp(path.join(os.tmpdir(), "lean-native-product-")))
-    const project = path.join(home, "project")
-    const configFile = path.join(home, "config/orchestra/orchestra.json")
-    const observer = path.join(home, "observe.mjs")
-    const ready = path.join(home, "ready")
-    const hits: { messages: { role: string; tool_call_id?: string; content: string }[] }[] = []
     const errors: unknown[] = []
     const disposers: (() => void)[] = []
-    const turn = { callID: "call_enabled" }
-    const provider = http.createServer(async (req, res) => { try {
-      if (!req.url?.endsWith("/chat/completions")) { res.writeHead(400); res.end("unexpected provider route"); return }
-      expect(req.headers.authorization).toBe("Bearer synthetic-key")
-      const bytes: Buffer[] = []
-      for await (const chunk of req) bytes.push(Buffer.from(chunk))
-      const body = JSON.parse(Buffer.concat(bytes).toString("utf8"))
-      hits.push(body)
-      const complete = body.messages.some((message: { role: string; tool_call_id?: string }) => message.role === "tool" && message.tool_call_id === turn.callID)
-      const delta = complete ? { content: "done" } : { tool_calls: [{ index: 0, id: turn.callID, type: "function", function: {
-        name: "bash", arguments: JSON.stringify({ command: "go test -v .", workdir: project, timeout: 120000 }),
-      } }] }
-      const chunks = [{ role: "assistant", ...delta }, {}].map((delta, index) => `data: ${JSON.stringify({ id: "completion", object: "chat.completion.chunk", created: 1,
-        model: "test-model", choices: [{ index: 0, delta, finish_reason: index ? (complete ? "stop" : "tool_calls") : null }] })}\n\n`)
-      res.writeHead(200, { "content-type": "text/event-stream" })
-      res.end(chunks.join("") + "data: [DONE]\n\n")
-    } catch (error) { errors.push(error); res.destroy(error instanceof Error ? error : new Error(String(error))) } })
-    await new Promise<void>((resolve, reject) => { provider.once("error", reject); provider.listen(0, "127.0.0.1", resolve) })
-    const address = provider.address()
-    if (!address || typeof address === "string") throw new Error("Missing loopback provider port")
-    let server: ReturnType<typeof child> | undefined
+    const resources: Resource[] = []
     try {
+      const buildEnv = { ...process.env, MODELS_DEV_API_JSON: path.join(orchestra, "test/tool/fixtures/models-api.json"), ORCHESTRA_CHANNEL: "dev", ORCHESTRA_VERSION: "1.18.27" }
+      console.log(await child(["bun", "run", "script/build-node.ts"], buildEnv).finish())
+      const artifact = path.join(orchestra, "dist/node/node.js")
+      await mkdir(path.join(orchestra, "dist/node/node_modules/@lydell"), { recursive: true })
+      const pty = createRequire(path.join(orchestra, "../core/package.json")).resolve("@lydell/node-pty/package.json")
+      await symlink(path.dirname(pty), path.join(orchestra, "dist/node/node_modules/@lydell/node-pty"), "junction")
+      const manifest = await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean/manifest.json")).json()
+      expect(manifest).toMatchObject({ version: "0.2.0", commit: "cfe14329cc98f0a2778acdd148e66dbf5a0dd668", sha256: "4e46ae0534937bdfedd46f667292d9904f2446a0fe01479ea0e6c71a74862af6" })
+      console.log(`Node artifact sha256=${createHash("sha256").update(new Uint8Array(await Bun.file(artifact).arrayBuffer())).digest("hex")} Lean=${JSON.stringify(manifest)}`)
+      const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-native-product-"))
+      resources.push({ label: "native scratch", close: () => rm(scratch, { recursive: true, force: true }) })
+      const home = await realpath(scratch)
+      const project = path.join(home, "project")
+      const configFile = path.join(home, "config/orchestra/orchestra.json")
+      const observer = path.join(home, "observe.mjs")
+      const ready = path.join(home, "ready")
+      const hits: { messages: { role: string; tool_call_id?: string; content: string }[] }[] = []
+      const turn = { callID: "call_enabled" }
+      const provider = http.createServer(async (req, res) => { try {
+        if (!req.url?.endsWith("/chat/completions")) { res.writeHead(400); res.end("unexpected provider route"); return }
+        expect(req.headers.authorization).toBe("Bearer synthetic-key")
+        const bytes: Buffer[] = []
+        for await (const chunk of req) bytes.push(Buffer.from(chunk))
+        const body = JSON.parse(Buffer.concat(bytes).toString("utf8"))
+        hits.push(body)
+        const complete = body.messages.some((message: { role: string; tool_call_id?: string }) => message.role === "tool" && message.tool_call_id === turn.callID)
+        const delta = complete ? { content: "done" } : { tool_calls: [{ index: 0, id: turn.callID, type: "function", function: {
+          name: "bash", arguments: JSON.stringify({ command: "go test -v .", workdir: project, timeout: 120000 }),
+        } }] }
+        const chunks = [{ role: "assistant", ...delta }, {}].map((delta, index) => `data: ${JSON.stringify({ id: "completion", object: "chat.completion.chunk", created: 1,
+          model: "test-model", choices: [{ index: 0, delta, finish_reason: index ? (complete ? "stop" : "tool_calls") : null }] })}\n\n`)
+        res.writeHead(200, { "content-type": "text/event-stream" })
+        res.end(chunks.join("") + "data: [DONE]\n\n")
+      } catch (error) { errors.push(error); res.destroy(error instanceof Error ? error : new Error(String(error))) } })
+      resources.push({ label: "loopback provider", close: () => !provider.listening ? undefined
+        : new Promise<void>((resolve, reject) => provider.close((error) => error ? reject(error) : resolve())),
+        expire: () => provider.closeAllConnections() })
+      await new Promise<void>((resolve, reject) => { provider.once("error", reject); provider.listen(0, "127.0.0.1", resolve) })
+      const address = provider.address()
+      if (!address || typeof address === "string") throw new Error("Missing loopback provider port")
       await mkdir(project, { recursive: true })
       await mkdir(path.dirname(configFile), { recursive: true })
       await mkdir(path.join(home, "tmp"))
@@ -107,7 +143,11 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", GOTOOLCHAIN: "local", GOPROXY: "off", GOSUMDB: "off", CGO_ENABLED: "0",
         GOCACHE: path.join(home, "go-cache"), GOPATH: path.join(home, "go"), TMPDIR: path.join(home, "tmp"), TMP: path.join(home, "tmp"), TEMP: path.join(home, "tmp"),
         ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}), ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}) }
-      server = child(["node", path.join(orchestra, "test/fixture/lean-package/node.mjs"), artifact, ready], env, project)
+      const server = child(["node", path.join(orchestra, "test/fixture/lean-package/node.mjs"), artifact, ready], env, project)
+      resources.push({ label: "Node server", close: async () => {
+        try { if (server.proc.exitCode === null) server.proc.kill("SIGTERM") } catch (error) { errors.push(error) }
+        await server.finish(true)
+      }, expire: () => { if (server.proc.exitCode === null) server.proc.kill("SIGKILL") } })
       const deadline = Date.now() + 120000
       while (!(await Bun.file(ready).exists())) {
         if (server.proc.exitCode !== null) { await server.finish(); throw new Error("Server exited before readiness") }
@@ -150,7 +190,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         expect(Buffer.from(next[0]!.content)).toEqual(Buffer.from(tool.state.output))
         const upstream: { output: string; metadata: { output: string } } = await Bun.file(path.join(home, `${callID}.json`)).json()
         for (let i = 0; i < 30; i++) expect(upstream.output).toContain(`=== RUN   TestCase${i}\n`)
-        // Mutation seam: removing persisted metadata here must fail the real consumer proof.
+        // Persistence assertion: production must attach a Decision to the actual saved ToolPart.
         const metric = LeanMetrics.decode(tool.state.metadata.lean)
         expect(metric).toBeDefined()
         if (!metric) throw new Error("Missing persisted Lean Decision")
@@ -307,10 +347,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       console.log(`native calls=2 Go cases=30/call privacy controls=10 foreign owners=4 replay=1 config unavailable controls=2 PATCH=1 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
     } catch (error) { errors.push(error) }
     for (const dispose of disposers.reverse()) { try { dispose() } catch (error) { errors.push(error) } }
-    if (server && server.proc.exitCode === null) server.proc.kill("SIGTERM")
-    if (server) await server.finish(true).catch((error) => errors.push(error))
-    await new Promise<void>((resolve, reject) => provider.close((error) => error ? reject(error) : resolve())).catch((error) => errors.push(error))
-    await rm(home, { recursive: true, force: true }).catch((error) => errors.push(error))
+    await cleanup(resources, errors)
     if (errors.length) throw new AggregateError(errors, "Native product primary and cleanup errors")
   }, 600000)
 }
