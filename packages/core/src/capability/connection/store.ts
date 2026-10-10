@@ -3,7 +3,7 @@ export * as CapabilityConnectionStore from "./store"
 import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
 import { SessionTable } from "../../session/sql"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
@@ -58,9 +58,10 @@ export const make = Effect.sync(() => {
     if (Option.isNone(parsed)) return yield* failure("target_denied")
     const value = structuredClone(parsed.value)
     yield* connection(tx, placement, value.ref)
+    // Drizzle maps JS null to SQL NULL; bind JSON text so every Schema.Json value remains non-null storage.
     const row = yield* tx.insert(CapabilityTargetTable).values({
       id: Capability.TargetID.create(), connection_id: value.ref.id,
-      environment: value.input.environment, resource: value.input.resource, generation: 0,
+      environment: value.input.environment, resource: sql`${JSON.stringify(value.input.resource)}`, generation: 0,
     }).returning().get()
     return targetRef(row)
   })
@@ -75,7 +76,7 @@ export const make = Effect.sync(() => {
     if (current.row.generation === Number.MAX_SAFE_INTEGER) return yield* failure("stale_descriptor")
     yield* tx.delete(CapabilityBindingTable).where(eq(CapabilityBindingTable.target_id, value.ref.id)).run()
     const row = yield* tx.update(CapabilityTargetTable).set({
-      environment: value.input.environment, resource: value.input.resource,
+      environment: value.input.environment, resource: sql`${JSON.stringify(value.input.resource)}`,
       generation: current.row.generation + 1, time_updated: Date.now(),
     }).where(eq(CapabilityTargetTable.id, value.ref.id)).returning().get()
     if (!row) return yield* failure("connection_unavailable")
