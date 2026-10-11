@@ -15,12 +15,14 @@ import type { SessionID } from "@/session/schema"
 import type { TaskPromptOps } from "@/tool/task"
 import { ClaudeHost } from "./host/session"
 
-export interface Interface {
+export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interrupt" | "setModel" | "fork" | "release" | "reconcileRevert"> {
   /**
    * Run one turn when the user's agent is on Claude Code: everything the user sent since the last delivery. False when
    * the agent runs on Orchestra's loop. The turn always ends with an assistant reply to `user` (with `error` when it
    * failed), so the loop's own exit check ends the run on its next pass.
    */
+  readonly admitted: (user: SessionV1.WithParts) => Effect.Effect<void>
+  readonly reconcileRevert: (session: Session.Info, agent?: string) => Effect.Effect<void>
   readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
 }
 
@@ -38,6 +40,7 @@ const layer = Layer.effect(
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
       const agent = yield* agents.get(input.user.agent).pipe(Effect.orElseSucceed(() => undefined))
       if (agent?.engine !== "claude-code") {
+        yield* host.release(input.sessionID)
         if (session.metadata?.claudeCode) yield* continuity.release(input.sessionID)
         return false
       }
@@ -46,7 +49,21 @@ const layer = Layer.effect(
       return yield* host.turn(input)
     })
 
-    return Service.of({ turn })
+    const admitted: Interface["admitted"] = (user) => Effect.gen(function* () {
+      if (user.info.role !== "user") return
+      const agent = yield* agents.get(user.info.agent)
+      if (agent?.engine !== "claude-code") return
+      yield* host.setModel({ sessionID: user.info.sessionID,
+        model: user.info.model.providerID === "anthropic" ? user.info.model.modelID : undefined })
+      yield* host.steer({ sessionID: user.info.sessionID, user })
+    })
+    const reconcileRevert: Interface["reconcileRevert"] = (session, seat) => Effect.gen(function* () {
+      if (!session.revert) return
+      const agent = seat ? yield* agents.get(seat) : yield* agents.defaultInfo()
+      if (agent?.engine === "claude-code") yield* host.reconcileRevert(session)
+    })
+    return Service.of({ turn, admitted, steer: host.steer, interrupt: host.interrupt, setModel: host.setModel,
+      fork: host.fork, release: host.release, reconcileRevert })
   }),
 )
 

@@ -153,9 +153,9 @@ const promptRoot = LayerNode.group([
   RuntimeFlags.node,
 ])
 
-function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[] }) {
+function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[]; realSummary?: boolean }) {
   return [
-    [SessionSummary.node, summary],
+    ...(input?.realSummary ? [] : [[SessionSummary.node, summary] as const]),
     [LSP.node, lsp],
     [MCP.node, makeMcp(input?.mcpInstructions)],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
@@ -171,6 +171,7 @@ function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; proces
 }
 
 export function makeHttp(input?: {
+  realSummary?: boolean
   mcpInstructions?: MCP.ServerInstructions[]
   processor?: "blocking"
   replacements?: LayerNode.Replacements

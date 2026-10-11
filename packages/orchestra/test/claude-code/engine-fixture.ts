@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
 import { Effect, Layer, Stream } from "effect"
-import type { Query, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { Query, SDKControlInterruptResponse, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { LLM } from "@/session/llm"
 import { Session } from "@/session/session"
@@ -18,9 +18,15 @@ export const state: {
   scripts: Script[]
   /** The text of every user message the host handed Claude Code, in order. */
   inputs: string[]
+  messages: SDKUserMessage[]
+  closed: Params[]
+  interrupts: number
+  stoppedTasks: string[]
+  models: (string | undefined)[]
+  receipt?: SDKControlInterruptResponse
   apiCalls: number
   construct: ClaudeCodeSDK.Interface["query"] | undefined
-} = { queries: [], scripts: [], inputs: [], apiCalls: 0, construct: undefined }
+} = { queries: [], scripts: [], inputs: [], messages: [], closed: [], interrupts: 0, stoppedTasks: [], models: [], apiCalls: 0, construct: undefined }
 
 export type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
 
@@ -31,6 +37,12 @@ export function reset() {
   state.queries.length = 0
   state.scripts.length = 0
   state.inputs.length = 0
+  state.messages.length = 0
+  state.closed.length = 0
+  state.interrupts = 0
+  state.stoppedTasks.length = 0
+  state.models.length = 0
+  state.receipt = undefined
   state.apiCalls = 0
   state.construct = undefined
 }
@@ -55,21 +67,23 @@ function hosted(script: Script, params: Params) {
   const input = (async function* () {
     for await (const message of prompt) {
       state.inputs.push(String(message.message.content))
+      state.messages.push(message)
       yield message
     }
   })()
   const frames = script(input, params)
   // Only the Query surface the host uses besides iteration.
   return Object.assign(frames, {
-    close: () => { void frames.return(undefined) },
-    interrupt: async () => {},
-    setModel: async () => {},
+    close: () => { state.closed.push(params); void frames.return(undefined) },
+    interrupt: async () => { state.interrupts++; return state.receipt },
+    stopTask: async (taskID: string) => { state.stoppedTasks.push(taskID) },
+    setModel: async (model?: string) => { state.models.push(model) },
     accountInfo: async () => ({ subscriptionType: "Claude Max", apiProvider: "firstParty" }),
     getContextUsage: async () => ({ totalTokens: 10, maxTokens: 200_000, percentage: 0 }),
   }) as unknown as Query
 }
 
-export const it = testEffect(makeHttp({ replacements: [[ClaudeCodeSDK.node, sdk], [LLM.node, Layer.mock(LLM.Service, {
+export const it = testEffect(makeHttp({ realSummary: true, replacements: [[ClaudeCodeSDK.node, sdk], [LLM.node, Layer.mock(LLM.Service, {
   stream: () => { state.apiCalls++; return Stream.fail(new Error("Default API transport must not run")) },
 })]] }))
 
