@@ -299,6 +299,8 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
         ? ToolSafetySandboxRuntime.settled().pipe(Effect.andThen(pick(false, true)))
         : Effect.succeed(picked)))
   if (sandbox.kind === "none") return yield* new ToolSafety.Denied({ reason: sandbox.reason })
+  // Language servers and formatters are not launched through the Windows AppContainer yet.
+  if (sandbox.kind === "appcontainer") return yield* new ToolSafety.Denied({ reason: "sandbox-platform-unsupported: appcontainer" })
   // A granted file is checked through the same physical path the policy grants, so a symlink planted at it or at a
   // parent cannot carry the grant outside cwd.
   const write = yield* Effect.forEach(input.write ?? [], (file) => io("sandbox-write-file-acquisition", () => realpath(file)))
