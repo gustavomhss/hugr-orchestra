@@ -31,7 +31,9 @@ const TICK = MINUTE
 // Local days searched for the next match; a rule that matches no day inside it never fires.
 const HORIZON = 5 * 366
 const LIMIT = 100_000
-const FIELDS = [[0, 59], [0, 23], [1, 31], [1, 12], [0, 7]] as const
+// Bounds of minute, hour, day-of-month, month and day-of-week (7 is also Sunday).
+const LOW = [0, 0, 1, 1, 0]
+const HIGH = [59, 23, 31, 12, 7]
 const MONTH_DAYS = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 type Clock = { zone: DateTime.TimeZone; cron: Cron; times: number[] }
@@ -40,7 +42,7 @@ type Clock = { zone: DateTime.TimeZone; cron: Cron; times: number[] }
 export function parseCron(expression: string): Cron | undefined {
   const fields = expression.trim().split(/\s+/)
   if (fields.length !== 5) return undefined
-  const sets = fields.map((field, index) => parseField(field, FIELDS[index][0], FIELDS[index][1]))
+  const sets = fields.map((field, index) => parseField(field, LOW[index], HIGH[index]))
   if (!sets.every((set): set is number[] => set !== undefined)) return undefined
   const cron = {
     minutes: new Set(sets[0]),
@@ -166,7 +168,8 @@ function countWalls(clock: Clock, from: number, to: number) {
     (total, day) => {
       if (!matchesDay(clock.cron, day)) return total
       if (day > first && day < last) return total + clock.times.length
-      return total + clock.times.filter((time) => day * DAY + time * MINUTE > from && day * DAY + time * MINUTE <= to).length
+      const walls = clock.times.map((time) => day * DAY + time * MINUTE)
+      return total + walls.filter((wall) => wall > from && wall <= to).length
     },
     0,
   )
