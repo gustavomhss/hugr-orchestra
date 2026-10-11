@@ -27,10 +27,11 @@ export function linuxGuestTarget(architecture: string, abi: string) {
   throw new WslArtifactError("architecture")
 }
 
+// The owned CLI prints exactly its version for --version (packages/cli/src/index.ts); anything else is refused.
 const validateGuestScript = `actual=$(sha256sum -- "$binary")
 [[ "\${actual%% *}" == "$digest" ]] || exit 84
 actual=$("$binary" --version) || exit 83
-[[ "$actual" == "orchestra v"* && "\${actual#orchestra v}" == "$version" ]] || exit 82`
+[[ "$actual" == "$version" ]] || exit 82`
 
 export const admitGuestScript = `${guestEnvironment}
 binary=$1; digest=$2; version=$3
