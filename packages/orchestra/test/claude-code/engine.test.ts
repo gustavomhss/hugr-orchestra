@@ -94,14 +94,6 @@ ClaudeEngineFixture.it.instance("a Claude Code agent's turn is mirrored and the 
     expect(ClaudeEngineFixture.state.queries[0].options?.settingSources).toEqual([])
     expect(ClaudeEngineFixture.state.queries[0].options?.disallowedTools).toEqual(["Read", "Edit", "Write", "NotebookEdit", "Task"])
     expect(ClaudeEngineFixture.state.queries[0].options?.model).toBe("claude-haiku-4-5-20251001")
-    // Only the Orchestra tools this turn has are aliased, by bare id and by the Claude Code tool each stands for:
-    // Claude Code's own Grep stays its own.
-    const orchestra = (id: string) => `mcp__orchestra__${id}`
-    expect(ClaudeEngineFixture.state.queries[0].options?.toolAliases).toEqual({ read: orchestra("read"), Read: orchestra("read"),
-      edit: orchestra("edit"), Edit: orchestra("edit"), write: orchestra("write"), Write: orchestra("write") })
-    // Outside a native research dispatch Claude Code keeps its own tools and turn count.
-    expect(ClaudeEngineFixture.state.queries[0].options?.tools).toBeUndefined()
-    expect(ClaudeEngineFixture.state.queries[0].options?.maxTurns).toBeUndefined()
     expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ sessionId: "sdk-1", cost: 0.01 })
 
     const second = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("again") })

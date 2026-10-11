@@ -23,8 +23,6 @@ export interface Interface {
   readonly reserveBytes: (allowance: Research.Allowance, operation: string, bytes: number) => Effect.Effect<void, Research.Error>
   /** Verify observed bytes fit the existing reservation. No credit is minted by reconciliation. */
   readonly reconcileBytes: (allowance: Research.Allowance, operation: string, bytes: number) => Effect.Effect<void, Research.Error>
-  /** What the dispatch may still spend of one kind, read from the committed ledger. */
-  readonly remaining: (allowance: Research.Allowance, kind: "provider" | "tool" | "bytes") => Effect.Effect<number, Research.Error>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ResearchAllowance") {}
@@ -87,20 +85,6 @@ export const layer = Layer.effect(
       return stored
     })
 
-    const spent = Effect.fn("ResearchAllowance.spent")(function* (allowance: Research.Allowance, kind: "provider" | "tool" | "bytes") {
-      const sessionID = allowance.binding.executionSessionID
-      const rows = yield* database.db.select({ data: EventTable.data }).from(EventTable).where(and(
-        eq(EventTable.aggregate_id, sessionID),
-        eq(EventTable.type, EventV2.versionedType(ResearchEvent.AllowanceCharged.type, 1)),
-      )).all()
-      const ledger = yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)(row.data))
-      if (ledger.some((entry) => entry.sessionID !== sessionID || !Number.isSafeInteger(entry.amount) ||
-        (entry.kind !== "bytes" && entry.amount !== 1)))
-        return yield* Effect.die(new Research.Error({ code: "publication_uncertain", message: "Invalid allowance ledger" }))
-      return ledger.filter((entry) => entry.dispatchCallID === allowance.dispatchCallID && entry.kind === kind)
-        .reduce((total, entry) => total + entry.amount, 0)
-    })
-
     const charge: Interface["charge"] = Effect.fn("ResearchAllowance.charge")((allowance, kind, operation, amount = 1) =>
       Effect.gen(function* () {
         if (!operation.trim() || operation.length > 256 || !Number.isSafeInteger(amount) || amount < 0 ||
@@ -122,7 +106,16 @@ export const layer = Layer.effect(
           // A preflight total outside this transaction would allow concurrent tools to overspend.
           commit: () => Effect.gen(function* () {
             yield* bound(allowance)
-            const used = yield* spent(allowance, kind)
+            const rows = yield* database.db.select({ data: EventTable.data }).from(EventTable).where(and(
+              eq(EventTable.aggregate_id, data.sessionID),
+              eq(EventTable.type, EventV2.versionedType(ResearchEvent.AllowanceCharged.type, 1)),
+            )).all()
+            const ledger = yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)(row.data))
+            if (ledger.some((entry) => entry.sessionID !== data.sessionID || !Number.isSafeInteger(entry.amount) ||
+              (entry.kind !== "bytes" && entry.amount !== 1)))
+              return yield* Effect.die(new Research.Error({ code: "publication_uncertain", message: "Invalid allowance ledger" }))
+            const used = ledger.filter((entry) => entry.dispatchCallID === data.dispatchCallID && entry.kind === kind)
+              .reduce((total, entry) => total + entry.amount, 0)
             const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit : allowance.byteLimit
             if (!Number.isSafeInteger(used) || amount > limit - used)
               return yield* Effect.die(new Research.Error({ code: "budget_exhausted", message: `Research ${kind} allowance exhausted (${used}/${limit}); retained work remains available` }))
@@ -149,16 +142,7 @@ export const layer = Layer.effect(
       }).pipe(researchFailure),
     )
 
-    const remaining: Interface["remaining"] = Effect.fn("ResearchAllowance.remaining")((allowance, kind) =>
-      Effect.gen(function* () {
-        yield* bound(allowance)
-        const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit : allowance.byteLimit
-        return Math.max(0, limit - (yield* spent(allowance, kind)))
-      }).pipe(researchFailure),
-    )
-
-    return Service.of({ bind, charge, reserveBytes: (allowance, operation, bytes) => charge(allowance, "bytes", operation, bytes),
-      reconcileBytes, remaining })
+    return Service.of({ bind, charge, reserveBytes: (allowance, operation, bytes) => charge(allowance, "bytes", operation, bytes), reconcileBytes })
   }),
 )
 

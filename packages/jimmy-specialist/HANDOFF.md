@@ -1,5 +1,12 @@
 # Jimmy final handoff — 2026-10-10
 
+## Landing note (2026-10-11)
+
+- On landing, Jimmy's Claude Code engine customizations were dropped; the engine is paused for its host/plugin redesign.
+- The Claude pilots and the SWE-QA-Pro numbers below were measured with those pre-redesign customizations, which are **not** in `dev`.
+- Jimmy will rejoin Claude mode as a plugin subagent through the new adapter.
+- On `dev`, Jimmy runs on Orchestra's normal loop.
+
 ## Update — 2026-10-11: Claude engine and SWE-QA-Pro
 
 The owner moved every model run to Claude; there is no OpenAI route. Jimmy now runs as a native research dispatch on Orchestra's `claude-code` engine, using the Claude Agent SDK and the machine's Claude Code login, with model `claude-opus-5-5`.

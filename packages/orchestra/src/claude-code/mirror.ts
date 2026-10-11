@@ -18,10 +18,8 @@ import type { Agent } from "@/agent/agent"
 import { ClaudeCodeTranscript } from "./transcript"
 import { ClaudeCodeTools } from "./tools"
 
-/** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. Orchestra's
- * tools drop their MCP prefix. Where the engine aliases a name to an Orchestra tool, the call is Orchestra's under that
- * tool's id, so its handler finds the mirrored part. */
-export const NAMES: Record<string, string> = Object.fromEntries(Object.entries(ClaudeCodeTools.STANDS_FOR).map(([id, name]) => [name, id]))
+/** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. */
+export const NAMES: Record<string, string> = Object.fromEntries(Object.entries(ClaudeCodeTools.NATIVE).map(([id, name]) => [name, id]))
 
 const FINISH: Record<string, string> = {
   end_turn: "stop",
@@ -56,8 +54,6 @@ export function create(input: {
   snapshot: Snapshot.Interface
   record?: (input: { apiID?: string; uuid?: string; messageID: MessageID }) => Effect.Effect<void>
   onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>
-  /** Names Claude Code resolves to an Orchestra tool (the engine's `toolAliases`). */
-  aliases?: Record<string, string>
 }) {
   const { sessionID, sessions, snapshot } = input
   const tools = new Map<string, SessionV1.ToolPart>()
@@ -210,9 +206,9 @@ export function create(input: {
           }
           if (block.type === "tool_use") {
             if (tools.has(block.id)) continue
-            const own = ClaudeCodeTools.orchestra(input.aliases?.[block.name] ?? block.name)
+            const own = ClaudeCodeTools.orchestra(block.name)
             const part: SessionV1.ToolPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "tool",
-              callID: block.id, tool: own ?? NAMES[block.name] ?? block.name,
+              callID: block.id, tool: NAMES[block.name] ?? own ?? block.name,
               state: { status: "running", input: block.input as Record<string, unknown>, time: { start: Date.now() } },
               metadata: own ? { claudeCodeTool: block.name } : { providerExecuted: true, claudeCodeTool: block.name } }
             tools.set(block.id, part)

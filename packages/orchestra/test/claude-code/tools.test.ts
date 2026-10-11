@@ -37,21 +37,9 @@ it.instance("MCP bridge advertises actual host schemas and executes real recall/
   const listed = yield* Effect.promise(() => client.listTools())
   expect(listed.tools.map((tool) => tool.name).toSorted()).toEqual(ClaudeCodeTools.IDS.toSorted())
   for (const def of defs) {
-    const tool = listed.tools.find((item) => item.name === def.id)
-    const schema = ToolJsonSchema.fromTool(def)
-    const union = Array.isArray(schema.anyOf) ? schema.anyOf : undefined
-    // A union is advertised as one object holding every variant's fields; any other schema exactly as the host has it.
-    if (!union) expect<unknown>(tool?.inputSchema).toEqual({ type: "object", ...schema })
-    if (union) {
-      expect(tool?.inputSchema).not.toHaveProperty("anyOf")
-      for (const variant of union)
-        for (const key of Object.keys(typeof variant === "object" && variant.properties ? variant.properties : {}))
-          expect(tool?.inputSchema.properties).toHaveProperty(key)
-    }
-    expect(tool?._meta).toEqual({ "anthropic/alwaysLoad": true })
+    expect<unknown>(listed.tools.find((tool) => tool.name === def.id)?.inputSchema).toEqual({ type: "object", ...ToolJsonSchema.fromTool(def) })
+    expect(listed.tools.find((tool) => tool.name === def.id)?._meta).toEqual({ "anthropic/alwaysLoad": true })
   }
-  // context_recall is a closed union: the flattened path is exercised.
-  expect(Array.isArray(ToolJsonSchema.fromTool(defs.find((def) => def.id === "context_recall")!).anyOf)).toBe(true)
   const recall = yield* Effect.promise(() => client.callTool({ name: "context_recall", arguments: { archive_list: true } }))
   const text = Schema.decodeUnknownSync(Schema.Struct({ content: Schema.Array(Schema.Struct({ type: Schema.String, text: Schema.String })) }))(recall)
   expect(text.content[0].text).toContain('"references":[]')

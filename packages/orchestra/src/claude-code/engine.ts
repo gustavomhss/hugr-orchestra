@@ -5,8 +5,6 @@ export * as ClaudeCode from "./engine"
 // Orchestra contributes the agent prompt and instructions, read/edit/write, and every approval. Maestro opts in with
 // its whole Orchestra toolset in-process (task included), under its own prompt (tools.ts). Each turn is mirrored into
 // the Orchestra session (mirror.ts), so the UI, revert and the archive work as for any session.
-// Inside a native research dispatch, Claude Code's own tools are off: the agent gets only the Orchestra tools it may
-// use, so every source it reads is captured and charged, and the dispatch allowance bounds the SDK's model turns.
 // Design: specs/claude-code-engine.md.
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -17,13 +15,10 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { ModelV2 } from "@orchestra/core/model"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
-import { nativeProfiles } from "@/maestro/roster"
 import { Permission } from "@/permission"
-import { ResearchExecution } from "@/research/allowance"
 import { Session } from "@/session/session"
 import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
@@ -97,7 +92,6 @@ const layer = Layer.effect(
     const catalog = yield* ModelsDev.Service
     const fs = yield* FSUtil.Service
     const spawner = yield* ChildProcessSpawner
-    const research = yield* ResearchExecution.Service
     const backend = ClaudeCodeLLM.create(sdk)
 
     const turn: Interface["turn"] = Effect.fn("ClaudeCode.turn")(function* (input) {
@@ -173,17 +167,11 @@ const layer = Layer.effect(
       const userIDs = users.map((message) => message.info.id)
       let prompt = ClaudeCodeTranscript.hostPrompt(users)
       const ruleset = Permission.merge(agent.permission, session.permission ?? [])
-      // A native seat's profile is a floor no Session grant lifts, as on Orchestra's loop.
-      const floor = agent.native && agent.id && nativeProfiles[agent.id] ? Permission.fromConfig(nativeProfiles[agent.id]) : undefined
-      // A native research dispatch (even an exhausted one, whose named exhaustion ends the turn before any SDK process)
-      // runs with Claude Code's own tools and compaction off.
-      const dispatch = yield* research.turns(sessionID).pipe(Effect.match({ onFailure: () => true, onSuccess: (left) => left !== undefined }))
       // The agent's toolset as Orchestra's loop resolves it: same registry, permissions and per-message switches.
       const available = (yield* registry.tools({ providerID: input.user.model.providerID, modelID: input.user.model.modelID,
         agent, permission: session.permission })).filter((def) => input.user.tools?.[def.id] !== false)
-      const defs = ClaudeCodeTools.served(agent, available, dispatch)
-      const builtins = dispatch ? [] : ClaudeCodeTools.builtins(agent, available)
-      const aliases = ClaudeCodeTools.aliases(defs)
+      const defs = ClaudeCodeTools.served(agent, available)
+      const builtins = ClaudeCodeTools.builtins(agent, available)
       const promptOps = input.promptOps ? yield* input.promptOps() : undefined
       const bypassAgentCheck = history.findLast((message) => message.info.role === "user")?.parts.some((part) => part.type === "agent") ?? false
       const canRecall = defs.some((def) => def.id === "context_recall") && Permission.evaluate("context_recall", sessionID, ruleset).action !== "deny"
@@ -197,7 +185,7 @@ const layer = Layer.effect(
         diagnostic: (reason) => metadata({ transcriptView: reason }),
         onFailure: () => Effect.sync(() => { persistenceFailed = true }), onDelivery: handoff })
       const view = create({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
-        sessions, snapshot, record: native.record, aliases,
+        sessions, snapshot, record: native.record,
         onStep: (message) => effective ? continuity.start({ sessionID, message, canRecall }) : Effect.void })
       if (state.nativeArchiveFailed) {
         yield* continuity.pause(sessionID)
@@ -214,7 +202,7 @@ const layer = Layer.effect(
         const messageID = part?.messageID ?? view.current()?.id ?? MessageID.ascending()
         const callID = part?.callID
         return {
-          sessionID, messageID, callID, agent: agent.name, agentID: agent.id, permission: ruleset, abort, messages: history,
+          sessionID, messageID, callID, agent: agent.name, agentID: agent.id, abort, messages: history,
           extra: { claudeCode: true, canRecall, promptOps, bypassAgentCheck },
           metadata: (value) => Effect.gen(function* () {
             const current = callID ? view.tool(callID) : undefined
@@ -222,11 +210,8 @@ const layer = Layer.effect(
             yield* view.complete({ ...current, state: { ...current.state, title: value.title ?? current.state.title,
               metadata: { ...current.state.metadata, ...value.metadata } } })
           }),
-          ask: (request) => Effect.gen(function* () {
-            if (floor && request.patterns.some((pattern) => Permission.evaluate(request.permission, pattern, floor).action === "deny"))
-              return yield* new PermissionV1.DeniedError({ ruleset: floor })
-            return yield* permission.ask({ ...request, sessionID, ...(callID ? { tool: { messageID, callID } } : {}), ruleset })
-          }).pipe(Effect.orDie),
+          ask: (request) => permission.ask({ ...request, sessionID, ...(callID ? { tool: { messageID, callID } } : {}), ruleset })
+            .pipe(Effect.orDie),
         }
       }
 
@@ -243,8 +228,7 @@ const layer = Layer.effect(
       })
       const gate = { run: toolRun, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
         shell: (ctx: Tool.Context, command: string) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
-          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid),
-        aliases, orchestraOnly: dispatch }
+          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
       // Every agent appends to Claude Code's preset, which a turn on the login must keep (sdk.ts preset). Maestro's text
       // claims precedence over the preset and carries what Orchestra's loop sends beside it (environment, instructions,
@@ -252,9 +236,7 @@ const layer = Layer.effect(
       const conductor = ClaudeCodeTools.conductor(agent)
       const append = (conductor
         ? [PRECEDENCE, agent.prompt, ENGINE_NOTE, ...(shape ? yield* system.environment(shape) : []), ...instructions, yield* system.skills(agent)]
-        // Claude Code's skills are off with its tools inside a research dispatch; the agent's own are listed as on
-        // Orchestra's loop.
-        : [agent.prompt, ...instructions, dispatch ? yield* system.skills(agent) : undefined]).filter(Boolean).join("\n\n") || undefined
+        : [agent.prompt, ...instructions]).filter(Boolean).join("\n\n") || undefined
       const prepare = Effect.gen(function* () {
       const stored = yield* native.read
       const key = stored.keys.find((item) => !item.key.subpath && item.key.sessionId === state.sessionId)?.key
@@ -321,8 +303,8 @@ const layer = Layer.effect(
         systemPrompt: ClaudeCodeSDK.preset(append),
         ...(builtins ? { tools: builtins } : {}),
         disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
-        toolAliases: aliases,
-        mcpServers: { [SERVER]: server({ defs, orchestraOnly: dispatch, run: toolRun, claim, complete: view.complete,
+        toolAliases: { Read: `mcp__${SERVER}__read`, Edit: `mcp__${SERVER}__edit`, Write: `mcp__${SERVER}__write` },
+        mcpServers: { [SERVER]: server({ defs, run: toolRun, claim, complete: view.complete,
           messages: () => sessions.messages({ sessionID }).pipe(Effect.orDie),
           context: (part) => toolContext(part, abort.signal) }) },
         // Orchestra is the only policy: no Claude Code settings (their allow rules would approve calls Orchestra never
@@ -352,17 +334,12 @@ const layer = Layer.effect(
       const outcome = yield* Effect.gen(function* () {
            // Same seam as LLM.stream: the caller's pre-model guard runs once before any SDK process (compaction included).
            yield* PromptGuard.check(sessionID)
-           // Provider calls left in the research dispatch; an exhausted one fails here with the ledger's named error.
-           const turns = yield* research.turns(sessionID)
            const materialized = yield* prepare
            // New SDK sessions must never fall into the legacy assistant-based delivery inference.
            if (!state.sessionId && state.delivered === undefined) yield* metadata({ delivered: [] })
-           // Inside a research dispatch Claude Code's own compaction stays off: the study charges maintenance before it
-           // runs and checkpoints it in Atlas, and Claude Code compacts unannounced and outside both.
-           options.settings.autoCompactEnabled = !effective && !dispatch
+           options.settings.autoCompactEnabled = !effective
            const env = yield* ClaudeCodeSDK.Environment
-           // No more model turns than the dispatch has provider calls left.
-           const lifetime = ClaudeCodeSDK.processLifetime({ ...options, env, ...(turns === undefined ? {} : { maxTurns: turns }),
+           const lifetime = ClaudeCodeSDK.processLifetime({ ...options, env,
              sessionStore: { ...options.sessionStore, load: async (key) => {
                if (materialized && key.sessionId === materialized.key.sessionId && key.projectKey === materialized.key.projectKey && !key.subpath)
                  return structuredClone(materialized.entries)
@@ -379,7 +356,6 @@ const layer = Layer.effect(
              yield* Effect.sync(() => query.close?.())
              yield* Effect.tryPromise({ try: () => query.return(undefined), catch: (error) => error }).pipe(Effect.orDie)
            }).pipe(Effect.ensuring(join)))
-          const charged = new Set<string>()
           while (true) {
             const next = yield* Effect.tryPromise({ try: () => query.next(), catch: (error) => error })
             if (next.done) break
@@ -407,18 +383,7 @@ const layer = Layer.effect(
               yield* view.retract(message.retracted_message_uuids)
               yield* continuity.invalidate(sessionID)
             }
-            // One provider call per model message, on its first frame; a compaction Claude Code still reports is a
-            // maintenance call, which the dispatch allowance includes.
-            const call = message.type === "stream_event" && message.event.type === "message_start" ? message.event.message.id
-              : message.type === "assistant" ? message.message.id
-              : message.type === "system" && message.subtype === "compact_boundary" ? message.uuid : undefined
-            if (turns !== undefined && call && !charged.has(call) && !("parent_tool_use_id" in message && message.parent_tool_use_id)) {
-              charged.add(call)
-              yield* research.provider({ sessionID, agent }, Effect.void)
-            }
             yield* view.on(message)
-            // Claude Code stopped at the turn bound: the ledger names the exhaustion.
-            if (turns !== undefined && message.type === "result" && message.subtype === "error_max_turns") yield* research.turns(sessionID)
             if (message.type === "result") {
               if (message.subtype !== "success" || message.is_error) {
                 const detail = "errors" in message && message.errors?.length ? message.errors.join("; ") : "result" in message ? message.result : message.subtype
@@ -472,6 +437,5 @@ export const node = LayerNode.make({
   service: Service,
   layer,
   deps: [Agent.node, Session.node, Snapshot.node, Permission.node, ToolRegistry.node, Instruction.node, SystemPrompt.node, Config.node,
-    FSUtil.node, CrossSpawnSpawner.node, ClaudeCodeSDK.node, SessionContinuity.node, Provider.node, ModelsDev.node,
-    ResearchExecution.node],
+    FSUtil.node, CrossSpawnSpawner.node, ClaudeCodeSDK.node, SessionContinuity.node, Provider.node, ModelsDev.node],
 })

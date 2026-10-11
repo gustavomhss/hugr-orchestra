@@ -23,12 +23,7 @@ const issued = new WeakSet<Frame>()
 export interface Interface {
   readonly enter: <A, E, R>(sessionID: string, dispatchCallID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly withAttribution: <A, E, R>(sessionID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
-  readonly provider: <A, E, R>(input: Pick<LLM.StreamInput, "sessionID" | "parentSessionID" | "agent" | "purpose">, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
-  /**
-   * Provider calls the session's dispatch may still make, for an engine that runs its own model loop; undefined outside a
-   * native research dispatch. An exhausted dispatch fails with the ledger's exhaustion error.
-   */
-  readonly turns: (sessionID: string) => Effect.Effect<number | undefined, Research.Error>
+  readonly provider: <A, E, R>(input: LLM.StreamInput, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly tool: <A, E, R>(sessionID: string, callID: string, toolID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly captureBytes: <A, E, R>(sessionID: string, callID: string, bytes: number, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
 }
@@ -133,17 +128,7 @@ const layer = Layer.effect(
       return yield* effect
     })
 
-    const turns: Interface["turns"] = (sessionID) => Effect.gen(function* () {
-      const current = yield* frame(sessionID)
-      if (!current) return undefined
-      const left = yield* allowances.remaining(current.allowance, "provider")
-      const limit = current.allowance.providerLimit
-      if (left < 1)
-        return yield* new Research.Error({ code: "budget_exhausted", message: `Research provider allowance exhausted (${limit}/${limit}); retained work remains available` })
-      return left
-    })
-
-    return Service.of({ enter, withAttribution, provider, tool, captureBytes, turns })
+    return Service.of({ enter, withAttribution, provider, tool, captureBytes })
   }),
 )
 

@@ -788,17 +788,3 @@ it.instance(
     },
   },
 )
-
-it.instance("native subagent honors a configured engine while Maestro stays on Orchestra's loop", () =>
-  Effect.gen(function* () {
-    const jimmy = yield* load((svc) => svc.get("jimmy"))
-    expect(jimmy).toMatchObject({ id: "jimmy", native: true, mode: "subagent", engine: "claude-code" })
-    expect(String(jimmy?.model?.providerID)).toBe("anthropic")
-    // The engine is the only thing the override moves: the seat's permission floor stays.
-    expect([evalPerm(jimmy, "bash"), evalPerm(jimmy, "edit"), evalPerm(jimmy, "research_capture")]).toEqual(["deny", "deny", "allow"])
-    const maestro = yield* load((svc) => svc.get("maestro"))
-    expect([maestro?.id, maestro?.mode, maestro?.engine]).toEqual(["maestro", "primary", undefined])
-  }),
-  { config: { agent: { jimmy: { engine: "claude-code", model: "anthropic/claude-opus-5-5", permission: { bash: "allow" } },
-    maestro: { engine: "claude-code", mode: "subagent" } } } },
-)
