@@ -86,3 +86,74 @@ A scan of slot directories, transport records and logs found no credential value
 - **Count-tokens refusal.** In one R08 slot the proxy refused one Claude Code `count_tokens` helper call because it is not allowlisted. The task still returned.
 - **R14 untested.** Native continuation on this engine is not bridged.
 - **Not a comparison.** This is a candidate-only system result, with no superiority claim and no baseline rerun. Host load was high during preparation.
+
+## Pilot 2 — union-schema fix (2026-10-11)
+
+Pilot 2 re-runs R05 and R08 on the candidate that carries the union-parameter fix. In Pilot 1, every R08 failure traced to one engine bug: tools whose parameters are a union (such as `research_record`) reached Claude with an empty schema, so no document could be published. The R14 status is unchanged and R14 was not re-run.
+
+There were no retries, no best-of selection and no criteria changes after the freeze. This section contains only identities, counts, classes and durations.
+
+### Result
+
+| Case | Slots | Pass | Fail | Inconclusive |
+|---|---|---|---|---|
+| R05 | 3 | 3 | 0 | 0 |
+| R08 | 3 | 3 | 0 | 0 |
+
+**Both families pass 3/3 on the fixed candidate.** Pilot 1's R08 failure class ("no published research document") did not recur: every R08 slot has at least one `research.document.published` event.
+
+### Per slot
+
+The provider-call and tool counts come from the dispatch allowance ledger (`research.allowance.charged`, kind `provider` / `tool`) in each slot's native DB. The `research_record` and document counts come from the native `part` and `event` tables.
+
+| Slot | Execution | Provider calls (of 24) | Tool charges (of 64) | `research_record` completed / error | `research.document.published` | Verdict | Failure class |
+|---|---|---|---|---|---|---|---|
+| R05-1 | task returned, 183 s | 10 | 27 | 5 / 0 | 1 | pass | none |
+| R05-2 | task returned, 141 s | 8 | 25 | 3 / 0 | 0 | pass | none |
+| R05-3 | task returned, 149 s | 8 | 28 | 5 / 0 | 0 | pass | none |
+| R08-1 | task returned, 246 s | 10 | 28 | 10 / 6 | 1 | pass | none |
+| R08-2 | task returned, 166 s | 9 | 28 | 8 / 0 | 1 | pass | none |
+| R08-3 | task returned, 259 s | 11 | 31 | 10 / 0 | 2 | pass | none |
+
+No slot hit a deadline, allowance or crash. Every native evaluation was present. R05 does not require a document, so R05-2 and R05-3 are not penalized for having none.
+
+**Observed engine defect (non-fatal).** All six `research_record` errors in R08-1 were Claude Code `InputValidationError: ... could not be parsed as JSON`. These are tool inputs the model emitted as malformed JSON: an unquoted `conditions` value, repeated keys. The schema was not empty, and the model corrected itself within the same dispatch. Each error still counts against the tool allowance. The defect is worth tracking: the fix lists the merged `conditions` field to the model, but the model sometimes fails to emit it as a JSON string array.
+
+### Identities
+
+| Item | Value |
+|---|---|
+| Candidate | `jimmy-claude-candidate` @ `68de9a03d5daef064f64287e18fb91c007be22e5`, tree `6bf1571a1931d15055a3263b278db9addbafba22`. The product checkout was clean before and after; CI 38102023339 is green |
+| Driver | unedited `packages/orchestra/script/research-pilot.ts --engine claude-code`, runner SHA-256 `662852763f9cbbf934d2a161dea76803ee55271ed9c71a86d62f01d04548c93f`; lock `5e313161…`; Jimmy prompt `ce43bfa0…`; config `b90ea29c…` |
+| Engine | claude-code, `@anthropic-ai/claude-agent-sdk` 0.3.289, bundled `claude` 2.1.289 (`358aa0e31666c48b2340ad9fa4003436105086ca12e1ecd4c5266d18598c2f7f`) |
+| Models | Jimmy `anthropic/claude-opus-5-5`; Maestro `opencode/big-pickle` (made no model calls; the driver dispatches Task directly) |
+| Grader | the same bundled `claude -p`, `claude-opus-5-5`, effort medium, no tools, no setting sources, no session persistence; one fresh call per slot. Grader instruction SHA-256 `c718ce46f1f55ead75ff1515de2b3703065f191599cd2df31d37970e2cfb3bef` |
+| Public input manifest | `ea828303187d4e0b14eb391d5d700948b913b7869390589b65cefc5f2202ddd4` |
+| Questions | `99c0f8841a0dc20b530874ef1ad1a66420cec3e5e7ccd5683f8fb2af74654606` |
+| R05 oracle and rubric | `01754443398d986a47184a37908ecf0406af9e937abde9b5d5e79d43bd88997c` |
+| R08 oracle and rubric | `7fa8d43a098e4a351cbfaca6ce3a1ed0756d78d518739dbc44af4bdd01954076` |
+| Private ledger (retained, not committed) | `05f70df23963919aec4d6ca3e99e4a473f32571bcf0be1ab091581bdcf67c9d1` |
+
+All four case hashes were frozen before the first model run. The budgets are unchanged and enforced by the engine: 24 provider calls, 64 tool calls, 64 MiB and 600 s per dispatch.
+
+### Isolation (lean, declared)
+
+- Each slot had its own run root and its own native DB, data, config and Claude Code state directories.
+- The slot-visible source directory held only that case's disclosed fixture files. The oracle, rubric and questions file live outside every slot root and outside every git repository.
+- Every `read` in all six traces resolved to a disclosed input or a native skill file; zero paths were undisclosed.
+- Claude Code built-ins are disabled for a research dispatch: Jimmy held only Orchestra tools under its permission floor.
+- Claude Code used the machine's own login, through the driver's default path. The evaluator did not read, copy or print any credential.
+
+### Durations
+
+- Execution: 514 s from first launch to last slot end, with 3 concurrent slots.
+- Grading tail after the last slot: 13 s (grading rolled as slots finished).
+- Whole pilot including case authoring: about 12 min.
+
+### Deviations from Pilot 1 (declared)
+
+- **Rebuilt cases.** A host reboot erased Pilot 1's private material. Pilot 2 used one fresh synthetic question per family, written from the public R05/R08 prototypes (with their discriminating evidence and named traps) and frozen by SHA-256 before any run. Pilot 2 results are therefore not item-comparable with Pilot 1.
+- **No seatbelt, no proxy.** Isolation came from the engine's tool floor and per-slot state placement, not from an OS sandbox or a credential-attaching proxy.
+- **Claude grades Claude.** The self-preference bias noted in Pilot 1 still applies.
+- **No calibration controls this round.** Grader calibration was not re-run, and no planted-wrong controls were graded.
+- **No preflight tool listing.** The candidate's own schema test (`test/claude-code/research.test.ts`) cannot run locally under the repository's local-test guard. The fix is instead evidenced by CI 38102023339 and by the run itself: completed `research_record` document actions and published-document events.
