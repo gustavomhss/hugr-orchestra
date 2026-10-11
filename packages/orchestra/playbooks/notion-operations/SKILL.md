@@ -113,9 +113,11 @@ Workers may require Business/Enterprise plan and workspace enablement. Deploying
 
 ## Curl fallback
 
+`NOTION_API_TOKEN` is set by the user in their shell; never echo it.
+
 ```bash
 curl -sS "https://api.notion.com/v1/users/me" \
-  -H "Authorization: Bearer $NOTION_API_TOKEN"   # variable set by the user; never echo it \
+  -H "Authorization: Bearer $NOTION_API_TOKEN" \
   -H "Notion-Version: 2026-03-11" \
   -H "Content-Type: application/json"
 ```

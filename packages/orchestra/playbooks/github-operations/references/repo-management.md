@@ -288,11 +288,13 @@ curl -s -X PUT \
 
 **With gh:**
 
+Setting or deleting secrets changes what CI can access: confirm with the user first.
+Never pass secret values on the command line; let `gh` prompt the user, or have the user pipe from a file they control.
+
 ```bash
-gh secret set API_KEY --body "your-secret-value"
-gh secret set SSH_KEY < ~/.ssh/id_rsa
+gh secret set API_KEY            # gh prompts the user for the value
 gh secret list
-gh secret delete API_KEY
+gh secret delete API_KEY         # confirm with the user first
 ```
 
 **With curl:**

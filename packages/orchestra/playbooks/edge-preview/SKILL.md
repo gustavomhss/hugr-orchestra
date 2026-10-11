@@ -61,15 +61,13 @@ Run every step with `bash`. Always pin the version (`wrangler@latest` or `wrangl
    ```
 
 2. **Deploy with `--temporary`** (the proof-of-work delay can be long; use `process_control` start/wait if it exceeds a short `bash` call) from the project directory:
-   ```
-   npx wrangler@latest deploy --temporary
-   ```
-   The proof-of-work check adds a short automatic delay. On success Wrangler prints an `Account: <name> (created)` (or `(reused)`) line, a `Claim URL`, and the live `https://<worker>.<account>.workers.dev` URL.
-
-3. **Parse the URLs** from that output. Run the helper to extract them reliably instead of eyeballing:
+   and pipe its output through the parser in the same run (deploy once, never twice):
    ```
    npx wrangler@latest deploy --temporary 2>&1 | python scripts/parse_deploy_output.py
    ```
+   The proof-of-work check adds a short automatic delay. On success Wrangler prints an `Account: <name> (created)` (or `(reused)`) line, a `Claim URL`, and the live `https://<worker>.<account>.workers.dev` URL.
+
+3. **Read the parsed URLs** from that JSON instead of eyeballing the raw output.
    (Resolve `scripts/parse_deploy_output.py` to this playbook's absolute path.) It prints JSON: `{"live_url", "claim_url", "account", "account_state", "expires_minutes", "deployed"}`.
 
 4. **Verify the deploy is actually live** — do not trust the deploy log alone. `curl` the live URL and confirm the body matches what the code returns:

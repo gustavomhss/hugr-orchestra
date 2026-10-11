@@ -54,7 +54,7 @@ error: would reformat src/utils.py
 **Common fixes:**
 - Run the formatter locally: `black .`, `isort .`, `ruff check --fix .`
 - Fix the specific style violation by editing the file
-- If using `patch`, make sure to match existing indentation style
+- If using `edit` or `apply_patch`, make sure to match existing indentation style
 
 ---
 

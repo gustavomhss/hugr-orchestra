@@ -73,12 +73,6 @@ After entering credentials once, they're saved and reused for all future operati
 git config --global credential.helper 'cache --timeout=28800'
 ```
 
-**Alternative: set the token directly in the remote URL (per-repo)**
-
-```bash
-# Embed token in the remote URL (avoids credential prompts entirely)
-git remote set-url origin https://<username>:<token>@github.com/<owner>/<repo>.git
-```
 
 **Step 3: Configure git identity**
 
@@ -153,7 +147,7 @@ If `gh` is installed, it handles both API access and git credentials in one step
 
 ### Interactive Browser Login (Desktop)
 
-> **PITFALL (agent-driven sessions on Windows):** when driving `gh auth login` through a pty background process, answer prompts with `process(submit)` — never `process(write)` with a bare `\n`. Enter on a Windows PTY (ConPTY/pywinpty) is a carriage return; a lone `\n` is not delivered as a line terminator, so gh's "Press Enter to open the browser" prompt (a blocking line read) silently never returns and the login hangs. Also note the browser may not open on the user's desktop from a background session — if they report that, fall back to the device flow below.
+> **PITFALL (agent-driven sessions on Windows):** when driving `gh auth login` through a pty background process, answer prompts with `process_control` action `submit` — never action `write` with a bare `\n`. Enter on a Windows PTY (ConPTY/pywinpty) is a carriage return; a lone `\n` is not delivered as a line terminator, so gh's "Press Enter to open the browser" prompt (a blocking line read) silently never returns and the login hangs. Also note the browser may not open on the user's desktop from a background session — if they report that, fall back to the device flow below.
 
 ```bash
 gh auth login
@@ -209,34 +203,21 @@ Note: on Windows winget installs, gh lands at `/c/Program Files/GitHub CLI` — 
 > credential storage may block indefinitely waiting on a secret-service
 > keyring — even with `--insecure-storage`, and with no output. If the
 > command doesn't return within ~20s (wrap it in `timeout 20 …` to detect
-> this), skip gh's login machinery and write the credential store directly:
->
-> ```bash
-> # $TOKEN = the access token from the device flow above (never echo it)
-> mkdir -p ~/.config/gh
-> LOGIN=$(curl -s -H "Authorization: token $TOKEN" https://api.github.com/user \
->   | sed 's/.*"login": *"\([^"]*\)".*/\1/')
-> printf 'github.com:\n    users:\n        %s:\n            oauth_token: %s\n    git_protocol: https\n    oauth_token: %s\n    user: %s\n' \
->   "$LOGIN" "$TOKEN" "$TOKEN" "$LOGIN" > ~/.config/gh/hosts.yml
-> chmod 600 ~/.config/gh/hosts.yml
-> gh auth status          # reads hosts.yml directly — verifies without the keyring
-> gh auth setup-git       # wires the git credential helper (does not hang)
-> ```
->
-> `gh auth status` and `setup-git` read the file store without touching the
-> keyring, so they work immediately. Proven on a headless x86_64 VPS
-> (gh 2.97.0, Aug 2026) after `--with-token` hung twice.
+> this), stop and ask the user to finish login in their own terminal (for
+> example `GH_TOKEN` exported in their shell profile, or `gh auth login`
+> run by them). Never write tokens into files or command lines yourself.
 
 ### Token-Based Login (Headless / SSH Servers)
 
-```bash
-echo "<THEIR_TOKEN>" | gh auth login --with-token
+Ask the user to run the token login themselves in their terminal (the token must
+never pass through the chat or your commands), for example:
 
-# Set up git credentials through gh
-gh auth setup-git
+```bash
+gh auth login --with-token < <path-the-user-controls>   # run by the user
+gh auth setup-git                                       # safe to run afterwards
 ```
 
-If `--with-token` hangs here, use the hosts.yml fallback from the pitfall above.
+If `--with-token` hangs, ask the user to export `GH_TOKEN` in their own shell instead.
 
 ### Verify
 

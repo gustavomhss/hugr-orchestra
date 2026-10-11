@@ -69,14 +69,14 @@ Read:
 Long-running (`process_control`): `netlify dev`; any `netlify logs` mode that streams.
 
 Safe writes: `netlify deploy` (draft deploy to a unique URL; `--alias=<name>` for a stable draft subdomain),
-`netlify env:set <KEY> <value> --context deploy-preview` (value from the user; add `--secret` for secrets).
+`netlify env:set <KEY> --context deploy-preview` for non-secret values only; for secrets ask the user to run `netlify env:set <KEY> <value> --secret` in their own terminal so the value never passes through you.
 
 CONFIRM first: `netlify deploy --prod`, `netlify env:set|unset ... --context production`, `netlify env:import`,
 `netlify api deleteSite|deleteDeploy|restoreSiteDeploy ...`.
 
 ## Railway (`railway`)
 
-- Install: `brew install railway`, `npm i -g @railway/cli`, or `bash <(curl -fsSL railway.com/install.sh)`. Check: `railway --version`.
+- Install: `brew install railway` or `npm i -g @railway/cli`. Check: `railway --version`.
 - Login (user): `railway login` (browser) or `railway login --browserless` over SSH. Token alternatives, set by the user in
   their shell: `RAILWAY_API_TOKEN` (account or workspace) or `RAILWAY_TOKEN` (one project environment). Check: `railway whoami`.
 - Target: `railway link` (project), `railway service` (service), `railway environment` (switch, interactive).
@@ -90,7 +90,7 @@ Read (`--json` is a global flag):
 Long-running (`process_control`): `railway logs` with no `-n` streams; `railway up` streams build and deploy output
 (prefer `railway up --detach` and poll `railway status --json`).
 
-Safe writes: `railway variable set KEY=value` in a non-production environment, `railway environment new <name>`,
+Safe writes: `railway variable set KEY=value` in a non-production environment for non-secret values only (secrets: the user runs it in their own terminal), `railway environment new <name>`,
 `railway up --detach` to a non-production environment.
 
 CONFIRM first: `railway up` or `railway redeploy` against a production environment, `railway down` (removes the latest deployment),
@@ -99,7 +99,7 @@ Run `railway --help` if a subcommand name differs on the installed version.
 
 ## Sentry (`sentry`)
 
-- Install: `curl https://cli.sentry.dev/install -fsS | bash`, `brew install getsentry/tools/sentry`, or `npm install -g sentry`
+- Install: `brew install getsentry/tools/sentry` or `npm install -g sentry`
   (Node 20+). Check: `sentry --version`. Note: the older `sentry-cli` is for releases and source maps, not triage.
 - Login (user): `sentry auth` (browser device flow); check with `sentry auth status`. Token alternative: user exports
   `SENTRY_AUTH_TOKEN` in their shell. Self-hosted: user sets `SENTRY_HOST=https://sentry.example.com` (login needs `--url`).
@@ -124,7 +124,7 @@ DELETE or PUT, deleting projects, releases, alerts, or monitors.
 
 ## Grafana (`gcx`)
 
-- Install: `brew install grafana/grafana/gcx`, `curl -fsSL https://raw.githubusercontent.com/grafana/gcx/main/scripts/install.sh | sh`,
+- Install: `brew install grafana/grafana/gcx`,
   or `go install github.com/grafana/gcx/cmd/gcx@latest`. Check: `gcx --version`.
 - Needs the stack URL. Grafana Cloud: `https://<stack>.grafana.net`. Self-hosted: the user's own URL (ask for it; never guess).
 - Login (user): `gcx login <name> --server https://<stack>.grafana.net` (browser OAuth for Cloud). Self-hosted or
