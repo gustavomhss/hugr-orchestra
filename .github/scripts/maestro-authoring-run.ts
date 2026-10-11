@@ -372,12 +372,6 @@ const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
   requireFact(actualGit === seeded.git && seeded.processes.spawn === containedSpawner.spawn && sharedSpawner.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_GIT_CONSUMER_NOT_BOUND")
   const store = yield* InstanceStore.Service
   stage("instance", "before")
-  if (job.preflightOnly) {
-    // Presence only: no -w, so the item's secret is never read here; ClaudeCodeSDK reads it when Archie's turn spawns.
-    const { ClaudeCodeSDK } = yield* Effect.promise(() => import(job.candidate + "/packages/orchestra/src/claude-code/sdk.ts"))
-    const keychain = Bun.spawnSync(["security", "find-generic-password", "-a", process.env.USER || userInfo().username, "-s", ClaudeCodeSDK.credentialStorage(process.env, process.env.HOME ?? "").service], { env: process.env, stdout: "ignore", stderr: "ignore" })
-    if (keychain.exitCode !== 0) { stage("instance", "failed", "AUTHORING_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING"); throw new Error("AUTHORING_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING") }
-  }
   const ctx = yield* store.load({ directory: job.project })
   stage("instance", "after")
   const services = yield* Effect.gen(function* () {
