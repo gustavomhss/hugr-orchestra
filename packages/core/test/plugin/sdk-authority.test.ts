@@ -36,7 +36,11 @@ for (const runtime of ["bun", "node", "compiled"] as const) {
       return JSON.parse(stdout) as { specifier: string; bundled?: boolean; require?: boolean; error?: string }[]
     }
     const control = await run(true)
-    control.forEach((row) => expect(row.error).toContain("planted SDK copy ran"))
+    // Bun 1.3 compiled binaries resolve only an on-disk package's root, never its subpath exports (explicit or
+    // pattern), so there the control must prove the planted root and may find subpaths unreachable.
+    const reachable = runtime !== "compiled" ? control : control.filter((row) => row.specifier === sdk.name || !row.error?.includes("Cannot find module"))
+    expect(reachable.map((row) => row.specifier)).toContain(sdk.name)
+    reachable.forEach((row) => expect(row.error).toContain("planted SDK copy ran"))
     const result = await run(false)
     result.forEach((row) => {
       expect(row.error).toContain("PluginSdkSetupError")

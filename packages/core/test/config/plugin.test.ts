@@ -19,7 +19,8 @@ const it = testEffect(PluginTestLayer)
 const decode = Schema.decodeUnknownSync(Config.Info)
 
 // Admission writes SDK bridges into a plugin's source envelope and into absent ancestor namespaces, so the
-// fixtures run from a temporary tree, never the checkout, with `effect` installed beside them like a real plugin.
+// fixtures run from a temporary tree, never the checkout. Only the Effect plugin gets `effect` installed beside
+// it, like a real plugin: admitting that link inventories its installed namespaces and takes seconds.
 const tmp = tmpdir()
 const staged = { root: "" }
 const dir = () => path.join(staged.root, "config")
@@ -28,10 +29,14 @@ beforeAll(async () => {
   staged.root = (await tmp).path
   await cp(path.join(import.meta.dir, "../plugin/fixtures"), path.join(staged.root, "plugin", "fixtures"), { recursive: true })
   await cp(path.join(import.meta.dir, "fixtures"), path.join(dir(), "fixtures"), { recursive: true })
-  await mkdir(path.join(staged.root, "node_modules"))
+  await mkdir(path.join(staged.root, "effect", "node_modules"), { recursive: true })
+  await cp(
+    path.join(import.meta.dir, "../plugin/fixtures/config-effect-plugin.ts"),
+    path.join(staged.root, "effect", "config-effect-plugin.ts"),
+  )
   await symlink(
     await realpath(path.join(import.meta.dir, "../../node_modules/effect")),
-    path.join(staged.root, "node_modules", "effect"),
+    path.join(staged.root, "effect", "node_modules", "effect"),
     "junction",
   )
 })
@@ -110,7 +115,7 @@ describe("ConfigExternalPlugin", () => {
                   info: decode({
                     plugins: [
                       {
-                        package: "../plugin/fixtures/config-effect-plugin.ts",
+                        package: "../effect/config-effect-plugin.ts",
                         options: { description: "Effect plugin from config" },
                       },
                     ],
@@ -263,7 +268,8 @@ describe("ConfigExternalPlugin", () => {
 })
 
 const waitForAgent = Effect.fnUntraced(function* (agents: AgentV2.Interface, id: string) {
-  for (let attempt = 0; attempt < 1000; attempt++) {
+  // SDK admission runs before each import; allow it up to 20 s, inside the package's 30 s test timeout.
+  for (let attempt = 0; attempt < 2000; attempt++) {
     const agent = yield* agents.get(AgentV2.ID.make(id))
     if (agent) return agent
     yield* Effect.sleep("10 millis")
