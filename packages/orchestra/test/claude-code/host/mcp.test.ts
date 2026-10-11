@@ -7,11 +7,11 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ToolRegistry } from "@/tool/registry"
 import { Session } from "@/session/session"
-import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { Tool } from "@/tool/tool"
 import { TestInstance } from "../../fixture/fixture"
 import { testEffect } from "../../lib/effect"
 import { makeHttp } from "../../session/prompt.fixture"
+import { BridgeFixture } from "./bridge-fixture"
 
 const it = testEffect(makeHttp())
 
@@ -33,19 +33,6 @@ function fake(id: string): Tool.Def {
   return { id, description: id, parameters: Schema.Struct({}), execute: () => Effect.succeed({ title: id, output: id, metadata: {} }) }
 }
 
-const bridge = Effect.fnUntraced(function* (sessionID: SessionID) {
-  const context = yield* Effect.context<never>()
-  const messageID = MessageID.ascending()
-  return {
-    run: <A>(effect: Effect.Effect<A, unknown>) => Effect.runPromiseWith(context)(effect),
-    claim: (tool: string) => Effect.succeed({ id: PartID.ascending(), sessionID, messageID, type: "tool" as const, tool, callID: tool,
-      state: { status: "running" as const, input: {}, time: { start: 1 } } }),
-    complete: () => Effect.void,
-    context: (part: { callID: string }) => ({ sessionID, messageID, agent: "maestro", agentID: "maestro", callID: part.callID,
-      abort: AbortSignal.any([]), messages: [], metadata: () => Effect.void, ask: () => Effect.void }),
-  }
-})
-
 it.instance("the orchestra server lists no tool that duplicates a Claude Code built-in", () => Effect.gen(function* () {
   const sessions = yield* Session.Service
   const registry = yield* ToolRegistry.Service
@@ -58,6 +45,7 @@ it.instance("the orchestra server lists no tool that duplicates a Claude Code bu
   expect(served.filter((id) => DUPLICATES.includes(id.toLowerCase()))).toEqual([])
   expect(served).not.toContain("context_compact")
   expect(served).not.toContain("invalid")
+  expect(served).not.toContain("maestro_request_review")
 
   const client = yield* connect(ClaudeHostMcp.server({ sessionID: chat.id, directory: "/", worktree: "/", agent: "maestro",
     abort: new AbortController(), tools: [...all, fake("dock_click"), fake("research_capture"), fake("process")] }))
@@ -72,10 +60,15 @@ it.instance("task_grant validates like Task, round-trips to the per-session gran
   const sessions = yield* Session.Service
   const instance = yield* TestInstance
   const chat = yield* sessions.create({ title: "Host grants" })
-  const client = yield* connect(ClaudeHostMcp.server({ sessionID: chat.id, directory: instance.directory, worktree: instance.directory,
-    agent: "maestro", abort: new AbortController(), bridge: yield* bridge(chat.id) }))
-  const call = (args: Record<string, unknown>) =>
-    Effect.promise(() => client.callTool({ name: ClaudeHostMcp.GRANT, arguments: args })).pipe(Effect.map((result) => Schema.decodeUnknownSync(Text)(result)))
+  const fixture = yield* BridgeFixture.make(chat.id)
+  const client = yield* fixture.client()
+  const call = (args: Record<string, unknown>) => Effect.gen(function* () {
+    const id = crypto.randomUUID()
+    yield* fixture.call({ id, tool: ClaudeHostMcp.GRANT, args })
+    const result = yield* Effect.promise(() => client.callTool({ name: ClaudeHostMcp.GRANT, arguments: fixture.arguments(id) }))
+    fixture.bridge.release(id)
+    return Schema.decodeUnknownSync(Text)(result)
+  })
 
   const granted = yield* call({ seat: "archie", writePaths: ["docs/plan", "docs/plan"], purpose: "Write the migration proposal" })
   expect(granted.isError).toBeUndefined()

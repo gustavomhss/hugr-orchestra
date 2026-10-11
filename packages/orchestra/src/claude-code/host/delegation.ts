@@ -108,7 +108,16 @@ export function make(input: {
     const hold = toolUseID ? join.get(toolUseID)?.hold : undefined
     if (!entry || hold)
       return { hold: `HOLD: subagent ${agentID} is not joined to an Orchestra dispatch${hold ? ` (${hold})` : ""}, so its calls cannot be scoped to a grant.` }
-    if (!entry.seat || !entry.child) return { ...entry.dispatcher, agentID }
+    if (!entry.seat) {
+      // HOST creates generic subagents' own Sessions at their first frame. Gate their tools in that placement too.
+      for (let round = 0; round < 150; round++) {
+        const child = join.child(toolUseID!)
+        if (child) return { ...entry.dispatcher, sessionID: child, agentID }
+        yield* Effect.sleep("20 millis")
+      }
+      return { hold: `HOLD: subagent ${agentID} has no mirrored child Session, so its calls cannot be scoped.` }
+    }
+    if (!entry.child) return { hold: `HOLD: ${entry.seat.id} has no child Session.` }
     return { sessionID: entry.child, seat: entry.seat.id, agentID }
   })
 

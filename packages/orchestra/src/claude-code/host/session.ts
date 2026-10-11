@@ -16,8 +16,16 @@ import type { CanUseTool, PermissionResult, Query, SDKMessage, SDKUserMessage } 
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { AppProcess } from "@orchestra/core/process"
+import { Database } from "@orchestra/core/database/database"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Agent } from "@/agent/agent"
+import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
+import { InstanceStore } from "@/project/instance-store"
 import { BackgroundProcess } from "@/background/process"
 import { Config } from "@/config/config"
 import { ToolRegistry } from "@/tool/registry"
@@ -128,6 +136,7 @@ type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number;
 type Live = {
   sessionID: SessionID
   query: Query
+  bridge?: ReturnType<typeof ClaudeHostBridge.create>
   inbox: ReturnType<typeof inbox>
   abort: AbortController
   agent: Agent.Info
@@ -152,6 +161,7 @@ type Live = {
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
+    const bindings = yield* ArsenalBindings.make
     const agents = yield* Agent.Service
     const sessions = yield* Session.Service
     const snapshot = yield* Snapshot.Service
@@ -186,9 +196,12 @@ const layer = Layer.effect(
       const stored = yield* sessions.getPart({ sessionID: call.sessionID, messageID: call.messageID, partID: call.id })
       const recorded = live.children.get(call.callID) ?? live.join.child(call.callID) ?? (stored?.type === "tool" ? childOf(stored) : undefined)
       const existing = recorded ? yield* sessions.get(recorded).pipe(Effect.option) : undefined
-      const agent = (yield* agents.get(seat).pipe(Effect.orElseSucceed(() => undefined))) ?? live.agent
+      const parent = yield* sessions.get(call.sessionID).pipe(Effect.orDie)
+      const inherited = parent.agent ?? live.agent.id ?? live.agent.name
+      const selected = String(input.subagent_type ?? "").startsWith("orchestra:") ? seat : inherited
+      const agent = (yield* agents.get(existing?._tag === "Some" ? existing.value.agent ?? selected : selected).pipe(
+        Effect.orElseSucceed(() => undefined))) ?? live.agent
       const session = existing?._tag === "Some" ? existing.value : yield* Effect.gen(function* () {
-        const parent = yield* sessions.get(call.sessionID).pipe(Effect.orDie)
         const created = yield* sessions.create({ parentID: call.sessionID, agent: agent.id ?? agent.name, permission: parent.permission,
           title: `${String(input.description ?? seat)} (@${agent.name} subagent)` })
         // The Agent card links its child session where a seat dispatch's card does: the part's and the state's metadata.
@@ -201,6 +214,7 @@ const layer = Layer.effect(
         return created
       })
       live.children.set(call.callID, session.id)
+      live.join.dispatched(call.callID, { child: session.id })
       const messages = yield* sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
       const brief = messages.findLast((message) => message.info.role === "user")?.info
       if (brief?.role === "user") return { sessionID: session.id, user: brief, agent }
@@ -234,8 +248,6 @@ const layer = Layer.effect(
       return Exit.isSuccess(exit) ? { behavior: "allow", updatedInput: toolInput } satisfies PermissionResult
         : { behavior: "deny", message: ClaudeCodeTools.failure(exit.cause) } satisfies PermissionResult
     }))
-
-    const bridge = (live: Live, ctx: ClaudeHostOptions.Context) => ClaudeHostBridge.create(live, ctx, { sessions, permission })
 
     const settle = (live: Live, outcome: Outcome) => {
       const turn = live.turn
@@ -344,15 +356,17 @@ const layer = Layer.effect(
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
         agent: input.agent.id ?? input.agent.name, abort }
+      const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, withSession: bindings.withSession })
+      live.bridge = bridge
       const adapters: ClaudeHostOptions.Adapters = {
         plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
-        mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge: bridge(live, ctx), tools: prepared?.tools ?? [] })),
+        mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
-        hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {},
+        hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge,
           // The hooks' effects need only what this session's context provides.
           run: live.run as ClaudeHostHooks.Context["run"],
           parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
-            complete: (part) => bridge(live, ctx).complete(part) } })),
+            complete: bridge.complete } })),
       }
       const options = yield* Effect.tryPromise(() => ClaudeHostOptions.build({
         ctx: { ...ctx, join: live.join },
@@ -386,6 +400,7 @@ const layer = Layer.effect(
     })
 
     const stop = (live: Live) => Effect.gen(function* () {
+      live.bridge?.interrupt()
       if (!live.turn) return
       live.discard = true
       const turn = live.turn
@@ -432,6 +447,7 @@ const layer = Layer.effect(
       if (running && prompt) yield* running.view.steer(input.user)
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [] }
       host.turn = turn
+      if (!running) host.bridge?.resume()
       const outcome = new Promise<Outcome>((resolve) => turn.waiters.push(resolve))
       // The session's stream may have ended while this turn was being set up: nothing would answer it.
       if (host.ended !== undefined) settle(host, { ok: false, message: host.ended })
@@ -502,5 +518,6 @@ export const node = LayerNode.make({
   service: Service,
   layer,
   deps: [Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
-    ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node],
+    ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node,
+    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node],
 })

@@ -5,10 +5,13 @@ export * as ClaudeHostMcp from "./mcp"
 // the `process` tool (process-tool.ts) and `task_grant`. It never serves a tool that duplicates a Claude Code built-in:
 // those stay Claude Code's own, and a seat's plugin allow-list names the built-in instead (plugin.ts).
 //
-// The protocol side (listing, JSON schemas, call dispatch, the mirrored tool part) is ClaudeCodeTools.server's,
-// reused by import.
-import { Effect, Schema } from "effect"
-import type { McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk"
+// Each accepted hook injects a dispatch receipt into the MCP input. The handler checks that exact reservation,
+// then strips the receipt before Orchestra's own parameter validation and execution.
+import { Effect, Exit, Schema } from "effect"
+import { createSdkMcpServer, type McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk"
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import type { JSONSchema7 } from "@ai-sdk/provider"
+import type { SessionV1 } from "@orchestra/core/v1/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { Identifier } from "@orchestra/core/id/id"
@@ -18,13 +21,20 @@ import type { ProviderV2 } from "@orchestra/core/provider"
 import { Agent } from "@/agent/agent"
 import { Seats } from "@/maestro/seats"
 import { WriteRoots } from "@/maestro/write-roots"
-import { MessageID, PartID, type SessionID } from "@/session/schema"
+import { PartID, type SessionID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
+import { ToolJsonSchema } from "@/tool/json-schema"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeHostProcess } from "./process-tool"
 
 export const NAME = ClaudeCodeTools.SERVER
+export const DISPATCH = "__orchestra_dispatch"
+
+/** Remove the host's transport receipt before any Orchestra implementation sees the arguments. */
+export function argumentsOf(input: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(input).filter(([key]) => key !== DISPATCH))
+}
 
 /**
  * Orchestra tools that Claude Code has as built-ins, with the built-in names. The server never serves them; a seat's
@@ -38,9 +48,10 @@ export const BUILTINS: Readonly<Record<string, readonly string[]>> = Object.free
 
 /**
  * Orchestra tools that belong to Orchestra's own loop, so Claude mode never serves them: `context_compact` (Claude Code
- * compacts its own context), `invalid` (the loop's repair tool) and `execute` (code mode runs tools through the loop).
+ * compacts its own context), `invalid` (the loop's repair tool), `execute` (code mode runs tools through the loop),
+ * and `maestro_request_review` (requires that loop's prompt executor; the append explains native Agent reviews).
  */
-export const LOOP_ONLY: readonly string[] = Object.freeze(["invalid", "context_compact", "execute"])
+export const LOOP_ONLY: readonly string[] = Object.freeze(["invalid", "context_compact", "execute", "maestro_request_review"])
 
 /** The Orchestra tools Claude mode may serve over MCP. */
 export function exposed(defs: readonly Tool.Def[]) {
@@ -51,8 +62,32 @@ export function servable(id: string) {
   return !Object.hasOwn(BUILTINS, id) && !LOOP_ONLY.includes(id)
 }
 
-/** The mirror bridge ClaudeCodeTools.server runs calls through: HOST builds it from its mirror, as engine.ts does. */
-export type Bridge = Omit<Parameters<typeof ClaudeCodeTools.server>[0], "defs">
+/** The host server executes each reservation in its mirrored caller's context and runtime binding. */
+export type Bridge = {
+  readonly run: <A>(effect: Effect.Effect<A, unknown>) => Promise<A>
+  readonly claim: (tool: string, args: Record<string, unknown>, signal: AbortSignal) => Effect.Effect<SessionV1.ToolPart>
+  readonly context: (part: SessionV1.ToolPart) => Effect.Effect<Tool.Context>
+  readonly execute: (def: Tool.Def, args: Record<string, unknown>, context: Tool.Context) => Effect.Effect<Tool.ExecuteResult>
+  readonly complete: (part: SessionV1.ToolPart) => Effect.Effect<void>
+  readonly settled: (callID: string) => void
+}
+
+/** An accepted PreToolUse call. The shared MCP transport carries arguments, but no caller identity or tool-use id. */
+export type Reservation = {
+  readonly callID: string
+  readonly sessionID: SessionID
+  readonly seat: string
+  readonly tool: string
+  readonly input: Record<string, unknown>
+  readonly args: Record<string, unknown>
+  readonly signal: AbortSignal
+}
+
+export type Calls = {
+  readonly reserve: (input: Reservation) => Record<string, unknown>
+  readonly cancel: (callID: string) => void
+  readonly release: (callID: string) => void
+}
 
 export type Context = {
   sessionID: SessionID
@@ -72,10 +107,59 @@ export type Context = {
 
 /** The `orchestra` server for one host session: the served registry tools plus `task_grant`. */
 export function server(ctx: Context): McpSdkServerConfigWithInstance {
-  return ClaudeCodeTools.server({
-    ...(ctx.bridge ?? detached(ctx)),
-    defs: [...exposed(ctx.tools ?? []).filter((def) => def.id !== GRANT), grant(ctx.sessionID)],
+  const defs = [...exposed(ctx.tools ?? []).filter((def) => def.id !== GRANT), grant(ctx.sessionID)]
+  const bridge = ctx.bridge
+  const server = createSdkMcpServer({ name: NAME, tools: [] })
+  server.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: defs.map((def) => ({
+    name: def.id, description: def.description, inputSchema: { type: "object" as const, ...dispatchSchema(ToolJsonSchema.fromTool(def)) },
+    _meta: { "anthropic/alwaysLoad": true },
+  })) }))
+  server.instance.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+    if (!bridge) return failed("Orchestra tool calls need the host bridge.")
+    return bridge.run(Effect.gen(function* () {
+      const def = defs.find((item) => item.id === request.params.name)
+      if (!def) return failed(`Orchestra tool ${request.params.name} is not available in Claude mode.`)
+      const wire = request.params.arguments ?? {}
+      const args = argumentsOf(wire)
+      const claimed = yield* bridge.claim(def.id, wire, extra.signal).pipe(Effect.exit)
+      if (Exit.isFailure(claimed)) return failed(ClaudeCodeTools.failure(claimed.cause))
+      const part = claimed.value
+      const start = part.state.status === "running" ? part.state.time.start : Date.now()
+      return yield* Effect.gen(function* () {
+        const exit = yield* bridge.context(part).pipe(
+          Effect.flatMap((context) => bridge.execute(def, args, context)), Effect.exit)
+        if (Exit.isFailure(exit)) {
+          const text = ClaudeCodeTools.failure(exit.cause)
+          yield* bridge.complete({ ...part, state: { status: "error", input: args, error: text, time: { start, end: Date.now() } } })
+          return failed(text)
+        }
+        const result = exit.value
+        yield* bridge.complete({ ...part, state: { status: "completed", input: args, output: result.output, title: result.title,
+          metadata: result.metadata, time: { start, end: Date.now() }, attachments: result.attachments?.map((attachment) => ({
+            ...attachment, id: PartID.ascending(), sessionID: part.sessionID, messageID: part.messageID,
+          })) } })
+        return { content: [{ type: "text" as const, text: result.output }, ...(result.attachments ?? []).flatMap((file) => {
+          const match = /^data:([^;,]+);base64,(.*)$/s.exec(file.url)
+          return match && file.mime.startsWith("image/") ? [{ type: "image" as const, data: match[2], mimeType: match[1] }] : []
+        })] }
+      }).pipe(Effect.ensuring(Effect.sync(() => bridge.settled(part.callID))))
+    }))
   })
+  return server
+}
+
+function failed(text: string) {
+  return { content: [{ type: "text" as const, text }], isError: true }
+}
+
+/** Closed unions accept the receipt too; the model omits it and the accepted hook supplies it. */
+function dispatchSchema(schema: JSONSchema7): JSONSchema7 {
+  return { ...schema, properties: { ...schema.properties,
+    [DISPATCH]: { type: "string", description: "Omit this field. The host supplies the dispatch receipt automatically." } },
+    ...(schema.anyOf ? { anyOf: schema.anyOf.map((item) => typeof item === "boolean" ? item : dispatchSchema(item)) } : {}),
+    ...(schema.oneOf ? { oneOf: schema.oneOf.map((item) => typeof item === "boolean" ? item : dispatchSchema(item)) } : {}),
+    ...(schema.allOf ? { allOf: schema.allOf.map((item) => typeof item === "boolean" ? item : dispatchSchema(item)) } : {}),
+  }
 }
 
 /**
@@ -179,18 +263,5 @@ function grant(sessionID: SessionID): Tool.Def {
       return { title: `Write grant for ${seat.id}`, output: JSON.stringify({ grantID: entry.grantID }),
         metadata: { grantID: entry.grantID, seat: seat.id, writeRoots: entry.writeRoots } }
     }),
-  }
-}
-
-// Without a bridge every call fails closed: no instance context, no permission asks, no mirrored part to complete.
-function detached(ctx: Context): Bridge {
-  return {
-    run: () => Promise.reject(new Error("Orchestra tool calls need the host bridge")),
-    claim: (tool) => Effect.succeed({ id: PartID.ascending(), sessionID: ctx.sessionID, messageID: MessageID.ascending(),
-      type: "tool" as const, tool, callID: tool, state: { status: "running" as const, input: {}, time: { start: Date.now() } } }),
-    complete: () => Effect.void,
-    context: (part) => ({ sessionID: ctx.sessionID, messageID: part.messageID, agent: ctx.agent, agentID: ctx.agent,
-      callID: part.callID, abort: ctx.abort.signal, messages: [], metadata: () => Effect.void,
-      ask: () => Effect.die(new Error("Orchestra tool calls need the host bridge")) }),
   }
 }
