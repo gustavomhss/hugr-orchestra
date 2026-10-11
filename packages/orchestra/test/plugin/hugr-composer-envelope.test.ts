@@ -247,6 +247,184 @@ Array.of("compose", "scaffold").forEach((operation) => {
   )
 })
 
+// The canonical hugr-owned-tool-v1 envelope (F4.21-F4.23) wins over the legacy fields it travels with.
+const canonical = (tool: "hugr-compose" | "hugr-scaffold", outcome: Record<string, unknown>) => ({
+  schema: "hugr-owned-tool-v1",
+  tool,
+  observed_changes: [],
+  ...outcome,
+})
+const invalid = (tool: "hugr-compose" | "hugr-scaffold") =>
+  canonical(tool, { status: "failed", effects: "unknown", error: { code: "INVALID_PRODUCER_RESULT" } })
+
+;["structured", "text"].forEach((carrier) => {
+  it.instance(
+    `Composer ${carrier} canonical envelope: success settles as a result with the validated outcome`,
+    () =>
+      Effect.gen(function* () {
+        const generated = yield* composerFixture(`${carrier}-canon-generated`)
+        const target = (...rel: string[]) => path.resolve(generated.context.directory, "generated", ...rel)
+        const compose = yield* Effect.promise(() =>
+          generated.tools["hugr-compose"].execute({ output_dir: "generated" }, generated.context),
+        )
+        // Directories stay in the inventory (a trailing slash), rebased onto the output directory.
+        expect(typeof compose === "object" && compose !== null ? compose.metadata : undefined).toEqual({
+          [OUTCOME_KEY]: canonical("hugr-compose", {
+            status: "generated",
+            effects: "observed",
+            mode: "ad_hoc",
+            observed_changes: [
+              { path: target("app") + "/", change: "created" },
+              { path: target("app", "compositions") + "/", change: "created" },
+              { path: target("app", "compositions", "x.py"), change: "created" },
+              { path: target("app", "compositions", "__init__.py"), change: "created" },
+            ],
+          }),
+        })
+        expect(generated.metadata).toEqual([])
+
+        const preview = yield* composerFixture(`${carrier}-canon-previewed`)
+        const dry = yield* Effect.promise(() =>
+          preview.tools["hugr-compose"].execute({ output_dir: "generated", dry_run: true }, preview.context),
+        )
+        expect(typeof dry === "object" && dry !== null ? dry.metadata : undefined).toEqual({
+          [OUTCOME_KEY]: canonical("hugr-compose", { status: "previewed", effects: "none", mode: "ad_hoc" }),
+        })
+        // No producer free text, artifact content or planned file crosses into the outcome.
+        expect(JSON.stringify([compose, dry].map((result) => (typeof result === "object" ? result.metadata : result)))).not.toContain("secret")
+      }),
+    { config: { permission: { edit: "allow" } } },
+    { timeout: 30_000 },
+  )
+
+  ;[
+    {
+      kind: "blocked",
+      tool: "hugr-compose" as const,
+      message: "hugr-compose blocked OUTPUT_CONFLICT",
+      outcome: { status: "blocked", effects: "none", mode: "ad_hoc", error: { code: "OUTPUT_CONFLICT", producer_code: "target-exists" } },
+    },
+    {
+      // F4.24: the producer says ok:true, but the material-less delegation is a refusal.
+      kind: "blocked-delegate",
+      tool: "hugr-compose" as const,
+      message: "hugr-compose blocked UNSUPPORTED_OUTPUT",
+      outcome: { status: "blocked", effects: "none", mode: "tool_delegate", error: { code: "UNSUPPORTED_OUTPUT" } },
+    },
+    {
+      kind: "partial",
+      tool: "hugr-scaffold" as const,
+      message: "hugr-scaffold failed PRODUCER_FAILED",
+      outcome: {
+        status: "failed",
+        effects: "partial",
+        mode: "ad_hoc",
+        observed_changes: [{ path: "half.py", change: "created" }],
+        error: { code: "PRODUCER_FAILED", producer_code: "scaffold-failed" },
+      },
+    },
+    {
+      // A producer code outside the closed set degrades to `unknown` instead of invalidating the envelope.
+      kind: "newer-code",
+      tool: "hugr-compose" as const,
+      message: "hugr-compose blocked INVALID_INPUT",
+      outcome: { status: "blocked", effects: "none", mode: "ad_hoc", error: { code: "INVALID_INPUT", producer_code: "unknown" } },
+    },
+  ].forEach(({ kind, tool, message, outcome }) => {
+    it.instance(
+      `Composer ${carrier} canonical ${kind}: settles through the failure path with the validated outcome`,
+      () =>
+        Effect.gen(function* () {
+          const fixture = yield* composerFixture(`${carrier}-canon-${kind}`)
+          yield* Effect.promise(async () => {
+            const failure = await rejection(fixture.tools[tool].execute({ output_dir: "generated" }, fixture.context))
+            expect(failure).toMatchObject({ message, code: message.split(" ")[2] })
+            const changes = (outcome.observed_changes as { path: string; change: string }[] | undefined)?.map((change) => ({
+              ...change,
+              path: path.resolve(fixture.context.directory, "generated", change.path),
+            }))
+            expect(fixture.metadata).toEqual([
+              streamed(tool === "hugr-compose" ? "Composed FastAPI composition" : "Scaffolded project: app", canonical(tool, { ...outcome, ...(changes ? { observed_changes: changes } : {}) })),
+            ])
+            expect(JSON.stringify(fixture.metadata)).not.toContain("secret")
+          })
+        }),
+      { config: { permission: { edit: "allow" } } },
+      { timeout: 30_000 },
+    )
+  })
+
+  ;[
+    "illegal-effects",
+    "illegal-code",
+    "empty-inventory",
+    "dirs-only",
+    "escape",
+    "absolute",
+    "unknown-status",
+    "wrong-tool",
+    "ok-false",
+    "excess-free-text",
+  ].forEach((kind) => {
+    it.instance(
+      `Composer ${carrier} canonical ${kind}: not a valid producer result, failed with unknown effects`,
+      () =>
+        Effect.gen(function* () {
+          const fixture = yield* composerFixture(`${carrier}-canon-${kind}`)
+          yield* Effect.promise(async () => {
+            expect(await rejection(fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context))).toMatchObject({
+              message: "hugr-compose failed INVALID_PRODUCER_RESULT",
+            })
+            expect(fixture.metadata).toEqual([streamed("Composed FastAPI composition", invalid("hugr-compose"))])
+          })
+        }),
+      { config: { permission: { edit: "allow" } } },
+      { timeout: 30_000 },
+    )
+  })
+
+  ;[
+    { kind: "generated", dryRun: true },
+    { kind: "previewed", dryRun: undefined },
+  ].forEach(({ kind, dryRun }) => {
+    it.instance(
+      `Composer ${carrier} canonical ${kind} that contradicts dry_run=${dryRun} is not a valid producer result`,
+      () =>
+        Effect.gen(function* () {
+          const fixture = yield* composerFixture(`${carrier}-canon-${kind}`)
+          yield* Effect.promise(async () => {
+            await rejection(fixture.tools["hugr-compose"].execute({ output_dir: "generated", dry_run: dryRun }, fixture.context))
+            expect(fixture.metadata).toEqual([streamed("Composed FastAPI composition", invalid("hugr-compose"))])
+          })
+        }),
+      { config: { permission: { edit: "allow" } } },
+      { timeout: 30_000 },
+    )
+  })
+})
+
+it.instance(
+  "Composer legacy ok:true delegation maps to blocked UNSUPPORTED_OUTPUT with no effects (F4.24)",
+  () =>
+    Effect.gen(function* () {
+      const fixture = yield* composerFixture("structured-legacy-delegate")
+      yield* Effect.promise(async () => {
+        expect(await rejection(fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context))).toMatchObject({
+          message: "hugr-compose blocked UNSUPPORTED_OUTPUT",
+        })
+        expect(fixture.metadata).toEqual([
+          streamed(
+            "Composed FastAPI composition",
+            canonical("hugr-compose", { status: "blocked", effects: "none", mode: "tool_delegate", error: { code: "UNSUPPORTED_OUTPUT" } }),
+          ),
+        ])
+        expect(JSON.stringify(fixture.metadata)).not.toContain("secret")
+      })
+    }),
+  { config: { permission: { edit: "allow" } } },
+  { timeout: 30_000 },
+)
+
 function failed(tool: "hugr-compose" | "hugr-scaffold", producerCode: string) {
   return {
     schema: "hugr-composer-outcome-v1",

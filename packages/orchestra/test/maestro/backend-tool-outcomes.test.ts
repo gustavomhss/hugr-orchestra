@@ -106,6 +106,37 @@ describe("BackendResult toolOutcomes", () => {
     expect(BackendResult.assemble(final, session).toolOutcomes).toBeUndefined()
   })
 
+  test("reports canonical hugr-owned-tool-v1 outcomes with their observed inventory and drops illegal ones", () => {
+    const generated = {
+      schema: "hugr-owned-tool-v1",
+      tool: "hugr-scaffold",
+      status: "generated",
+      effects: "observed",
+      observed_changes: [{ path: "/repo/app/main.py", change: "created" }],
+      mode: "full",
+    } as const
+    const partial = {
+      schema: "hugr-owned-tool-v1",
+      tool: "hugr-compose",
+      status: "failed",
+      effects: "partial",
+      observed_changes: [{ path: "/repo/app/compositions/x.py", change: "created" }],
+      error: { code: "PRODUCER_FAILED", producer_code: "write-failed" },
+    } as const
+    const session = [
+      toolCall("call_generated", "hugr-scaffold", { [OUTCOME_KEY]: generated }),
+      toolCall("call_partial", "hugr-compose", { [OUTCOME_KEY]: partial }, "error"),
+      toolCall("call_none_with_changes", "hugr-scaffold", { [OUTCOME_KEY]: { ...generated, effects: "none" } }),
+      toolCall("call_empty", "hugr-scaffold", { [OUTCOME_KEY]: { ...generated, observed_changes: [] } }),
+      toolCall("call_blocked_code", "hugr-compose", { [OUTCOME_KEY]: { ...partial, status: "blocked", effects: "none", observed_changes: [] } }),
+      toolCall("call_excess", "hugr-scaffold", { [OUTCOME_KEY]: { ...generated, artifacts: [] } }),
+    ]
+    expect(BackendResult.assemble(final, session).toolOutcomes).toEqual([
+      { callID: "call_generated", ...generated },
+      { callID: "call_partial", ...partial },
+    ])
+  })
+
   test("the final message is counted once when the stored history already holds it", () => {
     const last = toolCall("call_scaffold", "hugr-scaffold", { [OUTCOME_KEY]: failedScaffold }, "error")
     expect(BackendResult.assemble(last, [last]).toolOutcomes).toEqual([{ callID: "call_scaffold", ...failedScaffold }])
