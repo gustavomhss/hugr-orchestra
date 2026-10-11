@@ -2,8 +2,8 @@
 // Deferred native output check. Uses the shipped consumer admission, then checks
 // actual image headers and execution. No GUI, service, OAuth or arbitrary-CPU claim.
 import { spawnSync } from "node:child_process"
-import { readdir } from "node:fs/promises"
-import { join } from "node:path"
+import { readdir, stat } from "node:fs/promises"
+import { dirname, join } from "node:path"
 import { parseArgs } from "node:util"
 import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
 
@@ -45,10 +45,15 @@ const artifacts = await Promise.all([join(cli, "share/orchestra/cli"), join(reso
     fail(`ARTIFACT_TUPLE_MISMATCH:${directory}`)
   const artifact = await verifyCliArtifact(directory, target)
   await image(artifact.path)
-  const reported = execute(artifact.path, ["--version"]).trim()
-  if (![version, `orchestra v${version}`].includes(reported)) fail(`RAW_CLI_VERSION:${directory}:${reported}`)
-  return { directory, ...receipt }
+  return { directory, path: artifact.path, ...receipt }
 }))
+// The compiled CLI resolves omni next to realpath(process.execPath) (packages/core/src/omni.ts); artifact.path is
+// real. Checked before any CLI runs, so a CLI whose omni preflight fails is still named by the omni failure.
+const omniCli = await omni(dirname(artifacts[0].path), process.execPath, {})
+artifacts.forEach((artifact) => {
+  const reported = execute(artifact.path, ["--version"]).trim()
+  if (![version, `orchestra v${version}`].includes(reported)) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)
+})
 const wrapped = execute(join(cli, "bin/orchestra"), ["--version"]).trim()
 if (![version, `orchestra v${version}`].includes(wrapped)) fail(`WRAPPED_CLI_VERSION:${wrapped}`)
 await Promise.all([
@@ -73,6 +78,8 @@ addons.forEach((file) => {
   const loaded = execute(executable, ["-e", "require(process.argv[1]); console.log('NATIVE_ADDON_LOAD_OK')", file], true)
   if (loaded.trim() !== "NATIVE_ADDON_LOAD_OK") fail(`NATIVE_ADDON_LOAD_EVIDENCE:${file}`)
 })
+// Resources/omni is outside app.asar.unpacked, so the scan above never sees it: packaged Electron loads it here.
+const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
 if (platform === "linux") {
   const entry = await Bun.file(join(desktop, "share/applications/ai.hugr.orchestra.desktop")).text()
   Array.of("StartupWMClass=ai.hugr.orchestra", "Icon=ai.hugr.orchestra", "Exec=").forEach((property) => {
@@ -80,16 +87,58 @@ if (platform === "linux") {
   })
   if (!(await Bun.file(join(desktop, "share/metainfo/ai.hugr.orchestra.metainfo.xml")).size)) fail("MISSING_METAINFO")
 }
-return { system, version, target, artifacts, executable, runtime, pty, addons, status: "NATIVE_OUTPUT_CHECK_OK" }
+return { system, version, target, artifacts, executable, runtime, pty, addons,
+  omni: { cli: omniCli, desktop: omniDesktop }, status: "NATIVE_OUTPUT_CHECK_OK" }
 
-async function image(file: string) {
+async function image(file: string, code = "NATIVE_IMAGE_MISMATCH") {
   const header = Buffer.from(await Bun.file(file).slice(0, 64).arrayBuffer())
   if (header.length < 64) fail(`SHORT_NATIVE_IMAGE:${file}`)
   const valid = platform === "linux"
     ? header.subarray(0, 6).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1]))
       && header.readUInt16LE(18) === (arch === "x64" ? 62 : 183)
     : header.readUInt32LE(0) === 0xfeedfacf && header.readUInt32LE(4) === (arch === "x64" ? 0x1000007 : 0x100000c)
-  if (!valid) fail(`NATIVE_IMAGE_MISMATCH:${file}:${system}`)
+  if (!valid) fail(`${code}:${file}:${system}`)
+}
+
+// Both shipped omni files must be real, native and live: the supervisor runs on this host, and the product loader
+// (packages/omni/bindings/node/index.js, which calls process.dlopen) loads the addon inside the given runtime.
+async function omni(directory: string, runtime: string, env: Record<string, string>) {
+  const addon = join(directory, "hugr_omni.node")
+  const supervisor = join(directory, "hugr-omni-supervisor")
+  const present = async (file: string) => {
+    const info = await stat(file).catch(() => undefined)
+    return Boolean(info?.isFile() && info.size > 0)
+  }
+  if (!(await present(addon))) fail(`OMNI_ADDON_MISSING:${addon}`)
+  if (!(await present(supervisor))) fail(`OMNI_SUPERVISOR_MISSING:${supervisor}`)
+  await image(addon, "OMNI_IMAGE_MISMATCH")
+  await image(supervisor, "OMNI_IMAGE_MISMATCH")
+  // No --version/--help: with no arguments it must refuse its command line (exit 2), which only a native run can do.
+  const started = spawnSync(supervisor, [], { encoding: "utf8", timeout: 30_000 })
+  if (started.error || started.status !== 2 || !started.stderr.startsWith("hugr-omni-supervisor: missing --host-pid"))
+    fail(`OMNI_SUPERVISOR_EXECUTION:${supervisor}:${started.error?.message ?? `${started.status}:${started.signal}:${started.stderr}`}`)
+  // Inherited HUGR_OMNI_* would let the native side pick another supervisor than the shipped one.
+  const inherited = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("HUGR_OMNI_")))
+  const loaded = spawnSync(runtime, ["-e", String.raw`
+    const dlopen = process.dlopen
+    const opened = []
+    process.dlopen = function (module, file, ...rest) { opened.push(file); return dlopen.call(this, module, file, ...rest) }
+    const omni = require(process.env.NIX_OMNI_LOADER)
+    omni.configure({ addon: process.env.NIX_OMNI_ADDON, supervisor: process.env.NIX_OMNI_SUPERVISOR })
+    console.log("OMNI_LOAD_OK " + JSON.stringify({ opened, exports: Object.keys(omni),
+      runtime: process.versions.electron ? "electron " + process.versions.electron : "bun " + process.versions.bun }))
+  `], {
+    env: { ...inherited, ...env, NIX_OMNI_LOADER: join(source!, "packages/omni/bindings/node/index.js"),
+      NIX_OMNI_ADDON: addon, NIX_OMNI_SUPERVISOR: supervisor },
+    encoding: "utf8", timeout: 60_000,
+  })
+  const line = loaded.stdout?.trim() ?? ""
+  if (loaded.error || loaded.status !== 0 || !line.startsWith("OMNI_LOAD_OK {") || line.includes("\n"))
+    fail(`OMNI_ADDON_LOAD:${addon}:${loaded.error?.message ?? `${loaded.status}:${loaded.signal}:${loaded.stderr}`}`)
+  const evidence: { opened: string[]; exports: string[]; runtime: string } = JSON.parse(line.slice("OMNI_LOAD_OK ".length))
+  if (evidence.opened.length !== 1 || evidence.opened[0] !== addon || !evidence.exports.includes("configure"))
+    fail(`OMNI_ADDON_LOAD:${addon}:${line}`)
+  return { addon, supervisor, supervisorExit: started.status, ...evidence, status: "OMNI_OK" }
 }
 }
 
