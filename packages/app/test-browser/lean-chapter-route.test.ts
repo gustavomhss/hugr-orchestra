@@ -31,21 +31,22 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
         composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
         rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
       }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
+        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       await child(["typecheck", config])
     } finally { await rm(scratch, { recursive: true, force: true }) }
   }, 240000)
 } else {
-  const { createComponent, createStore, render } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { createContext, useContext } = await import("solid-js")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
-  const { createSdkForServer } = await import("@/utils/server")
-  const { ServerConnection } = await import("@/context/server")
-  const { ServerScope } = await import("@/utils/server-scope")
-  const { PlatformProvider } = await import("@/context/platform")
-  const { LanguageProvider } = await import("@/context/language")
-  const { navigation } = await import("@/orchestra/navigation")
+  const { solidDom } = await import("./solid-dom")
+  const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
+  const { ServerConnection }: typeof import("@/context/server") = await import(solidDom("@/context/server", import.meta.dir))
+  const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
+  const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+  const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
+  const { navigation }: typeof import("@/orchestra/navigation") = await import(solidDom("@/orchestra/navigation", import.meta.dir))
 
   const snapshot = (directory: string, bytes: number, enabled = true): LeanDashboard.Info => ({
     scope: { directory, profileID: directory, projectID: "same-git-project" }, engine: "http-fixture",
@@ -111,22 +112,25 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const [selection, select] = createStore({ server: ServerConnection.key(one.connection), directory: "/one" })
     const opened: { server: ServerConnection.Key; sessionId: string }[] = []
     const Context = createContext<typeof one.sdk>()
-    // Native context fixtures only; real route, SDKProvider, generated client, controller and U view execute.
-    mock.module("../src/context/global", () => ({ useGlobal: () => ({
+    // Native context fixtures only; real route, SDKProvider, generated client, controller and U view execute. Fixtures
+    // replace the solidDom() copies (./solid-dom) that the rendered route imports.
+    mock.module(solidDom("../src/context/global", import.meta.dir), () => ({ useGlobal: () => ({
       servers: { list: () => servers.map((server) => server.connection) },
       ensureServerCtx: (connection: ServerConnection.Any) => servers.find((server) => server.connection === connection)!,
     }) }))
-    mock.module("../src/context/layout", () => ({ useLayout: () => ({ home: { selection: () => selection } }) }))
-    mock.module("../src/context/tabs", () => ({ useTabs: () => ({ addSessionTab: (value: typeof opened[number]) => value,
+    mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ home: { selection: () => selection } }) }))
+    mock.module(solidDom("../src/context/tabs", import.meta.dir), () => ({ useTabs: () => ({ addSessionTab: (value: typeof opened[number]) => value,
       select: (value: typeof opened[number]) => opened.push(value) }) }))
-    mock.module("../src/context/server-sync", () => ({ ServerSyncProvider: (props: { children?: JSX.Element }) => props.children }))
-    mock.module("../src/context/server-sdk", () => ({
+    mock.module(solidDom("../src/context/server-sync", import.meta.dir), () => ({ ServerSyncProvider: (props: { children?: JSX.Element }) => props.children }))
+    mock.module(solidDom("../src/context/server-sdk", import.meta.dir), () => ({
       ServerSDKProvider: (props: { server: () => ServerConnection.Any; children?: JSX.Element }) => createComponent(Context.Provider, {
         value: servers.find((server) => server.connection === props.server())!.sdk, get children() { return props.children },
       }),
       useServerSDK: () => { const value = useContext(Context)!; return () => value },
     }))
-    const { OrchestraChapterRoute, chapterPages } = await import("@/orchestra/chapter-route")
+    const { OrchestraChapterRoute, chapterPages }: typeof import("@/orchestra/chapter-route") = await import(
+      solidDom("@/orchestra/chapter-route", import.meta.dir)
+    )
     expect(typeof chapterPages.lean).toBe("function")
     expect(navigation.filter((item) => item.id === "lean")).toHaveLength(1)
     const host = document.createElement("div")

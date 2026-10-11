@@ -68,6 +68,55 @@ for (const form of forms) for (const warm of [false, true]) {
   }, 60_000)
 }
 
+for (const [form, dependencies] of [
+  ["direct", { "@orchestra/squat": sdk.version }],
+  ["alias target", { squat: `npm:@orchestra/squat@${sdk.version}` }],
+  ["alias slot", { "@orchestra/squat": `npm:ordinary@${sdk.version}` }],
+  ["transitive", { carrier: sdk.version }],
+  ["bundled", { bundler: sdk.version }],
+] as const) {
+  test(`SDK scope ${form}: other scoped packages fail closed without a registry request`, async () => {
+    await using tmp = await tmpdir()
+    await using http = await registry(tmp.path)
+    await http.publish("@orchestra/squat", {}, { "index.js": planted })
+    await http.publish("ordinary")
+    await http.publish("carrier", { dependencies: { "@orchestra/squat": sdk.version } })
+    await http.publish("bundler", { dependencies: { "@orchestra/squat": sdk.version }, bundledDependencies: ["@orchestra/squat"] }, {
+      "node_modules/@orchestra/squat/package.json": JSON.stringify({ name: "@orchestra/squat", version: sdk.version, type: "module", main: "index.js" }),
+      "node_modules/@orchestra/squat/index.js": planted,
+    })
+    const cache = path.join(tmp.path, "cache")
+    const project = path.join(cache, "packages", "fixture")
+    await mkdir(project, { recursive: true })
+    // The fixture .npmrc maps the scope to this registry, so a scope leak shows up as a hit.
+    await http.config(project)
+    await Bun.write(path.join(project, "package.json"), JSON.stringify({ dependencies }))
+    const result = await installOwned(cache, project).then(() => "unexpected success", (error: unknown) => String(error))
+    expect(result).toContain("PluginSdkScopeError")
+    expect(http.hits.filter((hit) => hit.includes("@orchestra/squat"))).toEqual([])
+    expect(await Bun.file(path.join(project, "node_modules", "@orchestra", "squat", "index.js")).exists()).toBe(false)
+  }, 30_000)
+}
+
+test("deep SDK imports never reach a registry copy after install", async () => {
+  await using tmp = await tmpdir()
+  await using http = await registry(tmp.path)
+  await http.publish(sdk.name, { exports: { ".": "./index.js", "./*": "./index.js" } }, { "index.js": planted, "dist/x.js": planted })
+  const cache = path.join(tmp.path, "cache")
+  const project = path.join(cache, "packages", "fixture")
+  await mkdir(project, { recursive: true })
+  await http.config(project)
+  await Bun.write(path.join(project, "package.json"), JSON.stringify({ dependencies: { [sdk.name]: sdk.version } }))
+  await installOwned(cache, project)
+  await Bun.write(path.join(project, "probe.mjs"), `await import(${JSON.stringify(sdk.name + "/dist/x")}).then(() => console.log("resolved"), (error) => console.log(String(error)))\n`)
+  const child = Bun.spawn([process.execPath, path.join(project, "probe.mjs")], { cwd: project, stdout: "pipe", stderr: "pipe" })
+  const [stdout, code] = await Promise.all([new Response(child.stdout).text(), child.exited])
+  expect(code).toBe(0)
+  expect(stdout).not.toContain("planted SDK copy ran")
+  expect(stdout).not.toContain("resolved")
+  expect(http.hits.filter((hit) => hit.includes(sdk.name))).toEqual([])
+}, 30_000)
+
 test("warm Npm.add reconciles nested SDK copies before cache return", async () => {
   await using tmp = await tmpdir()
   await using http = await registry(tmp.path)

@@ -17,9 +17,9 @@ function input(): LLM.StreamInput {
   const sessionID = SessionID.make("ses_checkpoint")
   return {
     sessionID, parentSessionID: "ses_parent", model,
-    user: { id: MessageID.make("msg_checkpoint"), sessionID, role: "user", agent: "build", time: { created: 1 },
+    user: { id: MessageID.make("msg_checkpoint"), sessionID, role: "user", agent: "maestro", time: { created: 1 },
       model: { modelID: model.id, providerID: model.providerID, variant: "deliberate" } },
-    agent: { name: "build", mode: "primary", prompt: "Exact agent role", permission: [], options: { temperature: 0.2 } },
+    agent: { name: "maestro", mode: "primary", prompt: "Exact agent role", permission: [], options: { temperature: 0.2 } },
     permission: [{ permission: "read", pattern: "*", action: "allow" }],
     system: ["Exact system", "# Working memory\nRemember"],
     messages: [{ role: "user", content: "Replay prefix" }, { role: "assistant", content: "Prior reply" },

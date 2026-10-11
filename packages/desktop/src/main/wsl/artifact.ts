@@ -1,11 +1,13 @@
+import { createHash } from "node:crypto"
+import { lstat, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { readCliManifest, verifyCliArtifact } from "../cli-artifacts"
 import { nativeT } from "../native-translations"
 import { runWslInDistro, type RunWslOptions } from "./runtime"
 
 export class WslArtifactError extends Error {
-  constructor(readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command") {
-    super(nativeT("desktop.wsl.error.serverCannotRun"))
+  constructor(readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command" | "unavailable") {
+    super(nativeT(reason === "unavailable" ? "desktop.wsl.error.installUnavailable" : "desktop.wsl.error.serverCannotRun"))
     this.name = "WslArtifactError"
   }
 }
@@ -39,23 +41,38 @@ ${validateGuestScript}
 printf '%s\\n' "$actual"
 `
 
-// Verify bytes before the first execution, and version before the only replacement.
+// Linux CLIs are omni builds: their preflight needs this addon and supervisor next to the binary.
+export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as const
+
+// Verify bytes before the first execution, and version before the only replacement. The staged binary runs next to
+// its staged companions, so validation exercises the same omni pair that is installed.
 export const installGuestScript = `${guestEnvironment}
-source=$1; digest=$2; version=$3
+source=$1; digest=$2; version=$3; addon=$4; addon_digest=$5; supervisor=$6; supervisor_digest=$7
 for directory in "$HOME/.orchestra" "$HOME/.orchestra/bin"; do
   [[ ! -L "$directory" ]] || exit 85
 done
 mkdir -p -- "$HOME/.orchestra/bin"
-destination="$HOME/.orchestra/bin/orchestra"
-[[ ! -L "$destination" && ( ! -e "$destination" || -f "$destination" ) ]] || exit 85
-temporary=$(mktemp "$HOME/.orchestra/bin/.orchestra.XXXXXXXX")
-trap 'rm -f -- "$temporary"' EXIT
+for file in orchestra ${omniCompanions.join(" ")}; do
+  target="$HOME/.orchestra/bin/$file"
+  [[ ! -L "$target" && ( ! -e "$target" || -f "$target" ) ]] || exit 85
+done
+staging=$(mktemp -d "$HOME/.orchestra/bin/.orchestra.XXXXXXXX")
+trap 'rm -rf -- "$staging"' EXIT
 trap 'exit 130' INT TERM
-cp -- "$source" "$temporary"
-chmod 0755 -- "$temporary"
-binary="$temporary"
+cp -- "$addon" "$staging/${omniCompanions[0]}"
+cp -- "$supervisor" "$staging/${omniCompanions[1]}"
+chmod 0755 -- "$staging/${omniCompanions[1]}"
+actual=$(sha256sum -- "$staging/${omniCompanions[0]}")
+[[ "\${actual%% *}" == "$addon_digest" ]] || exit 84
+actual=$(sha256sum -- "$staging/${omniCompanions[1]}")
+[[ "\${actual%% *}" == "$supervisor_digest" ]] || exit 84
+cp -- "$source" "$staging/orchestra"
+chmod 0755 -- "$staging/orchestra"
+binary="$staging/orchestra"
 ${validateGuestScript}
-mv -fT -- "$temporary" "$destination"
+for file in ${omniCompanions.join(" ")} orchestra; do
+  mv -fT -- "$staging/$file" "$HOME/.orchestra/bin/$file"
+done
 `
 
 export async function installWslArtifact(
@@ -97,11 +114,30 @@ export async function installWslArtifact(
       "orchestra-admit", opts.installedPath, entry.sha256, manifest.version,
     ])
   }
-  const source = await command(["wslpath", "-u", "--", artifact.path])
-  if (!source.startsWith("/") || /[\r\n\0]/.test(source)) throw new WslArtifactError("path")
+  const companions = await Promise.all(omniCompanions.map((name) => companion(join(directory, `omni-${target}`, name))))
+  const guestPath = async (path: string) => {
+    const converted = await command(["wslpath", "-u", "--", path])
+    if (!converted.startsWith("/") || /[\r\n\0]/.test(converted)) throw new WslArtifactError("path")
+    return converted
+  }
+  const source = await guestPath(artifact.path)
+  const addon = await guestPath(companions[0].path)
+  const supervisor = await guestPath(companions[1].path)
   await command([
     "timeout", "--kill-after=1s", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version,
+    addon, companions[0].sha256, supervisor, companions[1].sha256,
   ])
+}
+
+// The bundle ships omni companions per Linux target under omni-<target>/. Without them the CLI cannot start in the
+// guest, so the install refuses by name instead of placing a binary that fails its preflight.
+async function companion(path: string) {
+  const stat = await lstat(path).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined
+    throw error
+  })
+  if (!stat?.isFile()) throw new WslArtifactError("unavailable")
+  return { path, sha256: createHash("sha256").update(await readFile(path)).digest("hex") }
 }
 
 export function verifyWslGuestArtifact(

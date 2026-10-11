@@ -229,7 +229,7 @@ it.instance("context_compact asks before its actual paid producer admission and 
     const definition = yield* ContextCompactTool
     const tool = yield* Tool.init(definition)
     const asks: unknown[] = []
-    const result = yield* tool.execute({}, { sessionID, messageID: MessageID.ascending(), agent: "build", abort: AbortSignal.any([]), messages: [],
+    const result = yield* tool.execute({}, { sessionID, messageID: MessageID.ascending(), agent: "maestro", abort: AbortSignal.any([]), messages: [],
       extra: { canRecall: true }, metadata: () => Effect.void, ask: (request) => Effect.sync(() => { asks.push(request) }).pipe(
         Effect.andThen(Effect.die(new Error("permission denied")))) }).pipe(Effect.exit)
     expect(Exit.isFailure(result)).toBe(true)

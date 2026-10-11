@@ -205,7 +205,7 @@ export function begin(sessionID: SessionID, marker: string) {
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     yield* continuity.advance(sessionID)
-    const user: SessionV1.User = { id: MessageID.ascending(), sessionID, role: "user", time: { created: Date.now() }, agent: "build", model: { providerID: model.providerID, modelID: model.id } }
+    const user: SessionV1.User = { id: MessageID.ascending(), sessionID, role: "user", time: { created: Date.now() }, agent: "maestro", model: { providerID: model.providerID, modelID: model.id } }
     yield* sessions.updateMessage(user)
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: user.id, type: "text", text: marker })
     return user
@@ -217,7 +217,7 @@ export function complete(user: SessionV1.User, marker: string, tokens = 100, can
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     const assistant: SessionV1.Assistant = {
-      id: MessageID.ascending(), sessionID: user.sessionID, parentID: user.id, role: "assistant", agent: "build", mode: "build",
+      id: MessageID.ascending(), sessionID: user.sessionID, parentID: user.id, role: "assistant", agent: "maestro", mode: "maestro",
       path: { cwd: "/test", root: "/test" }, modelID: model.id, providerID: model.providerID, cost: 0,
       tokens: { input: tokens, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       finish: "stop", time: { created: Date.now(), completed: Date.now() },
@@ -311,7 +311,7 @@ export function recall(sessionID: SessionID, params: Tool.InferParameters<typeof
     const definition = yield* ContextRecallTool
     const tool = yield* Tool.init(definition)
     const asks: unknown[] = []
-    const result = yield* tool.execute(params, { sessionID, messageID: MessageID.ascending(), agent: "build",
+    const result = yield* tool.execute(params, { sessionID, messageID: MessageID.ascending(), agent: "maestro",
       abort: AbortSignal.any([]), messages: [], extra, metadata: () => Effect.void,
       ask: (request) => Effect.sync(() => void asks.push(request)) })
     expect(asks).toEqual([{ permission: "context_recall", patterns: [sessionID], always: [sessionID], metadata: {} }])

@@ -38,7 +38,7 @@ it.instance("one-user 46-step production complete pass archives all aliases and 
     const chat = yield* sessions.create({ title: "Complete-prefix long turn" })
     const user = yield* begin(chat.id, "Restore cache consistency. " + "OLD_USER_NOISE ".repeat(9000))
     for (let step = 0; step < 46; step++) {
-      const assistant: SessionV1.Assistant = { id: MessageID.ascending(), sessionID: chat.id, parentID: user.id, role: "assistant", agent: "build", mode: "build",
+      const assistant: SessionV1.Assistant = { id: MessageID.ascending(), sessionID: chat.id, parentID: user.id, role: "assistant", agent: "maestro", mode: "maestro",
         path: { cwd: "/fixture", root: "/fixture" }, modelID: user.model.modelID, providerID: user.model.providerID, cost: 0,
         tokens: { input: step === 45 ? 50_000 : 100, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
         finish: "tool-calls", time: { created: user.time.created + step + 1, completed: user.time.created + step + 2 } }

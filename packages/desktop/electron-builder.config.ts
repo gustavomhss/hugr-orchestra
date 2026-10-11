@@ -101,6 +101,15 @@ const getBase = (appId: string): Configuration => ({
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { Arch } = await import("electron-builder")
+    const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
+    // The app's node_modules carry tree-sitter prebuilds; repair or refuse them before electron-builder copies them.
+    // A universal macOS app is packed per architecture first, and each of those passes is checked.
+    if (Arch[context.arch] !== "universal")
+      prepareTreeSitterPrebuilds({
+        root: rootDir,
+        os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
+        arch: Arch[context.arch],
+      })
     await verifyPackagedCli(
       path.join(packageDir, "resources/cli"),
       context.electronPlatformName,

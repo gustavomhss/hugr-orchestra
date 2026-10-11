@@ -3,7 +3,11 @@ import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import type { ToolPart } from "@orchestra/sdk/v2/client"
 
-// Exercise the actual profile collector with the fetched durable native part, not a UI clone.
+// Exercise the actual profile collector with the fetched durable native part, not a UI clone. The collector and the
+// dashboard schema load as plain modules, as the backend runs them, while the test body renders solidDom() copies
+// (./solid-dom). Only data crosses between them: the metric travels as JSON, the scope and part are plain objects, and
+// every check compares shapes (lengths, toMatchObject, serialized text), never identity or instanceof. The dashboard
+// schemas are Schema.Struct values, which decode to plain objects.
 export async function verifyProfileRows(scope: LeanDashboard.Scope, tool: ToolPart, metric: LeanMetrics.Decision) {
   const { LeanProject } = await import("../../orchestra/src/session/lean-project")
   if (tool.state.status !== "completed") throw new Error("Expected completed durable ToolPart")

@@ -26,7 +26,7 @@ const seed = Effect.gen(function* () {
     id: MessageID.ascending(),
     sessionID: chat.id,
     role: "user",
-    agent: "build",
+    agent: "maestro",
     model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
     time: { created: 1 },
     system: "Historical field_scope applies only to this turn.",
@@ -36,7 +36,7 @@ const seed = Effect.gen(function* () {
   const ctx: Tool.Context = {
     sessionID: chat.id,
     messageID: user.id,
-    agent: "build",
+    agent: "maestro",
     abort: AbortSignal.any([]),
     messages: [],
     metadata: () => Effect.void,

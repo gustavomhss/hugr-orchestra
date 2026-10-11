@@ -50,7 +50,8 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
             path.join(app, "package.json"),
             import.meta.path,
             path.join(import.meta.dir, "lean-profile-view.test-helper.ts"),
-            path.join(import.meta.dir, "lean-project-metrics.test-helper.ts"),
+            path.join(import.meta.dir, "lean-dom.test-helper.ts"),
+            path.join(import.meta.dir, "solid-dom.ts"),
           ],
         }),
       )
@@ -61,7 +62,8 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
   }, 240000)
 } else {
   const { info, history, mount } = await import("./lean-profile-view.test-helper")
-  const { loadLocaleDict } = await import("@/context/language")
+  const { solidDom } = await import("./solid-dom")
+  const { loadLocaleDict }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
   const settle = () => Bun.sleep(0)
 
   test("native page mounts all catalogue items, paired signed and missing values; filters and labels", async () => {

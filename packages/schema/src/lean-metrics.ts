@@ -24,37 +24,6 @@ export interface Decision {
   readonly durationMs: number
 }
 
-export interface Group {
-  readonly calls: number
-  readonly bytesSaved: number
-  readonly estimatedTokensSaved: number
-  readonly estimatedTokenCalls: number
-}
-
-export type Summary = AvailableSummary | UnavailableSummary
-
-/** Unavailable totals carry no numeric placeholders that could be mistaken for exact savings. */
-export interface UnavailableSummary {
-  readonly unavailable: "overflow" | "invalid-scope"
-  readonly coverage: "loaded-history" | "complete-history"
-}
-
-export interface AvailableSummary {
-  readonly unavailable?: never
-  readonly coverage: "loaded-history" | "complete-history"
-  readonly observedCalls: number
-  readonly eligibleCalls: number
-  readonly appliedCalls: number
-  readonly bytesSaved: number
-  readonly estimatedTokensSaved: number
-  readonly estimatedTokenCalls: number
-  readonly reasons: Readonly<Record<string, number>>
-  readonly filterProfiles: Readonly<Record<string, Group>>
-  readonly orchestraProfiles: Readonly<Record<string, Group>>
-  readonly models: Readonly<Record<string, Group>>
-  readonly latency: { readonly samples: number; readonly p50: number | null; readonly p95: number | null; readonly p99: number | null }
-}
-
 /** Frozen decoder signature; metrics author fills validation with the actual persisted record contract. */
 export const decode: (value: unknown) => Decision | undefined = (value) => {
   try {

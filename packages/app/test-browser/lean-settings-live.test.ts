@@ -1,96 +1,140 @@
 import { expect, mock, test } from "bun:test"
-import { createComponent, createRoot, createStore, render } from "./lean-project-metrics.test-helper"
+import path from "node:path"
 import type { Config } from "@orchestra/sdk/v2/client"
 
-const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
-  protocol: undefined, ready: false, error: undefined,
-  config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
-})
-const calls: Config[] = []
-const toasts: unknown[] = []
-const transport = { reject: true }
-const sync = {
-  data: state,
-  get ready() { return state.ready },
-  configReady: true,
-  get error() { return state.error },
-  session: { lineage: { peek: () => undefined } },
-  async updateConfig(config: Config) {
-    calls.push(config)
-    if (transport.reject) throw new Error("write denied")
-    setState("config", "tool_output", config.tool_output!)
-  },
+async function child(args: string[], env = process.env) {
+  const proc = Bun.spawn([Bun.which("bun")!, ...args], {
+    cwd: path.resolve(import.meta.dir, ".."), env, stdout: "pipe", stderr: "pipe", timeout: 180000, killSignal: "SIGKILL",
+  })
+  const [out, err, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
+  if (code !== 0) throw new Error(`${args.join(" ")} exited ${code}\n${out}\n${err}`)
+  console.log(out + err)
 }
-// External context fixtures only; render real SettingsGeneralV2, settings provider, controller and switch.
-const sdk = await import("@/context/server-sdk")
-const serverSync = await import("@/context/server-sync")
-const permission = await import("@/context/permission")
-mock.module("@/context/server-sync", () => ({ ...serverSync, useServerSync: () => () => sync }))
-mock.module("@/context/server-sdk", () => ({ ...sdk,
-  useServerProtocol: () => () => state.protocol,
-  useServerSDK: () => () => ({ protocol: Promise.resolve(state.protocol ?? "v2"), client: { pty: { shells: async () => ({ data: [] }) } } }),
-}))
-mock.module("@/context/permission", () => ({ ...permission, usePermission: () => ({}) }))
-mock.module("@/orchestra/palette/context", () => ({ useOrchestraPalette: () => ({ palettes: [], id: () => "dark" }) }))
-mock.module("@/utils/toast", () => ({ showToast: (options: unknown) => toasts.push(options) }))
-const { SettingsGeneralV2 } = await import("@/components/settings-v2/general")
-const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
-const { PlatformProvider } = await import("@/context/platform")
-const { LanguageProvider, useLanguage } = await import("@/context/language")
-const { SettingsProvider } = await import("@/context/settings")
-const { DialogProvider } = await import("@orchestra/ui/context/dialog")
-const { dict } = await import("@/i18n/en")
 
-test("active SettingsGeneralV2 mounts backend Lean controls; unavailable capability cannot write", async () => {
-  const host = document.createElement("div")
-  document.body.appendChild(host)
-  const owned = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController() }))
-  const dispose = render(() => createComponent(PlatformProvider, {
-    value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
-    get children() { return createComponent(LanguageProvider, {
-      locale: "en",
-      get children() {
-        useLanguage().setLocale("en")
-        return createComponent(SettingsProvider, { get children() {
-          return createComponent(DialogProvider, { get children() { return createComponent(SettingsGeneralV2, {}) } })
-        } })
-      },
-    }) },
-  }), host)
-  const row = () => host.querySelector('[data-action="settings-lean"]')
-  const input = () => row()?.querySelector<HTMLInputElement>('input[type="checkbox"]')
-  try {
-    await Bun.sleep(20)
-    expect(row()).not.toBeNull()
-    expect(host.textContent).toContain(dict["lean.settings.title"])
+// The fixtures below replace shared modules for the rest of a `bun test` process, so they run in a child process of
+// their own, like the other Lean DOM lanes.
+if (process.env.LEAN_SETTINGS_DOM !== "1") {
+  test("Settings surfaces stay free of Lean controls in an isolated browser lane", async () => {
+    await child(["--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path], {
+      ...process.env, LEAN_SETTINGS_DOM: "1",
+    })
+  }, 240000)
+} else {
+  const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
+  const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
+  const { solidDom } = await import("./solid-dom")
+  const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
+    protocol: undefined, ready: false, error: undefined,
+    config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
+  })
+  const calls: Config[] = []
+  const sync = {
+    data: state,
+    get ready() { return state.ready },
+    get error() { return state.error },
+    session: { lineage: { peek: () => undefined } },
+    async updateConfig(config: Config) {
+      calls.push(config)
+    },
+  }
+  // External context fixtures only, spread over the real module where it loads under Bun; render the real Settings
+  // sections and provider. Fixtures replace the solidDom() copies (./solid-dom) those modules import.
+  const sdk: typeof import("@/context/server-sdk") = await import(solidDom("@/context/server-sdk", import.meta.dir))
+  const serverSync: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
+  const permission: typeof import("@/context/permission") = await import(solidDom("@/context/permission", import.meta.dir))
+  const theme: typeof import("@orchestra/ui/theme/context") = await import(
+    solidDom("@orchestra/ui/theme/context", import.meta.dir)
+  )
+  mock.module(solidDom("@/context/server-sync", import.meta.dir), () => ({ ...serverSync, useServerSync: () => () => sync }))
+  mock.module(solidDom("@/context/server-sdk", import.meta.dir), () => ({ ...sdk,
+    useServerProtocol: () => () => state.protocol,
+    useServerSDK: () => () => ({ protocol: Promise.resolve(state.protocol ?? "v2"), client: { pty: { shells: async () => ({ data: [] }) } } }),
+  }))
+  mock.module(solidDom("@/context/permission", import.meta.dir), () => ({ ...permission,
+    usePermission: () => ({ isAutoAcceptingDirectory: () => false, isAutoAccepting: () => false }),
+  }))
+  // The real palette context cannot load here: it reads its stylesheets through Vite's import.meta.glob. This lane's own
+  // process confines the partial fixture.
+  mock.module(solidDom("@/orchestra/palette/context", import.meta.dir), () => ({
+    useOrchestraPalette: () => ({ palettes: [], id: () => "dark" }),
+  }))
+  mock.module(solidDom("@orchestra/ui/theme/context", import.meta.dir), () => ({ ...theme,
+    useTheme: () => ({ colorScheme: () => "system", setColorScheme() {} }),
+  }))
+  const { SettingsGeneralV2 }: typeof import("@/components/settings-v2/general") = await import(
+    solidDom("@/components/settings-v2/general", import.meta.dir)
+  )
+  const { SettingsGeneral }: typeof import("@/components/settings-general") = await import(
+    solidDom("@/components/settings-general", import.meta.dir)
+  )
+  const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+  const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
+    solidDom("@/context/language", import.meta.dir)
+  )
+  const { SettingsProvider }: typeof import("@/context/settings") = await import(solidDom("@/context/settings", import.meta.dir))
+  const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await import(
+    solidDom("@orchestra/ui/context/dialog", import.meta.dir)
+  )
+  const { dict }: typeof import("@/i18n/en") = await import(solidDom("@/i18n/en", import.meta.dir))
+
+  // The first Lean UI, a global toggle in Settings, was rejected (2026-10-10) and its code removed: Lean lives on its
+  // profile screen, with per-profile KPIs, covered items, bytes and tokens saved and per-item switches. That screen's live
+  // controls are covered by lean-profile-view (pending, failure, unsupported and paused states), lean-controller
+  // (unsupported blocks writes, failures keep data, pending lanes confirm only HTTP snapshots), lean-chapter-route and
+  // lean-native-product (persisted disable through the real backend). An accidental mount in either mounted Settings
+  // section (the current one and the legacy one the layout still opens) must fail here. The rejected row's English copy
+  // is spelled out because its locale keys were deleted with it.
+  const lean = [
+    "Lean tool output", "Reduce supported tool output using the server's Lean setting.",
+    "Lean setting unavailable · read-only until a supported v1 server is ready.", "Saving Lean setting…",
+    "Could not save the Lean setting",
+  ]
+  const mount = (section: () => ReturnType<typeof createComponent>) => {
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    const dispose = render(() => createComponent(PlatformProvider, {
+      value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
+      get children() { return createComponent(LanguageProvider, {
+        locale: "en",
+        get children() {
+          useLanguage().setLocale("en")
+          return createComponent(SettingsProvider, { get children() {
+            return createComponent(DialogProvider, { get children() { return section() } })
+          } })
+        },
+      }) },
+    }), host)
+    return { host, close: () => { dispose(); host.remove() } }
+  }
+  const expectNoLean = async (host: HTMLElement) => {
     for (const capability of [
-      { protocol: undefined, ready: true, error: undefined }, { protocol: "v2" as const, ready: true, error: undefined },
-      { protocol: "v1" as const, ready: false, error: undefined }, { protocol: "v1" as const, ready: true, error: new Error("offline") },
+      { protocol: undefined, ready: false, error: undefined }, { protocol: "v1" as const, ready: true, error: undefined },
+      { protocol: "v1" as const, ready: true, error: new Error("offline") },
     ]) {
       setState(capability)
-      expect(row()?.textContent).toContain(dict["lean.settings.unavailable"])
-      expect(input()).toBeNull()
-      expect(owned.lean.enabled()).toBeUndefined()
-      await owned.lean.set(true)
-      expect(calls).toHaveLength(0)
+      await Bun.sleep(20)
+      // Positive control: the real General section rendered its rows, so the absence below is not an empty mount.
+      const actions = [...host.querySelectorAll("*")].flatMap((node) => node.getAttribute("data-action") ?? [])
+      expect(actions).toContain("settings-language")
+      expect(actions.filter((action) => action.startsWith("settings-lean"))).toEqual([])
+      const text = host.textContent ?? ""
+      expect(text).toContain(dict["settings.general.row.language.title"])
+      expect(lean.filter((value) => text.includes(value))).toEqual([])
     }
-    setState({ protocol: "v1", ready: true, error: undefined })
-    expect(input()?.checked).toBe(false)
-    input()!.click()
-    expect(input()?.disabled).toBe(true)
-    expect(row()?.textContent).toContain(dict["lean.settings.saving"])
-    await Bun.sleep(10)
-    expect(calls).toEqual([{ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: true } } }])
-    expect(input()?.checked).toBe(false)
-    expect(row()?.querySelector('[role="alert"]')?.textContent).toBe(dict["lean.settings.failed"])
-    expect(toasts).toEqual([{ variant: "error", title: dict["lean.settings.failed"], description: "write denied" }])
-    transport.reject = false
-    input()!.click()
-    await Bun.sleep(10)
-    expect(input()?.checked).toBe(true)
-    input()!.click()
-    await Bun.sleep(10)
-    expect(input()?.checked).toBe(false)
-    expect(calls[2]).toEqual({ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } })
-  } finally { dispose(); owned.dispose(); host.remove() }
-})
+    expect(calls).toHaveLength(0)
+  }
+
+  test("active SettingsGeneralV2 renders no Lean controls, whether the Lean capability is unavailable, editable or failed", async () => {
+    const screen = mount(() => createComponent(SettingsGeneralV2, {}))
+    try { await expectNoLean(screen.host) } finally { screen.close() }
+  })
+
+  test("legacy SettingsGeneral renders no Lean controls, whether the Lean capability is unavailable, editable or failed", async () => {
+    const history = createMemoryHistory()
+    history.set({ value: "/", scroll: false, replace: true })
+    const screen = mount(() => createComponent(MemoryRouter, { history, get children() {
+      return createComponent(Route, { path: "/", component: SettingsGeneral })
+    } }))
+    try { await expectNoLean(screen.host) } finally { screen.close() }
+  })
+}

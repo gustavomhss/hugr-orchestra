@@ -16,6 +16,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./omni": "./src/omni.ts"
+    "./omni": "./src/omni.ts",
+    "./tree-sitter-prebuilds": "./src/tree-sitter-prebuilds.ts"
   }
 }

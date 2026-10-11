@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { guestEnvironment, installGuestScript, installWslArtifact, linuxGuestTarget, WslArtifactError } from "./artifact"
+import { guestEnvironment, installGuestScript, installWslArtifact, linuxGuestTarget, omniCompanions, WslArtifactError } from "./artifact"
 import { checkWslAuthentication } from "./startup"
 import { spawnWslSidecar, wslServeScript } from "./sidecar"
 import { normalizeWslCommandVersion, readWslCommandVersion, shellEscape } from "./runtime"
@@ -60,17 +60,32 @@ test("guest architecture/ABI selects Linux baseline only", () => {
 test("Linux transfer verifies bytes/version, replaces foreign executable, preserves old on failure", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-transfer-"))
   const source = join(root, "owned ' $(touch planted); artifact")
+  const addon = join(root, "addon ' $(touch planted)")
+  const supervisor = join(root, "supervisor ' $(touch planted)")
   const destination = join(root, ".orchestra/bin/orchestra")
-  const bytes = "#!/bin/bash\nprintf 'orchestra v1.16.2\\n'\n"
+  // Exits early unless the staged omni pair sits next to the binary, like the real CLI preflight.
+  const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf 'orchestra v1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
-  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s") => shell(
-    ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version], root,
+  const sha = (text: string) => createHash("sha256").update(text).digest("hex")
+  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon")) => shell(
+    ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version,
+      addon, addonHash, supervisor, sha("supervisor")], root,
   )
   try {
     await Bun.write(source, bytes)
+    await Bun.write(addon, "addon")
+    await Bun.write(supervisor, "supervisor")
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     expect((await stat(destination)).mode & 0o777).toBe(0o755)
+    expect(await readFile(join(root, ".orchestra/bin", omniCompanions[0]), "utf8")).toBe("addon")
+    expect(await readFile(join(root, ".orchestra/bin", omniCompanions[1]), "utf8")).toBe("supervisor")
+    expect((await stat(join(root, ".orchestra/bin", omniCompanions[1]))).mode & 0o777).toBe(0o755)
+    await Bun.write(destination, "foreign-old")
+    expect((await execute(source, digest, "1.16.2", "5s", "0".repeat(64))).code).toBe(84)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect((await execute(source)).code).toBe(0)
+    expect(await readFile(destination, "utf8")).toBe(bytes)
     await Bun.write(destination, "foreign-old")
     expect((await execute(source, "0".repeat(64))).code).toBe(84)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
@@ -92,7 +107,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
-    expect(await readdir(join(root, ".orchestra/bin"))).toEqual(["orchestra"])
+    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra"].sort())
     const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
     await Bun.write(source, hung)
     expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
@@ -111,8 +126,10 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
 test("manifest seam bounds commands, converts host path as one argument, cancellation prevents transfer", async () => {
   const commands: string[][] = []
   const abort = new AbortController()
+  const directory = await mkdtemp(join(tmpdir(), "w4-seam-"))
+  await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-arm64", name), name)))
   const options = {
-    directory: "resources/cli",
+    directory,
     signal: abort.signal,
     timeoutMs: 90_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-arm64", file: "owned", sha256: "a".repeat(64) }] }),
@@ -129,11 +146,17 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   }
   await installWslArtifact("Ubuntu Preview", "1.16.2", options)
   expect(commands[1]).toEqual(["wslpath", "-u", "--", "C:\\CLI ' $()\\owned"])
-  expect(commands[2]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
-  expect(commands[2]?.slice(-3)).toEqual(["/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2"])
+  expect(commands[2]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[0])])
+  expect(commands[3]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[1])])
+  expect(commands[4]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
+  expect(commands[4]?.slice(-7)).toEqual([
+    "/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2",
+    "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[0]).digest("hex"),
+    "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[1]).digest("hex"),
+  ])
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
-  expect(commands.length).toBe(3)
+  expect(commands.length).toBe(5)
   const duringVerification = new AbortController()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", {
     ...options, signal: duringVerification.signal,
@@ -142,7 +165,41 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
       return { path: "unused", version: "1.16.2" }
     },
   })).rejects.toThrow()
-  expect(commands.length).toBe(4)
+  expect(commands.length).toBe(6)
+  await rm(directory, { recursive: true, force: true })
+})
+
+test("bundle without the Linux omni pair refuses the install by name before any transfer", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "w4-unavailable-"))
+  const commands: string[][] = []
+  const install = () => installWslArtifact("Ubuntu", "1.16.2", {
+    directory,
+    readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: "a".repeat(64) }] }),
+    verifyArtifact: async () => ({ path: join(directory, "owned"), version: "1.16.2" }),
+    run: async (args: string[]) => {
+      commands.push(args)
+      return { code: 0, signal: null, stdout: args[0] === "wslpath" ? "/mnt/c/owned" : "x86_64\nglibc 2.39\n", stderr: "" }
+    },
+  }).then(() => undefined, (error: unknown) => error)
+  try {
+    for (const present of [[], [omniCompanions[0]], [omniCompanions[1]]]) {
+      await rm(join(directory, "omni-linux-x64-baseline"), { recursive: true, force: true })
+      await Promise.all(present.map((name) => Bun.write(join(directory, "omni-linux-x64-baseline", name), name)))
+      commands.length = 0
+      const error = await install()
+      expect(error).toBeInstanceOf(WslArtifactError)
+      expect((error as WslArtifactError).reason).toBe("unavailable")
+      expect((error as WslArtifactError).message).toBe("Installing the server in WSL is not available yet")
+      expect(commands.map((args) => args[0])).toEqual(["bash"])
+    }
+    // Control: with both companions present the same seam reaches the guest transfer.
+    await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-x64-baseline", name), name)))
+    commands.length = 0
+    expect(await install()).toBeUndefined()
+    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "timeout"])
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })
 
 test.each([false, true])("protected health rejects open/unhealthy servers (protected=%s)", async (protectedServer) => {
