@@ -11,7 +11,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 
 function history(sessionID: SessionID): SessionV1.WithParts[] {
   const id = MessageID.make("msg_archive_acceptance")
-  return [{ info: { id, sessionID, role: "user", agent: "build", time: { created: 1 },
+  return [{ info: { id, sessionID, role: "user", agent: "maestro", time: { created: 1 },
     model: { providerID: Provider.ID.make("test"), modelID: Model.ID.make("test") } },
     parts: [{ id: PartID.make("prt_archive_acceptance"), messageID: id, sessionID, type: "text",
       text: "Discovery: read-only verification succeeded. Keep deployment awaiting approval.\n" + "Exact detail 😀\r\n".repeat(6000) }] }]

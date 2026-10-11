@@ -1,0 +1,4 @@
+Resume the backend specialist's task again: call the task tool with subagent_type "backend", task_id "tsk_128828af50010A76MDPRx7VFMk" and writePaths ["counter.ts"]. Do not pass memoryUnit this time. Pass model "opencode/mimo-v2.6-flash-free" on the task call.
+
+Packet for the resumed task (T-LIVE-4):
+Small interim step, still NOT phase 2: add the one-line comment `// Never goes below zero.` directly above the `decrement()` method in counter.ts. Do not add reset() yet and do not record a new checkpoint. Then return.

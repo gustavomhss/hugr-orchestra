@@ -6,7 +6,7 @@ import path from "path"
  * member's default label lives in maestro/roster.ts.
  */
 export type Seat = {
-  /** Stable id: roster member id, agent id, native profile name and config key `agent.<id>`. */
+  /** Stable id: roster member id, agent id and config key `agent.<id>`. */
   readonly id: string
   readonly role: string
   readonly abilityClass: string
@@ -18,6 +18,8 @@ export type Seat = {
   readonly prompt: string
   /** The shared base profile (roster.ts `baseProfiles`) the seat's own grants extend. */
   readonly profile: "execution" | "review"
+  /** Optional stable profile projection, independent of agent routing and the shared permission base. */
+  readonly profileKey?: string
   /** How the task tool lists the seat to Maestro: role, access and return, never the label. */
   readonly description: string
   /** Environment variable that overrides the display label over config `agent.<id>.name`. */
@@ -41,6 +43,8 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`Invalid native seat id: ${seat.id}`)
   if (!seat.role.trim() || !seat.description.trim())
     throw new Error(`Native seat role and description must be nonempty: ${seat.id}`)
+  if (seat.profileKey !== undefined && (!/^[a-z]+(?:-[a-z]+)*$/.test(seat.profileKey) || reserved.has(seat.profileKey)))
+    throw new Error(`Invalid native seat profile key: ${seat.profileKey}`)
   if (seat.atlasMemory && seat.id !== "backend")
     throw new Error(`Atlas Memory supports only the backend owner: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")

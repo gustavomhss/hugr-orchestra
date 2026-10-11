@@ -35,6 +35,8 @@ describe("native seat framework", () => {
     expect(() => define({ ...backend, id: "../escape" })).toThrow("Invalid native seat id")
     expect(() => define({ ...backend, skills: ["foreign-work"] })).toThrow("Entry skills must be unique and seat-scoped")
     expect(() => define({ ...backend, returnCard: "unsafe.*" })).toThrow("Work result requires a fenced return-card tag")
+    expect(() => define({ ...backend, profileKey: "review" })).toThrow("Invalid native seat profile key")
+    expect(() => define({ ...backend, profileKey: "../escape" })).toThrow("Invalid native seat profile key")
   })
 
   test("scaffold refuses collisions and invalid ids without overwriting artifacts", async () => {

@@ -59,7 +59,7 @@ function messages(sessionID: SessionID, text: string): SessionV1.WithParts[] {
         id: messageID,
         sessionID,
         role: "user",
-        agent: "build",
+        agent: "maestro",
         time: { created: 1 },
         model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
       },
@@ -81,7 +81,7 @@ const seed = Effect.gen(function* () {
   const ctx: Tool.Context = {
     sessionID: chat.id,
     messageID: MessageID.ascending(),
-    agent: "build",
+    agent: "maestro",
     abort: AbortSignal.any([]),
     messages: [],
     metadata: () => Effect.void,

@@ -109,7 +109,7 @@ it.instance("awaits the real store sink; replay context stays detached while sav
   } }))
   const source = ParentReceipt.capture({ input: {
     user, sessionID: f.chat.id, model: { ...model, headers: { Authorization: "TRANSPORT_SECRET" } },
-    agent: { name: "build", mode: "primary", prompt: "Exact role", permission: [], options: { temperature: 0.2 } },
+    agent: { name: "maestro", mode: "primary", prompt: "Exact role", permission: [], options: { temperature: 0.2 } },
     permission: [{ permission: "read", pattern: "*", action: "allow" }], system: ["Parent system 🪨漢字e\u0301"],
     // Parent receipts already passed the existing structured-clone preparation boundary.
     // URL object preservation is tested directly at the new checkpoint codec boundary.

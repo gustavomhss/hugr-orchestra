@@ -16,6 +16,7 @@ import { lazy } from "@/util/lazy"
 import { BashArity } from "@/permission/arity"
 import type { Tool } from "../tool"
 import { ShellID } from "./id"
+import { Seats } from "@/maestro/seats"
 
 const CWD = new Set(["cd", "chdir", "popd", "pushd", "push-location", "set-location"])
 const FILES = new Set([
@@ -56,6 +57,17 @@ const CMD_FILES = new Set([
 ])
 const FLAGS = new Set(["-destination", "-literalpath", "-path"])
 const SWITCHES = new Set(["-confirm", "-debug", "-force", "-nonewline", "-recurse", "-verbose", "-whatif"])
+// Commands that only print their operands.
+const DATA = new Set(["echo", "printf", "write-output", "write-host"])
+// Commands that read or list the paths they are given. An operand of one of these that only the running shell can
+// resolve ($VAR, $(...), brace expansion) cannot be placed inside or outside the workspace, so seats fail closed on it.
+const READS = new Set([
+  ...CWD, "cat", "ls", "find", "head", "tail", "less", "more", "grep", "egrep", "fgrep", "rg", "stat", "file", "wc",
+  "tree", "du", "cp", "diff", "strings", "xxd", "od", "hexdump", "tac", "nl", "readlink", "realpath", "source", ".",
+  "get-content", "get-childitem", "get-item", "select-string", "copy-item", "type", "dir", "copy",
+])
+const DEVICE = /^(?:\/dev\/(?:null|zero|u?random|tty|std(?:in|out|err)|fd\/\d+)|\$null)$/i
+const RUNTIME = new Set(["simple_expansion", "expansion", "command_substitution", "process_substitution", "sub_expression"])
 
 type Part = {
   type: string
@@ -67,6 +79,7 @@ type Scan = {
   dirs: Set<string>
   patterns: Set<string>
   always: Set<string>
+  unresolved: Set<string>
 }
 
 const resolveWasm = (asset: string) => {
@@ -110,6 +123,40 @@ function source(node: Node) {
 
 function commands(node: Node) {
   return node.descendantsOfType("command").filter((child): child is Node => Boolean(child))
+}
+
+// Bash operands include the bare expansions that parts() leaves out of permission patterns.
+function operands(node: Node, command: Part[]) {
+  return [
+    ...command.slice(0, 1),
+    ...node.childrenForFieldName("argument").filter((child): child is Node => child !== null)
+      .map((child) => ({ type: child.type, text: child.text, node: child })),
+  ]
+}
+
+// File redirection targets; a descriptor duplication such as 2>&1 names no file.
+function redirects(root: Node, ps: boolean) {
+  return root.descendantsOfType(ps ? "redirection" : "file_redirect").flatMap((node) => {
+    if (!node) return []
+    const target = ps
+      ? node.descendantsOfType("redirected_file_name")[0]?.namedChildren.find((child) => child?.type !== "command_argument_sep")
+      : node.childForFieldName("destination") ?? node.namedChildren.at(-1)
+    if (!target) return []
+    const operator = (ps ? node.child(0)?.text : node.children.find((child) => child && !child.isNamed)?.text) ?? ""
+    if (operator.endsWith("&") && /^(?:\d+|-)$/.test(target.text)) return []
+    return [{ node: target, input: operator.startsWith("<") }]
+  })
+}
+
+// Parts only the running shell can resolve. The scan resolves $HOME, $PWD and PowerShell env variables itself.
+function runtime(node: Node) {
+  return [node, ...node.descendantsOfType([...RUNTIME, "variable", "word"])].some((item) => {
+    if (!item) return false
+    if (item.type === "word") return item.text === "{" && item.parent?.type === "concatenation"
+    if (item.type === "variable") return !/^\$\{?(?:null|true|false|home|pwd|pshome|env:[^}]*)\}?$/i.test(item.text)
+    if (item.type === "simple_expansion" || item.type === "expansion") return !/^\$\{?(?:HOME|PWD)\}?$/.test(item.text)
+    return RUNTIME.has(item.type)
+  })
 }
 
 function unquote(text: string) {
@@ -166,8 +213,9 @@ function dynamic(text: string, ps: boolean) {
   return text.includes("$")
 }
 
+// The literal part before the first glob or expansion: "~/.ssh/id_*" still names ~/.ssh.
 function prefix(text: string) {
-  const match = /[?*[]/.exec(text)
+  const match = /[?*[$`]/.exec(text)
   if (!match) return text
   if (match.index === 0) return
   return text.slice(0, match.index)
@@ -175,22 +223,21 @@ function prefix(text: string) {
 
 function pathArgs(list: Part[], ps: boolean, cmd = false) {
   if (!ps) {
-    return list
-      .slice(1)
-      .filter(
-        (item) =>
-          !item.text.startsWith("-") &&
-          !(cmd && item.text.startsWith("/")) &&
-          !(list[0]?.text === "chmod" && item.text.startsWith("+")),
-      )
-      .map((item) => item.text)
+    return list.slice(1).flatMap((item) => {
+      // A long option's inline value (--file=../x) is an operand too.
+      const value = /^--[^=]+=(.+)$/s.exec(item.text)?.[1]
+      if (value) return [{ ...item, text: value }]
+      if (item.text.startsWith("-") || (cmd && item.text.startsWith("/"))) return []
+      if (list[0]?.text === "chmod" && item.text.startsWith("+")) return []
+      return [item]
+    })
   }
 
-  const out: string[] = []
+  const out: Part[] = []
   let want = false
   for (const item of list.slice(1)) {
     if (want) {
-      out.push(item.text)
+      out.push(item)
       want = false
       continue
     }
@@ -200,7 +247,7 @@ function pathArgs(list: Part[], ps: boolean, cmd = false) {
       want = FLAGS.has(flag)
       continue
     }
-    out.push(item.text)
+    out.push(item)
   }
   return out
 }
@@ -291,12 +338,16 @@ export const resolvePath = Effect.fn("ShellScan.resolvePath")(function* (text: s
 })
 
 const argPath = Effect.fn("ShellScan.argPath")(function* (arg: string, cwd: string, ps: boolean, shell: string) {
-  const text = ps ? expand(arg, cwd, shell) : home(unquote(arg))
+  const text = ps
+    ? expand(arg, cwd, shell)
+    // Quotes may wrap any part of a word: "$HOME"/x and "dir"/*.txt.
+    : home(arg.replace(/"([^"]*)"|'([^']*)'/g, (_, double, single) => double ?? single)
+        .replace(/\$(?:\{(HOME|PWD)\}|(HOME|PWD))(?=$|\/)/g, (_, braced, bare) => (braced ?? bare) === "HOME" ? os.homedir() : cwd))
   const file = text && prefix(text)
   if (!file || dynamic(file, ps)) return
   const next = ps ? provider(file) : file
   if (!next) return
-  return yield* resolvePath(next, cwd, shell)
+  return { file: yield* resolvePath(next, cwd, shell), partial: file !== text }
 })
 
 const collect = Effect.fn("ShellScan.collect")(function* (
@@ -311,21 +362,32 @@ const collect = Effect.fn("ShellScan.collect")(function* (
     dirs: new Set<string>(),
     patterns: new Set<string>(),
     always: new Set<string>(),
+    unresolved: new Set<string>(),
   }
   const shellKind = ShellID.toKind(Shell.name(shell))
+  // A file command's or redirection's target outside the instance always counts. Any other command's operand counts
+  // only when it names an existing path: "/api/v1" in a grep pattern or a commit message is not one.
+  const outside = Effect.fnUntraced(function* (arg: string, file: boolean) {
+    if (DEVICE.test(unquote(arg))) return
+    const target = yield* argPath(arg, cwd, ps, shell)
+    if (!target || containsPath(target.file, instance)) return
+    const dir = (yield* fs.isDir(target.file)) ? target.file : path.dirname(target.file)
+    if (!file && !(yield* fs.existsSafe(target.partial ? dir : target.file))) return
+    scan.dirs.add(dir)
+  })
 
   for (const node of commands(root)) {
     const command = parts(node)
     const tokens = command.map((item) => item.text)
     const cmd = ps || shellKind === "cmd" ? tokens[0]?.toLowerCase() : tokens[0]
 
-    if (cmd && (FILES.has(cmd) || (shellKind === "cmd" && CMD_FILES.has(cmd)))) {
-      for (const arg of pathArgs(command, ps, shellKind === "cmd")) {
-        const resolved = yield* argPath(arg, cwd, ps, shell)
-        yield* Effect.logInfo("resolved path", { arg, resolved })
-        if (!resolved || containsPath(resolved, instance)) continue
-        const dir = (yield* fs.isDir(resolved)) ? resolved : path.dirname(resolved)
-        scan.dirs.add(dir)
+    // Every command's operands, not only file commands': ls, find, grep or git -C reach as far as cat does.
+    if (cmd && !DATA.has(cmd)) {
+      const file = FILES.has(cmd) || (shellKind === "cmd" && CMD_FILES.has(cmd))
+      for (const arg of pathArgs(ps ? command : operands(node, command), ps, shellKind === "cmd")) {
+        const variable = shellKind === "cmd" && /%[^%\s]+%|![^!\s]+!/.test(arg.text)
+        if (READS.has(cmd) && (variable || runtime(arg.node))) scan.unresolved.add(`${tokens[0]} ${arg.text}`)
+        yield* outside(arg.text, file)
       }
     }
 
@@ -333,6 +395,11 @@ const collect = Effect.fn("ShellScan.collect")(function* (
       scan.patterns.add(source(node))
       scan.always.add(BashArity.prefix(tokens).join(" ") + " *")
     }
+  }
+
+  for (const redirect of redirects(root, ps)) {
+    if (redirect.input && runtime(redirect.node)) scan.unresolved.add(`< ${redirect.node.text}`)
+    yield* outside(redirect.node.text, true)
   }
 
   return scan
@@ -350,6 +417,13 @@ export const approve = Effect.fn("ShellScan.approve")(function* (
       const tree = yield* Effect.acquireRelease(parse(input.command, ps), (tree) => Effect.sync(() => tree.delete()))
       const scan = yield* collect(tree.rootNode, input.cwd, ps, input.shell, instance)
       if (!containsPath(input.cwd, instance)) scan.dirs.add(input.cwd)
+      // A seat cannot ask the owner, so an operand the scan cannot place fails closed instead of running unchecked.
+      if (scan.unresolved.size && Seats.find(ctx.agentID))
+        return yield* Effect.die(new Error(
+          `Not run: ${[...scan.unresolved].map((item) => `\`${item}\``).join(", ")} reads a path that only the running ` +
+          "shell resolves (a variable, command substitution or brace expansion), so it cannot be checked against the " +
+          "workspace boundary. Write the path out literally, inside the workspace.",
+        ))
       return yield* ask(ctx, scan, input)
     }),
   )

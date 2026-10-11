@@ -6,7 +6,7 @@ import type { Flow } from "./graph"
 import { stateLabel } from "./parts"
 import { Receipt } from "./receipt"
 import type { RelaySource } from "./source"
-import { Ic, useRelayCopy } from "./ui"
+import { useRelayCopy } from "./ui"
 
 const FILTERS = ["all", "running", "parked", "failed", "completed"] as const
 
@@ -18,7 +18,6 @@ export function Executions(props: {
   selected: string | undefined
   source: RelaySource
   go: (path: string) => void
-  onRun: () => void
   onOpenStep: (run: RelayRun, wp: string) => void
   onCanvas: (run: RelayRun) => void
   onSession: (sessionID: string) => void
@@ -98,21 +97,7 @@ export function Executions(props: {
                 <strong>
                   {copy.t(props.selected ? "orchestra.workflows.receipt.missing" : "orchestra.workflows.runs.empty")}
                 </strong>
-                {copy.t(
-                  props.document.activeVersionId
-                    ? "orchestra.workflows.receipt.runPublished"
-                    : "orchestra.workflows.receipt.publishFirst",
-                )}
-                <br />
-                <button
-                  type="button"
-                  class="mx-btn primary"
-                  disabled={!props.document.activeVersionId}
-                  onClick={props.onRun}
-                >
-                  <Ic name="play" />
-                  {copy.t("orchestra.workflows.editor.run")}
-                </button>
+                {copy.t("orchestra.workflows.maestroOnly")}
               </div>
             </div>
           }

@@ -122,7 +122,14 @@ function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] 
         Message.make({
           id: message.id,
           role: "user",
-          content: [{ type: "text", text: message.text }, ...(message.files ?? []).map(media)],
+          content: [
+            { type: "text", text: message.text },
+            ...(message.files ?? []).map(media),
+            ...(message.promptContext?.reminders ?? []).map((note) => ({
+              type: "text" as const,
+              text: `Hook reminder:\n${note}`,
+            })),
+          ],
           metadata: {
             ...message.metadata,
             ...(message.agents?.length ? { agents: message.agents } : {}),

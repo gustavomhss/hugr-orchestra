@@ -4,6 +4,7 @@ import path from "path"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { BackendResult } from "./backend-result"
 import { ShellID } from "@/tool/shell/id"
+import { OUTCOME_KEY, isOwned, readOutcome } from "../plugin/hugr-composer/outcome"
 
 // ShellTool exposes this ID even when its executable is PowerShell (shell/id.ts).
 const knownToolIds = new Set<string>([ShellID.ToolID])
@@ -49,7 +50,7 @@ export function bind(
     callID: part.callID,
     paths: part.tool === "write" || part.tool === "edit"
       ? [resolve(state.input.filePath, input.directory)].filter((file) => file !== undefined)
-      : part.tool === "apply_patch" ? patchPaths(state.metadata.files) : [],
+      : part.tool === "apply_patch" ? patchPaths(state.metadata.files) : generatedPaths(part.tool, state.metadata),
   }))
   return {
     changes: result.changes.map((claim, index) => {
@@ -73,6 +74,14 @@ export function bind(
       return { index, evidence: callIDs.length ? "bound" : "unbound", callIDs }
     }),
   }
+}
+
+// F4.25: a `generated` owned-tool call feeds the change delta through its observed inventory, never through its
+// planned files or the producer's own file list. Directory entries are not files a claim can name.
+function generatedPaths(tool: string, metadata: unknown) {
+  const outcome = typeof metadata === "object" && metadata !== null && OUTCOME_KEY in metadata ? readOutcome(metadata[OUTCOME_KEY], tool) : undefined
+  if (!outcome || !isOwned(outcome) || outcome.status !== "generated") return []
+  return outcome.observed_changes.flatMap((change) => (change.path.endsWith("/") ? [] : [change.path]))
 }
 
 function resolve(value: unknown, directory: string) {

@@ -97,7 +97,7 @@ export function create(input: {
       const history = ids.length ? yield* input.sessions.messages({ sessionID: input.sessionID }) : []
       const users = ids.flatMap((id) => history.filter((message) => message.info.id === id && message.info.role === "user"))
       const prompt = input.userID && ids.includes(input.userID) && users.length && users.length === ids.length
-        ? users.flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : [])).join("\n\n").trim()
+        ? ClaudeCodeTranscript.hostPrompt(users)
         : undefined
       return yield* storage.modify((stored) => {
       if (stored.keys.some((item) => item.key.projectKey !== key.projectKey || item.key.sessionId !== key.sessionId))

@@ -269,6 +269,7 @@ describe("Relay hooks on V2 Session events", () => {
               action: "block",
               trigger: "prompt.before",
               sessionID: session.id,
+              messageID,
               // The prompt text stays in the Session record; the decision carries its sha256.
               subject: sha256("ship it"),
               outcome: "blocked",

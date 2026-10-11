@@ -141,13 +141,9 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
 function command(format: "tar.gz" | "zip") {
   if (format === "tar.gz") return ["tar", "-xzf", "archive.tar.gz", "-C", "out"]
   if (process.platform !== "win32") return ["unzip", "-q", "-o", "archive.zip", "-d", "out"]
-  return [
-    "powershell",
-    "-NoProfile",
-    "-NonInteractive",
-    "-Command",
-    "$global:ProgressPreference = 'SilentlyContinue'; Expand-Archive -LiteralPath archive.zip -DestinationPath out -Force",
-  ]
+  // Windows ships bsdtar, which reads zip without PowerShell's startup; Expand-Archive measured 5-10x slower and
+  // outlasted test timeouts on loaded runners. The absolute path skips Git for Windows' GNU tar, which cannot read zip.
+  return [path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe"), "-xf", "archive.zip", "-C", "out"]
 }
 
 /** A relative path that stays inside the directory it is resolved against. */

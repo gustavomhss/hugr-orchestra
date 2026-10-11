@@ -60,9 +60,20 @@ const historicalProfiles: Readonly<Record<string, Seat["profile"]>> = {
   patty: "execution", lucy: "review", bobby: "review", billy: "review", jimmy: "review", rosie: "execution", frankie: "review",
 }
 
+// Profile aliases are stable behavior projections, not new routing ids or permission bases.
+const profileKeys = new Set([...Object.keys(baseProfiles), ...Object.keys(Seats.all)])
+Object.values(Seats.all).forEach((seat) => {
+  if (!seat.profileKey || seat.profileKey === seat.id) return
+  if (profileKeys.has(seat.profileKey)) throw new Error(`Native seat profile key collision: ${seat.profileKey}`)
+  profileKeys.add(seat.profileKey)
+})
+
 export const nativeProfiles: Readonly<Record<string, NativeProfile>> = Object.freeze({
   ...baseProfiles,
-  ...Object.fromEntries(Object.values(Seats.all).map((seat) => [seat.id, seatProfile(seat)])),
+  ...Object.fromEntries(Object.values(Seats.all).flatMap((seat) => {
+    const profile = seatProfile(seat)
+    return [[seat.id, profile], ...(seat.profileKey && seat.profileKey !== seat.id ? [[seat.profileKey, profile]] : [])]
+  })),
 })
 
 // Seat-specific grants extend the unchanged base. The root edit deny is worktree-relative and added by Agent.
@@ -144,7 +155,7 @@ function seatMember(seat: Seat): RosterMember {
     abilityClass: seat.abilityClass,
     returnCard: seat.returnCard,
     forbiddenActions: seat.forbiddenActions,
-    nativeProfile: historicalProfiles[seat.id] ?? seat.id,
+    nativeProfile: seat.profileKey ?? historicalProfiles[seat.id] ?? seat.id,
     prompt: seat.prompt,
   }
 }

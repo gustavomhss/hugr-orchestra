@@ -9,14 +9,14 @@ import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
 import { documentDiagnostics, type RelayDocument, RelayError } from "./client"
 import type { RelayRun } from "./runs"
-import { DeleteDialog, failure, PublishDialog, RunDialog, ShortcutsDialog } from "./dialogs"
+import { DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
 import { EditorHead, type SaveState } from "./editor-head"
 import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { HookActivity, TestDialog } from "./hook-activity"
-import { issueText, runBlocker } from "./parts"
+import { issueText } from "./parts"
 import { RunsUnavailable } from "./library"
 import { copyDocument } from "./presets"
 import { layerBase, type RelayRoute, relayPath } from "./route"
@@ -77,7 +77,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const [name, setName] = createSignal(props.initial.name)
   const [save, setSave] = createStore<SaveState>({ state: "saved", dirty: false, error: "" })
   const [selected, setSelected] = createSignal<string[]>([])
-  const [dialog, setDialog] = createSignal<"publish" | "run" | "delete" | "keys" | "test">()
+  const [dialog, setDialog] = createSignal<"publish" | "delete" | "keys" | "test">()
   const [test, setTest] = createSignal<{ path: string[]; result: string; label: string }>()
   const [install, setInstall] = createSignal(false)
   const outputs = () => (kind === "hook" ? hookOutputs(props.source.nodeTypes.data?.hook) : {})
@@ -298,17 +298,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             },
           ]
         : []),
-      ...(kind === "workflow"
-        ? [
-            {
-              id: "relay.editor.run",
-              title: copy.t("orchestra.workflows.run.title", { name: name() }),
-              category,
-              disabled: !!runBlocker(base(), props.source.runsState()),
-              onSelect: () => setDialog("run"),
-            },
-          ]
-        : []),
       {
         id: "relay.editor.publish",
         title: copy.t("orchestra.palette.publish", { name: name() }),
@@ -346,8 +335,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       return
     }
     if (typing || props.route.node) return
-    if (mod && event.key === "Enter" && kind === "workflow" && !runBlocker(base(), props.source.runsState()))
-      return (event.preventDefault(), setDialog("run"))
     if (event.key === "?") return (event.preventDefault(), setDialog("keys"))
     if (props.route.tab !== "editor" || target?.closest(".wf-drawer") || mod) {
       if (mod && event.key.toLowerCase() === "a" && props.route.tab === "editor" && !target?.closest(".wf-drawer")) {
@@ -381,7 +368,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               : undefined
             : (decisions.data?.length ?? 0)
         }
-        runBlock={kind === "workflow" ? runBlocker(base(), props.source.runsState()) : undefined}
         installExists={!!installed()}
         save={save}
         issues={issueList()}
@@ -398,7 +384,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
           queueMicrotask(() => api?.center(node))
         }}
         onPublish={() => setDialog("publish")}
-        onRun={() => setDialog("run")}
         onTest={() => setDialog("test")}
         onInstall={(next) => void setInstalled(next)}
         onReload={() => void reload()}
@@ -445,7 +430,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               selected={props.route.run}
               source={props.source}
               go={props.go}
-              onRun={() => setDialog("run")}
               onSelect={(run) => props.go(relayPath.history("workflow", props.id, run.runID))}
               onOpenStep={(run, wp) => props.go(relayPath.node("workflow", props.id, wp, run.runID))}
               onCanvas={(run) => props.go(relayPath.view(props.id, run.runID))}
@@ -466,18 +450,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       <Switch>
         <Match when={dialog() === "publish"}>
           <PublishDialog document={base()} flow={flow()} source={props.source} onClose={() => setDialog(undefined)} />
-        </Match>
-        <Match when={dialog() === "run"}>
-          <RunDialog
-            document={base()}
-            source={props.source}
-            onClose={() => setDialog(undefined)}
-            onStarted={(run) => {
-              setDialog(undefined)
-              props.source.invalidate("runs")
-              props.go(relayPath.history("workflow", props.id, run.runID))
-            }}
-          />
         </Match>
         <Match when={dialog() === "delete"}>
           <DeleteDialog

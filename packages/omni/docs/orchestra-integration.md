@@ -143,7 +143,7 @@ verified: `415038b`).
 |---|---|
 | CLI daemon `cli/src/services/daemon.ts:122`; desktop `background-cli.ts:90` (its CLI may start the daemon); `ipc.ts:229` open-path; `wsl/runtime.ts:329` detached terminal | Must outlive the host; omni's Job and session containment would kill them. |
 | `utilityProcess.fork` (desktop `server.ts:84`) | Electron IPC, not a child process. |
-| CLI pager `cli/cmd/session.ts:97`, `cli/cmd/pr.ts:104` (TUI), `cli/cmd/db.ts:39` (sqlite3), `cli/bin/lildax.cjs:11` launcher, `tui/src/editor.ts` (`$EDITOR`), desktop `linux-workspace-access.ts:252` `shell()` | Need the real terminal (stdio inherit). They move to `Process.interactive` (a small cross-spawn wrapper) where they are in orchestra; the others stay as they are. |
+| CLI pager `cli/cmd/session.ts:97`, `cli/cmd/pr.ts:104` (TUI), `cli/cmd/db.ts:39` (sqlite3), `cli/bin/orchestra.cjs:11` launcher, `tui/src/editor.ts` (`$EDITOR`), desktop `linux-workspace-access.ts:252` `shell()` | Need the real terminal (stdio inherit). They move to `Process.interactive` (a small cross-spawn wrapper) where they are in orchestra; the others stay as they are. |
 | `cli/cmd/providers.ts:335` | Inherits stderr for auth prompts. Moves to `Process.interactive`. |
 | `tui/src/clipboard.ts:11` (`xclip` / `wl-copy`) | They daemonize to own the selection; omni would kill them. |
 | `cli/cmd/github.handler.ts:298` | Opens the browser (the launched app must outlive the host). Moves from `exec` with a shell string to `execFile`, or to the `open` package. |
@@ -151,6 +151,9 @@ verified: `415038b`).
 | `core/src/backend-toolkit/target.ts` (`spawnSync`) | Synchronous host detection (`sysctl`, `ldd`); omni has no synchronous API. |
 | `atlas-boundary/src/generated/native-memory.js` (`execFileSync`) | Canonically generated Atlas secret scanner with a synchronous, fail-closed write contract and a 5 s timeout. Changing the scanner's execution contract belongs to Atlas. |
 | `nix/scripts/probe-distribution.ts`, `nix/scripts/verify-distribution.ts` (`child_process`) | Lead-declared Nix exception, 2026-10-11: CI-only distribution oracles that execute the built CLI, supervisor and packaged Electron to prove the shipped outputs, including omni itself. They are not shipped process paths. |
+| `cli/bin/orchestra.cjs` (`spawnSync`) | Launcher host detection (`sysctl`, PowerShell, `ldd`) before any orchestra code loads; synchronous and bounded. |
+| `cli/script/runtime-proof.ts`, `desktop/scripts/install-electron.ts` (`spawnSync`, `execFile`) | Build and proof scripts; not a shipped process path. |
+| `script/src/tree-sitter-prebuilds.ts` (`child_process`) | Packaging step: rebuilds mislabeled tree-sitter prebuilds with node-gyp before electron-builder packs; a build script, not a shipped process path. |
 | `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `orchestra/src/claude-code/sdk.ts` (`spawn`, `spawnSync`) | Lead-declared integration exception, 2026-10-09: the current bridge implements the SDK's synchronous `SpawnedProcess` contract and tracks actual child exit; macOS machine-login lookup is synchronous and capped at 2 s. The former default SDK subprocess is now wrapped explicitly by `dev`. This bridge stays SDK-managed, outside Omni-tree guarantees; ordinary shell/LSP/MCP callers remain inside Omni. |
 | `Bun.$` and `Bun.spawn` in plugins | Plugin API surface. |

@@ -22,6 +22,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^specs\/backend-specialist\/evidence\//,
+    reason: "raw live-model evidence: session exports name the third-party Zen provider and model ids verbatim",
+  },
+  {
     path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,
     reason: "relay review records; their approvals bind artifact hashes taken before the rename",
     requires: "packages/relay",
@@ -213,13 +217,6 @@ export const protectedStrings: Protected[] = [
     pattern: /\^opencode\\\/|toBe\("opencode"\)/g,
     paths: /\/test\/plugin\/xai\.test\.ts$/,
     reason: "xAI User-Agent and referrer, kept until probed",
-  },
-
-  // Upstream build artifacts the tree downloads until Orchestra publishes its own
-  {
-    pattern: /@opencode-ai\/cli-(?=[a-z])|\bopencode2\b/g,
-    paths: /^packages\/desktop\/scripts\/utils\.ts$/,
-    reason: "upstream's published CLI binary, which the desktop dev build downloads from npm",
   },
 
   // Unrelated words

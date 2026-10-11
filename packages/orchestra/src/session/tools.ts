@@ -1,5 +1,6 @@
 import { Agent } from "@/agent/agent"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
 import { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import { MCP } from "@/mcp"
@@ -109,7 +110,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           ...match,
           state: {
             title: val.title,
-            metadata: val.metadata,
+            metadata: SessionMessageUpdater.taskMetadata("metadata" in match.state ? match.state.metadata ?? {} : {},
+              val.metadata ?? {}, { sessionID: match.sessionID, messageID: match.messageID, callID: match.callID,
+                tool: match.tool, input: match.state.input }),
             status: "running",
             input: args,
             time: match.state.status === "running" ? match.state.time : { start: Date.now() },
@@ -125,6 +128,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             if (Permission.evaluate(req.permission, pattern, nativePermission).action !== "deny") continue
             return yield* new PermissionV1.DeniedError({
               ruleset: nativePermission,
+              reason: req.permission === "external_directory"
+                ? `${pattern.replace(/[\\/]\*$/, "")} is outside the workspace. The owner's rules keep this agent inside ` +
+                  "it, and it cannot ask for an exception: work with paths inside the workspace."
+                : undefined,
             })
           }
         }

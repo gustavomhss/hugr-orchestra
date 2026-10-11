@@ -8,6 +8,8 @@ const sidebar = (page: Page) => page.locator(".orchestra-sidebar")
 const editor = (page: Page) => page.locator('[data-component="relay-editor"]')
 const canvas = (page: Page) => page.locator('[data-component="relay-canvas"]')
 const RUNS_MISSING = "This server cannot run workflows yet. Runs, receipts and audits appear here once it can."
+const MAESTRO_ONLY =
+  "Maestro alone starts workflows, checks executable gates and releases parked runs. This view authors definitions and reads recorded results."
 const SEEDED = [
   "Relay · wp-execute",
   "Relay · spec-decompose",
@@ -42,13 +44,12 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(view.locator(".wf-attn")).toHaveCount(0)
     await expect(row("Relay · wp-execute").locator(".wf-last")).toHaveCount(0)
     await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toHaveCount(0)
-    const run = row("Relay · wp-execute").getByRole("button", { name: "Run Relay · wp-execute" })
-    await expect(run).toBeDisabled()
-    await expect(run).toHaveAttribute("title", "This server cannot run workflows yet")
-    await expect(row("Relay · design").getByRole("button", { name: "Run Relay · design" })).toHaveAttribute(
-      "title",
-      "Needs Relay tools that are not available yet, so it cannot run",
-    )
+    // Maestro alone starts runs, so every row's run button is disabled and says so.
+    for (const name of ["Relay · wp-execute", "Relay · design"]) {
+      const run = row(name).getByRole("button", { name: `Run ${name}` })
+      await expect(run).toBeDisabled()
+      await expect(run).toHaveAttribute("title", MAESTRO_ONLY)
+    }
 
     const templates = view.locator(".wf-tpl-grid .wf-tpl h3")
     await expect(templates).toHaveText([

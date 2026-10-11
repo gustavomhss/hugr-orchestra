@@ -92,10 +92,18 @@ function matchLegacyOpenApi(input: Record<string, unknown>) {
   fixSelfReferencingComponents(spec)
 
   // Effect's Schema.optional emits `anyOf: [T, {type:"null"}]` in OpenAPI,
-  // but the legacy SDK expected plain `T` for optional fields. Strip null
-  // from all component schemas so both request and response types match.
+  // but the legacy SDK expected plain `T` for optional fields. Normalize those
+  // legacy shapes while preserving genuine nullable CAS expectations below.
   for (const [name, schema] of Object.entries(spec.components?.schemas ?? {})) {
     spec.components!.schemas![name] = stripOptionalNull(structuredClone(schema))
+    // These CAS expectations use real null for absent state, not optional-field nullability.
+    // The JSON Schema deduplicator may suffix the same named component before collapsing it below.
+    if (/^SessionV1PromptTransition\d*$/.test(name)) {
+      for (const field of ["expectedRevert", "expectedPermission"]) {
+        const property = spec.components!.schemas![name].properties?.[field]
+        if (property) spec.components!.schemas![name].properties![field] = { anyOf: [property, { type: "null" }] }
+      }
+    }
   }
   normalizeComponentNames(spec)
   collapseDuplicateComponents(spec)

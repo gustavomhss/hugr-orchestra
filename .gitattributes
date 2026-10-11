@@ -15,6 +15,9 @@ packages/app/src/pages/session/orchestra-evidence-fixtures/** -text
 # All packaged skill-tree text uses LF, including companions; Git leaves detected binary files byte-exact.
 packages/*-specialist/skills/** text=auto eol=lf
 packages/orchestra/src/agent/prompt/*.txt text eol=lf
+packages/orchestra/playbooks/maestro-decompose/SKILL.md text eol=lf
+packages/orchestra/playbooks/maestro-contract/SKILL.md text eol=lf
+packages/orchestra/playbooks/maestro-pack/SKILL.md text eol=lf
 # Generated Atlas boundary: the contract is its bytes. A CRLF checkout would also add a carriage return to the line
 # break inside a joined template literal, changing what the code produces, so Windows checkouts must not convert it.
 packages/atlas-boundary/src/generated/** -text

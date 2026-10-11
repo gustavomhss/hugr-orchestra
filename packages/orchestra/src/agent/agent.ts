@@ -14,6 +14,7 @@ import { AgentPrompt } from "@orchestra/core/agent/prompt"
 import { Permission } from "@/permission"
 import { mergeDeep, values } from "remeda"
 import { Global } from "@orchestra/core/global"
+import { FSUtil } from "@orchestra/core/fs-util"
 import path from "path"
 import { Plugin } from "@/plugin"
 import { Skill } from "../skill"
@@ -125,11 +126,13 @@ const layer = Layer.effect(
               return (yield* (yield* Reference.Service).list()).map((reference) => reference.path)
             }).pipe(Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(ctx.directory) }))))
           : []
+        // Tools ask with the real path, and on Windows the configured one can be a short 8.3 path (RUNNER~1), so the
+        // rules are built from the real path too. Truncate.GLOB already is.
         const whitelistedDirs = [
           Truncate.GLOB,
-          path.join(Global.Path.tmp, "*"),
-          ...skillDirs.map((dir) => path.join(dir, "*")),
-          ...referenceDirs.map((dir) => path.join(dir, "*")),
+          ...[Global.Path.tmp, ...skillDirs, ...referenceDirs].map((dir) =>
+            FSUtil.normalizePathPattern(path.join(dir, "*")),
+          ),
         ]
         const readonlyExternalDirectory = {
           "*": "ask",
@@ -319,15 +322,18 @@ const layer = Layer.effect(
         }
 
         for (const [key, value] of Object.entries(agentConfig)) {
-          // Native seats accept only model, variant, temperature and their display label (resolved below).
+          // Every session runs on Maestro, so configuration may neither disable it, take it out of primary mode, nor move
+          // it off Orchestra's loop: it coordinates the other engines. Every other agent, native seats included, may.
+          const engine = key === "maestro" ? undefined : value.engine
+          // Native seats accept only model, variant, temperature, engine and their display label (resolved below).
           if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
             const item = agents[key]
             if (value.model) item.model = Provider.parseModel(value.model)
             item.variant = value.variant ?? item.variant
             item.temperature = value.temperature ?? item.temperature
+            item.engine = engine ?? item.engine
             continue
           }
-          // Every session runs on Maestro, so configuration may neither disable it nor take it out of primary mode.
           if (value.disable && key !== "maestro") {
             delete agents[key]
             continue
@@ -353,8 +359,7 @@ const layer = Layer.effect(
           item.hidden = value.hidden ?? item.hidden
           if (key !== "maestro") item.name = value.name ?? item.name
           item.steps = value.steps ?? item.steps
-          // Maestro always runs on Orchestra's loop: it coordinates the other engines.
-          if (key !== "maestro") item.engine = value.engine ?? item.engine
+          item.engine = engine ?? item.engine
           item.options = mergeDeep(item.options, value.options ?? {})
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
         }

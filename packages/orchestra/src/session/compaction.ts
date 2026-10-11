@@ -62,7 +62,11 @@ const serialize = (message: SessionV1.WithParts) => {
     const files = message.parts.flatMap((part) =>
       part.type === "file" ? [`[Attached ${part.mime}: ${part.filename ?? "file"}]`] : [],
     )
-    return [...(text ? [`[User]: ${text}`] : []), ...files].join("\n")
+    return [
+      ...(text ? [`[User]: ${text}`] : []),
+      ...files,
+      ...(message.info.promptContext?.reminders ?? []).map((note) => `[Hook reminder]: ${note}`),
+    ].join("\n")
   }
   return message.parts
     .flatMap((part) => {
@@ -481,6 +485,8 @@ const layer = Layer.effect(
             format: original.format,
             tools: original.tools,
             system: original.system,
+            // Replay the bound historical request, without evaluating hooks again.
+            promptContext: original.promptContext,
           })
           for (const part of replay.parts) {
             if (part.type === "compaction") continue

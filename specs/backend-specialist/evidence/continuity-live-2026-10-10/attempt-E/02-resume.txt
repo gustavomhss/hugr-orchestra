@@ -1,0 +1,4 @@
+Resume the backend specialist's earlier task: call the task tool with subagent_type "backend", task_id "tsk_128888e10001yPoX7syGAkX96K", memoryUnit {"kind":"task","id":"T-LIVE-5"} and writePaths ["counter.ts"]. Pass model "opencode/nemotron-3-ultra-free" on the task call.
+
+Packet for the resumed task (T-LIVE-5):
+Do not edit any file in this step. Reply only with: (a) the record id of the Atlas Memory checkpoint the host added to your context on this resume, (b) its stoppedAt, quoted exactly, and (c) which phase is next. Then return.

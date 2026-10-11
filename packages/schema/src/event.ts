@@ -49,8 +49,12 @@ export function define<
     readonly aggregate: string
   }
   readonly schema: Fields
+  /** Optional shared OpenAPI component name for data repeated in event envelopes. */
+  readonly dataIdentifier?: string
 }) {
-  const data = Schema.Struct(input.schema)
+  const data = Schema.Struct(input.schema).pipe((schema) =>
+    input.dataIdentifier ? schema.annotate({ identifier: input.dataIdentifier }) : schema,
+  )
   return Schema.Struct({
     id: ID,
     metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),

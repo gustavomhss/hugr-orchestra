@@ -14,7 +14,7 @@ import type { ArchiveChunk } from "@/continuity/memory-types"
 export function user(sessionID: SessionID, suffix = "user", text = "captured observation"): SessionV1.WithParts {
   const id = MessageID.make(`msg_${suffix}`)
   return {
-    info: { id, sessionID, role: "user", agent: "build", time: { created: 1 },
+    info: { id, sessionID, role: "user", agent: "maestro", time: { created: 1 },
       model: { modelID: Model.ID.make("test"), providerID: Provider.ID.make("test") } },
     parts: [{ id: PartID.make(`prt_${suffix}`), messageID: id, sessionID, type: "text", text }],
   }
@@ -23,7 +23,7 @@ export function user(sessionID: SessionID, suffix = "user", text = "captured obs
 export function tool(sessionID: SessionID, output = "captured tool output", suffix = "tool"): SessionV1.WithParts {
   const id = MessageID.make(`msg_${suffix}`)
   return {
-    info: { id, sessionID, role: "assistant", parentID: MessageID.make("msg_user"), agent: "build", mode: "build",
+    info: { id, sessionID, role: "assistant", parentID: MessageID.make("msg_user"), agent: "maestro", mode: "maestro",
       time: { created: 1, completed: 2 }, modelID: Model.ID.make("test"), providerID: Provider.ID.make("test"),
       path: { cwd: "/project", root: "/project" }, cost: 0, finish: "stop",
       tokens: { input: 1, output: 1, reasoning: 0, cache: { read: 0, write: 0 } } },

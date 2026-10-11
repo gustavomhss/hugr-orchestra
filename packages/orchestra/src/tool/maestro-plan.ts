@@ -8,11 +8,13 @@ import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { Tool } from "./tool"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
+import { ProjectID } from "@orchestra/schema/project-id"
+import { WorkflowBinding } from "@/maestro/workflow-binding"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 
-const Field = Schema.Struct({
-  value: Schema.String,
-  source: Schema.Literals(["stakeholder", "maestro", "orientation"]),
-})
+const Field = MaestroEvent.PlanRevision.RecordedV3.data.fields.goal
 const Parameters = Schema.Struct({
   admissionMessageID: Schema.String,
   methodVersion: Schema.String,
@@ -24,6 +26,15 @@ const Parameters = Schema.Struct({
   reviewRequirement: Field,
   assumptions: Schema.Array(Field),
   risks: Schema.Array(Field),
+  upstream: Schema.optional(Schema.Struct({
+    parentMessageID: UpstreamAttribution.V1.fields.parentMessageID,
+    parentCallID: UpstreamAttribution.V1.fields.parentCallID,
+    authorSessionID: UpstreamAttribution.V1.fields.authorSessionID,
+    authorMessageID: UpstreamAttribution.V1.fields.authorMessageID,
+    logicalTaskID: UpstreamAttribution.V1.fields.logicalTaskID,
+  })),
+  workflow: Schema.optional(Schema.Struct({ documentID: Schema.NonEmptyString,
+    parameters: Schema.Record(Schema.String, Schema.String), writePaths: Schema.Array(Schema.NonEmptyString) })),
 })
 
 export const MaestroCatalogContextTool = Tool.define(
@@ -98,8 +109,15 @@ export const MaestroRecordPlanRevisionTool = Tool.define(
           const agent = yield* agents.get(ctx.agentID ?? ctx.agent)
           if (agent?.id !== "maestro" || agent.native !== true)
             return yield* Effect.fail(new Error("Plan revision requires Maestro"))
+          const host = yield* WorkflowBinding.NativeHost
+          if (params.workflow && !host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
+          const session = yield* sessions.get(ctx.sessionID)
+          const port = params.workflow && host ? yield* host.publication({ directory: session.directory,
+            projectID: ProjectID.make(session.projectID) }) : undefined
+          const { workflow, ...fields } = params
           const record = yield* recordPlanRevision({
-            ...params,
+            ...fields,
+            ...(workflow && port ? { workflow: { ...workflow, port } } : {}),
             sessionID: ctx.sessionID,
             contextRequirement: "PENDING",
           })
