@@ -38,6 +38,7 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeCodeTranscript } from "../transcript"
 import { asks } from "../permissions"
+import { ClaudeHostBridge } from "./bridge"
 import { ClaudeHostHooks } from "./hooks"
 import { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
@@ -234,41 +235,7 @@ const layer = Layer.effect(
         : { behavior: "deny", message: ClaudeCodeTools.failure(exit.cause) } satisfies PermissionResult
     }))
 
-    /**
-     * How the `orchestra` MCP server runs an Orchestra tool on this session (as engine.ts builds it for
-     * ClaudeCodeTools.server): it claims the mirrored call, runs in the session's instance context and completes the part.
-     */
-    const bridge = (live: Live, ctx: ClaudeHostOptions.Context): ClaudeHostMcp.Bridge => ({
-      run: (effect) => live.run(effect),
-      claim: (name) => Effect.gen(function* () {
-        // Claude Code may call the tool before the mirror has seen its tool_use block: wait for it.
-        for (let round = 0; round < 1500; round++) {
-          // The running turn first, then the mirrors of earlier turns, whose background subagents may still call.
-          const part = live.turn?.view.claim(name) ??
-            [...new Set(live.known.calls.values())].map((mirror) => mirror.claim(name)).find((found) => found !== undefined)
-          if (part) return part
-          yield* Effect.sleep("20 millis")
-        }
-        return yield* Effect.die(new Error(`no mirrored ${name} call to run`))
-      }),
-      complete: (part) => live.turn?.view.complete(part) ?? live.known.calls.get(part.callID)?.complete(part) ?? Effect.void,
-      messages: () => sessions.messages({ sessionID: live.sessionID }).pipe(Effect.orDie),
-      context: (part) => ({
-        sessionID: part.sessionID, messageID: part.messageID, callID: part.callID, agent: live.agent.name, agentID: live.agent.id,
-        abort: ctx.abort.signal, messages: [], extra: { claudeCode: true },
-        metadata: (value) => Effect.gen(function* () {
-          const current = live.turn?.view.tool(part.callID) ?? live.known.calls.get(part.callID)?.tool(part.callID)
-          if (!current || current.state.status !== "running") return
-          yield* bridge(live, ctx).complete({ ...current, state: { ...current.state, title: value.title ?? current.state.title,
-            metadata: { ...current.state.metadata, ...value.metadata } } })
-        }),
-        ask: (request) => Effect.gen(function* () {
-          const session = yield* sessions.get(part.sessionID).pipe(Effect.orDie)
-          yield* permission.ask({ ...request, sessionID: part.sessionID, tool: { messageID: part.messageID, callID: part.callID },
-            ruleset: Permission.merge(live.agent.permission, session.permission ?? []) }).pipe(Effect.orDie)
-        }),
-      }),
-    })
+    const bridge = (live: Live, ctx: ClaudeHostOptions.Context) => ClaudeHostBridge.create(live, ctx, { sessions, permission })
 
     const settle = (live: Live, outcome: Outcome) => {
       const turn = live.turn
