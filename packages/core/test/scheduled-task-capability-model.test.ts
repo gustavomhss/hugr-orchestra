@@ -17,31 +17,29 @@ const timing = (
   catchUp: "latest",
   ...input,
 })
-const next = (value: ScheduledTaskCapabilityModel.Timing, after: number) =>
-  ScheduledTaskCapabilityModel.nextAfter(value, after)
+const next = ScheduledTaskCapabilityModel.nextAfter
 const daily = (time: string, timezone = "America/New_York") => timing({ kind: "daily", time }, { timezone })
 const cron = (expression: string, timezone = "America/New_York") => timing({ kind: "cron", expression }, { timezone })
 
 describe("ScheduledTaskCapabilityModel.parseCron", () => {
   test("accepts five fields with lists, ranges and steps", () => {
     const parsed = ScheduledTaskCapabilityModel.parseCron("*/15 9-17/4 1,15 * 5-7")
-    expect([...(parsed?.minutes ?? [])]).toEqual([0, 15, 30, 45])
-    expect([...(parsed?.hours ?? [])]).toEqual([9, 13, 17])
-    expect([...(parsed?.days ?? [])]).toEqual([1, 15])
+    expect(parsed?.minutes).toEqual(new Set([0, 15, 30, 45]))
+    expect(parsed?.hours).toEqual(new Set([9, 13, 17]))
+    expect(parsed?.days).toEqual(new Set([1, 15]))
     expect(parsed?.months.size).toBe(12)
     expect([...(parsed?.weekdays ?? [])].sort()).toEqual([0, 5, 6])
-    expect(parsed?.dayRestricted).toBe(true)
-    expect(parsed?.weekdayRestricted).toBe(true)
+    expect([parsed?.dayRestricted, parsed?.weekdayRestricted]).toEqual([true, true])
     const starred = ScheduledTaskCapabilityModel.parseCron("  0 0 */2 * 7 ")
-    expect([...(starred?.weekdays ?? [])]).toEqual([0])
-    expect(starred?.dayRestricted).toBe(false)
+    expect([starred?.weekdays, starred?.dayRestricted]).toEqual([new Set([0]), false])
+    expect(ScheduledTaskCapabilityModel.parseCron("*/59 */23 * * \t0-7/7")?.minutes.size).toBe(2)
     expect(ScheduledTaskCapabilityModel.parseCron("0 0 30 2 1")?.dayRestricted).toBe(true)
   })
 
   // Empty, wrong arity, out of range, reversed range, zero step, `a/n`, empty item, macro, names, and
   // day-of-month rules no selected month can hold.
   test.each(
-    "|* * * *|* * * * * *|60 * * * *|* 24 * * *|* * 0 * *|* * 32 * *|* * * 13 *|* * * * 8|-1 * * * *|5-1 * * * *|*/0 * * * *|1/5 * * * *|1,,2 * * * *|@daily|0 0 * JAN *|0 0 * * MON|0 0 30 2 *|0 0 31 4,6,9,11 *".split(
+    "|* * * *|* * * * * *|60 * * * *|* 24 * * *|* * 0 * *|* * 32 * *|* * * 13 *|* * * * 8|-1 * * * *|5-1 * * * *|*/0 * * * *|1/5 * * * *|1,,2 * * * *|@daily|0 0 * JAN *|0 0 * * MON|0 0 30 2 *|0 0 31 4,6,9,11 *|*/99999999 * * * *|0-59/60 * * * *|0 0 * * 0-7/8|0\u00a00 * * *|0 0 * * *\u00a0|0 0 * *\n*".split(
       "|",
     ),
   )("rejects %p", (expression) => {
@@ -101,6 +99,12 @@ describe("ScheduledTaskCapabilityModel.nextAfter", () => {
     expect(next(daily("09:30", "Mars/Olympus"), 0)).toBeUndefined()
     expect(next(cron("0 0 30 2 *"), 0)).toBeUndefined()
     expect(next(cron("0 0 * * *"), Number.NaN)).toBeUndefined()
+    expect(next(timing({ kind: "interval", minutes: 5 }), 9e15)).toBeUndefined()
+  })
+
+  test("rare rules are found across their full cycle", () => {
+    expect(next(cron("0 0 */31 1 0", "UTC"), at("2026-01-01T00:00:00Z"))).toBe(at("2034-01-01T00:00:00Z"))
+    expect(next(cron("0 0 29 2 *", "UTC"), at("2097-01-01T00:00:00Z"))).toBe(at("2104-02-29T00:00:00Z"))
   })
 })
 

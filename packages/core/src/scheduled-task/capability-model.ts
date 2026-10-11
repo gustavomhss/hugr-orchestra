@@ -14,7 +14,8 @@ export type Timing = Readonly<{
   catchUp: "latest" | "skip"
 }>
 
-/** `skipped` counts slots that will never run because of this plan. */
+/** `skipped` counts slots that will never run because of this plan. Catch-up counts local wall times, so several
+ * cron matches inside one DST gap count separately although they collapse into one run. */
 export type Plan =
   | { readonly type: "wait" }
   | { readonly type: "run"; readonly slot: number; readonly skipped: number }
@@ -28,8 +29,8 @@ const DAY = 86_400_000
 // A once slot later than this is skipped; with catchUp "skip" a slot later than one tick is not run.
 const LATE = DAY
 const TICK = MINUTE
-// Local days searched for the next match; a rule that matches no day inside it never fires.
-const HORIZON = 5 * 366
+// Local days searched for the next match: 28 years covers the weekday cycle of any date and Feb 29 across 2100.
+const HORIZON = 28 * 366
 const LIMIT = 100_000
 // Bounds of minute, hour, day-of-month, month and day-of-week (7 is also Sunday).
 const LOW = [0, 0, 1, 1, 0]
@@ -38,9 +39,10 @@ const MONTH_DAYS = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 type Clock = { zone: DateTime.TimeZone; cron: Cron; times: number[] }
 
-/** Five Vixie fields with `*`, lists, ranges and steps; names, macros and seconds are rejected, as is a rule that can never fire. */
+/** Five Vixie fields separated by ASCII spaces or tabs, with `*`, lists, ranges and steps; names, macros and
+ * seconds are rejected, as is a rule that can never fire. */
 export function parseCron(expression: string): Cron | undefined {
-  const fields = expression.trim().split(/\s+/)
+  const fields = expression.replace(/^[ \t]+|[ \t]+$/g, "").split(/[ \t]+/)
   if (fields.length !== 5) return undefined
   const sets = fields.map((field, index) => parseField(field, LOW[index], HIGH[index]))
   if (!sets.every((set): set is number[] => set !== undefined)) return undefined
@@ -64,15 +66,15 @@ export function parseCron(expression: string): Cron | undefined {
 /** First slot strictly after `after`; DST gaps resolve to the next valid local instant; undefined for a past once. */
 export function nextAfter(timing: Timing, after: number): number | undefined {
   const cadence = timing.cadence
-  if (!Number.isFinite(after)) return undefined
+  if (!inRange(after)) return undefined
   if (cadence.kind === "once") return cadence.at > after ? cadence.at : undefined
   if (cadence.kind === "interval") {
     const step = cadence.minutes * MINUTE
-    if (timing.next > after) return timing.next
-    return timing.next + (Math.floor((after - timing.next) / step) + 1) * step
+    const slot = timing.next > after ? timing.next : timing.next + (Math.floor((after - timing.next) / step) + 1) * step
+    return inRange(slot) ? slot : undefined
   }
   const clock = wallClock(timing)
-  if (!clock || !inRange(after)) return undefined
+  if (!clock) return undefined
   // Wall times at or before `after`'s own map to instants at or before it; inside a repeated hour later wall
   // times can too, so the scan keeps going until an instant passes `after`.
   return scan(clock, Math.floor(localWall(clock.zone, after) / MINUTE) * MINUTE, 1, (instant) => instant > after)
@@ -88,8 +90,7 @@ export function plan(timing: Timing, now: number): Plan {
   return { type: "run", slot: due.latest, skipped: due.count - 1 }
 }
 
-// The latest slot due at `now` and how many slots are due counting the owed `next`. Without a usable zone or
-// rule only the owed slot is known.
+// The latest due slot and the due count including the owed `next`; without a usable zone or rule, only `next`.
 function overdue(timing: Timing, now: number) {
   const cadence = timing.cadence
   if (cadence.kind === "interval") {
@@ -100,7 +101,6 @@ function overdue(timing: Timing, now: number) {
   const clock = wallClock(timing)
   const latest = clock && inRange(now) ? latestSlot(clock, now) : undefined
   if (!clock || latest === undefined || latest <= timing.next) return { latest: timing.next, count: 1 }
-  // Counted in local wall times, so several matches inside one DST gap count apart though they run once.
   return { latest, count: 1 + countWalls(clock, localWall(clock.zone, timing.next), localWall(clock.zone, latest)) }
 }
 
@@ -127,8 +127,7 @@ function latestSlot(clock: Clock, now: number) {
   return scan(clock, start, -1, (instant) => instant <= now)
 }
 
-// Resolves matching wall times one by one from `from` and returns the first accepted instant. Resolution is
-// monotone in wall time, so the first accepted instant is the nearest one in that direction.
+// The first accepted instant among matching wall times from `from`; resolution is monotone in wall time.
 function scan(clock: Clock, from: number, step: 1 | -1, accept: (instant: number) => boolean) {
   let wall = seek(clock, from, step)
   for (let index = 0; wall !== undefined && index < LIMIT; index++) {
@@ -213,6 +212,7 @@ function parseItem(item: string, min: number, max: number) {
   const low = match[1] ? min : Number(match[2])
   const high = match[1] ? max : Number(match[3] ?? match[2])
   const step = Number(match[4] ?? 1)
-  if (low < min || high > max || low > high || step < 1) return undefined
+  // Like cronie, a step above the field maximum is rejected.
+  if (low < min || high > max || low > high || step < 1 || step > max) return undefined
   return Array.from({ length: Math.floor((high - low) / step) + 1 }, (_, index) => low + index * step)
 }
