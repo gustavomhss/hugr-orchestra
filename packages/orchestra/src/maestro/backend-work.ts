@@ -133,9 +133,12 @@ export function track(input: {
     }),
     // Never query history here: retain the returned assistant, or the captured host failure when none returned.
     // Both carry the host verification projection this dispatch observed, never one from a later turn.
-    notice: (_state: "completed" | "error", _text: string) => Effect.sync(() => {
+    notice: Effect.fn("SeatWork.notice")(function* (_state: "completed" | "error", _text: string) {
+      if (!input.enabled) return undefined
       const captured = returned.value ?? ended.value
-      if (!captured) return
+      // Nothing returned or ended: still report the host facts (bound roots, shell fact) of a child with no message.
+      if (!captured)
+        return yield* bound(BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" }, input.seat), [])
       // A completion-shaped notice cannot erase a later observed host failure.
       return structuredClone(project(returned.value && ended.value ? { ...captured, terminal: ended.value.terminal } : captured))
     }),
