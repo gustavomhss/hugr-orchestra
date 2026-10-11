@@ -28,7 +28,8 @@ import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { Permission } from "@/permission"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
-import { approve } from "@/tool/shell/scan"
+import { approve, resolvePath } from "@/tool/shell/scan"
+import { ShellExecution } from "@/tool/shell/execution"
 import type { Tool } from "@/tool/tool"
 import { asks } from "../permissions"
 import { ClaudeCodeTools } from "../tools"
@@ -68,7 +69,7 @@ export type Ports = {
    * A write-roots seat's Bash command, rewritten to run inside the OS write jail with its grant's roots; undefined for
    * any other actor. Fails when this host has no jail: that seat's Bash is then denied.
    */
-  readonly confine: (actor: Actor, command: string, toolUseID: string) => Effect.Effect<string | undefined, unknown>
+  readonly confine: (actor: Actor, command: string, toolUseID: string, process?: { workdir?: string }) => Effect.Effect<string | undefined, unknown>
   /** Releases what a confined call holds (the jail's policy and scratch files) once the call has ended. */
   readonly release: (toolUseID: string) => Effect.Effect<void>
   /** Releases every jail still held, such as a background `process`'s, when the host session ends. */
@@ -93,7 +94,8 @@ export const decide = Effect.fn("ClaudeHostGate.decide")(function* (ports: Ports
   }
   // Bash and the `process` tool both run a shell command; a write-roots seat runs either only inside its write jail.
   if (name !== "Bash" && !(own === PROCESS && input.action === "start")) return { allow: true }
-  const confined = yield* Effect.exit(ports.confine(actor, typeof input.command === "string" ? input.command : "", toolUseID))
+  const confined = yield* Effect.exit(ports.confine(actor, typeof input.command === "string" ? input.command : "", toolUseID,
+    own === PROCESS ? { workdir: text(input, "workdir") } : undefined))
   if (Exit.isFailure(confined)) return { allow: false, reason: ClaudeCodeTools.failure(confined.cause) }
   return (confined.value === undefined ? { allow: true } : { allow: true, input: { ...input, command: confined.value } })
 })
@@ -199,7 +201,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
 
   return {
     granted: input.granted,
-    close: Effect.forEach([...scopes.keys()], release, { discard: true }),
+    close: Effect.suspend(() => Effect.forEach([...scopes.keys()], release, { discard: true })),
     hold: (actor, name) => Effect.gen(function* () {
       // A workflow-bound Session runs its bound work only; it never starts teammates (task.ts parity).
       if (agentCall(name) && (yield* WorkflowBinding.read(actor.sessionID).pipe(Effect.provideService(Database.Service, database))))
@@ -212,24 +214,39 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         projectID: session.projectID, projectDirectory }))
     }),
     arsenal: (actor, tool, args) => arsenal.beforeExecute(actor.sessionID, tool, args),
-    confine: (actor, command, toolUseID) => Effect.gen(function* () {
+    confine: (actor, command, toolUseID, background) => Effect.gen(function* () {
       if (!Seats.find(actor.seat)?.writeRoots) return undefined
       const session = yield* sessions.get(actor.sessionID)
       const roots = WriteRoots.read(session.permission)
       if (!roots) return yield* Effect.fail(new Error(`HOLD: ${actor.seat} has no bound write roots, so its Bash did not run.`))
+      const ctx = yield* context(actor, toolUseID)
+      const cwd = background?.workdir ? yield* resolvePath(background.workdir, instance.directory, shell).pipe(
+        Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner),
+      ) : instance.directory
+      const prepareParents = background ? yield* approve(ctx, { command, cwd, shell }).pipe(
+        Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner),
+      ) : false
       const scope = yield* Scope.make()
       scopes.set(toolUseID, scope)
       // The seat's own profile narrowed to its bound roots, sandbox required, with no unconfined fallback: no jail, no Bash.
       const jailed = yield* arsenal.withSession(actor.sessionID, Effect.gen(function* () {
         const loader = yield* ToolSafety.RuntimeProfileLoader
         const profile = WriteRoots.profile(loader ? yield* loader() : yield* ToolSafety.RuntimeProfile, roots, session.directory)
-        return yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: session.directory })).pipe(
+        // Process starts use the shell's seat profile here and transfer this jail at execution, without a second wrap.
+        return yield* (background
+          ? ShellExecution.wrap(fs, { command, shell, cwd, env: process.env, prepareParents }, ctx)
+          : ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: session.directory }))).pipe(
           Effect.provideService(ToolSafety.RuntimeProfile, { ...profile, sandbox: { ...profile.sandbox, unconfinedFallback: false } }),
           Effect.provideService(FSUtil.Service, fs), Scope.provide(scope))
       })).pipe(Effect.tapCause(() => release(toolUseID)), Effect.mapError((error) => new Error(
         `HOLD: ${actor.seat}'s Bash runs only inside Orchestra's write jail, and it could not be set up here (${error instanceof ToolSafety.Denied ? error.reason : String(error)}), so the command did not run. Read with Read, Grep and Glob, and write with Write or Edit inside your grant.`)))
       if (jailed._tag !== "StandardCommand") return yield* Effect.fail(new Error("HOLD: the write jail returned a pipeline, so the command did not run."))
-      return line(jailed)
+      const updated = line(jailed)
+      if (background) yield* ShellExecution.handoff(ctx, {
+        command: updated, originalCommand: command, prepareParents, cwd, agentID: ctx.agentID, wrapped: jailed, resources: scope,
+        onTake: () => { scopes.delete(toolUseID) },
+      })
+      return updated
     }),
     release,
     ask: (actor, name, args, toolUseID) => Effect.gen(function* () {
