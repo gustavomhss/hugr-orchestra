@@ -13,6 +13,7 @@ import { AppProcess } from "../../process"
 import { SessionStore } from "../../session/store"
 import { Tool } from "../../tool/tool"
 import { ToolSafety } from "../../tool-safety"
+import { ToolSafetyCommands } from "../../tool-safety-commands"
 import { ToolSafetyGit } from "../../tool-safety-git"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { CapabilityInvocation } from "../invocation"
@@ -75,7 +76,8 @@ export const make = (options: { jobs: CapabilityProcessContract.Jobs }) => Effec
     const target = yield* mutation.resolve({ path: input.cwd ?? ".", kind: "directory" })
     if (target.externalDirectory) yield* permission.assert({ ...LocationMutation.externalDirectoryPermission(target.externalDirectory),
       sessionID: context.sessionID, agent: context.agent, source })
-    const display = input.argv.map(quote).join(" ")
+    // One string for permission, git hygiene and command safety: explicit env changes what runs, so it is part of it.
+    const display = ToolSafetyCommands.display(input.argv, input.env ?? {})
     yield* permission.assert({ action: "bash", resources: [display], save: [display],
       sessionID: context.sessionID, agent: context.agent, source })
     if ((yield* fs.stat(target.canonical)).type !== "Directory") return yield* failure("unsupported_operation")
@@ -98,15 +100,17 @@ export const make = (options: { jobs: CapabilityProcessContract.Jobs }) => Effec
     // Durable intent through running and the spawn are one indivisible step: no running job without a process attempt.
     return yield* Effect.uninterruptible(Effect.gen(function* () {
       const ref = yield* jobs.create(context, { kind: "local-process", operation: "process.start" })
-      yield* jobs.transition(context, ref, { expectedGeneration: 0, state: "submitting", observation: {} })
-      yield* jobs.transition(context, ref, { expectedGeneration: 1, state: "running", observation: {} })
       const settle = (outcome: Readonly<{ exit: typeof CapabilityProcessContract.Exit.Type; stopped: boolean }>) =>
         (outcome.stopped
           ? observe(ref, "cancel-requested", { cancellation: "requested" })
             .pipe(Effect.andThen(observe(ref, "cancelled", { cancellation: "confirmed" })))
           : observe(ref, outcome.exit.code === 0 ? "completed" : "failed", {})).pipe(
           Effect.catchCause((cause) => Effect.logWarning("process_control settlement failed", cause)))
-      const started = yield* registry.start({ ref, owner: binding.owner, command, prepare, settle }).pipe(Effect.exit)
+      const started = yield* Effect.gen(function* () {
+        yield* jobs.transition(context, ref, { expectedGeneration: 0, state: "submitting", observation: {} })
+        yield* jobs.transition(context, ref, { expectedGeneration: 1, state: "running", observation: {} })
+        return yield* registry.start({ ref, owner: binding.owner, command, prepare, settle })
+      }).pipe(Effect.exit)
       if (Exit.isSuccess(started)) return started.value
       const marked = yield* observe(ref, "failed", {}).pipe(Effect.exit)
       return yield* Effect.failCause(Exit.isFailure(marked)
@@ -173,7 +177,9 @@ export const make = (options: { jobs: CapabilityProcessContract.Jobs }) => Effec
   })
 
   const toolFailure = (error: Error) => new Tool.Failure({ message: error instanceof Capability.Failure ? error.code
-    : error instanceof ToolSafety.Denied ? error.message : `process_control_${error._tag}` })
+    : error instanceof ToolSafety.Denied ? error.message : `process_control_${error._tag}`,
+    // Settlement escalates a passed-through Denied as a safety HOLD instead of an ordinary tool error.
+    ...(error instanceof ToolSafety.Denied ? { error } : {}) })
   const toolErrors = <A>(effect: Effect.Effect<A, Error>) => effect.pipe(
     Effect.exit,
     Effect.flatMap((exit) => Exit.isSuccess(exit) ? Effect.succeed(exit.value) : Effect.failCause(
@@ -193,10 +199,6 @@ Output is merged stdout+stderr addressed by absolute byte cursors; pass the prev
   }
   return { tools }
 })
-
-function quote(arg: string) {
-  return /^[A-Za-z0-9_\/.,:=@%+-]+$/.test(arg) ? arg : `'${arg.replaceAll("'", `'\\''`)}'`
-}
 
 function failure(code: Capability.ErrorCode) {
   return new Capability.Failure({ code, message: "Process control action is unavailable" })
