@@ -79,13 +79,14 @@ test("extended setup input cannot replace captured location; actual SQL connecti
   const other = createIntegrationsApi({ server: { url: host.url, username: "native", password: host.password }, directory: input.location.directory, fetch: wire.fetch })
   expect(await other.list()).toEqual({ items: [], coverage: "live" })
   expect((await api.list()).items[0].connection.id).toBe(rows.connections[0].id)
+  const sent = wire.calls.length
   const error = await Promise.resolve().then(() => createIntegrationsApi({ server: { url: host.url },
     directory: host.directory, bearer: "malformed\r\nprivate-header", fetch: wire.fetch })).then(
       () => { throw new Error("Expected malformed bearer rejection") }, (error: unknown) => error)
   expect(error).toBeInstanceOf(TypeError)
   expect(String(error)).toBe("TypeError: Invalid integration authorization")
   expect(error).not.toHaveProperty("cause")
-  expect(wire.calls.map((call) => call.response).join("")).not.toContain("private-header")
+  expect(wire.calls).toHaveLength(sent) // Rejected locally: the malformed bearer never reaches the wire.
 }, 90000)
 
 test("strict protected HTTP rejects body endpoints/identity/actor and sanitizes malformed or expired credentials", async () => {

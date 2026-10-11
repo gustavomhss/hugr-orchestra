@@ -18,7 +18,8 @@ import { SessionID } from "@orchestra/schema/session-id"
 import { Cause, Context, Effect, Layer, LayerMap, Option } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
+import { rm } from "node:fs/promises"
 import { makeCapabilityConnectionsGroup } from "../../../protocol/src/groups/capability-connections"
 import { ServerAuth } from "../../../server/src/auth"
 import { CapabilityConnectionsHandler } from "../../../server/src/handlers/capability-connections"
@@ -33,6 +34,8 @@ const Api = HttpApi.make("server").add(makeCapabilityConnectionsGroup(LocationMi
   .middleware(Authorization).middleware(SchemaErrorMiddleware)
 const stop = Promise.withResolvers<void>()
 process.once("SIGTERM", stop.resolve)
+// Parent holds stdin open; EOF means the runner died (even SIGKILL), so never orphan this server.
+void new Response(Bun.stdin.stream()).arrayBuffer().then(() => stop.resolve())
 const directory = process.env.ORCHESTRA_TEST_HOME!
 const password = process.argv[2] === "basic" ? "native:password" : undefined
 
@@ -99,7 +102,8 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     if (path === "/__fixture/inspect") return Response.json(await inspect())
     if (path === "/__fixture/expire") { readiness.expired = true; return Response.json({ ok: true }) }
     if (path === "/__fixture/credential") {
-      const credential = (await inspect()).credentials[0]
+      const credential = await Effect.runPromise(database.db.select().from(CredentialTable)
+        .orderBy(sql`rowid`).limit(1).get()) // Oldest inserted credential.
       if (!credential) throw new Error("Missing fixture credential")
       await Effect.runPromise(database.db.delete(CredentialTable).where(eq(CredentialTable.id, credential.id)).run())
       return Response.json({ ok: true })
@@ -114,3 +118,4 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   console.log(JSON.stringify({ url: server.url.origin, directory, sessionID, bearer: issued.bearer, password }))
   yield* Effect.promise(() => stop.promise)
 })))
+await rm(directory, { recursive: true, force: true })

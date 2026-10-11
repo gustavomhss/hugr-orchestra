@@ -19,7 +19,7 @@ test("Basic and ephemeral host bearer reach actual protected handler; invalid be
   field("bearer").value = "malicious\r\nAuthorization: Basic injected"
   submit(".integrations-auth")
   expect(field("bearer").value).toBe("")
-  await Bun.sleep(30)
+  await Bun.sleep(30) // No positive signal exists for "nothing was sent".
   expect(view.wire.calls).toHaveLength(1)
   const bearer = field("bearer")
   bearer.value = host.bearer
@@ -65,7 +65,8 @@ test("root dispose/remount across server/profile aborts A reads, clears draft/be
   expect(field("bearer").value).toBe("")
   expect(wire.calls.slice(before).map((call) => [new URL(call.url).origin, call.headers.has("authorization")])).toEqual([[b.url, false]])
   gate.resolve()
-  await Bun.sleep(50)
+  await waitFor(() => pending?.delivered === true)
+  await Bun.sleep(10) // Let the late resolution reach any (fenced) consumer before absence checks.
   expect(second.root.textContent).toContain("Host authorization is required")
   expect(second.root.textContent).not.toContain("Request saved")
   expect(second.root.textContent).not.toContain("Only profile A")
@@ -173,7 +174,8 @@ test("pending setup root disposal clears private intent and cannot refresh or re
   cleanup.push(second.dispose)
   await idle(second.root)
   gate.resolve()
-  await Bun.sleep(50)
+  await waitFor(() => pending?.delivered === true)
+  await Bun.sleep(10) // Let the late resolution reach any (fenced) consumer before absence checks.
   expect(wire.calls.slice(before).map((call) => [call.method, new URL(call.url).origin, call.headers.has("authorization")])).toEqual([["GET", b.url, false]])
   expect(second.root.textContent).not.toContain("Late profile A account")
   expect(second.root.textContent).not.toContain("Request saved")

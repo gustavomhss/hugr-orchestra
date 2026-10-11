@@ -30,10 +30,10 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   const pendingRead = view.wire.calls.at(-1)
   expect(pendingRead?.signal?.aborted).toBe(false)
   const before = view.wire.calls.length
-  const root = view.root
+  expect(view.mounts()).toBe(1)
   view.change(b) // One render/owner, reactive props only. No fixture remount or substitute controller.
   await idle(view.root)
-  expect(view.root).toBe(root)
+  expect(view.mounts()).toBe(1) // Same IntegrationsPage instance; only its keyed session screen is replaced.
   expect(oldForm.isConnected).toBe(false)
   expect(oldInput.value).toBe("")
   expect(pendingRead?.signal?.aborted).toBe(true)
@@ -44,9 +44,12 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   oldInput.value = a.bearer
   const late = new Event("submit", { bubbles: true, cancelable: true })
   oldForm.dispatchEvent(late)
-  expect(late.defaultPrevented).toBe(true) // Actual retained DOM listener executes, even after its page owner changes.
+  // Retained listener runs and prevents default, but the detached disposed model is not admitting, so this
+  // never reaches the authorize guard; that guard is proven by "actual authorization callback rejects owner...".
+  expect(late.defaultPrevented).toBe(true)
   gate.resolve() // Actual A rows arrive late despite abort; B's live component must remain fenced.
-  await Bun.sleep(30)
+  await waitFor(() => pendingRead?.delivered === true)
+  await Bun.sleep(10)
   expect(view.root.querySelector(".integrations-auth")).toBe(currentForm)
   expect(view.wire.calls).toHaveLength(before + 1)
   field("bearer").value = b.bearer
@@ -95,8 +98,9 @@ test("same host reactive profile change discards bearer and private pending exac
   oldInput.value = host.bearer
   const late = new Event("submit", { bubbles: true, cancelable: true })
   oldForm.dispatchEvent(late)
+  // Detached form is swallowed before the authorize guard (disposed model); guard proof lives in the owner-disposal test.
   expect(late.defaultPrevented).toBe(true)
-  await Bun.sleep(30)
+  await Bun.sleep(30) // No positive signal exists for "nothing was sent".
   expect(view.wire.calls).toHaveLength(before + 1)
   field("bearer").value = host.bearer
   submit(".integrations-auth")

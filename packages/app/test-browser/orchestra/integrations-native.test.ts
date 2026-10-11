@@ -173,7 +173,10 @@ test("failed read after ACK retries only GET, never POST or vendor verification"
   expect((await host.inspect()).vendor).toHaveLength(1)
   expect(view.root.querySelector('[role="alert"]')).toBeNull()
   expect(view.root.textContent).toContain("Read retry")
-  assertPrivate(view.root, ["read-retry-private-key", "fixture-private-read-error"], view.wire)
+  assertPrivate(view.root, ["read-retry-private-key"], view.wire)
+  // The injected error body is on the wire by construction; prove it reached the client, then that the DOM never shows it.
+  expect(view.wire.calls.some((call) => call.status === 503 && !!call.response?.includes("fixture-private-read-error"))).toBe(true)
+  expect(view.root.textContent).not.toContain("fixture-private-read-error")
 }, 90000)
 
 test("actual page sanitizes malformed/expired vendor credentials without persisting failed setup", async () => {
@@ -184,6 +187,7 @@ test("actual page sanitizes malformed/expired vendor credentials without persist
   await idle(view.root)
   for (const key of ["malformed-page-private-key", "expired-page-private-key"]) {
     await connect(view.root, "slack", key)
+    // Pins current copy; product follow-up: distinct provider-credential-rejected error.
     expect(view.root.textContent).toContain("Host authorization is required")
     expect(view.root.textContent).not.toContain("Request saved")
     assertPrivate(view.root, [key, "token_expired", "vendor-private"], view.wire)
