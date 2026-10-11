@@ -122,6 +122,41 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
   yield* host.release(setup.chat.id)
 }), 30_000)
 
+ClaudeEngineFixture.it.instance("Stop after a delivered steer ends its revisit as interrupted rather than no text", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const host = yield* ClaudeHost.Service
+  const engine = yield* ClaudeCode.Service
+  const scope = yield* Scope.Scope
+  const entered = Promise.withResolvers<void>()
+  const queued = Promise.withResolvers<void>()
+  ClaudeEngineFixture.state.scripts.push(async function* (input) {
+    const reader = input[Symbol.asyncIterator]()
+    await reader.next()
+    yield { type: "assistant", ...frame, uuid: crypto.randomUUID(), message: {
+      id: "working", model: "claude-haiku-4-5-20251001", content: [{ type: "text", text: "working" }], usage: {} } }
+    entered.resolve()
+    await reader.next()
+    queued.resolve()
+    for await (const _ of input) {}
+  })
+  const admitted = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start"), noReply: true })
+  if (admitted.info.role !== "user") throw new Error("missing admitted user")
+  const running = yield* host.turn({ sessionID: setup.chat.id, user: admitted.info }).pipe(Effect.forkIn(scope))
+  yield* Effect.promise(() => entered.promise)
+  const steer = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("steer text"), noReply: true })
+  if (steer.info.role !== "user") throw new Error("missing steer user")
+  yield* engine.admitted(steer)
+  yield* Effect.promise(() => queued.promise)
+  yield* engine.interrupt(setup.chat.id)
+  yield* Fiber.await(running)
+  yield* host.turn({ sessionID: setup.chat.id, user: steer.info })
+  const history = yield* setup.sessions.messages({ sessionID: setup.chat.id })
+  expect(history.findLast((message) => message.info.role === "assistant" && message.info.parentID === steer.info.id)?.info)
+    .toMatchObject({ error: { name: "AbortedError" } })
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+}), 30_000)
+
 ClaudeEngineFixture.it.instance("Tasks-panel child interruption targets the joined native task without stopping its parent", () => Effect.gen(function* () {
   ClaudeEngineFixture.reset()
   const setup = yield* ClaudeEngineFixture.setup()

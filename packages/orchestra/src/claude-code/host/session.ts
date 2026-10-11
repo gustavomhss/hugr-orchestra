@@ -8,8 +8,6 @@ export * as ClaudeHost from "./session"
 // - Stop is `interrupt()`, the model picker is `setModel()`;
 // - Claude Code's session id is derived 1:1 from the Orchestra session id, so resume and fork use the SDK's own
 //   `resume` / `forkSession` and need no transcript store;
-// - an idle session releases its process; the next turn resumes it.
-// The entry mirrors claude-code/engine.ts `turn`, so the engine can hand a turn to this host with a small diff.
 import { createHash } from "node:crypto"
 import { Context, Effect, Exit, Layer, Semaphore } from "effect"
 import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
@@ -37,6 +35,7 @@ import { Permission } from "@/permission"
 import { Question } from "@/question"
 import { marker } from "@/continuity/alias"
 import { RequestSource } from "@/continuity/request-source"
+import { Archive } from "@/continuity/archive"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { SessionStatus } from "@/session/status"
@@ -151,7 +150,6 @@ type Live = {
   agent: Agent.Info
   model?: string
   turn?: Turn
-  /** Frames of a stopped turn still arrive until its result; they are dropped. */
   discard: boolean
   background: number
   uuids: Record<string, string>
@@ -173,7 +171,6 @@ type Live = {
   /** The Agent-call identity join the hooks share with this stream consumer (spikes S3, S12). */
   join: ClaudeHostJoin.Join
   idle?: ReturnType<typeof setTimeout>
-  /** Why the session's stream ended, once it has. */
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
@@ -432,12 +429,13 @@ const layer = Layer.effect(
       const overrides = yield* Adapters
       const env = yield* ClaudeCodeSDK.Environment
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
-      // The registry tools of Maestro and every seat, resolved once per live session (agent PLUGIN's prepare).
       const prepared = overrides.plugin && overrides.mcp ? undefined
         : yield* ClaudeHostMcp.prepare({ agent: input.agent, model: input.user.model, permission: session.permission }).pipe(
           Effect.provide(preparation))
       const release = yield* IdleRelease
-      const context = yield* Effect.context<never>()
+      // Layer dependencies are private to the service implementation; the turn caller only has exported services.
+      // Retain them for SDK callbacks while taking instance placement and request references from the caller.
+      const context = Context.merge(preparation, yield* Effect.context<never>())
       const abort = new AbortController()
       const fork = ClaudeCodeTranscript.record(input.state.forkFrom) ? input.state.forkFrom : undefined
       const resume = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId,
@@ -478,7 +476,6 @@ const layer = Layer.effect(
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
         hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge,
-          // The hooks' effects need only what this session's context provides.
           run: live.run as ClaudeHostHooks.Context["run"],
           parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
             complete: bridge.complete } })),
@@ -580,6 +577,11 @@ const layer = Layer.effect(
         : ClaudeHostMirror.create({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
             sessions, snapshot, todo, status, provider, catalog })
       if (!prompt && !existing?.turn) {
+        if (delivered.has(input.user.id)) {
+          if (!history.some((message) => message.info.role === "assistant" && message.info.parentID === input.user.id && message.info.time.completed))
+            yield* view.fail({ aborted: true, message: "The delivered turn was interrupted." })
+          return true
+        }
         yield* view.fail({ aborted: false, message: "Claude Code receives text only; this message has no text." })
         return true
       }
@@ -595,14 +597,12 @@ const layer = Layer.effect(
         host.model = model
         yield* Effect.promise(() => host.query.setModel(model).catch(() => undefined))
       }
-      // A turn Claude Code started on its own is still running: this message steers it, and this turn waits for it.
       const running = host.turn
       if (running && prompt) host.inbox.push(yield* send(host, running.view, input.user, prompt, "next"))
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [], answered: new Set([input.user.id]) }
       host.turn = turn
       if (!running) host.bridge?.resume()
       const outcome = new Promise<Outcome>((resolve) => turn.waiters.push(resolve))
-      // The session's stream may have ended while this turn was being set up: nothing would answer it.
       if (host.ended !== undefined) settle(host, { ok: false, message: host.ended })
       if (prompt) {
         delivered.forEach((id) => host.delivered.add(id))
@@ -745,5 +745,5 @@ export const node = LayerNode.make({
   layer,
   deps: [SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
-    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node],
+    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node],
 })

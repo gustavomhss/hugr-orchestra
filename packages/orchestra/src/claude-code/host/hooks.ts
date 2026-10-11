@@ -78,10 +78,14 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
     path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts })
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
+  const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
     : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
   const unsubscribe = ctx.join.subscribe((frame) => {
-    ctx.run(delegation.notify(frame)).catch(() => undefined)
+    void Promise.resolve().then(() => ctx.run(delegation.notify(frame))).catch((error: unknown) => {
+      fault.reason = `Orchestra could not record the subagent delivery: ${String(error)}`
+      ctx.abort.abort()
+    })
   })
   // The session's end releases its notices, its unbound grants and the jails its background processes still hold.
   ctx.abort.signal.addEventListener("abort", () => {
@@ -148,7 +152,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
       }
       return context ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context } } : {}
-    }).pipe(Effect.catchCause((cause) => Effect.succeed({ systemMessage: `Orchestra could not record this call: ${ClaudeCodeTools.failure(cause)}` }))))
+    }))
   }
 
   // A failed call holds a jail too; nothing else is recorded for it here.
@@ -175,16 +179,40 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   }
 
   return {
-    PreToolUse: [{ hooks: [pre] }],
-    PostToolUse: [{ hooks: [post] }],
-    PostToolUseFailure: [{ hooks: [failed] }],
-    SubagentStop: [{ hooks: [stop] }],
-    SessionStart: [{ matcher: "compact", hooks: [compact] }],
-    PostCompact: [{ hooks: [archive] }],
+    PreToolUse: [{ hooks: [closed(pre)] }],
+    PostToolUse: [{ hooks: [closed(post)] }],
+    PostToolUseFailure: [{ hooks: [closed(failed)] }],
+    SubagentStop: [{ hooks: [closed(stop)] }],
+    SessionStart: [{ matcher: "compact", hooks: [closed(compact)] }],
+    PostCompact: [{ hooks: [closed(archive)] }],
+  }
+
+  // A rejected SDK callback is a hook error, not a denial (SDK 0.3.289). Recover outside run AND cleanup, including
+  // synchronous throws and cancellation. Record failures latch the gate; events without stop control abort the query.
+  function closed(callback: HookCallback): HookCallback {
+    return (input, toolUseID, options) => Promise.resolve().then(() => {
+      if (fault.reason && input.hook_event_name === "PreToolUse") return ClaudeHostGate.deny(fault.reason)
+      return callback(input, toolUseID, options)
+    }).catch(async (error: unknown): Promise<HookJSONOutput> => {
+      const reason = `Orchestra ${input.hook_event_name} failed closed: ${String(error)}`
+      fault.reason ??= reason
+      if (input.hook_event_name === "PreToolUse") {
+        await Promise.resolve().then(() => {
+          ctx.calls?.cancel(input.tool_use_id)
+          ctx.calls?.release(input.tool_use_id)
+        }).catch(() => undefined)
+        return ClaudeHostGate.deny(reason)
+      }
+      if (input.hook_event_name === "PostToolUse")
+        return { ...withheld(reason), continue: false, stopReason: reason }
+      if (input.hook_event_name === "SessionStart" || input.hook_event_name === "PostCompact") ctx.abort.abort()
+      return { continue: false, stopReason: reason, systemMessage: reason }
+    })
   }
 
   function release(toolUseID: string) {
-    return Effect.promise(ports).pipe(Effect.flatMap((policy) => policy.release(toolUseID)))
+    // No acquired policy means no jail to release. Never initialize policy during denial cleanup.
+    return policy.value ? Effect.promise(() => policy.value!).pipe(Effect.flatMap((policy) => policy.release(toolUseID))) : Effect.void
   }
 
   // Durable safety evidence per call, on the mirrored call's message. A call the mirror has not seen yet has no anchor.
