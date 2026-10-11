@@ -63,7 +63,7 @@ it.live("matched parent receipt preserves cache prefix but supplies full origina
   const user = history[0].info
   if (user.role !== "user") throw new Error("Expected user")
   const parent: ParentRequest = ParentReceipt.capture({ input: { user, model, sessionID: user.sessionID,
-    agent: { name: "build", mode: "primary", permission: [], options: {} }, system: ["SAME_CACHE_SYSTEM"], messages: [{ role: "user", content: "PLUGIN_OR_MASK_STUB" }],
+    agent: { name: "maestro", mode: "primary", permission: [], options: {} }, system: ["SAME_CACHE_SYSTEM"], messages: [{ role: "user", content: "PLUGIN_OR_MASK_STUB" }],
     tools: {}, toolChoice: "auto" }, messageIDs: [user.id] }, last.id, [history[0]])
   ParentReceipt.complete(parent, last)
   const requests: LLM.StreamInput[] = []
@@ -116,7 +116,7 @@ for (const field of ["messages", "system", "options", "variant", "agent", "tools
     const snapshot = completeSnapshot(user.sessionID, history)
     if (!snapshot) throw new Error("No receipt snapshot")
     const original: ParentRequest = { input: { user, model: structuredClone(model), sessionID: user.sessionID,
-      agent: { name: "build", mode: "primary", permission: [], options: { reasoningEffort: "high" } }, system: ["CACHE_SYSTEM"],
+      agent: { name: "maestro", mode: "primary", permission: [], options: { reasoningEffort: "high" } }, system: ["CACHE_SYSTEM"],
       messages: [{ role: "user", content: "ORIGINAL_PREPARED_PREFIX" }], preflightParams: { options: { reasoningEffort: "high" }, maxOutputTokens: 1234,
         temperature: undefined, topP: undefined, topK: undefined },
       tools: { first: tool({ description: "Original tool", inputSchema: jsonSchema({ type: "object", properties: { path: { type: "string" } } }), execute: async () => "unused" }),

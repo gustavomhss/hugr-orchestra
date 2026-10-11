@@ -9,6 +9,11 @@ import { appRuntime, authorized, deliveryEnv, effectModules, evidence, record, s
 
 type Sample = { ms: number; stdout: string; spawns: number; delegations: number; mode: string; pid: number }
 
+// A busy machine is not a measurement: the run waits for quiet and starts over, and if quiet never comes it is unrun.
+class Busy extends Error {}
+const ATTEMPTS = 3
+const SETTLE_MS = 180_000
+
 export async function run(options: { controlOnly?: boolean; quiet?: boolean; interPairIdleMs?: number; mutation?: "slow-omni" } = {}) {
   authorized()
   const scratch = isolated("v7", {})
@@ -16,10 +21,16 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean; int
   const hosts: Awaited<ReturnType<typeof startServer>>[] = []
   const quiet = () => process.platform === "win32" || os.loadavg()[0] <= os.availableParallelism() * 0.5
   const idle = options.interPairIdleMs ?? 0
+  const settle = async () => {
+    for (const end = Date.now() + SETTLE_MS; !quiet(); await sleep(2_000)) if (Date.now() > end) return false
+    return true
+  }
+  let attempts = 0
   try {
     if (!Number.isInteger(idle) || idle < 0 || idle > 100) throw new Error("V7 inter-pair idle must be an integer from 0 to 100 ms")
-    if (!options.controlOnly && (!options.quiet || !quiet()))
-      throw new Error(`V7 timing requires --quiet and load1 <= 0.5 * CPUs; current load=${load()}`)
+    if (!options.controlOnly && !options.quiet) throw new Error("V7 timing requires --quiet")
+    if (!options.controlOnly && !(await settle()))
+      throw new Busy(`V7 machine stayed busy for ${SETTLE_MS} ms before timing (load1 <= 0.5 * CPUs): ${load()}`)
     // Both arms use the same real git checkout and caller. Only the process-start flag differs.
     for (const flag of ["0", "1"])
       hosts.push(await startServer(BUN, [import.meta.filename, "--host", scratch.home], {
@@ -42,18 +53,28 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean; int
       return result
     }
     const warmup = options.controlOnly ? 1 : 25
-    for (let pair = 0; pair < warmup; pair++) {
-      await sample(pair % 2)
-      await sample(1 - pair % 2)
-      if (idle) await sleep(idle)
-    }
     const count = options.controlOnly ? 3 : 1000
-    for (let pair = 0; pair < count; pair++) {
-      if (!options.controlOnly && !quiet()) throw new Error(`V7 machine became busy at pair ${pair}: ${load()}`)
-      for (const arm of [pair % 2, 1 - pair % 2])
-        rows.push({ pair, arm: arm ? "omni" : "legacy", sample: await sample(arm), load: load() })
-      // Only executions are measured, not throughput. Idle outside both arms keeps the probe from creating its own load.
-      if (idle) await sleep(idle)
+    // Each attempt is a whole measurement (warmup and every pair): samples from a busy stretch are never kept.
+    for (;;) {
+      attempts++
+      rows.length = 0
+      try {
+        for (let pair = 0; pair < warmup; pair++) {
+          await sample(pair % 2)
+          await sample(1 - pair % 2)
+          if (idle) await sleep(idle)
+        }
+        for (let pair = 0; pair < count; pair++) {
+          if (!options.controlOnly && !quiet()) throw new Busy(`V7 machine became busy at pair ${pair}: ${load()}`)
+          for (const arm of [pair % 2, 1 - pair % 2])
+            rows.push({ pair, arm: arm ? "omni" : "legacy", sample: await sample(arm), load: load() })
+          // Only executions are measured, not throughput. Idle outside both arms keeps the probe from creating its own load.
+          if (idle) await sleep(idle)
+        }
+        break
+      } catch (error) {
+        if (!(error instanceof Busy) || attempts >= ATTEMPTS || !(await settle())) throw error
+      }
     }
     if (new Set(rows.map((row) => row.sample.stdout)).size !== 1) throw new Error("V7 git HEAD changed during run")
     if (new Set(rows.map((row) => row.sample.pid)).size !== 2) throw new Error("V7 arms did not use separate hosts")
@@ -74,10 +95,11 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean; int
     const base = p50("legacy")
     const omni = p50("omni")
     const limit = Math.max(base * 1.10, base + 2)
-    return record("v7-overhead", { pass: omni <= limit, timingKpiRun: true, warmup, interPairIdleMs: idle, mutation: options.mutation, counts,
+    return record("v7-overhead", { pass: omni <= limit, timingKpiRun: true, attempts, warmup, interPairIdleMs: idle, mutation: options.mutation, counts,
       p50Ms: { legacy: base, omni, limit }, evidence: evidence("v7-samples", rows) })
   } catch (error) {
-    return record(options.controlOnly ? "v7-readiness" : "v7-overhead", { pass: false, ready: false, timingKpiRun: false, interPairIdleMs: idle, mutation: options.mutation, error: String(error),
+    return record(options.controlOnly ? "v7-readiness" : "v7-overhead", { pass: false, ready: false, timingKpiRun: false,
+      ...(error instanceof Busy ? { status: "unrun-busy" } : {}), attempts, interPairIdleMs: idle, mutation: options.mutation, error: String(error),
       evidence: evidence("v7-failure", { rows, hosts: hosts.map((host) => host.out()) }) })
   } finally {
     for (const host of hosts) kill9(host.pid)
@@ -128,6 +150,9 @@ if (import.meta.main) {
     const result = await run({ controlOnly: process.argv.includes("--control"), quiet: process.argv.includes("--quiet"),
       interPairIdleMs: Number(idleValue ?? 0),
       mutation: process.argv.includes("--mutation-slow-omni") ? "slow-omni" : undefined })
-    process.exit(result.pass || "ready" in result && result.ready ? 0 : 1)
+    // --busy-unrun-ok (pull requests): a machine that never got quiet leaves V7 unrun with a warning, not failed.
+    const unrun = "status" in result && result.status === "unrun-busy"
+    if (unrun) console.log(`::warning title=V7 unrun::${"error" in result ? result.error : "machine busy"}`)
+    process.exit(result.pass || "ready" in result && result.ready || unrun && process.argv.includes("--busy-unrun-ok") ? 0 : 1)
   }
 }

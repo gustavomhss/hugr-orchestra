@@ -14,6 +14,7 @@ import { AgentPrompt } from "@orchestra/core/agent/prompt"
 import { Permission } from "@/permission"
 import { mergeDeep, values } from "remeda"
 import { Global } from "@orchestra/core/global"
+import { FSUtil } from "@orchestra/core/fs-util"
 import path from "path"
 import { Plugin } from "@/plugin"
 import { Skill } from "../skill"
@@ -125,11 +126,13 @@ const layer = Layer.effect(
               return (yield* (yield* Reference.Service).list()).map((reference) => reference.path)
             }).pipe(Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(ctx.directory) }))))
           : []
+        // Tools ask with the real path, and on Windows the configured one can be a short 8.3 path (RUNNER~1), so the
+        // rules are built from the real path too. Truncate.GLOB already is.
         const whitelistedDirs = [
           Truncate.GLOB,
-          path.join(Global.Path.tmp, "*"),
-          ...skillDirs.map((dir) => path.join(dir, "*")),
-          ...referenceDirs.map((dir) => path.join(dir, "*")),
+          ...[Global.Path.tmp, ...skillDirs, ...referenceDirs].map((dir) =>
+            FSUtil.normalizePathPattern(path.join(dir, "*")),
+          ),
         ]
         const readonlyExternalDirectory = {
           "*": "ask",
