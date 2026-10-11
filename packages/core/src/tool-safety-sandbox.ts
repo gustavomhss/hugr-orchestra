@@ -228,7 +228,11 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ), { discard: true })
   if (sandbox.kind === "appcontainer") {
     const launched = yield* ToolSafetyAppContainer.command({
-      command, supervisor: sandbox.supervisor, cwd, directory, roots: declared, scratch, deny, protectedWrites,
+      command, supervisor: sandbox.supervisor, cwd, directory, roots: declared, scratch, deny, guards: guarded,
+      // The guard journal must be the same location for every Orchestra instance on the machine, or one instance's
+      // restore would race another's protection. It is keyed per user (%LOCALAPPDATA%), not per instance-state dir;
+      // multiple OS users sharing one checkout is out of scope.
+      journal: path.join(process.env.LOCALAPPDATA ?? Global.Path.state, "orchestra", "appcontainer-guard"),
       env: confined, ports: endpoints, domains: profile?.sandbox?.allowedDomains?.length ?? 0,
     }).pipe(Effect.result)
     // A policy the ACLs cannot express is an unavailable sandbox for this command, never for an exact endpoint.
