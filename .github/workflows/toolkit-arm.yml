@@ -6,9 +6,6 @@ name: toolkit-arm
 # runs each with its version flag, and lists the result per engine in the job summary.
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/toolkit-arm.yml
 
 permissions:
   contents: read
