@@ -405,7 +405,12 @@ describe("tool.task Atlas resume admission", () => {
         const first = yield* dispatch(seeded, prompts, { callID: "call_one", unit: UNIT })
         expect(admissionsOf(prompts[0]?.parts ?? [])).toHaveLength(1)
         yield* dispatch(seeded, prompts, { callID: "call_one", taskID: first.taskID, unit: UNIT })
-        expect(prompts[1]?.parts).toEqual([{ type: "text", text: "packet" }])
+        // No second admission, only the host's resume marker; a fresh dispatch carries none.
+        expect(prompts[0]?.parts.some((part) => part.type === "text" && part.metadata?.resumeRef)).toBe(false)
+        expect(prompts[1]?.parts).toEqual([
+          { type: "text", text: "packet" },
+          expect.objectContaining({ ignored: true, metadata: { resumeRef: `${seeded.chat.id}/call_one` } }),
+        ])
         yield* dispatch(seeded, prompts, { callID: "call_two", taskID: first.taskID, unit: UNIT })
         expect(admissionsOf(prompts[2]?.parts ?? [])).toMatchObject([
           { key: key(store.projectID, seeded.chat, "call_two"), verdict: { ok: true, ref: store.refs[0] } },
