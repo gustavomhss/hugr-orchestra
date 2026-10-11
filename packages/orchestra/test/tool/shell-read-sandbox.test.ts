@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import os from "os"
 import path from "path"
-import { mkdir, rm, writeFile } from "fs/promises"
+import { mkdir, rm, stat, writeFile } from "fs/promises"
 import { $ } from "bun"
 import { Cause, Effect, Exit, Layer } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -162,6 +162,72 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell re
       const engine = yield* run(`cat "${path.join(toolkit, "bin", "engine.txt")}"`)
       expect(engine.metadata.exit, engine.output).toBe(0)
       expect(engine.output).toContain("toolkit-file")
+    }), 300_000,
+  )
+
+  it.live("a seat runs cargo through its rustup proxy: the toolchain resolves and a crate builds and tests", () =>
+    Effect.gen(function* () {
+      const cargo = Bun.which("cargo")
+      const rustup = Bun.which("rustup")
+      if (!cargo || !rustup) throw new Error("BLOCKED: rustup-managed cargo unavailable on this host")
+      // rustup installs cargo as a proxy: a link to the rustup binary, which picks the toolchain at run time.
+      const [proxy, launcher] = yield* Effect.promise(() => Promise.all([stat(cargo), stat(rustup)]))
+      if (proxy.ino !== launcher.ino || proxy.dev !== launcher.dev) throw new Error(`BLOCKED: ${cargo} is not a rustup proxy`)
+      const directory = yield* tmpdirScoped({ git: true })
+      yield* Effect.promise(() => Promise.all([
+        writeFile(path.join(directory, "Cargo.toml"), '[package]\nname = "seat_probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "lib.rs"\n'),
+        writeFile(path.join(directory, "lib.rs"), "#[test]\nfn one() { assert_eq!(1, 1); }\n#[test]\nfn two() { assert_eq!(2, 2); }\n"),
+      ]))
+      const version = yield* shell(directory, "backend", "cargo --version && rustc --version")
+      expect(version.metadata.exit, version.output).toBe(0)
+      expect(version.output).toMatch(/cargo \d+\.\d+/)
+      expect(version.output).toMatch(/rustc \d+\.\d+/)
+      const tested = yield* shell(directory, "backend", "cargo test --lib -- --test-threads=1")
+      expect(tested.metadata.exit, tested.output).toBe(0)
+      expect(tested.output).toContain("test result: ok. 2 passed")
+    }), 300_000,
+  )
+
+  it.live("a seat reads rustup's toolchains and cargo's crate sources but never cargo's credentials or config", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const homes = yield* tmpdirScoped()
+      const cargo = path.join(homes, "cargo")
+      const rustup = path.join(homes, "rustup")
+      const readable = [
+        path.join(cargo, "bin", "cargo-probe"), path.join(cargo, "registry", "index", "config.json"),
+        path.join(cargo, "git", "checkouts", "probe"), path.join(rustup, "settings.toml"),
+        path.join(rustup, "toolchains", "stable", "probe"),
+      ]
+      const denied = [
+        path.join(cargo, "credentials.toml"), path.join(cargo, "credentials"), path.join(cargo, "config.toml"),
+        path.join(cargo, "config"), path.join(rustup, "downloads", "probe"), path.join(rustup, "tmp", "probe"),
+        path.join(rustup, "update-hashes", "stable"),
+      ]
+      yield* Effect.promise(() => Promise.all([...readable, ...denied].map((file) =>
+        mkdir(path.dirname(file), { recursive: true }).then(() => writeFile(file, "cargo-secret-body")))))
+      // The seat's shell inherits the host's CARGO_HOME and RUSTUP_HOME, which name the homes its toolchain reads.
+      yield* Effect.acquireRelease(Effect.sync(() => {
+        const previous = { cargo: process.env.CARGO_HOME, rustup: process.env.RUSTUP_HOME }
+        process.env.CARGO_HOME = cargo
+        process.env.RUSTUP_HOME = rustup
+        return previous
+      }), (previous) => Effect.sync(() => {
+        if (previous.cargo === undefined) delete process.env.CARGO_HOME
+        else process.env.CARGO_HOME = previous.cargo
+        if (previous.rustup === undefined) delete process.env.RUSTUP_HOME
+        else process.env.RUSTUP_HOME = previous.rustup
+      }))
+      const files = JSON.stringify([...readable, ...denied].map((file) => file.replaceAll("\\", "/")))
+      const probe = `${bun} -e "const fs=require('fs');console.log(JSON.stringify(${files.replaceAll('"', "'")}.map((f)=>{try{return fs.readFileSync(f,'utf8').length>0}catch{return false}})))"`
+      // Control: Maestro has no read sandbox, so every file is there to read.
+      const maestro = yield* shell(directory, "maestro", probe)
+      expect(maestro.metadata.exit, maestro.output).toBe(0)
+      expect(JSON.parse(maestro.output.trim().split("\n").at(-1) ?? "")).toEqual([...readable, ...denied].map(() => true))
+      const seat = yield* shell(directory, "backend", probe)
+      expect(seat.metadata.exit, seat.output).toBe(0)
+      expect(seat.output).not.toContain("cargo-secret-body")
+      expect(JSON.parse(seat.output.trim().split("\n").at(-1) ?? "")).toEqual([...readable.map(() => true), ...denied.map(() => false)])
     }), 300_000,
   )
 })

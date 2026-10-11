@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
 import path from "path"
 import { createServer } from "node:net"
 import { Effect } from "effect"
@@ -193,3 +193,39 @@ live("scratch gives each confined command a private TMPDIR; read-only roots stil
     expect(yield* f.fs.exists(out.tmp)).toBe(false)
   }), 30_000,
 )
+
+live("a confined-read command's TMPDIR is its own scratch, where it can create a temporary directory", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // srt otherwise hands the child TMPDIR=/tmp/claude, which does not exist in the jail (go: creating work dir).
+    const script = "const fs=require('fs'),os=require('os'),p=require('path');const made=fs.mkdtempSync(p.join(os.tmpdir(),'probe-'));" +
+      "fs.writeFileSync(p.join(made,'file'),'t');" +
+      "process.stdout.write(JSON.stringify({tmp:process.env.TMPDIR,tmpdir:os.tmpdir(),made,read:fs.readFileSync(p.join(made,'file'),'utf8')}))"
+    const profile = { requireSandbox: true, writeRoots: [f.root], sandbox: { enabled: true, scratch: true, readRoots: [f.root] } }
+    const result = yield* Effect.scoped(f.run(script, profile))
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    const out = JSON.parse(result.stdout.toString())
+    expect(path.basename(out.tmp)).toStartWith("orchestra-tool-scratch-")
+    expect(out.tmpdir).toBe(out.tmp)
+    expect(path.dirname(out.made)).toBe(out.tmp)
+    expect(out.read).toBe("t")
+    // The scratch directory, and the temporary directory made in it, live only as long as the command's scope.
+    expect(yield* f.fs.exists(out.tmp)).toBe(false)
+  }), 30_000,
+)
+
+test("the confined-read toolchain names exactly what a rustup-proxied cargo needs, never cargo's credentials or config", () => {
+  const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
+  const rustup = path.join(base, "rustup")
+  const cargo = path.join(base, "cargo")
+  const listed = ToolSafetySandbox.toolchain({ PATH: "", RUSTUP_HOME: rustup, CARGO_HOME: cargo })
+  expect(listed.filter((entry) => entry.startsWith(base)).sort()).toEqual([
+    path.join(cargo, "bin"), path.join(cargo, "git"), path.join(cargo, "registry"),
+    path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
+  ])
+  // Without RUSTUP_HOME and CARGO_HOME the same entries come from the home directory, and the home's .cargo and .rustup
+  // themselves (with cargo's credentials and config, rustup's downloads, tmp and update hashes) stay out.
+  const home = ToolSafetySandbox.toolchain({ PATH: "" }).filter((entry) => /[\\/]\.(?:cargo|rustup)(?:[\\/]|$)/.test(entry))
+  expect(home.length).toBeGreaterThan(0)
+  expect(home.every((entry) => /[\\/]\.(?:cargo[\\/](?:bin|registry|git)|rustup[\\/](?:settings\.toml|toolchains))$/.test(entry))).toBe(true)
+})

@@ -341,11 +341,11 @@ const ETC = [
 
 /**
  * What a confined-read command may read besides its roots: the system's programs, libraries and essential /etc entries,
- * this process's runtime install, every PATH directory, rustup toolchains and cargo crate sources, and git's global
- * config (git refuses to start when that file exists but cannot be read). A PATH directory named `bin` also exposes its
- * install prefix (node's lib beside its bin), unless that prefix is the home directory or one of its direct children,
- * such as ~/.local or ~/.cargo, which hold user data and credentials. Nothing that contains the home directory is ever
- * listed.
+ * this process's runtime install, every PATH directory, what a rustup-proxied cargo needs to run and build, and git's
+ * global config (git refuses to start when that file exists but cannot be read). A PATH directory named `bin` also
+ * exposes its install prefix (node's lib beside its bin), unless that prefix is the home directory or one of its direct
+ * children, such as ~/.local or ~/.cargo, which hold user data and credentials. Nothing that contains the home directory
+ * is ever listed.
  */
 export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   // The account's home and the one Orchestra uses (a test home differs); neither is ever exposed.
@@ -359,12 +359,16 @@ export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   const prefixes = bins.filter((entry) => path.basename(entry) === "bin").map((entry) => path.dirname(entry))
     .filter((prefix) => !homes.includes(path.dirname(prefix)))
   const git = homes.flatMap((home) => [path.join(home, ".gitconfig"), path.join(home, ".config", "git")])
-  // rustup's cargo and rustc proxies resolve their toolchain under RUSTUP_HOME, and cargo builds read crate sources
-  // from CARGO_HOME's registry and git checkouts. CARGO_HOME's credentials stay unreadable.
+  // Exactly what a rustup-proxied cargo needs: the proxies in CARGO_HOME/bin (also when they are not on PATH), the
+  // default toolchain and overrides in RUSTUP_HOME/settings.toml, the toolchains it runs, and the crate sources a build
+  // reads from CARGO_HOME's registry and git checkouts. The rest stays unreadable: cargo's credentials and config (which
+  // can carry registry tokens and proxy credentials) and rustup's downloads, tmp and update hashes, which only an install
+  // or update uses.
   const rust = [
-    ...(env.RUSTUP_HOME ? [env.RUSTUP_HOME] : homes.map((home) => path.join(home, ".rustup"))),
+    ...(env.RUSTUP_HOME ? [env.RUSTUP_HOME] : homes.map((home) => path.join(home, ".rustup")))
+      .flatMap((rustup) => [path.join(rustup, "settings.toml"), path.join(rustup, "toolchains")]),
     ...(env.CARGO_HOME ? [env.CARGO_HOME] : homes.map((home) => path.join(home, ".cargo")))
-      .flatMap((cargo) => [path.join(cargo, "registry"), path.join(cargo, "git")]),
+      .flatMap((cargo) => ["bin", "registry", "git"].map((entry) => path.join(cargo, entry))),
   ]
   return [...system, ...bins, ...prefixes, ...git, ...rust, ...(env.XDG_CONFIG_HOME ? [path.join(env.XDG_CONFIG_HOME, "git")] : [])]
     .filter((entry) => !homes.some((home) => FSUtil.contains(entry, home)))
