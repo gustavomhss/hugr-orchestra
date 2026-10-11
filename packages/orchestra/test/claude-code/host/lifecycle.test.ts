@@ -59,7 +59,7 @@ ClaudeEngineFixture.it.instance("prompt admission reconciles revert before remov
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("kept request") })
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("reverted request") })
   const users = (yield* setup.sessions.messages({ sessionID: setup.chat.id })).filter((item) => item.info.role === "user")
-  yield* setup.sessions.setRevert({ sessionID: setup.chat.id, revert: { messageID: users[1].info.id } })
+  yield* setup.sessions.setRevert({ sessionID: setup.chat.id, revert: { messageID: users[1].info.id }, summary: undefined })
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("replacement request") })
   expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
   expect(ClaudeEngineFixture.state.queries[1].options).toMatchObject({ resume: "sdk-1", resumeSessionAt: "msg_0" })
@@ -304,7 +304,7 @@ ClaudeEngineFixture.it.instance("a visible boundary with no native mapping and a
   yield* setup.sessions.setMetadata({ sessionID: setup.chat.id, metadata: { claudeCode: { sessionId: "sdk-1", uuids: {}, ends: {} } } })
   const fork = yield* setup.sessions.fork({ sessionID: setup.chat.id, messageID: users[1].info.id }).pipe(Effect.exit)
   expect(Exit.isFailure(fork)).toBe(true)
-  yield* setup.sessions.setRevert({ sessionID: setup.chat.id, revert: { messageID: users[0].info.id, partID: users[0].parts[0].id } })
+  yield* setup.sessions.setRevert({ sessionID: setup.chat.id, revert: { messageID: users[0].info.id, partID: users[0].parts[0].id }, summary: undefined })
   const continuation = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("must not admit") }).pipe(Effect.exit)
   expect(Exit.isFailure(continuation)).toBe(true)
   expect((yield* setup.sessions.messages({ sessionID: setup.chat.id })).filter((item) => item.info.role === "user")).toHaveLength(2)
@@ -370,7 +370,7 @@ ClaudeEngineFixture.it.instance("Stop cancels and joins an unanswered SDK questi
     const permit = params.options?.canUseTool
     if (!permit) throw new Error("missing SDK permission callback")
     await permit("AskUserQuestion", { questions: [{ question: "Continue?", header: "Continue", options: [] }] },
-      { signal: new AbortController().signal, toolUseID: "unanswered" }).catch(() => undefined)
+      { signal: new AbortController().signal, toolUseID: "unanswered", requestId: "ask-unanswered" }).catch(() => undefined)
     settled.resolve()
     for await (const _ of input) {}
   })
@@ -383,6 +383,6 @@ ClaudeEngineFixture.it.instance("Stop cancels and joins an unanswered SDK questi
   const permit = ClaudeEngineFixture.state.queries[0].options?.canUseTool
   if (!permit) throw new Error("missing SDK permission callback")
   yield* Effect.promise(() => permit("AskUserQuestion", { questions: [{ question: "Late?", header: "Late", options: [] }] },
-    { signal: new AbortController().signal, toolUseID: "late" }).catch(() => undefined))
+    { signal: new AbortController().signal, toolUseID: "late", requestId: "ask-late" }).catch(() => undefined))
   expect(yield* questions.list()).toHaveLength(0)
 }), 30_000)

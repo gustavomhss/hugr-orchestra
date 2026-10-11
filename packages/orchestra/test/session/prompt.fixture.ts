@@ -1,3 +1,7 @@
+import { ModelsDev } from "@orchestra/core/models-dev"
+import { ClaudeCode } from "@/claude-code/engine"
+import { ClaudeHost } from "@/claude-code/host/session"
+import { InstanceStore } from "@/project/instance-store"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
@@ -111,6 +115,10 @@ const blockingProcessor = Layer.succeed(
 )
 
 const promptRoot = LayerNode.group([
+  ClaudeCode.node,
+  ClaudeHost.node,
+  InstanceStore.node,
+  ModelsDev.node,
   SessionPrompt.node,
   Session.node,
   SessionProjector.node,
