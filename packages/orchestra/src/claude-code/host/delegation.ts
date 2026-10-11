@@ -224,7 +224,7 @@ export function make(input: {
       return undefined
     }
     entry.settled = true
-    const author = yield* authored(entry.child, entry.seat.id, blocks, text(response, "resolvedModel"))
+    const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
     const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
     yield* write(entry, reply, { ...base, ...(workResult ? { workResult } : {}) })
     return undefined
@@ -245,7 +245,7 @@ export function make(input: {
     return Effect.gen(function* () {
       if (entry.settled || !entry.seat || !entry.child) return
       entry.settled = true
-      if (message.status === "completed" && entry.final !== undefined) yield* authored(entry.child, entry.seat.id, [entry.final], undefined)
+      if (message.status === "completed" && entry.final !== undefined) yield* authored(entry.child, entry.seat.id, message.task_id, [entry.final], undefined)
       const part = yield* find(entry)
       if (!part || part.state.status !== "completed") return
       yield* save({ ...part, state: { ...part.state, metadata: { ...part.state.metadata, delivery: {
@@ -338,8 +338,9 @@ export function make(input: {
   }
 
   // The child's author message is the subagent's byte-complete final text, one text part per returned block. A mirrored
-  // message that already carries exactly those texts, completed, is the author; otherwise the host records it.
-  function authored(child: SessionID, seat: string, blocks: readonly string[], model: string | undefined) {
+  // message that already carries exactly those texts, completed, is the author; otherwise the host records it, tagged so
+  // nobody mistakes it for a natively mirrored turn (its cost and tokens are unknown, not zero).
+  function authored(child: SessionID, seat: string, agentID: string, blocks: readonly string[], model: string | undefined) {
     return Effect.gen(function* () {
       const sessions = yield* Session.Service
       const history = yield* sessions.messages({ sessionID: child })
@@ -355,7 +356,8 @@ export function make(input: {
         modelID: model ? ModelV2.ID.make(model) : prompt.info.model.modelID, providerID: prompt.info.model.providerID,
         time: { created: now, completed: now }, finish: "stop" } satisfies SessionV1.Assistant)
       const parts = yield* Effect.forEach(blocks, (block) => sessions.updatePart({ id: PartID.ascending(), sessionID: child,
-        messageID: info.id, type: "text", text: block, time: { start: now, end: now } } satisfies SessionV1.TextPart))
+        messageID: info.id, type: "text", text: block, time: { start: now, end: now },
+        metadata: { source: "claude-code-agent-output", agentID } } satisfies SessionV1.TextPart))
       return { info, parts }
     })
   }
