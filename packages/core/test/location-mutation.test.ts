@@ -87,6 +87,27 @@ describe("LocationMutation", () => {
     }),
   )
 
+  it.live("rejects a prospective target behind a dangling symlink that points outside", () =>
+    withTmp((directory) => {
+      const outside = `${directory}-outside`
+      return Effect.gen(function* () {
+        if (process.platform === "win32") return
+        yield* Effect.promise(async () => {
+          await fs.mkdir(outside)
+          await fs.symlink(path.join(outside, "created.txt"), path.join(directory, "dangling.txt"))
+          // A chain: the first link only dangles through the second.
+          await fs.symlink("dangling.txt", path.join(directory, "chained.txt"))
+        })
+        const mutation = yield* LocationMutation.Service
+        for (const name of ["dangling.txt", "chained.txt"]) {
+          const error = yield* Effect.flip(mutation.resolve({ path: name }))
+          expect(error).toMatchObject({ _tag: "LocationMutation.PathError", reason: "location_escape" })
+        }
+        yield* Effect.promise(() => fs.rm(outside, { recursive: true, force: true }))
+      }).pipe(provide(directory))
+    }),
+  )
+
   it.live("follows an in-location symlink using ordinary filesystem semantics", () =>
     withTmp((directory) =>
       Effect.gen(function* () {

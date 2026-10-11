@@ -353,6 +353,9 @@ export const make = Effect.gen(function* () {
             Effect.mapError(() => new Denied({ reason: "path-acquisition-stat" })),
           )
           if (info && info.type !== "Directory") return yield* new Denied({ reason: "path-acquisition-non-directory" })
+          // A dangling symlink is not missing: a write through it creates the file where it points.
+          const link = yield* fs.readLink(target).pipe(Effect.orElseSucceed(() => undefined))
+          if (link !== undefined) return yield* canonical(path.resolve(anchor, link))
           return path.join(anchor, path.basename(target))
         }),
       ),
