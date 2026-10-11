@@ -86,7 +86,8 @@ describe("seat scaffold validation", () => {
         .replace('from "./seats"', `from ${JSON.stringify(registry)}`)
         .replace('from "./seats/seat"', `from ${JSON.stringify(path.join(source, "src/maestro/seats/seat.ts"))}`)
         .replace('from "./seat-skill-root"', `from ${JSON.stringify(path.join(source, "src/maestro/seat-skill-root.ts"))}`)
-        .replace('from "../tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "src/tool/truncation-dir.ts"))}`))
+        .replace('from "../tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "src/tool/truncation-dir.ts"))}`)
+        .replace('from "@orchestra/core/tool/upstream-arsenal"', `from ${JSON.stringify(path.join(source, "../core/src/tool/upstream-arsenal.ts"))}`))
       await expect(import(copied)).rejects.toThrow(error)
     }
   })

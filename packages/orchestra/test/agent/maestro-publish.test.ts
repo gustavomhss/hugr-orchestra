@@ -8,6 +8,7 @@ import { Auth } from "../../src/auth"
 import { Config } from "../../src/config/config"
 import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import { nativeProfiles, roster } from "../../src/maestro/roster"
+import { Seats } from "../../src/maestro/seats"
 import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
@@ -50,7 +51,8 @@ const asking = ["maestro", "general"]
 const shellProfiles = ["execution", "backend"] as const
 const denied = [
   ...roster
-    .filter((member) => shellProfiles.some((profile) => profile === member.nativeProfile))
+    // A seat with its own profile key (archie's "upstream") still runs on its base profile.
+    .filter((member) => shellProfiles.some((profile) => profile === (Seats.find(member.memberId)?.profile ?? member.nativeProfile)))
     .map((member) => member.memberId),
   "explore",
 ]
@@ -58,7 +60,7 @@ const denied = [
 it.instance("maestro and general ask before publishing, shell seats and explore cannot, others keep their access", () =>
   Effect.gen(function* () {
     const agents = yield* load((svc) => svc.list())
-    expect(denied).toEqual(["backend", "patty", "rosie", "explore"])
+    expect(denied).toEqual(["backend", "archie", "patty", "rosie", "explore"])
 
     for (const agent of agents) {
       const id = agent.id ?? agent.name

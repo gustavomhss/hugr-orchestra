@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import path from "node:path"
 import { z } from "zod"
 import { ConfigMarkdown } from "@orchestra/core/config/markdown"
@@ -92,33 +93,28 @@ describe("Maestro Arsenal playbooks", () => {
     },
   )
 
-  test("planning distinguishes symbol partitions from durable governed records", async () => {
-    const skill = await readSkill("maestro-decompose")
-    expect(skill.content).toContain("It is not durable prompt `PlanRevision`.")
-    expect(skill.content).toContain("Separate baseline-passing preservation checks from red-to-green proof")
-    expect(skill.content).toContain("never auto-green them")
-    expect(skill.content).toContain("Pre-deciding boundaries reduces ambiguity; it cannot guarantee zero decisions")
-    expect(skill.content).toContain("Arsenal planning neither records that lifecycle nor grants its authority.")
+  // REPAIR + STRENGTHENING: full-file SHA-256 pins replace obsolete sentence sentries.
+  // Source: specs/upstream-specialist/maestro-planning-handoff.md, independently reviewed replacements;
+  // native API clarification: specs/upstream-specialist/maestro-transfer-gate.md.
+  // Naming-only refreeze: specs/upstream-specialist/NAMING-CORRECTION.md; prior hashes are historical receipts.
+  // REPAIR: authoring observation delegates to the actual Task boundary; no model-side inspection API is promised.
+  // Update pins only with reviewed procedure changes. Artifact drift protection does not grade prose or prove
+  // semantic correctness, model compliance or runtime enforcement.
+  test.each([
+    ["maestro-decompose", "52c132a44e03e23b56566514d0a10d3a12305d3e16dbc3aa7700b2cf19a8f17d"],
+    ["maestro-contract", "cc91d68a944ceba506ff1c5b24bd2bc1a4b873d6d39acf948d01f6fe54a8dcaa"],
+    ["maestro-pack", "158e22580f1476781a29b9e3db6fcd73e0d7eb0ea21e5c12a7edc1b3ea54dd92"],
+  ])("%s matches its reviewed procedure artifact SHA-256", async (name, digest) => {
+    const skill = await readSkill(name)
+    expect(createHash("sha256").update(await Bun.file(skill.location).bytes()).digest("hex")).toBe(digest)
   })
 
-  test("contracts and generated policy require actual execution evidence", async () => {
-    const contract = await readSkill("maestro-contract")
+  test("generated policy requires actual execution evidence", async () => {
     const verify = await readSkill("maestro-verify")
-    expect(contract.content).toContain("It returns scaffold text;")
-    expect(contract.content).toContain("compilation of a stub is not proof of production behavior.")
     expect(verify.content).toContain("Proposed completion commands; native execution receipts still required")
     expect(verify.content).toContain("Proposed scoped permissions; not host authorization")
     expect(verify.content).toContain("Missing, skipped, or unknown results are not PASS.")
     expect(verify.content).toContain("confirm the specific test fails for the intended")
-  })
-
-  test("dispatch uses native context pressure and fresh Own facts", async () => {
-    const skill = await readSkill("maestro-pack")
-    expect(skill.content).toContain("Use existing Orchestra truncation, output/resource pointers, Session evidence")
-    expect(skill.content).toContain("Current static `own_*` facts dominate reconnaissance")
-    expect(skill.content).toContain("Source pointers must match current identities")
-    expect(skill.content).toContain("Arming alone is not enforcement.")
-    expect(skill.content).toContain("The input symbol plan is `partitionPlan`, not durable prompt `PlanRevision`.")
   })
 
   test("loop records verified outcomes, never stamps worker return as sealed", async () => {

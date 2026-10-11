@@ -154,6 +154,10 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
   // Before the harness rewrite reworded the review, exploration and documentation seats' roles.
   ["d409ee796e265fb4f6ed0908bef20e2c5ac36b173231b7b86719ddd1d5e247f5", ROSTER_V2],
+  // Before the architecture-only reviewer was retired and the upstream authoring seat was registered.
+  ["e956abbc3f4ce9c67a6e453f14616de06bf20231bca302ee412355eb33610695", ROSTER_V2],
+  // The retirement-only candidate roster, before upstream registration.
+  ["92b759346ac3366f26bc2940408770ba33767bc56108c9f3b0b5d13a58b9f127", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],

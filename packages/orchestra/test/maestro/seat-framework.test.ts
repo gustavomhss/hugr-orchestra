@@ -39,6 +39,28 @@ describe("native seat framework", () => {
     expect(() => define({ ...backend, profileKey: "../escape" })).toThrow("Invalid native seat profile key")
   })
 
+  test("upstream identity preserves bounded authoring and backend-only capabilities", () => {
+    const upstream = Seats.all.archie
+    expect(Seats.find("archie")).toBe(upstream)
+    expect(upstream).toMatchObject({
+      id: "archie",
+      profile: "execution",
+      profileKey: "upstream",
+      labelEnv: "HUGR_UPSTREAM_NAME",
+      skills: ["archie-plan", "archie-work-package"],
+      returnCard: "upstream-result",
+      workResult: "upstream-work-result-v1",
+      writeRoots: true,
+      strictResume: true,
+      atlasMemory: false,
+      toolkit: false,
+    })
+    expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../archie-specialist/skills"))
+    expect(upstream.prompt).toContain("Load archie-plan for authoring and archie-work-package")
+    expect(() => define({ ...upstream, atlasMemory: true })).toThrow("Atlas Memory supports only the backend owner: archie")
+    expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")
+  })
+
   test("scaffold refuses collisions and invalid ids without overwriting artifacts", async () => {
     await using tmp = await tmpdir()
     const packageRoot = path.join(tmp.path, "packages/orchestra")

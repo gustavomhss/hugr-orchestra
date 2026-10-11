@@ -1,4 +1,5 @@
 import path from "path"
+import { UpstreamArsenal } from "@orchestra/core/tool/upstream-arsenal"
 import { Seats, type Seat } from "./seats"
 import { validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
@@ -13,6 +14,7 @@ export const backendSkills = Object.freeze({
 // The backend seat's default display label, its only literal name in the repository (F1.2): config
 // `agent.backend.name` or HUGR_BACKEND_NAME replaces it, and test/agent/specialist-name-guard.test.ts pins it.
 export const BACKEND_DEFAULT_LABEL = "Charlie"
+export const UPSTREAM_DEFAULT_LABEL = "Archie"
 
 // Data written before the backend seat got its stable `backend` id carries its former id, which was the lowercased
 // default label. It is derived, never spelled, and only read: `canonicalMemberId` maps it to `backend` wherever a stored
@@ -57,7 +59,7 @@ type NativeProfile = Readonly<Record<string, "allow" | "deny" | Readonly<Record<
 
 // These seats historically hashed their shared profile name. Keep that projection exactly; new seats use their id.
 const historicalProfiles: Readonly<Record<string, Seat["profile"]>> = {
-  patty: "execution", lucy: "review", bobby: "review", billy: "review", jimmy: "review", rosie: "execution", frankie: "review",
+  patty: "execution", lucy: "review", billy: "review", jimmy: "review", rosie: "execution", frankie: "review",
 }
 
 // Profile aliases are stable behavior projections, not new routing ids or permission bases.
@@ -83,6 +85,13 @@ function seatProfile(seat: Seat): NativeProfile {
   return Object.freeze({
     ...baseProfiles[seat.profile],
     ...(seat.atlasMemory ? { atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
+    ...(seat.id === "archie" ? {
+      maestro_arsenal_catalog: "allow" as const,
+      ...Object.fromEntries(["maestro_arsenal_describe", "maestro_arsenal_execute"].map((name) => [name, Object.freeze({
+        "*": "deny" as const,
+        ...Object.fromEntries(UpstreamArsenal.UPSTREAM_AUTHORING_OPERATIONS.map((operation) => [operation, "allow" as const])),
+      })])),
+    } : {}),
     ...(seat.skills.length > 0 ? {
       skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
       external_directory: Object.freeze({
@@ -146,7 +155,7 @@ export const roster = createRoster([
 
 function seatMember(seat: Seat): RosterMember {
   const labels: Readonly<Record<string, string>> = {
-    backend: BACKEND_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", bobby: "Bobby", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
+    backend: BACKEND_DEFAULT_LABEL, archie: UPSTREAM_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
   }
   return {
     displayName: labels[seat.id] ?? seat.id,
