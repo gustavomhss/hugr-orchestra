@@ -271,7 +271,9 @@ function modernProposal(author: Evidence): BackendResult.WorkResult | undefined 
   if (!card || author.error || !author.completed || !author.finish || ["tool-calls", "unknown", "error"].includes(author.finish) ||
     author.tools.some((tool) => tool.status !== "completed")) return
   return {
-    schema: UpstreamResult.SCHEMA, card: { parsed: true, messageID: author.id }, outcome: card.outcome,
+    // Mirrors BackendResult.assemble, which the legacy proposal path uses.
+    schema: UpstreamResult.SCHEMA, mode: "delegated", acceptance: { state: "pending" }, verification: { state: "not-host-verified" },
+    card: { parsed: true, messageID: author.id }, outcome: card.outcome,
     changes: [], checks: [], blockers: card.blockers, risks: card.risks, nextActions: card.nextActions,
     artifacts: card.artifacts, terminal: { reason: card.outcome === "blocked" || card.blockers.length ? "blocked" : "ended" },
     memory: { reads: [], writes: [] }, author: { memberId: "archie", executionSessionID: author.sessionID, messageID: author.id },
