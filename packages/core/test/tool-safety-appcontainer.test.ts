@@ -137,6 +137,20 @@ windows("a pwsh command runs confined: write roots only, no reads outside grants
   }), 180_000,
 )
 
+windows("a command whose environment lacks LOCALAPPDATA still launches confined", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // Callers may pass a narrowed environment; Windows needs LOCALAPPDATA to build an AppContainer's (error 203 without it).
+    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toUpperCase() !== "LOCALAPPDATA"))
+    const command = yield* f.wrap(ChildProcess.make(f.pwsh, ["-NoProfile", "-Command", "'confined'"], { cwd: f.workspace, env, extendEnv: false, stdin: "ignore" }),
+      { requireSandbox: true })
+    expect(command._tag === "StandardCommand" && command.args[0]).toBe("--appcontainer")
+    const result = yield* f.processes.run(command, { timeout: "60 seconds" })
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(result.stdout.toString().trim()).toBe("confined")
+  }), 120_000,
+)
+
 windows("killing the command kills its confined process tree", () =>
   Effect.gen(function* () {
     const f = yield* fixture

@@ -99,10 +99,19 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     "--line", [quote(app), run.tail].filter(Boolean).join(" "),
   ], {
     ...input.command.options, cwd: input.cwd, shell: false, extendEnv: false,
-    env: { ...input.env, ...routes.length ? { ORCHESTRA_TCP_PROXY_ROUTES: routes.map((route) =>
+    env: { ...input.env, ...localAppData(input.env), ...routes.length ? { ORCHESTRA_TCP_PROXY_ROUTES: routes.map((route) =>
       `${route.port}:${Buffer.from(route.socket, "utf8").toString("hex")}`).join(";") } : {} },
   })
 })
+
+/**
+ * Windows builds an AppContainer process's environment from LOCALAPPDATA, which it points at the profile's own folder;
+ * without it CreateProcess fails with error 203. A caller may pass a narrowed environment, so supply the user's.
+ */
+function localAppData(env: Record<string, string | undefined>) {
+  if (Object.entries(env).some(([key, value]) => key.toUpperCase() === "LOCALAPPDATA" && value)) return {}
+  return { LOCALAPPDATA: path.join(os.homedir(), "AppData", "Local") }
+}
 
 /** The program and the rest of its command line; a cmd.exe shell keeps Node's verbatim `/d /s /c "<joined>"` tail. */
 function program(command: ChildProcess.StandardCommand) {
