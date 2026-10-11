@@ -54,7 +54,8 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       const app = path.resolve(import.meta.dir, "..")
       const config = path.join(dir, "tsconfig.json")
       await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
-        compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
+        // core's omni loader imports with explicit .ts extensions, which the bundler-driven packages already allow.
+        compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, allowImportingTsExtensions: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
         include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
       }))
       console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
@@ -156,7 +157,9 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "true", ORCHESTRA_DISABLE_MODELS_FETCH: "true", ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "true", ORCHESTRA_DISABLE_CLAUDE_CODE: "true",
         ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", GOTOOLCHAIN: "local", GOPROXY: "off", GOSUMDB: "off", CGO_ENABLED: "0",
         GOCACHE: path.join(home, "go-cache"), GOPATH: path.join(home, "go"), TMPDIR: path.join(home, "tmp"), TMP: path.join(home, "tmp"), TEMP: path.join(home, "tmp"),
-        ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}), ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}) }
+        ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}), ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}),
+        // omni is on by default; the desktop hands its sidecar these paths (OmniHost.sidecarEnv), so the proof does too.
+        ...Object.fromEntries(["HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"].flatMap((key) => process.env[key] ? [[key, process.env[key]!]] : [])) }
       const server = child(["node", path.join(orchestra, "test/fixture/lean-package/node.mjs"), artifact, ready], env, project)
       resources.push({ label: "Node server", close: async () => {
         try { if (server.proc.exitCode === null) server.proc.kill("SIGTERM") } catch (error) { errors.push(error) }
