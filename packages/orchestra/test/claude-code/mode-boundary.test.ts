@@ -31,6 +31,8 @@ const INTERFACE = [
   "maestro/session-authority", "maestro/workflow-binding", "session/todo",
   // The host session provides what resolving the served tools needs: the tool-output truncation service.
   "tool/truncate",
+  // Native teardown/fork ownership callbacks and diff summaries shared with the normal loop.
+  "session/lifecycle", "session/summary",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */

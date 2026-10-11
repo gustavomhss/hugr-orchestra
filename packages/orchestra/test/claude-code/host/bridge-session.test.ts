@@ -95,7 +95,8 @@ ClaudeEngineFixture.it.instance("host Stop cancels the real MCP execution instea
     const transports = InMemoryTransport.createLinkedPair()
     await server.instance.connect(transports[0])
     await client.connect(transports[1])
-    responses.push(await client.callTool({ name: "context_recall", arguments: accepted }))
+    // Closing the SDK query may reject its MCP transport instead of delivering a tool error response.
+    responses.push(await client.callTool({ name: "context_recall", arguments: accepted }).catch(() => ({ isError: true })))
     await client.close()
     yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0.01, ...frame }
     for await (const _ of input) {}

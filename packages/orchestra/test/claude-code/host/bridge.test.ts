@@ -68,14 +68,14 @@ it.instance("execution binds the real runtime profile and native placement to th
   for (const [session, bound, label] of [[child, rules, "one"], [other, otherRules, "two"]] as const) {
     yield* f.call({ id: label, tool: "runtime_probe", args: { label }, sessionID: session.id, seat: "archie" })
     const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "runtime_probe", arguments: f.arguments(label) })))
-    expect(Schema.decodeUnknownSync(Runtime)(result.content[0].text)).toEqual({ roots: WriteRoots.read(bound), required: true,
+    expect(Schema.decodeUnknownSync(Runtime)(result.content[0].text)).toEqual({ roots: WriteRoots.read(bound) ?? [], required: true,
       native: { directory: session.directory, projectID: session.projectID }, directory: session.directory })
     f.bridge.release(label)
   }
   yield* WriteRoots.rebind(f.sessions, child, otherRules)
   yield* f.call({ id: "rebound", tool: "runtime_probe", args: { label: "one" }, sessionID: child.id, seat: "archie" })
   const rebound = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "runtime_probe", arguments: f.arguments("rebound") })))
-  expect(Schema.decodeUnknownSync(Runtime)(rebound.content[0].text).roots).toEqual(WriteRoots.read(otherRules))
+  expect(Schema.decodeUnknownSync(Runtime)(rebound.content[0].text).roots).toEqual(WriteRoots.read(otherRules) ?? [])
 }), 60_000)
 
 it.instance("a native lucy MCP review passes the review tool's identity and child-session checks", () => Effect.gen(function* () {
