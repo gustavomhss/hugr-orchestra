@@ -47,7 +47,7 @@ export type Context = {
   /** The main conversation's seat id (Maestro). */
   readonly agent: string
   readonly abort: AbortController
-  readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Promise<A>
+  readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>, teardown?: boolean) => Promise<A>
   readonly join: ClaudeHostJoin.Join
   readonly parts?: ClaudeHostDelegation.Parts
   readonly granted: ClaudeHostGate.Ports["granted"]
@@ -85,7 +85,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   ctx.abort.signal.addEventListener("abort", () => {
     unsubscribe()
     ClaudeHostMcp.release(ctx.sessionID)
-    if (policy.value) policy.value.then((value) => ctx.run(value.close)).catch(() => undefined)
+    if (policy.value) policy.value.then((value) => ctx.run(value.close, true)).catch(() => undefined)
   }, { once: true })
 
   // A defect in Orchestra's own checks denies the call: the gate fails closed.
