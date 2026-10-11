@@ -20,6 +20,13 @@
 }:
 let
   target = lib.removePrefix "bun-" bun.compileTarget;
+  # packages/script/src/omni.ts maps each CLI target to hugr-omni's platform id.
+  omniId = {
+    "linux-x64-baseline" = "linux-x64-gnu";
+    "linux-arm64" = "linux-arm64-gnu";
+    "darwin-x64-baseline" = "darwin-x64";
+    "darwin-arm64" = "darwin-arm64";
+  }.${target};
 in
 assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
   "Orchestra CLI artifacts require a matching native build platform";
@@ -73,6 +80,10 @@ stdenv.mkDerivation (finalAttrs: {
   '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
     ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
   '' + ''
+    # A --target build requires OMNI_ARTIFACTS laid out as <dir>/<omni id>/{addon,supervisor}.
+    omniArtifacts="$(mktemp -d)"
+    ln -s ${finalAttrs.omni} "$omniArtifacts/${omniId}"
+    export OMNI_ARTIFACTS="$omniArtifacts"
     # Bun 1.3.14's automatic Nix-host detection can miss relocated ELF metadata.
     # Preserve the selected Nix compiler's interpreter, then verify emitted paths below.
     ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}${if stdenv.hostPlatform.isLinux then "\"$BUN_INSTALL_CACHE_DIR/native-bun-template\"" else "bun"} --bun packages/cli/script/build.ts --target ${target} --skip-install
@@ -173,8 +184,8 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   meta = {
-    description = "The open source coding agent";
-    homepage = "https://opencode.ai";
+    description = "Orchestra coding agent CLI";
+    homepage = "https://github.com/gustavomhss/hugr-orchestra";
     license = lib.licenses.mit;
     mainProgram = "orchestra";
     inherit (node_modules.meta) platforms;
