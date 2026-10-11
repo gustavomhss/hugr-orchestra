@@ -12,6 +12,7 @@ import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { Global } from "@orchestra/core/global"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
+import { LocationMutation } from "@orchestra/core/location-mutation"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionStore } from "@orchestra/core/session/store"
@@ -31,6 +32,9 @@ const it = testEffect(Layer.unwrap(Effect.gen(function* () {
     PermissionV2.node, PermissionSaved.node, SessionStore.node, ToolRegistry.node]), [
     [Database.node, Database.layerFromPath(join(tmp.path, "capabilities.sqlite"))],
     [Location.node, Layer.succeed(Location.Service, Location.Service.of(CapabilityPolicyFixture.placement))],
+    // The fixture placement is not a real directory; process start paths are covered by capability-process-control tests.
+    [LocationMutation.node, Layer.succeed(LocationMutation.Service,
+      LocationMutation.Service.of({ resolve: () => Effect.die("LocationMutation is not used by this test") }))],
     [Global.node, Global.layerWith({ data: tmp.path, home: tmp.path })],
     [Credential.node, makeGlobalNode({ service: Credential.Service,
       layer: Credential.layerFrom(undefined), deps: [Database.node] })],
@@ -44,7 +48,7 @@ it.live("Location capability producer registers canonical leaves and settlement 
   yield* CapabilityPolicyFixture.setRules(rules)
   const materialized = yield* registry.materialize(rules)
   const names = ["channel_read", "channel_send", "channel_update", "image_create", "video_create",
-    "document_read", "document_edit", "sheet_read", "sheet_edit", "service_find", "service_describe", "service_call",
+    "document_read", "document_edit", "sheet_read", "sheet_edit", "service_find", "service_describe", "service_call", "process_control",
     ...CapabilityServiceProviders.platformNames]
   names.forEach((name) => {
     expect(materialized.definition(name)).toBeDefined()

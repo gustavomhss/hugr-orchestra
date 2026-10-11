@@ -68,3 +68,62 @@ Baseline `fa525499fb`. This wave delivers the canonical `process_control` leaf f
 | P4 | `process-control/index.ts` (the leaf `make({jobs})` returning `{ tools: { process_control } }`) and leaf tests through real tool settlement |
 
 Each slice is at most 400 LOC and gets a cold review. Focused local tests only; one PR+CI at the end of the campaign.
+
+## Landing results
+
+The wave landed on `native-capabilities`. Each author slice passed a cold review, and the blockers raised were fixed, re-reviewed and probed red, then restored green:
+
+| Slice | Head | Content |
+|---|---|---|
+| P1 output | `7195783ba7` | UTF-8 byte ring with absolute cursors and boundary-safe text. `lost` now also covers bytes skipped to reach a character boundary. Waiters wake only when a whole character is readable. A BOM is preserved. A 20k-case fuzz in review found no failures. |
+| P2 registry | `cecd07a3de` | Registry-owned per-process Scopes with a bounded, parallel shutdown. Spawn starts immediately, which fixes a leak on immediate shutdown. The JobID is reserved before spawn. The stdin backlog is bounded (`quota_exceeded`). A `ToolSafety.Denied` raised by prepare propagates unchanged. Transfer still works after exit. |
+| P3 jobs | `7381ac76bd` | `CapabilityJobs.transferHost`. `host()` checks provenance against the first `producerOwner`, which only transferHost writes. `proofFromRow` is for trusted hosts only. Sweep logs each skipped row. |
+| P4 leaf | `6b0a9cd7ff` | `process_control`. See "Security fixes from review" below. |
+
+### Security fixes from review
+
+The leaf builds one display string: the sorted explicit env as `KEY=value` prefixes, followed by the quoted argv. That single string feeds:
+- the bash permission check;
+- `ToolSafetyGit`;
+- `ToolSafety.before`, which covers destructive-command refusals, askBefore and requireSandbox;
+- command hooks.
+
+`ToolSafety.Denied` now passes through to the HOLD path. The bash and shell paths are unchanged, and the existing bash and tool-safety suites stay green.
+
+### Lead integration
+
+- `capability/tools.ts` registers `process_control` and runs the startup sweep. A sweep failure is logged and never blocks the Location; interrupts are not swallowed. The node now depends on `CapabilityProcessRegistry`, `LocationMutation` and `AppProcess`.
+- `ToolSafetyCommands.command` falls back to `args.command` for any other tool shape registered under the name `process_control`.
+- `capability-tools.test.ts` now asserts that `process_control` is registered; removing the registration turns it red. It also overrides `LocationMutation`, because the fixture placement is not a real directory.
+- Fixed a pre-existing failure: the expected tool lists in `location-layer.test.ts` had gone stale. They lacked every capability leaf registered by earlier waves.
+
+### Verification
+
+This is a local focused run, not campaign CI:
+
+| Test | Result |
+|---|---|
+| output | 19 pass |
+| registry | 15 pass |
+| jobs-transfer | 3 pass |
+| sweep | 2 pass |
+| jobs | 23 pass |
+| process-control and process-control-safety | 6 pass |
+| capability-tools | 2 pass |
+| location-layer | 5 pass |
+| tool-bash and tool-safety* | 57 pass |
+| Server artifact routes | pass |
+
+Typecheck passes in core, server, sdk-next and orchestra.
+
+### Follow-ups
+
+- **Pty mode.**
+- **Operator HTTP (I03C).**
+- **`job_read`/`job_cancel` leaves.**
+- **Kill-tree qualification on Linux and Windows.**
+- **Escaped descendant holding stdout:** when one remains after the main child exits, the entry never settles and stop reports `incomplete`.
+- **Regex-based command gates:** askBefore and git hygiene can be bypassed by a quoted `;`/`|`/`&` inside an argv element. This gap is shared with bash. For process_control, match on parsed tokens instead.
+- **Signal names:** they are parsed from the spawner error text.
+- **Command hooks:** the process_control hooks change has no dedicated test.
+- **Campaign CI:** expect more stale cross-wave expectations like `location-layer`.

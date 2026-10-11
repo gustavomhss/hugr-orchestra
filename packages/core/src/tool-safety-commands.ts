@@ -73,10 +73,12 @@ export function command(tool: string, args: unknown) {
   if (tool !== "process_control") return typeof record.command === "string" ? record.command : undefined
   const argv: unknown = record.argv
   const env: unknown = record.env ?? {}
+  // Another tool registered under this name keeps the generic `command` extraction.
+  const fallback = typeof record.command === "string" ? record.command : undefined
   if (record.action !== "start" || !Array.isArray(argv) || !argv.every((arg) => typeof arg === "string") ||
-    env === null || typeof env !== "object" || Array.isArray(env)) return undefined
+    env === null || typeof env !== "object" || Array.isArray(env)) return fallback
   const entries = Object.entries(env)
-  if (!entries.every((entry): entry is [string, string] => typeof entry[1] === "string")) return undefined
+  if (!entries.every((entry): entry is [string, string] => typeof entry[1] === "string")) return fallback
   return display(argv, Object.fromEntries(entries))
 }
 
