@@ -19,6 +19,8 @@ export type Descriptor = Readonly<{
   origin: string
   /** Full Authorization header value for the identity origin (e.g. `Bearer k`, `Bot k`, or the raw key). */
   authorization: (key: string) => string
+  /** Keys outside this shape are refused before any network call (e.g. Stripe accepts only restricted rk_ keys). */
+  keyPattern?: RegExp
   /** Extra fixed headers for the identity origin (never derived from input). */
   headers?: Readonly<Record<string, string>>
   /**
