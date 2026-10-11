@@ -312,6 +312,13 @@ const invalid = (tool: "hugr-compose" | "hugr-scaffold") =>
       outcome: { status: "blocked", effects: "none", mode: "tool_delegate", error: { code: "UNSUPPORTED_OUTPUT" } },
     },
     {
+      // Refused before the mode was decided: the Composer sends `mode: null`, which means absent.
+      kind: "blocked-pre-mode",
+      tool: "hugr-compose" as const,
+      message: "hugr-compose blocked INVALID_INPUT",
+      outcome: { status: "blocked", effects: "none", error: { code: "INVALID_INPUT", producer_code: "missing-selection" } },
+    },
+    {
       kind: "partial",
       tool: "hugr-scaffold" as const,
       message: "hugr-scaffold failed PRODUCER_FAILED",
@@ -360,6 +367,7 @@ const invalid = (tool: "hugr-compose" | "hugr-scaffold") =>
     "empty-inventory",
     "dirs-only",
     "escape",
+    "oversize",
     "absolute",
     "unknown-status",
     "wrong-tool",

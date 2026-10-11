@@ -152,12 +152,22 @@ export function readOwned(value: unknown, tool: Owned["tool"], outputDir: string
   return rebased.every((change) => change !== undefined) ? { ...decoded, observed_changes: rebased } : undefined
 }
 
-// A producer code outside the closed set (a newer Composer) degrades to `unknown` instead of invalidating the envelope.
+// The Composer serializes an absent `mode` and an absent `error.producer_code` as null (Python None), so null means
+// absent. A producer code outside the closed set (a newer Composer) degrades to `unknown` instead of invalidating the
+// envelope.
 function closeProducerCode(value: unknown) {
-  if (typeof value !== "object" || value === null || !("error" in value)) return value
-  const error = value.error
-  if (typeof error !== "object" || error === null || !("producer_code" in error) || typeof error.producer_code !== "string") return value
-  return { ...value, error: { ...error, producer_code: producerCodeOf(error.producer_code) } }
+  if (typeof value !== "object" || value === null) return value
+  const envelope = withoutNull(value, "mode")
+  if (!("error" in envelope) || typeof envelope.error !== "object" || envelope.error === null) return envelope
+  const error = withoutNull(envelope.error, "producer_code")
+  return {
+    ...envelope,
+    error: "producer_code" in error && typeof error.producer_code === "string" ? { ...error, producer_code: producerCodeOf(error.producer_code) } : error,
+  }
+}
+
+function withoutNull(value: object, key: string) {
+  return Object.fromEntries(Object.entries(value).filter(([name, field]) => name !== key || field !== null))
 }
 
 /** A producer result that cannot be trusted: it may have written, so the effects are unknown (F4.23). */

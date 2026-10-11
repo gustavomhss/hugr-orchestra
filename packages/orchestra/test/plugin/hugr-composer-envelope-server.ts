@@ -37,7 +37,9 @@ function canonical(kind: string, backend: string | undefined) {
     generated,
     previewed: { ...legacy(true, null), ...base, status: "previewed", effects: "none", artifacts: [{ kind: "source", path: "app/x.py", content: secret }], planned_files: ["app/x.py"] },
     blocked: { ...legacy(false, "target-exists"), ...base, status: "blocked", effects: "none", error: { code: "OUTPUT_CONFLICT", producer_code: "target-exists" } },
-    "blocked-delegate": { ...legacy(true, null), ...base, mode: "tool_delegate", status: "blocked", effects: "none", error: { code: "UNSUPPORTED_OUTPUT" } },
+    // The Composer sends Python None as null: an absent `producer_code` or `mode` arrives as an explicit null.
+    "blocked-delegate": { ...legacy(true, null), ...base, mode: "tool_delegate", artifact_kind: null, status: "blocked", effects: "none", error: { code: "UNSUPPORTED_OUTPUT", producer_code: null } },
+    "blocked-pre-mode": { ...legacy(false, "missing-selection"), ...base, mode: null, artifact_kind: null, status: "blocked", effects: "none", error: { code: "INVALID_INPUT", producer_code: "missing-selection" } },
     partial: { ...legacy(false, "scaffold-failed"), ...base, status: "failed", effects: "partial", observed_changes: created("half.py"), error: { code: "PRODUCER_FAILED", producer_code: "scaffold-failed" } },
     "newer-code": { ...legacy(false, "scaffold-failed"), ...base, status: "blocked", effects: "none", error: { code: "INVALID_INPUT", producer_code: secret } },
     "illegal-effects": { ...generated, effects: "none" },
@@ -45,6 +47,8 @@ function canonical(kind: string, backend: string | undefined) {
     "empty-inventory": { ...generated, observed_changes: [] },
     "dirs-only": { ...generated, observed_changes: created("app/", "app/compositions/") },
     escape: { ...generated, observed_changes: created("../outside.py") },
+    // One entry over MAX_OBSERVED_CHANGES: a larger inventory is not trusted as complete.
+    oversize: { ...generated, observed_changes: created(...Array.from({ length: 5001 }, (_, index) => `app/f${index}.py`)) },
     absolute: { ...generated, observed_changes: created("/etc/passwd") },
     "unknown-status": { ...generated, status: "done" },
     "wrong-tool": { ...generated, tool: tool === "hugr-compose" ? "hugr-scaffold" : "hugr-compose" },
