@@ -92,6 +92,8 @@ function hasAvx2() {
   if (process.platform === "darwin")
     return spawnSync("sysctl", ["-n", "hw.optional.avx2_0"], { encoding: "utf8", timeout: 1500 }).stdout?.trim() === "1"
   if (process.platform === "win32") {
+    // bun:ffi exists only under Bun. Anywhere else there is no cheap probe, so the floor is skipped rather than guessed.
+    if (!process.versions.bun) return true
     // The installer asks PowerShell, whose Add-Type compile can outlast any sane timeout on a cold machine; the same
     // kernel32 call through FFI is immediate. 40 is PF_AVX2_INSTRUCTIONS_AVAILABLE.
     const ffi: typeof import("bun:ffi") = require("bun:ffi")
