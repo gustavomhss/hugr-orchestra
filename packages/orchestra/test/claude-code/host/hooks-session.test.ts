@@ -63,6 +63,11 @@ ClaudeEngineFixture.it.instance("Agent grant binding retains the host filesystem
       content: [{ type: "tool_use", id: "toolu_agent", name: "Agent", input: args }], usage: {} } }
     decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0]({ ...pre, tool_name: "Agent", tool_use_id: "toolu_agent", tool_input: args },
       "toolu_agent", { signal: new AbortController().signal }))
+    yield { type: "system", subtype: "task_started", task_id: "native-child", tool_use_id: "toolu_agent", description: "bounded proposal", ...ClaudeEngineFixture.frame }
+    for (const [name, file] of [["Write", "proposal.md"], ["Write", "denied.txt"], ["Read", "orchestra.json"], ["Read", ".env"]])
+      decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0]({ ...pre, agent_id: "native-child", tool_name: name,
+        tool_use_id: `${name}-${file}`, tool_input: { file_path: `${setup.chat.directory}/${file}`, content: "proposal" } },
+        `${name}-${file}`, { signal: new AbortController().signal }))
     yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...ClaudeEngineFixture.frame }
     for await (const _ of input) {}
   })
@@ -71,6 +76,8 @@ ClaudeEngineFixture.it.instance("Agent grant binding retains the host filesystem
   yield* host.turn({ sessionID: setup.chat.id, user: admitted.info }).pipe(
     Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({})))
   expect(decisions[0]).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
+  expect(decisions.slice(1).map((decision) => "hookSpecificOutput" in decision && decision.hookSpecificOutput &&
+    "permissionDecision" in decision.hookSpecificOutput ? decision.hookSpecificOutput.permissionDecision : undefined)).toEqual(["allow", "deny", "allow", "deny"])
 }), 30_000)
 
 for (const event of ["PostToolUse", "PostToolUseFailure", "SubagentStop", "SessionStart", "PostCompact"] as const)

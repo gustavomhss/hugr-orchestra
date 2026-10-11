@@ -9,6 +9,7 @@ export * as ClaudeHostGate from "./gate"
 // A write-roots seat's Bash runs inside Orchestra's OS write jail with its grant's roots (spike S11): parsing a command
 // for its writes is not a control.
 import { Effect, Exit, Scope } from "effect"
+import path from "node:path"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import type { HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
@@ -30,6 +31,7 @@ import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { approve, resolvePath } from "@/tool/shell/scan"
 import { ShellExecution } from "@/tool/shell/execution"
+import { assertExternalDirectoryEffect } from "@/tool/external-directory"
 import type { Tool } from "@/tool/tool"
 import { asks } from "../permissions"
 import { ClaudeCodeTools } from "../tools"
@@ -257,6 +259,17 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         return yield* ctx.ask({ permission: "task", patterns: [seat], always: ["*"],
           metadata: { description: text(args, "description"), subagent_type: seat } })
       }
+      // Native file tools use Orchestra's read/edit permissions and worktree-relative path patterns.
+      // Asking for the SDK name (e.g. Write) falls through a native seat's deny-all rule, even inside its grant.
+      if (["Read", "Write", "Edit", "MultiEdit", "NotebookEdit"].includes(name)) {
+        const target = text(args, "file_path") ?? text(args, "notebook_path")
+        if (!target) return yield* Effect.fail(new Error(`HOLD: ${name} has no file path.`))
+        const filepath = path.resolve(instance.directory, target)
+        yield* assertExternalDirectoryEffect(ctx, filepath)
+        return yield* ctx.ask({ permission: name === "Read" ? "read" : "edit", patterns: [path.relative(instance.worktree, filepath)],
+          always: ["*"], metadata: { filepath } })
+      }
+      if (name === "Skill") return yield* ctx.ask({ permission: "skill", patterns: [text(args, "skill") ?? "*"], always: ["*"], metadata: { input: args } })
       return yield* asks(name, args, ctx, (command) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
         Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid))
     }),
