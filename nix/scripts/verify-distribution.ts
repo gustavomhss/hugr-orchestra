@@ -50,6 +50,9 @@ const artifacts = await Promise.all([join(cli, "share/orchestra/cli"), join(reso
 // The compiled CLI resolves omni next to realpath(process.execPath) (packages/core/src/omni.ts); artifact.path is
 // real. Checked before any CLI runs, so a CLI whose omni preflight fails is still named by the omni failure.
 const omniCli = await omni(dirname(artifacts[0].path), process.execPath, {})
+// The packaged CLI (Resources/cli) resolves Resources/omni through ../omni: check it before that CLI runs too.
+// Resources/omni is outside app.asar.unpacked, so the addon scan below never sees it; packaged Electron loads it here.
+const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
 artifacts.forEach((artifact) => {
   const reported = execute(artifact.path, ["--version"]).trim()
   if (![version, `orchestra v${version}`].includes(reported)) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)
@@ -78,8 +81,6 @@ addons.forEach((file) => {
   const loaded = execute(executable, ["-e", "require(process.argv[1]); console.log('NATIVE_ADDON_LOAD_OK')", file], true)
   if (loaded.trim() !== "NATIVE_ADDON_LOAD_OK") fail(`NATIVE_ADDON_LOAD_EVIDENCE:${file}`)
 })
-// Resources/omni is outside app.asar.unpacked, so the scan above never sees it: packaged Electron loads it here.
-const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
 if (platform === "linux") {
   const entry = await Bun.file(join(desktop, "share/applications/ai.hugr.orchestra.desktop")).text()
   Array.of("StartupWMClass=ai.hugr.orchestra", "Icon=ai.hugr.orchestra", "Exec=").forEach((property) => {
