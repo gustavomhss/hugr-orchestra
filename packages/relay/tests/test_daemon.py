@@ -7,8 +7,10 @@ identical sequence of calls — one gate, no drift. All state is isolated under 
 down cleanly.
 """
 import contextlib
+import hashlib
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -79,14 +81,14 @@ def _post(port, path, body):
     return _request(port, "POST", path, body)
 
 
-def _sprint(work, budget=3):
+def _sprint(budget=3):
     return {
         "brief": "t", "retry_budget": budget,
         "work_packages": [
             {"id": "wp1", "instructions": "a",
-             "checklist": [{"id": "C1", "assert": "f1", "cmd": f"test -f {work}/f1"}]},
+             "checklist": [{"id": "C1", "assert": "f1", "cmd": "test -f f1"}]},
             {"id": "wp2", "instructions": "b",
-             "checklist": [{"id": "C2", "assert": "f2", "cmd": f"test -f {work}/f2"}]},
+             "checklist": [{"id": "C2", "assert": "f2", "cmd": "test -f f2"}]},
         ],
     }
 
@@ -103,7 +105,7 @@ def test_full_sprint_disposition_mapping(tmp_path):
     work = tmp_path / "work"
     work.mkdir()
     state = tmp_path / "state"
-    sprint = _sprint(work)
+    sprint = _sprint()
     port = _free_port()
     with running_daemon(port):
         def ev():
@@ -134,7 +136,7 @@ def test_escalate_maps_to_423(tmp_path):
     work = tmp_path / "work"
     work.mkdir()
     state = tmp_path / "state"
-    sprint = _sprint(work, budget=1)  # 1 retry then escalate; f1 never planted
+    sprint = _sprint(budget=1)  # 1 retry then escalate; f1 never planted
     port = _free_port()
     with running_daemon(port):
         def ev():
@@ -153,7 +155,7 @@ def test_sprint_path_form(tmp_path):
     (work / "f1").write_text("x")
     state = tmp_path / "state"
     sprint_file = tmp_path / "sprint.json"
-    sprint_file.write_text(json.dumps(_sprint(work)))
+    sprint_file.write_text(json.dumps(_sprint()))
     port = _free_port()
     with running_daemon(port):
         status, body = _post(port, "/gate/eval",
@@ -197,7 +199,7 @@ def test_missing_workdir_is_500_with_gate_stderr(tmp_path):
     """A gate HARD error (relay-gate exits 1, empty stdout, message on stderr) must surface as 500 with
     the gate's stderr in `detail` — NOT be masked as a retriable 409 gate-fail with an empty body."""
     state = tmp_path / "state"
-    sprint = _sprint(tmp_path / "work")
+    sprint = _sprint()
     bad_workdir = str(tmp_path / "does_not_exist_xyz")
     port = _free_port()
     with running_daemon(port):
@@ -315,39 +317,55 @@ def test_concurrent_same_state_dir_ledger_stays_valid(tmp_path):
     assert "TAMPERED" not in (proc.stdout + proc.stderr), proc.stdout + proc.stderr
 
 
-def _run_gate_cli(sprint_file, work, state):
-    return subprocess.run([str(GATE), "eval", "--sprint", str(sprint_file),
+def _run_gate_cli(sprint_file, work, state, expected_exit, expected_outcome):
+    """Independent pinned CLI process; never use the daemon's evaluation adapter as its oracle."""
+    bash = shutil.which("bash")
+    assert bash is not None, "Bash is required for the direct CLI oracle"
+    # Test-only SHA-256 compatibility for Git Bash, whose coreutils already supply sha256sum.
+    bootstrap = r'''
+if ! command -v shasum >/dev/null 2>&1; then
+  command -v sha256sum >/dev/null 2>&1 || exit 127
+  shasum() {
+    [ "$#" -ge 2 ] && [ "$1" = '-a' ] && [ "$2" = '256' ] || return 2
+    shift 2
+    sha256sum -- "$@"
+  }
+  export -f shasum
+fi
+exec bash "$@"
+'''
+    proc = subprocess.run([bash, "-c", bootstrap, "direct-cli-oracle", str(GATE), "eval", "--sprint", str(sprint_file),
                            "--workdir", str(work), "--state", str(state)],
                           capture_output=True, text=True)
+    assert proc.returncode == expected_exit, (proc.returncode, proc.stdout, proc.stderr)
+    assert json.loads(proc.stdout)["outcome"] == expected_outcome, (proc.stdout, proc.stderr)
 
 
 def _normalize_ledger(path):
-    """Ledger lines minus volatile fields (ts, and the chained hashes that depend on ts).
-
-    `oracle` is dropped for the same reason: it is sha256 of the control's `cmd`, and this test's
-    commands embed their own workdir (`test -f {work}/f1`), so the daemon run and the CLI run have
-    genuinely different command text. Its PRESENCE is asserted separately by _assert_oracles_present
-    so a driver that stopped recording the oracle is still caught here.
-    """
+    """Ledger lines minus ts and its dependent chain hashes; relative command oracle bytes stay identical."""
     out = []
     for ln in Path(path).read_text().splitlines():
         if not ln.strip():
             continue
         e = json.loads(ln)
-        for k in ("ts", "prev", "h", "oracle"):
+        for k in ("ts", "prev", "h"):
             e.pop(k, None)
         out.append(e)
     return out
 
 
-def _assert_oracles_present(path):
-    """Every checklist-item entry must carry a full sha256 oracle (R5 — docs/control-plane.md §5)."""
-    for ln in Path(path).read_text().splitlines():
-        if not ln.strip():
-            continue
-        e = json.loads(ln)
-        if e.get("event") == "checklist-item":
-            assert len(e.get("oracle", "")) == 64, f"checklist-item without an oracle: {e}"
+def _assert_oracles_present(path, sprint):
+    """Both drivers must record the actual command digest, not merely a digest-shaped string."""
+    expected = {item["id"]: hashlib.sha256(item["cmd"].encode()).hexdigest()
+                for wp in sprint["work_packages"] for item in wp["checklist"]}
+    entries = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    controls = [entry for entry in entries if entry["event"] in ("checklist-item", "regression-item")]
+    assert expected and {entry["item"] for entry in controls} == set(expected), controls
+    for entry in controls:
+        assert entry.get("oracle") == expected[entry["item"]], f"incorrect command oracle: {entry}"
+    proc = subprocess.run([sys.executable, str(ROOT / "benchmark/verify_ledger.py"), str(path)],
+                          capture_output=True, text=True)
+    assert proc.returncode == 0, (proc.stdout, proc.stderr)
 
 
 def test_daemon_ledger_matches_cli(tmp_path):
@@ -358,31 +376,39 @@ def test_daemon_ledger_matches_cli(tmp_path):
     d_work = tmp_path / "d_work"
     d_work.mkdir()
     d_state = tmp_path / "d_state"
-    sprint_file.write_text(json.dumps(_sprint(d_work)))
+    sprint = _sprint()
+    sprint_file.write_text(json.dumps(sprint))
     port = _free_port()
     with running_daemon(port):
         def ev():
             return _post(port, "/gate/eval",
                          {"sprint_path": str(sprint_file),
                           "workdir": str(d_work), "state_dir": str(d_state)})
-        ev()                                  # fail wp1
-        (d_work / "f1").write_text("x"); ev() # advance
-        ev()                                  # fail wp2
-        (d_work / "f2").write_text("x"); ev() # complete
+        status, body = ev()
+        assert status == 409 and body["outcome"] == "gate-fail", body
+        (d_work / "f1").write_text("x")
+        status, body = ev()
+        assert status == 200 and body["outcome"] == "advance", body
+        status, body = ev()
+        assert status == 409 and body["outcome"] == "gate-fail", body
+        (d_work / "f2").write_text("x")
+        status, body = ev()
+        assert status == 200 and body["outcome"] == "complete", body
 
     # --- via the CLI, identical sequence ---
     c_work = tmp_path / "c_work"
     c_work.mkdir()
     c_state = tmp_path / "c_state"
-    sprint_file.write_text(json.dumps(_sprint(c_work)))
-    _run_gate_cli(sprint_file, c_work, c_state)
-    (c_work / "f1").write_text("x"); _run_gate_cli(sprint_file, c_work, c_state)
-    _run_gate_cli(sprint_file, c_work, c_state)
-    (c_work / "f2").write_text("x"); _run_gate_cli(sprint_file, c_work, c_state)
+    _run_gate_cli(sprint_file, c_work, c_state, 1, "gate-fail")
+    (c_work / "f1").write_text("x")
+    _run_gate_cli(sprint_file, c_work, c_state, 0, "advance")
+    _run_gate_cli(sprint_file, c_work, c_state, 1, "gate-fail")
+    (c_work / "f2").write_text("x")
+    _run_gate_cli(sprint_file, c_work, c_state, 0, "complete")
 
-    _assert_oracles_present(d_state / "ledger.jsonl")
-    _assert_oracles_present(c_state / "ledger.jsonl")
+    _assert_oracles_present(d_state / "ledger.jsonl", sprint)
+    _assert_oracles_present(c_state / "ledger.jsonl", sprint)
     d_led = _normalize_ledger(d_state / "ledger.jsonl")
     c_led = _normalize_ledger(c_state / "ledger.jsonl")
-    # The `fails`/`reg` strings embed the workdir-derived nothing; events + verdicts must match exactly.
+    # Only timestamps and their chain hashes may differ; all control digests and verdicts must match.
     assert d_led == c_led, f"daemon ledger drifted from CLI ledger\n{d_led}\n!=\n{c_led}"

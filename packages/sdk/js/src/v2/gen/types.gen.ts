@@ -28,6 +28,7 @@ export type Event =
   | EventSessionCreated
   | EventSessionUpdated
   | EventSessionDeleted
+  | EventSessionV1PromptAdmitted
   | EventMessageUpdated
   | EventMessageRemoved
   | EventMessagePartUpdated
@@ -79,6 +80,7 @@ export type Event =
   | EventMaestroAuthorizationGranted
   | EventMaestroDispatchReserved
   | EventMaestroTaskBound
+  | EventMaestroTaskWorkflowBound
   | EventMaestroWorkResultDecided
   | EventMessagePartDelta
   | EventSessionDiff
@@ -289,121 +291,8 @@ export type UserMessage = {
   tools?: {
     [key: string]: boolean
   }
+  promptContext?: PromptContextInfo
 }
-
-export type ProviderAuthError = {
-  name: "ProviderAuthError"
-  data: {
-    providerID: string
-    message: string
-  }
-}
-
-export type UnknownError = {
-  name: "UnknownError"
-  data: {
-    message: string
-    ref?: string
-  }
-}
-
-export type MessageOutputLengthError = {
-  name: "MessageOutputLengthError"
-  data: {
-    [key: string]: unknown
-  }
-}
-
-export type MessageAbortedError = {
-  name: "MessageAbortedError"
-  data: {
-    message: string
-  }
-}
-
-export type StructuredOutputError = {
-  name: "StructuredOutputError"
-  data: {
-    message: string
-    retries: number
-  }
-}
-
-export type ContextOverflowError = {
-  name: "ContextOverflowError"
-  data: {
-    message: string
-    responseBody?: string
-  }
-}
-
-export type ContentFilterError = {
-  name: "ContentFilterError"
-  data: {
-    message: string
-  }
-}
-
-export type ApiError = {
-  name: "APIError"
-  data: {
-    message: string
-    statusCode?: number
-    isRetryable: boolean
-    responseHeaders?: {
-      [key: string]: string
-    }
-    responseBody?: string
-    metadata?: {
-      [key: string]: string
-    }
-  }
-}
-
-export type AssistantMessage = {
-  id: string
-  sessionID: string
-  role: "assistant"
-  time: {
-    created: number
-    completed?: number
-  }
-  error?:
-    | ProviderAuthError
-    | UnknownError
-    | MessageOutputLengthError
-    | MessageAbortedError
-    | StructuredOutputError
-    | ContextOverflowError
-    | ContentFilterError
-    | ApiError
-  parentID: string
-  modelID: string
-  providerID: string
-  mode: string
-  agent: string
-  path: {
-    cwd: string
-    root: string
-  }
-  summary?: boolean
-  cost: number
-  tokens: {
-    total?: number
-    input: number
-    output: number
-    reasoning: number
-    cache: {
-      read: number
-      write: number
-    }
-  }
-  structured?: unknown
-  variant?: string
-  finish?: string
-}
-
-export type Message = UserMessage | AssistantMessage
 
 export type TextPart = {
   id: string
@@ -632,6 +521,22 @@ export type AgentPart = {
   }
 }
 
+export type ApiError = {
+  name: "APIError"
+  data: {
+    message: string
+    statusCode?: number
+    isRetryable: boolean
+    responseHeaders?: {
+      [key: string]: string
+    }
+    responseBody?: string
+    metadata?: {
+      [key: string]: string
+    }
+  }
+}
+
 export type RetryPart = {
   id: string
   sessionID: string
@@ -667,6 +572,128 @@ export type Part =
   | AgentPart
   | RetryPart
   | CompactionPart
+
+export type SessionV1PromptTransition = {
+  expectedRevert: {
+    messageID: string
+    partID?: string
+    snapshot?: string
+    diff?: string
+  } | null
+  removeMessageIDs: Array<string>
+  removePartIDs: Array<string>
+  permission?: PermissionRuleset
+  expectedPermission?: PermissionRuleset | null
+  timeUpdated: number
+}
+
+export type SessionV1PromptAdmission = {
+  sessionID: string
+  messageID: string
+  identityVersion: 1
+  identity: string
+  info: UserMessage
+  parts: Array<Part>
+  transition?: SessionV1PromptTransition
+}
+
+export type ProviderAuthError = {
+  name: "ProviderAuthError"
+  data: {
+    providerID: string
+    message: string
+  }
+}
+
+export type UnknownError = {
+  name: "UnknownError"
+  data: {
+    message: string
+    ref?: string
+  }
+}
+
+export type MessageOutputLengthError = {
+  name: "MessageOutputLengthError"
+  data: {
+    [key: string]: unknown
+  }
+}
+
+export type MessageAbortedError = {
+  name: "MessageAbortedError"
+  data: {
+    message: string
+  }
+}
+
+export type StructuredOutputError = {
+  name: "StructuredOutputError"
+  data: {
+    message: string
+    retries: number
+  }
+}
+
+export type ContextOverflowError = {
+  name: "ContextOverflowError"
+  data: {
+    message: string
+    responseBody?: string
+  }
+}
+
+export type ContentFilterError = {
+  name: "ContentFilterError"
+  data: {
+    message: string
+  }
+}
+
+export type AssistantMessage = {
+  id: string
+  sessionID: string
+  role: "assistant"
+  time: {
+    created: number
+    completed?: number
+  }
+  error?:
+    | ProviderAuthError
+    | UnknownError
+    | MessageOutputLengthError
+    | MessageAbortedError
+    | StructuredOutputError
+    | ContextOverflowError
+    | ContentFilterError
+    | ApiError
+  parentID: string
+  modelID: string
+  providerID: string
+  mode: string
+  agent: string
+  path: {
+    cwd: string
+    root: string
+  }
+  summary?: boolean
+  cost: number
+  tokens: {
+    total?: number
+    input: number
+    output: number
+    reasoning: number
+    cache: {
+      read: number
+      write: number
+    }
+  }
+  structured?: unknown
+  variant?: string
+  finish?: string
+}
+
+export type Message = UserMessage | AssistantMessage
 
 export type Prompt = {
   text: string
@@ -826,6 +853,11 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "session.v1.prompt.admitted"
+        properties: SessionV1PromptAdmission
+      }
+    | {
+        id: string
         type: "message.updated"
         properties: {
           sessionID: string
@@ -896,6 +928,7 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           prompt: Prompt
+          promptContext?: PromptContextInfo
           delivery: "steer" | "queue"
         }
       }
@@ -907,6 +940,7 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           prompt: Prompt
+          promptContext?: PromptContextInfo
           delivery: "steer" | "queue"
         }
       }
@@ -1350,40 +1384,42 @@ export type GlobalEvent = {
           sessionID: string
           admissionMessageID: string
           methodVersion: string
-          revision: "v2"
+          revision: "v3"
           goal: {
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }
           acceptance: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           scope: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           constraints: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           reviewRequirement: {
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }
           contextRequirement: "PENDING"
           assumptions: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           risks: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           status: "PROPOSED"
           revisionHash: string
           createdAt: number
-          grounding: MaestroGrounding
+          workflowBinding?: RelayArmWorkflowDefinition
+          upstreamAttribution?: MaestroUpstreamAttributionV1
+          grounding?: MaestroGrounding
         }
       }
     | {
@@ -1562,6 +1598,17 @@ export type GlobalEvent = {
           executionSessionID: string
           authoritySessionID: string
           source: "host" | "user" | "dispatch" | "governed"
+        }
+      }
+    | {
+        id: string
+        type: "maestro.task.workflow_bound"
+        properties: {
+          executionSessionID: string
+          authorityMessageID: string
+          authorityCallID: string
+          token: string
+          binding: RelayArmWorkflowBinding
         }
       }
     | {
@@ -1769,6 +1816,7 @@ export type GlobalEvent = {
           sessionID: string
           callID?: string
           assistantMessageID?: string
+          messageID?: string
           agent?: string
           subject: string
           outcome:
@@ -2032,6 +2080,7 @@ export type GlobalEvent = {
     | SyncEventSessionCreated
     | SyncEventSessionUpdated
     | SyncEventSessionDeleted
+    | SyncEventSessionV1PromptAdmitted
     | SyncEventMessageUpdated
     | SyncEventMessageRemoved
     | SyncEventMessagePartUpdated
@@ -2079,6 +2128,7 @@ export type GlobalEvent = {
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
     | SyncEventMaestroTaskBound
+    | SyncEventMaestroTaskWorkflowBound
     | SyncEventMaestroWorkResultDecided
     | SyncEventRelayHookDecided
 }
@@ -3638,6 +3688,7 @@ export type V2Event =
   | SessionCreated
   | SessionUpdated
   | SessionDeleted
+  | SessionV1PromptAdmitted
   | MessageUpdated
   | MessageRemoved
   | MessagePartUpdated
@@ -3689,6 +3740,7 @@ export type V2Event =
   | MaestroAuthorizationGranted
   | MaestroDispatchReserved
   | MaestroTaskBound
+  | MaestroTaskWorkflowBound
   | MaestroWorkResultDecided
   | MessagePartDelta
   | SessionDiff
@@ -3861,6 +3913,12 @@ export type RelayCheckInput = {
   params?: {
     [key: string]: string
   }
+}
+
+export type RelayForbiddenError = {
+  _tag: "RelayForbiddenError"
+  code: string
+  message: string
 }
 
 export type RelayNodeTypes = {
@@ -4036,6 +4094,10 @@ export type MoveSessionDestination = {
   directory: string
 }
 
+export type PromptContextInfo = {
+  reminders: Array<string>
+}
+
 export type ModelRef = {
   id: string
   providerID: string
@@ -4120,6 +4182,51 @@ export type RevertState = {
   files?: Array<FileDiff>
 }
 
+export type RelayArmPublication = {
+  projectID: string
+  documentID: string
+  activeVersionID: string
+  immutableVersionBodyChecksum: string
+  livePublicationChecksum: string
+}
+
+export type RelayArmMaterialization = {
+  schemaIdentifier: "RelaySprint.Sprint"
+  digest: string
+  byteLength: number
+}
+
+export type RelayAuthoringSkillBinding = {
+  wp: string
+  skill: string
+  sha256: string
+  mode: "combine" | "replace"
+  content: string
+}
+
+export type RelayArmWorkflowDefinition = {
+  publication: RelayArmPublication
+  materialization: RelayArmMaterialization
+  resolvedSkills: Array<RelayAuthoringSkillBinding>
+  parameters: {
+    [key: string]: string
+  }
+  writePaths: Array<string>
+}
+
+export type MaestroUpstreamAttributionV1 = {
+  schema: "maestro-upstream-attribution-v1"
+  projectID: string
+  memberID: string
+  profile: "upstream"
+  authorSessionID: string
+  authorMessageID: string
+  parentSessionID: string
+  parentMessageID: string
+  parentCallID: string
+  logicalTaskID: string
+}
+
 export type MaestroGrounding = {
   catalogVersion: string
   snapshot: string
@@ -4173,6 +4280,14 @@ export type MaestroLoadedOwnSkill = {
   content: string
   contentHash: string
   receiptHash: string
+}
+
+export type RelayArmWorkflowBinding = {
+  definition: RelayArmWorkflowDefinition
+  planRevisionID: string
+  executionSessionID: string
+  authoritySessionID: string
+  logicalTaskID: string
 }
 
 export type PermissionV2Source = {
@@ -4289,6 +4404,18 @@ export type SyncEventSessionDeleted = {
       sessionID: string
       info: Session
     }
+  }
+}
+
+export type SyncEventSessionV1PromptAdmitted = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "session.v1.prompt.admitted.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: SessionV1PromptAdmission
   }
 }
 
@@ -4418,6 +4545,7 @@ export type SyncEventSessionNextPrompted = {
       sessionID: string
       messageID: string
       prompt: Prompt
+      promptContext?: PromptContextInfo
       delivery: "steer" | "queue"
     }
   }
@@ -4436,6 +4564,7 @@ export type SyncEventSessionNextPromptAdmitted = {
       sessionID: string
       messageID: string
       prompt: Prompt
+      promptContext?: PromptContextInfo
       delivery: "steer" | "queue"
     }
   }
@@ -5030,7 +5159,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
   type: "sync"
   id: string
   syncEvent: {
-    type: "maestro.plan_revision.recorded.2"
+    type: "maestro.plan_revision.recorded.3"
     id: string
     seq: number
     aggregateID: string
@@ -5039,40 +5168,42 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       sessionID: string
       admissionMessageID: string
       methodVersion: string
-      revision: "v2"
+      revision: "v3"
       goal: {
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }
       acceptance: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       scope: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       constraints: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       reviewRequirement: {
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }
       contextRequirement: "PENDING"
       assumptions: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       risks: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       status: "PROPOSED"
       revisionHash: string
       createdAt: number
-      grounding: MaestroGrounding
+      workflowBinding?: RelayArmWorkflowDefinition
+      upstreamAttribution?: MaestroUpstreamAttributionV1
+      grounding?: MaestroGrounding
     }
   }
 }
@@ -5299,6 +5430,24 @@ export type SyncEventMaestroDispatchReserved = {
   }
 }
 
+export type SyncEventMaestroTaskWorkflowBound = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.task.workflow_bound.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      executionSessionID: string
+      authorityMessageID: string
+      authorityCallID: string
+      token: string
+      binding: RelayArmWorkflowBinding
+    }
+  }
+}
+
 export type SyncEventRelayHookDecided = {
   type: "sync"
   id: string
@@ -5319,6 +5468,7 @@ export type SyncEventRelayHookDecided = {
       sessionID: string
       callID?: string
       assistantMessageID?: string
+      messageID?: string
       agent?: string
       subject: string
       outcome:
@@ -5516,6 +5666,7 @@ export type SessionInputAdmitted = {
   id: string
   sessionID: string
   prompt: Prompt
+  promptContext?: PromptContextInfo
   delivery: "steer" | "queue"
   timeCreated: number
   promotedSeq?: number
@@ -5556,6 +5707,7 @@ export type SessionMessageUser = {
   text: string
   files?: Array<PromptFileAttachment>
   agents?: Array<PromptAgentAttachment>
+  promptContext?: PromptContextInfo
   type: "user"
 }
 
@@ -5814,6 +5966,7 @@ export type SessionNextPrompted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -5835,6 +5988,7 @@ export type SessionNextPromptAdmitted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -6733,6 +6887,21 @@ export type SessionDeleted = {
   }
 }
 
+export type SessionV1PromptAdmitted = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "session.v1.prompt.admitted"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: SessionV1PromptAdmission
+}
+
 export type MessageUpdated = {
   id: string
   metadata?: {
@@ -7076,40 +7245,42 @@ export type MaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v2"
+    revision: "v3"
     goal: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     acceptance: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     scope: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     constraints: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     reviewRequirement: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     contextRequirement: "PENDING"
     assumptions: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     risks: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
-    grounding: MaestroGrounding
+    workflowBinding?: RelayArmWorkflowDefinition
+    upstreamAttribution?: MaestroUpstreamAttributionV1
+    grounding?: MaestroGrounding
   }
 }
 
@@ -7356,6 +7527,27 @@ export type MaestroDispatchReserved = {
       pattern: string
       action: "allow" | "deny" | "ask"
     }>
+  }
+}
+
+export type MaestroTaskWorkflowBound = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.task.workflow_bound"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    executionSessionID: string
+    authorityMessageID: string
+    authorityCallID: string
+    token: string
+    binding: RelayArmWorkflowBinding
   }
 }
 
@@ -7741,6 +7933,7 @@ export type RelayHookDecided = {
     sessionID: string
     callID?: string
     assistantMessageID?: string
+    messageID?: string
     agent?: string
     subject: string
     outcome:
@@ -8717,6 +8910,12 @@ export type EventSessionDeleted = {
   }
 }
 
+export type EventSessionV1PromptAdmitted = {
+  id: string
+  type: "session.v1.prompt.admitted"
+  properties: SessionV1PromptAdmission
+}
+
 export type EventMessageUpdated = {
   id: string
   type: "message.updated"
@@ -8796,6 +8995,7 @@ export type EventSessionNextPrompted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -8808,6 +9008,7 @@ export type EventSessionNextPromptAdmitted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -9284,40 +9485,42 @@ export type EventMaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v2"
+    revision: "v3"
     goal: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     acceptance: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     scope: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     constraints: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     reviewRequirement: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     contextRequirement: "PENDING"
     assumptions: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     risks: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
-    grounding: MaestroGrounding
+    workflowBinding?: RelayArmWorkflowDefinition
+    upstreamAttribution?: MaestroUpstreamAttributionV1
+    grounding?: MaestroGrounding
   }
 }
 
@@ -9492,6 +9695,18 @@ export type EventMaestroDispatchReserved = {
       pattern: string
       action: "allow" | "deny" | "ask"
     }>
+  }
+}
+
+export type EventMaestroTaskWorkflowBound = {
+  id: string
+  type: "maestro.task.workflow_bound"
+  properties: {
+    executionSessionID: string
+    authorityMessageID: string
+    authorityCallID: string
+    token: string
+    binding: RelayArmWorkflowBinding
   }
 }
 
@@ -9697,6 +9912,7 @@ export type EventRelayHookDecided = {
     sessionID: string
     callID?: string
     assistantMessageID?: string
+    messageID?: string
     agent?: string
     subject: string
     outcome:
@@ -17537,6 +17753,10 @@ export type V2RelayDocumentCheckErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * RelayForbiddenError
+   */
+  403: RelayForbiddenError
   /**
    * RelayNotFoundError
    */

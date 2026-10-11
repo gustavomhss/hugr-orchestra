@@ -2,10 +2,8 @@ import type { ServerConnection } from "@/context/server"
 import { authTokenFromCredentials } from "@/utils/server"
 import { record, RelayError } from "./client"
 
-// Workflow runs (`server.relay.run`, WP17). The routes are not in the API or the generated client yet, so these calls
-// answer 404 (or the web app's fallback) today and the run views say that the server cannot run workflows. Once
-// WP17 lands they move to the generated client and its contract; until then the answers are read defensively, so a
-// missing field renders as absent, never as an invented value.
+// Read-only workflow observations. Maestro owns execution even when run routes become available.
+// Missing fields render as absent, never as invented values.
 
 export type RelayRunStatus = "running" | "parked" | "completed" | "failed" | "cancelled"
 export type RelayStepStatus = "pending" | "running" | "passed" | "failed" | "escalated"
@@ -42,19 +40,18 @@ type Fetch = (url: URL, init: RequestInit) => Promise<Response>
 export type RelayRunClient = ReturnType<typeof createRunClient>
 
 export function createRunClient(input: { server: ServerConnection.HttpBase; directory: string; fetch: Fetch }) {
-  const call = async (method: string, path: string, body?: unknown, query?: Record<string, string>) => {
+  const call = async (path: string, query?: Record<string, string>) => {
     const url = new URL(path, input.server.url)
     url.searchParams.set("location[directory]", input.directory)
     Object.entries(query ?? {}).forEach(([key, value]) => url.searchParams.set(key, value))
     const headers = new Headers()
-    if (body !== undefined) headers.set("content-type", "application/json")
     if (input.server.password)
       headers.set(
         "authorization",
         `Basic ${authTokenFromCredentials({ username: input.server.username, password: input.server.password })}`,
       )
     const response = await input
-      .fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
+      .fetch(url, { method: "GET", headers })
       .catch((cause: unknown) => {
         throw new RelayError(-1, cause instanceof Error ? cause.message : String(cause), "transport")
       })
@@ -74,18 +71,10 @@ export function createRunClient(input: { server: ServerConnection.HttpBase; dire
   const run = (id: string) => `/api/relay/run/${encodeURIComponent(id)}`
   return {
     runs: async (documentID?: string) =>
-      list(await call("GET", "/api/relay/run", undefined, documentID ? { document: documentID } : undefined)).flatMap(
-        decodeRun,
-      ),
-    run: async (id: string) => required(await call("GET", run(id))),
-    // `version` is the published versionId the run admits.
-    start: async (body: { documentID: string; version: string; params: Record<string, string> }) =>
-      required(await call("POST", "/api/relay/run", body)),
-    // Release records the signed-in user and the reason, then runs the same gate again.
-    release: async (id: string, reason: string) =>
-      required(await call("POST", `${run(id)}/release`, { reason, mode: "recheck" })),
-    audit: async (id: string) => decodeAudit(await call("GET", `${run(id)}/audit`)),
-    ledger: (id: string) => call("GET", `${run(id)}/ledger`, undefined, { after: "0" }),
+      list(await call("/api/relay/run", documentID ? { document: documentID } : undefined)).flatMap(decodeRun),
+    run: async (id: string) => required(await call(run(id))),
+    audit: async (id: string) => decodeAudit(await call(`${run(id)}/audit`)),
+    ledger: (id: string) => call(`${run(id)}/ledger`, { after: "0" }),
   }
 }
 

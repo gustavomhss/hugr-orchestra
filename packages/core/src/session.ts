@@ -223,12 +223,12 @@ const layer = Layer.effect(
     // tool calls use. Only a project with a hooks.json opens its Location for them.
     const hook = Effect.fnUntraced(function* (
       session: SessionSchema.Info,
-      event: Pick<ToolSafety.SessionEvent, "operation" | "text">,
+      event: Pick<ToolSafety.SessionEvent, "operation" | "text" | "messageID">,
     ) {
       const { RelayHookInstall } = yield* Effect.promise(() => import("./relay-hook-install"))
-      if (!existsSync(RelayHookInstall.file(global.data, session.projectID))) return
+      if (!existsSync(RelayHookInstall.file(global.data, session.projectID))) return []
       const { ToolRegistry } = yield* Effect.promise(() => import("./tool/registry"))
-      yield* ToolRegistry.Service.use((registry) =>
+      return yield* ToolRegistry.Service.use((registry) =>
         registry.session({ ...event, sessionID: session.id, ...(session.agent ? { agent: session.agent } : {}) }),
       ).pipe(Effect.provide(locations.get(session.location)))
     })
@@ -237,13 +237,13 @@ const layer = Layer.effect(
     // ID that already names a durable prompt is left to admission, which reconciles an exact retry or refuses a
     // conflict, without asking again. It reads the Session first, as admission did.
     const promptHooks = Effect.fnUntraced(function* (input: {
-      readonly id?: SessionMessage.ID
+      readonly id: SessionMessage.ID
       readonly sessionID: SessionSchema.ID
       readonly prompt: PromptInput.Prompt
     }) {
       const session = yield* result.get(input.sessionID)
-      if (input.id && ((yield* SessionInput.find(db, input.id)) || (yield* store.message(input.id)))) return
-      yield* hook(session, { operation: "prompt", text: input.prompt.text }).pipe(
+      if ((yield* SessionInput.find(db, input.id)) || (yield* store.message(input.id))) return []
+      return yield* hook(session, { operation: "prompt", text: input.prompt.text, messageID: input.id }).pipe(
         Effect.catch((error) =>
           Effect.fail(
             new PromptBlockedError({
@@ -415,15 +415,16 @@ const layer = Layer.effect(
       prompt: Effect.fn("V2Session.prompt")((input) =>
         Effect.uninterruptibleMask((restore) =>
           Effect.gen(function* () {
-            yield* restore(promptHooks(input))
-            const prompt = resolvePrompt(input.prompt)
             const messageID = input.id ?? SessionMessage.ID.create()
+            const notes = yield* restore(promptHooks({ ...input, id: messageID }))
+            const prompt = resolvePrompt(input.prompt)
             const delivery = input.delivery ?? "steer"
             const expected = { sessionID: input.sessionID, messageID, prompt, delivery }
             const admitted = yield* SessionInput.admit(db, events, {
               id: messageID,
               sessionID: input.sessionID,
               prompt,
+              ...(notes.length === 0 ? {} : { promptContext: { reminders: [...notes] } }),
               delivery,
             }).pipe(
               Effect.catchDefect((defect) =>

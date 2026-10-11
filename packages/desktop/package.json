@@ -17,6 +17,7 @@
     "test:app-dock:tools": "bun run src/main/app-dock-tools.test.ts",
     "test:app-dock:rpc": "bun run src/main/app-dock-rpc.test.ts",
     "predev": "bun ./scripts/predev.ts",
+    "install-electron": "bun ./scripts/install-electron.ts",
     "dev": "electron-vite dev",
     "prebuild": "bun ./scripts/prebuild.ts",
     "build": "electron-vite build",

@@ -118,7 +118,7 @@
       "name": "@orchestra/cli",
       "version": "1.18.27",
       "bin": {
-        "lildax": "./bin/lildax.cjs",
+        "orchestra": "./bin/orchestra.cjs",
       },
       "dependencies": {
         "@effect/platform-node": "catalog:",
@@ -494,6 +494,7 @@
         "@orchestra/maestro-arsenal": "workspace:*",
         "@orchestra/plugin": "workspace:*",
         "@orchestra/protocol": "workspace:*",
+        "@orchestra/relay": "workspace:*",
         "@orchestra/schema": "workspace:*",
         "@orchestra/script": "workspace:*",
         "@orchestra/sdk": "workspace:*",
@@ -645,8 +646,10 @@
         "semver": "^7.6.3",
       },
       "devDependencies": {
+        "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@types/semver": "^7.5.8",
+        "@typescript/native-preview": "catalog:",
       },
     },
     "packages/sdk-next": {

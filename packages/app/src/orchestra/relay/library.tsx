@@ -3,10 +3,10 @@ import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import type { RelayDocument } from "./client"
 import { CreateWorkflowDialog, templateID, templates } from "./create"
-import { DeleteDialog, failure, RunDialog } from "./dialogs"
+import { DeleteDialog, failure } from "./dialogs"
 import { badgeTone, liveRuns, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
-import { phaseNames, RunBadge, runBlocker, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
+import { phaseNames, RunBadge, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
 import { copyDocument } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
 import type { RelayRun, RelayRunStatus } from "./runs"
@@ -27,7 +27,7 @@ export function WorkflowLibrary(props: Props) {
   const [filter, setFilter] = createSignal<"all" | "published" | "draft">("all")
   const [template, setTemplate] = createSignal<string>()
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
-  const [dialog, setDialog] = createSignal<{ type: "run" | "delete"; document: RelayDocument }>()
+  const [dialog, setDialog] = createSignal<{ type: "delete"; document: RelayDocument }>()
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "workflow")])),
   )
@@ -251,11 +251,8 @@ export function WorkflowLibrary(props: Props) {
                             type="button"
                             class="mx-btn icon"
                             aria-label={copy.t("orchestra.workflows.row.run", { name: document.name })}
-                            title={copy.t(
-                              runBlocker(document, props.source.runsState()) ?? "orchestra.workflows.row.runTitle",
-                            )}
-                            disabled={!!runBlocker(document, props.source.runsState())}
-                            onClick={() => setDialog({ type: "run", document })}
+                            title={copy.t("orchestra.workflows.maestroOnly")}
+                            disabled
                           >
                             <Ic name="play" />
                           </button>
@@ -310,28 +307,15 @@ export function WorkflowLibrary(props: Props) {
         )}
       </Show>
       <Show when={dialog()} keyed>
-        {(current) =>
-          current.type === "run" ? (
-            <RunDialog
-              document={current.document}
-              source={props.source}
-              onClose={() => setDialog(undefined)}
-              onStarted={(run) => {
-                setDialog(undefined)
-                props.source.invalidate("runs")
-                props.go(relayPath.history("workflow", current.document.id, run.runID))
-              }}
-            />
-          ) : (
-            <DeleteDialog
-              document={current.document}
-              kind="workflow"
-              source={props.source}
-              onClose={() => setDialog(undefined)}
-              onDeleted={() => setDialog(undefined)}
-            />
-          )
-        }
+        {(current) => (
+          <DeleteDialog
+            document={current.document}
+            kind="workflow"
+            source={props.source}
+            onClose={() => setDialog(undefined)}
+            onDeleted={() => setDialog(undefined)}
+          />
+        )}
       </Show>
     </MxPage>
   )

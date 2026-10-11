@@ -7,6 +7,7 @@ import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import { Seats, type Seat } from "./seats"
+import { UpstreamResult } from "./upstream-result"
 import { OUTCOME_KEY, readOutcome, type Outcome } from "../plugin/hugr-composer/outcome"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
@@ -86,7 +87,7 @@ export type WorkResult = {
   outcome?: Card["outcome"]
   changes: Card["changes"]
   checks: Card["checks"]
-  blockers: Card["blockers"]
+  blockers: Card["blockers"] | UpstreamResult.Card["blockers"]
   risks: Card["risks"]
   nextActions: Card["nextActions"]
   terminal: Terminal
@@ -95,6 +96,9 @@ export type WorkResult = {
   toolOutcomes?: ToolOutcome[]
   // F4 cl.16 / F4-CH: host binding of worker claims, separate from verification and acceptance.
   workerEvidence?: WorkerEvidence
+  artifacts?: UpstreamResult.Card["artifacts"]
+  // Host-observed authorship only. Approval and materialized artifact identity remain separate host contracts.
+  author?: { memberId: string; executionSessionID: string; messageID: string }
   // Host fact set by the Task path: the write roots enforced for the child, worktree-relative; empty is read-only.
   writeRoots?: string[]
   // Host fact: whether the child's shell commands ran inside the write jail. `unenforced` means at least one ran
@@ -111,7 +115,11 @@ export type WorkResult = {
  */
 export function assemble(message: SessionV1.WithParts, session: readonly SessionV1.WithParts[] = [], seat: Seat = Seats.all.backend): WorkResult {
   const text = message.parts.findLast((part) => part.type === "text")
-  const card = text?.type === "text" ? parse(text.text, seat.returnCard) : undefined
+  const upstream = seat.id === "archie" && seat.workResult === UpstreamResult.SCHEMA
+  const authored = upstream && message.info.role === "assistant" && message.info.agent === seat.id
+  const card = upstream
+    ? authored ? UpstreamResult.parse(message.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n")) : undefined
+    : text?.type === "text" ? parse(text.text, seat.returnCard) : undefined
   const host = terminal(message)
   const history = [...session.filter((stored) => stored.info.id !== message.info.id), message]
   const outcomes = toolOutcomes(history)
@@ -122,14 +130,19 @@ export function assemble(message: SessionV1.WithParts, session: readonly Session
     verification: { state: "not-host-verified" },
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(card ? { outcome: card.outcome } : {}),
-    changes: card?.changes ?? [],
-    checks: card?.checks ?? [],
+    changes: card && "changes" in card ? card.changes : [],
+    checks: card && "checks" in card ? card.checks : [],
     blockers: card?.blockers ?? [],
     risks: card?.risks ?? [],
     nextActions: card?.nextActions ?? [],
-    terminal: { reason: host === "ended" && card?.outcome === "blocked" ? "blocked" : host },
+    // Successful process termination does not complete an upstream assignment without a unique valid proposal card.
+    terminal: { reason: host === "ended" && (card?.outcome === "blocked" || (upstream && (!card || card.blockers.length > 0))) ? "blocked" : host },
     memory: seat.atlasMemory ? memory(history) : { reads: [], writes: [] },
     ...(outcomes.length ? { toolOutcomes: outcomes } : {}),
+    ...(upstream ? {
+      artifacts: card && "artifacts" in card ? card.artifacts : [],
+      ...(authored ? { author: { memberId: seat.id, executionSessionID: message.info.sessionID, messageID: message.info.id } } : {}),
+    } : {}),
   }
 }
 
@@ -160,6 +173,7 @@ export function hostEnded(input: {
         nextActions: [],
         memory: seat.atlasMemory ? memory(input.session ?? []) : { reads: [], writes: [] },
         ...(outcomes.length ? { toolOutcomes: outcomes } : {}),
+        ...(seat.id === "archie" && seat.workResult === UpstreamResult.SCHEMA ? { artifacts: [] } : {}),
       }
   return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
 }

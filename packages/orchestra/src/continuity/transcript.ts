@@ -102,6 +102,9 @@ function render(message: SessionV1.WithParts) {
         throw new Error("archive-unsupported-part")
     }
   }
+  if (info.role === "user")
+    sections.push(...(info.promptContext?.reminders ?? []).map((note) =>
+      `### Hook reminder (historical)\n\n${fenced(note)}`))
   const result = sections.join("\n\n")
   if (!result.isWellFormed()) throw new Error("archive-invalid-unicode")
   return result

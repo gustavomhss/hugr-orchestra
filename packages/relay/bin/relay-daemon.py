@@ -6,7 +6,10 @@ relay-daemon — a long-running HTTP gate service over the model-agnostic CLI (R
 step (sprint + workdir + state → JSON outcome + exit code). That CLI is one-shot per process, fine for a
 shell loop on the same box. This daemon adds the OTHER half of "model-agnostic": a long-running HTTP
 surface so a remote harness (a CI runner, a non-Claude agent, an OEM integration) can drive Relay over
-the network. It is the OEM surface.
+the network. It remains a standalone/regression tool, not Orchestra's installed authoring transport.
+
+Historical docs/reviews source hashes identify the bytes reviewed at the recorded revision, not this
+unpinned harness after portability repairs. Keep those review records and pinned oracle sources intact.
 
 There is exactly ONE gate. This daemon does NOT reimplement gate logic: every /gate/eval request shells
 out to `bin/relay-gate eval` and faithfully relays its JSON + maps its exit code onto the HTTP status, so
@@ -42,6 +45,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -76,8 +80,27 @@ EXIT_STATUS = {0: 200, 1: 409, 2: 423}
 
 def run_gate(sprint_path, workdir, state_dir):
     """Shell out to the ONE gate. Returns (http_status, body_dict)."""
+    # Windows ignores Bash shebangs and searches System32 before PATH for bare executable names.
+    # Resolve PATH explicitly so Git Bash wins over the unrelated System32 WSL launcher.
+    bash = shutil.which("bash")
+    if bash is None:
+        raise FileNotFoundError("Bash is required to run relay-gate")
+    # Git Bash ships sha256sum, not shasum. Adapt only the pinned core's SHA-256 invocation;
+    # unsupported algorithms and missing hash tools fail rather than produce an empty digest.
+    bootstrap = r'''
+if ! command -v shasum >/dev/null 2>&1; then
+  command -v sha256sum >/dev/null 2>&1 || { printf '%s\n' 'relay-daemon: SHA-256 tool unavailable' >&2; exit 127; }
+  shasum() {
+    [ "$#" -ge 2 ] && [ "$1" = '-a' ] && [ "$2" = '256' ] || return 2
+    shift 2
+    sha256sum -- "$@"
+  }
+  export -f shasum
+fi
+exec bash "$@"
+'''
     proc = subprocess.run(
-        [GATE, "eval", "--sprint", sprint_path, "--workdir", workdir, "--state", state_dir],
+        [bash, "-c", bootstrap, "relay-daemon", GATE, "eval", "--sprint", sprint_path, "--workdir", workdir, "--state", state_dir],
         capture_output=True, text=True)
     out = proc.stdout.strip()
     try:

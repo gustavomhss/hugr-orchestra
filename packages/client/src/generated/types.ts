@@ -131,6 +131,14 @@ export type RelayUnavailableError = {
 export const isRelayUnavailableError = (value: unknown): value is RelayUnavailableError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayUnavailableError"
 
+export type RelayForbiddenError = {
+  readonly _tag: "RelayForbiddenError"
+  readonly code: string
+  readonly message: string
+}
+export const isRelayForbiddenError = (value: unknown): value is RelayForbiddenError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayForbiddenError"
+
 export type PullRequestError = {
   readonly name: "PullRequestError"
   readonly data: {
@@ -687,6 +695,7 @@ export type SessionsPromptOutput = {
         readonly source?: { readonly start: number; readonly end: number; readonly text: string }
       }>
     }
+    readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
     readonly delivery: "steer" | "queue"
     readonly timeCreated: number
     readonly promotedSeq?: number
@@ -765,6 +774,7 @@ export type SessionsContextOutput = {
           readonly name: string
           readonly source?: { readonly start: number; readonly end: number; readonly text: string }
         }>
+        readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
         readonly type: "user"
       }
     | {
@@ -958,6 +968,7 @@ export type SessionsHistoryOutput = {
               readonly source?: { readonly start: number; readonly end: number; readonly text: string }
             }>
           }
+          readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
           readonly delivery: "steer" | "queue"
         }
       }
@@ -985,6 +996,7 @@ export type SessionsHistoryOutput = {
               readonly source?: { readonly start: number; readonly end: number; readonly text: string }
             }>
           }
+          readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
           readonly delivery: "steer" | "queue"
         }
       }
@@ -1396,6 +1408,7 @@ export type SessionsMessageOutput = {
           readonly name: string
           readonly source?: { readonly start: number; readonly end: number; readonly text: string }
         }>
+        readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
         readonly type: "user"
       }
     | {
@@ -1568,6 +1581,7 @@ export type MessagesListOutput = {
           readonly name: string
           readonly source?: { readonly start: number; readonly end: number; readonly text: string }
         }>
+        readonly promptContext?: { readonly reminders: ReadonlyArray<string> }
         readonly type: "user"
       }
     | {

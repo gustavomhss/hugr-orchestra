@@ -319,15 +319,18 @@ const layer = Layer.effect(
         }
 
         for (const [key, value] of Object.entries(agentConfig)) {
-          // Native seats accept only model, variant, temperature and their display label (resolved below).
+          // Every session runs on Maestro, so configuration may neither disable it, take it out of primary mode, nor move
+          // it off Orchestra's loop: it coordinates the other engines. Every other agent, native seats included, may.
+          const engine = key === "maestro" ? undefined : value.engine
+          // Native seats accept only model, variant, temperature, engine and their display label (resolved below).
           if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
             const item = agents[key]
             if (value.model) item.model = Provider.parseModel(value.model)
             item.variant = value.variant ?? item.variant
             item.temperature = value.temperature ?? item.temperature
+            item.engine = engine ?? item.engine
             continue
           }
-          // Every session runs on Maestro, so configuration may neither disable it nor take it out of primary mode.
           if (value.disable && key !== "maestro") {
             delete agents[key]
             continue
@@ -353,8 +356,7 @@ const layer = Layer.effect(
           item.hidden = value.hidden ?? item.hidden
           if (key !== "maestro") item.name = value.name ?? item.name
           item.steps = value.steps ?? item.steps
-          // Maestro always runs on Orchestra's loop: it coordinates the other engines.
-          if (key !== "maestro") item.engine = value.engine ?? item.engine
+          item.engine = engine ?? item.engine
           item.options = mergeDeep(item.options, value.options ?? {})
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
         }

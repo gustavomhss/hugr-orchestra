@@ -230,7 +230,7 @@ const withBash = <A, E, R>(options: {
       LayerNode.group([LocationMutation.node, BashTool.node]), [
         [ToolRegistry.node, Layer.merge(tools, Layer.succeed(ToolRegistry.Service, ToolRegistry.Service.of({
           register: () => Effect.die("use native Tools registration"),
-          materialize: () => Effect.die("raw producer fixture does not bound output"), session: () => Effect.void,
+          materialize: () => Effect.die("raw producer fixture does not bound output"), session: () => Effect.succeed([]),
         })))],
         [Location.node, Layer.succeed(Location.Service, Location.Service.of(location({ directory: AbsolutePath.make(tmp.path) })))],
         [PermissionV2.node, permission], [AppProcess.node, options.real ? LayerNode.compile(AppProcess.node) : appProcess],

@@ -1,18 +1,20 @@
 ---
 name: relay-authoring
-description: Maintains the Relay authoring service and its versioned API when agents change bin/relay-api or lib/relay_authoring.
+description: Routes native Orchestra authoring maintenance and retained Python authoring regression evidence.
 ---
 
-# Relay authoring service
+# Relay authoring maintenance
 
 ## Trigger
 
-Use for `bin/relay-api`, `lib/relay_authoring/`, workflow and hook documents, sprint compilation,
-publication, scopes, skill bindings and uploads, execution receipts or the `api/v1` contract.
+Use for native workflow/hook authoring, publication, scopes and skill binding, or retained
+`lib/relay_authoring/` regression modules. The former Python `api/v1` host is test-only.
 
 ## Read first
 
 - [Authoring API](../../../docs/authoring-api.md) and [SPEC §7](../../../SPEC.md#7-authoring-service-and-host-boundary).
+- From the Orchestra root: `packages/server/src/handlers/relay-document.ts`, `relay-hook.ts`,
+  `packages/server/src/relay-documents.ts`, and `packages/app/src/orchestra/relay/client.ts`.
 - [Application](../../../lib/relay_authoring/application.py), [HTTP host](../../../lib/relay_authoring/server.py),
   [graph compiler](../../../lib/relay_authoring/graph.py), [hooks](../../../lib/relay_authoring/hooks.py),
   [runner](../../../lib/relay_authoring/runs.py), [store](../../../lib/relay_authoring/store.py).
@@ -20,10 +22,26 @@ publication, scopes, skill bindings and uploads, execution receipts or the `api/
 
 ## Ownership
 
-Own `bin/relay-api`, `lib/relay_authoring/`, `tests/test_authoring.py` and `tests/test_authoring_hooks.py`.
-The lead owns shared catalogs. The Orchestra host owns supervision, proxying, authentication and screens.
+The Relay catalog owns retained `lib/relay_authoring/`, `tests/test_authoring.py` and
+`tests/test_authoring_hooks.py`; it inventories Python/shell sources, not native TypeScript.
+Native contracts belong to Schema/Protocol, native compilation/storage to Relay, handlers to Server,
+and screens to App. The lead owns shared catalogs. The Python authoring launch pair is retired.
 
-## Contracts
+## Installed contracts
+
+- Installed screens call native Server `HttpApi` through generated Client; no Python sidecar starts.
+- `RelayDocumentHandler`, `RelayPublishHandler` and `RelayHookHandler` are registered in
+  `packages/server/src/handlers.ts`; see the authoring API routing table for their exact source paths.
+- `RelayDocuments` uses native graph/hook/store and Location-scoped `SkillV2`, with SQLite under
+  `<Global.data>/relay/<projectID>/authoring.sqlite3`.
+- Native updates require a version/checksum guard or explicit force; publishing compiles first.
+- Public document checks return 403 `maestro-execution-required`. Maestro owns executable checks.
+- Native hook installs pin the published snapshot through `RelayHookInstall`; export alone does not install.
+- Missing native profile tools remain unavailable; standalone Python tools are separately owned.
+
+## Retained regression contracts
+
+The following describe only the directly imported Python test service, not installed routing:
 
 - The API is versioned under `<base>api/v1/`; the base path is configurable and confined.
   Refuse unexpected `Host` and `Origin` values. Identity comes from host configuration, not authentication.
@@ -46,15 +64,16 @@ The lead owns shared catalogs. The Orchestra host owns supervision, proxying, au
 
 1. Claim exact files through [ownership](../relay-ownership/SKILL.md).
 2. Select consumers and checks through [blast radius](../relay-blast-radius/SKILL.md).
-3. Run the service against an isolated workspace and data directory.
+3. Trace installed callers through App, Client, Protocol and Server. For Python regression changes,
+   preserve direct test imports, isolated workspace/data state and every frozen ORACLE source byte.
 4. Update the API doc and SPEC §7 with any contract change; keep product copy in English.
 
 ## Checks
 
-From `packages/relay`; in the Orchestra monorepo run them through `bun run test:ci relay <files>`:
+Run tests from the Orchestra root through CI; structural commands run from `packages/relay`:
 
 ```sh
-python3 -m pytest tests/test_authoring.py tests/test_authoring_hooks.py -q
+bun run test:ci relay tests/test_docs.py tests/test_authoring.py tests/test_authoring_hooks.py --os both
 python3 bin/check-docs.py
 python3 bin/gen-doc-index.py --check
 ```
@@ -62,8 +81,8 @@ python3 bin/gen-doc-index.py --check
 ## Cold review
 
 Require author != reviewer in a fresh context. Freeze the source list and hashes. The reviewer checks
-compilation against the daemon's sprint contract, persistence and conflicts, retry snapshots and budgets,
-workspace isolation and host/origin refusal against the named tests. Return APPROVE, FIX-FIRST or REJECT
+native handler registration and App/Client routing; retained tests cover Python compilation against
+the daemon, persistence/conflicts, retry budgets and host/origin refusal. Return APPROVE, FIX-FIRST or REJECT
 with evidence; fix findings and repeat against a new freeze.
 
 ## Failure handling

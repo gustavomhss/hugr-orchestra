@@ -167,6 +167,7 @@ it.instance(
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
+      const callbackEntered = yield* Deferred.make<void>()
       const entered = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
       const pending = yield* f.tool
@@ -174,6 +175,10 @@ it.instance(
           { ...f.args, fail: true },
           {
             ...f.context,
+            ask: (request) => Effect.gen(function* () {
+              yield* f.context.ask(request)
+              yield* Deferred.succeed(callbackEntered, undefined)
+            }),
             metadata: (input) => Effect.gen(function* () {
               yield* Deferred.succeed(entered, undefined)
               yield* Deferred.await(release)
@@ -182,6 +187,10 @@ it.instance(
           },
         )
         .pipe(Effect.exit, Effect.forkChild)
+      // Bound real invocation readiness separately; this checks ordering, not a two-second startup SLO.
+      // The plugin's bridged ask marks callback readiness without replacing binding or safety work.
+      yield* awaitWithTimeout(Deferred.await(callbackEntered), "plugin callback never reached its bridged ask", "10 seconds")
+      expect(f.asks).toHaveLength(1)
       yield* awaitWithTimeout(Deferred.await(entered), "metadata persistence never entered")
       expect(pending.pollUnsafe()).toBeUndefined()
       expect((yield* f.sessions.get(f.child.id)).metadata?.receipt).toBeUndefined()
@@ -193,6 +202,7 @@ it.instance(
       expect((yield* f.sessions.get(f.child.id)).metadata).toMatchObject({ receipt: "before-failure" })
     }),
   options,
+  30000,
 )
 
 it.instance(

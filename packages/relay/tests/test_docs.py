@@ -1,6 +1,7 @@
 """Structural doc guard: known-good corpus, named defects and recursive hash reach.
 
-These tests establish structural discrimination, not semantic freshness or reviewer independence.
+These tests establish structural discrimination and narrow native handler/source correspondence,
+not general semantic freshness or reviewer independence.
 """
 import importlib.util
 import json
@@ -236,6 +237,34 @@ def test_index_detects_nested_skill_drift(corpus):
 
 def test_repository_structure_and_real_source_coverage():
     assert guard.check(ROOT) == []
+
+
+def test_current_authoring_routes():
+    """Check current routing paths and today's export spelling, not arbitrary TypeScript semantics."""
+    text = (ROOT / "docs/authoring-api.md").read_text(encoding="utf-8")
+    begin, end = "<!-- native-authoring-handlers:begin -->", "<!-- native-authoring-handlers:end -->"
+    assert text.count(begin) == text.count(end) == 1, "authoring routing delimiters missing/duplicated"
+    section = text.split(begin)[1].split(end)[0]
+    assert text.index(begin) < text.index(end), "authoring routing delimiters reversed"
+    tokens = guard.MarkdownIt("commonmark").enable("table").parse(section)
+    assert sum(t.type == "table_open" for t in tokens) == 1, "authoring routing table missing/duplicated"
+    codes = [c.content for t in tokens for c in t.children or [] if c.type == "code_inline"]
+    assert len(codes) == 6, "authoring routing table must name all three handler/source pairs"
+    host = ROOT.parents[1]
+    registered = (host / "packages/server/src/handlers.ts").read_text(encoding="utf-8")
+    for symbol, source in zip(codes[::2], codes[1::2]):
+        assert source.startswith("packages/server/src/handlers/"), f"non-native authoring source: {source}"
+        assert ".." not in Path(source).parts, f"authoring source traversal: {source}"
+        exported = (host / source).read_text(encoding="utf-8")
+        assert f"export const {symbol} = HttpApiBuilder.group(" in exported, f"authoring export missing: {symbol} in {source}"
+        assert f"  {symbol}," in registered, f"authoring handler not registered: {symbol}"
+    assert len(set(codes[::2])) == 3, "authoring handler repeated"
+    for source in ("SPEC.md", "PRODUCT.md", "README.md", "docs/authoring-api.md",
+                   "docs/skills/relay-authoring/SKILL.md", "docs/skills/relay-integration/SKILL.md"):
+        tokens = guard.MD.parse((ROOT / source).read_text(encoding="utf-8"))
+        code = [t.content for t in tokens if t.type in ("fence", "code_block")]
+        code.extend(c.content for t in tokens for c in t.children or [] if c.type == "code_inline")
+        assert not any("relay-api" in c or "relay_authoring.cli" in c for c in code), f"retired authoring launcher advertised: {source}"
 
 
 def test_real_catalog_row_removal_is_detected(tmp_path):

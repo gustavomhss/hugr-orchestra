@@ -2,14 +2,17 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import path from "path"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import type { PromptContext } from "@orchestra/schema/prompt-context"
+import { PromptHost } from "./prompt-host"
+import { EventV2 } from "@orchestra/core/event"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
-import { WriteRoots } from "@/maestro/write-roots"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
 import { InstanceStore } from "@/project/instance-store"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Git } from "@/git"
-import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
 import { MessageV2 } from "./message-v2"
 import { SessionRevert } from "./revert"
@@ -22,7 +25,6 @@ export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
-import { RequestSource } from "@/continuity/request-source"
 import { PromptContinuity } from "./prompt-continuity"
 import { ClaudeCode } from "@/claude-code/engine"
 import { commandSource } from "@/continuity/alias"
@@ -39,7 +41,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import * as Stream from "effect/Stream"
 import { Command } from "../command"
-import { pathToFileURL, fileURLToPath } from "url"
+import { fileURLToPath } from "url"
 import { Config } from "@/config/config"
 import { ConfigMarkdown } from "@/config/markdown"
 import { SessionSummary } from "./summary"
@@ -57,9 +59,9 @@ import { Truncate } from "@/tool/truncate"
 import { Image } from "@/image/image"
 import { decodeDataUrl } from "@/util/data-url"
 import { Process } from "@/util/process"
-import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
+import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
-import { TaskTool, type TaskPromptOps } from "@/tool/task"
+import { TaskTool } from "@/tool/task"
 import { PromptGuard } from "./prompt-guard"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -72,6 +74,10 @@ import { SessionTable } from "@orchestra/core/session/sql"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@orchestra/llm"
+import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
+import { SessionMessage } from "@orchestra/schema/session-message"
+import { TaskPromptOperations } from "./task-prompt-ops"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -109,10 +115,10 @@ function isOrphanedInterruptedTool(part: SessionV1.ToolPart) {
 
 export interface Interface {
   readonly cancel: (sessionID: SessionID) => Effect.Effect<void>
-  readonly prompt: (input: PromptInput) => Effect.Effect<SessionV1.WithParts, Image.Error>
+  readonly prompt: (input: PromptInput) => Effect.Effect<SessionV1.WithParts, Image.Error | PromptAdmission.Conflict | ToolSafety.Denied>
   readonly loop: (input: LoopInput) => Effect.Effect<SessionV1.WithParts>
   readonly shell: (input: ShellInput) => Effect.Effect<SessionV1.WithParts, Session.BusyError>
-  readonly command: (input: CommandInput) => Effect.Effect<SessionV1.WithParts, Image.Error>
+  readonly command: (input: CommandInput) => Effect.Effect<SessionV1.WithParts, Image.Error | PromptAdmission.Conflict | ToolSafety.Denied>
   readonly resolvePromptParts: (template: string) => Effect.Effect<PromptInput["parts"]>
 }
 
@@ -152,53 +158,12 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const nativeHost = yield* ArsenalBindings.make
-    const ops = Effect.fn("SessionPrompt.ops")(function* () {
-      return {
-        cancel: (sessionID: SessionID) => cancel(sessionID),
-        resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input, options) => nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
-      } satisfies TaskPromptOps
-    })
-
-    const cancel = Effect.fn("SessionPrompt.cancel")(function* (sessionID: SessionID) {
-      yield* Effect.logInfo("cancel", { "session.id": sessionID })
-      yield* state.cancel(sessionID)
-    })
-
-    const resolvePromptParts = Effect.fn("SessionPrompt.resolvePromptParts")(function* (template: string) {
-      const ctx = yield* InstanceState.context
-      const parts: Types.DeepMutable<PromptInput["parts"]> = [{ type: "text", text: template }]
-      const files = ConfigMarkdown.files(template)
-      const seen = new Set<string>()
-      yield* Effect.forEach(
-        files,
-        Effect.fnUntraced(function* (match) {
-          const name = match[1]
-          if (!name) return
-          if (seen.has(name)) return
-          seen.add(name)
-
-          const filepath = name.startsWith("~/")
-            ? path.join(os.homedir(), name.slice(2))
-            : path.resolve(ctx.worktree, name)
-
-          const info = yield* fsys.stat(filepath).pipe(Effect.option)
-          if (Option.isNone(info)) {
-            const found = yield* agents.get(name)
-            if (found) parts.push({ type: "agent", name: found.name })
-            return
-          }
-          const stat = info.value
-          parts.push({
-            type: "file",
-            url: pathToFileURL(filepath).href,
-            filename: name,
-            mime: stat.type === "Directory" ? "application/x-directory" : "text/plain",
-          })
-        }),
-        { concurrency: "unbounded", discard: true },
-      )
-      return parts
+    const taskPrompts = TaskPromptOperations.make({
+      fs: fsys,
+      agents,
+      state,
+      nativeHost,
+      prompt: (input, options) => prompt(input, options),
     })
 
     const title = Effect.fn("SessionPrompt.ensureTitle")(function* (input: {
@@ -274,7 +239,7 @@ const layer = Layer.effect(
     }) {
       const { task, model, lastUser, sessionID, session, msgs } = input
       const ctx = yield* InstanceState.context
-      const promptOps = yield* ops()
+      const promptOps = yield* taskPrompts.ops()
       const { task: taskTool } = yield* registry.named()
       const taskModel = task.model ? yield* getModel(task.model.providerID, task.model.modelID, sessionID) : model
       const assistantMessage: SessionV1.Assistant = yield* sessions.updateMessage({
@@ -624,7 +589,7 @@ const layer = Layer.effect(
       return yield* Effect.die(err)
     })
 
-    const currentModel = Effect.fnUntraced(function* (sessionID: SessionID) {
+    const currentModel = Effect.fnUntraced(function* (sessionID: SessionID, history?: SessionV1.WithParts[]) {
       const current = yield* database.db
         .select({ model: SessionTable.model })
         .from(SessionTable)
@@ -638,14 +603,18 @@ const layer = Layer.effect(
           ...(current.model.variant && current.model.variant !== "default" ? { variant: current.model.variant } : {}),
         }
       }
-      const match = yield* sessions
-        .findMessage(sessionID, (m) => m.info.role === "user" && !!m.info.model)
-        .pipe(Effect.orDie)
+      const match = history === undefined
+        ? yield* sessions.findMessage(sessionID, (m) => m.info.role === "user" && !!m.info.model).pipe(Effect.orDie)
+        : Option.fromUndefinedOr(history.findLast((m) => m.info.role === "user" && !!m.info.model))
       if (Option.isSome(match) && match.value.info.role === "user") return match.value.info.model
       return yield* provider.defaultModel().pipe(Effect.orDie)
     })
 
-    const createUserMessage = Effect.fn("SessionPrompt.createUserMessage")(function* (input: PromptInput) {
+    const createUserMessage = Effect.fn("SessionPrompt.createUserMessage")(function* (
+      input: PromptInput & { messageID: MessageID },
+      promptContext: PromptContext.Info | undefined,
+      history?: SessionV1.WithParts[],
+    ) {
       const agentName = input.agent
       const ag = agentName ? yield* agents.get(agentName) : yield* agents.defaultInfo()
       if (!ag) {
@@ -656,7 +625,7 @@ const layer = Layer.effect(
         throw error
       }
 
-      const model = input.model ?? ag.model ?? (yield* currentModel(input.sessionID))
+      const model = input.model ?? ag.model ?? (yield* currentModel(input.sessionID, history))
       const same = ag.model && model.providerID === ag.model.providerID && model.modelID === ag.model.modelID
       const full =
         !input.variant && ag.variant && same
@@ -667,7 +636,7 @@ const layer = Layer.effect(
       const variant = input.variant ?? (ag.variant && full?.variants?.[ag.variant] ? ag.variant : undefined)
 
       const info: SessionV1.User = {
-        id: input.messageID ?? MessageID.ascending(),
+        id: input.messageID,
         role: "user",
         sessionID: input.sessionID,
         time: { created: Date.now() },
@@ -683,25 +652,8 @@ const layer = Layer.effect(
       }
 
       const current = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
-      if (
-        current.agent !== info.agent ||
-        current.model?.providerID !== info.model.providerID ||
-        current.model?.id !== info.model.modelID ||
-        (current.model?.variant === "default" ? undefined : current.model?.variant) !== info.model.variant
-      ) {
-        yield* sessions.setAgentModel({
-          sessionID: input.sessionID,
-          agent: info.agent,
-          model: {
-            id: info.model.modelID,
-            providerID: info.model.providerID,
-            variant: info.model.variant ?? "default",
-          },
-          time: info.time.created,
-        })
-      }
 
-      yield* Effect.addFinalizer(() => instruction.clear(info.id))
+      yield* Effect.addFinalizer(() => instruction.clear(input.messageID))
 
       type Draft<T> = T extends SessionV1.Part ? Omit<T, "id"> & { id?: string } : never
       const assign = (part: Draft<SessionV1.Part>): SessionV1.Part => ({
@@ -1011,7 +963,7 @@ const layer = Layer.effect(
         Effect.map((x) => x.flat().map(assign)),
       )
 
-      yield* plugin.trigger(
+      const edited = yield* plugin.trigger(
         "chat.message",
         {
           sessionID: input.sessionID,
@@ -1023,7 +975,11 @@ const layer = Layer.effect(
         { message: info, parts: resolvedParts },
       )
 
-      const parts = yield* Effect.forEach(resolvedParts, (part) =>
+      const protectedInfo = PromptHost.protectUser(input, edited.message, promptContext)
+
+      const parts = yield* Effect.forEach(edited.parts.map((part) => ({
+        ...part, sessionID: input.sessionID, messageID: input.messageID,
+      })), (part) =>
         part.type === "file" && part.mime.startsWith("image/")
           ? image.normalize(part).pipe(
               Effect.catchIf(
@@ -1034,7 +990,7 @@ const layer = Layer.effect(
           : Effect.succeed(part),
       )
 
-      const parsed = decodeMessageInfo(info, { errors: "all", propertyOrder: "original" })
+      const parsed = decodeMessageInfo(protectedInfo, { errors: "all", propertyOrder: "original" })
       if (Exit.isFailure(parsed)) {
         yield* Effect.logError("invalid user message before save", {
           sessionID: input.sessionID,
@@ -1058,32 +1014,11 @@ const layer = Layer.effect(
         })
       }
 
-      yield* continuity.advance(input.sessionID)
-      yield* sessions.updateMessage(info)
-      for (const part of parts) yield* sessions.updatePart(part)
-
-      return { info, parts }
+      return { info: protectedInfo, parts }
     }, Effect.scoped)
 
-    const prompt: (input: PromptInput) => Effect.Effect<SessionV1.WithParts, Image.Error> = Effect.fn(
-      "SessionPrompt.prompt",
-    )(function* (input: PromptInput) {
-      const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
-      if (session.revert) yield* continuity.invalidate(input.sessionID)
-      yield* revert.cleanup(session)
-      const message = yield* createUserMessage(input)
-      yield* sessions.touch(input.sessionID)
-
-      const permissions = Object.entries(input.tools ?? {}).map(
-        ([t, enabled]): PermissionV1.Rule => ({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" }),
-      )
-      if (permissions.length > 0) {
-        session.permission = WriteRoots.keep(session.permission, permissions)
-        yield* sessions.setPermission({ sessionID: session.id, permission: session.permission })
-      }
-
-      if (input.noReply === true) return message
-      return yield* loop({ sessionID: input.sessionID })
+    const prompt: TaskPromptOperations.Prompt = yield* PromptHost.make({
+      sessions, continuity, schema: PromptInput, build: createUserMessage, loop: (input) => loop(input),
     })
 
     const lastAssistant = Effect.fnUntraced(function* (sessionID: SessionID) {
@@ -1108,7 +1043,18 @@ const layer = Layer.effect(
             Effect.provideService(Database.Service, database),
           )
 
-          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest, sourceHistory } = yield* PromptContinuity.select(msgs, sessions, sessionID)
+          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest, sourceHistory } =
+            yield* PromptContinuity.select(msgs, sessions, sessionID)
+          const workflow = yield* RelayWorkflowSession.current(sessionID).pipe(
+            Effect.provideService(Database.Service, database), Effect.orDie,
+          )
+          if (workflow?.view.pending) {
+            const next = yield* RelayWorkflowSession.reconcile(workflow).pipe(Effect.orDie)
+            if (!next) break
+            continue
+          }
+          if (workflow?.view.state === "complete") break
+
           if (!lastUser) break
           const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
@@ -1124,10 +1070,12 @@ const layer = Layer.effect(
             ) ?? false
 
           if (
+            !workflow &&
             lastAssistant?.finish &&
             !["tool-calls", "unknown"].includes(lastAssistant.finish) &&
             !hasToolCalls &&
-            lastAssistant.parentID === lastUser.id && (logicalUser?.id === lastUser.id || !logicalUser || logicalUser.time.created <= lastAssistant.time.created)
+            lastAssistant.parentID === lastUser.id &&
+            (logicalUser?.id === lastUser.id || !logicalUser || logicalUser.time.created <= lastAssistant.time.created)
           ) {
             const orphan = lastAssistantMsg?.parts.find(
               (part): part is SessionV1.ToolPart => part.type === "tool" && isOrphanedInterruptedTool(part),
@@ -1145,7 +1093,9 @@ const layer = Layer.effect(
             break
           }
 
-          if (yield* claudeCode.turn({ sessionID, user: lastUser })) continue
+          if (workflow && (yield* agents.get(lastUser.agent))?.engine === "claude-code")
+            return yield* Effect.die(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED" }))
+          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser }))) continue
           step++
           if (step === 1)
             yield* title({
@@ -1191,9 +1141,7 @@ const layer = Layer.effect(
           const isLastStep = step >= (agent.steps ?? Infinity)
           const msg = PromptContinuity.assistant(lastUser, agent, model, sessionID, ctx.directory, ctx.worktree)
           const allocated = { value: false }
-
           const finalizeInterruptedAssistant = Effect.suspend(() => PromptContinuity.interrupted(msg, allocated.value, sessions))
-
           const proxy = yield* PromptContinuity.proxy(msg)
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
@@ -1206,7 +1154,7 @@ const layer = Layer.effect(
               model,
               processor: proxy.processor,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: taskPrompts.ops })
 
             const recall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
@@ -1229,11 +1177,12 @@ const layer = Layer.effect(
             ])
             const format = lastUser.format ?? { type: "text" as const }
             const system = [...env, ...instructions, ...(mcpInstructions ? [mcpInstructions] : []), ...(skills ? [skills] : [])]
+            const workflowPrompt = workflow?.view.instructions ? [workflow.view.instructions] : []
             const structuredPrompt = format.type === "json_schema" ? [STRUCTURED_OUTPUT_SYSTEM_PROMPT] : []
             const reminders = isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []
             // What this caller sends besides memory: admission reuses a catch-up paid for a superseded caller only when it is identical.
             const context = yield* PromptContinuity.identity({ agent, model, user: lastUser, permission: session.permission,
-              system: [...system, ...structuredPrompt], reminders, tools })
+              system: [...system, ...workflowPrompt, ...structuredPrompt], reminders, tools })
             const admitted = yield* continuity.admit({ sessionID, messages: msgs, originalRequest, expectedUserID: lastUser.id, model, context,
               canRecall: model.capabilities.toolcall && lastUser.tools?.context_recall !== false &&
                 Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny" }).pipe(Effect.result)
@@ -1264,7 +1213,7 @@ const layer = Layer.effect(
               permission: session.permission,
               sessionID,
               parentSessionID: session.parentID,
-              system: [...system, ...prepared.system, ...structuredPrompt],
+              system: [...system, ...prepared.system, ...workflowPrompt, ...structuredPrompt],
               messages: [...modelMsgs, ...reminders],
               tools,
               model,
@@ -1273,12 +1222,15 @@ const layer = Layer.effect(
             const checked = yield* PromptContinuity.check(streamInput, sessions, llm)
             if (checked.kind === "stale") { step--; return "continue" }
             if (checked.kind === "failed") {
-              yield* PromptContinuity.fault(msg, checked.error, sessions, (error) => events.publish(Session.Event.Error, { sessionID, error }))
+              yield* PromptContinuity.fault(msg, checked.error, sessions,
+                (error) => events.publish(Session.Event.Error, { sessionID, error }))
               return "break"
             }
+            // Only an admitted outgoing plan may allocate a durable assistant or snapshot processor.
             yield* sessions.updateMessage(msg)
             allocated.value = true
-            const handle = yield* processor.create({ assistantMessage: msg, sessionID, model }).pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
+            const handle = yield* processor.create({ assistantMessage: msg, sessionID, model })
+              .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
             yield* proxy.bind(handle)
             const planned = { ...streamInput, prepared: checked.plan }
             yield* continuity.observe({
@@ -1289,6 +1241,21 @@ const layer = Layer.effect(
               responseMessageID: handle.message.id,
             })
             const result = yield* handle.process(planned)
+
+            // The existing serialized loop owns this provider/tool-settle boundary. Continuation reloads history at
+            // the top of that loop; a pure resume never grades a historical assistant again.
+            if (workflow) {
+              const settled = yield* MessageV2.get({ sessionID, messageID: handle.message.id }).pipe(
+                Effect.provideService(Database.Service, database), Effect.orDie,
+              )
+              const next = yield* RelayWorkflowSession.settle({ current: workflow,
+                assistantMessageID: SessionMessage.ID.make(handle.message.id),
+                succeeded: !handle.message.error && !!handle.message.finish &&
+                  !["unknown", "error", "content-filter"].includes(handle.message.finish) &&
+                  settled.parts.every((part) => part.type !== "tool" || part.state.status === "completed"),
+              }).pipe(Effect.orDie)
+              return next ? "continue" as const : "break" as const
+            }
 
             if (structured !== undefined) {
               handle.message.structured = structured
@@ -1463,7 +1430,7 @@ const layer = Layer.effect(
       }
 
       const { invocation, source } = commandSource(input.command, input.arguments)
-      const templateParts = (yield* resolvePromptParts(template)).map((part) =>
+      const templateParts = (yield* taskPrompts.resolvePromptParts(template)).map((part) =>
         part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
@@ -1518,12 +1485,12 @@ const layer = Layer.effect(
     })
 
     return Service.of({
-      cancel,
+      cancel: taskPrompts.cancel,
       prompt: (input) => nativeHost.withSession(input.sessionID, prompt(input)),
       loop: (input) => nativeHost.withSession(input.sessionID, loop(input)),
       shell: (input) => nativeHost.withSession(input.sessionID, shell(input)),
       command: (input) => nativeHost.withSession(input.sessionID, command(input)),
-      resolvePromptParts,
+      resolvePromptParts: taskPrompts.resolvePromptParts,
     })
   }),
 )
@@ -1634,6 +1601,8 @@ export const node = LayerNode.make({
     SystemPrompt.node,
     LLM.node,
     EventV2Bridge.node,
+    // ToolSafety's durable hook recorder captures the Core service, not the compatibility bridge tag.
+    EventV2.node,
     RuntimeFlags.node,
     Database.node,
     AppProcess.node,

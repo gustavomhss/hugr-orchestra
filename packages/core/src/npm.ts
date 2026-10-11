@@ -7,11 +7,13 @@ import { NodeFileSystem } from "@effect/platform-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { EffectFlock } from "./util/effect-flock"
+import { Flock } from "./util/flock"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem } from "./effect/app-node-platform"
 import { LayerNode } from "./effect/layer-node"
 import { makeRuntime } from "./effect/runtime"
 import { NpmConfig } from "./npm-config"
+import { PluginSdkPackage } from "./plugin/sdk-package"
 
 export class InstallFailedError extends Schema.TaggedErrorClass<InstallFailedError>()("NpmInstallFailedError", {
   add: Schema.Array(Schema.String).pipe(Schema.optional),
@@ -25,7 +27,7 @@ export interface EntryPoint {
 }
 
 export interface Interface {
-  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | EffectFlock.LockError>
+  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | EffectFlock.LockError>
   readonly install: (
     dir: string,
     input?: {
@@ -34,7 +36,7 @@ export interface Interface {
         version?: string
       }[]
     },
-  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError>
+  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
   readonly which: (pkg: string, bin?: string) => Effect.Effect<string | undefined>
 }
 
@@ -75,38 +77,84 @@ const layer = Layer.effect(
     const afs = yield* FSUtil.Service
     const global = yield* Global.Service
     const fs = yield* FileSystem.FileSystem
-    const flock = yield* EffectFlock.Service
     const directory = (pkg: string) => path.join(global.cache, "packages", sanitize(pkg))
-    const reify = (input: { dir: string; add?: string[] }) =>
+    const validate = (dir: string, add: string[]) => Effect.try({
+      try: () => add.forEach((specifier) => PluginSdkPackage.requestSpec(specifier)),
+      catch: (cause) => PluginSdkPackage.versionFailure(cause) ?? new InstallFailedError({ cause, add, dir }),
+    })
+    const reify = (input: { dir: string; add?: string[]; inspect?: boolean }) =>
       Effect.gen(function* () {
-        yield* flock.acquire(`npm-install:${input.dir}`)
-        const { Arborist } = yield* Effect.promise(() => import("@npmcli/arborist"))
         const add = input.add ?? []
-        const npmOptions = yield* NpmConfig.load(input.dir)
-        const arborist = new Arborist({
-          ...npmOptions,
-          path: input.dir,
-          binLinks: true,
-          progress: false,
-          savePrefix: "",
-          ignoreScripts: true,
-        })
-        return yield* Effect.tryPromise({
-          try: () =>
-            arborist.reify({
-              ...npmOptions,
-              add,
-              save: true,
-              saveType: "prod",
-            }),
-          catch: (cause) =>
-            new InstallFailedError({
-              cause,
-              add,
-              dir: input.dir,
-            }),
-        }) as Effect.Effect<ArboristTree, InstallFailedError>
+        yield* validate(input.dir, add)
+        yield* Effect.acquireRelease(
+          Effect.tryPromise({
+            try: async (signal) => {
+              const lease = await Flock.acquire(`npm-install:${input.dir}`, { dir: path.join(global.state, "locks"), signal })
+              // An abort racing the final mkdir must not orphan a late lease.
+              if (!signal.aborted) return lease
+              await lease.release()
+              throw signal.reason
+            },
+            catch: (cause) => new InstallFailedError({ cause, add, dir: input.dir }),
+          }).pipe(Effect.interruptible),
+          (lease) => Effect.promise(() => lease.release()),
+        )
+        // Arborist/bridge filesystem promises do not cancel on Effect interruption.
+        // Keep their lock and listener alive until they settle; only this acquired
+        // critical section is masked, not the caller's outer installation effect.
+        return yield* Effect.gen(function* () {
+          const { Arborist } = yield* Effect.promise(() => import("@npmcli/arborist"))
+          const { PluginSdkRegistry } = yield* Effect.promise(() => import("./plugin/sdk-registry"))
+          const { PluginSdkReconcile } = yield* Effect.promise(() => import("./plugin/sdk-reconcile"))
+          const sdk = yield* Effect.acquireRelease(Effect.promise(() => PluginSdkRegistry.open()), (sdk) => Effect.promise(() => sdk.close()))
+          const npmOptions = yield* NpmConfig.load(input.dir)
+          yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
+            Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
+          )
+          const options = {
+            ...npmOptions,
+            path: input.dir,
+            binLinks: true,
+            progress: false,
+            savePrefix: "",
+            ignoreScripts: true,
+          }
+          // The installed runtime accepts its checked LRU SPI; published pacote
+          // declarations incorrectly restrict this constructor option to Map.
+          Object.assign(options, { packumentCache: sdk.packumentCache })
+          const arborist = new Arborist(options)
+          return yield* Effect.tryPromise({
+            try: async () => {
+              const actual = await arborist.loadActual()
+              const virtual = await arborist.loadVirtual().catch((error: unknown) => {
+                if (error && typeof error === "object" && "code" in error && error.code === "ENOLOCK") return
+                throw error
+              })
+              if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, global.cache)
+              await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, global.cache)
+              if (input.inspect) return actual
+              const options = {
+                ...npmOptions,
+                add,
+                save: true,
+                saveType: "prod" as const,
+                packumentCache: sdk.packumentCache,
+              }
+              const tree = await arborist.reify(options)
+              await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, global.cache)
+              return tree
+            },
+            catch: (cause) =>
+              PluginSdkPackage.versionFailure(cause) ??
+              new InstallFailedError({
+                cause,
+                add,
+                dir: input.dir,
+              }),
+          }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
+        }).pipe(Effect.uninterruptible)
       }).pipe(
+        Effect.scoped,
         Effect.withSpan("Npm.reify", {
           attributes: input,
         }),
@@ -123,6 +171,7 @@ const layer = Layer.effect(
       })()
 
       if (yield* afs.existsSafe(path.join(dir, "node_modules", name))) {
+        yield* reify({ dir, add: [pkg], inspect: true })
         return resolveEntryPoint(name, path.join(dir, "node_modules", name))
       }
 
@@ -137,13 +186,15 @@ const layer = Layer.effect(
     }, Effect.scoped)
 
     const install: Interface["install"] = Effect.fn("Npm.install")(function* (dir, input) {
+      const add = input?.add.map((pkg) => [pkg.name, pkg.version].filter(Boolean).join("@")) ?? []
+      yield* validate(dir, add)
       const canWrite = yield* afs.access(dir, { writable: true }).pipe(
         Effect.as(true),
         Effect.orElseSucceed(() => false),
       )
       if (!canWrite) return
 
-      const add = input?.add.map((pkg) => [pkg.name, pkg.version].filter(Boolean).join("@")) ?? []
+      if (yield* afs.existsSafe(path.join(dir, "node_modules"))) yield* reify({ dir, add, inspect: true })
       if (
         yield* Effect.gen(function* () {
           const nodeModulesExists = yield* afs.existsSafe(path.join(dir, "node_modules"))
@@ -177,6 +228,15 @@ const layer = Layer.effect(
           ...Object.keys(root?.peerDependencies || {}),
           ...Object.keys(root?.optionalDependencies || {}),
         ])
+
+        if (add.some((specifier) => {
+          if (!PluginSdkPackage.requestSpec(specifier)) return false
+          const parsed = npa(specifier)
+          return root?.dependencies?.[parsed.name ?? PluginSdkPackage.manifest.name] !== parsed.rawSpec
+        })) {
+          yield* reify({ dir, add })
+          return
+        }
 
         for (const name of declared) {
           if (!locked.has(name)) {

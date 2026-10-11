@@ -1,11 +1,9 @@
 import { createSignal, For, type JSX, Show } from "solid-js"
-import { RelayError, type RelayDocument } from "./client"
-import type { RelayRun } from "./runs"
-import { checkParams } from "./format"
-import { checkCount, type Flow, flowFromDocument, readChecklist, retryBudget, steps } from "./graph"
+import type { RelayDocument } from "./client"
+import { checkCount, type Flow, retryBudget, steps } from "./graph"
 import { phaseNames } from "./parts"
 import type { RelaySource } from "./source"
-import { Ic, RelayDialog, useRelayCopy } from "./ui"
+import { RelayDialog, useRelayCopy } from "./ui"
 
 export const failure = (error: unknown) => (error instanceof Error && error.message ? error.message : String(error))
 
@@ -129,102 +127,6 @@ export function PublishDialog(props: {
   )
 }
 
-export function RunDialog(props: {
-  document: RelayDocument
-  source: RelaySource
-  onClose: () => void
-  onStarted: (run: RelayRun) => void
-}) {
-  const copy = useRelayCopy()
-  const action = createAction()
-  const [values, setValues] = createSignal<Record<string, string>>({})
-  // Parameters come from the checks of the version that runs (the published one the view carries), not the draft.
-  const flow = () => flowFromDocument(props.document.activeVersion ?? props.document, "workflow")
-  const params = () =>
-    checkParams(
-      steps(flow()).flatMap((node) =>
-        readChecklist(node).controls.flatMap((control) => (typeof control.cmd === "string" ? [control.cmd] : [])),
-      ),
-    )
-  const ahead = () => props.document.activeVersionId !== props.document.versionId
-  const start = () =>
-    action.run(async () => {
-      const version = props.document.activeVersionId
-      if (!version) throw new RelayError(409, copy.t("orchestra.workflows.run.publishFirst"))
-      const entries = Object.entries(values()).filter(([, value]) => value.trim())
-      props.onStarted(
-        await props.source.runClient.start({
-          documentID: props.document.id,
-          version,
-          params: Object.fromEntries(entries),
-        }),
-      )
-    })
-  return (
-    <RelayDialog
-      title={copy.t("orchestra.workflows.run.title", { name: props.document.name })}
-      description={copy.t("orchestra.workflows.run.description", { version: props.document.publishedCounter ?? "" })}
-      onClose={props.onClose}
-      onSubmit={start}
-      foot={
-        <Foot
-          busy={action.busy()}
-          cancel={copy.t("orchestra.workflows.dialog.cancel")}
-          submit={
-            <>
-              <Ic name="play" />
-              {copy.t("orchestra.workflows.run.start")}
-            </>
-          }
-          onCancel={props.onClose}
-        />
-      }
-    >
-      <Show when={params().length}>
-        <p class="mx-note" style={{ margin: "0 0 12px" }}>
-          {copy.t("orchestra.workflows.run.params")}
-        </p>
-        <div class="mx-fields">
-          <For each={params()}>
-            {(name) => (
-              <label class="mx-field">
-                <span>
-                  <code>{name}</code>
-                </span>
-                <input
-                  name={name}
-                  value={values()[name] ?? ""}
-                  placeholder={copy.t("orchestra.workflows.run.paramDefault")}
-                  onInput={(event) => setValues({ ...values(), [name]: event.currentTarget.value })}
-                />
-              </label>
-            )}
-          </For>
-        </div>
-      </Show>
-      <Show when={ahead()}>
-        <div class="wf-alert warm">
-          <Ic name="warn" />
-          <span>
-            {copy.t("orchestra.workflows.run.ahead", {
-              draft: props.document.versionCounter,
-              live: props.document.publishedCounter ?? "",
-            })}
-          </span>
-        </div>
-      </Show>
-      <p class="mx-note" style={{ margin: 0 }}>
-        {copy.t("orchestra.workflows.run.budget", { count: retryBudget(flow()) })}
-      </p>
-      <Show when={action.error()}>
-        <p class="mx-error" role="alert" style={{ margin: "14px 0 0" }}>
-          {action.error()}
-        </p>
-      </Show>
-    </RelayDialog>
-  )
-}
-
 export function DeleteDialog(props: {
   document: RelayDocument
   kind: "workflow" | "hook"
@@ -289,7 +191,6 @@ const SHORTCUTS = [
   "wheel",
   "pan",
   "box",
-  "run",
   "help",
 ] as const
 
