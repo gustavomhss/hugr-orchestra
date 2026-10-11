@@ -8,24 +8,11 @@ import { createRequire } from "node:module"
 import { userInfo } from "node:os"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
-const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
-// W6 approved the listener-bound successor in source; current-tree runtime qualification remains separate.
-const consumerReview = { revision: "4f2156e1003978b1edd949fcde8f488b2ceaf667", status: "approved", sourceReview: "W6",
-  historicalRevision: "6d325f9356a100ea684fc9c302015557d33b1bfa", runtimeQualification: "pending" }
+// Owner-run native Archie authoring on the Claude Code engine. The host creates the archie Session directly (no Maestro
+// parent, model turn or Task call) with exact read grants and a proposal.md-only write, runs the PromptGuard pre-model
+// check, then verifies the persisted Session and the project tree before writing the report.
 const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
 const inventoryDigest = "80bdd0f9e2cb3195fbdc64ad7d1e8fb1d2e06bb55ceabcb213e28e4bed4ae465"
-const consumerPinReview = { file: "packages/orchestra/src/plugin/index.ts", previousBlob: "6588027dd666cd6d1a3dd437bec548e53622afda",
-  approvedBlob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", status: "source-approved", reviewer: "W6", runtimeQualification: "pending",
-  reason: "ListenerContext.Current binds plugin client and serverUrl to the actual listener; legacy selection is unchanged." }
-const guarded = [
-  ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
-  ["packages/orchestra/src/plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
-  ["packages/orchestra/src/plugin/openai/siwc.ts", "203e07b88371a420db664c01e7796401cbad44df"],
-  ["packages/core/src/auth/siwc.ts", "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3"],
-  // 6d325f9356a100ea684fc9c302015557d33b1bfa; keep these distinct from the historical auth guards above.
-  ["packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
-  ["packages/orchestra/src/plugin/index.ts", "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5"],
-] as const
 // Current runtime ABI observations are separate from the frozen historical packet's source/blob identities.
 const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats/index.ts", "maestro/roster.ts",
   "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "tool/task-background.ts",
@@ -45,9 +32,10 @@ const inside = (path: string, root: string) => path === root || path.startsWith(
 // Resolve the candidate package's installed Effect before any schema decoding; no root dependency assumption.
 const bootstrap = await (async () => {
   const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
-    candidate: { type: "string" }, pilot: { type: "string" }, "auth-source": { type: "string" },
-    "inventory-digest": { type: "string" }, "archie-engine": { type: "string" }, "archie-model": { type: "string" }, "parent-model": { type: "string" },
-    direct: { type: "boolean" }, model: { type: "string" }, "prepare-only": { type: "boolean" }, "preflight-only": { type: "boolean" }, run: { type: "boolean" },
+    candidate: { type: "string" }, pilot: { type: "string" },
+    "inventory-digest": { type: "string" }, "archie-engine": { type: "string" }, "archie-model": { type: "string" },
+    // Accepted no-op: direct dispatch is the only path.
+    direct: { type: "boolean" }, "prepare-only": { type: "boolean" }, "preflight-only": { type: "boolean" }, run: { type: "boolean" },
   } }).values
   requireAuthoring(args["inventory-digest"] === undefined || /^[a-f0-9]{64}$/.test(args["inventory-digest"]), "AUTHORING_INVENTORY_DIGEST_INVALID")
   const candidate = await canonical(args.candidate, true)
@@ -64,29 +52,16 @@ async function main() {
   const args = bootstrap.args
   const expectedInventoryDigest = args["inventory-digest"] ?? inventoryDigest
   requireAuthoring([args.run, args["prepare-only"], args["preflight-only"]].filter(Boolean).length <= 1, "AUTHORING_MODE_CONFLICT")
-  // Claude mode: Archie on the Claude Code engine with the machine's Claude Code login; Maestro on a free Zen model.
-  requireAuthoring(args["archie-engine"] === undefined ? args["archie-model"] === undefined && args["parent-model"] === undefined
-    : args["archie-engine"] === "claude-code" && args.model === undefined && args["auth-source"] === undefined, "AUTHORING_ENGINE_FLAGS_INVALID")
-  // Direct mode: no parent model turn exists, so there is no parent model to select.
-  requireAuthoring(!args.direct || (args["archie-engine"] === "claude-code" && args["parent-model"] === undefined), "AUTHORING_DIRECT_MODE_REQUIRES_CLAUDE_ENGINE")
-  const claude = args["archie-engine"] === "claude-code" ? { engine: "claude-code", archieModel: args["archie-model"] ?? "anthropic/claude-opus-5-5",
-    parentModel: args.direct ? null : args["parent-model"] ?? "opencode/big-pickle", credentialKind: "claude-code-keychain-oauth" } : undefined
-  const model = claude?.archieModel ?? args.model ?? "openai/gpt-6.1-sol"
-  requireAuthoring(claude ? /^anthropic\/[A-Za-z0-9._-]{1,128}$/.test(model) && (claude.parentModel === null || /^opencode\/[A-Za-z0-9._-]{1,128}$/.test(claude.parentModel))
-    : /^openai\/[A-Za-z0-9._-]{1,128}$/.test(model), "AUTHORING_MODEL_INVALID")
+  // Archie runs on the Claude Code engine with the machine's Claude Code login; no parent model turn exists.
+  requireAuthoring(args["archie-engine"] === "claude-code", "AUTHORING_ENGINE_FLAGS_INVALID")
+  const model = args["archie-model"]
+  requireAuthoring(model && /^anthropic\/[A-Za-z0-9._-]{1,128}$/.test(model), "AUTHORING_MODEL_INVALID")
+  const claude = { engine: "claude-code", archieModel: model, credentialKind: "claude-code-keychain-oauth" }
   const candidate = bootstrap.candidate
   const pilot = await canonical(args.pilot, true)
   const project = await canonical(join(pilot, "project"), true)
   requireAuthoring(!inside(pilot, candidate) && !inside(candidate, pilot), "AUTHORING_CANDIDATE_FIXTURE_OVERLAP")
-  // The legacy Codex auth source and its consumer pins do not participate in Claude mode.
-  const source = claude ? undefined : await canonical(args["auth-source"], false)
-  requireAuthoring(claude || source === selectedAuth, "AUTHORING_OWNER_SELECTED_AUTH_SOURCE_REQUIRED")
-  const sourceHashes = claude ? [] : await Promise.all(guarded.map(async ([file, expected]) => {
-    const bytes = await read(await canonical(join(candidate, file), false))
-    requireAuthoring(blob(bytes) === expected, "AUTHORING_AUTH_CONSUMER_PIN_MISMATCH")
-    return { file, blob: expected, sha256: sha256(bytes) }
-  }))
-  const nativeSourceHashes = await Promise.all([...sourcePaths, ...(claude ? ["claude-code/engine.ts", "claude-code/sdk.ts"] : [])].map(async (file) => ({ file,
+  const nativeSourceHashes = await Promise.all([...sourcePaths, "claude-code/engine.ts", "claude-code/sdk.ts"].map(async (file) => ({ file,
     sha256: sha256(await read(await canonical(join(candidate, "packages/orchestra/src", file), false))) })))
   const head = await gitHead(candidate)
   requireAuthoring(/^[a-f0-9]{40}$/.test(head), "AUTHORING_CANDIDATE_HEAD_INVALID")
@@ -127,39 +102,30 @@ async function main() {
   const env: Record<string, string> = Object.fromEntries(["HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "TMPDIR"].map((key) => [key, join(runtime, key.toLowerCase())]))
   await Promise.all(Object.values(env).map((path) => mkdir(path, { mode: 0o700 })))
   Object.assign(env, { ORCHESTRA_DB: join(runtime, "session.db"), ORCHESTRA_CONFIG: join(runtime, "config.json"),
-    ORCHESTRA_INHERIT_CREDENTIALS: "0", ...(claude ? {} : { ORCHESTRA_LEGACY_CODEX_READONLY: "1" }), ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
-  if (claude) {
-    // `security` finds the login Keychain through $HOME and sdk.ts names the item's account from $USER (Bun reports
-    // "unknown" without it), so ClaudeCodeSDK needs both real values. Orchestra state stays isolated (ORCHESTRA_TEST_HOME,
-    // XDG_*), Claude Code state goes to CLAUDE_CONFIG_DIR, and the empty secure-storage directory keeps sdk.ts on the
-    // unsuffixed "Claude Code-credentials" item. Side effect: "~" in permission patterns means the real home.
-    Object.assign(env, { HOME: userInfo().homedir, USER: userInfo().username, CLAUDE_CONFIG_DIR: join(runtime, "claude"), CLAUDE_SECURESTORAGE_CONFIG_DIR: "" })
-    await mkdir(env.CLAUDE_CONFIG_DIR, { mode: 0o700 })
-  }
+    ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
+  // `security` finds the login Keychain through $HOME and sdk.ts names the item's account from $USER (Bun reports
+  // "unknown" without it), so ClaudeCodeSDK needs both real values. Orchestra state stays isolated (ORCHESTRA_TEST_HOME,
+  // XDG_*), Claude Code state goes to CLAUDE_CONFIG_DIR, and the empty secure-storage directory keeps sdk.ts on the
+  // unsuffixed "Claude Code-credentials" item. Side effect: "~" in permission patterns means the real home.
+  Object.assign(env, { HOME: userInfo().homedir, USER: userInfo().username, CLAUDE_CONFIG_DIR: join(runtime, "claude"), CLAUDE_SECURESTORAGE_CONFIG_DIR: "" })
+  await mkdir(env.CLAUDE_CONFIG_DIR, { mode: 0o700 })
   const maestroConfig = { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } }
-  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify(claude?.parentModel === null
-    ? { model: claude.archieModel, default_agent: "maestro", agent: { maestro: maestroConfig, archie: { engine: claude.engine, model: claude.archieModel } } }
-    : claude
-    // Zen serves its free models with the public key; nothing secret is written.
-    ? { model: claude.parentModel, default_agent: "maestro", provider: { opencode: { options: { apiKey: "public" } } },
-      agent: { maestro: maestroConfig, archie: { engine: claude.engine, model: claude.archieModel } } }
-    : { model, default_agent: "maestro", agent: { maestro: maestroConfig } }) + "\n", { flag: "wx", mode: 0o600 })
-  // Render one exact Task string without the source file's final LF; original input hashes remain byte-exact.
+  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model: claude.archieModel, default_agent: "maestro",
+    agent: { maestro: maestroConfig, archie: { engine: claude.engine, model: claude.archieModel } } }) + "\n", { flag: "wx", mode: 0o600 })
+  // Render one exact assignment string without the source file's final LF; original input hashes remain byte-exact.
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`.trimEnd()
-  const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]), ...(claude ? { claude } : {}), ...(args.direct ? { direct: true, readPaths: inventory.map((item) => item.path), hiddenPath: join(packet, "DOMAIN-RUBRIC-PRIVATE.md") } : {}) }
-  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi,
-    ...(claude ? { ...claude, authConsumerPins: "not-applicable" } : { consumerReview, consumerPinReview }),
-    ...(args.direct ? { dispatch: "direct-archie", parentSession: null,
-      scope: "Proves native Archie authoring on the Claude Code engine. It is not a Maestro-to-Task chain: no Maestro Session, model turn, Task call or logical-task binding exists.",
-      taskSpawn: "not-used: Task.execute requires an existing Maestro assistant message (tool/task.ts MessageV2.get(ctx.messageID), role assistant); none is fabricated",
-      notApplicable: ["single-task-call", "task-request-scope", "maestro-parent-session", "parent-pre-model-guard", "parent-model", "task-db-row", "logical-task-binding"] } : {}),
+  const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]), readPaths: inventory.map((item) => item.path), hiddenPath: join(packet, "DOMAIN-RUBRIC-PRIVATE.md") }
+  const report = { schema: 1, runtime, candidate, head, project, model, nativeSourceHashes, runtimeAbi, ...claude,
+    dispatch: "direct-archie", parentSession: null,
+    scope: "Proves native Archie authoring on the Claude Code engine. It is not a Maestro-to-Task chain: no Maestro Session, model turn, Task call or logical-task binding exists.",
+    taskSpawn: "not-used: Task.execute requires an existing Maestro assistant message (tool/task.ts MessageV2.get(ctx.messageID), role assistant); none is fabricated",
+    notApplicable: ["single-task-call", "task-request-scope", "maestro-parent-session", "parent-pre-model-guard", "parent-model", "task-db-row", "logical-task-binding"],
     inventoryDigest: expectedInventoryDigest,
     inventoryDigestSelection: args["inventory-digest"] === undefined ? "historical-default" : "explicit-packet",
     packetPointer: join(packet, "DOMAIN-SOURCE.json"), packetSha256: sha256(domainBytes), runInputSha256: sha256(instructions),
     inventory: inventory.map(({ bytes, ...item }) => item), assignmentSha256: sha256(Buffer.from(assignment)), deadlineMs: deadline, stdoutBytes: 32 * 1024 * 1024, semanticJudgment: "not-performed" }
   await writeFile(join(runtime, "prepared.json"), JSON.stringify(report) + "\n", { flag: "wx", mode: 0o600 })
-  if (!args.run && !args["preflight-only"]) { console.log(JSON.stringify({ code: "AUTHORING_PREPARED", runtime, head, ...(claude ?? { consumerReview }) })); return }
-  requireAuthoring(claude || consumerReview.status === "approved", "AUTHORING_REVIEWED_CONSUMER_SUCCESSOR_REQUIRED")
+  if (!args.run && !args["preflight-only"]) { console.log(JSON.stringify({ code: "AUTHORING_PREPARED", runtime, head, dispatch: "direct-archie", ...claude })); return }
   const entry = join(runtime, "initializer.ts")
   const program = initializer(job)
   await writeFile(entry, program, { flag: "wx", mode: 0o600 })
@@ -167,30 +133,17 @@ async function main() {
     await writeFile(join(runtime, "status.txt"), "AUTHORING_INITIALIZER_PARSE_FAILED", { flag: "wx", mode: 0o600 })
     throw new AuthoringError("AUTHORING_INITIALIZER_PARSE_FAILED")
   }
-  // Pure legacy shape inspection; never call Siwc, decode JWT claims, login, refresh, or infer issued scopes.
-  const snapshot = args.run && source ? await (async () => {
-  const store = decode(Schema.Record(Schema.String, Schema.Unknown), json(Buffer.from(await read(source, true)).toString("utf8")), "AUTHORING_LEGACY_AUTH_STORE_INVALID")
-  const value = decode(Schema.Record(Schema.String, Schema.Unknown), store.openai, "AUTHORING_OPENAI_AUTH_MISSING")
-  requireAuthoring(!Object.hasOwn(value, "metadata"), "AUTHORING_LEGACY_AUTH_METADATA_MUST_BE_ABSENT")
-  const auth = decode(Schema.Struct({ type: Schema.Literal("oauth"), access: Schema.NonEmptyString, refresh: Schema.NonEmptyString,
-    expires: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)), accountId: Schema.optional(Schema.String) }), value, "AUTHORING_LEGACY_OAUTH_INVALID")
-  requireAuthoring(auth.expires > Date.now() + 15 * 60_000, "AUTHORING_LEGACY_AUTH_EXPIRED_OR_TOO_SOON")
-  const secrets = [auth.access, auth.refresh].flatMap((text) => [text, JSON.stringify(text).slice(1, -1), encodeURIComponent(text), Buffer.from(text).toString("base64")]).sort((a, b) => b.length - a.length)
-  return { content: JSON.stringify({ openai: auth }), secrets }
-  })() : { content: undefined, secrets: [] as string[] }
-  const secrets = snapshot.secrets
-  const redact = (text: string) => secrets.reduce((output, secret) => output.split(secret).join("[REDACTED]"), text)
-  // Direct mode proves proposal.md is the only project write by comparing the whole project tree around the run.
+  // Proves proposal.md is the only project write by comparing the whole project tree around the run.
   const projectTree = async () => Object.fromEntries(await Promise.all((await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: project, dot: true, onlyFiles: true }))).sort()
     .map(async (file) => [file, sha256(await read(join(project, file)))] as const)))
-  const treeBefore = args.direct && args.run ? await projectTree() : undefined
-  // Initializer derives the Task path from its real Instance. Stdin carries only this exact assignment and EOF.
-  const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH, ...(snapshot.content ? { ORCHESTRA_AUTH_CONTENT: snapshot.content } : {}) }, assignment, job.preflightOnly ? 30_000 : deadline)
+  const treeBefore = args.run ? await projectTree() : undefined
+  // Initializer derives the proposal write root from its real Instance. Stdin carries only this exact assignment and EOF.
+  const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH }, assignment, job.preflightOnly ? 30_000 : deadline)
   await writeFile(join(runtime, "launcher.json"), JSON.stringify(output.launcher) + "\n", { flag: "wx", mode: 0o600 })
   const stages = output.text.split("\n").flatMap((line) => {
     const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
     if (Option.isNone(parsed)) return []
-    const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("authoring_stage"), stage: Schema.Literals(["initializer", "spawner", "consumers", "app_runtime", "instance", "native_registry", "scope_preflight", "cli", "parent_pre_model", "child_pre_model", "direct_turn", "dispose"]), phase: Schema.Literals(["before", "after", "failed"]), timestamp: Schema.Int, code: Schema.optional(Schema.String.check(Schema.isPattern(/^(?:AUTHORING|LEGACY_CODEX)_[A-Z_]+$/))) }))(parsed.value)
+    const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("authoring_stage"), stage: Schema.Literals(["initializer", "spawner", "consumers", "app_runtime", "instance", "native_registry", "scope_preflight", "child_pre_model", "direct_turn", "dispose"]), phase: Schema.Literals(["before", "after", "failed"]), timestamp: Schema.Int, code: Schema.optional(Schema.String.check(Schema.isPattern(/^AUTHORING_[A-Z_]+$/))) }))(parsed.value)
     return Option.isSome(event) ? [event.value] : []
   })
   await writeFile(join(runtime, "stages.jsonl"), stages.map((item) => JSON.stringify(item)).join("\n") + "\n", { flag: "wx", mode: 0o600 })
@@ -204,19 +157,17 @@ async function main() {
     const header = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literals(["tool_use", "step_start", "step_finish", "text", "error", "retry"]), sessionID: Schema.String, timestamp: Schema.Number }))(parsed.value)
     return Option.isSome(header) ? [header.value] : []
   })
-  await writeFile(join(runtime, "events.jsonl"), records.map((item) => redact(JSON.stringify(item))).join("\n") + "\n", { flag: "wx", mode: 0o600 })
+  await writeFile(join(runtime, "events.jsonl"), records.map((item) => JSON.stringify(item)).join("\n") + "\n", { flag: "wx", mode: 0o600 })
   await writeFile(join(runtime, "status.txt"), output.code ?? "AUTHORING_CHILD_COMPLETED", { flag: "wx", mode: 0o600 })
-  if (output.code) await writeFile(join(runtime, "diagnostic.txt"), redact(output.stderr), { flag: "wx", mode: 0o600 })
+  if (output.code) await writeFile(join(runtime, "diagnostic.txt"), output.stderr, { flag: "wx", mode: 0o600 })
   requireAuthoring(!output.code, output.code ?? "AUTHORING_CHILD_FAILED_STDERR_WITHHELD")
   if (args["preflight-only"]) { console.log(JSON.stringify({ code: "AUTHORING_NATIVE_PREFLIGHT_COMPLETED_NO_MODEL", runtime, ...claude })); return }
   const preflight = records.filter((item) => item.type === "authoring_native_preflight")
   requireAuthoring(preflight.length === 1, "AUTHORING_NATIVE_PREFLIGHT_NOT_OBSERVED")
   requireAuthoring(preflight[0].worktree, "AUTHORING_ACTUAL_WORKTREE_NOT_OBSERVED")
   const directResults = records.filter((item) => item.type === "authoring_direct_result")
-  requireAuthoring(!args.direct || (directResults.length === 1 && directResults[0].sessionID === preflight[0].sessionID), "AUTHORING_DIRECT_RESULT_NOT_OBSERVED")
-  const evidence = args.direct
-    ? await verifyDirect(env.ORCHESTRA_DB, preflight[0].sessionID, project, model, assignment, preflight[0].worktree, candidate, directResults[0].workResult)
-    : await verifyDatabase(env.ORCHESTRA_DB, preflight[0].sessionID, project, model, assignment, preflight[0].worktree, claude?.parentModel ?? undefined)
+  requireAuthoring(directResults.length === 1 && directResults[0].sessionID === preflight[0].sessionID, "AUTHORING_DIRECT_RESULT_NOT_OBSERVED")
+  const evidence = await verifyDirect(env.ORCHESTRA_DB, preflight[0].sessionID, project, model, assignment, preflight[0].worktree, candidate, directResults[0].workResult)
   if (treeBefore) {
     const treeAfter = await projectTree()
     requireAuthoring(!Object.hasOwn(treeBefore, "proposal.md") && Object.hasOwn(treeAfter, "proposal.md") && JSON.stringify(Object.entries(treeAfter).filter(([file]) => file !== "proposal.md")) === JSON.stringify(Object.entries(treeBefore)), "AUTHORING_DIRECT_PROJECT_WRITE_OUTSIDE_PROPOSAL")
@@ -224,7 +175,7 @@ async function main() {
   const result = evidence.provenance
   const proposal = await read(await canonical(join(project, "proposal.md"), false))
   const returnedCard = Buffer.from(evidence.returnedText)
-  requireAuthoring(proposal.length > 0 && returnedCard.length > 0 && !secrets.some((secret) => Buffer.from(proposal).includes(Buffer.from(secret)) || returnedCard.includes(Buffer.from(secret))), "AUTHORING_ORIGINAL_OUTPUT_EMPTY_OR_SECRET_BEARING")
+  requireAuthoring(proposal.length > 0 && returnedCard.length > 0, "AUTHORING_ORIGINAL_OUTPUT_EMPTY")
   const returnedCardPath = join(runtime, "returned-assistant.txt")
   await writeFile(returnedCardPath, returnedCard, { flag: "wx", mode: 0o600 })
   await Promise.all(inventory.map(async (item) => requireAuthoring(sha256(await read(item.path)) === item.sha256, "AUTHORING_FROZEN_INPUT_CHANGED_DURING_RUN")))
@@ -355,15 +306,15 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
   return { text: Buffer.concat(chunks).toString("utf8"), stderr: Buffer.concat(diagnostics).toString("utf8"), code,
     launcher: { primaryPid: child.pid ?? null, ownedGroupId: state.identity?.pgid ?? null, signalGroupTarget: child.pid ?? null, groupCreation: "detached-owned-spawn", startedAt, endedAt: state.endedAt ?? null, observationAt: Date.now(), deadlineMs: budget, identity: state.identity ?? null, admittedAlive: state.admittedAlive ?? false, exitObserved: state.exitObserved, closeObserved: state.closeObserved, exitStatus: state.status ?? null, exitSignal: state.signal ?? null, primaryEsrchObserved: state.primaryGone ?? false, groupEsrchObserved: state.groupGone ?? false, failure: state.failure ?? null, cleanupFailure: state.cleanupFailure ?? null } }
 }
-function initializer(job: { candidate: string; project: string; model: string; assignment: string; preflightOnly: boolean; claude?: { archieModel: string; parentModel: string | null }; direct?: boolean; readPaths?: string[]; hiddenPath?: string }) {
-  // Adapter uses the real candidate runtime and CLI command in one owned process; restores every wrapped method.
+function initializer(job: { candidate: string; project: string; model: string; assignment: string; preflightOnly: boolean; readPaths: string[]; hiddenPath: string }) {
+  // Adapter uses the real candidate runtime in one owned process; restores the shared spawner on exit.
   return `import { createRequire } from "node:module"
 import { relative, dirname } from "node:path"
 import { realpath } from "node:fs/promises"
 import { userInfo } from "node:os"
 const job = ${JSON.stringify(job)}
 const stageState = { current: "initializer" }
-const safeCode = (error: unknown) => error instanceof Error && /^(?:AUTHORING|LEGACY_CODEX)_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_DEPENDENCY_OR_RUNTIME_FAILED"
+const safeCode = (error: unknown) => error instanceof Error && /^AUTHORING_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_DEPENDENCY_OR_RUNTIME_FAILED"
 function stage(name: string, phase: "before" | "after" | "failed", code?: string) {
   if (name !== "dispose") stageState.current = name
   console.log(JSON.stringify({ type: "authoring_stage", stage: name, phase, timestamp: Date.now(), ...(code ? { code } : {}) }))
@@ -412,10 +363,7 @@ const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/
 const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
 const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
 const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
-const { RunCommand } = await import(job.candidate + "/packages/orchestra/src/cli/cmd/run.ts")
-type TaskPromptOps = import(${JSON.stringify(job.candidate + "/packages/orchestra/src/tool/task.ts")}).TaskPromptOps
 function requireFact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
-function isOps(value: unknown): value is TaskPromptOps { return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function" && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function" }
 const shutdown = () => { void Promise.race([AppRuntime.dispose().finally(releaseSpawner), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
 process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
@@ -423,15 +371,11 @@ const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
   requireFact(actualGit === seeded.git && seeded.processes.spawn === containedSpawner.spawn && sharedSpawner.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_GIT_CONSUMER_NOT_BOUND")
   const store = yield* InstanceStore.Service
   stage("instance", "before")
-  if (job.preflightOnly && job.claude) {
+  if (job.preflightOnly) {
     // Presence only: no -w, so the item's secret is never read here; ClaudeCodeSDK reads it when Archie's turn spawns.
     const { ClaudeCodeSDK } = yield* Effect.promise(() => import(job.candidate + "/packages/orchestra/src/claude-code/sdk.ts"))
     const keychain = Bun.spawnSync(["security", "find-generic-password", "-a", process.env.USER || userInfo().username, "-s", ClaudeCodeSDK.credentialStorage(process.env, process.env.HOME ?? "").service], { env: process.env, stdout: "ignore", stderr: "ignore" })
     if (keychain.exitCode !== 0) { stage("instance", "failed", "AUTHORING_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING"); throw new Error("AUTHORING_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING") }
-  }
-  if (job.preflightOnly && !job.claude) {
-    const { validateLegacyCodexReadonlyAuth } = yield* Effect.promise(() => import(job.candidate + "/packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts"))
-    try { validateLegacyCodexReadonlyAuth() } catch (error) { stage("instance", "failed", safeCode(error)); throw error } // No fake AUTH_CONTENT or auth-file read.
   }
   const ctx = yield* store.load({ directory: job.project })
   stage("instance", "after")
@@ -445,26 +389,15 @@ const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
     const archie = yield* agents.get("archie")
     const named = yield* registry.named()
     requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.writeRoots === true && Seats.find("archie")?.profileKey === "upstream" && named.task.id === "task", "AUTHORING_NATIVE_REGISTRY_MISMATCH")
-    if (job.claude) {
-      requireFact(archie.engine === "claude-code" && archie.model?.providerID + "/" + archie.model?.modelID === job.claude.archieModel && maestro.engine === undefined, "AUTHORING_CLAUDE_ENGINE_BINDING_MISMATCH")
-    }
-    if (job.claude?.parentModel) {
-      const { Provider } = yield* Effect.promise(() => import(job.candidate + "/packages/orchestra/src/provider/provider.ts"))
-      const providers = yield* Provider.Service
-      const parsed = Provider.parseModel(job.claude.parentModel)
-      yield* providers.getModel(parsed.providerID, parsed.modelID).pipe(Effect.catch(() => Effect.die(new Error("AUTHORING_PARENT_MODEL_UNAVAILABLE"))))
-    }
+    requireFact(archie.engine === "claude-code" && archie.model?.providerID + "/" + archie.model?.modelID === job.model && maestro.engine === undefined, "AUTHORING_CLAUDE_ENGINE_BINDING_MISMATCH")
     stage("native_registry", "after")
+    // No Maestro Session exists: the host creates the archie Session below with these inherited denies.
     const denies = [{ permission: "edit", pattern: "*", action: "deny" as const }, { permission: "bash", pattern: "*", action: "deny" as const }]
-    // Direct mode has no Maestro Session: the host creates the archie Session below instead.
-    const parent = job.direct ? undefined : yield* sessions.create({ agent: "maestro", title: "ordinary-archie-authoring", permission: denies })
-    if (parent) yield* sessions.setPermission({ sessionID: parent.id, permission: denies })
-    return { agents, sessions, prompts, task: named.task, parent, denies }
+    return { agents, sessions, prompts, denies }
   }).pipe(Effect.provideService(InstanceRef, ctx))
   return { store, ctx, ...services }
 }))
-const state = { calls: 0, parentChecks: 0, childChecks: 0 }
-const taskExecute = loaded.task.execute
+const state = { childChecks: 0 }
 const realPrompt = loaded.prompts.prompt
 const writeRootBase = await realpath(loaded.ctx.worktree === "/" ? loaded.ctx.directory : loaded.ctx.worktree)
 const proposalRoot = job.project + "/proposal.md"
@@ -472,19 +405,19 @@ const dispatchPath = relative(writeRootBase, proposalRoot).split(String.fromChar
 requireFact(dispatchPath && !dispatchPath.split("/").includes(".."), "AUTHORING_DISPATCH_PATH_OUTSIDE_WORKTREE")
 const proposalPattern = relative(loaded.ctx.worktree, job.project + "/proposal.md").split(String.fromCharCode(92)).join("/")
 const contextPattern = relative(loaded.ctx.worktree, job.project + "/README.md").split(String.fromCharCode(92)).join("/")
-// Direct mode: Task needs a Maestro assistant message, so the host binds the same write root and creates the native
-// archie Session itself with the inherited denies plus the exact proposal allowance.
-const direct = job.direct ? await AppRuntime.runPromise(Effect.gen(function* () {
+// Task needs a Maestro assistant message, so the host binds the same write root and creates the native archie Session
+// itself with the inherited denies plus the exact proposal allowance.
+const direct = await AppRuntime.runPromise(Effect.gen(function* () {
   const rules = yield* WriteRoots.bind("archie", [dispatchPath], loaded.denies)
   requireFact(JSON.stringify(WriteRoots.read(rules)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_NOT_OWNER_PROPOSAL")
   // Reads are exact: deny all, then allow the project and each inventoried input; private judge files stay hidden.
   const reads = [{ permission: "read", pattern: "*", action: "deny" as const },
     { permission: "read", pattern: relative(loaded.ctx.worktree, job.project).split(String.fromCharCode(92)).join("/") + "/*", action: "allow" as const },
-    ...(job.readPaths ?? []).map((path) => ({ permission: "read", pattern: relative(loaded.ctx.worktree, path).split(String.fromCharCode(92)).join("/"), action: "allow" as const })),
-    ...[...new Set((job.readPaths ?? []).map((path) => dirname(path)))].map((dir) => ({ permission: "external_directory", pattern: dir + "/*", action: "allow" as const }))]
+    ...job.readPaths.map((path) => ({ permission: "read", pattern: relative(loaded.ctx.worktree, path).split(String.fromCharCode(92)).join("/"), action: "allow" as const })),
+    ...[...new Set(job.readPaths.map((path) => dirname(path)))].map((dir) => ({ permission: "external_directory", pattern: dir + "/*", action: "allow" as const }))]
   return yield* loaded.sessions.create({ agent: "archie", title: "direct-archie-authoring", permission: [...rules, ...reads, { permission: "edit", pattern: proposalPattern, action: "allow" as const }] })
-}).pipe(Effect.provideService(InstanceRef, loaded.ctx), Effect.provide(LayerNode.compile(filesystem)))) : undefined
-const directCheck = direct ? Effect.gen(function* () {
+}).pipe(Effect.provideService(InstanceRef, loaded.ctx), Effect.provide(LayerNode.compile(filesystem))))
+const directCheck = Effect.gen(function* () {
   stage("child_pre_model", "before")
   const archie = yield* loaded.agents.get("archie")
   const child = yield* loaded.sessions.get(direct.id)
@@ -496,10 +429,10 @@ const directCheck = direct ? Effect.gen(function* () {
   requireFact(canonicalRoot === proposalRoot && JSON.stringify(WriteRoots.read(child.permission)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_CHANGED_BEFORE_MODEL")
   requireFact(Permission.evaluate("edit", proposalPattern, archie.permission, child.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, archie.permission, child.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", archie.permission, child.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
   const readable = (path: string) => Permission.evaluate("read", relative(loaded.ctx.worktree, path).split(String.fromCharCode(92)).join("/"), archie.permission, child.permission ?? []).action === "allow"
-  requireFact((job.readPaths ?? []).length > 0 && (job.readPaths ?? []).every(readable) && job.hiddenPath && !readable(job.hiddenPath), "AUTHORING_DIRECT_READ_BOUNDARY_INVALID")
+  requireFact(job.readPaths.length > 0 && job.readPaths.every(readable) && job.hiddenPath && !readable(job.hiddenPath), "AUTHORING_DIRECT_READ_BOUNDARY_INVALID")
   state.childChecks++
   stage("child_pre_model", "after")
-}).pipe(Effect.provideService(InstanceRef, loaded.ctx)) : undefined
+}).pipe(Effect.provideService(InstanceRef, loaded.ctx))
 if (job.preflightOnly) {
   stage("scope_preflight", "before")
   await AppRuntime.runPromise(Effect.gen(function* () {
@@ -508,8 +441,8 @@ if (job.preflightOnly) {
   // AppRuntime's root surface hides FileSystem; Task provides the same platform node before WriteRoots.bind.
   }).pipe(Effect.provideService(InstanceRef, loaded.ctx), Effect.provide(LayerNode.compile(filesystem))))
   stage("scope_preflight", "after")
-  if (directCheck) await AppRuntime.runPromise(directCheck) // The exact pre-model guard, run once without a model.
-} else if (direct && directCheck) {
+  await AppRuntime.runPromise(directCheck) // The exact pre-model guard, run once without a model.
+} else {
 try {
   console.log(JSON.stringify({ type: "authoring_native_preflight", sessionID: direct.id, projectID: direct.projectID, worktree: loaded.ctx.worktree }))
   const { Provider } = await import(job.candidate + "/packages/orchestra/src/provider/provider.ts")
@@ -528,66 +461,6 @@ try {
   console.error(error instanceof Error && /^AUTHORING_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_OR_NATIVE_RUN_FAILED")
   process.exitCode = 1
 }
-} else {
-const parentCheck = Effect.gen(function* () {
-  stage("parent_pre_model", "before")
-  const maestro = yield* loaded.agents.get("maestro")
-  const archie = yield* loaded.agents.get("archie")
-  const parent = yield* loaded.sessions.get(loaded.parent.id)
-  requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && parent.agent === "maestro" && parent.directory === job.project && !parent.parentID, "AUTHORING_PRE_MODEL_IDENTITY_CHANGED")
-  requireFact(Permission.evaluate("edit", "README.md", parent.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", parent.permission ?? []).action === "deny", "AUTHORING_PARENT_SESSION_PERMISSION_CHANGED")
-  state.parentChecks++
-  stage("parent_pre_model", "after")
-}).pipe(Effect.provideService(InstanceRef, loaded.ctx))
-loaded.prompts.prompt = (request) => PromptGuard.provide(realPrompt(request), loaded.parent.id, parentCheck)
-loaded.task.execute = (params, ctx) => Effect.gen(function* () {
-  state.calls++
-  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "archie" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === JSON.stringify([dispatchPath]) && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
-  const ops = ctx.extra?.promptOps
-  requireFact(isOps(ops), "AUTHORING_REAL_TASK_PROMPT_OPS_MISSING")
-  return yield* taskExecute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
-    prompt: (request, options) => Effect.gen(function* () {
-      // Bind the inherited deny + exact allowance before prompt admission/tool selection, not after tools are built.
-      const child = yield* loaded.sessions.get(request.sessionID)
-      requireFact(child.parentID === loaded.parent.id && child.agent === "archie" && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
-      const roots = WriteRoots.read(child.permission)
-      requireFact(JSON.stringify(roots) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_NOT_OWNER_PROPOSAL")
-      yield* loaded.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []), { permission: "edit", pattern: proposalPattern, action: "allow" }] })
-      const beforeModel = Effect.gen(function* () {
-        stage("child_pre_model", "before")
-        const archie = yield* loaded.agents.get("archie")
-        const child = yield* loaded.sessions.get(request.sessionID)
-        requireFact(archie.id === "archie" && archie.native === true && archie.mode === "subagent" && (!job.claude || archie.engine === "claude-code") && Seats.find("archie")?.profileKey === "upstream" && request.agent === "archie" && child.agent === "archie" && child.parentID === loaded.parent.id && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
-        const bound = yield* loaded.sessions.get(child.id)
-        const canonicalRoot = yield* Effect.promise(() => realpath(proposalRoot).catch(async (error: NodeJS.ErrnoException) => {
-          if (error.code !== "ENOENT") throw error
-          return (await realpath(dirname(proposalRoot))) + "/proposal.md"
-        }))
-        requireFact(canonicalRoot === proposalRoot && JSON.stringify(WriteRoots.read(bound.permission)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_CHANGED_BEFORE_MODEL")
-        requireFact(Permission.evaluate("edit", proposalPattern, archie.permission, bound.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, archie.permission, bound.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
-        state.childChecks++
-        stage("child_pre_model", "after")
-      }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
-      return yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, beforeModel], { discard: true }) })
-    }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
-  } } })
-}).pipe(Effect.provideService(InstanceRef, loaded.ctx))
-try {
-  console.log(JSON.stringify({ type: "authoring_native_preflight", sessionID: loaded.parent.id, projectID: loaded.parent.projectID, worktree: loaded.ctx.worktree }))
-  requireFact(RunCommand.handler, "AUTHORING_REAL_CLI_HANDLER_MISSING")
-  const hostPrompt = "Use exactly one existing foreground Task with subagent_type=archie, model=" + job.model + ", writePaths=" + JSON.stringify([dispatchPath]) + ", and the exact assignment supplied below on stdin. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch."
-  stage("cli", "before")
-  await RunCommand.handler({ $0: "orchestra", _: ["run"], message: [hostPrompt], command: undefined, continue: false, session: loaded.parent.id, fork: false,
-    model: job.claude?.parentModel ?? job.model, agent: "maestro", format: "json", file: undefined, title: undefined, attach: undefined, password: undefined, username: undefined,
-    dir: job.project, port: undefined, variant: undefined, thinking: false, mini: false, interactive: false, replay: undefined,
-    "replay-limit": undefined, replayLimit: undefined, auto: false, yolo: false, "dangerously-skip-permissions": false, dangerouslySkipPermissions: false, demo: false })
-  stage("cli", "after")
-  requireFact(state.calls === 1 && state.parentChecks > 0 && state.childChecks > 0, "AUTHORING_EXECUTION_GUARDS_NOT_OBSERVED")
-} catch (error) {
-  stage(stageState.current, "failed", safeCode(error))
-  console.error(error instanceof Error && /^AUTHORING_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_OR_NATIVE_RUN_FAILED")
-  process.exitCode = 1
-} finally { loaded.task.execute = taskExecute; loaded.prompts.prompt = realPrompt }
 }
 } finally { stage("dispose", "before"); await AppRuntime.dispose(); stage("dispose", "after") }
 } finally { await releaseSpawner() }
@@ -605,52 +478,6 @@ const flushed = await Promise.all([flush(process.stdout), flush(process.stderr)]
 if (!flushed.every(Boolean)) { console.error("AUTHORING_STDIO_FLUSH_FAILED"); process.exitCode = 1 }
 process.exit(process.exitCode ?? 0)
 `
-}
-async function verifyDatabase(path: string, parentID: string, project: string, model: string, assignment: string, worktree: string, parentModel?: string) {
-  await canonical(path, false)
-  const db = new Database(path, { readonly: true, strict: true })
-  try {
-    const sessionRow = Schema.Struct({ id: Schema.String, project_id: Schema.String, parent_id: Schema.NullOr(Schema.String), directory: Schema.String, agent: Schema.NullOr(Schema.String), permission: Schema.String })
-    const parent = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(parentID), "AUTHORING_PARENT_DB_MISSING")
-    requireAuthoring(parent.parent_id === null && parent.directory === project && parent.agent === "maestro", "AUTHORING_PARENT_DB_BINDING_MISMATCH")
-    const rows = decode(Schema.Array(Schema.Struct({ id: Schema.String, message_id: Schema.String, data: Schema.String, message: Schema.String })), db.query("SELECT p.id,p.message_id,p.data,m.data AS message FROM part p JOIN message m ON m.id=p.message_id WHERE p.session_id=? AND m.session_id=? AND json_extract(p.data,'$.type')='tool' AND json_extract(p.data,'$.tool')='task'").all(parentID, parentID), "AUTHORING_TASK_DB_SCHEMA_INVALID")
-    requireAuthoring(rows.length === 1, "AUTHORING_TASK_DB_MISSING_OR_MULTIPLE")
-    const row = rows[0]
-    const task = decode(Schema.Struct({ callID: Schema.String, state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Record(Schema.String, Schema.Unknown), metadata: Schema.Struct({ sessionId: Schema.String, parentSessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String, author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }), writeRoots: Schema.Array(Schema.String) }) }) }) }), json(row.data), "AUTHORING_CAPTURED_TASK_RETURN_MISSING")
-    const author = task.state.metadata.workResult.author
-    const dispatchPath = relative(worktree === "/" ? project : worktree, join(project, "proposal.md")).replaceAll("\\", "/")
-    requireAuthoring(task.state.input.subagent_type === "archie" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === JSON.stringify([dispatchPath]) && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === JSON.stringify([dispatchPath]), "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
-    const caller = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro"), providerID: Schema.optional(Schema.String), modelID: Schema.optional(Schema.String) }), json(row.message), "AUTHORING_TASK_CALLER_NOT_MAESTRO")
-    requireAuthoring(parentModel === undefined || `${caller.providerID}/${caller.modelID}` === parentModel, "AUTHORING_PARENT_MODEL_MISMATCH")
-    const child = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(author.executionSessionID), "AUTHORING_CHILD_DB_MISSING")
-    requireAuthoring(child.parent_id === parentID && child.project_id === parent.project_id && child.directory === project && child.agent === "archie", "AUTHORING_CHILD_DB_BINDING_MISMATCH")
-    const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(child.permission), "AUTHORING_CHILD_RULES_INVALID")
-    const roots = rules.filter((rule) => rule.permission === "tool_safety_write_root" && rule.action === "allow").map((rule) => rule.pattern)
-    const proposalPattern = relative(worktree, join(project, "proposal.md")).replaceAll("\\", "/")
-    requireAuthoring(JSON.stringify(roots) === JSON.stringify([join(project, "proposal.md")]) && rules.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "deny") && rules.findLast((rule) => rule.permission === "edit" && ["*", proposalPattern].includes(rule.pattern))?.action === "allow" && rules.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "deny"), "AUTHORING_PERSISTED_CHILD_SCOPE_MISMATCH")
-    const returned = decode(Schema.Struct({ session_id: Schema.String, data: Schema.String }), db.query("SELECT session_id,data FROM message WHERE id=?").get(author.messageID), "AUTHORING_CAPTURED_ASSISTANT_DB_MISSING")
-    const info = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("archie"), providerID: Schema.String, modelID: Schema.String }), json(returned.data), "AUTHORING_CAPTURED_ASSISTANT_NOT_ARCHIE")
-    requireAuthoring(returned.session_id === child.id && `${info.providerID}/${info.modelID}` === model, "AUTHORING_CAPTURED_ASSISTANT_MODEL_OR_SESSION_MISMATCH")
-    const bindings = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM event WHERE aggregate_id=? AND type='maestro.task.bound.1'").all(child.id), "AUTHORING_LOGICAL_TASK_DB_INVALID")
-    requireAuthoring(bindings.length === 1, "AUTHORING_LOGICAL_TASK_MISSING_OR_AMBIGUOUS")
-    const bound = decode(Schema.Struct({ taskId: Schema.String, memberID: Schema.Literal("archie"), projectID: Schema.String, executionSessionID: Schema.String, authoritySessionID: Schema.String, source: Schema.Literal("host") }), json(bindings[0].data), "AUTHORING_ORDINARY_TASK_BINDING_INVALID")
-    requireAuthoring(bound.taskId === task.state.metadata.workResult.taskId && bound.executionSessionID === child.id && bound.authoritySessionID === parentID && bound.projectID === parent.project_id, "AUTHORING_LOGICAL_TASK_BINDING_MISMATCH")
-    const texts = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, author.messageID), "AUTHORING_CAPTURED_ASSISTANT_TEXT_MISSING")
-    const returnedText = texts.map((item) => decode(Schema.Struct({ type: Schema.Literal("text"), text: Schema.String }), json(item.data), "AUTHORING_CAPTURED_TEXT_INVALID").text).join("\n")
-    // Observe stored step-finish parts, not assistant totals or inferred provider/token counts.
-    const stepRows = decode(Schema.Array(Schema.Struct({ id: Schema.String, message_id: Schema.String, session_id: Schema.String, data: Schema.String })),
-      db.query("SELECT id,message_id,session_id,data FROM part WHERE session_id IN (?,?) AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(parentID, child.id), "AUTHORING_STEP_USAGE_ROWS_INVALID")
-    const steps = stepRows.map((item) => {
-      const part = decode(Schema.Struct({ type: Schema.Literal("step-finish"), reason: Schema.optional(Schema.String), cost: Schema.optional(Schema.Finite),
-        tokens: Schema.optional(Schema.Struct({ total: Schema.optional(Schema.Finite), input: Schema.optional(Schema.Finite), output: Schema.optional(Schema.Finite), reasoning: Schema.optional(Schema.Finite),
-          cache: Schema.optional(Schema.Struct({ read: Schema.optional(Schema.Finite), write: Schema.optional(Schema.Finite) })) })) }), json(item.data), "AUTHORING_STEP_USAGE_INVALID")
-      return { partID: item.id, messageID: item.message_id, sessionID: item.session_id, reason: part.reason ?? null, cost: part.cost ?? null,
-        tokens: { total: part.tokens?.total ?? null, input: part.tokens?.input ?? null, output: part.tokens?.output ?? null, reasoning: part.tokens?.reasoning ?? null,
-          cache: { read: part.tokens?.cache?.read ?? null, write: part.tokens?.cache?.write ?? null } } }
-    })
-    return { provenance: { parentSessionID: parentID, parentMessageID: row.message_id, parentCallID: task.callID, childSessionID: child.id, projectID: child.project_id, logicalTaskID: bound.taskId, returnedAssistantID: author.messageID, nativeMemberID: child.agent }, returnedText,
-      stepUsage: { source: "stored-part.step-finish", status: steps.length ? "observed" : "absent", absentFields: "null", inferredCounts: false, steps } }
-  } finally { db.close() }
 }
 async function verifyDirect(path: string, sessionID: string, project: string, model: string, assignment: string, worktree: string, candidate: string, workResult: unknown) {
   await canonical(path, false)
