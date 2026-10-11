@@ -19,7 +19,7 @@ linuxGuestTest("startup admits only descriptor-bound guest bytes before credenti
   const root = await mkdtemp(join(tmpdir(), "w4-admission-"))
   const binary = join(root, ".orchestra/bin/orchestra")
   const marker = join(root, "executed")
-  const trusted = "#!/bin/bash\nprintf '%s\\n' \"$1\" >> \"$HOME/executed\"\nprintf 'orchestra v1.16.2\\n'\n"
+  const trusted = "#!/bin/bash\nprintf '%s\\n' \"$1\" >> \"$HOME/executed\"\nprintf '1.16.2\\n'\n"
   const options = (bytes: string) => ({
     directory: root, timeoutMs: 20_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") }] }),
@@ -35,7 +35,7 @@ linuxGuestTest("startup admits only descriptor-bound guest bytes before credenti
     for (const scenario of ["tampered", "stale", "symlink", "outside"]) {
       await rm(marker, { force: true })
       await rm(binary, { force: true })
-      const bytes = scenario === "stale" ? trusted.replace("v1.16.2", "v1.16.3") : trusted + "# changed\n"
+      const bytes = scenario === "stale" ? trusted.replace("'1.16.2", "'1.16.3") : trusted + "# changed\n"
       await Bun.write(binary, bytes)
       await chmod(binary, 0o755)
       const outside = join(root, "outside")
@@ -49,7 +49,8 @@ linuxGuestTest("startup admits only descriptor-bound guest bytes before credenti
       expect(await Bun.file(marker).exists()).toBe(scenario === "stale")
       if (scenario === "stale") expect(await readFile(marker, "utf8")).toBe("--version\n")
     }
-    for (const output of ["1.16.2", "orchestra v", " orchestra v1.16.2", "orchestra v1.16.2 extra", "orchestra v1.16.2\nextra"]) {
+    expect(normalizeWslCommandVersion("1.16.2\n")).toBe("1.16.2")
+    for (const output of ["", "orchestra v1.16.2", " 1.16.2", "1.16.2 extra", "1.16.2\nextra"]) {
       expect(normalizeWslCommandVersion(output)).toBeNull()
     }
   } finally {
@@ -71,7 +72,7 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
   const supervisor = join(root, "supervisor ' $(touch planted)")
   const destination = join(root, ".orchestra/bin/orchestra")
   // Exits early unless the staged omni pair sits next to the binary, like the real CLI preflight.
-  const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf 'orchestra v1.16.2\\n'\n"
+  const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf '1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
   const sha = (text: string) => createHash("sha256").update(text).digest("hex")
   // The digest over `sha256sum` lines of the tree's files, sorted by path.
@@ -116,7 +117,7 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     await Bun.write(destination, "foreign-old")
-    for (const output of ["1.16.2", "orchestra v", "orchestra v1.16.2 extra", "orchestra v1.16.3"]) {
+    for (const output of ["orchestra v1.16.2", "v1.16.2", "1.16.2 extra", "1.16.3", ""]) {
       const malformed = `#!/bin/bash\nprintf '%s\\n' '${output}'\n`
       await Bun.write(source, malformed)
       expect((await execute(source, createHash("sha256").update(malformed).digest("hex"))).code).toBe(82)
@@ -274,6 +275,39 @@ linuxGuestTest("real owned V2 CLI guest credential authenticates foreground serv
     await rm(root, { recursive: true, force: true })
   }
 }, 30_000)
+
+linuxGuestTest("real owned CLI --version output passes guest install and admission", async () => {
+  // The guest checks run against what the owned CLI really prints, not a hand-written imitation of it.
+  const root = await mkdtemp(join(tmpdir(), "w4-real-version-"))
+  const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
+  const executable = join(root, "owned ' $()")
+  const bytes = `#!/bin/bash\nexec ${shellEscape(process.execPath)} ${shellEscape(cli)} "$@"\n`
+  const targets = ["linux-x64-baseline", "linux-arm64"]
+  // A source run reports InstallationVersion "local", as a compiled CLI reports the version it was built with.
+  const options = {
+    directory: root,
+    timeoutMs: 20_000,
+    readManifest: async () => ({
+      schema: 1 as const,
+      version: "local",
+      artifacts: targets.map((target) => ({ target, file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") })),
+    }),
+    verifyArtifact: async () => ({ path: executable, version: "local" }),
+    // On a Linux host the host path already is the guest path.
+    run: async (args: string[]) =>
+      args[0] === "wslpath" ? { code: 0, signal: null, stdout: args[3]!, stderr: "" } : { ...(await shell(args, root)), signal: null },
+  }
+  try {
+    await Bun.write(executable, bytes)
+    await chmod(executable, 0o755)
+    await Promise.all(targets.flatMap((target) => omniCompanions.map((name) => Bun.write(join(root, `omni-${target}`, name), name))))
+    await Promise.all(targets.map((target) => writeTreeSitterBundle(join(root, `tree-sitter-${target}`), target)))
+    await installWslArtifact("Ubuntu", "local", options)
+    expect(await readWslCommandVersion(join(root, ".orchestra/bin/orchestra"), "Ubuntu", options)).toBe("local")
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+}, 60_000)
 
 function isolatedEnv(root: string) {
   return { ...process.env, HOME: root, TMPDIR: root, ORCHESTRA_TEST_HOME: root,

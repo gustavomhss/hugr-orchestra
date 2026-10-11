@@ -314,7 +314,7 @@ export async function readWslCommandVersion(command: string, distro: string, opt
 }
 
 export function normalizeWslCommandVersion(output: string) {
-  return /^orchestra v([^\s]+)\r?\n?$/.exec(output)?.[1] ?? null
+  return /^([^\s]+)\r?\n?$/.exec(output)?.[1] ?? null
 }
 
 export function openWslTerminal(distro?: string | null) {
