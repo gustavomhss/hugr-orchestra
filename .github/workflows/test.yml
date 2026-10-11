@@ -215,6 +215,15 @@ jobs:
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
 
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
         with:
@@ -310,6 +319,15 @@ jobs:
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
@@ -437,6 +455,15 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Native binaries for fresh default-on comparison
         uses: ./.github/actions/omni-binaries
         with:
@@ -490,6 +517,15 @@ jobs:
       - name: Setup Bun
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
       - name: Read Playwright version
         if: steps.previous.outputs.hit != 'true'
