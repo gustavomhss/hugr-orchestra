@@ -7,7 +7,8 @@ import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import * as LSPServer from "./server"
 import { Config } from "@/config/config"
-import { spawn as lspspawn } from "./launch"
+import { confined, spawn as lspspawn } from "./launch"
+import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { Effect, Layer, Context, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { containsPath } from "@/project/instance-context"
@@ -171,11 +172,12 @@ const layer = Layer.effect(
                 id: name,
                 root: existing?.root ?? (async (_file, ctx) => ctx.directory),
                 extensions: item.extensions ?? existing?.extensions ?? [],
+                // A configured command is trusted like any configured program, unless that program lives in the
+                // workspace, where a sandboxed command could have replaced it.
                 spawn: async (root) => ({
-                  process: lspspawn(item.command[0], item.command.slice(1), {
-                    cwd: root,
-                    env: { ...process.env, ...item.env },
-                  }),
+                  process: (await ToolSafetySandbox.inside(ctx.directory, item.command[0], root))
+                    ? await confined(item.command[0], item.command.slice(1), { cwd: root, env: { ...process.env, ...item.env } })
+                    : lspspawn(item.command[0], item.command.slice(1), { cwd: root, env: { ...process.env, ...item.env } }),
                   initialization: item.initialization,
                 }),
               }

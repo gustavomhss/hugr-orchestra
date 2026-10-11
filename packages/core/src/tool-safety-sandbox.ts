@@ -1,8 +1,9 @@
 export * as ToolSafetySandbox from "./tool-safety-sandbox"
 
+import os from "os"
 import path from "path"
 import which from "which"
-import { lstat } from "node:fs/promises"
+import { lstat, mkdtemp, realpath, rm, writeFile } from "node:fs/promises"
 import { Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
@@ -241,6 +242,90 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     env: { ...confined, ...sandbox.env, ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
   })
 })
+
+/**
+ * Language servers and formatters execute workspace-controlled code (binaries, configs, plugins, build scripts), so
+ * they never run with the host's authority. No network; the shell sandbox's denied paths stay unreadable; writes reach
+ * only `write` and a fresh scratch directory that becomes TMPDIR and the cache dirs. macOS uses seatbelt, Linux only
+ * the pinned, hash-verified srt with its seccomp filter; anywhere else, or without a ready backend, this refuses and
+ * nothing runs unconfined. The caller keeps the Scope open until the child exits.
+ */
+export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: {
+  readonly command: string
+  readonly args: ReadonlyArray<string>
+  readonly cwd: string
+  readonly env: NodeJS.ProcessEnv
+  /** Existing files the program may rewrite in place. */
+  readonly write?: ReadonlyArray<string>
+}) {
+  if (process.platform !== "darwin" && process.platform !== "linux")
+    return yield* new ToolSafety.Denied({ reason: `sandbox-platform-unsupported: ${process.platform}` })
+  const sandbox = process.platform === "darwin"
+    ? yield* available("/usr/bin/sandbox-exec").pipe(Effect.map((binary) => binary
+        ? { kind: "seatbelt" as const, binary }
+        : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }))
+    : yield* pick(true, true).pipe(Effect.flatMap((picked) => picked.kind === "none" && picked.reason === "sandbox-runtime-acquiring"
+        ? ToolSafetySandboxRuntime.settled().pipe(Effect.andThen(pick(false, true)))
+        : Effect.succeed(picked)))
+  if (sandbox.kind === "none") return yield* new ToolSafety.Denied({ reason: sandbox.reason })
+  const write = yield* Effect.forEach(input.write ?? [], (file) => io("sandbox-write-file-acquisition", () => realpath(file)))
+  const deny = yield* Effect.forEach([Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"),
+    path.join(Global.Path.home, ".aws"), path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc")],
+  (entry) => io("sandbox-deny-path-acquisition", () => physical(entry)))
+  const scratch = yield* temporary("orchestra-confined-")
+  const env = {
+    ...environment(input.env), TMPDIR: scratch, TMP: scratch, TEMP: scratch, XDG_CACHE_HOME: path.join(scratch, "cache"),
+    GOCACHE: path.join(scratch, "go-build"), CARGO_TARGET_DIR: path.join(scratch, "target"),
+  }
+  const roots = [scratch, ...write]
+  if (sandbox.kind === "seatbelt") {
+    const outside = `(require-all (require-not (literal "/dev/null")) ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})`
+    const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
+      ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`)].join("\n")
+    return { command: sandbox.binary, args: ["-p", policy, input.command, ...input.args], env }
+  }
+  // The policy lives outside every writable root, so the program cannot rewrite it.
+  const settings = path.join(yield* temporary("orchestra-confined-policy-"), "settings.json")
+  yield* io("sandbox-policy-write", () => writeFile(settings, JSON.stringify({
+    filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: deny },
+    network: { allowedDomains: [], deniedDomains: [], strictAllowlist: true, allowUnixSockets: [], allowAllUnixSockets: false, allowLocalBinding: false },
+    enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
+    ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
+  }), { mode: 0o600 }))
+  // srt's launcher runs on the host before any confinement, with the workspace as its cwd: under Bun it must not load
+  // that directory's bunfig.toml (whose preload runs code) or .env.
+  return {
+    command: sandbox.command,
+    args: [...(process.versions.bun ? ["--no-env-file", "--config=/dev/null"] : []), ...sandbox.args, "--settings", settings, "--", input.command, ...input.args],
+    env: { ...env, ...sandbox.env },
+  }
+})
+
+/** Whether `command`, a path or a name found on PATH, names a program inside `directory`, before or after symlinks. */
+export async function inside(directory: string, command: string, cwd: string) {
+  const program = path.isAbsolute(command) || /[\\/]/.test(command)
+    ? path.resolve(cwd, command)
+    : await which(command, { nothrow: true })
+  if (!program) return false
+  return FSUtil.contains(path.resolve(directory), program) ||
+    FSUtil.contains(await physical(directory), await physical(program))
+}
+
+// A path with its existing part resolved through symlinks; a missing leaf keeps its name.
+async function physical(target: string): Promise<string> {
+  return realpath(target).catch(async () => {
+    const parent = path.dirname(target)
+    return parent === target ? target : path.join(await physical(parent), path.basename(target))
+  })
+}
+
+const io = <A>(reason: string, run: () => Promise<A>) =>
+  Effect.tryPromise({ try: run, catch: () => new ToolSafety.Denied({ reason }) })
+
+const temporary = (prefix: string) => Effect.acquireRelease(
+  io("sandbox-scratch-acquisition", () => mkdtemp(path.join(os.tmpdir(), prefix)).then((created) => realpath(created))),
+  (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+)
 
 /**
  * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by
