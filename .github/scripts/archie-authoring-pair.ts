@@ -5,31 +5,25 @@ import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import { lstat, mkdir, open, readdir, realpath, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
+import { userInfo } from "node:os"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 import { fileURLToPath } from "node:url"
 import type { Schema } from "effect"
 
 // Observation wrapper, not an approval/benefit gate. No inference in prepare/preflight modes.
-const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
-const model = "openai/gpt-6.1-sol"
+// Direct mode on the Claude Code engine: the host creates and prompts one native archie Session per arm; no Maestro.
+const claude = { engine: "claude-code", model: "anthropic/claude-opus-5-5", credentialKind: "claude-code-keychain-oauth" } as const
+const model = claude.model
 export const armBudgetMs = 20 * 60_000
 export const totalBudgetMs = 2 * armBudgetMs + 2 * 60_000
 const outputLimit = 32 * 1024 * 1024
-const authPins = [
-  ["auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
-  ["plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
-  ["plugin/openai/siwc.ts", "203e07b88371a420db664c01e7796401cbad44df"],
-  ["plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
-  ["plugin/index.ts", "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5"],
-] as const
-const consumerSourceReview = { reviewer: "W6", verdict: "SOURCE_APPROVE", file: "packages/orchestra/src/plugin/index.ts",
-  blob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", runtimeQualification: "pending" }
-const runtimeFiles = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "session/prompt.ts",
-  "session/task-prompt-ops.ts", "session/prompt-guard.ts", "maestro/seats/archie.ts", "maestro/roster.ts", "maestro/write-roots.ts",
-  "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "effect/app-runtime.ts"]
+// Credential stores stay outside every read grant even though no arm is given their paths.
+const credentialPaths = (home: string) => [join(home, ".local/share/opencode/auth.json"), join(home, ".claude/.credentials.json"), join(home, ".claude.json")]
+const runtimeFiles = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/registry.ts", "session/prompt.ts", "session/session.ts",
+  "session/prompt-guard.ts", "maestro/seats/archie.ts", "maestro/roster.ts", "maestro/write-roots.ts", "maestro/backend-result.ts", "effect/app-runtime.ts",
+  "claude-code/engine.ts", "claude-code/sdk.ts", "claude-code/mirror.ts", "claude-code/permissions.ts", "claude-code/tools.ts"]
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
-const blob = (bytes: Uint8Array) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
 class PairError extends Error {}
 function requireFact(value: unknown, code: string): asserts value {
   if (!value) throw new PairError(code)
@@ -78,12 +72,24 @@ export function serializedEvidence(value: unknown, secrets: readonly string[], d
     originalSha256: sha256(Buffer.from(original + "\n")), originalUtf8ByteLength: Buffer.byteLength(original + "\n"),
     writtenSha256: sha256(Buffer.from(text)), writtenUtf8ByteLength: Buffer.byteLength(text), originalDatabase: "retained-unmodified" } }
 }
-// Model-visible tool view only: provider tool objects carry closures and SDK internals that need not serialize.
-export async function modelToolProjection(tools: Record<string, unknown>) {
-  return Promise.all(Object.entries(tools).map(async ([name, tool]) => {
-    requireFact(tool && typeof tool === "object" && "inputSchema" in tool && tool.inputSchema && typeof tool.inputSchema === "object" && "jsonSchema" in tool.inputSchema, "PAIR_MODEL_TOOL_SCHEMA_UNAVAILABLE")
-    return { name, description: "description" in tool ? tool.description : undefined, schema: await tool.inputSchema.jsonSchema }
-  }))
+// Redaction secrets for the Claude Code login the engine hands its SDK process. Held in memory only, never written.
+export async function claudeLoginSecrets(candidate: string, raw: string, minimumValidMs: number, now = Date.now()) {
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(raw)
+  const login = Option.isSome(parsed) ? Schema.decodeUnknownOption(Schema.Struct({ claudeAiOauth: Schema.Struct({ accessToken: Schema.NonEmptyString,
+    refreshToken: Schema.optional(Schema.NonEmptyString), expiresAt: Schema.Finite, scopes: Schema.Array(Schema.String) }) }))(parsed.value) : Option.none()
+  // sdk.ts refuses an expired access token on every spawn and never refreshes it; each stage spawns, so cover the whole run.
+  requireFact(Option.isSome(login) && login.value.claudeAiOauth.scopes.includes("user:inference") && login.value.claudeAiOauth.expiresAt > now + minimumValidMs, "PAIR_CLAUDE_LOGIN_INVALID_OR_EXPIRY_TOO_CLOSE")
+  return secretForms([login.value.claudeAiOauth.accessToken, ...(login.value.claudeAiOauth.refreshToken ? [login.value.claudeAiOauth.refreshToken] : [])])
+}
+// The same store sdk.ts reads per spawn: the unsuffixed Keychain item (CLAUDE_SECURESTORAGE_CONFIG_DIR=""), else its file.
+export async function readClaudeLogin(candidate: string, home: string, user: string, minimumValidMs: number) {
+  const { ClaudeCodeSDK } = await import(join(candidate, "packages/orchestra/src/claude-code/sdk.ts"))
+  const storage = ClaudeCodeSDK.credentialStorage({ CLAUDE_SECURESTORAGE_CONFIG_DIR: "" }, home)
+  const keychain = process.platform === "darwin" ? Bun.spawnSync(["security", "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(user) ? user : "claude-code-user", "-w", "-s", storage.service],
+    { env: { PATH: process.env.PATH, HOME: home, USER: user }, stdout: "pipe", stderr: "ignore" }) : undefined
+  const raw = keychain?.exitCode === 0 ? keychain.stdout.toString() : await Bun.file(storage.file).text().catch(() => "")
+  return claudeLoginSecrets(candidate, raw, minimumValidMs)
 }
 export async function saveEvidence(path: string, value: unknown, secrets: readonly string[], decodeJson?: JsonDecoder) {
   const serialized = serializedEvidence(value, secrets, decodeJson)
@@ -144,7 +150,9 @@ export function requireReadBoundary(input: { worktree: string; allowed: readonly
   requireFact(input.allowed.length > 0 && input.forbidden.length > 0 && input.operations.length > 0, "PAIR_BOUNDARY_CHECK_EMPTY")
   input.allowed.forEach((path) => requireFact(input.evaluate("read", relative(input.worktree, path).replaceAll("\\", "/")) === "allow", "PAIR_PINNED_READ_GRANT_MISSING"))
   input.forbidden.forEach((path) => requireFact(input.evaluate("read", relative(input.worktree, path).replaceAll("\\", "/")) === "deny", "PAIR_PRIVATE_READ_BOUNDARY_BYPASS"))
-  const deniedTools = ["bash", "task", "glob", "grep", "read_mcp_resource", "list_mcp_resources", "list_mcp_resource_templates"]
+  // Claude Code keeps its own tools; Orchestra's gate asks bash/glob/grep/webfetch/websearch by those names and any other
+  // tool under its own name, so an unlisted name stands for that remainder and must fall to the deny default.
+  const deniedTools = ["bash", "task", "glob", "grep", "read_mcp_resource", "list_mcp_resources", "list_mcp_resource_templates", "webfetch", "websearch", "claude_code_unlisted_tool"]
   deniedTools.forEach((permission) =>
     requireFact(input.evaluate(permission, "*") === "deny", "PAIR_READ_CAPABLE_TOOL_BYPASS"))
   const methods = ["maestro_arsenal_describe", "maestro_arsenal_execute"]
@@ -152,7 +160,8 @@ export function requireReadBoundary(input: { worktree: string; allowed: readonly
     requireFact(input.evaluate(permission, operation) === "allow", "PAIR_NATIVE_METHOD_GRANT_MISSING")))
   methods.forEach((permission) => requireFact(input.evaluate(permission, "workflow-execute") === "deny" && input.evaluate(permission, "*") === "deny", "PAIR_WORKFLOW_PERMISSION_BYPASS"))
   requireFact(input.operationGrants.every((grant) => methods.includes(grant.permission) && input.operations.includes(grant.pattern)), "PAIR_NATIVE_OPERATION_GRANT_BYPASS")
-  requireFact(input.tools.length > 0 && input.tools.every((tool) => ["read", "edit", "write", "apply_patch", "skill", "maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"].includes(tool)), "PAIR_NATIVE_TOOL_SURFACE_BYPASS")
+  // The engine hands Claude Code Orchestra's read/edit/write and its session-history tools; none reads another file.
+  requireFact(input.tools.length > 0 && input.tools.every((tool) => ["read", "edit", "write", "apply_patch", "skill", "maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute", "context_recall", "context_compact"].includes(tool)), "PAIR_NATIVE_TOOL_SURFACE_BYPASS")
 }
 
 export function requireStageObserved(observed: { calls: number; checks: number; turns: number; result?: unknown }) {
@@ -163,11 +172,17 @@ export function requireTurnBoundaries(messageIDs: readonly string[], records: re
   requireFact(messageIDs.length > 0 && messageIDs.every((id) => records.some((record) => record.assistantMessageID === id)), "PAIR_PROVIDER_TURN_BOUNDARY_MISSING")
   requireFact(records.every((record) => record.tools.length > 0 && messageIDs.includes(record.assistantMessageID)), "PAIR_PROVIDER_TURN_BOUNDARY_UNBOUND")
 }
-// The card may name the proposal relative to the dispatch base (as writePaths does) or to the child's project directory.
+// Stage N+1 resumes stage N: one Orchestra Session and one Claude Code SDK session, four prompts, four replies.
+export function requireSameSessionResume(stages: readonly { sessionID: string; claudeSessionID: string; promptMessageID: string; returnedAssistantID: string }[]) {
+  requireFact(stages.length === 4 && new Set(stages.map((stage) => stage.sessionID)).size === 1 && new Set(stages.map((stage) => stage.claudeSessionID)).size === 1
+    && new Set(stages.map((stage) => stage.promptMessageID)).size === 4 && new Set(stages.map((stage) => stage.returnedAssistantID)).size === 4, "PAIR_SAME_SESSION_RESUME_NOT_OBSERVED")
+}
+// The card may name the proposal relative to the dispatch base (as writePaths does) or to the Session's project directory.
+// Direct mode has no Task, so no logical task ID: the work result is the native assembler's (BackendResult.assemble).
 export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string, base: string) {
   const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
   const { UpstreamResult } = await import(join(candidate, "packages/orchestra/src/maestro/upstream-result.ts"))
-  const decoded = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.NonEmptyString,
+  const decoded = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"),
     card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.NonEmptyString }), outcome: Schema.Literal("done"), terminal: Schema.Struct({ reason: Schema.Literal("ended"), hostDetail: Schema.optional(Schema.Unknown) }),
     blockers: Schema.Array(Schema.Unknown), artifacts: Schema.Array(Schema.Struct({ kind: Schema.String, path: Schema.optional(Schema.String) })), risks: Schema.Array(Schema.String), nextActions: Schema.Array(Schema.String),
     author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }) }))(work)
@@ -337,30 +352,28 @@ async function unchanged(packet: Packet) {
   }))
 }
 
-export function initializer(job: { candidate: string; output: string; packet: Packet; assets: AssetPins; driverSha256: string; arm: "E" | "P"; preflightOnly: boolean }) {
-  // Real services and native Task are never substituted. Wrappers only assert boundaries/capture facts.
+export function initializer(job: { candidate: string; output: string; packet: Packet; assets: AssetPins; driverSha256: string; arm: "E" | "P"; preflightOnly: boolean; credentialPaths: string[] }) {
+  // Real services and the native archie Session are never substituted. Wrappers only assert boundaries/capture facts.
   return `import { createRequire } from "node:module"
 import { dirname, join, relative } from "node:path"
 import { mkdir, realpath, writeFile } from "node:fs/promises"
 import { createHash } from "node:crypto"
-const job = ${JSON.stringify(job)}
+const job = ${JSON.stringify({ ...job, claude })}
 const model = ${JSON.stringify(model)}
 const requireCandidate = createRequire(job.candidate + "/packages/orchestra/package.json")
-const { Effect, ManagedRuntime, Option, Schema, Stream } = await import(requireCandidate.resolve("effect"))
+const { Cause, Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
 const driverPath = ${JSON.stringify(fileURLToPath(import.meta.url))}
 const driverSha256 = ${JSON.stringify(job.driverSha256)}
-const { secretForms, evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring, requireStageObserved, modelToolProjection } = await import(driverPath)
+const { evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring, requireStageObserved, readClaudeLogin } = await import(driverPath)
 const decodeJson = await evidenceDecoder(job.candidate)
-const authStore = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(process.env.ORCHESTRA_AUTH_CONTENT)
-fact(Option.isSome(authStore), "PAIR_AUTH_CONTENT_INVALID")
-const auth = Schema.decodeUnknownOption(Schema.Struct({ openai: Schema.Struct({ access: Schema.String, refresh: Schema.String, accountId: Schema.optional(Schema.String) }) }))(authStore.value)
-fact(Option.isSome(auth), "PAIR_AUTH_CONTENT_INVALID")
-const secrets = secretForms([auth.value.openai.access, auth.value.openai.refresh, ...(auth.value.openai.accountId ? [auth.value.openai.accountId] : [])])
+// Preflight never reads the login secret (presence only, below). A run holds it in memory, only to redact evidence.
+const secrets = job.preflightOnly ? [] : await readClaudeLogin(job.candidate, process.env.HOME ?? "", process.env.USER ?? "", Number(process.env.PAIR_ARM_BUDGET_MS))
 requireSecretFree({ global: job.packet.global, sources: job.packet.sources, stages: job.packet.stages }, secrets, decodeJson)
 const redact = (text: string) => secrets.reduce((result, secret) => result.split(secret).join(""), text)
 const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
 const { CrossSpawnSpawner } = await import(job.candidate + "/packages/core/src/cross-spawn-spawner.ts")
 const { LayerNode } = await import(job.candidate + "/packages/core/src/effect/layer-node.ts")
+const { filesystem } = await import(job.candidate + "/packages/core/src/effect/app-node-platform.ts")
 const { memoMap } = await import(job.candidate + "/packages/core/src/effect/memo-map.ts")
 type Command = import("effect/unstable/process/ChildProcess").Command
 const contained = (command: Command): Command => command._tag === "StandardCommand"
@@ -378,6 +391,10 @@ function fact(value: unknown, code: string): asserts value { if (!value) throw n
 const emit = (event: object) => console.log(serializedEvidence(event, secrets, decodeJson).text.trimEnd())
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const save = (path: string, value: unknown) => saveEvidence(path, value, secrets, decodeJson)
+const pairCode = (cause: unknown) => {
+  const error = Cause.isCause(cause) ? Cause.squash(cause) : cause
+  return error instanceof Error && /^PAIR_[A-Z_]+$/.test(error.message) ? error.message : "PAIR_INITIALIZER_OR_NATIVE_RUNTIME_FAILED"
+}
 const verifyInputs = async () => {
   fact(digest(await Bun.file(job.packet.packetPath).bytes()) === job.packet.packetSha256, "PAIR_PACKET_CHANGED")
   fact(digest(await Bun.file(driverPath).bytes()) === driverSha256, "PAIR_DRIVER_SOURCE_CHANGED")
@@ -395,8 +412,6 @@ const seeded = await processRuntime.runPromise(Effect.gen(function* () {
   fact(processes.spawn === groupSpawner.spawn, "PAIR_PROCESS_CONTAINMENT_NOT_BOUND")
   return { processes, git }
 }))
-const { validateLegacyCodexReadonlyAuth } = await import(job.candidate + "/packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts")
-validateLegacyCodexReadonlyAuth()
 const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
 try {
 const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
@@ -404,26 +419,26 @@ const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/ef
 const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
 const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
 const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
+const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
+const { MessageID } = await import(job.candidate + "/packages/orchestra/src/session/schema.ts")
 const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
+const { ToolJsonSchema } = await import(job.candidate + "/packages/orchestra/src/tool/json-schema.ts")
 const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
+const { BackendResult } = await import(job.candidate + "/packages/orchestra/src/maestro/backend-result.ts")
 const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
+const { Provider } = await import(job.candidate + "/packages/orchestra/src/provider/provider.ts")
+const { ClaudeCodeTools } = await import(job.candidate + "/packages/orchestra/src/claude-code/tools.ts")
 const { Wildcard } = await import(job.candidate + "/packages/core/src/util/wildcard.ts")
 const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats/index.ts")
 const { SeatSkillRoot } = await import(job.candidate + "/packages/orchestra/src/maestro/seat-skill-root.ts")
 const { UpstreamArsenal } = await import(job.candidate + "/packages/core/src/tool/upstream-arsenal.ts")
-const { LLM } = await import(job.candidate + "/packages/orchestra/src/session/llm.ts")
-type TaskPromptOps = import(${JSON.stringify(join(job.candidate, "packages/orchestra/src/tool/task.ts"))}).TaskPromptOps
-function isOps(value: unknown): value is TaskPromptOps {
-  return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function"
-    && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function"
-}
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
   const git = yield* Git.Service
   const store = yield* InstanceStore.Service
   fact(git === seeded.git && seeded.processes.spawn === groupSpawner.spawn, "PAIR_CONTAINED_GIT_NOT_BOUND")
   return { store }
 }))
-// Sequential arms avoid cross-arm tool wrapping; each has an independent Instance, parent, child and proposal.
+// Sequential arms avoid cross-arm wrapping; each has an independent Instance, archie Session and proposal.
 for (const arm of [job.arm]) {
   const timing = admitArm(arm, Number(process.env.PAIR_ARM_STARTED_AT), Number(process.env.PAIR_TOTAL_DEADLINE_AT), Number(process.env.PAIR_ARM_BUDGET_MS))
   requireArmTime(timing)
@@ -437,37 +452,35 @@ for (const arm of [job.arm]) {
     const sessions = yield* Session.Service
     const prompts = yield* SessionPrompt.Service
     const registry = yield* ToolRegistry.Service
-    const llm = yield* LLM.Service
     const archie = yield* agents.get("archie")
-    const maestro = yield* agents.get("maestro")
-    const named = yield* registry.named()
-    fact(archie.native === true && archie.mode === "subagent" && maestro.native === true && maestro.mode === "primary"
-      && Seats.find("archie")?.profileKey === "upstream" && Seats.find("archie")?.strictResume === true && named.task.id === "task", "PAIR_NATIVE_ABI_MISMATCH")
+    const toolIDs = yield* registry.ids()
+    fact(archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && Seats.find("archie")?.strictResume === true, "PAIR_NATIVE_ABI_MISMATCH")
+    fact(archie.engine === job.claude.engine && archie.model?.providerID + "/" + archie.model?.modelID === model, "PAIR_CLAUDE_ENGINE_BINDING_MISMATCH")
     fact(SeatSkillRoot.roots.archie === job.candidate + "/packages/archie-specialist/skills", "PAIR_NATIVE_SKILL_ROOT_UNPINNED")
-    const denies = boundaryRules(placement.worktree, project, [join(project, "global.txt")], job.assets).filter((rule) => rule.permission !== "task")
-    const parent = yield* sessions.create({ agent: "maestro", title: "archie-pair-" + arm, permission: denies })
-    yield* sessions.setPermission({ sessionID: parent.id, permission: denies })
-    return { agents, sessions, prompts, llm, task: named.task, parent, denies, archie, maestro, toolIDs: Object.keys(named) }
+    return { agents, sessions, prompts, registry, archie, toolIDs }
   }))
   const base = await realpath(placement.worktree === "/" ? placement.directory : placement.worktree)
   const proposal = join(project, "proposal.md")
   const dispatchPath = relative(base, proposal).replaceAll("\\\\", "/")
   const pattern = relative(placement.worktree, proposal).replaceAll("\\\\", "/")
   fact(dispatchPath && !dispatchPath.split("/").includes(".."), "PAIR_WRITE_ROOT_OUTSIDE_WORKTREE")
-  await run(Effect.gen(function* () {
-    const rules = yield* WriteRoots.bind("archie", [dispatchPath], services.denies)
+  // No Maestro: Task needs a Maestro assistant message, so the host binds the reserved write root and creates the
+  // native archie Session itself, with stage 1's exact read grants and the proposal-only edit allowance.
+  const session = await run(Effect.gen(function* () {
+    const rules = yield* WriteRoots.bind("archie", [dispatchPath], [])
     fact(JSON.stringify(WriteRoots.read(rules)) === JSON.stringify([proposal]), "PAIR_WRITE_ROOT_BINDING_INVALID")
-  }))
-  emit({ type: "pair_preflight", arm, parentSessionID: services.parent.id, projectID: services.parent.projectID, worktree: placement.worktree, project, dispatchPath })
-  await save(join(root, "native-settings.json"), { archie: services.archie, maestro: services.maestro, toolIDs: services.toolIDs, parent: services.parent, denies: services.denies, dispatchPath, worktree: placement.worktree, timing, assets: job.assets })
-  if (job.preflightOnly) continue
-  const state: { index: number; calls: number; checks: number; turns: number; child?: string; logical?: string; prompt?: string; result?: unknown; childReturned?: unknown; childPromptID?: string; parentMessageID?: string; callID?: string } = { index: 0, calls: 0, checks: 0, turns: 0 }
+    return yield* services.sessions.create({ agent: "archie", title: "archie-pair-" + arm,
+      permission: [...rules, ...boundaryRules(placement.worktree, project, [join(project, "global.txt")], job.assets), { permission: "edit", pattern, action: "allow" }] })
+  }).pipe(Effect.provide(LayerNode.compile(filesystem))))
+  emit({ type: "pair_preflight", arm, dispatch: "direct-archie", parentSessionID: null, sessionID: session.id, projectID: session.projectID, worktree: placement.worktree, project, dispatchPath })
+  await save(join(root, "native-settings.json"), { archie: services.archie, toolIDs: services.toolIDs, engine: job.claude, dispatch: "direct-archie", parentSession: null, session, dispatchPath, worktree: placement.worktree, timing, assets: job.assets })
+  const state: { index: number; calls: number; checks: number; turns: number; promptID?: string; prompt?: string; result?: unknown; claudeSessionID?: string; violation?: string; tools?: { name: string; description: string; schema: unknown }[] } = { index: 0, calls: 0, checks: 0, turns: 0 }
   const revealed = new Set<string>()
   const expectedLocal = () => [{ file: "global.txt", sha256: job.packet.global.sha256, utf8ByteLength: job.packet.global.utf8ByteLength }, ...job.packet.sources.filter((source) => revealed.has(source.id))]
   const localFiles = () => expectedLocal().map((source) => join(project, source.file))
   const blockedPaths = () => [job.packet.packetPath, job.packet.global.path, ...job.packet.sources.flatMap((source) => [source.path, ...("originalPath" in source ? [source.originalPath] : [])]),
     ...job.packet.stages.map((stage) => stage.request.path), ...job.packet.nonModelArtifacts.map((item) => item.path), driverPath, join(job.output, "initializer-" + arm + ".ts"),
-    join(job.output, "session.db"), join(job.output, "config.json"), ${JSON.stringify(selectedAuth)}, ...["E", "P"].filter((other) => other !== arm).flatMap((other) => [join(job.output, "initializer-" + other + ".ts"), join(job.output, other, "project", "global.txt"), join(job.output, other, "project", "proposal.md"), ...job.packet.sources.map((source) => join(job.output, other, "project", source.file)),
+    join(job.output, "session.db"), join(job.output, "config.json"), ...job.credentialPaths, join(job.output, "claude-E"), join(job.output, "claude-P"), ...["E", "P"].filter((other) => other !== arm).flatMap((other) => [join(job.output, "initializer-" + other + ".ts"), join(job.output, other, "project", "global.txt"), join(job.output, other, "project", "proposal.md"), ...job.packet.sources.map((source) => join(job.output, other, "project", source.file)),
       join(job.output, other), ...job.packet.stages.flatMap((_, index) => ["proposal.md", "native.json", "verified.json"].map((file) => join(job.output, other, "stage-" + (index + 1), file)))]),
     ...job.packet.sources.filter((source) => !revealed.has(source.id)).map((source) => join(project, source.file))]
   const boundary = async (bound: { permission?: import(${JSON.stringify(join(job.candidate, "packages/core/src/v1/permission.ts"))}).PermissionV1.Ruleset }, tools: string[]) => {
@@ -482,87 +495,75 @@ for (const arm of [job.arm]) {
     job.assets.forEach((asset) => fact(Permission.evaluate("external_directory", join(dirname(asset.path), "*"), services.archie.permission, bound.permission ?? []).action === "allow", "PAIR_NATIVE_REFERENCE_EXTERNAL_GRANT_MISSING"))
     return inventory
   }
-  const stream = services.llm.stream
-  services.llm.stream = (input) => Stream.unwrap(Effect.gen(function* () {
-    requireArmTime(timing)
-    const toolView = yield* Effect.promise(() => modelToolProjection(input.tools))
-    requireSecretFree({ system: input.system, messages: input.messages, tools: toolView, agentPrompt: input.agent.prompt }, secrets, decodeJson)
-    if (input.sessionID === state.child) {
-      // The processor persists the streamed assistant before calling stream; bind this turn to it and to this stage's prompt.
-      const stored = yield* services.sessions.messages({ sessionID: input.sessionID })
-      const assistant = stored.findLast((message) => message.info.role === "assistant" && message.info.parentID === state.childPromptID)
-      fact(input.user.id === state.childPromptID && assistant, "PAIR_PROVIDER_TURN_MESSAGE_UNBOUND")
-      const bound = yield* services.sessions.get(input.sessionID)
-      const inventory = yield* Effect.promise(() => boundary(bound, Object.keys(input.tools)))
+  const stageFile = (file: string) => job.preflightOnly ? join(root, "preflight-" + file) : join(root, "stage-" + (state.index + 1), file)
+  const record = (file: string, value: object) => save(stageFile(file), { checkedAt: Date.now(), timing, ...value, tools: state.tools?.map((tool) => tool.name), revealedSourceIDs: [...revealed], assets: job.assets, forbiddenPaths: blockedPaths() })
+  // Engine pre-model hook: ClaudeCode.turn runs PromptGuard.check once per SessionPrompt turn, before it spawns the SDK.
+  const guard = Effect.gen(function* () {
+    yield* Effect.promise(verifyInputs)
+    const bound = yield* services.sessions.get(session.id)
+    const archie = yield* services.agents.get("archie")
+    const canonicalProposal = yield* Effect.promise(() => realpath(proposal).catch(async (error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error
+      return (await realpath(dirname(proposal))) + "/proposal.md"
+    }))
+    fact(canonicalProposal === proposal && JSON.stringify(WriteRoots.read(bound.permission)) === JSON.stringify([proposal]), "PAIR_CHILD_WRITE_ROOT_CHANGED")
+    fact(archie.native === true && archie.engine === job.claude.engine && bound.agent === "archie" && !bound.parentID && bound.directory === project && bound.projectID === session.projectID, "PAIR_SAME_CHILD_BINDING_MISMATCH")
+    fact(Permission.evaluate("edit", pattern, archie.permission, bound.permission ?? []).action === "allow"
+      && Permission.evaluate("edit", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "deny"
+      && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny"
+      && Permission.evaluate("task", "archie", archie.permission, bound.permission ?? []).action === "deny"
+      && Permission.evaluate("read", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "allow"
+      && Permission.evaluate("read", relative(placement.worktree, job.packet.packetPath), archie.permission, bound.permission ?? []).action === "deny", "PAIR_CHILD_SCOPE_INVALID")
+    // ClaudeCode.turn builds its Orchestra tool view from the registry before this hook; the registry wrapper captured it.
+    fact(state.tools, "PAIR_ENGINE_TOOL_SURFACE_NOT_OBSERVED")
+    const inventory = yield* Effect.promise(() => boundary(bound, state.tools.map((tool) => tool.name)))
+    const history = yield* services.sessions.messages({ sessionID: session.id })
+    fact(job.preflightOnly || history.findLast((message) => message.info.role === "user")?.info.id === state.promptID, "PAIR_PROVIDER_TURN_MESSAGE_UNBOUND")
+    // Model-bound input of the first provider turn: stored history with this prompt, the agent prompt and the tool view.
+    requireSecretFree({ history, tools: state.tools, agentPrompt: archie.prompt }, secrets, decodeJson)
+    state.checks++
+    yield* Effect.promise(() => record("pre-model-boundary.json", { hook: "PromptGuard.check in ClaudeCode.turn before SDK spawn", sessionID: session.id, promptMessageID: state.promptID ?? null, inventory }))
+  }).pipe(Effect.tapCause((cause) => Effect.sync(() => { state.violation ??= pairCode(cause) })), Effect.provideService(InstanceRef, placement))
+  const tools = services.registry.tools
+  services.registry.tools = (input) => tools(input).pipe(Effect.tap((defs) => Effect.sync(() => {
+    // The same filter ClaudeCode.turn applies before handing Orchestra tools to the SDK's in-process MCP server.
+    if (input.agent.id === "archie") state.tools = defs.filter((def) => ClaudeCodeTools.IDS.includes(def.id)).map((def) => ({ name: def.id, description: def.description, schema: ToolJsonSchema.fromTool(def) }))
+  })))
+  // SDK provider turns run inside the Claude Code process, so LLM.stream never sees them. The mirror opens one Orchestra
+  // assistant message per Claude API message, before any of its parts or tool calls, so each provider turn is checked here.
+  const updateMessage = services.sessions.updateMessage
+  const opened = new Set<string>()
+  services.sessions.updateMessage = (message) => Effect.gen(function* () {
+    if (message.role !== "assistant" || message.sessionID !== session.id || opened.has(message.id) || state.violation) return yield* updateMessage(message)
+    opened.add(message.id)
+    yield* Effect.gen(function* () {
+      fact(state.checks > 0 && state.promptID && message.parentID === state.promptID, "PAIR_PROVIDER_TURN_MESSAGE_UNBOUND")
+      fact(state.tools, "PAIR_ENGINE_TOOL_SURFACE_NOT_OBSERVED")
+      const bound = yield* services.sessions.get(session.id)
+      const inventory = yield* Effect.promise(() => boundary(bound, state.tools.map((tool) => tool.name)))
+      requireSecretFree({ history: yield* services.sessions.messages({ sessionID: session.id }), tools: state.tools }, secrets, decodeJson)
       state.turns++
-      yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "provider-boundary-" + state.turns + ".json"), { checkedAt: Date.now(), timing, assistantMessageID: assistant.info.id, inventory, tools: Object.keys(input.tools), revealedSourceIDs: [...revealed], assets: job.assets, forbiddenPaths: blockedPaths() }))
-    }
-    return stream(input)
-  }).pipe(Effect.provideService(InstanceRef, placement)))
-  const execute = services.task.execute
-  services.task.execute = (params, ctx) => Effect.gen(function* () {
-    state.calls++
-    fact(state.calls === 1 && ctx.sessionID === services.parent.id && (ctx.agentID ?? ctx.agent) === "maestro"
-      && params.subagent_type === "archie" && params.model === model && params.prompt === state.prompt
-      && JSON.stringify(params.writePaths) === JSON.stringify([dispatchPath]) && params.task_id === state.logical
-      && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined
-      && params.memoryUnit === undefined && params.command === undefined, "PAIR_NATIVE_TASK_REQUEST_MISMATCH")
-    state.parentMessageID = ctx.messageID
-    state.callID = ctx.callID
-    const ops = ctx.extra?.promptOps
-    fact(isOps(ops), "PAIR_NATIVE_PROMPT_OPS_MISSING")
-    const result = yield* execute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
-      prompt: (request, options) => Effect.gen(function* () {
-        fact(request.parts.length === 1 && request.parts[0].type === "text" && request.parts[0].text === state.prompt, "PAIR_NATIVE_ATTACHMENT_EXPANSION_REFUSED")
-        const child = yield* services.sessions.get(request.sessionID)
-        fact(child.parentID === services.parent.id && child.agent === "archie" && child.directory === project
-          && child.projectID === services.parent.projectID && (!state.child || state.child === child.id), "PAIR_SAME_CHILD_BINDING_MISMATCH")
-        state.child = child.id
-        state.childPromptID = request.messageID
-        yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "child-prompt-request.json"), request))
-        fact(JSON.stringify(WriteRoots.read(child.permission)) === JSON.stringify([proposal]), "PAIR_CHILD_WRITE_ROOT_INVALID")
-        // Native child inheritance retains denies, not parent read allowances. Bind the same local read surface in both arms.
-        yield* services.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []).filter((rule) => rule.permission === "tool_safety_write_root"),
-          ...boundaryRules(placement.worktree, project, localFiles(), job.assets), { permission: "edit", pattern, action: "allow" }] })
-        const check = Effect.gen(function* () {
-          yield* Effect.promise(verifyInputs)
-          const bound = yield* services.sessions.get(child.id)
-          const archie = yield* services.agents.get("archie")
-          const canonicalProposal = yield* Effect.promise(() => realpath(proposal).catch(async (error: NodeJS.ErrnoException) => {
-            if (error.code !== "ENOENT") throw error
-            return (await realpath(dirname(proposal))) + "/proposal.md"
-          }))
-          fact(canonicalProposal === proposal && JSON.stringify(WriteRoots.read(bound.permission)) === JSON.stringify([proposal]), "PAIR_CHILD_WRITE_ROOT_CHANGED")
-          fact(archie.native === true && request.agent === "archie" && Permission.evaluate("edit", pattern, archie.permission, bound.permission ?? []).action === "allow"
-            && Permission.evaluate("edit", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "deny"
-            && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny"
-            && Permission.evaluate("task", "archie", archie.permission, bound.permission ?? []).action === "deny"
-            && Permission.evaluate("read", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "allow"
-            && Permission.evaluate("read", relative(placement.worktree, job.packet.packetPath), archie.permission, bound.permission ?? []).action === "deny", "PAIR_CHILD_SCOPE_INVALID")
-          // Exposure, rule equality and tool surface are checked per provider turn by the stream wrapper, which runs before this.
-          state.checks++
-        })
-        const returned = yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, check], { discard: true }) })
-        state.childReturned = returned
-        yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "child-return.json"), returned))
-        return returned
-      }).pipe(Effect.provideService(InstanceRef, placement))
-    } } })
-    yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "task-return.json"), result))
-    const work = result.metadata.workResult
-    yield* Effect.promise(() => requireSuccessfulAuthoring(job.candidate, work, state.childReturned, proposal, base))
-    fact(work && work.schema === "upstream-work-result-v1" && work.author?.memberId === "archie"
-      && work.author.executionSessionID === state.child && work.author.messageID === work.card?.messageID
-      && (!state.logical || state.logical === work.taskId), "PAIR_NATIVE_RETURN_BINDING_MISMATCH")
-    state.logical = work.taskId
-    state.result = result
-    return result
+      yield* Effect.promise(() => record("provider-boundary-" + state.turns + ".json", { hook: "Session.updateMessage on claude-code mirror step open", assistantMessageID: message.id, inventory }))
+    }).pipe(Effect.tapCause((cause) => Effect.sync(() => { state.violation ??= pairCode(cause) })))
+    return yield* updateMessage(message)
   }).pipe(Effect.provideService(InstanceRef, placement))
   try {
+    if (job.preflightOnly) {
+      // Presence only: no -w, so the Keychain secret is never read here; sdk.ts reads it when a turn spawns.
+      const { ClaudeCodeSDK } = await import(job.candidate + "/packages/orchestra/src/claude-code/sdk.ts")
+      const keychain = Bun.spawnSync(["security", "find-generic-password", "-a", process.env.USER ?? "", "-s", ClaudeCodeSDK.credentialStorage(process.env, process.env.HOME ?? "").service], { env: process.env, stdout: "ignore", stderr: "ignore" })
+      fact(keychain.exitCode === 0, "PAIR_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING")
+      // The exact pre-model guard over stage 1's grants, run once without a model on the tool view the engine builds.
+      const bound = await run(services.sessions.get(session.id))
+      await run(services.registry.tools({ ...Provider.parseModel(model), agent: services.archie, permission: bound.permission }))
+      await run(guard)
+      fact(!state.violation && state.checks === 1, state.violation ?? "PAIR_PREFLIGHT_GUARD_NOT_OBSERVED")
+      continue
+    }
     for (const [index, stage] of job.packet.stages.entries()) {
       requireArmTime(timing)
       await verifyInputs()
-      state.index = index; state.calls = 0; state.checks = 0; state.turns = 0; state.result = undefined; state.childReturned = undefined; state.childPromptID = undefined
+      state.index = index; state.calls = 0; state.checks = 0; state.turns = 0; state.result = undefined; state.tools = undefined; state.promptID = MessageID.ascending()
       const stageRoot = join(root, "stage-" + (index + 1))
       await mkdir(stageRoot, { mode: 0o700 })
       const reveal = arm === "E" && index === 0 ? job.packet.sources : arm === "P" ? job.packet.sources.filter((item) => stage.sourceIDs.includes(item.id) && !revealed.has(item.id)) : []
@@ -570,37 +571,53 @@ for (const arm of [job.arm]) {
         await writeFile(join(project, item.file), item.text, { flag: "wx", mode: 0o400 })
         revealed.add(item.id)
       }))
+      // Stage-gated grants: bind exactly this stage's cumulative reads before its prompt; ClaudeCode.turn fixes its
+      // ruleset and tool view from the stored Session at turn start.
+      const current = await run(services.sessions.get(session.id))
+      await run(services.sessions.setPermission({ sessionID: session.id, permission: [...(current.permission ?? []).filter((rule) => rule.permission === "tool_safety_write_root"),
+        ...boundaryRules(placement.worktree, project, localFiles(), job.assets), { permission: "edit", pattern, action: "allow" }] }))
       const context = index === 0 ? "GLOBAL OBLIGATIONS (complete):\\n" + job.packet.global.text + "\\n\\n" : ""
       const sources = reveal.map((item) => "SOURCE " + JSON.stringify(item.id) + " [" + item.file + "]:\\n" + item.text).join("\\n\\n")
       // Request bytes are appended without trimming. Context differs only by scheduled source revelation.
       state.prompt = "Proposal-only native authoring. Write only proposal.md. No child dispatch, implementation, workflow execution, approval or publication. Return native upstream-result card.\\n\\n"
         + context + sources + "\\n\\nSTAGE REQUEST (exact UTF-8 bytes):\\n" + stage.request.text
       requireSecretFree(state.prompt, secrets, decodeJson)
-      const host = "Use exactly one foreground native Task: subagent_type=archie, model=" + model + ", writePaths=" + JSON.stringify([dispatchPath])
-        + (state.logical ? ", task_id=" + state.logical : ", omit task_id")
-        + ". Omit background, governed, authorizationID, workflow, memoryUnit and command. Copy following assignment exactly into prompt; no trimming, rewriting or added obligations. Return actual Task result.\\n\\n" + state.prompt
-      requireSecretFree(host, secrets, decodeJson)
       emit({ type: "pair_stage_start", arm, index, id: stage.id, requestSha256: stage.request.sha256, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed] })
-      const returned = await run(services.prompts.prompt({ sessionID: services.parent.id, agent: "maestro", model: { providerID: "openai", modelID: "gpt-6.1-sol" }, parts: [{ type: "text", text: host }] }))
-      await save(join(stageRoot, "parent-return.json"), returned)
+      state.calls++
+      // Real SessionPrompt path on the same Session: stage N+1 resumes stage N's Claude Code session.
+      const returned = await run(PromptGuard.provide(services.prompts.prompt({ sessionID: session.id, messageID: state.promptID, agent: "archie", model: Provider.parseModel(model),
+        parts: [{ type: "text", text: state.prompt }] }), session.id, guard))
+      await save(join(stageRoot, "assistant-return.json"), returned)
+      fact(!state.violation, state.violation)
       requireArmTime(timing)
-      fact(returned.info.role === "assistant" && !returned.info.error, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+      fact(returned.info.role === "assistant" && returned.info.agent === "archie" && returned.info.parentID === state.promptID && !returned.info.error, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+      // The native work-result assembler Task uses; it parses the upstream card from the returned assistant.
+      const work = BackendResult.assemble(returned, await run(services.sessions.messages({ sessionID: session.id })), Seats.find("archie"))
+      await save(join(stageRoot, "work-result.json"), work)
+      await requireSuccessfulAuthoring(job.candidate, work, returned, proposal, base)
+      state.result = work
       requireStageObserved(state)
+      const claudeSessionID = (await run(services.sessions.get(session.id))).metadata?.claudeCode?.sessionId
+      fact(typeof claudeSessionID === "string" && claudeSessionID.length > 0 && (!state.claudeSessionID || state.claudeSessionID === claudeSessionID), "PAIR_SAME_SESSION_RESUME_NOT_OBSERVED")
+      state.claudeSessionID = claudeSessionID
       const inputHashes = await verifyInputs()
       const bytes = await Bun.file(proposal).bytes()
       fact(bytes.length > 0 && (await realpath(proposal)) === proposal, "PAIR_PROPOSAL_MISSING_OR_ALIAS")
       fact(!secrets.some((secret) => Buffer.from(bytes).includes(Buffer.from(secret))), "PAIR_PROPOSAL_SECRET_BEARING")
       await writeFile(join(stageRoot, "proposal.md"), bytes, { flag: "wx", mode: 0o600 })
-      await save(join(stageRoot, "native.json"), { arm, index, id: stage.id, parentSessionID: services.parent.id, parentMessageID: state.parentMessageID, callID: state.callID,
-        childSessionID: state.child, childPromptMessageID: state.childPromptID, logicalTaskID: state.logical, worktree: placement.worktree, result: state.result, parentReturned: returned, proposalSha256: digest(bytes), proposalBytes: bytes.length, timing,
+      await save(join(stageRoot, "native.json"), { arm, index, id: stage.id, dispatch: "direct-archie", parentSessionID: null, sessionID: session.id, promptMessageID: state.promptID, claudeSessionID,
+        worktree: placement.worktree, workResult: work, returned, proposalSha256: digest(bytes), proposalBytes: bytes.length, timing,
         requestSha256: stage.request.sha256, assignment: state.prompt, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed], inputHashes, checks: state.checks, turns: state.turns, dispatchBase: base })
-      emit({ type: "pair_stage_end", arm, index, childSessionID: state.child, logicalTaskID: state.logical })
+      emit({ type: "pair_stage_end", arm, index, sessionID: session.id, claudeSessionID })
     }
-  } finally { services.task.execute = execute; services.llm.stream = stream; await save(join(root, "arm-timing.json"), { ...timing, endedAt: Date.now(), elapsedMs: Date.now() - timing.startedAt }) }
+  } finally {
+    services.registry.tools = tools; services.sessions.updateMessage = updateMessage
+    if (!job.preflightOnly) await save(join(root, "arm-timing.json"), { ...timing, endedAt: Date.now(), elapsedMs: Date.now() - timing.startedAt })
+  }
 }
 } finally { await AppRuntime.dispose() }
 } catch (error) {
-  emit({ type: "pair_failure", code: error instanceof Error && /^(PAIR|LEGACY_CODEX)_[A-Z_]+$/.test(error.message) ? error.message : "PAIR_INITIALIZER_OR_NATIVE_RUNTIME_FAILED", diagnostic: redact(String(error)) })
+  emit({ type: "pair_failure", code: pairCode(error), diagnostic: redact(String(error)) })
   process.exitCode = 1
 } finally {
   await processRuntime.dispose()
@@ -673,31 +690,25 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
 
 async function main() {
   const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
-    candidate: { type: "string" }, packet: { type: "string" }, output: { type: "string" }, "auth-source": { type: "string" },
-    model: { type: "string" }, "prepare-only": { type: "boolean" }, "preflight-only": { type: "boolean" }, run: { type: "boolean" },
+    candidate: { type: "string" }, packet: { type: "string" }, output: { type: "string" }, "archie-engine": { type: "string" }, "archie-model": { type: "string" },
+    direct: { type: "boolean" }, "prepare-only": { type: "boolean" }, "preflight-only": { type: "boolean" }, run: { type: "boolean" },
   } }).values
   requireFact([args.run, args["prepare-only"], args["preflight-only"]].filter(Boolean).length === 1, "PAIR_EXACTLY_ONE_MODE_REQUIRED")
-  requireFact(args.model === model, "PAIR_EXACT_MODEL_REQUIRED")
+  // The legacy Maestro→Task path on Codex is retired: only the direct archie Session on the Claude Code engine runs.
+  requireFact(args["archie-engine"] === claude.engine && args.direct === true, "PAIR_DIRECT_CLAUDE_ENGINE_REQUIRED")
+  requireFact(args["archie-model"] === model, "PAIR_EXACT_MODEL_REQUIRED")
   const candidate = await canonical(args.candidate, true)
   const packetPath = await canonical(args.packet)
   // Verification precedes output creation, credential inspection and any runtime initialization.
   const packet = await verifyPacket(candidate, packetPath)
   const assets = await pinNativeAssets(candidate, packet)
   const driverSha256 = sha256(await read(await canonical(fileURLToPath(import.meta.url))))
-  requireFact(args["auth-source"] === selectedAuth, "PAIR_EXACT_SELECTED_AUTH_REQUIRED")
   requireFact(args.output && isAbsolute(args.output) && !args.output.split(/[\\/]/).includes(".."), "PAIR_OUTPUT_ABSOLUTE_PATH_REQUIRED")
   const output = resolve(args.output)
   const parent = await canonical(dirname(output), true)
   requireFact(output !== candidate && !output.startsWith(candidate + "/") && !candidate.startsWith(output + "/")
     && !packetPath.startsWith(output + "/") && ![packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request), ...packet.nonModelArtifacts].some((item) => item.path.startsWith(output + "/")), "PAIR_OUTPUT_INPUT_OVERLAP")
   requireFact(parent === dirname(output), "PAIR_OUTPUT_PARENT_ALIAS")
-  const sourceHashes = await Promise.all(authPins.map(async ([file, expected]) => {
-    const bytes = await read(await canonical(join(candidate, "packages/orchestra/src", file)))
-    requireFact(blob(bytes) === expected, `PAIR_AUTH_CONSUMER_PIN_MISMATCH:${file}`)
-    return { file, blob: expected, sha256: sha256(bytes) }
-  }))
-  const coreAuth = await read(await canonical(join(candidate, "packages/core/src/auth/siwc.ts")))
-  requireFact(blob(coreAuth) === "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3", "PAIR_CORE_AUTH_PIN_MISMATCH")
   const runtimeHashes = await Promise.all(runtimeFiles.map(async (file) => {
     const path = await canonical(join(candidate, "packages/orchestra/src", file))
     return { path, sha256: sha256(await read(path)) }
@@ -705,30 +716,25 @@ async function main() {
   const git = Bun.spawn(["git", "--no-optional-locks", "-C", candidate, "rev-parse", "HEAD"], { stdout: "pipe", stderr: "ignore" })
   const head = (await new Response(git.stdout).text()).trim()
   requireFact(await git.exited === 0 && /^[a-f0-9]{40}$/.test(head), "PAIR_CANDIDATE_HEAD_UNAVAILABLE")
-  const snapshot = args["prepare-only"] ? undefined : await (async () => {
-    const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-    const source = await canonical(args["auth-source"])
-    const bytes = await read(source, true)
-    const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(utf8(bytes))
-    requireFact(Option.isSome(parsed) && parsed.value && typeof parsed.value === "object" && "openai" in parsed.value, "PAIR_SELECTED_OPENAI_AUTH_MISSING")
-    const value = parsed.value.openai
-    requireFact(value && typeof value === "object" && !Object.hasOwn(value, "metadata"), "PAIR_LEGACY_AUTH_METADATA_REFUSED")
-    const auth = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("oauth"), access: Schema.NonEmptyString, refresh: Schema.NonEmptyString,
-      expires: Schema.Int, accountId: Schema.optional(Schema.String) }))(value)
-    requireFact(Option.isSome(auth) && auth.value.expires > Date.now() + (args.run ? totalBudgetMs : 2 * 60_000) + 15 * 60_000, "PAIR_LEGACY_AUTH_INVALID_OR_EXPIRY_TOO_CLOSE")
-    return { source, sha256: sha256(bytes), content: JSON.stringify({ openai: auth.value }), secrets: secretForms([auth.value.access, auth.value.refresh, ...(auth.value.accountId ? [auth.value.accountId] : [])]) }
-  })()
-  const secrets = snapshot?.secrets ?? []
+  // `security` finds the login Keychain through $HOME and sdk.ts names the item's account from $USER, so the engine needs
+  // both real values. Only a run reads the login (redaction + expiry); preflight checks presence, prepare reads nothing.
+  const user = { home: userInfo().homedir, name: userInfo().username }
+  const secrets = args.run ? await readClaudeLogin(candidate, user.home, user.name, totalBudgetMs + 15 * 60_000) : []
   const decodeJson = await evidenceDecoder(candidate)
   requireSecretFree({ packet, assets }, secrets, decodeJson)
   process.umask(0o077)
   await mkdir(output, { mode: 0o700 }) // Existing output is refused: no overwrite or mixed-run receipts.
   const save = (file: string, value: unknown) => saveEvidence(join(output, file), value, secrets, decodeJson)
-  await save("prepared.json", { schema: 1, packetContract: "schema-1-documented-metadata-successor", candidate, head, model, sourceHashes, consumerSourceReview, runtimeHashes, coreAuthBlob: blob(coreAuth), packetPath, packetSha256: packet.packetSha256,
+  await save("prepared.json", { schema: 1, packetContract: "schema-1-documented-metadata-successor", candidate, head, ...claude, authConsumerPins: "not-applicable",
+    dispatch: "direct-archie", parentSession: null,
+    scope: "Native archie authoring on the Claude Code engine. Not a Maestro-to-Task chain: no Maestro Session, model turn, Task call or logical-task binding exists.",
+    notApplicable: ["maestro-parent-session", "parent-model", "single-task-call", "task-request-scope", "task-db-row", "logical-task-binding", "legacy-codex-auth-pins"],
+    providerTurnBoundary: "SDK turns bypass LLM.stream; PromptGuard.check before each SDK spawn plus Session.updateMessage at each mirrored provider step",
+    runtimeHashes, packetPath, packetSha256: packet.packetSha256,
     packetDeclarations: packet.declarations, nonModelArtifacts: packet.nonModelArtifacts, assets, driverSha256,
     global: receipt(packet.global), sources: packet.sources.map((item) => ({ id: item.id, file: item.file, ...receipt(item) })),
     stages: packet.stages.map((item) => ({ id: item.id, sourceIDs: item.sourceIDs, request: receipt(item.request) })),
-    armBudgetMs, totalBudgetMs, outputLimitPerArm: outputLimit, judgment: "not-performed", authAdapter: "explicit-legacy-codex-readonly", order: ["E", "P"] })
+    armBudgetMs, totalBudgetMs, outputLimitPerArm: outputLimit, judgment: "not-performed", order: ["E", "P"] })
   try {
     await Promise.all(["E", "P"].map(async (arm) => {
       await mkdir(join(output, arm), { mode: 0o700 })
@@ -736,7 +742,7 @@ async function main() {
       await writeFile(join(output, arm, "project", "global.txt"), packet.global.text, { flag: "wx", mode: 0o400 })
     }))
     const entries = await Promise.all((["E", "P"] as const).map(async (arm) => {
-      const program = initializer({ candidate, output, packet, assets, driverSha256, arm, preflightOnly: Boolean(args["preflight-only"]) })
+      const program = initializer({ candidate, output, packet, assets, driverSha256, arm, preflightOnly: Boolean(args["preflight-only"]), credentialPaths: credentialPaths(user.home) })
       requireSecretFree(program, secrets, decodeJson)
       new Bun.Transpiler({ loader: "ts" }).transformSync(program)
       const entry = join(output, "initializer-" + arm + ".ts")
@@ -745,19 +751,23 @@ async function main() {
     }))
     if (args["prepare-only"]) { console.log(JSON.stringify({ code: "PAIR_PREPARED_NO_MODEL", output })); return }
     const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-    requireFact(snapshot, "PAIR_SELECTED_AUTH_SNAPSHOT_MISSING")
     const env: Record<string, string | undefined> = Object.fromEntries(["HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "TMPDIR"].map((key) => [key, join(output, key.toLowerCase())]))
     await Promise.all(Object.values(env).filter((path): path is string => typeof path === "string").map((path) => mkdir(path, { mode: 0o700 })))
     Object.assign(env, { PATH: process.env.PATH, ORCHESTRA_DB: join(output, "session.db"), ORCHESTRA_CONFIG: join(output, "config.json"),
-      ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_LEGACY_CODEX_READONLY: "1", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME,
-      ORCHESTRA_AUTH_CONTENT: snapshot.content, TMP: env.TMPDIR, TEMP: env.TMPDIR })
-    await writeFile(String(env.ORCHESTRA_CONFIG), JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } } } }) + "\n", { flag: "wx", mode: 0o600 })
+      ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
+    // Orchestra state stays isolated (ORCHESTRA_TEST_HOME, XDG_*); Claude Code state goes to a per-arm CLAUDE_CONFIG_DIR, and
+    // the empty secure-storage directory keeps sdk.ts on the unsuffixed "Claude Code-credentials" item. "~" in permission
+    // patterns now means the real home.
+    Object.assign(env, { HOME: user.home, USER: user.name, CLAUDE_SECURESTORAGE_CONFIG_DIR: "" })
+    await Promise.all(["E", "P"].map((arm) => mkdir(join(output, "claude-" + arm), { mode: 0o700 })))
+    await writeFile(String(env.ORCHESTRA_CONFIG), JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } },
+      archie: { engine: claude.engine, model } } }) + "\n", { flag: "wx", mode: 0o600 })
     await unchanged(packet)
     const pairStartedAt = Date.now()
     const totalDeadlineAt = pairStartedAt + (args.run ? totalBudgetMs : 3 * 60_000)
     const launched = []
     for (const item of entries) {
-      const result = await launch(item.entry, candidate, env, item.arm, totalDeadlineAt, args["preflight-only"] ? 60_000 : armBudgetMs)
+      const result = await launch(item.entry, candidate, { ...env, CLAUDE_CONFIG_DIR: join(output, "claude-" + item.arm) }, item.arm, totalDeadlineAt, args["preflight-only"] ? 60_000 : armBudgetMs)
       launched.push(result)
       await save(item.arm + "/launcher.json", result.launcher)
       await save(item.arm + "/stdout.json", { text: result.stdout })
@@ -766,19 +776,17 @@ async function main() {
       requireFact(!result.code, result.code ?? "PAIR_PROCESS_FAILED")
     }
     await save("pair-timing.json", { pairStartedAt, totalDeadlineAt, endedAt: Date.now(), armBudgetMs, totalBudgetMs, arms: launched.map((item) => item.launcher) })
-    requireFact(sha256(await read(snapshot.source, true)) === snapshot.sha256, "PAIR_SELECTED_AUTH_STORE_CHANGED")
     await unchanged(packet)
-    await Promise.all([...runtimeHashes, ...sourceHashes.map((item) => ({ path: join(candidate, "packages/orchestra/src", item.file), sha256: item.sha256 }))].map(async (item) =>
+    await Promise.all(runtimeHashes.map(async (item) =>
       requireFact(sha256(await read(await canonical(item.path))) === item.sha256, `PAIR_CANDIDATE_SOURCE_CHANGED:${item.path}`)))
-    requireFact(blob(await read(await canonical(join(candidate, "packages/core/src/auth/siwc.ts")))) === blob(coreAuth), "PAIR_CORE_AUTH_SOURCE_CHANGED")
     if (args["preflight-only"]) {
       const events = launched.flatMap((result) => result.stdout.split("\n")).flatMap((line) => {
         const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
         if (Option.isNone(parsed)) return []
-        const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("pair_preflight"), arm: Schema.Literals(["E", "P"]), parentSessionID: Schema.String }))(parsed.value)
+        const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("pair_preflight"), arm: Schema.Literals(["E", "P"]), dispatch: Schema.Literal("direct-archie"), parentSessionID: Schema.Null, sessionID: Schema.String }))(parsed.value)
         return Option.isSome(event) ? [event.value] : []
       })
-      requireFact(events.length === 2 && new Set(events.map((event) => event.arm)).size === 2 && new Set(events.map((event) => event.parentSessionID)).size === 2, "PAIR_PREFLIGHT_RECORDS_MISSING_OR_AMBIGUOUS")
+      requireFact(events.length === 2 && new Set(events.map((event) => event.arm)).size === 2 && new Set(events.map((event) => event.sessionID)).size === 2, "PAIR_PREFLIGHT_RECORDS_MISSING_OR_AMBIGUOUS")
       await save("status.json", { code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL" }); console.log(JSON.stringify({ code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL", output })); return
     }
     await verifyDatabase(candidate, output, packet, secrets, totalDeadlineAt)
@@ -802,68 +810,57 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
   }
   const json = (text: string) => decode(Schema.UnknownFromJsonString, text, "PAIR_DB_JSON_INVALID")
   const rowSchema = Schema.Struct({ id: Schema.String, data: Schema.String })
-  const sessionSchema = Schema.Struct({ id: Schema.String, parent_id: Schema.NullOr(Schema.String), project_id: Schema.String, directory: Schema.String, agent: Schema.String, permission: Schema.String })
+  const sessionSchema = Schema.Struct({ id: Schema.String, parent_id: Schema.NullOr(Schema.String), project_id: Schema.String, directory: Schema.String, agent: Schema.String, permission: Schema.String, metadata: Schema.NullOr(Schema.String) })
   try {
     const arms = await Promise.all(["E", "P"].map(async (arm) => {
       const stages = await Promise.all(packet.stages.map(async (stage, index) => {
         const root = join(output, arm, `stage-${index + 1}`)
         const nativeBytes = await read(await canonical(join(root, "native.json")))
         requireFact(!secrets.some((secret) => nativeBytes.includes(Buffer.from(secret))), "PAIR_RAW_RESULT_SECRET_BEARING")
-        const native = decode(Schema.Struct({ parentSessionID: Schema.String, parentMessageID: Schema.String, callID: Schema.String,
-          childSessionID: Schema.String, logicalTaskID: Schema.String, worktree: Schema.String, assignment: Schema.String, assignmentSha256: Schema.String,
-          childPromptMessageID: Schema.String, turns: Schema.Int, dispatchBase: Schema.String, requestSha256: Schema.String, proposalSha256: Schema.String, proposalBytes: Schema.Int, revealedSourceIDs: Schema.Array(Schema.String) }), json(utf8(nativeBytes)), "PAIR_STAGE_RECEIPT_INVALID")
+        const native = decode(Schema.Struct({ dispatch: Schema.Literal("direct-archie"), parentSessionID: Schema.Null, sessionID: Schema.String, promptMessageID: Schema.String, claudeSessionID: Schema.String,
+          worktree: Schema.String, assignment: Schema.String, assignmentSha256: Schema.String, turns: Schema.Int, checks: Schema.Int, dispatchBase: Schema.String, requestSha256: Schema.String,
+          proposalSha256: Schema.String, proposalBytes: Schema.Int, revealedSourceIDs: Schema.Array(Schema.String), workResult: Schema.Unknown }), json(utf8(nativeBytes)), "PAIR_STAGE_RECEIPT_INVALID")
         requireFact(native.requestSha256 === stage.request.sha256 && native.assignment.endsWith(stage.request.text) && native.assignmentSha256 === sha256(Buffer.from(native.assignment)), "PAIR_STAGE_REQUEST_CHANGED")
-        const parent = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.parentSessionID), "PAIR_PARENT_DB_MISSING")
-        const child = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.childSessionID), "PAIR_CHILD_DB_MISSING")
-        requireFact(parent.parent_id === null && parent.agent === "maestro" && child.agent === "archie" && child.parent_id === parent.id && child.project_id === parent.project_id && parent.directory === child.directory && child.directory === join(output, arm, "project"), "PAIR_DB_LINEAGE_MISMATCH")
-        const caller = decode(Schema.Struct({ data: Schema.String }), db.query("SELECT data FROM message WHERE session_id=? AND id=?").get(parent.id, native.parentMessageID), "PAIR_TASK_CALLER_MESSAGE_MISSING")
-        const callerInfo = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro"), providerID: Schema.String, modelID: Schema.String }), json(caller.data), "PAIR_TASK_CALLER_IDENTITY_INVALID")
-        requireFact(callerInfo.providerID + "/" + callerInfo.modelID === model, "PAIR_TASK_CALLER_MODEL_MISMATCH")
-        const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(child.permission), "PAIR_PERSISTED_CHILD_RULES_INVALID")
-        const proposalPath = join(child.directory, "proposal.md")
+        const session = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission,metadata FROM session WHERE id=?").get(native.sessionID), "PAIR_DIRECT_SESSION_DB_MISSING")
+        requireFact(session.parent_id === null && session.agent === "archie" && session.directory === join(output, arm, "project"), "PAIR_DB_DIRECT_SESSION_MISMATCH")
+        // ClaudeCode.turn stores the SDK session it resumes; a fresh SDK session per stage would replace it.
+        const metadata = decode(Schema.Struct({ claudeCode: Schema.Struct({ sessionId: Schema.NonEmptyString }) }), json(session.metadata ?? ""), "PAIR_DB_CLAUDE_SESSION_MISSING")
+        requireFact(metadata.claudeCode.sessionId === native.claudeSessionID, "PAIR_DB_CLAUDE_SESSION_MISMATCH")
+        const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(session.permission), "PAIR_PERSISTED_CHILD_RULES_INVALID")
+        const proposalPath = join(session.directory, "proposal.md")
         const proposalPattern = relative(native.worktree, proposalPath).replaceAll("\\", "/")
         requireFact(JSON.stringify(rules.filter((rule) => rule.permission === "tool_safety_write_root" && rule.action === "allow").map((rule) => rule.pattern)) === JSON.stringify([proposalPath])
           && rules.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "deny")
           && rules.findLast((rule) => rule.permission === "edit" && ["*", proposalPattern].includes(rule.pattern))?.action === "allow"
           && rules.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "deny"), "PAIR_PERSISTED_CHILD_SCOPE_MISMATCH")
-        const taskRows = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.tool')='task' AND json_extract(data,'$.callID')=?").all(parent.id, native.parentMessageID, native.callID), "PAIR_TASK_ROWS_INVALID")
-        requireFact(taskRows.length === 1, "PAIR_STAGE_TASK_MISSING_OR_AMBIGUOUS")
-        await saveEvidence(join(root, "stored-task-evidence.json"), { rows: taskRows }, secrets, decodeJson)
-        const task = decode(Schema.Struct({ state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Struct({ prompt: Schema.String, model: Schema.String, subagent_type: Schema.Literal("archie"), task_id: Schema.optional(Schema.String) }),
-          metadata: Schema.Struct({ parentSessionId: Schema.String, sessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String,
-             author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }) }) }) }) }), json(taskRows[0].data), "PAIR_STORED_NATIVE_TASK_INVALID")
-        const work = task.state.metadata.workResult
-        requireFact(task.state.input.prompt === native.assignment && task.state.input.model === model && task.state.input.task_id === (index === 0 ? undefined : native.logicalTaskID)
-          && work.taskId === native.logicalTaskID && work.author.executionSessionID === child.id && work.author.messageID === work.card.messageID
-          && task.state.metadata.sessionId === child.id && task.state.metadata.parentSessionId === parent.id, "PAIR_STORED_NATIVE_RETURN_MISMATCH")
-        const bindings = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM event WHERE aggregate_id=? AND type='maestro.task.bound.1'").all(child.id), "PAIR_LOGICAL_BINDING_ROWS_INVALID")
-        requireFact(bindings.length === 1, "PAIR_LOGICAL_BINDING_MISSING_OR_AMBIGUOUS")
-        const bound = decode(Schema.Struct({ taskId: Schema.String, memberID: Schema.Literal("archie"), executionSessionID: Schema.String, authoritySessionID: Schema.String, projectID: Schema.String, source: Schema.Literal("host") }), json(bindings[0].data), "PAIR_LOGICAL_BINDING_INVALID")
-        requireFact(bound.taskId === work.taskId && bound.executionSessionID === child.id && bound.authoritySessionID === parent.id && bound.projectID === child.project_id, "PAIR_LOGICAL_BINDING_MISMATCH")
+        const work = decode(Schema.Struct({ author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }) }), native.workResult, "PAIR_STAGE_WORK_RESULT_INVALID")
+        requireFact(work.author.executionSessionID === session.id && work.author.messageID === work.card.messageID, "PAIR_STAGE_WORK_RESULT_BINDING_MISMATCH")
         const message = decode(Schema.Struct({ session_id: Schema.String, data: Schema.String }), db.query("SELECT session_id,data FROM message WHERE id=?").get(work.author.messageID), "PAIR_ASSISTANT_DB_MISSING")
         const info = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("archie"), providerID: Schema.String, modelID: Schema.String, parentID: Schema.String }), json(message.data), "PAIR_ASSISTANT_IDENTITY_INVALID")
-        requireFact(message.session_id === child.id && info.providerID + "/" + info.modelID === model, "PAIR_ASSISTANT_MODEL_OR_SESSION_MISMATCH")
-        const storedParts = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? ORDER BY id").all(child.id, work.author.messageID), "PAIR_ASSISTANT_PARTS_INVALID")
-        const assistant = { info: { ...decode(Schema.Record(Schema.String, Schema.Unknown), json(message.data), "PAIR_ASSISTANT_INFO_INVALID"), id: work.author.messageID, sessionID: child.id }, parts: storedParts.map((row) => json(row.data)) }
+        requireFact(message.session_id === session.id && info.providerID + "/" + info.modelID === model, "PAIR_ASSISTANT_MODEL_OR_SESSION_MISMATCH")
+        const storedParts = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? ORDER BY id").all(session.id, work.author.messageID), "PAIR_ASSISTANT_PARTS_INVALID")
+        const assistant = { info: { ...decode(Schema.Record(Schema.String, Schema.Unknown), json(message.data), "PAIR_ASSISTANT_INFO_INVALID"), id: work.author.messageID, sessionID: session.id }, parts: storedParts.map((row) => json(row.data)) }
         await saveEvidence(join(root, "stored-assistant-evidence.json"), assistant, secrets, decodeJson)
-        requireFact(info.parentID === native.childPromptMessageID, "PAIR_STORED_CHILD_PROMPT_ID_MISMATCH")
-        await requireStoredPrompt(candidate, db, child.id, info.parentID, native.assignment)
-        await requireSuccessfulAuthoring(candidate, decode(Schema.Struct({ state: Schema.Struct({ metadata: Schema.Struct({ workResult: Schema.Unknown }) }) }), json(taskRows[0].data), "PAIR_STORED_WORK_RESULT_MISSING").state.metadata.workResult, assistant, proposalPath, native.dispatchBase)
-        const texts = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, work.author.messageID), "PAIR_ASSISTANT_TEXT_ROWS_INVALID")
+        requireFact(info.parentID === native.promptMessageID, "PAIR_STORED_CHILD_PROMPT_ID_MISMATCH")
+        await requireStoredPrompt(candidate, db, session.id, info.parentID, native.assignment)
+        await requireSuccessfulAuthoring(candidate, native.workResult, assistant, proposalPath, native.dispatchBase)
+        const texts = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(session.id, work.author.messageID), "PAIR_ASSISTANT_TEXT_ROWS_INVALID")
         const returned = texts.map((row) => decode(Schema.Struct({ text: Schema.String }), json(row.data), "PAIR_ASSISTANT_TEXT_INVALID").text).join("\n")
         requireFact(returned.length > 0 && !secrets.some((secret) => returned.includes(secret)), "PAIR_ASSISTANT_EMPTY_OR_SECRET_BEARING")
         await saveEvidence(join(root, "returned-assistant.json"), { text: returned, originalUtf8Sha256: sha256(Buffer.from(returned)), originalUtf8ByteLength: Buffer.byteLength(returned) }, secrets, decodeJson)
         const proposal = await read(await canonical(join(root, "proposal.md")))
         utf8(proposal)
         requireFact(proposal.length === native.proposalBytes && sha256(proposal) === native.proposalSha256 && !secrets.some((secret) => proposal.includes(Buffer.from(secret))), "PAIR_PROPOSAL_SNAPSHOT_MISMATCH_OR_SECRET")
-        // Collect every stored provider step belonging to this child prompt, including tool turns.
-        const messages = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM message WHERE session_id=? AND json_extract(data,'$.role')='assistant' AND json_extract(data,'$.parentID')=? ORDER BY id").all(child.id, info.parentID), "PAIR_USAGE_MESSAGE_ROWS_INVALID")
+        // Collect every stored provider step belonging to this stage prompt, including tool turns.
+        const messages = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM message WHERE session_id=? AND json_extract(data,'$.role')='assistant' AND json_extract(data,'$.parentID')=? ORDER BY id").all(session.id, info.parentID), "PAIR_USAGE_MESSAGE_ROWS_INVALID")
         requireFact(messages.length > 0, "PAIR_STAGE_PROVIDER_MESSAGES_MISSING")
+        const premodel = decode(Schema.Struct({ sessionID: Schema.String, promptMessageID: Schema.String }), json(utf8(await read(await canonical(join(root, "pre-model-boundary.json"))))), "PAIR_PRE_MODEL_BOUNDARY_RECORD_INVALID")
+        requireFact(native.checks === 1 && premodel.sessionID === session.id && premodel.promptMessageID === native.promptMessageID, "PAIR_PRE_MODEL_BOUNDARY_RECORD_MISMATCH")
         const boundaries = await Promise.all((await readdir(root)).filter((file) => /^provider-boundary-\d+\.json$/.test(file)).map(async (file) =>
           decode(Schema.Struct({ assistantMessageID: Schema.String, tools: Schema.Array(Schema.String) }), json(utf8(await read(await canonical(join(root, file))))), "PAIR_PROVIDER_BOUNDARY_RECORD_INVALID")))
         requireFact(boundaries.length === native.turns, "PAIR_PROVIDER_BOUNDARY_RECORD_COUNT_MISMATCH")
         requireTurnBoundaries(messages.map((row) => row.id), boundaries)
-        const steps = messages.flatMap((msg) => decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(child.id, msg.id), "PAIR_STEP_ROWS_INVALID").map((row) => {
+        const steps = messages.flatMap((msg) => decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(session.id, msg.id), "PAIR_STEP_ROWS_INVALID").map((row) => {
           const stored = decode(Schema.Record(Schema.String, Schema.Unknown), json(row.data), "PAIR_STEP_DATA_INVALID")
           const tokens = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(stored.tokens)
           const cache = Option.isSome(tokens) ? Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(tokens.value.cache) : Option.none()
@@ -871,31 +868,33 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
             ...["read", "write"].filter((field) => Option.isNone(cache) || !Object.hasOwn(cache.value, field)).map((field) => "cache." + field)]
           return { messageID: msg.id, partID: row.id, stored, missingFields }
         }))
-        const evidence = { arm, index, id: stage.id, ...native, returnedAssistantID: work.author.messageID, childPromptMessageID: info.parentID,
+        const evidence = { arm, index, id: stage.id, ...native, returnedAssistantID: work.author.messageID, promptMessageID: info.parentID,
           returnedAssistantSha256: sha256(Buffer.from(returned)), providerMessages: messages.map((row) => ({ id: row.id, stored: json(row.data) })),
-          usage: { scope: "native-child-only-parent-overhead-excluded", source: "stored-step-finish", steps, missingness: steps.length === 0 ? "no-stored-step-finish" : "per-step-missingFields-no-inferred-counts" },
+          // The mirror writes per-step token counts with cost 0 and puts the SDK's turn cost on the last step's message.
+          usage: { scope: "native-archie-session-only", source: "stored-step-finish", turnCost: "stored assistant info.cost (SDK total_cost_usd delta)", steps, missingness: steps.length === 0 ? "no-stored-step-finish" : "per-step-missingFields-no-inferred-counts" },
           inputs: [receipt(packet.global), ...packet.sources.map(receipt), ...packet.stages.map((item) => receipt(item.request))], judgment: "not-performed" }
         await saveEvidence(join(root, "verified.json"), evidence, secrets, decodeJson)
         return evidence
       }))
-      requireFact(new Set(stages.map((stage) => stage.childSessionID)).size === 1 && new Set(stages.map((stage) => stage.logicalTaskID)).size === 1
-        && new Set(stages.map((stage) => stage.returnedAssistantID)).size === 4, "PAIR_SAME_CHILD_RESUME_NOT_OBSERVED")
-      const tasks = db.query("SELECT id FROM part WHERE session_id=? AND json_extract(data,'$.tool')='task'").all(stages[0].parentSessionID)
-      requireFact(tasks.length === 4, "PAIR_PARENT_EXTRA_OR_MISSING_TASKS")
-      const children = decode(Schema.Array(Schema.Struct({ id: Schema.String })), db.query("SELECT id FROM session WHERE parent_id=?").all(stages[0].parentSessionID), "PAIR_NATIVE_CHILD_ROWS_INVALID")
-      requireFact(children.length === 1 && children[0].id === stages[0].childSessionID, "PAIR_EXTRA_OR_MISSING_NATIVE_CHILD")
+      requireSameSessionResume(stages)
+      const prompts = decode(Schema.Array(Schema.Struct({ id: Schema.String })), db.query("SELECT id FROM message WHERE session_id=? AND json_extract(data,'$.role')='user' ORDER BY id").all(stages[0].sessionID), "PAIR_SESSION_PROMPT_ROWS_INVALID")
+      requireFact(JSON.stringify(prompts.map((row) => row.id)) === JSON.stringify(stages.map((stage) => stage.promptMessageID)), "PAIR_SESSION_EXTRA_OR_MISSING_PROMPTS")
+      const children = decode(Schema.Array(Schema.Struct({ id: Schema.String })), db.query("SELECT id FROM session WHERE parent_id=?").all(stages[0].sessionID), "PAIR_NATIVE_CHILD_ROWS_INVALID")
+      requireFact(children.length === 0, "PAIR_UNEXPECTED_CHILD_SESSION")
       return { arm, stages }
     }))
-    requireFact(arms[0].stages[0].childSessionID !== arms[1].stages[0].childSessionID && arms[0].stages[0].parentSessionID !== arms[1].stages[0].parentSessionID, "PAIR_ARMS_NOT_INDEPENDENT")
+    const sessions = decode(Schema.Array(Schema.Struct({ id: Schema.String })), db.query("SELECT id FROM session ORDER BY id").all(), "PAIR_SESSION_ROWS_INVALID")
+    requireFact(sessions.length === 2 && arms.every((item) => sessions.some((row) => row.id === item.stages[0].sessionID)), "PAIR_EXTRA_OR_MISSING_SESSION")
+    requireFact(arms[0].stages[0].sessionID !== arms[1].stages[0].sessionID && arms[0].stages[0].claudeSessionID !== arms[1].stages[0].claudeSessionID, "PAIR_ARMS_NOT_INDEPENDENT")
     const settings = await Promise.all(["E", "P"].map(async (arm) => {
       const raw = json(utf8(await read(await canonical(join(output, arm, "native-settings.json")))))
       const timing = decode(Schema.Struct({ timing: Schema.Struct({ startedAt: Schema.Int, deadlineAt: Schema.Int, budgetMs: Schema.Int, totalDeadlineAt: Schema.Int }) }), raw, "PAIR_ARM_TIMING_MISSING").timing
       requireFact(timing.budgetMs === armBudgetMs && timing.deadlineAt - timing.startedAt === armBudgetMs, "PAIR_ARM_BUDGET_NOT_EQUAL")
-      return decode(Schema.Struct({ archie: Schema.Unknown, maestro: Schema.Unknown, toolIDs: Schema.Array(Schema.String) }), raw, "PAIR_NATIVE_SETTINGS_MISSING")
+      return decode(Schema.Struct({ archie: Schema.Unknown, engine: Schema.Unknown, toolIDs: Schema.Array(Schema.String) }), raw, "PAIR_NATIVE_SETTINGS_MISSING")
     }))
     requireFact(JSON.stringify(settings[0]) === JSON.stringify(settings[1]), "PAIR_NATIVE_SETTINGS_OR_TOOLS_DIFFER")
     requireFact(Date.now() < totalDeadlineAt, "PAIR_TOTAL_DEADLINE")
-    await saveEvidence(join(output, "results.json"), { schema: 1, model, arms, judgment: "not-performed", benefit: "not-assessed", approval: "not-assessed" }, secrets, decodeJson)
+    await saveEvidence(join(output, "results.json"), { schema: 1, ...claude, dispatch: "direct-archie", parentSession: null, arms, judgment: "not-performed", benefit: "not-assessed", approval: "not-assessed" }, secrets, decodeJson)
   } finally { db.close() }
 }
 
