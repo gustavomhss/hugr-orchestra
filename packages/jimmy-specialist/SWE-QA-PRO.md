@@ -146,3 +146,66 @@ Token columns are totals over the 60 questions. Call counts are measured differe
 On this sample, under a Claude judge, Jimmy scored **2.4 points lower** (CI −4.0 to −0.8) than plain Claude Code with Read/Grep/Glob, using the same model. The gap shrinks to about 1.2 points, but persists, when the two load-related timeouts are excluded post hoc.
 
 Jimmy's research protocol (skills, captured sources, published records, result card) took about twice the wall time and tokens without improving judged answer quality on this benchmark. Both agentic arms clearly beat the no-tool probe.
+
+## Re-measure: defect fixes and method change
+
+This re-measure used the same frozen setup as above:
+- the same 60 questions (seed 20261011);
+- the same adapter bytes and web-tool guard;
+- the same `claude-sonnet-5-5` judge (unchanged upstream prompt, blinded, shuffled, 3 runs);
+- the same scoring and statistics.
+
+The original Jimmy and baseline answers and scores were reused, not regenerated. Two new Jimmy arms were added, one attempt each:
+
+| Arm | Branch | Change |
+|---|---|---|
+| **J-fix** | `jimmy-engine-friction` @ `4dfc7f6f27` | Per-action required fields in tool schemas (`research_record` `contrary`/`conditions`), plus bare and Claude-Code tool-name aliases. |
+| **J-fix+depth** | `jimmy-friction-depth` @ `2aeeff55c2` | J-fix plus two `jimmy.txt` sentences: verify beyond the first confirming source; state verified claims directly, with structure. |
+
+The contrasts, statistics and load control were pre-registered by hash before any sample run (private `FREEZE-v3.txt`, sha256 `d102526b…48f1`).
+
+### Load control
+
+- At most 2 Jimmy runs at once, and each run started only once the 1-minute load average was below 30.
+- Start load had a median of 4.4 and a maximum of 29.2. No run started above the gate; one run waited 30 s.
+- Time to first prompt had a median of 5 s and a maximum of 19 s, against a maximum of 660 s in the original run.
+- **No timeouts** in either new arm. The original had 2.
+
+### Scores
+
+All scores are under the Claude judge, so they are not comparable to published numbers (see J2). Scale is 5–50; correctness + completeness ("C+C") is 2–20.
+
+| Arm | Mean | 95% CI | C+C | What | Where | Why | How |
+|---|---|---|---|---|---|---|---|
+| Jimmy (original) | 39.18 | 37.41–40.95 | 15.19 | 37.42 | 39.91 | 37.84 | 41.07 |
+| J-fix | 40.43 | 39.30–41.56 | 15.67 | 40.94 | 42.35 | 36.98 | 41.16 |
+| J-fix+depth | 40.96 | 39.91–42.02 | 15.98 | 40.11 | 42.63 | 38.62 | 41.98 |
+| Baseline (Claude Code, Read/Grep/Glob) | 41.58 | 40.57–42.59 | 16.29 | 41.36 | 42.72 | 38.91 | 43.04 |
+
+### Pre-registered paired contrasts
+
+Paired over the same 60 questions; 95% t CI with the finite-population correction; Wilcoxon signed-rank p-value.
+
+| Contrast | Mean difference | 95% CI | Wilcoxon p | Wins / losses | C+C difference |
+|---|---|---|---|---|---|
+| J-fix − Jimmy (defect fixes) | +1.24 | −0.39 to 2.88 | 0.49 | 28 / 22 | +0.48 (−0.20 to 1.16) |
+| J-fix+depth − J-fix (method) | **+0.53** | 0.13 to 0.94 | 0.035 | 32 / 19 | +0.31 (0.09 to 0.54) |
+| J-fix − baseline | −1.15 | −1.68 to −0.62 | 0.0004 | 14 / 34 | −0.62 (−0.90 to −0.35) |
+| J-fix+depth − baseline | **−0.62** | −1.10 to −0.14 | 0.032 | 14 / 29 | −0.31 (−0.58 to −0.04) |
+
+- **The fixes.** Most of the +1.24 comes from removing the two load-related timeouts in the original arm. The original was run under host load ≈ 100 and these runs under load < 30, so fixes and load are confounded in this contrast. The per-item gain on answered questions is small and not significant.
+- **The method change** is a small, significant improvement. It is concentrated in Why questions (+1.64, CI 0.75 to 2.54) and How questions (+0.82), with a slight loss on What (−0.83).
+- **Plain Claude Code** still leads the best Jimmy arm, by 0.62 points.
+
+### Mechanics per arm (60 runs each)
+
+| Arm | `research_record` errors (runs) | "No such tool" errors | All tool errors | Provider calls, median (max) | Files read, median | Wall time, median (max) |
+|---|---|---|---|---|---|---|
+| Jimmy | 46 (24) | 4 | 55 | 6 (12) | 3.5 | 65 s (806 s) |
+| J-fix | 9 (8) | 0 | 13 | 6 (9) | 4 | 51 s (99 s) |
+| J-fix+depth | 4 (2) | 0 | 7 | 5 (10) | 4 | 49 s (112 s) |
+
+- The schema errors (missing `contrary`/`conditions`) and the tool-name collision are gone.
+- The remaining `research_record` errors are mostly JSON-escaping failures the client rejected before the call (10), plus "Source line range does not exist" (3).
+- No arm came near the 24-call or 64-tool cap.
+- The depth sentences did not increase exploration in calls or files.
