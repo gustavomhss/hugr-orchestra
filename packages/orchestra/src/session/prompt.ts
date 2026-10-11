@@ -140,6 +140,7 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const permission = yield* Permission.Service
     const fsys = yield* FSUtil.Service
+    const global = yield* Global.Service
     const mcp = yield* MCP.Service
     const lsp = yield* LSP.Service
     const registry = yield* ToolRegistry.Service
@@ -1062,10 +1063,12 @@ const layer = Layer.effect(
           )
           // Some providers return "stop" even when the assistant message contains
           // tool calls. Keep the loop running so tool results can be sent back to
-          // the model, but ignore cleanup-marked interrupted orphans.
+          // the model, but ignore cleanup-marked interrupted orphans. Calls mirrored from Claude Code are never
+          // pending here: Claude Code's turn already returned their results.
           const hasToolCalls =
             lastAssistantMsg?.parts.some(
-              (part) => part.type === "tool" && !part.metadata?.providerExecuted && !isOrphanedInterruptedTool(part),
+              (part) => part.type === "tool" && !part.metadata?.providerExecuted && !part.metadata?.claudeCodeTool &&
+                !isOrphanedInterruptedTool(part),
             ) ?? false
 
           if (
@@ -1094,7 +1097,7 @@ const layer = Layer.effect(
 
           if (workflow && (yield* agents.get(lastUser.agent))?.engine === "claude-code")
             return yield* Effect.die(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED" }))
-          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser }))) continue
+          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser, promptOps: taskPrompts.ops }))) continue
           step++
           if (step === 1)
             yield* title({
@@ -1153,7 +1156,7 @@ const layer = Layer.effect(
               model,
               processor: proxy.processor,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: taskPrompts.ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: taskPrompts.ops })
 
             const recall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),

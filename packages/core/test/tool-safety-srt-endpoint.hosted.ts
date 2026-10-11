@@ -106,9 +106,11 @@ const sandboxFor = (port: number) =>
     }).pipe(Effect.orDie))
     const profile = { requireSandbox: true, writeRoots: ["models"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
       allowedLoopbackEndpoints: [{ directory: work, host: "127.0.0.1" as const, port }] } } satisfies ToolSafety.Profile
-    const sandboxed = (script: string, env?: Record<string, string>) => Effect.scoped(Effect.gen(function* () {
+    // The backend seat's shell also confines reads: its work directory, the toolkit and the host toolchain only.
+    const confined = { ...profile, sandbox: { ...profile.sandbox, readRoots: [work, root] } } satisfies ToolSafety.Profile
+    const sandboxed = (script: string, env?: Record<string, string>, reads = false) => Effect.scoped(Effect.gen(function* () {
       const command = yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", script], { cwd: work, env })).pipe(
-        Effect.provideService(ToolSafety.RuntimeProfile, profile),
+        Effect.provideService(ToolSafety.RuntimeProfile, reads ? confined : profile),
         Effect.provideService(ToolSafety.NativeContext, { directory: work }),
       )
       return yield* processes.run(command, { timeout: "2 minutes" })
@@ -176,6 +178,19 @@ Promise.all([connect(${port}),connect(${other.port}),raw(${port}),raw(${other.po
     expect(result.rawGranted).toBe("CONNECTED")
     expect(result.rawOther).toBe("ERR:ECONNREFUSED")
     expect(result.ports).toBe(String(port))
+    // Under confined reads the same engine generates the same models through the same grant, the CONNECT client still
+    // reaches exactly the granted port, and a read outside the grants fails.
+    yield* fs.remove(path.join(work, "models", "models.go"))
+    const regenerated = yield* sandboxed(command, prepared.env, true)
+    expect(regenerated.exitCode, regenerated.stderr.toString()).toBe(0)
+    expect(createHash("sha256").update(yield* fs.readFile(path.join(work, "models", "models.go"))).digest("hex")).toBe(MODELS_SHA256)
+    const reprobed = yield* sandboxed(`"${node}" probe.cjs`, undefined, true)
+    expect(reprobed.exitCode, reprobed.stderr.toString()).toBe(0)
+    expect(JSON.parse(reprobed.stdout.toString())).toMatchObject({ granted: expect.stringMatching(/^HTTP\/1.1 200/), other: expect.stringMatching(/^HTTP\/1.1 403/) })
+    expect((yield* sandboxed("cat /etc/hostname")).exitCode).toBe(0)
+    const outside = yield* sandboxed("cat /etc/hostname", undefined, true)
+    expect(outside.exitCode).not.toBe(0)
+    console.info(`confined reads: regenerated models.go, probe ${reprobed.stdout.toString().trim()}, /etc/hostname: ${outside.stderr.toString().trim()}`)
     expect(other.accepted()).toBe(0)
   }), 20 * 60_000,
 )

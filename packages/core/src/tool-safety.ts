@@ -38,6 +38,12 @@ export type Profile = {
     readonly scratch?: boolean
     /** Where no sandbox can run, run the command without the write jail and report it instead of holding it. */
     readonly unconfinedFallback?: boolean
+    /**
+     * Confine reads too: the command reads only these paths, its write roots, its scratch directory and the host's
+     * toolchain (ToolSafetySandbox.toolchain); every other path is denied. A host without a sandbox refuses the command,
+     * whatever `unconfinedFallback` says. Host-bound only (native seats' shells); macOS and Linux.
+     */
+    readonly readRoots?: ReadonlyArray<string>
   }
   /** Installed Relay hooks (`hooks.json`), pinned per install. Only ToolSafety.run enforces them; they grant nothing. */
   readonly hooks?: ReadonlyArray<RelayHook.Install>
@@ -252,6 +258,10 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   [
     /^required-process-sandbox-unbound$/,
     "The project's safety profile requires commands to run in a process sandbox and this tool cannot, so it did not run. Run commands with the shell tool, or ask the owner.",
+  ],
+  [
+    /^shell-read-sandbox-unavailable: /,
+    "This agent's commands run only inside the OS sandbox that confines what they read, and this host could not start it, so the command did not run. Do not run it another way; report the reason to the owner.",
   ],
   [
     /^(?:required-process-sandbox-unavailable|sandbox-.+)$/,

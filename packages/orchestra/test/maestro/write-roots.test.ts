@@ -24,6 +24,7 @@ import { Permission } from "@/permission"
 import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { SEAT_SHELL_REFUSED, seatShellRuns } from "../fixture/seat-sandbox"
 
 // F2.14: the host, not the prompt, decides where a bound backend child may write. These run the real write and shell
 // tools through ArsenalBindings.withSession, the per-Session binding every native tool call goes through.
@@ -64,9 +65,11 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
           return found
         }
         const parent = yield* sessions.create({ agent: "maestro" })
+        // The unbound Session is Maestro's own; every bound child is the backend seat.
         const context = (sessionID: SessionID): Tool.Context => ({
-          sessionID, messageID: MessageID.ascending(), callID: `call-${MessageID.ascending()}`, agent: "backend",
-          agentID: "backend", abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
+          sessionID, messageID: MessageID.ascending(), callID: `call-${MessageID.ascending()}`,
+          agent: sessionID === parent.id ? "maestro" : "backend", agentID: sessionID === parent.id ? "maestro" : "backend",
+          abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
           ask: (request) => permission.ask({ ...request, sessionID, ruleset: [{ permission: "*", pattern: "*", action: "allow" }] }).pipe(Effect.orDie),
         })
         const bound = yield* Effect.forEach(bindings, (writePaths) => Effect.gen(function* () {
@@ -142,9 +145,15 @@ describe("backend write roots enforcement", () => {
         return
       }
       const escape = yield* h.shell(child, `printf escaped > outside/shell.txt`)
+      if (!seatShellRuns()) {
+        // macOS and Linux: a seat's shell never runs without the sandbox that confines its reads.
+        held(escape, SEAT_SHELL_REFUSED)
+        expect(yield* exists(path.join(outside, "shell.txt"))).toBe(false)
+        return
+      }
       if (!sandbox) {
-        // Owner decision 2026-10-06: without a sandbox the shell runs without the write jail (the host fact says so,
-        // see below); the edit tools still hold writes outside the roots.
+        // Windows (owner decision 2026-10-06): without a sandbox the shell runs without the write jail (the host fact
+        // says so, see below); the edit tools still hold writes outside the roots.
         expect(Exit.isSuccess(escape) && escape.value.metadata.exit).toBe(0)
         expect(yield* exists(path.join(outside, "shell.txt"))).toBe(true)
         held(yield* h.write(child, path.join(outside, "edit.txt")), "write-outside-physical-roots")
@@ -156,7 +165,8 @@ describe("backend write roots enforcement", () => {
       const chmod = yield* h.shell(child, `chmod 644 outside/locked`)
       if (Exit.isSuccess(chmod)) expect(chmod.value.metadata.exit).not.toBe(0)
       expect((yield* Effect.promise(() => fs.stat(path.join(outside, "locked")))).mode & 0o777).toBe(0o444)
-      const inside = yield* h.shell(child, `printf kept > src/shell.txt && printf t > "$TMPDIR/probe" && cat "$TMPDIR/probe" > /dev/null`)
+      // A seat may not name a read path only the shell resolves (ShellScan), so the scratch read goes through sh -c.
+      const inside = yield* h.shell(child, `printf kept > src/shell.txt && printf t > "$TMPDIR/probe" && sh -c 'cat "$TMPDIR/probe"' > /dev/null`)
       expect(Exit.isSuccess(inside) && inside.value.metadata.exit).toBe(0)
       expect(yield* Effect.promise(() => fs.readFile(path.join(h.directory, "src", "shell.txt"), "utf8"))).toBe("kept")
     })),
@@ -167,7 +177,10 @@ describe("backend write roots enforcement", () => {
     harness([["src"]], (h) => Effect.gen(function* () {
       const [child] = h.bound
       const observed: ToolSafety.Observation[] = []
-      expect(Exit.isSuccess(yield* h.guarded(child, `printf fact > src/fact.txt`, observed))).toBe(true)
+      const guarded = yield* h.guarded(child, `printf fact > src/fact.txt`, observed)
+      // macOS and Linux: without the sandbox a seat's shell is refused instead (see above); there is no shell fact.
+      if (!seatShellRuns()) return held(guarded, SEAT_SHELL_REFUSED)
+      expect(Exit.isSuccess(guarded)).toBe(true)
       expect(observed.at(-1)).toMatchObject({ outcome: "success", ...host })
       const work = BackendWork.track({ enabled: true, sessionID: child, writeRoots: ["src"], publish: () => Effect.void })
       expect(yield* work.notice("completed", "done").pipe(Effect.provideService(Database.Service, h.database)))

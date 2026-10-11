@@ -4,6 +4,7 @@ import { Script } from "@orchestra/script"
 import path from "path"
 import { fileURLToPath } from "url"
 import { seatSkillsFiles } from "./seat-skills"
+import { leanNotices } from "./lean-notices"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -26,6 +27,7 @@ const result = await Bun.build({
   external: ["jsonc-parser", "@lydell/node-pty"],
   define: {
     ORCHESTRA_COMPILED: "true",
+    ORCHESTRA_CANDIDATE_BUILD: String(process.argv.slice(2).includes("--lean-candidate")),
     ORCHESTRA_MODELS_DEV: generated.modelsData,
     ORCHESTRA_VERSION: `'${Script.version}'`,
     ORCHESTRA_CHANNEL: `'${Script.channel}'`,
@@ -73,5 +75,7 @@ const external = await Promise.all(
 )
 if (external.some(Boolean))
   throw new Error(`hugr-omni must be bundled, not imported: ${external.filter(Boolean).join(", ")}`)
+
+await leanNotices("./dist/node")
 
 console.log("Build complete")
