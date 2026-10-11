@@ -23,6 +23,11 @@
     "./*": "./src/*.ts"
   },
   "imports": {
+    "#claude-code-sqlite": {
+      "bun": "./src/claude-code/sqlite.bun.ts",
+      "node": "./src/claude-code/sqlite.node.ts",
+      "default": "./src/claude-code/sqlite.bun.ts"
+    },
     "#db": {
       "bun": "./src/storage/db.bun.ts",
       "node": "./src/storage/db.node.ts",
@@ -53,6 +58,7 @@
     "why-is-node-running": "3.2.2"
   },
   "dependencies": {
+    "hugr-omni": "workspace:*",
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.1",
     "@agentclientprotocol/sdk": "0.21.0",

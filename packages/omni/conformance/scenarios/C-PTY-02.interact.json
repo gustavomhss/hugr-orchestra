@@ -1,0 +1,11 @@
+{
+  "id": "C-PTY-02.interact",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "prompt=YOUR-NAME\\n", "out=BYE\\n", "hang"], "options": {"pty": true}, "as": "c"},
+    {"read": "c", "until": {"match": "YOUR-NAME"}},
+    {"write": "c", "data": "alice\r"},
+    {"read": "c", "until": {"match": "GOT alice|BYE", "count": 2}},
+    {"write": "c", "data": "\u0003"},
+    {"wait": "c", "expect": {"success": false, "elapsedMs": {"lt": 1000}}}
+  ]
+}

@@ -996,6 +996,8 @@ export function make(options: ClientOptions) {
               cwd: input?.["cwd"],
               title: input?.["title"],
               env: input?.["env"],
+              cols: input?.["cols"],
+              rows: input?.["rows"],
             },
             successStatus: 200,
             declaredStatuses: [401, 400],

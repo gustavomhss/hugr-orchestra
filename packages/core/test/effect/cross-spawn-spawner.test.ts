@@ -7,6 +7,7 @@ import type * as PlatformError from "effect/PlatformError"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { omniSpawner } from "@orchestra/core/flag/flag"
 import { testEffect } from "../lib/effect"
 
 const live = LayerNode.compile(CrossSpawnSpawner.node)
@@ -302,7 +303,8 @@ describe("cross-spawn spawner", () => {
     )
   })
 
-  describe("pipeline", () => {
+  // Pipelines delegate to legacy, and strict refuses any delegation (D-L12), so they only run when strict is off.
+  describe.skipIf(omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) === "strict")("pipeline", () => {
     fx.effect(
       "pipes stdout of one command to stdin of another",
       Effect.gen(function* () {

@@ -143,7 +143,9 @@ describe("plugin.azure", () => {
       `,
         ],
         {
-          env: { PATH: installed ? cli.bin : tmp.path, XDG_DATA_HOME: tmp.path },
+          // The nested Node host is a plain bundle with no hugr-omni next to it, and children never see
+          // HUGR_OMNI_* (D-L3), so it runs the legacy spawner whatever this test run's flag is.
+          env: { PATH: installed ? cli.bin : tmp.path, XDG_DATA_HOME: tmp.path, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" },
           nothrow: true,
         },
       )

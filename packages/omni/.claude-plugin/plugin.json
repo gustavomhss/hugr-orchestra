@@ -1,0 +1,11 @@
+{
+  "name": "hugr-omni",
+  "displayName": "hugr-omni",
+  "version": "0.1.0",
+  "description": "Skills for using hugr-omni (processes and terminals with the same, tested behavior on Windows, macOS and Linux) and for maintaining it: gates, core changes, OS traps, conformance, release.",
+  "author": { "name": "Gustavo Schneiter" },
+  "homepage": "https://github.com/gustavomhss/hugr-omni",
+  "repository": "https://github.com/gustavomhss/hugr-omni",
+  "license": "MIT OR Apache-2.0",
+  "keywords": ["process", "spawn", "pty", "terminal", "process-tree", "cross-platform"]
+}

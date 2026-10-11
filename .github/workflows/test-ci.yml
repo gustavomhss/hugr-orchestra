@@ -1,8 +1,9 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
-# The request names its runner (`bun` or `pytest`). A request without one falls back to the files: a package.json means
+# with a .ci-run.json request ({ package, args, runner, env }). This workflow runs exactly those tests, then deletes the
+# branch.
+# The request names its runner (`bun`, `node` or `pytest`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.
 on:
   push:
@@ -18,8 +19,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-* or ci-run-both-*.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || '["ubuntu-latest"]') }}
+        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
+        # ci-run-both-* (Linux and Windows) or ci-run-all-*.
+        # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -46,7 +49,7 @@ jobs:
             runner=pytest
           fi
           case "$runner" in
-            bun) required=package.json ;;
+            bun | node) required=package.json ;;
             pytest) required=requirements-dev.txt ;;
             *) required="" ;;
           esac
@@ -58,7 +61,7 @@ jobs:
           echo "runner=$runner" >> "$GITHUB_OUTPUT"
 
       - name: Setup Bun
-        if: steps.request.outputs.runner == 'bun'
+        if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun
 
       - name: Setup Python
@@ -80,19 +83,49 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "orchestra"
 
+      # Only allow-listed keys with plain values reach the environment; test-ci.ts validates before upload too.
+      - name: Export requested environment
+        run: |
+          jq -r '(.env // {}) | to_entries[] | "\(.key)=\(.value)"' .ci-run.json | tr -d '\r' | while IFS= read -r line; do
+            key=${line%%=*}
+            value=${line#*=}
+            case "$key" in
+              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) ;;
+              *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
+            esac
+            if ! printf '%s' "$value" | grep -Eq '^[A-Za-z0-9_]+$'; then
+              echo "::error::.ci-run.json env value for $key is not [A-Za-z0-9_]+"
+              exit 2
+            fi
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done
+
+      - name: omni binaries
+        if: steps.request.outputs.runner != 'pytest'
+        uses: ./.github/actions/omni-binaries
+
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |
-          mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
+          args=()
+          while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
           cd "packages/$PACKAGE"
-          if [ "$RUNNER" = pytest ]; then
-            python -m pytest -p no:cacheprovider "${args[@]}"
-          else
-            GITHUB_ACTIONS=false bun test "${args[@]}"
-          fi
+          case "$RUNNER" in
+            pytest) python -m pytest -p no:cacheprovider "${args[@]}" ;;
+            bun) GITHUB_ACTIONS=false bun test "${args[@]}" ;;
+            node)
+              for file in "${args[@]}"; do
+                case "$file" in
+                  *.node-smoke.mjs) ;;
+                  *) echo "::error::the node runner runs only *.node-smoke.mjs files, not $file"; exit 2 ;;
+                esac
+              done
+              node --experimental-strip-types --test "${args[@]}"
+              ;;
+          esac
 
   cleanup:
     needs: test

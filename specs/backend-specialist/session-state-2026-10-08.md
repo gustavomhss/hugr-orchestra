@@ -27,7 +27,7 @@ The owner requested saving state **before continuing**. Stop after saving; resum
 - Do not stop/restart owner app/server. Only dispose isolated listeners/services/process groups created by us.
 - Default branch `dev`, remote `fork` → `gustavomhss/hugr-orchestra`.
 - Current identity is `packages/orchestra`, `@orchestra/*`, `ORCHESTRA_*`. Historical private bench may
-  reproduce pre-rename OpenCode; product does not gain aliases/migration.
+  reproduce the pre-rename product; product does not gain aliases/migration.
 - Native specialist id `backend`; display label configurable. Never spell its default label outside
   `BACKEND_DEFAULT_LABEL` in roster.ts. Maestro name fixed. Preserve dependency direction and V2 session invariants.
 
@@ -175,11 +175,11 @@ the host/runtime simply to run bench tests.
 New campaign `backend-bench/results/2026-10-08-gpt6-luna-repairs/`:
 **01 PASS; 02 PASS**. Then bootstrap failed with `bench-host-ready-timeout` (old 20s readiness).
 No complete valid result for remaining cases; do not claim 11/10 passed. Supervisor stopped on missing result.
-Evidence/log: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-gpt6-repairs.log`.
-Failed work: `.../opencode/backend-bench-NABhKu/host/host.stderr.log` shows input/source-import only;
+Evidence/log: `backend-gpt6-repairs.log`, relative to the harness-approved temporary parent.
+Failed work: `backend-bench-NABhKu/host/host.stderr.log` under that same parent shows input/source-import only;
 `host.process.json` shows exit143, pipes closed and no cleanup errors.
 
-Temporary driver files under `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/`:
+Temporary driver files under the harness-approved temporary parent:
 - `backend-gpt6-campaign.ts`: targets backend-failures; original same-case result collision protection applies.
   Update to a **new campaign** for next attempt; don't overwrite 01/02 or re-grade originals.
   Two shards, 900s case budget; current coordinator throws on missing result and needs safe sibling finalization.
@@ -190,7 +190,7 @@ Temporary driver files under `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/o
 Real owner OAuth is read only inside supervisor and forwarded only to
 `https://chatgpt.com/backend-api/codex/responses`; no token belongs in handoff, results or commits.
 
-Reusable pinned cache: `.../opencode/toolkit-repairs-cache`. Warm-ready needed engines include Buf/ES,
+Reusable pinned cache: `toolkit-repairs-cache` under that same temporary parent. Warm-ready needed engines include Buf/ES,
 SQLglot30.21.0, DataFusion55.1.0, datamodel-codegen, SQLx/kopium, Orval/Kiota/Modelina, controller-gen/kubeconform,
 Kysely/PGLS, gocqlx and existing SQLc/ogen/Squawk. Verify actual readiness after code integration; READY metadata
 alone does not prove invocation. DataFusion real CSV + EXPLAIN positive/invalid-table negative already measured.

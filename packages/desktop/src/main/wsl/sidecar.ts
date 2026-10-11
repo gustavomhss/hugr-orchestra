@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process"
 import { createServer } from "node:net"
+import { DesktopOmni } from "../omni-process"
 import { type WslCommandLine, resolveWslOrchestra, runWslInDistro, shellEscape, wslArgs } from "./runtime"
 import { checkWslAuthentication, pollWslHealth } from "./startup"
 import { guestEnvironment, verifyWslGuestArtifact } from "./artifact"
@@ -37,11 +38,14 @@ export async function spawnWslSidecar(
     throw new Error(nativeT("desktop.wsl.error.serverCannotRun"))
   }
   const username = "orchestra"
-  const child = spawn("wsl", wslArgs(["bash", "-se"], distro), {
-    stdio: ["pipe", "pipe", "pipe"],
-    windowsHide: true,
-    signal: opts.signal,
-  })
+  // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the WSL server runs through omni, so it ends with this app.
+  const child: DesktopOmni.Spawned = DesktopOmni.enabled()
+    ? DesktopOmni.spawn("wsl", wslArgs(["bash", "-se"], distro), { signal: opts.signal })
+    : spawn("wsl", wslArgs(["bash", "-se"], distro), {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+        signal: opts.signal,
+      })
   child.stdin.end(wslServeScript(orchestra, port))
 
   const recentOutput: string[] = []
