@@ -85,7 +85,7 @@ function hosted(script: Script, params: Params) {
 
 export const it = testEffect(makeHttp({ realSummary: true, replacements: [[ClaudeCodeSDK.node, sdk], [LLM.node, Layer.mock(LLM.Service, {
   stream: () => { state.apiCalls++; return Stream.fail(new Error("Default API transport must not run")) },
-})]] }))
+})]] }).pipe(Layer.provideMerge(sdk)))
 
 export const frame = { parent_tool_use_id: null, uuid: "u", session_id: "sdk-1" }
 
