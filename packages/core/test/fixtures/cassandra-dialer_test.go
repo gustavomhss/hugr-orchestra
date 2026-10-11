@@ -130,3 +130,105 @@ func TestOrchestraBroker(t *testing.T) {
 		t.Fatal("close leaked pending read")
 	}
 }
+
+func TestOrchestraConnect(t *testing.T) {
+	d, err := newOrchestraConnectDialer("9042;9043", "http://user%2Bx:token@localhost:3128", time.Second)
+	if err != nil || d.proxy != "127.0.0.1:3128" || d.auth != "Proxy-Authorization: Basic dXNlcit4OnRva2Vu\r\n" || len(d.routes) != 2 {
+		t.Fatalf("valid connect grant: %v", err)
+	}
+	if socket, port, err := d.address("tcp", "127.0.0.1:9043"); err != nil || socket != "" || port != 9043 {
+		t.Fatalf("declared connect port failed: %v", err)
+	}
+	if _, _, err := d.address("tcp", "127.0.0.1:9044"); err == nil || !strings.Contains(err.Error(), "undeclared-port") {
+		t.Fatal("undeclared connect port admitted", err)
+	}
+	if d, err := newOrchestraConnectDialer("9042", "http://127.0.0.1:3128/", time.Second); err != nil || d.auth != "" {
+		t.Fatalf("anonymous loopback proxy: %v", err)
+	}
+	for _, text := range []string{"", ";", "9042;", "9042;9042", "0", "65536", "+9042", "09042", "9042:", "x", strings.Repeat("1;", 32) + "1"} {
+		if d, err := newOrchestraConnectDialer(text, "http://localhost:3128", time.Second); d != nil || err == nil || !strings.Contains(err.Error(), "invalid-routes") {
+			t.Fatalf("malformed ports %q admitted: %v", text, err)
+		}
+	}
+	for _, proxy := range []string{"", "localhost:3128", "https://localhost:3128", "socks5h://localhost:1080", "http://localhost", "http://localhost:0",
+		"http://localhost:03128", "http://10.0.0.1:3128", "http://[::1]:3128", "http://proxy.example:3128", "http://localhost:3128/path", "http://localhost:3128?x=1"} {
+		if d, err := newOrchestraConnectDialer("9042", proxy, time.Second); d != nil || err == nil || !strings.Contains(err.Error(), "invalid-proxy") {
+			t.Fatalf("foreign proxy %q admitted: %v", proxy, err)
+		}
+	}
+}
+
+// A local CONNECT peer stands in for the sandbox proxy; the real srt proxy is exercised by the hosted Linux proof.
+func TestOrchestraTunnel(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+	requests := make(chan string, 8)
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer conn.Close()
+				header := make([]byte, 0, 256)
+				next := make([]byte, 1)
+				for !strings.HasSuffix(string(header), "\r\n\r\n") {
+					if _, err := io.ReadFull(conn, next); err != nil {
+						return
+					}
+					header = append(header, next[0])
+				}
+				requests <- string(header)
+				switch {
+				case strings.HasPrefix(string(header), "CONNECT 127.0.0.1:9042 "):
+					io.WriteString(conn, "HTTP/1.1 200 Connection Established\r\n\r\n")
+					io.Copy(conn, conn)
+				case strings.HasPrefix(string(header), "CONNECT 127.0.0.1:9043 "):
+					io.WriteString(conn, "HTTP/1.1 403 Forbidden\r\n\r\n")
+				case strings.HasPrefix(string(header), "CONNECT 127.0.0.1:9044 "):
+					io.WriteString(conn, "SSH-2.0-not-a-proxy\r\n\r\n")
+				}
+			}()
+		}
+	}()
+	proxy := "http://user:token@localhost:" + strings.Split(listener.Addr().String(), ":")[1]
+	d, err := newOrchestraConnectDialer("9042;9043;9044", proxy, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	conn, err := d.DialContext(context.Background(), "tcp", "127.0.0.1:9042")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	if request := <-requests; request != "CONNECT 127.0.0.1:9042 HTTP/1.1\r\nHost: 127.0.0.1:9042\r\nProxy-Authorization: Basic dXNlcjp0b2tlbg==\r\n\r\n" {
+		t.Fatalf("unexpected CONNECT request %q", request)
+	}
+	if conn.RemoteAddr().String() != "127.0.0.1:9042" || conn.LocalAddr().String() != "127.0.0.1:0" || conn.(*orchestraGeneratorConn).Conn.RemoteAddr().Network() != "tcp" {
+		t.Fatal("driver address view does not wrap the tunnel")
+	}
+	payload := []byte("bytes after the CONNECT response")
+	if _, err := conn.Write(payload); err != nil {
+		t.Fatal(err)
+	}
+	got := make([]byte, len(payload))
+	if _, err := io.ReadFull(conn, got); err != nil || string(got) != string(payload) {
+		t.Fatal("tunnel round trip failed", err)
+	}
+	for addr, reason := range map[string]string{"127.0.0.1:9043": "proxy-refused:403", "127.0.0.1:9044": "proxy-invalid-response"} {
+		conn, err := d.DialContext(context.Background(), "tcp", addr)
+		if conn != nil || err == nil || !strings.Contains(err.Error(), "orchestra-cassandra-dialer:"+reason) {
+			t.Fatalf("%s: expected %s, got %v", addr, reason, err)
+		}
+		<-requests
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if conn, err := d.DialContext(ctx, "tcp", "127.0.0.1:9042"); conn != nil || !errors.Is(err, context.Canceled) {
+		t.Fatal("dial cancellation lost", err)
+	}
+}

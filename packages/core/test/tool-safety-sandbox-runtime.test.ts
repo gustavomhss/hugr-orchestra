@@ -25,7 +25,7 @@ const fixture = Effect.gen(function* () {
   yield* fs.makeDirectory(root)
   // A runtime archive shaped like the npm package: its cli prints what srt would receive.
   const cli = "const fs=require('fs');process.stdout.write(JSON.stringify({argv:process.argv.slice(2)," +
-    "env:Object.fromEntries(['TMPDIR','GOCACHE','XDG_CACHE_HOME','npm_config_cache','BUN_INSTALL_CACHE_DIR','PIP_CACHE_DIR','UV_CACHE_DIR'].map(k=>[k,process.env[k]]))," +
+    "env:Object.fromEntries(['TMPDIR','GOCACHE','XDG_CACHE_HOME','npm_config_cache','BUN_INSTALL_CACHE_DIR','PIP_CACHE_DIR','UV_CACHE_DIR','ORCHESTRA_TCP_PROXY_CONNECT'].map(k=>[k,process.env[k]]))," +
     "settings:JSON.parse(fs.readFileSync(process.argv[3],'utf8'))}))"
   yield* fs.writeWithDirs(path.join(directory, "archive", "package", "dist", "cli.js"), cli)
   const tar = yield* processes.run(ChildProcess.make("tar", ["-czf", "runtime.tgz", "-C", "archive", "package"], { cwd: directory }))
@@ -172,5 +172,34 @@ linux("an installed runtime runs srt with toolchain caches in scratch; unconfine
     const env = unconfined.wrapped._tag === "StandardCommand" ? unconfined.wrapped.options.env : undefined
     expect(env?.GOCACHE).toBe("/inherited/go-build")
     expect(env?.TMPDIR).toBe(process.env.TMPDIR)
+  }), 30_000,
+)
+
+linux("an exact endpoint grant gives srt only its IP-literal port under a strict allowlist and never falls back", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const endpoint = { ...fallback, sandbox: { ...fallback.sandbox,
+      allowedLoopbackEndpoints: [{ directory: f.root, host: "127.0.0.1" as const, port: 9042 }] } }
+    const held = yield* Effect.flip(f.wrap(endpoint, f.source("absent", ["orchestra-missing-sandbox-dependency"])))
+    expect(held.reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
+    const installed = f.source("installed")
+    yield* ToolSafetySandboxRuntime.acquire(installed)
+    const sandboxed = (profile: ToolSafety.Profile) => Effect.scoped(Effect.gen(function* () {
+      const result = yield* f.wrap(profile, installed)
+      expect(result.fact).toEqual({ shellWrites: "enforced", shellSandbox: { kind: "srt" } })
+      const run = yield* f.processes.run(result.wrapped, { timeout: "10 seconds" })
+      if (run.exitCode !== 0) throw new Error(run.stderr.toString())
+      return JSON.parse(run.stdout.toString())
+    }))
+    const granted = yield* sandboxed(endpoint)
+    expect(granted.settings.network).toEqual({ allowedDomains: ["127.0.0.1:9042"], deniedDomains: [], strictAllowlist: true,
+      allowUnixSockets: [], allowAllUnixSockets: false, allowLocalBinding: false })
+    expect(granted.env.ORCHESTRA_TCP_PROXY_CONNECT).toBe("9042")
+    // A grant bound to another placement leaves this command with no network at all.
+    const elsewhere = yield* sandboxed({ ...endpoint, sandbox: { ...endpoint.sandbox,
+      allowedLoopbackEndpoints: [{ directory: f.directory, host: "127.0.0.1" as const, port: 9042 }] } })
+    expect(elsewhere.settings.network.allowedDomains).toEqual([])
+    expect(elsewhere.env.ORCHESTRA_TCP_PROXY_CONNECT).toBeUndefined()
+    expect(yield* f.fs.exists(f.outside)).toBe(false)
   }), 30_000,
 )

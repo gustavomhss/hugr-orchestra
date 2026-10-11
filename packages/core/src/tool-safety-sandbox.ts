@@ -117,9 +117,6 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     )
     return placement === directory ? [entry.port] : []
   })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
-  // SRT domain proxies cannot enforce exact raw endpoints. Darwin uses fixed-target Unix brokers below.
-  if (endpointGrants.length && process.platform === "linux")
-    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
   const sockets = yield* Effect.forEach(grants, (entry) => Effect.gen(function* () {
     const placement = yield* fs.realPath(entry.directory).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-unix-socket-directory-acquisition" })),
@@ -141,8 +138,9 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Never silently widen an exact-path grant to all AF_UNIX endpoints.
   if (grants.length && process.platform === "linux")
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-exact-policy-unsupported" })
-  // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac.
-  const sandbox = discovered ?? (yield* available("/usr/bin/sandbox-exec").pipe(
+  // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac. Linux endpoints use srt's
+  // own strict-allowlist proxy; without a ready srt they refuse below and never run unconfined.
+  const sandbox = discovered ?? (process.platform === "linux" ? yield* pick(true) : yield* available("/usr/bin/sandbox-exec").pipe(
     Effect.map((binary) => binary
       ? { kind: "seatbelt" as const, binary }
       : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }),
@@ -182,7 +180,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
     : [command.command, ...command.args]
   // Only owned route-adapted clients consume these host services; kernel TCP remains denied.
-  const proxy = endpoints.length ? yield* TcpProxy.open(endpoints, deny) : undefined
+  const proxy = endpoints.length && seatbelt ? yield* TcpProxy.open(endpoints, deny) : undefined
   const scratch = profile?.sandbox?.scratch
     ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
@@ -225,7 +223,12 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const policy = path.join(temp, "settings.json")
   yield* fs.writeFileString(policy, JSON.stringify({
     filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites] },
-    network: { allowedDomains: profile?.sandbox?.allowedDomains ?? [], deniedDomains: [], allowUnixSockets: sockets, allowLocalBinding: false },
+    // An exact endpoint is an IP-literal host:port entry; its network namespace has no other route. Domain and
+    // endpoint grants are mutually exclusive above. Never allowAllUnixSockets: it would expose host daemons.
+    network: {
+      allowedDomains: [...profile?.sandbox?.allowedDomains ?? [], ...endpoints.map((port) => `127.0.0.1:${port}`)],
+      deniedDomains: [], strictAllowlist: true, allowUnixSockets: sockets, allowAllUnixSockets: false, allowLocalBinding: false,
+    },
     enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
     ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
@@ -233,7 +236,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
   return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--", ...invocation], {
-    ...command.options, cwd, shell: false, env: { ...confined, ...sandbox.env }, extendEnv: false,
+    ...command.options, cwd, shell: false, extendEnv: false,
+    env: { ...confined, ...sandbox.env, ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
   })
 })
 
