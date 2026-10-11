@@ -86,6 +86,12 @@ Maestro runs on Orchestra's loop unless the owner sets `"agent": { "maestro": { 
 Configuration still cannot disable, re-mode or rename Maestro; only its engine (and model) follow the owner's choice.
 On Claude Code, Maestro stays Maestro:
 
+- **Terms posture, unchanged from seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
+  `query()` on the machine's Claude Code login, exactly as for seats. Orchestra never calls the Anthropic API with
+  subscription credentials, never reads or extracts tokens, and adds no auth path; delegation only adds in-process
+  tools to that `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
+  transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
+
 - **One mapping, wider for Maestro** (`claude-code/tools.ts`). The engine takes the agent's toolset exactly as
   Orchestra's loop resolves it (`ToolRegistry.tools` with the agent, the session's permissions and the message's tool
   switches). `ClaudeCodeTools.NATIVE` names the tools Claude Code runs natively under Orchestra's gate (5):

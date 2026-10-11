@@ -69,6 +69,16 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     ClaudeEngineFixture.reset()
     const { sessions, prompt, chat } = yield* setup([{ permission: "task", pattern: "*", action: "ask" }])
     const permission = yield* Permission.Service
+    // A runner that wraps the registry's own task object must see Maestro's call: it is the object the engine runs.
+    const registry = yield* ToolRegistry.Service
+    const named = yield* registry.named()
+    const original = named.task.execute
+    const routed: string[] = []
+    named.task.execute = (args, ctx) => {
+      routed.push(ctx.callID ?? "")
+      return original.call(named.task, args, ctx)
+    }
+    yield* Effect.addFinalizer(() => Effect.sync(() => { named.task.execute = original }))
     const seen: Seen = {}
     ClaudeEngineFixture.state.scripts.push(delegating(seen), ClaudeEngineFixture.reply("Checked: the release flag is on.", "helper-api"))
     const run = yield* prompt.prompt({ sessionID: chat.id, ...ask("Is the release flag on?") }).pipe(Effect.forkChild)
@@ -89,6 +99,14 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     expect(answer.parts.some((part) => part.type === "text" && part.text === "Delegated and reviewed.")).toBe(true)
     expect(seen.result?.isError).toBe(false)
     expect(JSON.stringify(seen.result?.content)).toContain("Checked: the release flag is on.")
+    expect(routed).toEqual(["toolu_task"])
+
+    // The teammate's nested Claude Code turn is its own query: no resume, its own in-process server and transcript store.
+    const [parentQuery, childQuery] = ClaudeEngineFixture.state.queries
+    expect(childQuery.options?.resume).toBeUndefined()
+    expect(childQuery.options?.mcpServers?.orchestra).not.toBe(parentQuery.options?.mcpServers?.orchestra)
+    expect(childQuery.options?.sessionStore).not.toBe(parentQuery.options?.sessionStore)
+    expect(childQuery.options?.abortController).not.toBe(parentQuery.options?.abortController)
 
     // The teammate ran in its own child session, on its own engine turn, and its job settled.
     const [child] = yield* sessions.children(chat.id)
@@ -121,7 +139,6 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     expect(options?.tools).toContain("Bash")
     for (const name of ["Task", "Agent", "TodoWrite", "Skill", "AskUserQuestion", "Read", "Edit", "Write"])
       expect(options?.tools).not.toContain(name)
-    const registry = yield* ToolRegistry.Service
     const defs = yield* registry.tools({ ...Provider.parseModel(MODEL), agent: maestro, permission: chat.permission })
     const names = seen.tools?.map((tool) => tool.name) ?? []
     for (const id of ["task", "todowrite", "skill", "context_recall", "maestro_record_admission"]) expect(names).toContain(id)
