@@ -23,6 +23,7 @@ import { readCliManifest } from "../../packages/desktop/src/main/cli-artifacts"
   "cli-omni-addon-wrong-cpu": "OMNI_IMAGE_MISMATCH",
   "cli-omni-addon-truncated": "OMNI_ADDON_LOAD",
   "cli-omni-supervisor-truncated": "OMNI_SUPERVISOR_EXECUTION",
+  "cli-tree-sitter-core-missing": "TREE_SITTER_BUNDLE_MISSING",
   "restored-real-copy": null,
   "packaged-pty-fixture-unchanged": null,
   "missing-packaged-pty-binding": "PTY_BINDING_MISSING",
@@ -30,6 +31,7 @@ import { readCliManifest } from "../../packages/desktop/src/main/cli-artifacts"
   "desktop-omni-addon-missing": "OMNI_ADDON_MISSING",
   "desktop-omni-supervisor-missing": "OMNI_SUPERVISOR_MISSING",
   "desktop-omni-addon-truncated": "OMNI_ADDON_LOAD",
+  "desktop-tree-sitter-core-missing": "TREE_SITTER_BUNDLE_MISSING",
   "packaged-pty-fixture-restored": null
 }
 CONTROL_LEDGER_END */
@@ -75,7 +77,8 @@ const completed: string[] = []
 async function probe(name: string, desktop = values.desktop!) {
   if (!(name in ledger) || completed.includes(name)) throw new Error(`NIX_DISTRIBUTION_FAILURE:UNDECLARED_CONTROL:${name}`)
   const expected = ledger[name]
-  const result = spawnSync(process.execPath, ["--bun", join(values.source!, "nix/scripts/verify-distribution.ts"),
+  const result = spawnSync(process.execPath, ["--bun", "--no-install",
+    `--tsconfig-override=${join(values.source!, "nix/scripts/workspace-paths.json")}`, join(values.source!, "nix/scripts/verify-distribution.ts"),
     ...params, "--cli", values.directory!, "--desktop", desktop], { encoding: "utf8", timeout: 180_000 })
   if (result.error || result.status === null) throw new Error(`NIX_DISTRIBUTION_FAILURE:PROBE_EXECUTION:${name}`)
   const verdict: { status: string; failureCode?: string; pty?: { resolved: string; bindings: string[] } } = JSON.parse(result.stdout)
@@ -124,6 +127,8 @@ await held(cliOmni.supervisor, "cli-omni-supervisor-missing")
 await mutated(cliOmni.addon, (bytes) => Buffer.concat([crossCPU(bytes.subarray(0, 64)), bytes.subarray(64)]), "cli-omni-addon-wrong-cpu")
 await mutated(cliOmni.addon, truncated, "cli-omni-addon-truncated")
 await mutated(cliOmni.supervisor, truncated, "cli-omni-supervisor-truncated")
+// The CLI loads the core tree-sitter binding from tree-sitter/ beside its real binary.
+await held(await coreBinding(join(dirname(file), "tree-sitter")), "cli-tree-sitter-core-missing")
 await probe("restored-real-copy")
 // Repack the real archive only in this private fixture. Its package entrypoint
 // and native binding are tested through Electron's actual ASAR module resolver.
@@ -170,6 +175,8 @@ const desktopOmni = await omniFiles(join(resources, "omni"))
 await held(desktopOmni.addon, "desktop-omni-addon-missing", fixture)
 await held(desktopOmni.supervisor, "desktop-omni-supervisor-missing", fixture)
 await mutated(desktopOmni.addon, truncated, "desktop-omni-addon-truncated", fixture)
+const staged = join(resources, "cli", `tree-sitter-${receipt.artifacts[0].target}`)
+await held(await coreBinding(staged), "desktop-tree-sitter-core-missing", fixture)
 await probe("packaged-pty-fixture-restored", fixture)
 if (completed.length !== Object.keys(ledger).length || Object.keys(ledger).some((name) => !completed.includes(name)))
   throw new Error("NIX_DISTRIBUTION_FAILURE:INCOMPLETE_OUTPUT_CONTROLS")
@@ -191,6 +198,12 @@ function truncated(bytes: Buffer) {
 async function omniFiles(directory: string) {
   await chmod(directory, 0o755)
   return { addon: join(directory, "hugr_omni.node"), supervisor: join(directory, "hugr-omni-supervisor") }
+}
+
+async function coreBinding(bundle: string) {
+  const directory = join(bundle, "tree-sitter", "prebuilds", `${process.platform}-${process.arch}`)
+  await chmod(directory, 0o755)
+  return join(directory, "tree-sitter.node")
 }
 
 async function held(target: string, name: string, desktop?: string) {
