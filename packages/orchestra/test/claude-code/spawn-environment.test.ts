@@ -27,7 +27,7 @@ test("the environment a real SDK query hands the binary carries no Orchestra aut
     ANTHROPIC_BASE_URL: "https://owner-gateway.invalid" }
   const captured: Record<string, string | undefined>[] = []
   const controller = new AbortController()
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), pathToClaudeCodeExecutable: process.execPath,
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const }, pathToClaudeCodeExecutable: process.execPath,
     env: { ...owner, ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }, abortController: controller,
     spawnClaudeCodeProcess: (options) => {
       captured.push(options.env)
@@ -48,7 +48,7 @@ test("the environment a real SDK query hands the binary carries no Orchestra aut
 
 test("the default spawner's child process sees the owner's environment and no Orchestra auth", async () => {
   await using dir = await tmpdir()
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const },
     env: { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", CLAUDE_CONFIG_DIR: dir.path, ANTHROPIC_API_KEY: "user-api-key" } })
   const child = lifetime.options.spawnClaudeCodeProcess({ command: process.execPath,
     args: ["-e", "process.stdout.write(JSON.stringify(process.env));"], env: lifetime.options.env, signal: new AbortController().signal })

@@ -13,13 +13,16 @@ import { makeHttp } from "../session/prompt.fixture"
 
 const it = testEffect(makeHttp())
 
+// A sample of registry tools to serve, with their real schemas.
+const SERVED = ["read", "edit", "write", "context_recall"]
+
 it.instance("MCP bridge advertises actual host schemas and executes real recall with host permissions; context_compact is never served", () => Effect.gen(function* () {
   const sessions = yield* Session.Service
   const registry = yield* ToolRegistry.Service
   const chat = yield* sessions.create({ title: "Actual SDK tools" })
   const messageID = MessageID.ascending()
   const all = yield* registry.all()
-  const defs = all.filter((def) => ClaudeCodeTools.IDS.includes(def.id))
+  const defs = all.filter((def) => SERVED.includes(def.id))
   // Claude Code compacts natively in Claude mode; Orchestra's context_compact exists but is never handed to it.
   expect(all.some((def) => def.id === "context_compact")).toBe(true)
   const context = yield* Effect.context<never>()
@@ -38,7 +41,7 @@ it.instance("MCP bridge advertises actual host schemas and executes real recall 
   yield* Effect.addFinalizer(() => Effect.promise(() => client.close()))
   yield* Effect.promise(async () => { await server.instance.connect(transports[0]); await client.connect(transports[1]) })
   const listed = yield* Effect.promise(() => client.listTools())
-  expect(listed.tools.map((tool) => tool.name).toSorted()).toEqual(ClaudeCodeTools.IDS.toSorted())
+  expect(listed.tools.map((tool) => tool.name).toSorted()).toEqual(SERVED.toSorted())
   const unserved = ClaudeCodeTools.server({ defs: all, run: (effect) => Effect.runPromiseWith(context)(effect),
     claim: () => Effect.die("unused"), complete: () => Effect.void, context: () => { throw new Error("unused") } })
   const probe = new Client({ name: "unserved", version: "1" })

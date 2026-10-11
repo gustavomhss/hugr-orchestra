@@ -7,20 +7,13 @@ import { spawn } from "node:child_process"
 
 type QueryOptions = NonNullable<Parameters<typeof query>[0]["options"]>
 
-/** Explicit environment injection for producers; the SDK helper also accepts options.env. */
+/** The owner's environment the host hands Claude Code; tests inject their own. */
 export const Environment = Context.Reference<NonNullable<QueryOptions["env"]>>("@orchestra/ClaudeCodeSDK/Environment", {
   defaultValue: () => process.env,
 })
 
+/** Claude Code's own `claude_code` prompt preset. Claude mode only appends to it and never replaces it. */
 type Preset = Extract<NonNullable<QueryOptions["systemPrompt"]>, { type: "preset" }>
-
-/**
- * The only system prompt a Claude mode query carries: Claude Code's own `claude_code` preset, with the agent's text
- * appended. Claude mode adds to Claude Code and never replaces its prompt (specs/claude-code-engine.md, "Claude mode").
- */
-export function preset(append?: string): Preset {
-  return { type: "preset", preset: "claude_code", append, snapshot: true }
-}
 
 /** A billing refusal from Anthropic, repeated verbatim so the owner sees exactly what was returned. Never retried. */
 export function billingRejection(detail: string) {
@@ -52,7 +45,7 @@ export function requirePlanApproval(env: NonNullable<QueryOptions["env"]>) {
  * removes no credential. SDK 0.3.289 Query.return races waitForExit against 2000ms, so it is not an exit receipt.
  */
 export function processLifetime(options: QueryOptions & { systemPrompt: Preset }) {
-  // Structural guard over every engine query, casts included: Claude mode keeps Claude Code's prompt (see preset).
+  // Structural guard over every engine query, casts included: Claude mode keeps Claude Code's prompt (see Preset).
   const system: unknown = options.systemPrompt
   if (typeof system !== "object" || system === null || Array.isArray(system) ||
     !("type" in system) || system.type !== "preset" || !("preset" in system) || system.preset !== "claude_code")

@@ -12,7 +12,7 @@ for (const abort of [false, true]) {
     await using dir = await tmpdir()
     const controller = new AbortController()
     const spawned: ReturnType<typeof spawn>[] = []
-    const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+    const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const },
       env: { ...approved, CLAUDE_CONFIG_DIR: dir.path }, abortController: controller,
       pathToClaudeCodeExecutable: process.execPath,
       spawnClaudeCodeProcess: (options) => {
@@ -47,7 +47,7 @@ for (const abort of [false, true]) {
 
 test("default spawner forwards command, args, cwd, the owner's env and joins fast exit", async () => {
   await using dir = await tmpdir()
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const },
     env: { ...approved, CLAUDE_CONFIG_DIR: dir.path, ANTHROPIC_API_KEY: "user-api-key" } })
   const child = lifetime.options.spawnClaudeCodeProcess({ command: process.execPath,
     args: ["-e", "process.stdout.write(JSON.stringify({ cwd: process.cwd(), env: process.env }));"],
@@ -69,13 +69,13 @@ test("default spawner forwards command, args, cwd, the owner's env and joins fas
 
 test("default spawner observes failed spawn and aborted process without mistaking error for exit", async () => {
   await using dir = await tmpdir()
-  const failed = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
+  const failed = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const }, env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
   failed.options.spawnClaudeCodeProcess({ command: `${dir.path}/missing`, args: [], env: failed.options.env,
     signal: new AbortController().signal })
   await expect(failed.join()).rejects.toThrow()
 
   const controller = new AbortController()
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const }, env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
   const child = lifetime.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
     process.on("SIGTERM", () => setTimeout(() => process.exit(0), 100));
     setInterval(() => {}, 1000); process.stdout.write("ready");

@@ -18,7 +18,7 @@ const user = { id: MessageID.ascending(), sessionID, role: "user", time: { creat
   model: { providerID: "anthropic", modelID: "claude-haiku-4-5-20251001" } } as SessionV1.User
 const agent = { name: "claude", id: "claude", mode: "primary", permission: [], options: {}, engine: "claude-code" } as Agent.Info
 
-function setup(onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>) {
+function setup() {
   const messages = new Map<string, SessionV1.Info>()
   const parts = new Map<string, SessionV1.Part>()
   const deltas: string[] = []
@@ -32,7 +32,7 @@ function setup(onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>) {
     track: () => Effect.sync(() => `tree${++tracked}`),
     patch: (hash: string) => Effect.succeed({ hash, files: ["/repo/notes.txt"] }),
   } as unknown as Snapshot.Interface
-  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot, onStep })
+  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot })
   const feed = (list: unknown[]) => Effect.runPromise(Effect.forEach(list as SDKMessage[], (message) => view.on(message)))
   const ofType = <T extends SessionV1.Part["type"]>(type: T) =>
     [...parts.values()].filter((part): part is Extract<SessionV1.Part, { type: T }> => part.type === type)
@@ -131,7 +131,6 @@ test("a failure before any reply still answers the user", async () => {
   const view = create({ sessionID: chat.id, user: prompt, agent, sessions, snapshot,
     path: { cwd: instance.directory, root: instance.directory },
     record: (entry) => entry.uuid ? Effect.die(new Error("native record failed")) : Effect.void,
-    onStep: () => Effect.die(new Error("failed steps cannot trigger maintenance")),
   })
   yield* view.on(stream({ type: "message_start", message: { id: "usage", usage: {
     input_tokens: 37, output_tokens: 1, cache_read_input_tokens: 91, cache_creation_input_tokens: 23,
@@ -167,40 +166,19 @@ test("a failure before any reply still answers the user", async () => {
   expect(texts[0].time?.end).toBeDefined()
 }), 60_000))
 
-test("subagent frames are not mirrored", async () => {
+// host/mirror.ts hands a subagent's frames to its child session's mirror, without their parent id.
+test("a turn mirror leaves subagent frames to the child session", async () => {
   const { feed, messages } = setup()
   await feed([{ ...assistant("msg_sub", [{ type: "text", text: "inner" }]), parent_tool_use_id: "toolu_task" }])
   expect(messages.size).toBe(0)
 })
 
-test("maintenance is notified only at a completed step after every tool result, never on partial blocks", async () => {
-  const safe: SessionV1.Assistant[] = []
-  const { view, feed } = setup((message) => Effect.sync(() => { safe.push(message) }))
-  await feed([assistant("tools", [
-    { type: "tool_use", id: "a", name: "Bash", input: {} },
-    { type: "tool_use", id: "b", name: "Bash", input: {} },
-  ], "tool_use"), result([{ type: "tool_result", tool_use_id: "a", content: "a" }])])
-  expect(safe).toEqual([])
-  await feed([result([{ type: "tool_result", tool_use_id: "b", content: "b" }]), assistant("next", [{ type: "text", text: "done" }], "end_turn")])
-  expect(safe.map((message) => message.finish)).toEqual(["tool-calls"])
-  await Effect.runPromise(view.finish(0))
-  expect(safe.map((message) => message.finish)).toEqual(["tool-calls", "stop"])
-  const partial = setup((message) => Effect.sync(() => { safe.push(message) }))
-  await partial.feed([stream({ type: "message_start", message: { id: "partial", usage: {} } }),
-    stream({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } }),
-    stream({ type: "message_delta", delta: { stop_reason: "end_turn" }, usage: {} })])
-  await Effect.runPromise(partial.view.finish(0))
-  expect(safe).toHaveLength(2)
-})
-
-test("blockless SDK completion answers the turn, while unknown stop reasons never trigger maintenance", async () => {
-  const safe: SessionV1.Assistant[] = []
-  const f = setup((message) => Effect.sync(() => { safe.push(message) }))
+test("blockless SDK completion answers the turn", async () => {
+  const f = setup()
   await f.feed([{ type: "result", subtype: "success", result: "local command finished", stop_reason: null, uuid: "result", session_id: "s" }])
   await Effect.runPromise(f.view.finish(0))
   expect([...f.messages.values()].map((info) => info.role === "assistant" ? info.finish : "")).toEqual(["other"])
   expect(f.ofType("text")[0].text).toBe("local command finished")
-  expect(safe).toEqual([])
 })
 
 test("native tool-result images become host attachments while full text output remains intact", async () => {
