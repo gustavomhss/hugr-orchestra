@@ -86,10 +86,13 @@ const layer = Layer.effect(
               yield* Effect.logInfo("running", { command: cmd })
               const replaced = cmd.map((x) => x.replace("$FILE", filepath))
               const dir = yield* InstanceState.directory
-              // A trusted formatter whose program resolves into the workspace runs workspace code all the same.
+              // A trusted formatter still runs workspace code when its program resolves into the workspace, is a runner
+              // (npx, uv run, ...) or is a version-manager shim.
               const confine =
                 item.confine ??
-                ((yield* Effect.promise(() => ToolSafetySandbox.inside(dir, replaced[0]!, dir))) ? "file" : undefined)
+                ((yield* Effect.promise(() => ToolSafetySandbox.runsWorkspaceCode(dir, replaced[0]!, replaced.slice(1), dir)))
+                  ? "file"
+                  : undefined)
               const source = confine === "stdin" ? yield* Effect.promise(() => readSource(filepath, dir)) : undefined
               if (confine === "stdin" && !source) {
                 yield* Effect.logError("failed to format file", { error: "outside the workspace", command: cmd, file: filepath })

@@ -3,7 +3,7 @@ export * as ToolSafetySandbox from "./tool-safety-sandbox"
 import os from "os"
 import path from "path"
 import which from "which"
-import { lstat, mkdtemp, realpath, rm, writeFile } from "node:fs/promises"
+import { lstat, mkdtemp, open, realpath, rm, writeFile } from "node:fs/promises"
 import { Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
@@ -308,14 +308,57 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
   }
 })
 
-/** Whether `command`, a path or a name found on PATH, names a program inside `directory`, before or after symlinks. */
-export async function inside(directory: string, command: string, cwd: string) {
+/**
+ * Whether launching `command` may run workspace-controlled code even though the program itself is trusted: it lies
+ * inside `directory` (before or after symlinks), it is a package or version-manager runner (`npx`, `uv run`, `mise exec`
+ * load whatever the workspace names), or it is a version-manager shim, which resolves its real binary from workspace
+ * files (`.tool-versions` `path:` versions, mise.toml, .python-version, .node-version, rust-toolchain.toml, ...).
+ * Over-confining costs a sandbox launch; under-confining runs workspace code with the host's authority.
+ */
+export async function runsWorkspaceCode(directory: string, command: string, args: ReadonlyArray<string>, cwd: string) {
+  if (runner(path.basename(command), args)) return true
   const program = path.isAbsolute(command) || /[\\/]/.test(command)
     ? path.resolve(cwd, command)
     : await which(command, { nothrow: true })
   if (!program) return false
-  return FSUtil.contains(path.resolve(directory), program) ||
-    FSUtil.contains(await physical(directory), await physical(program))
+  if (FSUtil.contains(path.resolve(directory), program)) return true
+  const real = await physical(program)
+  return FSUtil.contains(await physical(directory), real) || SHIM_DIRECTORY.test(program) || SHIM_DIRECTORY.test(real) ||
+    VERSION_MANAGERS.has(programName(path.basename(real))) || await execsVersionManager(real)
+}
+
+const VERSION_MANAGERS = new Set(["asdf", "mise", "rtx", "rbenv", "pyenv", "nodenv", "goenv", "jenv", "volta", "volta-shim", "proto", "proto-shim"])
+const SHIM_DIRECTORY = /[\\/](?:shims|\.?volta[\\/]bin|\.proto[\\/]bin)[\\/]/
+
+// Programs that run a package script, a dependency's binary or workspace code on behalf of the workspace, by the
+// subcommands that do so (`true`: any invocation).
+const RUNNERS: Record<string, true | ReadonlyArray<string>> = {
+  npx: true, bunx: true, pnpx: true, uvx: true, yarn: true, corepack: true,
+  npm: ["exec", "x", "run", "run-script", "start", "test"], pnpm: ["exec", "dlx", "x", "run", "start", "test"],
+  bun: ["x", "run", "test"], bundle: ["exec"], bundler: ["exec"], pipx: ["run"], uv: ["run", "tool", "x"],
+  poetry: ["run"], pipenv: ["run"], pdm: ["run"], hatch: ["run"], rye: ["run"], go: ["run"], cargo: ["run"],
+}
+
+function programName(base: string) {
+  return base.replace(/\.(?:exe|cmd|bat|ps1)$/i, "")
+}
+
+function runner(base: string, args: ReadonlyArray<string>) {
+  const name = programName(base)
+  if (VERSION_MANAGERS.has(name)) return true
+  if (/^(?:python|py)[\d.]*$/.test(name)) return args.includes("-m")
+  const subcommands = RUNNERS[name]
+  return subcommands === true || (subcommands !== undefined && args.some((arg) => subcommands.includes(arg)))
+}
+
+// A shim script ends in `exec <version manager> ...`; a native or binary shim never starts with a shebang.
+async function execsVersionManager(file: string) {
+  const handle = await open(file, "r").catch(() => undefined)
+  if (!handle) return false
+  const head = await handle.read(Buffer.alloc(4096), 0, 4096, 0).catch(() => undefined)
+  await handle.close()
+  const text = head?.buffer.subarray(0, head.bytesRead).toString("utf8")
+  return !!text?.startsWith("#!") && /\bexec\b[^\n]*\b(?:asdf|mise|rtx|rbenv|pyenv|nodenv|goenv|jenv|volta|proto)\b/.test(text)
 }
 
 // A path with its existing part resolved through symlinks; a missing leaf keeps its name.

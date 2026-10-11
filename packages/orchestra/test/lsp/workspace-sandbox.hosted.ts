@@ -6,13 +6,14 @@
 // product itself. Windows has no backend for them yet and must refuse.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { NodeFileSystem } from "@effect/platform-node"
-import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { rm, symlink } from "node:fs/promises"
 import { createServer } from "node:net"
 import os from "node:os"
 import path from "node:path"
 import { Effect, Fiber, Layer } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Format } from "../../src/format"
 import { LSP } from "../../src/lsp/lsp"
@@ -37,6 +38,8 @@ const listener = createServer((socket) => {
 })
 const outside = realpathSync(mkdtempSync(path.join(os.tmpdir(), "workspace-sandbox-outside-")))
 const marker = path.join(outside, "escaped")
+// Host-side programs a test puts first on PATH: a version-manager shim directory and a fake package runner.
+const tools = realpathSync(mkdtempSync(path.join(os.tmpdir(), "workspace-sandbox-tools-")))
 let port = 0
 
 beforeAll(async () => {
@@ -53,7 +56,22 @@ beforeAll(async () => {
 afterAll(() => {
   listener.close()
   rmSync(outside, { recursive: true, force: true })
+  rmSync(tools, { recursive: true, force: true })
 })
+
+// Runs the effect with `directory` first on PATH, then restores PATH.
+const onPath = <A, E, R>(directory: string, effect: Effect.Effect<A, E, R>) =>
+  Effect.suspend(() => {
+    const previous = process.env.PATH
+    process.env.PATH = `${directory}${path.delimiter}${previous}`
+    return effect.pipe(Effect.ensuring(Effect.sync(() => void (process.env.PATH = previous))))
+  })
+
+function program(file: string, body: string) {
+  mkdirSync(path.dirname(file), { recursive: true })
+  writeFileSync(file, `#!/bin/sh\n${body}`)
+  chmodSync(file, 0o755)
+}
 
 function host(cmd: string[]) {
   const result = Bun.spawnSync(cmd, { stdout: "inherit", stderr: "inherit" })
@@ -288,6 +306,71 @@ module.exports = { semi: false }
         }),
     },
     240_000,
+  )
+
+  confinedFormat(
+    "a gofmt shim that resolves a .tool-versions path: toolchain from the workspace runs confined",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const file = path.join(directory, "a.go")
+        yield* Effect.promise(() => Bun.write(file, "package main\n"))
+        // Positive control: the planted toolchain's gofmt ran through the shim and rewrote its file.
+        expect(yield* onPath(path.join(tools, ".asdf", "shims"), Format.use.file(file))).toBe(true)
+        expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("package main\nformatted out=denied sibling=denied\n")
+        expect(existsSync(marker)).toBe(false)
+        expect(existsSync(path.join(directory, "planted.txt"))).toBe(false)
+      }),
+    {
+      config: { formatter: true },
+      init: (directory) =>
+        Effect.sync(() => {
+          // asdf's shim reads the version from the workspace; `path:` points it at a directory the workspace holds.
+          program(path.join(tools, ".asdf", "shims", "gofmt"), `dir=$(sed -n 's/^golang path://p' .tool-versions)\nexec "$dir/bin/gofmt" "$@"\n`)
+          writeFileSync(path.join(directory, ".tool-versions"), `golang path:${path.join(directory, "toolchain")}\n`)
+          program(path.join(directory, "toolchain", "bin", "gofmt"), `${probes(directory)}\necho "formatted $probe" >> "$2"\n`)
+        }),
+    },
+    180_000,
+  )
+
+  confinedFormat(
+    "a configured npx formatter runs confined",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const file = path.join(directory, "a.zz")
+        yield* Effect.promise(() => Bun.write(file, "zz\n"))
+        expect(yield* onPath(path.join(tools, "runner"), Format.use.file(file))).toBe(true)
+        expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("zz\nformatted out=denied sibling=denied\n")
+        expect(existsSync(marker)).toBe(false)
+        expect(existsSync(path.join(directory, "planted.txt"))).toBe(false)
+      }),
+    {
+      config: { formatter: { zfmt: { command: ["npx", "zfmt", "$FILE"], extensions: [".zz"] } } },
+      init: (directory) =>
+        Effect.sync(() => program(path.join(tools, "runner", "npx"), `${probes(directory)}\necho "formatted $probe" >> "$2"\n`)),
+    },
+    180_000,
+  )
+
+  confinedFormat(
+    "a static gofmt outside the workspace and the shim directories stays unconfined and formats",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const file = path.join(directory, "a.go")
+        yield* Effect.promise(() => Bun.write(file, "package main\nfunc main(){}\n"))
+        const gofmt = path.join(tools, "system", "gofmt")
+        expect(yield* Effect.promise(() => ToolSafetySandbox.runsWorkspaceCode(directory, gofmt, ["-w", file], directory))).toBe(false)
+        expect(yield* onPath(path.join(tools, "system"), Format.use.file(file))).toBe(true)
+        expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("package main\n\nfunc main() {}\n")
+      }),
+    {
+      config: { formatter: true },
+      init: () => Effect.sync(() => program(path.join(tools, "system", "gofmt"), `printf 'package main\\n\\nfunc main() {}\\n' > "$2"\n`)),
+    },
+    60_000,
   )
 
   test.skipIf(!confinable)(
