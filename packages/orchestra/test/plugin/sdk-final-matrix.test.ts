@@ -32,15 +32,16 @@ test("A06 prepared SDK final matrix: Bun, Node ESM, compiled Bun, real OpenTUI a
   const source = fileURLToPath(new URL("./fixtures/sdk-final-runtime.ts", import.meta.url))
   const tui = fileURLToPath(new URL("./fixtures/sdk-final-tui.ts", import.meta.url))
   const binary = path.join(tmp.path, process.platform === "win32" ? "sdk-final.exe" : "sdk-final")
-  const [build, compile] = await Promise.all([
-    Bun.build({ entrypoints: [source], target: "node", format: "esm", outdir: path.join(tmp.path, "dist") }),
-    (async () => {
-      const child = Bun.spawn([process.execPath, "build", "--compile", source, "--outfile", binary], { stdout: "pipe", stderr: "pipe" })
+  // Fresh compiler processes: an in-process Bun.build after earlier builds in the same test process read other
+  // files' bytes on Linux (parse errors attributed to node_modules files).
+  const [build, compile] = await Promise.all(
+    [["--target", "node", "--format", "esm", "--outdir", path.join(tmp.path, "dist")], ["--compile", "--outfile", binary]].map(async (args) => {
+      const child = Bun.spawn([process.execPath, "build", source, ...args], { stdout: "pipe", stderr: "pipe" })
       const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
       return { stdout, stderr, code }
-    })(),
-  ])
-  expect({ success: build.success, logs: build.logs }).toEqual({ success: true, logs: [] })
+    }),
+  )
+  expect(build).toMatchObject({ code: 0, stderr: "" })
   expect(compile).toMatchObject({ code: 0, stderr: "" })
   const specifiers = Object.keys(sdk.exports).map((key) => sdk.name + (key === "." ? "" : key.slice(1)))
   expect(specifiers).toHaveLength(7)
