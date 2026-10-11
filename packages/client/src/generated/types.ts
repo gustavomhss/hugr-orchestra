@@ -6866,12 +6866,50 @@ export type ConnectionsConnectInput = {
   }["location"]
   readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
   readonly provider: {
-    readonly provider: "slack" | "discord"
+    readonly provider:
+      | "slack"
+      | "discord"
+      | "cloudflare"
+      | "supabase"
+      | "neon"
+      | "linear"
+      | "stripe"
+      | "openai"
+      | "runway"
+      | "globalping"
     readonly key: string
     readonly label?: string
   }["provider"]
-  readonly key: { readonly provider: "slack" | "discord"; readonly key: string; readonly label?: string }["key"]
-  readonly label?: { readonly provider: "slack" | "discord"; readonly key: string; readonly label?: string }["label"]
+  readonly key: {
+    readonly provider:
+      | "slack"
+      | "discord"
+      | "cloudflare"
+      | "supabase"
+      | "neon"
+      | "linear"
+      | "stripe"
+      | "openai"
+      | "runway"
+      | "globalping"
+    readonly key: string
+    readonly label?: string
+  }["key"]
+  readonly label?: {
+    readonly provider:
+      | "slack"
+      | "discord"
+      | "cloudflare"
+      | "supabase"
+      | "neon"
+      | "linear"
+      | "stripe"
+      | "openai"
+      | "runway"
+      | "globalping"
+    readonly key: string
+    readonly label?: string
+  }["label"]
 }
 
 export type ConnectionsConnectOutput = {

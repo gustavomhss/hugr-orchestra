@@ -74,6 +74,8 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
         yield* validate
         const proof = capture(result, decode(Proof))
         if (!proof.ok || proof.value.provider !== value.input.provider ||
+          // Frozen baseline: only Slack/Discord until the descriptor registry replaces this map.
+          (value.input.provider !== "slack" && value.input.provider !== "discord") ||
           proof.value.endpoint !== endpoints[value.input.provider] ||
           proof.value.integrationID !== `capability.${value.input.provider}` ||
           proof.value.subjectID !== proof.value.subjectID.trim() || proof.value.subjectID.includes(value.input.key))

@@ -269,6 +269,8 @@ export default {
           \`id\` text PRIMARY KEY,
           \`task_id\` text NOT NULL,
           \`slot\` integer,
+          \`revision\` integer DEFAULT 0 NOT NULL,
+          \`manual_key\` text,
           \`state\` text NOT NULL,
           \`session_id\` text NOT NULL,
           \`message_id\` text,
@@ -293,6 +295,15 @@ export default {
           \`enabled\` integer NOT NULL,
           \`runs\` integer NOT NULL,
           \`missed\` integer,
+          \`policy\` text DEFAULT 'legacy-browser' NOT NULL,
+          \`revision\` integer DEFAULT 0 NOT NULL,
+          \`owner\` text,
+          \`interval_minutes\` integer,
+          \`cron\` text,
+          \`catch_up\` text,
+          \`repeat_limit\` integer,
+          \`skipped\` integer DEFAULT 0 NOT NULL,
+          \`disabled_reason\` text,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL
         );
@@ -418,7 +429,10 @@ export default {
         `CREATE UNIQUE INDEX \`permission_project_action_resource_idx\` ON \`permission\` (\`project_id\`,\`action\`,\`resource\`);`,
       )
       yield* tx.run(
-        `CREATE UNIQUE INDEX \`scheduled_task_run_slot_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`slot\`);`,
+        `CREATE UNIQUE INDEX \`scheduled_task_run_slot_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`revision\`,\`slot\`);`,
+      )
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`scheduled_task_run_manual_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`manual_key\`);`,
       )
       yield* tx.run(
         `CREATE INDEX \`scheduled_task_run_state_idx\` ON \`scheduled_task_run\` (\`state\`,\`time_claimed\`);`,

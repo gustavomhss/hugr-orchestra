@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "cd4ed692-a18b-4870-aa6f-6f831ef9f76d",
+  "id": "c7519892-c710-4731-ab20-66013f7a66c7",
   "prevIds": [
-    "97cb4462-a723-4439-92dd-9bb21eaaf2d5"
+    "cd4ed692-a18b-4870-aa6f-6f831ef9f76d"
   ],
   "ddl": [
     {
@@ -1757,6 +1757,26 @@
       "table": "scheduled_task_run"
     },
     {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "manual_key",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
       "type": "text",
       "notNull": true,
       "autoincrement": false,
@@ -1943,6 +1963,96 @@
       "default": null,
       "generated": null,
       "name": "missed",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'legacy-browser'",
+      "generated": null,
+      "name": "policy",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "interval_minutes",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "cron",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "catch_up",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "repeat_limit",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "skipped",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "disabled_reason",
       "entityType": "columns",
       "table": "scheduled_task"
     },
@@ -3400,6 +3510,10 @@
           "isExpression": false
         },
         {
+          "value": "revision",
+          "isExpression": false
+        },
+        {
           "value": "slot",
           "isExpression": false
         }
@@ -3408,6 +3522,24 @@
       "where": null,
       "origin": "manual",
       "name": "scheduled_task_run_slot_idx",
+      "entityType": "indexes",
+      "table": "scheduled_task_run"
+    },
+    {
+      "columns": [
+        {
+          "value": "task_id",
+          "isExpression": false
+        },
+        {
+          "value": "manual_key",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "scheduled_task_run_manual_idx",
       "entityType": "indexes",
       "table": "scheduled_task_run"
     },
