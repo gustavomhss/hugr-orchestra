@@ -28,7 +28,7 @@
     "foundation/atlas/vitest.workspace.ts": ["StdioClientTransport"],
     "packages/atlas-boundary/src/generated/native-header.js": ["child_process"],
     "packages/atlas-boundary/src/generated/native-memory.js": ["child_process"],
-    "packages/cli/bin/lildax.cjs": ["child_process"],
+    "packages/cli/bin/orchestra.cjs": ["child_process"],
     "packages/cli/src/services/daemon.ts": ["child_process"],
     "packages/core/src/cross-spawn-spawner.ts": ["child_process", "cross-spawn"],
     "packages/core/src/backend-toolkit/target.ts": ["child_process"],

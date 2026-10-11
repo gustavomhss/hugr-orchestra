@@ -8,9 +8,10 @@ import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
 import pkg from "../package.json"
 import { modelsData } from "./generate"
+import { namedTargets } from "./targets"
 
 const dir = path.resolve(import.meta.dirname, "..")
-const binary = "lildax"
+const binary = "orchestra"
 process.chdir(dir)
 
 await rm("dist", { recursive: true, force: true })
@@ -21,52 +22,33 @@ const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
 const plugin = createSolidTransformPlugin()
 
-const allTargets: {
-  os: string
-  arch: "arm64" | "x64"
-  abi?: "musl"
-  avx2?: false
-}[] = [
-  { os: "linux", arch: "arm64" },
-  { os: "linux", arch: "x64" },
-  { os: "linux", arch: "x64", avx2: false },
-  { os: "linux", arch: "arm64", abi: "musl" },
-  { os: "linux", arch: "x64", abi: "musl" },
-  { os: "linux", arch: "x64", abi: "musl", avx2: false },
-  { os: "darwin", arch: "arm64" },
-  { os: "darwin", arch: "x64" },
-  { os: "darwin", arch: "x64", avx2: false },
-  { os: "win32", arch: "arm64" },
-  { os: "win32", arch: "x64" },
-  { os: "win32", arch: "x64", avx2: false },
-]
+const targetArgs = process.argv.slice(2).flatMap((arg, index, args) =>
+  arg === "--target" ? [args[index + 1] ?? ""] : arg.startsWith("--target=") ? [arg.slice(9)] : [],
+)
+if (targetArgs.length > 1 || (targetArgs.length === 1 && !namedTargets.some((item) => item.target === targetArgs[0])))
+  throw new Error(
+    `Invalid --target: ${targetArgs.join(", ") || "missing value"}. Expected one of: ${namedTargets.map((item) => item.target).join(", ")}`,
+  )
 
-const targets = singleFlag
-  ? allTargets.filter((item) => {
-      if (item.os !== process.platform || item.arch !== process.arch) return false
-      if (item.avx2 === false) return baselineFlag
-      return item.abi === undefined
-    })
-  : allTargets
+const targets = targetArgs.length
+  ? namedTargets.filter((item) => item.target === targetArgs[0])
+  : singleFlag
+    ? namedTargets.filter((item) => {
+        if (item.os !== process.platform || item.arch !== process.arch) return false
+        if (item.avx2 === false) return baselineFlag
+        return item.abi === undefined
+      })
+    : namedTargets
 
 // Resolved before anything is built, so a release build with a missing omni artifact fails at once.
 const builds = targets.map((item) => {
-  const target = [
-    binary,
-    item.os === "win32" ? "windows" : item.os,
-    item.arch,
-    item.avx2 === false ? "baseline" : undefined,
-    item.abi,
-  ]
-    .filter(Boolean)
-    .join("-")
-  const name = target.replace(binary, "cli")
-  return { item, target, name, ...resolveOmni({ name, target: name.slice(4), os: item.os, single: singleFlag }) }
+  const name = `cli-${item.target}`
+  return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
 })
 
 if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
 
-for (const { item, target, name, omni, omniFiles } of builds) {
+for (const { item, name, omni, omniFiles } of builds) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   const result = await Bun.build({
     // The omni preflight runs first and imports ./src/index.ts.
@@ -83,8 +65,8 @@ for (const { item, target, name, omni, omniFiles } of builds) {
       autoloadDotenv: false,
       autoloadTsconfig: true,
       autoloadPackageJson: true,
-      target: target.replace(binary, "bun") as Bun.Build.CompileTarget,
-      outfile: `./dist/${name}/bin/${binary}`,
+      target: `bun-${item.target}` as Bun.Build.CompileTarget,
+      outfile: `./dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`,
       execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
       windows: {},
     },
