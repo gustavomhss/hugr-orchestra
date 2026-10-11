@@ -2,6 +2,8 @@ import { expect, test } from "bun:test"
 import { clearWslDistroState, requireWslIpcString, requireWslIpcStrings, wslTerminalArgs } from "./policy"
 import { pendingRestartAfterWslInstall, pollWslHealth, wslServerIdsToStartOnInitialize } from "./startup"
 import { createWslServersController, type WslServerConfig } from "./servers"
+import { WslArtifactError } from "./artifact"
+import { nativeT } from "../native-translations"
 
 let persistedServers: WslServerConfig[] = []
 let releaseOrchestraResolve: (() => void) | undefined
@@ -190,6 +192,83 @@ test("does not check Orchestra in addable distros that cannot execute commands",
   expect(Object.keys(controller.getState().distroProbes)).toEqual(["Debian", "Ubuntu"])
   expect(orchestra).toEqual(["Debian"])
   expect(Object.keys(controller.getState().orchestraChecks)).toEqual(["Debian"])
+})
+
+test("a guest CLI from another desktop build is a server to update, and other distros keep their checks", async () => {
+  persistedServers = []
+  const installed = "/home/me/.orchestra/bin/orchestra"
+  const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
+    ...testControllerOptions(),
+    probeDistro: async (distro) => ({ name: distro, canExecute: true, hasBash: true, error: null }),
+    resolveOrchestra: async () => installed,
+    // Admission refuses an install whose bytes differ from this desktop's bundle, as after every desktop update.
+    readCommandVersion: async (_command, distro) => {
+      if (distro === "Debian") throw new WslArtifactError("bytes")
+      if (distro === "Alpine") throw new WslArtifactError("abi")
+      return "1.16.2"
+    },
+  })
+
+  await controller.probeAddable(["Debian", "Ubuntu", "Alpine"])
+
+  expect(controller.getState().job).toBeNull()
+  expect(controller.getState().orchestraChecks).toEqual({
+    Debian: { distro: "Debian", resolvedPath: installed, version: null, expectedVersion: "1.16.2", matchesDesktop: false, error: null },
+    Ubuntu: { distro: "Ubuntu", resolvedPath: installed, version: "1.16.2", expectedVersion: "1.16.2", matchesDesktop: true, error: null },
+    Alpine: {
+      distro: "Alpine", resolvedPath: installed, version: null, expectedVersion: "1.16.2", matchesDesktop: null,
+      error: nativeT("desktop.wsl.error.serverCannotRun"),
+    },
+  })
+})
+
+test("one distro whose check fails does not sink the addable probe batch", async () => {
+  persistedServers = []
+  const errors: unknown[] = []
+  const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
+    ...testControllerOptions(),
+    logger: { log: () => undefined, error: (_message, meta) => errors.push(meta) },
+    probeDistro: async (distro) => ({ name: distro, canExecute: true, hasBash: true, error: null }),
+    resolveOrchestra: async (distro) => {
+      if (distro === "Debian") throw new Error("wsl.exe timed out")
+      return "/home/me/.orchestra/bin/orchestra"
+    },
+  })
+
+  await controller.probeAddable(["Debian", "Ubuntu"])
+
+  expect(controller.getState().job).toBeNull()
+  expect(Object.keys(controller.getState().orchestraChecks)).toEqual(["Ubuntu"])
+  expect(errors).toEqual([{ distro: "Debian", message: "wsl.exe timed out" }])
+})
+
+test("background checks record a stale guest server as one to update", async () => {
+  const stale = {
+    ...testControllerOptions(),
+    resolveOrchestra: async () => "/home/me/.orchestra/bin/orchestra",
+    readCommandVersion: async () => {
+      throw new WslArtifactError("bytes")
+    },
+  }
+  const sidecar = async () => ({
+    listener: { stop: () => undefined, onExit: () => undefined },
+    url: "http://127.0.0.1:4096",
+    username: "orchestra",
+    password: "secret",
+  })
+  // The refresh of every configured server at startup.
+  persistedServers = [{ id: "wsl:Debian", distro: "Debian" }]
+  const starting = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), stale)
+  await starting.initialize()
+  await waitFor(() => !!starting.getState().orchestraChecks.Debian)
+  expect(starting.getState().orchestraChecks.Debian?.matchesDesktop).toBe(false)
+  // The check after a server's sidecar is ready.
+  persistedServers = []
+  const adding = createWslServersController("1.16.2", sidecar, stale)
+  await adding.addServer("Ubuntu")
+  await waitFor(() => !!adding.getState().orchestraChecks.Ubuntu)
+  expect(adding.getState().orchestraChecks.Ubuntu?.matchesDesktop).toBe(false)
+  expect(adding.getState().orchestraChecks.Ubuntu?.resolvedPath).toBe("/home/me/.orchestra/bin/orchestra")
 })
 
 async function waitFor(check: () => boolean) {

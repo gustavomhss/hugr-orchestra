@@ -16,7 +16,7 @@ import { getStore } from "../store"
 import { pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
 import { clearWslDistroState } from "./policy"
 import { nativeT } from "../native-translations"
-import { installWslArtifact } from "./artifact"
+import { installWslArtifact, WslArtifactError } from "./artifact"
 import {
   installWslDistro,
   installWslRuntimeElevated,
@@ -132,12 +132,20 @@ export function createWslServersController(
     })
   }
 
+  // Reading the version admits the installed guest CLI against this desktop's bundle. Every desktop update changes the
+  // bundled bytes, so an older install fails admission ("bytes", or "version"): that is a server to update, which the
+  // check records like a version mismatch. Any other admission failure is a server that cannot run.
   const checkOrchestra = async (distro: string, opts?: { signal?: AbortSignal }) => {
     const resolved = await (options?.resolveOrchestra ?? resolveWslOrchestra)(distro, opts)
-    const version = resolved
-      ? await (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts)
-      : null
-    return orchestraCheck(distro, resolved, version, expectedVersion)
+    if (!resolved) return orchestraCheck(distro, null, null, expectedVersion)
+    return (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts).then(
+      (version) => orchestraCheck(distro, resolved, version, expectedVersion),
+      (error: unknown): WslOrchestraCheck => {
+        if (!(error instanceof WslArtifactError)) throw error
+        if (error.reason !== "bytes" && error.reason !== "version") return orchestraCheck(distro, resolved, null, expectedVersion)
+        return { distro, resolvedPath: resolved, version: null, expectedVersion, matchesDesktop: false, error: null }
+      },
+    )
   }
 
   const probeAddableDistros = async (distros: string[], opts?: { signal?: AbortSignal }) => {
@@ -151,12 +159,22 @@ export function createWslServersController(
       setState({ distroProbes: { ...state.distroProbes, ...Object.fromEntries(distroProbes) } })
     }
 
-    const orchestraChecks = await Promise.all(
-      unique
-        .filter((distro) => distroProbeReady(state.distroProbes[distro]))
-        .filter((distro) => !state.orchestraChecks[distro])
-        .map(async (distro) => [distro, await checkOrchestra(distro, opts)] as const),
+    // One distro whose check fails does not cost the others theirs; it stays unchecked, so the next probe retries it.
+    const checking = unique
+      .filter((distro) => distroProbeReady(state.distroProbes[distro]))
+      .filter((distro) => !state.orchestraChecks[distro])
+    const settled = await Promise.allSettled(
+      checking.map(async (distro) => [distro, await checkOrchestra(distro, opts)] as const),
     )
+    opts?.signal?.throwIfAborted()
+    settled.forEach((result, index) => {
+      if (result.status === "rejected")
+        logger?.error("wsl orchestra check failed", {
+          distro: checking[index],
+          message: result.reason instanceof Error ? result.reason.message : String(result.reason),
+        })
+    })
+    const orchestraChecks = settled.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []))
     if (orchestraChecks.length) {
       setState({ orchestraChecks: { ...state.orchestraChecks, ...Object.fromEntries(orchestraChecks) } })
     }
