@@ -208,21 +208,26 @@ it.live("headerTimeout can be disabled with false for non-OpenAI providers", () 
   }),
 )
 
+// Unregistered Codex OAuth reaches the Codex backend only through the explicit
+// read-only legacy consumer, which requires the same inherited credential.
 it.live("OpenAI Codex header and chunk timeout defaults can be disabled by config", () =>
   Effect.gen(function* () {
-    yield* withAuthContent(
-      Effect.gen(function* () {
-        yield* provideTmpdirInstance(
-          () =>
-            Effect.gen(function* () {
-              const provider = yield* Provider.Service
-              const openai = yield* provider.getProvider(ProviderV2.ID.openai)
-              expect(openai.options.headerTimeout).toBe(false)
-              expect(openai.options.chunkTimeout).toBe(false)
-            }),
-          { config: { provider: { openai: { options: { headerTimeout: false, chunkTimeout: false } } } } },
-        )
-      }),
+    yield* withLegacyCodexReadonly(
+      withAuthContent(
+        Effect.gen(function* () {
+          yield* provideTmpdirInstance(
+            () =>
+              Effect.gen(function* () {
+                const provider = yield* Provider.Service
+                const openai = yield* provider.getProvider(ProviderV2.ID.openai)
+                expect(openai.options.headerTimeout).toBe(false)
+                expect(openai.options.chunkTimeout).toBe(false)
+              }),
+            { config: { provider: { openai: { options: { headerTimeout: false, chunkTimeout: false } } } } },
+          )
+        }),
+        { openai: { type: "oauth", refresh: "refresh", access: "access", expires: Date.now() + 60 * 60_000 } },
+      ),
     )
   }),
 )
@@ -296,6 +301,22 @@ function withAuthContent<A, E, R>(self: Effect.Effect<A, E, R>, value: Record<st
       Effect.sync(() => {
         if (previous === undefined) delete process.env.ORCHESTRA_AUTH_CONTENT
         else process.env.ORCHESTRA_AUTH_CONTENT = previous
+      }),
+  )
+}
+
+function withLegacyCodexReadonly<A, E, R>(self: Effect.Effect<A, E, R>) {
+  return Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_LEGACY_CODEX_READONLY
+      process.env.ORCHESTRA_LEGACY_CODEX_READONLY = "1"
+      return previous
+    }),
+    () => self,
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete process.env.ORCHESTRA_LEGACY_CODEX_READONLY
+        else process.env.ORCHESTRA_LEGACY_CODEX_READONLY = previous
       }),
   )
 }
