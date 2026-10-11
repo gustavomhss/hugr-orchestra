@@ -92,7 +92,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       const tool = tools[0]!
       if (tool.state.status !== "completed") throw new Error(`Candidate native tool ${callID} failed: ${tool.state.status}`, { cause: { privateResponse: tool.state } })
       assert.equal(tool.state.input.command, command)
-      assert.equal(tool.state.metadata.exit, 0)
+      assert.equal(tool.state.metadata.exit, 0, `${callID} exited ${tool.state.metadata.exit}: ${tool.state.output.slice(-2000)}`)
       assert.equal(tool.state.metadata.truncated, false)
       const next = hits.flatMap((hit) => hit.messages).filter((message) => message.role === "tool" && message.tool_call_id === callID)
       assert.equal(next.length, 1, "Missing actual next HTTP model turn")
