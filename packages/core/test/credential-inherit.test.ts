@@ -6,6 +6,7 @@ import { rm } from "fs/promises"
 import os from "os"
 import path from "path"
 import { Effect, Exit, Layer } from "effect"
+import { Siwc } from "@orchestra/core/auth/siwc"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
@@ -292,8 +293,12 @@ describe("Credential inheritance from the release database", () => {
   test("an expired inherited OAuth credential is never refreshed; a dev-owned one is", async () => {
     const paths = fixture()
     const methodID = Integration.MethodID.make("chatgpt")
+    // OpenAI refresh only rotates credentials that carry the issued ChatGPT registration.
     const expired = (access: string) =>
-      Credential.OAuth.make({ type: "oauth", methodID, access, refresh: `${access}-refresh`, expires: 1 })
+      Credential.OAuth.make({ type: "oauth", methodID, access, refresh: `${access}-refresh`, expires: 1, metadata: {
+        clientId: "fixture-issued-client", hostId: "fixture-host", issuer: Siwc.issuer, subject: "fixture-subject",
+        idToken: "fixture-id-token", scopes: Siwc.scopes.split(" "),
+      } })
     await seedRelease(paths.release, (credentials) =>
       credentials.create({ integrationID: openai, label: "installed", value: expired("installed") }),
     )
