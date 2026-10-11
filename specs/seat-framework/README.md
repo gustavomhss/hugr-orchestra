@@ -21,6 +21,23 @@ source receipts keep their original IDs. See [naming correction](../upstream-spe
 
 Permissions extend shared bases with only the seat's entry skills and read-only external skill root. Native config cannot widen permissions. Existing execution/review members keep their semantics.
 
+### Shell read boundary
+
+Argument checks cannot confine what a command reads at run time (`python -c`, scripts, `xargs`, variables), so on macOS and Linux every native seat's shell command runs in the OS sandbox (`ToolSafetySandbox.wrap`: seatbelt on macOS, `srt` over bubblewrap on Linux) with reads confined as well as writes (`ToolSafety.Profile.sandbox.readRoots`, built by `seatProfile` in `src/tool/shell.ts`). One policy on both platforms; a seat command may read:
+
+- its worktree and instance directory, and the git directories a linked worktree keeps outside it (`gitdir` and its `commondir`);
+- saved tool output (`TRUNCATION_DIR`), the external directories its native profile grants (its skill root), and the backend toolkit root for the toolkit seat;
+- its write roots and per-command scratch directory (`TMPDIR` and toolchain caches);
+- the host toolchain (`ToolSafetySandbox.toolchain`): `/usr`, `/bin`, `/sbin`, `/opt`, `/nix`, the libraries (`/lib*` on Linux; `/System`, `/Library/{Apple,Developer,Frameworks}`, dyld and timezone data and the selected Xcode on macOS), the essential `/etc` entries (users, hosts, TLS, loader, locale, time; never `hostname`, `machine-id`, `shadow` or `ssh`), the runtime's and every `PATH` directory with the install prefix of a `bin` directory not directly under the home directory, and git's global config.
+
+Every other path, the rest of the home directory included, is denied; data, state, `.ssh`, `.aws` and the other credential paths stay denied for reads and writes, except that saved tool output under data is carved out read-only. A host whose sandbox cannot start refuses the command with `shell-read-sandbox-unavailable: <reason>` and never runs it unconfined, whatever `unconfinedFallback` says; on Linux a first command waits for the sandbox runtime's first download instead of refusing. Linux CI runners have no bubblewrap, so there seat shells are refused; a `test:ci` run that starts with `packages/orchestra/test/linux-sandbox.hosted.ts` provisions the runner and exercises them confined.
+
+Owner decision (2026-10-11): Maestro's reads are not sandboxed. Maestro keeps argument checks with permission asks, because the owner answers them; seats cannot ask, so the sandbox decides for them.
+
+On Linux, srt guards dotfiles a writable root lacks (`.bashrc`, `.gitconfig`, `.vscode` and the like) with placeholders that cannot be opened, so a recursive `grep` over the worktree root reports them; `rg`, which skips hidden entries, does not.
+
+Limit: Windows has no read sandbox. There seats keep only the argument checks (`ShellScan`: out-of-workspace operands are refused, and a read operand only the running shell resolves fails closed), which do not confine interpreters or programs that build their own paths.
+
 Skill trees support UTF-8 text only, including companion references; binary companions are unsupported. Embedding rejects invalid or nonlossless UTF-8 and preserves authored bytes without whole-tree newline normalization. Packaged skill-tree text checks out with LF on every platform, including JSON and TypeScript companions; Git's binary detection preserves binary bytes, while embedding still rejects unsupported content. Source and compiled startup fail closed if a declared tree or entry is missing or invalid; project/global skills cannot substitute for packaged entries. Every `SKILL.md` must be a declared, seat-scoped entry with its matching string name and optional string description, using the runtime frontmatter parser.
 
 Source roots and extracted tree roots must be real directories, not symlinks; tree entries cannot be links or escape their root. Extraction verifies the content digest before reuse and serializes cooperative publication of each cache copy. This confines supported authored trees and cooperative starts, not hostile concurrent filesystem rewrites or symlinked cache ancestors.
