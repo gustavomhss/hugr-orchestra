@@ -60,7 +60,7 @@ stdenv.mkDerivation (finalAttrs: {
     export BUN_INSTALL_CACHE_DIR=$(mktemp -d)
     # Same host-binding repair as the desktop: the CLI bundles tree-sitter bindings beside its binary.
     python3 -B ${./scripts/repair-host-prebuilds.py} "$PWD" '${stdenv.hostPlatform.system}' ${nodejs} \
-      "$(echo node_modules/.bun/node-gyp@*/node_modules/node-gyp/bin/node-gyp.js)"
+      "$(echo "$PWD"/node_modules/.bun/node-gyp@*/node_modules/node-gyp/bin/node-gyp.js)"
     runHook postConfigure
   '';
 
