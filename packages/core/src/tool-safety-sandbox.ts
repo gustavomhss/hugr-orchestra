@@ -353,6 +353,8 @@ export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   const system = process.platform === "darwin"
     ? ["/usr", "/bin", "/sbin", "/System", "/Library/Apple", "/Library/Developer", "/Library/Frameworks", "/opt", "/nix", "/dev",
         "/private/var/db/dyld", "/private/var/db/timezone", "/private/var/select", "/private/var/db/xcode_select_link",
+        // xcrun, which cc and the linker run, refuses (exit 69) unless it can read that the Xcode license was accepted.
+        "/Library/Preferences/com.apple.dt.Xcode.plist",
         ...ETC.map((entry) => path.join("/private/etc", entry))]
     : ["/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/libx32", "/opt", "/nix", ...ETC.map((entry) => path.join("/etc", entry))]
   const bins = [path.dirname(process.execPath), ...(env.PATH ?? env.Path ?? "").split(path.delimiter).filter((entry) => path.isAbsolute(entry))]
