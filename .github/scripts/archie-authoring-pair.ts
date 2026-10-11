@@ -180,7 +180,8 @@ export function requireSameSessionResume(stages: readonly { sessionID: string; c
   requireFact(stages.length === 4 && new Set(stages.map((stage) => stage.sessionID)).size === 1 && new Set(stages.map((stage) => stage.claudeSessionID)).size === 1
     && new Set(stages.map((stage) => stage.promptMessageID)).size === 4 && new Set(stages.map((stage) => stage.returnedAssistantID)).size === 4, "PAIR_SAME_SESSION_RESUME_NOT_OBSERVED")
 }
-// The card may name the proposal relative to the dispatch base (as writePaths does) or to the Session's project directory.
+// The card may name the proposal relative to the dispatch base (as writePaths does), to the Session's project directory,
+// or to the arm root, since the packet's handoff asks for `project/proposal.md`. It must still resolve to that exact file.
 // Direct mode has no Task, so no logical task ID: the work result is the native assembler's (BackendResult.assemble).
 export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string, base: string) {
   const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
@@ -196,7 +197,7 @@ export async function requireSuccessfulAuthoring(candidate: string, work: unknow
   requireFact(returned.value.parts.every((part) => part.type !== "tool" || (part.state && typeof part.state === "object" && "status" in part.state && part.state.status === "completed")), "PAIR_COMPLETED_ASSISTANT_TOOLS_REQUIRED")
   const text = returned.value.parts.filter((part) => part.type === "text").map((part) => part.text).join("\n")
   const card = UpstreamResult.parse(text)
-  requireFact(card && card.outcome === "done" && card.blockers.length === 0 && card.artifacts.some((artifact: { path?: string }) => artifact.path && [base, dirname(proposal)].some((root) => resolve(root, artifact.path ?? "") === proposal)), "PAIR_CANONICAL_PROPOSAL_CARD_REQUIRED")
+  requireFact(card && card.outcome === "done" && card.blockers.length === 0 && card.artifacts.some((artifact: { path?: string }) => artifact.path && [base, dirname(proposal), dirname(dirname(proposal))].some((root) => resolve(root, artifact.path ?? "") === proposal)), "PAIR_CANONICAL_PROPOSAL_CARD_REQUIRED")
   requireFact(decoded.value.author.messageID === returned.value.info.id && decoded.value.card.messageID === returned.value.info.id && decoded.value.author.executionSessionID === returned.value.info.sessionID
     && ["outcome", "artifacts", "blockers", "risks", "nextActions"].every((field) => JSON.stringify(Reflect.get(decoded.value, field)) === JSON.stringify(Reflect.get(card, field))), "PAIR_CANONICAL_WORK_RESULT_MISMATCH")
   return decoded.value
