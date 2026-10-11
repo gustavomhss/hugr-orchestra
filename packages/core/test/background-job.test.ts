@@ -103,4 +103,39 @@ describe("BackgroundJob", () => {
       expect((yield* jobs.get(job.id))?.status).toBe("running")
     }),
   )
+
+  for (const replace of [false, true]) {
+    it.live(`extension ${replace ? "replaces" : "retains"} actual attempt's callback`, () => Effect.gen(function* () {
+      const jobs = yield* BackgroundJob.Service
+      const entered = yield* Deferred.make<void>()
+      const release = yield* Deferred.make<void>()
+      const notice = yield* Deferred.make<{ owner: string; info: BackgroundJob.Info }>()
+      const notify = (owner: string) => (info: BackgroundJob.Info) => Deferred.succeed(notice, { owner, info }).pipe(Effect.asVoid)
+      const job = yield* jobs.start({ type: "test", notify: notify("original"),
+        run: Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(release)), Effect.as("first")) })
+      yield* Deferred.await(entered)
+      expect(yield* jobs.extend({ id: job.id, notify: replace ? notify("extension") : undefined, run: Effect.succeed("second") })).toBe(true)
+      yield* Deferred.succeed(release, undefined)
+      expect(yield* Deferred.await(notice).pipe(Effect.timeout("5 seconds"))).toMatchObject({
+        owner: replace ? "extension" : "original", info: { status: "completed", output: "second" } })
+    }).pipe(Effect.provide(jobsLayer)))
+  }
+
+  it.live("earlier failed command owns notification and never starts queued successor", () => Effect.gen(function* () {
+    const jobs = yield* BackgroundJob.Service
+    const release = yield* Deferred.make<void>()
+    const notice = yield* Deferred.make<{ owner: string; info: BackgroundJob.Info }>()
+    const ran: string[] = []
+    const notify = (owner: string) => (info: BackgroundJob.Info) => Deferred.succeed(notice, { owner, info }).pipe(Effect.asVoid)
+    const job = yield* jobs.start({ type: "test", notify: notify("original"),
+      run: Deferred.await(release).pipe(Effect.andThen(Effect.fail(new Error("first failed")))) })
+    expect(yield* jobs.extend({ id: job.id, notify: notify("unstarted"), run: Effect.sync(() => {
+      ran.push("unstarted")
+      return "second"
+    }) })).toBe(true)
+    yield* Deferred.succeed(release, undefined)
+    expect(yield* Deferred.await(notice).pipe(Effect.timeout("5 seconds"))).toMatchObject({
+      owner: "original", info: { status: "error", error: "first failed" } })
+    expect(ran).toEqual([])
+  }).pipe(Effect.provide(jobsLayer)))
 })
