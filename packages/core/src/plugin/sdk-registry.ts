@@ -43,8 +43,12 @@ export async function open() {
     throw new PluginSdkPackage.SetupError({ path: "@npmcli/arborist/lib/packument-cache.js", reason: "Required packument-cache SPI is unavailable" })
   const bytes = archive()
   const endpoint = "/" + randomUUID() + ".tgz"
+  // Installs point the whole SDK scope at this listener, so any other scoped
+  // package fails here instead of being fetched from a registry we do not own.
+  const denied: string[] = []
   const server = createServer((request, response) => {
     if (request.url !== endpoint || request.method !== "GET") {
+      denied.push(decodeURIComponent(new URL(request.url ?? "/", "http://127.0.0.1").pathname.slice(1)))
       response.writeHead(404).end()
       return
     }
@@ -75,6 +79,8 @@ export async function open() {
   }()
   return {
     dist,
+    registry: `http://127.0.0.1:${address.port}/`,
+    denied,
     packumentCache,
     close: () => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
   }
