@@ -190,12 +190,13 @@ const layer = Layer.effect(
         const parent = yield* sessions.get(call.sessionID).pipe(Effect.orDie)
         const created = yield* sessions.create({ parentID: call.sessionID, agent: agent.id ?? agent.name, permission: parent.permission,
           title: `${String(input.description ?? seat)} (@${agent.name} subagent)` })
-        // The Agent card links its child session, as a seat dispatch's card does.
+        // The Agent card links its child session where a seat dispatch's card does: the part's and the state's metadata.
         const owner = live.known.calls.get(call.callID)
         const current = owner?.tool(call.callID)
+        const placement = { parentSessionId: call.sessionID, sessionId: created.id }
         if (owner && current?.state.status === "running")
-          yield* owner.complete({ ...current, state: { ...current.state,
-            metadata: { ...current.state.metadata, parentSessionId: call.sessionID, sessionId: created.id } } })
+          yield* owner.complete({ ...current, metadata: { ...current.metadata, ...placement },
+            state: { ...current.state, metadata: { ...current.state.metadata, ...placement } } })
         return created
       })
       live.children.set(call.callID, session.id)
