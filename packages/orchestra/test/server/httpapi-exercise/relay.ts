@@ -74,7 +74,7 @@ export const relayScenarios: Scenario[] = [
   http.protected
     .post(`${document}/check`, "v2.relay.document.check")
     .at((ctx) => ({ path: route(`${document}/check`, missing), headers: ctx.headers(), body: {} }))
-    .json(404, refusal("RelayNotFoundError", "not-found"), "status"),
+    .json(403, refusal("RelayForbiddenError", "maestro-execution-required"), "status"),
   http.protected.get("/api/relay/node-types", "v2.relay.document.nodeTypes").json(
     200,
     locationData((value) => {

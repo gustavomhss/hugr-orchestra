@@ -5,7 +5,7 @@ import type { Pack } from "../manifest"
 // download matched.
 const VERSION = "55.1.0"
 
-// The default feature set. aws-lc-rs, ring, zstd and mimalloc still compile C, so the build host needs a C compiler and
+// The crate unconditionally enables cloud and Parquet dependencies. aws-lc-rs, ring, zstd and mimalloc compile C, so the build host needs a C compiler and
 // linker: the Xcode command line tools on macOS, cc on Linux.
 export default {
   id: "datafusion-cli",
@@ -29,6 +29,9 @@ export default {
     build: "cargo",
     path: ".",
     binary: "datafusion-cli",
+    // This engine checks plans, not throughput. Keep release semantics and the full locked dependency graph, but avoid
+    // optimizing that graph during cold acquisition. SQL, CSV and EXPLAIN support are unchanged.
+    optLevel: 0,
   },
   launch: [],
   // The msvc toolchain links only through Microsoft's `link.exe`, and the standalone gnu toolchain ships a linker but

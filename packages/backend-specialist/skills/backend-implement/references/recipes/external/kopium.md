@@ -16,15 +16,17 @@ The packet assigns Rust types for a Kubernetes custom resource generated from a 
 - The CRD YAML file and, when it serves several versions, the version to generate (`--api-version`).
 - The generated module path and its existing header, which records the kopium command and version that wrote it.
 - The project's `Cargo.toml`: the generated code uses `kube` with its `derive` feature, `serde`, `k8s-openapi`, and `schemars` when deriving `JsonSchema`.
+- Host confirmation that the native shell provides command-scoped scratch through `$TMPDIR`. An ambient host `$TMPDIR` is not authorization; without that confirmation, return a `packet` blocker asking the caller to supply scoped scratch before generation.
 
 ## Steps
 
 1. Check the project's pin first. An existing generated module whose header names a kopium version other than `0.24.1` means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=0.24.1)` and do not regenerate.
 2. Generate with the options the header or the packet records:
    ```sh
-   "$BACKEND_TOOLKIT_BIN/kopium" -f <crd.yaml> --api-version <version> --derive Default --docs > src/<module>.rs
+   temporary="$(mktemp "${TMPDIR:?host-scoped scratch required}/kopium.XXXXXX")" &&
+   "$BACKEND_TOOLKIT_BIN/kopium" -f <crd.yaml> --api-version <version> --derive Default --docs > "$temporary" && mv "$temporary" src/<module>.rs
    ```
-   `--schema derived` (or `-A`, which also adds `--derive JsonSchema` and `--docs`) only when the packet assigns a schema that compiles on its own. Write to a temporary file first and move it over the module only after a zero exit, so a failed run never truncates it.
+   `--schema derived` (or `-A`, which also adds `--derive JsonSchema` and `--docs`) only when the packet assigns a schema that compiles on its own. With host-confirmed command-scoped `$TMPDIR`, create and move the temporary file in the same call. Unconfined fallback does not guarantee scoped scratch; never substitute ambient `$TMPDIR`, a fixed host path such as `/tmp/<module>.rs`, or a sibling outside the packet's write paths. Move over the module only after a zero exit, so a failed run never truncates it.
 3. The first run on a machine compiles the engine once; it can take several minutes. Later runs reuse that build. Do not interrupt it or retry in a loop.
 4. Read the diff. Only the generated module may move, and only for the fields the CRD change touched.
 5. Use the types from handwritten code, then compile and run the packet's checks.

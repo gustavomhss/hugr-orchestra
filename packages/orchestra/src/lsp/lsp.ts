@@ -2,11 +2,11 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import * as LSPClient from "./client"
+import { LSPOwnership } from "./ownership"
 import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import * as LSPServer from "./server"
 import { Config } from "@/config/config"
-import { Process } from "@/util/process"
 import { spawn as lspspawn } from "./launch"
 import { Effect, Layer, Context, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
@@ -110,6 +110,7 @@ const filterExperimentalServers = (servers: Record<string, LSPServer.Info>, flag
 type LocInput = { file: string; line: number; character: number }
 
 interface State {
+  closing: boolean
   clients: LSPClient.Info[]
   servers: Record<string, LSPServer.Info>
   broken: Set<string>
@@ -189,17 +190,14 @@ const layer = Layer.effect(
         }
 
         const s: State = {
+          closing: false,
           clients: [],
           servers,
           broken: new Set(),
           spawning: new Map(),
         }
 
-        yield* Effect.addFinalizer(() =>
-          Effect.promise(async () => {
-            await Promise.all(s.clients.map((client) => client.shutdown()))
-          }),
-        )
+        yield* Effect.addFinalizer(() => Effect.promise(() => LSPOwnership.close(s)))
 
         return s
       }),
@@ -214,52 +212,18 @@ const layer = Layer.effect(
         const result: LSPClient.Info[] = []
         let updated = 0
 
-        async function schedule(server: LSPServer.Info, root: string, key: string) {
-          const handle = await server
-            .spawn(root, ctx, flags)
-            .then((value) => {
-              if (!value) s.broken.add(key)
-              return value
-            })
-            .catch(() => {
-              s.broken.add(key)
-              return undefined
-            })
-
-          if (!handle) return undefined
-          const client = await LSPClient.create({
-            serverID: server.id,
-            server: handle,
-            root,
-            directory: ctx.directory,
-            instance: ctx,
-          }).catch(async () => {
-            s.broken.add(key)
-            await Process.stop(handle.process)
-            return undefined
-          })
-
-          if (!client) return undefined
-
-          const existing = s.clients.find((x) => x.root === root && x.serverID === server.id)
-          if (existing) {
-            await Process.stop(handle.process)
-            return existing
-          }
-
-          s.clients.push(client)
-          return client
-        }
-
+        await LSPOwnership.prune(s)
+        if (s.closing) return { result, updated }
         for (const server of Object.values(s.servers)) {
           if (server.extensions.length && !server.extensions.includes(extension)) continue
 
           const root = await server.root(file, ctx)
+          if (s.closing) break
           if (!root) continue
           if (s.broken.has(root + server.id)) continue
 
           const match = s.clients.find((x) => x.root === root && x.serverID === server.id)
-          if (match) {
+          if (match?.connected) {
             result.push(match)
             continue
           }
@@ -272,7 +236,7 @@ const layer = Layer.effect(
             continue
           }
 
-          const task = schedule(server, root, root + server.id)
+          const task = LSPOwnership.schedule(s, { server, root, key: root + server.id, ctx, flags })
           s.spawning.set(root + server.id, task)
 
           task.finally(() => {
@@ -303,7 +267,7 @@ const layer = Layer.effect(
 
     const runAll = Effect.fnUntraced(function* <T>(fn: (client: LSPClient.Info) => Promise<T>) {
       const s = yield* InstanceState.get(state)
-      return yield* Effect.promise(() => Promise.all(s.clients.map((x) => fn(x))))
+      return yield* Effect.promise(() => Promise.all(s.clients.filter((client) => client.connected).map((x) => fn(x))))
     })
 
     const init = Effect.fn("LSP.init")(function* () {
@@ -319,7 +283,7 @@ const layer = Layer.effect(
           id: client.serverID,
           name: s.servers[client.serverID].id,
           root: path.relative(ctx.directory, client.root),
-          status: "connected",
+          status: client.connected ? "connected" : "error",
         })
       }
       return result

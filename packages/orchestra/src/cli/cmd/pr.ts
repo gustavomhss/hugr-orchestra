@@ -78,7 +78,7 @@ export const PrCommand = effectCmd({
 
     const code = yield* Effect.promise(
       () =>
-        Process.spawn(["orchestra"], {
+        Process.interactive(["orchestra"], {
           stdin: "inherit",
           stdout: "inherit",
           stderr: "inherit",

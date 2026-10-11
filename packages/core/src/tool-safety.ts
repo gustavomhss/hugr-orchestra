@@ -29,11 +29,21 @@ export type Profile = {
   readonly sandbox?: {
     readonly enabled: boolean
     readonly allowedDomains?: ReadonlyArray<string>
+    /** Exact existing local sockets, granted only by the programmatic host and bound to native placement. */
+    readonly allowedUnixSockets?: readonly { readonly directory: string; readonly path: string }[]
+    /** Owned route-adapted clients only: Darwin Unix broker, Linux srt strict-allowlist CONNECT proxy; raw TCP denied; Windows HOLD. */
+    readonly allowedLoopbackEndpoints?: readonly { readonly directory: string; readonly host: "127.0.0.1"; readonly port: number }[]
     readonly denyPaths?: ReadonlyArray<string>
     /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */
     readonly scratch?: boolean
     /** Where no sandbox can run, run the command without the write jail and report it instead of holding it. */
     readonly unconfinedFallback?: boolean
+    /**
+     * Confine reads too: the command reads only these paths, its write roots, its scratch directory and the host's
+     * toolchain (ToolSafetySandbox.toolchain); every other path is denied. A host without a sandbox refuses the command,
+     * whatever `unconfinedFallback` says. Host-bound only (native seats' shells); macOS and Linux.
+     */
+    readonly readRoots?: ReadonlyArray<string>
   }
   /** Installed Relay hooks (`hooks.json`), pinned per install. Only ToolSafety.run enforces them; they grant nothing. */
   readonly hooks?: ReadonlyArray<RelayHook.Install>
@@ -109,6 +119,8 @@ export type Approval = {
   readonly message?: string
   /** A Session event's hook asks with no tool call to bind: its event, such as `prompt.before`. */
   readonly trigger?: string
+  /** Final prompt identity captured by the Session host, never hook parameters. */
+  readonly messageID?: string
 }
 export const NativeHost = Context.Reference<
   | {
@@ -225,7 +237,7 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   ],
   [
     /^write-outside-physical-roots$/,
-    "The project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner.",
+    "Effective write roots respect project limits and any bound dispatch `writePaths`. This path is outside them, so nothing was written. A teammate must return a blocker naming the path and missing write scope; otherwise ask the owner. Do not widen an explicit packet's scope.",
   ],
   [
     /^defense-corpus-bulk-read$/,
@@ -246,6 +258,10 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   [
     /^required-process-sandbox-unbound$/,
     "The project's safety profile requires commands to run in a process sandbox and this tool cannot, so it did not run. Run commands with the shell tool, or ask the owner.",
+  ],
+  [
+    /^shell-read-sandbox-unavailable: /,
+    "This agent's commands run only inside the OS sandbox that confines what they read, and this host could not start it, so the command did not run. Do not run it another way; report the reason to the owner.",
   ],
   [
     /^(?:required-process-sandbox-unavailable|sandbox-.+)$/,
@@ -287,6 +303,8 @@ export type SessionEvent = {
   readonly projectDirectory?: string
   /** The prompt's text; hooks record only its sha256. */
   readonly text?: string
+  /** Final prompt identity supplied by the host, never hook or model data. */
+  readonly messageID?: string
 }
 
 /** Audit observations carry identities and outcomes only; they never grant execution authority. */
@@ -312,7 +330,7 @@ export interface Interface {
     outcome?: (value: A) => "success" | "failure" | "cancelled",
   ) => Effect.Effect<A, E | Denied, R>
   /** Installed hooks on a Session event, over the profile loaded for it; only a `prompt` denial has an effect to stop. */
-  readonly session: (input: SessionEvent) => Effect.Effect<void, Denied>
+  readonly session: (input: SessionEvent) => Effect.Effect<ReadonlyArray<string>, Denied>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ToolSafety") {}
@@ -548,9 +566,19 @@ export const make = Effect.gen(function* () {
   const session: Interface["session"] = (input) =>
     Effect.gen(function* () {
       const loader = yield* RuntimeProfileLoader
-      const loaded = loader ? yield* loader() : yield* RuntimeProfile
-      if (!loaded?.hooks) return
-      yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
+      // Profile loaders never read hooks from state inside the project, so that placement has no installs to fire:
+      // only the host profile applies. Every other acquisition failure still refuses the event, and tool calls keep
+      // refusing this placement.
+      const loaded = loader
+        ? yield* loader().pipe(
+            Effect.catchIf(
+              (error) => error.reason === "profile-state-inside-project",
+              () => RuntimeProfile,
+            ),
+          )
+        : yield* RuntimeProfile
+      if (!loaded?.hooks) return []
+      return yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
     })
 
   return Service.of({ before, inspect, run, session })

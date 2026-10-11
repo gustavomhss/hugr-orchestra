@@ -74,7 +74,7 @@ describe("native tool safety", () => {
         Effect.provideService(Location.Service, location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))),
         Effect.provideService(ToolSafety.RuntimeProfile, { writeRoots: ["owned"] }),
       )
-      expect((yield* execute("owned/escape/blocked")).result).toEqual({ type: "error", value: "Tool safety HOLD: write-outside-physical-roots\nThe project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner." })
+      expect((yield* execute("owned/escape/blocked")).result).toEqual({ type: "error", value: "Tool safety HOLD: write-outside-physical-roots\nEffective write roots respect project limits and any bound dispatch `writePaths`. This path is outside them, so nothing was written. A teammate must return a blocker naming the path and missing write scope; otherwise ask the owner. Do not widen an explicit packet's scope." })
       expect(yield* fs.exists(path.join(tmp.path, "outside", "blocked"))).toBe(false)
       expect((yield* execute("owned/allowed")).result.type).toBe("text")
       expect(yield* fs.readFileString(path.join(tmp.path, "owned", "allowed"))).toBe("written")

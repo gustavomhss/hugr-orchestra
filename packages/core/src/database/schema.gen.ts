@@ -24,6 +24,32 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`project_checkpoint\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`fork_id\` text NOT NULL,
+          \`boundary\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`directory\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`digest\` text NOT NULL,
+          \`payload\` text NOT NULL,
+          CONSTRAINT \`fk_project_checkpoint_project_id_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT "project_checkpoint_attempt_check" CHECK("attempt" in (0, 1))
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`session_v1_prompt_admission\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`identity_version\` integer DEFAULT 1 NOT NULL,
+          \`identity\` text NOT NULL,
+          \`snapshot\` text NOT NULL,
+          CONSTRAINT \`fk_session_v1_prompt_admission_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`account_state\` (
           \`id\` integer PRIMARY KEY,
           \`active_account_id\` text,
@@ -343,6 +369,7 @@ export default {
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,
           \`prompt\` text NOT NULL,
+          \`prompt_context\` text,
           \`delivery\` text NOT NULL,
           \`admitted_seq\` integer NOT NULL,
           \`promoted_seq\` integer,
@@ -420,6 +447,9 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(
+        `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
+      )
       yield* tx.run(
         `CREATE UNIQUE INDEX \`capability_child_parent_ordinal\` ON \`capability_child\` (\`session_id\`,\`assistant_message_id\`,\`parent_call_id\`,\`ordinal\`);`,
       )

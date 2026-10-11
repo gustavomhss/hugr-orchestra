@@ -24,7 +24,7 @@ Treat `docs/skills.json` as authority for exact source assignments, tests, depen
 
 | Module ID | Maintenance domain | Maintenance skill |
 |---|---|---|
-| `authoring` | Authoring service, versioned API, scoped persistence and gate evaluation adapter | [relay-authoring](../relay-authoring/SKILL.md) |
+| `authoring` | Retained Python authoring regression service and frozen parity sources; native routing handoff | [relay-authoring](../relay-authoring/SKILL.md) |
 | `gate-core` | Shared checklist evaluation, ledger append, and note adapter | [relay-gate-core](../relay-gate-core/SKILL.md) |
 | `arm-hook` | Per-agent hook binding, position, and arm state transitions | [relay-arm-hook](../relay-arm-hook/SKILL.md) |
 | `gate-cli` | Model-agnostic gate commands and index-based state | [relay-gate-cli](../relay-gate-cli/SKILL.md) |
@@ -47,6 +47,8 @@ Treat `docs/skills.json` as authority for exact source assignments, tests, depen
 Route semantic grading and calibration to `judge`, chain verification and audit reports to `audit`, and benchmark hooks, drivers, grader, generators, and campaigns to `benchmark`; directory location does not determine ownership.
 Keep `bin/relay-note` owned by `gate-core` even though the daemon calls it.
 Route integration workflow changes to [relay-integration](../relay-integration/SKILL.md); use its procedure rather than reproducing installation instructions here.
+Installed authoring uses native Server handlers; this catalog's source inventory covers retained Python/shell
+modules and standalone tools. See [runtime disposition](../../../docs/python-runtime-disposition.md) for callers and roles.
 
 ## Contracts
 

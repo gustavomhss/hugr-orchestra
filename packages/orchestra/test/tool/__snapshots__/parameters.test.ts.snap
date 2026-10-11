@@ -446,6 +446,30 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "description": "Set only to continue an earlier task: the exact task_id that call returned. The teammate resumes with its earlier context. An unknown id fails.",
       "type": "string",
     },
+    "workflow": {
+      "properties": {
+        "documentID": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "parameters": {
+          "additionalProperties": {
+            "type": "string",
+          },
+          "type": "object",
+        },
+        "planRevisionID": {
+          "pattern": "^evt_",
+          "type": "string",
+        },
+      },
+      "required": [
+        "documentID",
+        "planRevisionID",
+        "parameters",
+      ],
+      "type": "object",
+    },
     "writePaths": {
       "description": "Worktree-relative files or directories a write-roots seat may write; the host enforces them. Absent or empty: that seat is read-only. Ignored for agents without this capability.",
       "items": {

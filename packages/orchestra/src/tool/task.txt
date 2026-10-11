@@ -1,6 +1,7 @@
 Start a teammate (a subagent) on a task, or continue one you started. The teammates you can start are listed below.
 
 - `prompt` is the teammate's whole brief: it starts with only the brief and the repository's instruction files. Give the outcome and why, the constraints, the exact paths, what done looks like and the check to run, whether to change code or only research, and what to send back.
+- A teammate that edits only its `writePaths` is read-only without them. Pass only the files or directories the brief allows; preserve an owner's explicit packet boundaries.
 - Teammates share your working tree. Give each set of files a single writer, start teammates in parallel only for independent work, and do not redo work you handed off.
 - The result is the teammate's final message: a report to check. Verify the claims you rely on, such as the diff or the test output, before you build on them or relay them.
 - Each call starts a fresh teammate. To continue one with its earlier context, pass the `task_id` it returned; an unknown id fails.

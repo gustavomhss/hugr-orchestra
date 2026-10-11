@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { chmod, mkdir } from "node:fs/promises"
+import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { createNativeMemory } from "@orchestra/atlas-boundary/native-memory"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
@@ -23,6 +23,7 @@ import { ToolRegistry } from "@/tool/registry"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { fakeScanner, type FakeScanner } from "../lib/fake-scanner"
 
 const it = testEffect(Layer.empty)
 const layer = LayerNode.compile(LayerNode.group([Agent.node, Truncate.node, Git.node]))
@@ -52,12 +53,7 @@ type Receipt = AtlasMemory.Receipt
 // Bun resolves a child-process command against the PATH it started with, so a host scanner on that PATH cannot be
 // hidden from inside the test. A test that writes therefore pins the scanner binary on the binding the real open()
 // produced: `clean` reports every record clean, `broken` answers --version but never completes a scan.
-const SCANNERS = {
-  clean: "#!/bin/sh\n/bin/cat >/dev/null\nexit 0\n",
-  broken: '#!/bin/sh\n[ "$1" = "--version" ] && exit 0\n/bin/cat >/dev/null\nexit 2\n',
-}
-
-const tools = (scanner?: keyof typeof SCANNERS) =>
+const tools = (scanner?: FakeScanner) =>
   Effect.gen(function* () {
     const asks: unknown[] = []
     const ctx: Tool.Context = {
@@ -74,13 +70,8 @@ const tools = (scanner?: keyof typeof SCANNERS) =>
           asks.push(request)
         }),
     }
-    const command = path.join((yield* TestInstance).directory, ".test-bin", "gitleaks")
-    if (scanner)
-      yield* Effect.promise(async () => {
-        await mkdir(path.dirname(command), { recursive: true })
-        await Bun.write(command, SCANNERS[scanner])
-        await chmod(command, 0o755)
-      })
+    const directory = (yield* TestInstance).directory
+    const command = scanner ? yield* Effect.promise(() => fakeScanner(scanner, directory)) : ""
     // The test pins its own scanner, so the toolkit never fetches one.
     const open = (execution: AtlasMemory.Execution) =>
       AtlasMemory.open(execution).pipe(
@@ -218,11 +209,7 @@ it.instance("a worktree without a HEAD revision yields an unavailable receipt, n
   }).pipe(Effect.provide(layer)),
 )
 
-// The fake scanners are POSIX shell scripts, and Atlas runs its scanner through execFileSync with no shell, which
-// cannot launch a script on Windows. Scanner semantics do not depend on the OS, so these run on Linux and macOS only.
-const posix = process.platform === "win32" ? it.instance.skip : it.instance
-
-posix(
+it.instance(
   "with a scanner an entry is admitted once, recalled by ref, and a logbook entry is refused verbatim",
   () =>
     Effect.gen(function* () {
@@ -284,7 +271,7 @@ it.instance(
   { git: true },
 )
 
-posix(
+it.instance(
   "empty write roots hold a file write to the Memory log but never the harness-owned emit",
   () =>
     Effect.gen(function* () {

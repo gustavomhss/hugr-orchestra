@@ -59,12 +59,15 @@ const tampered = {
   "mismatched-artifact": (stored: any) => JSON.stringify({ ...stored, entry: { ...stored.entry, boundary: stored.entry.artifact.tailStart } }),
   "malformed-mask": (stored: any) => JSON.stringify({ ...stored, masks: [["prt_masked", "not-an-archive-reference"]] }),
 }
-for (const [name, tamper] of Object.entries(tampered)) it.instance(`a ${name} memory file is ignored and deleted`, () => Effect.gen(function* () {
+for (const [name, tamper] of Object.entries(tampered)) it.instance(`pure preview ignores a ${name} memory file without changing its bytes`, () => Effect.gen(function* () {
   const { sessionID, history } = yield* applied()
   const file = memoryFile(sessionID)
-  writeFileSync(file, tamper(JSON.parse(readFileSync(file, "utf8"))))
+  const invalid = tamper(JSON.parse(readFileSync(file, "utf8")))
+  writeFileSync(file, invalid)
   expect(yield* restarted(sessionID, history)).toEqual({ messages: history, system: [] })
-  expect(existsSync(file)).toBe(false)
+  expect(readFileSync(file, "utf8")).toBe(invalid)
+  expect(yield* restarted(sessionID, history)).toEqual({ messages: history, system: [] })
+  expect(readFileSync(file, "utf8")).toBe(invalid)
 }), 30_000)
 
 it.instance("a failed memory write does not fail the pass", () => Effect.gen(function* () {

@@ -130,50 +130,42 @@ it.instance("G2 smaller parent model, growing native tail and failed model looku
     state.fail = false
     const restored = yield* prepare(sessionID)
     expect(restored.system).toEqual(original.system)
-    expect(restored.messages).toEqual((yield* sessions.messages({ sessionID })).slice(4))
+    expect(restored.messages).toEqual([(yield* sessions.messages({ sessionID })).at(-1)!])
     expect(lookups).toContain("small")
     expect(lookups).toContain("medium")
   }).pipe(Effect.provide(environment([plan], { getModel })))
 }), 30_000)
 
-it.instance("G3 budget batches preserve every unfinished turn and low-token completions advance coverage until backlog is consumed", () => Effect.gen(function* () {
-  const plans = yield* Effect.forEach([0, 1, 2, 3], (i) => held(`Work: Batch ${i}; keep checks read-only and deployment awaiting approval.`))
+it.instance("G3 complete production covers the whole span beyond the old 32k cutoff, then low-token new work stays native", () => Effect.gen(function* () {
+  const plan = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessions = yield* Session.Service
     const archive = yield* Archive.Service
     const chat = yield* sessions.create({ title: "Whole-turn backlog" })
     for (let i = 0; i < 8; i++) {
       const assistant = yield* complete(yield* begin(chat.id, `BATCH_USER_${i}`), `BATCH_ASSISTANT_${i}`, i === 7 ? 50_000 : 100)
-      // Assistant text is never masked, and parts under the producer's clip reach it whole, so these turns need batches.
+      // Source outweighs the old partial cutoff; complete coverage must still include every turn.
       if (i < 4) for (let piece = 0; piece < 10; piece++) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id,
         messageID: assistant.id, type: "text", text: `TOOL_TURN_${i}_${piece} ` + "x".repeat(7_200) })
     }
     const initial = yield* sessions.messages({ sessionID: chat.id })
     expect(Token.estimate(Transcript.transcript(initial.slice(0, 2)))).toBeLessThan(32_000)
     expect(Token.estimate(Transcript.transcript(initial.slice(0, 4)))).toBeGreaterThan(32_000)
-    for (let i = 0; i < plans.length; i++) {
-      if (i > 0) yield* complete(yield* begin(chat.id, `LOW_USAGE_REFRESH_${i}`), `LOW_REPLY_${i}`, 100)
-      const hit = yield* entered(plans[i])
-      const history = yield* sessions.messages({ sessionID: chat.id })
-      const named = new Map(aliases(history).map((source) => [source.alias, source.message.info.id]))
-      const span = fragments(packet(hit.request))
-      const sourceIDs = [...new Set(span.map((fragment) => named.get(fragment.id)))]
-      const end = i < 3 ? (i + 1) * 2 : history.length - 8
-      expect(sourceIDs).toEqual(history.slice(i * 2, end).map((message) => message.info.id))
-      if (i > 0) expect(packet(hit.request)).toContain(plans[i - 1].memory)
-      yield* Deferred.succeed(plans[i].release, undefined)
-      yield* terminal(hit.jobID, "completed", "applied")
-      const prepared = yield* prepare(chat.id)
-      expect(prepared.messages).toEqual(history.slice(end))
-      expect(prepared.messages[0].info.role).toBe("user")
-      expect(prepared.system[0]).toContain(`Covers this session through ${span.at(-1)!.id} (`)
-      expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(history)
-    }
+    const hit = yield* entered(plan)
+    const named = new Map(aliases(initial).map((source) => [source.alias, source.message.info.id]))
+    const span = fragments(packet(hit.request))
+    expect([...new Set(span.map((fragment) => named.get(fragment.id)))]).toEqual(initial.map((message) => message.info.id))
+    expect(packet(hit.request)).toContain("TOOL_TURN_3_9")
+    const prepared = yield* applyFirst(chat.id, plan)
+    expect(prepared.messages).toEqual([initial.at(-2)!])
+    expect(prepared.coverage?.coveredThrough).toBe(initial.at(-1)!.info.id)
+    expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(initial)
     const jobs = yield* BackgroundJob.Service
     const before = yield* jobs.list()
-    yield* complete(yield* begin(chat.id, "BACKLOG_FINISHED"), "LOW_NO_REFRESH", 100)
+    const later = yield* complete(yield* begin(chat.id, "BACKLOG_FINISHED"), "LOW_NO_REFRESH", 100)
     expect(yield* jobs.list()).toEqual(before)
-  }).pipe(Effect.provide(environment(plans)))
+    expect((yield* prepare(chat.id)).messages.at(-1)?.info.id).toBe(later.id)
+  }).pipe(Effect.provide(environment([plan])))
 }), 60_000)
 
 it.instance("G3 one indivisible over-budget turn is covered whole when the isolated request fits, never split", () => Effect.gen(function* () {
@@ -192,10 +184,10 @@ it.instance("G3 one indivisible over-budget turn is covered whole when the isola
     // Coverage would stall on this turn forever if the head budget excluded it.
     const hit = yield* entered(plan)
     expect(packet(hit.request)).toContain("INDIVISIBLE")
-    expect(fragments(packet(hit.request)).map((entry) => entry.id)).toEqual(["u1", "a1", "t1"])
+    expect(fragments(packet(hit.request)).map((entry) => entry.id)).toEqual(["u1", "a1", "t1", "u2", "a2", "u3", "a3", "u4", "a4", "u5", "a5"])
     yield* Deferred.succeed(plan.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
-    expect((yield* prepare(chat.id)).messages).toEqual(history.slice(2))
+    expect((yield* prepare(chat.id)).messages).toEqual([history.at(-2)!])
   }).pipe(Effect.provide(environment([plan])))
 }), 30_000)
 
@@ -238,7 +230,9 @@ for (const action of ["advance", "cancel", "forget-rearm"] as const) it.instance
     const after = yield* prepare(sessionID)
     expect(after.system[0]).toContain(SECOND)
     expect(after.system[0]).not.toContain("STALE_TERMINAL_RESULT")
-    expect(after.messages.at(-1)?.parts.some((part) => part.type === "text" && part.text === "NEWER_REPLY")).toBe(true)
+    const sessions = yield* Session.Service
+    expect(after.messages).toEqual([(yield* sessions.messages({ sessionID })).at(-2)!])
+    expect(after.coverage?.coveredThrough).toBe(newer.id)
     yield* continuity.start({ sessionID, message: newer, canRecall: true })
     expect((yield* jobs.list()).filter((job) => job.id.includes(`:${newer.id}:`)).map((job) => job.id)).toEqual([next.jobID])
   }).pipe(Effect.provide(environment([first, stale, fresh])))
@@ -324,7 +318,7 @@ for (const action of ["deliver", "duplicate", "advance", "invalidate", "forget",
   }).pipe(Effect.provide(environment([first, old, fresh])))
 }), 60_000)
 
-it.instance("G3 a replayable parent request lifts the head cap: the replay sends the index, not the transcript", () => Effect.gen(function* () {
+it.instance("G3 complete replay uses trusted parent usage and appends the final completed source", () => Effect.gen(function* () {
   const plan = yield* held(FIRST)
   yield* Effect.gen(function* () {
     const sessions = yield* Session.Service
@@ -344,9 +338,11 @@ it.instance("G3 a replayable parent request lifts the head cap: the replay sends
     // The isolated cap would take one turn of this head; the replay covers every turn up to the native tail.
     expect(Token.estimate(Transcript.transcript(history.slice(0, 4)))).toBeGreaterThan(32_000)
     const hit = yield* entered(plan)
-    expect(String(hit.request.messages.at(-1)?.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT")
+    expect(hit.request.purpose).toBe("context-maintenance")
+    expect(String(hit.request.messages.at(-1)?.content)).toContain("TOOL_TURN_0")
     yield* Deferred.succeed(plan.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
-    expect((yield* prepare(chat.id)).messages).toEqual(history.slice(-8))
+    expect(packet(hit.request)).toContain("REPLAY_ASSISTANT_7")
+    expect((yield* prepare(chat.id)).messages).toEqual([history.at(-2)!])
   }).pipe(Effect.provide(environment([plan])))
 }), 60_000)

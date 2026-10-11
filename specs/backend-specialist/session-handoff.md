@@ -1,5 +1,11 @@
 # Session snapshot + handoff — the backend specialist
 
+## Current state
+
+Read [acceptance.md](acceptance.md) first. It is the final acceptance record (2026-10-10, after the close-out epic): clause status, each PR's proof runs, and the declared limits. The close-out work landed through integration PR #289 (merge `524f8ec626`, green epic CI). Remaining: a live-model observation of restore after compaction and the install channels (deferred to release, owner: last). No new 21/21 model campaign is planned. Everything below this heading is historical context from earlier sessions. Where it disagrees with `acceptance.md`, `acceptance.md` wins. Earlier closure notes live in the Landing update of [session-resume-2026-10-08.md](session-resume-2026-10-08.md) and the earlier compaction checkpoint in [session-state-2026-10-08.md](session-state-2026-10-08.md).
+
+## Historical: 2026-10-05 respawn snapshot
+
 Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude Code) reads this file first, then the listed sources, and continues from §7 without rediscovering prior decisions.
 
 ## 0. Where this lives

@@ -1,6 +1,7 @@
 import { afterEach, expect } from "bun:test"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Cause, Effect, Exit, Layer } from "effect"
+import { realpathSync } from "fs"
 import path from "path"
 import { NpmTest } from "../fake/npm"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
@@ -36,6 +37,10 @@ function evalPerm(agent: Agent.Info | undefined, permission: string): Permission
   if (!agent) return undefined
   return Permission.evaluate(permission, "*", agent.permission).action
 }
+
+// Tools ask with the real path. On Windows the configured temp directory can be a short 8.3 path (C:\Users\RUNNER~1),
+// so a rule built from it would never match and the owner would be asked anyway.
+const realTmp = () => (process.platform === "win32" ? realpathSync.native(Global.Path.tmp) : Global.Path.tmp)
 
 function load<A>(fn: (svc: Agent.Interface) => Effect.Effect<A>) {
   return Agent.Service.use(fn)
@@ -108,7 +113,7 @@ it.instance("explore agent asks for external directories and allows whitelisted 
     expect(Permission.evaluate("external_directory", "/some/other/path", explore!.permission).action).toBe("ask")
     expect(Permission.evaluate("external_directory", Truncate.GLOB, explore!.permission).action).toBe("allow")
     expect(
-      Permission.evaluate("external_directory", path.join(Global.Path.tmp, "agent-work"), explore!.permission).action,
+      Permission.evaluate("external_directory", path.join(realTmp(), "agent-work"), explore!.permission).action,
     ).toBe("allow")
   }),
 )
@@ -546,11 +551,11 @@ it.instance(
   },
 )
 
-it.instance("global tmp directory children are allowed for external_directory", () =>
+it.instance("global tmp directory children are allowed for external_directory under the real path", () =>
   Effect.gen(function* () {
     const maestro = yield* load((svc) => svc.get("maestro"))
     expect(
-      Permission.evaluate("external_directory", path.join(Global.Path.tmp, "scratch"), maestro!.permission).action,
+      Permission.evaluate("external_directory", path.join(realTmp(), "scratch"), maestro!.permission).action,
     ).toBe("allow")
     expect(Permission.evaluate("external_directory", "/some/other/path", maestro!.permission).action).toBe("ask")
   }),

@@ -20,6 +20,7 @@ export type ID = import("@orchestra/schema/event").ID
 export type { Data, Definition, Payload } from "@orchestra/schema/event"
 
 export type Subscriber<D extends Definition = Definition> = (event: Payload<D>) => Effect.Effect<void>
+type Projector<D extends Definition = Definition> = (event: Payload<D>, origin: { readonly replay: boolean }) => Effect.Effect<void>
 export type Unsubscribe = Effect.Effect<void>
 
 export const latestSequence = Effect.fn("EventV2.latestSequence")(function* (
@@ -146,7 +147,7 @@ export interface Interface {
   readonly durable: (input: { readonly aggregateID: string; readonly after?: number }) => Stream.Stream<Payload>
   /** @deprecated Use `all()` and consume the returned stream. */
   readonly listen: (listener: Subscriber) => Effect.Effect<Unsubscribe>
-  readonly project: <D extends Definition>(definition: D, projector: Subscriber<D>) => Effect.Effect<void>
+  readonly project: <D extends Definition>(definition: D, projector: Projector<D>) => Effect.Effect<void>
   readonly replay: (
     event: SerializedEvent,
     options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
@@ -191,7 +192,7 @@ export const layerWith = (options?: LayerOptions) =>
         durable: new Map<string, Set<PubSub.PubSub<void>>>(),
         typed: new Map<string, PubSub.PubSub<Payload>>(),
       }
-      const projectors = new Map<string, Subscriber[]>()
+      const projectors = new Map<string, Projector[]>()
       // TODO: Bind durable projectors to exact type+version before supporting incompatible historical payloads.
       const listeners = new Array<Subscriber>()
       const { db } = yield* Database.Service
@@ -230,6 +231,7 @@ export const layerWith = (options?: LayerOptions) =>
         persist = true,
       ) {
         return Effect.gen(function* () {
+          const origin = Object.freeze({ replay: input !== undefined })
           const durable = definition?.durable
           if (durable) {
             const aggregateID = (event.data as Record<string, unknown>)[durable.aggregate]
@@ -273,7 +275,7 @@ export const layerWith = (options?: LayerOptions) =>
                               durable: { aggregateID, seq: -1, version: durable.version },
                             } as Payload
                             for (const projector of list) {
-                              yield* projector(committed)
+                              yield* projector(committed, origin)
                             }
                             return
                           }),
@@ -380,7 +382,7 @@ export const layerWith = (options?: LayerOptions) =>
                             durable: { aggregateID, seq, version: durable.version },
                           } as Payload
                           for (const projector of list) {
-                            yield* projector(committed)
+                            yield* projector(committed, origin)
                           }
                           if (commit) yield* commit(seq)
                           yield* db
@@ -705,10 +707,10 @@ export const layerWith = (options?: LayerOptions) =>
           })
         })
 
-      const project = <D extends Definition>(definition: D, projector: Subscriber<D>): Effect.Effect<void> =>
+      const project = <D extends Definition>(definition: D, projector: Projector<D>): Effect.Effect<void> =>
         Effect.sync(() => {
           const list = projectors.get(definition.type) ?? []
-          list.push((event) => projector(event as Payload<D>))
+          list.push((event, origin) => projector(event as Payload<D>, origin))
           projectors.set(definition.type, list)
         })
 

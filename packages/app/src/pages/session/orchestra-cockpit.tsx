@@ -14,6 +14,7 @@ import { OrchestraEvidenceTerminal } from "./orchestra-evidence-terminal"
 import { useSessionLayout } from "./session-layout"
 import type { TasksData, TasksItem } from "./tasks-data"
 import { TasksPanel } from "./tasks-panel"
+import { BackgroundProcessesPanel } from "./processes-panel"
 import "./orchestra-cockpit.css"
 
 // Orchestra's Apps tab hosts the session's Dock, as in the approved rail. The pane is restored
@@ -79,6 +80,7 @@ export function OrchestraTaskFeed(props: { tasks: TasksData; onShowBrowser: () =
         return (
           <div class="orchestra-cockpit" data-variant="feed">
             <div class="orchestra-cockpit-feed">
+              <BackgroundProcessesPanel />
               <TasksPanel
                 data={props.tasks}
                 onOpenItem={openTask}

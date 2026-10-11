@@ -1,4 +1,5 @@
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { createHash } from "node:crypto"
 
 /**
  * One aliased source: `uN` user text, `aN` assistant message, `tN` tool call or delegation return.
@@ -38,12 +39,13 @@ export function commandSource(command: string, args: string) {
 }
 
 /** What the human typed in a user message: non-synthetic text, and the invocation for a command template. */
-export function userText(message: SessionV1.WithParts) {
+export function userText(message: SessionV1.WithParts, includeIgnored = false) {
   if (message.info.role !== "user") return ""
   return message.parts.flatMap((part) => {
     if (part.type !== "text") return []
     const source = marker(part)
     if (source?.type === "command") return [source.invocation]
+    if (part.ignored && !includeIgnored) return []
     if (part.synthetic || source) return []
     return part.text.trim() ? [part.text.trim()] : []
   }).join("\n\n")
@@ -80,11 +82,19 @@ export function aliases(history: SessionV1.WithParts[]): Source[] {
       const text = userText(message)
       return [
         ...(notice?.type === "text" ? [{ alias: next("t"), message, part: notice, time: created, text: notice.text }] : []),
-        ...(text ? [{ alias: next("u"), message, time: created, text }] : []),
+        // Preserve v4 ordinal slots even when ignored text no longer supplies authority.
+        ...(userText(message, true) ? [{ alias: next("u"), message, time: created, text }] : []),
       ]
     }
-    const text = message.parts.flatMap((part) => part.type === "text" && !part.synthetic && part.text.trim() ? [part.text.trim()] : []).join("\n\n")
-    const result: Source[] = text ? [{ alias: next("a"), message, time: created, text }] : []
+    const parts = message.parts.filter((part) => part.type === "text" && !part.synthetic && part.text.trim())
+    const text = parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text.trim()] : []).join("\n\n")
+    // Empty/reasoning-only terminal steps need an anchor without renumbering historical aN slots.
+    // Padded SHA-256 decimal identities occupy a namespace beyond ordinal counters and remain append-stable.
+    const result: Source[] = parts.length ? [{ alias: next("a"), message, time: created, text }] :
+      message.info.time.completed !== undefined && !message.parts.some((part) => part.type === "tool") ? [{
+        alias: `a1${BigInt(`0x${createHash("sha256").update(message.info.id).digest("hex")}`).toString().padStart(78, "0")}`,
+        message, time: created, text: `Assistant step completed; finish=${message.info.finish ?? "unknown"}.`,
+      }] : []
     for (const part of message.parts) {
       if (part.type !== "tool") continue
       const call: Source = { alias: next("t"), message, part, time: end(part, created), text: "" }

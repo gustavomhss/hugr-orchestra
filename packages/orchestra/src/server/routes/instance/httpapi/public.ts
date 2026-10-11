@@ -81,6 +81,10 @@ const LegacyComponentDescriptions: Record<string, string> = {
   LayoutConfig: "@deprecated Always uses stretch layout.",
 }
 
+// These new, required response fields use Schema.NullOr for unavailable measurements.
+// Preserve their declared unions rather than applying legacy optional-field compatibility.
+const RequiredNullableComponents = new Set(["LeanProfileSavings", "LeanProfileExecution"])
+
 function matchLegacyOpenApi(input: Record<string, unknown>) {
   const spec = input as OpenApiSpec
 
@@ -92,10 +96,23 @@ function matchLegacyOpenApi(input: Record<string, unknown>) {
   fixSelfReferencingComponents(spec)
 
   // Effect's Schema.optional emits `anyOf: [T, {type:"null"}]` in OpenAPI,
-  // but the legacy SDK expected plain `T` for optional fields. Strip null
-  // from all component schemas so both request and response types match.
+  // but the legacy SDK expected plain `T` for optional fields. Normalize those
+  // legacy shapes while preserving genuine nullable CAS expectations below.
+  // Native Lean measurement contracts explicitly retain required null values.
   for (const [name, schema] of Object.entries(spec.components?.schemas ?? {})) {
+    if (RequiredNullableComponents.has(name)) {
+      spec.components!.schemas![name] = structuredClone(schema)
+      continue
+    }
     spec.components!.schemas![name] = stripOptionalNull(structuredClone(schema))
+    // These CAS expectations use real null for absent state, not optional-field nullability.
+    // The JSON Schema deduplicator may suffix the same named component before collapsing it below.
+    if (/^SessionV1PromptTransition\d*$/.test(name)) {
+      for (const field of ["expectedRevert", "expectedPermission"]) {
+        const property = spec.components!.schemas![name].properties?.[field]
+        if (property) spec.components!.schemas![name].properties![field] = { anyOf: [property, { type: "null" }] }
+      }
+    }
   }
   normalizeComponentNames(spec)
   collapseDuplicateComponents(spec)
@@ -273,6 +290,12 @@ function applyLegacySchemaOverrides(spec: OpenApiSpec) {
     schemas.GlobalSession.properties.project = nullable(schemas.GlobalSession.properties.project)
   const activity = schemas.VcsActivity?.properties
   if (activity) Object.assign(activity, { ahead: nullable(activity.ahead), behind: nullable(activity.behind) })
+  // Flatten only these declared NonNegativeInt refinements: hey-api otherwise emits
+  // unknown for inline integer + allOf:[{minimum:0}]. Required nullable fields stay intact.
+  for (const [name, fields] of [["LeanProfileSavings", ["calls", "tokenCalls"]], ["LeanProfileExecution", ["time"]]] as const) {
+    const properties = schemas[name]?.properties
+    for (const field of fields) if (properties?.[field]) properties[field] = stripOptionalNull(properties[field])
+  }
   const providerOptions = schemas.ProviderConfig?.properties?.options
   if (providerOptions) providerOptions.additionalProperties = {}
   const model = schemas.ProviderConfig?.properties?.models?.additionalProperties
