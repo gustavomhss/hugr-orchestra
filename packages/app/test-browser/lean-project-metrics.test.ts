@@ -1,12 +1,21 @@
 import { expect, test } from "bun:test"
 import { createComponent, createRoot, createMemo, createStore, decision, render, savedLeanPart } from "./lean-project-metrics.test-helper"
 import type { Config, Part } from "@orchestra/sdk/v2/client"
+import { solidDom } from "./solid-dom"
 
-const panel = await import("@/components/session/lean-project-metrics")
-const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
-const { LanguageProvider, useLanguage } = await import("@/context/language")
-const { PlatformProvider } = await import("@/context/platform")
-const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
+const panel: typeof import("@/components/session/lean-project-metrics") = await import(
+  solidDom("@/components/session/lean-project-metrics", import.meta.dir)
+)
+const { createLeanSettingsController }: typeof import("@/components/settings-v2/general-controllers") = await import(
+  solidDom("@/components/settings-v2/general-controllers", import.meta.dir)
+)
+const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
+  solidDom("@/context/language", import.meta.dir)
+)
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { LeanMetrics }: typeof import("@orchestra/schema/lean-metrics") = await import(
+  solidDom("@orchestra/schema/lean-metrics", import.meta.dir)
+)
 test("Lean reads backend false and preserves sibling limits in one awaited patch", async () => {
   const [data, setData] = createStore<{ config: Config }>({
     config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
@@ -148,7 +157,7 @@ for (const locale of ["en", "br"] as const) test(`real repository KPI DOM: scope
     }) },
   }), host)
   try {
-    const { dict } = await import(locale === "en" ? "@/i18n/en" : "@/i18n/br")
+    const { dict }: typeof import("@/i18n/en") = await import(solidDom(locale === "en" ? "@/i18n/en" : "@/i18n/br", import.meta.dir))
     await Bun.sleep(20)
     expect(host.querySelector("section")?.getAttribute("aria-label")).toBe(dict["lean.project.title"])
     expect(host.textContent).toContain("native-repo")

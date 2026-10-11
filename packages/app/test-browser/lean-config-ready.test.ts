@@ -3,12 +3,17 @@ import { createComponent, render } from "./lean-project-metrics.test-helper"
 import type { Config } from "@orchestra/sdk/v2/client"
 import type { ServerSDK } from "@/context/server-sdk"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
-import { ServerScope } from "@/utils/server-scope"
+import { solidDom } from "./solid-dom"
 
-const { createServerSyncContextInner } = await import("@/context/server-sync")
-const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
-const { PlatformProvider } = await import("@/context/platform")
-const { LanguageProvider } = await import("@/context/language")
+const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
+const { createServerSyncContextInner }: typeof import("@/context/server-sync") = await import(
+  solidDom("@/context/server-sync", import.meta.dir)
+)
+const { createLeanSettingsController }: typeof import("@/components/settings-v2/general-controllers") = await import(
+  solidDom("@/components/settings-v2/general-controllers", import.meta.dir)
+)
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
 
 async function until(predicate: () => boolean) {
   for (let n = 0; n < 200 && !predicate(); n++) await Bun.sleep(10)

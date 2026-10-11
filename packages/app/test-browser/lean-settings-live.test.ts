@@ -1,6 +1,7 @@
 import { expect, mock, test } from "bun:test"
 import { createComponent, createRoot, createStore, render } from "./lean-project-metrics.test-helper"
 import type { Config } from "@orchestra/sdk/v2/client"
+import { solidDom } from "./solid-dom"
 
 const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
   protocol: undefined, ready: false, error: undefined,
@@ -21,25 +22,36 @@ const sync = {
     setState("config", "tool_output", config.tool_output!)
   },
 }
-// External context fixtures only; render real SettingsGeneralV2, settings provider, controller and switch.
-const sdk = await import("@/context/server-sdk")
-const serverSync = await import("@/context/server-sync")
-const permission = await import("@/context/permission")
-mock.module("@/context/server-sync", () => ({ ...serverSync, useServerSync: () => () => sync }))
-mock.module("@/context/server-sdk", () => ({ ...sdk,
+// External context fixtures only; render real SettingsGeneralV2, settings provider, controller and switch. Fixtures
+// replace the solidDom() copies (./solid-dom) that the rendered graph imports.
+const sdk: typeof import("@/context/server-sdk") = await import(solidDom("@/context/server-sdk", import.meta.dir))
+const serverSync: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
+const permission: typeof import("@/context/permission") = await import(solidDom("@/context/permission", import.meta.dir))
+mock.module(solidDom("@/context/server-sync", import.meta.dir), () => ({ ...serverSync, useServerSync: () => () => sync }))
+mock.module(solidDom("@/context/server-sdk", import.meta.dir), () => ({ ...sdk,
   useServerProtocol: () => () => state.protocol,
   useServerSDK: () => () => ({ protocol: Promise.resolve(state.protocol ?? "v2"), client: { pty: { shells: async () => ({ data: [] }) } } }),
 }))
-mock.module("@/context/permission", () => ({ ...permission, usePermission: () => ({}) }))
-mock.module("@/orchestra/palette/context", () => ({ useOrchestraPalette: () => ({ palettes: [], id: () => "dark" }) }))
-mock.module("@/utils/toast", () => ({ showToast: (options: unknown) => toasts.push(options) }))
-const { SettingsGeneralV2 } = await import("@/components/settings-v2/general")
-const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
-const { PlatformProvider } = await import("@/context/platform")
-const { LanguageProvider, useLanguage } = await import("@/context/language")
-const { SettingsProvider } = await import("@/context/settings")
-const { DialogProvider } = await import("@orchestra/ui/context/dialog")
-const { dict } = await import("@/i18n/en")
+mock.module(solidDom("@/context/permission", import.meta.dir), () => ({ ...permission, usePermission: () => ({}) }))
+mock.module(solidDom("@/orchestra/palette/context", import.meta.dir), () => ({
+  useOrchestraPalette: () => ({ palettes: [], id: () => "dark" }),
+}))
+mock.module(solidDom("@/utils/toast", import.meta.dir), () => ({ showToast: (options: unknown) => toasts.push(options) }))
+const { SettingsGeneralV2 }: typeof import("@/components/settings-v2/general") = await import(
+  solidDom("@/components/settings-v2/general", import.meta.dir)
+)
+const { createLeanSettingsController }: typeof import("@/components/settings-v2/general-controllers") = await import(
+  solidDom("@/components/settings-v2/general-controllers", import.meta.dir)
+)
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
+  solidDom("@/context/language", import.meta.dir)
+)
+const { SettingsProvider }: typeof import("@/context/settings") = await import(solidDom("@/context/settings", import.meta.dir))
+const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await import(
+  solidDom("@orchestra/ui/context/dialog", import.meta.dir)
+)
+const { dict }: typeof import("@/i18n/en") = await import(solidDom("@/i18n/en", import.meta.dir))
 
 test("active SettingsGeneralV2 mounts backend Lean controls; unavailable capability cannot write", async () => {
   const host = document.createElement("div")

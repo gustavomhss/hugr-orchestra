@@ -1,25 +1,9 @@
-import { createRequire } from "node:module"
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import type { ToolPart } from "@orchestra/sdk/v2/client"
 
-// Browser-lane only: compile JSX using the app's own Solid preset.
-const compiler = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
-Bun.plugin({
-  name: "lean-solid-dom",
-  setup(build) {
-    build.onLoad({ filter: /\.tsx$/ }, async (args) => {
-      const result = await compiler("@babel/core").transformAsync(await Bun.file(args.path).text(), {
-        filename: args.path,
-        presets: [[compiler("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] },
-        configFile: false,
-        babelrc: false,
-      })
-      return { contents: result.code, loader: "ts" }
-    })
-  },
-})
-
+// Browser-lane only. Tests load the app and ui modules they render through solidDom() (./solid-dom), which compiles
+// them with the app's Solid preset whichever test file loaded the plain modules first. solid-js stays the single shared
+// copy those compiled modules import, so the primitives below drive the same reactive runtime.
 export const { createRoot, createComponent, createMemo }: typeof import("solid-js") = await import("solid-js")
 export const { createStore }: typeof import("solid-js/store") = await import("solid-js/store")
 export const { render }: typeof import("solid-js/web") = await import("solid-js/web")
