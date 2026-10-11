@@ -1,33 +1,34 @@
 import { expect, test } from "bun:test"
-import { createRequire } from "node:module"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
-import { flowFromDocument, issues } from "@/orchestra/relay/graph"
 import type { RelaySource } from "@/orchestra/relay/source"
+import { solidDom } from "../solid-dom"
 
-// Drive production JSX with the app's Solid compiler, not Bun's React transform.
-const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
-Bun.plugin({
-  name: "solid-relay-policy",
-  setup(build) {
-    build.onLoad({ filter: /\.tsx$/ }, async (args) => {
-      const result = await solid("@babel/core").transformAsync(await Bun.file(args.path).text(), {
-        filename: args.path,
-        presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] }, configFile: false, babelrc: false,
-      })
-      return { contents: result.code, loader: "ts" }
-    })
-  },
-})
-const { PlatformProvider } = await import("@/context/platform")
-const { createSdkForServer } = await import("@/utils/server")
-const { createRelayClient, decodeDocument } = await import("@/orchestra/relay/client")
-const { createRunClient, decodeRun } = await import("@/orchestra/relay/runs")
-const { LanguageProvider } = await import("@/context/language")
-const { EditorHead } = await import("@/orchestra/relay/editor-head")
-const { Receipt } = await import("@/orchestra/relay/receipt")
+// Drive production JSX with the app's Solid compiler, not Bun's React transform, whichever test file loaded these
+// modules first (see solid-dom.ts).
+const { flowFromDocument, issues }: typeof import("@/orchestra/relay/graph") = await import(
+  solidDom("@/orchestra/relay/graph", import.meta.dir)
+)
+const { PlatformProvider }: typeof import("@/context/platform") = await import(
+  solidDom("@/context/platform", import.meta.dir)
+)
+const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
+const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await import(
+  solidDom("@/orchestra/relay/client", import.meta.dir)
+)
+const { createRunClient, decodeRun }: typeof import("@/orchestra/relay/runs") = await import(
+  solidDom("@/orchestra/relay/runs", import.meta.dir)
+)
+const { LanguageProvider }: typeof import("@/context/language") = await import(
+  solidDom("@/context/language", import.meta.dir)
+)
+const { EditorHead }: typeof import("@/orchestra/relay/editor-head") = await import(
+  solidDom("@/orchestra/relay/editor-head", import.meta.dir)
+)
+const { Receipt }: typeof import("@/orchestra/relay/receipt") = await import(
+  solidDom("@/orchestra/relay/receipt", import.meta.dir)
+)
 
 test("Relay UI cannot POST start, release or check; authoring and recorded GETs survive", async () => {
   const requests: Request[] = []
