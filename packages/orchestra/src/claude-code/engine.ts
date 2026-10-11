@@ -62,11 +62,17 @@ const Metadata = Schema.Struct({ sessionId: Schema.optional(Schema.String), cost
   selectedModel: Schema.optional(Schema.String), version: Schema.optional(Schema.String), continuityPaused: Schema.optional(Schema.NullOr(Schema.String)),
   nativeArchiveFailed: Schema.optional(Schema.Boolean), delivered: Schema.optional(Schema.Array(MessageID)) })
 
-// Where Maestro's prompt describes Orchestra's loop, this engine differs in tool names and in when steering arrives.
+// Maestro's prompt rides on Claude Code's preset (sdk.ts preset), so it says up front that it governs.
+const PRECEDENCE = "The instructions below are Maestro's. Where they differ from the Claude Code guidance above, follow them."
+
+// Where the preset or Maestro's prompt describes other tools or Orchestra's loop, this engine differs.
 const ENGINE_NOTE = [
   "You run on Claude Code with the owner's subscription. Orchestra's tools carry the `mcp__orchestra__` prefix (`task` is",
-  "`mcp__orchestra__task`); Bash, Grep, Glob and the web tools are Claude Code's, under the same permissions. A message the",
-  "owner writes while you work reaches you when your current turn ends, not at your next step.",
+  "`mcp__orchestra__task`); Bash, Grep, Glob and the web tools are Claude Code's, under the same permissions. Claude Code's",
+  "guidance on Task or Agent subagents, TodoWrite, Skill and AskUserQuestion names tools you do not have: delegate with",
+  "`mcp__orchestra__task`, track work with `mcp__orchestra__todowrite`, load skills with `mcp__orchestra__skill` and ask",
+  "the owner with `mcp__orchestra__question`. A message the owner writes while you work reaches you when your current turn",
+  "ends, not at your next step.",
 ].join(" ")
 
 const layer = Layer.effect(
@@ -224,12 +230,12 @@ const layer = Layer.effect(
         shell: (ctx: Tool.Context, command: string) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
           Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
-      // Maestro's prompt stays authoritative: it replaces Claude Code's preset, whose own persona and tool habits would
-      // otherwise speak first, and carries what Orchestra's loop sends beside it (environment, instructions, skills).
-      // Seats append their prompt to the preset.
+      // Every agent appends to Claude Code's preset, which a turn on the login must keep (sdk.ts preset). Maestro's text
+      // claims precedence over the preset and carries what Orchestra's loop sends beside it (environment, instructions,
+      // skills).
       const conductor = ClaudeCodeTools.conductor(agent)
       const append = (conductor
-        ? [agent.prompt, ENGINE_NOTE, ...(shape ? yield* system.environment(shape) : []), ...instructions, yield* system.skills(agent)]
+        ? [PRECEDENCE, agent.prompt, ENGINE_NOTE, ...(shape ? yield* system.environment(shape) : []), ...instructions, yield* system.skills(agent)]
         : [agent.prompt, ...instructions]).filter(Boolean).join("\n\n") || undefined
       const prepare = Effect.gen(function* () {
       const stored = yield* native.read
@@ -294,8 +300,7 @@ const layer = Layer.effect(
         cwd: instance.directory,
         model: selected,
         resume: state.sessionId,
-        systemPrompt: conductor ? { type: "custom" as const, prompt: append ?? "", snapshot: true }
-          : { type: "preset" as const, preset: "claude_code" as const, append, snapshot: true },
+        systemPrompt: ClaudeCodeSDK.preset(append),
         ...(builtins ? { tools: builtins } : {}),
         disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
         toolAliases: { Read: `mcp__${SERVER}__read`, Edit: `mcp__${SERVER}__edit`, Write: `mcp__${SERVER}__write` },
@@ -364,6 +369,10 @@ const layer = Layer.effect(
               yield* metadata({ sessionId: message.session_id })
             if (message.type === "system" && message.subtype === "init") sdkModel = message.model
              if (message.type === "assistant" && !message.parent_tool_use_id && message.message.model) actualModel = message.message.model
+            if (message.type === "assistant" && message.error === "billing_error") {
+              const detail = "billing_error: " + message.message.content.flatMap((block) => block.type === "text" ? [block.text] : []).join(" ")
+              throw new Error(ClaudeCodeSDK.billingRejection(detail) ?? detail)
+            }
             if (message.type === "assistant" && message.supersedes?.length) {
               yield* native.retract(message.supersedes)
               yield* view.retract(message.supersedes)
@@ -376,9 +385,10 @@ const layer = Layer.effect(
             }
             yield* view.on(message)
             if (message.type === "result") {
-              if (message.subtype !== "success" || message.is_error)
-                throw new Error("Claude Code query failed (native overflow is not retried): " +
-                  ("errors" in message && message.errors?.length ? message.errors.join("; ") : "result" in message ? message.result : message.subtype))
+              if (message.subtype !== "success" || message.is_error) {
+                const detail = "errors" in message && message.errors?.length ? message.errors.join("; ") : "result" in message ? message.result : message.subtype
+                throw new Error(ClaudeCodeSDK.billingRejection(detail) ?? "Claude Code query failed (native overflow is not retried): " + detail)
+              }
               const usage = message.modelUsage?.[actualModel ?? ""] ?? message.modelUsage?.[sdkModel ?? ""] ??
                 message.modelUsage?.[selected ?? ""] ?? Object.values(message.modelUsage ?? {}).find((usage) =>
                   usage.canonicalModel !== undefined && [actualModel, sdkModel, selected].includes(usage.canonicalModel))
