@@ -323,8 +323,11 @@ export function create(input: {
     current: () => current().current(),
     tool,
     retract: (ids) => Effect.forEach(views, (item) => item.retract(ids), { discard: true }),
-    claim: (name) => current().claim(name),
-    complete: (part) => write(part),
+    // An Orchestra MCP call by Maestro or by a seat whose child session is mirrored.
+    claim: (name) => current().claim(name) ??
+      [...children.values()].map((item) => item?.mirror.claim(name)).find((part) => part !== undefined),
+    complete: (part) => tool(part.callID) ? write(part)
+      : known.calls.get(part.callID)?.complete(part) ?? Effect.void,
     finish: (previousCost) => Effect.gen(function* () {
       yield* Effect.forEach([...children.values()], (item) => item?.mirror.finish(0) ?? Effect.void, { discard: true })
       return yield* current().finish(previousCost)

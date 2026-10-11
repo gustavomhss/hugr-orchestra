@@ -27,7 +27,7 @@ function setup(agent: string) {
       return hooks
     },
   }
-  const ctx = { sessionID: SessionID.descending(), directory: "/repo/app", worktree: "/repo", agent, abort: new AbortController().signal }
+  const ctx = { sessionID: SessionID.descending(), directory: "/repo/app", worktree: "/repo", agent, abort: new AbortController() }
   const env = { HOME: "/home/owner", PATH: "/bin", ANTHROPIC_API_KEY: "owner-key", CLAUDE_CONFIG_DIR: "/home/owner/.claude" }
   const build = (session: Parameters<typeof ClaudeHostOptions.build>[0]["session"] = {}) =>
     ClaudeHostOptions.build({ ctx, adapters, model: "claude-opus-5-5", session, abortController: new AbortController(), env })
@@ -125,4 +125,17 @@ test("the session's join reaches the MCP server and the hooks through the contex
     join: () => join,
   } })
   expect(seen).toEqual([join, join])
+})
+
+test("seats the plugin defines through the SDK go in the agents option; the main thread stays the preset", async () => {
+  const { ctx } = setup("maestro")
+  const sdkAgents = { "orchestra:backend": { description: "backend", prompt: "Backend seat.", permissionMode: "acceptEdits" as const } }
+  const options = await ClaudeHostOptions.build({ ctx, session: {}, abortController: new AbortController(), env: {}, adapters: {
+    plugin: async () => ({ path: "/p", seats: { "orchestra:backend": "backend" }, sdkAgents }),
+    mcp: () => server,
+    hooks: () => ({}),
+  } })
+  expect(options.agents).toEqual(sdkAgents)
+  expect(options.agent).toBeUndefined()
+  expect(options.systemPrompt).toMatchObject({ type: "preset", preset: "claude_code" })
 })

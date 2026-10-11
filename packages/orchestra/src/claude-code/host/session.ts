@@ -15,7 +15,13 @@ import { Context, Effect, Exit, Layer } from "effect"
 import type { CanUseTool, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Agent } from "@/agent/agent"
+import { BackgroundProcess } from "@/background/process"
+import { Config } from "@/config/config"
+import { ToolRegistry } from "@/tool/registry"
+import { Truncate } from "@/tool/truncate"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Question } from "@/question"
@@ -32,7 +38,10 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeCodeTranscript } from "../transcript"
 import { asks } from "../permissions"
+import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
+import { ClaudeHostPlugin } from "./plugin"
+import { ClaudeHostProcess } from "./process-tool"
 import { ClaudeHostOptions } from "./options"
 
 export interface Interface {
@@ -57,13 +66,13 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ClaudeHost") {}
 
-/** The plugin, MCP and hook builders (agents PLUGIN and HOOKS). Wired by the lead; unwired, a turn fails clearly. */
-export const Adapters = Context.Reference<ClaudeHostOptions.Adapters>("@orchestra/ClaudeHost/Adapters", {
-  defaultValue: () => ({
-    plugin: () => Promise.reject(new Error("Claude host adapters are not wired: the orchestra plugin is missing.")),
-    mcp: () => { throw new Error("Claude host adapters are not wired: the orchestra MCP server is missing.") },
-    hooks: () => ({}),
-  }),
+/**
+ * Overrides of the plugin, MCP, hook and join builders. The plugin and the MCP server default to agent PLUGIN's
+ * (`plugin.ts`, `mcp.ts`). TODO(claude-host, agent HOOKS): default `hooks` to `ClaudeHostHooks.create` and `join` to
+ * `ClaudeHostJoin` when they land; until then no in-process hook runs and nothing reads the join frames.
+ */
+export const Adapters = Context.Reference<Partial<ClaudeHostOptions.Adapters>>("@orchestra/ClaudeHost/Adapters", {
+  defaultValue: () => ({}),
 })
 
 /** How long a session's process outlives its last turn, so a quick follow-up does not respawn it. */
@@ -145,6 +154,8 @@ const layer = Layer.effect(
     const todo = yield* Todo.Service
     const status = yield* SessionStatus.Service
     const sdk = yield* ClaudeCodeSDK.Service
+    // What resolving the served registry tools needs (ClaudeHostMcp.prepare: registry, config, the process tool).
+    const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>>>()
     const lives = new Map<SessionID, Live>()
 
     const read = (sessionID: SessionID) => sessions.get(sessionID).pipe(Effect.orDie, Effect.map((session) => {
@@ -204,6 +215,40 @@ const layer = Layer.effect(
         : { behavior: "deny", message: ClaudeCodeTools.failure(exit.cause) } satisfies PermissionResult
     }))
 
+    /**
+     * How the `orchestra` MCP server runs an Orchestra tool on this session (as engine.ts builds it for
+     * ClaudeCodeTools.server): it claims the mirrored call, runs in the session's instance context and completes the part.
+     */
+    const bridge = (live: Live, ctx: ClaudeHostOptions.Context): ClaudeHostMcp.Bridge => ({
+      run: (effect) => live.run(effect),
+      claim: (name) => Effect.gen(function* () {
+        // Claude Code may call the tool before the mirror has seen its tool_use block: wait for it.
+        for (let round = 0; round < 1500; round++) {
+          const part = live.turn?.view.claim(name)
+          if (part) return part
+          yield* Effect.sleep("20 millis")
+        }
+        return yield* Effect.die(new Error(`no mirrored ${name} call to run`))
+      }),
+      complete: (part) => live.turn?.view.complete(part) ?? live.known.calls.get(part.callID)?.complete(part) ?? Effect.void,
+      messages: () => sessions.messages({ sessionID: live.sessionID }).pipe(Effect.orDie),
+      context: (part) => ({
+        sessionID: part.sessionID, messageID: part.messageID, callID: part.callID, agent: live.agent.name, agentID: live.agent.id,
+        abort: ctx.abort.signal, messages: [], extra: { claudeCode: true },
+        metadata: (value) => Effect.gen(function* () {
+          const current = live.turn?.view.tool(part.callID) ?? live.known.calls.get(part.callID)?.tool(part.callID)
+          if (!current || current.state.status !== "running") return
+          yield* bridge(live, ctx).complete({ ...current, state: { ...current.state, title: value.title ?? current.state.title,
+            metadata: { ...current.state.metadata, ...value.metadata } } })
+        }),
+        ask: (request) => Effect.gen(function* () {
+          const session = yield* sessions.get(part.sessionID).pipe(Effect.orDie)
+          yield* permission.ask({ ...request, sessionID: part.sessionID, tool: { messageID: part.messageID, callID: part.callID },
+            ruleset: Permission.merge(live.agent.permission, session.permission ?? []) }).pipe(Effect.orDie)
+        }),
+      }),
+    })
+
     const settle = (live: Live, outcome: Outcome) => {
       const turn = live.turn
       live.turn = undefined
@@ -220,6 +265,7 @@ const layer = Layer.effect(
     const close = (live: Live) => {
       clearTimeout(live.idle)
       if (lives.get(live.sessionID) === live) lives.delete(live.sessionID)
+      ClaudeHostMcp.release(live.sessionID)
       live.inbox.end()
       live.abort.abort()
       live.query.close()
@@ -279,14 +325,19 @@ const layer = Layer.effect(
       if (pending) live.turn = { view: live.make(pending), user: pending, cost, waiters: [] }
     })
 
-    const start = (input: { sessionID: SessionID; agent: Agent.Info; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
+    const start = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
       const instance = yield* InstanceState.context
-      const adapters = yield* Adapters
+      const overrides = yield* Adapters
+      const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
+      // The registry tools of Maestro and every seat, resolved once per live session (agent PLUGIN's prepare).
+      const prepared = overrides.plugin && overrides.mcp ? undefined
+        : yield* ClaudeHostMcp.prepare({ agent: input.agent, model: input.user.model, permission: session.permission }).pipe(
+          Effect.provide(preparation))
       const release = yield* IdleRelease
       const context = yield* Effect.context<never>()
       const abort = new AbortController()
       const fork = ClaudeCodeTranscript.record(input.state.forkFrom) ? input.state.forkFrom : undefined
-      const session = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId }
+      const resume = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId }
         : fork && typeof fork.sessionId === "string" ? { resume: fork.sessionId, forkSession: true, sessionId: claudeSessionID(input.sessionID),
             ...(typeof fork.at === "string" ? { resumeSessionAt: fork.at } : {}) }
         : { sessionId: claudeSessionID(input.sessionID) }
@@ -303,11 +354,19 @@ const layer = Layer.effect(
           record: (value) => Effect.sync(() => { if (value.uuid) live.uuids[value.messageID] = value.uuid }) }),
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
-        agent: input.agent.id ?? input.agent.name, abort: abort.signal }
-      live.join = adapters.join?.(ctx)
+        agent: input.agent.id ?? input.agent.name, abort }
+      live.join = overrides.join?.(ctx)
+      const adapters: ClaudeHostOptions.Adapters = {
+        plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
+        mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge: bridge(live, ctx),
+          // prepare() returns the process tool from its info's init(), which carries no id: name it here.
+          tools: (prepared?.tools ?? []).map((def) => "id" in def ? def : { ...def, id: ClaudeHostProcess.ID }) })),
+        hooks: overrides.hooks ?? (() => ({})),
+        ...(overrides.join ? { join: overrides.join } : {}),
+      }
       const options = yield* Effect.tryPromise(() => ClaudeHostOptions.build({
         ctx: { ...ctx, join: live.join },
-        adapters, model: input.model, session, abortController: abort, canUseTool: permit(live),
+        adapters, model: input.model, session: resume, abortController: abort, canUseTool: permit(live),
       }))
       live.query = sdk.query({ prompt: live.inbox, options: ClaudeCodeSDK.processLifetime(options).options })
       lives.set(input.sessionID, live)
@@ -363,7 +422,7 @@ const layer = Layer.effect(
         return true
       }
       if (prompt && typeof state.sessionId !== "string") yield* sessions.setTitle({ sessionID, title: prompt.split("\n")[0].slice(0, 80) })
-      const started = existing ? Exit.succeed(existing) : yield* start({ sessionID, agent, model, state }).pipe(Effect.exit)
+      const started = existing ? Exit.succeed(existing) : yield* start({ sessionID, agent, user: input.user, model, state }).pipe(Effect.exit)
       if (Exit.isFailure(started)) {
         yield* view.fail({ aborted: false, message: ClaudeCodeTools.failure(started.cause) })
         return true
@@ -440,5 +499,6 @@ function answered(history: readonly SessionV1.WithParts[]) {
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node],
+  deps: [Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
+    ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node],
 })

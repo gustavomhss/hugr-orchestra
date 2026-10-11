@@ -7,6 +7,7 @@ export * as ClaudeHostOptions from "./options"
 // - the owner's own environment, plus switches that only turn on output Claude Code already offers.
 // Built-in tools are never disabled or aliased, and nothing here touches a credential.
 import type {
+  AgentDefinition,
   CanUseTool,
   HookCallbackMatcher,
   HookEvent,
@@ -27,7 +28,7 @@ export type Context = {
   /** The main thread's seat id: `maestro`, or another seat when it is the main conversation. */
   agent: string
   /** Aborts when the session's Claude Code process is released or stopped for good. */
-  abort: AbortSignal
+  abort: AbortController
   /** `orchestra:<seat>` → seat id, once the plugin is built. */
   seats?: Record<string, string>
   /** The session's Agent-call join (agent HOOKS, `host/join.ts`), fed by the stream consumer (spikes S3, S12). */
@@ -44,7 +45,7 @@ export type Join = {
 
 /** The builders agents PLUGIN and HOOKS own (build brief, "Fixed interfaces"), injected so each side stays testable. */
 export type Adapters = {
-  plugin: (ctx: Context) => Promise<{ path: string; seats: Record<string, string> }>
+  plugin: (ctx: Context) => Promise<{ path: string; seats: Record<string, string>; sdkAgents?: Record<string, AgentDefinition> }>
   mcp: (ctx: Context) => McpSdkServerConfigWithInstance
   hooks: (ctx: Context) => Partial<Record<HookEvent, HookCallbackMatcher[]>>
   /** One join per session, created before the hooks so they share it through `ctx.join`. */
@@ -82,6 +83,8 @@ export async function build(input: {
     ...input.session,
     systemPrompt: { type: "preset", preset: "claude_code", append: append(input.ctx.agent, plugin.seats) },
     plugins: [{ type: "local", path: plugin.path }],
+    // Seats that need `permissionMode` or their own MCP server, which plugin agent files ignore. Never the main thread.
+    ...(Object.keys(plugin.sdkAgents ?? {}).length ? { agents: plugin.sdkAgents } : {}),
     mcpServers: { [MCP_SERVER]: input.adapters.mcp(ctx) },
     hooks: input.adapters.hooks(ctx),
     // CLAUDE.md and project agents load; the owner's user-level settings stay the owner's own Claude Code's.

@@ -24,6 +24,8 @@ const INTERFACE = [
   // The host adapter (claude-code/host): seat definitions and skills for the generated plugin, Task's write-root
   // validation for task_grant, the skill playbooks, and the background process registry the `process` tool feeds.
   "maestro/seats", "maestro/seat-skill-root", "maestro/write-roots", "skill", "background/process",
+  // The host session provides what resolving the served tools needs: the tool-output truncation service.
+  "tool/truncate",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
