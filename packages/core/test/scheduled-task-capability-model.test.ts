@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { ScheduledTaskCapabilityModel } from "@orchestra/core/scheduled-task/capability-model"
 
+const plan = ScheduledTaskCapabilityModel.plan
+
 const MINUTE = 60_000
 const DAY = 86_400_000
 const at = (value: string) => Date.parse(value)
@@ -15,48 +17,32 @@ const timing = (
   catchUp: "latest",
   ...input,
 })
-const next = (value: ScheduledTaskCapabilityModel.Timing, after: number) =>
-  ScheduledTaskCapabilityModel.nextAfter(value, after)
+const next = ScheduledTaskCapabilityModel.nextAfter
 const daily = (time: string, timezone = "America/New_York") => timing({ kind: "daily", time }, { timezone })
 const cron = (expression: string, timezone = "America/New_York") => timing({ kind: "cron", expression }, { timezone })
 
 describe("ScheduledTaskCapabilityModel.parseCron", () => {
   test("accepts five fields with lists, ranges and steps", () => {
     const parsed = ScheduledTaskCapabilityModel.parseCron("*/15 9-17/4 1,15 * 5-7")
-    expect([...(parsed?.minutes ?? [])]).toEqual([0, 15, 30, 45])
-    expect([...(parsed?.hours ?? [])]).toEqual([9, 13, 17])
-    expect([...(parsed?.days ?? [])]).toEqual([1, 15])
+    expect(parsed?.minutes).toEqual(new Set([0, 15, 30, 45]))
+    expect(parsed?.hours).toEqual(new Set([9, 13, 17]))
+    expect(parsed?.days).toEqual(new Set([1, 15]))
     expect(parsed?.months.size).toBe(12)
     expect([...(parsed?.weekdays ?? [])].sort()).toEqual([0, 5, 6])
-    expect(parsed?.dayRestricted).toBe(true)
-    expect(parsed?.weekdayRestricted).toBe(true)
+    expect([parsed?.dayRestricted, parsed?.weekdayRestricted]).toEqual([true, true])
     const starred = ScheduledTaskCapabilityModel.parseCron("  0 0 */2 * 7 ")
-    expect([...(starred?.weekdays ?? [])]).toEqual([0])
-    expect(starred?.dayRestricted).toBe(false)
+    expect([starred?.weekdays, starred?.dayRestricted]).toEqual([new Set([0]), false])
+    expect(ScheduledTaskCapabilityModel.parseCron("*/59 */23 * * \t0-7/7")?.minutes.size).toBe(2)
     expect(ScheduledTaskCapabilityModel.parseCron("0 0 30 2 1")?.dayRestricted).toBe(true)
   })
 
-  test.each([
-    "",
-    "* * * *",
-    "* * * * * *",
-    "60 * * * *",
-    "* 24 * * *",
-    "* * 0 * *",
-    "* * 32 * *",
-    "* * * 13 *",
-    "* * * * 8",
-    "-1 * * * *",
-    "5-1 * * * *",
-    "*/0 * * * *",
-    "1/5 * * * *",
-    "1,,2 * * * *",
-    "@daily",
-    "0 0 * JAN *",
-    "0 0 * * MON",
-    "0 0 30 2 *",
-    "0 0 31 4,6,9,11 *",
-  ])("rejects %p", (expression) => {
+  // Empty, wrong arity, out of range, reversed range, zero step, `a/n`, empty item, macro, names, and
+  // day-of-month rules no selected month can hold.
+  test.each(
+    "|* * * *|* * * * * *|60 * * * *|* 24 * * *|* * 0 * *|* * 32 * *|* * * 13 *|* * * * 8|-1 * * * *|5-1 * * * *|*/0 * * * *|1/5 * * * *|1,,2 * * * *|@daily|0 0 * JAN *|0 0 * * MON|0 0 30 2 *|0 0 31 4,6,9,11 *|*/99999999 * * * *|0-59/60 * * * *|0 0 * * 0-7/8|0\u00a00 * * *|0 0 * * *\u00a0|0 0 * *\n*".split(
+      "|",
+    ),
+  )("rejects %p", (expression) => {
     expect(ScheduledTaskCapabilityModel.parseCron(expression)).toBeUndefined()
   })
 })
@@ -113,6 +99,12 @@ describe("ScheduledTaskCapabilityModel.nextAfter", () => {
     expect(next(daily("09:30", "Mars/Olympus"), 0)).toBeUndefined()
     expect(next(cron("0 0 30 2 *"), 0)).toBeUndefined()
     expect(next(cron("0 0 * * *"), Number.NaN)).toBeUndefined()
+    expect(next(timing({ kind: "interval", minutes: 5 }, { next: 8e15 - 1 }), 8e15 - 1)).toBeUndefined()
+  })
+
+  test("rare rules are found across their full cycle", () => {
+    expect(next(cron("0 0 */31 1 0", "UTC"), at("2026-01-01T00:00:00Z"))).toBe(at("2034-01-01T00:00:00Z"))
+    expect(next(cron("0 0 29 2 *", "UTC"), at("2097-01-01T00:00:00Z"))).toBe(at("2104-02-29T00:00:00Z"))
   })
 })
 
@@ -121,47 +113,47 @@ describe("ScheduledTaskCapabilityModel.plan", () => {
 
   test("waits for a future or disabled slot; once runs within 24h and is skipped after", () => {
     const once = timing({ kind: "once", at: t0 }, { next: t0 })
-    expect(ScheduledTaskCapabilityModel.plan(once, t0 - 1)).toEqual({ type: "wait" })
-    expect(ScheduledTaskCapabilityModel.plan({ ...once, enabled: false }, t0 + 1)).toEqual({ type: "wait" })
-    expect(ScheduledTaskCapabilityModel.plan(once, t0 + DAY)).toEqual({ type: "run", slot: t0, skipped: 0 })
-    expect(ScheduledTaskCapabilityModel.plan(once, t0 + DAY + 1)).toEqual({ type: "skip", skipped: 1 })
+    expect(plan(once, t0 - 1)).toEqual({ type: "wait" })
+    expect(plan({ ...once, enabled: false }, t0 + 1)).toEqual({ type: "wait" })
+    expect(plan(once, t0 + DAY)).toEqual({ type: "run", slot: t0, skipped: 0 })
+    expect(plan(once, t0 + DAY + 1)).toEqual({ type: "skip", skipped: 1 })
   })
 
   test("latest runs the newest overdue slot; skip never runs a slot more than a tick late", () => {
     const interval = timing({ kind: "interval", minutes: 5 }, { next: t0 })
-    expect(ScheduledTaskCapabilityModel.plan(interval, t0 + 22 * MINUTE)).toEqual({
+    expect(plan(interval, t0 + 22 * MINUTE)).toEqual({
       type: "run",
       slot: t0 + 20 * MINUTE,
       skipped: 4,
     })
     const skip = { ...interval, catchUp: "skip" as const }
-    expect(ScheduledTaskCapabilityModel.plan(skip, t0 + 22 * MINUTE)).toEqual({ type: "skip", skipped: 5 })
-    expect(ScheduledTaskCapabilityModel.plan(skip, t0 + 20 * MINUTE + 30_000)).toEqual({
+    expect(plan(skip, t0 + 22 * MINUTE)).toEqual({ type: "skip", skipped: 5 })
+    expect(plan(skip, t0 + 20 * MINUTE + 30_000)).toEqual({
       type: "run",
       slot: t0 + 20 * MINUTE,
       skipped: 4,
     })
-    expect(ScheduledTaskCapabilityModel.plan(skip, t0 + MINUTE)).toEqual({ type: "run", slot: t0, skipped: 0 })
+    expect(plan(skip, t0 + MINUTE)).toEqual({ type: "run", slot: t0, skipped: 0 })
   })
 
   test("daily catch-up counts local days across DST", () => {
     const start = at("2031-03-07T09:30:00-05:00")
     const value = { ...daily("09:30"), next: start }
-    expect(ScheduledTaskCapabilityModel.plan(value, at("2031-03-10T09:30:30-04:00"))).toEqual({
+    expect(plan(value, at("2031-03-10T09:30:30-04:00"))).toEqual({
       type: "run",
       slot: at("2031-03-10T09:30:00-04:00"),
       skipped: 3,
     })
-    expect(ScheduledTaskCapabilityModel.plan({ ...value, catchUp: "skip" }, at("2031-03-10T10:00:00-04:00"))).toEqual({
+    expect(plan({ ...value, catchUp: "skip" }, at("2031-03-10T10:00:00-04:00"))).toEqual({
       type: "skip",
       skipped: 4,
     })
-    expect(ScheduledTaskCapabilityModel.plan(value, start + 1)).toEqual({ type: "run", slot: start, skipped: 0 })
+    expect(plan(value, start + 1)).toEqual({ type: "run", slot: start, skipped: 0 })
   })
 
   test("a cron due inside the second pass of a repeated hour picks the earlier-pass slot", () => {
     const value = { ...cron("45 1 * * *"), next: at("2031-11-01T01:45:00-04:00") }
-    expect(ScheduledTaskCapabilityModel.plan(value, at("2031-11-02T01:10:00-05:00"))).toEqual({
+    expect(plan(value, at("2031-11-02T01:10:00-05:00"))).toEqual({
       type: "run",
       slot: at("2031-11-02T01:45:00-04:00"),
       skipped: 1,
@@ -170,7 +162,7 @@ describe("ScheduledTaskCapabilityModel.plan", () => {
 
   test("an invalid zone runs only the owed slot", () => {
     const value = { ...daily("09:30", "Mars/Olympus"), next: t0 }
-    expect(ScheduledTaskCapabilityModel.plan(value, t0 + 3 * DAY)).toEqual({ type: "run", slot: t0, skipped: 0 })
+    expect(plan(value, t0 + 3 * DAY)).toEqual({ type: "run", slot: t0, skipped: 0 })
   })
 
   test("a year of downtime is planned without walking every slot", () => {
@@ -180,7 +172,7 @@ describe("ScheduledTaskCapabilityModel.plan", () => {
     ).toEqual({ type: "run", slot: t0 + 365 * DAY, skipped: 105_120 })
     expect(performance.now() - started).toBeLessThan(50)
     const minutely = { ...cron("* * * * *", "UTC"), next: at("2031-01-01T00:00:00Z") }
-    expect(ScheduledTaskCapabilityModel.plan(minutely, at("2032-01-01T00:00:30Z"))).toEqual({
+    expect(plan(minutely, at("2032-01-01T00:00:30Z"))).toEqual({
       type: "run",
       slot: at("2032-01-01T00:00:00Z"),
       skipped: 525_600,
