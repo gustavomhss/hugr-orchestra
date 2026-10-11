@@ -1,5 +1,5 @@
 import { expect, mock, test } from "bun:test"
-import { createComponent, createStore, render } from "./lean-project-metrics.test-helper"
+import { createComponent, createStore, render } from "./lean-dom.test-helper"
 import type { Config } from "@orchestra/sdk/v2/client"
 import { solidDom } from "./solid-dom"
 

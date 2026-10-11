@@ -50,7 +50,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
             path.join(app, "package.json"),
             import.meta.path,
             path.join(import.meta.dir, "lean-profile-view.test-helper.ts"),
-            path.join(import.meta.dir, "lean-project-metrics.test-helper.ts"),
+            path.join(import.meta.dir, "lean-dom.test-helper.ts"),
             path.join(import.meta.dir, "solid-dom.ts"),
           ],
         }),

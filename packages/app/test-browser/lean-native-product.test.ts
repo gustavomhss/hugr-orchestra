@@ -56,7 +56,7 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
         // core's omni loader imports with explicit .ts extensions, which the bundler-driven packages already allow.
         compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, allowImportingTsExtensions: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
-        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-project-metrics.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
+        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
     } catch (error) { errors.push(error) }
@@ -64,7 +64,7 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
     if (errors.length) throw new AggregateError(errors, "Proof typecheck primary and cleanup errors")
   }, 600000)
 } else {
-  const { createComponent, createRoot, createStore, render } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, createRoot, createStore, render } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-native-product-assets", setup(build) {
     build.onLoad({ filter: /\?(worker&)?url$/ }, (args) => ({ contents: `export default ${JSON.stringify(args.path)}`, loader: "js" }))
   } })

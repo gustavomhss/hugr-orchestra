@@ -1,10 +1,9 @@
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
-import type { ToolPart } from "@orchestra/sdk/v2/client"
 
 // Browser-lane only. Tests load the app and ui modules they render through solidDom() (./solid-dom), which compiles
 // them with the app's Solid preset whichever test file loaded the plain modules first. solid-js stays the single shared
 // copy those compiled modules import, so the primitives below drive the same reactive runtime.
-export const { createRoot, createComponent, createMemo }: typeof import("solid-js") = await import("solid-js")
+export const { createRoot, createComponent }: typeof import("solid-js") = await import("solid-js")
 export const { createStore }: typeof import("solid-js/store") = await import("solid-js/store")
 export const { render }: typeof import("solid-js/web") = await import("solid-js/web")
 // Saved wire objects are mutable Solid state even though decoded Decisions are readonly.
@@ -19,14 +18,4 @@ export function decision(callID: string, patch: Partial<LeanMetrics.Decision> = 
     tokens: { kind: "estimated", counter: "chars-per-token-4", before: 3, after: 1, saved: 2 },
     durationMs: 1, ...patch,
   }
-}
-
-export function savedLeanPart<T>(messageID: string, sessionID: string, callID: string, lean: T) {
-  return {
-    id: `part-${messageID}-${callID}`, messageID, sessionID, callID, type: "tool" as const, tool: "bash",
-    state: {
-      status: "completed" as const, input: {}, output: "", title: "",
-      metadata: { lean }, time: { start: 1, end: 2 },
-    },
-  } satisfies ToolPart
 }

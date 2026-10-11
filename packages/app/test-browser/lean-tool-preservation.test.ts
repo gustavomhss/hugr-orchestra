@@ -24,7 +24,7 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
         composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
         rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
       }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-project-metrics.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
+        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: app, stdout: "pipe", stderr: "pipe", timeout: 120000 })
       const [out, err, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
@@ -33,7 +33,7 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
     } finally { await rm(scratch, { recursive: true, force: true }) }
   }, 180000)
 } else {
-  const { createComponent, render, decision } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, render, decision } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-wrapper-assets", setup(build) {
     build.onLoad({ filter: /\?(worker&)?url$/ }, (args) => ({ contents: `export default ${JSON.stringify(args.path)}`, loader: "js" }))
   } })

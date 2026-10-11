@@ -31,13 +31,13 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
         composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
         rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
       }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-project-metrics.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
+        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       await child(["typecheck", config])
     } finally { await rm(scratch, { recursive: true, force: true }) }
   }, 240000)
 } else {
-  const { createComponent, createStore, render } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { createContext, useContext } = await import("solid-js")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")

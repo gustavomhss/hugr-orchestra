@@ -1,4 +1,4 @@
-import { createComponent, createStore, render } from "./lean-project-metrics.test-helper"
+import { createComponent, createStore, render } from "./lean-dom.test-helper"
 import type { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { LeanViewProps } from "@/orchestra/chapters/lean-view-contract"
