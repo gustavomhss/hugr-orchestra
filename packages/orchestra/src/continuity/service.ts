@@ -16,11 +16,11 @@ import { Cause, Context, Deferred, Effect, Layer, Scope, Semaphore, Stream } fro
 import { isDeepStrictEqual } from "node:util"
 import { create } from "./context"
 import { completeSnapshot, measure, run, type ParentRequest, type Pass } from "./fork"
-import { completeIndex, fingerprint, hasArtifact, isCurrent } from "./model"
+import { completeIndex, fingerprint, hasArtifact, isCurrent, type ContinuityContext } from "./model"
 import { hardLimit, isSafe, settings, shouldStart, tokenCount } from "./trigger"
 import { ContinuityMasking, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import type { Prepared } from "./memory-types"
+import type { MemoryArtifact, MemorySnapshot, Prepared } from "./memory-types"
 import { ContinuityAdmission } from "./admission"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
@@ -28,10 +28,15 @@ import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
 
 type Backend = { readonly model: Provider.Model; readonly llm: LLM.Interface; readonly revision: number }
 type Active = { generation: number; epoch: number; backend: Backend | null | undefined; boundary: MessageID;
-  registered: Deferred.Deferred<void>; done: Deferred.Deferred<void> }
-type Pending = { message: SessionV1.Assistant; canRecall: boolean; model?: Provider.Model }
+  registered: Deferred.Deferred<void>; done: Deferred.Deferred<void>; context?: string }
+type Pending = { message: SessionV1.Assistant; canRecall: boolean; model?: Provider.Model; context?: string }
+/** A checked catch-up whose caller was superseded, with everything its reuse must find unchanged. Revision counts history edits. */
+type Parked = { artifact: MemoryArtifact; selected: MemorySnapshot; model: Provider.Model; context: string; epoch: number;
+  backend: Backend | null | undefined; revision: number; prior?: ContinuityContext }
 type Entry = {
   generation: number
+  revision?: number
+  parked?: Parked
   safe?: MessageID
   active?: Active
   pending?: Pending
@@ -95,7 +100,7 @@ export interface Interface {
    * Bring the context under the hard limit before the next model request: wait for running maintenance, run a
    * pass when still over (or when forced), then mask every old tool result the recall can restore.
    */
-  readonly compact: (input: { sessionID: SessionID; canRecall?: boolean; force?: boolean; model?: Provider.Model }) => Effect.Effect<Compacted>
+  readonly compact: (input: { sessionID: SessionID; canRecall?: boolean; force?: boolean; model?: Provider.Model; context?: string }) => Effect.Effect<Compacted>
   readonly advance: (sessionID: SessionID) => Effect.Effect<void>
   readonly invalidate: (sessionID: SessionID) => Effect.Effect<void>
   readonly forget: (sessionID: SessionID) => Effect.Effect<void>
@@ -156,6 +161,7 @@ const layer = Layer.effect(
       item.pending = undefined
       item.safe = undefined
       item.attempted = undefined
+      item.parked = undefined
       return { epoch, active: item.active }
     }
     const join = (sessionID: SessionID, active: Active | undefined) => Effect.gen(function* () {
@@ -331,6 +337,7 @@ const layer = Layer.effect(
       current.overheads.delete(sessionID)
       current.masks.delete(sessionID)
       const item = entry(current, sessionID)
+      item.revision = (item.revision ?? 0) + 1
       item.attempted = undefined
       item.failures = undefined
       item.refresh = true
@@ -422,7 +429,7 @@ const layer = Layer.effect(
           if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false, context,
             trigger: options.trigger })) return
           const active: Active = { generation: item.generation, epoch: token.epoch, backend: token.backend,
-            boundary: message.id, done: Deferred.makeUnsafe<void>(), registered: Deferred.makeUnsafe<void>() }
+            boundary: message.id, done: Deferred.makeUnsafe<void>(), registered: Deferred.makeUnsafe<void>(), context: pending.context }
           item.active = active
           item.attempted = message.id
           item.pending = undefined
@@ -479,6 +486,7 @@ const layer = Layer.effect(
             metadata: { sessionId: sessionID, background: true },
             run: Effect.gen(function* () {
               if (!live()) return "discarded"
+              const revision = token.entry.revision ?? 0
               const stored = yield* sessions.messages({ sessionID })
               // External engines may still be executing tools. Their producer captures only a completed step.
               const history = stored.slice(0, stored.findIndex((item) => item.info.id === active.boundary) + 1)
@@ -509,6 +517,12 @@ const layer = Layer.effect(
                 yield* result("discarded")
                 return "discarded"
               }
+              const prior = current.contexts.get(sessionID)
+              const parked = token.entry.parked
+              // A superseded caller's checked catch-up serves only an identical caller, fence, revision, prior memory and prefix.
+              const reused = parked && parked.context === pending.context && parked.epoch === token.epoch && parked.backend === token.backend &&
+                parked.revision === revision && parked.prior === prior && parked.selected.boundary === selected.boundary &&
+                parked.selected.canRecall === selected.canRecall && isDeepStrictEqual(parked.model, model) && isCurrent(parked.selected, activeHistory) ? parked : undefined
               // A turn that started before the last swap replays older memory than this
               // pass edits. Wait for a turn that carries the current memory instead of
               // paying for an uncached isolated request.
@@ -521,7 +535,7 @@ const layer = Layer.effect(
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
               if (!live()) return "discarded"
-              const { artifact, ...pass } = yield* run(selected, {
+              const { artifact, ...pass }: Pass = reused ? { artifact: reused.artifact, retried: false, ops: [], size: 0 } : yield* run(selected, {
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                  llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
@@ -534,9 +548,14 @@ const layer = Layer.effect(
               // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
               if (!live()) {
-                yield* diagnostic(sessionID, active.boundary, "stale-or-backend-change", pass)
-                yield* result("discarded")
-                return "discarded"
+                // Only a newer caller superseded this pass: keep the checked catch-up for that caller's admission to judge.
+                token.entry.parked = artifact && active.context !== undefined && (token.entry.revision ?? 0) === revision && current.contexts.get(sessionID) === prior &&
+                  (current.epochs.get(sessionID) ?? 0) === token.epoch && current.backends.get(sessionID) === token.backend && current.sessions.get(sessionID) === token.entry
+                  ? { artifact, selected, model, context: active.context, epoch: token.epoch, backend: token.backend, revision, prior } : undefined
+                const kept = token.entry.parked ? "parked" : "discarded"
+                yield* diagnostic(sessionID, active.boundary, token.entry.parked ? "parked" : "stale-or-backend-change", pass)
+                yield* result(kept)
+                return kept
               }
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
@@ -592,7 +611,7 @@ const layer = Layer.effect(
                 return "discarded"
               }
               yield* persist(current, sessionID)
-              yield* diagnostic(sessionID, active.boundary, "applied", pass)
+              yield* diagnostic(sessionID, active.boundary, reused ? "reused" : "applied", pass)
               yield* outcome(true)
               yield* result("applied")
               return "applied"
@@ -697,7 +716,7 @@ const layer = Layer.effect(
         item.attempted = undefined
         item.result = undefined
       })
-      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model })
+      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model, context: input.context })
       yield* settle(current, sessionID)
       if (item.checkpointBlocked) return "over" as const
       const after = yield* pressure
@@ -732,7 +751,7 @@ const layer = Layer.effect(
           completeIndex(context, MessageV2.filterCompacted(history.toReversed())) !== undefined ? context.boundary : undefined,
           admitted: current.sessions.get(id)?.admittedBoundary, epoch: current.epochs.get(id) ?? 0, generation: entry(current, id).generation }
       }),
-      compact: (sessionID, canRecall, model) => compact({ sessionID, canRecall, force: true, model }),
+      compact: (sessionID, canRecall, model, context) => compact({ sessionID, canRecall, force: true, model, context }),
       commit: (id, boundary, epoch, generation) => Effect.gen(function* () {
         const current = yield* InstanceState.get(state)
         const history = yield* sessions.messages({ sessionID: id }).pipe(Effect.orDie)

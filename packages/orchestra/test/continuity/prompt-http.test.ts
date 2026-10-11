@@ -26,6 +26,7 @@ import { testProviderConfig } from "../lib/test-provider"
 import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, reviewing, retrying, wireMessages } from "./service-fixture"
 import { MessageID, PartID } from "@/session/schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import PROMPT from "@/continuity/prompt.txt"
 
 const transform: { plan?: { entered: Deferred.Deferred<void>; release: Deferred.Deferred<void>; append?: string } } = {}
 const preparation: { plan?: { systemCalls: number; paramCalls: number; system?: string; reserve?: number; once?: boolean;
@@ -91,16 +92,18 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const review: Match = (hit) => reviewing(hit.body)
+// The real producer role's first line: the isolated transport sends it as system, a replay as the last user message.
+const PRODUCER = PROMPT.split("\n")[0]
 const maintenance: Match = (hit) => {
   if (review(hit)) return false
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v5")) ||
+  return wire.some((message) => message.role === "system" && message.content.includes(PRODUCER)) ||
     (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
 }
 const parent = (marker: string): Match => (hit) => !review(hit) && !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
-function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number } = {}) {
+function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number; alternate?: boolean } = {}) {
   const config = testProviderConfig(url)
   config.provider.test.models["test-model"].tool_call = options.toolcall ?? true
   if (options.context) config.provider.test.models["test-model"].limit.context = options.context
@@ -109,7 +112,8 @@ function configure(url: string, directory: string, options: { toolcall?: boolean
     plugin: [], mcp: {}, compaction: { auto: false },
     // Scenario turns report 50,000 tokens against the test model's 100,000-token window.
     continuity: { trigger: 0.5 },
-    agent: { build: { permission: { context_recall: options.permission ?? "allow" } } },
+    agent: { build: { permission: { context_recall: options.permission ?? "allow" } },
+      ...options.alternate ? { alternate: { permission: { context_recall: "allow" } } } : {} },
   })))
 }
 function chunks(text: string, input = 100, cached = 0) {
@@ -165,7 +169,8 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT · working memory v5", "system"))).toBe(true)
+  expect(PRODUCER.startsWith("CONTEXT CONTINUITY CHECKPOINT")).toBe(true)
+  expect(maintenance(control(PROMPT, "system"))).toBe(true)
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
@@ -440,13 +445,14 @@ it.instance("permission changes during real preflight rebind same caller before 
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
 }), 120_000)
 
-it.instance("different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error", () => Effect.gen(function* () {
+for (const drift of ["unchanged", "agent", "tools", "format", "permission", "system"] as const) it.instance(
+  `different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error${drift === "unchanged" ? "" : `; ${drift} drift`}`, () => Effect.gen(function* () {
   const llm = yield* TestLLMServer
   const instance = yield* TestInstance
   const prompt = yield* SessionPrompt.Service
   const sessions = yield* Session.Service
   const jobs = yield* BackgroundJob.Service
-  yield* configure(llm.url, instance.directory)
+  yield* configure(llm.url, instance.directory, { alternate: drift === "agent" })
   const chat = yield* sessions.create({ title: "Held catch-up caller race" })
   const seed = Array.from({ length: 6 }, (_, index) => `CATCHUP_SEED_${index}`)
   for (const text of seed) yield* llm.pushMatch(parent(text), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
@@ -464,28 +470,41 @@ it.instance("different user queued during real held catch-up retries stale admis
   yield* sessions.updateMessage(delta)
   yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: delta.id, type: "text", text: `NEW_COMPLETED_DELTA ${PAD}` })
   const hold = yield* gate
-  const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
+  const selected = yield* Deferred.make<void>()
+  // Only the real producer request opens this barrier, so the maintenance matcher cannot pass vacuously.
+  const catchup = forkAnswer("HELD_CATCHUP_RESULT", (hit) => maintenance(hit) && Deferred.doneUnsafe(selected, Effect.void), undefined, hold.wait)
   yield* llm.pushMatch(catchup.match, catchup.response)
-  yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
+  const fresh = forkAnswer("FRESH_CATCHUP_RESULT", maintenance)
+  if (drift !== "unchanged") yield* llm.pushMatch(fresh.match, fresh.response)
+  yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), drift === "format" ? reply().tool("StructuredOutput", { accepted: true }) : answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
-  yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
+  yield* awaitWithTimeout(Deferred.await(selected), "Real catch-up never reached HTTP", "15 seconds")
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
-  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
+  if (drift === "permission") yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "/owner-drift/*", action: "deny" }] })
+  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: drift === "agent" ? "alternate" : "build", model,
+    tools: drift === "tools" ? { bash: false } : undefined, system: drift === "system" ? "OWNER_SYSTEM_DRIFT" : undefined,
+    format: drift === "format" ? { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } } : undefined,
+    parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
+  // Release the paid catch-up only once U2's admission is durable.
+  expect((yield* sessions.messages({ sessionID: chat.id })).some((message) => message.info.id === newer.info.id)).toBe(true)
+  expect(yield* Deferred.isDone(hold.release)).toBe(false)
   yield* Deferred.succeed(hold.release, undefined)
   const result = yield* awaitWithTimeout(Fiber.join(old), "Queued caller stranded by catch-up", "30 seconds")
-  expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id })
-  expect(result.parts.some((part) => part.type === "text" && part.text === "U2_DELIVERED_ONCE")).toBe(true)
+  expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id, ...drift === "format" ? { structured: { accepted: true } } : {} })
+  if (drift !== "format") expect(result.parts.some((part) => part.type === "text" && part.text === "U2_DELIVERED_ONCE")).toBe(true)
   const history = yield* sessions.messages({ sessionID: chat.id })
   expect(history.filter((message) => message.info.role === "assistant" && message.info.error)).toEqual([])
   expect(history.filter((message) => message.info.role === "assistant" && message.info.parentID === newer.info.id)).toHaveLength(1)
   const hits = yield* llm.hits
   expect(hits.filter(parent("QUEUED_U2_DURING_CATCHUP"))).toHaveLength(1)
-  // The completed prefix remains usable; rebinding a newer caller must not pay for it again.
-  expect(hits.filter(maintenance)).toHaveLength(2)
+  // An identical newer caller reuses the checked catch-up; any drift in its request context pays for one fresh checked pass.
+  expect(hits.filter(maintenance).map((hit) => retrying(hit.body))).toEqual(drift === "unchanged" ? [false, false] : [false, false, false])
   const delivered = hits.find(parent("QUEUED_U2_DURING_CATCHUP"))
   if (!delivered) throw new Error("Missing rebound caller request")
-  expect(wireMessages(delivered.body).filter((message) => message.role === "system").map((message) => message.content).join("\n"))
-    .toContain("HELD_CATCHUP_RESULT")
+  const system = wireMessages(delivered.body).filter((message) => message.role === "system").map((message) => message.content).join("\n")
+  expect(system).toContain(drift === "unchanged" ? "HELD_CATCHUP_RESULT" : "FRESH_CATCHUP_RESULT")
+  if (drift !== "unchanged") expect(system).not.toContain("HELD_CATCHUP_RESULT")
+  expect((yield* jobs.list()).filter((entry) => entry.metadata?.sessionId === chat.id).map((entry) => entry.output)).toEqual(["applied", "parked", "applied"])
   expect(hits.filter(review)).toEqual([])
 }), 120_000)
 
