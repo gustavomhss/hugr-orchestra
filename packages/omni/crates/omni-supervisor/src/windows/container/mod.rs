@@ -2,12 +2,18 @@
 //!
 //! The host runs this as an ordinary managed child (so output, exit and stop work as for any root). It creates or
 //! reuses the named AppContainer profile, applies the grants, starts the exact-endpoint broker, then runs `--app`
-//! with the command line `--line`, verbatim, as an AppContainer process with no capabilities (no network) inside its
+//! with the command line `--line`, verbatim, as an AppContainer process with no network capability inside its
 //! own `KILL_ON_JOB_CLOSE` Job, nested in the host's. It inherits only its standard handles, waits for that root and
 //! exits with its exit code; the Job's last handle closes with this process, so no confined descendant outlives it.
 //!
 //! Grants: `--read <path>` and `--write <path>` (inherited by a directory's subtree), `--route <port>=<socket>` (the
 //! broker; the socket's folder gets a write grant). `--revoke` instead removes the profile's ACEs from every named path and deletes the profile.
+//!
+//! Every container also holds the `orchestraToolchainRead` capability. `--appcontainer <profile> --toolchain <path>…`,
+//! with no command, grants each folder read to that capability (not to a profile) and exits: once per folder for every
+//! profile, best effort, since a folder that cannot take the ACE only stays unreadable. A first grant walks the
+//! folder's whole tree (~200k files took minutes on windows-latest), so the host runs it beside commands, never
+//! inside one's deadline; a walk cut short leaves its folder's ACE in place and the rest of its tree unreadable.
 //! A launcher failure exits 125 with one `hugr-omni-supervisor: appcontainer: …` line on stderr.
 
 mod acl;
@@ -24,7 +30,7 @@ use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
 use std::path::{Path, PathBuf};
 
 use windows_sys::Win32::Foundation::{HANDLE, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE, SetHandleInformation};
-use windows_sys::Win32::Security::SECURITY_CAPABILITIES;
+use windows_sys::Win32::Security::{SECURITY_CAPABILITIES, SID_AND_ATTRIBUTES};
 use windows_sys::Win32::System::Console::{GetStdHandle, STD_ERROR_HANDLE, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE};
 use windows_sys::Win32::System::Threading::{
     CreateProcessW, EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess, INFINITE, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
@@ -38,11 +44,18 @@ use broker::Route;
 /// Exit code of a launcher that could not start its confined root.
 const FAILED: i32 = 125;
 
+/// The custom capability toolchain folders are granted to.
+const TOOLCHAIN: &str = "orchestraToolchainRead";
+
+/// `SE_GROUP_ENABLED` (winnt.h): a capability in the token takes part in access checks only when enabled.
+const ENABLED: u32 = 0x4;
+
 /// The parsed launch request.
 #[derive(Debug, Default)]
 struct Request {
     name: String,
     grants: Vec<(PathBuf, Grant)>,
+    toolchain: Vec<PathBuf>,
     routes: Vec<Route>,
     /// Project-config paths made read-only to the container for the command's lifetime; a missing one gets a locked
     /// placeholder directory. Protection is journalled under `journal`, so `--recover` can undo a crashed run.
@@ -91,6 +104,7 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Request, String> {
         match flag.as_str() {
             "--read" => request.grants.push(grant(Grant::Read)),
             "--write" => request.grants.push(grant(Grant::Write)),
+            "--toolchain" => request.toolchain.push(PathBuf::from(&value)),
             "--guard" => request.guards.push(PathBuf::from(&value)),
             "--journal" => request.journal = Some(PathBuf::from(&value)),
             "--route" => {
@@ -114,12 +128,25 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Request, String> {
         .grants
         .iter()
         .map(|g| &g.0)
+        .chain(&request.toolchain)
         .chain(request.routes.iter().map(|r| &r.socket))
         .chain(request.guards.iter())
         .chain(request.journal.iter())
         .any(|p| !p.is_absolute())
     {
         return Err("every path must be absolute".into());
+    }
+    if !request.toolchain.is_empty() {
+        let alone = request.grants.is_empty()
+            && request.routes.is_empty()
+            && request.guards.is_empty()
+            && request.journal.is_none()
+            && request.app.is_none()
+            && request.line.is_none();
+        if request.revoke || request.recover || !alone {
+            return Err("--toolchain takes no command and no other grant".into());
+        }
+        return Ok(request);
     }
     if (!request.guards.is_empty() || request.recover) && request.journal.is_none() {
         return Err("--guard and --recover need --journal".into());
@@ -131,6 +158,13 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Request, String> {
 }
 
 fn run(request: &Request) -> Result<i32, String> {
+    let toolchain = acl::capability(TOOLCHAIN).map_err(|e| format!("capability {TOOLCHAIN}: {e}"))?;
+    if !request.toolchain.is_empty() {
+        for path in &request.toolchain {
+            let _ = acl::apply(path, &toolchain, Grant::Read);
+        }
+        return Ok(0);
+    }
     // Recovery needs no profile: it only restores ACLs captured by an earlier run and removes stale placeholders.
     if request.recover {
         let journal = request.journal.as_deref().unwrap_or_else(|| Path::new(""));
@@ -170,7 +204,7 @@ fn run(request: &Request) -> Result<i32, String> {
         request.app.as_deref().unwrap_or_default(),
         request.line.as_deref().unwrap_or_default(),
     );
-    let code = launch(app, line, &sid).map_err(|e| format!("start {app}: {e}"));
+    let code = launch(app, line, &sid, &toolchain).map_err(|e| format!("start {app}: {e}"));
     if let (Some(held), Some(dir)) = (held, &journal) {
         let _ = guard::release(held, dir);
     }
@@ -181,11 +215,17 @@ fn run(request: &Request) -> Result<i32, String> {
 }
 
 /// Starts `app` confined to the profile, in a new kill-on-close Job, and waits for it.
-fn launch(app: &str, line: &str, sid: &acl::Sid) -> io::Result<i32> {
+fn launch(app: &str, line: &str, sid: &acl::Sid, toolchain: &acl::Sid) -> io::Result<i32> {
     let job = super::job::create()?;
     let jobs: [HANDLE; 1] = [job.as_raw_handle()];
+    let mut held = [SID_AND_ATTRIBUTES {
+        Sid: toolchain.raw(),
+        Attributes: ENABLED,
+    }];
     let mut capabilities = SECURITY_CAPABILITIES {
         AppContainerSid: sid.raw(),
+        Capabilities: held.as_mut_ptr(),
+        CapabilityCount: 1,
         ..SECURITY_CAPABILITIES::default()
     };
     let mut inherit: Vec<HANDLE> = Vec::new();
@@ -210,7 +250,7 @@ fn launch(app: &str, line: &str, sid: &acl::Sid) -> io::Result<i32> {
         si.StartupInfo.hStdError,
     ) = (std[0], std[1], std[2]);
     let mut attrs = super::create::Attributes::new(if inherit.is_empty() { 2 } else { 3 })?;
-    // SAFETY: `jobs`, `capabilities` (and the SID it names) and `inherit` outlive `attrs` and do not move.
+    // SAFETY: `jobs`, `capabilities` (and the SIDs it names, `held`) and `inherit` outlive `attrs` and do not move.
     unsafe {
         attrs.set(
             PROC_THREAD_ATTRIBUTE_JOB_LIST as usize,

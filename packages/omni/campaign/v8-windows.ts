@@ -64,6 +64,13 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
     }).then(async (response) => ({ status: response.status, text: await response.text() }),
       (error: unknown) => ({ status: 0, text: String(error) }))
     await until(25_000, "PowerShell bash nonce tree", async () => (await remaining(tree.nonce)) === tree.size ? true : undefined)
+    // Every record exists before the leaf's ready line has crossed its ancestors and the server's stream into the part;
+    // aborting on the records alone raced that line (run 38160151593). Abort once the user can see it.
+    await until(25_000, "PowerShell bash ready line in the running part", async () => {
+      const response = await fetch(new URL(`/session/${session.id}/message`, server.url), { signal: AbortSignal.timeout(5_000),
+        headers: { "x-orchestra-directory": encodeURIComponent(scratch.project) } })
+      return response.ok && (await response.text()).includes(tree.ready) ? true : undefined
+    })
     const control = supervised(tree.nonce)
     await post(`/session/${session.id}/abort`, {})
     const result = await pending

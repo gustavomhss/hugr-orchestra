@@ -18,9 +18,9 @@ use windows_sys::Win32::Security::Isolation::{
     CreateAppContainerProfile, DeleteAppContainerProfile, DeriveAppContainerSidFromAppContainerName,
 };
 use windows_sys::Win32::Security::{
-    ACL, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, GetSecurityDescriptorControl,
-    GetSecurityDescriptorDacl, OBJECT_INHERIT_ACE, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID,
-    SE_DACL_PROTECTED, UNPROTECTED_DACL_SECURITY_INFORMATION,
+    ACL, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, GetSecurityDescriptorControl, GetSecurityDescriptorDacl,
+    OBJECT_INHERIT_ACE, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID, SE_DACL_PROTECTED,
+    UNPROTECTED_DACL_SECURITY_INFORMATION,
 };
 use windows_sys::Win32::Storage::FileSystem::{
     BY_HANDLE_FILE_INFORMATION, CreateFileW, DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAG_BACKUP_SEMANTICS,
@@ -31,7 +31,9 @@ use windows_sys::Win32::Storage::FileSystem::{
 use super::{wide, wide_path};
 
 mod dacl;
+mod sid;
 use dacl::Dacl;
+pub(super) use sid::{Sid, capability};
 
 /// What a confined path is identified by across its many possible names (symlink, hardlink, `.`): the volume and the
 /// file index. Used to dedupe guards that resolve to the same object so restore is order-independent.
@@ -58,22 +60,6 @@ impl Grant {
     }
 }
 
-/// The profile's SID, freed on drop.
-pub(super) struct Sid(PSID);
-
-impl Sid {
-    pub(super) fn raw(&self) -> PSID {
-        self.0
-    }
-}
-
-impl Drop for Sid {
-    fn drop(&mut self) {
-        // SAFETY: a SID from CreateAppContainerProfile or DeriveAppContainerSidFromAppContainerName.
-        unsafe { FreeSid(self.0) };
-    }
-}
-
 /// Creates the named profile, or reuses it when it exists.
 pub(super) fn profile(name: &str) -> io::Result<Sid> {
     let name = wide(name);
@@ -92,9 +78,9 @@ pub(super) fn profile(name: &str) -> io::Result<Sid> {
     if hr == hresult(ERROR_ALREADY_EXISTS) {
         // SAFETY: a NUL-terminated name and an out pointer for the SID.
         let hr = unsafe { DeriveAppContainerSidFromAppContainerName(name.as_ptr(), &mut sid) };
-        return checked(hr).map(|()| Sid(sid));
+        return checked(hr).map(|()| Sid(sid, false));
     }
-    checked(hr).map(|()| Sid(sid))
+    checked(hr).map(|()| Sid(sid, false))
 }
 
 /// Deletes the named profile; a missing one is already gone.
