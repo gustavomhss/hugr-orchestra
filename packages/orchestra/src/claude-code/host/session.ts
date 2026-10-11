@@ -12,7 +12,7 @@ export * as ClaudeHost from "./session"
 // The entry mirrors claude-code/engine.ts `turn`, so the engine can hand a turn to this host with a small diff.
 import { createHash } from "node:crypto"
 import { Context, Effect, Exit, Layer, Semaphore } from "effect"
-import type { CanUseTool, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -30,6 +30,8 @@ import { BackgroundProcess } from "@/background/process"
 import { Config } from "@/config/config"
 import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
+import { Provider } from "@/provider/provider"
+import { ModelsDev } from "@orchestra/core/models-dev"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Question } from "@/question"
@@ -165,7 +167,7 @@ type Live = {
   owned?: Set<Live>
   closing?: Promise<void>
   stopping?: Promise<void>
-  known: { calls: Map<string, ClaudeHostMirror.Mirror>; tasks: Map<string, string> }
+  known: { calls: Map<string, ClaudeHostMirror.Mirror>; tasks: Map<string, string>; usage: Map<string, ModelUsage> }
   /** The child session of each subagent run, by its Agent `tool_use_id`. */
   children: Map<string, SessionID>
   /** The Agent-call identity join the hooks share with this stream consumer (spikes S3, S12). */
@@ -175,6 +177,17 @@ type Live = {
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
+}
+
+function send(live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") {
+  return Effect.gen(function* () {
+    const message = userInput(prompt, priority)
+    if (message.uuid) {
+      live.sends.set(message.uuid, user)
+      yield* view.sent(user, message.uuid)
+    }
+    return message
+  })
 }
 
 const layer = Layer.effect(
@@ -191,6 +204,8 @@ const layer = Layer.effect(
     const todo = yield* Todo.Service
     const status = yield* SessionStatus.Service
     const sdk = yield* ClaudeCodeSDK.Service
+    const provider = yield* Provider.Service
+    const catalog = yield* ModelsDev.Service
     // What resolving the served registry tools needs (ClaudeHostMcp.prepare: registry, config, the process tool).
     const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>>>()
     const serviceState = { disposed: false }
@@ -430,13 +445,16 @@ const layer = Layer.effect(
         : fork && typeof fork.sessionId === "string" ? { resume: fork.sessionId, forkSession: true, sessionId: claudeSessionID(input.sessionID),
             ...(typeof fork.at === "string" ? { resumeSessionAt: fork.at } : {}) }
         : { sessionId: typeof input.state.freshSessionId === "string" ? input.state.freshSessionId : claudeSessionID(input.sessionID) }
+      const usage = typeof input.state.sessionId === "string" || typeof fork?.sessionId === "string"
+        ? ClaudeCodeTranscript.record(input.state.modelUsage) ? input.state.modelUsage : {} : {}
       const uuids = ClaudeCodeTranscript.record(input.state.uuids) ? input.state.uuids : {}
       const live: Live = {
         sessionID: input.sessionID, inbox: inbox(), abort, agent: input.agent, model: input.model, discard: false, background: 0,
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
         chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {}, callbacks: new Set(),
-        known: { calls: new Map(), tasks: new Map() }, children: new Map(), join: ClaudeHostJoin.make(),
+        known: { calls: new Map(), tasks: new Map(), usage: new Map(Object.entries(usage) as [string, ModelUsage][]) },
+        children: new Map(), join: ClaudeHostJoin.make(),
         query: undefined as unknown as Query,
         run: (effect, teardown) => {
           // Late SDK callbacks are cancelled too; only our reconciliation may run after shutdown.
@@ -446,7 +464,8 @@ const layer = Layer.effect(
           return running
         },
         make: (user) => ClaudeHostMirror.create({ sessionID: input.sessionID, user, agent: input.agent,
-          path: { cwd: instance.directory, root: instance.worktree }, sessions, snapshot, todo, status, child: child(live), known: live.known,
+          path: { cwd: instance.directory, root: instance.worktree }, sessions, snapshot, todo, status, provider, catalog,
+          child: child(live), known: live.known,
           state: (patch) => write(input.sessionID, patch),
           record: (value) => Effect.sync(() => { if (value.uuid) live.uuids[value.messageID] = value.uuid }) }),
       }
@@ -559,7 +578,7 @@ const layer = Layer.effect(
       // Already handed over (a steer Claude Code answers in its own next turn): wait for that turn.
       const view = existing?.turn && !prompt ? existing.turn.view
         : ClaudeHostMirror.create({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
-            sessions, snapshot, todo, status })
+            sessions, snapshot, todo, status, provider, catalog })
       if (!prompt && !existing?.turn) {
         yield* view.fail({ aborted: false, message: "Claude Code receives text only; this message has no text." })
         return true
@@ -578,7 +597,7 @@ const layer = Layer.effect(
       }
       // A turn Claude Code started on its own is still running: this message steers it, and this turn waits for it.
       const running = host.turn
-      if (running && prompt) yield* running.view.steer(input.user)
+      if (running && prompt) host.inbox.push(yield* send(host, running.view, input.user, prompt, "next"))
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [], answered: new Set([input.user.id]) }
       host.turn = turn
       if (!running) host.bridge?.resume()
@@ -589,12 +608,7 @@ const layer = Layer.effect(
         delivered.forEach((id) => host.delivered.add(id))
         users.forEach((message) => host.delivered.add(message.info.id))
         yield* write(sessionID, { delivered: [...host.delivered] })
-        const message = userInput(prompt, running ? "next" : undefined)
-        if (message.uuid) {
-          host.sends.set(message.uuid, input.user)
-          yield* turn.view.sent(input.user, message.uuid)
-        }
-        host.inbox.push(message)
+        if (!running) host.inbox.push(yield* send(host, turn.view, input.user, prompt))
       }
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
       if (!result.ok) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
@@ -605,10 +619,8 @@ const layer = Layer.effect(
       const live = lives.get(input.sessionID)
       const prompt = ClaudeCodeTranscript.hostPrompt([input.user])
       if (!live?.turn || live.stopping || live.closing || !prompt || input.user.info.role !== "user") return false
-      const message = userInput(prompt, "next")
-      if (message.uuid) live.sends.set(message.uuid, input.user.info)
+      const message = yield* send(live, live.turn.view, input.user.info, prompt, "next")
       live.delivered.add(input.user.info.id)
-      yield* live.turn.view.steer(input.user.info, message.uuid)
       yield* write(input.sessionID, { delivered: [...live.delivered] })
       if ("model" in input) yield* setModel({ sessionID: input.sessionID, model: input.model })
       if (!live.stopping && !live.closing) live.inbox.push(message)
@@ -732,6 +744,6 @@ export const node = LayerNode.make({
   service: Service,
   layer,
   deps: [SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
-    ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node,
+    ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node],
 })
