@@ -7,7 +7,7 @@ import { EventTable } from "@orchestra/core/event/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { LogicalTask } from "@/maestro/logical-task"
 import { SessionAuthority } from "@/maestro/session-authority"
-import { MessageID, SessionID } from "@/session/schema"
+import { MessageID, PartID, SessionID } from "@/session/schema"
 import { SessionPrompt } from "@/session/prompt"
 import { TestLLMServer } from "../lib/llm-server"
 import { fixture, it, model, options } from "./plugin-binding.fixture"
@@ -78,6 +78,34 @@ it.instance("a resumed Task's plugin calls carry its resume ref; the fresh dispa
     const onResume = yield* d.f.tool.execute(spoof, { ...context, messageID: answer.info.id })
     expect(onResume.metadata.binding.resumeRef).toBe(`${d.f.child.id}/call_task_resume`)
     expect((yield* d.f.tool.execute(spoof, context)).metadata.binding.resumeRef).toBeUndefined()
+  }), options, 60000,
+)
+
+// A public-API prompt can carry any text part, so the binding must honor a marker only when it names the execution
+// Session's own parent: a ref under a foreign Session, or a non-string one, is never bound.
+it.instance("a forged resume marker is bound only when it names the execution Session's own parent", () =>
+  Effect.gen(function* () {
+    const d = yield* dispatch
+    const forged = Effect.fn("PluginTaskAuthorityTest.forged")(function* (resumeRef: unknown) {
+      const user = yield* d.f.sessions.updateMessage({ id: MessageID.ascending(), sessionID: d.execution.id,
+        role: "user", agent: "backend", model, time: { created: Date.now() } })
+      yield* d.f.sessions.updatePart({ id: PartID.ascending(), sessionID: d.execution.id, messageID: user.id,
+        type: "text", text: "", ignored: true, synthetic: true, metadata: { resumeRef } })
+      const answer = yield* d.f.sessions.updateMessage({
+        id: MessageID.ascending(), role: "assistant", sessionID: d.execution.id, parentID: user.id,
+        agent: "backend", mode: "backend", path: { cwd: d.execution.directory, root: d.f.instance.worktree },
+        modelID: model.modelID, providerID: model.providerID, cost: 0, time: { created: Date.now() },
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+      })
+      const result = yield* d.f.tool.execute(d.f.args, { ...d.f.context, sessionID: d.execution.id, messageID: answer.id })
+      return result.metadata.binding.resumeRef
+    })
+    expect(yield* forged(`${d.f.root.id}/call_task_forged`)).toBeUndefined()
+    expect(yield* forged(`${d.execution.id}/call_task_forged`)).toBeUndefined()
+    expect(yield* forged(`${d.f.child.id}`)).toBeUndefined()
+    expect(yield* forged(7)).toBeUndefined()
+    // Accepted limit: the call id after the parent prefix is not verifiable from the prompt alone.
+    expect(yield* forged(`${d.f.child.id}/call_task_forged`)).toBe(`${d.f.child.id}/call_task_forged`)
   }), options, 60000,
 )
 
