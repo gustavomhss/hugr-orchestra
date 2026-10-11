@@ -56,7 +56,7 @@ function floor(host: Host) {
 export type Floor = {
   /** Highest glibc symbol version the binaries import, e.g. `2.34`. */
   readonly glibc?: string
-  /** Lowest macOS the binaries declare, e.g. `12.0`; only the major is compared (macOS N is Darwin N + 9). */
+  /** Lowest macOS the binaries declare, e.g. `12.0`; only the major is compared (macOS 11-15 is Darwin N + 9, macOS 26 is Darwin 25). */
   readonly macos?: string
   /** Lowest Windows build the binaries import APIs from, e.g. `10.0.17763`. */
   readonly windows?: string
@@ -83,7 +83,7 @@ export function below(host: Host, target: TargetId, floor: Floor | undefined) {
   if (host.platform === "linux" && floor.glibc && host.glibc && compareVersions(host.glibc, floor.glibc) < 0)
     return `glibc-below-${floor.glibc}`
   const major = Number.parseInt(floor.macos ?? "", 10)
-  if (host.platform === "darwin" && major >= 11 && Number.parseInt(host.kernel, 10) < major + 9) return `macos-below-${major}`
+  if (host.platform === "darwin" && major >= 11 && Number.parseInt(host.kernel, 10) < (major >= 26 ? major - 1 : major + 9)) return `macos-below-${major}`
   if (host.platform === "win32" && floor.windows && compareVersions(host.kernel, floor.windows) < 0)
     return `windows-below-${floor.windows}`
 }

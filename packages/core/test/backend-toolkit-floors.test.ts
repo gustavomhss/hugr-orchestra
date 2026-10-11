@@ -25,6 +25,9 @@ describe("below", () => {
     [{ ...mac, kernel: "20.6.0" }, "darwin-arm64", { macos: "12.0" }, "macos-below-12"],
     [{ ...mac, kernel: "20.6.0" }, "darwin-arm64", { macos: "11.0" }, undefined],
     [{ ...mac, kernel: "19.6.0" }, "darwin-x64", { macos: "10.12" }, undefined],
+    // macOS 26 is Darwin 25, not Darwin 35.
+    [{ ...mac, kernel: "25.0.0" }, "darwin-arm64", { macos: "26.0" }, undefined],
+    [{ ...mac, kernel: "24.6.0" }, "darwin-arm64", { macos: "26.0" }, "macos-below-26"],
     [win, "win32-x64", { windows: "10.0" }, undefined],
     [{ ...win, kernel: "10.0.17134" }, "win32-x64", { windows: "10.0.17763" }, "windows-below-10.0.17763"],
     [{ ...win, kernel: "10.0.17763" }, "win32-x64", { windows: "10.0.17763" }, undefined],
