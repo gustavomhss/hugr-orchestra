@@ -56,13 +56,20 @@ describe("plugin SDK runtime", () => {
     const files = await writePlugins(tmp.path, "js")
     const node = Bun.which("node")
     if (!node) throw new Error("this test needs node on PATH to run the Node bundle")
-    const build = await Bun.build({
-      entrypoints: [path.join(import.meta.dir, "sdk-runtime.node-entry.ts")],
-      target: "node",
-      format: "esm",
-      outdir: path.join(tmp.path, "dist"),
-    })
-    expect(build.success).toBe(true)
+    // A fresh compiler process, as in sdk-authority.test.ts: Bun.build keeps module state across calls in one process,
+    // and after omni-default-mode.test.ts built in-process this build failed with EISDIR reading a file of effect.
+    const build = Bun.spawnSync([
+      process.execPath,
+      "build",
+      path.join(import.meta.dir, "sdk-runtime.node-entry.ts"),
+      "--target",
+      "node",
+      "--format",
+      "esm",
+      "--outdir",
+      path.join(tmp.path, "dist"),
+    ])
+    expect({ code: build.exitCode, stderr: build.stderr.toString() }).toEqual({ code: 0, stderr: "" })
     const run = (env: Record<string, string>) => {
       const result = Bun.spawnSync([node, path.join(tmp.path, "dist", "sdk-runtime.node-entry.js"), ...files], {
         env: { ...process.env, ...env },
