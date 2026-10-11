@@ -43,11 +43,10 @@ NESTED = "packages/omni"
 
 CASES = [
     # (name, files, expected exit code, text that must appear in the output[, omni root inside the repo])
-    ("650 lines passes with WARN", {"src/a.rs": lines(650)}, 0, "WARN   650  src/a.rs"),
-    ("400 lines is sweet", {"src/a.rs": lines(400)}, 0, "sweet 1"),
-    ("651 lines fails and names the file", {"src/big.rs": lines(651)}, 1, "FAIL   651  src/big.rs"),
+    ("400 lines passes", {"src/a.rs": lines(400)}, 0, "sweet 1"),
+    ("401 lines fails and names the file", {"src/big.rs": lines(401)}, 1, "FAIL   401  src/big.rs"),
     ("no trailing newline still counts the last line",
-     {"src/a.py": lines(651, end_newline=False)}, 1, "FAIL   651  src/a.py"),
+     {"src/a.py": lines(401, end_newline=False)}, 1, "FAIL   401  src/a.py"),
     ("documents are not checked",
      {"PLAN.md": lines(5000), "data.json": lines(5000), "src/a.ts": lines(10)}, 0, "fail 0"),
     ("extensionless shebang script is code",
@@ -59,7 +58,7 @@ CASES = [
     ("nested: a big file outside the omni root is not ours",
      {"src/huge.ts": lines(5000), "x.weird": "1\n", f"{NESTED}/src/a.rs": lines(10)}, 0, "1 code files checked", NESTED),
     ("nested: a big file inside the omni root fails, named from the root",
-     {"src/a.ts": lines(1), f"{NESTED}/src/big.rs": lines(651)}, 1, "FAIL   651  src/big.rs", NESTED),
+     {"src/a.ts": lines(1), f"{NESTED}/src/big.rs": lines(401)}, 1, "FAIL   401  src/big.rs", NESTED),
     ("nested: an empty omni root is broken, not a pass",
      {"src/a.ts": lines(1)}, 2, "returned no files", NESTED),
 ]

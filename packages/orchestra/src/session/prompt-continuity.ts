@@ -2,6 +2,9 @@ export * as PromptContinuity from "./prompt-continuity"
 
 import { Deferred, Effect } from "effect"
 import { isDeepStrictEqual } from "node:util"
+import { createHash } from "node:crypto"
+import { asSchema, type Tool } from "ai"
+import type { PermissionV1 } from "@orchestra/core/v1/permission"
 import type { Session } from "./session"
 import type { SessionProcessor } from "./processor"
 import type { LLM } from "./llm"
@@ -42,6 +45,20 @@ export const interrupted = Effect.fn("PromptContinuity.interrupted")(function* (
   message.time.completed = Date.now()
   yield* sessions.updateMessage(message)
 })
+
+/**
+ * Identity of what a caller's request carries besides memory and history: agent, resolved model, the owner's request
+ * options, tool definitions, system and reminders, and session permissions (the agent's are part of the agent).
+ * Undefined when any part cannot be read, so nothing is reused against an unchecked context.
+ */
+export const identity = (input: { agent: Agent.Info; model: Provider.Model; user: SessionV1.User; permission?: PermissionV1.Ruleset;
+  system: string[]; reminders: unknown[]; tools: Record<string, Tool> }) =>
+  Effect.tryPromise(async () => createHash("sha256").update(JSON.stringify({ agent: input.agent, model: input.model,
+    user: { model: input.user.model, format: input.user.format, system: input.user.system, tools: input.user.tools },
+    permission: input.permission, system: input.system, reminders: input.reminders,
+    tools: await Promise.all(Object.entries(input.tools).toSorted(([a], [b]) => a.localeCompare(b)).map(async ([name, tool]) =>
+      ({ name, type: tool.type, description: tool.description, schema: await asSchema(tool.inputSchema).jsonSchema }))),
+  })).digest("hex")).pipe(Effect.orElseSucceed(() => undefined))
 
 /** Tools are initialized before a durable assistant/processor exists; callbacks bind only after admission. */
 export function proxy(message: SessionProcessor.Handle["message"]) {

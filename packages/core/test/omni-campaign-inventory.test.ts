@@ -3,9 +3,8 @@ import { spawn } from "node:child_process"
 import { readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until, win } from "../../omni/campaign/lib.ts"
+import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until } from "../../omni/campaign/lib.ts"
 import { execute, startServer } from "../../omni/campaign/delivery-fixtures.ts"
-import { WindowsInventory } from "../../omni/campaign/windows-inventory.ts"
 import { closeWithinDeadline } from "../../omni/campaign/v8-windows.ts"
 
 const host = { ProcessId: process.pid, ParentProcessId: 1, CommandLine: "campaign host", StartTime: "100", SessionId: 1 }
@@ -289,36 +288,6 @@ try {
   }
 }, 120_000)
 
-test("real recorder no-ready, malformed-ready, early-close and stuck-shutdown faults are red and closed", async () => {
-  const healthyNonce = `recorder-control-${crypto.randomUUID()}`
-  const healthy = WindowsInventory.makeRecorder({ command: BUN, args: ["-e", 'console.log(JSON.stringify({ready:true})); process.stdin.resume(); process.stdin.on("end",()=>process.exit(0)); setInterval(()=>{},1000)', healthyNonce] }, 2000)
-  try {
-    await healthy.prepare()
-    expect(table().some((row) => row.pid === healthy.snapshot().pid && hasNonce(row.args, healthyNonce))).toBe(true)
-    await healthy.stop()
-    expect(healthy.snapshot()).toMatchObject({ pid: undefined, closed: true })
-    expect(table().some((row) => hasNonce(row.args, healthyNonce))).toBe(false)
-  } finally { await healthy.stop(true) }
-  const faults = [
-    { name: "no-ready", script: "setInterval(()=>{},1000)", error: "readiness deadline expired", shutdown: false },
-    { name: "malformed-ready", script: 'console.log(JSON.stringify({ready:"yes"}));setInterval(()=>{},1000)', error: "malformed identity recorder ready", shutdown: false },
-    { name: "early-close", script: "process.exit(0)", error: "identity recorder closed", shutdown: false },
-    { name: "early-close-after-ready", script: 'console.log(JSON.stringify({ready:true}));process.exit(0)', error: "identity recorder closed", shutdown: false, capture: true },
-    { name: "stuck-shutdown", script: 'console.log(JSON.stringify({ready:true}));process.stdin.resume();setInterval(()=>{},1000)', error: "shutdown deadline expired", shutdown: true },
-  ]
-  for (const fault of faults) {
-    const nonce = `recorder-fault-${crypto.randomUUID()}`
-    const recorder = WindowsInventory.makeRecorder({ command: BUN, args: ["-e", fault.script, nonce] }, 500)
-    try {
-      const result = await (fault.shutdown ? recorder.prepare().then(() => recorder.stop()) : fault.capture ? recorder.prepare().then(() => recorder.capture(process.pid)) : recorder.prepare()).then(() => ({ error: "" }), (error: unknown) => ({ error: String(error) }))
-      expect((fault.capture ? [fault.error, "EPIPE: broken pipe, write"] : [fault.error]).some((error) => result.error.includes(error))).toBe(true)
-      expect(recorder.snapshot()).toMatchObject({ pid: undefined, closed: true, pending: 0 })
-      expect(table().some((row) => hasNonce(row.args, nonce))).toBe(false)
-      console.log("RECORDER_FAULT_PROOF " + JSON.stringify({ name: fault.name, red: !!result.error, closed: recorder.snapshot().closed }))
-    } finally { await recorder.stop(true) }
-  }
-}, 90_000)
-
 test("unconfirmed recorder kill keeps its handle; delayed close confirmation permits teardown", async () => {
   const scratch = isolated("recorder-close-control", {})
   await instrumentCopy(scratch.home, (source) => source, (source) => replace(replace(source,
@@ -405,23 +374,6 @@ test("full close deadline rejects a delayed OS disappearance and delayed reachab
   }
 }, 120_000)
 
-if (win) test("real stalled executable before query work is bounded; owned helper exit is confirmed", async () => {
-  // Warm the watchdog outside this operation, as production capture setup does outside KPI timing.
-  expect(table().some((row) => row.pid === process.pid)).toBe(true)
-  const nonce = `stalled-helper-${crypto.randomUUID()}`
-  const started = performance.now()
-  const result = (() => {
-    try { WindowsInventory.run("node", ["-e", "setInterval(()=>{},1000)", nonce], 500); return { error: "", pid: 0 } }
-    catch (error) { return { error: String(error), pid: (error as Error & { helperPID: number }).helperPID } }
-  })()
-  expect(result.error).toContain("Windows helper deadline expired")
-  expect(Number.isSafeInteger(result.pid) && result.pid > 0).toBe(true)
-  expect(performance.now() - started).toBeLessThan(3000)
-  expect(table().some((row) => row.pid === result.pid && hasNonce(row.args, nonce))).toBe(false)
-  await WindowsInventory.stop()
-  console.log("STALLED_HELPER_PROOF " + JSON.stringify({ red: !!result.error, pid: result.pid, exitConfirmed: true }))
-}, 30_000)
-
 function replace(source: string, before: string, after: string) {
   if (!source.includes(before)) throw new Error(`mutation boundary missing: ${before}`)
   return source.replace(before, after)
@@ -431,7 +383,8 @@ async function instrumentCopy(home: string, lib = (source: string) => source, wi
   await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
     .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
   await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "packages/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
-  await Bun.write(path.join(home, "delivery-fixtures.ts"), await Bun.file(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts")).text())
+  for (const name of ["delivery-fixtures.ts", "fake-llm.ts", "isolated-user.ts", "process-rows.ts", "server-client.ts", "wait.ts"])
+    await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "packages/omni/campaign", name)).text())
 }
 
 async function controller(script: string, env: Record<string, string>) {

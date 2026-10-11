@@ -12,16 +12,16 @@
 //! follows those bytes when nothing else holds the pipes, and for at most `DRAIN` when something outside
 //! the tree still does. Then the output is cut: nothing more is queued.
 
+mod reader;
+
 use std::collections::VecDeque;
-use std::fs::File;
-use std::io::{ErrorKind, Read};
-use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError, mpsc};
-use std::thread;
+use std::sync::{Condvar, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
 
 use tokio::sync::Notify;
 
-use super::Pipe;
+pub(super) use reader::read;
+
 use crate::error::Error;
 use crate::types::{DroppedBytes, Stream};
 
@@ -363,51 +363,4 @@ impl Shared {
         }
         self.changed.notify_waiters();
     }
-}
-
-/// Starts the reader of `slot`. A terminal's reader is running when this returns, so the held root may
-/// exec (ADR-0005 R9): a terminal drops what nobody read once its session leader exits (macOS).
-pub(super) fn read(shared: &Arc<Shared>, slot: usize, source: Pipe, pty: bool) -> Result<(), Error> {
-    let shared = Arc::clone(shared);
-    let (running, started) = mpsc::sync_channel(1);
-    thread::Builder::new()
-        .name("hugr-omni-out".into())
-        .stack_size(STACK)
-        .spawn(move || {
-            let _ = running.send(());
-            pump(&shared, slot, File::from(source), pty);
-        })
-        .map_err(|e| Error::io_thread("an output reader", &e))?;
-    if pty {
-        let _ = started.recv();
-    }
-    Ok(())
-}
-
-fn pump(shared: &Shared, slot: usize, mut source: File, pty: bool) {
-    let mut buf = vec![0; CHUNK];
-    loop {
-        match source.read(&mut buf) {
-            Ok(0) => break shared.finish(slot, None),
-            Ok(n) => {
-                if !shared.accept(slot, &buf[..n]) {
-                    break;
-                }
-            }
-            Err(e) if e.kind() == ErrorKind::Interrupted => {}
-            // Linux reports the end of a terminal's output as EIO once its last holder closed it.
-            Err(e) if pty && is_eio(&e) => break shared.finish(slot, None),
-            Err(e) => break shared.finish(slot, Some(Error::read_failed(shared.streams[slot], &e))),
-        }
-    }
-}
-
-#[cfg(unix)]
-fn is_eio(e: &std::io::Error) -> bool {
-    e.raw_os_error() == Some(libc::EIO)
-}
-
-#[cfg(windows)]
-fn is_eio(_: &std::io::Error) -> bool {
-    false
 }

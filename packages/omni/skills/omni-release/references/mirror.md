@@ -6,17 +6,19 @@ read-only mirror of it.
 
 ## How the mirror is made
 
-- `git subtree split --prefix=packages/omni` reproduces the mirror's history. The import was verified: the split
-  matched the mirror's `main` at `415038b` exactly. The import commit carries `git-subtree-split` trailers, so a split
-  walks only the commits made since the import (seconds, not the whole Orchestra history).
-- Orchestra's `.github/workflows/omni-mirror.yml` runs on every push to `dev` that touches `packages/omni/**`, one run
-  at a time (`concurrency: omni-mirror`, never cancelled half-way):
-  1. it checks out Orchestra's full history and splits the pushed commit;
-  2. it fetches the mirror's `main`. If `main` already has the split, it stops green. If `main` is not an ancestor of
-     the split, it stops red with "the mirror has commits Orchestra does not; port them to packages/omni";
-  3. it runs `node scripts/ci.mjs` once on Linux in a checkout of the split, which proves that the mirror builds and
-     passes its gate on its own;
-  4. it pushes the split to the mirror's `refs/heads/main`, **fast-forward only**. It never forces.
+- Up to `415038b` the mirror's `main` is omni's own history: the commit the subtree import recorded
+  (`git-subtree-split`). After it, `script/omni-mirror.sh` replays Orchestra's `dev`: each first-parent commit of `dev`
+  that changes `packages/omni` becomes one mirror commit with that tree, the original author, committer, dates and
+  message, and an `Orchestra-Commit: <sha>` trailer. The commits are fully determined by their source, so a re-run
+  makes the same SHAs. (`git subtree split` was used first; on `dev`'s history it overflows dash's recursion limit and
+  runs past an hour, so the replay replaced it.)
+- Orchestra's `.github/workflows/omni-mirror.yml` runs on every push to `dev` that touches `packages/omni/**` (and by
+  hand), one run at a time (`concurrency: omni-mirror`, never cancelled half-way):
+  1. it fetches the mirror's `main` and checks that it is exactly what an earlier run pushed: the tree of the
+     Orchestra commit named in its newest trailer, or `415038b` itself. Anything else stops it red with "the mirror
+     has a commit Orchestra does not; port it to packages/omni";
+  2. it replays the new `dev` commits and pushes them to the mirror's `refs/heads/main`, **fast-forward only**. It never
+     forces. The gate is not run again: `omni.yml` runs it on the same push on three OSes.
 - It authenticates with an SSH deploy key with write access, in the Orchestra secret `OMNI_MIRROR_DEPLOY_KEY`, and pins
   github.com's host key.
 - The mirror's `main` is protected (owner decision O4). The deploy key is the only bypass.
@@ -27,15 +29,15 @@ read-only mirror of it.
 ## Release tags
 
 A release is tagged in Orchestra, never on the mirror: tag the release commit on `dev` as `omni-v<version>`
-(`omni-v0.2.0`) and push the tag. The same workflow splits the tagged commit and pushes the split as the mirror's tag
-`v<version>`, which starts the mirror's release-check CI. The tag job requires that split to be on the mirror's `main`
-already. If the tag arrived before the `dev` run that mirrors its commit had finished, the job is red: re-run it once
-that run is green. An existing mirror tag is never moved; a refused tag push turns the job red.
+(`omni-v0.2.0`) and push the tag. The same workflow points the mirror's tag `v<version>` at the mirror commit made
+from the tagged commit, which starts the mirror's release-check CI. That commit must be on the mirror's `main` already.
+If the tag arrived before the `dev` run that mirrors its commit had finished, the job is red: re-run it once that run is
+green. An existing mirror tag is never moved; a refused tag push turns the job red.
 
 ## Rules
 
 - **Never commit, push, merge or open a pull request on the mirror.** Every change goes into Orchestra's
-  `packages/omni` and reaches the mirror through the split. A commit made on the mirror makes the next push a
+  `packages/omni` and reaches the mirror through the replay. A commit made on the mirror makes the next push a
   non-fast-forward. The mirror job turns red, and someone has to untangle it by hand.
 - Issues and pull requests that arrive on the mirror are ported into Orchestra by a maintainer, credited, and then
   closed on the mirror with a link.

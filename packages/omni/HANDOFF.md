@@ -1,5 +1,25 @@
 # HANDOFF — estado do hugr-omni (2026-10-02, tarde)
 
+## Pós-landing — 2026-10-11
+
+Esta seção substitui o estado de retomada abaixo. WP9a está na `dev` (PR #73, merge `7368278b`); Omni é o default.
+
+- Espelho: `script/omni-mirror.sh` + `.github/workflows/omni-mirror.yml` reproduzem cada commit first-parent da
+  `dev` que toca `packages/omni` como um commit determinístico no `hugr-omni` (trailer `Orchestra-Commit:`), sobre
+  a v0.1 `415038b`, só fast-forward. `git subtree` foi abandonado (recursão do dash, mais de 1 h). A main do
+  espelho é read-only (ruleset `mirror-main-read-only`, deploy key `OMNI_MIRROR_DEPLOY_KEY`).
+- Limite de 400 linhas por arquivo de código (regra do owner): `scripts/file-size-guard.py` falha acima de 400.
+  Campanha de split no PR #277 (`f926b11a74`).
+- `native.yml` provisiona os binários do Omni no job workspace (PR #280).
+- Paridade das CLIs (PR #282, `8926c90b93`): `packages/cli` e `packages/orchestra` usam
+  `packages/script/src/omni.ts`. `OMNI_ARTIFACTS=<dir>/<id>/{hugr_omni.node,hugr-omni-supervisor[.exe]}` é
+  obrigatório exceto com `--single`; o par vai ao lado do binário; preflight em `packages/cli/src/omni-entry.ts`. O
+  loader também procura em `<binário>/../omni` (CLI do desktop em `Resources/cli`). O Nix (`fork/nix-omni`) passa
+  um symlink por id.
+- V7 no macOS Intel hospedado é ruidoso: falhou uma vez por 0,25 ms no #282 e passou na repetição.
+- Pendências do owner: release do Orchestra (pré-requisito do WP9b), npm, notarização, campanha separada para os
+  god files do Orchestra anteriores ao Omni.
+
 ## Landing WP9a no Orchestra — 2026-10-10
 
 Esta seção substitui o estado de retomada anterior. Worktree `omni-native`; candidato final verificado

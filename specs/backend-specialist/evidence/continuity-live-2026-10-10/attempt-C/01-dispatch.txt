@@ -1,0 +1,7 @@
+This is backend implementation work for your backend specialist (`backend`); hand it to that teammate. Dispatch it as a new backend task with writePaths ["counter.ts"].
+
+Packet for the backend specialist (task unit T-LIVE-3, file counter.ts only):
+This unit has two phases and will be resumed later; do ONLY phase 1 now.
+- Phase 1 (now): add a `decrement()` method to `Counter` in counter.ts that lowers the value by 1 but never below 0, and returns the new value.
+- Phase 2 (later, NOT now): add a `reset()` method that sets the value back to 0 and returns 0.
+When phase 1 is done, before you return, record an Atlas Memory task checkpoint for taskId "T-LIVE-3" (what you attempted, what failed if anything, where you stopped — say phase 1 done and phase 2 `reset()` not started — and one lesson). Then return your work result. Do not run tests, do not commit.

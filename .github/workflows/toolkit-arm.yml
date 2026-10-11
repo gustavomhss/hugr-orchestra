@@ -1,0 +1,84 @@
+name: toolkit-arm
+
+# Manual only: the backend toolkit pins linux-arm64 and darwin-arm64 targets, but test:ci runs x64 hosts. Dispatch
+# this on a ref to observe the real engines on Arm; it costs nothing until run. `tests` runs the toolkit test files
+# (real pinned engines in backend-toolkit-cli, fixtures elsewhere); `prefetch` acquires every engine one at a time,
+# runs each with its version flag, and lists the result per engine in the job summary.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  arm:
+    name: ${{ matrix.part }} (${{ matrix.host }})
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-24.04-arm, macos-15]
+        part: [tests, prefetch]
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      # The toolkit's installers run through the hugr-omni spawner, which cargo builds here on a cache miss.
+      - name: omni binaries
+        uses: ./.github/actions/omni-binaries
+
+      - name: Host
+        run: |
+          echo "arch=$(uname -m) runner_arch=$RUNNER_ARCH"
+          cd packages/core
+          bun -e 'import { BackendToolkitTarget } from "./src/backend-toolkit/target"; console.log(JSON.stringify(BackendToolkitTarget.detect()))'
+
+      - name: Toolkit tests
+        if: matrix.part == 'tests'
+        working-directory: packages/core
+        run: GITHUB_ACTIONS=false bun test --timeout 120000 ./test/backend-toolkit*.test.ts
+
+      - name: Acquire every engine
+        if: matrix.part == 'prefetch'
+        working-directory: packages/core
+        run: |
+          cat > .toolkit-arm-probe.ts <<'TS'
+          import { appendFileSync } from "fs"
+          import { Effect } from "effect"
+          import { BackendToolkit } from "./src/backend-toolkit"
+          import { BackendToolkitManifest } from "./src/backend-toolkit/manifest"
+          import { BackendToolkitTarget } from "./src/backend-toolkit/target"
+
+          const host = BackendToolkitTarget.detect()
+          const rows: string[] = [`host: ${JSON.stringify(host)}`, "", "| engine | state | probe |", "| --- | --- | --- |"]
+          let broken = 0
+          for (const id of Object.keys(BackendToolkitManifest.ENGINES) as BackendToolkitManifest.EngineId[]) {
+            const [state] = await Effect.runPromise(BackendToolkit.prefetch([id]))
+            if (state.status !== "ready") {
+              if (state.status !== "unsupported") broken++
+              rows.push(`| ${id} | ${state.status}: ${"cause" in state ? state.cause : "reason" in state ? "unsupported-target:" + state.reason : ""} | |`)
+              continue
+            }
+            // Engines disagree on the spelling; the first that exits 0 proves the binary executes on this host.
+            const tries = [["--version"], ["version"], ["-version"], ["-v"], ["--help"]].map((args) => ({
+              args,
+              probe: Bun.spawnSync([state.executable, ...args], { stdout: "pipe", stderr: "pipe", timeout: 30_000 }),
+            }))
+            const hit = tries.find((item) => item.probe.exitCode === 0) ?? tries[0]
+            if (hit.probe.exitCode !== 0) broken++
+            const lines = (hit.probe.stdout.toString() + hit.probe.stderr.toString()).trim().split("\n")
+            const shown = (hit.probe.exitCode === 0 ? lines[0] : lines.at(-1)) ?? ""
+            rows.push(`| ${id} | ready | ${hit.args.join(" ")} exit ${hit.probe.exitCode}: ${shown.replaceAll("|", "/")} |`)
+          }
+          console.log(rows.join("\n"))
+          if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### prefetch ${process.env.RUNNER_ARCH} ${process.env.RUNNER_OS}\n${rows.join("\n")}\n`)
+          if (broken) throw new Error(`${broken} engine(s) failed to acquire or run`)
+          TS
+          bun .toolkit-arm-probe.ts

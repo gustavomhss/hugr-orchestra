@@ -8,14 +8,24 @@
 // Scripts run under Bun on every OS and can be imported by bun:test wrappers.
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process"
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync, appendFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { tree } from "../../core/test/fixture/process-tree.ts"
+import { fakeLLM, provider } from "./fake-llm.ts"
+import { isolated } from "./isolated-user.ts"
+import { birth, decodeUnixTable, hasNonce, matches, type Identity, type Row } from "./process-rows.ts"
+import { client } from "./server-client.ts"
+import { sleep, until } from "./wait.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
 export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
+export type { ToolCall } from "./fake-llm.ts"
+export type { Identity, Row } from "./process-rows.ts"
+
+// The stateless parts of the harness live in modules of their own; this file re-exports them, so importers keep one
+// entry point. omni-campaign-inventory.test.ts instruments a copy of this file beside copies of those modules.
+export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, sleep, until }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
 export const ORCHESTRA = path.join(ROOT, "packages/orchestra")
@@ -36,156 +46,6 @@ export function load() {
   return win ? "n/a (windows)" : os.loadavg().map((value) => value.toFixed(2)).join(" ")
 }
 
-export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-export async function until<T>(timeoutMs: number, what: string, probe: () => T | undefined | Promise<T | undefined>) {
-  const deadline = Date.now() + timeoutMs
-  for (;;) {
-    const left = deadline - Date.now()
-    if (left <= 0) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const value = await Promise.race([
-      Promise.resolve().then(probe),
-      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)), left) }),
-    ]).finally(() => clearTimeout(timer))
-    if (Date.now() >= deadline) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)
-    if (value !== undefined) return value
-    await sleep(Math.min(200, deadline - Date.now()))
-  }
-}
-
-/**
- * An isolated user: HOME and every XDG directory in a temp dir (never the real ~/.local/share/orchestra), plus a
- * throwaway git project. The config goes inline through ORCHESTRA_CONFIG_CONTENT, as the repo's CLI harness does.
- */
-export function isolated(name: string, config: Record<string, unknown>) {
-  const home = realpathSync(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
-  const project = path.join(home, "project")
-  mkdirSync(project, { recursive: true })
-  writeFileSync(path.join(project, "a.ts"), "export const a = 1\n")
-  const env: Record<string, string> = {}
-  for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined && !/^(HUGR_|ORCHESTRA_|ORCHESTRA_|ANTHROPIC_|OPENAI_|AWS_|AZURE_|GOOGLE_|GEMINI_|GITHUB_|GH_|BUN_OPTIONS|NODE_OPTIONS|SSH_AUTH_SOCK)/i.test(key) && !/(TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)/i.test(key)) env[key] = value
-  Object.assign(env, {
-    ORCHESTRA_TEST_HOME: home,
-    HOME: home,
-    USERPROFILE: home,
-    APPDATA: path.join(home, "AppData/Roaming"),
-    LOCALAPPDATA: path.join(home, "AppData/Local"),
-    PWD: project,
-    GIT_CONFIG_GLOBAL: path.join(home, ".gitconfig"),
-    GIT_CONFIG_NOSYSTEM: "1",
-    XDG_CONFIG_HOME: path.join(home, ".config"),
-    XDG_DATA_HOME: path.join(home, ".local/share"),
-    XDG_STATE_HOME: path.join(home, ".local/state"),
-    XDG_CACHE_HOME: path.join(home, ".cache"),
-    ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config.provider ? {
-      ...config,
-      agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } }, ...(config.agent as Record<string, unknown>) },
-    } : config),
-    ORCHESTRA_DISABLE_PROJECT_CONFIG: "1",
-    ORCHESTRA_PURE: "1",
-    ORCHESTRA_DISABLE_AUTOUPDATE: "1",
-    ORCHESTRA_DISABLE_AUTOCOMPACT: "1",
-    ORCHESTRA_DISABLE_MODELS_FETCH: "1",
-    ORCHESTRA_AUTH_CONTENT: "{}",
-    ORCHESTRA_DISABLE_CLAUDE_CODE: "1",
-    ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "1",
-    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
-  })
-  const git = spawnSync("git", ["init", "-q"], { cwd: project, env })
-  if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)
-  return { home, project, env }
-}
-
-/** The provider block for the fake LLM (the shape of packages/orchestra/test/lib/test-provider.ts). */
-export function provider(url: string) {
-  return {
-    test: {
-      name: "Test",
-      id: "test",
-      env: [],
-      npm: "@ai-sdk/openai-compatible",
-      models: {
-        "test-model": {
-          id: "test-model",
-          name: "Test Model",
-          attachment: false,
-          reasoning: false,
-          temperature: false,
-          tool_call: true,
-          release_date: "2025-01-01",
-          limit: { context: 100_000, output: 10_000 },
-          cost: { input: 0, output: 0 },
-          options: {},
-        },
-      },
-      options: { apiKey: "test-key", baseURL: url },
-    },
-  }
-}
-
-export type ToolCall = { name: string; args: Record<string, unknown> }
-
-/**
- * A minimal OpenAI-compatible chat-completions server. The first request offering all requested tools gets them
- * as parallel tool calls; every other request (tool results, titles) gets a short text answer.
- */
-export async function fakeLLM(calls: ToolCall[]) {
-  const seen: string[] = []
-  const offered: string[][] = []
-  let issued = false
-  const server = createServer((request: IncomingMessage, response: ServerResponse) => {
-    let body = ""
-    request.on("data", (chunk) => (body += chunk))
-    request.on("end", () => {
-      const parsed = (() => {
-        try {
-          return JSON.parse(body) as { tools?: { function: { name: string } }[]; messages?: { role: string }[] }
-        } catch {
-          return {}
-        }
-      })()
-      const names = (parsed.tools ?? []).map((tool) => tool.function.name)
-      if (names.length > 0) offered.push(names)
-      const available = calls.filter((call) => names.includes(call.name))
-      const withTools = !issued && calls.length > 0 && available.length === calls.length
-      seen.push(withTools ? "tools" : "text")
-      if (withTools) issued = true
-      response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" })
-      const send = (delta: Record<string, unknown>, finish?: string) =>
-        response.write(
-          `data: ${JSON.stringify({
-            id: "chatcmpl-campaign",
-            object: "chat.completion.chunk",
-            choices: [{ index: 0, delta, ...(finish ? { finish_reason: finish } : {}) }],
-          })}\n\n`,
-        )
-      send({ role: "assistant" })
-      if (withTools)
-        available.forEach((call, index) =>
-          send({
-            tool_calls: [
-              {
-                index,
-                id: `call_${index}`,
-                type: "function",
-                function: { name: call.name, arguments: JSON.stringify(call.args) },
-              },
-            ],
-          }),
-        )
-      else send({ content: "done" })
-      send({}, withTools ? "tool_calls" : "stop")
-      response.end("data: [DONE]\n\n")
-    })
-  })
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
-  const address = server.address() as { port: number }
-  return { url: `http://127.0.0.1:${address.port}/v1`, seen, offered, stop: () => server.close() }
-}
-
-export type Identity = { pid: number; startTime: string }
 export type Started = { proc: ChildProcess; url: string; pid: number; extra: number[]; identity?: Identity; out: () => string }
 
 const owners = new Map<string, { proc: ChildProcess; identity: Identity }[]>()
@@ -223,27 +83,6 @@ export async function serve(bin: string, args: string[], env: Record<string, str
   return { proc, url, pid: proc.pid!, extra: [] as number[], identity: captured, out: () => out }
 }
 
-/** JSON calls against an Orchestra server for one project directory. */
-export function client(url: string, directory: string) {
-  const call = async (method: string, route: string, body?: unknown) => {
-    const response = await fetch(new URL(route, url), {
-      method,
-      signal: AbortSignal.timeout(120_000),
-      headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(directory) },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-    const text = await response.text()
-    if (!response.ok) throw new Error(`${method} ${route} answered ${response.status}: ${text.slice(0, 500)}`)
-    return text ? JSON.parse(text) : undefined
-  }
-  return {
-    get: (route: string) => call("GET", route),
-    post: (route: string, body?: unknown) => call("POST", route, body ?? {}),
-    put: (route: string, body: unknown) => call("PUT", route, body),
-    del: (route: string) => call("DELETE", route),
-  }
-}
-
 /** A nonce tree written as a script file, so a shell command line carries only plain words (and the nonce). */
 export function fileTree(home: string, depth = 2) {
   const t = tree(depth)
@@ -263,7 +102,6 @@ export function adoptTree(marker: string, nonce: string, roots: Identity[] = [])
 }
 
 const QUERY_MS = 10_000
-export type Row = Identity & { parent: number; args: string | null; state: string; session?: number }
 
 /** Bounded live inventory. Unavailable argv remains unknown, never evidence of absence. */
 export function table(timeoutMs = QUERY_MS): Row[] {
@@ -307,40 +145,6 @@ export async function captureStarted(home: string, proc: ChildProcess) {
   return retain(home, proc, captured)
 }
 
-/** Exact ps decoding boundary; Linux cross-checks start time and argv through the same /proc identity. */
-export function decodeUnixTable(stdout: string, queryPID: number): Row[] {
-  const rows = stdout.split("\n")
-    .filter((line) => line.trim().length > 0)
-    .flatMap((line) => {
-      const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\S+)\s+(\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.*)$/)
-      if (!match) throw new Error(`malformed ps row: ${line}`)
-      const pid = Number(match[1])
-      // macOS ps runs in UTC/C; preserve that clock in the identity, never reinterpret local lstart.
-      if (process.platform !== "linux") return [{ pid, parent: Number(match[2]), state: match[3]!, startTime: `UTC:${match[4]!}`, args: match[5]! }]
-      const observed = (() => {
-        try {
-          const stat = readFileSync(`/proc/${pid}/stat`, "utf8")
-          const args = readFileSync(`/proc/${pid}/cmdline`, "utf8").replaceAll("\0", " ").trim()
-          const checked = readFileSync(`/proc/${pid}/stat`, "utf8")
-          const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ")
-          const now = checked.slice(checked.lastIndexOf(")") + 2).split(" ")
-          if (fields[19] !== now[19]) throw new Error(`PID ${pid} changed identity during /proc query`)
-          return { fields: now, args: args || null }
-        }
-        catch (error) {
-          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined // It exited after the ps snapshot.
-          throw error
-        }
-      })()
-      if (observed === undefined) return []
-      if (!/^\d+$/.test(observed.fields[19]!)) throw new Error(`malformed /proc/${pid}/stat start time`)
-      return [{ pid, parent: Number(observed.fields[1]), state: observed.fields[0]!, startTime: observed.fields[19]!, args: observed.args }]
-    })
-    .filter((row) => row.pid !== queryPID)
-  if (!rows.some((row) => row.pid === process.pid)) throw new Error("ps returned an incomplete or malformed process table (querying host missing)")
-  return rows
-}
-
 /** Pure CIM decoding boundary, separately falsifiable without claiming a Windows runtime run. */
 export function decodeWindowsTable(input: unknown, queryPID: number): Row[] {
   return WindowsInventory.decode(input, queryPID)
@@ -350,14 +154,6 @@ export function identity(pid: number, rows = table()): Identity {
   const row = rows.find((row) => row.pid === pid && !row.state.startsWith("Z"))
   if (!row) throw new Error(`cannot capture live process identity for PID ${pid}`)
   return { pid: row.pid, startTime: row.startTime }
-}
-
-export function matches(row: Identity, pinned: Identity) {
-  return row.pid === pinned.pid && row.startTime === pinned.startTime
-}
-
-export function hasNonce(args: string | null, nonce: string) {
-  return args !== null && new RegExp(`(?:^|[\\s"'])${nonce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s"'])`).test(args)
 }
 
 const markerArguments = new Map<string, Set<string>>()
@@ -398,15 +194,6 @@ function bornAfter(child: Row, parent: Row) {
   const ordered = birth(child) >= birth(parent)
   if (/^\d+$/.test(child.startTime) !== /^\d+$/.test(parent.startTime)) throw new Error("campaign ancestry has mixed birth clocks")
   return ordered
-}
-
-function birth(row: Identity) {
-  if (typeof row.startTime === "string" && /^\d+$/.test(row.startTime)) return BigInt(row.startTime)
-  const match = typeof row.startTime === "string" && row.startTime.match(/^UTC:(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$/)
-  const date = new Date(match ? Date.parse(row.startTime.slice(4) + " GMT") : NaN)
-  if (!match || !Number.isFinite(date.getTime()) || date.getUTCFullYear() !== Number(match[7]) || date.getUTCMonth() !== ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(match[2]!) || date.getUTCDate() !== Number(match[3]) || date.getUTCHours() !== Number(match[4]) || date.getUTCMinutes() !== Number(match[5]) || date.getUTCSeconds() !== Number(match[6]) || date.getUTCDay() !== ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(match[1]!))
-    throw new Error(`campaign birth time unavailable/unparseable for PID ${row.pid}: ${row.startTime}`)
-  return BigInt(date.getTime())
 }
 
 function ownerScope(marker: string, rows: Row[], named: Identity[] = []) {

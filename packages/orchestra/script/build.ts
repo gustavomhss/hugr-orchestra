@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun"
-import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
@@ -15,6 +14,7 @@ process.chdir(dir)
 const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
+import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
 import { leanNotices } from "./lean-notices"
@@ -121,55 +121,6 @@ const allTargets: {
   },
 ]
 
-// D-L8/D-L9: the omni build each target ships, as hugr-omni's platform id. A target with `enabled: false` compiles
-// with OMNI_ENABLED=false (the legacy spawner) and ships no omni files. Flip a row once WP8a publishes its omni build.
-const omniTargets: Record<string, { id: string; enabled: boolean }> = {
-  "linux-arm64": { id: "linux-arm64-gnu", enabled: true },
-  "linux-x64": { id: "linux-x64-gnu", enabled: true },
-  "linux-x64-baseline": { id: "linux-x64-gnu", enabled: true },
-  "linux-arm64-musl": { id: "linux-arm64-musl", enabled: false },
-  "linux-x64-musl": { id: "linux-x64-musl", enabled: false },
-  "linux-x64-baseline-musl": { id: "linux-x64-musl", enabled: false },
-  "darwin-arm64": { id: "darwin-arm64", enabled: true },
-  "darwin-x64": { id: "darwin-x64", enabled: true },
-  "darwin-x64-baseline": { id: "darwin-x64", enabled: true },
-  "windows-arm64": { id: "win32-arm64-msvc", enabled: false },
-  "windows-x64": { id: "win32-x64-msvc", enabled: true },
-  "windows-x64-baseline": { id: "win32-x64-msvc", enabled: true },
-}
-
-// Where the addon and the supervisor for an omni id come from: OMNI_ARTIFACTS=<dir>/<id>/{hugr_omni.node,
-// hugr-omni-supervisor[.exe]}, required by every build but --single. A --single build without it takes this checkout's
-// packages/omni/target/{release,debug}, with a warning. The files ship next to the binary, never embedded: Bun would
-// extract an embedded addon to $TMPDIR, where a planted supervisor wins (probe P1).
-function omniSources(os: string, id: string) {
-  const supervisor = `hugr-omni-supervisor${os === "win32" ? ".exe" : ""}`
-  const artifacts = process.env.OMNI_ARTIFACTS
-  if (artifacts) {
-    const files = {
-      addon: path.join(artifacts, id, "hugr_omni.node"),
-      supervisor: path.join(artifacts, id, supervisor),
-    }
-    const missing = Object.values(files).filter((file) => !fs.existsSync(file))
-    if (missing.length > 0) throw new Error(`omni artifact missing for ${id}: ${missing.join(", ")}`)
-    return files
-  }
-  if (!singleFlag) throw new Error(`OMNI_ARTIFACTS is required: no omni artifacts for ${id} (OMNI_ENABLED target).`)
-  const addon =
-    ({ darwin: "libhugr_omni_node.dylib", win32: "hugr_omni_node.dll" } as Record<string, string>)[os] ??
-    "libhugr_omni_node.so"
-  const found = ["release", "debug"]
-    .map((profile) => path.join(dir, "../omni/target", profile))
-    .map((target) => ({ addon: path.join(target, addon), supervisor: path.join(target, supervisor) }))
-    .find((files) => fs.existsSync(files.addon) && fs.existsSync(files.supervisor))
-  if (!found) {
-    console.warn(`WARNING: no OMNI_ARTIFACTS and no packages/omni/target build; this binary fails with omni on.`)
-    return
-  }
-  console.warn(`WARNING: no OMNI_ARTIFACTS; shipping this checkout's omni build from ${path.dirname(found.addon)}.`)
-  return found
-}
-
 const targets = singleFlag
   ? allTargets.filter((item) => {
       if (item.os !== process.platform || item.arch !== process.arch) {
@@ -203,9 +154,11 @@ const builds = targets.map((item) => {
   ]
     .filter(Boolean)
     .join("-")
-  const omni = omniTargets[name.slice(pkg.name.length + 1)]
-  if (!omni) throw new Error(`${name} has no row in omniTargets`)
-  return { item, name, omni, omniFiles: omni.enabled ? omniSources(item.os, omni.id) : undefined }
+  return {
+    item,
+    name,
+    ...resolveOmni({ name, target: name.slice(pkg.name.length + 1), os: item.os, single: singleFlag }),
+  }
 })
 
 await $`rm -rf dist`
@@ -269,12 +222,7 @@ for (const { item, name, omni, omniFiles } of builds) {
     },
   })
 
-  if (omniFiles) {
-    fs.copyFileSync(omniFiles.addon, `dist/${name}/bin/hugr_omni.node`)
-    const supervisor = `dist/${name}/bin/${path.basename(omniFiles.supervisor)}`
-    fs.copyFileSync(omniFiles.supervisor, supervisor)
-    fs.chmodSync(supervisor, 0o755)
-  }
+  copyOmni(omniFiles, `dist/${name}/bin`)
 
   // Smoke test: only run if binary is for current platform
   if (item.os === process.platform && item.arch === process.arch && !item.abi) {

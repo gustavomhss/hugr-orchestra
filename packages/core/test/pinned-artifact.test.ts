@@ -117,7 +117,6 @@ it.live("a raw download is the executable itself", () =>
   }), 30_000,
 )
 
-// PowerShell Expand-Archive alone can take most of half a minute on a loaded Windows runner.
 it.live("a zip extracts with the platform extractor, or names the one that is missing", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -128,7 +127,7 @@ it.live("a zip extracts with the platform extractor, or names the one that is mi
       format: "zip",
       entries: [{ from: "bin/tool", to: "tool", executable: true }],
     }
-    const extractor = process.platform === "win32" ? "powershell" : "unzip"
+    const extractor = process.platform === "win32" ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "unzip"
     if (!which.sync(extractor, { nothrow: true })) {
       expect(yield* refused(target, [artifact])).toBe(`extractor-missing:${extractor}`)
       expect(yield* f.leftovers()).toEqual([])

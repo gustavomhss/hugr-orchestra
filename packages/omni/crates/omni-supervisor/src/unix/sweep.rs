@@ -15,9 +15,10 @@ use std::time::{Duration, Instant};
 
 use omni_proto::{Ack, Msg, ProcEntry};
 
+use super::exits::{exited_msg, wait_exit};
 use super::procs::{self, Exiting, Inventory, Member};
 use super::sys::Reserve;
-use super::trees::{Exec, PIN_MAX, Stopping, Tree, Trees, exited_msg, wait_exit};
+use super::trees::{Exec, PIN_MAX, Stopping, Tree, Trees};
 use super::watch;
 
 /// Sweep interval while a tree is being stopped.

@@ -1,0 +1,10 @@
+{"label": "01-dispatch", "session": "ses_ed777afbaffeRttsq58YzuG8J9", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T01:16:25Z"}
+{"label": "01-dispatch", "end": "2026-10-11T01:18:31Z"}
+{"label": "02-resume", "session": "ses_ed777afbaffeRttsq58YzuG8J9", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T01:18:31Z"}
+{"label": "02-resume", "end": "2026-10-11T01:18:56Z"}
+{"label": "03-interim", "session": "ses_ed777afbaffeRttsq58YzuG8J9", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T01:18:56Z"}
+{"label": "03-interim", "end": "2026-10-11T01:19:48Z"}
+{"label": "04-compact", "session": "ses_ed7777201ffeOfwr3GlKQi85jJ", "call": "POST /session/ses_ed7777201ffeOfwr3GlKQi85jJ/summarize", "start": "2026-10-11T01:19:49Z"}
+{"label": "04-compact", "end": "2026-10-11T01:20:27Z"}
+{"label": "05-continue", "session": "ses_ed777afbaffeRttsq58YzuG8J9", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T01:20:27Z"}
+{"label": "05-continue", "end": "2026-10-11T01:22:52Z"}

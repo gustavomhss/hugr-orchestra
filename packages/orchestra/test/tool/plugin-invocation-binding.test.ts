@@ -20,8 +20,8 @@ it.instance(
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
-      const spoofed = { ...f.context, binding: { memberId: "spoof" } }
-      const result = yield* f.tool.execute({ ...f.args, binding: { authoritySessionId: "spoof" } }, spoofed)
+      const spoofed = { ...f.context, binding: { memberId: "spoof", resumeRef: "spoof" } }
+      const result = yield* f.tool.execute({ ...f.args, resumeRef: "spoof", binding: { authoritySessionId: "spoof", resumeRef: "spoof" } }, spoofed)
       expect(result.metadata).toMatchObject({
         agent: "Copper",
         agentID: "backend",

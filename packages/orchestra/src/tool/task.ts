@@ -549,7 +549,12 @@ export const TaskTool = Tool.define(
             model: { modelID: model.modelID, providerID: model.providerID },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
-            parts: [...parts, ...own, ...resume],
+            parts: [
+              ...parts,
+              ...own,
+              ...resume,
+              ...(resumed && ctx.callID ? [LogicalTask.resumeMarker(ctx.sessionID, ctx.callID)] : []),
+            ],
           },
           beforeModel ? { beforeModel } : undefined,
         )

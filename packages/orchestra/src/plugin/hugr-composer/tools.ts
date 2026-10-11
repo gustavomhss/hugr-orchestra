@@ -2,29 +2,11 @@ import path from "node:path"
 import { lstat, realpath } from "node:fs/promises"
 import { tool, type ToolContext } from "@orchestra/plugin"
 import { Option, Schema } from "effect"
-import { composerFailure, type HugrComposerClient } from "./client"
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+import { ComposerFailure, composerFailure, type HugrComposerClient } from "./client"
+import { ERROR_CODES, OUTCOME_KEY, OWNED_SCHEMA, delegated, invalidResult, outcome, producerCodeOf, readOwned, type Legacy, type Owned } from "./outcome"
 
-// Mirrors mcp_tools/error_codes.py in the Composer backend. Only these codes cross the boundary;
-// free-text backend detail (what_happened, error) stays redacted.
-const ERROR_CODES = new Set([
-  "missing-selection",
-  "unknown-recipe",
-  "unknown-primitive",
-  "recipe-mismatch",
-  "domain-boundary",
-  "empty-query",
-  "not-found",
-  "unknown-skill",
-  "unknown-bundle",
-  "path-rejected",
-  "target-exists",
-  "invalid-output",
-  "scaffold-failed",
-  "backend-unavailable",
-  "catalog-invalid",
-  "audit-failed",
-  "verify-failed",
-])
+const CLOSED_CODES: ReadonlySet<string> = new Set(ERROR_CODES)
 
 function output(result: {
   content: ReadonlyArray<{ type: string; text?: string }>
@@ -41,7 +23,7 @@ function output(result: {
     return true
   }
   const code = (value: unknown) =>
-    typeof value === "object" && value !== null && "code" in value && typeof value.code === "string" && ERROR_CODES.has(value.code)
+    typeof value === "object" && value !== null && "code" in value && typeof value.code === "string" && CLOSED_CODES.has(value.code)
       ? value.code
       : "unknown"
   if (result.isError) throw composerFailure("backend-error")
@@ -74,21 +56,22 @@ export function createHuGRTools(client: HugrComposerClient) {
       async execute(args, context) {
         const outputDir = await resolveOutputDirectory(args.output_dir, context)
         if (!args.dry_run) await authorizeWrite(context, outputDir, "compose")
-        const result = await client.callTool(
-          "fastapi_meta_compose",
-          compact({
-            output_dir: outputDir,
-            primitives: args.primitives,
-            recipe_id: args.recipe_id,
-            name: args.name,
-            mount_path: args.mount_path,
-            dry_run: args.dry_run,
-            force: args.force,
-          }),
-          context.abort,
-          { retry: false },
+        return owned("hugr-compose", `Composed ${args.name ?? args.recipe_id ?? "FastAPI composition"}`, args.dry_run, path.resolve(context.directory, args.output_dir), context, () =>
+          client.callTool(
+            "fastapi_meta_compose",
+            compact({
+              output_dir: outputDir,
+              primitives: args.primitives,
+              recipe_id: args.recipe_id,
+              name: args.name,
+              mount_path: args.mount_path,
+              dry_run: args.dry_run,
+              force: args.force,
+            }),
+            context.abort,
+            { retry: false },
+          ),
         )
-        return { title: `Composed ${args.name ?? args.recipe_id ?? "FastAPI composition"}`, output: output(result) }
       },
     }),
     "hugr-search": tool({
@@ -129,21 +112,22 @@ export function createHuGRTools(client: HugrComposerClient) {
       async execute(args, context) {
         const outputDir = await resolveOutputDirectory(args.output_dir, context)
         await authorizeWrite(context, outputDir, "scaffold")
-        const result = await client.callTool(
-          "fastapi_meta_scaffold",
-          compact({
-            name: args.name,
-            output_dir: outputDir,
-            models: args.models,
-            owner_models: args.owner_models,
-            shared_models: args.shared_models,
-            profile: args.profile,
-            with_auth: args.with_auth,
-          }),
-          context.abort,
-          { retry: false },
+        return owned("hugr-scaffold", `Scaffolded project: ${args.name ?? "app"}`, false, path.resolve(context.directory, args.output_dir), context, () =>
+          client.callTool(
+            "fastapi_meta_scaffold",
+            compact({
+              name: args.name,
+              output_dir: outputDir,
+              models: args.models,
+              owner_models: args.owner_models,
+              shared_models: args.shared_models,
+              profile: args.profile,
+              with_auth: args.with_auth,
+            }),
+            context.abort,
+            { retry: false },
+          ),
         )
-        return { title: `Scaffolded project: ${args.name ?? "app"}`, output: output(result) }
       },
     }),
     "hugr-describe": tool({
@@ -175,6 +159,88 @@ export function createHuGRTools(client: HugrComposerClient) {
       },
     }),
   }
+}
+
+// An owned write settles through the real failure path, so its outcome is streamed into the running metadata first
+// (F4.27): the processor keeps it on the errored tool part, where the backend work result reads it back (F4.25).
+// A canonical `hugr-owned-tool-v1` envelope is preferred when the producer sends one (F4.21-F4.23); otherwise the
+// legacy envelope is interpreted under the F4.24 fallback.
+async function owned(
+  name: Legacy["tool"],
+  title: string,
+  dryRun: boolean | undefined,
+  // Where the model said the output goes, resolved but not de-symlinked: observed paths are reported against it so
+  // they compare equal to the paths the worker's other write tools use.
+  outputDir: string,
+  context: Pick<ToolContext, "abort" | "metadata">,
+  call: () => Promise<CallToolResult>,
+) {
+  const stream = (settled: Legacy | Owned) =>
+    Promise.resolve(context.metadata({ title, metadata: { [OUTCOME_KEY]: settled } })).catch(() => undefined)
+  const legacyFailure = (error: unknown) =>
+    context.abort.aborted
+      ? outcome(name, { interrupted: true })
+      : outcome(name, {
+          ok: false,
+          dryRun,
+          producerCode: error instanceof ComposerFailure ? producerCodeOf(error.code) : "backend-error",
+        })
+  const result = await call().catch(async (error: unknown) => {
+    await stream(legacyFailure(error))
+    throw error
+  })
+  const envelopes = [result.structuredContent, ...result.content.map((item) => (item.type === "text" ? parseJson(item.text) : undefined))]
+
+  const canonical = envelopes.filter((value) => isRecord(value) && value.schema === OWNED_SCHEMA)
+  if (canonical.length > 0) {
+    const settled = settleCanonical(canonical, envelopes, name, dryRun, outputDir)
+    if (settled.status === "previewed" || settled.status === "generated")
+      return { title, output: output(result), metadata: { [OUTCOME_KEY]: settled } }
+    await stream(settled)
+    throw new ComposerFailure(settled.error?.code ?? "INVALID_PRODUCER_RESULT", `${name} ${settled.status} ${settled.error?.code}`)
+  }
+
+  // F4.24: a legacy success that only points at another tool produced no material.
+  if (envelopes.some((value) => isRecord(value) && value.ok === true && value.code == null && isRecord(value.result) && value.result.mode === "tool_delegate")) {
+    await stream(delegated(name))
+    throw new ComposerFailure("UNSUPPORTED_OUTPUT", `${name} blocked UNSUPPORTED_OUTPUT`)
+  }
+  try {
+    const text = output(result)
+    // A success carrying a code breaks the producer's own invariant: its effects cannot be trusted.
+    if (envelopes.some((value) => isRecord(value) && value.ok === true && value.code != null)) throw composerFailure("unknown")
+    // A result that is no envelope at all is returned as before, without an outcome claim.
+    if (!envelopes.some((value) => isRecord(value) && value.ok === true)) return { title, output: text }
+    return { title, output: text, metadata: { [OUTCOME_KEY]: outcome(name, { ok: true, dryRun }) } }
+  } catch (error) {
+    await stream(legacyFailure(error))
+    throw error
+  }
+}
+
+// The producer is untrusted: every canonical copy must agree, name this tool, be a legal combination, and not
+// contradict the call (a preview only for a dry run) or the legacy `ok` it travels with.
+function settleCanonical(
+  canonical: unknown[],
+  envelopes: unknown[],
+  name: Owned["tool"],
+  dryRun: boolean | undefined,
+  outputDir: string,
+) {
+  const settled = readOwned(canonical[0], name, outputDir)
+  if (!settled || canonical.some((value) => JSON.stringify(value) !== JSON.stringify(canonical[0]))) return invalidResult(name)
+  const success = settled.status === "previewed" || settled.status === "generated"
+  const wrongKind = (settled.status === "previewed") !== (dryRun === true) && success
+  const contradicted = success && envelopes.some((value) => isRecord(value) && value.ok === false)
+  return wrongKind || contradicted ? invalidResult(name) : settled
+}
+
+function parseJson(text: string | undefined) {
+  return text ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)) : undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function compact(input: Record<string, unknown>) {

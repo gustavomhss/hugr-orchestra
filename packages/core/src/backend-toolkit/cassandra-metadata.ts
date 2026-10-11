@@ -68,7 +68,8 @@ export const prepare = Effect.fn("BackendToolkitCassandra.prepare")(function* (s
       await writeFile(path.join(staging, "src", "go.mod"), prepared.module)
       await writeFile(path.join(staging, "src", "cmd", "schemagen", "schemagen.go"), prepared.generator)
       await writeFile(path.join(staging, "src", "cmd", "schemagen", "ORCHESTRA-MODIFICATIONS.txt"),
-        "Orchestra cassandra2: schemagen.go changed to dial host-captured Unix routes through the pinned driver's public Dialer API.\n" +
+        "Orchestra cassandra3: schemagen.go changed to dial host-captured Unix routes or granted ports through the sandbox's CONNECT proxy, " +
+        "using the pinned driver's public Dialer API.\n" +
         `Upstream gocqlx v3.0.4 (Apache-2.0); source SHA-256 ${BackendToolkitCassandraDialer.BEFORE}; modified SHA-256 ${BackendToolkitCassandraDialer.AFTER}.\n`)
       await writeFile(path.join(staging, "driver", "ORCHESTRA-MODIFICATIONS.txt"),
         "Orchestra cassandra1: metadata_scylla.go changed to check the standard catalog before reading optional Scylla metadata.\n" +

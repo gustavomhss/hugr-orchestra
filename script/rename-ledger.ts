@@ -22,6 +22,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^specs\/backend-specialist\/evidence\//,
+    reason: "raw live-model evidence: session exports name the third-party Zen provider and model ids verbatim",
+  },
+  {
     path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,
     reason: "relay review records; their approvals bind artifact hashes taken before the rename",
     requires: "packages/relay",

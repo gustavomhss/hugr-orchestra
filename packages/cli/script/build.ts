@@ -4,6 +4,7 @@ import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
 import { Script } from "@orchestra/script"
+import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
 import pkg from "../package.json"
 import { modelsData } from "./generate"
@@ -48,9 +49,8 @@ const targets = singleFlag
     })
   : allTargets
 
-if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
-
-for (const item of targets) {
+// Resolved before anything is built, so a release build with a missing omni artifact fails at once.
+const builds = targets.map((item) => {
   const target = [
     binary,
     item.os === "win32" ? "windows" : item.os,
@@ -61,9 +61,16 @@ for (const item of targets) {
     .filter(Boolean)
     .join("-")
   const name = target.replace(binary, "cli")
-  console.log(`building ${name}`)
+  return { item, target, name, ...resolveOmni({ name, target: name.slice(4), os: item.os, single: singleFlag }) }
+})
+
+if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
+
+for (const { item, target, name, omni, omniFiles } of builds) {
+  console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   const result = await Bun.build({
-    entrypoints: ["./src/index.ts"],
+    // The omni preflight runs first and imports ./src/index.ts.
+    entrypoints: ["./src/omni-entry.ts"],
     tsconfig: "./tsconfig.json",
     plugins: [plugin],
     external: ["node-gyp"],
@@ -86,6 +93,7 @@ for (const item of targets) {
       ORCHESTRA_CLI_NAME: `'${binary}'`,
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
+      OMNI_ENABLED: JSON.stringify(omni.enabled),
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
@@ -97,6 +105,8 @@ for (const item of targets) {
     for (const log of result.logs) console.error(log)
     process.exit(1)
   }
+
+  copyOmni(omniFiles, `dist/${name}/bin`)
 
   await Bun.write(
     `./dist/${name}/package.json`,

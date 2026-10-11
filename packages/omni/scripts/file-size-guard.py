@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""God-file guard: no tracked code file may exceed 650 lines.
+"""God-file guard: no tracked code file may exceed 400 lines (owner rule, 2026-10-10; it was 650 before).
 
-Bands (physical lines, counted on the raw bytes, nothing stripped):
-  <= 400  sweet spot
-  <= 600  ok
-  <= 650  tolerated; printed as WARN so review asks for a split plan
-  >  650  FAIL
+Physical lines, counted on the raw bytes, nothing stripped: <= 400 passes, > 400 FAILS. The limit is per file, never
+per change.
 
 Scope: every file tracked by git under the omni root, the parent of this
 script's directory (`git ls-files` run there, so a checkout that holds omni as
@@ -14,7 +11,7 @@ CODE (checked) or NOT-CODE (documents, data, config, assets; skipped) by the
 closed sets below. A file that fits neither set is a hard failure, so a new
 kind of source file can never slip past unchecked.
 
-There is no exception list. A file over 650 lines is split. Allowing one would
+There is no exception list. A file over 400 lines is split. Allowing one would
 weaken this gate and needs a written Owner waiver plus an amendment here.
 
 Exit codes: 0 pass (WARN allowed), 1 a file is over the limit, 2 the guard
@@ -24,7 +21,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SWEET, OK, MAX = 400, 600, 650
+# One limit: the ok and warn bands of the old 400/600/650 guard are gone, so they hold nothing.
+SWEET, OK, MAX = 400, 400, 400
 
 CODE_EXT = {
     ".rs", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs",

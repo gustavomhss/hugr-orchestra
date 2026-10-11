@@ -2,6 +2,7 @@
 // Each test binary uses a different part of these helpers; the rest would warn as dead code there.
 #![allow(dead_code)]
 
+pub mod cmd;
 pub mod host;
 pub mod host_role;
 pub mod os;

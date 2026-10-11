@@ -7,7 +7,7 @@ import { EventTable } from "@orchestra/core/event/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { LogicalTask } from "@/maestro/logical-task"
 import { SessionAuthority } from "@/maestro/session-authority"
-import { MessageID, SessionID } from "@/session/schema"
+import { MessageID, PartID, SessionID } from "@/session/schema"
 import { SessionPrompt } from "@/session/prompt"
 import { TestLLMServer } from "../lib/llm-server"
 import { fixture, it, model, options } from "./plugin-binding.fixture"
@@ -24,14 +24,17 @@ const dispatch = Effect.gen(function* () {
     modelID: model.modelID, providerID: model.providerID, cost: 0, time: { created: Date.now() },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
   })
-  yield* llm.tool("read", f.args)
-  yield* llm.text("nested work done")
-  const named = yield* f.registry.named()
-  const result = yield* named.task.execute({ description: "Nested backend work", subagent_type: "backend",
-    prompt: "Run the read probe once.", model: "test/test-model" }, {
-    ...f.context, messageID: assistant.id, agent: "maestro", agentID: "maestro", callID: "call_task_dispatch",
-    extra: { promptOps: { prompt: prompt.prompt, cancel: prompt.cancel, resolvePromptParts: prompt.resolvePromptParts } },
+  const run = Effect.fn("PluginTaskAuthorityTest.run")(function* (callID: string, taskID?: string) {
+    yield* llm.tool("read", f.args)
+    yield* llm.text("nested work done")
+    const named = yield* f.registry.named()
+    return yield* named.task.execute({ description: "Nested backend work", subagent_type: "backend",
+      prompt: "Run the read probe once.", model: "test/test-model", ...(taskID ? { task_id: taskID } : {}) }, {
+      ...f.context, messageID: assistant.id, agent: "maestro", agentID: "maestro", callID,
+      extra: { promptOps: { prompt: prompt.prompt, cancel: prompt.cancel, resolvePromptParts: prompt.resolvePromptParts } },
+    })
   })
+  const result = yield* run("call_task_dispatch")
   const execution = yield* f.sessions.get(Schema.decodeUnknownSync(SessionID)(result.metadata.sessionId))
   const binding = yield* LogicalTask.read(execution.id)
   if (!binding) throw new Error("Task producer left no durable logical binding")
@@ -39,7 +42,7 @@ const dispatch = Effect.gen(function* () {
   const part = messages.flatMap((message) => message.parts)
     .find((part) => part.type === "tool" && part.tool === "read" && part.state.status === "completed")
   if (!part || part.type !== "tool" || part.state.status !== "completed") throw new Error("plugin consumer never ran")
-  return { f, execution, binding, pluginMetadata: part.state.metadata }
+  return { f, execution, binding, pluginMetadata: part.state.metadata, run }
 })
 
 it.instance("real nested Task producer and plugin consumer share root authority and ancestry", () =>
@@ -53,6 +56,56 @@ it.instance("real nested Task producer and plugin consumer share root authority 
     const authority = yield* SessionAuthority.make(d.f.sessions.get)(d.execution.id, d.execution.projectID)
     expect(authority.ancestry).toEqual([d.execution.id, d.f.child.id, d.f.parent.id, d.f.root.id])
     expect(authority.rootID).toBe(d.f.root.id)
+  }), options, 60000,
+)
+
+it.instance("a resumed Task's plugin calls carry its resume ref; the fresh dispatch and later spoofs do not", () =>
+  Effect.gen(function* () {
+    const d = yield* dispatch
+    const resumed = yield* d.run("call_task_resume", d.binding.taskId)
+    expect(resumed.metadata.sessionId).toBe(d.execution.id)
+    const messages = yield* d.f.sessions.messages({ sessionID: d.execution.id })
+    const reads = messages.flatMap((message) => message.parts)
+      .filter((part) => part.type === "tool" && part.tool === "read" && part.state.status === "completed")
+    expect(reads.map((part) => part.type === "tool" && part.state.status === "completed"
+      ? part.state.metadata.binding.resumeRef : "not-a-read")).toEqual([undefined, `${d.f.child.id}/call_task_resume`])
+    const prompt = messages.find((message) => message.parts.some((part) => part.type === "text" && part.metadata?.resumeRef))
+    const answer = messages.find((message) => message.info.role === "assistant" && message.info.parentID === prompt?.info.id)
+    if (!answer) throw new Error("resume answer missing")
+    // The plugin cannot supply or replace the ref, on the resumed call or on any other.
+    const spoof = { ...d.f.args, resumeRef: "spoof", binding: { resumeRef: "spoof" } }
+    const context = { ...d.f.context, sessionID: d.execution.id, binding: { resumeRef: "spoof" } }
+    const onResume = yield* d.f.tool.execute(spoof, { ...context, messageID: answer.info.id })
+    expect(onResume.metadata.binding.resumeRef).toBe(`${d.f.child.id}/call_task_resume`)
+    expect((yield* d.f.tool.execute(spoof, context)).metadata.binding.resumeRef).toBeUndefined()
+  }), options, 60000,
+)
+
+// A public-API prompt can carry any text part, so the binding must honor a marker only when it names the execution
+// Session's own parent: a ref under a foreign Session, or a non-string one, is never bound.
+it.instance("a forged resume marker is bound only when it names the execution Session's own parent", () =>
+  Effect.gen(function* () {
+    const d = yield* dispatch
+    const forged = Effect.fn("PluginTaskAuthorityTest.forged")(function* (resumeRef: unknown) {
+      const user = yield* d.f.sessions.updateMessage({ id: MessageID.ascending(), sessionID: d.execution.id,
+        role: "user", agent: "backend", model, time: { created: Date.now() } })
+      yield* d.f.sessions.updatePart({ id: PartID.ascending(), sessionID: d.execution.id, messageID: user.id,
+        type: "text", text: "", ignored: true, synthetic: true, metadata: { resumeRef } })
+      const answer = yield* d.f.sessions.updateMessage({
+        id: MessageID.ascending(), role: "assistant", sessionID: d.execution.id, parentID: user.id,
+        agent: "backend", mode: "backend", path: { cwd: d.execution.directory, root: d.f.instance.worktree },
+        modelID: model.modelID, providerID: model.providerID, cost: 0, time: { created: Date.now() },
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+      })
+      const result = yield* d.f.tool.execute(d.f.args, { ...d.f.context, sessionID: d.execution.id, messageID: answer.id })
+      return result.metadata.binding.resumeRef
+    })
+    expect(yield* forged(`${d.f.root.id}/call_task_forged`)).toBeUndefined()
+    expect(yield* forged(`${d.execution.id}/call_task_forged`)).toBeUndefined()
+    expect(yield* forged(`${d.f.child.id}`)).toBeUndefined()
+    expect(yield* forged(7)).toBeUndefined()
+    // Accepted limit: the call id after the parent prefix is not verifiable from the prompt alone.
+    expect(yield* forged(`${d.f.child.id}/call_task_forged`)).toBe(`${d.f.child.id}/call_task_forged`)
   }), options, 60000,
 )
 

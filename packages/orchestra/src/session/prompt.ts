@@ -21,7 +21,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
-import { ContinuityAdmission } from "@/continuity/admission"
+import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
 import { RequestSource } from "@/continuity/request-source"
 import { PromptContinuity } from "./prompt-continuity"
 import { ClaudeCode } from "@/claude-code/engine"
@@ -1188,22 +1188,8 @@ const layer = Layer.effect(
             yield* events.publish(Session.Event.Error, { sessionID, error: error.toObject() })
             throw error
           }
-          const maxSteps = agent.steps ?? Infinity
-          const isLastStep = step >= maxSteps
-          const admitted = yield* continuity.admit({ sessionID, messages: msgs, originalRequest, expectedUserID: lastUser.id, model,
-            canRecall: model.capabilities.toolcall && lastUser.tools?.context_recall !== false &&
-              Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny" }).pipe(Effect.result)
-          if (admitted._tag === "Failure" && ["complete-prefix-caller-stale", "complete-prefix-admission-stale"].includes(admitted.failure.reason)) {
-            step--
-            continue
-          }
-
+          const isLastStep = step >= (agent.steps ?? Infinity)
           const msg = PromptContinuity.assistant(lastUser, agent, model, sessionID, ctx.directory, ctx.worktree)
-          if (admitted._tag === "Failure") {
-            yield* PromptContinuity.fault(msg, new SessionV1.ContextOverflowError({ message: `Continuity admission failed: ${admitted.failure.reason}` }).toObject(),
-              sessions, (error) => events.publish(Session.Event.Error, { sessionID, error }))
-            break
-          }
           const allocated = { value: false }
 
           const finalizeInterruptedAssistant = Effect.suspend(() => PromptContinuity.interrupted(msg, allocated.value, sessions))
@@ -1222,7 +1208,7 @@ const layer = Layer.effect(
               messages: sent,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: ops })
 
-            canRecall = Object.hasOwn(
+            const recall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
               "context_recall",
             ) && model.capabilities.toolcall &&
@@ -1235,30 +1221,42 @@ const layer = Layer.effect(
                 },
               })
             }
-
-            if (step === 1)
-              yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
-
-            const prepared = admitted.success
-            yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: prepared.messages })
-            sent.splice(0, sent.length, ...prepared.messages)
-
-            const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
+            const [skills, env, instructions, mcpInstructions] = yield* Effect.all([
               sys.skills(agent),
               sys.environment(model),
               instruction.system().pipe(Effect.orDie),
               sys.mcp(agent, session.permission),
-              MessageV2.toModelMessagesEffect(prepared.messages, model),
             ])
-            const system = [
-              ...env,
-              ...instructions,
-              ...(mcpInstructions ? [mcpInstructions] : []),
-              ...(skills ? [skills] : []),
-              ...prepared.system,
-            ]
             const format = lastUser.format ?? { type: "text" as const }
-            if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
+            const system = [...env, ...instructions, ...(mcpInstructions ? [mcpInstructions] : []), ...(skills ? [skills] : [])]
+            const structuredPrompt = format.type === "json_schema" ? [STRUCTURED_OUTPUT_SYSTEM_PROMPT] : []
+            const reminders = isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []
+            // What this caller sends besides memory: admission reuses a catch-up paid for a superseded caller only when it is identical.
+            const context = yield* PromptContinuity.identity({ agent, model, user: lastUser, permission: session.permission,
+              system: [...system, ...structuredPrompt], reminders, tools })
+            const admitted = yield* continuity.admit({ sessionID, messages: msgs, originalRequest, expectedUserID: lastUser.id, model, context,
+              canRecall: model.capabilities.toolcall && lastUser.tools?.context_recall !== false &&
+                Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny" }).pipe(Effect.result)
+            if (admitted._tag === "Failure" && ["complete-prefix-caller-stale", "complete-prefix-admission-stale"].includes(admitted.failure.reason)) {
+              step--
+              return "continue" as const
+            }
+            if (admitted._tag === "Failure") {
+              yield* PromptContinuity.fault(msg, new SessionV1.ContextOverflowError({ message: `Continuity admission failed: ${admitted.failure.reason}` }).toObject(),
+                sessions, (error) => events.publish(Session.Event.Error, { sessionID, error }))
+              return "break" as const
+            }
+            canRecall = recall
+            if (step === 1)
+              yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
+
+            const prepared = yield* AtlasResumeRestore.request({
+              session: sessions, agent, sessionID, user: lastUser.id, prepared: admitted.success,
+            })
+            yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: prepared.messages })
+            sent.splice(0, sent.length, ...prepared.messages)
+
+            const modelMsgs = yield* MessageV2.toModelMessagesEffect(prepared.messages, model)
             const streamInput = {
               contextMemory: prepared.system.length > 0,
               user: lastUser,
@@ -1266,11 +1264,8 @@ const layer = Layer.effect(
               permission: session.permission,
               sessionID,
               parentSessionID: session.parentID,
-              system,
-              messages: [
-                ...modelMsgs,
-                ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []),
-              ],
+              system: [...system, ...prepared.system, ...structuredPrompt],
+              messages: [...modelMsgs, ...reminders],
               tools,
               model,
               toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,

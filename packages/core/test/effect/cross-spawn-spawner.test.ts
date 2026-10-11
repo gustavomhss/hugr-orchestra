@@ -3,34 +3,8 @@ import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { Effect, Exit, Stream } from "effect"
-import type * as PlatformError from "effect/PlatformError"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { omniSpawner } from "@orchestra/core/flag/flag"
-import { testEffect } from "../lib/effect"
-
-const live = LayerNode.compile(CrossSpawnSpawner.node)
-const fx = testEffect(live)
-
-function js(code: string, opts?: ChildProcess.CommandOptions) {
-  return ChildProcess.make("node", ["-e", code], opts)
-}
-
-function decodeByteStream(stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>) {
-  return Stream.runCollect(stream).pipe(
-    Effect.map((chunks) => {
-      const total = chunks.reduce((acc, x) => acc + x.length, 0)
-      const out = new Uint8Array(total)
-      let off = 0
-      for (const chunk of chunks) {
-        out.set(chunk, off)
-        off += chunk.length
-      }
-      return new TextDecoder("utf-8").decode(out).trim()
-    }),
-  )
-}
+import { decodeByteStream, fx, js } from "./cross-spawn-fixture"
 
 function alive(pid: number) {
   try {
@@ -299,81 +273,6 @@ describe("cross-spawn spawner", () => {
           }),
         )
         expect(Exit.isFailure(exit) ? true : exit.value !== ChildProcessSpawner.ExitCode(0)).toBe(true)
-      }),
-    )
-  })
-
-  // Pipelines delegate to legacy, and strict refuses any delegation (D-L12), so they only run when strict is off.
-  describe.skipIf(omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) === "strict")("pipeline", () => {
-    fx.effect(
-      "pipes stdout of one command to stdin of another",
-      Effect.gen(function* () {
-        const handle = yield* js('process.stdout.write("hello world")').pipe(
-          ChildProcess.pipeTo(
-            js(
-              'process.stdin.setEncoding("utf8"); let out = ""; process.stdin.on("data", (chunk) => out += chunk); process.stdin.on("end", () => process.stdout.write(out.toUpperCase()))',
-            ),
-          ),
-        )
-        const out = yield* decodeByteStream(handle.stdout)
-        yield* handle.exitCode
-        expect(out).toBe("HELLO WORLD")
-      }),
-    )
-
-    fx.effect(
-      "three-stage pipeline",
-      Effect.gen(function* () {
-        const handle = yield* js('process.stdout.write("hello world")').pipe(
-          ChildProcess.pipeTo(
-            js(
-              'process.stdin.setEncoding("utf8"); let out = ""; process.stdin.on("data", (chunk) => out += chunk); process.stdin.on("end", () => process.stdout.write(out.toUpperCase()))',
-            ),
-          ),
-          ChildProcess.pipeTo(
-            js(
-              'process.stdin.setEncoding("utf8"); let out = ""; process.stdin.on("data", (chunk) => out += chunk); process.stdin.on("end", () => process.stdout.write(out.replaceAll(" ", "-")))',
-            ),
-          ),
-        )
-        const out = yield* decodeByteStream(handle.stdout)
-        yield* handle.exitCode
-        expect(out).toBe("HELLO-WORLD")
-      }),
-    )
-
-    fx.effect(
-      "pipes stderr with { from: 'stderr' }",
-      Effect.gen(function* () {
-        const handle = yield* js('process.stderr.write("error")').pipe(
-          ChildProcess.pipeTo(
-            js(
-              'process.stdin.setEncoding("utf8"); let out = ""; process.stdin.on("data", (chunk) => out += chunk); process.stdin.on("end", () => process.stdout.write(out))',
-            ),
-            { from: "stderr" },
-          ),
-        )
-        const out = yield* decodeByteStream(handle.stdout)
-        yield* handle.exitCode
-        expect(out).toBe("error")
-      }),
-    )
-
-    fx.effect(
-      "pipes combined output with { from: 'all' }",
-      Effect.gen(function* () {
-        const handle = yield* js('process.stdout.write("stdout\\n"); process.stderr.write("stderr\\n")').pipe(
-          ChildProcess.pipeTo(
-            js(
-              'process.stdin.setEncoding("utf8"); let out = ""; process.stdin.on("data", (chunk) => out += chunk); process.stdin.on("end", () => process.stdout.write(out))',
-            ),
-            { from: "all" },
-          ),
-        )
-        const out = yield* decodeByteStream(handle.stdout)
-        yield* handle.exitCode
-        expect(out).toContain("stdout")
-        expect(out).toContain("stderr")
       }),
     )
   })

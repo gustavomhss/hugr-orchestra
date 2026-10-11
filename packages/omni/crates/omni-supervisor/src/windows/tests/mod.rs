@@ -11,15 +11,17 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, FailCode, Msg, ProcEntry, Slot, Spawn};
+use omni_proto::{Ack, FailCode, Msg, Slot, Spawn};
 use windows_sys::Win32::Storage::FileSystem::WriteFile;
 use windows_sys::Win32::System::JobObjects::AssignProcessToJobObject;
 use windows_sys::Win32::System::Pipes::{CreatePipe, PIPE_NOWAIT, PIPE_WAIT, SetNamedPipeHandleState};
 
+use super::Supervisor;
 use super::diag::{self, Diag};
-use super::members::{Members, Proof};
-use super::queues::{Event, Inbox, Item, MAX_REPLIES, Outbox};
-use super::{Supervisor, inventory, job};
+use super::members::Members;
+use super::queues::{Inbox, MAX_REPLIES, Outbox};
+
+mod members;
 
 /// Polls `f` until it holds, for at most 10 s.
 fn until(mut f: impl FnMut() -> bool) -> bool {
@@ -365,64 +367,4 @@ fn a_spawn_over_the_tree_cap_is_refused_and_its_handles_are_closed() {
         rx.recv_timeout(Duration::from_secs(10)).unwrap().unwrap(),
         "the refused handle was kept"
     );
-}
-
-#[test]
-fn list_keeps_live_members_and_leaves_out_pids_outside_the_job_or_gone() {
-    let job = job::create().unwrap();
-    let (mut member, mut outsider) = (pause(), pause());
-    assign(&job, &member);
-    let gone = {
-        let mut c = Command::new(cmd_exe()).args(["/d", "/c", "exit"]).spawn().unwrap();
-        c.wait().unwrap();
-        c.id()
-    };
-    let list = inventory::of(&job, &[member.id(), outsider.id(), gone]).unwrap();
-    assert_eq!(
-        list,
-        [ProcEntry {
-            pid: member.id(),
-            ppid: None,
-            name: Some("cmd.exe".into())
-        }]
-    );
-    job::terminate(&job);
-    member.wait().unwrap();
-    assert_eq!(inventory::of(&job, &[member.id()]).unwrap(), []);
-    outsider.kill().unwrap();
-    outsider.wait().unwrap();
-}
-
-#[test]
-fn members_are_recorded_as_they_start_and_proven_gone_only_once_exited() {
-    let inbox = Arc::new(Inbox::default());
-    let members = Members::start(&inbox).unwrap();
-    let job = job::create().unwrap();
-    members.watch(7, &job).unwrap();
-    let (mut member, mut outsider) = (pause(), pause());
-    assign(&job, &member);
-    // From the completion port, with no poll.
-    assert!(until(|| members.recorded(7).contains(&member.id())));
-    // A recorded pid that names a live process outside the Job (a reused pid) never blocks the proof.
-    members.insert(7, outsider.id());
-    assert!(
-        matches!(members.prove(7, &job), Proof::Pending(_)),
-        "the flush marker goes out first"
-    );
-    match inbox.next(false, Some(Instant::now() + Duration::from_secs(10))) {
-        Some(Item::Event(Event::Settle { id: 7 })) => {}
-        other => panic!("{other:?}"),
-    }
-    let live = members.prove(7, &job);
-    assert_eq!(
-        live,
-        Proof::Pending(format!("pid {} is still exiting", member.id())),
-        "a live member blocks it"
-    );
-    job::terminate(&job);
-    member.wait().unwrap();
-    assert_eq!(members.prove(7, &job), Proof::Gone);
-    assert!(outsider.try_wait().unwrap().is_none(), "the outsider is untouched");
-    outsider.kill().unwrap();
-    outsider.wait().unwrap();
 }

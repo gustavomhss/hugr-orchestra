@@ -9,7 +9,9 @@ import { RequestSource } from "./request-source"
 
 export class AdmissionError extends Schema.TaggedErrorClass<AdmissionError>()("ContinuityAdmissionError", { reason: Schema.String }) {}
 export type Input = { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean;
-  expectedUserID?: MessageID; model?: Provider.Model; originalRequest?: SessionV1.WithParts }
+  expectedUserID?: MessageID; model?: Provider.Model; originalRequest?: SessionV1.WithParts
+  /** Identity of the caller's prepared request context (agent, model, tools, format, system and reminders, permissions). */
+  context?: string }
 
 /** Candidate sealing is an admission boundary, never part of the pure renderer or producer transport. */
 export function create(input: {
@@ -19,7 +21,7 @@ export function create(input: {
   current: (sessionID: SessionID) => Effect.Effect<SessionV1.WithParts | undefined>
   candidate: (sessionID: SessionID) => Effect.Effect<{ boundary?: MessageID; admitted?: MessageID; epoch: number; generation: number }>
   latest: (messages: SessionV1.WithParts[]) => SessionV1.Assistant | undefined
-  compact: (sessionID: SessionID, canRecall: boolean, model?: Provider.Model) => Effect.Effect<string>
+  compact: (sessionID: SessionID, canRecall: boolean, model?: Provider.Model, context?: string) => Effect.Effect<string>
   commit: (sessionID: SessionID, boundary: MessageID, epoch: number, generation: number) => Effect.Effect<boolean>
   fits: (sessionID: SessionID, prepared: Prepared, model?: Provider.Model) => Effect.Effect<boolean>
 }) {
@@ -39,7 +41,7 @@ export function create(input: {
       const history = yield* input.history(value.sessionID)
       const latest = input.latest(history)
       if (latest && latest.id !== candidate.boundary) {
-        const result = yield* input.compact(value.sessionID, value.canRecall === true, value.model)
+        const result = yield* input.compact(value.sessionID, value.canRecall === true, value.model, value.context)
         yield* requireOwner()
         if (result !== "applied") return yield* new AdmissionError({ reason: "complete-prefix-catchup-unmet" })
       }

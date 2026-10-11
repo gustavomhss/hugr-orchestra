@@ -1,4 +1,4 @@
-//! Host side of the Windows supervisor suite (SUP-W), included as `host` by `windows_spawn.rs` and
+//! Host side of the Windows supervisor suite (SUP-W), included as `host` by `windows_spawn/main.rs` and
 //! `windows_tree.rs`: a named-pipe host as `docs/protocol.md` describes it, the supervisor under test, and the
 //! `child` test that runs the child program (`windows_child.rs`) or a sub-host.
 #![cfg(windows)]
@@ -8,22 +8,23 @@
 pub mod kid;
 #[path = "windows_os.rs"]
 pub mod os;
+#[path = "windows_host/spawn.rs"]
+mod spawn;
 
-use std::ffi::{OsStr, OsString};
-use std::fs::File;
+use std::ffi::OsString;
 use std::os::windows::io::{AsRawHandle, IntoRawHandle, OwnedHandle};
 use std::os::windows::process::CommandExt;
-use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Condvar, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
 pub use kid::child_cmd;
-use kid::{CHILD, out};
-use omni_proto::{FailCode, INFO_PIDFD_HOST, Msg, ProcEntry, Slot, Spawn, VERSION};
+use kid::out;
+use omni_proto::{INFO_PIDFD_HOST, Msg, ProcEntry, VERSION};
 pub use os::{Lines, Proc, T, pipe};
 use os::{check, overlapped, owned, write_watching};
+pub use spawn::{Prepared, Spec, Tree};
 use windows_sys::Win32::Foundation::{DUPLICATE_CLOSE_SOURCE, DUPLICATE_SAME_ACCESS, DuplicateHandle, FALSE, TRUE};
 use windows_sys::Win32::Storage::FileSystem::{
     FILE_FLAG_FIRST_PIPE_INSTANCE, FILE_FLAG_OVERLAPPED, PIPE_ACCESS_DUPLEX, ReadFile, WriteFile,
@@ -37,78 +38,6 @@ use windows_sys::Win32::System::Threading::{CREATE_NO_WINDOW, GetCurrentProcess,
 
 /// Pipe buffers and read size: small, so a host that stops reading backs the supervisor up quickly.
 const BUF: u32 = 4096;
-
-/// What a test asks the supervisor to start (the fields of `Spawn`).
-pub struct Spec {
-    /// Absolute path of the file to run.
-    pub program: PathBuf,
-    /// `argv[0]`, then the arguments.
-    pub argv: Vec<OsString>,
-    /// The complete environment.
-    pub env: Vec<(OsString, OsString)>,
-    /// Working directory.
-    pub cwd: PathBuf,
-    /// `Null` or `Pipe`.
-    pub stdin: Slot,
-    /// `Pipe` or `Merge`.
-    pub stderr: Slot,
-    /// Grace on host death.
-    pub grace_ms: u32,
-    /// The verbatim command-line tail (amendment WP8b); `argv` is then `argv[0]` alone.
-    pub verbatim: Option<OsString>,
-}
-
-impl Spec {
-    /// `program args...` with this process's environment and cwd, stdin null, stderr piped.
-    pub fn program(program: &Path, args: &[&str]) -> Spec {
-        Spec {
-            program: program.into(),
-            argv: std::iter::once(program.as_os_str())
-                .chain(args.iter().map(OsStr::new))
-                .map(Into::into)
-                .collect(),
-            env: std::env::vars_os().collect(),
-            cwd: std::env::current_dir().unwrap(),
-            stdin: Slot::Null,
-            stderr: Slot::Pipe,
-            grace_ms: 1000,
-            verbatim: None,
-        }
-    }
-
-    /// The child program (`windows_child.rs`) in mode `args`.
-    pub fn child(args: &[&str]) -> Spec {
-        let all: Vec<&str> = CHILD.iter().chain(args).copied().collect();
-        Spec::program(&std::env::current_exe().unwrap(), &all)
-    }
-}
-
-/// A started tree, seen from the host.
-pub struct Tree {
-    /// Tree id.
-    pub id: u64,
-    /// Root pid.
-    pub pid: u32,
-    /// The root, seen by the OS.
-    pub root: Proc,
-    /// stdout (with stderr when merged).
-    pub stdout: Lines,
-    /// stderr, when piped.
-    pub stderr: Option<Lines>,
-    /// stdin, when piped.
-    pub stdin: Option<File>,
-}
-
-/// A `Spawn` ready to send (its stdio handles already given to the supervisor) and the host's ends.
-pub struct Prepared {
-    /// Its request id.
-    pub req: u64,
-    /// The message.
-    pub msg: Msg,
-    stdout: OwnedHandle,
-    stderr: Option<Lines>,
-    stdin: Option<File>,
-}
 
 /// Writes to a host's channel from another thread.
 pub struct Writer(Arc<OwnedHandle>);
@@ -277,74 +206,6 @@ impl Host {
         };
         check(ok, "give");
         target as u64
-    }
-
-    /// The `Spawn` for `spec`, with fresh pipes for its stdio slots.
-    pub fn prepare(&mut self, spec: Spec) -> Prepared {
-        let (out_r, out_w) = pipe();
-        let (stdin, in_h) = match spec.stdin {
-            Slot::Pipe => {
-                let (r, w) = pipe();
-                (Some(File::from(w)), self.give(r))
-            }
-            _ => (None, 0),
-        };
-        let (stderr, err_h) = match spec.stderr {
-            Slot::Pipe => {
-                let (r, w) = pipe();
-                (Some(Lines::new(File::from(r))), self.give(w))
-            }
-            _ => (None, 0),
-        };
-        let handles = [in_h, self.give(out_w), err_h];
-        let bytes = |s: &OsStr| s.as_encoded_bytes().to_vec();
-        let req = self.req();
-        let msg = Msg::Spawn(Spawn {
-            req,
-            program: bytes(spec.program.as_os_str()),
-            argv: spec.argv.iter().map(|a| bytes(a)).collect(),
-            env: spec.env.iter().map(|(k, v)| (bytes(k), bytes(v))).collect(),
-            cwd: bytes(spec.cwd.as_os_str()),
-            pty: None,
-            stdin: spec.stdin,
-            stderr: spec.stderr,
-            grace_ms: spec.grace_ms,
-            handles,
-            verbatim: spec.verbatim.as_deref().map(bytes),
-        });
-        Prepared {
-            req,
-            msg,
-            stdout: out_r,
-            stderr,
-            stdin,
-        }
-    }
-
-    /// Spawns `spec` with fresh pipes for its stdio slots.
-    pub fn spawn(&mut self, spec: Spec) -> Result<Tree, (FailCode, String)> {
-        let p = self.prepare(spec);
-        self.send(&p.msg);
-        match self.reply(p.req) {
-            Msg::Spawned {
-                id,
-                pid,
-                pty_ends: [0, 0],
-                ..
-            } => {
-                let (root, stdout) = (Proc::open(pid), Lines::new(File::from(p.stdout)));
-                Ok(Tree {
-                    id,
-                    pid,
-                    root,
-                    stdout,
-                    stderr: p.stderr,
-                    stdin: p.stdin,
-                })
-            }
-            Msg::SpawnFailed { code, msg, .. } => Err((code, msg)),
-            other => panic!("unexpected reply to Spawn: {other:?}"),
-        }
     }
 
     /// The exit code in tree `id`'s `Exited`.

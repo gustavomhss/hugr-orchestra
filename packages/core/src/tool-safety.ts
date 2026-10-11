@@ -31,7 +31,7 @@ export type Profile = {
     readonly allowedDomains?: ReadonlyArray<string>
     /** Exact existing local sockets, granted only by the programmatic host and bound to native placement. */
     readonly allowedUnixSockets?: readonly { readonly directory: string; readonly path: string }[]
-    /** Host services for owned route-adapted clients: Darwin Unix broker, kernel TCP denied; Linux/Windows HOLD. */
+    /** Owned route-adapted clients only: Darwin Unix broker, Linux srt strict-allowlist CONNECT proxy; raw TCP denied; Windows HOLD. */
     readonly allowedLoopbackEndpoints?: readonly { readonly directory: string; readonly host: "127.0.0.1"; readonly port: number }[]
     readonly denyPaths?: ReadonlyArray<string>
     /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */

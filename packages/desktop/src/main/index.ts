@@ -54,8 +54,7 @@ import { nativeT, setNativeTranslations } from "./native-translations"
 import { initializeCandidateProfile } from "./candidate-profile"
 import { getStore } from "./store"
 import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
-import { OmniHost } from "./omni-host"
-import { OmniSmoke } from "./omni-smoke"
+import { OmniBoot } from "./omni-boot"
 
 const candidateProfile = (() => {
   try {
@@ -173,7 +172,7 @@ const main = Effect.gen(function* () {
   } else initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
-  OmniHost.setup()
+  OmniBoot.setup()
 
   const wslServers = createWslServersController(
     app.getVersion(),
@@ -436,11 +435,7 @@ const main = Effect.gen(function* () {
       }),
     )
     server = listener
-    yield* Deferred.succeed(serverReady, {
-      url,
-      username: "orchestra",
-      password,
-    })
+    yield* Deferred.succeed(serverReady, { url, username: "orchestra", password })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -454,11 +449,7 @@ const main = Effect.gen(function* () {
         }),
       ),
     )
-    yield* Effect.promise(() =>
-      OmniSmoke.report({ url, username: "orchestra", password }).catch((error: unknown) =>
-        logger.error("omni smoke report failed", error),
-      ),
-    )
+    yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
 
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
