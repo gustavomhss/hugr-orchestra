@@ -71,7 +71,7 @@ const BACKGROUND_UPDATED = [
 /** Per-dispatch capture, background admission and durable return delivery; registry and execution remain existing services. */
 export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
   const dispatchDone = yield* Deferred.make<UpstreamSettlement.Capture | undefined>()
-  const dispatch: { capture?: UpstreamSettlement.Capture; notified: boolean } = { notified: false }
+  const dispatch: { capture?: UpstreamSettlement.Capture } = {}
 
   const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (captured: UpstreamSettlement.Capture | undefined) {
     if (!captured) return // Setup failure/interruption has no returned assistant and cannot mint a receipt.
@@ -120,19 +120,19 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
     )
   })
 
-  const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* () {
-    if (dispatch.notified) return
-    dispatch.notified = true
-    yield* Deferred.await(dispatchDone).pipe(
+  // BackgroundJob calls this once, with the settled job, from the dispatch that ran last. An extended task
+  // therefore returns the update's result, not the superseded first dispatch's.
+  const notify = (info: BackgroundJob.Info) => {
+    if (info.metadata?.background !== true) return Effect.void
+    return Deferred.await(dispatchDone).pipe(
       Effect.flatMap(inject),
       Effect.catchCause(() => Effect.logWarning("Background Task delivery HOLD", {
         sessionID: input.ctx.sessionID,
         messageID: input.ctx.messageID,
         callID: input.ctx.callID,
       })),
-      Effect.forkIn(input.scope, { startImmediately: true }),
     )
-  })
+  }
 
   const schedule = Effect.fn("TaskBackground.schedule")(function* (
     run: Effect.Effect<string, unknown, FileSystem.FileSystem>,
@@ -190,20 +190,18 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
     )
     // Keep extend/start atomic for this child. Otherwise start can join another caller without running this dispatch.
     return yield* input.lock.withLock(`background:${input.childSessionID}`)(Effect.gen(function* () {
-      if (yield* input.background.extend({ id: input.childSessionID, run: dispatched }))
+      if (yield* input.background.extend({ id: input.childSessionID, run: dispatched, notify }))
         return { extended: true as const }
       const info = yield* input.background.start({
         id: input.childSessionID,
         type: "task",
         title: input.description,
         metadata: input.metadata,
-        onPromote: Effect.all([
-          input.ctx.metadata({
-            title: input.description,
-            metadata: { ...input.metadata, background: true, jobId: input.childSessionID },
-          }),
-          notify(),
-        ], { discard: true }),
+        notify,
+        onPromote: input.ctx.metadata({
+          title: input.description,
+          metadata: { ...input.metadata, background: true, jobId: input.childSessionID },
+        }),
         run: dispatched.pipe(Effect.onInterrupt(() => input.ops.cancel(input.childSessionID))),
       })
       return { extended: false as const, info }
@@ -235,7 +233,6 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
       dispatch.capture = structuredClone(value)
     },
     schedule,
-    notify,
     result,
   }
 })

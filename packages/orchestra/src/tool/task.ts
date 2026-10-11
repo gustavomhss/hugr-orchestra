@@ -643,17 +643,11 @@ export const TaskTool = Tool.define(
       })
 
       const scheduled = yield* backgroundDispatch.schedule(runTask())
-      if (scheduled.extended) {
-        yield* backgroundDispatch.notify()
-        return yield* backgroundDispatch.result(nextSession.id, true)
-      }
+      if (scheduled.extended) return yield* backgroundDispatch.result(nextSession.id, true)
 
       const info = scheduled.info
 
-      if (runInBackground) {
-        yield* backgroundDispatch.notify()
-        return yield* backgroundDispatch.result(info.id)
-      }
+      if (runInBackground) return yield* backgroundDispatch.result(info.id)
 
       const runCancel = yield* EffectBridge.make()
       const cancel = ops.cancel(nextSession.id)
