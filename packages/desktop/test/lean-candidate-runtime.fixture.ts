@@ -72,7 +72,11 @@ export async function launchCandidate(executable: string, root: string, recorder
   const close = async () => {
     if (state.closed) return
     try {
-      await bounded("owned Electron quit", application.close(), 15000)
+      // The first native run measured more than 15 s for this quit (before-quit waits up to 6 s for the sidecar,
+      // then Electron exits under Playwright). Keep a bound, and print the measured duration as evidence.
+      const started = performance.now()
+      await bounded("owned Electron quit", application.close(), 60000)
+      console.log(`owned Electron quit ms=${Math.round(performance.now() - started)}`)
       if (state.backend) await portClosed(state.backend.url)
       state.closed = true
     } catch (error) {

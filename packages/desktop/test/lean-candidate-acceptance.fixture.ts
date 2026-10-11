@@ -176,7 +176,8 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
     if (owned.current) proof.rendererDiagnostics = owned.current.diagnostics
   }
   for (const resource of resources.reverse()) {
-    try { await bounded(resource.label, resource.close(), 30000) } catch (error) { recorder.fail("cleanup", resource.label, error) }
+    // Above the 60 s Electron quit bound inside close(), so that bound reports first.
+    try { await bounded(resource.label, resource.close(), 120000) } catch (error) { recorder.fail("cleanup", resource.label, error) }
   }
   proof.status = recorder.failures.length ? "failed" : "accepted"
   proof.diagnostics = recorder.failures // Original objects stay in memory; serialization is the output boundary.
