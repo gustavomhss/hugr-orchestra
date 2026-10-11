@@ -42,10 +42,10 @@ stdenv.mkDerivation (finalAttrs: {
     bun
     nodejs
     makeWrapper
+    python3
     writableTmpDirAsHomeHook
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
-    python3
     autoPatchelfHook
     copyDesktopItems
     wrapGAppsHook3
@@ -100,6 +100,10 @@ stdenv.mkDerivation (finalAttrs: {
     # Bun installs both libc variants; Electron here uses glibc. Prune only the
     # locked unsupported optional leaves before the collector creates app.asar.
     python3 ${./scripts/prune-desktop-addons.py} "$PWD" '${stdenv.hostPlatform.system}'
+  '' + ''
+    # node-gyp-build packages (tree-sitter grammars) ship every platform's prebuilds;
+    # only the host's can load, so the others must not reach app.asar.unpacked.
+    python3 ${./scripts/prune-foreign-prebuilds.py} "$PWD" '${stdenv.hostPlatform.system}'
   '';
 
   buildPhase = ''
