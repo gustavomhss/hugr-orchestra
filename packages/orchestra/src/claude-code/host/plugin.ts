@@ -171,17 +171,35 @@ async function publish(root: string, files: ReadonlyMap<string, Uint8Array>) {
   const dir = path.join(root, expected.slice(0, 16))
   if (await existing(dir) === expected) return dir
   const temp = `${dir}.${randomUUID()}.tmp`
-  await Promise.all([...files].map(async ([file, bytes]) => {
-    const target = path.join(temp, ...file.split("/"))
-    await fs.mkdir(path.dirname(target), { recursive: true })
-    await fs.writeFile(target, bytes)
-  }))
-  await fs.rm(dir, { recursive: true, force: true })
-  // A concurrent build of the same content may win the rename; its directory is as good as ours.
-  await fs.rename(temp, dir).catch(() => undefined)
-  await fs.rm(temp, { recursive: true, force: true })
-  if (await existing(dir) !== expected) throw new Error(`Cannot publish the Orchestra plugin at ${dir}`)
-  return dir
+  // Like SeatSkillRoot.extract: never steal a lock from a publisher that may still be alive.
+  const lock = `${dir}.lock`
+  await fs.mkdir(root, { recursive: true })
+  const deadline = Date.now() + 10_000
+  const acquire = async (): Promise<void> => {
+    const error = await fs.mkdir(lock).then(() => undefined, (error: NodeJS.ErrnoException) => error)
+    if (!error) return
+    if (error.code !== "EEXIST" || Date.now() >= deadline)
+      throw new Error(`Cannot acquire Orchestra plugin publication lock: ${dir}`, { cause: error })
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    return acquire()
+  }
+  await acquire()
+  try {
+    // A competing build may have published while we waited. Keep the directory it handed to Claude intact.
+    if (await existing(dir) === expected) return dir
+    await Promise.all([...files].map(async ([file, bytes]) => {
+      const target = path.join(temp, ...file.split("/"))
+      await fs.mkdir(path.dirname(target), { recursive: true })
+      await fs.writeFile(target, bytes)
+    }))
+    await fs.rm(dir, { recursive: true, force: true })
+    await fs.rename(temp, dir)
+    if (await existing(dir) !== expected) throw new Error(`Cannot publish the Orchestra plugin at ${dir}`)
+    return dir
+  } finally {
+    await fs.rm(temp, { recursive: true, force: true })
+    await fs.rmdir(lock)
+  }
 }
 
 async function existing(dir: string) {

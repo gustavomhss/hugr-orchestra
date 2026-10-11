@@ -6,16 +6,15 @@ export * as ClaudeHostProcess from "./process-tool"
 // shell tool hands its background trees to, so it shows in the Processes panel with its pid, process tree and live
 // tail, and the panel's stop works on it. Claude Code's Bash stays enabled for ordinary commands.
 import { Effect, Option, Schema, Stream } from "effect"
-import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Shell } from "@orchestra/core/shell"
 import { OmniBackground } from "@orchestra/core/omni-background"
-import { OmniSpawner } from "@orchestra/core/omni-spawner"
 import { BackgroundProcess } from "@/background/process"
 import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { ShellScan } from "@/tool/shell/scan"
+import { ShellExecution } from "@/tool/shell/execution"
 import { Tool } from "@/tool/tool"
 
 export const ID = "process"
@@ -67,16 +66,11 @@ export const ProcessTool = Tool.define(
         ? yield* scanned(ShellScan.resolvePath(params.workdir, instance.directory, shell))
         : instance.directory
       // The shell tool's own checks and asks: the command is a shell command, under the same `bash` permission.
-      yield* scanned(ShellScan.approve(ctx, { command, cwd, shell }))
-      const before = new Set((yield* processes.list(ctx.sessionID, 0)).map((item) => item.id))
+      const approved = yield* ShellExecution.approve(fs, spawner, { command, cwd, shell }, ctx)
       const early = yield* Effect.scoped(Effect.gen(function* () {
-        const handle = yield* spawner.spawn(ChildProcess.make(command, [], {
-          shell, cwd, env: process.env, stdin: "ignore", detached: process.platform !== "win32",
-        })).pipe(
-          // As in the shell tool: only the tail is kept, so a gap is a visible marker rather than a failed start.
-          Effect.provideService(OmniSpawner.GapPolicy, "marker"),
-          processes.adoptable(ctx.sessionID),
-        )
+        const handle = yield* ShellExecution.spawn(fs, spawner, processes.adoptable, {
+          command, shell, cwd, env: process.env, prepareParents: approved.prepareParents,
+        }, ctx)
         const seen = { text: "" }
         yield* Effect.forkScoped(Stream.runForEach(Stream.decodeText(handle.all), (chunk) => Effect.suspend(() => {
           seen.text = (seen.text + chunk).slice(-TAIL_BYTES)
@@ -88,21 +82,20 @@ export const ProcessTool = Tool.define(
         return { pid: Number(handle.pid), code: Option.isSome(exit) ? Number(exit.value) : undefined, output: seen.text }
       }))
       // Closing the spawn scope with the tree alive hands it to the BackgroundProcess registry.
-      const adopted = (yield* processes.list(ctx.sessionID, 0)).filter((item) => !before.has(item.id))
-      const entry = adopted.find((item) => item.pid === early.pid) ?? adopted[0]
+      const entry = (yield* processes.list(ctx.sessionID, 0)).find((item) => item.pid === early.pid)
       const output = early.output || "(no output yet)"
       if (entry) return {
-        title: command,
+        title: approved.command,
         output: `Started process ${entry.id} (pid ${entry.pid}). It keeps running; tail or stop it with id ${entry.id}.\n\n${output}`,
         metadata: { id: entry.id, pid: entry.pid, output: early.output, exit: null },
       }
       if (early.code !== undefined) return {
-        title: command,
+        title: approved.command,
         output: `The command ended with exit code ${early.code} before it went to the background.\n\n${output}`,
         metadata: { output: early.output, exit: early.code },
       }
       return {
-        title: command,
+        title: approved.command,
         output: `The command was still running but this host could not keep it in the background, so it was stopped.\n\n${output}`,
         metadata: { output: early.output, exit: null },
       }
