@@ -304,9 +304,10 @@ c.setTimeout(1000, () => { c.destroy(); process.exitCode = 4 })
           expect(calls[0].state.status === "completed" && calls[0].state.metadata.exit).toBe(0)
           return
         }
-        const suffix = kind === "loopback-endpoint" || process.platform === "linux"
-          ? "exact-policy-unsupported"
-          : "platform-unsupported"
+        // Linux CI has no ready srt here; an exact endpoint grant refuses rather than running unconfined.
+        const suffix = kind === "loopback-endpoint" && process.platform === "linux"
+          ? "backend-unavailable"
+          : kind === "loopback-endpoint" || process.platform === "linux" ? "exact-policy-unsupported" : "platform-unsupported"
         expect(calls[0].state.status).toBe("error")
         expect(calls[0].state.status === "error" && calls[0].state.error).toContain(
           `Tool safety HOLD: sandbox-${kind}-${suffix}`,

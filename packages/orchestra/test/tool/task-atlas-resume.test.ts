@@ -1,5 +1,5 @@
 import { afterEach, describe, expect } from "bun:test"
-import { appendFile, chmod, mkdir } from "node:fs/promises"
+import { appendFile } from "node:fs/promises"
 import path from "node:path"
 import { createNativeMemory, type RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
@@ -30,6 +30,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { fakeScanner } from "../lib/fake-scanner"
 
 // F3 clauses 15-20, rulings F3-D3 and S-3: a backend resume dispatched with `memoryUnit` admits the unit's latest
 // admitted checkpoint into the child Session once per logical resume, as one synthetic part carrying the Admission.
@@ -80,12 +81,8 @@ const offline = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
 // Writes the entries, in order, to the instance's Atlas store through the real binding, with a scanner that reports
 // every record clean.
 const remember = Effect.fn("TaskAtlasResumeTest.remember")(function* (...entries: (typeof OLDER)[]) {
-  const command = path.join((yield* TestInstance).directory, ".test-bin", "gitleaks")
-  yield* Effect.promise(async () => {
-    await mkdir(path.dirname(command), { recursive: true })
-    await Bun.write(command, "#!/bin/sh\n/bin/cat >/dev/null\nexit 0\n")
-    await chmod(command, 0o755)
-  })
+  const directory = (yield* TestInstance).directory
+  const command = yield* Effect.promise(() => fakeScanner("clean", directory))
   const memory = yield* offline(
     AtlasMemory.open({ sessionID: "ses_seed", callID: "call_seed", assistantMessageID: "msg_seed" }),
   )
@@ -298,12 +295,8 @@ const key = (projectID: string, chat: Session.Info, callID: string) => ({
   id: "T-17",
 })
 
-// The fake scanner is a POSIX shell script, and Atlas runs its scanner through execFileSync with no shell, which cannot
-// launch a script on Windows. These cases write Memory through that scanner, so they run on Linux and macOS only.
-const posix = process.platform === "win32" ? it.instance.skip : it.instance
-
 describe("tool.task Atlas resume admission", () => {
-  posix(
+  it.instance(
     "another seat ignores memoryUnit while the backend seat admits the fold",
     () =>
       Effect.gen(function* () {
@@ -321,7 +314,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  posix(
+  it.instance(
     "the latest admitted receipt picks the newer record, not the last one in the log",
     () =>
       Effect.gen(function* () {
@@ -354,7 +347,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  posix(
+  it.instance(
     "a refused or uncertain later write never wins over an admitted one",
     () =>
       Effect.gen(function* () {
@@ -380,7 +373,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  posix(
+  it.instance(
     "two own records without a receipt yield one ambiguous notice that asks for a packet blocker",
     () =>
       Effect.gen(function* () {
@@ -402,7 +395,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  posix(
+  it.instance(
     "replaying the same dispatch call adds no second part, and a new call admits again",
     () =>
       Effect.gen(function* () {
@@ -412,7 +405,12 @@ describe("tool.task Atlas resume admission", () => {
         const first = yield* dispatch(seeded, prompts, { callID: "call_one", unit: UNIT })
         expect(admissionsOf(prompts[0]?.parts ?? [])).toHaveLength(1)
         yield* dispatch(seeded, prompts, { callID: "call_one", taskID: first.taskID, unit: UNIT })
-        expect(prompts[1]?.parts).toEqual([{ type: "text", text: "packet" }])
+        // No second admission, only the host's resume marker; a fresh dispatch carries none.
+        expect(prompts[0]?.parts.some((part) => part.type === "text" && part.metadata?.resumeRef)).toBe(false)
+        expect(prompts[1]?.parts).toEqual([
+          { type: "text", text: "packet" },
+          expect.objectContaining({ ignored: true, metadata: { resumeRef: `${seeded.chat.id}/call_one` } }),
+        ])
         yield* dispatch(seeded, prompts, { callID: "call_two", taskID: first.taskID, unit: UNIT })
         expect(admissionsOf(prompts[2]?.parts ?? [])).toMatchObject([
           { key: key(store.projectID, seeded.chat, "call_two"), verdict: { ok: true, ref: store.refs[0] } },
@@ -425,7 +423,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  posix(
+  it.instance(
     "a partial store yields a store-partial notice that asks for an atlas blocker",
     () =>
       Effect.gen(function* () {

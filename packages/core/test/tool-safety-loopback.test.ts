@@ -9,6 +9,7 @@ import { FSUtil } from "../src/fs-util"
 import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
+import { ToolSafetySandboxRuntime } from "../src/tool-safety-sandbox-runtime"
 import { TcpProxy } from "../src/tcp-proxy"
 import { BackendToolkit } from "../src/backend-toolkit"
 import pack from "../src/backend-toolkit/packs/gocqlx-schemagen"
@@ -38,7 +39,7 @@ const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
   (server) => Effect.promise(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))),
 )
 
-it.live("host service grants keep generic TCP and bind denied; Darwin only supplies an exact Unix route", () =>
+it.live("host service grants keep generic TCP and bind denied; Darwin supplies an exact Unix route, Linux never falls back", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const one = yield* listen()
@@ -66,10 +67,14 @@ it.live("host service grants keep generic TCP and bind denied; Darwin only suppl
     const profile = { requireSandbox: true, writeRoots: ["must/not/out"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
       allowedLoopbackEndpoints: grants } } satisfies ToolSafety.Profile
     if (process.platform !== "darwin") {
-      const held = yield* Effect.flip(f.wrap(script, profile))
-      expect(held.reason).toBe("sandbox-loopback-endpoint-exact-policy-unsupported")
+      // Linux without a ready srt must refuse even though the profile allows an unconfined fallback.
+      const held = yield* Effect.flip(f.wrap(script, profile).pipe(Effect.provideService(ToolSafetySandboxRuntime.Source, {
+        directory: path.join(f.directory, "absent-runtime"), dependencies: ["orchestra-missing-sandbox-dependency"], artifacts: [],
+      })))
+      expect(held.reason).toBe(process.platform === "linux"
+        ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-loopback-endpoint-exact-policy-unsupported")
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
-      console.info(`${process.platform}: working TCP controls and exact loopback policy HOLD measured`)
+      console.info(`${process.platform}: working TCP controls and exact loopback HOLD without a ready sandbox measured`)
       return
     }
     const bridged = yield* f.processes.run(yield* f.wrap(script, profile), { timeout: "5 seconds" })
@@ -100,16 +105,16 @@ it.live("host service grants keep generic TCP and bind denied; Darwin only suppl
   }), 30_000,
 )
 
-// The adapter owner supplies cassandra2; this branch must not substitute upstream or invent its parser.
-const adapted = String(pack.version).includes("+orchestra.cassandra2") && process.platform !== "win32" ? it.live : it.live.skip
-adapted("owned cassandra2 parser consumes real broker routes and rejects malformed map, undeclared port and foreign addresses", () => Effect.gen(function* () {
+// The adapter owner supplies cassandra3; this branch must not substitute upstream or invent its parser.
+const adapted = String(pack.version).includes("+orchestra.cassandra3") && process.platform !== "win32" ? it.live : it.live.skip
+adapted("owned cassandra3 parser consumes real broker routes and rejects malformed map, undeclared port and foreign addresses", () => Effect.gen(function* () {
   const f = yield* fixture
   const root = yield* Effect.acquireRelease(f.fs.makeTempDirectory({ prefix: "loopback-owned-adapter-" }), (root) => Effect.gen(function* () {
     yield* AppProcess.requireSuccess(yield* f.processes.run(ChildProcess.make("chmod", ["-R", "u+w", root])))
     yield* f.fs.remove(root, { recursive: true, force: true })
   }).pipe(Effect.orDie))
   const owned = yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
-  expect(path.dirname(owned.executable)).toContain("+orchestra.cassandra2-")
+  expect(path.dirname(owned.executable)).toContain("+orchestra.cassandra3-")
   const counters = [0, 0]
   const targets = yield* Effect.forEach([0, 1], (index) => Effect.gen(function* () {
     const clients = new Set<Socket>()

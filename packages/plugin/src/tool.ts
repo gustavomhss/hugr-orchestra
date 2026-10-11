@@ -12,6 +12,7 @@ export type InvocationBinding = Readonly<{
   assistantMessageID: string
   callID: string
   taskId?: string
+  /** Present only when this call runs inside a resumed Task: identifies that one resume (dispatching Session and Task call). */
   resumeRef?: string
 }>
 
