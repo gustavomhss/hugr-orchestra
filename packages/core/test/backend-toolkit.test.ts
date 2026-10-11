@@ -214,7 +214,7 @@ it.live("prepare fetches exactly the engines the command invokes through BACKEND
 it.live("a musl host is blocked as an unsupported target without fetching", () =>
   Effect.gen(function* () {
     const f = yield* fixture
-    const scoped = within(f.root, f.manifest(), BackendToolkitTarget.detect({ platform: "linux", arch: "x64", musl: true, rosetta: false }))
+    const scoped = within(f.root, f.manifest(), BackendToolkitTarget.detect({ platform: "linux", arch: "x64", musl: true, rosetta: false, avx2: true, kernel: "6.8.0" }))
     expect(yield* BackendToolkit.prepare("$BACKEND_TOOLKIT_BIN/sqlc generate").pipe(scoped)).toEqual({
       env: { BACKEND_TOOLKIT_BIN: path.join(f.root, "bin") },
       blocked: "unsupported-target:libc-musl",
