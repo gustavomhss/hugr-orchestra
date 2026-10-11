@@ -69,7 +69,9 @@ const ChildProof = Schema.Struct({
 const Stored = Schema.Struct({ rootToolName: Schema.NonEmptyString,
   rootInvocation: Schema.optional(Capability.InvocationRef),
   lineage: Schema.optional(Schema.Array(ChildProof).check(Schema.isMaxLength(8))), effectiveRules: Permission.Ruleset,
-  nativeDenyFloor: Permission.Ruleset, data: Observation })
+  nativeDenyFloor: Permission.Ruleset, data: Observation,
+  // Set by the first transferHost: provenance stays with the producer while `owner` names the current holder.
+  producerOwner: Schema.optional(Schema.toType(Capability.Owner)) })
 type Row = typeof CapabilityJobTable.$inferSelect
 type Writer = Pick<Database.Interface["db"], "select" | "insert" | "update">
 type FixedTransition = Omit<TransitionInput, "observation"> & { observation: Observation }
@@ -126,25 +128,27 @@ export const make = Effect.gen(function* () {
 
   const host = Effect.fn("CapabilityJobs.host")(function* (writer: Writer, proof: ProducerProof, row: Row, read: boolean) {
     const stored = yield* Schema.decodeUnknownEffect(Stored)(row.observation).pipe(Effect.orDie)
+    const producer = stored.producerOwner ?? row.owner
     if (!sameOwner(proof.owner, row.owner) || !sameInvocation(proof.producer, row.invocation) ||
       proof.rootToolName !== stored.rootToolName || row.owner.projectID !== placement.projectID ||
       row.owner.location.directory !== placement.location.directory ||
-      row.owner.location.workspaceID !== placement.location.workspaceID) return yield* failure("target_denied")
+      row.owner.location.workspaceID !== placement.location.workspaceID || !samePlacement(producer, row.owner))
+      return yield* failure("target_denied")
     // Legacy direct producers have no lineage. Missing provenance never adopts a child as a root.
     const root = stored.rootInvocation ?? row.invocation
     const lineage = stored.lineage ?? []
-    if (root.sessionID !== row.owner.sessionID || root.agentID !== row.owner.agentID ||
-      row.invocation.sessionID !== row.owner.sessionID || row.invocation.agentID !== row.owner.agentID ||
+    if (root.sessionID !== producer.sessionID || root.agentID !== producer.agentID ||
+      row.invocation.sessionID !== producer.sessionID || row.invocation.agentID !== producer.agentID ||
       root.assistantMessageID !== row.invocation.assistantMessageID ||
       (lineage.length === 0 ? !sameInvocation(root, row.invocation) : !stored.rootInvocation ||
         lineage.at(-1)?.callID !== row.invocation.callID)) return yield* failure("target_denied")
     const session = yield* sessions.get(root.sessionID)
     const message = yield* sessions.message(root.assistantMessageID)
-    if (!session || session.id !== row.owner.sessionID || session.projectID !== row.owner.projectID ||
+    if (!session || session.id !== producer.sessionID || session.projectID !== row.owner.projectID ||
       session.location.directory !== row.owner.location.directory || session.location.workspaceID !== row.owner.location.workspaceID ||
-      !message || message.sessionID !== row.owner.sessionID || message.message.id !== root.assistantMessageID ||
+      !message || message.sessionID !== producer.sessionID || message.message.id !== root.assistantMessageID ||
       message.message.type !== "assistant" ||
-      message.message.agent !== row.owner.agentID || !message.message.content.some((part) =>
+      message.message.agent !== producer.agentID || !message.message.content.some((part) =>
         part.type === "tool" && part.id === root.callID && part.name === stored.rootToolName))
       return yield* failure("target_denied")
     yield* Effect.forEach(lineage, (proof, index) => Effect.gen(function* () {
@@ -154,8 +158,8 @@ export const make = Effect.gen(function* () {
         return yield* failure("target_denied")
       const child = yield* writer.select().from(CapabilityChildTable)
         .where(eq(CapabilityChildTable.id, proof.callID)).get().pipe(Effect.orDie)
-      if (!child || child.id !== proof.callID || child.session_id !== row.owner.sessionID ||
-        child.agent_id !== row.owner.agentID || child.assistant_message_id !== root.assistantMessageID ||
+      if (!child || child.id !== proof.callID || child.session_id !== producer.sessionID ||
+        child.agent_id !== producer.agentID || child.assistant_message_id !== root.assistantMessageID ||
         child.root_call_id !== root.callID || child.root_tool_name !== stored.rootToolName ||
         child.parent_call_id !== proof.parentCallID || child.ordinal !== proof.ordinal || child.depth !== index + 1 ||
         child.tool_name !== proof.toolName || child.request_hash !== proof.requestHash ||
@@ -367,8 +371,49 @@ export const make = Effect.gen(function* () {
         return yield* update(tx, current, fixed, true)
       }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die))
     }),
+    transferHost: Effect.fn("CapabilityJobs.transferHost")(function* (
+      suppliedProof: ProducerProof, suppliedRef: Capability.JobRef,
+      // Trusted host only: the caller has already proven the destination is the live parent Session.
+      input: { expectedGeneration: number; owner: Capability.Owner },
+    ) {
+      const expectedGeneration = input.expectedGeneration
+      const decoded = Schema.decodeUnknownOption(Schema.toType(Capability.Owner))(input.owner)
+      const proof = fixedProof(suppliedProof)
+      const ref = fixedRef(suppliedRef)
+      if (!Number.isSafeInteger(expectedGeneration) || expectedGeneration < 0) return yield* failure("stale_descriptor")
+      if (Option.isNone(decoded)) return yield* failure("target_denied")
+      if (proof instanceof Capability.Failure) return yield* proof
+      if (ref instanceof Capability.Failure) return yield* ref
+      const owner = Object.freeze({ ...decoded.value, location: Object.freeze({ ...decoded.value.location }) })
+      return yield* agents.withPermissions(proof.owner.agentID, () => database.db.transaction((tx) => Effect.gen(function* () {
+        const current = yield* load(tx, ref)
+        yield* host(tx, proof, current, false)
+        if (current.kind !== "local-process" || current.state !== "running") return yield* failure("unsupported_operation")
+        if (!samePlacement(owner, current.owner) || owner.sessionID === current.owner.sessionID)
+          return yield* failure("target_denied")
+        if (current.generation !== expectedGeneration || current.generation >= Number.MAX_SAFE_INTEGER)
+          return yield* failure("stale_descriptor")
+        const session = yield* sessions.get(owner.sessionID)
+        if (!session || session.projectID !== owner.projectID || session.location.directory !== owner.location.directory ||
+          session.location.workspaceID !== owner.location.workspaceID) return yield* failure("target_denied")
+        const stored = yield* Schema.decodeUnknownEffect(Stored)(current.observation).pipe(Effect.orDie)
+        const next = yield* tx.update(CapabilityJobTable).set({ owner,
+          observation: { ...stored, producerOwner: stored.producerOwner ?? current.owner },
+          generation: current.generation + 1, time_updated: Date.now(),
+        }).where(and(eq(CapabilityJobTable.id, current.id), eq(CapabilityJobTable.generation, expectedGeneration)))
+          .returning().get().pipe(Effect.orDie)
+        if (!next) return yield* failure("stale_descriptor")
+        return yield* receipt(next)
+      }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die))
+    }),
   }
 })
+
+/** Host proof for a stored row's current owner; None when the persisted provenance does not decode. */
+export function proofFromRow(row: Row): Option.Option<ProducerProof> {
+  return Schema.decodeUnknownOption(Stored)(row.observation).pipe(Option.map((stored) =>
+    ({ owner: row.owner, producer: row.invocation, rootToolName: stored.rootToolName })))
+}
 
 function fixedTransition(input: TransitionInput): FixedTransition | Capability.Failure {
   const state = input.state
