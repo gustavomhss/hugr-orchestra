@@ -8,6 +8,7 @@ import { forwardInitializationFailure } from "./initialization"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT } from "./native-translations"
 import { verifyPackagedCli } from "../../scripts/cli-packaging"
+import { omniCompanions } from "../../scripts/cli-staging"
 
 describe("desktop initialization", () => {
   const failure = new Error("sidecar startup failed")
@@ -48,6 +49,12 @@ test("Windows WSL version binds descriptor and agrees with effective package met
   const bytes = Buffer.from("owned staged artifact")
   const targets = ["windows-x64-baseline", "linux-arm64", "linux-x64-baseline"]
   await Promise.all(targets.map((target) => writeFile(join(directory, `orchestra-${target}`), bytes)))
+  // A Windows bundle carries each WSL guest CLI's omni pair in omni-<target>/, as stageCliArtifacts leaves it.
+  await Promise.all(
+    targets
+      .filter((target) => target.startsWith("linux-"))
+      .flatMap((target) => omniCompanions.map((name) => Bun.write(join(directory, `omni-${target}`, name), name))),
+  )
   await writeFile(
     join(directory, "manifest.json"),
     JSON.stringify({
