@@ -15,7 +15,6 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { ToolSafety } from "@orchestra/core/tool-safety"
-import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { BackendWork } from "@/maestro/backend-work"
 import { Database } from "@orchestra/core/database/database"
 import { Service } from "@/tool/registry"
@@ -25,14 +24,15 @@ import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { SEAT_SHELL_REFUSED, seatShellRuns } from "../fixture/seat-sandbox"
+import { jail, sandboxHost } from "../fixture/sandbox-host"
 
 // F2.14: the host, not the prompt, decides where a bound backend child may write. These run the real write and shell
 // tools through ArsenalBindings.withSession, the per-Session binding every native tool call goes through.
 
 const it = testEffect(Layer.empty)
-// What this host gives a bound child's shell: a jail (seatbelt or srt), or none yet and the reason.
-const host = await Effect.runPromise(ToolSafetySandbox.status())
-const sandbox = host.shellWrites === "enforced" ? host.shellSandbox.kind : undefined
+// What this host gives a bound child's shell: a jail (seatbelt, or srt where bubblewrap is present), or none and why.
+const host = sandboxHost
+const sandbox = jail
 
 const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
   directory: string
