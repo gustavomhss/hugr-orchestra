@@ -47,7 +47,7 @@ need(desktop["devDependencies"]["electron"] == m["electron"]["version"], "DESKTO
 need(read_json("flake.lock")["nodes"]["nixpkgs"]["locked"]["rev"] == m["nixpkgsRevision"], "NIXPKGS_PIN_DRIFT")
 omni = tomllib.loads(Path("packages/omni/rust-toolchain.toml").read_text())
 need(omni["toolchain"]["channel"] == m["rust"]["version"], "OMNI_RUST_VERSION_DRIFT")
-for system, source in m["rust"]["sources"].items():
+for source in m["rust"]["sources"].values():
     url = "https://static.rust-lang.org/dist/rust-" + m["rust"]["version"] + "-" + source["target"] + ".tar.gz"
     need(source["url"] == url and source["publishedChecksumUrl"] == url + ".sha256", "SOURCE_URL_RECORD:rust")
 for tool in ("bun", "electron", "rust"):
