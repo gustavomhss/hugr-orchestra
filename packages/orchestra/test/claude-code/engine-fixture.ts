@@ -1,15 +1,11 @@
 import { expect } from "bun:test"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
-import { Deferred, Effect, Layer, Schema, Stream } from "effect"
+import { Deferred, Effect, Layer, Stream } from "effect"
 import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { LLM } from "@/session/llm"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
-import { body } from "../continuity/service-fixture"
-import PROMPT from "@/continuity/prompt.txt"
 import { Session } from "@/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { TestInstance } from "../fixture/fixture"
@@ -21,13 +17,11 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 export const state: {
   queries: Params[]
   scripts: Script[]
-  producer: ((params: Params) => AsyncGenerator<unknown>) | undefined
   producers: number
-  reviews: number
   apiCalls: number
   construct: ClaudeCodeSDK.Interface["query"] | undefined
   heldRead: { plan?: { file: string; entered: Deferred.Deferred<void>; release: Deferred.Deferred<void> } }
-} = { queries: [], scripts: [], producer: undefined, producers: 0, reviews: 0, apiCalls: 0, construct: undefined, heldRead: {} }
+} = { queries: [], scripts: [], producers: 0, apiCalls: 0, construct: undefined, heldRead: {} }
 
 export type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
 
@@ -36,9 +30,7 @@ export type Script = (signal: AbortSignal, params: Params) => AsyncGenerator<unk
 export function reset() {
   state.queries.length = 0
   state.scripts.length = 0
-  state.producer = undefined
   state.producers = 0
-  state.reviews = 0
   state.apiCalls = 0
   state.construct = undefined
   state.heldRead.plan = undefined
@@ -47,20 +39,14 @@ export function reset() {
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   query: (params) => {
     state.queries.push(params)
-    // Every query the engine makes on the login, turns and maintenance alike, keeps Claude Code's preset: a replaced
-    // system prompt is billed as a third-party app (ClaudeCodeSDK.preset).
+    // Every Claude mode query keeps Claude Code's preset (ClaudeCodeSDK.preset).
     expect(params.options?.systemPrompt).toMatchObject({ type: "preset", preset: "claude_code" })
-    // Detect by instruction before routing: a reviewer must never consume an ordinary script.
-    if (isReview(params)) {
-      state.reviews++
-      throw new Error("Unexpected SDK reviewer: maintenance must use producer self-check")
-    }
-    if (state.construct) return state.construct(params)
+    // Claude mode makes no side model call: a tool-less, unpersisted query is the removed maintenance transport.
     if (params.options?.persistSession === false) {
       state.producers++
-      if (!state.producer) throw new Error("Unexpected SDK producer")
-      return state.producer(params) as ReturnType<ClaudeCodeSDK.Interface["query"]>
+      throw new Error("Unexpected SDK maintenance query: Claude mode runs no side model call")
     }
+    if (state.construct) return state.construct(params)
     const script = state.scripts.shift()
     if (!script) throw new Error("Unexpected SDK engine query")
     return script(params.options?.abortController?.signal ?? AbortSignal.any([]), params) as ReturnType<ClaudeCodeSDK.Interface["query"]>
@@ -137,66 +123,6 @@ export function nativeReply(index: number, options: { usage?: number; version?: 
       // Deliberately cumulative and huge: these counters must not become current context pressure.
       modelUsage: { [options.modelKey ?? "claude-haiku-4-5-20251001"]: { contextWindow: 20_000, maxOutputTokens: 2_000, inputTokens: 999_999, outputTokens: 999_999 } } }
   }
-}
-
-export const memoryProducer = async function* (params: Params) {
-  expect(params.options).toMatchObject({ tools: [], mcpServers: {}, strictMcpConfig: true,
-    disallowedTools: ["*"], persistSession: false, maxTurns: 1, settingSources: [],
-    systemPrompt: { type: "preset", preset: "claude_code", append: PROMPT } })
-  expect(params.options?.resume).toBeUndefined()
-  expect(params.options?.sessionStore).toBeUndefined()
-  expect(params.options).not.toHaveProperty("parentResume")
-  const reply = JSON.stringify(body({ messages: historicalMessages(params) }, "SDK_MEMORY_NEEDLE_9C41"))
-  yield { type: "assistant", ...frame, message: { id: "memory", content: [{ type: "text", text: reply }], stop_reason: "end_turn", usage: {} } }
-  yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", ...frame }
-}
-
-const reviewInstruction = "You independently review a complete working-memory candidate"
-
-export function isReview(params: Params) {
-  const system = params.options?.systemPrompt
-  const prompt = typeof system === "string" || Array.isArray(system) ? system : system?.type === "custom" ? system.prompt : system?.append ?? ""
-  return (Array.isArray(prompt) ? prompt.join("\n") : prompt).includes(reviewInstruction)
-}
-
-export function historicalMessages(params: Params) {
-  if (typeof params.prompt !== "string") throw new Error("Expected SDK historical JSON prompt")
-  expect(params.prompt.split("\n")[0]).toBe("Historical messages (JSON, including original roles/content):")
-  return Schema.decodeUnknownSync(Schema.Array(Schema.Unknown))(
-    Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(params.prompt.split("\n").slice(1).join("\n")))
-}
-
-export const compactTurn: Script = async function* (_signal, params) {
-  const key = { projectKey: params.options?.cwd ?? "fixture", sessionId: "sdk-1" }
-  const loaded = await params.options?.sessionStore?.load(key)
-  yield { type: "system", subtype: "init", ...frame }
-  const base = { version: "2.1.289", sessionId: "sdk-1", isSidechain: false }
-  const user = { ...base, type: "user", uuid: "compact-user", parentUuid: loaded?.at(-1)?.uuid ?? null, message: { role: "user", content: params.prompt } }
-  await params.options?.sessionStore?.append(key, [user])
-  const tool = { id: "compact-api", model: "claude-haiku-4-5-20251001", content: [{ type: "tool_use", id: "compact-call", name: "mcp__orchestra__context_compact", input: {} }],
-    stop_reason: "tool_use", usage: { input_tokens: 50, output_tokens: 2 } }
-  yield { type: "assistant", ...frame, uuid: "compact-assistant", message: tool }
-  await params.options?.sessionStore?.append(key, [{ ...base, type: "assistant", uuid: "compact-assistant", parentUuid: user.uuid, message: tool }])
-  const server = params.options?.mcpServers?.orchestra
-  if (server?.type !== "sdk") throw new Error("Actual Orchestra SDK server missing")
-  const client = new Client({ name: "scripted-cli", version: "1" })
-  const transports = InMemoryTransport.createLinkedPair()
-  await server.instance.connect(transports[0])
-  await client.connect(transports[1])
-  const result = await client.callTool({ name: "context_compact", arguments: {} })
-  await client.close()
-  expect(result.isError).not.toBe(true)
-  expect(JSON.stringify(result)).toContain("next SDK resume")
-  const receipt = { ...base, type: "user", uuid: "compact-receipt", parentUuid: "compact-assistant", message: { role: "user",
-    content: [{ type: "tool_result", tool_use_id: "compact-call", content: result.content }] } }
-  yield { ...receipt, ...frame, uuid: receipt.uuid, parent_tool_use_id: null }
-  await params.options?.sessionStore?.append(key, [receipt])
-  const answer = { id: "compact-final-api", model: "claude-haiku-4-5-20251001", content: [{ type: "text", text: "Prepared; this query still has its old native context." }],
-    stop_reason: "end_turn", usage: { input_tokens: 50, output_tokens: 2 } }
-  yield { type: "assistant", ...frame, uuid: "compact-final", message: answer }
-  await params.options?.sessionStore?.append(key, [{ ...base, type: "assistant", uuid: "compact-final", parentUuid: receipt.uuid, message: answer }])
-  yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0.1, ...frame,
-    modelUsage: { "claude-haiku-4-5-20251001": { contextWindow: 20_000, maxOutputTokens: 2_000 } } }
 }
 
 export * as ClaudeEngineFixture from "./engine-fixture"

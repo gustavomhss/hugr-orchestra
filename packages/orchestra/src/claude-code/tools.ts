@@ -13,7 +13,11 @@ export const SERVER = "orchestra"
 const PREFIX = `mcp__${SERVER}__`
 
 /** The Orchestra tools a seat on Claude Code runs in-process. */
-export const IDS = ["read", "edit", "write", "context_recall", "context_compact"]
+export const IDS = ["read", "edit", "write", "context_recall"]
+
+// Orchestra tools Claude mode never serves. Claude Code compacts its own context, so Orchestra's context_compact
+// (a maintenance pass through Orchestra's continuity) has nothing to act on here.
+const UNSERVED = ["invalid", "context_compact"]
 
 /** Orchestra tools Claude Code runs natively, by Claude Code name; Orchestra's gate (permissions.ts) decides each call. */
 export const NATIVE: Record<string, string> = { bash: "Bash", grep: "Grep", glob: "Glob", webfetch: "WebFetch", websearch: "WebSearch" }
@@ -42,7 +46,7 @@ export function conductor(agent: Agent.Info) {
 }
 
 function servable(def: Tool.Def) {
-  return def.id !== "invalid" && !Object.hasOwn(NATIVE, def.id)
+  return !UNSERVED.includes(def.id) && !Object.hasOwn(NATIVE, def.id)
 }
 
 /** A rejected or failed call, as the model reads it. */

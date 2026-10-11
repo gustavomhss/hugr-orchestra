@@ -127,7 +127,7 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     expect(call.state.metadata).toMatchObject({ sessionId: child.id, parentSessionId: chat.id })
     expect(call.state.output).toContain("Checked: the release flag is on.")
 
-    // Maestro's prompt rides on Claude Code's preset (a replaced prompt is billed as a third-party app) and claims
+    // Maestro's prompt rides on Claude Code's preset (Claude mode never replaces it) and claims
     // precedence; its toolset has no SDK subagents or built-in replacements for its tools.
     const options = ClaudeEngineFixture.state.queries[0].options
     const system = options?.systemPrompt
@@ -148,7 +148,7 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     const defs = yield* registry.tools({ ...Provider.parseModel(MODEL), agent: maestro, permission: chat.permission })
     const names = seen.tools?.map((tool) => tool.name) ?? []
     for (const id of ["task", "todowrite", "skill", "context_recall", "maestro_record_admission"]) expect(names).toContain(id)
-    for (const id of ["bash", "grep", "glob", "webfetch", "invalid"]) expect(names).not.toContain(id)
+    for (const id of ["bash", "grep", "glob", "webfetch", "invalid", "context_compact"]) expect(names).not.toContain(id)
     expect(seen.tools?.find((tool) => tool.name === "task")?.description).toBe(defs.find((def) => def.id === "task")?.description)
   }), 60_000)
 
@@ -185,7 +185,7 @@ ClaudeEngineFixture.it.instance("a background teammate's task return reaches Mae
     expect(answer.parts.some((part) => part.type === "text" && part.text === "The teammate confirmed the flag.")).toBe(true)
   }), 60_000)
 
-ClaudeEngineFixture.it.instance("a third-party billing refusal fails Maestro's turn with that cause and is not retried", () =>
+ClaudeEngineFixture.it.instance("a billing refusal fails Maestro's turn with Anthropic's message and is not retried", () =>
   Effect.gen(function* () {
     ClaudeEngineFixture.reset()
     const { prompt, chat } = yield* setup()
@@ -196,7 +196,24 @@ ClaudeEngineFixture.it.instance("a third-party billing refusal fails Maestro's t
     })
     const answer = yield* prompt.prompt({ sessionID: chat.id, ...ask("Is the release flag on?") })
     const error = answer.info.role === "assistant" ? answer.info.error : undefined
-    expect(error?.data).toMatchObject({ message: expect.stringContaining("billed it as a third-party app") })
+    expect(error?.data).toMatchObject({ message: expect.stringContaining("Anthropic returned: API Error: 400 Third-party apps now draw from your extra usage, not your plan limits.") })
     expect(JSON.stringify(error)).not.toContain("native overflow")
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+  }), 60_000)
+
+ClaudeEngineFixture.it.instance("a signed-out Claude Code tells the owner to run claude auth login and records the init sign-in source", () =>
+  Effect.gen(function* () {
+    ClaudeEngineFixture.reset()
+    const { sessions, prompt, chat } = yield* setup()
+    ClaudeEngineFixture.state.scripts.push(async function* () {
+      yield { type: "system", subtype: "init", apiKeySource: "none", ...frame }
+      yield { type: "assistant", error: "authentication_failed", ...frame, message: { id: "signed-out",
+        content: [{ type: "text", text: "Not logged in" }], stop_reason: "end_turn", usage: {} } }
+      yield { type: "result", subtype: "success", is_error: true, ...frame, result: "Not logged in" }
+    })
+    const answer = yield* prompt.prompt({ sessionID: chat.id, ...ask("Is the release flag on?") })
+    const error = answer.info.role === "assistant" ? answer.info.error : undefined
+    expect(error?.data).toMatchObject({ message: expect.stringContaining("claude auth login") })
+    expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ apiKeySource: "none" })
     expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
   }), 60_000)

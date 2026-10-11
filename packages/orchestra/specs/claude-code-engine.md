@@ -1,36 +1,93 @@
 # Claude Code as Orchestra's harness
 
-Status: 2026-10-11. **Paused** (see "Paused" below): no real engine run starts until the owner approves a new
-meta-harness plan. Historical prototype and verification records below retain their original scope.
+Status: 2026-10-11. **Paused** (see "Paused" below). Phase 0 of the meta-harness plan has removed the compliance
+violations ("Phase 0" below). The target design is the meta-harness plan,
+`HuGR/_worktrees/archie-state/meta-harness/PLAN.md` (§2 compliance map, §3 Phase 0, §4 architecture). The sections
+"Two modes", "Auth", "Continuity in Claude mode" and "Phase 0" describe the code as it is; where the numbered sections
+below (written for the first engine) disagree with them, these win. The numbered sections are kept as the record.
+
+## Two modes
+
+Orchestra runs every agent in one of two modes.
+
+- **Normal mode.** Orchestra's own loop (`session/prompt.ts`, `session/llm.ts`, the processor), with any provider and
+  Orchestra's own continuity. This is the default.
+- **Claude mode.** The agent's turns run in Claude Code through the Claude Agent SDK: Claude Code keeps the loop, the
+  model, its own tools, its own login and its own compaction. Orchestra mirrors each turn into its session and keeps
+  its permissions, its file tools and, for Maestro, its whole toolset (4.3).
+
+**The switch.** Exactly one setting decides the mode of an agent: `agent.<id>.engine`. `"claude-code"` is Claude mode;
+absent or `"orchestra"` is normal mode (`agent/agent.ts`, the `engine` field). Nothing else changes the mode. While the
+engine is paused, Claude mode turns end with the pause error ("Paused").
+
+**The boundary.** All Claude mode code lives in `src/claude-code/` and its single entry point is
+`src/claude-code/engine.ts` (`ClaudeCode.Service.turn`), which the normal loop calls once per turn (`session/prompt.ts`)
+and which returns `false` for a normal-mode agent. Normal-mode code imports nothing else from `src/claude-code/`.
+Claude mode reaches normal mode only through a declared interface of shared services and types (agent, config,
+session store and schema, permissions, tool registry and tool types, instructions, the system prompt builder,
+snapshots, and the continuity archive records), never through the loop (`session/prompt`, `session/llm`,
+`session/processor`). `test/claude-code/mode-boundary.test.ts` parses every import under `src` and fails on any other
+crossing; its `INTERFACE` list is that declared interface, and an entry is added only with a reason.
+
+## Auth
+
+Orchestra never touches Claude Code credentials. The unmodified binary signs in from its own credential store, set up by
+the owner's own `claude auth login`, or uses the owner's `ANTHROPIC_API_KEY` / `apiKeyHelper`.
+`ClaudeCodeSDK.processLifetime` spawns it with the owner's environment as it is: it adds no token, scope, plan, tier
+or host-managed provider variable and strips nothing; only Orchestra's own `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED` flag
+stays in Orchestra's process. Sign-in status comes only from documented SDK output: the init message's `apiKeySource`
+(kept as `metadata.claudeCode.apiKeySource`) and an `authentication_failed` assistant error, which ends the turn with
+"Claude Code is not signed in. Run `claude auth login` in a terminal, then send your message again." `accountInfo()`
+is the documented surface for a richer status (plan §4.2, spike S2). A billing refusal ends the turn with
+"Anthropic returned: <message>", verbatim, and is never retried.
+
+Tests: `test/claude-code/spawn-environment.test.ts` (spawn-environment audit),
+`test/claude-code/credential-access.test.ts` (no package source or script reads the Keychain item or
+`.credentials.json`).
+
+## Continuity in Claude mode
+
+Claude Code's own auto-compaction keeps the session's context; the engine sends no `settings` override, so nothing
+disables it. Orchestra makes no side model call through Claude Code: the old maintenance transport (`claude-code/llm.ts`,
+a tool-less one-shot `query()` running Orchestra's memory pass) is deleted, and the session's Orchestra continuity stays
+paused (`metadata.claudeCode.continuityPaused`). Claude Code resumes its own transcript from the native archive;
+Orchestra no longer swaps a prepared view into `sessionStore.load`. `context_recall` still serves the archive;
+`context_compact` is not offered in Claude mode, since Claude Code compacts its own context. The pre-spawn admission
+check against the model's known window stays.
+
+Until Phase 2, nothing of Orchestra's working memory re-enters after a Claude Code compaction; Claude Code's own summary
+is what carries over. Phase 2 (plan §4.6) adds SDK `hooks` callbacks: `SessionStart` with source `compact` returns the
+working memory as `additionalContext`, and `PostCompact` archives Claude Code's summary for `context_recall` (TODO in
+`claude-code/engine.ts`, `NATIVE_COMPACTION`). Normal mode's continuity is unchanged.
+
+## Phase 0
+
+Phase 0 of the plan (owner-approved, "adapt without losing anything") removed:
+
+- V1/V2: the Keychain and `.credentials.json` reads and the `CLAUDE_CODE_OAUTH_TOKEN` injection;
+- V3: `CLAUDE_CODE_OAUTH_SCOPES`, `CLAUDE_CODE_SUBSCRIPTION_TYPE`, `CLAUDE_CODE_RATE_LIMIT_TIER`;
+- V4: the environment allowlist that dropped API-key variables, `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`, and the
+  `--bare` / API-key refusal;
+- V5: the bare-model maintenance transport (`llm.ts`) and the Orchestra continuity swap it fed;
+- V7: comments citing binary internals;
+- V9: the billing rationale of the preset guard. The guard stays as a design choice: Claude mode adds to Claude Code's
+  prompt and never replaces it.
 
 ## Paused
 
-All real Claude Code engine runs are on hold until the owner approves a new meta-harness plan.
-
-**Why.**
-
-- **Token intermediation.** Orchestra drives Claude Code through its own loop, and the engine does extract and inject
-  the machine's login today: `ClaudeCodeSDK.processLifetime` reads the Claude Code OAuth token from the Keychain (or
-  `.credentials.json`) and injects it into the CLI as `CLAUDE_CODE_OAUTH_TOKEN`. That may count as intermediating
-  session tokens under Anthropic's terms. Earlier text in this spec said Orchestra "never reads or extracts tokens";
-  that was false (corrected in 4.3).
-- **Billing finding.** Anthropic billed a query whose system prompt replaced Claude Code's preset as a third-party app
-  drawing on extra usage (`400 Third-party apps now draw from your extra usage`, 4.3). The preset guard fixes that one
-  case; it does not settle whether Orchestra's loop around Claude Code is first-party use of the plan.
-- **Known gap.** In-process tools run `def.execute` directly (`claude-code/tools.ts`), so they skip ToolSafety and the
-  plugin `tool.execute.before`/`after` hooks that Orchestra's loop applies (`session/tools.ts`).
-
-The meta-harness plan resolves all three.
+All real Claude Code engine runs stay on hold until the plan's later phases land and the owner lifts the lock.
 
 **Enforcement.** `ClaudeCodeSDK.requirePlanApproval` runs inside `processLifetime`'s `spawnClaudeCodeProcess`, the
-point every real SDK `query()` passes before a Claude Code process exists, and ahead of the login read. Unless the
-environment sets `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1`, it throws "The Claude Code engine is paused until its
-meta-harness plan is approved by the owner." The agent, seat or Maestro configured with `engine: "claude-code"`
-gets that as its turn error; it is never retried and never falls back to another transport, and the Keychain is never
-read. Recorded test transports never spawn, so they run without the flag. `script/claude-code-engine/proto.ts`, which
-calls `query()` directly, and the Archie authoring pair's login read hold the same flag.
+point every real SDK `query()` passes before a Claude Code process exists. Unless the environment sets
+`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1`, it throws "The Claude Code engine is paused until its meta-harness plan is
+approved by the owner." The agent, seat or Maestro configured with `engine: "claude-code"` gets that as its turn error;
+it is never retried and never falls back to another transport. Recorded test transports never spawn, so they run
+without the flag. `script/claude-code-engine/proto.ts`, which calls `query()` directly, holds the same flag.
 
-**What lifts it.** The owner approves the new meta-harness plan; only then does an operator set
+**Known gap.** In-process tools run `def.execute` directly (`claude-code/tools.ts`), so they skip ToolSafety and the
+plugin `tool.execute.before`/`after` hooks that Orchestra's loop applies (`session/tools.ts`). Plan §4.3 closes it.
+
+**What lifts it.** Plan §10 step 6, after migration acceptance; only then does an operator set
 `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1` in the server environment.
 
 ## 1. Goal
@@ -49,10 +106,12 @@ the API with the subscription. It only changes, locally and between turns, what 
 | System prompt | Orchestra | `systemPrompt: { type: "preset", preset: "claude_code", append }` only; never `custom` (4.3, terms posture) |
 | `read`, `edit`, `write` | Orchestra | In-process SDK tools (`createSdkMcpServer` + `tool()`), executed by Orchestra's own implementations |
 | Built-in file tools | removed | `disallowedTools: ["Read", "Edit", "Write", "NotebookEdit"]` removes them from the model's context; `toolAliases` routes a stray `Read`/`Edit`/`Write` call to Orchestra's |
-| Compaction | Orchestra | `settings: { autoCompactEnabled: false }`; Orchestra's continuity swaps the loaded context between turns |
+| Compaction | Claude Code | Native auto-compaction ("Continuity in Claude mode"); the first engine's Orchestra swap (3, 6) is removed |
 | Transcript | both | `sessionStore`: Claude Code writes locally and mirrors every entry to Orchestra (`append`); on resume, Orchestra returns what the session loads (`load`) |
 
 ## 3. The context swap
+
+Removed in Phase 0 ("Continuity in Claude mode"); kept as the record of the first engine.
 
 The SDK calls `sessionStore.load()` once before it spawns a resumed session, and the session continues from what it
 returns. Orchestra returns the compacted transcript in Claude Code's own compaction shape:
@@ -117,19 +176,15 @@ Maestro runs on Orchestra's loop unless the owner sets `"agent": { "maestro": { 
 Configuration still cannot disable, re-mode or rename Maestro; only its engine (and model) follow the owner's choice.
 On Claude Code, Maestro stays Maestro:
 
-- **Terms posture, unchanged from seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
-  `query()` on the machine's Claude Code login, exactly as for seats. Orchestra never calls the Anthropic API with
-  subscription credentials, but it does extract and inject the login: `processLifetime` reads the OAuth token from
-  the Keychain and hands it to the CLI as `CLAUDE_CODE_OAUTH_TOKEN` (an earlier "never reads or extracts tokens" here
-  was false). That is one reason the engine is paused ("Paused" above). Delegation only adds in-process tools to that
-  `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
+- **One query per turn, as for seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
+  `query()`, exactly as for seats, signed in by Claude Code itself ("Auth"). Delegation only adds in-process tools to
+  that `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
   transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
-  Every query on the login, turns and continuity maintenance alike, keeps Claude Code's `claude_code` system prompt
-  preset and only appends to it (`ClaudeCodeSDK.preset`). Anthropic bills a query whose system prompt replaces the
-  preset (custom, string or none) as a third-party app drawing on extra usage, not as Claude Code on the owner's plan:
-  Archie's acceptance run of the first Maestro build, which used `{ type: "custom" }`, was refused with
-  `400 Third-party apps now draw from your extra usage`. `ClaudeCodeSDK.processLifetime`, the one seam every engine
-  query passes, refuses any other system prompt, and such a refusal is reported as a billing refusal, never retried.
+  Every query keeps Claude Code's `claude_code` system prompt preset and only appends to it (`ClaudeCodeSDK.preset`);
+  `ClaudeCodeSDK.processLifetime`, the one seam every engine query passes, refuses any other system prompt. That is a
+  design choice of Claude mode, not a billing lever. Archie's acceptance run of the first Maestro build, which used
+  `{ type: "custom" }`, ended with Anthropic's `400 Third-party apps now draw from your extra usage`; such a refusal is
+  shown as "Anthropic returned: <message>" and never retried.
 
 - **One mapping, wider for Maestro** (`claude-code/tools.ts`). The engine takes the agent's toolset exactly as
   Orchestra's loop resolves it (`ToolRegistry.tools` with the agent, the session's permissions and the message's tool
@@ -180,6 +235,8 @@ prompt reaches `canUseTool`.
   SDK passes (the full sentence, e.g. "Claude wants to read foo.txt").
 
 ## 6. Continuity
+
+Superseded by "Continuity in Claude mode": the memory-pass transport and the swap below were removed in Phase 0.
 
 The continuity service runs on the mirrored session as on any Orchestra session. What differs is the transport of the
 memory pass and how the result reaches the model.

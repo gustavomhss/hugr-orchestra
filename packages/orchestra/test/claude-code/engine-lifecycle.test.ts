@@ -125,9 +125,6 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
     ClaudeEngineFixture.state.queries.length = 0
     ClaudeEngineFixture.state.scripts.length = 0
     const { directory } = yield* TestInstance
-    writeFileSync(path.join(directory, ".credentials.json"), JSON.stringify({ claudeAiOauth: {
-      accessToken: "local-test-token", refreshToken: "local-test-refresh", expiresAt: 4102444800000, scopes: ["user:inference"],
-    } }))
     const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
     const entered = yield* Deferred.make<void>()
     const returned = yield* Deferred.make<void>()
@@ -138,7 +135,8 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
     yield* Effect.addFinalizer(() => Effect.sync(() => { ClaudeEngineFixture.state.construct = undefined; children.forEach((child) => child.kill("SIGKILL")) }))
     ClaudeEngineFixture.state.construct = (params) => {
       if (!params.options?.spawnClaudeCodeProcess || !params.options.env) throw new Error("missing lifetime options")
-      expect(params.options.env).toEqual({ HOME: directory, CLAUDE_CONFIG_DIR: directory, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1" })
+      // The owner's environment reaches Claude Code as it is; only the approval flag stays in Orchestra.
+      expect(params.options.env).toEqual({ HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "user-api-key" })
       expect(params.options.managedSettings).toBeUndefined()
       const child = params.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
         process.stdin.resume();
@@ -181,8 +179,8 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
       }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
     }
     const worker = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("local child only") }).pipe(
-      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip",
-        ANTHROPIC_BASE_URL: "https://must-strip.invalid", CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "must-strip-host-token" }),
+      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: directory, CLAUDE_CONFIG_DIR: directory,
+        ANTHROPIC_API_KEY: "user-api-key" }),
       Effect.onExit(() => Deferred.succeed(done, undefined)), Effect.forkChild)
     const stop = mode === "cancel" ? yield* Effect.raceFirst(Deferred.await(entered), Deferred.await(done).pipe(
       Effect.andThen(Effect.die(new Error("engine settled before cancellation readiness"))))).pipe(
@@ -198,8 +196,7 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
     // Bun's Windows child runtime restores these OS fields even when options.env omits them.
     expect(Object.fromEntries(Object.entries(environment).filter(([key]) => process.platform !== "win32" ||
       !["HOMEDRIVE", "HOMEPATH", "LOGONSERVER", "PATH", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERDOMAIN", "USERNAME", "USERPROFILE", "WINDIR"].includes(key)))).toEqual({
-      HOME: directory, CLAUDE_CONFIG_DIR: directory, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
-      CLAUDE_CODE_OAUTH_TOKEN: "local-test-token", CLAUDE_CODE_OAUTH_SCOPES: "user:inference",
+      HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "user-api-key",
     })
     writeFileSync(path.join(directory, "release-child"), "release")
     yield* Fiber.await(worker)

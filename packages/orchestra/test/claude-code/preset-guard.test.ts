@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 
-// Anthropic bills a query whose system prompt replaces Claude Code's preset as a third-party app on extra usage. The
-// one seam every engine query goes through (turns, Maestro, seats, maintenance) refuses anything but the preset.
+// Claude mode adds to Claude Code's own prompt and never replaces it: the one seam every engine query goes through
+// (turns, Maestro, seats) refuses anything but the preset.
 
 type Options = Parameters<typeof ClaudeCodeSDK.processLifetime>[0]
 
@@ -15,9 +15,8 @@ test("every Claude Code query must carry the claude_code preset; custom, string,
   expect(lifetime.options.systemPrompt).toEqual({ type: "preset", preset: "claude_code", append: "Maestro's prompt", snapshot: true })
 })
 
-test("a third-party billing refusal is named as such, never as an overflow", () => {
+test("a billing refusal repeats Anthropic's message verbatim and never reads as an overflow", () => {
   const detail = "API Error: 400 Third-party apps now draw from your extra usage, not your plan limits."
-  expect(ClaudeCodeSDK.billingRejection(detail)).toContain("billed it as a third-party app")
-  expect(ClaudeCodeSDK.billingRejection(detail)).toContain("not retried")
+  expect(ClaudeCodeSDK.billingRejection(detail)).toBe(`Anthropic returned: ${detail}`)
   expect(ClaudeCodeSDK.billingRejection("prompt is too long")).toBeUndefined()
 })

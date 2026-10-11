@@ -1,11 +1,12 @@
 export * as ClaudeCode from "./engine"
 
-// Claude Code as an engine: an agent with `engine: "claude-code"` runs its turns in Claude Code (Claude Agent SDK, the
-// machine's Claude Code login) instead of Orchestra's loop. Claude Code keeps the loop, the model and its own tools;
-// Orchestra contributes the agent prompt and instructions, read/edit/write, and every approval. Maestro opts in with
-// its whole Orchestra toolset in-process (task included), under its own prompt (tools.ts). Each turn is mirrored into
-// the Orchestra session (mirror.ts), so the UI, revert and the archive work as for any session.
-// Design: specs/claude-code-engine.md.
+// Claude mode's single entry point. An agent with `engine: "claude-code"` runs its turns in Claude Code (Claude Agent
+// SDK, signed in through Claude Code's own login) instead of Orchestra's loop. Claude Code keeps the loop, the model,
+// its own tools and its own compaction; Orchestra contributes the agent prompt and instructions, read/edit/write, and
+// every approval. Maestro opts in with its whole Orchestra toolset in-process (task included), under its own prompt
+// (tools.ts). Each turn is mirrored into the Orchestra session (mirror.ts), so the UI, revert and the archive work as
+// for any session. Orchestra's normal mode imports nothing from this directory but this file
+// (test/claude-code/mode-boundary.test.ts). Design: specs/claude-code-engine.md.
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Shell } from "@orchestra/core/shell"
@@ -33,11 +34,10 @@ import { Provider } from "@/provider/provider"
 import { SessionContinuity } from "@/continuity/service"
 import { RequestSource } from "@/continuity/request-source"
 import { marker } from "@/continuity/alias"
-import { settings, tokenCount, hardLimit } from "@/continuity/trigger"
+import { tokenCount, hardLimit } from "@/continuity/trigger"
 import { estimate } from "@/continuity/masking"
 import { ToolJsonSchema } from "@/tool/json-schema"
 import { ClaudeCodeStore } from "./store"
-import { ClaudeCodeLLM } from "./llm"
 import { ClaudeCodeTranscript } from "./transcript"
 import { ClaudeCodeNative } from "./native"
 import { ClaudeCodeSDK } from "./sdk"
@@ -60,14 +60,24 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/C
 const Metadata = Schema.Struct({ sessionId: Schema.optional(Schema.String), cost: Schema.optional(Schema.Number),
   model: Schema.optional(Schema.String), contextWindow: Schema.optional(Schema.Number), maxOutputTokens: Schema.optional(Schema.Number),
   selectedModel: Schema.optional(Schema.String), version: Schema.optional(Schema.String), continuityPaused: Schema.optional(Schema.NullOr(Schema.String)),
-  nativeArchiveFailed: Schema.optional(Schema.Boolean), delivered: Schema.optional(Schema.Array(MessageID)) })
+  nativeArchiveFailed: Schema.optional(Schema.Boolean), delivered: Schema.optional(Schema.Array(MessageID)),
+  apiKeySource: Schema.optional(Schema.String) })
+
+/**
+ * Continuity in Claude mode is Claude Code's own auto-compaction; Orchestra runs no maintenance model call here and
+ * leaves the session's Orchestra continuity paused. TODO(meta-harness PLAN.md §4.6, Phase 2): carry Orchestra's working
+ * memory across a compaction with SDK `hooks` callbacks — `SessionStart` with source "compact" returns it as
+ * `additionalContext`, and `PostCompact` archives Claude Code's summary for `context_recall`. Until then nothing re-enters
+ * after a compaction except Claude Code's own summary.
+ */
+export const NATIVE_COMPACTION = "Claude mode: Claude Code's native compaction"
 
 // Maestro's prompt rides on Claude Code's preset (sdk.ts preset), so it says up front that it governs.
 const PRECEDENCE = "The instructions below are Maestro's. Where they differ from the Claude Code guidance above, follow them."
 
 // Where the preset or Maestro's prompt describes other tools or Orchestra's loop, this engine differs.
 const ENGINE_NOTE = [
-  "You run on Claude Code with the owner's subscription. Orchestra's tools carry the `mcp__orchestra__` prefix (`task` is",
+  "You run on Claude Code. Orchestra's tools carry the `mcp__orchestra__` prefix (`task` is",
   "`mcp__orchestra__task`); Bash, Grep, Glob and the web tools are Claude Code's, under the same permissions. Claude Code's",
   "guidance on Task or Agent subagents, TodoWrite, Skill and AskUserQuestion names tools you do not have: delegate with",
   "`mcp__orchestra__task`, track work with `mcp__orchestra__todowrite`, load skills with `mcp__orchestra__skill` and ask",
@@ -92,7 +102,6 @@ const layer = Layer.effect(
     const catalog = yield* ModelsDev.Service
     const fs = yield* FSUtil.Service
     const spawner = yield* ChildProcessSpawner
-    const backend = ClaudeCodeLLM.create(sdk)
 
     const turn: Interface["turn"] = Effect.fn("ClaudeCode.turn")(function* (input) {
       const { sessionID } = input
@@ -110,39 +119,25 @@ const layer = Layer.effect(
       const selected = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
       const shape = selected ? yield* provider.getModel(input.user.model.providerID, selected).pipe(Effect.catch(() =>
         catalog.get().pipe(Effect.map((models) => models.anthropic ? Provider.fromModelsDevProvider(models.anthropic).models[selected] : undefined)))) : undefined
-      let effective: Provider.Model | undefined
       let admissionModel = shape && Number.isFinite(shape.limit.context) && shape.limit.context > 0 &&
         Number.isFinite(shape.limit.output) && shape.limit.output > 0 && hardLimit(shape) > 0 ? shape : undefined
       let nativeVersion = state.version
       let actualModel = state.model ?? selected
       let sdkModel: string | undefined
       let limits: { contextWindow?: number; maxOutputTokens?: number } = {}
-      let nativeOverhead: number | undefined
       const metadata = (value: Record<string, unknown>) => Effect.gen(function* () {
         const latest = (yield* sessions.get(sessionID).pipe(Effect.orDie)).metadata ?? {}
         yield* sessions.setMetadata({ sessionID, metadata: { ...latest,
           claudeCode: { ...(ClaudeCodeTranscript.record(latest.claudeCode) ? latest.claudeCode : {}), ...value } } })
       })
+      // Records the model's limits for the pre-spawn admission check. Continuity stays Claude Code's (NATIVE_COMPACTION).
       const configure = (model: string | undefined, window: number | undefined, output: number | undefined) => Effect.gen(function* () {
-        const reason = !settings(cfg).enabled ? "disabled" : !ClaudeCodeTranscript.SUPPORTED.includes(nativeVersion ?? "")
-          ? `Claude Code ${nativeVersion ?? "unknown"} not yet supported` : !shape || !model || !Number.isFinite(window) ||
-            !Number.isFinite(output) || !window || window <= 0 || !output || output <= 0 || output >= window
-            ? "SDK model/window metadata unavailable" : nativeOverhead === undefined ? "SDK system/tool snapshot unavailable; native compaction enabled" : undefined
-         if (model && window !== undefined && output !== undefined && Number.isFinite(window) && Number.isFinite(output))
-           yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output })
+        if (model && window !== undefined && output !== undefined && Number.isFinite(window) && Number.isFinite(output))
+          yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output })
         if (shape && model && window && output && Number.isFinite(window) && Number.isFinite(output) && output < window)
           admissionModel = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { ...shape.limit, context: window, output } }
-        if (reason) {
-          effective = undefined
-          yield* continuity.pause(sessionID)
-          yield* metadata({ ...(nativeVersion ? { version: nativeVersion } : {}), continuityPaused: reason })
-          return
-        }
-        if (!shape || !model || window === undefined || output === undefined) return
-        const resolved = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { ...shape.limit, context: window, output } }
-        effective = resolved
-        yield* continuity.configure({ sessionID, model: resolved, llm: backend, overhead: nativeOverhead })
-        yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output, version: nativeVersion, continuityPaused: null })
+        yield* continuity.pause(sessionID)
+        yield* metadata({ ...(nativeVersion ? { version: nativeVersion } : {}), continuityPaused: NATIVE_COMPACTION })
       })
       const context = yield* Effect.context<never>()
       const abort = new AbortController()
@@ -181,12 +176,12 @@ const layer = Layer.effect(
         yield* metadata({ delivered: [...delivered] })
       })
       const native = ClaudeCodeStore.create({ sessionID, fs, sessions, continuity, run, userID: userIDs.at(-1), userIDs, canRecall,
-        rewrite: () => effective !== undefined,
+        // Claude Code resumes its own transcript; Orchestra's continuity view is never swapped in (NATIVE_COMPACTION).
+        rewrite: () => false,
         diagnostic: (reason) => metadata({ transcriptView: reason }),
         onFailure: () => Effect.sync(() => { persistenceFailed = true }), onDelivery: handoff })
       const view = create({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
-        sessions, snapshot, record: native.record,
-        onStep: (message) => effective ? continuity.start({ sessionID, message, canRecall }) : Effect.void })
+        sessions, snapshot, record: native.record })
       if (state.nativeArchiveFailed) {
         yield* continuity.pause(sessionID)
         yield* view.fail({ aborted: false, message: "Claude Code native transcript persistence failed; SDK resume is blocked until its archive is repaired." })
@@ -242,47 +237,15 @@ const layer = Layer.effect(
       const key = stored.keys.find((item) => !item.key.subpath && item.key.sessionId === state.sessionId)?.key
       if (state.sessionId && !key)
         return yield* Effect.fail(new Error("Claude Code native archive unavailable; legacy SDK resume is blocked until a complete native archive is imported."))
-      nativeOverhead = measureNativeOverhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
       yield* configure(state.selectedModel === selected ? state.model : undefined, state.contextWindow, state.maxOutputTokens)
       stored.delivered.forEach((id) => delivered.add(MessageID.make(id)))
       const remaining = users.filter((message) => !delivered.has(message.info.id))
       userIDs.splice(0, userIDs.length, ...remaining.map((message) => message.info.id))
       prompt = ClaudeCodeTranscript.hostPrompt(remaining)
       if (!prompt) return yield* Effect.fail(new Error("Claude Code has no undelivered prompt to admit; previously handed inputs were not resent."))
-      if (effective && state.sessionId) {
-        const last = history.findLast((message) => message.info.role === "assistant")?.info
-        const result = yield* continuity.compact({ sessionID, canRecall,
-          force: last?.role === "assistant" && tokenCount(last.tokens) >= hardLimit(effective) }).pipe(
-            Effect.onInterrupt(() => Effect.gen(function* () {
-              abort.abort()
-              yield* continuity.cancel(sessionID)
-              yield* view.fail({ aborted: true, message: "The owner stopped the turn." })
-            })))
-        if (result === "over") {
-          yield* view.fail({ aborted: false, message: "Claude Code continuity remains over the hard limit; next query was not started." })
-          return yield* Effect.fail(new Error("Claude Code continuity remains over the hard limit; next query was not started."))
-        }
-      }
-       let materialized = key ? yield* native.prepare(key, { admit: true, model: effective }) : undefined
+       const materialized = key ? yield* native.prepare(key) : undefined
        const reason = materialized?.reason ?? "first-turn"
        const nativeFallback = materialized?.kind === "fallback"
-       if (effective && state.sessionId) {
-         if (nativeFallback) {
-           effective = undefined
-           yield* continuity.pause(sessionID)
-           yield* metadata({ continuityPaused: `Native replay ${reason}; native compaction enabled` })
-           materialized = key ? yield* native.prepare(key) : undefined
-         }
-         if (effective && !(materialized && ClaudeCodeNative.overhead(materialized.entries))) {
-           nativeOverhead = undefined
-           effective = undefined
-           yield* continuity.pause(sessionID)
-           yield* metadata({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
-           materialized = key ? yield* native.prepare(key) : undefined
-         }
-         if (effective && !materialized?.ready)
-           return yield* Effect.fail(new Error(`Claude Code native admission blocked before spawn: ${reason}; exact native view cannot be bounded under the hard limit.`))
-       }
        const system = materialized && ClaudeCodeNative.overhead(materialized.entries)
        // Unknown CLI overhead prevents an exact budget, but known payload alone can already exceed the limit.
         const tokens = estimate(materialized?.entries ?? []) + estimate(prompt) + estimate({ system, append,
@@ -314,21 +277,8 @@ const layer = Layer.effect(
         canUseTool: canUseTool(gate),
         includePartialMessages: true,
         abortController: abort,
-        settings: { autoCompactEnabled: !effective },
-        sessionStore: {
-          ...native.store,
-          append: async (key: Parameters<typeof native.store.append>[0], entries: Parameters<typeof native.store.append>[1]) => {
-            await native.store.append(key, entries)
-            if (key.subpath) return
-            const version = ClaudeCodeTranscript.version(entries)
-            if (version) nativeVersion = version
-            if (nativeVersion && !ClaudeCodeTranscript.SUPPORTED.includes(nativeVersion)) {
-              await run(continuity.pause(sessionID))
-              effective = undefined
-              await run(metadata({ version: nativeVersion, continuityPaused: `Claude Code ${nativeVersion} not yet supported` }))
-            }
-          },
-        },
+        // No `settings` override: Claude Code's own auto-compaction keeps the session's continuity (NATIVE_COMPACTION).
+        sessionStore: native.store,
       }
 
       const outcome = yield* Effect.gen(function* () {
@@ -337,7 +287,6 @@ const layer = Layer.effect(
            const materialized = yield* prepare
            // New SDK sessions must never fall into the legacy assistant-based delivery inference.
            if (!state.sessionId && state.delivered === undefined) yield* metadata({ delivered: [] })
-           options.settings.autoCompactEnabled = !effective
            const env = yield* ClaudeCodeSDK.Environment
            const lifetime = ClaudeCodeSDK.processLifetime({ ...options, env,
              sessionStore: { ...options.sessionStore, load: async (key) => {
@@ -361,14 +310,16 @@ const layer = Layer.effect(
             if (next.done) break
             const message = next.value
             if (message.type === "system" && message.subtype === "mirror_error") {
-              effective = undefined
               persistenceFailed = true
               return yield* Effect.fail(new Error("Claude Code native transcript persistence failed; SDK resume is blocked until its archive is repaired."))
             }
-            if (message.type === "system" && message.subtype === "init" && message.session_id !== state.sessionId)
-              yield* metadata({ sessionId: message.session_id })
+            // Sign-in status comes only from the documented init frame; Orchestra never reads Claude Code's credentials.
+            if (message.type === "system" && message.subtype === "init" &&
+              (message.session_id !== state.sessionId || message.apiKeySource !== state.apiKeySource))
+              yield* metadata({ sessionId: message.session_id, apiKeySource: message.apiKeySource })
             if (message.type === "system" && message.subtype === "init") sdkModel = message.model
              if (message.type === "assistant" && !message.parent_tool_use_id && message.message.model) actualModel = message.message.model
+            if (ClaudeCodeSDK.signedOut(message)) throw new Error(ClaudeCodeSDK.SIGNED_OUT)
             if (message.type === "assistant" && message.error === "billing_error") {
               const detail = "billing_error: " + message.message.content.flatMap((block) => block.type === "text" ? [block.text] : []).join(" ")
               throw new Error(ClaudeCodeSDK.billingRejection(detail) ?? detail)
@@ -397,7 +348,6 @@ const layer = Layer.effect(
             }
           }
           const stored = yield* native.read
-          nativeOverhead = measureNativeOverhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
           nativeVersion = ClaudeCodeTranscript.version(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries))
           yield* configure(actualModel, limits.contextWindow, limits.maxOutputTokens)
           const { cost } = yield* view.finish(state.cost ?? 0)
@@ -427,11 +377,6 @@ const layer = Layer.effect(
     return Service.of({ turn })
   }),
 )
-
-function measureNativeOverhead(entries: Parameters<typeof ClaudeCodeNative.overhead>[0]) {
-  const snapshot = ClaudeCodeNative.overhead(entries)
-  return snapshot ? estimate({ system: snapshot.systemPrompt, tools: snapshot.tools }) : undefined
-}
 
 export const node = LayerNode.make({
   service: Service,
