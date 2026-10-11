@@ -15,7 +15,8 @@ import type { Schema } from "effect"
 // Direct mode on the Claude Code engine: the host creates and prompts one native archie Session per arm; no Maestro.
 const claude = { engine: "claude-code", model: "anthropic/claude-opus-5-5", credentialKind: "claude-code-keychain-oauth" } as const
 const model = claude.model
-export const armBudgetMs = 20 * 60_000
+// Measured 2026-10-11: one Opus 5.5 stage takes about 6 minutes, so four stages need more than 20.
+export const armBudgetMs = 40 * 60_000
 export const totalBudgetMs = 2 * armBudgetMs + 2 * 60_000
 const outputLimit = 32 * 1024 * 1024
 // Credential stores stay outside every read grant even though no arm is given their paths.
