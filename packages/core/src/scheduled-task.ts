@@ -1,6 +1,6 @@
 export * as ScheduledTask from "./scheduled-task"
 
-import { and, asc, desc, eq, inArray, lt, lte, ne, notInArray } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNotNull, lt, lte, ne, notInArray, type SQL } from "drizzle-orm"
 import { Cause, Clock, Context, Duration, Effect, Layer, Schedule, Schema } from "effect"
 import type { Capability } from "@orchestra/schema/capability"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
@@ -117,7 +117,7 @@ const layer = Layer.effect(
     const { db } = yield* Database.Service
     const sessions = yield* SessionV2.Service
     // Marks this process's claims. A restarted process takes its old claims over once their lease ends.
-    const owner = crypto.randomUUID()
+    const lease = crypto.randomUUID()
     const immediate = <A, E>(effect: Effect.Effect<A, E>) =>
       db.transaction(() => effect, { behavior: "immediate" }).pipe(Effect.orDie)
 
@@ -205,7 +205,7 @@ const layer = Layer.effect(
         task.policy === "capability"
           ? ScheduledTaskModel.slotIDs(
               slot === undefined ? `${task.id}:manual:${manualKey}` : `${task.id}:${task.revision}`,
-              slot ?? now,
+              slot ?? task.time_created,
             )
           : slot === undefined
             ? undefined
@@ -229,7 +229,7 @@ const layer = Layer.effect(
           session_id: claimed.sessionID,
           message_id: claimed.messageID,
           prompt: claimed.prompt,
-          owner,
+          owner: lease,
           time_claimed: now,
         })
         .run()
@@ -309,8 +309,9 @@ const layer = Layer.effect(
 
     // The path a user prompt takes: the Session (adopted when its ID exists), durable admission, then a wake.
     // Legacy runs are Maestro Sessions in the task's directory. A capability run uses its owner's agent and
-    // placement, and only while the owner Session still exists there with that agent.
-    const dispatch = (claimed: Claim) =>
+    // placement, and only while the owner Session still exists there with that agent. `admitted` is a takeover
+    // retrying a prompt that is already durable, which only reconciles and wakes.
+    const dispatch = (claimed: Claim, admitted = false) =>
       Effect.gen(function* () {
         const owner = claimed.task.policy === "capability" ? claimed.task.owner : undefined
         if (claimed.task.policy === "capability" && !(owner && (yield* present(owner))))
@@ -320,9 +321,50 @@ const layer = Layer.effect(
           agent: owner?.agentID ?? AgentV2.defaultID,
           location: owner?.location ?? { directory: claimed.task.directory },
         })
+        // An edit, pause or removal since the claim voids it before admission. What remains is the window from this
+        // read to the durable admission inside `sessions.prompt` (its prompt hooks included); a claim revoked in it
+        // still settles with an honest `started` receipt.
+        if (claimed.task.policy === "capability" && !admitted && !(yield* holds(claimed)))
+          return { type: "void" } as const
         yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
         return { type: "started", sessionID: session.id } as const
-      }).pipe(Effect.catchCause((cause) => Effect.succeed({ type: "failed", error: reason(cause) } as const)))
+      }).pipe(
+        Effect.catchCause((cause) =>
+          Effect.gen(function* () {
+            // A capability prompt that was admitted before the failure (a wake that failed, say) did start.
+            const durable =
+              claimed.task.policy === "capability" ? yield* SessionInput.find(db, claimed.messageID) : undefined
+            if (durable) return { type: "started", sessionID: durable.sessionID } as const
+            return { type: "failed", error: reason(cause) } as const
+          }),
+        ),
+      )
+
+    const holds = (claimed: Claim) =>
+      db
+        .select({
+          state: ScheduledTaskRunTable.state,
+          lease: ScheduledTaskRunTable.owner,
+          slot: ScheduledTaskRunTable.slot,
+          claimed: ScheduledTaskRunTable.revision,
+          revision: ScheduledTaskTable.revision,
+          enabled: ScheduledTaskTable.enabled,
+        })
+        .from(ScheduledTaskRunTable)
+        .innerJoin(ScheduledTaskTable, eq(ScheduledTaskTable.id, ScheduledTaskRunTable.task_id))
+        .where(eq(ScheduledTaskRunTable.id, claimed.id))
+        .get()
+        .pipe(
+          Effect.orDie,
+          Effect.map(
+            (row) =>
+              row?.state === "running" &&
+              row.lease === lease &&
+              row.claimed === row.revision &&
+              // A manual run may start while the schedule is paused.
+              (row.enabled || row.slot === null),
+          ),
+        )
 
     const present = (owner: Capability.Owner) =>
       sessions.get(owner.sessionID).pipe(
@@ -345,8 +387,16 @@ const layer = Layer.effect(
             .from(ScheduledTaskRunTable)
             .where(eq(ScheduledTaskRunTable.id, claimed.id))
             .get()
-          // Gone with its task, taken over after the lease ended (the new owner settles it), or revoked by an edit.
-          if (run?.state !== "running" || run.owner !== owner) return
+          // A claim an edit revoked while its prompt was being admitted keeps an honest receipt; it never counts
+          // toward repeat or moves `next`.
+          if (run?.state === "revoked" && outcome.type === "started")
+            return yield* db
+              .update(ScheduledTaskRunTable)
+              .set({ state: "started", session_id: outcome.sessionID, error: null, time_settled: now })
+              .where(eq(ScheduledTaskRunTable.id, run.id))
+              .run()
+          // Gone with its task, taken over after the lease ended (the new lease settles it), or revoked by an edit.
+          if (run?.state !== "running" || run.owner !== lease) return
           if (outcome.type === "void")
             return yield* db.delete(ScheduledTaskRunTable).where(eq(ScheduledTaskRunTable.id, run.id)).run()
           yield* db
@@ -424,7 +474,7 @@ const layer = Layer.effect(
           if (!task || !run.message_id || run.prompt === null) return
           yield* db
             .update(ScheduledTaskRunTable)
-            .set({ owner, time_claimed: now })
+            .set({ owner: lease, time_claimed: now })
             .where(eq(ScheduledTaskRunTable.id, run.id))
             .run()
           return {
@@ -439,7 +489,7 @@ const layer = Layer.effect(
       if (!claimed) return
       const admitted = yield* SessionInput.find(db, claimed.messageID)
       if (!admitted) return yield* settle(claimed, { type: "void" })
-      const retried = yield* dispatch(claimed)
+      const retried = yield* dispatch(claimed, true)
       if (retried.type !== "started") yield* Effect.logWarning("Scheduled run retry failed", retried)
       yield* settle(claimed, { type: "started", sessionID: admitted.sessionID })
     })
@@ -464,22 +514,46 @@ const layer = Layer.effect(
 
     // Runs `edit` on the owner's schedule under the write lock, then reads it back. Errors come back as values so
     // the transaction commits only what the edit wrote.
-    const change = Effect.fn("ScheduledTask.change")(function* (
+    const change = <E extends InvalidError>(
       owner: Capability.Owner,
       id: ID,
-      edit: (task: Task, now: number) => Effect.Effect<InvalidError | undefined, unknown>,
-    ) {
-      const now = yield* Clock.currentTimeMillis
-      const failed = yield* immediate(
-        Effect.gen(function* () {
-          const task = yield* owned(owner, id)
-          if (!task) return new NotFoundError({ id })
-          return yield* edit(task, now)
-        }),
-      )
-      if (failed) return yield* failed
-      return yield* getOwned(owner, id)
-    })
+      edit: (task: Task, now: number) => Effect.Effect<E | undefined, unknown>,
+    ) =>
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis
+        const failed = yield* immediate(
+          Effect.gen(function* () {
+            const task = yield* owned(owner, id)
+            if (!task) return new NotFoundError({ id })
+            return yield* edit(task, now)
+          }),
+        )
+        if (failed) return yield* failed
+        return yield* getOwned(owner, id)
+      })
+
+    // Marks the task's running claims in `scope` whose prompt was never admitted as revoked.
+    const revoke = (task: Task, now: number, scope: SQL) =>
+      Effect.gen(function* () {
+        const pending = yield* db
+          .select()
+          .from(ScheduledTaskRunTable)
+          .where(and(eq(ScheduledTaskRunTable.task_id, task.id), eq(ScheduledTaskRunTable.state, "running"), scope))
+          .all()
+        yield* Effect.forEach(
+          pending,
+          (run) =>
+            Effect.gen(function* () {
+              if (run.message_id && (yield* SessionInput.find(db, run.message_id))) return
+              yield* db
+                .update(ScheduledTaskRunTable)
+                .set({ state: "revoked", owner: null, time_settled: now })
+                .where(eq(ScheduledTaskRunTable.id, run.id))
+                .run()
+            }),
+          { discard: true },
+        )
+      })
 
     const capability: Interface["capability"] = {
       create: Effect.fn("ScheduledTask.capability.create")(function* (owner, input) {
@@ -539,50 +613,36 @@ const layer = Layer.effect(
             const next = firstSlot({ cadence, timezone, catchUp, enabled: task.enabled }, now)
             if (typeof next !== "number") return next
             const revision = task.revision + 1
+            const repeat = input.repeat === undefined ? task.repeat_limit : input.repeat
+            // A limit at or below the runs already admitted exhausts the schedule now.
+            const exhausted = repeat !== null && task.runs >= repeat
             yield* advance(
               task,
               {
+                ...(exhausted ? { enabled: false, disabled_reason: "exhausted" as const } : {}),
                 name: input.name ?? task.name,
                 prompt: input.prompt ?? task.prompt,
                 ...encode(cadence),
                 timezone,
                 catch_up: catchUp,
-                repeat_limit: input.repeat === undefined ? task.repeat_limit : input.repeat,
+                repeat_limit: repeat,
                 next,
                 revision,
               },
               now,
             )
             // Unstarted claims of older revisions never admit their prompt; an admitted one keeps its receipt.
-            const pending = yield* db
-              .select()
-              .from(ScheduledTaskRunTable)
-              .where(
-                and(
-                  eq(ScheduledTaskRunTable.task_id, task.id),
-                  eq(ScheduledTaskRunTable.state, "running"),
-                  lt(ScheduledTaskRunTable.revision, revision),
-                ),
-              )
-              .all()
-            yield* Effect.forEach(
-              pending,
-              (run) =>
-                Effect.gen(function* () {
-                  if (run.message_id && (yield* SessionInput.find(db, run.message_id))) return
-                  yield* db
-                    .update(ScheduledTaskRunTable)
-                    .set({ state: "revoked", owner: null, time_settled: now })
-                    .where(eq(ScheduledTaskRunTable.id, run.id))
-                    .run()
-                }),
-              { discard: true },
-            )
+            yield* revoke(task, now, lt(ScheduledTaskRunTable.revision, revision))
           }),
         ),
+      // Pausing revokes unstarted slot claims; a manual run may still start while paused.
       pause: (owner, id) =>
-        change(owner, id, (task, now) => advance(task, { enabled: false }, now).pipe(Effect.as(undefined))).pipe(
-          Effect.catchTag("ScheduledTask.InvalidError", Effect.die),
+        change<never>(owner, id, (task, now) =>
+          Effect.gen(function* () {
+            yield* advance(task, { enabled: false }, now)
+            yield* revoke(task, now, isNotNull(ScheduledTaskRunTable.slot))
+            return undefined
+          }),
         ),
       resume: (owner, id) =>
         change(owner, id, (task, now) =>
@@ -626,6 +686,10 @@ const layer = Layer.effect(
         if (begun.type === "missing") return yield* new NotFoundError({ id })
         if (begun.type === "prior") {
           if (begun.run.state === "revoked") return yield* new RunError({ reason: begun.run.error ?? "revoked" })
+          // A claim still starting elsewhere (or stopped before its lease ended) is reused only once admitted.
+          const admitted = begun.run.message_id && (yield* SessionInput.find(db, begun.run.message_id))
+          if (begun.run.state === "running" && !admitted)
+            return yield* new RunError({ reason: "This run is still starting; retry shortly." })
           return { sessionID: begun.run.session_id, reused: true }
         }
         const outcome = yield* dispatch(begun.claim)
@@ -633,9 +697,16 @@ const layer = Layer.effect(
           yield* settle(begun.claim, outcome)
           return { sessionID: outcome.sessionID, reused: false }
         }
-        // A failed manual run records nothing, so the same call may retry it; a missing owner disables the schedule.
+        // Nothing was admitted, so the same call may retry; a missing owner disables the schedule.
         yield* settle(begun.claim, outcome.type === "revoked" ? outcome : { type: "void" })
-        return yield* new RunError({ reason: outcome.type === "failed" ? outcome.error : "owner-missing" })
+        return yield* new RunError({
+          reason:
+            outcome.type === "failed"
+              ? outcome.error
+              : outcome.type === "void"
+                ? "The schedule changed before the run started."
+                : "owner-missing",
+        })
       }),
     }
 
