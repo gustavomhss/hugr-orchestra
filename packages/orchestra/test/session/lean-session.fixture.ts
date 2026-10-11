@@ -93,7 +93,9 @@ export const fixture = Effect.fnUntraced(function* (globalEnabled = true, store?
         !observe || item.id !== "bash" ? item : { ...item, execute: (args, ctx) => item.execute(args, ctx).pipe(
           Effect.tap((output) => Effect.sync(() => {
             const capture = ctx.callID && LegacyLeanCapture.bind(output, output, { sessionID: ctx.sessionID, callID: ctx.callID })
-            if (!capture) throw new Error("Actual same-call native capture missing")
+            // Say why: the shell records a capture only for a complete, untruncated, exit-0 result.
+            if (!capture) throw new Error(`Actual same-call native capture missing: ${JSON.stringify({ metadata: output.metadata,
+              head: String(output.output).slice(0, 600) })}`)
             captures.push(capture)
           })),
         ) },
