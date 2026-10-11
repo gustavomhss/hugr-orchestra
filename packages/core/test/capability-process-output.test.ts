@@ -146,4 +146,34 @@ describe("CapabilityProcessOutput", () => {
       yield* out.changed(100)
     }),
   )
+
+  it.effect("changed waits for a whole character beyond the cursor", () =>
+    Effect.gen(function* () {
+      const emoji = bytes("😀")
+      const order: string[] = []
+      const out = buffer(16, "a", emoji.subarray(0, 2))
+      const waiter = yield* out.changed(1).pipe(
+        Effect.tap(() => Effect.sync(() => order.push("woke"))),
+        Effect.forkChild({ startImmediately: true }),
+      )
+      yield* Effect.yieldNow
+      order.push("rest")
+      out.append(emoji.subarray(2))
+      yield* Fiber.join(waiter)
+      expect(order).toEqual(["rest", "woke"])
+      expect(out.read(1, 1)).toEqual({ start: 1, end: 5, text: "😀", eof: false })
+    }),
+  )
+
+  it.effect("end() wakes a waiter blocked on a dangling partial character", () =>
+    Effect.gen(function* () {
+      const out = buffer(16, "a", Uint8Array.of(0xf0, 0x9f))
+      const waiter = yield* out.changed(1).pipe(Effect.forkChild({ startImmediately: true }))
+      yield* Effect.yieldNow
+      expect(waiter.pollUnsafe()).toBeUndefined()
+      out.end()
+      yield* Fiber.join(waiter)
+      expect(out.read(1, 10)).toEqual({ start: 1, end: 3, text: "\uFFFD", eof: true })
+    }),
+  )
 })

@@ -19,11 +19,18 @@ export function make(options: { capacity: number }): CapabilityProcessContract.B
 
   const wake = () =>
     [...waiters]
-      .filter((waiter) => state.ended || state.total > waiter.cursor)
+      .filter((waiter) => ready(waiter.cursor))
       .forEach((waiter) => {
         waiters.delete(waiter)
         waiter.wake()
       })
+
+  // Waiters wake only when a read would return a whole unit, so a partial character never spins a reader.
+  const ready = (cursor: number) => {
+    if (state.ended) return true
+    const start = align(Math.max(Math.min(cursor, state.total), retained()))
+    return start < state.total && unit(start) !== undefined
+  }
 
   // Advances a start that falls inside a sequence to the next unit boundary.
   const align = (offset: number) => {
@@ -89,7 +96,7 @@ export function make(options: { capacity: number }): CapabilityProcessContract.B
     },
     changed: (cursor) =>
       Effect.callback<void>((resume) => {
-        if (state.ended || state.total > cursor) return resume(Effect.void)
+        if (ready(cursor)) return resume(Effect.void)
         const waiter = { cursor, wake: () => resume(Effect.void) }
         waiters.add(waiter)
         return Effect.sync(() => waiters.delete(waiter))
