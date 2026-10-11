@@ -17,6 +17,7 @@ import { Script } from "@orchestra/script"
 import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
+import { leanNotices } from "./lean-notices"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -252,6 +253,7 @@ for (const { item, name, omni, omniFiles } of builds) {
     ),
   )
   binaries[name] = Script.version
+  await leanNotices(`dist/${name}`)
 }
 
 export { binaries }
