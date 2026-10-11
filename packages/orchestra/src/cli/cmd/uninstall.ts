@@ -194,6 +194,8 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
       spinner.start(`Running ${cmd.join(" ")}...`)
       const result = await Process.run(method === "choco" ? ["choco", "uninstall", "orchestra", "-y", "-r"] : cmd, {
         nothrow: true,
+        // Not the workspace: package managers run project files (yarn-path, packageManager, bunfig.toml) from their cwd.
+        cwd: Global.Path.state,
       })
       if (result.code !== 0) {
         spinner.stop(`Package manager uninstall failed: exit code ${result.code}`, 1)
