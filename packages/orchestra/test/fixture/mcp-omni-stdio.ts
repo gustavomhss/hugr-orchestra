@@ -14,9 +14,13 @@ if (fail > 0) {
   process.exit(1)
 }
 
+// Bun makes fd 2 non-blocking, so a writeSync that finds the pipe momentarily full throws EAGAIN and the fixture dies
+// before it serves. process.stderr.write waits for the pipe instead, and the server serves only once the pipe took all
+// of it, so a transport that stopped draining stderr still never connects.
 const bytes = Number(process.env.MCP_OMNI_STDERR ?? 0)
-for (let written = 0; written < bytes; written += 100) writeSync(2, "x".repeat(99) + "\n")
-writeSync(2, "fixture stderr done\n")
+await new Promise((resolve) =>
+  process.stderr.write(("x".repeat(99) + "\n").repeat(Math.ceil(bytes / 100)) + "fixture stderr done\n", resolve),
+)
 
 if (process.env.MCP_OMNI_TREE) {
   const tree = JSON.parse(process.env.MCP_OMNI_TREE) as { command: string; args: string[] }
