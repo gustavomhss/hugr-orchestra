@@ -83,8 +83,12 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     entries.some((entry) => roots.some((root) => FSUtil.contains(root, entry) || FSUtil.contains(entry, root)))
   if (overlaps(input.deny, granted))
     return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-deny-inside-grant-unenforceable" })
-  // Config paths only need the read-only guard where the container could otherwise write them: inside a write root
-  // (never a root itself). Elsewhere they are already read-only or closed.
+  // A guard that equals or contains a write root cannot be both writable and read-only; the launcher would silently
+  // keep it writable (Darwin refuses it outright), so refuse here too.
+  if (input.guards.some((entry) => writes.some((root) => FSUtil.contains(entry, root))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-guard-over-write-root" })
+  // Config paths only need the read-only guard where the container could otherwise write them: strictly inside a write
+  // root. Elsewhere they are already read-only or closed.
   const guards = [...new Set(input.guards)].filter((entry) =>
     writes.some((root) => FSUtil.contains(root, entry) && root !== entry))
   const name = `orchestra-${createHash("sha256").update(JSON.stringify([reads, writes, input.ports])).digest("hex").slice(0, 32)}`

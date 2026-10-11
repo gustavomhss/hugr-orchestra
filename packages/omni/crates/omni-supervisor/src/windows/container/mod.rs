@@ -157,8 +157,9 @@ fn run(request: &Request) -> Result<i32, String> {
     // Protection brackets only the launch, and its holds are released whether the command succeeds or fails. A crash
     // between here and release leaves a journal that the next launch (reconciled in `protect`) or `--recover` replays.
     let journal = request.journal.clone();
+    let write_roots: Vec<PathBuf> = grants.iter().filter(|(_, grant)| matches!(grant, Grant::Write)).map(|(path, _)| path.clone()).collect();
     let held = match &journal {
-        Some(dir) => Some(guard::protect(dir, &request.guards, &sid).map_err(|e| format!("guard: {e}"))?),
+        Some(dir) => Some(guard::protect(dir, &request.guards, &write_roots, &sid).map_err(|e| format!("guard: {e}"))?),
         None => None,
     };
     let (app, line) = (
@@ -261,6 +262,15 @@ fn launch(app: &str, line: &str, sid: &acl::Sid) -> io::Result<i32> {
     // SAFETY: a live process handle and an out value.
     if waited != 0 || unsafe { GetExitCodeProcess(process.as_raw_handle(), &mut code) } == 0 {
         return Err(io::Error::last_os_error());
+    }
+    // Kill any confined descendant the root left behind and wait until the Job is empty before the caller restores
+    // ACLs — a process still alive could otherwise write a guarded path during the restore window.
+    super::job::terminate(&job);
+    for _ in 0..200 {
+        if matches!(super::job::active(&job), None | Some(0)) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
     }
     drop(job);
     Ok(code as i32)

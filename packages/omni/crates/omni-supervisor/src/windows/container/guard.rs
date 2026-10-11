@@ -7,10 +7,11 @@
 //! marker files, each locked for its holder's lifetime; protection is undone only once no marker is still locked, and
 //! a dead holder's lock is released by the OS, so a crash never pins a path read-only.
 
+use std::collections::HashSet;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::io::{self};
-use std::os::windows::io::AsRawHandle;
+use std::os::windows::io::{AsRawHandle, OwnedHandle};
 use std::path::{Path, PathBuf};
 
 use windows_sys::Win32::Foundation::{ERROR_LOCK_VIOLATION, HANDLE};
@@ -20,23 +21,38 @@ use windows_sys::Win32::Storage::FileSystem::{
 use windows_sys::Win32::System::IO::OVERLAPPED;
 use windows_sys::Win32::System::Threading::GetCurrentProcessId;
 
-use super::acl::{self, Sid};
+use super::acl::{self, Identity, Sid};
 
-/// The locked marker files that keep this command's protection alive; dropping them releases the OS locks.
+/// What keeps this command's protection alive: the locked marker files (dropping them releases the OS locks) and the
+/// directory pins (held-open handles that block any parent from being renamed or deleted).
 pub(super) struct Held {
     markers: Vec<(File, PathBuf)>,
+    pins: Vec<OwnedHandle>,
 }
 
-/// Protects every guarded path, returning the holds to release when the command exits. Stale state from a crashed run
-/// is reconciled first, under the same directory lock, so a new hold never races recovery.
-pub(super) fn protect(journal: &Path, paths: &[PathBuf], sid: &Sid) -> io::Result<Held> {
+/// Protects every guarded path under its containing write root, returning the holds to release when the command
+/// exits. Stale state from a crashed run is reconciled first, under the same directory lock, so a new hold never races
+/// recovery. `acl::protect` runs for this command's SID on every path — first or joining — so a second profile whose
+/// write grant was copied in by an earlier command's detach is stripped to read-only too.
+pub(super) fn protect(journal: &Path, paths: &[PathBuf], roots: &[PathBuf], sid: &Sid) -> io::Result<Held> {
     fs::create_dir_all(journal)?;
     let _lock = DirLock::acquire(journal)?;
     reconcile(journal)?;
     // SAFETY: GetCurrentProcessId reads only this process's id and cannot fail.
     let pid = unsafe { GetCurrentProcessId() };
     let mut markers = Vec::new();
+    let mut pins = Vec::new();
+    let mut pinned: HashSet<PathBuf> = HashSet::new();
+    let mut seen: HashSet<Identity> = HashSet::new();
     for (index, path) in paths.iter().enumerate() {
+        // Dedupe guards that resolve to the same object, so restoration is order-independent and never leaves a file
+        // read-only. A missing name has no identity yet and cannot collide with another name.
+        if path.exists() {
+            match acl::identity(path) {
+                Ok(id) if !seen.insert(id) => continue,
+                _ => {}
+            }
+        }
         let hash = hash(path);
         let state = journal.join(format!("g-{hash}.state"));
         if !state.exists() {
@@ -50,13 +66,44 @@ pub(super) fn protect(journal: &Path, paths: &[PathBuf], sid: &Sid) -> io::Resul
                 format!("P\n{}\n", path.display())
             };
             write_atomic(&state, &content)?;
+        } else {
+            // A joining command still strips its own profile to read-only on an already-protected path.
+            acl::protect(path, sid)?;
+        }
+        // Pin every directory from the path up to its write root so the container cannot move a parent aside.
+        for ancestor in ancestors_to_root(path, roots) {
+            if !pinned.insert(ancestor.clone()) {
+                continue;
+            }
+            if let Ok(handle) = acl::pin(&ancestor) {
+                pins.push(handle);
+            }
         }
         let marker = journal.join(format!("o-{hash}-{pid}-{index}.own"));
         let file = OpenOptions::new().create(true).truncate(true).read(true).write(true).open(&marker)?;
         lock(&file, false)?;
         markers.push((file, marker));
     }
-    Ok(Held { markers })
+    Ok(Held { markers, pins })
+}
+
+/// Every directory from `path`'s parent up to and including the write root that contains it (the longest matching
+/// root), bottom-up. Empty when no root contains the path.
+fn ancestors_to_root(path: &Path, roots: &[PathBuf]) -> Vec<PathBuf> {
+    let Some(root) = roots.iter().filter(|root| path.starts_with(root)).max_by_key(|root| root.components().count())
+    else {
+        return Vec::new();
+    };
+    let mut result = Vec::new();
+    let mut current = path.parent();
+    while let Some(dir) = current {
+        result.push(dir.to_path_buf());
+        if dir == root {
+            break;
+        }
+        current = dir.parent();
+    }
+    result
 }
 
 /// Releases this command's holds, then restores every path no other live holder still protects.
@@ -67,6 +114,8 @@ pub(super) fn release(held: Held, journal: &Path) -> io::Result<()> {
         drop(file);
         let _ = fs::remove_file(&marker);
     }
+    // Release the parent pins before restoring, so a placeholder's directory can be removed.
+    drop(held.pins);
     reconcile(journal)
 }
 
@@ -115,11 +164,23 @@ fn reconcile(journal: &Path) -> io::Result<()> {
                 let sddl = parts.next().unwrap_or("");
                 if !path.is_empty() {
                     let target = PathBuf::from(path);
-                    let _ = match kind {
-                        "E" => acl::restore(&target, sddl),
-                        "P" => fs::remove_dir(&target).or_else(|_| fs::remove_dir_all(&target)),
-                        _ => Ok(()),
-                    };
+                    match kind {
+                        "E" => {
+                            let _ = acl::restore(&target, sddl);
+                        }
+                        // Only ever remove the empty placeholder this guard created. If something is inside it, it is
+                        // host content: leave it and report, never delete it.
+                        "P" => {
+                            if let Err(error) = fs::remove_dir(&target) {
+                                let _ = writeln!(
+                                    io::stderr().lock(),
+                                    "hugr-omni-supervisor: appcontainer: leaving placeholder {}: {error}",
+                                    target.display(),
+                                );
+                            }
+                        }
+                        _ => {}
+                    }
                 }
             }
         }
