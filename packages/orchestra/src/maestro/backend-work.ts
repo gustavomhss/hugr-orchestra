@@ -120,9 +120,11 @@ export function track(input: {
       // A completion denial is not a worker failure. Preserve the independently observed execution terminal.
       if (reason === "failed" && (completion.observed || completion.interrupted)) return
       if (reason === "interrupted") completion.interrupted = true
-      const session = evidence.value ? [] : structuredClone(yield* history())
-      const captured = structuredClone(evidence.value
-        ? { ...evidence.value, terminal: ended.value?.terminal ?? { reason, hostDetail: detail } }
+      // A `running` snapshot only marks the dispatch start; a later end re-reads the child's last assistant message.
+      const prior = evidence.value?.terminal.reason === "running" ? undefined : evidence.value
+      const session = prior ? [] : structuredClone(yield* history())
+      const captured = structuredClone(prior
+        ? { ...prior, terminal: ended.value?.terminal ?? { reason, hostDetail: detail } }
         : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session))
       // Historical evidence is not an assistant returned by this dispatch.
       if (!returned.value) delete captured.author

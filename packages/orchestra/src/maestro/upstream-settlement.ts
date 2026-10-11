@@ -24,7 +24,8 @@ import { UpstreamResult } from "./upstream-result"
 import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 
 export type Capture = {
-  readonly assistantMessageID: MessageID
+  // Absent when the dispatch failed before any assistant returned; such a capture can never settle upstream.
+  readonly assistantMessageID?: MessageID
   readonly workResult?: BackendResult.WorkResult
   readonly text: string
   readonly state: "completed" | "error"
@@ -68,8 +69,9 @@ export function make(binding: {
     if (source?.type !== "task-return" || source.task_id !== input.childSessionID || source.state !== state)
       return yield* new Hold({ message: "HOLD: settlement Task source mismatch" })
     const result = input.capture.workResult?.schema === UpstreamResult.SCHEMA ? input.capture.workResult : undefined
-    if (result && (result.author?.memberId !== "archie" || result.author.messageID !== input.capture.assistantMessageID ||
-      result.author.executionSessionID !== input.childSessionID || result.card.messageID !== input.capture.assistantMessageID ||
+    const author = input.capture.assistantMessageID
+    if (result && (!author || result.author?.memberId !== "archie" || result.author.messageID !== author ||
+      result.author.executionSessionID !== input.childSessionID || result.card.messageID !== author ||
       result.taskId !== input.taskID))
       return yield* new Hold({ message: "HOLD: captured assistant binding mismatch" })
 
@@ -130,11 +132,11 @@ export function make(binding: {
       return { deliveryMessageID: message.info.id, deliveryPartID: part.id }
     })
 
-    if (result) {
+    if (result && author) {
       const settlement = { parentMessageID: input.messageID, parentCallID: input.callID, workResult: result, ...receipt }
       // One private all-view writer validates stored proposal and original anchors before installing any receipt.
       yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,
-        childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: input.capture.assistantMessageID })
+        childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: author })
       if (modern) {
         const row = yield* database.db.select().from(SessionMessageTable)
           .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.messageID))).get().pipe(Effect.orDie)

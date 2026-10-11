@@ -74,7 +74,7 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
   const dispatch: { capture?: UpstreamSettlement.Capture } = {}
 
   const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (captured: UpstreamSettlement.Capture | undefined) {
-    if (!captured) return // Setup failure/interruption has no returned assistant and cannot mint a receipt.
+    if (!captured) return // Interruption or an upstream setup failure has no returned assistant and cannot mint a receipt.
     const state = captured.workResult?.terminal.reason === "failed" || captured.workResult?.terminal.reason === "interrupted"
       ? "error" : captured.state
     const currentParent = yield* input.sessions.get(input.ctx.sessionID)
@@ -166,6 +166,16 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
             },
           } : {}),
         } : captured
+        // A dispatch that failed before any assistant returned (an extension whose setup died) still owes the parent a
+        // failure notice: the host terminal over this dispatch's tracked evidence, never a receipt. Upstream returns
+        // need a returned assistant to settle, and cancellation is not a failure.
+        if (!captured && Exit.isFailure(exit) && !Exit.hasInterrupts(exit)) {
+          yield* input.work.hostEnded("failed", detail)
+          const tracked = input.work.attach({}).workResult
+          yield* Deferred.succeed(dispatchDone, tracked && tracked.schema !== UpstreamResult.SCHEMA
+            ? { state: "error", text: detail, workResult: structuredClone(tracked) } : undefined)
+          return
+        }
         if (settled?.workResult && Exit.isFailure(exit)) {
           const terminal = settled.workResult.terminal
           if (terminal.reason !== "failed" && terminal.reason !== "interrupted")
