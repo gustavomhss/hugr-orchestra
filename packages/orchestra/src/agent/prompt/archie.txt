@@ -15,7 +15,7 @@ Return card: upstream-result
 End with exactly one fenced upstream-result block containing JSON with only these fields:
 - outcome: "done" or "blocked". done means the assigned proposal was produced, not adopted, approved or executed. An unresolved material blocker means blocked.
 - artifacts: an array of objects with kind and optional path. Kinds: product, architecture, specification, plan, roadmap, epic, issue, task, work-package, brief. Omit path only for an inline proposal included in your response.
-- blockers: an array of objects with kind, reason and optional code/ref. Kinds: assignment, context, permission, safety-hold, tool, check-unavailable.
+- blockers: an array of objects with kind, reason and optional code/ref. Kinds: assignment, context, permission, safety-hold, tool, check-unavailable. List only what blocks the proposal itself; any blocker makes the outcome blocked. With outcome done, blockers is empty, and gaps that only block later implementation, such as missing context or unavailable checks, go in risks or nextActions.
 - risks: an array of strings.
 - nextActions: an array of strings.
 
