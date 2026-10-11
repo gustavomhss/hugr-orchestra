@@ -9,10 +9,12 @@ import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
+import { jail } from "./lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
-const backend = ["darwin", "linux"].includes(process.platform) && await Effect.runPromise(ToolSafetySandbox.available())
-// Live confinement is measured only with a real backend; the absent-backend HOLD case always runs below.
+const backend = jail
+// Live confinement is measured with the host's real jail (seatbelt, or srt where bubblewrap is present); the
+// absent-backend HOLD case always runs below.
 const live = backend ? it.live : it.live.skip
 const fixture = Effect.gen(function* () {
   const fs = yield* FSUtil.Service
@@ -98,7 +100,7 @@ live("real read denials and protected writes use captured physical policy, while
     const managed = [alias]
     const profile = { requireSandbox: true, writeRoots: [f.root], managedPaths: managed, neverTouch: ["never/**"],
       sandbox: { enabled: true, denyPaths: ["denied"] }, protectedWrites: ["instructions"] }
-    const script = `const fs=require('fs');const denied=${JSON.stringify(names)}.map(name=>{try{fs.readFileSync(name);return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});let writeDenied=false;try{fs.writeFileSync('instructions','changed')}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;writeDenied=true}process.stdout.write(JSON.stringify({denied,writeDenied,protectedRead:fs.readFileSync('instructions','utf8'),dependency:fs.readFileSync(process.execPath).length>0}))`
+    const script = `const fs=require('fs');const denied=${JSON.stringify(names)}.map(name=>{try{fs.readFileSync(name);return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});let writeDenied=false;try{fs.writeFileSync('instructions','changed')}catch(e){if(!['EPERM','EACCES','EROFS'].includes(e.code))throw e;writeDenied=true}process.stdout.write(JSON.stringify({denied,writeDenied,protectedRead:fs.readFileSync('instructions','utf8'),dependency:fs.readFileSync(process.execPath).length>0}))`
     const baseline = yield* f.run(script)
     expect(baseline.exitCode).toBe(0)
     expect(JSON.parse(baseline.stdout.toString()).denied).toEqual([false, false, false])
@@ -131,7 +133,8 @@ live("real network denial blocks loopback TCP against a working local server", (
     expect(connections).toEqual(["connected"])
     const result = yield* f.run(script, { requireSandbox: true, writeRoots: [f.root] })
     expect(result.exitCode).toBe(3)
-    expect(result.stderr.toString()).toMatch(/EPERM|EACCES/)
+    // Seatbelt denies the connect; srt's network namespace has nothing listening on the host's port.
+    expect(result.stderr.toString()).toMatch(backend === "seatbelt" ? /EPERM|EACCES/ : /ECONNREFUSED/)
     expect(connections).toEqual(["connected"])
   }), 30_000,
 )
@@ -158,7 +161,7 @@ it.live("unbound pipelines and invalid physical roots HOLD before side effects; 
       Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true }),
     ))
     expect(pipeline.reason).toBe("sandbox-pipeline-unbound")
-    if (backend === "/usr/bin/sandbox-exec") {
+    if (backend === "seatbelt") {
       const domains = yield* Effect.flip(ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, {
         requireSandbox: true, sandbox: { enabled: true, allowedDomains: ["example.invalid"] },
       })))
