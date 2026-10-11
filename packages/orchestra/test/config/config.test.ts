@@ -668,6 +668,19 @@ it.instance("jsonc overrides json in the same directory", () =>
   }),
 )
 
+it.instance("ignores config file names occupied by a sandbox guard placeholder directory", () =>
+  Effect.gen(function* () {
+    const test = yield* TestInstance
+    // While a confined command runs (or after a crash, until recovery), a missing config name is held by a locked
+    // placeholder directory. The loader must treat `orchestra.json`-as-a-directory and an empty `.orchestra` as absent
+    // rather than fail trying to read a directory as text.
+    yield* Effect.promise(() => fs.mkdir(path.join(test.directory, "orchestra.json"), { recursive: true }))
+    yield* Effect.promise(() => fs.mkdir(path.join(test.directory, ".orchestra"), { recursive: true }))
+    const config = yield* Config.use.get()
+    expect(config.model).toBeUndefined()
+  }),
+)
+
 it.instance("handles environment variable substitution", () =>
   withProcessEnv(
     "TEST_VAR",

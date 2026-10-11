@@ -12,6 +12,7 @@
 
 mod acl;
 mod broker;
+mod guard;
 
 #[cfg(test)]
 mod tests;
@@ -43,9 +44,14 @@ struct Request {
     name: String,
     grants: Vec<(PathBuf, Grant)>,
     routes: Vec<Route>,
+    /// Project-config paths made read-only to the container for the command's lifetime; a missing one gets a locked
+    /// placeholder directory. Protection is journalled under `journal`, so `--recover` can undo a crashed run.
+    guards: Vec<PathBuf>,
+    journal: Option<PathBuf>,
     app: Option<String>,
     line: Option<String>,
     revoke: bool,
+    recover: bool,
 }
 
 /// Runs the launch mode; `args` follow `--appcontainer`. Never returns.
@@ -76,11 +82,17 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Request, String> {
             request.revoke = true;
             continue;
         }
+        if flag == "--recover" {
+            request.recover = true;
+            continue;
+        }
         let value = it.next().ok_or_else(|| format!("{flag} needs a value"))?;
         let grant = |kind| (PathBuf::from(&value), kind);
         match flag.as_str() {
             "--read" => request.grants.push(grant(Grant::Read)),
             "--write" => request.grants.push(grant(Grant::Write)),
+            "--guard" => request.guards.push(PathBuf::from(&value)),
+            "--journal" => request.journal = Some(PathBuf::from(&value)),
             "--route" => {
                 let (port, socket) = value.split_once('=').ok_or_else(|| format!("bad --route {value}"))?;
                 let port = port
@@ -103,17 +115,28 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Request, String> {
         .iter()
         .map(|g| &g.0)
         .chain(request.routes.iter().map(|r| &r.socket))
+        .chain(request.guards.iter())
+        .chain(request.journal.iter())
         .any(|p| !p.is_absolute())
     {
         return Err("every path must be absolute".into());
     }
-    if !request.revoke && (request.app.is_none() || request.line.is_none()) {
+    if (!request.guards.is_empty() || request.recover) && request.journal.is_none() {
+        return Err("--guard and --recover need --journal".into());
+    }
+    if !request.revoke && !request.recover && (request.app.is_none() || request.line.is_none()) {
         return Err("missing --app or --line".into());
     }
     Ok(request)
 }
 
 fn run(request: &Request) -> Result<i32, String> {
+    // Recovery needs no profile: it only restores ACLs captured by an earlier run and removes stale placeholders.
+    if request.recover {
+        let journal = request.journal.as_deref().unwrap_or_else(|| Path::new(""));
+        guard::recover(journal).map_err(|e| format!("recover {}: {e}", journal.display()))?;
+        return Ok(0);
+    }
     let sid = acl::profile(&request.name).map_err(|e| format!("profile {}: {e}", request.name))?;
     let folders = request
         .routes
@@ -131,11 +154,21 @@ fn run(request: &Request) -> Result<i32, String> {
         acl::apply(path, &sid, *grant).map_err(|e| format!("grant {grant:?} {}: {e}", path.display()))?;
     }
     broker::start(&request.routes).map_err(|e| format!("broker: {e}"))?;
+    // Protection brackets only the launch, and its holds are released whether the command succeeds or fails. A crash
+    // between here and release leaves a journal that the next launch (reconciled in `protect`) or `--recover` replays.
+    let journal = request.journal.clone();
+    let held = match &journal {
+        Some(dir) => Some(guard::protect(dir, &request.guards, &sid).map_err(|e| format!("guard: {e}"))?),
+        None => None,
+    };
     let (app, line) = (
         request.app.as_deref().unwrap_or_default(),
         request.line.as_deref().unwrap_or_default(),
     );
     let code = launch(app, line, &sid).map_err(|e| format!("start {app}: {e}"));
+    if let (Some(held), Some(dir)) = (held, &journal) {
+        let _ = guard::release(held, dir);
+    }
     for route in &request.routes {
         let _ = std::fs::remove_file(&route.socket);
     }
