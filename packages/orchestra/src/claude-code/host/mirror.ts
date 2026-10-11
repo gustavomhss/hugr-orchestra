@@ -23,10 +23,12 @@ import { ModelV2 } from "@orchestra/core/model"
 import type { ModelsDev } from "@orchestra/core/models-dev"
 import { ClaudeCodeMirror, NAMES } from "../mirror"
 import { ClaudeCodeTranscript } from "../transcript"
+import { ClaudeHostTodos } from "./todos"
 
 /** Claude Code built-ins shown under the Orchestra tool id whose card renders them. */
 export const RENAME: Record<string, string> = {
   Read: "read", Edit: "edit", Write: "write", TodoWrite: "todowrite", AskUserQuestion: "question", Skill: "skill",
+  TaskCreate: "todowrite", TaskUpdate: "todowrite", TaskList: "todowrite", TaskGet: "todowrite",
 }
 
 export function toolName(name: string) {
@@ -330,9 +332,16 @@ export function create(input: {
         const name = raw.get(block.tool_use_id) ?? ""
         if (!part || (part.state.status !== "completed" && part.state.status !== "error")) continue
         const output = part.state.status === "completed" ? part.state.output : part.state.error
-        const metadata = toolMetadata(name, message.tool_use_result, output, block.is_error === true)
-        yield* write({ ...part, state: { ...part.state, metadata: { ...part.state.metadata, ...metadata } } }, before[index])
-        if (name === "TodoWrite" && Array.isArray(metadata.todos))
+        const nativeTodos = part.state.status === "completed" && block.is_error !== true
+          ? yield* ClaudeHostTodos.update({ sessionID, sessions, name, args: part.state.input,
+            result: message.tool_use_result, state: input.state })
+          : undefined
+        const metadata = { ...toolMetadata(name, message.tool_use_result, output, block.is_error === true),
+          ...(nativeTodos ? { todos: nativeTodos } : {}) }
+        yield* write({ ...part, state: { ...part.state,
+          ...(nativeTodos ? { input: { ...part.state.input, todos: nativeTodos } } : {}),
+          metadata: { ...part.state.metadata, ...metadata } } }, before[index])
+        if ((name === "TodoWrite" || ClaudeHostTodos.TOOLS.includes(name)) && Array.isArray(metadata.todos))
           yield* input.todo.update({ sessionID, todos: metadata.todos as Todos })
         if ((name === "Agent" || name === "Task") && ClaudeCodeTranscript.record(message.tool_use_result) &&
           message.tool_use_result.status === "completed") yield* self.settle(block.tool_use_id)

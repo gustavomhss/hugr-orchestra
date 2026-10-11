@@ -58,7 +58,7 @@ export type Preset = Extract<NonNullable<Options["systemPrompt"]>, { type: "pres
 
 export const MCP_SERVER = "orchestra"
 
-/** Claude Code's todo tools are off by default on current models; this only turns Claude Code's own tool on. */
+/** Documented task-tracking opt-in for newer models; current binaries expose TaskCreate/Update/Get/List. */
 export const ENV_FLAGS = { CLAUDE_CODE_ENABLE_TODO_TOOLS: "1" } as const
 
 const REVIEW_NOTICE =
@@ -171,7 +171,8 @@ function maestro(seats: Record<string, string>) {
     [
       "- A message the owner sends while you work reaches you at your next step. Treat it as steering: fold in " +
         "corrections and keep the goal unless the owner changes it.",
-      "- Track multi-step work with TodoWrite; the owner sees the list. When you need a decision, ask with " +
+      "- Track multi-step work with TaskCreate and TaskUpdate; use TaskList or TaskGet to inspect it. The owner sees " +
+        "the list. Use the task tools available in this session. When you need a decision, ask with " +
         "AskUserQuestion, offering short options.",
       "- Tool calls and seat reports show as collapsed rows, so put what the owner needs from them in your own reply.",
     ].join("\n"),

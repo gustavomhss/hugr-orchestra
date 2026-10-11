@@ -54,6 +54,10 @@ test("Maestro's append delegates through Agent with plugin seats and names Orche
   expect(append).toContain("Run `orchestra:archie` and `orchestra:backend` in the foreground")
   expect(append).toContain("mcp__orchestra__process")
   expect(append).toContain("mcp__orchestra__context_recall")
+  expect(append).toContain("TaskCreate and TaskUpdate")
+  expect(append).toContain("TaskList or TaskGet")
+  expect(append).not.toContain("TodoWrite")
+  expect(append).not.toMatch(/use Grep|use Glob/i)
   expect(append).not.toMatch(/<env>|working directory:|precedence|follow them|override|instead of the Claude Code/i)
 })
 

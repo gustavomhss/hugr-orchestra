@@ -125,6 +125,30 @@ it.instance("Edit and Write persist the diff and paths read by their cards", () 
   expect(write.state.metadata).toMatchObject({ filepath: "/repo/b.ts", exists: false, diff: "+new" })
 }))
 
+it.instance("native Read, Glob, Grep and Bash retain their existing card names", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([
+    assistant("search", [
+      { type: "tool_use", id: "read-card", name: "Read", input: { file_path: "/repo/sample.txt" } },
+      { type: "tool_use", id: "glob-card", name: "Glob", input: { pattern: "*.txt" } },
+      { type: "tool_use", id: "grep-card", name: "Grep", input: { pattern: "sample" } },
+      { type: "tool_use", id: "bash-card", name: "Bash", input: { command: "grep sample sample.txt" } },
+    ]),
+    result("read-card", "sample", { type: "text", file: { filePath: "/repo/sample.txt", content: "sample" } }),
+    result("glob-card", "sample.txt", { numFiles: 1, truncated: false }),
+    result("grep-card", "sample", { numMatches: 1 }),
+    result("bash-card", "sample", { stdout: "sample", stderr: "", interrupted: false }),
+  ])
+  const cards = yield* ctx.tools()
+  expect(cards.map((part) => part.tool)).toEqual(["read", "glob", "grep", "bash"])
+  expect(cards[0].state.input.filePath).toBe("/repo/sample.txt")
+  const completed = cards.map((part) => part.state).filter((state) => state.status === "completed")
+  expect(completed).toHaveLength(4)
+  expect(completed[1].metadata).toMatchObject({ count: 1, truncated: false })
+  expect(completed[2].metadata).toMatchObject({ matches: 1 })
+  expect(completed[3].metadata).toMatchObject({ exit: 0 })
+}))
+
 it.instance("TodoWrite updates real todos; AskUserQuestion persists the owner's answers", () => Effect.gen(function* () {
   const ctx = yield* setup()
   const todos = [{ content: "Plan", status: "completed", activeForm: "Planning" }, { content: "Build", status: "in_progress" }]
@@ -145,6 +169,68 @@ it.instance("TodoWrite updates real todos; AskUserQuestion persists the owner's 
   expect(question.state.input).toMatchObject({ questions: [{ question: "Which database?", multiple: true }] })
   if (question.state.status !== "completed") throw new Error("Expected answered question")
   expect(question.state.metadata?.answers).toEqual([["Postgres", "SQLite"]])
+}))
+
+it.instance("native tasks update real todos across mirrors and restart, without accepting failed updates", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([
+    assistant("create", [{ type: "tool_use", id: "create", name: "TaskCreate",
+      input: { subject: "Inspect", description: "Read the file", activeForm: "Inspecting" } }]),
+    result("create", "Task #1 created", { task: { id: "1", subject: "Inspect" } }),
+  ])
+  expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspect", status: "pending", priority: "medium" }])
+  const next = ctx.make(yield* ctx.steer())
+  yield* ctx.feed([
+    assistant("update", [{ type: "tool_use", id: "update", name: "TaskUpdate", input: { taskId: "1", status: "in_progress" } }]),
+    result("update", "updated", { success: true, taskId: "1", updatedFields: ["status"], statusChange: { from: "pending", to: "in_progress" } }),
+    assistant("failed", [{ type: "tool_use", id: "failed", name: "TaskUpdate", input: { taskId: "1", status: "completed" } }]),
+    result("failed", "not updated", { success: false, taskId: "1", error: "failed" }),
+  ], next)
+  expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspect", status: "in_progress", priority: "medium" }])
+  // A fresh mirror with no shared call/task maps stands in for a new process reading the durable metadata.
+  const agents = yield* Agent.Service
+  const restored = ClaudeHostMirror.create({ sessionID: ctx.sessionID, user: yield* ctx.steer(),
+    agent: (yield* agents.get("maestro"))!,
+    path: { cwd: "/repo", root: "/repo" }, sessions: ctx.sessions,
+    snapshot: yield* Snapshot.Service, todo: ctx.todo, status: ctx.status })
+  yield* ctx.feed([
+    assistant("done", [{ type: "tool_use", id: "done", name: "TaskUpdate", input: { taskId: "1", status: "completed", subject: "Inspected" } }]),
+    result("done", "updated", { success: true, taskId: "1", updatedFields: ["status", "subject"] }),
+  ], restored)
+  expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspected", status: "completed", priority: "medium" }])
+  expect(yield* ctx.todo.get(ctx.childID)).toEqual([])
+  const cards = yield* ctx.tools()
+  expect(cards.map((part) => part.tool)).toEqual(["todowrite", "todowrite", "todowrite", "todowrite"])
+  const last = cards.at(-1)
+  if (last?.state.status !== "completed") throw new Error("TaskUpdate card did not complete")
+  expect(last.state.input.todos).toMatchObject([{ content: "Inspected", status: "completed" }])
+  expect(last.state.metadata.todos).toMatchObject([{ content: "Inspected", status: "completed" }])
+  yield* ctx.feed([
+    assistant("list", [{ type: "tool_use", id: "list", name: "TaskList", input: {} }]),
+    result("list", "tasks", { tasks: [{ id: "2", subject: "Build", status: "pending", blockedBy: [] }] }),
+    assistant("get", [{ type: "tool_use", id: "get", name: "TaskGet", input: { taskId: "2" } }]),
+    result("get", "task", { task: { id: "2", subject: "Build now", status: "in_progress", description: "", blocks: [], blockedBy: [] } }),
+    assistant("delete", [{ type: "tool_use", id: "delete", name: "TaskUpdate", input: { taskId: "2", status: "deleted" } }]),
+    result("delete", "deleted", { success: true, taskId: "2", updatedFields: ["status"] }),
+  ], restored)
+  expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([])
+}))
+
+it.instance("parent and child native tasks with the same ID remain independent", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([assistant("dispatch", [{ type: "tool_use", id: "child", name: "Agent", input: {} }])])
+  const [call] = yield* ctx.tools()
+  yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: ctx.childID } })
+  yield* ctx.feed([
+    assistant("parent-task", [{ type: "tool_use", id: "parent-create", name: "TaskCreate", input: { subject: "Parent", description: "" } }]),
+    result("parent-create", "created", { task: { id: "1", subject: "Parent" } }),
+    assistant("child-task", [{ type: "tool_use", id: "child-create", name: "TaskCreate", input: { subject: "Child", description: "" } }], "child"),
+    result("child-create", "created", { task: { id: "1", subject: "Child" } }, false, "child"),
+    assistant("child-done", [{ type: "tool_use", id: "child-update", name: "TaskUpdate", input: { taskId: "1", status: "completed" } }], "child"),
+    result("child-update", "updated", { success: true, taskId: "1", updatedFields: ["status"] }, false, "child"),
+  ])
+  expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Parent", status: "pending", priority: "medium" }])
+  expect(yield* ctx.todo.get(ctx.childID)).toEqual([{ content: "Child", status: "completed", priority: "medium" }])
 }))
 
 it.instance("retry, compaction and rate limits reach real status, parts and metadata", () => Effect.gen(function* () {
