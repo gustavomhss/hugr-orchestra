@@ -1,6 +1,23 @@
 # Jimmy final handoff — 2026-10-10
 
-## Decision
+## Update — 2026-10-11: Claude engine and SWE-QA-Pro
+
+The owner moved every model run to Claude; there is no OpenAI route. Jimmy now runs as a native research dispatch on Orchestra's `claude-code` engine, using the Claude Agent SDK and the machine's Claude Code login, with model `claude-opus-5-5`.
+
+- **Engine:** under a research frame, Claude Code built-ins are off. Jimmy's permitted Orchestra tools are exposed over the in-process MCP server and charged through the registry. Provider allowance is charged per SDK model message, with `maxTurns` set to the remaining calls. Union tool schemas carry per-action required fields, and bare and Claude Code tool names alias to Orchestra tools.
+- **Limit:** R14 (interruption, compaction and resume from the Atlas checkpoint) is not supported on the engine, because Orchestra compaction is not bridged into Claude Code's transcript.
+- **Pilots:** see [QUALITY-PILOT-CLAUDE.md](QUALITY-PILOT-CLAUDE.md).
+  - Pilot 1: R05 3/3; R08 0/3, caused by the union-schema bug.
+  - Pilot 2, after the fix: R05 3/3, R08 3/3. Its cases were rebuilt after a reboot wiped the private material. It ran without a seatbelt and without calibration controls; both are declared.
+- **SWE-QA-Pro:** see [SWE-QA-PRO.md](SWE-QA-PRO.md). 60 questions, a blinded `claude-sonnet-5-5` judge (J1 passed), and a system comparison against plain Claude Code (Read/Grep/Glob) on the same model.
+  - The totals are not comparable to published numbers: the J2 anchor failed, 21.56 against 27.69 ± 2.0.
+  - Final Jimmy (friction fixes plus verification-depth prompt): 40.96, against a baseline of 41.58.
+  - The paired gap is −0.62 (95% CI −1.10 to −0.14).
+  - The depth prompt adds +0.53 (p = 0.035).
+  - Jimmy still stops early: a median of 5 of 24 provider calls.
+- **Decision:** close at near parity on repository QA. Jimmy's added value is its durable provenance, findings, documents and qualification handoff, which this benchmark does not measure. No superiority claim.
+
+## Decision (2026-10-10, OpenAI candidate)
 
 **Feature implemented. Final main CI passed all 12 jobs. Qualification failed. Release acceptance BLOCKED.**
 
