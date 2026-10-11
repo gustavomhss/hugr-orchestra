@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { Message } from "@orchestra/sdk/v2/client"
-import { getSessionContext } from "./session-context-metrics"
+import { getSessionContext, getSessionCost } from "./session-context-metrics"
 
 const assistant = (
   id: string,
@@ -38,6 +38,25 @@ const user = (id: string) => {
 }
 
 describe("getSessionContext", () => {
+  test("native host reports supply cost and context when the UI catalog is absent or stale", () => {
+    const messages = [assistant("a1", { input: 10000, output: 50, reasoning: 25, read: 0, write: 0 }, 0,
+      "anthropic", "claude-haiku-5-5")]
+    const metadata = { claudeCode: { cost: 0.12, modelUsage: {
+      alias: { canonicalModel: "claude-haiku-5-5", costUSD: 0.12, contextWindow: 200000 },
+    } } }
+    expect(getSessionContext(messages, [], {}, metadata)?.limit).toBe(200000)
+    expect(getSessionCost(0, messages, [], {}, metadata)).toBe(0.12)
+    expect(getSessionContext(messages, [{ id: "anthropic", models: {
+      "claude-haiku-5-5": { limit: { context: 1000000 } },
+    } }], {}, metadata)?.limit).toBe(200000)
+    expect(getSessionContext(messages, [], {}, { claudeCode: { cost: 0.12, modelUsage: {
+      unrelated: { contextWindow: 200000 },
+    } } })?.limit).toBeUndefined()
+    expect(getSessionCost(0, messages, [], {}, { claudeCode: { cost: NaN, modelUsage: {
+      "claude-haiku-5-5": { contextWindow: -1 },
+    } } })).toBeUndefined()
+  })
+
   test("computes token totals and usage from latest assistant with tokens", () => {
     const messages = [
       user("u1"),

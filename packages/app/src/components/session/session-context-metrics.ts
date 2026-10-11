@@ -45,13 +45,13 @@ const lastAssistantWithTokens = (messages: Message[], parts: Parts) => {
   }
 }
 
-const build = (messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}): Context | undefined => {
+const build = (messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}, metadata?: Record<string, unknown>): Context | undefined => {
   const message = lastAssistantWithTokens(messages, parts)
   if (!message) return undefined
 
   const provider = providers.find((item) => item.id === message.providerID)
   const model = provider?.models[message.modelID]
-  const limit = model?.limit.context
+  const limit = hostUsage(metadata, message)?.contextWindow ?? model?.limit.context
   const total = tokenTotal(message)
 
   return {
@@ -67,8 +67,8 @@ const build = (messages: Message[] = [], providers: Provider[] = [], parts: Part
   }
 }
 
-export function getSessionContext(messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}) {
-  return build(messages, providers, parts)
+export function getSessionContext(messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}, metadata?: Record<string, unknown>) {
+  return build(messages, providers, parts, metadata)
 }
 
 export function getSessionCost(
@@ -76,7 +76,11 @@ export function getSessionCost(
   messages: Message[] | undefined,
   providers: Provider[],
   parts: Parts = {},
+  metadata?: Record<string, unknown>,
 ) {
+  const message = messages && lastAssistantWithTokens(messages, parts)
+  const reported = message && hostUsage(metadata, message)?.cost
+  if (reported !== undefined) return reported
   if (cost === undefined || cost === null || !Number.isFinite(cost)) return undefined
   if (!messages) return cost !== 0 ? cost : undefined
   // A zero aggregate is also the server default when pricing or cost reports are absent.
@@ -92,6 +96,25 @@ export function getSessionCost(
     return !Number.isFinite(model.cost.input) || !Number.isFinite(model.cost.output)
   })
   return unknown ? undefined : cost
+}
+
+// The host reports native usage durably. The UI's V2 provider catalog can be absent or stale and is separate from
+// the legacy provider catalog the host updates, so a matching SDK model report takes precedence over list pricing.
+function hostUsage(metadata: Record<string, unknown> | undefined, message: AssistantMessage) {
+  const host = metadata?.claudeCode
+  if (message.providerID !== "anthropic" || !record(host) || !record(host.modelUsage)) return
+  const usage = host.modelUsage[message.modelID] ?? Object.values(host.modelUsage).find((value) =>
+    record(value) && value.canonicalModel === message.modelID)
+  if (!record(usage)) return
+  return {
+    cost: typeof host.cost === "number" && Number.isFinite(host.cost) && host.cost >= 0 ? host.cost : undefined,
+    contextWindow: typeof usage.contextWindow === "number" && Number.isFinite(usage.contextWindow) && usage.contextWindow > 0
+      ? usage.contextWindow : undefined,
+  }
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function syntheticAssistant(message: AssistantMessage, parts: Parts) {
