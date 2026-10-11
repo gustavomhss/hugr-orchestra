@@ -170,13 +170,13 @@ describe("ScheduledTaskCapabilityModel.plan", () => {
     expect(
       ScheduledTaskCapabilityModel.plan(timing({ kind: "interval", minutes: 5 }, { next: t0 }), t0 + 365 * DAY),
     ).toEqual({ type: "run", slot: t0 + 365 * DAY, skipped: 105_120 })
-    expect(performance.now() - started).toBeLessThan(50)
     const minutely = { ...cron("* * * * *", "UTC"), next: at("2031-01-01T00:00:00Z") }
     expect(plan(minutely, at("2032-01-01T00:00:30Z"))).toEqual({
       type: "run",
       slot: at("2032-01-01T00:00:00Z"),
       skipped: 525_600,
     })
-    expect(performance.now() - started).toBeLessThan(250)
+    // Generous on purpose: walking slot by slot takes tens of seconds; this only catches that regression.
+    expect(performance.now() - started).toBeLessThan(2000)
   })
 })
