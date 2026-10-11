@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { beforeEach, describe, expect } from "bun:test"
 import { eq, sql } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { TestClock } from "effect/testing"
@@ -23,8 +23,22 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { testEffect } from "./lib/effect"
 
 const wakes: SessionV2.ID[] = []
-// Runs once while the dispatcher creates a run's Session, after the claim and before admission.
-const hook: { beforeResolve?: Effect.Effect<void> } = {}
+// Deterministic interleavings: `beforeResolve` runs once while the dispatcher creates a run's Session (after the
+// claim, before the recheck and admission); `onWake` runs once right after a prompt was admitted; `failWake` makes
+// the wake after admission fail.
+const hook: { beforeResolve?: Effect.Effect<void>; onWake?: Effect.Effect<void>; failWake?: boolean } = {}
+beforeEach(() => {
+  wakes.length = 0
+  hook.beforeResolve = undefined
+  hook.onWake = undefined
+  hook.failWake = false
+})
+const once = (key: "beforeResolve" | "onWake") =>
+  Effect.suspend(() => {
+    const effect = hook[key] ?? Effect.void
+    hook[key] = undefined
+    return effect
+  })
 const execution = Layer.succeed(
   SessionExecution.Service,
   SessionExecution.Service.of({
@@ -32,20 +46,20 @@ const execution = Layer.succeed(
     resume: () => Effect.void,
     interrupt: () => Effect.void,
     wake: (sessionID) =>
-      Effect.sync(() => {
-        wakes.push(sessionID)
-      }),
+      once("onWake").pipe(
+        Effect.andThen(
+          Effect.suspend(() => {
+            wakes.push(sessionID)
+            return hook.failWake ? Effect.die(new Error("wake failed")) : Effect.void
+          }),
+        ),
+      ),
   }),
 )
 const projects = Layer.succeed(
   ProjectV2.Service,
   ProjectV2.Service.of({
-    resolve: (directory) =>
-      Effect.suspend(() => {
-        const before = hook.beforeResolve ?? Effect.void
-        hook.beforeResolve = undefined
-        return before
-      }).pipe(Effect.as({ id: ProjectV2.ID.global, directory })),
+    resolve: (directory) => once("beforeResolve").pipe(Effect.as({ id: ProjectV2.ID.global, directory })),
     directories: () => Effect.succeed([]),
     commit: () => Effect.void,
   }),
@@ -97,7 +111,6 @@ const ownerSession = (agent = reviewer, agentID = agent) =>
 describe("ScheduledTask capability dispatch", () => {
   it.effect("concurrent ticks admit a due slot once in a fresh Session with the owner's agent and placement", () =>
     Effect.gen(function* () {
-      wakes.length = 0
       yield* TestClock.setTime(start)
       const tasks = yield* ScheduledTask.Service
       const sessions = yield* SessionV2.Service
@@ -167,25 +180,57 @@ describe("ScheduledTask capability dispatch", () => {
     }),
   )
 
-  it.effect("a missing owner disables the schedule and revokes the claim without admitting", () =>
+  it.effect("lowering repeat to the runs already admitted exhausts the schedule at once", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(start)
       const tasks = yield* ScheduledTask.Service
-      // The owner Session now persists another agent than the one the schedule was created for.
-      const owner = yield* ownerSession(AgentV2.ID.make("builder"), reviewer)
+      const owner = yield* ownerSession()
       const created = yield* tasks.capability.create(owner, hourly)
       yield* TestClock.setTime(created.next! + MINUTE)
       yield* tasks.tick
+      const lowered = yield* tasks.capability.update(owner, created.id, { repeat: 1 })
+      expect(lowered).toMatchObject({ runs: 1, repeat: 1, enabled: false, disabledReason: "exhausted" })
+      yield* TestClock.setTime(created.next! + 3 * HOUR)
       yield* tasks.tick
-      expect(yield* inputs).toHaveLength(0)
-      expect((yield* runRows).map((row) => row.state)).toEqual(["revoked"])
-      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({
-        enabled: false,
-        disabledReason: "owner-missing",
-        runs: 0,
-      })
+      expect(yield* inputs).toHaveLength(1)
     }),
   )
+
+  const missing: ReadonlyArray<[string, (owner: Capability.Owner) => Capability.Owner, AgentV2.ID]> = [
+    ["the owner Session persists another agent", (owner) => owner, AgentV2.ID.make("builder")],
+    [
+      "the owner Session no longer exists",
+      (owner) => ({ ...owner, sessionID: SessionV2.ID.make("ses_gone") }),
+      reviewer,
+    ],
+    [
+      "the owner Session lives in another placement",
+      (owner) => ({
+        ...owner,
+        location: { directory: AbsolutePath.make("/elsewhere"), workspaceID: WorkspaceID.make("wrk_other") },
+      }),
+      reviewer,
+    ],
+  ]
+  for (const [name, change, persisted] of missing)
+    it.effect(`owner-missing when ${name}: disabled, claim revoked, nothing admitted`, () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(start)
+        const tasks = yield* ScheduledTask.Service
+        const owner = change(yield* ownerSession(persisted, reviewer))
+        const created = yield* tasks.capability.create(owner, hourly)
+        yield* TestClock.setTime(created.next! + MINUTE)
+        yield* tasks.tick
+        yield* tasks.tick
+        expect(yield* inputs).toHaveLength(0)
+        expect((yield* runRows).map((row) => row.state)).toEqual(["revoked"])
+        expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({
+          enabled: false,
+          disabledReason: "owner-missing",
+          runs: 0,
+        })
+      }),
+    )
 })
 
 describe("ScheduledTask capability revisions", () => {
@@ -228,7 +273,7 @@ describe("ScheduledTask capability revisions", () => {
     }),
   )
 
-  it.effect("an edit during dispatch revokes the claim and its settle cannot overwrite the edit", () =>
+  it.effect("an edit before the recheck voids the claim and admits nothing", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(start)
       const tasks = yield* ScheduledTask.Service
@@ -240,19 +285,73 @@ describe("ScheduledTask capability revisions", () => {
       hook.beforeResolve = tasks.capability
         .update(owner, created.id, { cadence: { kind: "interval", minutes: 120 } })
         .pipe(
-          Effect.tap((schedule) =>
-            Effect.sync(() => {
-              edits.push(schedule)
-            }),
-          ),
+          Effect.map((schedule) => edits.push(schedule)),
           Effect.asVoid,
           Effect.orDie,
         )
       yield* tasks.tick
       expect(edits).toHaveLength(1)
+      expect(yield* inputs).toHaveLength(0)
       expect((yield* runRows).map((row) => [row.slot, row.revision, row.state])).toEqual([[slot, 0, "revoked"]])
-      const settled = yield* tasks.capability.get(owner, created.id)
-      expect(settled).toMatchObject({ revision: 1, runs: 0, next: edits[0]!.next, cadence: { minutes: 120 } })
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({
+        revision: 1,
+        runs: 0,
+        next: edits[0]!.next,
+        cadence: { minutes: 120 },
+      })
+    }),
+  )
+
+  it.effect("an edit after admission keeps the old revision's started receipt and its new next", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      yield* TestClock.setTime(slot + MINUTE)
+      const edits: ScheduledTask.Schedule[] = []
+      hook.onWake = tasks.capability.update(owner, created.id, { cadence: { kind: "interval", minutes: 120 } }).pipe(
+        Effect.map((schedule) => edits.push(schedule)),
+        Effect.asVoid,
+        Effect.orDie,
+      )
+      yield* tasks.tick
+      const ids = slotIDs(created.id, 0, slot)
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.revision, row.state, row.session_id])).toEqual([
+        [0, "started", ids.session],
+      ])
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({
+        revision: 1,
+        runs: 1,
+        next: edits[0]!.next,
+        last: { outcome: "started", sessionID: ids.session },
+      })
+    }),
+  )
+
+  it.effect("a claim revoked while its prompt was admitted settles as started without counting", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      yield* TestClock.setTime(slot + MINUTE)
+      // What an edit racing admission leaves behind: the claim revoked after the recheck.
+      hook.onWake = db
+        .update(ScheduledTaskRunTable)
+        .set({ state: "revoked", owner: null })
+        .where(eq(ScheduledTaskRunTable.task_id, created.id))
+        .run()
+        .pipe(Effect.asVoid, Effect.orDie)
+      yield* tasks.tick
+      const ids = slotIDs(created.id, 0, slot)
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.state, row.session_id])).toEqual([["started", ids.session]])
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({ runs: 0, next: slot })
     }),
   )
 })
@@ -267,9 +366,15 @@ describe("ScheduledTask capability manual runs", () => {
       const created = yield* tasks.capability.create(owner, hourly)
       yield* TestClock.setTime(start + 10 * MINUTE)
       const key = "invocation:msg_assistant:call_1"
+      // The wake fails after admission: the prompt did start, so the run reports it and a retry reuses it.
+      hook.failWake = true
       const first = yield* tasks.capability.run(owner, created.id, key)
+      hook.failWake = false
       const retry = yield* tasks.capability.run(owner, created.id, key)
-      expect(first.reused).toBe(false)
+      expect(first).toEqual({
+        sessionID: SessionV2.ID.make(ScheduledTaskModel.slotIDs(`${created.id}:manual:${key}`, start).session),
+        reused: false,
+      })
       expect(retry).toEqual({ sessionID: first.sessionID, reused: true })
       expect(yield* sessions.get(first.sessionID)).toMatchObject({ agent: "reviewer", location })
       const other = yield* tasks.capability.run(owner, created.id, "invocation:msg_assistant:call_2")
