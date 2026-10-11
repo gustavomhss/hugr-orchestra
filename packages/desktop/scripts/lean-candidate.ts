@@ -13,6 +13,7 @@ const manifestPath = path.join(output, "lean-candidate-build.json")
 const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
 const heapBudgetMiB = 8192
+const omniFiles = ["hugr_omni.node", "hugr-omni-supervisor"]
 
 type CommandResult = {
   exitCode: number | null; signal: string | null; stdout: string; stderr: string; timedOut: boolean; error?: string
@@ -111,6 +112,36 @@ export function assertBuildResources(memory: CommandResult, heap: CommandResult)
     memoryBytes < 10 * 1024 ** 3 || heapLimitBytes < heapBudgetMiB * 1024 ** 2
   ) throw new Error(`Candidate build heap budget rejected: ${JSON.stringify({ memory, heap })}`)
   return { memoryBytes, heapLimitBytes, heapBudgetMiB }
+}
+
+// The candidate ships omni like a prod build: exact-source release binaries from the omni-binaries action, never a
+// silent OMNI_ENABLED=false fallback, since omni is on by default and the packaged app must find Resources/omni.
+export function omniSource(env: Record<string, string | undefined> = process.env) {
+  const addon = env.HUGR_OMNI_ADDON, supervisor = env.HUGR_OMNI_SUPERVISOR
+  if (
+    !addon || !supervisor || !path.isAbsolute(addon) || !path.isAbsolute(supervisor) ||
+    path.dirname(addon) !== path.dirname(supervisor) || path.basename(supervisor) !== "hugr-omni-supervisor" ||
+    env.OMNI_ENABLED === "false" || (env.OMNI_ARTIFACTS !== undefined && env.OMNI_ARTIFACTS !== path.dirname(addon))
+  ) throw new Error(`Candidate omni binaries rejected: ${JSON.stringify({ addon, supervisor,
+    OMNI_ENABLED: env.OMNI_ENABLED, OMNI_ARTIFACTS: env.OMNI_ARTIFACTS })}`)
+  return { directory: path.dirname(addon), addon, supervisor }
+}
+
+async function verifyOmni(directory: string, expected: { path: string; bytes: number; sha256: string }[]) {
+  return Promise.all(omniFiles.map(async (name, index) => {
+    const target = path.join(directory, name)
+    if (!(await Bun.file(target).exists())) throw new Error(`Missing candidate omni binary: ${target}`)
+    const bytes = Buffer.from(await Bun.file(target).arrayBuffer())
+    assertMachOX64(bytes, name)
+    if (name === "hugr-omni-supervisor" && !((await lstat(target)).mode & 0o111)) {
+      throw new Error(`Candidate omni supervisor not executable: ${target}`)
+    }
+    const file = { path: name, bytes: bytes.length, sha256: sha256(bytes) }
+    if (JSON.stringify(expected[index]) !== JSON.stringify(file)) {
+      throw new Error(`Candidate omni binary differs: ${name}`)
+    }
+    return file
+  }))
 }
 
 function requireSuccess(result: CommandResult, args: string[]) {
@@ -247,6 +278,15 @@ export async function candidate(action: string) {
     await command(["bun", "./scripts/copy-icons.ts", "prod"], env)
     await command(["bun", "./scripts/copy-metainfo.ts", "prod"], env)
     await command(["bun", "script/build-node.ts", "--lean-candidate"], env, path.resolve(desktop, "../orchestra"))
+    const omniBuild = omniSource()
+    await command(["bun", "-e", 'await (await import("./scripts/stage-omni.ts")).stageOmni("prod")'],
+      { ...env, OMNI_ARTIFACTS: omniBuild.directory })
+    // Cargo names the macOS addon libhugr_omni_node.dylib; stage-omni ships it as hugr_omni.node.
+    const omni = await verifyOmni(path.join(desktop, "resources/omni"), await Promise.all(
+      [omniBuild.addon, omniBuild.supervisor].map(async (file, index) => {
+        const bytes = Buffer.from(await Bun.file(file).arrayBuffer())
+        return { path: omniFiles[index]!, bytes: bytes.length, sha256: sha256(bytes) }
+      })))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
@@ -274,7 +314,7 @@ export async function candidate(action: string) {
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
       backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
-      buildResources, resources: await inventory(path.join(desktop, "resources")),
+      buildResources, omni, resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
   }
@@ -349,6 +389,7 @@ export async function candidate(action: string) {
       throw new Error(`Packaged PTY helper not executable: ${file.path}`)
     }
   }
+  await verifyOmni(path.join(resources, "omni"), manifest.omni)
   for (const icon of ["icon.png", "icon.ico", "dock.png"]) {
     const original = new Uint8Array(await Bun.file(path.join(desktop, "resources/icons", icon)).arrayBuffer())
     const packaged = new Uint8Array(await Bun.file(path.join(resources, "icons", icon)).arrayBuffer())

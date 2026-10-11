@@ -77,7 +77,7 @@ function check(input: unknown) {
   expect(Array.isArray(job.steps)).toBe(true)
   const steps = (job.steps as unknown[]).map(object)
   expect(steps.map((step) => step.id)).toEqual([
-    "checkout", "host", "node", "bun", "cache", "install", "versions", "contract", "build", "package",
+    "checkout", "host", "node", "bun", "cache", "install", "versions", "omni", "contract", "build", "package",
     "typecheck", "verify", "archive", "upload",
   ])
   for (const step of steps) {
@@ -93,6 +93,9 @@ function check(input: unknown) {
   expect(by.cache.with).toEqual({ path: "${{ runner.temp }}/lean-candidate-bun-cache", key:
     "lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'patches/**') }}" })
   expect(by.install.env).toEqual({ BUN_INSTALL_CACHE_DIR: "${{ runner.temp }}/lean-candidate-bun-cache" })
+  // In-repo composite action at the exact candidate checkout; it never saves the shared omni cache.
+  expect(by.omni.uses).toBe("./.github/actions/omni-binaries")
+  expect(by.omni.with).toEqual({ save: "false" })
   for (const [id, command] of Object.entries({
     install: "bun install --frozen-lockfile", contract: "bun test test/lean-candidate-workflow.test.ts",
     build: "bun run packages/desktop/scripts/lean-candidate.ts build",

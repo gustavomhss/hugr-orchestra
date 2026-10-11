@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import path from "node:path"
 import ts from "typescript"
 import {
-  assertBuildResources, assertIntelRunner, candidateEnv, electronViteEnv, runCandidateCommand,
+  assertBuildResources, assertIntelRunner, candidateEnv, electronViteEnv, omniSource, runCandidateCommand,
 } from "./scripts/lean-candidate"
 
 const result = (stdout: string, stderr = "", exitCode: number | null = 0) =>
@@ -172,3 +172,17 @@ test("real node child with the electron-vite env reports heap_size_limit at or a
   expect(probe.stderr).toBe("")
   expect(assertBuildResources(result("15032385536\n"), probe).heapLimitBytes).toBeGreaterThanOrEqual(8192 * 1024 * 1024)
 }, 20_000)
+
+test("omni source requires the action's paired absolute release binaries and never a disabled or foreign build", () => {
+  const dir = "/runner/work/repo/packages/omni/target/release"
+  const exact = { HUGR_OMNI_ADDON: `${dir}/libhugr_omni_node.dylib`, HUGR_OMNI_SUPERVISOR: `${dir}/hugr-omni-supervisor` }
+  expect(omniSource(exact)).toEqual({ directory: dir, addon: exact.HUGR_OMNI_ADDON, supervisor: exact.HUGR_OMNI_SUPERVISOR })
+  expect(omniSource({ ...exact, OMNI_ARTIFACTS: dir }).directory).toBe(dir)
+  for (const env of [
+    {}, { HUGR_OMNI_ADDON: exact.HUGR_OMNI_ADDON }, { HUGR_OMNI_SUPERVISOR: exact.HUGR_OMNI_SUPERVISOR },
+    { ...exact, HUGR_OMNI_ADDON: "target/release/libhugr_omni_node.dylib" },
+    { ...exact, HUGR_OMNI_SUPERVISOR: "/elsewhere/hugr-omni-supervisor" },
+    { ...exact, HUGR_OMNI_SUPERVISOR: `${dir}/planted-supervisor` },
+    { ...exact, OMNI_ENABLED: "false" }, { ...exact, OMNI_ARTIFACTS: "/tmp/foreign-omni" },
+  ]) expect(() => omniSource(env)).toThrow("Candidate omni binaries rejected:")
+})

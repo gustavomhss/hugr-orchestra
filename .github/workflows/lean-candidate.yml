@@ -115,6 +115,13 @@ jobs:
           # shellcheck disable=SC2016
           bun -e 'const p = await Bun.file("packages/desktop/package.json").json(); for (const name of ["electron", "electron-builder"]) { const installed = require(require.resolve(`${name}/package.json`, { paths: ["packages/desktop"] })).version; if (installed !== p.devDependencies[name]) throw new Error(`${name} version mismatch: ${installed}`); console.log(name, installed) }'
 
+      # Exact-source release omni binaries, like a prod desktop build; restore-only cache, cargo on a miss.
+      - name: Exact-source release omni binaries
+        id: omni
+        uses: ./.github/actions/omni-binaries
+        with:
+          save: "false"
+
       - name: Portable workflow contract
         id: contract
         working-directory: packages/desktop
