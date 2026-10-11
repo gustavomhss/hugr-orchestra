@@ -5,7 +5,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
-import { Deferred, Effect, Exit, Fiber, Scope } from "effect"
+import { Deferred, Effect, Exit, Fiber, Option, Schedule, Scope } from "effect"
 import { TestClock } from "effect/testing"
 import { ChildProcess } from "effect/unstable/process"
 import type { CapabilityProcessContract } from "../src/capability/process-control/contract"
@@ -27,12 +27,14 @@ function harness(options?: CapabilityProcessRegistry.Options) {
   return Effect.gen(function* () {
     const registry = yield* CapabilityProcessRegistry.make(options)
     const settled: Settled[] = []
-    const start = (script: string, who = owner(), settle?: CapabilityProcessContract.StartInput["settle"]) =>
-      registry.start({
-        ref: { id: Capability.JobID.create() }, owner: who,
+    const start = (script: string, overrides: Partial<CapabilityProcessContract.StartInput> = {}) => {
+      const input: CapabilityProcessContract.StartInput = {
+        ref: { id: Capability.JobID.create() }, owner: owner(),
         command: ChildProcess.make(process.execPath, ["-e", script]), prepare: Effect.succeed,
-        settle: settle ?? ((outcome) => Effect.sync(() => { settled.push(outcome) })),
-      }).pipe(Effect.map((live) => ({ live, owner: who })))
+        settle: (outcome) => Effect.sync(() => { settled.push(outcome) }), ...overrides,
+      }
+      return registry.start(input).pipe(Effect.map((live) => ({ live, owner: input.owner })))
+    }
     return { registry, settled, start }
   })
 }
@@ -46,14 +48,16 @@ function until(live: CapabilityProcessContract.Live, predicate: (text: string) =
   })
 }
 
-function gone(pid: number): Effect.Effect<boolean> {
-  return Effect.gen(function* () {
-    for (const _ of Array.from({ length: 100 })) {
-      if (!alive(pid)) return true
-      yield* Effect.sleep("20 millis")
-    }
-    return false
-  })
+function gone(pid: number) {
+  return Effect.sync(() => alive(pid)).pipe(
+    Effect.repeat({ while: (running) => running, schedule: Schedule.spaced("20 millis") }),
+    Effect.timeoutOption("2 seconds"),
+    Effect.map(Option.isSome),
+  )
+}
+
+function kill(pid: number) {
+  return Effect.ignore(Effect.try({ try: () => process.kill(pid, "SIGKILL"), catch: () => "dead" }))
 }
 
 function alive(pid: number) {
@@ -61,6 +65,9 @@ function alive(pid: number) {
 }
 
 const echo = "process.stdin.once('data', (d) => { process.stdout.write('got:' + d); process.exit(0) })"
+const descendant = (options: string) => "const c = require('node:child_process').spawn(process.execPath," +
+  ` ['-e', 'setInterval(() => {}, 1000)'], ${options}); process.stdout.write(c.pid + '\\n'); setInterval(() => {}, 1000)`
+const pidLine = (live: CapabilityProcessContract.Live) => until(live, (text) => text.endsWith("\n")).pipe(Effect.map((text) => Number(text.trim())))
 const hold = "process.stdout.write(String(process.pid) + '\\n'); setInterval(() => {}, 1000)"
 
 describe("CapabilityProcessRegistry", () => {
@@ -89,7 +96,7 @@ describe("CapabilityProcessRegistry", () => {
     const h = yield* harness()
     const who = owner()
     const ready = yield* Deferred.make<void>()
-    const started = yield* Effect.forkChild(h.start(echo, who).pipe(Effect.andThen(Deferred.succeed(ready, undefined)), Effect.andThen(Effect.never)))
+    const started = yield* Effect.forkChild(h.start(echo, { owner: who }).pipe(Effect.andThen(Deferred.succeed(ready, undefined)), Effect.andThen(Effect.never)))
     yield* Deferred.await(ready)
     yield* Fiber.interrupt(started)
     const [live] = yield* h.registry.list(who)
@@ -99,35 +106,63 @@ describe("CapabilityProcessRegistry", () => {
   }))
 
   it.live("merges stdout and stderr in arrival order and reports lost bytes", Effect.gen(function* () {
-    const script = "process.stdout.write('aaaa'); setTimeout(() => process.stderr.write('bbbb'), 80);" +
-      "setTimeout(() => process.stdout.write('cccc'), 160)"
-    const wide = yield* (yield* harness()).start(script)
-    yield* wide.live.exited
-    expect(wide.live.output.read(0, 1024).text).toBe("aaaabbbbcccc")
-    const narrow = yield* (yield* harness({ capacity: 4 })).start(script)
-    yield* narrow.live.exited
-    expect(narrow.live.output.read(0, 1024)).toMatchObject({ start: 8, end: 12, text: "cccc", lost: { from: 0, to: 8 }, eof: true })
+    // Each next chunk is released by one stdin byte, so arrival order is fixed without timers.
+    const script = "const next = [[process.stderr, 'bbbb'], [process.stdout, 'cccc']]; process.stdout.write('aaaa');" +
+      "process.stdin.on('data', () => { const [stream, text] = next.shift(); stream.write(text) })"
+    const run = (options: CapabilityProcessRegistry.Options) => Effect.gen(function* () {
+      const h = yield* harness(options)
+      const p = yield* h.start(script)
+      yield* Effect.forEach(["aaaa", "bbbb"], (text) =>
+        until(p.live, (all) => all.endsWith(text)).pipe(Effect.andThen(p.live.write(encode("1")))), { discard: true })
+      yield* until(p.live, (all) => all.endsWith("cccc"))
+      yield* p.live.closeInput()
+      yield* p.live.exited
+      return p.live.output.read(0, 1024)
+    })
+    expect((yield* run({})).text).toBe("aaaabbbbcccc")
+    expect(yield* run({ capacity: 4 })).toMatchObject({ start: 8, end: 12, text: "cccc", lost: { from: 0, to: 8 }, eof: true })
   }))
 
   it.live("stop kills the process tree and settles once as stopped", Effect.gen(function* () {
     const h = yield* harness()
-    const p = yield* h.start("const c = require('node:child_process').spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });" +
-      "process.stdout.write(c.pid + '\\n'); setInterval(() => {}, 1000)")
-    const grandchild = Number((yield* until(p.live, (text) => text.endsWith("\n"))).trim())
-    expect(alive(grandchild)).toBe(true)
+    const p = yield* h.start(descendant("{ stdio: 'ignore' }"))
+    const grandchild = yield* pidLine(p.live)
+    yield* Effect.gen(function* () {
+      expect(alive(grandchild)).toBe(true)
+      expect(yield* p.live.stop()).toBe("local-stop")
+      expect(yield* p.live.exited).toEqual({ signal: "SIGTERM" })
+      expect(yield* gone(grandchild)).toBe(true)
+      expect(yield* p.live.stop()).toBe("local-stop")
+      expect(h.settled).toEqual([{ exit: { signal: "SIGTERM" }, stopped: true }])
+      expect(h.registry.live().has(p.live.ref.id)).toBe(false)
+    }).pipe(Effect.ensuring(kill(grandchild)))
+  }))
+
+  it.live("a full stdin backlog fails quota_exceeded instead of blocking", Effect.gen(function* () {
+    const h = yield* harness()
+    const p = yield* h.start(hold)
+    const chunk = new Uint8Array(65_536)
+    const error = yield* Effect.flip(Effect.forEach(Array.from({ length: 512 }), () => p.live.write(chunk), { discard: true }))
+    expect(error.code).toBe("quota_exceeded")
     expect(yield* p.live.stop()).toBe("local-stop")
-    expect(yield* p.live.exited).toEqual({ signal: "SIGTERM" })
-    expect(yield* gone(grandchild)).toBe(true)
-    expect(yield* p.live.stop()).toBe("local-stop")
-    expect(h.settled).toEqual([{ exit: { signal: "SIGTERM" }, stopped: true }])
-    expect(h.registry.live().has(p.live.ref.id)).toBe(false)
+  }))
+
+  it.live("concurrent duplicate starts spawn once; the loser is denied", Effect.gen(function* () {
+    const h = yield* harness()
+    const ref = { id: Capability.JobID.create() }
+    const slow = { ref, prepare: (command: ChildProcess.Command) => Effect.sleep("100 millis").pipe(Effect.as(command)) }
+    const exits = yield* Effect.all([h.start(hold, slow), h.start(hold, slow)].map(Effect.exit), { concurrency: "unbounded" })
+    expect(exits.filter(Exit.isSuccess)).toHaveLength(1)
+    const failure = exits.flatMap((exit) => Exit.isFailure(exit) ? [Option.getOrUndefined(Exit.findErrorOption(exit))] : [])
+    expect(failure.map((error) => error?.code)).toEqual(["target_denied"])
+    expect([...h.registry.live()]).toEqual([ref.id])
   }))
 
   it.live("records exit codes and signals; a failing settle does not break the registry", Effect.gen(function* () {
     const h = yield* harness()
     expect(yield* (yield* h.start("process.exit(7)")).live.exited).toEqual({ code: 7 })
     expect(yield* (yield* h.start("process.kill(process.pid, 'SIGKILL')")).live.exited).toEqual({ signal: "SIGKILL" })
-    const broken = yield* h.start("process.exit(0)", owner(), () => Effect.die(new Error("settle defect")))
+    const broken = yield* h.start("process.exit(0)", { settle: () => Effect.die(new Error("settle defect")) })
     expect(yield* broken.live.exited).toEqual({ code: 0 })
     expect(yield* h.registry.get(broken.live.ref, broken.owner)).toBe(broken.live)
     expect(h.settled).toEqual([{ exit: { code: 7 }, stopped: false }, { exit: { signal: "SIGKILL" }, stopped: false }])
@@ -165,7 +200,7 @@ describe("CapabilityProcessRegistry", () => {
 
   it.effect("evicts exited entries past retention time and count", Effect.gen(function* () {
     const h = yield* harness({ retainMs: 1_000, maxExited: 2 })
-    const exit = (who: Capability.Owner) => h.start("process.exit(0)", who).pipe(
+    const exit = (who: Capability.Owner) => h.start("process.exit(0)", { owner: who }).pipe(
       Effect.tap((p) => p.live.exited), Effect.tap(() => TestClock.adjust("10 millis")))
     const who = owner()
     const [first, second, third] = [yield* exit(who), yield* exit(who), yield* exit(who)]
@@ -179,12 +214,23 @@ describe("CapabilityProcessRegistry", () => {
   }))
 
   it.live("closing the registry scope kills live children", Effect.gen(function* () {
-    const scope = yield* Scope.make()
+    const scope = yield* Scope.fork(yield* Effect.scope)
     const h = yield* harness().pipe(Scope.provide(scope))
-    const p = yield* h.start(hold)
-    const pid = Number((yield* until(p.live, (text) => text.endsWith("\n"))).trim())
-    expect(alive(pid)).toBe(true)
+    const pids = yield* Effect.forEach([1, 2, 3], () => h.start(hold).pipe(Effect.flatMap((p) => pidLine(p.live))))
+    expect(pids.every(alive)).toBe(true)
     yield* Scope.close(scope, Exit.void)
-    expect(yield* gone(pid)).toBe(true)
+    expect(yield* Effect.forEach(pids, gone)).toEqual([true, true, true])
   }))
+
+  it.live("shutdown is bounded when an escaped descendant holds the output pipe", Effect.gen(function* () {
+    const scope = yield* Scope.fork(yield* Effect.scope)
+    const h = yield* harness().pipe(Scope.provide(scope))
+    const p = yield* h.start(descendant("{ detached: true, stdio: ['ignore', 'inherit', 'ignore'] }"))
+    const escaped = yield* pidLine(p.live)
+    yield* Effect.gen(function* () {
+      const began = Date.now()
+      yield* Scope.close(scope, Exit.void)
+      expect(Date.now() - began).toBeLessThan(8_000)
+    }).pipe(Effect.ensuring(kill(escaped)))
+  }), 20_000)
 })
