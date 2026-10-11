@@ -39,7 +39,6 @@ export const make = (options: Options = {}) => {
         if (!captured.ok) return yield* failure("unsupported_schema")
         const selected = captured.value
         const descriptor = CapabilityVerifiers.descriptor(selected.provider)
-        if (!descriptor) return yield* failure("connection_unavailable")
         // Origin, auth scheme and headers are descriptor-fixed; only the trusted fixture may swap the origin.
         const call: CapabilityVerifierContract.Call = (route) => request(descriptor.origin, descriptor.authorization(selected.key),
           { method: route.method, path: route.path, body: route.body, headers: descriptor.headers }, transport.value).pipe(

@@ -10,7 +10,8 @@ import type { CapabilityConnectionSetupContract } from "@orchestra/core/capabili
 import type { Layer } from "effect"
 import type { HttpRouter } from "effect/unstable/http"
 
-export const keys = ["proof-slack-key-private-71", "proof-slack-key-private-92", "proof-discord-key-private-83"]
+export const keys = ["proof-slack-key-private-71", "proof-slack-key-private-92", "proof-discord-key-private-83",
+  "proof-neon-key-private-64", "proof-openai-key-private-55"]
 export const worker = process.env.ORCHESTRA_SETUP_PROOF_WORKER === "1"
 
 // Parent imports only platform modules. Child environment exists before Bun preloads or Core imports.
@@ -104,6 +105,8 @@ export async function make(options: { password?: string; routes?: Routes } = {})
       response.end(JSON.stringify(state.mode === "expired" ? { ok: false, error: "token_expired", private: keys[0] }
         : state.mode === "malformed" ? { ok: true, team_id: "T123", private: keys[0] }
         : request.url === "/api/v10/users/@me" ? { id: "123456789", bot: state.mode !== "not-bot", private: keys[2] }
+        : request.url === "/api/v2/auth" ? { account_id: "acct-neon-1", auth_method: "api_key_user", private: keys[3] }
+        : request.url === "/v1/models" ? { object: "list", data: [{ id: keys[4] }] }
         : { ok: true, team_id: request.headers.authorization === `Bearer ${keys[1]}` ? "T999" : "T123",
           user_id: "U456", bot_id: "B789", private: keys[0] }))
     })

@@ -10,7 +10,7 @@ const Snowflake = /^[0-9]{1,20}(?![\s\S])/
 // Only bot tokens: a user or OAuth bearer must never be stored as a Discord bot connection.
 const Identity = Schema.Struct({ id: Schema.String.check(Schema.isPattern(Snowflake)), bot: Schema.Literal(true) })
 
-export const descriptor = {
+export const descriptor = Object.freeze({
   provider: "discord",
   endpoint: CapabilityDiscord.endpoint,
   integrationID: Integration.ID.make("capability.discord"),
@@ -22,7 +22,7 @@ export const descriptor = {
     return Option.isSome(identity) ? Effect.succeed(identity.value.id) : Effect.fail(new Capability.Failure({
       code: "connection_unavailable", message: "Capability connection verification is unavailable" }))
   })),
-} satisfies CapabilityVerifierContract.Descriptor
+} satisfies CapabilityVerifierContract.Descriptor)
 
 export function subject(value: string) {
   return Snowflake.test(value)

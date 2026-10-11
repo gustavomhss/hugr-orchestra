@@ -14,7 +14,7 @@ const Rejection = Schema.Struct({ ok: Schema.Literal(false), error: Schema.Strin
 const Subject = Schema.Tuple([Team, User, Schema.NullOr(Bot)])
 const rejected = new Set(["invalid_auth", "token_revoked", "token_expired", "not_authed", "account_inactive"])
 
-export const descriptor = {
+export const descriptor = Object.freeze({
   provider: "slack",
   endpoint: CapabilitySlack.endpoint,
   integrationID: Integration.ID.make("capability.slack"),
@@ -30,7 +30,7 @@ export const descriptor = {
     if (Option.isNone(identity)) return failure("connection_unavailable")
     return Effect.succeed(JSON.stringify([identity.value.team_id, identity.value.user_id, identity.value.bot_id ?? null]))
   })),
-} satisfies CapabilityVerifierContract.Descriptor
+} satisfies CapabilityVerifierContract.Descriptor)
 
 /** Stored subject is the canonical `[team, user, bot|null]` JSON tuple. */
 export function subject(value: string) {

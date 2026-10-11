@@ -69,7 +69,7 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
         const proof = capture(result, decode(Proof))
         const descriptor = CapabilityVerifiers.descriptor(value.input.provider)
         // The registry, not the verifier, decides endpoint, integration, subject shape and verification level.
-        if (!proof.ok || !descriptor || proof.value.provider !== value.input.provider ||
+        if (!proof.ok || proof.value.provider !== value.input.provider ||
           proof.value.endpoint !== descriptor.endpoint || proof.value.integrationID !== descriptor.integrationID ||
           !CapabilityVerifiers.accepts(value.input.provider, proof.value.subjectID, value.input.key))
           return yield* unavailable()
