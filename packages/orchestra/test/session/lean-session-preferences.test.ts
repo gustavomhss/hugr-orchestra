@@ -7,11 +7,15 @@ import { fixture } from "./lean-session.fixture"
 import { provideInstance, tmpdirScoped, testInstanceStoreLayer } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { makeHttp } from "./prompt.fixture"
+import { seatShellRuns } from "../fixture/seat-sandbox"
 
 const it = testEffect(makeHttp())
+// The backend seat's shell runs only where its read sandbox can (test/fixture/seat-sandbox.ts); elsewhere each test
+// asserts that the native call is refused before anything runs, and stops there.
 
 it.instance("same resolved SessionTools executor reads real profile writes on every native call", () => Effect.gen(function* () {
   const f = yield* fixture()
+  if (!seatShellRuns()) return yield* f.refused()
   const initial = yield* f.invoke()
   expect(initial.metric).toMatchObject({ itemID: "go", engine: LeanEngine.current, orchestraProfile: f.profileID, status: "applied" })
   expect(initial.output.output).not.toContain("=== RUN")
@@ -28,6 +32,7 @@ it.instance("same resolved SessionTools executor reads real profile writes on ev
 
 it.instance("profile master explicitly overrides legacy global off; item override remains independent", () => Effect.gen(function* () {
   const f = yield* fixture(false)
+  if (!seatShellRuns()) return yield* f.refused()
   const initial = yield* f.invoke()
   expect(initial.metric).toMatchObject({ itemID: "go", status: "passthrough", reason: "disabled", bytes: { saved: 0 } })
   yield* f.preferences.update(f.owner, { enabled: true })
@@ -42,6 +47,7 @@ it.instance("profile master explicitly overrides legacy global off; item overrid
 
 it.instance("corrupt oversized and unreadable actual preferences preserve settled native text and flags", () => Effect.gen(function* () {
   const f = yield* fixture()
+  if (!seatShellRuns()) return yield* f.refused()
   yield* f.preferences.update(f.owner, { enabled: true })
   const valid = yield* f.fs.readFileString(f.file)
   for (const text of ["{", " ".repeat(4097)]) {
@@ -68,6 +74,7 @@ it.live("same native Project ID different selected directories use distinct exac
   const global = Global.make({ data: path.join(first, ".lean-data"), state: path.join(first, ".lean-state") })
   const a = yield* fixture(true, global).pipe(provideInstance(first))
   const b = yield* fixture(true, global).pipe(provideInstance(second))
+  if (!seatShellRuns()) return yield* Effect.all([a.refused(), b.refused()], { discard: true })
   expect(a.owner.projectID).toBe(b.owner.projectID)
   expect(a.owner.directory).not.toBe(b.owner.directory)
   expect(a.profileID).not.toBe(b.profileID)
