@@ -176,9 +176,9 @@ it.instance("a new API step cannot consume a steer; only its SDK UUID receipt ca
   yield* ctx.mirror.finish(0)
   expect(ctx.mirror.pending()).toBeUndefined()
   expect(ctx.mirror.consumed().map((user) => user.id)).toEqual([ctx.user.id, steer.id])
-  const replies = (yield* ctx.read()).filter((item) => item.info.role === "assistant")
-  expect(replies.map((item) => item.info.parentID)).toEqual([ctx.user.id, ctx.user.id, steer.id])
-  expect(replies.every((item) => item.info.time.completed !== undefined)).toBe(true)
+  const replies = (yield* ctx.read()).flatMap((item) => item.info.role === "assistant" ? [item.info] : [])
+  expect(replies.map((info) => info.parentID)).toEqual([ctx.user.id, ctx.user.id, steer.id])
+  expect(replies.every((info) => info.time.completed !== undefined)).toBe(true)
 }))
 
 it.instance("batched and delayed receipts reconcile every sent UUID without guessing", () => Effect.gen(function* () {
@@ -268,7 +268,8 @@ it.instance("background child completions route through an earlier mirror after 
       output_file: "/tmp/o", summary: "BG-RESULT" },
   ], later)
   expect((yield* ctx.tools(ctx.childID)).map((part) => [part.callID, part.state.status])).toEqual([["late", "completed"]])
-  expect((yield* ctx.read(ctx.childID)).findLast((item) => item.info.role === "assistant")?.info.time.completed).toBeDefined()
+  const reply = (yield* ctx.read(ctx.childID)).flatMap((item) => item.info.role === "assistant" ? [item.info] : []).at(-1)
+  expect(reply?.time.completed).toBeDefined()
   expect((yield* ctx.tools())[0].metadata).toMatchObject({ claudeCodeTask: { taskID: "task-bg", status: "completed", summary: "BG-RESULT" } })
 }))
 
