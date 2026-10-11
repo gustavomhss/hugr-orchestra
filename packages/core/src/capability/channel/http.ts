@@ -16,7 +16,10 @@ export type Request = {
   path: string
   query?: Readonly<Record<string, string | number | boolean | undefined>>
   body?: Schema.Json
-  /** Fixed descriptor headers only; they can never replace authorization or the transport's own headers. */
+  /**
+   * Only fixed verifier-descriptor headers reach this (never input-derived). They are spread first, so they cannot
+   * replace `authorization`, `accept`, `accept-encoding`, or the body's `content-type`/`content-length`.
+   */
   headers?: Readonly<Record<string, string>>
 }
 export type RPC = (input: Request) => Effect.Effect<Schema.Json, Failure | CapabilityConnections.Error>

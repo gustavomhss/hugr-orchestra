@@ -36,13 +36,14 @@ function fixture(response: (request: Request) => Response = vendor) {
 
 it.effect("registry is exhaustive, self-keyed and bound to fixed https origins", () => Effect.sync(() => {
   expect(Object.keys(CapabilityVerifiers.descriptors).sort()).toEqual([...CapabilitySetup.Provider.literals].sort())
-  Object.entries(CapabilityVerifiers.descriptors).forEach(([provider, descriptor]) => {
+  Object.entries<CapabilityVerifierContract.Descriptor>(CapabilityVerifiers.descriptors).forEach(([provider, descriptor]) => {
     expect<string>(descriptor.provider).toBe(provider)
     expect(CapabilityVerifiers.descriptor(descriptor.provider)).toBe(descriptor)
     expect<string>(descriptor.integrationID).toBe(`capability.${provider}`)
     expect(new URL(descriptor.origin).origin).toBe(descriptor.origin)
     expect(descriptor.origin.startsWith("https://")).toBe(true)
     expect(Object.isFrozen(descriptor)).toBe(true)
+    if (descriptor.keyPattern) expect(descriptor.keyPattern.source).toMatch(/^\^.*(\$|\(\?!\[\\s\\S\]\))$/)
   })
 }))
 
@@ -68,29 +69,38 @@ it.live("verified and credential-only proofs bind descriptor endpoint, fixed hea
   ])
 }))
 
-it.live("descriptor keyPattern refuses other key shapes before any network call", () => Effect.gen(function* () {
+it.live("keyPattern must match the whole key and refuses other shapes before any network call", () => Effect.gen(function* () {
   const seen: string[] = []
   const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
     fetch(request) { seen.push(new URL(request.url).pathname); return Response.json({ id: "acct_1" }) } })),
   (server) => Effect.promise(() => server.stop(true)))
-  // Test-only descriptor; a global flag proves shared RegExp state cannot flip consecutive checks.
-  const restricted = { provider: "stripe", endpoint: "https://api.stripe.com/v1", origin: "https://api.stripe.com",
-    integrationID: Integration.ID.make("capability.stripe"), verification: "verified", keyPattern: /^rk_[A-Za-z0-9_]+$/g,
+  // Test-only descriptor: unanchored and global, so only prove's whole-key, stateless evaluation can refuse these.
+  const loose = { provider: "stripe", endpoint: "https://mcp.stripe.com", origin: "https://api.stripe.com",
+    integrationID: Integration.ID.make("capability.stripe"), verification: "verified", keyPattern: /rk_[A-Za-z0-9_]+/g,
     authorization: (value: string) => `Bearer ${value}`,
     identify: (call) => call({ method: "GET", path: "/v1/account" }).pipe(Effect.map(() => "acct_1")),
   } satisfies CapabilityVerifierContract.Descriptor
   const options = { fixtureOrigin: server.url.origin }
-  yield* Effect.forEach(["sk_live_secret", "rk_", "xrk_test_1"], (value) => CapabilityConnectionVerification.prove(restricted,
-    value, options).pipe(Effect.exit, Effect.tap((exit) => Effect.sync(() =>
+  yield* Effect.forEach(["sk_live_secret", "rk_", "xrk_test_1", "rk_test_1-x"], (value) =>
+    CapabilityConnectionVerification.prove(loose, value, options).pipe(Effect.exit, Effect.tap((exit) => Effect.sync(() =>
       CapabilityConnectionSetupFixture.expectCode(exit, "unsupported_operation", [value])))))
+  CapabilityConnectionSetupFixture.expectCode(yield* CapabilityConnectionVerification.prove(loose, "rk_a\r\nx: y", options)
+    .pipe(Effect.exit), "unsupported_schema", ["rk_a"])
   expect(seen).toEqual([])
-  yield* Effect.forEach(["rk_test_1", "rk_test_2"], (value) => CapabilityConnectionVerification.prove(restricted, value, options))
+  yield* Effect.forEach(["rk_test_1", "rk_test_2"], (value) => CapabilityConnectionVerification.prove(loose, value, options))
   expect(seen).toEqual(["/v1/account", "/v1/account"])
+  // Registered Stripe descriptor through the real verifier: full-access keys never reach the vendor.
+  const verifier = yield* CapabilityConnectionVerification.make(options)
+  CapabilityConnectionSetupFixture.expectCode(yield* verifier.verify({ provider: "stripe", key: "sk_live_0123456789abcdef" })
+    .pipe(Effect.exit), "unsupported_operation", ["sk_live_0123456789abcdef"])
+  expect(seen).toHaveLength(2)
+  expect((yield* verifier.verify({ provider: "stripe", key: "rk_test_0123456789ab" })).subjectID).toBe("acct_1")
+  expect(seen).toHaveLength(3)
 }))
 
 it.live("rejected keys and keyed subjects fail without proof", () => Effect.gen(function* () {
   const f = yield* fixture(() => Response.json({ secret: key }, { status: 403 }))
-  yield* Effect.forEach(["neon", "openai", "stripe"] as const, (provider) => f.verifier.verify({ provider, key }).pipe(Effect.exit,
+  yield* Effect.forEach(["neon", "openai", "linear"] as const, (provider) => f.verifier.verify({ provider, key }).pipe(Effect.exit,
     Effect.tap((exit) => Effect.sync(() => CapabilityConnectionSetupFixture.expectCode(exit, "authentication_required", [key])))))
   const echo = yield* fixture(() => Response.json({ account_id: "acct-neon-1", auth_method: "api_key_user" }))
   CapabilityConnectionSetupFixture.expectCode(yield* echo.verifier.verify({ provider: "neon", key: "neon-1" }).pipe(Effect.exit),

@@ -31,8 +31,7 @@ export const make = (options: Options = {}) => {
       // Capture at call time, before scheduling any effects; only this flat data shape is accepted.
       const captured = capture(input, ["provider", "key", "label"], (value) => {
         const decoded = Schema.decodeUnknownOption(CapabilitySetup.Input)(value)
-        if (Option.isNone(decoded) || /\s/.test(decoded.value.key))
-          throw new Error("Invalid verification input")
+        if (Option.isNone(decoded)) throw new Error("Invalid verification input")
         return Object.freeze(decoded.value)
       })
       return Effect.gen(function* () {
@@ -44,12 +43,17 @@ export const make = (options: Options = {}) => {
   })
 }
 
-/** Descriptor dispatch. Exported so a test descriptor can prove the shared rules without joining the registry. */
+/**
+ * Descriptor dispatch. Exported so a test descriptor can prove the shared rules without joining the registry.
+ * Expects already-captured input: a trusted descriptor and a plain key string; options are re-validated here.
+ */
 export function prove(descriptor: CapabilityVerifierContract.Descriptor, key: string, options: Options) {
   return Effect.gen(function* () {
-    if (!validateOptions(options)) return yield* failure("unsupported_schema")
-    // Before any network call; `search` ignores global/sticky lastIndex state on a shared RegExp.
-    if (descriptor.keyPattern && key.search(descriptor.keyPattern) === -1) return yield* failure("unsupported_operation")
+    // Whitespace or control characters could split headers; refused here so no caller of this hook can skip it.
+    if (!validateOptions(options) || /[\s\u0000-\u001f\u007f]/.test(key)) return yield* failure("unsupported_schema")
+    // Before any network call. A fresh anchored, non-global copy matches the WHOLE key without shared lastIndex state.
+    if (descriptor.keyPattern && !new RegExp(`^(?:${descriptor.keyPattern.source})(?![\\s\\S])`,
+      descriptor.keyPattern.flags.replace(/[gmy]/g, "")).test(key)) return yield* failure("unsupported_operation")
     // Origin, auth scheme and headers are descriptor-fixed; only the trusted fixture may swap the origin.
     const call: CapabilityVerifierContract.Call = (route) => request(descriptor.origin, descriptor.authorization(key),
       { method: route.method, path: route.path, body: route.body, headers: descriptor.headers }, options).pipe(
