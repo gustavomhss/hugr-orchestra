@@ -5,6 +5,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Effect } from "effect"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Wildcard } from "@orchestra/core/util/wildcard"
 import { LSP } from "@/lsp/lsp"
 import { Truncate } from "@/tool/truncate"
 import { Tool } from "@/tool/tool"
@@ -41,8 +42,9 @@ const posix = process.platform === "win32" ? it.instance.skip : it.instance
 
 type Ask = { permission: string; patterns: readonly string[] }
 
-// `deny` rejects the named permission; `during` runs when `edit` is asked, standing for a swap after the checks.
-function makeCtx(options: { deny?: string; during?: () => Promise<void> } = {}) {
+// `deny` rejects the named permission; `denyEdit` rejects `edit` when any asked pattern matches it, as the permission
+// engine does; `during` runs when `edit` is asked, standing for a swap after the checks.
+function makeCtx(options: { deny?: string; denyEdit?: string; during?: () => Promise<void> } = {}) {
   const asked: Ask[] = []
   const ctx = {
     sessionID: SessionID.make("ses_test-symlink"),
@@ -56,13 +58,23 @@ function makeCtx(options: { deny?: string; during?: () => Promise<void> } = {}) 
       Effect.gen(function* () {
         asked.push({ permission: request.permission, patterns: request.patterns })
         if (request.permission === options.deny) return yield* Effect.die(new Error(`denied ${request.permission}`))
+        const denyEdit = options.denyEdit
+        if (
+          request.permission === "edit" &&
+          denyEdit &&
+          request.patterns.some((item) => Wildcard.match(item, denyEdit))
+        )
+          return yield* Effect.die(new Error("denied edit"))
         if (request.permission === "edit" && options.during) yield* Effect.promise(options.during)
       }),
   }
   return { asked, ctx }
 }
 
-const writeTool = Effect.fn("SymlinkEscape.write")(function* (args: { filePath: string; content: string }, ctx: Tool.Context) {
+const writeTool = Effect.fn("SymlinkEscape.write")(function* (
+  args: { filePath: string; content: string },
+  ctx: Tool.Context,
+) {
   const tool = yield* (yield* WriteTool).init()
   return yield* tool.execute(args, ctx)
 })
@@ -164,7 +176,9 @@ describe("tool writes through workspace symlinks", () => {
         yield* writeTool({ filePath: "alias.txt", content: "new" }, run.ctx)
         expect(run.asked.map((item) => item.permission)).toEqual(["edit"])
         expect(yield* read(path.join(test.directory, "real.txt"))).toBe("new")
-        expect((yield* Effect.promise(() => fs.lstat(path.join(test.directory, "alias.txt")))).isSymbolicLink()).toBe(true)
+        expect((yield* Effect.promise(() => fs.lstat(path.join(test.directory, "alias.txt")))).isSymbolicLink()).toBe(
+          true,
+        )
       }),
     )
 
@@ -220,10 +234,9 @@ describe("tool writes through workspace symlinks", () => {
         yield* link(path.join(outside, "rc"), path.join(test.directory, "x.ts"))
 
         const denied = makeCtx({ deny: "external_directory" })
-        const exit = yield* editTool(
-          { filePath: "x.ts", oldString: "ls", newString: "rm -rf ~" },
-          denied.ctx,
-        ).pipe(Effect.exit)
+        const exit = yield* editTool({ filePath: "x.ts", oldString: "ls", newString: "rm -rf ~" }, denied.ctx).pipe(
+          Effect.exit,
+        )
         expect(exit._tag).toBe("Failure")
         expect(denied.asked[0]?.permission).toBe("external_directory")
         expect(yield* read(path.join(outside, "rc"))).toBe("alias ll=ls")
@@ -253,10 +266,9 @@ describe("tool writes through workspace symlinks", () => {
         yield* link(outside, path.join(test.directory, "linked"))
 
         const denied = makeCtx({ deny: "external_directory" })
-        const exit = yield* editTool(
-          { filePath: "linked/f.ts", oldString: "one", newString: "two" },
-          denied.ctx,
-        ).pipe(Effect.exit)
+        const exit = yield* editTool({ filePath: "linked/f.ts", oldString: "one", newString: "two" }, denied.ctx).pipe(
+          Effect.exit,
+        )
         expect(exit._tag).toBe("Failure")
         expect(denied.asked[0]?.permission).toBe("external_directory")
         expect(yield* read(path.join(outside, "f.ts"))).toBe("one")
@@ -291,10 +303,9 @@ describe("tool writes through workspace symlinks", () => {
         yield* link(path.join(outside, "rc"), path.join(test.directory, "x.txt"))
 
         const denied = makeCtx({ deny: "external_directory" })
-        const exit = yield* patchTool(
-          patch("*** Update File: x.txt", "@@", "-one", "+pwned"),
-          denied.ctx,
-        ).pipe(Effect.exit)
+        const exit = yield* patchTool(patch("*** Update File: x.txt", "@@", "-one", "+pwned"), denied.ctx).pipe(
+          Effect.exit,
+        )
         expect(exit._tag).toBe("Failure")
         expect(yield* read(path.join(outside, "rc"))).toBe("one\n")
       }),
@@ -330,6 +341,54 @@ describe("tool writes through workspace symlinks", () => {
         expect(run.asked[0]?.permission).toBe("external_directory")
         expect(yield* exists(path.join(test.directory, "x.txt"))).toBe(false)
         expect(yield* read(path.join(outside, "rc"))).toBe("keep\n")
+      }),
+    )
+  })
+
+  // A deny written for a workspace path must hold when the same file is reached through a link named elsewhere.
+  describe("edit rules on the real path", () => {
+    const secretDir = Effect.gen(function* () {
+      const test = yield* TestInstance
+      yield* Effect.promise(() => fs.mkdir(path.join(test.directory, "secret")))
+      yield* put(path.join(test.directory, "secret", "key.txt"), "keep\n")
+      yield* link(path.join(test.directory, "secret"), path.join(test.directory, "docs"))
+      return test.directory
+    })
+
+    it.instance("write is denied by a rule on where the link lands", () =>
+      Effect.gen(function* () {
+        const directory = yield* secretDir
+        const run = makeCtx({ denyEdit: "secret/*" })
+        const exit = yield* writeTool({ filePath: "docs/key.txt", content: "pwned" }, run.ctx).pipe(Effect.exit)
+        expect(exit._tag).toBe("Failure")
+        expect(run.asked.find((item) => item.permission === "edit")?.patterns).toEqual(
+          ["docs/key.txt", "secret/key.txt"].map((item) => item.replaceAll("/", path.sep)),
+        )
+        expect(yield* read(path.join(directory, "secret", "key.txt"))).toBe("keep\n")
+      }),
+    )
+
+    it.instance("edit is denied by a rule on where the link lands", () =>
+      Effect.gen(function* () {
+        const directory = yield* secretDir
+        const run = makeCtx({ denyEdit: "secret*key.txt" })
+        const exit = yield* editTool({ filePath: "docs/key.txt", oldString: "keep", newString: "pwned" }, run.ctx).pipe(
+          Effect.exit,
+        )
+        expect(exit._tag).toBe("Failure")
+        expect(yield* read(path.join(directory, "secret", "key.txt"))).toBe("keep\n")
+      }),
+    )
+
+    it.instance("apply_patch is denied by a rule on where the link lands", () =>
+      Effect.gen(function* () {
+        const directory = yield* secretDir
+        const run = makeCtx({ denyEdit: "secret/*" })
+        const exit = yield* patchTool(patch("*** Update File: docs/key.txt", "@@", "-keep", "+pwned"), run.ctx).pipe(
+          Effect.exit,
+        )
+        expect(exit._tag).toBe("Failure")
+        expect(yield* read(path.join(directory, "secret", "key.txt"))).toBe("keep\n")
       }),
     )
   })

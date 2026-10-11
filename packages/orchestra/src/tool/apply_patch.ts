@@ -5,7 +5,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Watcher } from "@orchestra/core/filesystem/watcher"
 import { InstanceState } from "@/effect/instance-state"
 import { createTwoFilesPatch, diffLines } from "diff"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import { trimDiff } from "./edit"
 import { LSP } from "@/lsp/lsp"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -14,7 +14,7 @@ import DESCRIPTION from "./apply_patch.txt"
 import { FileSystem } from "@orchestra/core/filesystem"
 import { Format } from "../format"
 import * as Bom from "@/util/bom"
-import { physicalPath, writePhysical } from "@/util/physical-path"
+import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
 
 export const Parameters = Schema.Struct({
   patchText: Schema.String.annotate({ description: "The full patch text that describes all changes to be made" }),
@@ -210,9 +210,17 @@ export const ApplyPatchTool = Tool.define(
 
       // Check permissions if needed
       const relativePaths = fileChanges.map((c) => path.relative(instance.worktree, c.filePath).replaceAll("\\", "/"))
+      const patterns = yield* Effect.promise(() =>
+        Promise.all(
+          fileChanges.flatMap((c) => [
+            editPatterns(instance.worktree, c.filePath, c.physical),
+            ...(c.movePath && c.movePhysical ? [editPatterns(instance.worktree, c.movePath, c.movePhysical)] : []),
+          ]),
+        ),
+      )
       yield* ctx.ask({
         permission: "edit",
-        patterns: relativePaths,
+        patterns: [...new Set(patterns.flat().map((item) => item.replaceAll("\\", "/")))],
         always: ["*"],
         metadata: {
           filepath: relativePaths.join(", "),

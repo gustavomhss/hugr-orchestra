@@ -4,7 +4,7 @@ import { InstanceState } from "@/effect/instance-state"
 import type * as Tool from "./tool"
 import { containsPath } from "../project/instance-context"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { physicalPath } from "@/util/physical-path"
+import { physicalPath } from "@orchestra/core/util/physical-path"
 
 type Kind = "file" | "directory"
 
@@ -57,6 +57,16 @@ export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirec
   })
   return true
 })
+
+/**
+ * The `edit` patterns for a target: its path as named and, when a link moves it, where it really lands, so a rule
+ * written for either path applies and a deny on either wins.
+ */
+export async function editPatterns(worktree: string, target: string, real: string) {
+  const named = path.relative(worktree, target)
+  const landed = path.relative(await physicalPath(worktree).catch(() => worktree), real)
+  return named === landed ? [named] : [named, landed]
+}
 
 export async function assertExternalDirectory(ctx: Tool.Context, target?: string, options?: Options) {
   return Effect.runPromise(assertExternalDirectoryEffect(ctx, target, options))

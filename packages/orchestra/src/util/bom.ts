@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { writePhysical } from "./physical-path"
+import { writePhysical } from "@orchestra/core/util/physical-path"
 
 const BOM_CODE = 0xfeff
 const BOM = String.fromCharCode(BOM_CODE)

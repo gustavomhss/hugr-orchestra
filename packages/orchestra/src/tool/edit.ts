@@ -15,10 +15,10 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Format } from "../format"
 import { InstanceState } from "@/effect/instance-state"
 import { Snapshot } from "@/snapshot"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import { FSUtil } from "@orchestra/core/fs-util"
 import * as Bom from "@/util/bom"
-import { physicalPath, writePhysical } from "@/util/physical-path"
+import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
 
 function normalizeLineEndings(text: string): string {
   return text.replaceAll("\r\n", "\n")
@@ -104,7 +104,7 @@ export const EditTool = Tool.define(
                 diff = trimDiff(createTwoFilesPatch(filePath, filePath, contentOld, contentNew))
                 yield* ctx.ask({
                   permission: "edit",
-                  patterns: [path.relative(instance.worktree, filePath)],
+                  patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filePath, physical)),
                   always: ["*"],
                   metadata: {
                     filepath: filePath,
@@ -147,7 +147,7 @@ export const EditTool = Tool.define(
               )
               yield* ctx.ask({
                 permission: "edit",
-                patterns: [path.relative(instance.worktree, filePath)],
+                patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filePath, physical)),
                 always: ["*"],
                 metadata: {
                   filepath: filePath,
