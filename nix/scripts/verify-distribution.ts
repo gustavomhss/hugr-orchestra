@@ -171,7 +171,9 @@ async function treeSitter(directory: string, runtime: string, env: Record<string
     const dlopen = process.dlopen
     const opened = []
     process.dlopen = function (module, file, ...rest) { opened.push(file); return dlopen.call(this, module, file, ...rest) }
+    const stage = (name) => require("node:fs").appendFileSync(process.env.NIX_TREE_SITTER_RESULT + ".stages", name + "\n")
     const parse = (language, source) => {
+      stage("parse:" + source)
       const Parser = require(path.join(dir, "tree-sitter"))
       const parser = new Parser()
       parser.setLanguage(language)
@@ -190,8 +192,9 @@ async function treeSitter(directory: string, runtime: string, env: Record<string
     encoding: "utf8", timeout: 60_000,
   })
   const line = (await readFile(result, "utf8").catch(() => "")).trim()
+  const stages = (await readFile(result + ".stages", "utf8").catch(() => "")).trim().replaceAll("\n", ",")
   if (loaded.error || loaded.status !== 0 || !line.startsWith("TREE_SITTER_LOAD_OK {") || line.includes("\n"))
-    fail(`TREE_SITTER_BUNDLE_LOAD:${directory}:${loaded.error?.message ?? `${loaded.status}:${loaded.signal}:${loaded.stderr}`}`)
+    fail(`TREE_SITTER_BUNDLE_LOAD:${directory}:${loaded.error?.message ?? `${loaded.status}:${loaded.signal}:${loaded.stderr}`}:stages=${stages}`)
   const evidence: { opened: string[]; parsed: unknown[]; runtime: string } = JSON.parse(line.slice("TREE_SITTER_LOAD_OK ".length))
   // require() opens the real path, so a symlinked evidence directory must not fail a valid bundle.
   const real = await Promise.all(bindings.map((file) => realpath(file)))
