@@ -13,8 +13,7 @@ export const ScheduledTaskTable = sqliteTable(
     directory: absoluteColumn().notNull(),
     name: text().notNull(),
     prompt: text().notNull(),
-    // Capability schedules add "interval" and "cron"; legacy readers only ever see legacy-browser rows.
-    cadence: text().$type<ScheduledTask.Cadence | "interval" | "cron">().notNull(),
+    cadence: text().$type<ScheduledTask.Cadence>().notNull(),
     timezone: text().notNull(),
     minute: integer().notNull(),
     next: integer().notNull(),
