@@ -24,7 +24,7 @@ import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { SEAT_SHELL_REFUSED, seatShellRuns } from "../fixture/seat-sandbox"
-import { jail, sandboxHost } from "../fixture/sandbox-host"
+import { sandboxHost } from "../fixture/sandbox-host"
 
 // F2.14: the host, not the prompt, decides where a bound backend child may write. These run the real write and shell
 // tools through ArsenalBindings.withSession, the per-Session binding every native tool call goes through.
@@ -32,7 +32,8 @@ import { jail, sandboxHost } from "../fixture/sandbox-host"
 const it = testEffect(Layer.empty)
 // What this host gives a bound child's shell: a jail (seatbelt, or srt where bubblewrap is present), or none and why.
 const host = sandboxHost
-const sandbox = jail
+// This test drives pwsh through the Windows AppContainer, so it keeps that jail (the shared `jail` omits it).
+const sandbox = host.shellWrites === "enforced" ? host.shellSandbox.kind : undefined
 
 const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
   directory: string
