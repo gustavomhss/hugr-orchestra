@@ -4,10 +4,10 @@ import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import { lstat, readlink, readdir, realpath } from "node:fs/promises"
 
-export const desktop = path.resolve(import.meta.dir, "..")
+import { appID, desktop, productName } from "./lean-candidate-identity.fixture"
+
+export { appID, desktop, productName }
 export const repository = path.resolve(desktop, "../..")
-export const appID = "ai.hugr.orchestra.lean.candidate"
-export const productName = "HuGR Lean Candidate"
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const archivePin = "369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1"
 type Material = { path: string; bytes: number; sha256: string; link?: string }

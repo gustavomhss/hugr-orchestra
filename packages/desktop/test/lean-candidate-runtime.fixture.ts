@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { connect } from "node:net"
+import { readFile } from "node:fs/promises"
+import { setTimeout as sleep } from "node:timers/promises"
 import type { ElectronApplication, Page } from "@playwright/test"
 import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
-import { appID, desktop, productName } from "./lean-candidate-archive.fixture"
+import { appID, desktop, productName } from "./lean-candidate-identity.fixture"
 import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 const appRequire = createRequire(path.resolve(desktop, "../app/package.json"))
@@ -13,6 +15,9 @@ export const expect = (appRequire("@playwright/test") as typeof import("@playwri
 export async function bounded<T>(label: string, task: Promise<T>, ms = 30000): Promise<T> {
   const timeout = Promise.withResolvers<never>()
   const timer = setTimeout(() => timeout.reject(new Error(`${label} timed out after ${ms} ms`)), ms)
+  // A task that loses the race may still reject later; observe it so it never escapes as an unhandled rejection
+  // past the recorder. The race result (including the task's own rejection when it settles first) is unchanged.
+  task.catch(() => undefined)
   try { return await Promise.race([task, timeout.promise]) }
   finally { clearTimeout(timer) }
 }
@@ -21,7 +26,7 @@ export async function until(label: string, check: () => Promise<boolean>, ms = 3
   const deadline = Date.now() + ms
   while (Date.now() < deadline) {
     if (await bounded(label, check(), Math.min(5000, deadline - Date.now()))) return
-    await Bun.sleep(100)
+    await sleep(100)
   }
   throw new Error(`${label} did not settle within ${ms} ms`)
 }
@@ -143,7 +148,7 @@ export async function launchCandidate(executable: string, root: string, recorder
     const utilities = await bounded("actual sidecar child counter", application.evaluate(({ app }) =>
       app.getAppMetrics().filter((metric) => metric.type === "Utility" && metric.name === "Orchestra server").length))
     assert.equal(utilities, 1, "Missing actual owned utility sidecar child")
-    const marker = await Bun.file(path.join(root, ".orchestra-lean-candidate.json")).json()
+    const marker = JSON.parse(await readFile(path.join(root, ".orchestra-lean-candidate.json"), "utf8"))
     assert.deepEqual(marker, { appId: appID, version: 1, root })
     return { application, page, backend, request, close, get diagnostics() { return [stdout.read(), stderr.read(), renderer.read()] }, root }
   } catch (error) {

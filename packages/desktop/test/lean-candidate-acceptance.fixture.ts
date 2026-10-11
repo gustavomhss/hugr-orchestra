@@ -1,15 +1,24 @@
 import assert from "node:assert/strict"
 import path from "node:path"
 import os from "node:os"
-import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises"
+import { access, constants, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import type { LeanDashboard } from "../../schema/src/lean-dashboard"
-import { desktop, packagedCandidate } from "./lean-candidate-archive.fixture"
+import type { packagedCandidate } from "./lean-candidate-archive.fixture"
+import { desktop } from "./lean-candidate-identity.fixture"
 import { bounded, expect, launchCandidate, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import { nativeFixture, nativePtySmoke, type NativeRun } from "./lean-candidate-native.fixture"
 import { nativeHistory, nativeItemToggle, nativeMasterToggle, seedNativeRenderer, selectNativeProfile, verifyNativeRows } from "./lean-candidate-ui.fixture"
 import { CandidateRecorder } from "./lean-candidate-record.fixture"
 
-export async function proveNativeCandidate() {
+// Node has no Bun.which; this is the same PATH lookup for an executable file.
+async function which(name: string) {
+  for (const directory of (process.env.PATH ?? "").split(path.delimiter).filter(Boolean)) {
+    if (await access(path.join(directory, name), constants.X_OK).then(() => true, () => false)) return path.join(directory, name)
+  }
+}
+
+// Runs under Node (Playwright cannot drive Electron from Bun); the Bun test resolves and verifies the candidate first.
+export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof packagedCandidate>>) {
   const recorder = new CandidateRecorder()
   recorder.protectPath(path.resolve(desktop, "../.."), "repository")
   recorder.protectPath(os.homedir(), "runner-home")
@@ -18,7 +27,6 @@ export async function proveNativeCandidate() {
   const artifacts = path.join(desktop, "dist-candidate/proof")
   const owned: { current?: OwnedCandidate } = {}
   try {
-    const candidate = await packagedCandidate()
     proof.sourceCommit = candidate.manifest.sourceCommit
     await mkdir(artifacts, { recursive: true })
     const parent = await realpath(await mkdtemp(path.join(os.tmpdir(), "lean-candidate-owned-")))
@@ -43,7 +51,7 @@ export async function proveNativeCandidate() {
     await independent.close()
     assert.equal(recorder.failures.length, 0, "Independent lock control cleanup failed")
     await nativePtySmoke(app, a, recorder)
-    assert.ok(Bun.which("go"), "LEAN_CANDIDATE_GO_REQUIRED: native Go30 fixture needs runner Go")
+    assert.ok(await which("go"), "LEAN_CANDIDATE_GO_REQUIRED: native Go30 fixture needs runner Go")
     const fixture = await nativeFixture(app, a, recorder)
     resources.push({ label: "owned public loopback model", close: fixture.close })
     const on = await fixture.execute("call_go_on")
@@ -80,11 +88,11 @@ export async function proveNativeCandidate() {
     assert.deepEqual(Buffer.from(off.tool.state.status === "completed" ? off.tool.state.output : ""), Buffer.from(off.raw.output))
     assert.equal(off.raw.output.match(/=== RUN/g)?.length, 30)
     const cargo: NativeRun[] = []
-    if (Bun.which("cargo")) {
+    if (await which("cargo")) {
       const rust = path.join(a, "public-cargo-fixture")
       await mkdir(path.join(rust, "src"), { recursive: true })
-      await Bun.write(path.join(rust, "Cargo.toml"), '[package]\nname = "candidate_fixture"\nversion = "0.1.0"\nedition = "2021"\n[lib]\ndoctest = false\n')
-      await Bun.write(path.join(rust, "src/lib.rs"), Array.from({ length: 30 }, (_, i) => `#[test] fn case_${i}() { assert_eq!(2 + 2, 4); }`).join("\n") + "\n")
+      await writeFile(path.join(rust, "Cargo.toml"), '[package]\nname = "candidate_fixture"\nversion = "0.1.0"\nedition = "2021"\n[lib]\ndoctest = false\n')
+      await writeFile(path.join(rust, "src/lib.rs"), Array.from({ length: 30 }, (_, i) => `#[test] fn case_${i}() { assert_eq!(2 + 2, 4); }`).join("\n") + "\n")
       const enabled = await fixture.execute("call_cargo_on", "cargo test --offline --color never", rust)
       assert.equal(enabled.metric.status, "applied", `Supported native Cargo fixture declined: ${JSON.stringify(enabled.metric)}\n${enabled.raw.output}`)
       assert.ok(enabled.metric.bytes.saved > 0)
@@ -124,10 +132,10 @@ export async function proveNativeCandidate() {
       await app.page.locator("#lean-trigger-go").click()
       await nativeHistory(app, a, "cargo", cargo)
     }
-    assert.ok(await Bun.file(path.join(root, "db/orchestra.sqlite")).exists(), "Actual backend DB missing inside ROOT")
+    assert.ok(await access(path.join(root, "db/orchestra.sqlite")).then(() => true, () => false), "Actual backend DB missing inside ROOT")
     const preferences = async (profileID: string) => {
       assert.match(profileID, /^[a-zA-Z0-9_-]+$/)
-      return Bun.file(path.join(root, "data/orchestra/lean/profiles", `${profileID}.json`)).json()
+      return JSON.parse(await readFile(path.join(root, "data/orchestra/lean/profiles", `${profileID}.json`), "utf8"))
     }
     const prefsA = await preferences(first.scope.profileID)
     const prefsB = await preferences(other.scope.profileID)
@@ -150,7 +158,7 @@ export async function proveNativeCandidate() {
     for (const run of [on, off, ...cargo]) {
       assert.deepEqual(replay.flatMap((message) => message.parts).find((part) => part.id === run.tool.id)?.state, run.tool.state,
         "Relaunched durable tool bytes/metadata differ from the observed native call")
-      assert.deepEqual(Buffer.from((await Bun.file(path.join(root, `${run.tool.callID}.json`)).json()).output), Buffer.from(run.raw.output))
+      assert.deepEqual(Buffer.from(JSON.parse(await readFile(path.join(root, `${run.tool.callID}.json`), "utf8")).output), Buffer.from(run.raw.output))
     }
     // Relaunch receives no fixture state reseed. Actual MemoryRouter/persist restores the page/owner.
     await expect(again.page.locator('[data-component="orchestra-chapter"][data-chapter="lean"]')).toBeVisible()
@@ -173,7 +181,7 @@ export async function proveNativeCandidate() {
   proof.status = recorder.failures.length ? "failed" : "accepted"
   proof.diagnostics = recorder.failures // Original objects stay in memory; serialization is the output boundary.
   if (recorder.failures.length) proof.ownedOutput = recorder.observations
-  try { await Bun.write(path.join(artifacts, "proof.log"), recorder.serialize(proof) + "\n") }
+  try { await writeFile(path.join(artifacts, "proof.log"), recorder.serialize(proof) + "\n") }
   catch (error) { recorder.fail("cleanup", "owned proof log publication", error) }
   if (recorder.failures.length) throw recorder.publicError("Native candidate primary and owned cleanup diagnostics")
   console.log(recorder.clean(`native candidate accepted: source=${proof.sourceCommit}; actual Go30 on/off; Cargo=${proof.cargo}; actual renderer A/B/A; same-ROOT relaunch`))

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import path from "node:path"
 import http from "node:http"
-import { mkdir } from "node:fs/promises"
+import { access, mkdir, readFile, writeFile } from "node:fs/promises"
 import type { Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
 import { LeanMetrics } from "../../schema/src/lean-metrics"
 import { bounded, inside, until, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
@@ -17,8 +17,8 @@ type Saved = { info: Message; parts: Part[] }[]
 export async function nativeFixture(candidate: OwnedCandidate, directory: string, recorder: CandidateRecorder) {
   inside(candidate.root, directory, "public fixture directory")
   await mkdir(directory, { recursive: true })
-  await Bun.write(path.join(directory, "go.mod"), "module example.test\n\ngo 1.20\n")
-  await Bun.write(path.join(directory, "native_test.go"), `package example\nimport "testing"\n${Array.from({ length: 30 }, (_, i) => `func TestCase${i}(t *testing.T) {}`).join("\n")}\n`)
+  await writeFile(path.join(directory, "go.mod"), "module example.test\n\ngo 1.20\n")
+  await writeFile(path.join(directory, "native_test.go"), `package example\nimport "testing"\n${Array.from({ length: 30 }, (_, i) => `func TestCase${i}(t *testing.T) {}`).join("\n")}\n`)
   const hits: Hit[] = []
   const turn: { current?: Turn } = {}
   const provider = http.createServer(async (req, res) => {
@@ -65,7 +65,7 @@ export async function nativeFixture(candidate: OwnedCandidate, directory: string
     const address = provider.address()
     assert.ok(address && typeof address !== "string", "Missing loopback fixture port")
     const observer = path.join(candidate.root, "public-fixture-observer.mjs")
-    await Bun.write(observer, `import { writeFile } from "node:fs/promises";
+    await writeFile(observer, `import { writeFile } from "node:fs/promises";
 export default async () => ({ "tool.execute.after": async (input, output) => {
   if (input.tool === "bash") await writeFile(${JSON.stringify(candidate.root)} + "/" + input.callID + ".json", JSON.stringify({ output: output.output, metadata: output.metadata }));
 } });`)
@@ -97,7 +97,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       const next = hits.flatMap((hit) => hit.messages).filter((message) => message.role === "tool" && message.tool_call_id === callID)
       assert.equal(next.length, 1, "Missing actual next HTTP model turn")
       assert.deepEqual(Buffer.from(next[0]!.content), Buffer.from(tool.state.output), "Next HTTP result differs from durable whole UTF-8 bytes")
-      const raw = await Bun.file(path.join(candidate.root, `${callID}.json`)).json() as { output: string; metadata: { output: string } }
+      const raw = JSON.parse(await readFile(path.join(candidate.root, `${callID}.json`), "utf8")) as { output: string; metadata: { output: string } }
       const metric = LeanMetrics.decode(tool.state.metadata.lean)
       assert.ok(metric, "Missing durable native Lean Decision")
       assert.equal(metric.engine, "hugr-lean@0.2.0:369206cd0a468904", "Actual native boundary used the wrong archive engine")
@@ -126,8 +126,8 @@ export async function nativePtySmoke(candidate: OwnedCandidate, directory: strin
     assert.ok(pty.pid > 0, "Real native PTY child PID missing")
     const children = await request<{ id: string; pid: number }[]>("pty", "GET", undefined, directory)
     assert.equal(children.filter((child) => child.id === pty.id && child.pid === pty.pid).length, 1, "Actual native PTY child counter did not increase")
-    await until("native PTY child output", () => Bun.file(output).exists())
-    const observed = await Bun.file(output).json() as { tty: boolean; input: boolean; env: Record<string, string> }
+    await until("native PTY child output", () => access(output).then(() => true, () => false))
+    const observed = JSON.parse(await readFile(output, "utf8")) as { tty: boolean; input: boolean; env: Record<string, string> }
     assert.equal(observed.tty, true)
     assert.equal(observed.input, true)
     for (const key of ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "ORCHESTRA_DB"]) {
