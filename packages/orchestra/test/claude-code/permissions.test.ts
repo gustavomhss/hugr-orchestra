@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import { Effect } from "effect"
+import { Cause, Effect } from "effect"
+import { PermissionV1 } from "@orchestra/core/v1/permission"
+import { ClaudeCodeTools } from "@/claude-code/tools"
 import { asks, canUseTool, preToolUse } from "@/claude-code/permissions"
 import { MessageID, SessionID } from "@/session/schema"
 import type * as Tool from "@/tool/tool"
@@ -60,4 +62,11 @@ test("the PreToolUse hook lets Orchestra's own tools through and puts every othe
   const fetch = await hook("WebFetch", { url: "https://example.com" })
   expect(fetch.hookSpecificOutput).toMatchObject({ permissionDecision: "deny" })
   expect(calls.map((call) => call.permission)).toEqual(["webfetch"])
+})
+
+test("a rule denial shows the rule and lets the model continue; only a user rejection says to stop", () => {
+  const denied = ClaudeCodeTools.failure(Cause.fail(new PermissionV1.DeniedError({ ruleset: [{ permission: "bash", pattern: "*", action: "deny" }] })))
+  expect(denied).toContain("rule which prevents")
+  expect(denied).not.toContain("Stop and wait")
+  expect(ClaudeCodeTools.failure(Cause.fail(new PermissionV1.RejectedError()))).toContain("Stop and wait")
 })
