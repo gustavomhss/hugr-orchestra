@@ -211,6 +211,24 @@ it.instance("child interruption cancels its permission wait while another child'
   expect(result.content[0].text).toContain("brief for archie")
 }), 60_000)
 
+it.instance("child Stop rejects late reservations even after the root resumes", () => Effect.gen(function* () {
+  const f = yield* BridgeFixture.make()
+  const stopped = yield* f.child("lucy", [...allow])
+  const active = yield* f.child("archie", [...allow])
+  f.bridge.interrupt(stopped.id)
+  expect(Exit.isFailure(yield* f.call({ id: "late_child", tool: "context_recall", args: { query: "brief" },
+    sessionID: stopped.id, seat: "lucy" }).pipe(Effect.exit))).toBe(true)
+  f.bridge.interrupt()
+  f.bridge.resume()
+  expect(Exit.isFailure(yield* f.call({ id: "resumed_root_late_child", tool: "context_recall", args: { query: "brief" },
+    sessionID: stopped.id, seat: "lucy" }).pipe(Effect.exit))).toBe(true)
+  yield* f.call({ id: "active_child", tool: "context_recall", args: { query: "brief" }, sessionID: active.id, seat: "archie" })
+  const client = yield* f.client([yield* recall])
+  const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "context_recall", arguments: f.arguments("active_child") })))
+  expect(result.isError).toBeUndefined()
+  expect(result.content[0].text).toContain("brief for archie")
+}), 60_000)
+
 it.instance("MCP request cancellation aborts only its execution and later calls remain usable", () => Effect.gen(function* () {
   const f = yield* BridgeFixture.make()
   const child = yield* f.child("lucy", [{ permission: "context_recall", pattern: "*", action: "ask" }])

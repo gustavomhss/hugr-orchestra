@@ -33,6 +33,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
   readonly withSession: <A>(sessionID: string, effect: Effect.Effect<A>) => Effect.Effect<A>
 }) {
   const admission = { stopped: false }
+  const stoppedChildren = new Set<ClaudeHostOptions.Context["sessionID"]>()
   const calls = new Map<string, Call>()
   const owner = (callID: string) => live.known.calls.get(callID) ?? live.turn?.view
   const tool = (callID: string) => owner(callID)?.tool(callID)
@@ -40,6 +41,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
     run: live.run,
     reserve: (reservation: ClaudeHostMcp.Reservation) => {
       if (admission.stopped || ctx.abort.signal.aborted) throw new Error("HOLD: this host turn was stopped, so no MCP call was admitted.")
+      if (stoppedChildren.has(reservation.sessionID)) throw new Error("HOLD: this child was stopped, so no MCP call was admitted.")
       if (calls.has(reservation.callID)) throw new Error(`HOLD: duplicate MCP reservation ${reservation.callID}.`)
       const receipt = crypto.randomUUID()
       calls.set(reservation.callID, { reservation: { ...reservation, input: structuredClone(reservation.input), args: structuredClone(reservation.args) },
@@ -55,6 +57,8 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
     /** Cancels outstanding calls, optionally scoped to one child. Completed processes are adopted separately. */
     interrupt: (sessionID?: ClaudeHostOptions.Context["sessionID"]) => {
       if (!sessionID) admission.stopped = true
+      // Root continuation cannot reopen an interrupted native child; an explicit new query gets a fresh bridge.
+      if (sessionID) stoppedChildren.add(sessionID)
       calls.forEach((call) => {
         if (!sessionID || call.reservation.sessionID === sessionID) call.abort.abort()
       })
