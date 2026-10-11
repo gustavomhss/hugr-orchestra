@@ -43,9 +43,7 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
     assert.deepEqual(await app.request("pty", "GET", undefined, a), [], "Default candidate startup executed PTY tools")
     // Two instances of the same packaged executable in fresh owned roots must coexist.
     // Identity + isolated userData + held locks bind this control without launching production.
-    // TEMPORARY DIAGNOSTIC: this control quits first with the legacy spawner; the main instance keeps omni on.
-    const independent = await launchCandidate(candidate.executable, path.join(parent, "lock-control"), recorder,
-      { ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" })
+    const independent = await launchCandidate(candidate.executable, path.join(parent, "lock-control"), recorder)
     resources.push({ label: "independent owned lock control", close: independent.close })
     assert.notEqual(independent.application.process().pid, app.application.process().pid)
     assert.notEqual(independent.backend.url, app.backend.url)

@@ -72,16 +72,18 @@ export async function portClosed(url: string) {
   }))
 }
 
-// TEMPORARY DIAGNOSTIC (remove with the quit-hang fix): extra launch env for an A/B of the omni spawner.
-export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder, diagnosticEnv: Record<string, string> = {}) {
+export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder) {
   assert.ok(path.isAbsolute(root), "Candidate ROOT must be absolute")
   recorder.protectPath(root, "candidate-root")
   // Resolve the installed Playwright through the package that declares it. Never attach to a user app.
   const { _electron } = appRequire("@playwright/test") as typeof import("@playwright/test")
   const env = Object.fromEntries(["PATH", "LANG", "LC_ALL", "GOROOT", "RUSTUP_HOME"].flatMap((key) =>
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
+  // --use-mock-keychain: on quit Chromium creates the "<name> Safe Storage" keychain item, and an unattended runner
+  // never answers the keychain authorization prompt, so the process hangs (sampled stack: SecItemAdd ->
+  // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
-    cwd: path.dirname(root), env: { ...env, ...diagnosticEnv, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
+    args: ["--use-mock-keychain"], cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
   // Recorder-owned bounded streams join chunks before redaction; overflow publishes only a named marker.
   const stdout = recorder.stream("owned Electron main stdout")
   const stderr = recorder.stream("owned Electron main stderr")
