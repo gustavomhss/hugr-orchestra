@@ -1,0 +1,6 @@
+#!/bin/sh
+# The QA harness (qa/README.md): qa/run --quick | --full [--lang rust,ts] [--inject-orphan]
+# Builds omni-qa into the repository's target dir and runs it; it builds the rest and writes qa/out/report.{json,md}.
+set -eu
+cd "$(dirname "$0")/.."
+exec cargo run --release --quiet --manifest-path qa/Cargo.toml --target-dir "${CARGO_TARGET_DIR:-target}" -- "$@"

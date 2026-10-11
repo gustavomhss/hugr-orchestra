@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import { Effect } from "effect"
+import { Cause, Effect } from "effect"
+import { PermissionV1 } from "@orchestra/core/v1/permission"
+import { ClaudeCodeTools } from "@/claude-code/tools"
 import { asks, canUseTool, preToolUse } from "@/claude-code/permissions"
 import { MessageID, SessionID } from "@/session/schema"
 import type * as Tool from "@/tool/tool"
@@ -82,4 +84,11 @@ test("a name Claude Code aliases to an Orchestra tool passes as that tool when C
   for (const name of ["grep", "Grep"]) expect((await hook(name)).hookSpecificOutput.permissionDecision).toBe("allow")
   expect((await hook("Glob")).hookSpecificOutput.permissionDecision).toBe("deny")
   expect(calls).toEqual([])
+})
+
+test("a rule denial shows the rule and lets the model continue; only a user rejection says to stop", () => {
+  const denied = ClaudeCodeTools.failure(Cause.fail(new PermissionV1.DeniedError({ ruleset: [{ permission: "bash", pattern: "*", action: "deny" }] })))
+  expect(denied).toContain("rule which prevents")
+  expect(denied).not.toContain("Stop and wait")
+  expect(ClaudeCodeTools.failure(Cause.fail(new PermissionV1.RejectedError()))).toContain("Stop and wait")
 })

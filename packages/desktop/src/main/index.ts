@@ -50,7 +50,9 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
+import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
+import { OmniBoot } from "./omni-boot"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -154,9 +156,17 @@ const main = Effect.gen(function* () {
   initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
+  OmniBoot.setup()
 
+  const wslVersion = yield* Effect.promise(() =>
+    readWslExpectedVersion(
+      process.platform,
+      app.isPackaged ? join(process.resourcesPath, "cli") : join(import.meta.dirname, "../../resources/cli"),
+      app.getVersion(),
+    ),
+  )
   const wslServers = createWslServersController(
-    app.getVersion(),
+    wslVersion,
     async (distro) => {
       logger.log("spawning wsl sidecar", { distro })
       return spawnWslSidecar(distro, {
@@ -415,11 +425,7 @@ const main = Effect.gen(function* () {
       }),
     )
     server = listener
-    yield* Deferred.succeed(serverReady, {
-      url,
-      username: "orchestra",
-      password,
-    })
+    yield* Deferred.succeed(serverReady, { url, username: "orchestra", password })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -433,6 +439,7 @@ const main = Effect.gen(function* () {
         }),
       ),
     )
+    yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
 
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)

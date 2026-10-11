@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js"
 import type { RelayDocument, RelayKind } from "./client"
-import { HeadBadge, type runBlocker } from "./parts"
+import { HeadBadge } from "./parts"
 import { relayPath } from "./route"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
@@ -15,8 +15,6 @@ export function EditorHead(props: {
   tab: "editor" | "runs"
   // Hidden while the server has no run routes.
   runCount: number | undefined
-  // Why Run is off (a copy key), when it is.
-  runBlock: ReturnType<typeof runBlocker>
   // An install exists, so the toggle works even after an unpublish.
   installExists?: boolean
   save: SaveState
@@ -29,7 +27,6 @@ export function EditorHead(props: {
   onRename: (name: string) => void
   onIssue: (node: string | undefined) => void
   onPublish: () => void
-  onRun: () => void
   onTest: () => void
   onInstall: (next: boolean) => void
   onReload: () => void
@@ -196,9 +193,8 @@ export function EditorHead(props: {
           <button
             type="button"
             class="mx-btn primary"
-            title={copy.t(props.runBlock ?? "orchestra.workflows.editor.runTitle")}
-            disabled={!!props.runBlock}
-            onClick={props.onRun}
+            title={copy.t("orchestra.workflows.maestroOnly")}
+            disabled
           >
             <Ic name="play" />
             {copy.t("orchestra.workflows.editor.run")}

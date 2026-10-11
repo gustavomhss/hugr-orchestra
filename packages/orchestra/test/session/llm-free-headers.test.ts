@@ -99,6 +99,7 @@ export default async () => ({
               const agent = {
                 name: "test",
                 mode: "primary",
+                prompt: "Say hello.",
                 options: {},
                 permission: [{ permission: "*", pattern: "*", action: "allow" }],
               } satisfies Agent.Info

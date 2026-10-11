@@ -43,6 +43,9 @@ export const CreateInput = Schema.Struct({
   cwd: optional(Schema.String),
   title: optional(Schema.String),
   env: optional(Schema.Record(Schema.String, Schema.String)),
+  // The terminal's size at creation; the server clamps both sides to 1..32767.
+  cols: optional(PositiveInt),
+  rows: optional(PositiveInt),
 })
 export interface CreateInput extends Schema.Schema.Type<typeof CreateInput> {}
 

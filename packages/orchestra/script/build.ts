@@ -14,6 +14,8 @@ process.chdir(dir)
 const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
+import { copyOmni, resolveOmni } from "@orchestra/script/omni"
+import { copyTreeSitter, resolveTreeSitter } from "@orchestra/script/tree-sitter-prebuilds"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
 
@@ -140,15 +142,8 @@ const targets = singleFlag
     })
   : allTargets
 
-await $`rm -rf dist`
-
-const binaries: Record<string, string> = {}
-if (!skipInstall) {
-  await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
-  await $`bun install --os="*" --cpu="*" @parcel/watcher@${pkg.dependencies["@parcel/watcher"]}`
-  await $`bun install --os="*" --cpu="*" @ff-labs/fff-bun@${pkg.dependencies["@ff-labs/fff-bun"]}`
-}
-for (const item of targets) {
+// Resolved before anything is built, so a release build with a missing omni artifact fails at once.
+const builds = targets.map((item) => {
   const name = [
     pkg.name,
     // changing to win32 flags npm for some reason
@@ -159,7 +154,33 @@ for (const item of targets) {
   ]
     .filter(Boolean)
     .join("-")
-  console.log(`building ${name}`)
+  return {
+    item,
+    name,
+    ...resolveOmni({ name, target: name.slice(pkg.name.length + 1), os: item.os, single: singleFlag }),
+  }
+})
+
+await $`rm -rf dist`
+
+const binaries: Record<string, string> = {}
+if (!skipInstall) {
+  await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
+  await $`bun install --os="*" --cpu="*" @parcel/watcher@${pkg.dependencies["@parcel/watcher"]}`
+  await $`bun install --os="*" --cpu="*" @ff-labs/fff-bun@${pkg.dependencies["@ff-labs/fff-bun"]}`
+}
+// After the installs, which own node_modules, and before any build: a target whose bindings this host cannot provide
+// stops here with the named error.
+const prepared = builds.map((build) => ({
+  ...build,
+  treeSitter: resolveTreeSitter({
+    root: path.resolve(dir, "../.."),
+    artifacts: process.env.TREE_SITTER_ARTIFACTS,
+    ...build.item,
+  }),
+}))
+for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
+  console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   await $`mkdir -p dist/${name}/bin`
 
   const workerPath = "./src/cli/tui/worker.ts"
@@ -191,7 +212,7 @@ for (const item of targets) {
       ...seatSkillsFileMap,
     },
     entrypoints: [
-      "./src/index.ts",
+      "./src/cli/omni-entry.ts",
       workerPath,
       treeSitterWorkerPath,
       "orchestra-seat-skills.gen.ts",
@@ -205,10 +226,14 @@ for (const item of targets) {
       OTUI_TREE_SITTER_WORKER_PATH: bunfsRoot + treeSitterWorkerPath,
       ORCHESTRA_WORKER_PATH: workerPath,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
+      OMNI_ENABLED: JSON.stringify(omni.enabled),
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "",
       ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
     },
   })
+
+  copyOmni(omniFiles, `dist/${name}/bin`)
+  copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
 
   // Smoke test: only run if binary is for current platform
   if (item.os === process.platform && item.arch === process.arch && !item.abi) {

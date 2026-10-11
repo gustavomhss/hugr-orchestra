@@ -29,8 +29,22 @@ test("legacy runner inference, explicit pytest, defaults and added OS choices st
   expect(validateRequest({ package: "relay", args: ["tests/test_authoring.py", "-k", "author"] }, isFile).runner).toBe("pytest")
   expect(validateRequest({ package: "relay", runner: "pytest", args: [] }, isFile).runner).toBe("pytest")
   expect(parseOptions(["app"]).options.os).toBe("linux")
-  for (const os of ["linux", "windows", "both", "macos", "all"])
+  for (const os of ["linux", "windows", "both", "macos", "macos-intel", "all"])
     expect(parseOptions(["app", "--os", os]).options.os).toBe(os)
+})
+
+test("bun, node and env requests survive validation; unlisted or malformed env fails by name", () => {
+  const env = { ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1" }
+  const parsed = parseOptions(["app", "smoke.node-smoke.mjs", "--runner", "node", "--env", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1"])
+  expect(parsed.options.runner).toBe("node")
+  expect(parsed.env).toEqual(env)
+  expect(validateRequest({ package: "app", runner: "node", env, args: ["smoke.node-smoke.mjs"] }, isFile)).toMatchObject({ runner: "node", env })
+  expect(validateRequest({ package: "app", runner: "bun", args: [] }, isFile).env).toEqual({})
+  expect(validateRequest({ ...valid, env }, isFile).env).toEqual(env)
+  expect(() => parseOptions(["app", "--env", "PATH=x"])).toThrow("KEY one of")
+  expect(() => parseOptions(["app", "--env", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=a b"])).toThrow("needs a value matching")
+  expect(() => validateRequest({ package: "app", env: { PATH: "x" }, args: [] }, isFile)).toThrow("KEY one of")
+  expect(() => validateRequest({ package: "app", env: [], args: [] }, isFile)).toThrow("env must be an object")
 })
 
 test("selection rejects empty, partially ignored and extra files; accepts exact files", () => {
@@ -49,7 +63,7 @@ for (const flag of ["--os", "--runner", "--config", "--benchmark-renderer"])
   })
 
 for (const [argv, reason] of [
-  [["--os", "unknown"], "--os must be"], [["--runner", "bun"], "--runner must be"],
+  [["--os", "unknown"], "--os must be"], [["--runner", "shell"], "--runner must be"],
   [["--config", config], "--config requires"], [["--runner", "playwright", "-t", "filter"], "only named"],
 ] as const)
   test(`invalid CLI ${argv.join(" ")}`, () => expect(() => parseOptions(["app", ...argv])).toThrow(reason))
@@ -94,13 +108,13 @@ test("benchmark transport rejects missing, empty, unknown and regression rendere
 })
 
 test("report requires exact OS matrix jobs; missing, repeated and extra hosts fail", () => {
-  const jobs = ["ubuntu-latest", "windows-latest", "macos-15"].map((host) => ({ name: `test (${host})` }))
+  const jobs = ["ubuntu-latest", "windows-latest", "macos-14"].map((host) => ({ name: `test (${host})` }))
   expect(requireTestJobs("all", [...jobs, { name: "cleanup" }])).toEqual(jobs)
   for (const [os, indices] of [["linux", [0]], ["windows", [1]], ["macos", [2]], ["both", [0, 1]]] as const)
     expect(requireTestJobs(os, indices.map((index) => jobs[index]!))).toHaveLength(indices.length)
   expect(() => requireTestJobs("linux", [])).toThrow("test (ubuntu-latest): missing or repeated")
   expect(() => requireTestJobs("linux", undefined as unknown as { name: string }[])).toThrow("missing matrix jobs")
-  expect(() => requireTestJobs("all", jobs.slice(0, 2))).toThrow("test (macos-15): missing or repeated")
+  expect(() => requireTestJobs("all", jobs.slice(0, 2))).toThrow("test (macos-14): missing or repeated")
   expect(() => requireTestJobs("linux", [jobs[0]!, jobs[0]!])).toThrow("repeated")
   expect(() => requireTestJobs("linux", jobs)).toThrow("test (windows-latest): unexpected")
 })
@@ -119,6 +133,6 @@ test("successful report requires step metadata, step log, endgroup and nonempty 
 })
 
 test("failed setup report retains setup diagnostics without requiring Run tests", () => {
-  expect(reportLines({ name: "test (macos-15)", conclusion: "failure", steps: [{ name: "Setup Bun", conclusion: "failure" }] },
-    "test (macos-15)\tSetup Bun\tinstallation failed")).toEqual(["installation failed"])
+  expect(reportLines({ name: "test (macos-14)", conclusion: "failure", steps: [{ name: "Setup Bun", conclusion: "failure" }] },
+    "test (macos-14)\tSetup Bun\tinstallation failed")).toEqual(["installation failed"])
 })

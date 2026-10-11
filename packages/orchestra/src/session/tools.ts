@@ -1,5 +1,6 @@
 import { Agent } from "@/agent/agent"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
 import { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import { MCP } from "@/mcp"
@@ -58,6 +59,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   bypassAgentCheck: boolean
   messages: SessionV1.WithParts[]
   promptOps: TaskPromptOps
+  canRecall?: () => boolean
 }) {
   const tools: Record<string, AITool> = {}
   const run = yield* EffectBridge.make()
@@ -99,7 +101,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     abort: options.abortSignal!,
     messageID: input.processor.message.id,
     callID: options.toolCallId,
-    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps },
+    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps, canRecall: input.canRecall?.() === true },
     agent: input.agent.name,
     agentID: input.agent.id,
     permission: Permission.merge(input.agent.permission, input.session.permission ?? []),
@@ -111,7 +113,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           ...match,
           state: {
             title: val.title,
-            metadata: val.metadata,
+            metadata: SessionMessageUpdater.taskMetadata("metadata" in match.state ? match.state.metadata ?? {} : {},
+              val.metadata ?? {}, { sessionID: match.sessionID, messageID: match.messageID, callID: match.callID,
+                tool: match.tool, input: match.state.input }),
             status: "running",
             input: args,
             time: match.state.status === "running" ? match.state.time : { start: Date.now() },
@@ -127,6 +131,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             if (Permission.evaluate(req.permission, pattern, nativePermission).action !== "deny") continue
             return yield* new PermissionV1.DeniedError({
               ruleset: nativePermission,
+              reason: req.permission === "external_directory"
+                ? `${pattern.replace(/[\\/]\*$/, "")} is outside the workspace. The owner's rules keep this agent inside ` +
+                  "it, and it cannot ask for an exception: work with paths inside the workspace."
+                : undefined,
             })
           }
         }
@@ -156,7 +164,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
         }, Option.isSome(research) ? research.value.tool(input.session.id,
           options.toolCallId ? `${input.processor.message.id}:${options.toolCallId}` : "", name, effect).pipe(Effect.orDie)
           : input.agent.id === "jimmy" ? Effect.die(new Error("Native discovery allowance service is unavailable")) : effect,
-        (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+        (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
+          input.processor.updateToolCall(options.toolCallId, (match) => ({
+            ...match,
+            state: match.state.status === "pending"
+              ? {
+                  status: "running",
+                  input: toRecord(args),
+                  time: { start: Date.now() },
+                  metadata: { toolSafety: observation },
+                }
+              : {
+                  ...match.state,
+                  // Preserve streamed progress and terminal state; only the host owns this observation.
+                  metadata: { ...match.state.metadata, toolSafety: observation },
+                },
+          })),
+        ), Effect.asVoid) : Effect.void,
         () => !!options.abortSignal?.aborted).pipe(Effect.provideService(ToolSafetyHooks.Placement, placement(scope))),
       ),
     ).pipe(Effect.orDie)

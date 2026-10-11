@@ -41,7 +41,8 @@ const layer = Layer.effect(
     const sessions = yield* Session.Service
     const database = yield* Database.Service
     const allowances = yield* ResearchAllowance.Service
-    const logical = (sessionID: string) => LogicalTask.read(sessionID).pipe(Effect.provideService(Database.Service, database))
+    const logical = (sessionID: string) => LogicalTask.read(sessionID).pipe(Effect.provideService(Database.Service, database),
+      Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Native logical Task binding is invalid" })))
 
     const placement = Effect.fn("ResearchExecution.placement")(function* (sessionID: string) {
       const task = yield* logical(sessionID)

@@ -29,6 +29,7 @@ type Active = {
   tail: Deferred.Deferred<void>
   promoted: Deferred.Deferred<Info>
   onPromote?: Effect.Effect<void>
+  notify?: StartInput["notify"]
 }
 
 type State = {
@@ -40,6 +41,7 @@ type FinishResult = {
   info?: Info
   done?: Deferred.Deferred<Info>
   scope?: Scope.Closeable
+  notify?: StartInput["notify"]
 }
 
 type PromoteResult = {
@@ -67,11 +69,14 @@ export type StartInput = {
   title?: string
   metadata?: Record<string, unknown>
   onPromote?: Effect.Effect<void>
+  // Best-effort terminal notice; only a command that begins may replace its predecessor's callback.
+  notify?: (info: Info) => Effect.Effect<void, unknown>
   run: Effect.Effect<string, unknown>
 }
 
 export type ExtendInput = {
   id: string
+  notify?: StartInput["notify"]
   run: Effect.Effect<string, unknown>
 }
 
@@ -151,6 +156,7 @@ export const make = Effect.gen(function* () {
       const next = {
         ...job,
         onPromote: undefined,
+        notify: undefined,
         pending: 0,
         output,
         info: {
@@ -161,9 +167,13 @@ export const make = Effect.gen(function* () {
           ...(Exit.isFailure(exit) ? { error: errorText(Cause.squash(exit.cause)) } : {}),
         },
       }
-      return [{ info: snapshot(next), done: job.done, scope: job.scope }, new Map(jobs).set(id, next)]
+      return [{ info: snapshot(next), done: job.done, scope: job.scope, notify: job.notify }, new Map(jobs).set(id, next)]
     })
     if (result.info && result.done) yield* Deferred.succeed(result.done, result.info).pipe(Effect.ignore)
+    const notify = result.notify
+    const info = result.info
+    if (info && notify)
+      yield* Effect.suspend(() => notify(info)).pipe(Effect.ignore, Effect.forkIn(state.scope, { startImmediately: true }))
     if (result.scope) {
       yield* Scope.close(result.scope, Exit.void).pipe(Effect.forkIn(state.scope, { startImmediately: true }))
     }
@@ -175,14 +185,26 @@ export const make = Effect.gen(function* () {
     id: string,
     token: object,
     sequence: number,
-    run: Effect.Effect<string, unknown>,
+    command: Pick<StartInput, "run" | "notify">,
+    tail: Deferred.Deferred<void>,
+    previous?: Deferred.Deferred<void>,
   ) {
-    return yield* run.pipe(
-      Effect.matchCauseEffect({
+    return yield* Effect.gen(function* () {
+      if (previous) yield* Deferred.await(previous)
+      const began = yield* SynchronizedRef.modify(state.jobs, (jobs): readonly [boolean, Map<string, Active>] => {
+        const job = jobs.get(id)
+        if (!job || job.token !== token || job.info.status !== "running") return [false, jobs]
+        // Queuing is not execution: only the command that begins may take over the completion notice.
+        return [true, command.notify ? new Map(jobs).set(id, { ...job, notify: command.notify }) : jobs]
+      })
+      if (!began) return
+      yield* command.run.pipe(Effect.matchCauseEffect({
         onSuccess: (output) => settle(id, token, sequence, Exit.succeed(output)),
         onFailure: (cause) => settle(id, token, sequence, Exit.failCause(cause)),
-      }),
-      Effect.asVoid,
+      }))
+    }).pipe(
+      // Settle the prior attempt before releasing its successor, including when the prior attempt fails.
+      Effect.ensuring(Deferred.succeed(tail, undefined)),
       Effect.forkIn(scope, { startImmediately: true }),
     )
   })
@@ -246,7 +268,8 @@ export const make = Effect.gen(function* () {
             id,
             result.token,
             0,
-            restore(input.run).pipe(Effect.ensuring(Deferred.succeed(tail, undefined))),
+            { run: restore(input.run), notify: input.notify },
+            tail,
           )
         return result.info
       }),
@@ -279,10 +302,9 @@ export const make = Effect.gen(function* () {
           input.id,
           result.token,
           result.sequence,
-          Deferred.await(result.previous).pipe(
-            Effect.andThen(restore(input.run)),
-            Effect.ensuring(Deferred.succeed(result.tail, undefined)),
-          ),
+          { run: restore(input.run), notify: input.notify },
+          result.tail,
+          result.previous,
         )
         return true
       }),
@@ -344,6 +366,7 @@ export const make = Effect.gen(function* () {
         ...job,
         onPromote: undefined,
         pending: 0,
+        notify: undefined,
         info: {
           ...job.info,
           status: "cancelled" as const,

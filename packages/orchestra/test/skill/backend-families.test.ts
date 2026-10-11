@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
+import semver from "semver"
 import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest"
 
 // Family layout of the backend specialist's shared references (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
@@ -190,22 +191,7 @@ describe("backend skill family tuples and engine recipes", () => {
     const recipes = (await listReferences()).filter((file) => file.startsWith("recipes/external/"))
     expect(recipes).toEqual([...PACKS.map((pack) => `recipes/external/${pack.id}.md`), "recipes/external/index.md"].toSorted())
 
-    const results = await Promise.all(
-      PACKS.map(async (pack) => {
-        const text = await Bun.file(path.join(REFERENCES, `recipes/external/${pack.id}.md`)).text()
-        return {
-          id: pack.id,
-          pin: text.includes(`\`${pack.version}\``),
-          invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${pack.id}"`),
-          // F5.31 outcomes the recipe must turn into a `tool` blocker.
-          outcomes: text.includes("toolkit-not-ready:") && text.includes("unsupported-target:"),
-          otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pack.version),
-          otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
-            .map((match) => match[1])
-            .filter((engine) => engine !== pack.id && !(ENGINE_DRIVERS[pack.id] ?? []).includes(engine)),
-        }
-      }),
-    )
+    const results = await engineRecipeChecks(PACKS, (id) => Bun.file(path.join(REFERENCES, `recipes/external/${id}.md`)).text())
     expect(results).toEqual(
       PACKS.map((pack) => ({ id: pack.id, pin: true, invokes: true, outcomes: true, otherVersions: [], otherEngines: [] })),
     )
@@ -232,6 +218,74 @@ describe("backend skill family tuples and engine recipes", () => {
     )
   })
 })
+
+describe("engine recipe version guard teeth", () => {
+  const check = (version: string, text: string) => engineRecipeChecks([{ id: "fixture", version }], async () => text)
+  const plain = "3.0.4"
+  const owned = `${plain}+orchestra.cassandra1`
+
+  test("plain and prerelease pins stay exact; qualified owned pins also allow only their upstream core", async () => {
+    expect(await check(plain, `Pin \`${plain}\`.`)).toMatchObject([{ pin: true, otherVersions: [] }])
+    expect(await check(plain, `Pin \`${plain}\`; foreign 3.0.3.`)).toMatchObject([{ pin: true, otherVersions: ["3.0.3"] }])
+    expect(await check(plain, `Pin \`${plain}\`; foreign \`${owned}\`.`)).toMatchObject([{ pin: true, otherVersions: [owned] }])
+    expect(await check(`${plain}-rc.1`, `Pin \`${plain}-rc.1\`; core \`${plain}\`.`)).toMatchObject([{ pin: true, otherVersions: [plain] }])
+    expect(await check(owned, `Pin \`${owned}\`; upstream \`${plain}\`, project v${plain}.`)).toMatchObject([{ pin: true, otherVersions: [] }])
+    expect(await check(`${plain}-rc.1+host.1`, `Pin \`${plain}-rc.1+host.1\`; core \`${plain}\`.`)).toMatchObject([{ pin: true, otherVersions: [] }])
+  })
+
+  test("wrong same-core qualifiers and foreign/malformed tokens fail even with the exact owned pin present", async () => {
+    for (const foreign of ["3.0.4+orchestra.cassandra2", "3.0.4-rc.1+orchestra.cassandra1", "3.0.5", "1.15.3",
+      "03.0.4", "3.0.4+", "3.0.4+orchestra..cassandra1", "3.0.4+orchestra.cassandra1_extra", "3.0.4-01", "3.0.4+host+extra"]) {
+      expect(await check(owned, `Pin \`${owned}\`; foreign \`${foreign}\`.`), foreign).toMatchObject([{ pin: true, otherVersions: [foreign] }])
+    }
+  })
+
+  test("the full inline owned pin remains mandatory, including when its upstream core is present", async () => {
+    expect(await check(owned, `Only upstream \`${plain}\`.`)).toMatchObject([{ pin: false, otherVersions: [] }])
+    expect(await check(owned, `Unquoted ${owned}`)).toMatchObject([{ pin: false, otherVersions: [] }])
+  })
+
+  test("empty manifests, absent/unreadable text, empty candidates and malformed manifest pins fail by name", async () => {
+    await expect(engineRecipeChecks([], async () => "unused")).rejects.toThrow("engine-recipes:empty-manifest")
+    await expect(check(owned, "")).rejects.toThrow("engine-recipe:fixture:empty-text")
+    await expect(check(owned, "No version tokens")).rejects.toThrow("engine-recipe:fixture:empty-version-candidates")
+    await expect(check("3.0.4+", `Pin \`${owned}\`.`)).rejects.toThrow("engine-recipe:fixture:malformed-manifest-version")
+    await expect(engineRecipeChecks([{ id: "missing", version: owned }], () => Bun.file(path.join(REFERENCES, "missing-recipe.md")).text())).rejects.toThrow("engine-recipe:missing:unreadable-text")
+    await expect(engineRecipeChecks([{ id: "broken", version: owned }], async () => { throw new Error("reader failed") })).rejects.toThrow("engine-recipe:broken:unreadable-text")
+  })
+
+  test("a no-op recipe edit preserves the real gate result", async () => {
+    const read = (id: string) => Bun.file(path.join(REFERENCES, `recipes/external/${id}.md`)).text()
+    expect(await engineRecipeChecks(PACKS, async (id) => `${await read(id)}\n`)).toEqual(await engineRecipeChecks(PACKS, read))
+  })
+})
+
+// Repair: the former bare-core scan misread build metadata. Extract whole ASCII version candidates, including malformed
+// qualifiers, then delegate validity to SemVer. Exact token comparison deliberately retains build identity; SemVer
+// precedence/equality discards it. Only a manifest pin with build metadata admits its normalized upstream core too.
+async function engineRecipeChecks(packs: ReadonlyArray<Pick<BackendToolkitManifest.Pack, "id" | "version">>, read: (id: string) => Promise<string>) {
+  if (packs.length === 0) throw new Error("engine-recipes:empty-manifest")
+  return Promise.all(packs.map(async (pack) => {
+    const pin = semver.parse(pack.version)
+    if (!pin) throw new Error(`engine-recipe:${pack.id}:malformed-manifest-version`)
+    const text = await read(pack.id).catch((cause) => { throw new Error(`engine-recipe:${pack.id}:unreadable-text`, { cause }) })
+    if (!text.trim()) throw new Error(`engine-recipe:${pack.id}:empty-text`)
+    const versions = [...text.matchAll(/\bv?(\d+\.\d+\.\d+(?:[-+][\w.+-]*)?)/g)].map((match) => match[1])
+    if (versions.length === 0) throw new Error(`engine-recipe:${pack.id}:empty-version-candidates`)
+    return {
+      id: pack.id,
+      pin: text.includes(`\`${pack.version}\``),
+      invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${pack.id}"`),
+      // F5.31 outcomes the recipe must turn into a tool blocker.
+      outcomes: text.includes("toolkit-not-ready:") && text.includes("unsupported-target:"),
+      otherVersions: versions.filter((version) => !semver.parse(version) ||
+        (version !== pack.version && !(pin.build.length > 0 && version === `${pin.major}.${pin.minor}.${pin.patch}`))),
+      otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
+        .map((match) => match[1])
+        .filter((engine) => engine !== pack.id && !(ENGINE_DRIVERS[pack.id] ?? []).includes(engine)),
+    }
+  }))
+}
 
 // Reference paths relative to `references/`, with `/` separators.
 async function listReferences() {

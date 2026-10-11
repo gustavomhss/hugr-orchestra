@@ -14,7 +14,7 @@ import { it } from "./lib/effect"
 const posix = process.platform === "win32" ? it.live.skip : it.live
 
 const VERSION = "1.0.0-fixture"
-const RECORDED = ["GOFLAGS", "GOTOOLCHAIN", "GOPATH", "GOCACHE", "GOPROXY", "GOSUMDB", "CGO_ENABLED", "CARGO_HOME", "CARGO_TARGET_DIR", "RUSTC"]
+const RECORDED = ["GOFLAGS", "GOTOOLCHAIN", "GOPATH", "GOCACHE", "GOPROXY", "GOSUMDB", "CGO_ENABLED", "CARGO_HOME", "CARGO_TARGET_DIR", "RUSTC", "CARGO_PROFILE_RELEASE_OPT_LEVEL"]
 // Each fake toolchain records how it was called next to itself, then writes a binary that echoes its argv and the launcher's environment.
 const TOOLCHAIN = [
   "#!/bin/sh",
@@ -131,6 +131,7 @@ const fixture = Effect.gen(function* () {
     path: ".",
     binary: "sqlx",
     features: ["postgres", "rustls"],
+    optLevel: 0,
   })
   const manifest = (engines: ReadonlyArray<BackendToolkitManifest.HostedEngine>) => ({
     ...BackendToolkitManifest.ENGINES,
@@ -192,7 +193,7 @@ posix("a go source engine is extracted, built with the pinned go env, and its bu
     expect(log[0].cwd).toBe(path.join(staging, "src"))
     expect(path.dirname(staging)).toBe(path.join(f.root, "engines", "ogen"))
     expect(path.basename(staging)).toStartWith(".staging-")
-    // The other toolchain's variables pass through from the caller's environment; only the build's own are pinned.
+    // The installer receives its declared build variables and needed search paths, not ambient toolchain configuration.
     expect(log[0]).toMatchObject({
       cwd: path.join(staging, "src"),
       argv: `build -trimpath -o ${path.join(staging, "ogen")} ./cmd/ogen`,
@@ -238,6 +239,7 @@ posix("a cargo source engine is installed --locked into the staging root with th
       CARGO_HOME: path.join(f.root, "cache", "cargo"),
       CARGO_TARGET_DIR: path.join(f.root, "cache", "cargo-target"),
       RUSTC: path.join(home, "bin", "rustc"),
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: "0",
     })
     const run = Bun.spawnSync([path.join(f.root, "bin", "sqlx"), "migrate", "run"])
     expect(run.exitCode).toBe(0)
@@ -257,3 +259,12 @@ posix("a toolchain that cannot be fetched blocks the engine with runtime-<cause>
     expect(f.hits).toEqual({ "/missing/toolchain.tar.gz": 1 })
   }), 30_000,
 )
+
+posix("Cassandra compatibility is rejected for another Go engine before its source build", () => Effect.gen(function* () {
+  const f = yield* fixture
+  if (f.ogen.install.kind !== "source") throw new Error("fixture must be a source engine")
+  const engine = { ...f.ogen, install: { ...f.ogen.install, compatibility: "cassandra-metadata" as const } }
+  const error = yield* BackendToolkit.ensure("ogen").pipe(within(f.root, f.manifest([engine]), f.runtimes()), Effect.flip)
+  expect(error.reason).toBe("toolkit-not-ready:failed:ogen:compatibility:cassandra-metadata:unsupported-engine")
+  expect(f.hits).toEqual({ "/toolchain.tar.gz": 1 })
+}))

@@ -1,8 +1,9 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, runner, args, config?, benchmarkRenderer? }). This workflow runs those tests, then deletes the branch.
-# The request names its runner (`bun`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
+# with a .ci-run.json request ({ package, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
+# tests, then deletes the branch.
+# The request names its runner (`bun`, `node`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.
 on:
   push:
@@ -18,9 +19,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # both keeps its Linux/Windows meaning; all adds standard M1 arm64 macos-15.
-        # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-15"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-15"]' || '["ubuntu-latest"]') }}
+        # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
+        # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
+        # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -31,10 +33,10 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Assert macOS arm64
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && matrix.host != 'macos-15-intel'
         run: |
           if [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != arm64 ]; then
-            echo "::error::macos-15 must provide native arm64"
+            echo "::error::${{ matrix.host }} must provide native arm64"
             exit 2
           fi
 
@@ -61,7 +63,7 @@ jobs:
           NODE
 
       - name: Setup Bun
-        if: steps.request.outputs.runner == 'bun' || steps.request.outputs.runner == 'playwright'
+        if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun
 
       # setup-bun selects Node 24; match the existing e2e lane's extraction workaround afterwards.
@@ -122,6 +124,27 @@ jobs:
           node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))"
           echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"
 
+      # Only allow-listed keys with plain values reach the environment; test-ci.ts validates before upload too.
+      - name: Export requested environment
+        run: |
+          jq -r '(.env // {}) | to_entries[] | "\(.key)=\(.value)"' .ci-run.json | tr -d '\r' | while IFS= read -r line; do
+            key=${line%%=*}
+            value=${line#*=}
+            case "$key" in
+              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) ;;
+              *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
+            esac
+            if ! printf '%s' "$value" | grep -Eq '^[A-Za-z0-9_]+$'; then
+              echo "::error::.ci-run.json env value for $key is not [A-Za-z0-9_]+"
+              exit 2
+            fi
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done
+
+      - name: omni binaries
+        if: steps.request.outputs.runner != 'pytest'
+        uses: ./.github/actions/omni-binaries
+
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -160,11 +183,19 @@ jobs:
           args=()
           while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
           cd "packages/$PACKAGE"
-          if [ "$RUNNER" = pytest ]; then
-            python -m pytest -p no:cacheprovider "${args[@]}"
-          else
-            GITHUB_ACTIONS=false bun test "${args[@]}"
-          fi
+          case "$RUNNER" in
+            pytest) python -m pytest -p no:cacheprovider "${args[@]}" ;;
+            bun) GITHUB_ACTIONS=false bun test "${args[@]}" ;;
+            node)
+              for file in "${args[@]}"; do
+                case "$file" in
+                  *.node-smoke.mjs) ;;
+                  *) echo "::error::the node runner runs only *.node-smoke.mjs files, not $file"; exit 2 ;;
+                esac
+              done
+              node --experimental-strip-types --test "${args[@]}"
+              ;;
+          esac
 
       # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
       - name: Assert Jimmy desktop detecting evidence

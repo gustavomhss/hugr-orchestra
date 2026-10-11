@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 
-import * as NodeRuntime from "@effect/platform-node/NodeRuntime"
-import * as NodeServices from "@effect/platform-node/NodeServices"
-import * as Effect from "effect/Effect"
+import { NodeRuntime, NodeServices } from "@effect/platform-node"
+import { InstallationVersion } from "@orchestra/core/installation/version"
+import { Effect } from "effect"
+import { CliOutput } from "effect/unstable/cli"
 import { Commands } from "./commands/commands"
 import { Runtime } from "./framework/runtime"
 import { Daemon } from "./services/daemon"
@@ -12,6 +13,7 @@ const Handlers = Runtime.handlers(Commands, {
   api: () => import("./commands/handlers/api"),
   debug: {
     agents: () => import("./commands/handlers/debug/agents"),
+    symbols: () => import("./commands/handlers/debug/symbols"),
   },
   migrate: () => import("./commands/handlers/migrate"),
   service: {
@@ -24,7 +26,12 @@ const Handlers = Runtime.handlers(Commands, {
   serve: () => import("./commands/handlers/serve"),
 })
 
-Runtime.run(Commands, Handlers, { version: "local" }).pipe(
+Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(
+  // Artifact consumers require the exact version, without the CLI formatter's name/prefix.
+  Effect.provideService(CliOutput.Formatter, {
+    ...CliOutput.defaultFormatter(),
+    formatVersion: (_name, version) => version,
+  }),
   Effect.provide(Daemon.layer),
   Effect.provide(NodeServices.layer),
   Effect.scoped,

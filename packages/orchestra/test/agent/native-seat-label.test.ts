@@ -171,3 +171,34 @@ describe("native seat label", () => {
     { config: { agent: { backend: { name: "x".repeat(40) }, rosie: { name: "ROSIE" } } } },
   )
 })
+
+// Native seats and Maestro accept an engine override; Maestro's mode, name and presence stay fixed even then.
+it.instance(
+  "native subagent and Maestro honor a configured engine; Maestro still cannot be disabled, re-moded or renamed",
+  () =>
+    Effect.gen(function* () {
+      const backend = yield* Agent.Service.use((svc) => svc.get("backend"))
+      expect(backend).toMatchObject({ id: "backend", native: true, mode: "subagent", engine: "claude-code" })
+      expect(String(backend?.model?.providerID)).toBe("anthropic")
+      const maestro = yield* Agent.Service.use((svc) => svc.get("maestro"))
+      expect(maestro).toMatchObject({ id: "maestro", name: "maestro", native: true, mode: "primary", engine: "claude-code" })
+      expect(yield* Agent.Service.use((svc) => svc.defaultAgent())).toBe("maestro")
+    }),
+  {
+    config: {
+      agent: {
+        backend: { engine: "claude-code", model: "anthropic/claude-opus-5-5" },
+        maestro: { engine: "claude-code", mode: "subagent", disable: true, name: "conductor" },
+      },
+    },
+  },
+)
+
+it.instance(
+  "Maestro stays on Orchestra's loop unless the owner opts in",
+  () =>
+    Effect.gen(function* () {
+      expect((yield* Agent.Service.use((svc) => svc.get("maestro")))?.engine).toBeUndefined()
+    }),
+  { config: { agent: { maestro: { mode: "subagent" } } } },
+)

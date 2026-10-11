@@ -46,6 +46,9 @@ export const assemble = Effect.fn("DiscoveryResult.assemble")(function* (
   const host = BackendResult.terminal(message)
   return {
     schema: "discovery-work-result-v1",
+    mode: "delegated",
+    acceptance: { state: "pending" },
+    verification: { state: "not-host-verified" },
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(retained?.corpus ? { corpus: retained.corpus } : {}),
     ...(card && references !== undefined ? { discovery: card, ...references,

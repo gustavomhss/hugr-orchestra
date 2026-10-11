@@ -69,6 +69,12 @@ export function packet(input: { messages?: unknown }) {
 export const retrying = (input: { messages?: unknown }) =>
   wireMessages(input).at(-1)?.content.startsWith("HOST CHECK FAILED") === true
 
+export function reviewing(input: { agent?: { name: string }; system?: readonly string[]; messages?: unknown }) {
+  return input.agent?.name === "continuity-review" || [...input.system ?? [],
+    ...wireMessages(input).filter((message) => message.role === "system").map((message) => message.content),
+  ].some((text) => text.includes("You independently review a complete working-memory candidate"))
+}
+
 /** The index entries of the new span: alias and its index text, including appended output lines. */
 export function fragments(markdown: string) {
   const start = markdown.lastIndexOf("## Index of the new span\n")
@@ -90,21 +96,22 @@ export function body(input: { messages?: unknown; system?: unknown }, memory: st
   const system = Array.isArray(input.system) ? input.system.filter((item) => typeof item === "string") : []
   const visible = [...system, ...wireMessages(input).map((message) => message.content)].join("\n")
   const prior = [...new Set([...visible.matchAll(/^\[(m\d+)\] /gm)].map((match) => match[1]))]
-  return { ops: [
+  return { ...(packet(input).includes("Return required Now") ? { now: { doing: memory, next: "Check the latest completed evidence before continuing.", src: [entries.at(-1)!.id] } } : {}), ops: [
     ...prior.map((id) => ({ op: "retire" as const, id, reason: "Superseded by the newly covered history." })),
     { op: "add" as const, section: "findings" as const, src: [selected.id],
       fields: { finding: memory, why: "Scenario memory.", status: "hypothesis", check: "None." } },
   ] }
 }
 
-export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown>; holdCleanup?: boolean } = {}) {
+export function held(memory = FIRST, options: { reference?: string; raw?: boolean; output?: Stream.Stream<LLMEvent, unknown>; holdCleanup?: boolean;
+  respond?: (request: LLM.StreamInput) => string } = {}) {
   return Effect.gen(function* () {
     const release = yield* Deferred.make<void>()
     const cleanup = yield* Deferred.make<void>()
     yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Deferred.succeed(cleanup, undefined))))
-    return { memory, respond: (request: LLM.StreamInput) => options.raw ? memory : JSON.stringify(body(request, memory, options.reference)),
+    return { memory, respond: (request: LLM.StreamInput) => options.respond ? options.respond(request) : options.raw ? memory : JSON.stringify(body(request, memory, options.reference)),
       output: options.output ?? Stream.make(LLMEvent.finish({ reason: "stop" })),
-      entered: yield* Deferred.make<{ request: LLM.StreamInput; jobID: string }>(), release,
+      requests: [] as LLM.StreamInput[], entered: yield* Deferred.make<{ request: LLM.StreamInput; jobID: string }>(), release,
       closed: yield* Deferred.make<void>(), closing: yield* Deferred.make<void>(), cleanup, holdCleanup: options.holdCleanup === true }
   })
 }
@@ -113,6 +120,7 @@ type Held = Effect.Success<ReturnType<typeof held>>
 export function environment<A = never, E = never>(plans: Held[], options: {
   getModel?: Provider.Interface["getModel"]
   archive?: (actual: Archive.Interface) => Archive.Interface
+  background?: (actual: BackgroundJob.Interface) => BackgroundJob.Interface
   node?: LayerNode.Node<A, E, LayerNode.Tag | undefined>
   /** Fixture turns report 50,000 tokens against a 200,000-token window. */
   config?: ConfigV1.Info
@@ -120,19 +128,28 @@ export function environment<A = never, E = never>(plans: Held[], options: {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
     layer: Layer.effect(LLM.Service, Effect.gen(function* () {
       const jobs = yield* BackgroundJob.Service
+      const reviews: LLM.StreamInput[] = []
+      yield* Effect.addFinalizer(() => Effect.sync(() => { expect(reviews).toEqual([]) }))
       yield* Effect.addFinalizer(() => Effect.forEach(plans, (plan) =>
         Deferred.succeed(plan.release, undefined).pipe(Effect.andThen(Deferred.succeed(plan.cleanup, undefined))),
       ).pipe(Effect.asVoid))
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+        if (reviewing(request)) {
+          reviews.push(request)
+          return Stream.fail(new Error("Unexpected continuity review request"))
+        }
         // The one retry after a failed check replays the same plan's reply without re-entering.
         if (retrying(request) && plans[index - 1]) {
           const plan = plans[index - 1]
+          plan.requests.push(request)
+          expect(plan.requests).toHaveLength(2)
           return Stream.concat(Stream.make(LLMEvent.textStart({ id: "memory" }), LLMEvent.textDelta({ id: "memory", text: plan.respond(request) })), plan.output)
         }
         const plan = plans[index++]
         if (!plan) return Stream.fail(new Error("Unexpected maintenance request"))
+        plan.requests.push(request)
         // Mirror LLM.stream's scoped transport cleanup, not only normal stream completion.
         yield* Effect.addFinalizer(() => Effect.gen(function* () {
           yield* Deferred.succeed(plan.closing, undefined)
@@ -155,6 +172,9 @@ export function environment<A = never, E = never>(plans: Held[], options: {
     })),
   })
   const wrap = options.archive
+  const wrapBackground = options.background
+  const background = wrapBackground ? Layer.effect(BackgroundJob.Service, BackgroundJob.Service.use((actual) =>
+    Effect.succeed(wrapBackground(actual)))).pipe(Layer.provide(LayerNode.compile(BackgroundJob.node))) : undefined
   const archive = wrap ? LayerNode.make({ service: Archive.Service, deps: [FSUtil.node],
     layer: Layer.effect(Archive.Service, Effect.gen(function* () {
       const actual = yield* Archive.Service
@@ -168,6 +188,7 @@ export function environment<A = never, E = never>(plans: Held[], options: {
   ]), [
     [LLM.node, llm],
     ...(archive ? [[Archive.node, archive] as const] : []),
+    ...(background ? [[BackgroundJob.node, background] as const] : []),
     [Provider.node, Layer.mock(Provider.Service, { getModel: options.getModel ?? ((providerID, modelID) => {
       expect(providerID).toBe(model.providerID)
       expect(modelID).toBe(model.id)
@@ -184,7 +205,7 @@ export function begin(sessionID: SessionID, marker: string) {
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     yield* continuity.advance(sessionID)
-    const user: SessionV1.User = { id: MessageID.ascending(), sessionID, role: "user", time: { created: Date.now() }, agent: "build", model: { providerID: model.providerID, modelID: model.id } }
+    const user: SessionV1.User = { id: MessageID.ascending(), sessionID, role: "user", time: { created: Date.now() }, agent: "maestro", model: { providerID: model.providerID, modelID: model.id } }
     yield* sessions.updateMessage(user)
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: user.id, type: "text", text: marker })
     return user
@@ -196,7 +217,7 @@ export function complete(user: SessionV1.User, marker: string, tokens = 100, can
     const sessions = yield* Session.Service
     const continuity = yield* SessionContinuity.Service
     const assistant: SessionV1.Assistant = {
-      id: MessageID.ascending(), sessionID: user.sessionID, parentID: user.id, role: "assistant", agent: "build", mode: "build",
+      id: MessageID.ascending(), sessionID: user.sessionID, parentID: user.id, role: "assistant", agent: "maestro", mode: "maestro",
       path: { cwd: "/test", root: "/test" }, modelID: model.id, providerID: model.providerID, cost: 0,
       tokens: { input: tokens, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       finish: "stop", time: { created: Date.now(), completed: Date.now() },
@@ -265,12 +286,16 @@ export function applyFirst(sessionID: SessionID, plan: Held) {
     const hit = yield* entered(plan)
     yield* Deferred.succeed(plan.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
-    const prepared = yield* prepare(sessionID)
+    expect(plan.requests).toHaveLength(1)
+    expect(plan.requests.filter(reviewing)).toEqual([])
+    const continuity = yield* SessionContinuity.Service
+    const sessions = yield* Session.Service
+    const prepared = yield* continuity.admit({ sessionID, messages: yield* sessions.messages({ sessionID }), canRecall: true })
     expect(prepared.system).toHaveLength(1)
     expect(prepared.system[0]).toContain(plan.memory)
     expect(prepared.system[0]).toStartWith("# Working memory\n")
     expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
-    expect(prepared.messages).toHaveLength(8)
+    expect(prepared.messages).toHaveLength(1)
     return prepared
   })
 }
@@ -286,7 +311,7 @@ export function recall(sessionID: SessionID, params: Tool.InferParameters<typeof
     const definition = yield* ContextRecallTool
     const tool = yield* Tool.init(definition)
     const asks: unknown[] = []
-    const result = yield* tool.execute(params, { sessionID, messageID: MessageID.ascending(), agent: "build",
+    const result = yield* tool.execute(params, { sessionID, messageID: MessageID.ascending(), agent: "maestro",
       abort: AbortSignal.any([]), messages: [], extra, metadata: () => Effect.void,
       ask: (request) => Effect.sync(() => void asks.push(request)) })
     expect(asks).toEqual([{ permission: "context_recall", patterns: [sessionID], always: [sessionID], metadata: {} }])

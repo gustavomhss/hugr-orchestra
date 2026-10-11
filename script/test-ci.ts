@@ -10,7 +10,11 @@
 // filter that may match several files, which Bun runs in its own order.
 //
 // Playwright requires package app, existing .spec.ts files and one of the two explicit app configs.
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms]
+// --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
+// (*.node-smoke.mjs) with node instead of bun test.
+//
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms]
+//        [--env KEY=VALUE] [--runner bun|node]
 //        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
 // Performance config also requires --benchmark-renderer current|legacy.
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
@@ -25,7 +29,8 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 import { parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
-const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms] [--runner playwright --config <config> [--benchmark-renderer current|legacy]]"
+const USAGE =
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -36,7 +41,13 @@ const tree = await snapshot()
 const base = await chooseBase()
 const changes = await changed()
 
-console.log(`test-ci: ${request.package} ${request.args.join(" ")} on ${request.os}`)
+console.log(
+  `test-ci: ${request.package} ${request.args.join(" ")} on ${request.os} (${request.runner}${Object.entries(
+    request.env,
+  )
+    .map(([key, value]) => `, ${key}=${value}`)
+    .join("")})`,
+)
 console.log(`test-ci: uploading ${changes.length} changed files on top of ${base.slice(0, 10)}`)
 await uploadBlobs()
 const uploaded = await api("POST", `repos/${repo}/git/trees`, {
@@ -74,17 +85,18 @@ const failed = await report(finished)
 process.exit(failed ? 1 : 0)
 
 function parse(argv: string[]) {
-  const parsed = parseOptions(argv)
   if (argv.some((arg) => arg === "-h" || arg === "--help")) fail(USAGE, 0)
+  const parsed = parseOptions(argv)
   const positional = parsed.positional
-  const options = parsed.options
+  const options = { ...parsed.options, runner: parsed.options.runner ?? "bun" }
+  const env = parsed.env
   const name = positional[0]?.replace(/^packages\//, "").replace(/\/$/, "")
   if (!name) fail(USAGE, 2)
   if (!/^[\w-]+(?:\/[\w-]+)*$/.test(name)) fail(`Invalid package: ${name}`, 2)
   if (options.runner === "playwright")
     return {
       ...validateRequest(
-        { package: name, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, args: positional.slice(1) },
+        { package: name, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
         (file) => {
           const full = path.join(root, file)
           return (statSync(full, { throwIfNoEntry: false })?.isFile() ?? false) &&
@@ -95,11 +107,12 @@ function parse(argv: string[]) {
     }
   // Test paths may be given from the repository root or from the package directory.
   const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
-  if (pytest(name, named))
+  if (options.runner !== "node" && pytest(name, named))
     return {
       package: name,
       os: options.os,
       runner: "pytest",
+      env,
       args: [...named, ...(options.pattern ? ["-k", options.pattern] : [])],
     }
   const files = testPaths(
@@ -107,11 +120,20 @@ function parse(argv: string[]) {
     positional.slice(1),
     (file) => statSync(path.join(root, "packages", name, file), { throwIfNoEntry: false })?.isFile() ?? false,
   )
+  if (options.runner === "node") {
+    if (options.pattern !== undefined) fail(`-t is a bun test option; the node runner takes smoke scripts only`, 2)
+    if (files.length === 0 || files.some((file) => !file.endsWith(".node-smoke.mjs")))
+      fail(`--runner node runs named *.node-smoke.mjs scripts only, never bun:test files\n${USAGE}`, 2)
+  }
   return {
     package: name,
     os: options.os,
-    runner: "bun",
-    args: [...files, "--timeout", options.timeout, ...(options.pattern ? ["-t", options.pattern] : [])],
+    runner: options.runner,
+    env,
+    args:
+      options.runner === "node"
+        ? files
+        : [...files, "--timeout", options.timeout, ...(options.pattern ? ["-t", options.pattern] : [])],
   }
 }
 
@@ -157,7 +179,7 @@ async function snapshot() {
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
   const body = JSON.stringify({
-    package: request.package, runner: request.runner, args: request.args,
+    package: request.package, runner: request.runner, args: request.args, env: request.env,
     ...("config" in request && request.config ? { config: request.config } : {}),
     ...("benchmarkRenderer" in request && request.benchmarkRenderer ? { benchmarkRenderer: request.benchmarkRenderer } : {}),
   })

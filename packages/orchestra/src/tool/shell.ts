@@ -1,12 +1,13 @@
-import { Effect, Fiber, Stream } from "effect"
+import { Effect, Exit, Fiber, Scope, Stream } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetyGit } from "@orchestra/core/tool-safety-git"
 import { OutputInspector } from "@orchestra/core/output-inspector"
 import { AppProcess } from "@orchestra/core/process"
+import { OmniSpawner } from "@orchestra/core/omni-spawner"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { createWriteStream } from "node:fs"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import { InstanceState } from "@/effect/instance-state"
 
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -14,60 +15,26 @@ import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Shell } from "@orchestra/core/shell"
 import { ShellID } from "./shell/id"
-import * as ShellScan from "./shell/scan"
+import { ShellScan } from "./shell/scan"
 
-import * as Truncate from "./truncate"
+import { Truncate } from "./truncate"
 import { Plugin } from "@/plugin"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
+import { preview, tail } from "./shell/output"
+import { BackgroundProcess } from "@/background/process"
 import { Agent } from "@/agent/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
+import path from "path"
 import { Seats } from "@/maestro/seats"
 
 export { Parameters } from "./shell/prompt"
 
-const MAX_METADATA_LENGTH = 30_000
 type Chunk = {
   text: string
   size: number
-}
-
-function preview(text: string) {
-  if (text.length <= MAX_METADATA_LENGTH) return text
-  return "...\n\n" + text.slice(-MAX_METADATA_LENGTH)
-}
-
-function tail(text: string, maxLines: number, maxBytes: number) {
-  const lines = text.split("\n")
-  if (lines.length <= maxLines && Buffer.byteLength(text, "utf-8") <= maxBytes) {
-    return {
-      text,
-      cut: false,
-    }
-  }
-
-  const out: string[] = []
-  let bytes = 0
-  for (let i = lines.length - 1; i >= 0 && out.length < maxLines; i--) {
-    const size = Buffer.byteLength(lines[i], "utf-8") + (out.length > 0 ? 1 : 0)
-    if (bytes + size > maxBytes) {
-      if (out.length === 0) {
-        const buf = Buffer.from(lines[i], "utf-8")
-        let start = buf.length - maxBytes
-        if (start < 0) start = 0
-        while (start < buf.length && (buf[start] & 0xc0) === 0x80) start++
-        out.unshift(buf.subarray(start).toString("utf-8"))
-      }
-      break
-    }
-    out.unshift(lines[i])
-    bytes += size
-  }
-  return {
-    text: out.join("\n"),
-    cut: true,
-  }
 }
 
 function cmd(shell: string, command: string, cwd: string, env: NodeJS.ProcessEnv) {
@@ -93,6 +60,7 @@ export const ShellTool = Tool.define(
   Effect.gen(function* () {
     const config = yield* Config.Service
     const spawner = yield* ChildProcessSpawner
+    const adoptable = yield* BackgroundProcess.adoptable
     const fs = yield* FSUtil.Service
     const trunc = yield* Truncate.Service
     const plugin = yield* Plugin.Service
@@ -122,6 +90,7 @@ export const ShellTool = Tool.define(
         cwd: string
         env: NodeJS.ProcessEnv
         timeout: number
+        prepareParents: boolean
       },
       ctx: Tool.Context,
     ) {
@@ -175,14 +144,26 @@ export const ShellTool = Tool.define(
         },
       })
 
-      const code: number | null = yield* Effect.scoped(
+      return yield* Effect.scoped(
         Effect.gen(function* () {
+          const resources = yield* Scope.make()
+          const ownership = { retained: false }
+          // Registered before spawn: child release transfers ownership before foreground cleanup runs.
+          yield* Effect.addFinalizer(() => ownership.retained ? Effect.void : Scope.close(resources, Exit.void))
           yield* Effect.addFinalizer(closeSink)
-          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env)).pipe(
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
+            Scope.provide(resources),
           )
-          const handle = yield* spawner.spawn(wrapped)
+          // The tool keeps only the tail, so a gap is a visible marker rather than a failed run (R2-2).
+          const handle = yield* spawner.spawn(wrapped).pipe(
+            Effect.provideService(OmniSpawner.GapPolicy, "marker"),
+            adoptable(ctx.sessionID, {
+              onAdopt: Effect.sync(() => { ownership.retained = true }),
+              finalize: Scope.close(resources, Exit.void),
+            }),
+          )
           const inspection = OutputInspector.quarantine()
 
           const retain = (chunk: string) =>
@@ -275,50 +256,53 @@ export const ShellTool = Tool.define(
           }
 
           if (exit.kind === "exit") yield* Fiber.join(reader)
-          return exit.kind === "exit" ? exit.code : null
-        }),
+          const code: number | null = exit.kind === "exit" ? exit.code : null
+          // A nonzero root is a normal tool result, but its surviving descendants must never be adopted.
+          if (code !== null && code !== 0) yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
+
+          const meta: string[] = []
+          if (expired) {
+            meta.push(
+              `shell tool terminated command after exceeding timeout ${input.timeout} ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.`,
+            )
+          }
+          if (aborted) meta.push("User aborted the command")
+          const raw = list.map((item) => item.text).join("")
+          const end = tail(raw, limits.maxLines, limits.maxBytes)
+          if (end.cut) cut = true
+          if (!file && end.cut) {
+            file = yield* trunc.write(raw)
+          }
+
+          let output = end.text
+          if (!output) output = "(no output)"
+
+          // Timeout and abort already explain themselves below. This note goes first because the app's
+          // test evidence cards parse the end of the output, where runners print their summaries.
+          if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
+
+          if (cut && file) {
+            output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
+          }
+
+          if (meta.length > 0) {
+            output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
+          }
+          yield* closeSink()
+          return {
+            title: input.command,
+            metadata: {
+              output: last || preview(output),
+              exit: code,
+              timeout: expired,
+              aborted,
+              truncated: cut,
+              ...(cut && file ? { outputPath: file } : {}),
+            },
+            output,
+          }
+        }).pipe(Effect.ensuring(closeSink())),
       ).pipe(Effect.orDie)
-
-      const meta: string[] = []
-      if (expired) {
-        meta.push(
-          `shell tool terminated command after exceeding timeout ${input.timeout} ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.`,
-        )
-      }
-      if (aborted) meta.push("User aborted the command")
-      const raw = list.map((item) => item.text).join("")
-      const end = tail(raw, limits.maxLines, limits.maxBytes)
-      if (end.cut) cut = true
-      if (!file && end.cut) {
-        file = yield* trunc.write(raw)
-      }
-
-      let output = end.text
-      if (!output) output = "(no output)"
-
-      // Timeout and abort already explain themselves below. This note goes first because the app's
-      // test evidence cards parse the end of the output, where runners print their summaries.
-      if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
-
-      if (cut && file) {
-        output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
-      }
-
-      if (meta.length > 0) {
-        output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
-      }
-      return {
-        title: input.command,
-        metadata: {
-          output: last || preview(output),
-          exit: code,
-          timeout: expired,
-          aborted,
-          truncated: cut,
-          ...(cut && file ? { outputPath: file } : {}),
-        },
-        output,
-      }
     })
 
     return () =>
@@ -343,11 +327,22 @@ export const ShellTool = Tool.define(
                 throw new Error(`Invalid timeout value: ${params.timeout}. Timeout must be a positive number.`)
               }
               const timeout = params.timeout ?? defaultTimeoutMs
-              const ps = Shell.ps(shell)
-              yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
+              const prepareParents = yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
 
               // Only the native backend seat gets its toolkit engines fetched; a blocked engine is the tool's output.
               const seat = Seats.find(ctx.agentID)?.toolkit ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
+              const blocked = seat?.native === true ? yield* Effect.gen(function* () {
+                const root = yield* BackendToolkit.Root
+                const owned = yield* ShellScan.ownedToolArgv({ command: params.command, shell, toolkitBin: path.join(root, "bin") })
+                if (owned.blocked) return owned.blocked
+                yield* Effect.forEach(owned.calls ?? [], (call) => BackendToolkitProject.checkProjectVersion({
+                  ...call, cwd, projectDirectory: instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree,
+                }), { discard: true })
+                // Literal owned paths need not use toolkit variables; ensure the parsed engine, then reuse its cache.
+                if (owned.calls?.length) yield* BackendToolkit.ensure("openapi-generator")
+              }).pipe(Effect.catch((error) => Effect.succeed(error.reason))) : undefined
+              if (blocked)
+                return { title: params.command, output: blocked, metadata: { output: blocked, exit: null, timeout: false, aborted: false, truncated: false } }
               const toolkit = seat?.native === true ? yield* BackendToolkit.prepare(params.command) : undefined
               if (toolkit?.blocked)
                 return { title: params.command, output: toolkit.blocked, metadata: { output: toolkit.blocked, exit: null, timeout: false, aborted: false, truncated: false } }
@@ -358,6 +353,7 @@ export const ShellTool = Tool.define(
                   cwd,
                   env: { ...(yield* shellEnv(ctx, cwd)), ...toolkit?.env },
                   timeout,
+                  prepareParents,
                 },
                 ctx,
               )

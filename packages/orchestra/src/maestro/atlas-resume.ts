@@ -7,6 +7,7 @@ import type { SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { Tool } from "@/tool/tool"
 import { AtlasMemory } from "./atlas-memory"
+import { LogicalTask } from "./logical-task"
 
 // When Maestro dispatches a supported native Atlas resume for a unit, the host pushes that
 // unit's latest admitted checkpoint into the child Session once per logical resume. Every verdict, a fold or a refusal,
@@ -31,7 +32,7 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
   const key: AtlasMemory.AdmissionKey = {
     projectID: instance?.project.id ?? "",
     memoryOwner: member,
-    logicalResumeID: `${input.ctx.sessionID}/${callID}`,
+    logicalResumeID: LogicalTask.resumeRef(input.ctx.sessionID, callID),
     kind: unit.kind,
     id: unit.id,
   }

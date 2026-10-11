@@ -70,7 +70,7 @@ it.instance("the agent's context_compact tool runs a forced pass on its own sess
     // At trigger 0.5 the seed starts nothing on its own: only the tool runs the pass.
     const sessionID = yield* seed()
     const tool = yield* Tool.init(yield* ContextCompactTool)
-    const call = yield* tool.execute({}, { sessionID, messageID: MessageID.ascending(), agent: "build", abort: AbortSignal.any([]),
+    const call = yield* tool.execute({}, { sessionID, messageID: MessageID.ascending(), agent: "maestro", abort: AbortSignal.any([]),
       messages: [], metadata: () => Effect.void, ask: () => Effect.void }).pipe(Effect.forkChild)
     const hit = yield* entered(first)
     yield* Deferred.succeed(first.release, undefined)
@@ -80,6 +80,24 @@ it.instance("the agent's context_compact tool runs a forced pass on its own sess
     yield* terminal(hit.jobID, "completed", "applied")
     expect((yield* prepare(sessionID)).system[0]).toContain(FIRST)
   }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.5 } } })))
+}), 30_000)
+
+it.instance("context_compact uses the selected model and recall capability for hard-limit fallback", () => Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed()
+    const sessions = yield* Session.Service
+    const history = yield* sessions.messages({ sessionID })
+    yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: history[9].info.id, type: "tool", tool: "read", callID: "selected_model_large",
+      state: { status: "completed", input: { filePath: "selected-model.log" }, output: "build log line\n".repeat(8_000), title: "selected-model.log",
+        metadata: {}, time: { start: 1, end: 2 } } })
+    const tool = yield* Tool.init(yield* ContextCompactTool)
+    const context = { sessionID, messageID: MessageID.ascending(), agent: "maestro", abort: AbortSignal.any([]), messages: [],
+      metadata: () => Effect.void, ask: () => Effect.void,
+      extra: { model: { ...model, limit: { context: 20_000, output: 2_000 } }, canRecall: true } }
+    expect((yield* tool.execute({}, context)).metadata).toEqual({ outcome: "masked", truncated: false })
+    expect((yield* tool.execute({}, { ...context, extra: { ...context.extra, canRecall: false } })).metadata)
+      .toEqual({ outcome: "over", truncated: false })
+  }).pipe(Effect.provide(environment([])))
 }), 30_000)
 
 it.instance("below the trigger nothing is compacted: a long turn keeps every tool result", () => Effect.gen(function* () {
@@ -93,7 +111,7 @@ it.instance("below the trigger nothing is compacted: a long turn keeps every too
     const steps: SessionV1.Assistant[] = []
     for (let index = 0; index < 8; index++) {
       const step: SessionV1.Assistant = {
-        id: MessageID.ascending(), sessionID, parentID: user.id, role: "assistant", agent: "build", mode: "build",
+        id: MessageID.ascending(), sessionID, parentID: user.id, role: "assistant", agent: "maestro", mode: "maestro",
         path: { cwd: "/test", root: "/test" }, modelID: user.model.modelID, providerID: user.model.providerID, cost: 0,
         tokens: { input: 52_000 + index * 1_500, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
         finish: "tool-calls", time: { created: Date.now(), completed: Date.now() },

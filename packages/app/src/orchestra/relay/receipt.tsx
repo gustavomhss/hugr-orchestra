@@ -10,7 +10,7 @@ import type { RelaySource } from "./source"
 import { Ic, Menu, useRelayCopy } from "./ui"
 
 // One run's receipt: the decision first (waiting card or failure), then the phase strip, the per-step verdicts
-// and the audit. Release asks for a reason and runs the same gate again; it never skips a check.
+// and the recorded audit. Execution and release stay with Maestro.
 export function Receipt(props: {
   run: RelayRun
   document: RelayDocument
@@ -21,9 +21,7 @@ export function Receipt(props: {
   onSession: (sessionID: string) => void
 }) {
   const copy = useRelayCopy()
-  const [reason, setReason] = createSignal("")
   const [menu, setMenu] = createSignal<HTMLElement>()
-  const release = createAction()
   const ledger = createAction()
   const audit = useQuery(
     () => ({
@@ -63,19 +61,6 @@ export function Receipt(props: {
                   : ["", "orchestra.workflows.phase.pending"]
         return { phase, tone: state[0], label: copy.t(state[1]) }
       })
-  const submit = () =>
-    release.run(async () => {
-      const value = reason().trim()
-      if (!value) return
-      const run = await props.source.runClient.release(props.run.runID, value)
-      setReason("")
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("runs"), (list: RelayRun[] | undefined) =>
-          list?.map((item) => (item.runID === run.runID ? run : item)),
-        )
-      props.source.invalidate("runs")
-    })
   const download = () =>
     ledger.run(async () => {
       const value = await props.source.runClient.ledger(props.run.runID)
@@ -171,18 +156,9 @@ export function Receipt(props: {
               .
             </Show>
             <br />
-            {copy.t("orchestra.workflows.receipt.releaseHelp")}
-            <textarea
-              value={reason()}
-              placeholder={copy.t("orchestra.workflows.receipt.reasonPlaceholder")}
-              aria-label={copy.t("orchestra.workflows.receipt.reasonLabel")}
-              onInput={(event) => setReason(event.currentTarget.value)}
-            />
+            {copy.t("orchestra.workflows.maestroOnly")}
           </div>
           <div class="wf-wait-foot">
-            <small classList={{ bad: !!release.error() }} role={release.error() ? "alert" : undefined}>
-              {release.error() ?? copy.t("orchestra.workflows.receipt.reasonRequired")}
-            </small>
             <Show when={sessionOf(props.run.position)}>
               {(session) => (
                 <button type="button" class="mx-btn" onClick={() => props.onSession(session())}>
@@ -197,14 +173,6 @@ export function Receipt(props: {
                 </button>
               )}
             </Show>
-            <button
-              type="button"
-              class="mx-btn primary"
-              disabled={!reason().trim() || release.busy()}
-              onClick={() => void submit()}
-            >
-              {copy.t("orchestra.workflows.receipt.release")}
-            </button>
           </div>
         </section>
       </Show>
@@ -364,7 +332,7 @@ export function Receipt(props: {
           onClick={() => void audit.refetch()}
         >
           <Ic name="history" />
-          {copy.t("orchestra.workflows.receipt.rerunAudit")}
+          {copy.t("orchestra.workflows.receipt.refreshAudit")}
         </button>
         <button type="button" class="mx-btn" disabled={ledger.busy()} onClick={() => void download()}>
           <Ic name="download" />

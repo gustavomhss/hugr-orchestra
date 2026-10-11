@@ -1,7 +1,8 @@
-import type { ChildProcessWithoutNullStreams } from "child_process"
+import type { Readable, Writable } from "node:stream"
 import { Process } from "@/util/process"
 
-type Child = Process.Child & ChildProcessWithoutNullStreams
+/** A language server process: Process.Child with all three pipes (legacy ChildProcess or the omni adapter). */
+export type Child = Process.Child & { stdin: Writable; stdout: Readable; stderr: Readable }
 
 export function spawn(cmd: string, args: string[], opts?: Process.Options): Child
 export function spawn(cmd: string, opts?: Process.Options): Child

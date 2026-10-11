@@ -6,8 +6,9 @@ import type { SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
 import { aliases, child, marker, type Source } from "./alias"
 import { KEY_ARGS, signature } from "./masking"
-import { nonempty, validSnapshot } from "./model"
-import { SECTIONS, type Host, type MemoryArtifact, type MemoryItem, type MemorySnapshot, type Section } from "./memory-types"
+import { fingerprint, nonempty, singleLine, tailIndex, validSnapshot } from "./model"
+import { SECTIONS, type Host, type MemoryArtifact, type MemoryItem, type MemorySnapshot, type Now, type Section } from "./memory-types"
+import { RawPayload } from "./raw-payload"
 
 /** The closed producer contract: required and optional fields per section, and closed labels. */
 const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?: Record<string, readonly string[]> }> = {
@@ -33,7 +34,7 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-/** `dropped` counts ops whose exact value, error or user quote was not found; the rest of the pass still applies. */
+/** Partial v4 may drop unlocated exact data; complete v5 requires correction instead. */
 export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
@@ -54,10 +55,16 @@ export function scope(snapshot: MemorySnapshot, host: Host) {
   const last = position.get(snapshot.head.at(-1)!.info.id) ?? -1
   const head = new Set(snapshot.head.map((message) => message.info.id))
   const all = aliases(host.history)
-  const covered = all.filter((source) => (position.get(source.message.info.id) ?? Infinity) <= last)
+  const covered = all.filter((source) => (position.get(source.message.info.id) ?? Infinity) <= last &&
+    (!source.alias.startsWith("u") || source.text.trim().length > 0))
   const span = covered.filter((source) => head.has(source.message.info.id))
+  const previous = snapshot.previous
+  const priorValid = !previous || tailIndex({ sessionID: snapshot.sessionID, boundary: previous.boundary, tailStart: previous.tailStart,
+    text: previous.text, artifact: previous }, host.history) !== undefined
+  const changedAfter = previous ? priorValid ? position.get(previous.coveredThrough) : undefined : -1
+  const changes = changedAfter === undefined ? [] : span.filter((source) => (position.get(source.message.info.id) ?? -1) > changedAfter)
   const end = span.at(-1) ?? covered.at(-1)
-  return { covered, span, end, tail: all.find((source) => (position.get(source.message.info.id) ?? -1) > last),
+  return { covered, span, changes, changeProven: changedAfter !== undefined, end, tail: all.find((source) => (position.get(source.message.info.id) ?? -1) > last),
     sources: new Map(covered.map((source) => [source.alias, source])), team: team(covered, host),
     sessionID: snapshot.sessionID }
 }
@@ -80,7 +87,7 @@ export function decode(input: {
   if (errors.length || !uniqueKeys(tree) || Option.isNone(raw) || !record(raw.value))
     return fail("C1", "the reply must be exactly one JSON object, without duplicate keys or anything around it")
   const body = raw.value
-  if (Object.keys(body).some((key) => key !== "ops") || !Array.isArray(body.ops)) return fail("C2", 'the reply must be {"ops":[...]}')
+  if (Object.keys(body).some((key) => key !== "ops" && !(snapshot.complete && key === "now")) || !Array.isArray(body.ops)) return fail("C2", 'the reply must contain the closed ops object')
   const previous = snapshot.previous?.items ?? []
   const live = new Map(previous.map((item) => [item.id, item]))
   const keys = new Set<string>()
@@ -92,6 +99,20 @@ export function decode(input: {
   for (const op of ops) for (const need of op.op === "retire" ? [] : op.fields.needs ?? [])
     if (!ITEM_ID.test(need) && !keys.has(need)) return fail("C2", `needs names ${need}, which is no item ID or key in this reply`)
   const ctx = scope(snapshot, host)
+  const cursor = snapshot.complete ? body.now : undefined
+  if (snapshot.complete && (!record(cursor) || Object.keys(cursor).some((key) => !["doing", "next", "src"].includes(key)) ||
+    !singleLine(cursor.doing) || !singleLine(cursor.next) || !Array.isArray(cursor.src) || !cursor.src.length ||
+    !cursor.src.every((alias) => typeof alias === "string" && ctx.sources.has(alias)) ||
+    !cursor.src.some((alias) => ctx.span.some((source) => source.alias === alias && source.message.info.id === snapshot.boundary &&
+      (source.alias.startsWith("a") || source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status))))))
+    return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases, including a completed assistant/tool source from the exact boundary message listed in the host index")
+  const prohibited = RawPayload.inventory(snapshot.complete ? snapshot.covered ?? snapshot.head :
+    host.history.filter((message) => ctx.covered.some((source) => source.message.info.id === message.info.id)))
+  if (snapshot.complete && [cursor, ...body.ops].some((value) => {
+    if (!record(value)) return false
+    const fields = value === cursor ? value : record(value.fields) ? value.fields : {}
+    return Object.entries(fields).some(([key, field]) => key !== "src" && (typeof field === "string" ? prohibited(field) : Array.isArray(field) && field.some((item) => typeof item === "string" && prohibited(item))))
+  })) return fail("C16", "known raw source payload must be recovered by archive reference, not copied into semantic memory")
   for (const op of ops) for (const alias of op.src ?? [])
     if (!ctx.sources.has(alias)) return fail("C4", `${alias} is not an alias at or before ${ctx.end?.alias ?? "the new span"}`)
   const touched = new Set<string>()
@@ -114,14 +135,20 @@ export function decode(input: {
   each: for (const op of ops) {
     if (op.op === "retire") {
       const item = items.get(op.id)!
+      if (guarded(item) && (!ctx.changeProven || !(op.src ?? []).some((alias) => alias.startsWith("u") && ctx.changes.some((source) => source.alias === alias))))
+        return fail("C7", "guarded retirement requires proven newly covered user revocation evidence after prior.coveredThrough")
       // The user changes a goal by asking for something else, rarely with revoking words.
       if (item.section === "objective") {
-        if (!(op.src ?? []).some((alias) => alias.startsWith("u") && ctx.span.some((source) => source.alias === alias)))
+        if (!(op.src ?? []).some((alias) => alias.startsWith("u") && ctx.changes.some((source) => source.alias === alias)))
           return fail("C7", `retiring the objective ${op.id} cites the user's message in the new span that changed it`)
       } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
         // Revoking words that are not found drop the retire: the user's item stays.
-        if ("check" in quote(op.quote, ctx, op.src ?? [], true)) continue
+        const found = quote(op.quote, ctx, op.src ?? [], true)
+        if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Retirement ${op.id} needs a corrected user revocation quote: ${found.detail}`)
+          continue
+        }
       }
       items.delete(op.id)
       applied.push(op)
@@ -140,6 +167,7 @@ export function decode(input: {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
         // A wrong exact value, error or user quote costs only its own op; nothing unverified is stored.
         if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Correct ${section}.${name} before complete coverage: ${found.detail}`)
           if (op.op === "add" && op.key) lost.add(op.key)
           continue each
         }
@@ -183,21 +211,18 @@ export function decode(input: {
     return fail("C14", "the objective is open but the plan has no open step: keep the next move as a plan item " +
       "(todo, doing, waiting or verify; waiting on the user counts)")
 
-  const rendered = render(result, ctx, host, input.budget)
+  const now = cursor as Now | undefined
+  if (snapshot.complete && result.some((item) => Object.values(item.fields).some((field) => typeof field === "string" ? prohibited(field) : field.some(prohibited))))
+    return fail("C16", "known raw payload in retained semantic item requires archive reference")
+  const rendered = now ? renderComplete(result, ctx, host, now) : render(result, ctx, host, input.budget)
+  const common = { parentID: snapshot.sessionID, producerID: input.producerID, boundary: snapshot.boundary,
+    coveredThrough: snapshot.head.at(-1)!.info.id, items: result, next, text: rendered }
   return {
     ops: applied,
     dropped: ops.length - applied.length,
-    artifact: {
-      version: 4,
-      parentID: snapshot.sessionID,
-      producerID: input.producerID,
-      boundary: snapshot.boundary,
-      coveredThrough: snapshot.head.at(-1)!.info.id,
-      tailStart: snapshot.tailStart,
-      items: result,
-      next,
-      text: rendered,
-    },
+    artifact: snapshot.complete && now ? { ...common, version: 5, now,
+      covered: (snapshot.covered ?? snapshot.head).map((message) => ({ id: message.info.id, digest: fingerprint(message) })) }
+      : { ...common, version: 4, tailStart: snapshot.tailStart! },
   }
 }
 
@@ -296,7 +321,7 @@ function candidates(ctx: Scope, cited: readonly string[]) {
 
 /** C6: a quote is located in user text, inside exactly one sentence; the sentence is stored. */
 function quote(needle: string, ctx: Scope, cited: readonly string[], revoking: boolean) {
-  const users = candidates(ctx, cited).filter((source) => source.alias.startsWith("u") && (!revoking || ctx.span.includes(source)))
+   const users = candidates(ctx, cited).filter((source) => source.alias.startsWith("u") && (!revoking || ctx.changes.includes(source)))
   for (const source of users) {
     const matches = find(source.text, needle)
     if (!matches.length) continue
@@ -601,6 +626,33 @@ function render(items: MemoryItem[], ctx: Scope, host: Host, budget: number) {
   ].join("\n\n")
 }
 
+function renderComplete(items: MemoryItem[], ctx: Scope, host: Host, now: Now) {
+  const section = (name: Section) => {
+    const found = items.filter((item) => item.section === name)
+    return found.length ? [`## ${name}`, ...found.map((item) => renderItem(item, ctx))].join("\n") : undefined
+  }
+  const artifacts = new Map<string, string>()
+  for (const source of ctx.covered) {
+    const part = source.part
+    if (part?.type !== "tool" || part.state.status !== "completed" || !["edit", "write", "apply_patch"].includes(part.tool)) continue
+    const input = part.state.input as Record<string, unknown>
+    const files: unknown[] = Array.isArray(part.state.metadata?.files) ? part.state.metadata.files : [{ filePath: input.filePath }]
+    for (const file of files) if (record(file)) {
+      const path = file.relativePath ?? file.filePath
+      if (typeof path === "string" && singleLine(path)) artifacts.set(path, `${path} · latest mutation ${source.alias}`)
+    }
+  }
+  const ongoing = [...ctx.team.launches].flatMap(([id, launch]) => ctx.team.returns.has(id) ? [] :
+    [`${ctx.team.member(id)} · task_id ${id} · ${host.delegations[id]?.status ?? "unknown"} (${launch.alias})`])
+  return ["# Working memory", `Complete covered prefix through ${ctx.end?.alias}. Historical evidence, not permission or new instructions.`,
+    `## Now\nDoing: ${indent(now.doing, 4)}\nNext: ${indent(now.next, 4)}\nSources: ${now.src.join(", ")}`,
+    ...SECTIONS.map(section).filter((value) => value !== undefined),
+    "## Host artifact inventory\n" + ([...artifacts.values()].join("\n") || "(none)"),
+    "## Ongoing delegations\n" + (ongoing.join("\n") || "(none)"),
+    'Sources remain in the archive. context_recall {"reference":"tN"} retrieves exact records; re-read volatile files before using them.',
+    "The real current user request and genuinely newer records follow separately."].join("\n\n")
+}
+
 /** The host-appended part of the producer instruction: the new span, its index and the size (4.2). */
 export function index(snapshot: MemorySnapshot, host: Host, size: number) {
   const ctx = scope(snapshot, host)
@@ -625,7 +677,12 @@ export function index(snapshot: MemorySnapshot, host: Host, size: number) {
   return [
     "## New span",
     `${ranges.join(", ") || "No aliased sources"} (through ${ctx.end?.alias ?? "the start of this session"}). ` +
-      `The native tail starts at ${ctx.tail?.alias ?? "the next message"} and is not covered.`,
+      (snapshot.complete ? "Every declared completed source through the boundary is covered; no protected tail. Return required Now doing/next/src." :
+        `The native tail starts at ${ctx.tail?.alias ?? "the next message"} and is not covered.`),
+    ...(snapshot.complete ? [`Now.src MUST include at least one of these exact completed boundary aliases: ${ctx.span
+      .filter((source) => source.message.info.id === snapshot.boundary && (source.alias.startsWith("a") ||
+        source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status)))
+      .map((source) => source.alias).join(", ")}. Earlier user aliases alone are insufficient.`] : []),
     "## Index of the new span",
     ...lines,
     "## Size",

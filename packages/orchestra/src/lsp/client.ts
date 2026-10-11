@@ -2,7 +2,7 @@ import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from "vscode-jsonrpc/node"
 import type { Diagnostic as VSCodeDiagnostic } from "vscode-languageserver-types"
-import { Process } from "@/util/process"
+import { ClientLiveness } from "./client-liveness"
 import { LANGUAGE_EXTENSIONS } from "./language"
 import { Effect, Schema } from "effect"
 import type * as LSPServer from "./server"
@@ -134,6 +134,7 @@ export async function create(input: {
     new StreamMessageWriter(input.server.process.stdin as any),
   )
   input.server.process.stderr?.resume()
+  const liveness = ClientLiveness.track(connection, input.server.process)
   // --- Connection state ---
 
   const pushDiagnostics = new Map<string, Diagnostic[]>()
@@ -544,6 +545,9 @@ export async function create(input: {
 
   const result = {
     root: input.root,
+    get connected() {
+      return liveness.connected
+    },
     get serverID() {
       return input.serverID
     },
@@ -637,11 +641,7 @@ export async function create(input: {
       }
       await waitForFullDiagnostics({ path: normalizedPath, version: request.version, after: request.after })
     },
-    async shutdown() {
-      connection.end()
-      connection.dispose()
-      await Process.stop(input.server.process)
-    },
+    shutdown: liveness.shutdown,
   }
 
   return result

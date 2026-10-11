@@ -8,18 +8,13 @@ import path from "node:path"
 import { eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { EventV2Bridge } from "@/event-v2-bridge"
-import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { readPlanRevision } from "./plan-revision"
 import { AtlasContextHeld, loadAtlasSkills, readAtlasSource } from "./atlas-source"
 import { compileContextToolPlan } from "./context-tool-plan"
 import { ConfigMarkdown } from "@/config/markdown"
-import { Filesystem } from "@/util/filesystem"
-
-// The append-only Atlas Memory logs (the union-merged files in .gitattributes).
-const MEMORY_LOGS = [".atlas/memory.jsonl", ".atlas/orientation.jsonl"]
-const MEMORY = MEMORY_LOGS.map((file) => `:(exclude)${file}`)
+import { WorktreeEvidence } from "./worktree-evidence"
 
 type LegacyContextData = Schema.Schema.Type<typeof MaestroEvent.Context.Recorded.data> & { readonly mode: "UNGROUNDED" }
 type ContextData = LegacyContextData | Schema.Schema.Type<typeof MaestroEvent.Context.RecordedV2.data>
@@ -87,9 +82,10 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
   if (!plan || plan.sessionID !== sessionID) return yield* new ContextConflictError({ sessionID, planRevisionID })
   const sessions = yield* Session.Service
   const session = yield* sessions.get(SessionID.make(sessionID))
-  if (requireGrounded && plan.revision !== "v2")
+  const grounding = plan.revision === "v2" || plan.revision === "v3" ? plan.grounding : undefined
+  if (requireGrounded && grounding === undefined)
     return yield* new AtlasContextHeld({ reason: "grounded-plan-required", evidence: [plan.id] })
-  const evidence = yield* currentEvidence(session.directory)
+  const evidence = yield* WorktreeEvidence.current(session.directory)
   if (!evidence) return yield* new ContextConflictError({ sessionID, planRevisionID })
   const legacy: LegacyContextData = {
     id: id(sessionID, planRevisionID),
@@ -107,16 +103,16 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
     createdAt: Date.now(),
   }
   const next: ContextData =
-    plan.revision === "v2"
+    grounding !== undefined
       ? yield* Effect.gen(function* () {
           if (evidence.changedPaths.length)
             return yield* new AtlasContextHeld({ reason: "context-dirty", evidence: evidence.changedPaths })
           const source = yield* readAtlasSource(session)
           if (
-            source.identityHash !== plan.grounding.sourceIdentityHash ||
-            source.context.catalogVersion !== plan.grounding.catalogVersion ||
-            source.context.snapshot !== plan.grounding.snapshot ||
-            source.context.sourceRevision !== plan.grounding.sourceRevision
+            source.identityHash !== grounding.sourceIdentityHash ||
+            source.context.catalogVersion !== grounding.catalogVersion ||
+            source.context.snapshot !== grounding.snapshot ||
+            source.context.sourceRevision !== grounding.sourceRevision
           )
             return yield* new AtlasContextHeld({
               reason: "plan-grounding-stale",
@@ -126,13 +122,13 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
             actor: { projectId: session.projectID, sessionId: session.id, memberId: "maestro" },
             revision: { id: plan.id, hash: plan.revisionHash, projectId: session.projectID, sessionId: session.id },
             territories: plan.scope.map((field) => field.value),
-            units: plan.grounding.units,
+            units: grounding.units,
             context: source.context,
           })
           if (compiled.status === "HOLD")
             return yield* new AtlasContextHeld({ reason: compiled.reason, evidence: compiled.evidence })
           const skills = yield* loadAtlasSkills(session, source, compiled.plan)
-          const after = yield* currentEvidence(session.directory)
+          const after = yield* WorktreeEvidence.current(session.directory)
           if (!after || !isDeepStrictEqual(evidence, after))
             return yield* new AtlasContextHeld({
               reason: "git-changed-during-context-load",
@@ -171,7 +167,7 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
 
 export const contextIsCurrent = Effect.fn("MaestroContext.isCurrent")(
   function* (context: ContextData) {
-    const evidence = yield* currentEvidence(context.directory)
+    const evidence = yield* WorktreeEvidence.current(context.directory)
     if (!evidence || context.currentEvidenceIdentityHash !== hash(evidence)) return false
     if (context.mode !== "GROUNDED") return true
     if (!("toolPlan" in context)) return false
@@ -179,15 +175,17 @@ export const contextIsCurrent = Effect.fn("MaestroContext.isCurrent")(
     const session = yield* sessions.get(SessionID.make(context.sessionID))
     if (session.projectID !== context.projectID || session.directory !== context.directory) return false
     const plan = yield* readPlanRevision(context.planRevisionID)
-    if (!plan || plan.revision !== "v2" || plan.revisionHash !== context.planRevisionHash) return false
+    if (!plan || plan.revisionHash !== context.planRevisionHash) return false
+    const grounding = plan.revision === "v2" || plan.revision === "v3" ? plan.grounding : undefined
+    if (grounding === undefined) return false
     const source = yield* readAtlasSource(session)
-    if (source.identityHash !== context.sourceIdentityHash || source.identityHash !== plan.grounding.sourceIdentityHash)
+    if (source.identityHash !== context.sourceIdentityHash || source.identityHash !== grounding.sourceIdentityHash)
       return false
     const compiled = compileContextToolPlan({
       actor: { projectId: session.projectID, sessionId: session.id, memberId: "maestro" },
       revision: { id: plan.id, hash: plan.revisionHash, projectId: session.projectID, sessionId: session.id },
       territories: plan.scope.map((field) => field.value),
-      units: plan.grounding.units,
+      units: grounding.units,
       context: source.context,
     })
     if (
@@ -214,40 +212,8 @@ export const contextIsCurrent = Effect.fn("MaestroContext.isCurrent")(
         return markdown.data.name === loaded.name && markdown.content === loaded.content
       }),
     )
-    const after = yield* currentEvidence(context.directory)
+    const after = yield* WorktreeEvidence.current(context.directory)
     return matches.every(Boolean) && !!after && context.currentEvidenceIdentityHash === hash(after)
   },
   Effect.catch(() => Effect.succeed(false)),
 )
-
-const currentEvidence = Effect.fn("MaestroContext.currentEvidence")(function* (directory: string) {
-  const git = yield* Git.Service
-  const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: directory })
-  const worktree = Filesystem.windowsPath(root.text().replace(/\r?\n$/, ""))
-  if (root.exitCode !== 0 || !worktree) return undefined
-  const head = yield* git.run(["rev-parse", "HEAD"], { cwd: worktree })
-  if (head.exitCode !== 0) return undefined
-  // Atlas Memory logs are versioned with the code but are not task output (F4-O4): a Memory write must never make the
-  // plan context dirty or stale. They are still committed and pushed like any tracked file.
-  const diff = yield* git.run(["diff", "--binary", "--no-ext-diff", "HEAD", "--", ".", ...MEMORY], { cwd: worktree })
-  const untracked = yield* git.run(["ls-files", "--others", "--exclude-standard", "-z", "--", ".", ...MEMORY], {
-    cwd: worktree,
-  })
-  if (diff.exitCode !== 0 || diff.truncated || untracked.exitCode !== 0 || untracked.truncated) return undefined
-  const untrackedFiles = yield* Effect.forEach(untracked.text().split("\0").filter(Boolean).sort(), (file) =>
-    Effect.promise(() => Bun.file(path.join(worktree, file)).arrayBuffer()).pipe(
-      Effect.map((bytes) => ({ file, sha256: createHash("sha256").update(Buffer.from(bytes)).digest("hex") })),
-    ),
-  )
-  return {
-    directory,
-    branch: (yield* git.branch(worktree)) ?? "DETACHED",
-    headSHA: head.text().trim(),
-    changedPaths: (yield* git.status(worktree))
-      .map((item) => item.file)
-      .filter((file) => !MEMORY_LOGS.includes(file))
-      .sort(),
-    diffSHA256: createHash("sha256").update(diff.stdout).digest("hex"),
-    untrackedFiles,
-  }
-})

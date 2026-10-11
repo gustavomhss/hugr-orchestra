@@ -2,16 +2,28 @@ import { expect } from "bun:test"
 import path from "path"
 import { Effect, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
+import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { ChildProcess } from "effect/unstable/process"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { Session } from "@/session/session"
 import { testEffect } from "../lib/effect"
 import { tmpdirScoped } from "../fixture/fixture"
 import { relayFor } from "./relay-fixture"
 
-const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, CrossSpawnSpawner.node])))
+const it = testEffect(LayerNode.compile(LayerNode.group([
+  filesystem,
+  FSUtil.node,
+  AppProcess.node,
+  CrossSpawnSpawner.node,
+  Database.node,
+  Session.node,
+  EventV2Bridge.node,
+])))
 const repository = (format = "sha1") => Effect.gen(function* () {
   const directory = yield* tmpdirScoped()
   const fs = yield* FSUtil.Service

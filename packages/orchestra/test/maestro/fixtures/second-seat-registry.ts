@@ -11,12 +11,12 @@ const source = path.resolve(import.meta.dirname, "../../..")
 const packageRoot = path.join(snapshot, "packages/orchestra")
 await fs.cp(path.join(source, "src/maestro/seats"), path.join(packageRoot, "src/maestro/seats"), { recursive: true })
 await fs.cp(path.join(source, "src/agent/prompt"), path.join(packageRoot, "src/agent/prompt"), { recursive: true })
-// Snapshot every resident specialist tree without importing/caching the registry before its loader is installed.
-const trees = (await fs.readdir(path.dirname(source), { withFileTypes: true }))
+// Preserve every installed skill tree without importing/caching the live registry before the loader is registered.
+// Otherwise adding a real specialist makes this isolated registry fail before its runtime or bundle proof can run.
+const trees = (await fs.readdir(path.resolve(source, ".."), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory() && entry.name.endsWith("-specialist"))
 if (trees.length === 0) throw new Error("Second-seat specialist snapshot is empty")
-await Promise.all(trees.map((entry) => fs.cp(path.join(path.dirname(source), entry.name, "skills"),
-  path.join(snapshot, "packages", entry.name, "skills"), { recursive: true })))
+await Promise.all(trees.map((entry) => fs.cp(path.resolve(source, "..", entry.name), path.join(snapshot, "packages", entry.name), { recursive: true })))
 // The scaffold validates canonical identity through the live roster. Run it in a separate process so that
 // validation cannot cache this process's registry before the synthetic registry loader is registered.
 const scaffold = Bun.spawn([process.execPath, "-e", `const { add } = await import(${JSON.stringify(path.join(source, "script/seat.ts"))}); await add("sample-seat", "synthetic packet execution", process.argv[1])`, packageRoot], {

@@ -8,8 +8,9 @@ import {
   isContextOverflowFailure,
   type ProviderErrorEvent,
 } from "@orchestra/llm"
-import { Cause, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
 import { AgentV2 } from "../../agent"
+import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
@@ -39,6 +40,7 @@ import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
 import { llmClient } from "../../effect/app-node-platform"
+import { RelayWorkflowSession } from "../../relay-workflow-session"
 
 /**
  * Runs one durable coding-agent Session until it settles.
@@ -105,7 +107,14 @@ const layer = Layer.effect(
     const referenceGuidance = yield* ReferenceGuidance.Service
     const config = yield* Config.Service
     const snapshots = yield* Snapshot.Service
-    const db = (yield* Database.Service).db
+    const database = yield* Database.Service
+    const workflowHosts = yield* RelayWorkflowSession.Service
+    const nativeHost = yield* RelayWorkflowSession.NativeHost
+    const workflowContext = Context.make(Database.Service, database).pipe(
+      Context.add(RelayWorkflowSession.Service, workflowHosts),
+      Context.add(RelayWorkflowSession.NativeHost, nativeHost),
+    )
+    const db = database.db
     const compaction = SessionCompaction.make({ events, llm, config: yield* config.entries() })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID)
@@ -180,6 +189,7 @@ const layer = Layer.effect(
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
       const agent = yield* agents.select(session.agent)
+      const effectiveRules = agent.info?.permissions.map((rule) => ({ ...rule })) ?? []
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
@@ -199,8 +209,12 @@ const layer = Layer.effect(
       const model = yield* models.resolve(session)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
+      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
+      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
+        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
+      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(agent.info?.permissions)
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const request = LLM.request({
         model,
@@ -212,7 +226,7 @@ const layer = Layer.effect(
           },
         },
         providerOptions: { openai: { promptCacheKey } },
-        system: [agent.info?.system, system.baseline]
+        system: [agent.info?.system, system.baseline, workflow?.view.instructions]
           .filter((part): part is string => part !== undefined && part.length > 0)
           .map(SystemPart.make),
         messages: [...toLLMMessages(context, model), ...(isLastStep ? [Message.assistant(MAX_STEPS_PROMPT)] : [])],
@@ -256,12 +270,28 @@ const layer = Layer.effect(
             const assistantMessageID = yield* publisher.assistantMessageID(event.id)
             yield* Effect.uninterruptibleMask((restore) =>
               restore(
-                toolMaterialization.settle({
-                  sessionID: session.id,
-                  agent: agent.id,
-                  assistantMessageID,
-                  call: event,
-                }),
+                CapabilityInvocation.withContext(
+                  {
+                    issuer: "core",
+                    owner: {
+                      projectID: location.project.id,
+                      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+                      sessionID: session.id,
+                      agentID: agent.id,
+                    },
+                    invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: event.id },
+                    rootToolName: event.name,
+                    effectiveRules,
+                    // Core selection has configured permissions, not a separate native Permission floor.
+                    nativeDenyFloor: [],
+                  },
+                  toolMaterialization.settle({
+                    sessionID: session.id,
+                    agent: agent.id,
+                    assistantMessageID,
+                    call: event,
+                  }),
+                ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error))),
               ).pipe(
                 Effect.flatMap((settlement) =>
                   publish(
@@ -349,7 +379,12 @@ const layer = Layer.effect(
           if (stream._tag === "Failure") return yield* Effect.failCause(stream.cause)
           if (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
             return yield* Effect.failCause(settled.cause)
-          return { needsContinuation: !publisher.hasProviderError() && needsContinuation, step: currentStep }
+          const workflowContinues = workflow ? yield* RelayWorkflowSession.settle({
+            current: workflow, assistantMessageID: yield* publisher.startAssistant(),
+            succeeded: settled._tag === "Success" && !!stepSettlement && !publisher.hasProviderError() &&
+              !["unknown", "error", "content-filter"].includes(stepSettlement.finish),
+          }).pipe(Effect.provide(workflowContext), Effect.orDie) : false
+          return { needsContinuation: workflow ? workflowContinues : !publisher.hasProviderError() && needsContinuation, step: currentStep }
         }),
       )
     }, Effect.scoped)
@@ -437,5 +472,6 @@ export const node = makeLocationNode({
     Config.node,
     Snapshot.node,
     Database.node,
+    RelayWorkflowSession.node,
   ],
 })

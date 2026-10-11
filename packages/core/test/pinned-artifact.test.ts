@@ -23,7 +23,7 @@ const fixture = Effect.gen(function* () {
   if (tar.exitCode !== 0) throw new Error(`BLOCKED: tar unavailable: ${tar.stderr.toString()}`)
   const genuine = new Uint8Array(yield* Effect.promise(() => readFile(path.join(directory, "tool.tgz"))))
   const raw = new TextEncoder().encode("#!/bin/sh\necho raw\n")
-  const files: Record<string, Uint8Array> = {
+  const files: Record<string, Uint8Array<ArrayBuffer>> = {
     "/tool.tgz": genuine,
     "/tampered.tgz": new Uint8Array([...genuine.slice(0, -1), genuine[genuine.length - 1] ^ 1]),
     "/tool.zip": new Uint8Array(yield* Effect.promise(() => readFile(path.join(import.meta.dir, "fixture", "pinned-artifact", "tool.zip")))),
@@ -90,6 +90,17 @@ it.live("one flipped byte is refused before anything is extracted", () =>
   }), 30_000,
 )
 
+it.live("a digest-valid malformed archive fails extraction and leaves no completed install", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const target = path.join(f.installs, "broken")
+    f.files["/broken.tgz"] = new TextEncoder().encode("not a gzip archive")
+    expect(yield* refused(target, [{ ...f.tgz("broken.tgz"), integrity: f.sri(f.files["/broken.tgz"]) }])).toBe("extract")
+    expect(yield* PinnedArtifact.installed(target)).toBe(false)
+    expect(yield* f.leftovers()).toEqual([])
+  }), 30_000,
+)
+
 it.live("a raw download is the executable itself", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -106,7 +117,6 @@ it.live("a raw download is the executable itself", () =>
   }), 30_000,
 )
 
-// PowerShell Expand-Archive alone can take most of half a minute on a loaded Windows runner.
 it.live("a zip extracts with the platform extractor, or names the one that is missing", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -117,7 +127,7 @@ it.live("a zip extracts with the platform extractor, or names the one that is mi
       format: "zip",
       entries: [{ from: "bin/tool", to: "tool", executable: true }],
     }
-    const extractor = process.platform === "win32" ? "powershell" : "unzip"
+    const extractor = process.platform === "win32" ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "unzip"
     if (!which.sync(extractor, { nothrow: true })) {
       expect(yield* refused(target, [artifact])).toBe(`extractor-missing:${extractor}`)
       expect(yield* f.leftovers()).toEqual([])

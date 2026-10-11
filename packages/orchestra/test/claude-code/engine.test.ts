@@ -1,130 +1,152 @@
 import { expect } from "bun:test"
-import { writeFileSync } from "node:fs"
-import path from "node:path"
-import { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
-import { Effect, Fiber, Layer } from "effect"
+import { Effect } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { ClaudeCodeStore } from "@/claude-code/store"
+import { SessionContinuity } from "@/continuity/service"
 import { PromptGuard } from "@/session/prompt-guard"
-import { Session } from "@/session/session"
-import { SessionPrompt } from "../../src/session/prompt"
-import { TestInstance } from "../fixture/fixture"
-import { pollWithTimeout, testEffect } from "../lib/effect"
-import { makeHttp } from "../session/prompt.fixture"
+import { ClaudeEngineFixture } from "./engine-fixture"
 
-// A scripted Claude Code: each query records its options and plays the next script.
-type Script = (signal: AbortSignal) => AsyncGenerator<unknown>
-const queries: { prompt: unknown; options: Record<string, any> }[] = []
-const scripts: Script[] = []
-const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
-  query: ((params: { prompt: unknown; options: Record<string, any> }) => {
-    queries.push(params)
-    return scripts.shift()!(params.options.abortController.signal)
-  }) as never,
-}))
-
-const it = testEffect(makeHttp({ replacements: [[ClaudeCodeSDK.node, sdk]] }))
-
-const frame = { parent_tool_use_id: null, uuid: "u", session_id: "sdk-1" }
-const reply = (text: string, id: string): Script => async function* () {
-  yield { type: "system", subtype: "init", ...frame }
-  yield { type: "assistant", message: { id, content: [{ type: "text", text }], stop_reason: "end_turn", usage: { input_tokens: 5, output_tokens: 2 } }, ...frame }
-  yield { type: "result", subtype: "success", total_cost_usd: 0.01, ...frame }
-}
-
-const setup = Effect.gen(function* () {
-  const { directory } = yield* TestInstance
-  writeFileSync(path.join(directory, "orchestra.json"), JSON.stringify({
-    agent: { claude: { mode: "primary", engine: "claude-code", model: "anthropic/claude-haiku-4-5-20251001" } },
-  }))
-  const sessions = yield* Session.Service
-  const chat = yield* sessions.create({ title: "Claude Code", permission: [{ permission: "*", pattern: "*", action: "allow" }] })
-  return { sessions, prompt: yield* SessionPrompt.Service, chat }
-})
-const say = (text: string) => ({ agent: "claude", parts: [{ type: "text" as const, text }] })
-
-it.instance("a Claude Code agent's turn is mirrored and the loop ends on it; the next turn resumes the same session", () =>
+ClaudeEngineFixture.it.instance("hook reminders batch beside their own prompt and never reappear on resumed Claude turns", () =>
   Effect.gen(function* () {
-    queries.length = 0
-    const { sessions, prompt, chat } = yield* setup
-    scripts.push(reply("first answer", "msg_a"), reply("second answer", "msg_b"))
-    const first = yield* prompt.prompt({ sessionID: chat.id, ...say("hello") })
+    ClaudeEngineFixture.state.queries.length = 0
+    ClaudeEngineFixture.state.scripts.length = 0
+    const state = yield* ClaudeEngineFixture.setup()
+    const first = yield* state.prompt.prompt({ sessionID: state.chat.id, noReply: true, ...ClaudeEngineFixture.say("  first\r\n ") })
+    const second = yield* state.prompt.prompt({ sessionID: state.chat.id, noReply: true, ...ClaudeEngineFixture.say(" second ") })
+    if (first.info.role !== "user" || second.info.role !== "user") throw new Error("expected pending users")
+    yield* state.sessions.updateMessage({ ...first.info, promptContext: { reminders: ["first note", "next note"] } })
+    const user = yield* state.sessions.updateMessage({ ...second.info, promptContext: { reminders: ["second note"] } })
+    if (user.role !== "user") throw new Error("expected user")
+    const before = yield* state.sessions.messages({ sessionID: state.chat.id })
+    ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("batch answer", "msg_batch"), ClaudeEngineFixture.reply("later answer", "msg_later"))
+    const answer = yield* state.prompt.loop({ sessionID: state.chat.id })
+    expect(answer.info.role).toBe("assistant")
+    expect(ClaudeEngineFixture.state.queries[0].prompt).toBe("first\r\n \n\nHook reminder:\nfirst note\n\nHook reminder:\nnext note\n\n second \n\nHook reminder:\nsecond note")
+    expect(JSON.stringify(ClaudeEngineFixture.state.queries[0].options?.systemPrompt)).not.toContain("note")
+    const stored = yield* state.sessions.messages({ sessionID: state.chat.id })
+    expect(stored.filter((message) => message.info.role === "user")).toEqual(before)
+    expect((yield* state.sessions.get(state.chat.id)).metadata?.claudeCode).toMatchObject({
+      delivered: [first.info.id, second.info.id],
+    })
+    yield* state.prompt.prompt({ sessionID: state.chat.id, ...ClaudeEngineFixture.say(" later ") })
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(2)
+    expect(ClaudeEngineFixture.state.queries[1].prompt).toBe("later")
+    expect(ClaudeEngineFixture.state.queries[1].options?.resume).toBe("sdk-1")
+    expect(JSON.stringify(ClaudeEngineFixture.state.queries[1].options?.systemPrompt)).not.toContain("note")
+  }), 30_000)
+
+ClaudeEngineFixture.it.instance("a stale native receipt without current reminders cannot deliver the rendered prompt", () =>
+  Effect.gen(function* () {
+    ClaudeEngineFixture.reset()
+    const state = yield* ClaudeEngineFixture.setup()
+    const fs = yield* FSUtil.Service
+    const continuity = yield* SessionContinuity.Service
+    const context = yield* Effect.context<never>()
+    const native = ClaudeCodeStore.create({ sessionID: state.chat.id, sessions: state.sessions, fs, continuity,
+      run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: false, rewrite: () => false })
+    const pending = yield* state.prompt.prompt({ sessionID: state.chat.id, noReply: true, ...ClaudeEngineFixture.say("payload") })
+    if (pending.info.role !== "user") throw new Error("expected pending user")
+    yield* state.sessions.updateMessage({ ...pending.info, promptContext: { reminders: ["current reminder"] } })
+    ClaudeEngineFixture.state.scripts.push(async function* (signal, params) {
+      const reply = ClaudeEngineFixture.reply("accepted", "reminder-api")(signal, params)
+      const initial = await reply.next()
+      if (initial.done) throw new Error("expected SDK init frame")
+      yield initial.value
+      if (!params.options?.sessionStore) throw new Error("expected native session store")
+      // Actual SDK append, but stale raw text is not the reminder-bearing query it accepted.
+      await params.options.sessionStore.append({ projectKey: params.options.cwd ?? "fixture", sessionId: "sdk-1" }, [
+        { type: "user", uuid: "stale-reminder-input", sessionId: "sdk-1", parentUuid: null,
+          message: { role: "user", content: "payload" } },
+      ])
+      expect((await Effect.runPromiseWith(context)(state.sessions.get(state.chat.id))).metadata?.claudeCode)
+        .toMatchObject({ delivered: [] })
+      const stored = await Effect.runPromiseWith(context)(native.read)
+      expect(stored.delivered).toEqual([])
+      expect(stored.mapping).not.toHaveProperty("stale-reminder-input")
+      // Existing reply fixture appends the exact params.prompt before emitting the assistant/result.
+      yield* reply
+    }, ClaudeEngineFixture.reply("later accepted", "later-reminder-api"))
+    yield* state.prompt.loop({ sessionID: state.chat.id })
+    expect(ClaudeEngineFixture.state.queries[0].prompt).toBe("payload\n\nHook reminder:\ncurrent reminder")
+    expect((yield* state.sessions.get(state.chat.id)).metadata?.claudeCode).toMatchObject({ delivered: [pending.info.id] })
+    const stored = yield* native.read
+    expect(stored.delivered).toEqual([pending.info.id])
+    expect(stored.members["reminder-api-user"]).toEqual([pending.info.id])
+    expect(stored.mapping).not.toHaveProperty("stale-reminder-input")
+    yield* state.prompt.prompt({ sessionID: state.chat.id, ...ClaudeEngineFixture.say("later") })
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(2)
+    expect(ClaudeEngineFixture.state.queries[1].prompt).toBe("later")
+    expect(ClaudeEngineFixture.state.queries[1].options?.resume).toBe("sdk-1")
+  }), 30_000)
+
+ClaudeEngineFixture.it.instance("a Claude Code agent's turn is mirrored and the loop ends on it; the next turn resumes the same session", () =>
+  Effect.gen(function* () {
+    ClaudeEngineFixture.state.queries.length = 0
+     const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
+    ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("first answer", "msg_a"), ClaudeEngineFixture.reply("second answer", "msg_b"))
+    const first = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("hello") })
     expect(first.info.role).toBe("assistant")
     expect((first.info as SessionV1.Assistant).finish).toBe("stop")
     expect(first.parts.some((part) => part.type === "text" && part.text === "first answer")).toBe(true)
-    expect(queries[0].prompt).toBe("hello")
-    expect(queries[0].options.resume).toBeUndefined()
-    expect(queries[0].options.settingSources).toEqual([])
-    expect(queries[0].options.disallowedTools).toEqual(["Read", "Edit", "Write", "NotebookEdit", "Task"])
-    expect(queries[0].options.model).toBe("claude-haiku-4-5-20251001")
-    // Only the Orchestra tools this turn has are aliased: Claude Code's own Grep stays its own.
+    expect(ClaudeEngineFixture.state.queries[0].prompt).toBe("hello")
+    expect(ClaudeEngineFixture.state.queries[0].options?.resume).toBeUndefined()
+    expect(ClaudeEngineFixture.state.queries[0].options?.settingSources).toEqual([])
+    expect(ClaudeEngineFixture.state.queries[0].options?.disallowedTools).toEqual(["Read", "Edit", "Write", "NotebookEdit", "Task"])
+    expect(ClaudeEngineFixture.state.queries[0].options?.model).toBe("claude-haiku-4-5-20251001")
+    // Only the Orchestra tools this turn has are aliased, by bare id and by the Claude Code tool each stands for:
+    // Claude Code's own Grep stays its own.
     const orchestra = (id: string) => `mcp__orchestra__${id}`
-    expect(queries[0].options.toolAliases).toEqual({ read: orchestra("read"), Read: orchestra("read"), edit: orchestra("edit"),
-      Edit: orchestra("edit"), write: orchestra("write"), Write: orchestra("write") })
-    // Outside a native research dispatch Claude Code keeps its own tools, turn count and compaction.
-    expect(queries[0].options.tools).toBeUndefined()
-    expect(queries[0].options.maxTurns).toBeUndefined()
-    expect(queries[0].options.settings).toBeUndefined()
-    const client = new Client({ name: "claude-code", version: "1.0.0" })
-    const [local, remote] = InMemoryTransport.createLinkedPair()
-    yield* Effect.promise(() => Promise.all([client.connect(local), queries[0].options.mcpServers.orchestra.instance.connect(remote)]))
-    expect((yield* Effect.promise(() => client.listTools())).tools.map((tool) => tool.name).toSorted()).toEqual(["edit", "read", "write"])
-    yield* Effect.promise(() => client.close())
+    expect(ClaudeEngineFixture.state.queries[0].options?.toolAliases).toEqual({ read: orchestra("read"), Read: orchestra("read"),
+      edit: orchestra("edit"), Edit: orchestra("edit"), write: orchestra("write"), Write: orchestra("write") })
+    // Outside a native research dispatch Claude Code keeps its own tools and turn count.
+    expect(ClaudeEngineFixture.state.queries[0].options?.tools).toBeUndefined()
+    expect(ClaudeEngineFixture.state.queries[0].options?.maxTurns).toBeUndefined()
     expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ sessionId: "sdk-1", cost: 0.01 })
 
-    const second = yield* prompt.prompt({ sessionID: chat.id, ...say("again") })
+    const second = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("again") })
     expect(second.parts.some((part) => part.type === "text" && part.text === "second answer")).toBe(true)
-    expect(queries).toHaveLength(2)
-    expect(queries[1].prompt).toBe("again")
-    expect(queries[1].options.resume).toBe("sdk-1")
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(2)
+    expect(ClaudeEngineFixture.state.queries[1].prompt).toBe("again")
+    expect(ClaudeEngineFixture.state.queries[1].options?.resume).toBe("sdk-1")
   }), 30_000)
 
-it.instance("a failed turn answers with an error and does not fall back to Orchestra's loop", () =>
+ClaudeEngineFixture.it.instance("a failed turn answers with an error and does not fall back to Orchestra's loop", () =>
   Effect.gen(function* () {
-    queries.length = 0
-    const { prompt, chat } = yield* setup
-    scripts.push(async function* () { throw new Error("Claude Code is not logged in") })
-    const result = yield* prompt.prompt({ sessionID: chat.id, ...say("hello") })
+    ClaudeEngineFixture.state.queries.length = 0
+    const { prompt, chat } = yield* ClaudeEngineFixture.setup()
+    ClaudeEngineFixture.state.scripts.push(async function* () { throw new Error("Claude Code is not logged in") })
+    const result = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("hello") })
     const info = result.info as SessionV1.Assistant
     expect(info.finish).toBe("error")
     expect(info.error?.data).toMatchObject({ message: "Claude Code is not logged in" })
-    expect(queries).toHaveLength(1)
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
   }), 30_000)
 
-it.instance("cancel stops Claude Code and marks the turn aborted", () =>
-  Effect.gen(function* () {
-    queries.length = 0
-    const { sessions, prompt, chat } = yield* setup
-    let aborted = false
-    scripts.push(async function* (signal) {
-      yield { type: "system", subtype: "init", ...frame }
-      yield { type: "assistant", message: { id: "msg_c", content: [{ type: "tool_use", id: "toolu_1", name: "Bash", input: { command: "sleep 60" } }], stop_reason: null, usage: {} }, ...frame }
-      await new Promise<void>((resolve) => signal.addEventListener("abort", () => { aborted = true; resolve() }))
-    })
-    const run = yield* prompt.prompt({ sessionID: chat.id, ...say("long job") }).pipe(Effect.forkChild)
-    yield* pollWithTimeout(sessions.messages({ sessionID: chat.id }).pipe(Effect.map((list) =>
-      list.some((message) => message.parts.some((part) => part.type === "tool")) ? true : undefined)), "no tool part", "10 seconds")
-    yield* prompt.cancel(chat.id)
-    yield* Fiber.await(run)
-    expect(aborted).toBe(true)
-    const last = (yield* sessions.messages({ sessionID: chat.id })).findLast((message) => message.info.role === "assistant")!
-    expect((last.info as SessionV1.Assistant).error?.name).toBe("MessageAbortedError")
-    const tool = last.parts.find((part) => part.type === "tool")
-    expect(tool?.type === "tool" && tool.state.status).toBe("error")
-  }), 30_000)
+ClaudeEngineFixture.it.instance("SDK mirror_error is an explicit persistence failure and never resumes a dropped native batch", () => Effect.gen(function* () {
+  ClaudeEngineFixture.state.queries.length = 0
+  ClaudeEngineFixture.state.scripts.length = 0
+  const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
+  ClaudeEngineFixture.state.scripts.push(async function* () {
+    yield { type: "system", subtype: "init", ...ClaudeEngineFixture.frame }
+    yield { type: "system", subtype: "mirror_error", error: "claude-code-corrupt-storage", key: { projectKey: "fixture", sessionId: "sdk-1" }, ...ClaudeEngineFixture.frame }
+  })
+  const first = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("persist this turn") })
+  expect(first.info.role === "assistant" && first.info.error?.data).toMatchObject({ message: "Claude Code native transcript persistence failed; SDK resume is blocked until its archive is repaired." })
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ nativeArchiveFailed: true })
+  const next = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("do not resume missing native entries") })
+  expect(next.info.role === "assistant" && next.info.finish).toBe("error")
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+}), 60_000)
 
-it.instance("a failing pre-model guard ends the Claude Code turn before any SDK query", () =>
-  Effect.gen(function* () {
-    queries.length = 0
-    scripts.length = 0
-    const { prompt, chat } = yield* setup
-    scripts.push(reply("unguarded answer", "msg_unguarded"))
-    const check = Effect.fail(new Error("write root changed before model"))
-    const result = yield* prompt.prompt({ sessionID: chat.id, ...say("guarded work") })
-      .pipe(Effect.provideService(PromptGuard.Current, { sessionID: chat.id, check, checked: false }))
-    expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: "write root changed before model" })
-    expect(queries).toHaveLength(0)
-    expect(scripts).toHaveLength(1)
-    scripts.length = 0
-  }), 30_000)
+ClaudeEngineFixture.it.instance("a failing pre-model guard ends the Claude Code turn before any SDK query", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const { prompt, chat } = yield* ClaudeEngineFixture.setup()
+  ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("unguarded answer", "msg_unguarded"))
+  const check = Effect.fail(new Error("write root changed before model"))
+  const result = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("guarded work") })
+    .pipe(Effect.provideService(PromptGuard.Current, { sessionID: chat.id, check, checked: false }))
+  expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: "write root changed before model" })
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(0)
+  expect(ClaudeEngineFixture.state.scripts).toHaveLength(1)
+}), 30_000)

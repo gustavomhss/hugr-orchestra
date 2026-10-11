@@ -377,5 +377,6 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
     expect(DiscoveryResult.report("Original worker text", result)).toContain('\n> "Original worker text"')
   }
   expect(DiscoveryResult.report("Unsupported seat text", { schema: "backend-work-result-v1", qualifications: bounded,
+    mode: "delegated", acceptance: { state: "pending" }, verification: { state: "not-host-verified" },
     card: { parsed: false }, changes: [], checks: [], blockers: [], risks: [], nextActions: [], terminal: { reason: "ended" }, memory: { reads: [], writes: [] } })).toBe("Unsupported seat text")
 }), { git: true }, 120_000)

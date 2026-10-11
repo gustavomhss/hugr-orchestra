@@ -143,6 +143,18 @@ const layer = Layer.effectDiscard(
             { type: "text", text: output.output },
             { type: "text", text: modelOutput(output) },
           ],
+          modelCapture: ({ input, output }) => ({
+            textIndex: 0,
+            observation: {
+              source: "shell",
+              command: input.command,
+              output: output.output,
+              termination: output.timeout ? { kind: "timed_out" }
+                : typeof output.exit === "number" ? { kind: "exited", code: output.exit } : { kind: "unknown" },
+              completeness: output.timeout ? "unknown" : output.truncated ? "truncated" : "complete",
+              presentation: "unknown",
+            },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               const source = {
@@ -195,7 +207,7 @@ const layer = Layer.effectDiscard(
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
-                const wrapped = yield* ToolSafetySandbox.wrap(command).pipe(Effect.provideService(FSUtil.Service, fs))
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
