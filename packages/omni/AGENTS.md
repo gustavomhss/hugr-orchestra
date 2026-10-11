@@ -51,7 +51,8 @@ by a lead decision. Their bodies and every private item belong to the module's o
 - **Never block the host:** not the Node main thread, not the tokio executor. The one exception is spawning,
   which blocks for bounded round trips, like `std::process::Command::spawn`: one for a pipe child, two for a Unix
   PTY child (`client::spawn`, then `Tree::go`).
-- **File size:** at most 650 lines per code file (ideal ≤ 400). Split inside your module before 600.
+- **File size:** at most 400 lines per code file, tests included (owner rule; per file, never per change). Split
+  inside your module before you reach it.
 - **Tests assert.** A timeout or an incomplete observation is a failure. Synchronize on fixture markers, never on
   `sleep`.
 - **Contract scenarios** (`conformance/scenarios`, `crates/hugr-omni/tests`) are read-only for implementers

@@ -96,7 +96,7 @@ a reply rule is a lead decision, and lands as one change:
 
 ## 8. File size
 
-At most 650 lines per code file (400 is the target). Split inside your module before 600. Check with
+At most 400 lines per code file, tests included (per file, never per change). Check with
 `python3 scripts/file-size-guard.py`. Documents are not counted.
 
 ## Review checklist
