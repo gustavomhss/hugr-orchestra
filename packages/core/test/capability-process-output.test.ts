@@ -99,6 +99,22 @@ describe("CapabilityProcessOutput", () => {
     expect(out.read(undefined, 10)).toEqual({ start: 2, end: 7, text: "cdefg", eof: false })
   })
 
+  test("multibyte characters straddling the physical ring end stay whole", () => {
+    const out = buffer(8, "abcdef", "😀")
+    expect(out.read(undefined, 100)).toEqual({ start: 2, end: 10, text: "cdef😀", eof: false })
+    expect(out.read(6, 1)).toEqual({ start: 6, end: 10, text: "😀", eof: false })
+    const two = buffer(6, "abcde", "é", "x")
+    expect(two.read(5, 1)).toEqual({ start: 5, end: 7, text: "é", eof: false })
+    expect(two.read(undefined, 100)).toEqual({ start: 2, end: 8, text: "cdeéx", eof: false })
+  })
+
+  test("U+FEFF is kept mid-stream and at a chunk start", () => {
+    const out = buffer(32, "a\uFEFFb", "\uFEFFc")
+    expect(out.read(0, 100).text).toBe("a\uFEFFb\uFEFFc")
+    expect(out.read(1, 3)).toEqual({ start: 1, end: 4, text: "\uFEFF", eof: false })
+    expect(out.read(5, 100)).toEqual({ start: 5, end: 9, text: "\uFEFFc", eof: false })
+  })
+
   test("invalid process bytes decode as replacement but valid neighbours stay whole", () => {
     const out = buffer(16, Uint8Array.of(0x61, 0x80, 0xff, 0xe2, 0x82), bytes("é"))
     const chunks = drain(out, 1)
@@ -144,6 +160,36 @@ describe("CapabilityProcessOutput", () => {
       out.end()
       yield* Fiber.join(later)
       yield* out.changed(100)
+    }),
+  )
+
+  it.effect("changed waits for a whole character beyond the cursor", () =>
+    Effect.gen(function* () {
+      const emoji = bytes("😀")
+      const order: string[] = []
+      const out = buffer(16, "a", emoji.subarray(0, 2))
+      const waiter = yield* out.changed(1).pipe(
+        Effect.tap(() => Effect.sync(() => order.push("woke"))),
+        Effect.forkChild({ startImmediately: true }),
+      )
+      yield* Effect.yieldNow
+      order.push("rest")
+      out.append(emoji.subarray(2))
+      yield* Fiber.join(waiter)
+      expect(order).toEqual(["rest", "woke"])
+      expect(out.read(1, 1)).toEqual({ start: 1, end: 5, text: "😀", eof: false })
+    }),
+  )
+
+  it.effect("end() wakes a waiter blocked on a dangling partial character", () =>
+    Effect.gen(function* () {
+      const out = buffer(16, "a", Uint8Array.of(0xf0, 0x9f))
+      const waiter = yield* out.changed(1).pipe(Effect.forkChild({ startImmediately: true }))
+      yield* Effect.yieldNow
+      expect(waiter.pollUnsafe()).toBeUndefined()
+      out.end()
+      yield* Fiber.join(waiter)
+      expect(out.read(1, 10)).toEqual({ start: 1, end: 3, text: "\uFFFD", eof: true })
     }),
   )
 })
