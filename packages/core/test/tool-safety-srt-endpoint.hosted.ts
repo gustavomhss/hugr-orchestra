@@ -275,3 +275,73 @@ it.live("Linux srt exact endpoint: psql, a SQLx migration and PGLS check reach t
     expect(other.accepted()).toBe(0)
   }), 30 * 60_000,
 )
+
+// Attack cases against the grant: workspace runtime config, a port takeover, forwarder tampering, leftovers after the
+// command or a SIGKILL of srt, and srt's own listener ports.
+it.live("Linux srt exact endpoint: workspace runtime config, port takeover, tampering and leftovers stay confined", () =>
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const processes = yield* AppProcess.Service
+    const node = yield* prepareHost
+    const other = yield* otherService
+    const { work, sandboxed } = yield* sandboxFor(other.port)
+    yield* runtimeReady(sandboxed("true"))
+    const running = (pattern: string) => processes.run(ChildProcess.make("pgrep", ["-f", pattern])).pipe(Effect.map((result) => result.exitCode))
+    const until = (pattern: string, code: number) => running(pattern).pipe(
+      Effect.flatMap((value) => value === code ? Effect.succeed(value) : Effect.fail(value)),
+      Effect.retry({ schedule: Schedule.spaced("200 millis"), times: 25 }))
+
+    // An earlier command can leave these in its workspace. Bun loads both from the cwd unless told not to.
+    yield* fs.writeFileString(path.join(work, "bunfig.toml"), 'preload = ["./preload.cjs"]\n')
+    yield* fs.writeFileString(path.join(work, "preload.cjs"), `const fs=require("fs");const line=process.argv.slice(1).join(" ")+"\\n"
+try{fs.appendFileSync(${JSON.stringify(path.join(work, "escaped"))},line)}catch{fs.appendFileSync(${JSON.stringify(path.join(work, "models", "inside"))},line)}`)
+    yield* fs.writeFileString(path.join(work, ".env"), "ORCHESTRA_DOTENV_PROBE=loaded\n")
+    const config = yield* sandboxed(`printf 'dotenv=%s' "$ORCHESTRA_DOTENV_PROBE"`)
+    const escaped = (yield* fs.exists(path.join(work, "escaped"))) ? Buffer.from(yield* fs.readFile(path.join(work, "escaped"))).toString() : ""
+    const inside = (yield* fs.exists(path.join(work, "models", "inside"))) ? Buffer.from(yield* fs.readFile(path.join(work, "models", "inside"))).toString() : ""
+    yield* fs.remove(path.join(work, "bunfig.toml"))
+
+    // The command cannot take the granted port from the forwarder, with or without SO_REUSEPORT.
+    const takeover = yield* sandboxed(`"${node}" -e "require('net').createServer().once('error',e=>console.log(e.code)).listen(${other.port},'127.0.0.1',()=>{console.log('BOUND');process.exit(0)})"; ` +
+      `"${process.execPath}" -e "try{Bun.listen({hostname:'127.0.0.1',port:${other.port},reusePort:true,socket:{data(){}}});console.log('BOUND')}catch(e){console.log(e.code)}"`)
+
+    // The forwarder script and its directory are read-only to the command.
+    const tamper = yield* sandboxed(`f=$(tr '\\0' '\\n' < /proc/$PPID/cmdline | grep -m1 'orchestra-endpoint-forwarder.cjs$'); d=$(dirname "$f"); echo "seen=$f"
+(echo x >> "$f") 2>/dev/null && echo WRITE; (mv "$f" "$f.x") 2>/dev/null && echo RENAME; (mv "$d" "$d.x") 2>/dev/null && echo MOVEDIR
+(rm -f "$f") 2>/dev/null; [ -e "$f" ] || echo REMOVED; (ln -s / "$d/link") 2>/dev/null && echo CREATE; true`)
+
+    // A daemonized grandchild ends with the command; a SIGKILL of srt ends the forwarder and the command.
+    const daemon = yield* Effect.forkChild(sandboxed("setsid sh -c 'exec sleep 47.5' </dev/null >/dev/null 2>&1 & sleep 2"))
+    const daemonSeen = yield* until("sleep 47.5", 0)
+    yield* Fiber.join(daemon)
+    const daemonGone = yield* until("sleep 47.5", 1)
+    const forwarderGone = yield* until("orchestra-endpoint-forwarder.cjs", 1)
+    const killed = yield* Effect.forkChild(sandboxed("sleep 48.5").pipe(Effect.exit))
+    const killedSeen = yield* until("sleep 48.5", 0)
+    yield* host("pkill", ["-KILL", "-f", "sandbox-runtime/dist/cli.js"])
+    const killedGone = yield* until("sleep 48.5", 1)
+    const killedForwarderGone = yield* until("orchestra-endpoint-forwarder.cjs", 1)
+    yield* Fiber.join(killed)
+
+    // srt's own in-sandbox listeners take 3128 and 1080 first, every time.
+    const reserved = yield* Effect.forEach([3128, 1080, 3128, 1080, 3128, 1080], (port) => sandboxFor(port).pipe(
+      Effect.flatMap((proxy) => proxy.sandboxed("echo ran")),
+      Effect.map((result) => `${result.exitCode}:${result.stdout.toString().trim()}:${result.stderr.toString().trim()}`)))
+
+    const result = {
+      config: { exit: config.exitCode, stdout: config.stdout.toString(), stderr: config.stderr.toString().slice(0, 400), escaped, inside },
+      takeover: takeover.stdout.toString().trim().split("\n"),
+      tamper: tamper.stdout.toString().trim().split("\n"),
+      daemon: { daemonSeen, daemonGone, forwarderGone, killedSeen, killedGone, killedForwarderGone },
+      reserved,
+    }
+    console.info(`attack cases: ${JSON.stringify(result)}`)
+    expect(result.config).toMatchObject({ exit: 0, stdout: "dotenv=", escaped: "", inside: "" })
+    expect(result.takeover).toEqual(["EADDRINUSE", "EADDRINUSE"])
+    expect(result.tamper.slice(1)).toEqual([])
+    expect(result.tamper[0]).toContain("orchestra-endpoint-forwarder.cjs")
+    expect(result.daemon).toEqual({ daemonSeen: 0, daemonGone: 1, forwarderGone: 1, killedSeen: 0, killedGone: 1, killedForwarderGone: 1 })
+    result.reserved.forEach((entry) => expect(entry).toMatch(/^125::orchestra-endpoint-forwarder:listen-failed:(3128|1080):EADDRINUSE$/))
+    expect(other.accepted()).toBe(0)
+  }), 20 * 60_000,
+)

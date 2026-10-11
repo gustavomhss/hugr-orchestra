@@ -246,7 +246,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
   return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--",
-    ...forwarder ? [process.execPath, forwarder, endpoints.join(";")] : [], ...invocation], {
+    ...forwarder ? [process.execPath, ...RUNTIME_FLAGS, forwarder, endpoints.join(";")] : [], ...invocation], {
     ...command.options, cwd, shell: false, extendEnv: false,
     env: { ...confined, ...sandbox.env, ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
   })
@@ -271,7 +271,7 @@ const pick = Effect.fnUntraced(function* (start: boolean, pinned = false) {
   return {
     kind: "srt" as const,
     command: process.execPath,
-    args: [ToolSafetySandboxRuntime.cli(runtime.directory)],
+    args: [...RUNTIME_FLAGS, ToolSafetySandboxRuntime.cli(runtime.directory)],
     // A compiled Bun binary runs scripts only when told to; Electron runs as Node only when told to.
     env: process.versions.bun ? { BUN_BE_BUN: "1" } : process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {},
     ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
@@ -320,6 +320,10 @@ const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory:
   return yield* canonical(fs, literal)
 })
 
+// Bun loads ./bunfig.toml (whose preload runs code) and ./.env from its cwd, which is the command's writable workspace.
+// srt's launcher runs on the host before any confinement, and the forwarder's environment becomes the command's, so
+// neither may read them. Node and Electron-as-Node load neither.
+const RUNTIME_FLAGS = process.versions.bun ? ["--no-env-file", "--config=/dev/null"] : []
 
 // CommonJS for Node, Bun and Electron-as-Node alike. Exit 125 names a refusal before the command ran.
 const FORWARDER = String.raw`"use strict"
