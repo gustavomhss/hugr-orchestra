@@ -157,7 +157,8 @@ for (const locale of ["en", "br"] as const) test(`real repository KPI DOM: scope
     }) },
   }), host)
   try {
-    const { dict }: typeof import("@/i18n/en") = await import(solidDom(locale === "en" ? "@/i18n/en" : "@/i18n/br", import.meta.dir))
+    // Lean strings live in their own locale modules, which context/language.tsx merges over the app tables.
+    const { dict }: typeof import("@/i18n/lean/en") = await import(solidDom(`@/i18n/lean/${locale}`, import.meta.dir))
     await Bun.sleep(20)
     expect(host.querySelector("section")?.getAttribute("aria-label")).toBe(dict["lean.project.title"])
     expect(host.textContent).toContain("native-repo")
