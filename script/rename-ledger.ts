@@ -214,12 +214,15 @@ export const protectedStrings: Protected[] = [
     paths: /\/test\/plugin\/xai\.test\.ts$/,
     reason: "xAI User-Agent and referrer, kept until probed",
   },
-
-  // Upstream build artifacts the tree downloads until Orchestra publishes its own
   {
-    pattern: /@opencode-ai\/cli-(?=[a-z])|\bopencode2\b/g,
-    paths: /^packages\/desktop\/scripts\/utils\.ts$/,
-    reason: "upstream's published CLI binary, which the desktop dev build downloads from npm",
+    pattern: /headers\.set\("originator", "opencode"\)|`opencode\/\$\{InstallationVersion\} \(\$\{os\.platform\(\)\} \$\{os\.release\(\)\}; \$\{os\.arch\(\)\}\)`/g,
+    paths: /^packages\/orchestra\/src\/plugin\/openai\/legacy-codex-readonly\.ts$/,
+    reason: "Codex originator/User-Agent kept until live probe; ChatGPT plan access is tied to the registered originator",
+  },
+  {
+    pattern: /get\("originator"\)\)\.toBe\("opencode"\)|headers\.originator\)\.toBe\("opencode"\)|\["User-Agent"\]\)\.toStartWith\("opencode\/"\)/g,
+    paths: /^packages\/orchestra\/test\/plugin\/(?:codex-siwc|legacy-codex-readonly)\.test\.ts$/,
+    reason: "Codex originator/User-Agent kept until live probe; ChatGPT plan access is tied to the registered originator",
   },
 
   // Unrelated words
