@@ -1,6 +1,7 @@
 export * as Arsenal from "./index"
 export { list, describe, execute } from "./registry"
 export { validateHostSnapshot } from "./governance/telemetry"
+export { extractSymbols } from "./onboard/extract"
 export async function readPreferencesSnapshot(...args: Parameters<typeof import("./tools/profile").readPreferencesSnapshot>) {
   const { readPreferencesSnapshot } = await import("./tools/profile")
   return readPreferencesSnapshot(...args)

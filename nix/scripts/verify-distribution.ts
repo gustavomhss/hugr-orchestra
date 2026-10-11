@@ -2,10 +2,13 @@
 // Deferred native output check. Uses the shipped consumer admission, then checks
 // actual image headers and execution. No GUI, service, OAuth or arbitrary-CPU claim.
 import { spawnSync } from "node:child_process"
-import { readdir, stat } from "node:fs/promises"
+import { closeSync, mkdtempSync, openSync, readFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { lstat, readdir, realpath, stat } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { parseArgs } from "node:util"
-import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
+import { cliTreeSitterTarget, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
+import { requireTreeSitterBundle } from "../../packages/script/src/tree-sitter-prebuilds"
 
 const args = parseArgs({
   options: {
@@ -53,6 +56,13 @@ const omniCli = await omni(dirname(artifacts[0].path), process.execPath, {})
 // The packaged CLI (Resources/cli) resolves Resources/omni through ../omni: check it before that CLI runs too.
 // Resources/omni is outside app.asar.unpacked, so the addon scan below never sees it; packaged Electron loads it here.
 const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
+// maestro-arsenal in the compiled CLI loads tree-sitter/ beside realpath(process.execPath). The desktop stages its
+// bundle from the CLI output's tree-sitter-<target>/ and ships it in Resources/cli for the CLI it installs.
+const treeSitterBundles = {
+  cli: await treeSitter(join(dirname(artifacts[0].path), "tree-sitter"), process.execPath, {}),
+  cliStaged: await treeSitter(join(dirname(artifacts[0].path), `tree-sitter-${target}`), process.execPath, {}),
+  desktop: await treeSitter(join(resources, "cli", `tree-sitter-${target}`), executable, { ELECTRON_RUN_AS_NODE: "1" }),
+}
 artifacts.forEach((artifact) => {
   const reported = execute(artifact.path, ["--version"]).trim()
   if (![version, `orchestra v${version}`].includes(reported)) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)
@@ -89,7 +99,7 @@ if (platform === "linux") {
   if (!(await Bun.file(join(desktop, "share/metainfo/ai.hugr.orchestra.metainfo.xml")).size)) fail("MISSING_METAINFO")
 }
 return { system, version, target, artifacts, executable, runtime, pty, addons,
-  omni: { cli: omniCli, desktop: omniDesktop }, status: "NATIVE_OUTPUT_CHECK_OK" }
+  omni: { cli: omniCli, desktop: omniDesktop }, treeSitter: treeSitterBundles, status: "NATIVE_OUTPUT_CHECK_OK" }
 
 async function image(file: string, code = "NATIVE_IMAGE_MISMATCH") {
   const header = Buffer.from(await Bun.file(file).slice(0, 64).arrayBuffer())
@@ -115,12 +125,12 @@ async function omni(directory: string, runtime: string, env: Record<string, stri
   await image(addon, "OMNI_IMAGE_MISMATCH")
   await image(supervisor, "OMNI_IMAGE_MISMATCH")
   // No --version/--help: with no arguments it must refuse its command line (exit 2), which only a native run can do.
-  const started = spawnSync(supervisor, [], { encoding: "utf8", timeout: 30_000 })
+  const started = captured(supervisor, [], { encoding: "utf8", timeout: 30_000 })
   if (started.error || started.status !== 2 || !started.stderr.startsWith("hugr-omni-supervisor: missing --host-pid"))
     fail(`OMNI_SUPERVISOR_EXECUTION:${supervisor}:${started.error?.message ?? `${started.status}:${started.signal}:${started.stderr}`}`)
   // Inherited HUGR_OMNI_* would let the native side pick another supervisor than the shipped one.
   const inherited = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("HUGR_OMNI_")))
-  const loaded = spawnSync(runtime, ["-e", String.raw`
+  const loaded = captured(runtime, ["-e", String.raw`
     const dlopen = process.dlopen
     const opened = []
     process.dlopen = function (module, file, ...rest) { opened.push(file); return dlopen.call(this, module, file, ...rest) }
@@ -141,6 +151,53 @@ async function omni(directory: string, runtime: string, env: Record<string, stri
     fail(`OMNI_ADDON_LOAD:${addon}:${line}`)
   return { addon, supervisor, supervisorExit: started.status, ...evidence, status: "OMNI_OK" }
 }
+
+// Each host binding must be a real native image that loads in the given runtime: Bun loads the shipped package
+// entries and parses, as arsenal does in the compiled CLI; Electron as node dlopens each binding directly.
+async function treeSitter(directory: string, runtime: string, env: Record<string, string>) {
+  const bindings = ["tree-sitter", "tree-sitter-typescript", "tree-sitter-python"]
+    .map((name) => join(directory, name, "prebuilds", `${platform}-${arch}`, `${name}.node`))
+  for (const file of bindings) {
+    const info = await lstat(file).catch(() => undefined)
+    if (!info?.isFile() || !info.size) fail(`TREE_SITTER_BUNDLE_MISSING:${file}`)
+    await image(file, "TREE_SITTER_BUNDLE_IMAGE_MISMATCH")
+  }
+  await Promise.resolve().then(() => requireTreeSitterBundle(directory, cliTreeSitterTarget(target)))
+    .catch((error: unknown) => fail(`TREE_SITTER_BUNDLE_INCOMPLETE:${error instanceof Error ? error.message : error}`))
+  const loaded = captured(runtime, ["-e", String.raw`
+    const path = require("node:path")
+    const dir = process.env.NIX_TREE_SITTER_DIR
+    const dlopen = process.dlopen
+    const opened = []
+    process.dlopen = function (module, file, ...rest) { opened.push(file); return dlopen.call(this, module, file, ...rest) }
+    const parse = (language, source) => {
+      const Parser = require(path.join(dir, "tree-sitter"))
+      const parser = new Parser()
+      parser.setLanguage(language)
+      return parser.parse(source).rootNode.type
+    }
+    const parsed = process.versions.bun
+      ? [parse(require(path.join(dir, "tree-sitter-typescript")).typescript, "export const a = 1"),
+        parse(require(path.join(dir, "tree-sitter-python")), "a = 1")]
+      : JSON.parse(process.env.NIX_TREE_SITTER_BINDINGS).map((file) => Object.getOwnPropertyNames(require(file)).length)
+    console.log("TREE_SITTER_LOAD_OK " + JSON.stringify({ opened, parsed,
+      runtime: process.versions.electron ? "electron " + process.versions.electron : "bun " + process.versions.bun }))
+  `], {
+    env: { ...process.env, ...env, NIX_TREE_SITTER_DIR: directory, NIX_TREE_SITTER_BINDINGS: JSON.stringify(bindings) },
+    encoding: "utf8", timeout: 60_000,
+  })
+  const line = loaded.stdout?.trim() ?? ""
+  if (loaded.error || loaded.status !== 0 || !line.startsWith("TREE_SITTER_LOAD_OK {") || line.includes("\n"))
+    fail(`TREE_SITTER_BUNDLE_LOAD:${directory}:${loaded.error?.message ?? `${loaded.status}:${loaded.signal}:${loaded.stderr}`}`)
+  const evidence: { opened: string[]; parsed: unknown[]; runtime: string } = JSON.parse(line.slice("TREE_SITTER_LOAD_OK ".length))
+  // require() opens the real path, so a symlinked evidence directory must not fail a valid bundle.
+  const real = await Promise.all(bindings.map((file) => realpath(file)))
+  if (evidence.runtime.startsWith("electron ")
+    ? JSON.stringify(evidence.opened) !== JSON.stringify(real) || evidence.parsed.some((count) => !count)
+    : JSON.stringify(evidence.parsed) !== JSON.stringify(["program", "module"]))
+    fail(`TREE_SITTER_BUNDLE_LOAD:${directory}:${line}`)
+  return { directory, bindings, ...evidence, status: "TREE_SITTER_OK" }
+}
 }
 
 verify().then((result) => console.log(JSON.stringify(result, null, 2)), (error: unknown) => {
@@ -158,7 +215,7 @@ function fail(label: string): never {
 }
 
 function execute(file: string, argv: string[], electron = false) {
-  const result = spawnSync(file, argv, {
+  const result = captured(file, argv, {
     env: { ...process.env, ORCHESTRA_DISABLE_MODELS_FETCH: "1", ...(electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
     encoding: "utf8", timeout: 60_000,
   })
@@ -169,7 +226,7 @@ function execute(file: string, argv: string[], electron = false) {
 function packagedPty(executable: string, resources: string) {
   // electron-vite rewrites @lydell/node-pty to this platform package. Use the
   // same createRequire context as its packaged main bundle, not a .node shortcut.
-  const result = spawnSync(executable, ["-e", String.raw`
+  const result = captured(executable, ["-e", String.raw`
     const { createRequire } = require("node:module")
     const fs = require("node:fs")
     const path = require("node:path")
@@ -231,4 +288,17 @@ async function nativeAddons(directory: string): Promise<string[]> {
     if (entry.isDirectory()) return nativeAddons(file)
     return entry.isFile() && entry.name.endsWith(".node") ? [file] : []
   }))).flat()
+}
+
+// Every child writes to files, never pipes: on Linux, Electron's crash handler inherits the pipes and keeps them open
+// after a crashing load, so a piped spawnSync would wait forever instead of reporting the failure. SIGKILL ends hangs.
+function captured(command: string, args: string[], options: { env?: Record<string, string | undefined>; timeout: number; encoding?: string }) {
+  const logs = mkdtempSync(join(tmpdir(), "nix-verify-"))
+  const out = openSync(join(logs, "stdout"), "w")
+  const err = openSync(join(logs, "stderr"), "w")
+  const result = spawnSync(command, args, { env: options.env, timeout: options.timeout, stdio: ["ignore", out, err], killSignal: "SIGKILL" })
+  closeSync(out)
+  closeSync(err)
+  return { error: result.error, status: result.status, signal: result.signal,
+    stdout: readFileSync(join(logs, "stdout"), "utf8"), stderr: readFileSync(join(logs, "stderr"), "utf8") }
 }

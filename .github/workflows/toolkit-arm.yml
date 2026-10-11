@@ -5,7 +5,9 @@ name: toolkit-arm
 # (real pinned engines in backend-toolkit-cli, fixtures elsewhere); `prefetch` acquires every engine one at a time,
 # runs each with its version flag, and lists the result per engine in the job summary.
 # Scope `tree-sitter` runs only the native grammar lane: the published linux-arm64 prebuilds must fail to load here,
-# then load and parse after packages/script/src/tree-sitter-prebuilds.ts rebuilds them from source.
+# and the core binding must be absent after an install without lifecycle scripts (as Nix and the release lanes install);
+# both then load and parse, under Node and Bun, after packages/script/src/tree-sitter-prebuilds.ts builds them from source,
+# and the compiled linux-arm64 CLI extracts symbols with the copies it ships in bin/tree-sitter.
 on:
   workflow_dispatch:
     inputs:
@@ -104,17 +106,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      # Explicit flags skip the node_modules cache, whose key Linux x64 and Arm share.
+      # Explicit flags skip the node_modules cache, whose key Linux x64 and Arm share. --ignore-scripts leaves the core
+      # tree-sitter package without the build its install script would compile, as a packaging install does.
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
         with:
-          install-flags: --frozen-lockfile
+          install-flags: --frozen-lockfile --ignore-scripts
 
       - name: Guard tests before any repair
         working-directory: packages/script
         run: bun test --timeout 600000 ./src/tree-sitter-prebuilds.test.ts
 
-      - name: Published typescript and javascript prebuilds do not load on Arm
+      - name: Published typescript and javascript prebuilds and the core binding do not load on Arm
         working-directory: packages/maestro-arsenal
         run: |
           for grammar in tree-sitter-typescript tree-sitter-javascript; do
@@ -123,6 +126,10 @@ jobs:
               exit 1
             fi
           done
+          if node -e 'require("tree-sitter")'; then
+            echo "::error::the core tree-sitter binding loaded before the repair; the install was not script-free"
+            exit 1
+          fi
 
       - name: Rebuild from source
         run: bun packages/script/src/tree-sitter-prebuilds.ts linux arm64
@@ -143,5 +150,16 @@ jobs:
               if (root.hasError) throw new Error(`${name} parse error: ${root.toString()}`)
               console.log(`${name}: ${root.type} ${root.toString()}`)
             }'
+          # Bun loads only prebuilds/linux-arm64/tree-sitter.node; arsenal's own extraction must be complete there.
+          bun -e '
+            import { extractNative } from "./src/onboard/extract.ts"
+            const result = extractNative("a.ts", "import { b } from \"./b\"\nexport const a: number = 1")
+            console.log(JSON.stringify(result))
+            if (!result.coverage.complete || result.symbols[0]?.name !== "a") process.exit(1)'
           # The guard now passes with nothing left to rebuild.
           bun ../script/src/tree-sitter-prebuilds.ts linux arm64 | grep -F '"rebuilt":[]'
+
+      # A compiled CLI has no node_modules: it ships these bindings in bin/tree-sitter and parses from beside itself.
+      - name: The compiled linux-arm64 CLI extracts real symbols with the tree-sitter it ships
+        working-directory: packages/cli
+        run: GITHUB_ACTIONS=false bun test --timeout 900000 ./test/tree-sitter-bundle.test.ts

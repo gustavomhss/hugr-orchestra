@@ -57,6 +57,9 @@ stdenv.mkDerivation (finalAttrs: {
     # Desktop prebuild also signs admitted CLI resources before app packaging.
     darwin.sigtool
     sysctl
+    # gyp on Darwin needs xcodebuild/xcrun: repair-host-prebuilds.py below and electron-builder's
+    # beforePack (prepareTreeSitterPrebuilds builds the core tree-sitter binding) both run node-gyp.
+    xcbuild
   ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
@@ -79,6 +82,8 @@ stdenv.mkDerivation (finalAttrs: {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     ORCHESTRA_CLI_PREBUILT_DIR = orchestra.cliArtifacts;
     CSC_IDENTITY_AUTO_DISCOVERY = "false";
+    # beforePack compiles the core tree-sitter binding with the lockfile node-gyp against these headers.
+    npm_config_nodedir = "${nodejs}";
   };
 
   preBuild = ''
@@ -108,8 +113,7 @@ stdenv.mkDerivation (finalAttrs: {
     # Some upstream host prebuilds are another CPU's binary (tree-sitter-typescript
     # 0.23.2 ships x86-64 ELF as linux-arm64). Rebuild those offline from binding.gyp
     # with npm's bundled node-gyp against these Node headers (N-API is ABI-stable).
-    # gyp on Darwin needs xcodebuild/xcrun; xcbuild's stubs are scoped to this step.
-    ${lib.optionalString stdenv.hostPlatform.isDarwin "PATH=${lib.makeBinPath [ xcbuild ]}:$PATH "}python3 -B ${./scripts/repair-host-prebuilds.py} \
+    python3 -B ${./scripts/repair-host-prebuilds.py} \
       "$PWD" '${stdenv.hostPlatform.system}' ${nodejs} \
       ${nodejs}/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js
   '';

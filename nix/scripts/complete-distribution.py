@@ -174,6 +174,17 @@ def check(directory, phase, expected_context=None):
                 and item.get("opened") == [item.get("addon")] and "configure" in (item.get("exports") or [])
                 for item in omni.values()) and str(omni["desktop"]["addon"]).endswith("/omni/hugr_omni.node")
                 and omni["cli"]["addon"] == str(Path(str(output["artifacts"][0].get("path"))).parent / "hugr_omni.node"), "NATIVE_OUTPUT_CAPTURE:" + system)
+            # All three tree-sitter bundles must have been found, imaged and loaded; an absent record is a named failure.
+            tree = output.get("treeSitter")
+            cli_dir = Path(str(output["artifacts"][0].get("path"))).parent
+            require(isinstance(tree, dict) and set(tree) == {"cli", "cliStaged", "desktop"} and all(
+                isinstance(item, dict) and item.get("status") == "TREE_SITTER_OK" and isinstance(item.get("bindings"), list)
+                and [Path(str(file)).name for file in item["bindings"]] == ["tree-sitter.node", "tree-sitter-typescript.node", "tree-sitter-python.node"]
+                for item in tree.values()) and tree["cli"]["directory"] == str(cli_dir / "tree-sitter")
+                and str(tree["desktop"]["directory"]).startswith(str(output["artifacts"][1].get("directory")) + "/tree-sitter-")
+                and tree["cli"]["parsed"] == tree["cliStaged"]["parsed"] == ["program", "module"]
+                and [Path(str(file)).name for file in tree["desktop"].get("opened") or []]
+                == [Path(str(file)).name for file in tree["desktop"]["bindings"]], "NATIVE_OUTPUT_CAPTURE:" + system)
             check_controls(worker)
         for label in phases:
             require(read(worker / (label + ".exit")).strip() == "0", "FAILED_CAPTURE:" + system + ":" + label)

@@ -176,12 +176,22 @@ test("bridge validation rejects oversized bytes and unknown deep directories wit
   const bridge = path.join(project, "node_modules", name)
   await PluginSdkPackage.write(bridge)
   const entry = path.join(project, "entry.js")
-  await Bun.write(entry, `await import(${JSON.stringify(name + "/unlisted")})`)
-  await Bun.write(path.join(bridge, "index.js"), "x".repeat(PluginSdkLimits.limits.packageBytes + 1))
-  expect((await run("plugin", entry)).error).toContain("file-byte bound")
+  const mark = path.join(tmp.path, "evaluated")
+  await Bun.write(entry, `await Bun.write(${JSON.stringify(mark)}, "ran")\nawait import(${JSON.stringify(name + "/unlisted")})`)
+  const oversized = "x".repeat(PluginSdkLimits.limits.packageBytes + 1)
+  await Bun.write(path.join(bridge, "index.js"), oversized)
+  // A size mismatch marks the tree foreign before any read (sdk-package.ts valid), so the bytes are never loaded
+  // and a foreign tree is refused intact rather than replaced.
+  expect((await run("plugin", entry)).error).toContain("Foreign or altered SDK tree")
+  expect(await Bun.file(path.join(bridge, "index.js")).text()).toBe(oversized)
   await Bun.write(path.join(bridge, "index.js"), PluginSdkPackage.sources["index.js"])
   await mkdir(path.join(bridge, "extra", ...Array(80).fill("deep")), { recursive: true })
   expect((await run("plugin", entry)).error).toContain("PluginSdkSetupError")
+  expect(await Bun.file(mark).exists()).toBe(false)
+  // Control: once the bridge is exact again, admission passes and the entry is evaluated.
+  await rm(path.join(bridge, "extra"), { recursive: true, force: true })
+  await run("plugin", entry)
+  expect(await Bun.file(mark).text()).toBe("ran")
 })
 
 test("warm SDK version and changed alias requests fail locally before reconciling files", async () => {

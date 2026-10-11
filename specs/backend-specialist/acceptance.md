@@ -1,6 +1,6 @@
 # Backend acceptance record
 
-Current as of 2026-10-10. Source: `fork/dev` at `8faadbe0e6`, plus the close-out PRs that land through integration PR [#289](https://github.com/gustavomhss/hugr-orchestra/pull/289) (branch `charlie-closeout`, epic CI running). This is a status record, not a spec. It replaces the unmerged draft `acceptance-2026-10-09.md` (commit `c071f601eb`) and keeps its conservative reading. The lead owns acceptance and landing.
+Current as of 2026-10-10. Source: `fork/dev` at `8faadbe0e6`, plus the close-out PRs that land through integration PR [#289](https://github.com/gustavomhss/hugr-orchestra/pull/289), merged as `524f8ec626` with a green epic CI. This is a status record, not a spec. It replaces the unmerged draft `acceptance-2026-10-09.md` (commit `c071f601eb`) and keeps its conservative reading. The lead owns acceptance and landing.
 
 Read order: [Landing update](session-resume-2026-10-08.md#landing-update--2026-10-09), [contract rulings](contracts/README.md), F1-F6 as amended, then source. Older resume sections and [delivery-plan.md](delivery-plan.md) are historical.
 

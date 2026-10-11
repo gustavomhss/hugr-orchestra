@@ -1,7 +1,7 @@
 # Native distribution checkpoint — source-bound component evidence
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": true, "phase": "verify", "sourceParent": "a860fc4e20c40b6d74fd03d17b45cf9bb7670795", "measurementRun": 38143403159, "measurementAttempt": 1}
+{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
 ## Qualified Nix component
@@ -242,6 +242,15 @@ completion roles, and the full immutable output ledger declared in
 generic setup errors and positive-only subsets do not qualify. PTY controls repack
 one real archive in a private fixture, separately removing the required binding
 and breaking its actual package entrypoint, with unchanged/restored positives.
+
+The CLI output ships `tree-sitter/` beside its real binary (maestro-arsenal loads it
+there) and the same bundle as `tree-sitter-<target>/`, which Desktop staging copies
+into `Resources/cli`. All three bundles need each host binding (core, TypeScript,
+Python) as a native image that loads: Bun parses through the shipped entries, packaged
+Electron dlopens Desktop's copy (`TREE_SITTER_BUNDLE_*`). Holding the core binding in
+the CLI and Desktop copies must fail `TREE_SITTER_BUNDLE_MISSING`. The oracles run
+from a checkout without `node_modules`, so `nix/scripts/workspace-paths.json` maps the
+shipped admission's `@orchestra/script` import and Bun auto-install stays off.
 
 Completion/provenance teeth are declared in `probe-distribution-completion.py`:
 empty/extra/duplicate/unknown lanes and artifacts, wrong workflow/head/attempt,

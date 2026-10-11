@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { readdir } from "node:fs/promises";
+import { mkdtemp, readdir, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { fixture } from "./fixture.ts";
 import { extractSymbols } from "../src/onboard/extract.ts";
 import { planMove } from "../src/onboard/move-in.ts";
@@ -27,6 +30,28 @@ test("real tree parser extracts TS and Python; partial and unsupported parse tri
     expect(plan.briefs.length).toBeGreaterThan(0);
   } finally { await f.cleanup(); }
 });
+
+test("without a loadable tree-sitter binding extraction is named unavailable, never a crash or empty success", async () => {
+  // A compiled binary carries arsenal without node_modules or its package files, like the shipped CLI, and here nothing
+  // ships beside it: no binding resolves, whatever this checkout's install left behind, and no parser-worker is tried.
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "arsenal-no-binding-")));
+  try {
+    const extract = fileURLToPath(new URL("../src/onboard/extract.ts", import.meta.url));
+    await Bun.write(join(dir, "entry.ts"), `import { extractSymbols } from ${JSON.stringify(extract)};
+const context = { directory: process.cwd(), stateDirectory: process.cwd(), projectID: "p", authorize: async () => {} };
+console.log(JSON.stringify(await extractSymbols("a.ts", "export const a = 1", context)));`);
+    const binary = join(dir, process.platform === "win32" ? "probe.exe" : "probe");
+    const build = Bun.spawnSync([process.execPath, "build", "--compile", join(dir, "entry.ts"), "--outfile", binary]);
+    expect(build.exitCode, build.stderr.toString()).toBe(0);
+    const run = Bun.spawnSync([binary], { cwd: dir });
+    expect(run.exitCode, run.stderr.toString()).toBe(0);
+    const result = JSON.parse(run.stdout.toString());
+    expect(result).toMatchObject({ path: "a.ts", symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } });
+    expect(result.coverage.detail).toStartWith("native symbol extraction unavailable: ");
+    expect(result.coverage.detail).toContain(join(basename(dir), "tree-sitter", "tree-sitter"));
+    expect(result.coverage.detail).not.toContain("parser-worker");
+  } finally { await rm(dir, { recursive: true, force: true }); }
+}, 120_000);
 
 test("deterministic map ranks core deps and performs no model call or permanent write", async () => {
   const f = await fixture({ "src/central.ts": "export const Central = 1", "src/main.ts": "import { Central } from './central';\nexport const Main = Central;", "tests/example.ts": "export const Example = 1" });
