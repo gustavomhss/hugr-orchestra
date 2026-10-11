@@ -6,6 +6,13 @@ import { Credential } from "@orchestra/core/credential"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Auth } from "../src/auth"
 
+// Claude mode reads no credential: the Claude Agent SDK owns the machine's Claude Code login and Zen's key is public.
+if (process.argv.includes("--engine")) {
+  if (process.argv.slice(2).join(" ") !== "--engine claude-code") throw new Error("Usage: research-credential-probe [--models] | --engine claude-code")
+  console.log(JSON.stringify({ engine: "claude-code", model: "anthropic/claude-opus-5-5", parentModel: "opencode/big-pickle",
+    credentials: "not-read; the Claude Agent SDK authenticates with the machine's Claude Code login" }))
+  process.exit(0)
+}
 // Preserve the historical OAuth directory and probe source identity.
 const legacyName = ["open", "code"].join("")
 const Legacy = Schema.Struct({ openai: Auth.Oauth })

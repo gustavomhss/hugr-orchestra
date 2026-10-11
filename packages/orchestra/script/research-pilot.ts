@@ -21,8 +21,9 @@ const timeoutMs = Number(option("--timeout-ms"))
 const resumeTimeoutMs = Number(option("--resume-timeout-ms"))
 const totalTimeoutMs = Number(option("--total-timeout-ms"))
 const setupPath = option("--setup")
+const engine = option("--engine")
 const milliseconds = (value: number) => Number.isSafeInteger(value) && value > 0 && value <= 2_147_483_647
-const flags = ["--case", "--inputs", "--manifest", "--run-root", "--source-revision", "--timeout-ms", "--resume-timeout-ms", "--total-timeout-ms", "--setup"]
+const flags = ["--case", "--inputs", "--manifest", "--run-root", "--source-revision", "--timeout-ms", "--resume-timeout-ms", "--total-timeout-ms", "--setup", "--engine"]
 if (args.length % 2 || args.some((arg, index) => index % 2 === 0 && (!flags.includes(arg) || args.indexOf(arg) !== index)) ||
   args.some((arg, index) => index % 2 === 1 && arg.startsWith("--"))) throw new Error("Pilot CLI has unknown, duplicate or valueless options")
 if (!inputs || !privateManifest || !runRoot || !revision || !/^[a-f0-9]{40}$/.test(revision) || !/^R(?:0[1-9]|1[0-4])$/.test(caseID) ||
@@ -30,6 +31,12 @@ if (!inputs || !privateManifest || !runRoot || !revision || !/^[a-f0-9]{40}$/.te
   throw new Error("Usage: research-pilot --case R01 --inputs <public-root> --manifest <private-manifest> --run-root <new-isolated-run-root> --source-revision <full-source-sha> --timeout-ms <declared-dispatch-deadline-ms>")
 if (caseID === "R14" && (!milliseconds(resumeTimeoutMs) || !milliseconds(totalTimeoutMs)))
   throw new Error("R14 requires --timeout-ms <first-dispatch-ms> --resume-timeout-ms <second-dispatch-ms> --total-timeout-ms <whole-attempt-ms>")
+if (engine !== undefined && engine !== "claude-code") throw new Error("Pilot --engine accepts only claude-code; omit it for the original OpenAI path")
+// Claude mode: Jimmy runs on the Claude Code engine, which the Claude Agent SDK authenticates with the machine's own Claude
+// Code login; Maestro stays on Orchestra's loop with a free Zen model. The OpenAI OAuth loan is skipped entirely.
+const claude = engine === "claude-code" ? { engine, jimmyModel: "anthropic/claude-opus-5-5", parentModel: "opencode/big-pickle",
+  credential: "claude-code-machine-login; owned by the Claude Agent SDK, never read by the pilot" } : undefined
+const jimmyModel = claude?.jimmyModel ?? "openai/gpt-6.1-sol"
 
 const preparedAt = Date.now()
 const fs = await import("node:fs/promises")
@@ -88,7 +95,13 @@ const sources = await Promise.all(fixture.inputFiles.map(async (file) => {
   await fs.writeFile(path.join(data, "frozen-public", createHash("sha256").update(file).digest("hex") + ".bytes"), bytes, { flag: "wx", mode: 0o400 })
   return { path: file, sha256: digest, bytes: bytes.length }
 }))
-const config = { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
+const config = claude ? { model: claude.parentModel, small_model: claude.parentModel,
+  // Zen serves its free models with the public key; nothing secret is written. Jimmy's Anthropic model is never resolved
+  // through a provider: the engine hands it to the Claude Agent SDK, so no Anthropic API key is needed.
+  enabled_providers: ["opencode"], provider: { opencode: { options: { apiKey: "public" } } },
+  plugin: [], mcp: {}, lsp: false, formatter: false, compaction: { auto: false },
+  agent: { jimmy: { engine: claude.engine, model: claude.jimmyModel } },
+} : { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
   enabled_providers: ["openai"], plugin: [], mcp: {}, lsp: false, formatter: false, compaction: { auto: false },
   agent: { jimmy: { model: "openai/gpt-6.1-sol" } },
 }
@@ -145,6 +158,17 @@ Object.assign(process.env, {
   ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "1", ORCHESTRA_DISABLE_CLAUDE_CODE: "1", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "1",
   ORCHESTRA_PURE: "1", ORCHESTRA_DISABLE_AUTOUPDATE: "1",
 })
+if (claude) {
+  // The Claude Agent SDK spawns Claude Code with this environment. Inherited Anthropic/Claude variables could swap the
+  // machine login for an API key or another backend, so drop them unread. Claude Code finds the login Keychain through
+  // $HOME and names the item's account from $USER, so both carry real values; Orchestra state stays isolated
+  // (ORCHESTRA_TEST_HOME, XDG_*), Claude Code state goes to CLAUDE_CONFIG_DIR, and the empty secure-storage directory keeps
+  // Claude Code on its unsuffixed login item. Side effect: "~" in permission patterns means the real home.
+  Object.keys(process.env).filter((key) => /^(ANTHROPIC_|CLAUDE)/i.test(key)).forEach((key) => { delete process.env[key] })
+  Object.assign(process.env, { HOME: os.userInfo().homedir, USER: os.userInfo().username, CLAUDE_CONFIG_DIR: path.join(root, "claude"),
+    CLAUDE_SECURESTORAGE_CONFIG_DIR: "" })
+  await fs.mkdir(path.join(root, "claude"), { mode: 0o700 })
+}
 // Native Memory falls back to this actual scanner. The Effect toolkit target below refuses implicit installs.
 process.env.BACKEND_TOOLKIT_ROOT = path.join(root, "toolkit")
 process.env.ORCHESTRA_DB = path.join(data, "native.db")
@@ -191,6 +215,8 @@ const identity = {
   setupSha256: setupBytes ? createHash("sha256").update(setupBytes).digest("hex") : null, binaries, sourceSnapshotRevision,
   continuationRunnerSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(import.meta.dir, "research-continuation.ts")).arrayBuffer())).digest("hex"),
   retainedReaderSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(import.meta.dir, "research-retained.ts")).arrayBuffer())).digest("hex"),
+  // Claude mode only, so the original OpenAI identity serializes unchanged. sourceRevision pins the engine and SDK.
+  ...(claude ? { engine: claude } : {}),
 }
 await fs.writeFile(path.join(data, "preparation.json"), JSON.stringify({ caseID, preparedAt, timeoutMs, stage: "provisional-pilot", identity,
   resumeTimeoutMs: caseID === "R14" ? resumeTimeoutMs : undefined, totalTimeoutMs: caseID === "R14" ? totalTimeoutMs : undefined,
@@ -200,9 +226,9 @@ await fs.writeFile(path.join(data, "preparation.json"), JSON.stringify({ caseID,
     isolation: "state/config placement; not an OS sandbox" },
   qualityGrade: "not-run" }), { flag: "wx", mode: 0o600 })
 const { Auth } = await import("../src/auth")
-const legacy = Schema.decodeUnknownSync(Schema.Struct({ openai: Auth.Oauth }))(await Bun.file(credentialPath).json())
+const legacy = claude ? undefined : Schema.decodeUnknownSync(Schema.Struct({ openai: Auth.Oauth }))(await Bun.file(credentialPath).json())
 const checked = () => Effect.gen(function* () {
-  if (!legacy.openai.access.trim() || legacy.openai.expires <= Date.now() + 60_000)
+  if (!legacy?.openai.access.trim() || legacy.openai.expires <= Date.now() + 60_000)
     return yield* new Auth.AuthError({ message: "Read-only pilot OAuth requires owner refresh" })
   return { ...legacy.openai }
 })
@@ -211,6 +237,13 @@ const readonly = Auth.Service.of({
   all: () => checked().pipe(Effect.map((openai) => ({ openai }))),
   set: () => Effect.fail(new Auth.AuthError({ message: "Pilot cannot update inherited OAuth" })),
   remove: () => Effect.fail(new Auth.AuthError({ message: "Pilot cannot remove inherited OAuth" })),
+})
+// Claude mode holds no Orchestra credential at all: Zen's public key is config, and the SDK owns the Claude Code login.
+const sealed = Auth.Service.of({
+  get: () => Effect.succeed(undefined),
+  all: () => Effect.succeed({}),
+  set: () => Effect.fail(new Auth.AuthError({ message: "Pilot cannot store credentials" })),
+  remove: () => Effect.fail(new Auth.AuthError({ message: "Pilot cannot remove credentials" })),
 })
 const { AppNodeBuilderV1 } = await import("../src/effect/app-node-builder-v1")
 const { LayerNode } = await import("@orchestra/core/effect/layer-node")
@@ -230,7 +263,7 @@ const { BackendToolkit } = await import("@orchestra/core/backend-toolkit")
 const { ResearchContinuation } = await import("./research-continuation")
 const observation = ResearchContinuation.observe()
 const layer = AppNodeBuilderV1.build(LayerNode.group([Agent.node, Provider.node, Session.node, SessionProjector.node, SessionPrompt.node,
-  ToolRegistry.node, Permission.node, InstanceStore.node, ResearchContinuation.node]), [[Auth.node, Layer.succeed(Auth.Service, readonly)],
+  ToolRegistry.node, Permission.node, InstanceStore.node, ResearchContinuation.node]), [[Auth.node, Layer.succeed(Auth.Service, claude ? sealed : readonly)],
   ...(caseID === "R14" ? [observation.replacement] : []),
   [Global.node, Global.layerWith({ data, log: path.join(data, "log"), repos: path.join(data, "repos") })]])
 const startedAt = Date.now()
@@ -243,10 +276,15 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const provider = yield* Provider.Service
     const registry = yield* ToolRegistry.Service
     const permissions = yield* Permission.Service
-    const model = yield* provider.getModel(ProviderV2.ID.make("openai"), ModelV2.ID.make("gpt-6.1-sol"))
+    // Maestro's model; in the original path it is also Jimmy's.
+    const parentModel = claude ? Provider.parseModel(claude.parentModel) : { providerID: ProviderV2.ID.make("openai"), modelID: ModelV2.ID.make("gpt-6.1-sol") }
+    const model = yield* provider.getModel(parentModel.providerID, parentModel.modelID)
     const maestro = yield* agents.get("maestro")
     const specialist = yield* agents.get("jimmy")
-    const tools = yield* registry.tools({ agent: specialist, providerID: model.providerID, modelID: model.id })
+    if (claude && (specialist.engine !== "claude-code" || `${specialist.model?.providerID}/${specialist.model?.modelID}` !== claude.jimmyModel ||
+      maestro.engine !== undefined)) throw new Error("Claude mode requires Jimmy on claude-code with the selected model and Maestro on Orchestra's loop")
+    const tools = yield* registry.tools({ agent: specialist,
+      ...(claude ? Provider.parseModel(claude.jimmyModel) : { providerID: model.providerID, modelID: model.id }) })
     const parent = yield* sessions.create({ agent: "maestro", title: `Independent ${caseID} pilot authority` })
     const user = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "user", agent: "maestro",
       model: { providerID: model.providerID, modelID: model.id }, time: { created: Date.now() } })
@@ -256,7 +294,7 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const task = (yield* registry.tools({ agent: maestro, providerID: model.providerID, modelID: model.id })).find((tool) => tool.id === "task")
     if (!task) throw new Error("Native Maestro Task is unavailable")
     const input = { description: `${caseID} independent pilot`, prompt: `${question.prompt}\n\nSupplied source scope: ${fixture.inputFiles.join(", ")}. Use supplied retained source snapshots.${caseID === "R14" ? ResearchContinuation.protocol : ""}`,
-      subagent_type: "jimmy", model: "openai/gpt-6.1-sol" }
+      subagent_type: "jimmy", model: jimmyModel }
     const call = (input: Record<string, unknown>, callID: string, deadlineMs: number) => Effect.gen(function* () {
       const part = { id: PartID.ascending(), sessionID: parent.id, messageID: assistant.id, type: "tool" as const, tool: "task", callID,
         state: { status: "running" as const, input, time: { start: Date.now() } } }
@@ -284,13 +322,14 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const deadlineSignaled = continuation?.deadlineSignaled ?? first.abort.aborted
     const children = yield* sessions.children(parent.id)
     const histories = yield* Effect.forEach(children, (child) => sessions.messages({ sessionID: child.id }))
-    return { caseID, stage: "provisional-pilot", model: "openai/gpt-6.1-sol", startedAt, endedAt: Date.now(),
+    return { caseID, stage: "provisional-pilot", model: jimmyModel, startedAt, endedAt: Date.now(),
       limits: Research.Limits, timeoutMs, deadlineSignaled, parentSessionID: parent.id, output, metadata: continuation?.metadata ?? first.metadata.value, histories, qualityGrade: "not-run",
       continuation,
       identity: { ...identity, effectivePromptSha256: createHash("sha256").update(specialist.prompt ?? "").digest("hex"),
         tools: tools.map((tool) => tool.id).toSorted(), temperature: specialist.temperature ?? null, topP: specialist.topP ?? null,
         variant: specialist.variant ?? null, agentOptions: specialist.options,
-        modelLimits: model.limit, modelCostRates: model.cost } }
+        // In Claude mode `model` is Maestro's Zen model, not Jimmy's; Claude Code owns Jimmy's limits and billing.
+        modelLimits: claude ? null : model.limit, modelCostRates: claude ? null : model.cost } }
   }))
 }).pipe(Effect.provide(layer), Effect.provideService(BackendToolkit.Target, { unsupported: "evaluation-no-implicit-install" }))))
 await fs.writeFile(path.join(data, "trial.json"), JSON.stringify(result), { flag: "wx", mode: 0o600 })
@@ -332,4 +371,4 @@ const evaluation = {
   }))),
 }
 await fs.writeFile(path.join(data, "evaluation.json"), JSON.stringify(evaluation), { flag: "wx", mode: 0o600 })
-console.log(JSON.stringify({ caseID, model: "openai/gpt-6.1-sol", artifact: path.join(data, "evaluation.json"), qualityGrade: "not-run" }))
+console.log(JSON.stringify({ caseID, model: jimmyModel, artifact: path.join(data, "evaluation.json"), qualityGrade: "not-run" }))
