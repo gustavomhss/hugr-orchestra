@@ -124,7 +124,7 @@ export const fixture = Effect.fnUntraced(function* (globalEnabled = true, store?
       return result as LegacyLeanCapture.Output
     })
     expect(reads.slice(start)).toEqual([file])
-    expect(output.metadata.exit).toBe(0)
+    expect(output.metadata.exit, `${command}: ${output.output.slice(-3000)}`).toBe(0)
     expect(output.metadata.truncated).toBe(false)
     expect(output.metadata.timeout).toBe(false)
     expect(output.metadata.aborted).toBe(false)
