@@ -13,7 +13,8 @@ export const ScheduledTaskTable = sqliteTable(
     directory: absoluteColumn().notNull(),
     name: text().notNull(),
     prompt: text().notNull(),
-    cadence: text().$type<ScheduledTask.Cadence>().notNull(),
+    // Capability rows add interval and cron. Weekly capability rows encode `day * 1440 + minute of day` in `minute`.
+    cadence: text().$type<ScheduledTask.Cadence | "interval" | "cron">().notNull(),
     timezone: text().notNull(),
     minute: integer().notNull(),
     next: integer().notNull(),
