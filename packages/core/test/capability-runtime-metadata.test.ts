@@ -36,7 +36,9 @@ const fixture = Effect.gen(function* () {
         started.resolve()
         if (control.held) await release.promise
         if (control.inject) await control.inject()
-        return new Response(bodies[name] ?? "missing", { status: name in bodies ? 200 : 404 })
+        const body = bodies[name] ?? "missing"
+        // Copy into an ArrayBuffer-backed view: BodyInit rejects SharedArrayBuffer-capable Uint8Array.
+        return new Response(typeof body === "string" ? body : new Uint8Array(body), { status: name in bodies ? 200 : 404 })
       },
     })),
     (server) => Effect.promise(() => server.stop(true)),

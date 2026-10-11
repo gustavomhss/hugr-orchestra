@@ -403,7 +403,7 @@
       "authorizedAt": "2026-10-11"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 7346,
+      "maximumLines": 7388,
       "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule groups. Regenerated for capability operator, connection setup and artifact routes (native-capabilities campaign).",
       "authorizedBy": "owner (gustavomhss): generated-file waiver raises authorized without asking (2026-10-10)",
       "authorizedAt": "2026-10-11"
@@ -433,13 +433,13 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 9567,
+      "maximumLines": 10063,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule routes. Regenerated for capability operator, connection setup and artifact routes (native-capabilities campaign).",
       "authorizedBy": "owner (gustavomhss): generated-file waiver raises authorized without asking (2026-10-10)",
       "authorizedAt": "2026-10-11"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 18994,
+      "maximumLines": 19990,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request, schedule routes and relay.hook.decided event. Regenerated for capability operator, connection setup and artifact routes (native-capabilities campaign).",
       "authorizedBy": "owner (gustavomhss): generated-file waiver raises authorized without asking (2026-10-10)",
       "authorizedAt": "2026-10-11"

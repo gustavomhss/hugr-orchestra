@@ -21,6 +21,8 @@ import type {
   AuthSetErrors,
   AuthSetResponses,
   BehaviorSetInput,
+  CapabilityArtifactId,
+  CapabilityArtifactManagementArtifactCursor,
   CapabilityConnectionId,
   CapabilityConnectionRef,
   CapabilityManagementTargetCursor,
@@ -215,6 +217,18 @@ import type {
   RelayUnpublishInput,
   ScheduledTaskCreateInput,
   ScheduledTaskUpdateInput,
+  ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+  ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+  ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+  ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+  ServerCapabilityArtifactsCapabilityArtifactListErrors,
+  ServerCapabilityArtifactsCapabilityArtifactListResponses,
+  ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+  ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+  ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+  ServerCapabilityArtifactsCapabilityArtifactShareResponses,
   ServerCapabilityConnectionsCapabilityBindingListErrors,
   ServerCapabilityConnectionsCapabilityBindingListResponses,
   ServerCapabilityConnectionsCapabilityBindingPutErrors,
@@ -9576,7 +9590,266 @@ export class Connections extends HeyApiClient {
   }
 }
 
+export class Artifact extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityArtifactManagementArtifactCursor
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactListResponses,
+      ServerCapabilityArtifactsCapabilityArtifactListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts",
+      ...options,
+      ...params,
+    })
+  }
+
+  public removeReference<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+      ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Read artifact bytes
+   *
+   * Verified artifact bytes with attachment, sandbox and no-store headers. Supports one `bytes=` Range.
+   */
+  public content<ThrowOnError extends boolean = false>(
+    parameters: {
+      range?: string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "range" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+      ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content",
+      ...options,
+      ...params,
+    })
+  }
+
+  public share<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      targetSessionID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "targetSessionID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityArtifactsCapabilityArtifactShareResponses,
+      ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/share",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public pin<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      pinned?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "pinned" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+      ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/pin",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Capability3 extends HeyApiClient {
+  private _artifact?: Artifact
+  get artifact(): Artifact {
+    return (this._artifact ??= new Artifact({ client: this.client }))
+  }
+}
+
+export class Artifacts extends HeyApiClient {
+  private _capability?: Capability3
+  get capability(): Capability3 {
+    return (this._capability ??= new Capability3({ client: this.client }))
+  }
+}
+
+export class Capability4 extends HeyApiClient {
   private _operator?: Operator2
   get operator(): Operator2 {
     return (this._operator ??= new Operator2({ client: this.client }))
@@ -9586,12 +9859,17 @@ export class Capability3 extends HeyApiClient {
   get connections(): Connections {
     return (this._connections ??= new Connections({ client: this.client }))
   }
+
+  private _artifacts?: Artifacts
+  get artifacts(): Artifacts {
+    return (this._artifacts ??= new Artifacts({ client: this.client }))
+  }
 }
 
 export class Server extends HeyApiClient {
-  private _capability?: Capability3
-  get capability(): Capability3 {
-    return (this._capability ??= new Capability3({ client: this.client }))
+  private _capability?: Capability4
+  get capability(): Capability4 {
+    return (this._capability ??= new Capability4({ client: this.client }))
   }
 }
 

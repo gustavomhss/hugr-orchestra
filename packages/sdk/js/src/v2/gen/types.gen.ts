@@ -8851,7 +8851,17 @@ export type ScheduledTaskRunResult = {
   sessionID: string
 }
 
-export type CapabilitySetupProvider = "slack" | "discord"
+export type CapabilitySetupProvider =
+  | "slack"
+  | "discord"
+  | "cloudflare"
+  | "supabase"
+  | "neon"
+  | "linear"
+  | "stripe"
+  | "openai"
+  | "runway"
+  | "globalping"
 
 export type CapabilitySetupLabel = string
 
@@ -8890,6 +8900,34 @@ export type CapabilityConnectionRef = {
 }
 
 export type CapabilityManagementTargetCursor = string
+
+export type CapabilityArtifactManagementArtifactCursor = string
+
+export type CapabilityArtifactId = string
+
+export type CapabilityArtifactRef = {
+  id: CapabilityArtifactId
+  revision: number
+}
+
+export type CapabilityVerification = "acknowledged" | "observed" | "verified"
+
+export type CapabilityArtifactManagementArtifact = {
+  artifact: CapabilityArtifactRef
+  mime: string
+  kind: string
+  hash: string
+  bytes: number
+  verification: CapabilityVerification
+  timeCreated: number
+  pinned: boolean
+}
+
+export type CapabilityArtifactManagementArtifactPage = {
+  items: Array<CapabilityArtifactManagementArtifact>
+  after?: CapabilityArtifactManagementArtifactCursor
+  coverage: "live"
+}
 
 export type EventModelsDevRefreshed = {
   id: string
@@ -19526,6 +19564,354 @@ export type ServerCapabilityConnectionsCapabilityBindingRemoveResponses = {
 
 export type ServerCapabilityConnectionsCapabilityBindingRemoveResponse =
   ServerCapabilityConnectionsCapabilityBindingRemoveResponses[keyof ServerCapabilityConnectionsCapabilityBindingRemoveResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactListData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    after?: CapabilityArtifactManagementArtifactCursor
+    limit?: string
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactListError =
+  ServerCapabilityArtifactsCapabilityArtifactListErrors[keyof ServerCapabilityArtifactsCapabilityArtifactListErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactListResponses = {
+  /**
+   * CapabilityArtifactManagement.ArtifactPage
+   */
+  200: CapabilityArtifactManagementArtifactPage
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactListResponse =
+  ServerCapabilityArtifactsCapabilityArtifactListResponses[keyof ServerCapabilityArtifactsCapabilityArtifactListResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceData = {
+  body?: never
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceError =
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors[keyof ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponse =
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses[keyof ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactGetData = {
+  body?: never
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactGetError =
+  ServerCapabilityArtifactsCapabilityArtifactGetErrors[keyof ServerCapabilityArtifactsCapabilityArtifactGetErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactGetResponses = {
+  /**
+   * CapabilityArtifactManagement.Artifact
+   */
+  200: CapabilityArtifactManagementArtifact
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactGetResponse =
+  ServerCapabilityArtifactsCapabilityArtifactGetResponses[keyof ServerCapabilityArtifactsCapabilityArtifactGetResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentData = {
+  body?: never
+  headers?: {
+    range?: string
+  }
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * <No Content>
+   */
+  416: unknown
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentError =
+  ServerCapabilityArtifactsCapabilityArtifactContentErrors[keyof ServerCapabilityArtifactsCapabilityArtifactContentErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentResponses = {
+  /**
+   * Success
+   */
+  200: Blob | File
+  /**
+   * Success
+   */
+  206: Blob | File
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentResponse =
+  ServerCapabilityArtifactsCapabilityArtifactContentResponses[keyof ServerCapabilityArtifactsCapabilityArtifactContentResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactShareData = {
+  body: {
+    targetSessionID: string
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/share"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactShareErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactShareError =
+  ServerCapabilityArtifactsCapabilityArtifactShareErrors[keyof ServerCapabilityArtifactsCapabilityArtifactShareErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactShareResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactShareResponse =
+  ServerCapabilityArtifactsCapabilityArtifactShareResponses[keyof ServerCapabilityArtifactsCapabilityArtifactShareResponses]
+
+export type ServerCapabilityArtifactsCapabilityArtifactPinData = {
+  body: {
+    pinned: boolean
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/pin"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactPinErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactPinError =
+  ServerCapabilityArtifactsCapabilityArtifactPinErrors[keyof ServerCapabilityArtifactsCapabilityArtifactPinErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactPinResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactPinResponse =
+  ServerCapabilityArtifactsCapabilityArtifactPinResponses[keyof ServerCapabilityArtifactsCapabilityArtifactPinResponses]
 
 export type PtyConnectData = {
   body?: never
