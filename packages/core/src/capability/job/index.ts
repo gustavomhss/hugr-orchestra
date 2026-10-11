@@ -409,7 +409,11 @@ export const make = Effect.gen(function* () {
   }
 })
 
-/** Host proof for a stored row's current owner; None when the persisted provenance does not decode. */
+/**
+ * Trusted host only (startup sweep): rebuilds the host proof for a stored row's current owner, None when the
+ * persisted provenance does not decode. host() then acts as a provenance-consistency check for such callers, not as
+ * proof that the caller holds the producer invocation. Do not widen its use.
+ */
 export function proofFromRow(row: Row): Option.Option<ProducerProof> {
   return Schema.decodeUnknownOption(Stored)(row.observation).pipe(Option.map((stored) =>
     ({ owner: row.owner, producer: row.invocation, rootToolName: stored.rootToolName })))
