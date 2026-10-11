@@ -50,10 +50,15 @@ export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDash
     await expect(row.locator('[data-lean-value="tokens"]')).toHaveText(signed(item.savings.tokensSaved))
   }
   await bounded("actual renderer font readiness", page.evaluate(async () => { await document.fonts.ready }))
-  const fonts = await bounded("actual renderer font loads", page.evaluate(() => performance.getEntriesByType("resource")
-    .filter((entry) => /\.(woff2?|ttf|otf)(\?|$)/.test(entry.name)).map((entry) => entry.name)))
+  // Resource Timing records only the backend's http fetches, never the renderer's own oc:// assets, so it cannot see
+  // fonts. The FontFaceSet holds the bundle's @font-face faces; "loaded" means the packaged file was fetched and parsed.
+  const fonts = await bounded("actual renderer font loads", page.evaluate(() =>
+    [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family)))
   assert.ok(fonts.length > 0, "Actual renderer did not load packaged fonts")
-  assert.ok(fonts.every((url) => url.startsWith("oc://renderer/")), "Renderer fonts escaped the packaged source")
+  // Resource Timing does record network fetches: any font there would have come from outside the package.
+  const escaped = await bounded("actual renderer network fonts", page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => entry.name).filter((name) => /\.(woff2?|ttf|otf)(\?|$)/.test(name))))
+  assert.deepEqual(escaped, [], "Renderer fonts escaped the packaged source")
 }
 
 export async function selectNativeProfile(candidate: OwnedCandidate, directory: string, expected: LeanDashboard.Info) {
