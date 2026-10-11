@@ -408,6 +408,10 @@ export function makeProfileLoader(
         : ["absent"],
     )
     if (cache.stamp !== stamp) {
+      // Name the untrusted-placement refusal the native snapshot would otherwise report as an opaque invalid snapshot.
+      const project = yield* fs.realPath(binding.directory).pipe(Effect.option)
+      if (Option.isSome(project) && FSUtil.contains(project.value, binding.stateDirectory))
+        return yield* new ToolSafety.Denied({ reason: "profile-state-inside-project" })
       const { Arsenal } = yield* Effect.tryPromise({
         try: () => loadArsenal(),
         catch: () => new ToolSafety.Denied({ reason: "profile-native-snapshot-unavailable" }),
