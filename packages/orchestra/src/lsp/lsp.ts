@@ -2,11 +2,11 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import * as LSPClient from "./client"
+import { LSPOwnership } from "./ownership"
 import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import * as LSPServer from "./server"
 import { Config } from "@/config/config"
-import { Process } from "@/util/process"
 import { spawn as lspspawn } from "./launch"
 import { Effect, Layer, Context, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
@@ -197,12 +197,7 @@ const layer = Layer.effect(
           spawning: new Map(),
         }
 
-        yield* Effect.addFinalizer(() =>
-          Effect.promise(async () => {
-            s.closing = true
-            await Promise.all([...s.spawning.values(), ...s.clients.map((client) => client.shutdown())])
-          }),
-        )
+        yield* Effect.addFinalizer(() => Effect.promise(() => LSPOwnership.close(s)))
 
         return s
       }),
@@ -217,61 +212,7 @@ const layer = Layer.effect(
         const result: LSPClient.Info[] = []
         let updated = 0
 
-        async function prune() {
-          const dead = s.clients.filter((client) => !client.connected)
-          // Keep ownership until shutdown finishes; concurrent requests share the client's one stop promise.
-          await Promise.all(dead.map((client) => client.shutdown()))
-          s.clients = s.clients.filter((client) => !dead.includes(client))
-        }
-
-        async function schedule(server: LSPServer.Info, root: string, key: string) {
-          await prune()
-          if (s.closing) return undefined
-          const handle = await server
-            .spawn(root, ctx, flags)
-            .then((value) => {
-              if (!value) s.broken.add(key)
-              return value
-            })
-            .catch(() => {
-              s.broken.add(key)
-              return undefined
-            })
-
-          if (!handle) return undefined
-          if (s.closing) {
-            await Process.stop(handle.process)
-            return undefined
-          }
-          const client = await LSPClient.create({
-            serverID: server.id,
-            server: handle,
-            root,
-            directory: ctx.directory,
-            instance: ctx,
-          }).catch(async () => {
-            s.broken.add(key)
-            await Process.stop(handle.process)
-            return undefined
-          })
-
-          if (!client) return undefined
-          if (s.closing) {
-            await client.shutdown()
-            return undefined
-          }
-
-          const existing = s.clients.find((x) => x.root === root && x.serverID === server.id && x.connected)
-          if (existing) {
-            await Process.stop(handle.process)
-            return existing
-          }
-
-          s.clients.push(client)
-          return client
-        }
-
-        await prune()
+        await LSPOwnership.prune(s)
         if (s.closing) return { result, updated }
         for (const server of Object.values(s.servers)) {
           if (server.extensions.length && !server.extensions.includes(extension)) continue
@@ -295,7 +236,7 @@ const layer = Layer.effect(
             continue
           }
 
-          const task = schedule(server, root, root + server.id)
+          const task = LSPOwnership.schedule(s, { server, root, key: root + server.id, ctx, flags })
           s.spawning.set(root + server.id, task)
 
           task.finally(() => {

@@ -11,6 +11,7 @@ mod go;
 mod identity;
 #[cfg(unix)]
 mod ledger;
+mod lifetime;
 mod lookup;
 #[cfg(unix)]
 mod unix;

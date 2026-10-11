@@ -62,7 +62,8 @@ async function open(): Promise<Binding> {
  * Where the addon and the supervisor are, in this order: the paths given to configure(), then HUGR_OMNI_ADDON and
  * HUGR_OMNI_SUPERVISOR (CI). An explicit addon requires its sibling supervisor unless explicitly overridden; it
  * never borrows a supervisor from another candidate. Otherwise look next to realpath(process.execPath) (the
- * CLI), then process.resourcesPath/omni (the desktop), then this checkout's packages/omni/target/{release,debug}.
+ * CLI), then in ../omni from there (the desktop's CLI, run standalone from Resources/cli), then
+ * process.resourcesPath/omni (the desktop), then this checkout's packages/omni/target/{release,debug}.
  * A non-explicit location counts only when it holds both files, so a release addon never pairs a debug supervisor.
  */
 export function locate(given: Paths = injected): Found {
@@ -83,11 +84,10 @@ export function locate(given: Paths = injected): Found {
     throw new Error(`hugr-omni: the configured supervisor ${explicit.supervisor} does not exist.`)
   const resources = "resourcesPath" in process && typeof process.resourcesPath === "string" ? process.resourcesPath : ""
   const target = path.join(import.meta.dirname, "..", "..", "omni", "target")
+  const binary = path.dirname(realpath(process.execPath))
   const locations = [
-    {
-      addon: sibling(realpath(process.execPath), SHIPPED_ADDON),
-      supervisor: sibling(realpath(process.execPath), SUPERVISOR),
-    },
+    { addon: path.join(binary, SHIPPED_ADDON), supervisor: path.join(binary, SUPERVISOR) },
+    { addon: path.join(binary, "..", "omni", SHIPPED_ADDON), supervisor: path.join(binary, "..", "omni", SUPERVISOR) },
     ...(resources
       ? [{ addon: path.join(resources, "omni", SHIPPED_ADDON), supervisor: path.join(resources, "omni", SUPERVISOR) }]
       : []),
