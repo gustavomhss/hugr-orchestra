@@ -99,6 +99,22 @@ describe("CapabilityProcessOutput", () => {
     expect(out.read(undefined, 10)).toEqual({ start: 2, end: 7, text: "cdefg", eof: false })
   })
 
+  test("multibyte characters straddling the physical ring end stay whole", () => {
+    const out = buffer(8, "abcdef", "😀")
+    expect(out.read(undefined, 100)).toEqual({ start: 2, end: 10, text: "cdef😀", eof: false })
+    expect(out.read(6, 1)).toEqual({ start: 6, end: 10, text: "😀", eof: false })
+    const two = buffer(6, "abcde", "é", "x")
+    expect(two.read(5, 1)).toEqual({ start: 5, end: 7, text: "é", eof: false })
+    expect(two.read(undefined, 100)).toEqual({ start: 2, end: 8, text: "cdeéx", eof: false })
+  })
+
+  test("U+FEFF is kept mid-stream and at a chunk start", () => {
+    const out = buffer(32, "a\uFEFFb", "\uFEFFc")
+    expect(out.read(0, 100).text).toBe("a\uFEFFb\uFEFFc")
+    expect(out.read(1, 3)).toEqual({ start: 1, end: 4, text: "\uFEFF", eof: false })
+    expect(out.read(5, 100)).toEqual({ start: 5, end: 9, text: "\uFEFFc", eof: false })
+  })
+
   test("invalid process bytes decode as replacement but valid neighbours stay whole", () => {
     const out = buffer(16, Uint8Array.of(0x61, 0x80, 0xff, 0xe2, 0x82), bytes("é"))
     const chunks = drain(out, 1)
