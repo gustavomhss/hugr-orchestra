@@ -12,7 +12,8 @@ import type { CapabilityProcessContract } from "./contract"
 export function make(options: { capacity: number }): CapabilityProcessContract.Buffer {
   const ring = new Uint8Array(options.capacity)
   const waiters = new Set<{ cursor: number; wake: () => void }>()
-  const decoder = new TextDecoder()
+  // ignoreBOM keeps U+FEFF that a chunk happens to start with; it is process output, not a marker.
+  const decoder = new TextDecoder("utf-8", { ignoreBOM: true })
   const state = { total: 0, ended: false }
   const retained = () => Math.max(0, state.total - options.capacity)
   const at = (offset: number) => ring[offset % options.capacity]
