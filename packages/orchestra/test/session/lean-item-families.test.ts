@@ -26,6 +26,8 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
   const instance = yield* InstanceRef
   if (!instance) throw new Error("Native family instance missing")
   const directory = instance.directory
+  // venv puts executables in Scripts on Windows and bin elsewhere.
+  const venv = path.join(directory, ".venv", process.platform === "win32" ? "Scripts" : "bin")
   yield* Effect.promise(async () => {
     for (const executable of ["go", "cargo", "python3", "npm"]) {
       if (!Bun.which(executable)) throw new Error(`Required public native fixture binary unavailable: ${executable}`)
@@ -38,7 +40,7 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
     await Bun.write(path.join(directory, "test_native.py"), Array.from({ length: 30 }, (_, i) => `def test_case_${i}():\n    assert 1 == 1\n`).join("\n"))
     // Public pinned fixture dependencies only; no provider credentials or paid model.
     await setup(["python3", "-m", "venv", ".venv"], directory)
-    await setup([path.join(directory, ".venv/bin/python"), "-m", "pip", "install", "pytest==9.0.3", "pluggy==1.6.0"], directory)
+    await setup([path.join(venv, "python"), "-m", "pip", "install", "pytest==9.0.3", "pluggy==1.6.0"], directory)
     await Bun.write(path.join(directory, "package.json"), JSON.stringify({ private: true, type: "module", devDependencies: { vitest: "3.2.4" } }))
     await setup(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"], directory)
     await Bun.write(path.join(directory, "vitest.config.mjs"), 'export default { test: { pool: "forks", minWorkers: 1, maxWorkers: 1 } }\n')
@@ -48,7 +50,7 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
   const sessions = yield* Session.Service
   yield* Effect.acquireRelease(Effect.sync(() => {
     const previous = process.env.PATH
-    process.env.PATH = [path.join(directory, ".venv/bin"), path.join(directory, "node_modules/.bin"), previous].join(path.delimiter)
+    process.env.PATH = [venv, path.join(directory, "node_modules/.bin"), previous].join(path.delimiter)
     return previous
   }), (previous) => Effect.sync(() => {
     if (previous === undefined) delete process.env.PATH
