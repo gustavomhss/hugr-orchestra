@@ -36,17 +36,24 @@ process.chdir(dir)
 const { Script } = await import("@orchestra/script")
 const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
 const { modelsData } = await import("./generate")
+const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
 const plugin = createSolidTransformPlugin()
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
+// Resolved before anything is built, so a release build with a missing omni artifact fails at once.
+const builds = targets.map((item) => {
+  const name = `cli-${item.target}`
+  return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
+})
+
 if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
-for (const item of targets) {
-  const name = `cli-${item.target}`
-  console.log(`building ${name}`)
+for (const { item, name, omni, omniFiles } of builds) {
+  console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
   const result = await Bun.build({
-    entrypoints: ["./src/index.ts"],
+    // The omni preflight runs first and imports ./src/index.ts.
+    entrypoints: ["./src/omni-entry.ts"],
     tsconfig: "./tsconfig.json",
     plugins: [plugin],
     external: ["node-gyp"],
@@ -69,6 +76,7 @@ for (const item of targets) {
       ORCHESTRA_CLI_NAME: JSON.stringify(binary),
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
+      OMNI_ENABLED: JSON.stringify(omni.enabled),
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
@@ -80,6 +88,8 @@ for (const item of targets) {
     for (const log of result.logs) console.error(log)
     process.exit(1)
   }
+
+  copyOmni(omniFiles, `dist/${name}/bin`)
 
   await Bun.write(
     `./dist/${name}/package.json`,
