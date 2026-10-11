@@ -1,0 +1,4 @@
+Resume the backend specialist's earlier task: call the task tool with subagent_type "backend", task_id "tsk_1285e500c001fTpl47OI4XwfXI", memoryUnit {"kind":"task","id":"T-LIVE-1"} and writePaths ["counter.ts"].
+
+Packet for the resumed task (T-LIVE-1):
+Do not edit any file in this step. Reply only with: (a) the record id of the Atlas Memory checkpoint the host added to your context on this resume, (b) its stoppedAt, quoted exactly, and (c) which phase is next. Then return.
