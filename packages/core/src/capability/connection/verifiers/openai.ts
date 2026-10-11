@@ -7,6 +7,9 @@ import type { CapabilityVerifierContract } from "./contract"
 
 const Models = Schema.Struct({ data: Schema.Array(Schema.Unknown) })
 
+const failure = (code: Capability.ErrorCode) => new Capability.Failure({ code,
+  message: "Capability connection verification is unavailable" })
+
 /**
  * OpenAI project key. The stored endpoint is `CapabilityMedia` endpoints.openai exactly.
  * Credential-only: standard keys have no identity route, so `GET /v1/models` proves validity only.
@@ -22,8 +25,7 @@ export const descriptor: CapabilityVerifierContract.Descriptor = Object.freeze({
   authorization: (key: string) => `Bearer ${key}`,
   identify: (call: CapabilityVerifierContract.Call) => Effect.gen(function* () {
     if (Option.isNone(Schema.decodeUnknownOption(Models)(yield* call({ method: "GET", path: "/v1/models" }))))
-      return yield* new Capability.Failure({ code: "connection_unavailable",
-        message: "Capability connection verification is unavailable" })
+      return yield* failure("connection_unavailable")
     return "key"
   }),
 })

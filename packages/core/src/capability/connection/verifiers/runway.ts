@@ -7,6 +7,9 @@ import type { CapabilityVerifierContract } from "./contract"
 
 const Organization = Schema.Struct({ creditBalance: Schema.Number })
 
+const failure = (code: Capability.ErrorCode) => new Capability.Failure({ code,
+  message: "Capability connection verification is unavailable" })
+
 /**
  * Runway API secret. The stored endpoint is `CapabilityMedia` endpoints.runway exactly, with the same
  * `X-Runway-Version`. Credential-only: `GET /v1/organization` returns no org/user ID, so it proves validity only.
@@ -23,8 +26,7 @@ export const descriptor: CapabilityVerifierContract.Descriptor = Object.freeze({
   headers: Object.freeze({ "X-Runway-Version": "2024-11-06" }),
   identify: (call: CapabilityVerifierContract.Call) => Effect.gen(function* () {
     if (Option.isNone(Schema.decodeUnknownOption(Organization)(yield* call({ method: "GET", path: "/v1/organization" }))))
-      return yield* new Capability.Failure({ code: "connection_unavailable",
-        message: "Capability connection verification is unavailable" })
+      return yield* failure("connection_unavailable")
     return "key"
   }),
 })

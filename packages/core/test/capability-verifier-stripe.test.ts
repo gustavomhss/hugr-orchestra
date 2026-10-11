@@ -45,3 +45,12 @@ it.effect("stripe malformed accounts fail closed and transport failures propagat
     expect(code(yield* StripeVerifier.descriptor.identify(fake(new Capability.Failure({ code: failure,
       message: "Capability connection verification is unavailable" })).call).pipe(Effect.exit))).toBe(failure)
 }))
+
+it.effect("stripe key pattern accepts only restricted keys before any network call", () => Effect.gen(function* () {
+  const pattern = StripeVerifier.descriptor.keyPattern
+  if (!pattern) throw new Error("STRIPE_KEY_PATTERN_MISSING")
+  for (const accepted of [key, "rk_live_51Nv0FGQ9RKHgCVdK"]) expect(pattern.test(accepted)).toBe(true)
+  for (const refused of ["sk_live_51Nv0FGQ9RKHgCVdK", "sk_test_51Nv0FGQ9RKHgCVdK", "pk_live_51Nv0FGQ9RKHgCVdK",
+    "rk_prod_51Nv0FGQ9RKHgCVdK", "rk_live_short", `${key}\n`, ` ${key}`, "rk_live_51Nv0FGQ9-RKHgCVdK", ""])
+    expect(pattern.test(refused)).toBe(false)
+}))

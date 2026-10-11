@@ -10,6 +10,9 @@ const Limits = Schema.Struct({ rateLimit: Schema.Struct({ measurements: Schema.S
   create: Schema.Struct({ type: Schema.Literal("user") }),
 }) }) })
 
+const failure = (code: Capability.ErrorCode) => new Capability.Failure({ code,
+  message: "Capability connection verification is unavailable" })
+
 /**
  * Globalping API token. The stored endpoint is the hosted MCP URL the platform leaf resolves
  * (`mcp/index.ts` hosts.globalping, assets A20). Credential-only: no identity route exists.
@@ -25,8 +28,7 @@ export const descriptor: CapabilityVerifierContract.Descriptor = Object.freeze({
   authorization: (key: string) => `Bearer ${key}`,
   identify: (call: CapabilityVerifierContract.Call) => Effect.gen(function* () {
     if (Option.isNone(Schema.decodeUnknownOption(Limits)(yield* call({ method: "GET", path: "/v1/limits" }))))
-      return yield* new Capability.Failure({ code: "connection_unavailable",
-        message: "Capability connection verification is unavailable" })
+      return yield* failure("connection_unavailable")
     return "key"
   }),
 })
