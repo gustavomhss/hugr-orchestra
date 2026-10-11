@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -128,5 +129,163 @@ func TestOrchestraBroker(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("close leaked pending read")
+	}
+}
+
+// stallServer accepts Unix connections and then neither reads nor writes, so every client call stays blocked.
+func stallServer(t *testing.T) (*orchestraGeneratorDialer, chan net.Conn) {
+	t.Helper()
+	dir, err := os.MkdirTemp("", "ods")
+	if err != nil {
+		t.Fatal(err)
+	}
+	socket := dir + "/s"
+	listener, err := net.Listen("unix", socket)
+	if err != nil {
+		os.RemoveAll(dir)
+		t.Fatal(err)
+	}
+	accepted := make(chan net.Conn, 16)
+	var held sync.WaitGroup
+	held.Add(1)
+	go func() {
+		defer held.Done()
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			accepted <- conn
+		}
+	}()
+	t.Cleanup(func() {
+		listener.Close()
+		held.Wait()
+		close(accepted)
+		for conn := range accepted {
+			conn.Close()
+		}
+		os.RemoveAll(dir)
+	})
+	d, err := newOrchestraGeneratorDialer("9042:"+hex.EncodeToString([]byte(socket)), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return d, accepted
+}
+
+func stalledPair(t *testing.T) (net.Conn, net.Conn) {
+	t.Helper()
+	d, accepted := stallServer(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	conn, err := d.DialContext(ctx, "tcp", "127.0.0.1:9042")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { conn.Close() })
+	// The driver cancels its dial context once the connection exists; that must not tear the connection down.
+	cancel()
+	select {
+	case peer := <-accepted:
+		return conn, peer
+	case <-time.After(2 * time.Second):
+		t.Fatal("server never accepted")
+		return nil, nil
+	}
+}
+
+func within(t *testing.T, what string, result chan error) error {
+	t.Helper()
+	select {
+	case err := <-result:
+		return err
+	case <-time.After(2 * time.Second):
+		t.Fatalf("%s did not return promptly", what)
+		return nil
+	}
+}
+
+// Go connections cannot return a context error, so a driver abandons a blocked call by closing or by moving the deadline.
+func TestOrchestraInflightReadCancel(t *testing.T) {
+	conn, peer := stalledPair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	stop := context.AfterFunc(ctx, func() { conn.Close() })
+	defer stop()
+	read := make(chan error, 1)
+	go func() { _, err := conn.Read(make([]byte, 1)); read <- err }()
+	select {
+	case err := <-read:
+		t.Fatal("read returned before cancellation", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	cancel()
+	if err := within(t, "canceled read", read); !errors.Is(err, net.ErrClosed) || !errors.Is(ctx.Err(), context.Canceled) {
+		t.Fatal("canceled read did not report a closed conn", err)
+	}
+	if _, err := conn.Write([]byte("x")); !errors.Is(err, net.ErrClosed) {
+		t.Fatal("conn stayed writable after cancellation", err)
+	}
+	peer.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if _, err := peer.Read(make([]byte, 1)); err != io.EOF {
+		t.Fatal("peer did not observe the closed Unix socket", err)
+	}
+}
+
+func TestOrchestraInflightReadDeadlineMove(t *testing.T) {
+	conn, _ := stalledPair(t)
+	read := make(chan error, 1)
+	go func() { _, err := conn.Read(make([]byte, 1)); read <- err }()
+	time.Sleep(100 * time.Millisecond)
+	if err := conn.SetReadDeadline(time.Unix(1, 0)); err != nil {
+		t.Fatal(err)
+	}
+	if err, ok := within(t, "read after deadline moved", read).(net.Error); !ok || !err.Timeout() {
+		t.Fatal("moved deadline did not wake the blocked read with a timeout")
+	}
+}
+
+// fill writes until the Unix socket buffers are full and the peer's silence blocks the writer.
+func fill(conn net.Conn, result chan error) {
+	chunk := make([]byte, 64<<10)
+	for {
+		if _, err := conn.Write(chunk); err != nil {
+			result <- err
+			return
+		}
+	}
+}
+
+func TestOrchestraInflightWriteDeadline(t *testing.T) {
+	conn, _ := stalledPair(t)
+	if err := conn.SetWriteDeadline(time.Now().Add(300 * time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
+	started := time.Now()
+	write := make(chan error, 1)
+	go fill(conn, write)
+	err := within(t, "write against a silent peer", write)
+	if timeout, ok := err.(net.Error); !ok || !timeout.Timeout() || !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatal("write deadline did not produce a timeout", err)
+	}
+	if time.Since(started) < 250*time.Millisecond {
+		t.Fatal("write failed before its deadline, so the buffer was never the blocker", err)
+	}
+}
+
+func TestOrchestraInflightWriteCancel(t *testing.T) {
+	conn, _ := stalledPair(t)
+	write := make(chan error, 1)
+	go fill(conn, write)
+	select {
+	case err := <-write:
+		t.Fatal("write returned without a deadline or cancellation", err)
+	case <-time.After(300 * time.Millisecond):
+	}
+	if err := conn.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := within(t, "canceled write", write); !errors.Is(err, net.ErrClosed) {
+		t.Fatal("close did not cancel the blocked write", err)
 	}
 }

@@ -157,6 +157,7 @@ it.live("original or cassandra1 ready binaries cannot satisfy cassandra2 cache i
   expect(yield* Effect.promise(() => readFile(path.join(previous, "gocqlx-schemagen"), "utf8"))).toBe("previous binary")
   const go = path.join(root, "runtimes", "go", `${BackendToolkitManifest.RUNTIMES.go.version}-${host.target}`, BackendToolkitManifest.RUNTIMES.go.targets[host.target].executable)
   yield* Effect.promise(() => cp(path.join(import.meta.dirname, "fixtures/cassandra-dialer_test.go"), path.join(path.dirname(owned.executable), "src/cmd/schemagen/orchestra_dialer_test.go")))
+  yield* Effect.promise(() => cp(path.join(import.meta.dirname, "fixtures/cassandra-dialer-linux_test.go"), path.join(path.dirname(owned.executable), "src/cmd/schemagen/orchestra_dialer_linux_test.go")))
   const command = (args: string[], env: Record<string, string> = {}) => Effect.promise(async () => {
     const child = Bun.spawn([go, ...args], {
       cwd: path.join(path.dirname(owned.executable), "src"),
@@ -197,4 +198,9 @@ it.live("original or cassandra1 ready binaries cannot satisfy cassandra2 cache i
   })
   expect(roundtrip, roundtrip.stderr).toMatchObject({ exit: 0 })
   expect(counters).toEqual([1, 0])
+  // In-flight cancellation and write-deadline expiry need only their own stalled Unix servers; the Linux-only backlog test is skipped by build tag elsewhere.
+  const inflight = yield* command(["test", "./cmd/schemagen", "-run", "TestOrchestra(Inflight|DialFullBacklog)", "-count=1", "-v"])
+  expect(inflight, inflight.stdout + inflight.stderr).toMatchObject({ exit: 0 })
+  for (const name of ["InflightReadCancel", "InflightReadDeadlineMove", "InflightWriteDeadline", "InflightWriteCancel", ...(process.platform === "linux" ? ["DialFullBacklog"] : [])])
+    expect(inflight.stdout).toContain(`--- PASS: TestOrchestra${name} `)
 }).pipe(Effect.provide(LayerNode.compile(FSUtil.node))), 5 * 60_000)
