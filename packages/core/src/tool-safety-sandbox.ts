@@ -139,8 +139,9 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   if (grants.length && process.platform === "linux")
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-exact-policy-unsupported" })
   // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac. Linux endpoints use srt's
-  // own strict-allowlist proxy; without a ready srt they refuse below and never run unconfined.
-  const sandbox = discovered ?? (process.platform === "linux" ? yield* pick(true) : yield* available("/usr/bin/sandbox-exec").pipe(
+  // own strict-allowlist proxy, only from the pinned, hash-verified runtime (an `srt` on PATH is unverified and may
+  // lack seccomp, which would leave Unix sockets open); without a ready pinned srt they refuse below and never run unconfined.
+  const sandbox = discovered ?? (process.platform === "linux" ? yield* pick(true, endpointGrants.length > 0) : yield* available("/usr/bin/sandbox-exec").pipe(
     Effect.map((binary) => binary
       ? { kind: "seatbelt" as const, binary }
       : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }),
@@ -244,15 +245,19 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
 /**
  * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by
  * this process's own JavaScript runtime. `start` lets a Linux host begin fetching that runtime on first need.
+ * `pinned` (exact endpoint grants) ignores PATH and accepts only the verified runtime that ships its seccomp filter.
  */
-const pick = Effect.fnUntraced(function* (start: boolean) {
+const pick = Effect.fnUntraced(function* (start: boolean, pinned = false) {
   if (process.platform !== "darwin" && process.platform !== "linux")
     return { kind: "none" as const, reason: `sandbox-platform-unsupported: ${process.platform}` }
-  const binary = yield* available()
+  const binary = pinned ? undefined : yield* available()
   if (binary === "/usr/bin/sandbox-exec") return { kind: "seatbelt" as const, binary }
   if (binary) return { kind: "srt" as const, command: binary, args: [], env: {}, ripgrep: undefined }
   const runtime = yield* ToolSafetySandboxRuntime.resolve(start)
   if (runtime.reason !== undefined) return { kind: "none" as const, reason: runtime.reason }
+  // Without apply-seccomp srt only logs a debug warning and leaves AF_UNIX connects open.
+  if (pinned && !(yield* ToolSafetySandboxRuntime.seccomp(runtime.directory)))
+    return { kind: "none" as const, reason: "sandbox-seccomp-unavailable" }
   return {
     kind: "srt" as const,
     command: process.execPath,

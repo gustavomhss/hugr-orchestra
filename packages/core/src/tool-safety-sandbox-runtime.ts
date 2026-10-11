@@ -3,6 +3,7 @@ export * as ToolSafetySandboxRuntime from "./tool-safety-sandbox-runtime"
 import path from "path"
 import { createHash } from "crypto"
 import { execFile } from "child_process"
+import { constants } from "fs"
 import { access, mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises"
 import { promisify } from "util"
 import which from "which"
@@ -80,6 +81,10 @@ export const Source = Context.Reference<Source | undefined>("@orchestra/ToolSafe
 
 export const cli = (directory: string) => path.join(directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "dist", "cli.js")
 export const ripgrep = (directory: string) => path.join(directory, "ripgrep", "rg")
+/** srt finds its seccomp helper at this package-root path first; true when it is present and executable. */
+export const seccomp = (directory: string) => Effect.promise(() =>
+  access(path.join(directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "vendor", "seccomp", process.arch, "apply-seccomp"), constants.X_OK)
+    .then(() => true, () => false))
 
 const attempts = new Map<string, { readonly failed?: string; readonly at: number }>()
 
