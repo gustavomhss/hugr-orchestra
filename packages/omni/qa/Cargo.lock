@@ -22,7 +22,7 @@ checksum = "1944426bf7d03f1d14f708785e4b33efd750b36d48a157b836b3efc15ede8e1d"
 
 [[package]]
 name = "hugr-omni"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "libc",
  "omni-proto",
@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "omni-proto"
-version = "0.0.0"
+version = "0.1.0"
 
 [[package]]
 name = "omni-qa"
