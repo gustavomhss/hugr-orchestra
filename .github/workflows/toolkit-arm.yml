@@ -3,7 +3,7 @@ name: toolkit-arm
 # Manual only: the backend toolkit pins linux-arm64 and darwin-arm64 targets, but test:ci runs x64 hosts. Dispatch
 # this on a ref to observe the real engines on Arm; it costs nothing until run. `tests` runs the toolkit test files
 # (real pinned engines in backend-toolkit-cli, fixtures elsewhere); `prefetch` acquires every engine one at a time,
-# tries `--version` on each, and lists the result per engine in the job summary.
+# runs each with its version flag, and lists the result per engine in the job summary.
 on:
   workflow_dispatch:
   pull_request:
@@ -60,7 +60,7 @@ jobs:
           import { BackendToolkitTarget } from "./src/backend-toolkit/target"
 
           const host = BackendToolkitTarget.detect()
-          const rows: string[] = [`host: ${JSON.stringify(host)}`, "", "| engine | state | --version |", "| --- | --- | --- |"]
+          const rows: string[] = [`host: ${JSON.stringify(host)}`, "", "| engine | state | probe |", "| --- | --- | --- |"]
           let broken = 0
           for (const id of Object.keys(BackendToolkitManifest.ENGINES) as BackendToolkitManifest.EngineId[]) {
             const [state] = await Effect.runPromise(BackendToolkit.prefetch([id]))
@@ -69,12 +69,19 @@ jobs:
               rows.push(`| ${id} | ${state.status}: ${"cause" in state ? state.cause : "reason" in state ? "unsupported-target:" + state.reason : ""} | |`)
               continue
             }
-            const probe = Bun.spawnSync([state.executable, "--version"], { stdout: "pipe", stderr: "pipe", timeout: 30_000 })
-            const first = (probe.stdout.toString() || probe.stderr.toString()).trim().split("\n")[0] ?? ""
-            rows.push(`| ${id} | ready | exit ${probe.exitCode}: ${first.replaceAll("|", "/")} |`)
+            // Engines disagree on the spelling; the first that exits 0 proves the binary executes on this host.
+            const tries = [["--version"], ["version"], ["-version"], ["-v"], ["--help"]].map((args) => ({
+              args,
+              probe: Bun.spawnSync([state.executable, ...args], { stdout: "pipe", stderr: "pipe", timeout: 30_000 }),
+            }))
+            const hit = tries.find((item) => item.probe.exitCode === 0) ?? tries[0]
+            if (hit.probe.exitCode !== 0) broken++
+            const lines = (hit.probe.stdout.toString() + hit.probe.stderr.toString()).trim().split("\n")
+            const shown = (hit.probe.exitCode === 0 ? lines[0] : lines.at(-1)) ?? ""
+            rows.push(`| ${id} | ready | ${hit.args.join(" ")} exit ${hit.probe.exitCode}: ${shown.replaceAll("|", "/")} |`)
           }
           console.log(rows.join("\n"))
           if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### prefetch ${process.env.RUNNER_ARCH} ${process.env.RUNNER_OS}\n${rows.join("\n")}\n`)
-          if (broken) throw new Error(`${broken} engine(s) failed to become ready`)
+          if (broken) throw new Error(`${broken} engine(s) failed to acquire or run`)
           TS
           bun .toolkit-arm-probe.ts
