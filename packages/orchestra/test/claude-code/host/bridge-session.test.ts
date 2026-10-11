@@ -170,3 +170,79 @@ ClaudeEngineFixture.it.instance("generic subagent MCP calls join the mirrored ch
     .some((part) => part.type === "tool" && part.callID === "generic_recall" && part.state.status === "completed")).toBe(true)
   yield* host.release(f.chat.id)
 }), 60_000)
+
+ClaudeEngineFixture.it.instance("interrupting a child with its own query also cancels parent-owned MCP calls and preserves the root turn", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const f = yield* ClaudeEngineFixture.setup()
+  const host = yield* ClaudeHost.Service
+  const permission = yield* Permission.Service
+  yield* Effect.addFinalizer(() => host.release(f.chat.id))
+  yield* f.sessions.setPermission({ sessionID: f.chat.id, permission: [
+    { permission: "*", pattern: "*", action: "allow" }, { permission: "context_recall", pattern: "*", action: "ask" },
+  ] })
+  const responses: unknown[] = []
+  const frame = ClaudeEngineFixture.frame
+  ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
+    await input[Symbol.asyncIterator]().next()
+    const pre = params.options?.hooks?.PreToolUse?.[0].hooks[0]
+    if (!pre) throw new Error("missing gate")
+    const base = { session_id: "sdk-1", transcript_path: "/tmp/scripted-transcript", cwd: params.options?.cwd ?? "/tmp" }
+    const task = { subagent_type: "general-purpose", description: "Child recall", prompt: "child brief", run_in_background: true }
+    yield { type: "assistant", ...frame, message: { id: "msg_child_stop_agent", content: [
+      { type: "tool_use", id: "stopped_agent", name: "Agent", input: task },
+    ], stop_reason: "tool_use", usage: {} } }
+    expect(await pre({ ...base, hook_event_name: "PreToolUse", tool_name: "Agent", tool_use_id: "stopped_agent", tool_input: task },
+      "stopped_agent", { signal: new AbortController().signal })).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
+    yield { type: "system", subtype: "task_started", task_id: "stopped-task", tool_use_id: "stopped_agent", description: "Child recall",
+      subagent_type: "general-purpose", is_backgrounded: true, task_type: "local_agent", ...frame }
+    const args = { query: "child brief" }
+    yield { type: "assistant", ...frame, parent_tool_use_id: "stopped_agent", message: { id: "msg_child_stop_recall", content: [
+      { type: "tool_use", id: "child_waiting", name: "mcp__orchestra__context_recall", input: args },
+    ], stop_reason: "tool_use", usage: {} } }
+    const permitted = await pre({ ...base, hook_event_name: "PreToolUse", agent_id: "stopped-task", agent_type: "general-purpose",
+      tool_name: "mcp__orchestra__context_recall", tool_use_id: "child_waiting", tool_input: args }, "child_waiting", { signal: new AbortController().signal })
+    const accepted = "hookSpecificOutput" in permitted && permitted.hookSpecificOutput?.hookEventName === "PreToolUse"
+      ? permitted.hookSpecificOutput.updatedInput : undefined
+    if (!accepted) throw new Error("child did not receive a dispatch receipt")
+    const server = params.options?.mcpServers?.orchestra
+    if (!server || server.type !== "sdk") throw new Error("missing SDK MCP server")
+    const client = new Client({ name: "scripted-child-stop", version: "1" })
+    const transports = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transports[0])
+    await client.connect(transports[1])
+    responses.push(await client.callTool({ name: "context_recall", arguments: accepted }))
+    await client.close()
+    yield { type: "assistant", ...frame, message: { id: "msg_after_child_stop", content: [
+      { type: "text", text: "Root remains live" },
+    ], stop_reason: "end_turn", usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0.01, ...frame }
+    for await (const _ of input) {}
+  })
+  const running = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("start a child") }).pipe(Effect.forkChild)
+  const pending = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.tool?.callID === "child_waiting"))),
+    "the child MCP call never reached its permission wait", "5 seconds")
+  expect(pending.sessionID).not.toBe(f.chat.id)
+  // A directly prompted child has its own live query while the original subagent call still belongs to the root.
+  ClaudeEngineFixture.state.scripts.push(async function* (input) {
+    await input[Symbol.asyncIterator]().next()
+    yield { type: "assistant", ...frame, message: { id: "msg_independent_child", content: [
+      { type: "text", text: "Independent child prompt" },
+    ], stop_reason: "end_turn", usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0.01, ...frame }
+    for await (const _ of input) {}
+  })
+  yield* f.prompt.prompt({ sessionID: pending.sessionID, ...ClaudeEngineFixture.say("prompt the child directly") })
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(2)
+  yield* host.interrupt(pending.sessionID)
+  const reply = yield* Fiber.join(running)
+  if (reply.info.role !== "assistant") throw new Error("root did not return an assistant reply")
+  expect(reply.info.error).toBeUndefined()
+  expect(reply.parts.some((part) => part.type === "text" && part.text === "Root remains live")).toBe(true)
+  expect(Schema.decodeUnknownSync(Schema.Struct({ isError: Schema.Boolean }))(responses[0]).isError).toBe(true)
+  expect(ClaudeEngineFixture.state.queries[0].options?.abortController?.signal.aborted).toBe(false)
+  expect((yield* permission.list()).some((request) => request.sessionID === pending.sessionID)).toBe(false)
+  const part = (yield* f.sessions.messages({ sessionID: pending.sessionID })).flatMap((message) => message.parts)
+    .find((part) => part.type === "tool" && part.callID === "child_waiting")
+  expect(part?.type === "tool" && part.state.status).toBe("error")
+  yield* host.release(f.chat.id)
+}), 60_000)

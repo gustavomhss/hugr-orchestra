@@ -469,10 +469,12 @@ const layer = Layer.effect(
       return true
     })
 
-    const interrupt: Interface["interrupt"] = (sessionID) => {
+    const interrupt: Interface["interrupt"] = (sessionID) => Effect.suspend(() => {
+      // Child task Stop also cancels its Orchestra calls, independently of the SDK task's receipt.
+      lives.forEach((owner) => owner.bridge?.interrupt(sessionID))
       const live = lives.get(sessionID)
       return live ? stop(live) : Effect.void
-    }
+    })
 
     const setModel: Interface["setModel"] = (input) => Effect.gen(function* () {
       const live = lives.get(input.sessionID)
