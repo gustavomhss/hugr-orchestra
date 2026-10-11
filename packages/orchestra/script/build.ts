@@ -173,7 +173,11 @@ if (!skipInstall) {
 // stops here with the named error.
 const prepared = builds.map((build) => ({
   ...build,
-  treeSitter: resolveTreeSitter({ root: path.resolve(dir, "../.."), ...build.item }),
+  treeSitter: resolveTreeSitter({
+    root: path.resolve(dir, "../.."),
+    artifacts: process.env.TREE_SITTER_ARTIFACTS,
+    ...build.item,
+  }),
 }))
 for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
