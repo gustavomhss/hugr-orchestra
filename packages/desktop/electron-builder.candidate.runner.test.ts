@@ -194,8 +194,8 @@ test("the workflow's omni rollback for bun test never reaches candidate build ch
   process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
   try {
     const env = candidateEnv("1.0.0")
-    expect(env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBeUndefined()
-    expect(electronViteEnv(env).ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBeUndefined()
+    expect(Object.hasOwn(env, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER")).toBe(false)
+    expect(Object.hasOwn(electronViteEnv(env), "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER")).toBe(false)
   } finally {
     if (previous === undefined) delete process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
     else process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = previous
