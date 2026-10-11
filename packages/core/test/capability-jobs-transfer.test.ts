@@ -78,6 +78,22 @@ describe("CapabilityJobs.transferHost", () => {
       .toMatchObject({ state: "lost", generation: 5 })
   }))
 
+  it.live("repeated transfer keeps original producer provenance; only the latest owner proof works", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const grandparent = yield* CapabilityPolicyFixture.fixture()
+    // Each fixture resets the agent rules to read-only; restore effect permission for job creation.
+    yield* CapabilityPolicyFixture.setRules(rules)
+    const ref = yield* f.started("local-process", "primary", ["submitting", "running"])
+    const owners = [f.proof.owner, f.parent.binding.owner, grandparent.binding.owner]
+    yield* f.jobs.transferHost(f.proof, ref, { expectedGeneration: 2, owner: owners[1] })
+    expect(yield* f.jobs.transferHost({ ...f.proof, owner: owners[1] }, ref, { expectedGeneration: 3, owner: owners[2] }))
+      .toMatchObject({ state: "running", generation: 4 })
+    expect((yield* f.jobs.readHost({ ...f.proof, owner: owners[2] }, ref)).receipt.generation).toBe(4)
+    yield* Effect.forEach(owners.slice(0, 2), (owner) => rejected(f.jobs.readHost({ ...f.proof, owner }, ref), "target_denied"))
+    expect(yield* f.jobs.observeHost({ ...f.proof, owner: owners[2] }, ref,
+      { expectedGeneration: 4, state: "running", observation: { progress: 0.5 } })).toMatchObject({ generation: 5 })
+  }))
+
   it.live("wrong kind, state, placement, Session, generation or proof fail without writes", () => Effect.gen(function* () {
     const f = yield* fixture()
     const owner = f.parent.binding.owner

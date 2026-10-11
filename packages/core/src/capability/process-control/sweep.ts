@@ -30,11 +30,14 @@ export const run = Effect.fn("CapabilityProcessSweep.run")(function* (input: {
     row.owner.location.workspaceID === input.placement.location.workspaceID)
   const results = yield* Effect.forEach(eligible, (row) => {
     const proof = CapabilityJobs.proofFromRow(row)
-    if (Option.isNone(proof)) return Effect.succeed(false)
+    if (Option.isNone(proof))
+      return Effect.logWarning("process sweep skipped job", { jobID: row.id, code: "unsupported_schema" }).pipe(Effect.as(false))
     // A row that moved or was settled since the select fails its own guard; it is skipped, not fatal.
+    // Rows whose producer Session, message or lineage was deleted fail host() provenance and stay skipped, never lost.
     return input.jobs.markLostHost(proof.value, { id: row.id },
       { expectedGeneration: row.generation, evidence: "startup-owner-absent" }).pipe(
-      Effect.as(true), Effect.catchTag("Capability.Failure", () => Effect.succeed(false)))
+      Effect.as(true), Effect.catchTag("Capability.Failure", (error) =>
+        Effect.logWarning("process sweep skipped job", { jobID: row.id, code: error.code }).pipe(Effect.as(false))))
   })
   const marked = results.filter(Boolean).length
   return { marked, skipped: eligible.length - marked }
