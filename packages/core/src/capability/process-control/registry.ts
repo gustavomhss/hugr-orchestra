@@ -6,6 +6,7 @@ import type { PlatformError } from "effect/PlatformError"
 import { ChildProcess } from "effect/unstable/process"
 import { makeGlobalNode } from "../../effect/app-node"
 import { AppProcess } from "../../process"
+import { ToolSafety } from "../../tool-safety"
 import type { CapabilityProcessContract } from "./contract"
 import { CapabilityProcessOutput } from "./output"
 
@@ -55,7 +56,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       })),
       Scope.provide(scope),
       Effect.tapCause((cause) => Effect.logWarning("process start failed", cause)),
-      Effect.mapError((error) => error instanceof Capability.Failure
+      // A safety hold from prepare (sandbox wrap) propagates unchanged so settlement can escalate it.
+      Effect.mapError((error) => error instanceof Capability.Failure || error instanceof ToolSafety.Denied
         ? error
         : new Capability.Failure({ code: "acquisition_failed", message: "Process could not be started" })),
     )).pipe(Effect.onExit((exit) => Exit.isSuccess(exit)
@@ -97,7 +99,6 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         exited: Deferred.await(done),
         transfer: (from, to) => lock.withPermits(1)(Effect.suspend(() => {
           if (!sameOwner(entry.owner, from)) return Effect.fail(denied())
-          if (state.exit) return unsupported("Process is not running")
           entry.owner = to
           return Effect.void
         })),
@@ -106,6 +107,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     entries.set(spec.ref.id, entry)
     reserved.delete(spec.ref.id)
 
+    // startImmediately installs the ensuring below before a racing shutdown can interrupt the supervisor.
     yield* Effect.gen(function* () {
       // handle.all merges stdout and stderr in arrival order.
       yield* Stream.runForEach(handle.all, (bytes) => Effect.sync(() => output.append(bytes))).pipe(
@@ -124,7 +126,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       // exited resolves only after settlement, so callers observe the durable job already settled.
       yield* Deferred.succeed(done, exit)
       yield* prune
-    }).pipe(Effect.ensuring(closeBounded(scope)), Effect.forkIn(supervisors))
+    }).pipe(Effect.ensuring(closeBounded(scope)), Effect.forkIn(supervisors, { startImmediately: true }))
     return entry.live
   }))
 

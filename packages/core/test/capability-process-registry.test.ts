@@ -12,6 +12,7 @@ import type { CapabilityProcessContract } from "../src/capability/process-contro
 import { CapabilityProcessRegistry } from "../src/capability/process-control/registry"
 import { LayerNode } from "../src/effect/layer-node"
 import { AppProcess } from "../src/process"
+import { ToolSafety } from "../src/tool-safety"
 import { testEffect } from "./lib/effect"
 
 // Real child processes (bun -e). Qualified on macOS only; Linux and Windows kill-tree are unqualified.
@@ -48,21 +49,24 @@ function until(live: CapabilityProcessContract.Live, predicate: (text: string) =
   })
 }
 
-function gone(pid: number) {
-  return Effect.sync(() => alive(pid)).pipe(
+// A registry in its own Scope under the test Scope, so a test can shut it down early.
+function closable() {
+  return Effect.gen(function* () {
+    const scope = yield* Scope.fork(yield* Effect.scope)
+    return { scope, h: yield* harness().pipe(Scope.provide(scope)) }
+  })
+}
+
+function gone(pid: number | (() => boolean)) {
+  return Effect.sync(typeof pid === "number" ? () => alive(pid) : pid).pipe(
     Effect.repeat({ while: (running) => running, schedule: Schedule.spaced("20 millis") }),
-    Effect.timeoutOption("2 seconds"),
-    Effect.map(Option.isSome),
-  )
+    Effect.timeoutOption("2 seconds"), Effect.map(Option.isSome))
 }
 
-function kill(pid: number) {
-  return Effect.ignore(Effect.try({ try: () => process.kill(pid, "SIGKILL"), catch: () => "dead" }))
-}
-
-function alive(pid: number) {
-  return Effect.runSync(Effect.try({ try: () => process.kill(pid, 0), catch: () => "dead" }).pipe(Effect.match({ onFailure: () => false, onSuccess: () => true })))
-}
+const signal = (pid: number, sig: NodeJS.Signals | 0) => Effect.runSync(Effect.try({ try: () => process.kill(pid, sig), catch: () => "dead" })
+  .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true })))
+const alive = (pid: number) => signal(pid, 0)
+const kill = (pid: number) => Effect.sync(() => signal(pid, "SIGKILL"))
 
 const echo = "process.stdin.once('data', (d) => { process.stdout.write('got:' + d); process.exit(0) })"
 const descendant = (options: string) => "const c = require('node:child_process').spawn(process.execPath," +
@@ -147,21 +151,33 @@ describe("CapabilityProcessRegistry", () => {
     expect(yield* p.live.stop()).toBe("local-stop")
   }))
 
+  it.live("a safety hold from prepare propagates unchanged; spawn failures are acquisition_failed", Effect.gen(function* () {
+    const h = yield* harness()
+    const held = new ToolSafety.Denied({ reason: "sandbox" })
+    expect(yield* Effect.flip(h.start(hold, { prepare: () => Effect.fail(held) }))).toBe(held)
+    const missing = yield* Effect.flip(h.start(hold, { command: ChildProcess.make("/nonexistent/orchestra-binary") }))
+    expect(missing).toBeInstanceOf(Capability.Failure)
+    expect(missing).toMatchObject({ code: "acquisition_failed" })
+    expect(h.registry.live().size).toBe(0)
+  }))
+
   it.live("concurrent duplicate starts spawn once; the loser is denied", Effect.gen(function* () {
     const h = yield* harness()
     const ref = { id: Capability.JobID.create() }
     const slow = { ref, prepare: (command: ChildProcess.Command) => Effect.sleep("100 millis").pipe(Effect.as(command)) }
     const exits = yield* Effect.all([h.start(hold, slow), h.start(hold, slow)].map(Effect.exit), { concurrency: "unbounded" })
     expect(exits.filter(Exit.isSuccess)).toHaveLength(1)
-    const failure = exits.flatMap((exit) => Exit.isFailure(exit) ? [Option.getOrUndefined(Exit.findErrorOption(exit))] : [])
-    expect(failure.map((error) => error?.code)).toEqual(["target_denied"])
+    expect(exits.filter(Exit.isFailure).map((exit) => Option.getOrUndefined(Exit.findErrorOption(exit))))
+      .toMatchObject([{ code: "target_denied" }])
     expect([...h.registry.live()]).toEqual([ref.id])
   }))
 
   it.live("records exit codes and signals; a failing settle does not break the registry", Effect.gen(function* () {
     const h = yield* harness()
-    expect(yield* (yield* h.start("process.exit(7)")).live.exited).toEqual({ code: 7 })
-    expect(yield* (yield* h.start("process.kill(process.pid, 'SIGKILL')")).live.exited).toEqual({ signal: "SIGKILL" })
+    const coded = yield* h.start("process.exit(7)")
+    expect(yield* coded.live.exited).toEqual({ code: 7 })
+    const signalled = yield* h.start("process.kill(process.pid, 'SIGKILL')")
+    expect(yield* signalled.live.exited).toEqual({ signal: "SIGKILL" })
     const broken = yield* h.start("process.exit(0)", { settle: () => Effect.die(new Error("settle defect")) })
     expect(yield* broken.live.exited).toEqual({ code: 0 })
     expect(yield* h.registry.get(broken.live.ref, broken.owner)).toBe(broken.live)
@@ -175,8 +191,7 @@ describe("CapabilityProcessRegistry", () => {
     const foreign = yield* Effect.flip(h.registry.get(p.live.ref, other))
     const unknown = yield* Effect.flip(h.registry.get({ id: Capability.JobID.create() }, p.owner))
     expect(foreign).toBeInstanceOf(Capability.Failure)
-    expect({ code: foreign.code, message: foreign.message }).toEqual({ code: unknown.code, message: unknown.message })
-    expect(foreign.code).toBe("target_denied")
+    expect([foreign.code, unknown.code, foreign.message]).toEqual(["target_denied", "target_denied", unknown.message])
     expect(yield* h.registry.get(p.live.ref, p.owner)).toBe(p.live)
     expect(yield* h.registry.list(p.owner)).toEqual([p.live])
     expect(yield* h.registry.list(other)).toEqual([])
@@ -195,7 +210,10 @@ describe("CapabilityProcessRegistry", () => {
     expect((yield* Effect.flip(h.registry.get(p.live.ref, p.owner))).code).toBe("target_denied")
     expect(yield* h.registry.get(p.live.ref, parent)).toBe(p.live)
     yield* p.live.stop()
-    expect((yield* Effect.flip(p.live.transfer(parent, p.owner))).code).toBe("unsupported_operation")
+    // An exited entry still swaps owner; retention keeps it readable for the new owner.
+    yield* p.live.transfer(parent, p.owner)
+    expect(yield* h.registry.get(p.live.ref, p.owner)).toBe(p.live)
+    expect((yield* Effect.flip(h.registry.get(p.live.ref, parent))).code).toBe("target_denied")
   }))
 
   it.effect("evicts exited entries past retention time and count", Effect.gen(function* () {
@@ -214,17 +232,23 @@ describe("CapabilityProcessRegistry", () => {
   }))
 
   it.live("closing the registry scope kills live children", Effect.gen(function* () {
-    const scope = yield* Scope.fork(yield* Effect.scope)
-    const h = yield* harness().pipe(Scope.provide(scope))
+    const { scope, h } = yield* closable()
     const pids = yield* Effect.forEach([1, 2, 3], () => h.start(hold).pipe(Effect.flatMap((p) => pidLine(p.live))))
     expect(pids.every(alive)).toBe(true)
     yield* Scope.close(scope, Exit.void)
     expect(yield* Effect.forEach(pids, gone)).toEqual([true, true, true])
   }))
 
+  it.live("shutdown racing a fresh start still kills the child", Effect.gen(function* () {
+    const token = Capability.JobID.create()
+    const { scope, h } = yield* closable()
+    yield* h.start(`${hold} // ${token}`)
+    yield* Scope.close(scope, Exit.void)
+    expect(yield* gone(() => Bun.spawnSync(["pgrep", "-f", token]).exitCode === 0)).toBe(true)
+  }))
+
   it.live("shutdown is bounded when an escaped descendant holds the output pipe", Effect.gen(function* () {
-    const scope = yield* Scope.fork(yield* Effect.scope)
-    const h = yield* harness().pipe(Scope.provide(scope))
+    const { scope, h } = yield* closable()
     const p = yield* h.start(descendant("{ detached: true, stdio: ['ignore', 'inherit', 'ignore'] }"))
     const escaped = yield* pidLine(p.live)
     yield* Effect.gen(function* () {
