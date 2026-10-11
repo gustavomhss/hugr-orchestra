@@ -141,6 +141,15 @@ export type RelayUnavailableError = {
 export const isRelayUnavailableError = (value: unknown): value is RelayUnavailableError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayUnavailableError"
 
+export type RelayForbiddenError = {
+  readonly _tag: "RelayForbiddenError"
+  readonly code: string
+  readonly message: string
+}
+
+export const isRelayForbiddenError = (value: unknown): value is RelayForbiddenError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayForbiddenError"
+
 export type PullRequestError = {
   readonly name: "PullRequestError"
   readonly data: {

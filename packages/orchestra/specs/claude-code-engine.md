@@ -15,7 +15,7 @@ the API with the subscription. It only changes, locally and between turns, what 
 | Concern | Owner | How |
 | --- | --- | --- |
 | Loop, model calls, Bash, Grep, Glob | Claude Code | Claude Agent SDK `query()` |
-| System prompt | Orchestra | `systemPrompt: { type: "preset", preset: "claude_code", append }`, or `{ type: "custom" }` to replace it |
+| System prompt | Orchestra | `systemPrompt: { type: "preset", preset: "claude_code", append }` only; never `custom` (4.3, terms posture) |
 | `read`, `edit`, `write` | Orchestra | In-process SDK tools (`createSdkMcpServer` + `tool()`), executed by Orchestra's own implementations |
 | Built-in file tools | removed | `disallowedTools: ["Read", "Edit", "Write", "NotebookEdit"]` removes them from the model's context; `toolAliases` routes a stray `Read`/`Edit`/`Write` call to Orchestra's |
 | Compaction | Orchestra | `settings: { autoCompactEnabled: false }`; Orchestra's continuity swaps the loaded context between turns |
@@ -91,6 +91,12 @@ On Claude Code, Maestro stays Maestro:
   subscription credentials, never reads or extracts tokens, and adds no auth path; delegation only adds in-process
   tools to that `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
   transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
+  Every query on the login, turns and continuity maintenance alike, keeps Claude Code's `claude_code` system prompt
+  preset and only appends to it (`ClaudeCodeSDK.preset`). Anthropic bills a query whose system prompt replaces the
+  preset (custom, string or none) as a third-party app drawing on extra usage, not as Claude Code on the owner's plan:
+  Archie's acceptance run of the first Maestro build, which used `{ type: "custom" }`, was refused with
+  `400 Third-party apps now draw from your extra usage`. `ClaudeCodeSDK.processLifetime`, the one seam every engine
+  query passes, refuses any other system prompt, and such a refusal is reported as a billing refusal, never retried.
 
 - **One mapping, wider for Maestro** (`claude-code/tools.ts`). The engine takes the agent's toolset exactly as
   Orchestra's loop resolves it (`ToolRegistry.tools` with the agent, the session's permissions and the message's tool
@@ -108,9 +114,11 @@ On Claude Code, Maestro stays Maestro:
   provenance accept Maestro's `task` calls; the loop never treats a mirrored call (`metadata.claudeCodeTool`) as pending.
 - **Teammate returns.** A background teammate's result arrives as a synthetic `task-return` user message; the engine
   admits it as input, like the owner's own messages, and delivers it on Maestro's next turn.
-- **Prompt.** Maestro's prompt is authoritative: `systemPrompt: { type: "custom", snapshot: true }` carries Maestro's
-  prompt, a short engine note (tool prefix; steering arrives at the next turn, not the next step), the environment,
-  Orchestra's instructions and the skill list. Seats keep the `claude_code` preset with their prompt appended.
+- **Prompt.** Maestro, like every seat, keeps the `claude_code` preset (terms posture above). Its `append` opens with a
+  line saying Maestro's instructions govern where they differ from the Claude Code guidance, then Maestro's prompt, a
+  short engine note (tool prefix; Claude Code's Task/Agent, TodoWrite, Skill and AskUserQuestion guidance names tools
+  it does not have, so it uses `mcp__orchestra__task`, `todowrite`, `skill` and `question`; steering arrives at the
+  next turn, not the next step), the environment, Orchestra's instructions and the skill list.
 - **Unchanged:** `PromptGuard.check` before spawn, continuity through `sessionStore`, permissions through Orchestra
   (asks reach the owner; a rule denial is shown and the turn continues, a rejection says to stop), and the delivery
   cursor (prompts queued during a turn are sent on the next one).
@@ -149,7 +157,7 @@ memory pass and how the result reaches the model.
   Orchestra.
 - **Memory pass transport.** The replay transport reuses the parent's request, which only Claude Code holds, so the pass
   uses the isolated transport. Its model call goes through Claude Code too: an `LLM.Interface` adapter backed by a
-  one-shot `query()` (`tools: []`, `systemPrompt: { type: "custom", prompt }`, `maxTurns: 1`, `persistSession: false`,
+  one-shot `query()` (`tools: []`, the `claude_code` preset with the instruction appended, `maxTurns: 1`, `persistSession: false`,
   same model). No API key is needed, and the pass counts toward the plan like any Claude Code request.
 - **Swap.** An applied complete-prefix pass leaves a v5 artifact (memory text, `boundary`, equal `coveredThrough`,
   source fingerprints and required `now`), without `tailStart`. At the next turn
@@ -229,8 +237,8 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   An engine handoff calls `release` to restore the ordinary provider/LLM while preserving durable memory. Forget keeps
   ordinary Orchestra's existing completion/discard behavior; transport cancellation on forget applies to configured
   external backends only.
-- `claude-code/llm.ts` supplies the isolated SDK producer: the actual SDK query entry point, the same model, custom
-  host system prompt, JSON-labelled historical roles/content, no tools/MCP/settings sources, one model turn, no session
+- `claude-code/llm.ts` supplies the isolated SDK producer: the actual SDK query entry point, the same model, the
+  host system prompt appended to the `claude_code` preset, JSON-labelled historical roles/content, no tools/MCP/settings sources, one model turn, no session
   persistence. It publishes text and stop only after a successful non-truncated result. Stream-scope cleanup aborts and
   closes the query, then joins the real child exit through `ClaudeCodeSDK.processLifetime`; SDK `query.return()` alone races exit against two seconds. The existing host memory decoder, archive, delta checks, persistence and explicit retry remain in
   charge; there is no second compactor or direct provider API transport.

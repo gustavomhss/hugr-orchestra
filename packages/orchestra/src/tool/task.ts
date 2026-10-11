@@ -647,7 +647,8 @@ export const TaskTool = Tool.define(
         }
         // The background return carries the host verification observed above. Read the returned result, not the latest
         // streamed one: a concurrent "running" start snapshot must not replace the returned terminal.
-        if (returned) backgroundDispatch.capture({ ...returned, workResult: yield* work.notice(returned.state, returned.text) })
+        if (returned) backgroundDispatch.capture({ ...returned,
+          workResult: yield* work.notice(returned.state, returned.text).pipe(Effect.provideService(Database.Service, database)) })
         type Part = (typeof result.parts)[number]
         const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
           item.type === "text" && item.text.trim() !== ""
