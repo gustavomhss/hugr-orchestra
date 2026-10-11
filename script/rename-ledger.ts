@@ -219,13 +219,6 @@ export const protectedStrings: Protected[] = [
     reason: "xAI User-Agent and referrer, kept until probed",
   },
 
-  // Upstream build artifacts the tree downloads until Orchestra publishes its own
-  {
-    pattern: /@opencode-ai\/cli-(?=[a-z])|\bopencode2\b/g,
-    paths: /^packages\/desktop\/scripts\/utils\.ts$/,
-    reason: "upstream's published CLI binary, which the desktop dev build downloads from npm",
-  },
-
   // Unrelated words
   {
     pattern: /\bopenCode\b/g,

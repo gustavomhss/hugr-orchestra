@@ -53,7 +53,7 @@ test("parent receipts reject opaque plan replacement, edited canonical source an
   if (!snapshot) throw new Error("No snapshot")
   const plan = LLMPrepared.token()
   const parent = ParentReceipt.capture({ input: { user, model, sessionID: user.sessionID, prepared: plan,
-    agent: { name: "build", mode: "primary", permission: [], options: {} }, system: [],
+    agent: { name: "maestro", mode: "primary", permission: [], options: {} }, system: [],
     messages: [{ role: "user", content: "Projected prefix" }], tools: {} }, messageIDs: [user.id] }, response.id, [history[0]])
   ParentReceipt.complete(parent, response)
   expect(ParentReceipt.matches(parent, snapshot, model)).toBe(true)
@@ -91,7 +91,7 @@ it.live("active v5 projection detaches current request from canonical receipt so
   expect(selected.sourceHistory[0].parts).toEqual(history[0].parts)
   expect(JSON.stringify(selected.sourceHistory)).not.toContain("IN_PLACE_PLUGIN_TRANSFORM")
   const parent = ParentReceipt.capture({ input: { user: selected.user, model, sessionID: snapshot.sessionID,
-    agent: { name: "build", mode: "primary", permission: [], options: {} }, system: view.system,
+    agent: { name: "maestro", mode: "primary", permission: [], options: {} }, system: view.system,
     messages: [{ role: "user", content: part.text }], tools: {} }, messageIDs: view.messages.map((message) => message.info.id) }, response.id,
     view.messages.flatMap((message) => selected.sourceHistory.find((source) => source.info.id === message.info.id) ?? []))
   ParentReceipt.complete(parent, response)

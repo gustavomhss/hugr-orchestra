@@ -92,13 +92,16 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const review: Match = (hit) => reviewing(hit.body)
-// The real producer role's first line: the isolated transport sends it as system, a replay as the last user message.
-const PRODUCER = PROMPT.split("\n")[0]
+// The producer's own first line: its system prompt (fresh pass) or final user turn (cache replay) starts with it;
+// its single self-check retry ends with the host's correction note. Windows checkouts may carry CRLF.
+const PRODUCER = PROMPT.split(/\r?\n/, 1)[0]
+const opens = (text: string) => text.startsWith(PRODUCER) && /^\r?\n/.test(text.slice(PRODUCER.length))
 const maintenance: Match = (hit) => {
   if (review(hit)) return false
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes(PRODUCER)) ||
-    (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
+  const last = wire.at(-1)
+  return wire.some((message) => message.role === "system" && opens(message.content)) ||
+    (last?.role === "user" && (opens(last.content) || last.content.startsWith("HOST CHECK FAILED. ")))
 }
 const parent = (marker: string): Match => (hit) => !review(hit) && !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
@@ -112,7 +115,7 @@ function configure(url: string, directory: string, options: { toolcall?: boolean
     plugin: [], mcp: {}, compaction: { auto: false },
     // Scenario turns report 50,000 tokens against the test model's 100,000-token window.
     continuity: { trigger: 0.5 },
-    agent: { build: { permission: { context_recall: options.permission ?? "allow" } },
+    agent: { maestro: { permission: { context_recall: options.permission ?? "allow" } },
       ...options.alternate ? { alternate: { permission: { context_recall: "allow" } } } : {} },
   })))
 }
@@ -169,9 +172,11 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(PRODUCER.startsWith("CONTEXT CONTINUITY CHECKPOINT")).toBe(true)
+  expect(PRODUCER).toBe("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(maintenance(control(PROMPT, "system"))).toBe(true)
-  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
+  expect(maintenance(control(`${PRODUCER}\nprotocol`, "user"))).toBe(true)
+  expect(maintenance(control(`Quoted: ${PRODUCER}\nprotocol`, "user"))).toBe(false)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(false)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   const reviewing: Hit = { ...control('{"candidate":{"now":{"src":["a1"]}},"marker":"TRIGGER"}', "user"), body: {
@@ -188,7 +193,7 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   yield* llm.pushMatch(capture.record("advance", parent("ADVANCE_WHILE_HELD")), answer("PARENT_ADVANCED", 100))
   const fresh = forkAnswer(FIRST, capture.record("B", maintenance), "7E5D", b.wait)
   yield* llm.pushMatch(fresh.match, fresh.response)
-  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
     parts: [{ type: "text", text }] }), `Parent did not complete: ${text}`, "30 seconds")
   for (const turn of seed) expect((yield* send(turn.user)).parts.some((part) => part.type === "text" && part.text === turn.assistant)).toBe(true)
   const triggered = yield* send("TRIGGER")
@@ -288,7 +293,7 @@ it.instance("Stop joins held HTTP producer without publishing unchecked memory o
   for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
   const initial = forkAnswer(FIRST, capture.record("producer initial", maintenance))
   yield* llm.pushMatch(initial.match, initial.response)
-  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
     parts: [{ type: "text", text }] }), "Stop-producer parent stalled", "30 seconds")
   for (const text of seed) yield* send(text)
   const before = yield* sessions.messages({ sessionID: chat.id })
@@ -332,7 +337,7 @@ it.instance("large outgoing plugin append on first request emits completed overf
   yield* Deferred.succeed(release, undefined)
   transform.plan = { entered, release, append: "LARGE_PLUGIN_APPEND ".repeat(60_000) }
   yield* Effect.addFinalizer(() => Effect.sync(() => { transform.plan = undefined }))
-  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "FIRST_REQUEST" }] })
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "FIRST_REQUEST" }] })
   expect(result.info).toMatchObject({ role: "assistant", finish: "error", parentID: expect.any(String), error: { name: "ContextOverflowError" } })
   expect(result.info.time).toHaveProperty("completed")
   expect(yield* llm.hits).toEqual([])
@@ -357,7 +362,7 @@ for (const phase of ["system", "reserve"] as const) it.instance(`real one-shot $
     if (event.type === Session.Event.Error.type) errors.push(event.data)
   }))
   yield* Effect.addFinalizer(() => off)
-  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "PREFLIGHT_FIRST_REQUEST" }] })
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "PREFLIGHT_FIRST_REQUEST" }] })
   expect(result.info).toMatchObject({ role: "assistant", finish: "error", error: { name: "ContextOverflowError" } })
   expect(result.info.time).toHaveProperty("completed")
   expect(plan.systemCalls).toBe(1)
@@ -380,7 +385,7 @@ it.instance("real prepared plan runs mutable system and params hooks once, then 
   preparation.plan = plan
   yield* Effect.addFinalizer(() => Effect.sync(() => { preparation.plan = undefined }))
   yield* llm.pushMatch(parent("ONE_SHOT_REQUEST"), answer("ONE_SHOT_DONE"))
-  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "ONE_SHOT_REQUEST" }] })
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "ONE_SHOT_REQUEST" }] })
   expect(result.parts.some((part) => part.type === "text" && part.text === "ONE_SHOT_DONE")).toBe(true)
   expect(plan.systemCalls).toBe(1)
   expect(plan.paramCalls).toBe(1)
@@ -399,7 +404,7 @@ it.instance("queued caller during outgoing preparation rebinds agent/model/permi
   yield* Effect.promise(() => Bun.write(path.join(instance.directory, "orchestra.json"), JSON.stringify({ ...cfg,
     provider: { ...cfg.provider, test: { ...cfg.provider.test, models: { ...cfg.provider.test.models,
       "alternate-model": { ...cfg.provider.test.models["test-model"], id: "alternate-model", limit: { context: 200_000, output: 10_000 } } } } }, model: "test/test-model", plugin: [], mcp: {},
-    enabled_providers: ["test"], compaction: { auto: false }, agent: { build: { permission: { context_recall: "allow" } },
+    enabled_providers: ["test"], compaction: { auto: false }, agent: { maestro: { permission: { context_recall: "allow" } },
       alternate: { model: "test/alternate-model", permission: { bash: "deny" } } } })))
   const chat = yield* sessions.create({ title: "Queue caller binding" })
   const entered = yield* Deferred.make<void>()
@@ -407,12 +412,18 @@ it.instance("queued caller during outgoing preparation rebinds agent/model/permi
   preparation.plan = { systemCalls: 0, paramCalls: 0, entered, release }
   yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Effect.sync(() => { preparation.plan = undefined }))))
   yield* llm.pushMatch((hit) => hit.body.model === "alternate-model" && parent("NEW_BOUND_CALLER")(hit), reply().tool("StructuredOutput", { accepted: true }))
-  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_BOUND_CALLER" }] }).pipe(Effect.forkChild)
+  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "OLD_BOUND_CALLER" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(Deferred.await(entered), "Caller preparation never reached plugin", "15 seconds").pipe(Effect.catch((error) =>
     Effect.fail(new Error(`${error.message}; caller=${String(old.pollUnsafe())}`))))
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  // The in-process prompt API takes decoded Format classes; HTTP JSON is decoded at the route boundary.
+  const format = Schema.decodeUnknownSync(SessionV1.Format)({ type: "json_schema",
+    schema: { type: "object", properties: { accepted: { type: "boolean" } } } })
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "alternate", model: { providerID: model.providerID, modelID: ModelV2.ID.make("alternate-model") },
-    tools: { bash: false }, format: { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+    tools: { bash: false }, format, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+  if (newer.info.role !== "user" || !newer.info.format) throw new Error("New caller structured format was not durably admitted")
+  expect(Schema.encodeSync(SessionV1.Format)(newer.info.format)).toEqual(Schema.encodeSync(SessionV1.Format)(format))
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
   yield* Deferred.succeed(release, undefined)
   const result = yield* Fiber.join(old)
   expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id, agent: "alternate", modelID: "alternate-model", structured: { accepted: true } })
@@ -434,7 +445,7 @@ it.instance("permission changes during real preflight rebind same caller before 
   preparation.plan = { systemCalls: 0, paramCalls: 0, entered, release }
   yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Effect.sync(() => { preparation.plan = undefined }))))
   yield* llm.pushMatch((hit) => parent("PERMISSION_BOUND_REQUEST")(hit) && !JSON.stringify(hit.body.tools).includes('"name":"read"'), answer("PERMISSION_BOUND_DONE"))
-  const running = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "PERMISSION_BOUND_REQUEST" }] }).pipe(Effect.forkChild)
+  const running = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "PERMISSION_BOUND_REQUEST" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(Deferred.await(entered), "Permission preflight never reached plugin", "15 seconds")
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
   yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "*", action: "deny" }] })
@@ -458,7 +469,7 @@ for (const drift of ["unchanged", "agent", "tools", "format", "permission", "sys
   for (const text of seed) yield* llm.pushMatch(parent(text), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
   const first = forkAnswer(FIRST, maintenance)
   yield* llm.pushMatch(first.match, first.response)
-  for (const text of seed) yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text }] })
+  for (const text of seed) yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text }] })
   const before = yield* sessions.messages({ sessionID: chat.id })
   const latest = before.at(-1)!.info
   if (latest.role !== "assistant") throw new Error("Expected initial completed boundary")
@@ -477,13 +488,13 @@ for (const drift of ["unchanged", "agent", "tools", "format", "permission", "sys
   const fresh = forkAnswer("FRESH_CATCHUP_RESULT", maintenance)
   if (drift !== "unchanged") yield* llm.pushMatch(fresh.match, fresh.response)
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), drift === "format" ? reply().tool("StructuredOutput", { accepted: true }) : answer("U2_DELIVERED_ONCE"))
-  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
+  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(Deferred.await(selected), "Real catch-up never reached HTTP", "15 seconds")
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
   if (drift === "permission") yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "/owner-drift/*", action: "deny" }] })
-  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: drift === "agent" ? "alternate" : "build", model,
+  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: drift === "agent" ? "alternate" : "maestro", model,
     tools: drift === "tools" ? { bash: false } : undefined, system: drift === "system" ? "OWNER_SYSTEM_DRIFT" : undefined,
-    format: drift === "format" ? { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } } : undefined,
+    format: drift === "format" ? Schema.decodeUnknownSync(SessionV1.Format)({ type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }) : undefined,
     parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
   // Release the paid catch-up only once U2's admission is durable.
   expect((yield* sessions.messages({ sessionID: chat.id })).some((message) => message.info.id === newer.info.id)).toBe(true)
@@ -528,7 +539,7 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(maintenance, answer(invalid))
     yield* llm.pushMatch(capture.record("next", parent("AFTER_INVALID")), answer("NEXT_VALID"))
-    const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
       parts: [{ type: "text", text }] }), "Parent HTTP request stalled", "30 seconds")
     for (const text of seed) yield* send(text)
     const before = yield* pollWithTimeout(Effect.gen(function* () {
@@ -579,7 +590,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     yield* llm.pushMatch(response.match, response.response)
     yield* llm.pushMatch(capture.record("next", parent("CAPABILITY_NEXT")), answer("NEXT_DONE"))
     yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected capability request" } }))
-    const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
       parts: [{ type: "text", text }], tools: condition === "user-false" ? { context_recall: false } : undefined }), "Capability HTTP request stalled", "30 seconds")
     for (const text of seed) {
       const result = yield* send(text)
@@ -642,7 +653,7 @@ it.instance("read shows nested rules again after working memory drops the turn t
   yield* llm.pushMatch(capture.record("next", parent("RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
   yield* llm.pushMatch(parent("RULES_NEXT"), answer("NEXT_DONE"))
   yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected nested-rules request" } }))
-  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
     parts: [{ type: "text", text }] }), "Nested-rules HTTP request stalled", "30 seconds")
   for (const text of seed) yield* send(text)
   const history = yield* sessions.messages({ sessionID: chat.id })
@@ -687,7 +698,7 @@ it.instance("read shows nested rules again after masking hides the read that sho
   yield* llm.pushMatch(capture.record("next", parent("MASKED_RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
   yield* llm.pushMatch(parent("MASKED_RULES_NEXT"), answer("NEXT_DONE"))
   yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected masked-rules request" } }))
-  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "maestro", model,
     parts: [{ type: "text", text }] }), "Masked-rules HTTP request stalled", "30 seconds")
   for (const text of seed) yield* send(text)
   const history = yield* sessions.messages({ sessionID: chat.id })

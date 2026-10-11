@@ -36,9 +36,14 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
+import { WorkflowBinding } from "@/maestro/workflow-binding"
+import { TaskBackground } from "./task-background"
+import { TaskWorkObservation } from "./task-work-observation"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
+  /** Private host notice continuation through the existing process-global serialized V2 execution owner. */
+  resumeNotice?(sessionID: SessionID): Effect.Effect<void>
   resolvePromptParts(template: string): Effect.Effect<SessionPrompt.PromptInput["parts"]>
   prompt(
     input: SessionPrompt.PromptInput,
@@ -52,16 +57,6 @@ const BACKGROUND_DESCRIPTION = [
   "`background: true` starts the teammate and returns at once; its result arrives later as a new message.",
   "Use it only for independent work whose result you do not need before you continue. Without it, the call waits for the result.",
 ].join(" ")
-const BACKGROUND_STARTED = [
-  "The teammate is working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you started and end your turn.",
-].join("\n")
-const BACKGROUND_UPDATED = [
-  "The added context was sent to the teammate, which is still working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you sent and end your turn.",
-].join("\n")
 
 const BaseParameterFields = {
   description: Schema.String.annotate({ description: "A 3-5 word label the owner sees for this task" }),
@@ -99,6 +94,7 @@ const BaseParameterFields = {
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
   writePaths: WriteRoots.Param,
+  workflow: Schema.optional(WorkflowBinding.Selection),
   memoryUnit: AtlasResume.Param,
 }
 
@@ -178,6 +174,8 @@ export const TaskTool = Tool.define(
         id === parent.id ? Effect.succeed(parent) : sessions.get(id),
       )(parent.id, parent.projectID)
       const depth = authority.ancestry.length - 1
+      if (yield* WorkflowBinding.read(ctx.sessionID))
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_NESTED_TASK_REFUSED"))
       const next = yield* agent.get(params.subagent_type)
       if (!next) {
         return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
@@ -187,6 +185,13 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
+      if (params.workflow && !params.governed && !params.authorizationID)
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+      const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
+          callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
+          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
+          model: params.model, workflow: params.workflow,
+        }).pipe(Effect.orDie) : undefined
       const seat = next.native === true ? Seats.find(nextID) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
@@ -218,7 +223,7 @@ export const TaskTool = Tool.define(
         replayReserved = true
         requireCompletedReplay = true
       }
-      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined
+      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
       const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
         parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
       if (params.task_id && !resumed) {
@@ -288,6 +293,8 @@ export const TaskTool = Tool.define(
           database,
           events,
           sessions,
+          workflowBinding: workflowReady?.materialized.definition,
+          writePaths: params.writePaths,
         })
         governedChildID = reservation.childSessionID
         governedPresentationID = reservation.presentationID
@@ -420,10 +427,17 @@ export const TaskTool = Tool.define(
             projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
         : undefined
       const shownID = logical?.taskId ?? nextSession.id
+      if (!params.workflow && (yield* WorkflowBinding.read(nextSession.id)))
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_TASK_BINDING_REQUIRED"))
       const placement = yield* InstanceState.context
       const completionReceipt = yield* completion.beforeDispatch({
         sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",
-        directory: placement.directory, projectID: placement.project.id, planID: params.governed?.planRevisionID,
+        directory: placement.directory, projectID: placement.project.id,
+        planID: params.workflow?.planRevisionID ?? params.governed?.planRevisionID,
+        ...(params.workflow && logical ? { workflow: { selection: params.workflow,
+          assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
+          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
+        } } : {}),
       })
 
       if (params.governed) {
@@ -440,9 +454,15 @@ export const TaskTool = Tool.define(
         })
       }
 
-      const metadata = { parentSessionId: ctx.sessionID, sessionId: nextSession.id, model,
-        ...(runInBackground ? { background: true } : {}) }
-      const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
+      const metadata = {
+        parentSessionId: ctx.sessionID,
+        sessionId: nextSession.id,
+        model,
+        ...(runInBackground ? { background: true } : {}),
+      }
+      const completionEvidence: { value?: TaskBackground.Metadata["completion"] } = {}
+      const observation = TaskWorkObservation.make({ database, events, ctx,
+        childSessionID: nextSession.id, taskID: shownID, metadata })
       const work = SeatWork.track({
         enabled: seat?.workResult !== undefined,
         seat,
@@ -502,7 +522,29 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
+      const backgroundDispatch = yield* TaskBackground.make({
+        background,
+        sessions,
+        database,
+        events,
+        fs,
+        scope,
+        lock: dispatchLock,
+        ctx,
+        ops,
+        childSessionID: nextSession.id,
+        taskID: shownID,
+        description: params.description,
+        metadata,
+        work,
+        observe: observation.capture,
+        publishObservation: observation.publish,
+        variant,
+        renderOutput,
+      })
+
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
+        yield* completion.revalidateWorkflow(completionReceipt)
         // Session-start hooks run after reservation and can change the repository.
         if (params.authorizationID) {
           yield* reserveDispatch({
@@ -542,7 +584,7 @@ export const TaskTool = Tool.define(
             )
           : undefined
         const promptID = MessageID.ascending()
-        const result = yield* ops.prompt(
+        const result = yield* completion.withWorkflow(completionReceipt, ops.prompt(
           {
             messageID: promptID,
             sessionID: nextSession.id,
@@ -556,10 +598,19 @@ export const TaskTool = Tool.define(
               ...(resumed && ctx.callID ? [LogicalTask.resumeMarker(ctx.sessionID, ctx.callID)] : []),
             ],
           },
-          beforeModel ? { beforeModel } : undefined,
-        )
+          { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }).pipe(
+            Effect.provideService(FileSystem.FileSystem, fs),
+          ) },
+        ))
+        const returned = result.info.role === "assistant" ? {
+          assistantMessageID: result.info.id,
+          text: result.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n"),
+          state: result.info.error || result.parts.some((part) => part.type === "tool" && part.state.status === "error")
+            ? "error" as const : "completed" as const,
+        } : undefined
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
+        const workResult = yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
+        if (returned) backgroundDispatch.capture({ ...returned, workResult })
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -582,6 +633,9 @@ export const TaskTool = Tool.define(
           yield* work.publish(ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) }))
           completionEvidence.value = verified
         }
+        // The background return carries the host verification observed above. Read the returned result, not the latest
+        // streamed one: a concurrent "running" start snapshot must not replace the returned terminal.
+        if (returned) backgroundDispatch.capture({ ...returned, workResult: yield* work.notice(returned.state, returned.text) })
         type Part = (typeof result.parts)[number]
         const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
           item.type === "text" && item.text.trim() !== ""
@@ -593,85 +647,12 @@ export const TaskTool = Tool.define(
           TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
-      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (state: "completed" | "error", text: string) {
-        const currentParent = yield* sessions.get(ctx.sessionID)
-        const workResult = yield* work.notice(state, text).pipe(Effect.provideService(Database.Service, database))
-        yield* ops
-          .prompt({
-            sessionID: ctx.sessionID,
-            agent: currentParent.agent ?? ctx.agentID ?? ctx.agent,
-            variant,
-            parts: [
-              {
-                type: "text",
-                synthetic: true,
-                metadata: {
-                  source: { type: "task-return", task_id: nextSession.id, state },
-                  ...(workResult ? { workResult } : {}),
-                },
-                text: renderOutput({
-                  id: shownID,
-                  state,
-                  summary:
-                    state === "completed"
-                      ? `Background task completed: ${params.description}`
-                      : `Background task failed: ${params.description}`,
-                  text,
-                }),
-              },
-            ],
-          })
-          .pipe(Effect.ignore, Effect.forkIn(scope, { startImmediately: true }))
-      })
+      const scheduled = yield* backgroundDispatch.schedule(runTask())
+      if (scheduled.extended) return yield* backgroundDispatch.result(nextSession.id, true)
 
-      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* (info: BackgroundJob.Info) {
-        if (info.metadata?.background !== true) return
-        if (info.status === "completed") return yield* inject("completed", info.output ?? "")
-        if (info.status === "error") return yield* inject("error", info.error ?? "")
-      })
+      const info = scheduled.info
 
-      if (yield* background.extend({ id: nextSession.id, run: runTask(), notify })) {
-        yield* work.hostEnded("running", "Background task updated")
-        return {
-          title: params.description,
-          metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
-          output: renderOutput({
-            id: shownID,
-            state: "running",
-            summary: "Background task updated",
-            text: BACKGROUND_UPDATED,
-          }),
-        }
-      }
-
-      const info = yield* background.start({
-        id: nextSession.id,
-        type: id,
-        title: params.description,
-        metadata,
-        notify,
-        onPromote: ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
-        run: runTask().pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
-      })
-
-      // The child is still running: the work result says so and carries no worker fields yet.
-      const backgroundResult = Effect.fn("TaskTool.backgroundResult")(function* () {
-        yield* work.hostEnded("running", "Background task started")
-        return {
-          title: params.description,
-          metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
-          output: renderOutput({
-            id: shownID,
-            state: "running",
-            summary: "Background task started",
-            text: BACKGROUND_STARTED,
-          }),
-        }
-      })
-
-      if (runInBackground) {
-        return yield* backgroundResult()
-      }
+      if (runInBackground) return yield* backgroundDispatch.result(info.id)
 
       const runCancel = yield* EffectBridge.make()
       const cancel = ops.cancel(nextSession.id)
@@ -689,7 +670,7 @@ export const TaskTool = Tool.define(
               background.wait({ id: nextSession.id }).pipe(Effect.map((waited) => waited.info)),
               background.waitForPromotion(nextSession.id),
             )
-            if (result?.metadata?.background === true) return yield* backgroundResult()
+            if (result?.metadata?.background === true) return yield* backgroundDispatch.result(info.id)
             if (result?.status === "error") {
               const failure = result.error ?? "Task failed"
               yield* work.hostEnded("failed", failure)
@@ -729,7 +710,10 @@ export const TaskTool = Tool.define(
         : DESCRIPTION,
       parameters: Parameters,
       jsonSchema: flags.experimentalBackgroundSubagents ? undefined : ToolJsonSchema.fromSchema(BaseParameters),
-      execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
+      execute: (
+        params: Schema.Schema.Type<typeof Parameters>,
+        ctx: Tool.Context,
+      ): Effect.Effect<TaskBackground.ExecuteResult> =>
         (params.authorizationID
           ? dispatchLock.withLock(params.authorizationID)(run(params, ctx))
           : run(params, ctx)

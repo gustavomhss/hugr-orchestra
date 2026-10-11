@@ -2,16 +2,17 @@ export * as BackendWork from "./backend-work"
 export * as SeatWork from "./backend-work"
 
 import { Effect, Option } from "effect"
+import path from "path"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Session } from "@/session/session"
 import { InstanceState } from "@/effect/instance-state"
-import path from "path"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
 import { BackendEvidence } from "./backend-evidence"
+import { UpstreamResult } from "./upstream-result"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import type { Seat } from "./seats"
 
@@ -31,30 +32,33 @@ export function track(input: {
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
+  const returned: { value?: BackendResult.WorkResult } = {}
+  const ended: { value?: BackendResult.WorkResult } = {}
   const completion: { observed?: true; interrupted?: true; projection?: Pick<BackendResult.WorkResult, "verification" | "hostChecks" | "delta"> } = {}
-  const project = (result: BackendResult.WorkResult, observed = true): BackendResult.WorkResult => ({
+  const project = (result: BackendResult.WorkResult): BackendResult.WorkResult => ({
     ...result,
     ...(input.memberId ? { memberId: input.memberId, executionSessionId: input.sessionID } : {}),
     ...(input.authoritySessionId ? { authoritySessionId: input.authoritySessionId } : {}),
     mode: input.armed ? "delegated-armed" : "delegated",
     acceptance: { state: "pending" },
     verification: { state: input.armed ? "host-incomplete" : "not-host-verified" },
-    ...(observed ? completion.projection : {}),
+    ...completion.projection,
   })
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
-  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[], observed = true) {
-    // BackgroundJob callbacks have no required services; only a real host Session service may supply placement.
+  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[]) {
+    // Background callbacks may omit Session services; absent or mismatched placement cannot mint evidence.
     const sessions = yield* Effect.serviceOption(Session.Service)
     const session = Option.isSome(sessions)
       ? yield* sessions.value.get(input.sessionID).pipe(Effect.catch(() => Effect.succeed(undefined)))
       : undefined
     const placement = yield* InstanceState.context
-    const located = session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
+    // Upstream proposals never carry implementation evidence, including host-ended snapshots.
+    const located = result.schema !== UpstreamResult.SCHEMA && session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
       path.resolve(session.directory) === path.resolve(placement.directory) && session.projectID === placement.project.id &&
       session.workspaceID === (yield* InstanceState.workspaceID)
       ? { ...result, workerEvidence: BackendEvidence.bind(result, history, { executionSessionID: session.id, directory: session.directory }) }
       : result
-    const task = project(input.taskId ? { ...located, taskId: input.taskId } : located, observed)
+    const task = project(input.taskId ? { ...located, taskId: input.taskId } : located)
     if (!input.writeRoots) return task
     const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
@@ -94,13 +98,17 @@ export function track(input: {
     }),
     attach: <T extends object>(metadata: T) => ({
       ...metadata,
-      ...(evidence.value ? { workResult: evidence.value } : {}),
+      ...(evidence.value ? { workResult: structuredClone(evidence.value) } : {}),
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      const session = yield* history()
-      evidence.value = yield* bound(BackendResult.assemble(message, session, input.seat), session)
-      yield* input.publish(evidence.value)
+      const snapshot = structuredClone(message)
+      const session = structuredClone(yield* history())
+      const captured = yield* bound(BackendResult.assemble(snapshot, session, input.seat), session)
+      returned.value = structuredClone(captured)
+      evidence.value = structuredClone(captured)
+      yield* input.publish(structuredClone(captured))
+      return captured
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
     // stand behind: the card already assembled, else the child's last assistant message, else no card.
@@ -112,28 +120,29 @@ export function track(input: {
       // A completion denial is not a worker failure. Preserve the independently observed execution terminal.
       if (reason === "failed" && (completion.observed || completion.interrupted)) return
       if (reason === "interrupted") completion.interrupted = true
-      const session = evidence.value ? [] : yield* history()
-      evidence.value = evidence.value
-        ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session)
-      yield* input.publish(evidence.value)
+      // A `running` snapshot only marks the dispatch start; a later end re-reads the child's last assistant message.
+      const prior = evidence.value?.terminal.reason === "running" ? undefined : evidence.value
+      const session = prior ? [] : structuredClone(yield* history())
+      const captured = structuredClone(prior
+        ? { ...prior, terminal: ended.value?.terminal ?? { reason, hostDetail: detail } }
+        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session))
+      // Historical evidence is not an assistant returned by this dispatch.
+      if (!returned.value) delete captured.author
+      evidence.value = captured
+      if (captured.terminal.reason === "failed" || captured.terminal.reason === "interrupted")
+        ended.value = structuredClone(captured)
+      yield* input.publish(structuredClone(captured))
     }),
-    // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
-    // the final work result, read from the child's durable last assistant message (a resumed job may have run several
-    // turns).
-    notice: Effect.fn("SeatWork.notice")(function* (state: "completed" | "error", text: string) {
+    // Never query history here: retain the returned assistant, or the captured host failure when none returned.
+    // Both carry the host verification projection this dispatch observed, never one from a later turn.
+    notice: Effect.fn("SeatWork.notice")(function* (_state: "completed" | "error", _text: string) {
       if (!input.enabled) return undefined
-      const session = yield* history()
-      const last = lastAssistant(session)
-      if (completion.interrupted && evidence.value) return project(evidence.value)
-      if (state === "error" && !completion.observed)
-        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat), session)
-      // An extended job may finish a later turn than this callback observed; its card cannot inherit an earlier pass.
-      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat), session, last.info.id === evidence.value?.card.messageID)
-      return yield* bound(
-        BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
-        session, false,
-      )
+      const captured = returned.value ?? ended.value
+      // Nothing returned or ended: still report the host facts (bound roots, shell fact) of a child with no message.
+      if (!captured)
+        return yield* bound(BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" }, input.seat), [])
+      // A completion-shaped notice cannot erase a later observed host failure.
+      return structuredClone(project(returned.value && ended.value ? { ...captured, terminal: ended.value.terminal } : captured))
     }),
   }
 }

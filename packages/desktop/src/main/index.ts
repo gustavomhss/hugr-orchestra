@@ -50,6 +50,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
+import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
 import { OmniBoot } from "./omni-boot"
 
@@ -157,8 +158,15 @@ const main = Effect.gen(function* () {
   initCrashReporter()
   OmniBoot.setup()
 
+  const wslVersion = yield* Effect.promise(() =>
+    readWslExpectedVersion(
+      process.platform,
+      app.isPackaged ? join(process.resourcesPath, "cli") : join(import.meta.dirname, "../../resources/cli"),
+      app.getVersion(),
+    ),
+  )
   const wslServers = createWslServersController(
-    app.getVersion(),
+    wslVersion,
     async (distro) => {
       logger.log("spawning wsl sidecar", { distro })
       return spawnWslSidecar(distro, {

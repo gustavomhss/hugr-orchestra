@@ -1,0 +1,174 @@
+import { afterEach, expect, test } from "bun:test"
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
+import { createRequire } from "node:module"
+import os from "node:os"
+import path from "node:path"
+import { NATIVE_MACHINES, lockfileNodeGyp, nativeMachines, prepareTreeSitterPrebuilds } from "./tree-sitter-prebuilds"
+
+const root = path.resolve(import.meta.dir, "../../..")
+const host = `${process.platform}-${process.arch}`
+const fixtures: string[] = []
+
+afterEach(() => fixtures.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true })))
+
+test("the installed linux-arm64 typescript and javascript grammars are x86-64 and the guard refuses them", () => {
+  const failure = (() => {
+    try {
+      prepareTreeSitterPrebuilds({ root, os: "linux", arch: "arm64", rebuild: false })
+    } catch (error) {
+      return String(error)
+    }
+  })()
+  expect(failure).toContain("TREE_SITTER_PREBUILD_ARCH_MISMATCH")
+  expect(failure).toMatch(/tree-sitter-typescript[\\/]prebuilds[\\/]linux-arm64[\\/]tree-sitter-typescript\.node/)
+  expect(failure).toMatch(/tree-sitter-javascript[\\/]prebuilds[\\/]linux-arm64[\\/]tree-sitter-javascript\.node/)
+  expect(failure).not.toContain("tree-sitter-python.node")
+})
+
+// The grammar checks run first, so reaching the core error means every grammar prebuild for the target matched.
+// The published core package has no prebuilds; an install with lifecycle scripts adds only a host build/Release, which
+// is still no binding for Bun and is stale for every other target.
+test.each(["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64"])(
+  "%s grammar prebuilds all match and the installed core package has no binding for it",
+  (target) => {
+    const [platform, arch] = target.split("-")
+    expect(() => prepareTreeSitterPrebuilds({ root, os: platform!, arch: arch!, rebuild: false })).toThrow(
+      new RegExp(`^TREE_SITTER_CORE_(BINDING_MISSING|BUILD_STALE): ${target}`),
+    )
+  },
+)
+
+test("an install without the grammars or the core package is a named failure, not a pass", () => {
+  const empty = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-empty-"))
+  fixtures.push(empty)
+  expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow(
+    "TREE_SITTER_PREBUILDS_MISSING: linux-x64: tree-sitter, tree-sitter-javascript, tree-sitter-python, tree-sitter-typescript",
+  )
+})
+
+test("a core package without a binding is built for the host, and Node and Bun both parse with it", () => {
+  const fixture = grammarFixture("source")
+  const core = path.join(fixture, "node_modules", "tree-sitter")
+  const binding = path.join(core, "prebuilds", host, "tree-sitter.node")
+  const before = readdirSync(core).sort()
+  expect(() =>
+    prepareTreeSitterPrebuilds({ root: fixture, os: process.platform, arch: process.arch, rebuild: false }),
+  ).toThrow(`TREE_SITTER_CORE_BINDING_MISSING: ${host} needs a ${host} host to build ${binding}`)
+
+  const result = prepareTreeSitterPrebuilds({ root: fixture, os: process.platform, arch: process.arch })
+
+  expect(result.rebuilt).toEqual(["tree-sitter"])
+  expect(nativeMachines(binding)).toEqual([NATIVE_MACHINES[host]!])
+  // Only the binding is left behind: no build/ tree and no gyp stamps for node-addon-api.
+  expect(readdirSync(core).sort()).toEqual([...new Set([...before, "prebuilds"])].sort())
+  // Node finds the binding through node-gyp-build; Bun requires prebuilds/<os>-<arch>/tree-sitter.node directly.
+  const script = `const Parser = require(${JSON.stringify(core)}); const parser = new Parser();
+    parser.setLanguage(require(${JSON.stringify(path.join(fixture, "node_modules", "tree-sitter-python"))}));
+    console.log(parser.parse("a = 1").rootNode.toString())`
+  ;[["node", "-e", script], [process.execPath, "-e", script]].forEach((command) => {
+    const run = Bun.spawnSync(command)
+    expect({ exit: run.exitCode, stdout: run.stdout.toString().trim() }, run.stderr.toString()).toEqual({
+      exit: 0,
+      stdout: "(module (expression_statement (assignment left: (identifier) right: (integer))))",
+    })
+  })
+}, 600_000)
+
+test("an install-script core build for another CPU is refused, because node-gyp-build loads it first", () => {
+  const fixture = grammarFixture("stub")
+  const release = path.join(fixture, "node_modules", "tree-sitter", "build", "Release")
+  mkdirSync(release, { recursive: true })
+  copyFileSync(foreignPython(), path.join(release, "tree_sitter_runtime_binding.node"))
+  expect(() => prepareTreeSitterPrebuilds({ root: fixture, os: process.platform, arch: process.arch })).toThrow(
+    `TREE_SITTER_CORE_BUILD_STALE: ${host}: ${path.join(release, "tree_sitter_runtime_binding.node")}`,
+  )
+})
+
+test("a mislabeled host prebuild is rebuilt from source and loads", () => {
+  const fixture = grammarFixture("stub")
+  const file = path.join(fixture, "node_modules", "tree-sitter-python", "prebuilds", host, "tree-sitter-python.node")
+  rmSync(file)
+  copyFileSync(foreignPython(), file)
+  expect(nativeMachines(file)).not.toContain(NATIVE_MACHINES[host])
+  expect(() =>
+    prepareTreeSitterPrebuilds({ root: fixture, os: process.platform, arch: process.arch, rebuild: false }),
+  ).toThrow("TREE_SITTER_PREBUILD_ARCH_MISMATCH")
+
+  const result = prepareTreeSitterPrebuilds({ root: fixture, os: process.platform, arch: process.arch })
+
+  expect(result.rebuilt).toEqual(["tree-sitter-python"])
+  expect(nativeMachines(file)).toEqual([NATIVE_MACHINES[host]!])
+  expect(existsSync(path.join(fixture, "node_modules", "tree-sitter-python", "build"))).toBe(false)
+  // A child loads it: the grammar's real consumer is a Node worker, and a DLL loaded here would pin the fixture on Windows.
+  const load = Bun.spawnSync(["node", "-e", `console.log(Object.keys(require(${JSON.stringify(file)})).join())`])
+  expect({ exit: load.exitCode, stdout: load.stdout.toString().trim() }, load.stderr.toString()).toEqual({
+    exit: 0,
+    stdout: "language",
+  })
+}, 600_000)
+
+const resolve = createRequire(path.join(root, "packages", "maestro-arsenal", "package.json")).resolve
+const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.json")))
+
+// A real tree-sitter-python beside host-CPU javascript/typescript stubs. The core package is either a stub with a
+// host-CPU binding, or the real package as an install without lifecycle scripts leaves it: sources, no binding.
+function grammarFixture(core: "stub" | "source") {
+  // gyp computes relative paths from the real cwd; macOS tmpdir is behind the /var -> /private/var link.
+  const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), "tree-sitter-rebuild-")))
+  fixtures.push(fixture)
+  const modules = path.join(fixture, "node_modules")
+  const gyp = lockfileNodeGyp(root)!
+  const source = realpathSync(path.dirname(resolve("tree-sitter/package.json")))
+  mkdirSync(modules)
+  cpSync(realpathSync(python), path.join(modules, "tree-sitter-python"), { recursive: true, dereference: true })
+  // gyp cannot reach a dependency .gyp outside the tree it builds, so node-addon-api is copied, not linked.
+  // Python and the core package take the same node-addon-api and node-gyp-build.
+  ;["node-addon-api", "node-gyp-build"].forEach((name) =>
+    cpSync(realpathSync(path.dirname(createRequire(path.join(python, "package.json")).resolve(`${name}/package.json`))), path.join(modules, name), {
+      recursive: true,
+    }),
+  )
+  symlinkSync(path.dirname(path.dirname(gyp)), path.join(modules, "node-gyp"), "junction")
+  // The stubs only need host-CPU bytes. Python's host prebuild has them everywhere, including linux-arm64.
+  const stubs = [
+    ["tree-sitter-typescript", "tree-sitter-typescript.node"],
+    ["tree-sitter-javascript", "tree-sitter-javascript.node"],
+    ...(core === "stub" ? [["tree-sitter", "tree-sitter.node"]] : []),
+  ]
+  stubs.forEach(([name, file]) => {
+    mkdirSync(path.join(modules, name!, "prebuilds", host), { recursive: true })
+    writeFileSync(path.join(modules, name!, "package.json"), JSON.stringify({ name }))
+    copyFileSync(
+      path.join(python, "prebuilds", host, "tree-sitter-python.node"),
+      path.join(modules, name!, "prebuilds", host, file!),
+    )
+  })
+  // A CI install runs the core install script, so its build/ is left out along with any binding.
+  if (core === "source")
+    cpSync(source, path.join(modules, "tree-sitter"), {
+      recursive: true,
+      dereference: true,
+      filter: (file) => !["build", "prebuilds", "node_modules"].includes(path.relative(source, file).split(path.sep)[0]!),
+    })
+  return fixture
+}
+
+// Python's published prebuild for some CPU other than this host's.
+function foreignPython() {
+  const dir = readdirSync(path.join(python, "prebuilds")).find(
+    (name) =>
+      !nativeMachines(path.join(python, "prebuilds", name, "tree-sitter-python.node")).includes(NATIVE_MACHINES[host]!),
+  )!
+  return path.join(python, "prebuilds", dir, "tree-sitter-python.node")
+}

@@ -25,7 +25,6 @@ import { Npm } from "../npm"
 import { PluginV2 } from "../plugin"
 import { Reference } from "../reference"
 import { SkillV2 } from "../skill"
-import { State } from "../state"
 import { FetchHttpClient, HttpClient } from "effect/unstable/http"
 import { AgentPlugin } from "./agent"
 import { CommandPlugin } from "./command"
@@ -77,57 +76,54 @@ const layer = Layer.effectDiscard(
     const http = yield* HttpClient.HttpClient
     const skill = yield* SkillV2.Service
     const reference = yield* Reference.Service
-    const add = <R>(input: Plugin<R>) => {
-      const loaded = {
-        id: input.id,
-        effect: (context: PluginContext) =>
-          input
-            .effect(context)
-            .pipe(
-              Effect.provideService(Catalog.Service, catalog),
-              Effect.provideService(CommandV2.Service, commands),
-              Effect.provideService(Integration.Service, integration),
-              Effect.provideService(AgentV2.Service, agents),
-              Effect.provideService(Config.Service, config),
-              Effect.provideService(Location.Service, location),
-              Effect.provideService(ModelsDev.Service, modelsDev),
-              Effect.provideService(Npm.Service, npm),
-              Effect.provideService(EventV2.Service, events),
-              Effect.provideService(FSUtil.Service, fs),
-              Effect.provideService(FileSystem.Service, filesystem),
-              Effect.provideService(Global.Service, global),
-              Effect.provideService(HttpClient.HttpClient, http),
-              Effect.provideService(SkillV2.Service, skill),
-              Effect.provideService(Reference.Service, reference),
-            ),
-      }
-      return plugin.add(PluginV2.ID.make(loaded.id), loaded.effect)
-    }
+    const load = <R>(input: Plugin<R>) => ({
+      id: PluginV2.ID.make(input.id),
+      effect: (context: PluginContext) =>
+        input
+          .effect(context)
+          .pipe(
+            Effect.provideService(Catalog.Service, catalog),
+            Effect.provideService(CommandV2.Service, commands),
+            Effect.provideService(Integration.Service, integration),
+            Effect.provideService(AgentV2.Service, agents),
+            Effect.provideService(Config.Service, config),
+            Effect.provideService(Location.Service, location),
+            Effect.provideService(ModelsDev.Service, modelsDev),
+            Effect.provideService(Npm.Service, npm),
+            Effect.provideService(EventV2.Service, events),
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(FileSystem.Service, filesystem),
+            Effect.provideService(Global.Service, global),
+            Effect.provideService(HttpClient.HttpClient, http),
+            Effect.provideService(SkillV2.Service, skill),
+            Effect.provideService(Reference.Service, reference),
+          ),
+    })
 
-    // The boot finishes before the location is handed out. The batch only materializes agents, commands and the
-    // catalog once every plugin is added, so a forked boot let the first request on a new location read empty state.
-    // A failing plugin still leaves the location usable, as it did when the boot ran in the background.
-    yield* State.batch(
-      Effect.gen(function* () {
-        yield* add(ConfigReferencePlugin.Plugin)
-        yield* add(AgentPlugin.Plugin)
-        yield* add(CommandPlugin.Plugin)
-        yield* add(ModelsDevPlugin)
-        yield* add(ConfigAgentPlugin.Plugin)
-        yield* add(ConfigCommandPlugin.Plugin)
-        yield* add(ConfigSkillPlugin.Plugin)
-        for (const item of ProviderPlugins) yield* add(item)
-        yield* add(ConfigExternalPlugin.Plugin)
-        yield* add(ConfigProviderPlugin.Plugin)
-        yield* add(VariantPlugin.Plugin)
-      }),
-    ).pipe(
-      Effect.withSpan("PluginInternal.boot"),
-      Effect.catchCauseIf(
-        (cause) => !Cause.hasInterrupts(cause),
-        (cause) => Effect.logError("internal plugin boot failed", { cause }),
-      ),
-    )
+    // The boot finishes before the location is handed out. It materializes agents, commands and the catalog once
+    // every plugin is added, so a forked boot let the first request on a new location read empty state, and a flush
+    // per plugin replays every earlier transform again. A failing plugin is rolled back and the location stays usable.
+    yield* plugin
+      .boot([
+        load(ConfigReferencePlugin.Plugin),
+        load(AgentPlugin.Plugin),
+        load(CommandPlugin.Plugin),
+        load(ModelsDevPlugin),
+        load(ConfigAgentPlugin.Plugin),
+        load(ConfigCommandPlugin.Plugin),
+        load(ConfigSkillPlugin.Plugin),
+        ...ProviderPlugins.map(load),
+        load(ConfigExternalPlugin.Plugin),
+        load(ConfigProviderPlugin.Plugin),
+        load(VariantPlugin.Plugin),
+      ])
+      .pipe(
+        Effect.withSpan("PluginInternal.boot"),
+        Effect.catchCauseIf(
+          (cause) => !Cause.hasInterrupts(cause),
+          (cause) => Effect.logError("internal plugin boot failed", { cause }),
+        ),
+      )
   }),
 )
 

@@ -8,7 +8,7 @@
     {"id":"integration","skill":"docs/skills/relay-integration/SKILL.md"}
   ],
   "modules": [
-    {"id":"authoring","skill":"docs/skills/relay-authoring/SKILL.md","sources":["bin/relay-api","lib/relay_authoring/*.py"],"tests":["tests/test_authoring.py","tests/test_authoring_hooks.py"],"depends_on":["daemon","gate-cli","profiles","audit"]},
+    {"id":"authoring","skill":"docs/skills/relay-authoring/SKILL.md","sources":["lib/relay_authoring/*.py"],"tests":["tests/test_authoring.py","tests/test_authoring_hooks.py"],"depends_on":["daemon","gate-cli","profiles","audit"]},
     {"id":"gate-core","skill":"docs/skills/relay-gate-core/SKILL.md","sources":["lib/relay-gate.sh","bin/relay-note"],"tests":["tests/test_gate_core_runtime.py","tests/test_relay.py","tests/test_judge_diff.py","tests/test_judge_context.py","tests/test_ledger_provenance.py","tests/test_concurrent_gate.sh"],"depends_on":["judge"]},
     {"id":"arm-hook","skill":"docs/skills/relay-arm-hook/SKILL.md","sources":["bin/relay-arm-hook.sh"],"tests":["tests/test_arm_runtime.py","tests/test_arm_hook.sh","tests/test_arm_binding.py","tests/test_arm_state.py","tests/test_await_human.py","tests/test_backoff.py","tests/test_blocked_claim.py","tests/test_position_by_id.py","tests/test_position_macro.py","tests/test_kinds.py","tests/test_cap_preflight.py","tests/test_self_check.py","tests/test_compaction.py","tests/test_cost.py"],"depends_on":["gate-core"]},
     {"id":"gate-cli","skill":"docs/skills/relay-gate-cli/SKILL.md","sources":["bin/relay-gate"],"tests":["tests/test_command_transport.py","tests/test_gate_cli.py","tests/test_concurrent_gate.sh","tests/test_judge_diff.py"],"depends_on":["gate-core"]},

@@ -10,12 +10,13 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(83)
-    expect(EventManifest.Definitions.length).toBe(113)
+    expect(EventManifest.ServerDefinitions.length).toBe(86)
+    expect(EventManifest.Definitions.length).toBe(116)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
       SessionV1.Event.Deleted,
+      SessionV1.Event.PromptAdmitted,
       SessionV1.Event.MessageUpdated,
       SessionV1.Event.MessageRemoved,
       SessionV1.Event.PartUpdated,
@@ -24,8 +25,8 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(105)
-    expect(EventManifest.Durable.size).toBe(60)
+    expect(EventManifest.Latest.size).toBe(107)
+    expect(EventManifest.Durable.size).toBe(63)
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -40,7 +41,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.get("maestro.approval.consumed")).toBe(MaestroEvent.Approval.ConsumedV2)
     expect(EventManifest.Latest.get("maestro.approval.reserved")).toBe(MaestroEvent.Approval.ReservedV2)
     expect(EventManifest.Latest.get("maestro.admission.decided")).toBe(MaestroEvent.Admission.Decided)
-    expect(EventManifest.Latest.get("maestro.plan_revision.recorded")).toBe(MaestroEvent.PlanRevision.RecordedV2)
+    expect(EventManifest.Latest.get("maestro.plan_revision.recorded")).toBe(MaestroEvent.PlanRevision.RecordedV3)
     expect(EventManifest.Latest.get("maestro.context.recorded")).toBe(MaestroEvent.Context.RecordedV2)
     expect(EventManifest.Latest.get("maestro.clarification.decided")).toBe(MaestroEvent.Clarification.Decided)
     expect(EventManifest.Latest.get("maestro.scope.decided")).toBe(MaestroEvent.Scope.Decided)
@@ -60,7 +61,7 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(67, 70)).toEqual([
+    expect(EventManifest.Definitions.slice(70, 73)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,

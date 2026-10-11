@@ -22,6 +22,14 @@ export const main = (entry: SessionStoreEntry) => !entry.isSidechain
 export const chain = (entry: SessionStoreEntry) => main(entry) && typeof entry.uuid === "string" &&
   ["user", "assistant", "attachment", "system"].includes(entry.type)
 
+/** One rendering boundary for the SDK query and its exact durable native user receipt. */
+export function hostPrompt(messages: readonly SessionV1.WithParts[]) {
+  return messages.flatMap((message) => message.info.role === "user" ? [
+    ...message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : []),
+    ...(message.info.promptContext?.reminders ?? []).map((note) => `Hook reminder:\n${note}`),
+  ] : []).join("\n\n").trim()
+}
+
 export function version(entries: SessionStoreEntry[]) {
   const versions = [...new Set(entries.filter(chain).map((entry) => entry.version))]
   return versions.length === 1 && typeof versions[0] === "string" ? versions[0] : undefined

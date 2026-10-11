@@ -6,16 +6,21 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { Database } from "@orchestra/core/database/database"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ChildProcess } from "effect/unstable/process"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { WorktreeEvidence } from "@/maestro/worktree-evidence"
 import { Git } from "@/git"
+import { Session } from "@/session/session"
+import { EventV2Bridge } from "@/event-v2-bridge"
 import { testEffect } from "../lib/effect"
 import { tmpdirScoped } from "../fixture/fixture"
 import { relayFor } from "./relay-fixture"
 
-const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, CrossSpawnSpawner.node, Git.node])))
+const it = testEffect(LayerNode.compile(LayerNode.group([
+  FSUtil.node, AppProcess.node, CrossSpawnSpawner.node, Git.node, Database.node, Session.node, EventV2Bridge.node,
+])))
 const fixture = Effect.fnUntraced(function* () {
   const directory = yield* tmpdirScoped()
   const stateDirectory = yield* tmpdirScoped()

@@ -16,14 +16,14 @@ export async function extractSymbols(path: string, source: string, context?: Ars
   // Some native packages ship Node builds but omit Bun's expected prebuild filename.
   // A fixed, package-owned Node worker preserves actual parsing; host authorizes launch.
   const host = requireContext(context);
-  const worker = trustedAsset("parser-worker").entry;
-  const result = await runProcess(["node", "--experimental-strip-types", worker], host.directory, host, JSON.stringify({ path, source })).catch((error: unknown) => {
-    if (!(error instanceof AcquisitionError)) throw error;
+  // A compiled CLI bundles this module without its package files or node_modules, so the worker asset itself is absent.
+  const result = await Promise.resolve().then(() => runProcess(["node", "--experimental-strip-types", trustedAsset("parser-worker").entry], host.directory, host, JSON.stringify({ path, source }))).catch((error: unknown) => {
+    if (!(error instanceof Error)) throw error;
     return { stdout: "", stderr: error.message, exit: -1 };
   });
-  if (result.exit !== 0 || !result.stdout || result.stdout.length > 2_000_000) return { ...local, coverage: { ...local.coverage, detail: `parser-worker failed: exit ${result.exit}; ${result.stderr.slice(0, 500)}` } };
+  if (result.exit !== 0 || !result.stdout || result.stdout.length > 2_000_000) return { ...local, coverage: { ...local.coverage, detail: `${local.coverage.detail}; parser-worker failed: exit ${result.exit}; ${result.stderr.slice(0, 500)}` } };
   const parsed: unknown = await Promise.resolve().then(() => JSON.parse(result.stdout)).catch(() => undefined);
-  if (!validResult(parsed, path)) return { ...local, coverage: { ...local.coverage, detail: "parser-worker malformed diagnostics" } };
+  if (!validResult(parsed, path)) return { ...local, coverage: { ...local.coverage, detail: `${local.coverage.detail}; parser-worker malformed diagnostics` } };
   return parsed;
 }
 
@@ -96,7 +96,8 @@ export function extractNative(path: string, source: string): FileSymbols {
     });
     const partial = tree.rootNode.hasError;
     return { path, symbols, imports, coverage: { complete: !partial && !state.unsupported, reason: partial ? "partial-parse" : state.unsupported ? "unsupported-syntax" : undefined, scope } };
-  } catch {
-    return { path, symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", scope } };
+  } catch (error) {
+    const cause = (error instanceof Error ? error.message : String(error)).split("\n")[0];
+    return { path, symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", scope, detail: `native symbol extraction unavailable: ${cause}` } };
   }
 }

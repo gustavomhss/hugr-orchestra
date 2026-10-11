@@ -1,7 +1,5 @@
-import { Location } from "@orchestra/core/location"
-import { Relay } from "@orchestra/core/relay"
 import { SkillV2 } from "@orchestra/core/skill"
-import { RelayInvalidError } from "@orchestra/protocol/groups/relay-document"
+import { RelayForbiddenError } from "@orchestra/protocol/groups/relay-document"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
 import { AuthoringHook } from "@orchestra/relay/authoring/hook"
 import { Effect, Layer, Struct } from "effect"
@@ -111,34 +109,11 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
           }),
         ),
       )
-      .handle("relay.document.check", (ctx) =>
-        RelayDocuments.respond(
-          Effect.gen(function* () {
-            const relay = yield* Relay.Service
-            const location = yield* Location.Service
-            const skills = RelayDocuments.skills(yield* SkillV2.Service)
-            const document = yield* documents.use((store) => store.get(ctx.params.documentID))
-            if (AuthoringHook.isHook(document))
-              return yield* RelayDocuments.refusal("A hook has no steps to check", 400, "invalid-request")
-            const compiled = yield* AuthoringGraph.compile(document, skills)
-            return yield* relay
-              .check({
-                sprint: compiled.sprint,
-                workdir: location.directory,
-                position: ctx.payload.position,
-                counter: ctx.payload.counter,
-                baseRef: ctx.payload.baseRef,
-                params: ctx.payload.params ?? {},
-              })
-              .pipe(
-                Effect.mapError(
-                  (error) =>
-                    new RelayInvalidError({
-                      code: error._tag === "GateCheck.Busy" ? "busy" : "invalid-plan",
-                      message: error._tag === "GateCheck.Busy" ? "Another check holds this state" : error.message,
-                    }),
-                ),
-              )
+      .handle("relay.document.check", () =>
+        Effect.fail(
+          new RelayForbiddenError({
+            code: "maestro-execution-required",
+            message: "Executable workflow checks are owned by Maestro.",
           }),
         ),
       )
