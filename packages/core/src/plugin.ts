@@ -29,6 +29,13 @@ export interface Interface {
   readonly add: (id: ID, effect: PluginRuntime["effect"]) => Effect.Effect<void>
   /** Install once for this Location lifetime, preserving active plugin scope and transform order. */
   readonly ensure: (id: ID, effect: PluginRuntime["effect"]) => Effect.Effect<void>
+  /**
+   * Adds plugins in order with one state flush for the whole boot. If that flush fails, the booted plugins are
+   * removed and added again one by one, so the plugin whose state fails is rolled back as with `add`.
+   */
+  readonly boot: (
+    plugins: Iterable<{ readonly id: ID; readonly effect: PluginRuntime["effect"] }>,
+  ) => Effect.Effect<void>
   readonly remove: (id: ID) => Effect.Effect<void>
   readonly wait: (id: ID) => Effect.Effect<void>
 }
@@ -76,13 +83,18 @@ const layer = Layer.effect(
         Effect.provideService(StateBatch, undefined),
       )
 
+    // A boot defers every activation's reloads to its single flush instead of replaying them per plugin.
+    const settle = (reloads: Set<State.Reload>, boot: Set<State.Reload> | undefined) =>
+      boot ? Effect.sync(() => reloads.forEach((reload) => boot.add(reload))) : flush(reloads)
+
     const closeAndReplay = Effect.fn("Plugin.closeAndReplay")(function* (
       child: Scope.Closeable,
       primary: Exit.Exit<void, never>,
       reloads: Set<State.Reload>,
+      boot?: Set<State.Reload>,
     ) {
       const closed = yield* Scope.close(child, primary).pipe(Effect.exit)
-      const replayed = yield* flush(reloads).pipe(Effect.exit)
+      const replayed = yield* settle(reloads, boot).pipe(Effect.exit)
       const cause = [primary, closed, replayed].reduce(
         (cause, exit) => (Exit.isFailure(exit) ? Cause.combine(cause, exit.cause) : cause),
         Cause.empty,
@@ -90,7 +102,12 @@ const layer = Layer.effect(
       return cause.reasons.length === 0 ? Exit.void : Exit.failCause(cause)
     })
 
-    const install = Effect.fnUntraced(function* (id: ID, effect: PluginRuntime["effect"], retain: boolean) {
+    const install = Effect.fnUntraced(function* (
+      id: ID,
+      effect: PluginRuntime["effect"],
+      retain: boolean,
+      boot?: Set<State.Reload>,
+    ) {
       const ancestry = yield* checkAccess(id, "install")
 
       yield* locks.withLock(id)(
@@ -109,7 +126,7 @@ const layer = Layer.effect(
               Scope.provide(child),
               Effect.withSpan("Plugin.load", { attributes: { "plugin.id": id } }),
             )
-            yield* flush(reloads).pipe(Scope.provide(child))
+            yield* settle(reloads, boot).pipe(Scope.provide(child))
             yield* Effect.uninterruptible(
               Effect.gen(function* () {
                 yield* events.publish(Event.Added, { id })
@@ -126,7 +143,7 @@ const layer = Layer.effect(
               const primary = yield* restore(activate).pipe(Effect.exit)
               if (Exit.isSuccess(primary)) return
               active.delete(id)
-              const combined = yield* closeAndReplay(child, primary, reloads)
+              const combined = yield* closeAndReplay(child, primary, reloads, boot)
               failures.set(id, combined)
               yield* Effect.forEach(waiters.get(id) ?? [], (waiter) => Deferred.done(waiter, combined), {
                 discard: true,
@@ -165,6 +182,28 @@ const layer = Layer.effect(
           }),
         ),
       )
+    })
+
+    const boot = Effect.fn("Plugin.boot")(function* (
+      plugins: Iterable<{ readonly id: ID; readonly effect: PluginRuntime["effect"] }>,
+    ) {
+      const reloads = new Set<State.Reload>()
+      const installed: { readonly id: ID; readonly effect: PluginRuntime["effect"] }[] = []
+      const booted = yield* Effect.forEach(
+        plugins,
+        (plugin) =>
+          install(plugin.id, plugin.effect, false, reloads).pipe(
+            Effect.andThen(Effect.sync(() => installed.push(plugin))),
+          ),
+        { discard: true },
+      ).pipe(Effect.exit)
+      const flushed = yield* flush(reloads).pipe(Effect.exit)
+      if (Exit.isSuccess(flushed)) return yield* booted
+      // One flush cannot tell which plugin's state failed. Remove the booted plugins, then add them back one at a
+      // time so the per-plugin flush rolls back the failing one and stops there, as a boot of plain adds would.
+      yield* Effect.forEach(installed.toReversed(), (plugin) => remove(plugin.id).pipe(Effect.exit), { discard: true })
+      yield* Effect.forEach(installed, (plugin) => install(plugin.id, plugin.effect, false), { discard: true })
+      return yield* booted
     })
 
     const wait = Effect.fn("Plugin.wait")(function* (id: ID) {
@@ -206,6 +245,7 @@ const layer = Layer.effect(
     const service = Service.of({
       add: Effect.fn("Plugin.add")((id, effect) => install(id, effect, false)),
       ensure: Effect.fn("Plugin.ensure")((id, effect) => install(id, effect, true)),
+      boot,
       remove,
       wait,
     })
