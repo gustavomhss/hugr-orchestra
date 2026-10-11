@@ -1,13 +1,10 @@
 import { expect, test } from "bun:test"
 import { createComponent, createRoot, createMemo, createStore, decision, render, savedLeanPart } from "./lean-project-metrics.test-helper"
-import type { Config, Part } from "@orchestra/sdk/v2/client"
+import type { Part } from "@orchestra/sdk/v2/client"
 import { solidDom } from "./solid-dom"
 
 const panel: typeof import("@/components/session/lean-project-metrics") = await import(
   solidDom("@/components/session/lean-project-metrics", import.meta.dir)
-)
-const { createLeanSettingsController }: typeof import("@/components/settings-v2/general-controllers") = await import(
-  solidDom("@/components/settings-v2/general-controllers", import.meta.dir)
 )
 const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
   solidDom("@/context/language", import.meta.dir)
@@ -16,37 +13,6 @@ const { PlatformProvider }: typeof import("@/context/platform") = await import(s
 const { LeanMetrics }: typeof import("@orchestra/schema/lean-metrics") = await import(
   solidDom("@orchestra/schema/lean-metrics", import.meta.dir)
 )
-test("Lean reads backend false and preserves sibling limits in one awaited patch", async () => {
-  const [data, setData] = createStore<{ config: Config }>({
-    config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
-  })
-  const calls: Config[] = []
-  const owned = createRoot((dispose) => ({
-    dispose,
-    lean: createLeanSettingsController(() => ({
-      ready: true, configReady: true,
-      data,
-      updateConfig: async (patch) => {
-        calls.push(patch)
-      },
-    }), () => true),
-  }))
-  try {
-    expect(owned.lean.enabled()).toBe(false)
-    await owned.lean.set(true)
-    expect(calls).toEqual([{ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: true } } }])
-    // Successful transport alone is not authoritative state; refetched backend config is.
-    expect(owned.lean.enabled()).toBe(false)
-    setData("config", "tool_output", "lean", "enabled", true)
-    expect(owned.lean.enabled()).toBe(true)
-    await owned.lean.set(false)
-    expect(calls[1]).toEqual({ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } })
-    expect(owned.lean.enabled()).toBe(true)
-    setData("config", "tool_output", "lean", "enabled", false)
-    expect(owned.lean.enabled()).toBe(false)
-  } finally { owned.dispose() }
-})
-
 test("loaded repository selection excludes foreign, unknown, unfinished, orphan and reverted tool parts", () => {
   const message = (id: string, sessionID: string) => ({ id, sessionID })
   const part = (messageID: string, sessionID: string): Part => ({
@@ -199,27 +165,4 @@ for (const locale of ["en", "br"] as const) test(`real repository KPI DOM: scope
     expect(host.querySelector('[role="status"]')?.textContent).toBe(dict["lean.invalidScope"])
     expect(host.querySelectorAll("dd").length).toBe(0)
   } finally { dispose() }
-})
-
-test("Lean backend rejection remains visible, does not fake enabled state or retry", async () => {
-  const failure = new Error("config write failed")
-  const calls: Config[] = []
-  const owned = createRoot((dispose) => ({
-    dispose,
-    lean: createLeanSettingsController(() => ({
-      ready: true, configReady: true,
-      data: { config: { tool_output: { lean: { enabled: false } } } },
-      updateConfig: async (patch) => {
-        calls.push(patch)
-        throw failure
-      },
-    }), () => true),
-  }))
-  try {
-    await expect(owned.lean.set(true)).rejects.toBe(failure)
-    expect(owned.lean.enabled()).toBe(false)
-    expect(owned.lean.failed()).toBe(true)
-    expect(owned.lean.pending()).toBe(false)
-    expect(calls).toHaveLength(1)
-  } finally { owned.dispose() }
 })
