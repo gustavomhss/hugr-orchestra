@@ -47,7 +47,7 @@ export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as cons
 
 // Verify bytes before the first execution, and version before the only replacement. The staged binary runs next to
 // its staged companions, so validation exercises the same omni pair that is installed. Its tree-sitter directory is
-// checked as one digest over the sha256sum lines of its regular files, sorted by path, so a symlink never matches.
+// checked as one digest over "<sha256>  <path>" lines of its regular files, sorted by path, so a symlink never matches.
 export const installGuestScript = `${guestEnvironment}
 source=$1; digest=$2; version=$3; addon=$4; addon_digest=$5; supervisor=$6; supervisor_digest=$7
 tree_sitter=$8; tree_sitter_digest=$9
@@ -72,7 +72,9 @@ actual=$(sha256sum -- "$staging/${omniCompanions[0]}")
 actual=$(sha256sum -- "$staging/${omniCompanions[1]}")
 [[ "\${actual%% *}" == "$supervisor_digest" ]] || exit 84
 cp -R -- "$tree_sitter" "$staging/tree-sitter"
-actual=$(cd -- "$staging/tree-sitter" && find . -type f -printf '%P\\n' | LC_ALL=C sort | xargs -r -d '\\n' sha256sum -- | sha256sum)
+actual=$(cd -- "$staging/tree-sitter" && find . -type f -printf '%P\\n' | LC_ALL=C sort | while IFS= read -r file; do
+  sum=$(sha256sum -- "$file"); printf '%s  %s\\n' "\${sum%% *}" "$file"
+done | sha256sum)
 [[ "\${actual%% *}" == "$tree_sitter_digest" ]] || exit 84
 cp -- "$source" "$staging/orchestra"
 chmod 0755 -- "$staging/orchestra"

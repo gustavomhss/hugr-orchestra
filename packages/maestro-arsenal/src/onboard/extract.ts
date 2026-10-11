@@ -12,7 +12,7 @@ import { type FileSymbols, type SymbolInfo, type SymbolKind, type FileImport } f
 // A compiled CLI has no node_modules and no package files. It ships tree-sitter in tree-sitter/ beside
 // realpath(execPath), loaded there by path so a missing file never resolves through some ancestor's node_modules, and
 // it has no parser-worker asset, so a binding it lacks ends at parser-unavailable.
-const compiled = /\/\$bunfs\/|\/~BUN\//.test(import.meta.url);
+const compiled = /[\\/](\$bunfs|~BUN)[\\/]/.test(decodeURIComponent(import.meta.url));
 const KINDS: Record<string, SymbolKind> = { function_declaration: "function", class_declaration: "class", abstract_class_declaration: "class", interface_declaration: "interface", type_alias_declaration: "type", enum_declaration: "enum", lexical_declaration: "const", variable_declaration: "const", function_definition: "function", class_definition: "class" };
 
 export async function extractSymbols(path: string, source: string, context?: ArsenalContext): Promise<FileSymbols> {
