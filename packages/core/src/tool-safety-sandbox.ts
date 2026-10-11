@@ -10,6 +10,7 @@ import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 import { SandboxParents } from "./sandbox-parents"
+import { SandboxProjectConfig } from "./sandbox-project-config"
 import { TcpProxy } from "./tcp-proxy"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
@@ -172,10 +173,13 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
   if (protectedWrites.length && profile?.allowedConfigEdits?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-config-write-exception-unenforceable" })
+  // Project config runs on the host (LSP, formatter and MCP commands, plugins), so a sandboxed command never writes it.
+  // This is separate from the profile's list: an owner-approved edit-tool exception does not reach the shell.
+  const guarded = [...new Set([...protectedWrites, ...(yield* SandboxProjectConfig.protectedPaths(fs, [directory, cwd, ...declared]))])]
   if (sockets.some((socket) => deny.some((entry) => FSUtil.contains(entry, socket))))
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-denied-path" })
   const parents = options?.prepareParents === true
-    ? yield* SandboxParents.plan(fs, directory, requested, [...deny, ...protectedWrites])
+    ? yield* SandboxParents.plan(fs, directory, requested, [...deny, ...guarded])
     : []
   const invocation = command.options.shell
     ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
@@ -210,7 +214,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
       ...[...sockets, ...(proxy?.sockets ?? [])].map((socket) => `(allow network-outbound (remote unix-socket (literal ${JSON.stringify(socket)})))`),
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
-      ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
+      ...guarded.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
     if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
     yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
@@ -223,7 +227,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   )
   const policy = path.join(temp, "settings.json")
   yield* fs.writeFileString(policy, JSON.stringify({
-    filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites] },
+    filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...guarded] },
     // An exact endpoint is an IP-literal host:port entry; its network namespace has no other route. Domain and
     // endpoint grants are mutually exclusive above. Never allowAllUnixSockets: it would expose host daemons.
     network: {
