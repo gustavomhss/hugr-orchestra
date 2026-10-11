@@ -52,13 +52,11 @@ export type Options = {
 export type Record = typeof CapabilityArtifactTable.$inferSelect
 type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
 
-export const make = (options: Options = {}) => Effect.gen(function* () {
+/** Shared by the model facade and the operator facade so both resolve the same private blob root and bounds. */
+export const storage = Effect.fn("CapabilityArtifacts.storage")(function* (options: Options = {}) {
   const database = yield* Database.Service
-  const sessions = yield* SessionStore.Service
   const fs = yield* FSUtil.Service
   const global = yield* Global.Service
-  const policy = yield* CapabilityPolicy.make
-  const credentials = yield* Effect.serviceOption(Credential.Service)
   const boundedBytes = options.boundedBytes ?? 16 * 1024 * 1024
   const quota = options.quota ?? 256 * 1024 * 1024
   const scratchTTL = options.scratchTTL ?? 24 * 60 * 60 * 1000
@@ -66,7 +64,19 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   const root = options.root ?? join(global.data, "capability-artifacts", ArtifactBlobs.hash(storageID))
   if (![boundedBytes, quota, scratchTTL].every((n) => Number.isSafeInteger(n) && n > 0) || !isAbsolute(root))
     return yield* failure("invalid_input", "Artifact store options are invalid")
-  const blobs = ArtifactBlobs.make({ root, boundedBytes, storageID, fs })
+  return { boundedBytes, quota, scratchTTL, blobs: ArtifactBlobs.make({ root, boundedBytes, storageID, fs }) }
+})
+
+export const make = (options: Options = {}) => Effect.gen(function* () {
+  const database = yield* Database.Service
+  const sessions = yield* SessionStore.Service
+  const policy = yield* CapabilityPolicy.make
+  const credentials = yield* Effect.serviceOption(Credential.Service)
+  const settings = yield* storage(options)
+  const boundedBytes = settings.boundedBytes
+  const quota = settings.quota
+  const scratchTTL = settings.scratchTTL
+  const blobs = settings.blobs
   // Repeat persisted identity validation under the storage transaction, without opening an approval queue there.
   const binding = policy.binding
 
