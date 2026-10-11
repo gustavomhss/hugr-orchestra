@@ -44,7 +44,7 @@ Baseline `fa525499fb`. This wave delivers the canonical `process_control` leaf f
 - `stop` kills the tree with the existing spawner semantics (process group on POSIX, `taskkill /T` on win32). The outcome is `local-stop` only if the exit is observed within 5 s, otherwise `incomplete`.
 - `transfer` is allowed only from a child Session to its persisted live parent (`session.parent_id`).
   - The parent must have the same placement and a non-empty persisted agent. The new owner is `{parent sessionID, parent agent, same placement}`.
-  - It requires a running entry.
+  - It requires a running entry before the durable update. If the process exits after that commit, `Live.transfer` still swaps the owner (guarded by `owner === from`).
   - The order is: owner check, then the durable `CapabilityJobs.transferHost` (SQL owner update guarded by the expected generation), then `Live.transfer(from,to)`.
   - Afterwards the old owner gets `target_denied` on every action. Arbitrary destinations are impossible.
 

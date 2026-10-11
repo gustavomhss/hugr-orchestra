@@ -4,6 +4,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { NonNegativeInt } from "@orchestra/schema/schema"
 import { Schema, type Effect, type Scope } from "effect"
 import type { ChildProcess } from "effect/unstable/process"
+import type { ToolSafety } from "../../tool-safety"
 import type { CapabilityJobs } from "../job"
 
 // Model-facing input. One canonical leaf, explicit argv only: never shell text.
@@ -43,7 +44,7 @@ export const Window = Schema.Struct({ retainedStart: NonNegativeInt, end: NonNeg
 export interface Window extends Schema.Schema.Type<typeof Window> {}
 export const Chunk = Schema.Struct({
   start: NonNegativeInt, end: NonNegativeInt, text: Schema.String,
-  // Requested bytes that retention already dropped: [from, to).
+  // Requested bytes not returned: dropped by retention, or skipped to reach a UTF-8 boundary: [from, to).
   lost: Schema.optional(Schema.Struct({ from: NonNegativeInt, to: NonNegativeInt })),
   eof: Schema.Boolean,
 })
@@ -89,7 +90,8 @@ export type StartInput = Readonly<{
 
 /** Process-global: handles outlive tool fibers and Location idle teardown, never serialize, die with the host. */
 export type Registry = Readonly<{
-  start: (input: StartInput) => Effect.Effect<Live, Capability.Failure>
+  /** ToolSafety.Denied from prepare propagates unchanged so settlement can escalate it as a HOLD. */
+  start: (input: StartInput) => Effect.Effect<Live, Capability.Failure | ToolSafety.Denied>
   /** Owner mismatch and unknown IDs fail identically with target_denied. */
   get: (ref: Capability.JobRef, owner: Capability.Owner) => Effect.Effect<Live, Capability.Failure>
   list: (owner: Capability.Owner) => Effect.Effect<readonly Live[]>
@@ -109,7 +111,7 @@ export type Live = Readonly<{
   stop: () => Effect.Effect<"local-stop" | "incomplete">
   /** Waits for exit; interruption detaches the waiter only. */
   exited: Effect.Effect<typeof Exit.Type>
-  /** Atomic in-process owner swap after the durable owner update committed. */
+  /** Atomic in-process owner swap after the durable owner update committed. Allowed after exit (owner === from). */
   transfer: (from: Capability.Owner, to: Capability.Owner) => Effect.Effect<void, Capability.Failure>
 }>
 
