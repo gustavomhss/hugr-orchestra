@@ -98,7 +98,8 @@ const sources = await Promise.all(fixture.inputFiles.map(async (file) => {
 const config = claude ? { model: claude.parentModel, small_model: claude.parentModel,
   // Zen serves its free models with the public key; nothing secret is written. Jimmy's Anthropic model is never resolved
   // through a provider: the engine hands it to the Claude Agent SDK, so no Anthropic API key is needed.
-  enabled_providers: ["opencode"], provider: { opencode: { options: { apiKey: "public" } } },
+  // The Zen provider's id is the parent model's provider prefix.
+  enabled_providers: [claude.parentModel.split("/")[0]], provider: { [claude.parentModel.split("/")[0]]: { options: { apiKey: "public" } } },
   plugin: [], mcp: {}, lsp: false, formatter: false, compaction: { auto: false },
   agent: { jimmy: { engine: claude.engine, model: claude.jimmyModel } },
 } : { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
