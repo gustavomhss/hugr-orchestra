@@ -51,7 +51,11 @@ export function server(input: {
   return createSdkMcpServer({
     name: SERVER,
     // Loaded up front: Claude Code otherwise defers MCP tools behind a search, and the model falls back to its own.
-    tools: input.defs.map((def) => tool(def.id, def.description, shape(ToolJsonSchema.fromTool(def)), handler(def), { alwaysLoad: true })),
+    tools: input.defs.map((def) => {
+      const schema = ToolJsonSchema.fromTool(def)
+      return tool(def.id, [def.description, requirements(schema)].filter(Boolean).join("\n\n"), shape(schema), handler(def),
+        { alwaysLoad: true })
+    }),
   })
 }
 
@@ -59,20 +63,56 @@ export function server(input: {
 // model: each tool still decodes its arguments with its own schema, so constraints Zod is not given here still hold.
 // A union of objects (e.g. one variant per `action`) has no top-level properties, but an SDK tool must be one object:
 // merge the variants' fields, union a field's schemas across variants, and require only what every variant requires.
+// A field only some variants of a discriminated union require says in its description which of them do.
 function shape(schema: unknown) {
-  const options = isRecord(schema) ? (Array.isArray(schema.anyOf) ? schema.anyOf : Array.isArray(schema.oneOf) ? schema.oneOf : []) : []
-  const variants = options.length > 0 ? options.filter(isRecord) : isRecord(schema) ? [schema] : []
-  const fields = variants.map((variant) => ({
-    properties: isRecord(variant.properties) ? variant.properties : {},
-    required: Array.isArray(variant.required) ? variant.required : [],
-  }))
+  const fields = variants(schema)
+  const tag = discriminator(fields)
   const keys = [...new Set(fields.flatMap((field) => Object.keys(field.properties)))]
   return Object.fromEntries(keys.map((key) => {
     const schemas = [...new Map(fields.flatMap((field) => key in field.properties ? [field.properties[key]] : [])
       .map((item) => [JSON.stringify(item), item])).values()]
-    const type = zod(schemas.length === 1 ? schemas[0] : { anyOf: schemas })
-    return [key, fields.every((field) => field.required.includes(key)) ? type : type.optional()]
+    const merged = schemas.length === 1 ? schemas[0] : { anyOf: schemas }
+    if (fields.every((field) => field.required.includes(key))) return [key, zod(merged)]
+    const by = tag ? fields.filter((field) => field.required.includes(key)).map((field) => literal(field.properties[tag])) : []
+    // Described after `.optional()`: the JSON Schema the SDK lists drops a description set on the inner type.
+    const description = [isRecord(merged) && typeof merged.description === "string" ? merged.description : undefined,
+      by.length > 0 ? `Required when ${tag} is ${by.join(" or ")}.` : undefined].filter(Boolean).join(" ")
+    return [key, description ? zod(merged).optional().describe(description) : zod(merged).optional()]
   }))
+}
+
+/** For a discriminated union, the fields each variant requires, as a line of the tool's description. */
+function requirements(schema: unknown) {
+  const fields = variants(schema)
+  const tag = discriminator(fields)
+  if (!tag) return undefined
+  return [`Required fields for each ${tag}:`, ...fields.map((field) =>
+    `- ${literal(field.properties[tag])}: ${field.required.filter((key) => key !== tag).join(", ") || "none"}`)].join("\n")
+}
+
+function variants(schema: unknown) {
+  const options = isRecord(schema) ? (Array.isArray(schema.anyOf) ? schema.anyOf : Array.isArray(schema.oneOf) ? schema.oneOf : []) : []
+  return (options.length > 0 ? options.filter(isRecord) : isRecord(schema) ? [schema] : []).map((variant) => ({
+    properties: isRecord(variant.properties) ? variant.properties : {},
+    required: Array.isArray(variant.required) ? variant.required.filter((key): key is string => typeof key === "string") : [],
+  }))
+}
+
+/** The field every variant requires as one distinct literal, such as `action`; undefined when there is none. */
+function discriminator(fields: ReturnType<typeof variants>) {
+  if (fields.length < 2) return undefined
+  return Object.keys(fields[0].properties).find((key) => {
+    const values = fields.map((field) => field.required.includes(key) ? literal(field.properties[key]) : undefined)
+    return values.every((value) => value !== undefined) && new Set(values).size === values.length
+  })
+}
+
+/** A single-value schema (`const` or a one-item `enum`) as the model would write it, else undefined. */
+function literal(schema: unknown) {
+  if (!isRecord(schema)) return undefined
+  if ("const" in schema) return JSON.stringify(schema.const)
+  if (Array.isArray(schema.enum) && schema.enum.length === 1) return JSON.stringify(schema.enum[0])
+  return undefined
 }
 
 function zod(schema: unknown): z.ZodType {

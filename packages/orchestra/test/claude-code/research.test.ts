@@ -62,13 +62,15 @@ it.instance("a native research dispatch runs on Claude Code with only its Orches
     const fixture = yield* NativeResearchTask.setup(engine)
     yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
     yield* fixture.fs.writeFileString(path.join(fixture.instance.directory, "evidence.txt"), "Only version 1.\n")
-    const seen: { tools: string[]; schemas: Record<string, { properties?: Record<string, unknown>; required?: string[] }>; read: string[]; error?: boolean } =
-      { tools: [], schemas: {}, read: [] }
+    const seen: { tools: string[]; descriptions: Record<string, string | undefined>
+      schemas: Record<string, { properties?: Record<string, { description?: string }>; required?: string[] }>; read: string[]; error?: boolean } =
+      { tools: [], descriptions: {}, schemas: {}, read: [] }
     scripts.push(async function* (options) {
       const client = await connect(options)
       const listed = (await client.listTools()).tools
       seen.tools = listed.map((tool) => tool.name)
-      seen.schemas = Object.fromEntries(listed.map((tool) => [tool.name, tool.inputSchema]))
+      seen.schemas = Object.fromEntries(listed.map((tool) => [tool.name, tool.inputSchema as (typeof seen.schemas)[string]]))
+      seen.descriptions = Object.fromEntries(listed.map((tool) => [tool.name, tool.description]))
       yield init
       yield assistant("msg_read", [{ type: "tool_use", id: "toolu_read", name: "mcp__orchestra__read", input: { filePath: "evidence.txt" } }], "tool_use")
       const read = await client.callTool({ name: "read", arguments: { filePath: "evidence.txt" } })
@@ -97,6 +99,10 @@ it.instance("a native research dispatch runs on Claude Code with only its Orches
       expect(Object.keys(seen.schemas[name]?.properties ?? {}).length).toBeGreaterThan(0)
     expect(JSON.stringify(seen.schemas.research_record?.properties?.action)).toContain('"document"')
     expect(seen.schemas.research_record?.required).toContain("action")
+    // Fields only some actions require stay optional in the one-object shape, so the model is told which action needs them.
+    for (const name of ["contrary", "conditions"])
+      expect(seen.schemas.research_record?.properties?.[name]?.description).toContain('Required when action is "finding".')
+    expect(seen.descriptions.research_record).toContain('- "finding": proposition, nature, conditions, evidence, contrary')
 
     // The read ran through the registry: captured as retained source and charged to the dispatch.
     expect(seen.error).toBe(false)
