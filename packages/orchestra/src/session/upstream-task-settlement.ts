@@ -75,7 +75,9 @@ export function make(deps: { database: Database.Interface; events: EventV2.Inter
       observed.some((value) => isDeepStrictEqual(value, result))
     const expected = { ...proposal.result, taskId: logical.taskId,
       ...(lowered ? { terminal: result.terminal } : {}),
-      ...Object.fromEntries(["writeRoots", "shellWrites", "shellSandbox"].flatMap((key) =>
+      // Host facts the Task path adds to the proposal, accepted only as already observed on the original Task.
+      ...Object.fromEntries(["writeRoots", "shellWrites", "shellSandbox", "memberId", "executionSessionId", "authoritySessionId",
+        "mode", "verification", "hostChecks", "delta"].flatMap((key) =>
         result[key] === undefined ? [] : observed.some((value) => isDeepStrictEqual(value[key], result[key])) ? [[key, result[key]]] : [])),
     }
     if (!isDeepStrictEqual(expected, result)) return yield* refuse("UPSTREAM_SETTLEMENT_PROPOSAL_MISMATCH")
@@ -193,7 +195,9 @@ const readProposal = Effect.fn("UpstreamTaskSettlement.readProposal")(function* 
     const terminal = message.error || tools.includes("error") ? "failed" : !message.finish ||
       ["tool-calls", "unknown"].includes(message.finish) || tools.some((status) => status !== "completed") ? "interrupted" :
       !card || card.outcome === "blocked" || card.blockers.length ? "blocked" : "ended"
+    // Mirrors BackendResult.assemble, which the legacy view uses.
     return { text: texts.at(-1) ?? "", result: { schema: UpstreamResult.SCHEMA,
+      mode: "delegated", acceptance: { state: "pending" }, verification: { state: "not-host-verified" },
       card: { parsed: card !== undefined, messageID: message.id }, ...(card ? { outcome: card.outcome } : {}),
       changes: [], checks: [], blockers: card?.blockers ?? [], risks: card?.risks ?? [], nextActions: card?.nextActions ?? [],
       terminal: { reason: terminal }, memory: { reads: [], writes: [] }, artifacts: card?.artifacts ?? [],

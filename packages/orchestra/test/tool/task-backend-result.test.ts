@@ -351,7 +351,11 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
 // host gives a child that ran no command.
 const shell = await Effect.runPromise(ToolSafetySandbox.status())
 // Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
-const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
+const host = {
+  taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] },
+  memberId: "backend", executionSessionId: expect.stringMatching(/^ses_/), authoritySessionId: expect.stringMatching(/^ses_/),
+  mode: "delegated", acceptance: { state: "pending" }, verification: { state: "not-host-verified" },
+}
 // These child fixtures return/store text only: neither claimed file change nor claimed check has an actual tool call.
 const claimedEvidence = {
   changes: [{ index: 0, evidence: "unbound", callIDs: [] }],
@@ -364,10 +368,10 @@ const upstreamEmpty = {
   risks: [],
   nextActions: [],
   writeRoots: [],
-  ...host,
+  ...host, memberId: "archie",
   ...shell,
 }
-const empty = { ...upstreamEmpty, workerEvidence: { changes: [], checks: [] } }
+const empty = { ...upstreamEmpty, ...host, workerEvidence: { changes: [], checks: [] } }
 
 describe("tool.task backend-result", () => {
   it.instance("upstream dispatch returns proposal claims with host-bound authorship", () =>
@@ -382,7 +386,7 @@ describe("tool.task backend-result", () => {
         changes: [], checks: [],
         terminal: { reason: "ended" },
         author: { memberId: "archie", executionSessionID: result.exit.value.metadata.sessionId, messageID: result.childMessageID },
-        writeRoots: [], ...host, ...shell,
+        writeRoots: [], ...host, memberId: "archie", ...shell,
       })
     }),
   )
@@ -479,7 +483,7 @@ describe("tool.task backend-result", () => {
       expect(result.workResult).toEqual({
         schema: "upstream-work-result-v1", card: { parsed: true, messageID: result.childMessageID }, ...proposal,
         changes: [], checks: [], author: { memberId: "archie", executionSessionID: result.started.sessionId, messageID: result.childMessageID },
-        terminal: { reason: "ended" }, writeRoots: [], ...host, ...shell,
+        terminal: { reason: "ended" }, writeRoots: [], ...host, memberId: "archie", ...shell,
       })
     }),
   )

@@ -44,5 +44,6 @@ export const migrations = (
     import("./migration/20261006153404_scheduled_task"),
     import("./migration/20261008025417_prompt_context"),
     import("./migration/20261008133630_v1_prompt_admission"),
+    import("./migration/20261010135215_project_checkpoints"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

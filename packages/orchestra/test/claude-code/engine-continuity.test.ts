@@ -4,6 +4,8 @@ import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { Archive } from "@/continuity/archive"
+import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
+import { CheckpointContext } from "@/continuity/checkpoint-context"
 import { validChecklist } from "@/continuity/checklist-seal"
 import PROMPT from "@/continuity/prompt.txt"
 import { ClaudeCodeStore } from "@/claude-code/store"
@@ -36,6 +38,16 @@ ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and
     expect(producers[0].options?.model).toBe("claude-haiku-4-5-20251001")
     expect(producers[0].options?.systemPrompt).toEqual({ type: "custom", prompt: PROMPT })
     expect(JSON.stringify(ClaudeEngineFixture.historicalMessages(producers[0]))).toContain("prompt-0")
+    const checkpoints = yield* ProjectCheckpoint.Service.pipe(Effect.provide(ProjectCheckpoint.layer))
+    const saved = (yield* checkpoints.list({ projectID: chat.projectID, directory: chat.directory })).items
+    expect(saved).toHaveLength(1)
+    const checkpoint = yield* checkpoints.read({ projectID: chat.projectID, id: saved[0].id })
+    if (!checkpoint) throw new Error("Native producer spawned without a project checkpoint")
+    const captured = CheckpointContext.decode(checkpoint.payload)
+    if (!captured || typeof captured !== "object" || !("messages" in captured)) throw new Error("Missing captured messages")
+    expect(captured).toMatchObject({ system: [], agent: { prompt: PROMPT }, tools: {}, purpose: "context-maintenance" })
+    expect(producers[0].prompt).toBe("Historical messages (JSON, including original roles/content):\n" + JSON.stringify(captured.messages))
+    expect(saved[0]).toMatchObject({ sessionID: chat.id, projectID: chat.projectID, attempt: 0 })
     const storage = yield* Archive.Service
     const memory = (yield* storage.readMemory(chat.id))?.context?.artifact
     expect(memory?.version).toBe(5)
