@@ -41,7 +41,6 @@ import { asks } from "../permissions"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
-import { ClaudeHostProcess } from "./process-tool"
 import { ClaudeHostOptions } from "./options"
 
 export interface Interface {
@@ -358,9 +357,7 @@ const layer = Layer.effect(
       live.join = overrides.join?.(ctx)
       const adapters: ClaudeHostOptions.Adapters = {
         plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
-        mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge: bridge(live, ctx),
-          // prepare() returns the process tool from its info's init(), which carries no id: name it here.
-          tools: (prepared?.tools ?? []).map((def) => "id" in def ? def : { ...def, id: ClaudeHostProcess.ID }) })),
+        mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge: bridge(live, ctx), tools: prepared?.tools ?? [] })),
         hooks: overrides.hooks ?? (() => ({})),
         ...(overrides.join ? { join: overrides.join } : {}),
       }
