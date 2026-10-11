@@ -2,7 +2,7 @@
 
 ## Current state
 
-Read [acceptance.md](acceptance.md) first. It is the final acceptance record (2026-10-10, after the close-out epic): clause status, each PR's proof runs, and the declared limits. The close-out work lands through integration PR #289 (`charlie-closeout`); rows say "landing via #289" until the lead fills the merge SHA. Remaining after #289 merges: the epic CI result, measured whole-closure floors, a live-model observation of restore after compaction, and the install channels (deferred to release, owner: last). No new 21/21 model campaign is planned. Everything below this heading is historical context from earlier sessions. Where it disagrees with `acceptance.md`, `acceptance.md` wins. Earlier closure notes live in the Landing update of [session-resume-2026-10-08.md](session-resume-2026-10-08.md) and the earlier compaction checkpoint in [session-state-2026-10-08.md](session-state-2026-10-08.md).
+Read [acceptance.md](acceptance.md) first. It is the final acceptance record (2026-10-10, after the close-out epic): clause status, each PR's proof runs, and the declared limits. The close-out work landed through integration PR #289 (merge `524f8ec626`, green epic CI). Remaining: a live-model observation of restore after compaction and the install channels (deferred to release, owner: last). No new 21/21 model campaign is planned. Everything below this heading is historical context from earlier sessions. Where it disagrees with `acceptance.md`, `acceptance.md` wins. Earlier closure notes live in the Landing update of [session-resume-2026-10-08.md](session-resume-2026-10-08.md) and the earlier compaction checkpoint in [session-state-2026-10-08.md](session-state-2026-10-08.md).
 
 ## Historical: 2026-10-05 respawn snapshot
 
