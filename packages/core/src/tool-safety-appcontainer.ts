@@ -57,7 +57,10 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
   readonly roots: readonly string[]
   readonly scratch?: string
   readonly deny: readonly string[]
-  readonly protectedWrites: readonly string[]
+  /** Project-config paths kept read-only for the command; a missing one gets a locked placeholder directory. */
+  readonly guards: readonly string[]
+  /** Where the launcher journals guard protection so an aborted run can be recovered. */
+  readonly journal: string
   readonly ports: readonly number[]
   /** Allowed domains: an AppContainer without capabilities has no network to allow them on. */
   readonly domains: number
@@ -79,10 +82,11 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
   const granted = [...reads, ...writes, ...(input.scratch ? [input.scratch] : [])]
   if (!granted.some((root) => FSUtil.contains(root, input.cwd)))
     return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-cwd-outside-grants" })
-  // Outside every grant a path is already closed. Protected paths only lose writes, so read grants may contain them.
+  // A fully denied path cannot sit inside a grant: a deny ACE below an inherited allow does not hold on Windows, and
+  // unlike a guarded config path it must stay unreadable, so it can only be closed by being outside every grant.
   const overlaps = (entries: readonly string[], roots: readonly string[]) =>
     entries.some((entry) => roots.some((root) => FSUtil.contains(root, entry) || FSUtil.contains(entry, root)))
-  if (overlaps(input.deny, granted) || overlaps(input.protectedWrites, writes))
+  if (overlaps(input.deny, granted))
     return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-deny-inside-grant-unenforceable" })
   // A toolchain folder holding or inside a denied path is left unreadable rather than refusing the command. One inside
   // another listed folder is already covered by its walk.
@@ -90,6 +94,14 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     fs.realPath(entry).pipe(Effect.map((real) => [real]), Effect.orElseSucceed(() => []))))
     .flat().filter((entry) => !overlaps(input.deny, [entry]))
   prepare(input.supervisor, [...new Set(found)].filter((entry, _, all) => !all.some((other) => other !== entry && FSUtil.contains(other, entry))))
+  // A guard that equals or contains a write root cannot be both writable and read-only; the launcher would silently
+  // keep it writable (Darwin refuses it outright), so refuse here too.
+  if (input.guards.some((entry) => writes.some((root) => FSUtil.contains(entry, root))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-guard-over-write-root" })
+  // Config paths only need the read-only guard where the container could otherwise write them: strictly inside a write
+  // root. Elsewhere they are already read-only or closed.
+  const guards = [...new Set(input.guards)].filter((entry) =>
+    writes.some((root) => FSUtil.contains(root, entry) && root !== entry))
   const name = `orchestra-${createHash("sha256").update(JSON.stringify([reads, writes, input.ports])).digest("hex").slice(0, 32)}`
   const broker = input.ports.length
     ? yield* fs.makeTempDirectoryScoped({ directory: os.tmpdir(), prefix: "otcp-" }).pipe(
@@ -105,6 +117,8 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     "--appcontainer", name,
     ...reads.flatMap((entry) => ["--read", entry]),
     ...[...writes, ...(input.scratch ? [input.scratch] : [])].flatMap((entry) => ["--write", entry]),
+    ...guards.flatMap((entry) => ["--guard", entry]),
+    "--journal", input.journal,
     ...routes.flatMap((route) => ["--route", `${route.port}=${route.socket}`]),
     "--app", app,
     "--line", [quote(app), run.tail].filter(Boolean).join(" "),

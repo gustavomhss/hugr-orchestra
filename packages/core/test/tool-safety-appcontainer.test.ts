@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
-import { cp, readFile, writeFile, mkdir } from "node:fs/promises"
+import { cp, link, readFile, stat, writeFile, mkdir } from "node:fs/promises"
 import which from "which"
 import { Effect, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -106,15 +106,14 @@ windows("a pwsh command runs confined: write roots only, no reads outside grants
     // Relative paths and native children start in the command's directory, not at the drive root.
     expect(yield* f.fs.exists(path.join(f.workspace, "out", "relative.txt"))).toBe(true)
 
-    // A deny ACE for the profile's SID does not hold inside an inherited grant, so a protected path there is a policy
-    // the jail cannot express: refused, or unconfined and reported when the profile allows the fallback.
-    const protectedProfile = { ...profile, protectedWrites: [path.join(f.workspace, "out", "keep.txt")] }
-    expect((yield* Effect.flip(f.wrap(f.ps(script), protectedProfile))).reason).toBe("sandbox-appcontainer-deny-inside-grant-unenforceable")
-    const report: { fact?: ToolSafety.ShellFact } = {}
-    const fallback = yield* f.wrap(f.ps(script), { ...protectedProfile, sandbox: { enabled: true, unconfinedFallback: true } }).pipe(
-      Effect.provideService(ToolSafety.ShellReport, report))
-    expect(fallback._tag === "StandardCommand" && fallback.command).toBe(f.pwsh)
-    expect(report.fact).toEqual({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: "sandbox-appcontainer-deny-inside-grant-unenforceable" } })
+    // Project config inside a write root is guarded read-only for the command, not refused: the launcher gets a
+    // --guard for that path and a --journal so the protection can be recovered after an abort. (Enforcement, the
+    // attack matrix and restoration are exercised in "guards project config" below.)
+    const guardedProfile = { ...profile, protectedWrites: [path.join(f.workspace, "out", "keep.txt")] }
+    const guardedCommand = yield* f.wrap(f.ps(script), guardedProfile)
+    if (guardedCommand._tag !== "StandardCommand") throw new Error("expected one command")
+    expect(guardedCommand.args[guardedCommand.args.indexOf("--guard") + 1]).toBe(path.join(f.workspace, "out", "keep.txt"))
+    expect(guardedCommand.args).toContain("--journal")
 
     // Idempotent: the same grant set reuses its profile and adds no second ACE. Reversible: --revoke removes them.
     const aces = Effect.promise(async () => {
@@ -148,6 +147,106 @@ windows("a command whose environment lacks LOCALAPPDATA still launches confined"
     const result = yield* f.processes.run(command, { timeout: "60 seconds" })
     expect(result.exitCode, result.stderr.toString()).toBe(0)
     expect(result.stdout.toString().trim()).toBe("confined")
+  }), 120_000,
+)
+
+// Attempts every way the container could change a guarded path, and the normal writes that must still work. Each line
+// records its own outcome so the assertions read against a single object; `& cmd` proves a cmd.exe child in the root.
+const attacks = (w: string) => `
+$r = [ordered]@{}
+function t($k, $b) { try { & $b; $r[$k] = 'ok' } catch { $r[$k] = 'denied' } }
+t 'fileWrite'     { Set-Content -LiteralPath '${path.join(w, "orchestra.json")}' -Value hacked -ErrorAction Stop }
+t 'fileAppend'    { Add-Content -LiteralPath '${path.join(w, "orchestra.json")}' -Value more -ErrorAction Stop }
+t 'fileAds'       { Set-Content -LiteralPath '${path.join(w, "orchestra.json")}' -Stream evil -Value x -ErrorAction Stop }
+t 'fileAcl'       { \$a = Get-Acl -LiteralPath '${path.join(w, "orchestra.json")}'; \$a.SetAccessRuleProtection(\$false,\$true); Set-Acl -LiteralPath '${path.join(w, "orchestra.json")}' -AclObject \$a -ErrorAction Stop }
+t 'fileDelete'    { Remove-Item -LiteralPath '${path.join(w, "orchestra.json")}' -Force -ErrorAction Stop }
+t 'fileRename'    { Rename-Item -LiteralPath '${path.join(w, "orchestra.json")}' -NewName moved.json -ErrorAction Stop }
+t 'fileRenameOver'{ [IO.File]::Move('${path.join(w, "evil.txt")}', '${path.join(w, "orchestra.json")}', \$true) }
+t 'fileHardlink'  { New-Item -ItemType HardLink -Path '${path.join(w, "hl.json")}' -Value '${path.join(w, "orchestra.json")}' -ErrorAction Stop | Out-Null }
+t 'dirNewChild'   { Set-Content -LiteralPath '${path.join(w, ".orchestra", "new.json")}' -Value x -ErrorAction Stop }
+t 'dirWriteChild' { Set-Content -LiteralPath '${path.join(w, ".orchestra", "orchestra.json")}' -Value hacked -ErrorAction Stop }
+t 'dirDelete'     { Remove-Item -LiteralPath '${path.join(w, ".orchestra")}' -Recurse -Force -ErrorAction Stop }
+t 'dirRename'     { Rename-Item -LiteralPath '${path.join(w, ".orchestra")}' -NewName .orch-old -ErrorAction Stop }
+t 'guardJunction' { New-Item -ItemType Junction -Path '${path.join(w, "tui.jsonc")}' -Value '${path.join(w, "sub")}' -ErrorAction Stop | Out-Null }
+t 'phCreateName'  { Set-Content -LiteralPath '${path.join(w, "tui.json")}' -Value x -ErrorAction Stop }
+t 'phDelete'      { Remove-Item -LiteralPath '${path.join(w, "tui.json")}' -Recurse -Force -ErrorAction Stop }
+t 'phRename'      { Rename-Item -LiteralPath '${path.join(w, "tui.json")}' -NewName tui-old -ErrorAction Stop }
+t 'phWriteChild'  { Set-Content -LiteralPath '${path.join(w, "tui.json", "x.txt")}' -Value x -ErrorAction Stop }
+t 'okRootFile'    { cmd /c 'echo hi> "${path.join(w, "out.txt")}"' ; if (\$LASTEXITCODE) { throw } }
+t 'okSubdir'      { New-Item -ItemType Directory -Path '${path.join(w, "sub2")}' -ErrorAction Stop | Out-Null }
+t 'okEditData'    { Set-Content -LiteralPath '${path.join(w, "data.txt")}' -Value edited -ErrorAction Stop }
+$r | ConvertTo-Json -Compress
+`
+
+windows("guards project config: existing files and placeholders stay read-only, then restore; normal writes work", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    yield* Effect.promise(async () => {
+      await writeFile(path.join(f.workspace, "orchestra.json"), "{}")
+      await writeFile(path.join(f.workspace, "evil.txt"), "evil")
+      await writeFile(path.join(f.workspace, "data.txt"), "orig")
+      await mkdir(path.join(f.workspace, ".orchestra"))
+      await writeFile(path.join(f.workspace, ".orchestra", "orchestra.json"), "{}")
+      await mkdir(path.join(f.workspace, "sub"))
+    })
+    // The whole workspace is the write root, so the config names in it are auto-guarded by SandboxProjectConfig.
+    const profile = { requireSandbox: true, writeRoots: [f.workspace] } satisfies ToolSafety.Profile
+    const command = yield* f.wrap(f.ps(attacks(f.workspace)), profile)
+    if (command._tag !== "StandardCommand") throw new Error("expected one command")
+    // tui.json does not exist, so it is guarded by a placeholder directory.
+    expect(command.args.slice(command.args.indexOf("--guard"))).toContain(path.join(f.workspace, "tui.json"))
+
+    const result = output(yield* f.processes.run(command, { timeout: "90 seconds" }))
+    expect(result).toEqual({
+      fileWrite: "denied", fileAppend: "denied", fileAds: "denied", fileAcl: "denied", fileDelete: "denied",
+      fileRename: "denied", fileRenameOver: "denied", fileHardlink: "denied",
+      dirNewChild: "denied", dirWriteChild: "denied", dirDelete: "denied", dirRename: "denied", guardJunction: "denied",
+      phCreateName: "denied", phDelete: "denied", phRename: "denied", phWriteChild: "denied",
+      okRootFile: "ok", okSubdir: "ok", okEditData: "ok",
+    })
+    // Nothing the attacks tried actually changed.
+    expect(yield* f.fs.readFileString(path.join(f.workspace, "orchestra.json"))).toBe("{}")
+    expect(yield* f.fs.readFileString(path.join(f.workspace, ".orchestra", "orchestra.json"))).toBe("{}")
+    expect(yield* f.fs.exists(path.join(f.workspace, "moved.json"))).toBe(false)
+    // Normal writes landed.
+    expect(yield* f.fs.exists(path.join(f.workspace, "out.txt"))).toBe(true)
+    expect(yield* f.fs.exists(path.join(f.workspace, "sub2"))).toBe(true)
+    expect((yield* f.fs.readFileString(path.join(f.workspace, "data.txt"))).trim()).toBe("edited")
+
+    // Restored after the command: placeholders gone, and the host can write the config again (inheritance back, no
+    // leftover read-only ACE).
+    for (const name of ["tui.json", "orchestra.jsonc", "tui.jsonc"])
+      expect(yield* f.fs.exists(path.join(f.workspace, name))).toBe(false)
+    yield* Effect.promise(() => Bun.spawn([f.pwsh, "-NoProfile", "-Command",
+      `Set-Content -NoNewline -LiteralPath '${path.join(f.workspace, "orchestra.json")}' -Value host`]).exited)
+    expect(yield* f.fs.readFileString(path.join(f.workspace, "orchestra.json"))).toBe("host")
+  }), 180_000,
+)
+
+windows("concurrent commands share one protection and restore only when the last holder exits", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    yield* Effect.promise(() => writeFile(path.join(f.workspace, "orchestra.json"), "{}"))
+    const profile = { requireSandbox: true, writeRoots: [f.workspace] } satisfies ToolSafety.Profile
+    const probe = `try { Set-Content -LiteralPath '${path.join(f.workspace, "orchestra.json")}' -Value x -ErrorAction Stop; 'ok' } catch { 'denied' }`
+    // A holds the guard while B runs and finishes; B's exit must not un-protect the config while A is still live.
+    const long = yield* f.wrap(f.ps(`$res = ${probe}; Set-Content -LiteralPath '${path.join(f.workspace, "a.txt")}' -Value $res; Start-Sleep 8`), profile)
+    const handle = yield* f.processes.spawn(long)
+    yield* Effect.promise(async () => {
+      for (const _ of Array.from({ length: 80 })) {
+        if ((await readFile(path.join(f.workspace, "a.txt"), "utf8").catch(() => "")).trim()) return
+        await Bun.sleep(100)
+      }
+    })
+    const b = yield* f.processes.run(yield* f.wrap(f.ps(probe), profile), { timeout: "60 seconds" })
+    expect(b.exitCode, b.stderr.toString()).toBe(0)
+    expect(b.stdout.toString().trim()).toBe("denied")
+    expect((yield* Effect.promise(() => readFile(path.join(f.workspace, "a.txt"), "utf8"))).trim()).toBe("denied")
+    yield* handle.exitCode
+    // Both gone: the last release restored the config, so the host can write it again.
+    yield* Effect.promise(() => Bun.spawn([f.pwsh, "-NoProfile", "-Command",
+      `Set-Content -NoNewline -LiteralPath '${path.join(f.workspace, "orchestra.json")}' -Value host`]).exited)
+    expect(yield* f.fs.readFileString(path.join(f.workspace, "orchestra.json"))).toBe("host")
   }), 120_000,
 )
 
@@ -218,4 +317,124 @@ windows("an exact endpoint grant reaches only its upstream, through the broker, 
     expect(raw.stdout.toString().trim()).toMatch(/^(?:timeout|refused)$/)
     expect([f.counts[granted], f.counts[other] ?? 0]).toEqual([1, 0])
   }), 600_000,
+)
+
+windows("refuses a guard that equals or contains a write root", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // A guard equal to the write root cannot be both writable and read-only; it must be refused, not silently kept
+    // writable by the filter.
+    const profile = { requireSandbox: true, writeRoots: [f.workspace], protectedWrites: [f.workspace] } satisfies ToolSafety.Profile
+    expect((yield* Effect.flip(f.wrap(f.ps("'x'"), profile))).reason).toBe("sandbox-appcontainer-guard-over-write-root")
+  }), 60_000,
+)
+
+windows("journals guard protection under the per-user location so instances share it", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    yield* Effect.promise(() => writeFile(path.join(f.workspace, "orchestra.json"), "{}"))
+    const command = yield* f.wrap(f.ps("'x'"), { requireSandbox: true, writeRoots: [f.workspace] })
+    if (command._tag !== "StandardCommand") throw new Error("expected one command")
+    expect(command.args[command.args.indexOf("--journal") + 1]).toBe(
+      path.join(process.env.LOCALAPPDATA ?? "", "orchestra", "appcontainer-guard"))
+  }), 60_000,
+)
+
+windows("pins a guarded path's parent directories so the container cannot rename or delete them", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const nested = path.join(f.workspace, "nested")
+    yield* Effect.promise(async () => {
+      await mkdir(nested)
+      await writeFile(path.join(nested, "orchestra.json"), "{}")
+    })
+    const script = `
+$r = [ordered]@{}
+function t($k, $b) { try { & $b; $r[$k] = 'ok' } catch { $r[$k] = 'denied' } }
+t 'renameParent' { Rename-Item -LiteralPath '${nested}' -NewName gone -ErrorAction Stop }
+t 'deleteParent' { Remove-Item -LiteralPath '${nested}' -Recurse -Force -ErrorAction Stop }
+t 'okSibling'    { New-Item -ItemType Directory -Path '${path.join(f.workspace, "sib")}' -ErrorAction Stop | Out-Null }
+$r | ConvertTo-Json -Compress
+`
+    // Native placement is the nested dir, so SandboxProjectConfig guards nested\orchestra.json; the command runs from
+    // the write root, so the shell itself does not hold nested open.
+    const command = yield* ToolSafetySandbox.wrap(f.ps(script)).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [f.workspace] }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: nested }))
+    if (command._tag !== "StandardCommand") throw new Error("expected one command")
+    expect(output(yield* f.processes.run(command, { timeout: "60 seconds" }))).toEqual({
+      renameParent: "denied", deleteParent: "denied", okSibling: "ok",
+    })
+    expect(yield* f.fs.exists(nested)).toBe(true)
+  }), 120_000,
+)
+
+windows("never deletes host content left inside a placeholder", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const placeholder = path.join(f.workspace, "tui.json") // a missing guarded name becomes a placeholder directory
+    const handle = yield* f.processes.spawn(yield* f.wrap(f.ps("Start-Sleep 6"), { requireSandbox: true, writeRoots: [f.workspace] }))
+    yield* Effect.promise(async () => {
+      for (const _ of Array.from({ length: 80 }))
+        if (await stat(placeholder).then((s) => s.isDirectory()).catch(() => false)) break
+        else await Bun.sleep(100)
+    })
+    // The host (not the container) drops a file into the placeholder; release must not delete it.
+    yield* Effect.promise(() => writeFile(path.join(placeholder, "host.txt"), "keep"))
+    yield* handle.exitCode
+    expect(yield* f.fs.exists(path.join(placeholder, "host.txt"))).toBe(true)
+    expect(yield* f.fs.readFileString(path.join(placeholder, "host.txt"))).toBe("keep")
+  }), 120_000,
+)
+
+windows("a second profile joining an existing guard is stripped to read-only too", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const config = path.join(f.workspace, "orchestra.json")
+    const extra = path.join(f.workspace, "extra")
+    const journal = yield* f.fs.makeTempDirectoryScoped({ prefix: "acj-" }).pipe(Effect.flatMap(f.fs.realPath))
+    yield* Effect.promise(async () => {
+      await writeFile(config, "{}")
+      await mkdir(extra)
+    })
+    const supervisor = yield* ToolSafetyAppContainer.Launcher
+    const build = (roots: string[], guards: string[], script: string) => ToolSafetyAppContainer.command({
+      command: f.ps(script), supervisor: supervisor!, cwd: f.workspace, env: process.env, directory: f.workspace,
+      roots, scratch: undefined, deny: [], guards, journal, ports: [], domains: 0,
+    })
+    // profileB (two write roots) gets a different SID than profileA and is granted write on the workspace, inherited
+    // into orchestra.json.
+    yield* f.processes.run(yield* build([f.workspace, extra], [], "'grant'"), { timeout: "60 seconds" })
+    // profileA protects orchestra.json: its detach copies profileB's inherited write ACE in place.
+    const held = yield* f.processes.spawn(yield* build([f.workspace], [config], "Start-Sleep 6"))
+    yield* Effect.promise(() => Bun.sleep(1500))
+    // profileB joins and tries to write; it must be denied, not keep the copied-in write.
+    const b = yield* f.processes.run(yield* build([f.workspace, extra], [config],
+      `try { Set-Content -LiteralPath '${config}' -Value hacked -ErrorAction Stop; 'ok' } catch { 'denied' }`), { timeout: "60 seconds" })
+    expect(b.stdout.toString().trim()).toBe("denied")
+    expect(yield* f.fs.readFileString(config)).toBe("{}")
+    yield* held.exitCode
+  }), 180_000,
+)
+
+windows("dedupes guards that resolve to the same file, so restore never leaves it read-only", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const real = path.join(f.workspace, "orchestra.json")
+    const alias = path.join(f.workspace, "orchestra.jsonc") // hardlink: a second guarded config name, same inode
+    yield* Effect.promise(async () => {
+      await writeFile(real, "{}")
+      await link(real, alias)
+    })
+    yield* f.processes.run(yield* f.wrap(f.ps("'x'"), { requireSandbox: true, writeRoots: [f.workspace] }), { timeout: "60 seconds" })
+    // After restore the inode re-inherits the write-root grant (an inherited ACE, expected); what must be gone is any
+    // EXPLICIT container ACE the guard added. A second guard for the same inode, if not deduped, would restore a
+    // captured-while-protected state and leave one behind.
+    const explicitContainerAces = yield* Effect.promise(async () => {
+      const child = Bun.spawn([f.pwsh, "-NoProfile", "-Command",
+        `@((Get-Acl -LiteralPath '${real}').Access | ? { -not $_.IsInherited -and $_.IdentityReference.Value -like 'S-1-15-2-*' }).Count`])
+      return Number((await new Response(child.stdout).text()).trim())
+    })
+    expect(explicitContainerAces).toBe(0)
+  }), 120_000,
 )

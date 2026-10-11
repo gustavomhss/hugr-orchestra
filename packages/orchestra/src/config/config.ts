@@ -243,6 +243,10 @@ const layer = Layer.effect(
 
     const loadFile = Effect.fnUntraced(function* (filepath: string, env?: Record<string, string>) {
       yield* Effect.logInfo("loading", { path: filepath })
+      // The sandbox guards a missing config name with a locked placeholder directory; while one is present (during a
+      // confined command, or after a crash until it is recovered) a config file name resolves to a directory, which is
+      // ignored like an absent file rather than read as text.
+      if (yield* fs.isDir(filepath)) return {} as Info
       const text = yield* readConfigFile(filepath)
       if (!text) return {} as Info
       return yield* loadConfig(text, { path: filepath }, env)
