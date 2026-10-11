@@ -43,8 +43,10 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
     await setup([path.join(venv, "python"), "-m", "pip", "install", "pytest==9.0.3", "pluggy==1.6.0"], directory)
     await Bun.write(path.join(directory, "package.json"), JSON.stringify({ private: true, type: "module", devDependencies: { vitest: "3.2.4" } }))
     await setup(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"], directory)
-    await Bun.write(path.join(directory, "vitest.config.mjs"), 'export default { test: { pool: "forks", minWorkers: 1, maxWorkers: 1 } }\n')
-    await Bun.write(path.join(directory, "native.test.js"), `import { test, expect } from "vitest";\n${Array.from({ length: 20 }, (_, i) =>
+    // Globals, not `import ... from "vitest"`: a Windows full suite resolved that import to the repository's vitest
+    // while the fixture's own runner ran the file, and two vitest instances fail with "failed to find the current suite".
+    await Bun.write(path.join(directory, "vitest.config.mjs"), 'export default { test: { globals: true, pool: "forks", minWorkers: 1, maxWorkers: 1 } }\n')
+    await Bun.write(path.join(directory, "native.test.js"), `${Array.from({ length: 20 }, (_, i) =>
       `test("native ${i}", () => expect(1).toBe(1));`).join("\n")}\n`)
   })
   const sessions = yield* Session.Service
