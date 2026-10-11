@@ -8,8 +8,9 @@ import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
 import { SessionMessage } from "@orchestra/schema/session-message"
+import { WorkspaceID } from "@orchestra/schema/workspace-id"
 import { sql } from "drizzle-orm"
-import { Effect, Exit } from "effect"
+import { Cause, Effect, Exit } from "effect"
 import { CapabilityArtifacts } from "../src/capability/artifact/index"
 import { CapabilityArtifactManagement } from "../src/capability/artifact/management"
 import { CapabilityOperator } from "../src/capability/operator/index"
@@ -31,20 +32,20 @@ const home: CapabilityOperatorContract.Placement = { projectID: Project.ID.globa
 const away: CapabilityOperatorContract.Placement = { projectID: Project.ID.global, location: { directory: AbsolutePath.make("/artifact-away") } }
 const secret = "artifact-host-private"
 
-function fixture(scope: CapabilityOperatorContract.GrantScope = { placements: "instance", actions: ["*"] }) {
+function fixture(scope: CapabilityOperatorContract.GrantScope = { placements: "instance", actions: ["*"] }, now?: () => number) {
   return Effect.gen(function* () {
     const database = yield* Database.Service
     const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
     const options = { root: join(tmp.path, "blobs") }
     const storage = yield* CapabilityArtifacts.storage(options)
-    const operators = yield* CapabilityOperator.make({ principal: `artifact-${randomUUID()}`, scope })
+    const operators = yield* CapabilityOperator.make({ principal: `artifact-${randomUUID()}`, scope, ...(now ? { now } : {}) })
     const management = yield* CapabilityArtifactManagement.make({ operators, artifacts: options })
     yield* database.db.insert(ProjectTable).values({ id: home.projectID, worktree: home.location.directory, sandboxes: [] })
       .onConflictDoNothing().run()
     const session = (placement = home) => Effect.gen(function* () {
       const id = SessionID.create()
       yield* database.db.insert(SessionTable).values({ id, project_id: placement.projectID, directory: placement.location.directory,
-        slug: "artifact", title: "artifact", version: "test", agent: "actor" }).run()
+        workspace_id: placement.location.workspaceID, slug: "artifact", title: "artifact", version: "test", agent: "actor" }).run()
       return id
     })
     const sessionID = yield* session()
@@ -77,9 +78,68 @@ function failures<A, E>(exit: Exit.Exit<A, E>) {
     return { code: reason.error.code, message: reason.error.message }
   })
 }
+function invalid<A, E>(exit: Exit.Exit<A, E>) {
+  expect(failures(exit).map((failure) => failure.code)).toEqual(["invalid_input"])
+}
+// A defect must survive unchanged: only pure authority rejections collapse to artifact_unavailable.
+function survives<A, E>(exit: Exit.Exit<A, E>) {
+  if (!Exit.isFailure(exit)) throw new Error("Expected failed Exit")
+  expect(exit.cause.reasons.some((reason) => reason._tag === "Die")).toBe(true)
+  expect(exit.cause.reasons.some((reason) => reason._tag === "Fail" && reason.error instanceof CapabilityArtifacts.Failure)).toBe(false)
+  return exit.cause
+}
 const unavailable = [{ code: "artifact_unavailable" as const, message: "Capability artifact is unavailable" }]
 
 describe("CapabilityArtifactManagement reads", () => {
+  it.live("a Session and artifact differing only by workspaceID are invisible to list and unavailable to get", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const workspace = { ...home, location: { ...home.location, workspaceID: WorkspaceID.create() } }
+    const other = { ...home, location: { ...home.location, workspaceID: WorkspaceID.create() } }
+    const scoped = yield* f.session(workspace)
+    const plain = yield* f.publish("plain", { sessions: [f.sessionID, scoped] })
+    const owned = yield* f.publish("owned", { owner: workspace, sessions: [f.sessionID, scoped] })
+    const sibling = yield* f.publish("sibling", { owner: other, sessions: [f.sessionID, scoped] })
+    expect((yield* f.run(f.management.list(f.sessionID, {}))).items.map((item) => item.artifact)).toEqual([plain.ref])
+    expect((yield* f.run(f.management.list(scoped, {}))).items.map((item) => item.artifact)).toEqual([owned.ref])
+    expect((yield* f.run(f.management.get(scoped, owned.ref))).artifact).toEqual(owned.ref)
+    yield* Effect.forEach([[f.sessionID, owned], [f.sessionID, sibling], [scoped, plain], [scoped, sibling]] as const,
+      ([session, item]) => f.run(f.management.get(session, item.ref)).pipe(Effect.exit,
+        Effect.map((exit) => expect(failures(exit)).toEqual(unavailable))))
+  }))
+
+  it.live("malformed cursors and out-of-range limits are invalid_input", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const ref = (yield* f.publish("a")).ref
+    yield* Effect.forEach([{ after: "nope" }, { after: `${ref.id}:01` }, { after: `${ref.id}:-1` }, { after: `${ref.id}` },
+      { limit: 33 }, { limit: 0 }, { limit: 1.5 }],
+    (query) => f.run(f.management.list(f.sessionID, query)).pipe(Effect.exit, Effect.map(invalid)))
+  }))
+
+  it.live("operator defects, alone or mixed with a denial, are not collapsed into artifact_unavailable", () => Effect.gen(function* () {
+    const clock = { broken: false }
+    // The real operator calls its injected clock inside require; a throwing clock is a genuine defect on that path.
+    const f = yield* fixture(undefined, () => {
+      if (clock.broken) throw new Error("clock defect")
+      return Date.now()
+    })
+    const ref = (yield* f.publish("a")).ref
+    const broken = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+      f.run(Effect.sync(() => { clock.broken = true }).pipe(Effect.andThen(effect), Effect.ensuring(Effect.sync(() => { clock.broken = false }))))
+    survives(yield* broken(f.management.get(f.sessionID, ref)).pipe(Effect.exit))
+    survives(yield* broken(f.management.list(f.sessionID, {})).pipe(Effect.exit))
+    survives(yield* broken(f.management.content(f.sessionID, ref)).pipe(Effect.exit))
+    // No real operator path yields Fail and Die in one Cause, so this wrapper combines a defect with a real denial.
+    const denied = yield* f.operators.issue({ origin: "sdk", scope: { placements: [away], actions: ["*"] } })
+    const mixed = yield* CapabilityArtifactManagement.make({ operators: { ...f.operators,
+      require: (target) => f.operators.require(target).pipe(
+        Effect.catchCause((cause) => Effect.failCause(Cause.combine(cause, Cause.die("operator defect"))))) },
+    artifacts: { root: f.root } })
+    const cause = survives(yield* f.run(mixed.get(f.sessionID, ref), denied.authority).pipe(Effect.exit))
+    expect(cause.reasons.some((reason) => reason._tag === "Fail" && reason.error instanceof Capability.Failure &&
+      reason.error.code === "target_denied")).toBe(true)
+    survives(yield* f.run(mixed.list(f.sessionID, {}), denied.authority).pipe(Effect.exit))
+  }))
+
   it.live("pages by (id, revision) with limit+1 and a cursor naming only the last returned item", () => Effect.gen(function* () {
     const f = yield* fixture()
     const first = yield* f.publish("a")
