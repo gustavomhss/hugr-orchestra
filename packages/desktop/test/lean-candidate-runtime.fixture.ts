@@ -91,14 +91,18 @@ export async function launchCandidate(executable: string, root: string, recorder
   const close = async () => {
     if (state.closed) return
     try {
-      // Quit through the app's own path (app.quit, as Cmd+Q) and wait for the main process to exit, not for its
-      // stdio pipes to close: native runs never saw Playwright's close() return, although main logged its exit.
+      // Quit through the app's own path (app.quit, as Cmd+Q). Native runs showed two chained holds: Node keeps an
+      // exiting main alive while Playwright's inspector stays attached ("Waiting for the debugger to disconnect"),
+      // and Playwright's close() then waits for stdio pipes a descendant may hold. close() releases the inspector;
+      // the gate is the main process exit, then pipe holders are named and ended so close() can finish.
       const child = application.process()
       const exited = child.exitCode !== null || child.signalCode !== null
         ? Promise.resolve() : new Promise<void>((resolve) => child.once("exit", () => resolve()))
       const tree = child.pid ? descendants(child.pid) : []
       const started = performance.now()
       await bounded("owned Electron quit request", application.evaluate(({ app }) => { setImmediate(() => app.quit()) }), 10000)
+      const closing = application.close()
+      closing.catch(() => undefined)
       await bounded("owned Electron quit", exited, 60000)
       console.log(`owned Electron quit ms=${Math.round(performance.now() - started)} descendants=${tree.length}`)
       // Descendants still alive after main exited would hold inherited pipes open; name them, then end them.
@@ -109,6 +113,7 @@ export async function launchCandidate(executable: string, root: string, recorder
       }
       child.stdout?.destroy()
       child.stderr?.destroy()
+      await bounded("owned Electron connection close", closing, 15000)
       if (state.backend) await portClosed(state.backend.url)
       state.closed = true
     } catch (error) {
