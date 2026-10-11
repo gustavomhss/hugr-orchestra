@@ -25,6 +25,9 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
       CANDIDATE_SHA: ${{ github.sha }}
       WORKFLOW_SHA: ${{ github.workflow_sha }}
+      # These bun test processes never spawn through omni, so dev's omni positive control would fail them. The
+      # candidate build and the launched app use allowlisted envs without it: the packaged app runs omni by default.
+      ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
     steps:
       - name: Checkout exact candidate source
         id: checkout

@@ -73,6 +73,7 @@ function check(input: unknown) {
     CSC_IDENTITY_AUTO_DISCOVERY: "false",
     CANDIDATE_SHA: "${{ github.sha }}",
     WORKFLOW_SHA: "${{ github.workflow_sha }}",
+    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0",
   })
   expect(Array.isArray(job.steps)).toBe(true)
   const steps = (job.steps as unknown[]).map(object)

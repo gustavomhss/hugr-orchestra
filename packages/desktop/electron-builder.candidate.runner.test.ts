@@ -188,3 +188,16 @@ test("omni source requires the action's paired absolute release binaries and nev
     { ...exact, OMNI_ENABLED: "false" }, { ...exact, OMNI_ARTIFACTS: "/tmp/foreign-omni" },
   ]) expect(() => omniSource(env)).toThrow("Candidate omni binaries rejected:")
 })
+
+test("the workflow's omni rollback for bun test never reaches candidate build children", () => {
+  const previous = process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+  process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
+  try {
+    const env = candidateEnv("1.0.0")
+    expect(env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBeUndefined()
+    expect(electronViteEnv(env).ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBeUndefined()
+  } finally {
+    if (previous === undefined) delete process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+    else process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = previous
+  }
+})
