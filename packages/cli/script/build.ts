@@ -37,6 +37,7 @@ const { Script } = await import("@orchestra/script")
 const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
 const { modelsData } = await import("./generate")
 const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
+const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
 const plugin = createSolidTransformPlugin()
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
@@ -48,7 +49,14 @@ const builds = targets.map((item) => {
 
 if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
-for (const { item, name, omni, omniFiles } of builds) {
+// After the install, which owns node_modules, and before any build: a target whose bindings this host cannot provide
+// stops here with the named error.
+const prepared = builds.map((build) => ({
+  ...build,
+  treeSitter: resolveTreeSitter({ root: path.resolve(dir, "../.."), ...build.item }),
+}))
+
+for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
   const result = await Bun.build({
@@ -90,6 +98,7 @@ for (const { item, name, omni, omniFiles } of builds) {
   }
 
   copyOmni(omniFiles, `dist/${name}/bin`)
+  copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
 
   await Bun.write(
     `./dist/${name}/package.json`,

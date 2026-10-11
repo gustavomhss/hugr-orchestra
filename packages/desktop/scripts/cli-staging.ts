@@ -2,7 +2,7 @@ import { createHash } from "node:crypto"
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, isAbsolute, join, relative, sep } from "node:path"
 import { realpath } from "node:fs/promises"
-import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { copyCliTreeSitter, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
 export function desktopCliTargets(platform: string, arch: string) {
@@ -101,6 +101,13 @@ export async function stageCliArtifacts(input: {
       if (incoming && createHash("sha256").update(await readFile(path)).digest("hex") !== incoming.sha256)
         throw new Error(`Owned CLI prebuilt digest mismatch: ${target}`)
       if (!target.startsWith("windows-")) await chmod(path, 0o755)
+      // Every CLI parses with the tree-sitter its build ships in bin/tree-sitter; a producer directory is itself a
+      // staged bundle, so there it sits in tree-sitter-<target>/.
+      copyCliTreeSitter(
+        input.prebuilt === undefined ? join(source, "bin", "tree-sitter") : join(input.prebuilt, `tree-sitter-${target}`),
+        join(staging, `tree-sitter-${target}`),
+        target,
+      )
       // A producer directory is itself a staged bundle, so its pair sits in omni-<target>/ rather than bin/.
       if (windows && target.startsWith("linux-")) {
         const pair = await requireOmniPair(
