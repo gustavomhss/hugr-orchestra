@@ -316,6 +316,9 @@ const layer = Layer.effect(
         const owner = claimed.task.policy === "capability" ? claimed.task.owner : undefined
         if (claimed.task.policy === "capability" && !(owner && (yield* present(owner))))
           return { type: "revoked" } as const
+        // Checked before the Session too, so a void claim leaves no empty Session behind.
+        const checked = claimed.task.policy === "capability" && !admitted
+        if (checked && !(yield* holds(claimed))) return { type: "void" } as const
         const session = yield* sessions.create({
           id: claimed.sessionID,
           agent: owner?.agentID ?? AgentV2.defaultID,
@@ -324,8 +327,7 @@ const layer = Layer.effect(
         // An edit, pause or removal since the claim voids it before admission. What remains is the window from this
         // read to the durable admission inside `sessions.prompt` (its prompt hooks included); a claim revoked in it
         // still settles with an honest `started` receipt.
-        if (claimed.task.policy === "capability" && !admitted && !(yield* holds(claimed)))
-          return { type: "void" } as const
+        if (checked && !(yield* holds(claimed))) return { type: "void" } as const
         yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
         return { type: "started", sessionID: session.id } as const
       }).pipe(
@@ -388,7 +390,7 @@ const layer = Layer.effect(
             .where(eq(ScheduledTaskRunTable.id, claimed.id))
             .get()
           // A claim an edit revoked while its prompt was being admitted keeps an honest receipt; it never counts
-          // toward repeat or moves `next`.
+          // toward repeat or moves `next`, so this race can admit one run past the repeat limit.
           if (run?.state === "revoked" && outcome.type === "started")
             return yield* db
               .update(ScheduledTaskRunTable)
@@ -403,7 +405,7 @@ const layer = Layer.effect(
             .update(ScheduledTaskRunTable)
             .set({
               state: outcome.type,
-              error: outcome.type === "failed" ? outcome.error : null,
+              error: outcome.type === "failed" ? outcome.error : outcome.type === "revoked" ? "owner-missing" : null,
               owner: null,
               time_settled: now,
             })
@@ -547,7 +549,7 @@ const layer = Layer.effect(
               if (run.message_id && (yield* SessionInput.find(db, run.message_id))) return
               yield* db
                 .update(ScheduledTaskRunTable)
-                .set({ state: "revoked", owner: null, time_settled: now })
+                .set({ state: "revoked", error: "revoked by an edit", owner: null, time_settled: now })
                 .where(eq(ScheduledTaskRunTable.id, run.id))
                 .run()
             }),
@@ -685,7 +687,11 @@ const layer = Layer.effect(
         )
         if (begun.type === "missing") return yield* new NotFoundError({ id })
         if (begun.type === "prior") {
-          if (begun.run.state === "revoked") return yield* new RunError({ reason: begun.run.error ?? "revoked" })
+          // A revoked manual claim stays revoked: the same call never runs, a new call (new key) may.
+          if (begun.run.state === "revoked")
+            return yield* new RunError({
+              reason: `${begun.run.error ?? "revoked"}; retrying the same call will not run`,
+            })
           // A claim still starting elsewhere (or stopped before its lease ended) is reused only once admitted.
           const admitted = begun.run.message_id && (yield* SessionInput.find(db, begun.run.message_id))
           if (begun.run.state === "running" && !admitted)

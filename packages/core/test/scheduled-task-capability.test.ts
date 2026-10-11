@@ -390,6 +390,89 @@ describe("ScheduledTask capability manual runs", () => {
   )
 })
 
+describe("ScheduledTask capability voided and revoked claims", () => {
+  it.effect("a claim voided before its Session leaves no Session and no prompt", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const sessions = yield* SessionV2.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      // The schedule is paused the moment its slot is claimed, before dispatch reaches the Session.
+      yield* db
+        .run(
+          sql.raw(
+            "CREATE TEMP TRIGGER pause_on_claim AFTER INSERT ON scheduled_task_run BEGIN UPDATE scheduled_task SET enabled = 0 WHERE id = NEW.task_id; END",
+          ),
+        )
+        .pipe(Effect.orDie)
+      yield* TestClock.setTime(slot + MINUTE)
+      yield* tasks.tick
+      yield* db.run(sql.raw("DROP TRIGGER pause_on_claim")).pipe(Effect.orDie)
+      expect(yield* inputs).toHaveLength(0)
+      expect(yield* runRows).toEqual([])
+      expect(yield* sessions.get(slotIDs(created.id, 0, slot).session).pipe(Effect.flip)).toBeInstanceOf(
+        SessionV2.NotFoundError,
+      )
+    }),
+  )
+
+  it.effect("a revoked manual claim fails honestly and the same call never runs", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      // A manual claim that a stopped process never admitted, revoked by an edit.
+      const key = "invocation:msg_assistant:call_edit"
+      const ids = ScheduledTaskModel.slotIDs(`${created.id}:manual:${key}`, start)
+      yield* db
+        .insert(ScheduledTaskRunTable)
+        .values({
+          id: "stopped-manual",
+          task_id: created.id,
+          revision: 0,
+          manual_key: key,
+          state: "running",
+          session_id: SessionV2.ID.make(ids.session),
+          message_id: SessionMessage.ID.make(ids.message),
+          prompt: created.prompt,
+          owner: "stopped-process",
+          time_claimed: start,
+        })
+        .run()
+        .pipe(Effect.orDie)
+      yield* tasks.capability.update(owner, created.id, { name: "Renamed" })
+      const edited = yield* tasks.capability.run(owner, created.id, key).pipe(Effect.flip)
+      expect(edited).toBeInstanceOf(ScheduledTask.RunError)
+      expect(edited._tag === "ScheduledTask.RunError" && edited.reason).toBe(
+        "revoked by an edit; retrying the same call will not run",
+      )
+
+      const gone = { ...owner, sessionID: SessionV2.ID.make("ses_gone") }
+      const orphan = yield* tasks.capability.create(gone, hourly)
+      const missing = yield* tasks.capability
+        .run(gone, orphan.id, "invocation:msg_assistant:call_gone")
+        .pipe(Effect.flip)
+      expect(missing._tag === "ScheduledTask.RunError" && missing.reason).toBe("owner-missing")
+      const retried = yield* tasks.capability
+        .run(gone, orphan.id, "invocation:msg_assistant:call_gone")
+        .pipe(Effect.flip)
+      expect(retried._tag === "ScheduledTask.RunError" && retried.reason).toBe(
+        "owner-missing; retrying the same call will not run",
+      )
+      expect(yield* tasks.capability.get(gone, orphan.id)).toMatchObject({
+        enabled: false,
+        disabledReason: "owner-missing",
+      })
+      expect(yield* inputs).toHaveLength(0)
+    }),
+  )
+})
+
 describe("ScheduledTask capability isolation", () => {
   it.effect("legacy routes never see capability rows and legacy rows keep their behavior", () =>
     Effect.gen(function* () {
