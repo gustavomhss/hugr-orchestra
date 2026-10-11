@@ -152,6 +152,7 @@ verified: `415038b`).
 | `atlas-boundary/src/generated/native-memory.js` (`execFileSync`) | Canonically generated Atlas secret scanner with a synchronous, fail-closed write contract and a 5 s timeout. Changing the scanner's execution contract belongs to Atlas. |
 | `cli/bin/orchestra.cjs` (`spawnSync`) | Launcher host detection (`sysctl`, PowerShell, `ldd`) before any orchestra code loads; synchronous and bounded. |
 | `cli/script/runtime-proof.ts`, `desktop/scripts/install-electron.ts` (`spawnSync`, `execFile`) | Build and proof scripts; not a shipped process path. |
+| `script/src/tree-sitter-prebuilds.ts` (`child_process`) | Packaging step: rebuilds mislabeled tree-sitter prebuilds with node-gyp before electron-builder packs; a build script, not a shipped process path. |
 | `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `orchestra/src/claude-code/sdk.ts` (`spawn`, `spawnSync`) | Lead-declared integration exception, 2026-10-09: the current bridge implements the SDK's synchronous `SpawnedProcess` contract and tracks actual child exit; macOS machine-login lookup is synchronous and capped at 2 s. The former default SDK subprocess is now wrapped explicitly by `dev`. This bridge stays SDK-managed, outside Omni-tree guarantees; ordinary shell/LSP/MCP callers remain inside Omni. |
 | `Bun.$` and `Bun.spawn` in plugins | Plugin API surface. |
