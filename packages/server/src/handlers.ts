@@ -24,6 +24,7 @@ import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
 import { CapabilityOperatorHandler } from "./handlers/capability-operator"
 import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
+import { CapabilityArtifactsHandler } from "./handlers/capability-artifacts"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -52,4 +53,5 @@ export const handlers = Layer.mergeAll(
   ScheduleHandler,
   CapabilityOperatorHandler,
   CapabilityConnectionsHandler,
+  CapabilityArtifactsHandler,
 )

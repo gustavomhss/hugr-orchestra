@@ -214,6 +214,16 @@ import type {
   ConnectionsBindOutput,
   ConnectionsUnbindInput,
   ConnectionsUnbindOutput,
+  ArtifactsListInput,
+  ArtifactsListOutput,
+  ArtifactsGetInput,
+  ArtifactsGetOutput,
+  ArtifactsShareInput,
+  ArtifactsShareOutput,
+  ArtifactsPinInput,
+  ArtifactsPinOutput,
+  ArtifactsRemoveReferenceInput,
+  ArtifactsRemoveReferenceOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -1801,6 +1811,73 @@ export function make(options: ClientOptions) {
             body: { target: input["target"], sessionID: input["sessionID"] },
             successStatus: 200,
             declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    artifacts: {
+      list: (input: ArtifactsListInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsListOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ArtifactsGetInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      share: (input: ArtifactsShareInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsShareOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}/share`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { targetSessionID: input["targetSessionID"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pin: (input: ArtifactsPinInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsPinOutput>(
+          {
+            method: "PUT",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}/pin`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { pinned: input["pinned"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeReference: (input: ArtifactsRemoveReferenceInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsRemoveReferenceOutput>(
+          {
+            method: "DELETE",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
             empty: false,
           },
           requestOptions,

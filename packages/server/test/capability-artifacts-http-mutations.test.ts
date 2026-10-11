@@ -23,7 +23,7 @@ it.live("HTTP mutations require an idempotency key before Core and never write w
   const seeded = yield* f.seed({ data: body })
   const url = f.url(seeded.ref)
   const requests = [
-    { path: `${url}/share`, method: "POST", payload: { sessionID: f.peerID } },
+    { path: `${url}/share`, method: "POST", payload: { targetSessionID: f.peerID } },
     { path: `${url}/pin`, method: "PUT", payload: { pinned: true } },
     { path: url, method: "DELETE", payload: undefined },
   ]
@@ -47,12 +47,12 @@ it.live("HTTP share, pin and remove return Receipts; exact retries reuse the req
   const auth = yield* f.issue()
   const seeded = yield* f.seed({ data: body })
   const url = f.url(seeded.ref)
-  const shared = yield* receipt(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { sessionID: f.peerID } }))
-  expect(shared).toMatchObject({ reused: false, data: { artifact: seeded.ref, sessionID: f.peerID } })
-  const retried = yield* receipt(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { sessionID: f.peerID } }))
+  const shared = yield* receipt(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { targetSessionID: f.peerID } }))
+  expect(shared).toMatchObject({ reused: false, data: { artifact: seeded.ref, targetSessionID: f.peerID } })
+  const retried = yield* receipt(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { targetSessionID: f.peerID } }))
   expect(retried).toEqual({ ...shared, reused: true })
   expect((yield* f.request(f.url(seeded.ref, f.peerID), { auth })).status).toBe(200)
-  yield* deniedBody(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { sessionID: f.sessionID } }))
+  yield* deniedBody(yield* f.request(`${url}/share`, { auth, key: "share-1", payload: { targetSessionID: f.sessionID } }))
 
   const pinned = yield* receipt(yield* f.request(`${url}/pin`, { auth, method: "PUT", key: "pin-1", payload: { pinned: true } }))
   expect(pinned).toMatchObject({ reused: false, data: { artifact: seeded.ref, pinned: true } })
@@ -83,7 +83,7 @@ it.live("HTTP mutations collapse foreign, unreferenced and unauthorized targets 
   const cases = [
     { path: `${f.url(foreignOwned.ref)}/pin`, method: "PUT", payload: { pinned: true }, auth },
     { path: `${f.url({ id: Capability.ArtifactID.create(), revision: 0 })}/pin`, method: "PUT", payload: { pinned: true }, auth },
-    { path: `${url}/share`, method: "POST", payload: { sessionID: f.foreignSessionID }, auth },
+    { path: `${url}/share`, method: "POST", payload: { targetSessionID: f.foreignSessionID }, auth },
     { path: `${url}/pin`, method: "PUT", payload: { pinned: true }, auth: readOnly },
     { path: url, method: "DELETE", payload: undefined, auth: readOnly },
     { path: f.url(seeded.ref, f.peerID), method: "DELETE", payload: undefined, auth },

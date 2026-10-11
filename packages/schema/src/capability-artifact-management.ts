@@ -26,7 +26,7 @@ export interface ArtifactPage extends Schema.Schema.Type<typeof ArtifactPage> {}
 export const ArtifactPage = Schema.Struct({ items: Schema.Array(Artifact), after: Schema.optionalKey(ArtifactCursor),
   coverage: Schema.Literal("live") }).annotate({ identifier: "CapabilityArtifactManagement.ArtifactPage" })
 
-export const ShareInput = Schema.Struct({ sessionID: SessionID })
+export const ShareInput = Schema.Struct({ targetSessionID: SessionID })
   .annotate({ parseOptions: { onExcessProperty: "error" } })
 export const PinInput = Schema.Struct({ pinned: Schema.Boolean })
   .annotate({ parseOptions: { onExcessProperty: "error" } })

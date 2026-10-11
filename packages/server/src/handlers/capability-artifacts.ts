@@ -2,17 +2,13 @@ import { CapabilityArtifactManagement } from "@orchestra/core/capability/artifac
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { Database } from "@orchestra/core/database/database"
 import { ConflictError, ForbiddenError, InvalidRequestError, UnknownError } from "@orchestra/protocol/errors"
-import { makeCapabilityArtifactsGroup } from "@orchestra/protocol/groups/capability-artifacts"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Context, Effect } from "effect"
 import { HttpServerResponse } from "effect/unstable/http"
-import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
-import { LocationMiddleware } from "../location"
+import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { Api } from "../api"
 import { capabilityError } from "../middleware/capability-authorization"
 import { ServerOperator } from "../operator"
-
-// Same group identity as the aggregate Api; the layer key depends only on the group name.
-const Api = HttpApi.make("server").add(makeCapabilityArtifactsGroup(LocationMiddleware))
 
 export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capability.artifacts", (handlers) =>
   Effect.gen(function* () {

@@ -7138,3 +7138,131 @@ export type ConnectionsUnbindInput = {
 }
 
 export type ConnectionsUnbindOutput = { readonly requestID: string; readonly reused: boolean; readonly data: JsonValue }
+
+export type ArtifactsListInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["location"]
+  readonly after?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["after"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["limit"]
+}
+
+export type ArtifactsListOutput = {
+  readonly items: ReadonlyArray<{
+    readonly artifact: { readonly id: string; readonly revision: number }
+    readonly mime: string
+    readonly kind: string
+    readonly hash: string
+    readonly bytes: number
+    readonly verification: "acknowledged" | "observed" | "verified"
+    readonly timeCreated: number
+    readonly pinned: boolean
+  }>
+  readonly after?: string
+  readonly coverage: "live"
+}
+
+export type ArtifactsGetInput = {
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["sessionID"]
+  readonly artifactID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["artifactID"]
+  readonly revision: { readonly sessionID: string; readonly artifactID: string; readonly revision: string }["revision"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ArtifactsGetOutput = {
+  readonly artifact: { readonly id: string; readonly revision: number }
+  readonly mime: string
+  readonly kind: string
+  readonly hash: string
+  readonly bytes: number
+  readonly verification: "acknowledged" | "observed" | "verified"
+  readonly timeCreated: number
+  readonly pinned: boolean
+}
+
+export type ArtifactsShareInput = {
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["sessionID"]
+  readonly artifactID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["artifactID"]
+  readonly revision: { readonly sessionID: string; readonly artifactID: string; readonly revision: string }["revision"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly targetSessionID: { readonly targetSessionID: string }["targetSessionID"]
+}
+
+export type ArtifactsShareOutput = { readonly requestID: string; readonly reused: boolean; readonly data: JsonValue }
+
+export type ArtifactsPinInput = {
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["sessionID"]
+  readonly artifactID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["artifactID"]
+  readonly revision: { readonly sessionID: string; readonly artifactID: string; readonly revision: string }["revision"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly pinned: { readonly pinned: boolean }["pinned"]
+}
+
+export type ArtifactsPinOutput = { readonly requestID: string; readonly reused: boolean; readonly data: JsonValue }
+
+export type ArtifactsRemoveReferenceInput = {
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["sessionID"]
+  readonly artifactID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["artifactID"]
+  readonly revision: { readonly sessionID: string; readonly artifactID: string; readonly revision: string }["revision"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type ArtifactsRemoveReferenceOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}

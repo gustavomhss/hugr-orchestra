@@ -52,7 +52,7 @@ Protocol group `capability.artifact`, in the flat file `groups/capability-artifa
 | GET `/api/capability/sessions/:sessionID/artifacts` | `list` | `ArtifactQuery` (query) | `ArtifactPage` |
 | GET `/api/capability/sessions/:sessionID/artifacts/:artifactID/:revision` | `get` | | `Artifact` |
 | GET `/api/capability/sessions/:sessionID/artifacts/:artifactID/:revision/content` | `content` | | raw bytes |
-| POST `.../:revision/share` | `share` | `ShareInput`, idempotency-key | `Receipt` |
+| POST `.../:revision/share` | `share` | `ShareInput` `{targetSessionID}`, idempotency-key | `Receipt` |
 | PUT `.../:revision/pin` | `pin` | `PinInput`, idempotency-key | `Receipt` |
 | DELETE `.../:revision` | `removeReference` | idempotency-key | `Receipt` |
 
@@ -83,3 +83,49 @@ Error mapping:
 | Author C | Protocol group, Server handler, Range and headers, Server HTTP tests against real SQL and the real facade |
 
 Each author slice is at most 400 changed LOC, followed by a cold review. Focused local tests only; one PR+CI at campaign end.
+
+## Landing results
+
+The wave landed on `native-capabilities`. Each author slice passed a cold review of at most 400 LOC, and every check the reviewers flagged as unable to fail was fixed and probed red, then restored green:
+
+| Slice | Head | Content |
+|---|---|---|
+| Author A, `artifact-reads` | `16c9efb484` | Read facade, shared helpers and Core read tests. |
+| Author B, `artifact-mutations` | `5a8f10a313` | Ledger-backed share/pin/removeReference, with race and conflict tests. |
+| Author C, `artifact-http` | `d8ec5b5b6a` | Protocol group `server.capability.artifacts`, Server handler with Range and headers, Server and Protocol tests. |
+
+### Lead integration
+
+- The group is registered in Protocol `api.ts` and the handler in Server `handlers.ts`. The handler now uses the shared `Api`.
+- `Global.node` was added to the Server routes services and to the Orchestra host app group. The facade needs it for the shared blob root.
+- Client generation is updated: group `artifacts`, with `capability.artifact.content` omitted because it is binary.
+- `ShareInput` is renamed from `{sessionID}` to `{targetSessionID}`. The old field collided with the `:sessionID` path param in Client generation. The receipt data is now `{artifact, targetSessionID}`.
+- Two aggregate route tests were added, one in Server (`capability-artifacts-routes.test.ts`) and one on the full Orchestra host (`httpapi-capability-artifacts.test.ts`). They check that requests are authenticated first and that every selector failure returns the same constant 403 body. Removing the group and handler registration turns the Server test red.
+
+### Fixed along the way
+
+The `capability-artifacts.test.ts` test "missing storageID…" was already failing before this wave. Its fixture was dropping the `inTransaction` identity, and production was correct, so only the fixture changed.
+
+### Verification
+
+This is a local focused run, not campaign CI:
+
+| Test | Result |
+|---|---|
+| Core read | 7 pass |
+| Core mutations | 9 pass |
+| Core artifacts | 24 pass |
+| Server HTTP | 8 pass |
+| Protocol | 9 pass |
+| Server aggregate routes | 1 pass |
+| Orchestra host routes | 1 pass |
+
+Typecheck passes in schema, core, protocol, server, client, sdk-next, orchestra and app.
+
+### Follow-ups
+
+- Project export.
+- Artifact UI (U03).
+- Jobs and process control (I03C and J02).
+- One shared authority-rejection helper, replacing the copies in connections and artifacts.
+- Revisit the status code for SQL failures. It is 500 here and 403 in connections.

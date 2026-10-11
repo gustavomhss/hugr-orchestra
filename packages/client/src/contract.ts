@@ -43,6 +43,7 @@ export const groupNames = {
   "server.schedule": "schedules",
   "server.capability.operator": "operator",
   "server.capability.connections": "connections",
+  "server.capability.artifacts": "artifacts",
 } as const
 
 export const endpointNames = {
@@ -74,4 +75,4 @@ export const endpointNames = {
   "relay.scope.remove": "removeScope",
 } as const
 
-export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken"])
+export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken", "capability.artifact.content"])

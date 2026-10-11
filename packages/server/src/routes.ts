@@ -5,6 +5,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
@@ -44,6 +45,7 @@ const applicationServices = LayerNode.group([
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
+  Global.node,
 ])
 
 export function createRoutes(password?: string, operator?: CapabilityOperatorContract.Interface,

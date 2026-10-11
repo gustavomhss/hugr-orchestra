@@ -57,11 +57,11 @@ export const make = (options: CapabilityArtifactManagementContract.Options) => E
       const value = captured.value
       return yield* mutation("artifact.share", value, (tx, placement) => Effect.gen(function* () {
         yield* requireReference(tx, value.artifact, value.sessionID)
-        if (!samePlacement(placement, yield* sessionPlacement(tx, value.input.sessionID))) return yield* unavailable()
+        if (!samePlacement(placement, yield* sessionPlacement(tx, value.input.targetSessionID))) return yield* unavailable()
         yield* tx.insert(CapabilityArtifactReferenceTable).values({ artifact_id: value.artifact.id,
-          revision: value.artifact.revision, session_id: value.input.sessionID }).onConflictDoNothing().run()
-        return { artifact: value.artifact, sessionID: value.input.sessionID }
-      }), value.input.sessionID)
+          revision: value.artifact.revision, session_id: value.input.targetSessionID }).onConflictDoNothing().run()
+        return { artifact: value.artifact, targetSessionID: value.input.targetSessionID }
+      }), value.input.targetSessionID)
     })
   }
 

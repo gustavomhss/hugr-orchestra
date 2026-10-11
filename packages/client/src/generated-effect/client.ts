@@ -1492,6 +1492,95 @@ const adaptGroup25 = (raw: RawClient["server.capability.connections"]) => ({
   unbind: Endpoint25_11(raw),
 })
 
+type Endpoint26_0Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.list"]>[0]
+type Endpoint26_0Input = {
+  readonly sessionID: Endpoint26_0Request["params"]["sessionID"]
+  readonly location?: Endpoint26_0Request["query"]["location"]
+  readonly after?: Endpoint26_0Request["query"]["after"]
+  readonly limit?: Endpoint26_0Request["query"]["limit"]
+}
+const Endpoint26_0 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint26_0Input) =>
+  raw["capability.artifact.list"]({
+    params: { sessionID: input["sessionID"] },
+    query: {
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
+      ...(input["after"] === undefined ? {} : { after: input["after"] }),
+      ...(input["limit"] === undefined ? {} : { limit: input["limit"] }),
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint26_1Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.get"]>[0]
+type Endpoint26_1Input = {
+  readonly sessionID: Endpoint26_1Request["params"]["sessionID"]
+  readonly artifactID: Endpoint26_1Request["params"]["artifactID"]
+  readonly revision: Endpoint26_1Request["params"]["revision"]
+  readonly location?: Endpoint26_1Request["query"]["location"]
+}
+const Endpoint26_1 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint26_1Input) =>
+  raw["capability.artifact.get"]({
+    params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint26_2Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.share"]>[0]
+type Endpoint26_2Input = {
+  readonly sessionID: Endpoint26_2Request["params"]["sessionID"]
+  readonly artifactID: Endpoint26_2Request["params"]["artifactID"]
+  readonly revision: Endpoint26_2Request["params"]["revision"]
+  readonly location?: Endpoint26_2Request["query"]["location"]
+  readonly "idempotency-key": Endpoint26_2Request["headers"]["idempotency-key"]
+  readonly targetSessionID: Endpoint26_2Request["payload"]["targetSessionID"]
+}
+const Endpoint26_2 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint26_2Input) =>
+  raw["capability.artifact.share"]({
+    params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+    payload: { targetSessionID: input["targetSessionID"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint26_3Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.pin"]>[0]
+type Endpoint26_3Input = {
+  readonly sessionID: Endpoint26_3Request["params"]["sessionID"]
+  readonly artifactID: Endpoint26_3Request["params"]["artifactID"]
+  readonly revision: Endpoint26_3Request["params"]["revision"]
+  readonly location?: Endpoint26_3Request["query"]["location"]
+  readonly "idempotency-key": Endpoint26_3Request["headers"]["idempotency-key"]
+  readonly pinned: Endpoint26_3Request["payload"]["pinned"]
+}
+const Endpoint26_3 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint26_3Input) =>
+  raw["capability.artifact.pin"]({
+    params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+    payload: { pinned: input["pinned"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint26_4Request = Parameters<
+  RawClient["server.capability.artifacts"]["capability.artifact.removeReference"]
+>[0]
+type Endpoint26_4Input = {
+  readonly sessionID: Endpoint26_4Request["params"]["sessionID"]
+  readonly artifactID: Endpoint26_4Request["params"]["artifactID"]
+  readonly revision: Endpoint26_4Request["params"]["revision"]
+  readonly location?: Endpoint26_4Request["query"]["location"]
+  readonly "idempotency-key": Endpoint26_4Request["headers"]["idempotency-key"]
+}
+const Endpoint26_4 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint26_4Input) =>
+  raw["capability.artifact.removeReference"]({
+    params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup26 = (raw: RawClient["server.capability.artifacts"]) => ({
+  list: Endpoint26_0(raw),
+  get: Endpoint26_1(raw),
+  share: Endpoint26_2(raw),
+  pin: Endpoint26_3(raw),
+  removeReference: Endpoint26_4(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -1519,6 +1608,7 @@ const adaptClient = (raw: RawClient) => ({
   schedules: adaptGroup23(raw["server.schedule"]),
   operator: adaptGroup24(raw["server.capability.operator"]),
   connections: adaptGroup25(raw["server.capability.connections"]),
+  artifacts: adaptGroup26(raw["server.capability.artifacts"]),
 })
 
 export const make = (options?: {

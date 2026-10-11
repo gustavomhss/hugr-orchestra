@@ -101,25 +101,25 @@ function codes<A, E>(exit: Exit.Exit<A, E>) {
 
 it.live("share is idempotent, conflicts on a changed payload and never writes twice", () => Effect.gen(function* () {
   const f = yield* fixture()
-  const first = yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer }))
+  const first = yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer }))
   expect(first.reused).toBe(false)
-  expect(first.data).toEqual({ artifact: f.artifact, sessionID: f.peer })
+  expect(first.data).toEqual({ artifact: f.artifact, targetSessionID: f.peer })
   expect(yield* f.references(f.peer)).toHaveLength(1)
   // Remove the written row: an exact retry must replay the receipt, not insert again.
   yield* f.db.delete(CapabilityArtifactReferenceTable).where(eq(CapabilityArtifactReferenceTable.session_id, f.peer)).run()
-  const retry = yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer }))
+  const retry = yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer }))
   expect(retry).toEqual({ requestID: first.requestID, reused: true, data: first.data })
   expect(yield* f.references(f.peer)).toHaveLength(0)
-  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.source })).pipe(Effect.exit)))
+  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.source })).pipe(Effect.exit)))
     .toEqual(["outcome_unknown"])
   expect(yield* f.receipts()).toHaveLength(1)
 }))
 
 it.live("share refuses a cross-placement or missing target Session without writing", () => Effect.gen(function* () {
   const f = yield* fixture()
-  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.outsider })).pipe(Effect.exit)))
+  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.outsider })).pipe(Effect.exit)))
     .toEqual(["artifact_unavailable"])
-  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: SessionID.create() }), "missing")
+  expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: SessionID.create() }), "missing")
     .pipe(Effect.exit))).toEqual(["artifact_unavailable"])
   expect(yield* f.references(f.outsider)).toHaveLength(0)
   expect(yield* f.receipts()).toHaveLength(0)
@@ -131,7 +131,7 @@ it.live("share needs authority over both the artifact and the target Session", (
   const sessionOnly = yield* fixture((ids) => ({ placements: "instance", actions: ["artifact.share"],
     resources: [{ kind: "session", id: ids.peer }] }))
   yield* Effect.forEach([artifactOnly, sessionOnly], (f) => Effect.gen(function* () {
-    expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer })).pipe(Effect.exit)))
+    expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer })).pipe(Effect.exit)))
       .toEqual(["artifact_unavailable"])
     expect(yield* f.references(f.peer)).toHaveLength(0)
   }))
@@ -180,12 +180,12 @@ it.live("a failing receipt write rolls back the domain mutation and leaves no re
   yield* f.db.run(sql.raw(`CREATE TRIGGER artifact_receipt_abort BEFORE INSERT ON capability_request
     WHEN NEW.action = 'artifact.share' BEGIN SELECT RAISE(ABORT, 'RECEIPT_ABORT'); END`))
   yield* Effect.gen(function* () {
-    expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer })).pipe(Effect.exit)))
+    expect(codes(yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer })).pipe(Effect.exit)))
       .toEqual(["outcome_unknown"])
     expect(yield* f.references(f.peer)).toHaveLength(0)
     expect(yield* f.receipts()).toHaveLength(0)
   }).pipe(Effect.ensuring(f.db.run("DROP TRIGGER artifact_receipt_abort").pipe(Effect.orDie)))
-  expect((yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer }))).reused).toBe(false)
+  expect((yield* f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer }))).reused).toBe(false)
   expect(yield* f.references(f.peer)).toHaveLength(1)
 }))
 
@@ -203,7 +203,7 @@ it.live("verify rejects a source Session moved after the pre-ledger check", () =
 it.live("a fresh write fails when the source reference disappears after the pre-ledger check", () => Effect.gen(function* () {
   const f = yield* fixture()
   const database = yield* Database.Service
-  expect(codes(yield* interleaved(database, f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer })),
+  expect(codes(yield* interleaved(database, f.run(f.mutations.share(f.source, f.artifact, { targetSessionID: f.peer })),
     (tx) => tx.delete(CapabilityArtifactReferenceTable).where(eq(CapabilityArtifactReferenceTable.session_id, f.source)).run())))
     .toEqual(["artifact_unavailable"])
   expect(yield* f.references(f.peer)).toHaveLength(0)
