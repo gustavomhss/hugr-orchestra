@@ -35,7 +35,8 @@ beforeAll(async () => {
     path.join(staged.root, "effect", "config-effect-plugin.ts"),
   )
   await symlink(
-    await realpath(path.join(import.meta.dir, "../../node_modules/effect")),
+    // Resolve rather than assume packages/core/node_modules/effect: the Windows install hoists it elsewhere.
+    await realpath(path.dirname(Bun.resolveSync("effect/package.json", import.meta.dir))),
     path.join(staged.root, "effect", "node_modules", "effect"),
     "junction",
   )
