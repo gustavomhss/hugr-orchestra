@@ -50,8 +50,8 @@ afterAll(async () => {
   if (home) await rm(home, { recursive: true, force: true })
 })
 
-async function run(argv: string[], timeout = 120_000) {
-  const child = Bun.spawn(argv, { cwd: root, env, stdout: "pipe", stderr: "pipe", timeout })
+async function run(argv: string[], timeout = 120_000, cwd = root) {
+  const child = Bun.spawn(argv, { cwd, env, stdout: "pipe", stderr: "pipe", timeout })
   const [stdout, stderr, code] = await Promise.all([
     new Response(child.stdout).text(),
     new Response(child.stderr).text(),
@@ -61,7 +61,8 @@ async function run(argv: string[], timeout = 120_000) {
 }
 
 async function symbols(binary: string, file: string) {
-  const result = await run([binary, "debug", "symbols", path.join(home, file)])
+  // Outside the checkout, so nothing but the shipped copies can satisfy a lookup.
+  const result = await run([binary, "debug", "symbols", path.join(home, file)], 120_000, home)
   expect(result.code, result.stderr).toBe(0)
   return JSON.parse(result.stdout)
 }
