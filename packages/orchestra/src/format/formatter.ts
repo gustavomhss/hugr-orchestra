@@ -12,6 +12,11 @@ export interface Info {
   name: string
   environment?: Record<string, string>
   extensions: string[]
+  /**
+   * The formatter runs workspace code (its binary, or config that can load plugins or code), so it runs confined:
+   * `stdin` formats stdin to stdout and the host writes the file; `file` may rewrite only the file in place.
+   */
+  confine?: "stdin" | "file"
   enabled(context: Context): Promise<string[] | false>
 }
 
@@ -27,6 +32,7 @@ export const gofmt: Info = {
 
 export const mix: Info = {
   name: "mix",
+  confine: "file",
   extensions: [".ex", ".exs", ".eex", ".heex", ".leex", ".neex", ".sface"],
   async enabled() {
     const match = which("mix")
@@ -37,6 +43,7 @@ export const mix: Info = {
 
 export const prettier: Info = {
   name: "prettier",
+  confine: "stdin",
   environment: {
     BUN_BE_BUN: "1",
   },
@@ -77,7 +84,7 @@ export const prettier: Info = {
       }>(item)
       if (json.dependencies?.prettier || json.devDependencies?.prettier) {
         const bin = await Npm.which("prettier")
-        if (bin) return [bin, "--write", "$FILE"]
+        if (bin) return [bin, "--stdin-filepath", "$FILE"]
       }
     }
     return false
@@ -86,6 +93,7 @@ export const prettier: Info = {
 
 export const oxfmt: Info = {
   name: "oxfmt",
+  confine: "file",
   environment: {
     BUN_BE_BUN: "1",
   },
@@ -109,6 +117,7 @@ export const oxfmt: Info = {
 
 export const biome: Info = {
   name: "biome",
+  confine: "stdin",
   environment: {
     BUN_BE_BUN: "1",
   },
@@ -146,7 +155,7 @@ export const biome: Info = {
       const found = await Filesystem.findUp(config, context.directory, context.worktree)
       if (found.length > 0) {
         const bin = await Npm.which("@biomejs/biome")
-        if (bin) return [bin, "format", "--write", "$FILE"]
+        if (bin) return [bin, "format", "--stdin-file-path=$FILE"]
       }
     }
     return false
@@ -248,6 +257,7 @@ export const uvformat: Info = {
 
 export const rubocop: Info = {
   name: "rubocop",
+  confine: "file",
   extensions: [".rb", ".rake", ".gemspec", ".ru"],
   async enabled() {
     const match = which("rubocop")
@@ -258,6 +268,7 @@ export const rubocop: Info = {
 
 export const standardrb: Info = {
   name: "standardrb",
+  confine: "file",
   extensions: [".rb", ".rake", ".gemspec", ".ru"],
   async enabled() {
     const match = which("standardrb")
@@ -349,6 +360,8 @@ export const nixfmt: Info = {
 
 export const rustfmt: Info = {
   name: "rustfmt",
+  // rustfmt is usually the rustup proxy, which runs the toolchain a workspace `rust-toolchain.toml` names, by path too.
+  confine: "file",
   extensions: [".rs"],
   async enabled() {
     const match = which("rustfmt")
@@ -359,6 +372,7 @@ export const rustfmt: Info = {
 
 export const pint: Info = {
   name: "pint",
+  confine: "file",
   extensions: [".php"],
   async enabled(context) {
     const items = await Filesystem.findUp("composer.json", context.directory, context.worktree)
