@@ -231,6 +231,27 @@ describe("deriveTasks rows", () => {
     expect(only(setup({ calls: [taskCall("c2", "ses_explore", "completed")] })).agent).toBe("explore")
   })
 
+  test("a Claude Code Agent part is a task row named by its dispatch seat", () => {
+    const seat = { claudeCodeDispatch: { seat: "backend" } }
+    const rows = ["Agent", "Task"].map((name) => {
+      const call = taskCall("c1", "ses_backend", "completed", seat)
+      if (call.type !== "tool") throw new Error("expected a tool part")
+      return only(setup({ agents: [{ id: "backend", name: "Pikachu" }], calls: [{ ...call, tool: name }] }))
+    })
+    const task = only(
+      setup({
+        agents: [{ id: "backend", name: "Pikachu" }],
+        calls: [taskCall("c1", "ses_backend", "completed", seat)],
+      }),
+    )
+    for (const row of rows) expect(row).toEqual(task)
+    expect(task).toMatchObject({ kind: "agent", childId: "ses_backend", agentID: "backend", agent: "Pikachu" })
+    // Any other tool that happens to carry a sessionId stays out of the Tasks panel.
+    const other = taskCall("c2", "ses_other", "completed")
+    if (other.type !== "tool") throw new Error("expected a tool part")
+    expect(deriveTasks(setup({ calls: [{ ...other, tool: "webfetch" }] })).finished).toEqual([])
+  })
+
   test("an orphan task call yields exactly one row", () => {
     const result = deriveTasks(setup({ calls: [taskCall("c1", "ses_orphan", "completed")] }))
     expect(result.finished.map((item) => item.childId)).toEqual(["ses_orphan"])
