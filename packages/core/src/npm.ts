@@ -27,7 +27,7 @@ export interface EntryPoint {
 }
 
 export interface Interface {
-  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | EffectFlock.LockError>
+  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | PluginSdkPackage.ScopeError | EffectFlock.LockError>
   readonly install: (
     dir: string,
     input?: {
@@ -36,7 +36,7 @@ export interface Interface {
         version?: string
       }[]
     },
-  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
+  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | PluginSdkPackage.ScopeError>
   readonly which: (pkg: string, bin?: string) => Effect.Effect<string | undefined>
 }
 
@@ -111,8 +111,11 @@ const layer = Layer.effect(
           yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
             Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
           )
+          // A scoped registry wins over the default one, so no SDK-scope packument leaves the host.
+          const scope = { [PluginSdkPackage.scope.slice(0, -1) + ":registry"]: sdk.registry }
           const options = {
             ...npmOptions,
+            ...scope,
             path: input.dir,
             binLinks: true,
             progress: false,
@@ -135,6 +138,7 @@ const layer = Layer.effect(
               if (input.inspect) return actual
               const options = {
                 ...npmOptions,
+                ...scope,
                 add,
                 save: true,
                 saveType: "prod" as const,
@@ -146,12 +150,13 @@ const layer = Layer.effect(
             },
             catch: (cause) =>
               PluginSdkPackage.versionFailure(cause) ??
+              (sdk.denied.length ? new PluginSdkPackage.ScopeError({ requested: sdk.denied[0] }) : undefined) ??
               new InstallFailedError({
                 cause,
                 add,
                 dir: input.dir,
               }),
-          }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
+          }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | PluginSdkPackage.ScopeError>
         }).pipe(Effect.uninterruptible)
       }).pipe(
         Effect.scoped,
