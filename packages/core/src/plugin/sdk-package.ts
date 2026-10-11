@@ -62,7 +62,11 @@ export async function valid(directory: string): Promise<boolean> {
         continue
       }
       if (!entry.isFile() || !Object.hasOwn(sources, file)) return false
-      if (!(await PluginSdkLimits.read(path.join(dir, entry.name), quota, Buffer.byteLength(sources[file]))).equals(Buffer.from(sources[file]))) return false
+      const expected = Buffer.from(sources[file])
+      // A same-named file of another size is a foreign tree, not an admission failure: callers replace or
+      // reject it. The bounded read below still fails closed if the file grows after this check.
+      if ((await lstat(path.join(dir, entry.name))).size !== expected.length) return false
+      if (!(await PluginSdkLimits.read(path.join(dir, entry.name), quota, expected.length)).equals(expected)) return false
       found.add(file)
     }
     return true
