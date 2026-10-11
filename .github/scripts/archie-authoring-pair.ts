@@ -74,27 +74,6 @@ export function serializedEvidence(value: unknown, secrets: readonly string[], d
     originalSha256: sha256(Buffer.from(original + "\n")), originalUtf8ByteLength: Buffer.byteLength(original + "\n"),
     writtenSha256: sha256(Buffer.from(text)), writtenUtf8ByteLength: Buffer.byteLength(text), originalDatabase: "retained-unmodified" } }
 }
-// Redaction secrets for the Claude Code login the engine hands its SDK process. Held in memory only, never written.
-export async function claudeLoginSecrets(candidate: string, raw: string, minimumValidMs: number, now = Date.now()) {
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-  const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(raw)
-  const login = Option.isSome(parsed) ? Schema.decodeUnknownOption(Schema.Struct({ claudeAiOauth: Schema.Struct({ accessToken: Schema.NonEmptyString,
-    refreshToken: Schema.optional(Schema.NonEmptyString), expiresAt: Schema.Finite, scopes: Schema.Array(Schema.String) }) }))(parsed.value) : Option.none()
-  // sdk.ts refuses an expired access token on every spawn and never refreshes it; each stage spawns, so cover the whole run.
-  requireFact(Option.isSome(login) && login.value.claudeAiOauth.scopes.includes("user:inference") && login.value.claudeAiOauth.expiresAt > now + minimumValidMs, "PAIR_CLAUDE_LOGIN_INVALID_OR_EXPIRY_TOO_CLOSE")
-  return secretForms([login.value.claudeAiOauth.accessToken, ...(login.value.claudeAiOauth.refreshToken ? [login.value.claudeAiOauth.refreshToken] : [])])
-}
-// The same store sdk.ts reads per spawn: the unsuffixed Keychain item (CLAUDE_SECURESTORAGE_CONFIG_DIR=""), else its file.
-export async function readClaudeLogin(candidate: string, home: string, user: string, minimumValidMs: number) {
-  // The Claude Code engine is paused until the owner approves its plan (sdk.ts requirePlanApproval): no login read.
-  requireFact(process.env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED === "1", "PAIR_CLAUDE_CODE_ENGINE_PAUSED")
-  const { ClaudeCodeSDK } = await import(join(candidate, "packages/orchestra/src/claude-code/sdk.ts"))
-  const storage = ClaudeCodeSDK.credentialStorage({ CLAUDE_SECURESTORAGE_CONFIG_DIR: "" }, home)
-  const keychain = process.platform === "darwin" ? Bun.spawnSync(["security", "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(user) ? user : "claude-code-user", "-w", "-s", storage.service],
-    { env: { PATH: process.env.PATH, HOME: home, USER: user }, stdout: "pipe", stderr: "ignore" }) : undefined
-  const raw = keychain?.exitCode === 0 ? keychain.stdout.toString() : await Bun.file(storage.file).text().catch(() => "")
-  return claudeLoginSecrets(candidate, raw, minimumValidMs)
-}
 export async function saveEvidence(path: string, value: unknown, secrets: readonly string[], decodeJson?: JsonDecoder) {
   const serialized = serializedEvidence(value, secrets, decodeJson)
   await writeFile(path, serialized.text, { flag: "wx", mode: 0o600 })
@@ -450,7 +429,8 @@ async function main() {
   // `security` finds the login Keychain through $HOME and sdk.ts names the item's account from $USER, so the engine needs
   // both real values. Only a run reads the login (redaction + expiry); preflight checks presence, prepare reads nothing.
   const user = { home: userInfo().homedir, name: userInfo().username }
-  const secrets = args.run ? await readClaudeLogin(candidate, user.home, user.name, totalBudgetMs + 15 * 60_000) : []
+  // The driver never reads Claude credentials; the Claude Code binary authenticates through its own flow.
+  const secrets: string[] = []
   const decodeJson = await evidenceDecoder(candidate)
   requireSecretFree({ packet, assets }, secrets, decodeJson)
   process.umask(0o077)
