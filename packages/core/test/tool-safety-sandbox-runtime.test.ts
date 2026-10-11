@@ -1,6 +1,7 @@
 import { expect } from "bun:test"
 import path from "path"
 import { createHash } from "crypto"
+import { chmod } from "fs/promises"
 import { Effect, Schedule } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
@@ -25,9 +26,12 @@ const fixture = Effect.gen(function* () {
   yield* fs.makeDirectory(root)
   // A runtime archive shaped like the npm package: its cli prints what srt would receive.
   const cli = "const fs=require('fs');process.stdout.write(JSON.stringify({argv:process.argv.slice(2)," +
-    "env:Object.fromEntries(['TMPDIR','GOCACHE','XDG_CACHE_HOME','npm_config_cache','BUN_INSTALL_CACHE_DIR','PIP_CACHE_DIR','UV_CACHE_DIR'].map(k=>[k,process.env[k]]))," +
+    "env:Object.fromEntries(['TMPDIR','GOCACHE','XDG_CACHE_HOME','npm_config_cache','BUN_INSTALL_CACHE_DIR','PIP_CACHE_DIR','UV_CACHE_DIR','ORCHESTRA_TCP_PROXY_CONNECT'].map(k=>[k,process.env[k]]))," +
     "settings:JSON.parse(fs.readFileSync(process.argv[3],'utf8'))}))"
   yield* fs.writeWithDirs(path.join(directory, "archive", "package", "dist", "cli.js"), cli)
+  const helper = path.join(directory, "archive", "package", "vendor", "seccomp", process.arch, "apply-seccomp")
+  yield* fs.writeWithDirs(helper, "#!/bin/sh\n")
+  yield* Effect.promise(() => chmod(helper, 0o755))
   const tar = yield* processes.run(ChildProcess.make("tar", ["-czf", "runtime.tgz", "-C", "archive", "package"], { cwd: directory }))
   if (tar.exitCode !== 0) throw new Error(`BLOCKED: tar unavailable: ${tar.stderr.toString()}`)
   const genuine = new Uint8Array(yield* fs.readFile(path.join(directory, "runtime.tgz")))
@@ -172,5 +176,65 @@ linux("an installed runtime runs srt with toolchain caches in scratch; unconfine
     const env = unconfined.wrapped._tag === "StandardCommand" ? unconfined.wrapped.options.env : undefined
     expect(env?.GOCACHE).toBe("/inherited/go-build")
     expect(env?.TMPDIR).toBe(process.env.TMPDIR)
+  }), 30_000,
+)
+
+linux("an exact endpoint grant gives srt only its IP-literal port under a strict allowlist and never falls back", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const endpoint = { ...fallback, sandbox: { ...fallback.sandbox,
+      allowedLoopbackEndpoints: [{ directory: f.root, host: "127.0.0.1" as const, port: 9042 }] } }
+    const held = yield* Effect.flip(f.wrap(endpoint, f.source("absent", ["orchestra-missing-sandbox-dependency"])))
+    expect(held.reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
+    const installed = f.source("installed")
+    yield* ToolSafetySandboxRuntime.acquire(installed)
+    const sandboxed = (profile: ToolSafety.Profile) => Effect.scoped(Effect.gen(function* () {
+      const result = yield* f.wrap(profile, installed)
+      expect(result.fact).toEqual({ shellWrites: "enforced", shellSandbox: { kind: "srt" } })
+      const run = yield* f.processes.run(result.wrapped, { timeout: "10 seconds" })
+      if (run.exitCode !== 0) throw new Error(run.stderr.toString())
+      return JSON.parse(run.stdout.toString())
+    }))
+    const granted = yield* sandboxed(endpoint)
+    expect(granted.settings.network).toEqual({ allowedDomains: ["127.0.0.1:9042"], deniedDomains: [], strictAllowlist: true,
+      allowUnixSockets: [], allowAllUnixSockets: false, allowLocalBinding: false })
+    expect(granted.env.ORCHESTRA_TCP_PROXY_CONNECT).toBe("9042")
+    // A grant bound to another placement leaves this command with no network at all.
+    const elsewhere = yield* sandboxed({ ...endpoint, sandbox: { ...endpoint.sandbox,
+      allowedLoopbackEndpoints: [{ directory: f.directory, host: "127.0.0.1" as const, port: 9042 }] } })
+    expect(elsewhere.settings.network.allowedDomains).toEqual([])
+    expect(elsewhere.env.ORCHESTRA_TCP_PROXY_CONNECT).toBeUndefined()
+    expect(yield* f.fs.exists(f.outside)).toBe(false)
+  }), 30_000,
+)
+
+linux("an exact endpoint grant ignores an srt on PATH and needs the pinned runtime with its seccomp helper", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const bin = path.join(f.directory, "bin")
+    const onPath = path.join(bin, "srt")
+    yield* f.fs.writeWithDirs(onPath, "#!/bin/sh\nexit 97\n")
+    yield* Effect.promise(() => chmod(onPath, 0o755))
+    const previous = process.env.PATH
+    yield* Effect.acquireRelease(
+      Effect.sync(() => { process.env.PATH = `${bin}:${previous}` }),
+      () => Effect.sync(() => { process.env.PATH = previous }),
+    )
+    const grant = { ...fallback, sandbox: { ...fallback.sandbox,
+      allowedLoopbackEndpoints: [{ directory: f.root, host: "127.0.0.1" as const, port: 9042 }] } }
+    const absent = f.source("absent", ["orchestra-missing-sandbox-dependency"])
+    // PATH srt is never a fallback for a grant, even when no pinned runtime exists.
+    expect((yield* Effect.flip(f.wrap(grant, absent))).reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
+    const installed = f.source("installed")
+    yield* ToolSafetySandboxRuntime.acquire(installed)
+    const pinned = yield* Effect.scoped(f.wrap(grant, installed))
+    expect(pinned.wrapped._tag === "StandardCommand" ? pinned.wrapped.command : undefined).toBe(process.execPath)
+    // Without apply-seccomp srt would only log a warning and leave Unix sockets open.
+    yield* f.fs.remove(path.join(installed.directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "vendor"), { recursive: true })
+    expect((yield* Effect.flip(f.wrap(grant, installed))).reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
+    // Commands without a grant keep preferring a PATH srt, with or without a pinned runtime.
+    const ordinary = yield* Effect.scoped(f.wrap(fallback, absent))
+    expect(ordinary.wrapped._tag === "StandardCommand" ? ordinary.wrapped.command : undefined).toBe(onPath)
+    expect(ordinary.fact).toEqual({ shellWrites: "enforced", shellSandbox: { kind: "srt" } })
   }), 30_000,
 )

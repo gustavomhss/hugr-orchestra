@@ -8,6 +8,7 @@ import { AtlasMemory } from "./atlas-memory"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import { Seats, type Seat } from "./seats"
 import { UpstreamResult } from "./upstream-result"
+import { OUTCOME_KEY, readOutcome, type Outcome } from "../plugin/hugr-composer/outcome"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
@@ -56,6 +57,10 @@ export type Memory = {
   writes: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; receiptRef?: RecordRef }[]
 }
 
+// F4 cl.25: one owned-tool outcome per tool call. A tool outcome is not a task outcome; it sets no terminal,
+// verification or acceptance.
+export type ToolOutcome = Outcome & { callID: string }
+
 export type WorkerEvidence = {
   changes: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
   checks: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
@@ -87,7 +92,9 @@ export type WorkResult = {
   nextActions: Card["nextActions"]
   terminal: Terminal
   memory: Memory
-  // Host binding of worker claims, separate from verification and acceptance.
+  // Host facts from the execution Session's owned-tool calls (F4 `delta.toolOutcomes`); absent when it made none.
+  toolOutcomes?: ToolOutcome[]
+  // F4 cl.16 / F4-CH: host binding of worker claims, separate from verification and acceptance.
   workerEvidence?: WorkerEvidence
   artifacts?: UpstreamResult.Card["artifacts"]
   // Host-observed authorship only. Approval and materialized artifact identity remain separate host contracts.
@@ -114,6 +121,8 @@ export function assemble(message: SessionV1.WithParts, session: readonly Session
     ? authored ? UpstreamResult.parse(message.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n")) : undefined
     : text?.type === "text" ? parse(text.text, seat.returnCard) : undefined
   const host = terminal(message)
+  const history = [...session.filter((stored) => stored.info.id !== message.info.id), message]
+  const outcomes = toolOutcomes(history)
   return {
     schema: requireSchema(seat),
     mode: "delegated",
@@ -128,7 +137,8 @@ export function assemble(message: SessionV1.WithParts, session: readonly Session
     nextActions: card?.nextActions ?? [],
     // Successful process termination does not complete an upstream assignment without a unique valid proposal card.
     terminal: { reason: host === "ended" && (card?.outcome === "blocked" || (upstream && (!card || card.blockers.length > 0))) ? "blocked" : host },
-    memory: seat.atlasMemory ? memory([...session.filter((stored) => stored.info.id !== message.info.id), message]) : { reads: [], writes: [] },
+    memory: seat.atlasMemory ? memory(history) : { reads: [], writes: [] },
+    ...(outcomes.length ? { toolOutcomes: outcomes } : {}),
     ...(upstream ? {
       artifacts: card && "artifacts" in card ? card.artifacts : [],
       ...(authored ? { author: { memberId: seat.id, executionSessionID: message.info.sessionID, messageID: message.info.id } } : {}),
@@ -147,6 +157,7 @@ export function hostEnded(input: {
   reason: "failed" | "interrupted" | "running"
   detail: string
 }, seat: Seat = Seats.all.backend): WorkResult {
+  const outcomes = input.message ? [] : toolOutcomes(input.session ?? [])
   const base = input.message
     ? assemble(input.message, input.session, seat)
     : {
@@ -161,6 +172,7 @@ export function hostEnded(input: {
         risks: [],
         nextActions: [],
         memory: seat.atlasMemory ? memory(input.session ?? []) : { reads: [], writes: [] },
+        ...(outcomes.length ? { toolOutcomes: outcomes } : {}),
         ...(seat.id === "archie" && seat.workResult === UpstreamResult.SCHEMA ? { artifacts: [] } : {}),
       }
   return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
@@ -194,6 +206,18 @@ export function memory(messages: readonly SessionV1.WithParts[]): Memory {
         ...(item.receipt.ref ? { receiptRef: item.receipt.ref } : {}),
       })),
   }
+}
+
+// Outcomes are host-written by the HuGR bridge into their tool part's result metadata. A part counts only when it
+// has settled, is the tool the outcome names, and the value decodes strictly; anything else is ignored, never repaired.
+export function toolOutcomes(messages: readonly SessionV1.WithParts[]): ToolOutcome[] {
+  return messages
+    .flatMap((message) => message.parts)
+    .flatMap((part) => {
+      if (part.type !== "tool" || (part.state.status !== "completed" && part.state.status !== "error")) return []
+      const outcome = readOutcome(part.state.metadata?.[OUTCOME_KEY], part.tool)
+      return outcome ? [{ callID: part.callID, ...outcome }] : []
+    })
 }
 
 function isReceipt(value: unknown): value is AtlasMemory.Receipt {

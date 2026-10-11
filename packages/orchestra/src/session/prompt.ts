@@ -24,6 +24,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
 import { PromptContinuity } from "./prompt-continuity"
 import { ClaudeCode } from "@/claude-code/engine"
 import { commandSource } from "@/continuity/alias"
@@ -1197,7 +1198,9 @@ const layer = Layer.effect(
             if (step === 1)
               yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
 
-            const prepared = admitted.success
+            const prepared = yield* AtlasResumeRestore.request({
+              session: sessions, agent, sessionID, user: lastUser.id, prepared: admitted.success,
+            })
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: prepared.messages })
             sent.splice(0, sent.length, ...prepared.messages)
 

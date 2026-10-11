@@ -591,7 +591,12 @@ export const TaskTool = Tool.define(
             model: { modelID: model.modelID, providerID: model.providerID },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
-            parts: [...parts, ...own, ...resume],
+            parts: [
+              ...parts,
+              ...own,
+              ...resume,
+              ...(resumed && ctx.callID ? [LogicalTask.resumeMarker(ctx.sessionID, ctx.callID)] : []),
+            ],
           },
           { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }).pipe(
             Effect.provideService(FileSystem.FileSystem, fs),

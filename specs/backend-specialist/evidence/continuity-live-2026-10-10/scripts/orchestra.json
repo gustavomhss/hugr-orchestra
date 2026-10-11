@@ -1,0 +1,10 @@
+{
+ "autoupdate": false,
+ "provider": {
+  "opencode": {
+   "options": {
+    "apiKey": "public"
+   }
+  }
+ }
+}
