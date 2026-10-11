@@ -110,7 +110,8 @@ function check(input: unknown) {
   expect(by.diagnostics.uses).toBe(pins.upload)
   expect(by.diagnostics.if).toBe("failure()")
   expect(by.diagnostics.with).toEqual({ name: "ownedproofDiagnostics-${{ github.sha }}",
-    path: "packages/desktop/dist-candidate/proof/proof.log\npackages/desktop/dist-candidate/proof/renderer.png\n",
+    path: "packages/desktop/dist-candidate/proof/proof.log\npackages/desktop/dist-candidate/proof/renderer.png\n" +
+      "packages/desktop/dist-candidate/proof/quit-sample-*.txt\n",
     "if-no-files-found": "ignore", "include-hidden-files": false,
     "retention-days": 7 })
 }

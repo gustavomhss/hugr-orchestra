@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { connect } from "node:net"
-import { readFile } from "node:fs/promises"
+import { readFile, writeFile } from "node:fs/promises"
 import { execFileSync } from "node:child_process"
 import { setTimeout as sleep } from "node:timers/promises"
 import type { ElectronApplication, Page } from "@playwright/test"
@@ -72,7 +72,8 @@ export async function portClosed(url: string) {
   }))
 }
 
-export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder) {
+// TEMPORARY DIAGNOSTIC (remove with the quit-hang fix): extra launch env for an A/B of the omni spawner.
+export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder, diagnosticEnv: Record<string, string> = {}) {
   assert.ok(path.isAbsolute(root), "Candidate ROOT must be absolute")
   recorder.protectPath(root, "candidate-root")
   // Resolve the installed Playwright through the package that declares it. Never attach to a user app.
@@ -80,7 +81,7 @@ export async function launchCandidate(executable: string, root: string, recorder
   const env = Object.fromEntries(["PATH", "LANG", "LC_ALL", "GOROOT", "RUSTUP_HOME"].flatMap((key) =>
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
-    cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
+    cwd: path.dirname(root), env: { ...env, ...diagnosticEnv, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
   // Recorder-owned bounded streams join chunks before redaction; overflow publishes only a named marker.
   const stdout = recorder.stream("owned Electron main stdout")
   const stderr = recorder.stream("owned Electron main stderr")
@@ -120,6 +121,13 @@ export async function launchCandidate(executable: string, root: string, recorder
       recorder.fail("cleanup", "owned Electron quit", error)
       // Only the child returned by this launch is eligible for forced cleanup.
       const child = application.process()
+      // A main that never exits after app.quit: keep its native thread stacks (sanitized) as evidence first.
+      if (process.platform === "darwin" && child.pid && child.exitCode === null && child.signalCode === null) {
+        try {
+          const sample = execFileSync("/usr/bin/sample", [String(child.pid), "3"], { encoding: "utf8", timeout: 30000, maxBuffer: 32 << 20 })
+          await writeFile(path.join(desktop, "dist-candidate/proof", `quit-sample-${child.pid}.txt`), recorder.clean(sample))
+        } catch (error) { recorder.fail("cleanup", "owned Electron quit sample", error) }
+      }
       try { if (child.exitCode === null) child.kill("SIGKILL") }
       catch (error) { recorder.fail("cleanup", "owned Electron forced termination", error) }
       if (state.backend) {

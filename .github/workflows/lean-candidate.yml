@@ -205,6 +205,7 @@ jobs:
           path: |
             packages/desktop/dist-candidate/proof/proof.log
             packages/desktop/dist-candidate/proof/renderer.png
+            packages/desktop/dist-candidate/proof/quit-sample-*.txt
           if-no-files-found: ignore
           include-hidden-files: false
           retention-days: 7
