@@ -28,8 +28,11 @@ import { Agent } from "@/agent/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
 import path from "path"
-import { Seats } from "@/maestro/seats"
+import { Seats, type Seat } from "@/maestro/seats"
 import { LegacyLeanCapture } from "./lean-capture"
+import { nativeProfiles } from "@/maestro/roster"
+import { TRUNCATION_DIR } from "./truncation-dir"
+import type { InstanceContext } from "@/project/instance-context"
 
 export { Parameters } from "./shell/prompt"
 
@@ -56,6 +59,45 @@ function cmd(shell: string, command: string, cwd: string, env: NodeJS.ProcessEnv
     detached: process.platform !== "win32",
   })
 }
+/**
+ * A native seat cannot ask the owner, so on macOS and Linux its commands run in the OS sandbox with reads confined to its
+ * worktree (and the git directories a linked worktree keeps outside it), saved tool output, the external directories its
+ * native profile grants, the backend toolkit for the toolkit seat, and the host toolchain (ToolSafetySandbox.toolchain).
+ * A host without a sandbox refuses the command. Maestro and other agents keep argument checks and asks only; Windows has
+ * no read sandbox, so seats there keep only the argument checks (ShellScan).
+ */
+const seatProfile = Effect.fn("ShellTool.seatProfile")(function* (
+  fs: FSUtil.Interface,
+  profile: ToolSafety.Profile | undefined,
+  seat: Seat,
+  instance: InstanceContext,
+) {
+  const worktree = instance.worktree === "/" ? instance.directory : instance.worktree
+  const external = nativeProfiles[seat.id]?.external_directory
+  const granted = typeof external === "object"
+    ? Object.entries(external).filter((rule) => rule[1] === "allow" && rule[0] !== "*").map((rule) => rule[0].replace(/[\\/]\*$/, ""))
+    : []
+  // A linked worktree's `.git` file names its git directory, whose `commondir` names the repository's shared one.
+  const text = (file: string) => fs.readFileStringSafe(file).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  const gitdir = (yield* text(path.join(worktree, ".git")))?.match(/^gitdir: (.+)$/m)?.[1].trim()
+  const gitdirs = gitdir ? [path.resolve(worktree, gitdir)] : []
+  const common = gitdirs.length ? (yield* text(path.join(gitdirs[0], "commondir")))?.trim() : undefined
+  return {
+    ...profile,
+    requireSandbox: true,
+    writeRoots: profile?.writeRoots ?? [worktree],
+    sandbox: {
+      ...profile?.sandbox,
+      enabled: true,
+      scratch: true,
+      readRoots: [
+        worktree, instance.directory, ...gitdirs, ...(common ? [path.resolve(gitdirs[0], common)] : []), TRUNCATION_DIR, ...granted,
+        ...(seat.toolkit ? [yield* BackendToolkit.Root] : []),
+      ],
+    },
+  } satisfies ToolSafety.Profile
+})
+
 export const ShellTool = Tool.define(
   ShellID.ToolID,
   Effect.gen(function* () {
@@ -98,6 +140,10 @@ export const ShellTool = Tool.define(
       const limits = yield* trunc.limits()
       const profile = yield* ToolSafety.RuntimeProfile
       const instance = yield* InstanceState.context
+      const seat = Seats.find(ctx.agentID)
+      const sandboxed = seat && (process.platform === "darwin" || process.platform === "linux")
+        ? yield* seatProfile(fs, profile, seat, instance)
+        : profile
       const env = ToolSafetySandbox.environment(input.env)
       yield* ToolSafetyGit.before({ command: input.command, directory: instance.directory,
         projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
@@ -155,6 +201,7 @@ export const ShellTool = Tool.define(
           const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
+            Effect.provideService(ToolSafety.RuntimeProfile, sandboxed),
             Scope.provide(resources),
           )
           // The tool keeps only the tail, so a gap is a visible marker rather than a failed run (R2-2).
