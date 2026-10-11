@@ -50,14 +50,14 @@ export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDash
     await expect(row.locator('[data-lean-value="tokens"]')).toHaveText(signed(item.savings.tokensSaved))
   }
   await bounded("actual renderer font readiness", page.evaluate(async () => { await document.fonts.ready }))
-  // Resource Timing records only the backend's http fetches, never the renderer's own oc:// assets, so it cannot see
-  // fonts. The FontFaceSet holds the bundle's @font-face faces; "loaded" means the packaged file was fetched and parsed.
+  // Resource Timing lists the renderer's oc:// font loads only sometimes (a local run had none, the runner had one), so
+  // it cannot prove a load. The FontFaceSet holds the bundle's @font-face faces; "loaded" means the file was parsed.
   const fonts = await bounded("actual renderer font loads", page.evaluate(() =>
     [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family)))
   assert.ok(fonts.length > 0, "Actual renderer did not load packaged fonts")
-  // Resource Timing does record network fetches: any font there would have come from outside the package.
-  const escaped = await bounded("actual renderer network fonts", page.evaluate(() => performance.getEntriesByType("resource")
-    .map((entry) => entry.name).filter((name) => /\.(woff2?|ttf|otf)(\?|$)/.test(name))))
+  // Every font load it does list must come from the package itself, never from the network.
+  const escaped = await bounded("actual renderer font sources", page.evaluate(() => performance.getEntriesByType("resource")
+    .map((entry) => entry.name).filter((name) => /\.(woff2?|ttf|otf)(\?|$)/.test(name) && !name.startsWith("oc://renderer/"))))
   assert.deepEqual(escaped, [], "Renderer fonts escaped the packaged source")
 }
 
