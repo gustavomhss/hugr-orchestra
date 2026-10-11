@@ -10,6 +10,7 @@ import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { ToolSafetySandboxRuntime } from "../src/tool-safety-sandbox-runtime"
+import { ToolSafetyAppContainer } from "../src/tool-safety-appcontainer"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
@@ -93,7 +94,8 @@ noSeatbelt("without a sandbox a fallback profile runs the command unconfined and
     const missing = f.source("missing", ["orchestra-missing-sandbox-dependency"])
     const reason = process.platform === "linux"
       ? "sandbox-dependency-missing: orchestra-missing-sandbox-dependency"
-      : `sandbox-platform-unsupported: ${process.platform}`
+      // Windows confines only pwsh and cmd; this command is the JavaScript runtime itself.
+      : (yield* ToolSafetyAppContainer.Launcher) ? "sandbox-appcontainer-shell-unsupported" : "sandbox-appcontainer-launcher-unavailable"
 
     const held = yield* Effect.flip(f.wrap({ requireSandbox: true, sandbox: { enabled: true } }, missing))
     expect(held.reason).toBe(process.platform === "linux" ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable")

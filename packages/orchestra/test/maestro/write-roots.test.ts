@@ -131,6 +131,16 @@ describe("backend write roots enforcement", () => {
       const [child] = h.bound
       const outside = path.join(h.directory, "outside")
       yield* Effect.promise(() => fs.writeFile(path.join(outside, "locked"), "x", { mode: 0o444 }))
+      if (sandbox === "appcontainer") {
+        // Windows confines pwsh and cmd; Git's MSYS tools do not run inside an AppContainer.
+        const escaped = yield* h.shell(child, `Set-Content -LiteralPath outside/shell.txt -Value escaped -NoNewline`)
+        if (Exit.isSuccess(escaped)) expect(escaped.value.metadata.exit).not.toBe(0)
+        expect(yield* exists(path.join(outside, "shell.txt"))).toBe(false)
+        const kept = yield* h.shell(child, `Set-Content -LiteralPath src/shell.txt -Value kept -NoNewline`)
+        expect(Exit.isSuccess(kept) && kept.value.metadata.exit, Exit.isSuccess(kept) ? kept.value.output : String(kept)).toBe(0)
+        expect(yield* Effect.promise(() => fs.readFile(path.join(h.directory, "src", "shell.txt"), "utf8"))).toBe("kept")
+        return
+      }
       const escape = yield* h.shell(child, `printf escaped > outside/shell.txt`)
       if (!sandbox) {
         // Owner decision 2026-10-06: without a sandbox the shell runs without the write jail (the host fact says so,
