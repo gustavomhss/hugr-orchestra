@@ -61,7 +61,9 @@ test("real child capture retains complete stdout/stderr and nonzero failure", as
   expect(captured.error).toBeUndefined()
 })
 
-test("real command deadline kills owned child group including TERM-resistant descendant", async () => {
+// POSIX process groups only: Windows has no group TERM/KILL escalation, and the candidate host is darwin/x64
+// (assertCandidateHost), so a Windows result would answer nothing about the code that runs.
+test.skipIf(process.platform === "win32")("real command deadline kills owned child group including TERM-resistant descendant", async () => {
   const descendant = 'process.on("SIGTERM", () => {}); process.stderr.write("descendant stderr\\n"); setInterval(() => {}, 1000)'
   const captured = await runCandidateCommand(["node", "-e", `
     const { spawn } = require("node:child_process");

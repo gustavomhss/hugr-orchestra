@@ -400,10 +400,6 @@ export async function candidate(action: string) {
     ...manifest, status: "packaged", accepted: false, materials, runnerProbes,
     nativePty: { name: pty, version: metadata.version, binaries },
     packaged: await inventory(path.join(output, appRelativePath)),
-    nativeResources: {
-      tracked: Boolean(await git("ls-tree", "HEAD", "packages/desktop/native")),
-      scope: "Production native filters preserved; legacy mac_window addon is not a Lean dependency.",
-    },
   }, null, 2) + "\n")
 }
 

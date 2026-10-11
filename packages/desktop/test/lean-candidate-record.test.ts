@@ -196,5 +196,6 @@ test("published scratch acquisition and missing-manifest failures keep phase ide
   }
   expect(archive.message).toContain('"phase": "primary"')
   expect(archive.message).toContain('"phase": "cleanup"')
-  expect(archive.message).toContain("<repository>/packages/desktop/dist-candidate-synthetic-missing")
+  // The published message is JSON, so a Windows separator appears escaped.
+  expect(archive.message).toContain(JSON.stringify(path.join("<repository>", "packages", "desktop", "dist-candidate-synthetic-missing")).slice(1, -1))
 })

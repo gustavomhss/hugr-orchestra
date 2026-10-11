@@ -36,7 +36,7 @@ test("candidate preserves production package filters and app resources, appends 
     ...(Array.isArray(resources) ? resources : [resources]),
     { from: "../orchestra/dist/node/licenses", to: "licenses" },
   ])
-  expect(builder.extraResources).toContainEqual({ from: "native/", to: "native/", filter: ["index.js", "index.d.ts", "build/Release/mac_window.node", "swift-build/**"] })
+  expect(builder.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
   expect(builder.asarUnpack).toContain("node_modules/@lydell/node-pty-darwin-x64/**/*")
   expect(builder.mac.icon).toBe(baseBuilder.mac?.icon)
 })
