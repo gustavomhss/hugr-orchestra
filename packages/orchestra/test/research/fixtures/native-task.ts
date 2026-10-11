@@ -53,6 +53,8 @@ export const setup = Effect.fn("NativeResearchTask.setup")(function* () {
   const parent = yield* sessions.create({ agent: "maestro", title: "Native research outcome authority" })
   const user = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "user", agent: "maestro",
     model: { providerID: model.providerID, modelID: model.id }, time: { created: Date.now() } })
+  // The owner's request: a parent turn continues from its latest actual user request, never from a synthetic notice.
+  yield* sessions.updatePart({ id: PartID.ascending(), sessionID: parent.id, messageID: user.id, type: "text", text: "Research with native Jimmy." })
   const assistant = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, parentID: user.id,
     role: "assistant", agent: "maestro", mode: "maestro", path: { cwd: instance.directory, root: instance.directory },
     providerID: model.providerID, modelID: model.id, cost: 0,
@@ -77,6 +79,8 @@ export const setup = Effect.fn("NativeResearchTask.setup")(function* () {
           time: { start: part.state.time.start, end: Date.now() } }
       : { status: "error", input, error: Cause.pretty(exit.cause), metadata: metadata.value,
           time: { start: part.state.time.start, end: Date.now() } } })
+    // The parent's provider turn ends on its tool call, as Orchestra's loop would end it; a later notice continues it.
+    yield* sessions.updateMessage({ ...assistant, finish: "tool-calls", time: { ...assistant.time, completed: Date.now() } })
     return { exit, metadata: structuredClone(metadata.value), partID: part.id }
   })
   return { remote, fs, instance, sessions, prompt, parent, assistant, model, call }
