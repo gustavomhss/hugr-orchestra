@@ -8,7 +8,13 @@ import { checkWslAuthentication } from "./startup"
 import { spawnWslSidecar, wslServeScript } from "./sidecar"
 import { normalizeWslCommandVersion, readWslCommandVersion, shellEscape } from "./runtime"
 
-test("startup admits only descriptor-bound guest bytes before credentials/serve", async () => {
+// These tests run the guest scripts in the host's bash as a stand-in for the WSL guest, which is always Linux: glibc
+// (`getconf GNU_LIBC_VERSION`), GNU coreutils, POSIX paths, modes and signals. No other host shell is that guest (Git
+// Bash on Windows has no glibc, decides -x by file content and cannot kill the CLI behind an exec'd script), so they
+// run on Linux hosts, like the guest-script run in scripts/cli-staging.test.ts.
+const linuxGuestTest = test.skipIf(process.platform !== "linux")
+
+linuxGuestTest("startup admits only descriptor-bound guest bytes before credentials/serve", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-admission-"))
   const binary = join(root, ".orchestra/bin/orchestra")
   const marker = join(root, "executed")
@@ -57,7 +63,7 @@ test("guest architecture/ABI selects Linux baseline only", () => {
   expect(() => linuxGuestTarget("x86_64", "musl")).toThrow(WslArtifactError)
 })
 
-test("Linux transfer verifies bytes/version, replaces foreign executable, preserves old on failure", async () => {
+linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executable, preserves old on failure", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-transfer-"))
   const source = join(root, "owned ' $(touch planted); artifact")
   const addon = join(root, "addon ' $(touch planted)")
@@ -211,7 +217,7 @@ test.each([false, true])("protected health rejects open/unhealthy servers (prote
   }
 })
 
-test("real owned V2 CLI guest credential authenticates foreground server in isolated data", async () => {
+linuxGuestTest("real owned V2 CLI guest credential authenticates foreground server in isolated data", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-service-"))
   const env = isolatedEnv(root)
   const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
