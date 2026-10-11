@@ -9,8 +9,8 @@
 
 use std::collections::HashSet;
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Write};
 use std::io::{self};
+use std::io::{Read, Write};
 use std::os::windows::io::{AsRawHandle, OwnedHandle};
 use std::path::{Path, PathBuf};
 
@@ -80,7 +80,12 @@ pub(super) fn protect(journal: &Path, paths: &[PathBuf], roots: &[PathBuf], sid:
             }
         }
         let marker = journal.join(format!("o-{hash}-{pid}-{index}.own"));
-        let file = OpenOptions::new().create(true).truncate(true).read(true).write(true).open(&marker)?;
+        let file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .read(true)
+            .write(true)
+            .open(&marker)?;
         lock(&file, false)?;
         markers.push((file, marker));
     }
@@ -90,7 +95,10 @@ pub(super) fn protect(journal: &Path, paths: &[PathBuf], roots: &[PathBuf], sid:
 /// Every directory from `path`'s parent up to and including the write root that contains it (the longest matching
 /// root), bottom-up. Empty when no root contains the path.
 fn ancestors_to_root(path: &Path, roots: &[PathBuf]) -> Vec<PathBuf> {
-    let Some(root) = roots.iter().filter(|root| path.starts_with(root)).max_by_key(|root| root.components().count())
+    let Some(root) = roots
+        .iter()
+        .filter(|root| path.starts_with(root))
+        .max_by_key(|root| root.components().count())
     else {
         return Vec::new();
     };
@@ -133,7 +141,9 @@ fn reconcile(journal: &Path) -> io::Result<()> {
     let states: Vec<(String, PathBuf)> = read_names(journal)
         .into_iter()
         .filter_map(|(name, path)| {
-            name.strip_prefix("g-").and_then(|rest| rest.strip_suffix(".state")).map(|hash| (hash.to_owned(), path))
+            name.strip_prefix("g-")
+                .and_then(|rest| rest.strip_suffix(".state"))
+                .map(|hash| (hash.to_owned(), path))
         })
         .collect();
     for (hash, state) in states {
@@ -244,7 +254,12 @@ struct DirLock(File);
 
 impl DirLock {
     fn acquire(journal: &Path) -> io::Result<DirLock> {
-        let file = OpenOptions::new().create(true).truncate(true).read(true).write(true).open(journal.join(".dirlock"))?;
+        let file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .read(true)
+            .write(true)
+            .open(journal.join(".dirlock"))?;
         lock(&file, false)?;
         Ok(DirLock(file))
     }
@@ -262,7 +277,11 @@ fn lock(file: &File, immediate: bool) -> io::Result<()> {
     let flags = LOCKFILE_EXCLUSIVE_LOCK | if immediate { LOCKFILE_FAIL_IMMEDIATELY } else { 0 };
     // SAFETY: a handle we own and a zeroed OVERLAPPED; the one-byte region is released by `unlock` or on close.
     let ok = unsafe { LockFileEx(file.as_raw_handle() as HANDLE, flags, 0, 1, 0, &mut overlapped) };
-    if ok == 0 { Err(io::Error::last_os_error()) } else { Ok(()) }
+    if ok == 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
 }
 
 fn unlock(file: &File) -> io::Result<()> {
@@ -270,5 +289,9 @@ fn unlock(file: &File) -> io::Result<()> {
     let mut overlapped: OVERLAPPED = unsafe { std::mem::zeroed() };
     // SAFETY: a handle we own and a zeroed OVERLAPPED; unlocks the one-byte region `lock` took.
     let ok = unsafe { UnlockFileEx(file.as_raw_handle() as HANDLE, 0, 1, 0, &mut overlapped) };
-    if ok == 0 { Err(io::Error::last_os_error()) } else { Ok(()) }
+    if ok == 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
 }

@@ -157,7 +157,11 @@ fn run(request: &Request) -> Result<i32, String> {
     // Protection brackets only the launch, and its holds are released whether the command succeeds or fails. A crash
     // between here and release leaves a journal that the next launch (reconciled in `protect`) or `--recover` replays.
     let journal = request.journal.clone();
-    let write_roots: Vec<PathBuf> = grants.iter().filter(|(_, grant)| matches!(grant, Grant::Write)).map(|(path, _)| path.clone()).collect();
+    let write_roots: Vec<PathBuf> = grants
+        .iter()
+        .filter(|(_, grant)| matches!(grant, Grant::Write))
+        .map(|(path, _)| path.clone())
+        .collect();
     let held = match &journal {
         Some(dir) => Some(guard::protect(dir, &request.guards, &write_roots, &sid).map_err(|e| format!("guard: {e}"))?),
         None => None,

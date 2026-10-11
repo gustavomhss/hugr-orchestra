@@ -11,18 +11,16 @@ use std::path::Path;
 use windows_sys::Win32::Foundation::{ERROR_ALREADY_EXISTS, ERROR_SUCCESS, GENERIC_READ, HANDLE, LocalFree};
 use windows_sys::Win32::Security::Authorization::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW, ConvertStringSecurityDescriptorToSecurityDescriptorW,
-    EXPLICIT_ACCESS_W, GRANT_ACCESS, GetNamedSecurityInfoW, GetSecurityInfo, NO_MULTIPLE_TRUSTEE, REVOKE_ACCESS,
-    SDDL_REVISION_1, SE_FILE_OBJECT, SetEntriesInAclW, SetNamedSecurityInfoW, SetSecurityInfo, TRUSTEE_IS_SID,
-    TRUSTEE_IS_UNKNOWN, TRUSTEE_W,
+    EXPLICIT_ACCESS_W, GRANT_ACCESS, GetSecurityInfo, NO_MULTIPLE_TRUSTEE, REVOKE_ACCESS, SDDL_REVISION_1,
+    SE_FILE_OBJECT, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_SID, TRUSTEE_IS_UNKNOWN, TRUSTEE_W,
 };
 use windows_sys::Win32::Security::Isolation::{
     CreateAppContainerProfile, DeleteAppContainerProfile, DeriveAppContainerSidFromAppContainerName,
 };
 use windows_sys::Win32::Security::{
-    ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, ACL_SIZE_INFORMATION, AclSizeInformation, CONTAINER_INHERIT_ACE,
-    DACL_SECURITY_INFORMATION, EqualSid, FreeSid, GetAce, GetAclInformation, GetSecurityDescriptorControl,
-    GetSecurityDescriptorDacl, INHERITED_ACE, OBJECT_INHERIT_ACE, PROTECTED_DACL_SECURITY_INFORMATION,
-    PSECURITY_DESCRIPTOR, PSID, SE_DACL_PROTECTED, UNPROTECTED_DACL_SECURITY_INFORMATION,
+    ACL, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, FreeSid, GetSecurityDescriptorControl,
+    GetSecurityDescriptorDacl, OBJECT_INHERIT_ACE, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID,
+    SE_DACL_PROTECTED, UNPROTECTED_DACL_SECURITY_INFORMATION,
 };
 use windows_sys::Win32::Storage::FileSystem::{
     BY_HANDLE_FILE_INFORMATION, CreateFileW, DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAG_BACKUP_SEMANTICS,
@@ -31,6 +29,9 @@ use windows_sys::Win32::Storage::FileSystem::{
 };
 
 use super::{wide, wide_path};
+
+mod dacl;
+use dacl::Dacl;
 
 /// What a confined path is identified by across its many possible names (symlink, hardlink, `.`): the volume and the
 /// file index. Used to dedupe guards that resolve to the same object so restore is order-independent.
@@ -147,7 +148,8 @@ fn open(path: &Path, write: bool) -> io::Result<OwnedHandle> {
         )
     };
     // SAFETY: `raw` is INVALID_HANDLE_VALUE on failure or a fresh handle owned by nobody else.
-    OwnedHandle::try_from(unsafe { HandleOrInvalid::from_raw_handle(raw as RawHandle) }).map_err(|_| io::Error::last_os_error())
+    OwnedHandle::try_from(unsafe { HandleOrInvalid::from_raw_handle(raw as RawHandle) })
+        .map_err(|_| io::Error::last_os_error())
 }
 
 /// Holds a directory open with no delete share so no one can rename or delete it while the handle lives. Pinning every
@@ -168,14 +170,18 @@ pub(super) fn pin(path: &Path) -> io::Result<OwnedHandle> {
         )
     };
     // SAFETY: `raw` is INVALID_HANDLE_VALUE on failure or a fresh handle owned by nobody else.
-    OwnedHandle::try_from(unsafe { HandleOrInvalid::from_raw_handle(raw as RawHandle) }).map_err(|_| io::Error::last_os_error())
+    OwnedHandle::try_from(unsafe { HandleOrInvalid::from_raw_handle(raw as RawHandle) })
+        .map_err(|_| io::Error::last_os_error())
 }
 
 /// The volume and file index of the link at `path`, identifying the object across its names.
 pub(super) fn identity(path: &Path) -> io::Result<Identity> {
     let handle = open(path, false)?;
     file_info(&handle).map(|info| {
-        (info.dwVolumeSerialNumber, (u64::from(info.nFileIndexHigh) << 32) | u64::from(info.nFileIndexLow))
+        (
+            info.dwVolumeSerialNumber,
+            (u64::from(info.nFileIndexHigh) << 32) | u64::from(info.nFileIndexLow),
+        )
     })
 }
 
@@ -204,7 +210,11 @@ pub(super) fn protect(path: &Path, sid: &Sid) -> io::Result<()> {
     };
     // Copy the inherited ACEs in place and disable further inheritance, so the parents' write grants stop flowing in.
     let detached = HandleDacl::read(&handle)?;
-    detached.set(&handle, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION, detached.acl)?;
+    detached.set(
+        &handle,
+        DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+        detached.acl,
+    )?;
     // Drop every right any profile had here (the copies of the parents' write grants among them), then read-only.
     let current = HandleDacl::read(&handle)?;
     let entries = [
@@ -220,7 +230,13 @@ pub(super) fn capture(path: &Path) -> io::Result<String> {
     let (mut text, mut len): (*mut u16, u32) = (std::ptr::null_mut(), 0);
     // SAFETY: a valid security descriptor and out pointers for the allocated string and its length.
     let ok = unsafe {
-        ConvertSecurityDescriptorToStringSecurityDescriptorW(dacl.sd, SDDL_REVISION_1, DACL_SECURITY_INFORMATION, &mut text, &mut len)
+        ConvertSecurityDescriptorToStringSecurityDescriptorW(
+            dacl.sd,
+            SDDL_REVISION_1,
+            DACL_SECURITY_INFORMATION,
+            &mut text,
+            &mut len,
+        )
     };
     if ok == 0 {
         return Err(io::Error::last_os_error());
@@ -239,7 +255,15 @@ pub(super) fn restore(path: &Path, sddl: &str) -> io::Result<()> {
     let text: Vec<u16> = sddl.encode_utf16().chain([0]).collect();
     let mut sd: PSECURITY_DESCRIPTOR = std::ptr::null_mut();
     // SAFETY: a NUL-terminated SDDL string and an out pointer for the descriptor (freed below).
-    if unsafe { ConvertStringSecurityDescriptorToSecurityDescriptorW(text.as_ptr(), SDDL_REVISION_1, &mut sd, std::ptr::null_mut()) } == 0 {
+    if unsafe {
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            text.as_ptr(),
+            SDDL_REVISION_1,
+            &mut sd,
+            std::ptr::null_mut(),
+        )
+    } == 0
+    {
         return Err(io::Error::last_os_error());
     }
     let restore = (|| {
@@ -254,9 +278,23 @@ pub(super) fn restore(path: &Path, sddl: &str) -> io::Result<()> {
             return Err(io::Error::last_os_error());
         }
         let info = DACL_SECURITY_INFORMATION
-            | if control & SE_DACL_PROTECTED != 0 { PROTECTED_DACL_SECURITY_INFORMATION } else { UNPROTECTED_DACL_SECURITY_INFORMATION };
+            | if control & SE_DACL_PROTECTED != 0 {
+                PROTECTED_DACL_SECURITY_INFORMATION
+            } else {
+                UNPROTECTED_DACL_SECURITY_INFORMATION
+            };
         // SAFETY: a live handle and a DACL that lives in `sd`.
-        win32(unsafe { SetSecurityInfo(handle.as_raw_handle() as HANDLE, SE_FILE_OBJECT, info, std::ptr::null_mut(), std::ptr::null_mut(), dacl, std::ptr::null()) })
+        win32(unsafe {
+            SetSecurityInfo(
+                handle.as_raw_handle() as HANDLE,
+                SE_FILE_OBJECT,
+                info,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                dacl,
+                std::ptr::null(),
+            )
+        })
     })();
     // SAFETY: allocated by ConvertStringSecurityDescriptorToSecurityDescriptorW.
     unsafe { LocalFree(sd.cast()) };
@@ -309,7 +347,15 @@ impl HandleDacl {
     fn set(&self, handle: &OwnedHandle, info: u32, acl: *mut ACL) -> io::Result<()> {
         // SAFETY: a live handle and a DACL this object owns for the call's duration.
         win32(unsafe {
-            SetSecurityInfo(handle.as_raw_handle() as HANDLE, SE_FILE_OBJECT, info, std::ptr::null_mut(), std::ptr::null_mut(), acl, std::ptr::null())
+            SetSecurityInfo(
+                handle.as_raw_handle() as HANDLE,
+                SE_FILE_OBJECT,
+                info,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                acl,
+                std::ptr::null(),
+            )
         })
     }
 
@@ -329,130 +375,6 @@ impl HandleDacl {
 impl Drop for HandleDacl {
     fn drop(&mut self) {
         // SAFETY: allocated by GetSecurityInfo; the ACL points into it.
-        unsafe { LocalFree(self.sd) };
-    }
-}
-
-/// A path's DACL and the security descriptor that owns it, freed on drop.
-struct Dacl {
-    acl: *mut ACL,
-    sd: PSECURITY_DESCRIPTOR,
-}
-
-impl Dacl {
-    fn read(path: &Path) -> io::Result<Dacl> {
-        let name = wide_path(path);
-        let (mut acl, mut sd) = (std::ptr::null_mut(), std::ptr::null_mut());
-        // SAFETY: a NUL-terminated path and out pointers for the DACL and its descriptor (freed in Drop).
-        let error = unsafe {
-            GetNamedSecurityInfoW(
-                name.as_ptr(),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                &mut acl,
-                std::ptr::null_mut(),
-                &mut sd,
-            )
-        };
-        win32(error)?;
-        Ok(Dacl { acl, sd })
-    }
-
-    /// The explicit ACEs naming `sid`, as (denies, mask, flags).
-    fn entries(&self, sid: &Sid) -> io::Result<Vec<(bool, u32, u32)>> {
-        if self.acl.is_null() {
-            return Ok(Vec::new());
-        }
-        let mut size = ACL_SIZE_INFORMATION::default();
-        // SAFETY: a valid ACL and the structure this information class expects, with its exact size.
-        let ok = unsafe {
-            GetAclInformation(
-                self.acl,
-                (&raw mut size).cast(),
-                size_of::<ACL_SIZE_INFORMATION>() as u32,
-                AclSizeInformation,
-            )
-        };
-        if ok == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        let mut found = Vec::new();
-        for index in 0..size.AceCount {
-            let mut ace = std::ptr::null_mut();
-            // SAFETY: an index below AceCount of a valid ACL.
-            if unsafe { GetAce(self.acl, index, &mut ace) } == 0 {
-                return Err(io::Error::last_os_error());
-            }
-            // SAFETY: every ACE starts with an ACE_HEADER.
-            let header = unsafe { *ace.cast::<ACE_HEADER>() };
-            if !matches!(header.AceType, ACCESS_ALLOWED | ACCESS_DENIED)
-                || u32::from(header.AceFlags) & INHERITED_ACE != 0
-            {
-                continue;
-            }
-            // Allowed and denied ACEs share this layout: header, mask, then the SID in place.
-            let ace = ace.cast::<ACCESS_ALLOWED_ACE>();
-            // SAFETY: an allowed/denied ACE, whose SID starts at SidStart.
-            let (mask, named) = unsafe { ((*ace).Mask, EqualSid((&raw mut (*ace).SidStart).cast(), sid.raw()) != 0) };
-            if named {
-                found.push((header.AceType == ACCESS_DENIED, mask, u32::from(header.AceFlags)));
-            }
-        }
-        Ok(found)
-    }
-
-    fn has(&self, sid: &Sid, mask: u32, flags: u32) -> io::Result<bool> {
-        Ok(self
-            .entries(sid)?
-            .iter()
-            .any(|&(denies, m, f)| !denies && m & mask == mask && f & flags == flags))
-    }
-
-    fn mentions(&self, sid: &Sid) -> io::Result<bool> {
-        Ok(!self.entries(sid)?.is_empty())
-    }
-
-    fn write(&self, path: &Path, sid: &Sid, mode: i32, mask: u32, flags: u32) -> io::Result<()> {
-        let entry = EXPLICIT_ACCESS_W {
-            grfAccessPermissions: mask,
-            grfAccessMode: mode,
-            grfInheritance: flags,
-            Trustee: TRUSTEE_W {
-                pMultipleTrustee: std::ptr::null_mut(),
-                MultipleTrusteeOperation: NO_MULTIPLE_TRUSTEE,
-                TrusteeForm: TRUSTEE_IS_SID,
-                TrusteeType: TRUSTEE_IS_UNKNOWN,
-                ptstrName: sid.raw().cast(),
-            },
-        };
-        let mut next: *mut ACL = std::ptr::null_mut();
-        // SAFETY: one initialized entry naming a live SID; the old ACL may be null; `next` is freed below.
-        win32(unsafe { SetEntriesInAclW(1, &entry, self.acl, &mut next) })?;
-        let name = wide_path(path);
-        // Not SetFileSecurityW: SetNamedSecurityInfoW also updates the inherited ACEs of the existing subtree.
-        // SAFETY: a NUL-terminated path and the ACL built above.
-        let error = unsafe {
-            SetNamedSecurityInfoW(
-                name.as_ptr(),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                next,
-                std::ptr::null(),
-            )
-        };
-        // SAFETY: allocated by SetEntriesInAclW.
-        unsafe { LocalFree(next.cast()) };
-        win32(error)
-    }
-}
-
-impl Drop for Dacl {
-    fn drop(&mut self) {
-        // SAFETY: allocated by GetNamedSecurityInfoW; the ACL points into it.
         unsafe { LocalFree(self.sd) };
     }
 }
