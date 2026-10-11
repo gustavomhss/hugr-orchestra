@@ -18,6 +18,7 @@ import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import { copyTreeSitter, resolveTreeSitter } from "@orchestra/script/tree-sitter-prebuilds"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
+import { leanNotices } from "./lean-notices"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -264,6 +265,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     ),
   )
   binaries[name] = Script.version
+  await leanNotices(`dist/${name}`)
 }
 
 export { binaries }
