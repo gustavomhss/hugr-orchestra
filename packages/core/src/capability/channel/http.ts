@@ -16,6 +16,8 @@ export type Request = {
   path: string
   query?: Readonly<Record<string, string | number | boolean | undefined>>
   body?: Schema.Json
+  /** Fixed descriptor headers only; they can never replace authorization or the transport's own headers. */
+  headers?: Readonly<Record<string, string>>
 }
 export type RPC = (input: Request) => Effect.Effect<Schema.Json, Failure | CapabilityConnections.Error>
 export type Options = { fixtureOrigin?: string; timeoutMs?: number; maxResponseBytes?: number }
@@ -47,7 +49,7 @@ export function request(endpoint: string, authorization: string, input: Request,
       const body = input.body === undefined ? undefined : JSON.stringify(input.body)
       const req = (url.protocol === "https:" ? https : http).request(url, {
         method: input.method, signal, agent: false,
-        headers: { authorization, accept: "application/json", "accept-encoding": "identity",
+        headers: { ...input.headers, authorization, accept: "application/json", "accept-encoding": "identity",
           ...(body === undefined ? {} : { "content-type": "application/json", "content-length": Buffer.byteLength(body) }) },
       })
       const timer = setTimeout(() => {

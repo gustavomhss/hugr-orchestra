@@ -2,28 +2,17 @@ export * as CapabilityConnectionVerification from "./verify"
 
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
-import { Integration } from "@orchestra/schema/integration"
 import { Cause, Context, Effect, Option, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { types } from "node:util"
 import { Failure, request, validateOptions, type Options } from "../channel/http"
 import { CapabilityOperatorScope } from "../operator/scope"
-import { CapabilityDiscord } from "../providers/discord"
-import { CapabilitySlack } from "../providers/slack"
 import type { CapabilityConnectionSetupContract } from "./setup-contract"
-import type { CapabilityConnectionStoreContract } from "./store-contract"
+import type { CapabilityVerifierContract } from "./verifiers/contract"
+import { CapabilityVerifiers } from "./verifiers/index"
 
 export type { Options } from "../channel/http"
 
-const SlackIdentity = Schema.Struct({ ok: Schema.Literal(true),
-  team_id: Schema.String.check(Schema.isPattern(/^T[A-Z0-9]{1,63}(?![\s\S])/)),
-  user_id: Schema.String.check(Schema.isPattern(/^[UW][A-Z0-9]{1,63}(?![\s\S])/)),
-  bot_id: Schema.optionalKey(Schema.String.check(Schema.isPattern(/^B[A-Z0-9]{1,63}(?![\s\S])/))),
-})
-const DiscordIdentity = Schema.Struct({ id: Schema.String.check(Schema.isPattern(/^[0-9]{1,20}(?![\s\S])/)),
-  bot: Schema.Literal(true),
-})
-const SlackRejection = Schema.Struct({ ok: Schema.Literal(false), error: Schema.String })
 const failure = (code: Capability.ErrorCode) => new Capability.Failure({ code,
   message: "Capability connection verification is unavailable" })
 
@@ -49,28 +38,23 @@ export const make = (options: Options = {}) => {
       return Effect.gen(function* () {
         if (!captured.ok) return yield* failure("unsupported_schema")
         const selected = captured.value
-        const endpoint = selected.provider === "slack" ? CapabilitySlack.endpoint : CapabilityDiscord.endpoint
-        const value = yield* request(endpoint, `${selected.provider === "slack" ? "Bearer" : "Bot"} ${selected.key}`,
-          selected.provider === "slack" ? { method: "POST", path: "/auth.test", body: {} }
-            : { method: "GET", path: "/users/@me" }, transport.value).pipe(
+        const descriptor = CapabilityVerifiers.descriptor(selected.provider)
+        if (!descriptor) return yield* failure("connection_unavailable")
+        // Origin, auth scheme and headers are descriptor-fixed; only the trusted fixture may swap the origin.
+        const call: CapabilityVerifierContract.Call = (route) => request(descriptor.origin, descriptor.authorization(selected.key),
+          { method: route.method, path: route.path, body: route.body, headers: descriptor.headers }, transport.value).pipe(
           // Map the whole Cause without dropping other failures, defects, interrupts or annotations.
           Effect.catchCause((cause) => Effect.failCause(transportCause(cause))),
         )
-        const rejected = selected.provider === "slack" ? Schema.decodeUnknownOption(SlackRejection)(value) : Option.none()
-        if (Option.isSome(rejected)) return yield* failure(
-          ["invalid_auth", "token_revoked", "token_expired", "not_authed", "account_inactive"].includes(rejected.value.error)
-            ? "authentication_required" : "connection_unavailable",
-        )
-        const identity = selected.provider === "slack" ? Schema.decodeUnknownOption(SlackIdentity)(value).pipe(
-          Option.map((auth) => JSON.stringify([auth.team_id, auth.user_id, auth.bot_id ?? null])),
-        ) : Schema.decodeUnknownOption(DiscordIdentity)(value).pipe(Option.map((auth) => auth.id))
-        if (Option.isNone(identity)) return yield* failure("connection_unavailable")
-        const subjectID = identity.value
-        if (subjectID.includes(selected.key)) return yield* failure("connection_unavailable")
+        const identified = yield* descriptor.identify(call)
+        // Credential-only identify proves validity alone and returns the literal "key"; anything else fails `accepts`.
+        const subjectID = descriptor.verification === "verified" ? identified
+          : identified === "key" ? CapabilityVerifiers.fingerprint(selected.key) : ""
+        if (!CapabilityVerifiers.accepts(selected.provider, subjectID, selected.key)) return yield* failure("connection_unavailable")
         // This fingerprint binds identity and exact key, not vendor action entitlement.
-        return Object.freeze({ provider: selected.provider, endpoint, subjectID,
-          integrationID: Integration.ID.make(`capability.${selected.provider}`),
-          scopeHash: createHash("sha256").update(JSON.stringify([selected.provider, endpoint, subjectID,
+        return Object.freeze({ provider: selected.provider, endpoint: descriptor.endpoint, subjectID,
+          integrationID: descriptor.integrationID,
+          scopeHash: createHash("sha256").update(JSON.stringify([selected.provider, descriptor.endpoint, subjectID,
             createHash("sha256").update(selected.key).digest("hex")])).digest("hex"),
         }) satisfies CapabilityConnectionSetupContract.Proof
       })
@@ -80,8 +64,8 @@ export const make = (options: Options = {}) => {
 }
 
 /** Pure projection: mixed errors retain identity; repeated reasons and annotations survive normalization. */
-export function transportCause(cause: Cause.Cause<CapabilityConnectionStoreContract.Error | Failure>) {
-  return Cause.fromReasons<CapabilityConnectionStoreContract.Error>(cause.reasons.map((reason) => reason._tag === "Fail"
+export function transportCause(cause: Cause.Cause<Capability.Failure | Failure>) {
+  return Cause.fromReasons<Capability.Failure>(cause.reasons.map((reason) => reason._tag === "Fail"
     ? Cause.makeFailReason(reason.error instanceof Failure ? failure(
       reason.error.reason === "http" && (reason.error.status === 401 || reason.error.status === 403)
         ? "authentication_required" : "connection_unavailable",

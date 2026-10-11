@@ -6,7 +6,7 @@ import { Credential } from "@orchestra/schema/credential"
 import { Integration } from "@orchestra/schema/integration"
 import { createHash } from "node:crypto"
 import { eq } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
+import { Effect, Schema } from "effect"
 import { CredentialTable } from "../../credential/sql"
 import { Database } from "../../database/database"
 import { ProjectTable } from "../../project/sql"
@@ -16,18 +16,12 @@ import { CapabilityOperatorScope } from "../operator/scope"
 import { CapabilityConnectionTable } from "../sql"
 import { capture, decode } from "./input"
 import type { CapabilityConnectionSetupContract } from "./setup-contract"
+import { CapabilityVerifiers } from "./verifiers/index"
 
 const Proof = Schema.Struct({ provider: CapabilitySetup.Provider,
   subjectID: Schema.NonEmptyString.check(Schema.isMaxLength(4096)), endpoint: Schema.String,
   integrationID: Integration.ID,
   scopeHash: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}(?![\s\S])/)) })
-// Connections store the fixed channel base; the verifier owns auth.test / users/@me routes.
-const endpoints = Object.freeze({ slack: "https://slack.com/api", discord: "https://discord.com/api/v10" })
-const SlackSubject = Schema.Tuple([
-  Schema.String.check(Schema.isPattern(/^T[A-Z0-9]{1,63}(?![\s\S])/)),
-  Schema.String.check(Schema.isPattern(/^[UW][A-Z0-9]{1,63}(?![\s\S])/)),
-  Schema.NullOr(Schema.String.check(Schema.isPattern(/^B[A-Z0-9]{1,63}(?![\s\S])/))),
-])
 
 /** Historical receipts attest creation only, never current remote credential readiness. */
 export function make(options: CapabilityConnectionSetupContract.Options) {
@@ -73,19 +67,12 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
         const result = yield* verifier.verify(value.input)
         yield* validate
         const proof = capture(result, decode(Proof))
-        if (!proof.ok || proof.value.provider !== value.input.provider ||
-          // Frozen baseline: only Slack/Discord until the descriptor registry replaces this map.
-          (value.input.provider !== "slack" && value.input.provider !== "discord") ||
-          proof.value.endpoint !== endpoints[value.input.provider] ||
-          proof.value.integrationID !== `capability.${value.input.provider}` ||
-          proof.value.subjectID !== proof.value.subjectID.trim() || proof.value.subjectID.includes(value.input.key))
+        const descriptor = CapabilityVerifiers.descriptor(value.input.provider)
+        // The registry, not the verifier, decides endpoint, integration, subject shape and verification level.
+        if (!proof.ok || !descriptor || proof.value.provider !== value.input.provider ||
+          proof.value.endpoint !== descriptor.endpoint || proof.value.integrationID !== descriptor.integrationID ||
+          !CapabilityVerifiers.accepts(value.input.provider, proof.value.subjectID, value.input.key))
           return yield* unavailable()
-        if (value.input.provider === "discord" && !/^[0-9]{1,20}(?![\s\S])/.test(proof.value.subjectID)) return yield* unavailable()
-        if (value.input.provider === "slack") {
-          const subject = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(proof.value.subjectID).pipe(
-            Option.flatMap(Schema.decodeUnknownOption(SlackSubject)))
-          if (Option.isNone(subject) || JSON.stringify(subject.value) !== proof.value.subjectID) return yield* unavailable()
-        }
         if (proof.value.scopeHash.toLowerCase() !== createHash("sha256").update(JSON.stringify([
           value.input.provider, proof.value.endpoint, proof.value.subjectID,
           createHash("sha256").update(value.input.key).digest("hex"),
@@ -100,7 +87,7 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
             provider: connection.provider, label: value.label, integration_id: proof.value.integrationID, credential_id: credentialID,
             subject_id: proof.value.subjectID, endpoint: proof.value.endpoint, scope_hash: proof.value.scopeHash.toLowerCase(),
             generation: connection.generation, state: "active" }).run()
-          return { connection, verification: "verified" }
+          return { connection, verification: descriptor.verification }
         }), verify).pipe(Effect.withSpan("CapabilityConnectionSetup.commit"))
       })
     }
