@@ -19,12 +19,15 @@ const INTERFACE = [
   // Orchestra's archive and continuity records, which the native transcript store keeps in step.
   "continuity/alias", "continuity/archive-format", "continuity/masking", "continuity/memory-types", "continuity/request-source",
   "continuity/service", "continuity/trigger",
+  // The host adapter (claude-code/host): seat definitions and skills for the generated plugin, Task's write-root
+  // validation for task_grant, the skill playbooks, and the background process registry the `process` tool feeds.
+  "maestro/seats", "maestro/seat-skill-root", "maestro/write-roots", "skill", "background/process",
   // The host hooks (host/{gate,delegation,hooks}.ts): the policy gate's ToolSafety profile, arsenal input bindings and
-  // workflow HOLDs; the delegation records (seat registry, write roots, logical Task, authority, work result); the
-  // working memory read after a compaction (plan, todos) and the archive the compaction summary goes to.
+  // workflow HOLDs; the delegation records (seat registry, logical Task, authority, work result); the working memory
+  // read after a compaction (plan, todos) and the archive the compaction summary goes to.
   "continuity/archive", "id/id", "maestro/arsenal-bindings", "maestro/arsenal-observations", "maestro/backend-work",
-  "maestro/governed-task-reservation", "maestro/logical-task", "maestro/plan-revision", "maestro/route-grant", "maestro/seats",
-  "maestro/session-authority", "maestro/workflow-binding", "maestro/write-roots", "session/todo",
+  "maestro/governed-task-reservation", "maestro/logical-task", "maestro/plan-revision", "maestro/route-grant",
+  "maestro/session-authority", "maestro/workflow-binding", "session/todo",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
