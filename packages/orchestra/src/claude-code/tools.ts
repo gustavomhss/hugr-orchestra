@@ -57,11 +57,22 @@ export function server(input: {
 
 // The SDK takes a Zod shape; Orchestra's tools declare their own schemas. The shape only describes the call to the
 // model: each tool still decodes its arguments with its own schema, so constraints Zod is not given here still hold.
+// A union of objects (e.g. one variant per `action`) has no top-level properties, but an SDK tool must be one object:
+// merge the variants' fields, union a field's schemas across variants, and require only what every variant requires.
 function shape(schema: unknown) {
-  const required = isRecord(schema) && Array.isArray(schema.required) ? schema.required : []
-  const properties = isRecord(schema) && isRecord(schema.properties) ? schema.properties : {}
-  return Object.fromEntries(Object.entries(properties).map(([key, value]) =>
-    [key, required.includes(key) ? zod(value) : zod(value).optional()]))
+  const options = isRecord(schema) ? (Array.isArray(schema.anyOf) ? schema.anyOf : Array.isArray(schema.oneOf) ? schema.oneOf : []) : []
+  const variants = options.length > 0 ? options.filter(isRecord) : isRecord(schema) ? [schema] : []
+  const fields = variants.map((variant) => ({
+    properties: isRecord(variant.properties) ? variant.properties : {},
+    required: Array.isArray(variant.required) ? variant.required : [],
+  }))
+  const keys = [...new Set(fields.flatMap((field) => Object.keys(field.properties)))]
+  return Object.fromEntries(keys.map((key) => {
+    const schemas = [...new Map(fields.flatMap((field) => key in field.properties ? [field.properties[key]] : [])
+      .map((item) => [JSON.stringify(item), item])).values()]
+    const type = zod(schemas.length === 1 ? schemas[0] : { anyOf: schemas })
+    return [key, fields.every((field) => field.required.includes(key)) ? type : type.optional()]
+  }))
 }
 
 function zod(schema: unknown): z.ZodType {

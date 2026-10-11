@@ -62,10 +62,13 @@ it.instance("a native research dispatch runs on Claude Code with only its Orches
     const fixture = yield* NativeResearchTask.setup(engine)
     yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
     yield* fixture.fs.writeFileString(path.join(fixture.instance.directory, "evidence.txt"), "Only version 1.\n")
-    const seen: { tools: string[]; read: string[]; error?: boolean } = { tools: [], read: [] }
+    const seen: { tools: string[]; schemas: Record<string, { properties?: Record<string, unknown>; required?: string[] }>; read: string[]; error?: boolean } =
+      { tools: [], schemas: {}, read: [] }
     scripts.push(async function* (options) {
       const client = await connect(options)
-      seen.tools = (await client.listTools()).tools.map((tool) => tool.name)
+      const listed = (await client.listTools()).tools
+      seen.tools = listed.map((tool) => tool.name)
+      seen.schemas = Object.fromEntries(listed.map((tool) => [tool.name, tool.inputSchema]))
       yield init
       yield assistant("msg_read", [{ type: "tool_use", id: "toolu_read", name: "mcp__orchestra__read", input: { filePath: "evidence.txt" } }], "tool_use")
       const read = await client.callTool({ name: "read", arguments: { filePath: "evidence.txt" } })
@@ -88,6 +91,12 @@ it.instance("a native research dispatch runs on Claude Code with only its Orches
     expect(queries[0].systemPrompt.append).toContain("jimmy-research")
     expect(seen.tools).toEqual(expect.arrayContaining(["read", "research_capture", "research_record", "research_view", "atlas_context"]))
     for (const name of ["bash", "edit", "write", "task", "apply_patch"]) expect(seen.tools).not.toContain(name)
+    // Union-parameter tools reach Claude Code with every variant's fields, not an empty object: the model must be able to
+    // name the action (a document publication included) and its arguments.
+    for (const name of ["research_capture", "research_record", "research_view", "atlas_context"])
+      expect(Object.keys(seen.schemas[name]?.properties ?? {}).length).toBeGreaterThan(0)
+    expect(JSON.stringify(seen.schemas.research_record?.properties?.action)).toContain('"document"')
+    expect(seen.schemas.research_record?.required).toContain("action")
 
     // The read ran through the registry: captured as retained source and charged to the dispatch.
     expect(seen.error).toBe(false)
