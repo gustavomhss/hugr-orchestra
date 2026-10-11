@@ -80,6 +80,7 @@ import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
 import { withoutShellProjections } from "../orchestra-evidence-data"
+import { isTaskTool } from "@orchestra/core/util/task-tool"
 
 const emptyMessages: MessageType[] = []
 const emptyParts: PartType[] = []
@@ -96,9 +97,8 @@ let lastHeaderHeight = 64
 const timelineCache = new Map<string, { measurements: VirtualItem[]; toolOpen: Record<string, boolean | undefined> }>()
 
 const taskDescription = (part: PartType, sessionID: string) => {
-  if (part.type !== "tool" || part.tool !== "task") return
-  const metadata = "metadata" in part.state ? part.state.metadata : undefined
-  if (metadata?.sessionId !== sessionID) return
+  if (part.type !== "tool" || !isTaskTool(part.tool)) return
+  if (("metadata" in part.state ? part.state.metadata : undefined)?.sessionId !== sessionID) return
   const value = part.state.input?.description
   if (typeof value === "string" && value) return value
 }
