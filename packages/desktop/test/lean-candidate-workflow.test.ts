@@ -79,10 +79,10 @@ function check(input: unknown) {
   const steps = (job.steps as unknown[]).map(object)
   expect(steps.map((step) => step.id)).toEqual([
     "checkout", "host", "node", "bun", "cache", "install", "versions", "omni", "contract", "build", "package",
-    "typecheck", "verify", "archive", "upload",
+    "typecheck", "verify", "archive", "upload", "diagnostics",
   ])
   for (const step of steps) {
-    keys(step, step.uses ? ["name", "id", "uses", "with"] :
+    keys(step, step.uses ? ["name", "id", "uses", "with", ...(step.id === "diagnostics" ? ["if"] : [])] :
       ["name", "id", "run", ...(["contract", "typecheck", "verify"].includes(String(step.id)) ? ["working-directory"] : []), ...(step.id === "install" ? ["env"] : [])])
   }
   const by = Object.fromEntries(steps.map((step) => [String(step.id), step]))
@@ -106,6 +106,13 @@ function check(input: unknown) {
   for (const id of ["contract", "typecheck", "verify"]) expect(by[id]["working-directory"]).toBe("packages/desktop")
   expect(by.upload.with).toEqual({ name: "ownedappArtifact-${{ github.sha }}", path: artifacts.join("\n") + "\n",
     "if-no-files-found": "error", "include-hidden-files": false, "retention-days": 7, "compression-level": 0 })
+  // Failure-only, sanitized proof outputs: never the app archive or build receipt.
+  expect(by.diagnostics.uses).toBe(pins.upload)
+  expect(by.diagnostics.if).toBe("failure()")
+  expect(by.diagnostics.with).toEqual({ name: "ownedproofDiagnostics-${{ github.sha }}",
+    path: "packages/desktop/dist-candidate/proof/proof.log\npackages/desktop/dist-candidate/proof/renderer.png\n",
+    "if-no-files-found": "ignore", "include-hidden-files": false,
+    "retention-days": 7 })
 }
 
 test("candidate workflow has closed triggers, read-only permissions, pinned native toolchain and bounded artifacts", () => {

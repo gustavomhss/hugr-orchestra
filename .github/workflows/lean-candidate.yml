@@ -193,3 +193,18 @@ jobs:
           include-hidden-files: false
           retention-days: 7
           compression-level: 0
+
+      # A failed acceptance still publishes its sanitized proof log (and PNG when one was taken): the recorder's
+      # output boundary, never the app, receipts or raw streams.
+      - name: Upload failed-run owned proof diagnostics
+        id: diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ownedproofDiagnostics-${{ github.sha }}
+          path: |
+            packages/desktop/dist-candidate/proof/proof.log
+            packages/desktop/dist-candidate/proof/renderer.png
+          if-no-files-found: ignore
+          include-hidden-files: false
+          retention-days: 7
