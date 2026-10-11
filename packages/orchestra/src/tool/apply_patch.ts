@@ -78,7 +78,7 @@ export const ApplyPatchTool = Tool.define(
         const removable = yield* Effect.promise(async () =>
           path.join(await physicalPath(path.dirname(filePath)), path.basename(filePath)),
         )
-        yield* assertExternalDirectoryEffect(ctx, physical)
+        yield* assertExternalDirectoryEffect(ctx, filePath, { real: physical })
 
         switch (hunk.type) {
           case "add": {
@@ -142,7 +142,7 @@ export const ApplyPatchTool = Tool.define(
 
             const movePath = hunk.movePath ? path.resolve(instance.directory, hunk.movePath) : undefined
             const movePhysical = movePath ? yield* Effect.promise(() => physicalPath(movePath)) : undefined
-            yield* assertExternalDirectoryEffect(ctx, movePhysical)
+            yield* assertExternalDirectoryEffect(ctx, movePath, { real: movePhysical })
 
             fileChanges.push({
               filePath,

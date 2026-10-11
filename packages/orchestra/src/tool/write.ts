@@ -44,7 +44,7 @@ export const WriteTool = Tool.define(
             : path.join(instance.directory, params.filePath)
           // Resolved once, before any permission is asked: everything below judges and writes this real location.
           const physical = yield* Effect.promise(() => physicalPath(filepath))
-          yield* assertExternalDirectoryEffect(ctx, physical)
+          yield* assertExternalDirectoryEffect(ctx, filepath, { real: physical })
 
           const exists = yield* fs.existsSafe(physical)
           const source = exists ? yield* Bom.readFile(fs, physical) : { bom: false, text: "" }

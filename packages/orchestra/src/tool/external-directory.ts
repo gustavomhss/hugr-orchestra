@@ -11,6 +11,8 @@ type Kind = "file" | "directory"
 type Options = {
   bypass?: boolean
   kind?: Kind
+  /** The target's `physicalPath`, when the caller already holds it, so the check judges what it will write. */
+  real?: string
 }
 
 export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirectory")(function* (
@@ -26,14 +28,17 @@ export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirec
   const lexical = process.platform === "win32" ? FSUtil.normalizePath(target) : target
   // Symlinks and junctions decide where the path really lands, so containment is judged on the real locations.
   // A path that cannot be resolved cannot be written through either, so it falls back to its lexical form.
-  const real = yield* Effect.promise(() => physicalPath(lexical).catch(() => lexical))
+  const real = options?.real ?? (yield* Effect.promise(() => physicalPath(lexical).catch(() => lexical)))
   const roots = yield* Effect.promise(async () => ({
     directory: await physicalPath(ins.directory).catch(() => ins.directory),
     worktree: await physicalPath(ins.worktree).catch(() => ins.worktree),
   }))
-  if (containsPath(lexical, ins) && containsPath(real, { ...ins, ...roots })) return false
+  const inside = containsPath(lexical, ins)
+  if (inside && containsPath(real, { ...ins, ...roots })) return false
 
-  const full = real
+  // A path named outside the workspace is asked about as named, so a rule on that path keeps matching; a workspace
+  // path that leaves it through a link is asked about where it really lands.
+  const full = inside ? real : lexical
   const kind = options?.kind ?? "file"
   const dir = kind === "directory" ? full : path.dirname(full)
   const glob =

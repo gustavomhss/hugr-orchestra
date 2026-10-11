@@ -83,7 +83,7 @@ export const EditTool = Tool.define(
             : path.join(instance.directory, params.filePath)
           // Resolved once, before any permission is asked: everything below judges and writes this real location.
           const physical = yield* Effect.promise(() => physicalPath(filePath))
-          yield* assertExternalDirectoryEffect(ctx, physical)
+          yield* assertExternalDirectoryEffect(ctx, filePath, { real: physical })
 
           let diff = ""
           let contentOld = ""
