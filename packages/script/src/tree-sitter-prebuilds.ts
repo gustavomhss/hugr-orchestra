@@ -116,13 +116,18 @@ function entries(dir: string) {
   return existsSync(dir) ? readdirSync(dir) : []
 }
 
-function rebuildPackage(root: string, dir: string, files: string[], machine: number) {
-  const gyp = [
+/** The lockfile's node-gyp entry script under `root`, in the hoisted or the isolated (.bun store) layout. */
+export function lockfileNodeGyp(root: string) {
+  return [
     path.join(root, "node_modules", "node-gyp", "bin", "node-gyp.js"),
     ...entries(path.join(root, "node_modules", ".bun"))
       .filter((name) => name.startsWith("node-gyp@"))
       .map((name) => path.join(root, "node_modules", ".bun", name, "node_modules", "node-gyp", "bin", "node-gyp.js")),
   ].find((file) => existsSync(file))
+}
+
+function rebuildPackage(root: string, dir: string, files: string[], machine: number) {
+  const gyp = lockfileNodeGyp(root)
   if (!gyp) throw new Error(`TREE_SITTER_REBUILD_UNAVAILABLE: no lockfile node-gyp under ${root}`)
   const build = path.join(dir, "build")
   // node-gyp-build loads build/Release before prebuilds; a tree this step did not make is not its to replace.

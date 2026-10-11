@@ -14,7 +14,7 @@ import {
 import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
-import { NATIVE_MACHINES, nativeMachines, prepareTreeSitterPrebuilds } from "./tree-sitter-prebuilds"
+import { NATIVE_MACHINES, lockfileNodeGyp, nativeMachines, prepareTreeSitterPrebuilds } from "./tree-sitter-prebuilds"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const host = `${process.platform}-${process.arch}`
@@ -86,15 +86,15 @@ function mislabeledHostFixture() {
   const modules = path.join(fixture, "node_modules")
   const resolve = createRequire(path.join(root, "packages", "maestro-arsenal", "package.json")).resolve
   const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.json")))
-  const store = path.join(root, "node_modules", ".bun")
-  const gyp = readdirSync(store).find((name) => name.startsWith("node-gyp@"))!
+  const gyp = lockfileNodeGyp(root)!
   mkdirSync(modules)
   cpSync(realpathSync(python), path.join(modules, "tree-sitter-python"), { recursive: true, dereference: true })
   // gyp cannot reach a dependency .gyp outside the tree it builds, so node-addon-api is copied, not linked.
-  cpSync(realpathSync(path.join(python, "..", "node-addon-api")), path.join(modules, "node-addon-api"), {
+  const addonApi = createRequire(path.join(python, "package.json")).resolve("node-addon-api/package.json")
+  cpSync(realpathSync(path.dirname(addonApi)), path.join(modules, "node-addon-api"), {
     recursive: true,
   })
-  symlinkSync(path.join(store, gyp, "node_modules", "node-gyp"), path.join(modules, "node-gyp"), "junction")
+  symlinkSync(path.dirname(path.dirname(gyp)), path.join(modules, "node-gyp"), "junction")
   const foreign = readdirSync(path.join(python, "prebuilds")).find(
     (dir) =>
       !nativeMachines(path.join(python, "prebuilds", dir, "tree-sitter-python.node")).includes(NATIVE_MACHINES[host]!),
