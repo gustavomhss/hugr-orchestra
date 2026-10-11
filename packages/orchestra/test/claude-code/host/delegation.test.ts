@@ -160,6 +160,8 @@ describe("Claude Code Agent dispatch records", () => {
     if (recorded?.state.status !== "completed") throw new Error("expected the completed Agent part")
     expect(recorded.tool).toBe("Agent")
     expect(recorded.metadata?.providerExecuted).toBe(true)
+    // The mirror resolves the child Session from the part's own metadata.
+    expect(recorded.metadata?.sessionId).toBe(child)
     const session = yield* fixture.sessions.get(child)
     expect(recorded.state.metadata).toMatchObject({ parentSessionId: fixture.parent.id, sessionId: child, background: false })
     expect(recorded.state.metadata.claudeCodeDispatch).toEqual({ executor: "claude-code-host", toolName: "Agent", toolUseID: "toolu_01",

@@ -301,14 +301,19 @@ export function make(input: {
     })
   }
 
-  // The live task card needs the child Session while the subagent runs.
+  // The live task card needs the child Session while the subagent runs. The mirror finds it on the part's own metadata
+  // (HOST host/session.ts); the contract reads it from the call state's.
   function running(entry: Record) {
     return Effect.gen(function* () {
       const part = yield* find(entry)
       if (!part || part.state.status !== "running") return
-      yield* save({ ...part, state: { ...part.state, title: entry.description, metadata: { ...part.state.metadata,
-        parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: entry.background } } })
+      yield* save({ ...part, metadata: { ...part.metadata, ...placement(entry) }, state: { ...part.state, title: entry.description,
+        metadata: { ...part.state.metadata, ...placement(entry), background: entry.background } } })
     })
+  }
+
+  function placement(entry: Record) {
+    return { parentSessionId: entry.dispatcher.sessionID, ...(entry.child ? { sessionId: entry.child } : {}) }
   }
 
   // The parent part: Claude Code's raw tool name, executed by Claude Code, with what Maestro received as its output.
@@ -317,7 +322,7 @@ export function make(input: {
       const part = yield* find(entry)
       if (!part) return yield* refuse(`HOLD: the ${entry.toolName} call ${entry.toolUseID} has no mirrored part to record`)
       const start = part.state.status === "running" ? part.state.time.start : Date.now()
-      yield* save({ ...part, tool: entry.toolName, metadata: { ...part.metadata, providerExecuted: true, claudeCodeTool: entry.toolName },
+      yield* save({ ...part, tool: entry.toolName, metadata: { ...part.metadata, ...placement(entry), providerExecuted: true, claudeCodeTool: entry.toolName },
         state: { status: "completed", input: part.state.input, output, title: entry.description, metadata: { ...metadata },
           time: { start, end: Date.now() } } })
     })
