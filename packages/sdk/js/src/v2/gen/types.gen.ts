@@ -6493,6 +6493,13 @@ export type SessionNextRevertCommitted = {
   }
 }
 
+export type CapabilityArtifactId = string
+
+export type CapabilityArtifactRef = {
+  id: CapabilityArtifactId
+  revision: number
+}
+
 export type ModelApi =
   | {
       id: string
@@ -18887,3 +18894,26 @@ export type PtyConnectResponses = {
 }
 
 export type PtyConnectResponse = PtyConnectResponses[keyof PtyConnectResponses]
+
+export type {
+  ResearchArtifactNotFoundError,
+  ResearchArtifactPage,
+  ResearchAtlasSource,
+  ResearchBinding,
+  ResearchDocumentReceipt,
+  ResearchDocumentRef,
+  ResearchEvidenceRef,
+  ResearchJsonLocator,
+  ResearchLineLocator,
+  ResearchQuoteLocator,
+  ResearchRecordRef,
+  ResearchSourceExtent,
+  ResearchSourceOrigin,
+  ResearchSourceReceipt,
+  ResearchSourceRef,
+  V2ResearchArtifactData,
+  V2ResearchArtifactError,
+  V2ResearchArtifactErrors,
+  V2ResearchArtifactResponse,
+  V2ResearchArtifactResponses,
+} from "./research.gen.js"

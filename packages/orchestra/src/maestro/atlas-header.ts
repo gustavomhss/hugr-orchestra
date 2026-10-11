@@ -6,37 +6,37 @@ import { InstanceRef } from "@/effect/instance-ref"
 import { LEGACY_BACKEND_ID } from "./roster"
 import { AtlasMemory } from "./atlas-memory"
 
-const MEMBER = AtlasMemory.MEMBER
-
-// F3 A4: the backend seat's running Atlas header (Awareness, Orientation and its own top-12 project rules) as one
+// Native Atlas seats' running header (Awareness, Orientation and their own top-12 project rules) as one
 // system part of every provider turn it executes (F3 cl. 6-10, F2.8). The member comes from the executing agent's
-// stable id, never its label; every other agent, and the title/compaction/summary agents, get nothing. Storage is the
+// stable id, never its label; unsupported seats and title/compaction/summary agents get nothing. Storage is the
 // execution worktree's root (owner ruling F3-D5). The read never writes and never throws into the turn: an
 // unreadable or partial store renders an explicit degraded marker, which the charter tells the specialist to act on.
 export const render = Effect.fn("AtlasHeader.render")(function* (agent: Pick<Agent.Info, "id" | "native">) {
-  if (!AtlasMemory.supports(agent)) return undefined
+  const member = AtlasMemory.owner(agent)
+  if (!member) return undefined
   const instance = yield* InstanceRef
-  if (!instance) return degraded("no project placement is bound to this turn")
+  if (!instance) return degraded(member, "no project placement is bound to this turn")
   const root = instance.worktree === "/" ? instance.directory : instance.worktree
   return yield* Effect.try({
     try: () =>
       format(
         readBoundHeader({
           storage: { projectID: instance.project.id, root },
-          memoryOwner: MEMBER,
-          legacyOwners: [LEGACY_BACKEND_ID],
+          memoryOwner: member,
+          legacyOwners: member === "backend" ? [LEGACY_BACKEND_ID] : [],
         }),
+        member,
       ),
     catch: (cause) => cause,
   }).pipe(
     Effect.catch((cause) =>
-      Effect.logWarning("atlas header unavailable", { root, cause }).pipe(Effect.as(degraded(firstLine(cause)))),
+      Effect.logWarning("atlas header unavailable", { root, cause }).pipe(Effect.as(degraded(member, firstLine(cause)))),
     ),
   )
 })
 
-function format(bound: BoundHeader) {
-  if (!bound.header) return degraded("the project rules store could not be read")
+function format(bound: BoundHeader, member: AtlasMemory.Owner) {
+  if (!bound.header) return degraded(member, "the project rules store could not be read")
   const facets = Object.entries(bound.header.awareness).map(([name, facet]) =>
     facet.state === "UN-SEEDED" ? `- ${name}: unseeded` : `- ${name} (${facet.state}): ${facet.content}`,
   )
@@ -45,7 +45,7 @@ function format(bound: BoundHeader) {
   const rules = bound.header.rules.map((rule) => `- [${rule.scope}] ${rule.rule}`)
   const partial = bound.state.rules === "partial"
   return [
-    `<atlas-header member="${MEMBER}" rules="${rules.length}" rule-words="${bound.bound.rulesWords}"${partial ? ' degraded="rules-partial"' : ""}>`,
+    `<atlas-header member="${member}" rules="${rules.length}" rule-words="${bound.bound.rulesWords}"${partial ? ' degraded="rules-partial"' : ""}>`,
     ...(partial ? ["Degraded: some stored project rules could not be read; this list may be incomplete."] : []),
     "Awareness:",
     ...facets,
@@ -58,8 +58,8 @@ function format(bound: BoundHeader) {
   ].join("\n")
 }
 
-function degraded(reason: string) {
-  return `<atlas-header member="${MEMBER}" degraded="unavailable">Degraded: Atlas memory is unavailable (${reason}); no project rules are loaded.</atlas-header>`
+function degraded(member: AtlasMemory.Owner, reason: string) {
+  return `<atlas-header member="${member}" degraded="unavailable">Degraded: Atlas memory is unavailable (${reason}); no project rules are loaded.</atlas-header>`
 }
 
 function firstLine(cause: unknown) {

@@ -14,6 +14,10 @@ import type {
   TodoScenario,
 } from "./types"
 
+export function cursor(input: Record<string, unknown>) {
+  return Buffer.from(JSON.stringify(input)).toString("base64url")
+}
+
 class ScenarioBuilder<S = undefined> {
   private readonly state: BuilderState<S>
 
