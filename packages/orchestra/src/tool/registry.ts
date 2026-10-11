@@ -5,7 +5,7 @@ import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
 import { ShellPrompt } from "./shell/prompt"
-import { nativeProfiles, roster } from "@/maestro/roster"
+import { roster } from "@/maestro/roster"
 import { AtlasMemory } from "@/maestro/atlas-memory"
 import { InvocationBindingHost } from "@/maestro/invocation-binding"
 import { SessionStore } from "@orchestra/core/session/store"
@@ -17,13 +17,7 @@ import { ContextRecallTool } from "./context-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
-import { AtlasContextTool } from "./atlas-context"
-import { ResearchRecordTool } from "./research-record"
-import { ResearchViewTool } from "./research-view"
-import { ResearchCaptureTool } from "./research-capture"
-import { ResearchRecords } from "@orchestra/core/research/records"
-import { ResearchExecution } from "@/research/allowance"
-import { ResearchSourceCapture } from "@/research/source-capture"
+import { ResearchRegistry } from "./research-registry"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
@@ -189,12 +183,7 @@ const layer = Layer.effect(
     const compact = yield* ContextCompactTool
     const atlasRecall = yield* AtlasMemoryRecallTool
     const atlasEmit = yield* AtlasMemoryEmitTool
-    const atlasContext = yield* AtlasContextTool
-    const researchRecord = yield* ResearchRecordTool
-    const researchView = yield* ResearchViewTool
-    const researchCapture = yield* ResearchCaptureTool
-    const researchExecution = yield* ResearchExecution.Service
-    const retainSource = yield* ResearchSourceCapture.make
+    const research = yield* ResearchRegistry.make
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -371,10 +360,7 @@ const layer = Layer.effect(
           compact: Tool.init(compact),
           atlasRecall: Tool.init(atlasRecall),
           atlasEmit: Tool.init(atlasEmit),
-          atlasContext: Tool.init(atlasContext),
-          researchRecord: Tool.init(researchRecord),
-          researchView: Tool.init(researchView),
-          researchCapture: Tool.init(researchCapture),
+          research: research.init,
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -415,10 +401,7 @@ const layer = Layer.effect(
             tool.compact,
             tool.atlasRecall,
             tool.atlasEmit,
-            tool.atlasContext,
-            tool.researchRecord,
-            tool.researchView,
-            tool.researchCapture,
+            ...tool.research,
             tool.glob,
             tool.grep,
             tool.edit,
@@ -465,25 +448,22 @@ const layer = Layer.effect(
             runtime
               .withSession(
                 context.sessionID,
-                // Charged to the research dispatch the call runs in, with its sources captured and retained.
-                researchExecution.tool(context.sessionID, context.callID ? `${context.messageID}:${context.callID}` : "", definition.id,
-                  retainSource.withCapture(context, definition.id, runtime.run(
-                    {
-                      tool: definition.id,
-                      args,
-                      sessionID: context.sessionID,
-                      assistantMessageID: context.messageID,
-                      agent: context.agentID ?? context.agent,
-                      callID: context.callID ?? "",
-                      directory: instance.directory,
-                      projectID: instance.project.id,
-                      projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
-                    },
-                    definition.execute(args, context).pipe(Effect.flatMap((result) => retainSource.retain(context, definition.id, result))),
-                    durableSafety,
-                    () => context.abort.aborted,
-                  ), args),
-                ),
+                research.charge(definition, args, context, (execute) => runtime.run(
+                  {
+                    tool: definition.id,
+                    args,
+                    sessionID: context.sessionID,
+                    assistantMessageID: context.messageID,
+                    agent: context.agentID ?? context.agent,
+                    callID: context.callID ?? "",
+                    directory: instance.directory,
+                    projectID: instance.project.id,
+                    projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
+                  },
+                  execute,
+                  durableSafety,
+                  () => context.abort.aborted,
+                )),
               )
               .pipe(Effect.orDie),
         })),
@@ -550,8 +530,6 @@ const layer = Layer.effect(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool, index) => {
-        // Discovery has no configured plugin tools: only the builtins, listed first.
-        if (input.agent.id === "jimmy" && index >= s.builtin.length) return false
         if (
           tool.id === MaestroRecordResultDecisionTool.id &&
           (input.agent.id !== "maestro" || input.agent.native !== true)
@@ -576,18 +554,13 @@ const layer = Layer.effect(
           (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro") ||
           // Bound to the backend seat's Memory owner: a configured agent that merely reuses the id gets neither.
           ((tool.id === AtlasMemoryRecallTool.id || tool.id === AtlasMemoryEmitTool.id) &&
-            !AtlasMemory.supports(input.agent)) ||
-          ([AtlasContextTool.id, ResearchRecordTool.id, ResearchViewTool.id, ResearchCaptureTool.id].some((name) => name === tool.id) &&
-            (input.agent.id !== "jimmy" || input.agent.native !== true))
+            !AtlasMemory.supports(input.agent))
         ) {
           return false
         }
-        // A path-scoped skill-root edit deny can mask the wildcard discovery deny in disabled().
-        // Discovery schemas must also respect the immutable native floor, independent of Session grants.
         if (
-          (input.agent.native === true &&
-            input.agent.id === "jimmy" &&
-            Permission.disabled([tool.id], Permission.fromConfig(nativeProfiles[input.agent.id])).has(tool.id)) ||
+          // Builtins are listed first: a later index is a configured plugin tool.
+          ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length) ||
           Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
           Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
@@ -596,7 +569,7 @@ const layer = Layer.effect(
         if (tool.id === WebSearchTool.id) {
           return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
         }
-        if (tool.id === LspTool.id) return flags.experimentalLspTool || (input.agent.native === true && input.agent.id === "jimmy")
+        if (tool.id === LspTool.id) return flags.experimentalLspTool || ResearchRegistry.discovery(input.agent)
 
         const usePatch =
           input.modelID.includes("gpt-") && !input.modelID.includes("oss") && !input.modelID.includes("gpt-4")
@@ -803,8 +776,7 @@ export const node = LayerNode.make({
     InstanceStore.node,
     Permission.node,
     Ripgrep.node,
-    ResearchRecords.node,
-    ResearchExecution.node,
+    ...ResearchRegistry.nodes,
     // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
     LocationServiceMap.node,
   ],
