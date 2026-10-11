@@ -132,6 +132,8 @@ type Rule = { permission: string; pattern: string; action: "allow" | "deny" }
 export function boundaryRules(worktree: string, project: string, localFiles: readonly string[], assets: AssetPins): Rule[] {
   requireFact(assets.length > 0 && [...localFiles, ...assets.map((asset) => asset.path)].every((path) => !/[?*]/.test(path)), "PAIR_BOUNDARY_LITERAL_PATH_REQUIRED")
   return [...["read", "edit", "bash", "glob", "grep", "external_directory", "task", "todowrite"].map((permission) => ({ permission, pattern: "*", action: "deny" as const })),
+    // The project folder itself may be listed: stageInventory keeps it flat and limited to revealed sources.
+    { permission: "read", pattern: relative(worktree, project).replaceAll("\\", "/"), action: "allow" as const },
     ...[...localFiles, join(project, "proposal.md"), ...assets.map((asset) => asset.path)].map((path) => ({ permission: "read", pattern: relative(worktree, path).replaceAll("\\", "/"), action: "allow" as const })),
     ...[...new Set(assets.map((asset) => dirname(asset.path)))].map((dir) => ({ permission: "external_directory", pattern: join(dir, "*").replaceAll("\\", "/"), action: "allow" as const }))]
 }
