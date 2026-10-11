@@ -18,10 +18,18 @@ import { readCliManifest } from "../../packages/desktop/src/main/cli-artifacts"
   "mutated-bytes": "ARTIFACT_DIGEST_MISMATCH",
   "wrong-image-with-valid-digest": "NATIVE_IMAGE_MISMATCH",
   "wrong-cpu-with-valid-digest": "NATIVE_IMAGE_MISMATCH",
+  "cli-omni-addon-missing": "OMNI_ADDON_MISSING",
+  "cli-omni-supervisor-missing": "OMNI_SUPERVISOR_MISSING",
+  "cli-omni-addon-wrong-cpu": "OMNI_IMAGE_MISMATCH",
+  "cli-omni-addon-truncated": "OMNI_ADDON_LOAD",
+  "cli-omni-supervisor-truncated": "OMNI_SUPERVISOR_EXECUTION",
   "restored-real-copy": null,
   "packaged-pty-fixture-unchanged": null,
   "missing-packaged-pty-binding": "PTY_BINDING_MISSING",
   "broken-packaged-pty-entrypoint": "PTY_ENTRYPOINT_BROKEN",
+  "desktop-omni-addon-missing": "OMNI_ADDON_MISSING",
+  "desktop-omni-supervisor-missing": "OMNI_SUPERVISOR_MISSING",
+  "desktop-omni-addon-truncated": "OMNI_ADDON_LOAD",
   "packaged-pty-fixture-restored": null
 }
 CONTROL_LEDGER_END */
@@ -100,10 +108,7 @@ await writeFile(join(raw, "manifest.json"), JSON.stringify({
   ...receipt, artifacts: [{ ...receipt.artifacts[0], sha256: digest }],
 }))
 await probe("wrong-image-with-valid-digest")
-const wrongCPU = Buffer.from(header)
-if (values.system?.endsWith("-linux")) wrongCPU.writeUInt16LE(header.readUInt16LE(18) === 62 ? 183 : 62, 18)
-if (values.system?.endsWith("-darwin")) wrongCPU.writeUInt32LE(header.readUInt32LE(4) === 0x1000007 ? 0x100000c : 0x1000007, 4)
-await replaceHeader(wrongCPU)
+await replaceHeader(crossCPU(header))
 const cpuDigest = createHash("sha256").update(await readFile(file)).digest("hex")
 await writeFile(join(raw, "manifest.json"), JSON.stringify({
   ...receipt, artifacts: [{ ...receipt.artifacts[0], sha256: cpuDigest }],
@@ -111,6 +116,14 @@ await writeFile(join(raw, "manifest.json"), JSON.stringify({
 await probe("wrong-cpu-with-valid-digest")
 await replaceHeader(header)
 await writeFile(join(raw, "manifest.json"), original)
+// Omni teeth on this private copy: the CLI loads both files from next to its real binary. restored-real-copy
+// below is their positive restoration.
+const cliOmni = await omniFiles(dirname(file))
+await held(cliOmni.addon, "cli-omni-addon-missing")
+await held(cliOmni.supervisor, "cli-omni-supervisor-missing")
+await mutated(cliOmni.addon, (bytes) => Buffer.concat([crossCPU(bytes.subarray(0, 64)), bytes.subarray(64)]), "cli-omni-addon-wrong-cpu")
+await mutated(cliOmni.addon, truncated, "cli-omni-addon-truncated")
+await mutated(cliOmni.supervisor, truncated, "cli-omni-supervisor-truncated")
 await probe("restored-real-copy")
 // Repack the real archive only in this private fixture. Its package entrypoint
 // and native binding are tested through Electron's actual ASAR module resolver.
@@ -120,6 +133,7 @@ const resourceSuffix = values.system?.endsWith("-darwin")
 const resources = join(fixture, resourceSuffix)
 await mkdir(resources, { recursive: true })
 await cp(join(values.desktop, resourceSuffix, "cli"), join(resources, "cli"), { recursive: true })
+await cp(join(values.desktop, resourceSuffix, "omni"), join(resources, "omni"), { recursive: true })
 await symlink(join(values.desktop, resourceSuffix, "icons"), join(resources, "icons"))
 await symlink(join(values.desktop, "share"), join(fixture, "share"))
 const executableSuffix = values.system?.endsWith("-darwin")
@@ -151,10 +165,53 @@ await createPackageWithOptions(extracted, join(resources, "app.asar"), { unpack:
 await probe("broken-packaged-pty-entrypoint", fixture)
 await writeFile(entry, entryBytes)
 await createPackageWithOptions(extracted, join(resources, "app.asar"), { unpack: "**/*.node" })
+// Packaged Electron loads Resources/omni; packaged-pty-fixture-restored below is their positive restoration.
+const desktopOmni = await omniFiles(join(resources, "omni"))
+await held(desktopOmni.addon, "desktop-omni-addon-missing", fixture)
+await held(desktopOmni.supervisor, "desktop-omni-supervisor-missing", fixture)
+await mutated(desktopOmni.addon, truncated, "desktop-omni-addon-truncated", fixture)
 await probe("packaged-pty-fixture-restored", fixture)
 if (completed.length !== Object.keys(ledger).length || Object.keys(ledger).some((name) => !completed.includes(name)))
   throw new Error("NIX_DISTRIBUTION_FAILURE:INCOMPLETE_OUTPUT_CONTROLS")
 console.log(JSON.stringify({ status: "OUTPUT_NEGATIVE_CONTROLS_OK", completed }, null, 2))
+
+function crossCPU(header: Buffer) {
+  const wrong = Buffer.from(header)
+  if (values.system?.endsWith("-linux")) wrong.writeUInt16LE(header.readUInt16LE(18) === 62 ? 183 : 62, 18)
+  if (values.system?.endsWith("-darwin")) wrong.writeUInt32LE(header.readUInt32LE(4) === 0x1000007 ? 0x100000c : 0x1000007, 4)
+  return wrong
+}
+
+// The header stays valid, so only a real dlopen or exec can reject what follows it.
+function truncated(bytes: Buffer) {
+  if (bytes.length <= 4096) throw new Error("NIX_DISTRIBUTION_FAILURE:OMNI_FIXTURE_TOO_SMALL")
+  return bytes.subarray(0, 4096)
+}
+
+async function omniFiles(directory: string) {
+  await chmod(directory, 0o755)
+  return { addon: join(directory, "hugr_omni.node"), supervisor: join(directory, "hugr-omni-supervisor") }
+}
+
+async function held(target: string, name: string, desktop?: string) {
+  await rename(target, `${target}.held`)
+  await probe(name, desktop)
+  await rename(`${target}.held`, target)
+}
+
+async function mutated(target: string, change: (bytes: Buffer) => Buffer, name: string, desktop?: string) {
+  const bytes = await readFile(target)
+  await replace(target, change(bytes))
+  await probe(name, desktop)
+  await replace(target, bytes)
+}
+
+// A fresh inode each time: Darwin caches a rejected code signature per vnode, so an in-place restore of a file that
+// was just executed or dlopened could stay rejected and fail the positive restoration.
+async function replace(target: string, bytes: Buffer) {
+  await writeFile(`${target}.next`, bytes, { mode: 0o755 })
+  await rename(`${target}.next`, target)
+}
 
 async function replaceHeader(bytes: Buffer) {
   const handle = await open(file, "r+")
