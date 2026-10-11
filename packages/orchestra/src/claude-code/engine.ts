@@ -2,8 +2,9 @@ export * as ClaudeCode from "./engine"
 
 // Claude Code as an engine: an agent with `engine: "claude-code"` runs its turns in Claude Code (Claude Agent SDK, the
 // machine's Claude Code login) instead of Orchestra's loop. Claude Code keeps the loop, the model and its own tools;
-// Orchestra contributes the agent prompt and instructions, read/edit/write, and every approval. Each turn is mirrored
-// into the Orchestra session (mirror.ts), so the UI, revert and the archive work as for any session.
+// Orchestra contributes the agent prompt and instructions, read/edit/write, and every approval. Maestro opts in with
+// its whole Orchestra toolset in-process (task included), under its own prompt (tools.ts). Each turn is mirrored into
+// the Orchestra session (mirror.ts), so the UI, revert and the archive work as for any session.
 // Design: specs/claude-code-engine.md.
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -21,14 +22,17 @@ import { Permission } from "@/permission"
 import { Session } from "@/session/session"
 import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
+import { SystemPrompt } from "@/session/system"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
 import { ToolRegistry } from "@/tool/registry"
 import { approve } from "@/tool/shell/scan"
 import type { Tool } from "@/tool/tool"
+import type { TaskPromptOps } from "@/tool/task"
 import { Provider } from "@/provider/provider"
 import { SessionContinuity } from "@/continuity/service"
 import { RequestSource } from "@/continuity/request-source"
+import { marker } from "@/continuity/alias"
 import { settings, tokenCount, hardLimit } from "@/continuity/trigger"
 import { estimate } from "@/continuity/masking"
 import { ToolJsonSchema } from "@/tool/json-schema"
@@ -38,16 +42,17 @@ import { ClaudeCodeTranscript } from "./transcript"
 import { ClaudeCodeNative } from "./native"
 import { ClaudeCodeSDK } from "./sdk"
 import { create } from "./mirror"
-import { server, SERVER } from "./tools"
+import { ClaudeCodeTools, server, SERVER } from "./tools"
 import { canUseTool, preToolUse } from "./permissions"
 
 export interface Interface {
   /**
    * Run one turn when the user's agent is on Claude Code: everything the user sent since the last reply. False when the
    * agent runs on Orchestra's loop. The turn always ends with an assistant reply to `user` (with `error` when it
-   * failed), so the loop's own exit check ends the run on its next pass.
+   * failed), so the loop's own exit check ends the run on its next pass. `promptOps` are the loop's own Task callbacks:
+   * with them Maestro's `task` starts teammates exactly as on Orchestra's loop.
    */
-  readonly turn: (input: { sessionID: SessionID; user: SessionV1.User }) => Effect.Effect<boolean>
+  readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ClaudeCode") {}
@@ -56,6 +61,13 @@ const Metadata = Schema.Struct({ sessionId: Schema.optional(Schema.String), cost
   model: Schema.optional(Schema.String), contextWindow: Schema.optional(Schema.Number), maxOutputTokens: Schema.optional(Schema.Number),
   selectedModel: Schema.optional(Schema.String), version: Schema.optional(Schema.String), continuityPaused: Schema.optional(Schema.NullOr(Schema.String)),
   nativeArchiveFailed: Schema.optional(Schema.Boolean), delivered: Schema.optional(Schema.Array(MessageID)) })
+
+// Where Maestro's prompt describes Orchestra's loop, this engine differs in tool names and in when steering arrives.
+const ENGINE_NOTE = [
+  "You run on Claude Code with the owner's subscription. Orchestra's tools carry the `mcp__orchestra__` prefix (`task` is",
+  "`mcp__orchestra__task`); Bash, Grep, Glob and the web tools are Claude Code's, under the same permissions. A message the",
+  "owner writes while you work reaches you when your current turn ends, not at your next step.",
+].join(" ")
 
 const layer = Layer.effect(
   Service,
@@ -66,6 +78,7 @@ const layer = Layer.effect(
     const permission = yield* Permission.Service
     const registry = yield* ToolRegistry.Service
     const instruction = yield* Instruction.Service
+    const system = yield* SystemPrompt.Service
     const config = yield* Config.Service
     const sdk = yield* ClaudeCodeSDK.Service
     const continuity = yield* SessionContinuity.Service
@@ -142,12 +155,19 @@ const layer = Layer.effect(
         return [history.findIndex((user) => user.info.role === "user" && user.info.id === parent)]
       })) : -1
       const delivered = new Set(state.delivered ?? history.slice(0, answered + 1).flatMap((message) => message.info.role === "user" ? [message.info.id] : []))
-      const users = history.filter((message) => RequestSource.actual(message) && !delivered.has(message.info.id))
+      // A background teammate's result arrives as a synthetic task return: it is the delegating agent's input too.
+      const users = history.filter((message) => (RequestSource.actual(message) ||
+        message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id))
       const userIDs = users.map((message) => message.info.id)
       let prompt = ClaudeCodeTranscript.hostPrompt(users)
       const ruleset = Permission.merge(agent.permission, session.permission ?? [])
-      const defs = (yield* registry.tools({ providerID: input.user.model.providerID, modelID: input.user.model.modelID,
-        agent, permission: session.permission })).filter((def) => ["read", "edit", "write", "context_recall", "context_compact"].includes(def.id))
+      // The agent's toolset as Orchestra's loop resolves it: same registry, permissions and per-message switches.
+      const available = (yield* registry.tools({ providerID: input.user.model.providerID, modelID: input.user.model.modelID,
+        agent, permission: session.permission })).filter((def) => input.user.tools?.[def.id] !== false)
+      const defs = ClaudeCodeTools.served(agent, available)
+      const builtins = ClaudeCodeTools.builtins(agent, available)
+      const promptOps = input.promptOps ? yield* input.promptOps() : undefined
+      const bypassAgentCheck = history.findLast((message) => message.info.role === "user")?.parts.some((part) => part.type === "agent") ?? false
       const canRecall = defs.some((def) => def.id === "context_recall") && Permission.evaluate("context_recall", sessionID, ruleset).action !== "deny"
       let persistenceFailed = false
       const handoff = (ids: readonly MessageID[]) => Effect.gen(function* () {
@@ -177,7 +197,7 @@ const layer = Layer.effect(
         const callID = part?.callID
         return {
           sessionID, messageID, callID, agent: agent.name, agentID: agent.id, abort, messages: history,
-          extra: { claudeCode: true, canRecall },
+          extra: { claudeCode: true, canRecall, promptOps, bypassAgentCheck },
           metadata: (value) => Effect.gen(function* () {
             const current = callID ? view.tool(callID) : undefined
             if (!current || current.state.status !== "running") return
@@ -204,7 +224,13 @@ const layer = Layer.effect(
         shell: (ctx: Tool.Context, command: string) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
           Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
-      const append = [agent.prompt, ...instructions].filter(Boolean).join("\n\n") || undefined
+      // Maestro's prompt stays authoritative: it replaces Claude Code's preset, whose own persona and tool habits would
+      // otherwise speak first, and carries what Orchestra's loop sends beside it (environment, instructions, skills).
+      // Seats append their prompt to the preset.
+      const conductor = ClaudeCodeTools.conductor(agent)
+      const append = (conductor
+        ? [agent.prompt, ENGINE_NOTE, ...(shape ? yield* system.environment(shape) : []), ...instructions, yield* system.skills(agent)]
+        : [agent.prompt, ...instructions]).filter(Boolean).join("\n\n") || undefined
       const prepare = Effect.gen(function* () {
       const stored = yield* native.read
       const key = stored.keys.find((item) => !item.key.subpath && item.key.sessionId === state.sessionId)?.key
@@ -224,7 +250,7 @@ const layer = Layer.effect(
             Effect.onInterrupt(() => Effect.gen(function* () {
               abort.abort()
               yield* continuity.cancel(sessionID)
-              yield* view.fail({ aborted: true, message: "The user stopped the turn." })
+              yield* view.fail({ aborted: true, message: "The owner stopped the turn." })
             })))
         if (result === "over") {
           yield* view.fail({ aborted: false, message: "Claude Code continuity remains over the hard limit; next query was not started." })
@@ -268,8 +294,9 @@ const layer = Layer.effect(
         cwd: instance.directory,
         model: selected,
         resume: state.sessionId,
-        systemPrompt: { type: "preset" as const, preset: "claude_code" as const,
-          append, snapshot: true },
+        systemPrompt: conductor ? { type: "custom" as const, prompt: append ?? "", snapshot: true }
+          : { type: "preset" as const, preset: "claude_code" as const, append, snapshot: true },
+        ...(builtins ? { tools: builtins } : {}),
         disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
         toolAliases: { Read: `mcp__${SERVER}__read`, Edit: `mcp__${SERVER}__edit`, Write: `mcp__${SERVER}__write` },
         mcpServers: { [SERVER]: server({ defs, run: toolRun, claim, complete: view.complete,
@@ -371,7 +398,7 @@ const layer = Layer.effect(
           abort.abort()
           yield* continuity.cancel(sessionID)
           if (persistenceFailed) yield* metadata({ nativeArchiveFailed: true, continuityPaused: "Native transcript persistence failed" })
-          yield* view.fail({ aborted: true, message: "The user stopped the turn." })
+          yield* view.fail({ aborted: true, message: "The owner stopped the turn." })
         })),
         Effect.catchCause((cause) => Cause.hasInterruptsOnly(cause) ? Effect.interrupt
           : Effect.gen(function* () {
@@ -399,6 +426,6 @@ function measureNativeOverhead(entries: Parameters<typeof ClaudeCodeNative.overh
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Agent.node, Session.node, Snapshot.node, Permission.node, ToolRegistry.node, Instruction.node, Config.node,
+  deps: [Agent.node, Session.node, Snapshot.node, Permission.node, ToolRegistry.node, Instruction.node, SystemPrompt.node, Config.node,
     FSUtil.node, CrossSpawnSpawner.node, ClaudeCodeSDK.node, SessionContinuity.node, Provider.node, ModelsDev.node],
 })

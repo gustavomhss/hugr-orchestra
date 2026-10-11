@@ -77,8 +77,43 @@ part, and `ask` = Orchestra's permission service (5). The tool result returns as
 `image` content blocks.
 
 Built-in `Read`, `Edit`, `Write`, `NotebookEdit` are removed with `disallowedTools`; `toolAliases` routes a stray call.
-`Bash`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `TodoWrite` stay Claude Code's. Subagents (`Task`): Claude Code's own,
-off by default (`disallowedTools: ["Task"]`) until Orchestra decides how they relate to Maestro delegations.
+`Bash`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `TodoWrite` stay Claude Code's. Claude Code's own subagents (`Task`)
+are always off (`disallowedTools: ["Task"]`): delegation is Orchestra's `task` (4.3).
+
+### 4.3 Maestro on Claude Code (opt-in)
+
+Maestro runs on Orchestra's loop unless the owner sets `"agent": { "maestro": { "engine": "claude-code" } }`.
+Configuration still cannot disable, re-mode or rename Maestro; only its engine (and model) follow the owner's choice.
+On Claude Code, Maestro stays Maestro:
+
+- **Terms posture, unchanged from seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
+  `query()` on the machine's Claude Code login, exactly as for seats. Orchestra never calls the Anthropic API with
+  subscription credentials, never reads or extracts tokens, and adds no auth path; delegation only adds in-process
+  tools to that `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
+  transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
+
+- **One mapping, wider for Maestro** (`claude-code/tools.ts`). The engine takes the agent's toolset exactly as
+  Orchestra's loop resolves it (`ToolRegistry.tools` with the agent, the session's permissions and the message's tool
+  switches). `ClaudeCodeTools.NATIVE` names the tools Claude Code runs natively under Orchestra's gate (5):
+  `bash`→`Bash`, `grep`→`Grep`, `glob`→`Glob`, `webfetch`→`WebFetch`, `websearch`→`WebSearch`. Seats serve
+  `read`/`edit`/`write`/continuity in-process as before. Maestro serves every other tool it has in-process (`task`,
+  `question`, `todowrite`, `skill`, `maestro_*`, Arsenal, `context_*`, plugin tools such as the dock), with the
+  registry's own descriptions and schemas, and its Claude Code built-ins are limited (`tools`) to the native
+  counterparts it has, so no `TodoWrite`, `Skill`, `AskUserQuestion` or SDK subagent shadows an Orchestra tool.
+- **Delegation is the real `TaskTool`.** `mcp__orchestra__task` runs the registry's `task` definition, already wrapped by
+  the Arsenal bindings (`withSession` + `run`: tool-safety hooks, HOLDs, native-host observations). The loop hands the
+  engine its Task callbacks (`turn({ promptOps })`), so teammates, `writePaths`, logical task IDs, `beforeDispatch`,
+  background jobs and settlement are those of Orchestra's loop. A teammate runs in its own child session on its own
+  engine. Mirrored in-process calls carry no `providerExecuted` (Orchestra ran them), so work results, settlement and
+  provenance accept Maestro's `task` calls; the loop never treats a mirrored call (`metadata.claudeCodeTool`) as pending.
+- **Teammate returns.** A background teammate's result arrives as a synthetic `task-return` user message; the engine
+  admits it as input, like the owner's own messages, and delivers it on Maestro's next turn.
+- **Prompt.** Maestro's prompt is authoritative: `systemPrompt: { type: "custom", snapshot: true }` carries Maestro's
+  prompt, a short engine note (tool prefix; steering arrives at the next turn, not the next step), the environment,
+  Orchestra's instructions and the skill list. Seats keep the `claude_code` preset with their prompt appended.
+- **Unchanged:** `PromptGuard.check` before spawn, continuity through `sessionStore`, permissions through Orchestra
+  (asks reach the owner; a rule denial is shown and the turn continues, a rejection says to stop), and the delivery
+  cursor (prompts queued during a turn are sent on the next one).
 
 ## 5. Permissions
 
@@ -159,7 +194,7 @@ its last tool result arrives. Revert from Orchestra's UI then works on Claude Co
 
 Code: `src/claude-code/` (`engine.ts`, `mirror.ts`, `tools.ts`, `permissions.ts`, `sdk.ts`), `src/tool/shell/scan.ts`,
 one line in `prompt.ts`. Selection: `"agent": { "<name>": { "engine": "claude-code", "model": "anthropic/<model>" } }`
-(Maestro always stays on Orchestra's loop).
+(Maestro stayed on Orchestra's loop in step 1; it may now opt in, see 4.3).
 
 Where it differs from sections 4-5, and why:
 - **One `query()` per turn with `resume`**, not one long-lived streaming-input process. It fits the loop's
