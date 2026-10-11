@@ -433,16 +433,16 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 8703,
-      "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'.",
-      "authorizedBy": "owner (gustavomhss), explicit four-output ceiling extension",
-      "authorizedAt": "2026-10-09"
+      "maximumLines": 8860,
+      "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'. Extended for the Lean project dashboard and profile-preference routes (8838/17074 LOC plus a small margin).",
+      "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
+      "authorizedAt": "2026-10-11"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 16800,
-      "reason": "Generated @hey-api/OpenAPI V2 SDK schema output (packages/sdk/js/script/build.ts); splitting requires generator redesign. Regenerated for the Maestro landing combined with dev's Session process routes; 16782 LOC plus a small margin.",
+      "maximumLines": 17100,
+      "reason": "Generated @hey-api/OpenAPI V2 SDK schema output (packages/sdk/js/script/build.ts); splitting requires generator redesign. Regenerated for the Maestro landing combined with dev's Session process routes; 16782 LOC plus a small margin. Extended for the Lean dashboard, metrics and preference schemas (8838/17074 LOC plus a small margin).",
       "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
-      "authorizedAt": "2026-10-10"
+      "authorizedAt": "2026-10-11"
     }
   }
 }
