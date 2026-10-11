@@ -556,7 +556,17 @@ export const make = Effect.gen(function* () {
   const session: Interface["session"] = (input) =>
     Effect.gen(function* () {
       const loader = yield* RuntimeProfileLoader
-      const loaded = loader ? yield* loader() : yield* RuntimeProfile
+      // Profile loaders never read hooks from state inside the project, so that placement has no installs to fire:
+      // only the host profile applies. Every other acquisition failure still refuses the event, and tool calls keep
+      // refusing this placement.
+      const loaded = loader
+        ? yield* loader().pipe(
+            Effect.catchIf(
+              (error) => error.reason === "profile-state-inside-project",
+              () => RuntimeProfile,
+            ),
+          )
+        : yield* RuntimeProfile
       if (!loaded?.hooks) return []
       return yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
     })
