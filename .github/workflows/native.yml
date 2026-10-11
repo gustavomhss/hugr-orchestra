@@ -121,6 +121,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # Omni is the default process layer: the runtime's docker commands spawn through it, so the job needs its pair.
+      - name: Omni binaries
+        uses: ./.github/actions/omni-binaries
+
       - name: Prewarm production Linux runtime image
         run: docker build --progress=plain --tag orchestra-linux-prewarm:ci resources/linux-runtime
 
