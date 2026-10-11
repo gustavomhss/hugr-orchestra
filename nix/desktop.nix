@@ -19,6 +19,7 @@
   ripgrep,
   sysctl,
   xcbuild,
+  cctools,
   orchestra,
   omni ? orchestra.omni,
 }:
@@ -60,6 +61,8 @@ stdenv.mkDerivation (finalAttrs: {
     # gyp on Darwin needs xcodebuild/xcrun: repair-host-prebuilds.py below and electron-builder's
     # beforePack (prepareTreeSitterPrebuilds builds the core tree-sitter binding) both run node-gyp.
     xcbuild
+    # node-gyp's static archive step on Darwin calls libtool.
+    cctools
   ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [

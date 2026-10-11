@@ -4,7 +4,7 @@
 import { spawnSync } from "node:child_process"
 import { closeSync, mkdtempSync, openSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { lstat, readdir, realpath, stat } from "node:fs/promises"
+import { lstat, readdir, readFile, realpath, stat } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { parseArgs } from "node:util"
 import { cliTreeSitterTarget, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
@@ -164,6 +164,7 @@ async function treeSitter(directory: string, runtime: string, env: Record<string
   }
   await Promise.resolve().then(() => requireTreeSitterBundle(directory, cliTreeSitterTarget(target)))
     .catch((error: unknown) => fail(`TREE_SITTER_BUNDLE_INCOMPLETE:${error instanceof Error ? error.message : error}`))
+  const result = join(mkdtempSync(join(tmpdir(), "nix-tree-sitter-")), "result")
   const loaded = captured(runtime, ["-e", String.raw`
     const path = require("node:path")
     const dir = process.env.NIX_TREE_SITTER_DIR
@@ -180,13 +181,15 @@ async function treeSitter(directory: string, runtime: string, env: Record<string
       ? [parse(require(path.join(dir, "tree-sitter-typescript")).typescript, "export const a = 1"),
         parse(require(path.join(dir, "tree-sitter-python")), "a = 1")]
       : JSON.parse(process.env.NIX_TREE_SITTER_BINDINGS).map((file) => Object.getOwnPropertyNames(require(file)).length)
-    console.log("TREE_SITTER_LOAD_OK " + JSON.stringify({ opened, parsed,
+    // A synchronous file write: buffered stdout from Bun can be lost when a native module's teardown ends the process.
+    require("node:fs").writeFileSync(process.env.NIX_TREE_SITTER_RESULT, "TREE_SITTER_LOAD_OK " + JSON.stringify({ opened, parsed,
       runtime: process.versions.electron ? "electron " + process.versions.electron : "bun " + process.versions.bun }))
   `], {
-    env: { ...process.env, ...env, NIX_TREE_SITTER_DIR: directory, NIX_TREE_SITTER_BINDINGS: JSON.stringify(bindings) },
+    env: { ...process.env, ...env, NIX_TREE_SITTER_DIR: directory, NIX_TREE_SITTER_BINDINGS: JSON.stringify(bindings),
+      NIX_TREE_SITTER_RESULT: result },
     encoding: "utf8", timeout: 60_000,
   })
-  const line = loaded.stdout?.trim() ?? ""
+  const line = (await readFile(result, "utf8").catch(() => "")).trim()
   if (loaded.error || loaded.status !== 0 || !line.startsWith("TREE_SITTER_LOAD_OK {") || line.includes("\n"))
     fail(`TREE_SITTER_BUNDLE_LOAD:${directory}:${loaded.error?.message ?? `${loaded.status}:${loaded.signal}:${loaded.stderr}`}`)
   const evidence: { opened: string[]; parsed: unknown[]; runtime: string } = JSON.parse(line.slice("TREE_SITTER_LOAD_OK ".length))

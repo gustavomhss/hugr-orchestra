@@ -16,6 +16,7 @@
   apple-sdk,
   darwin,
   xcbuild,
+  cctools,
   node_modules ? callPackage ./node_modules.nix { inherit bun; },
   omni ? callPackage ./omni.nix { inherit nodejs; },
 }:
@@ -45,7 +46,7 @@ stdenv.mkDerivation (finalAttrs: {
     writableTmpDirAsHomeHook
   ] ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf ]
     # gyp on Darwin needs xcodebuild/xcrun for the tree-sitter bindings build.ts compiles.
-    ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk darwin.sigtool xcbuild ];
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk darwin.sigtool xcbuild cctools ];
 
   # stdenv supplies the native C/C++ compiler (Bun FFI cc, node-gyp); apple-sdk supplies headers and
   # libSystem stubs for Bun FFI cc's variadic-openat shim on both Darwin CPUs.
