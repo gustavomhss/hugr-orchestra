@@ -9,6 +9,9 @@ import { InstanceState } from "@/effect/instance-state"
 import { Effect, Layer } from "effect"
 import { Config } from "@/config/config"
 import { Service } from "./bootstrap-service"
+import { Agent } from "@/agent/agent"
+import { LocationServiceMap } from "@orchestra/core/location-services"
+import { UpstreamV2 } from "@/maestro/upstream-v2"
 
 export { Service } from "./bootstrap-service"
 export type { Interface } from "./bootstrap-service"
@@ -26,6 +29,7 @@ const layer = Layer.effect(
     const project = yield* Project.Service
     const snapshot = yield* Snapshot.Service
     const vcs = yield* Vcs.Service
+    const upstream = yield* UpstreamV2.make
 
     const run = Effect.gen(function* () {
       const ctx = yield* InstanceState.context
@@ -34,6 +38,7 @@ const layer = Layer.effect(
       yield* config.get()
       // Plugin can mutate config so it has to be initialized before anything else.
       yield* plugin.init()
+      yield* upstream(ctx)
       // Each service self-manages its own slow work via Effect.forkScoped against
       // its per-instance state scope. We just await materialization here.
       yield* Effect.forEach(
@@ -50,7 +55,17 @@ const layer = Layer.effect(
 export const node = makeGlobalNode({
   service: Service,
   layer: layer,
-  deps: [Config.node, Format.node, LSP.node, Plugin.node, Project.node, Snapshot.node, Vcs.node],
+  deps: [
+    Config.node,
+    Format.node,
+    LSP.node,
+    Plugin.node,
+    Project.node,
+    Snapshot.node,
+    Vcs.node,
+    Agent.node,
+    LocationServiceMap.node,
+  ],
 })
 
 export * as InstanceBootstrap from "./bootstrap"
