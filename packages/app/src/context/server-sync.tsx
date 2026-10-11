@@ -691,9 +691,6 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     get ready() {
       return globalStore.ready
     },
-    get configReady() {
-      return configQuery.isSuccess && !configQuery.isFetching && !configQuery.isError
-    },
     get error() {
       return globalStore.error
     },
