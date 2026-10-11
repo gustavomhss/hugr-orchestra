@@ -38,7 +38,7 @@ import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { scheduleScenarios } from "./schedule"
-import { leanScenarios } from "./lean"
+import { projectScenarios } from "./project"
 import { skillScenarios } from "./skill"
 import { catalogScenarios } from "./catalog"
 import { disposeApps } from "./backend"
@@ -115,7 +115,6 @@ const scenarios: Scenario[] = [
     check(body.worktree === ctx.directory, "worktree should resolve from x-orchestra-directory")
   }),
   ...vcsScenarios,
-  ...leanScenarios,
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
@@ -142,66 +141,7 @@ const scenarios: Scenario[] = [
     .at((ctx) => ({ path: "/config", headers: ctx.headers(), body: { username: 1 } }))
     .status(400),
   http.protected.get("/config/providers", "config.providers").json(),
-  http.protected.get("/project", "project.list").json(200, array, "status"),
-  http.protected.get("/project/current", "project.current").json(
-    200,
-    (body, ctx) => {
-      object(body)
-      check(body.worktree === ctx.directory, "current project should resolve from scenario directory")
-    },
-    "status",
-  ),
-  http.protected
-    .patch("/project/{projectID}", "project.update")
-    .mutating()
-    .seeded((ctx) => ctx.project())
-    .at((ctx) => ({
-      path: route("/project/{projectID}", { projectID: ctx.state.id }),
-      headers: ctx.headers(),
-      body: { name: "HTTP API Project", commands: { start: "bun --version" } },
-    }))
-    .json(
-      200,
-      (body) => {
-        object(body)
-        check(body.name === "HTTP API Project", "project update should return patched name")
-        check(
-          isRecord(body.commands) && body.commands.start === "bun --version",
-          "project update should return patched command",
-        )
-      },
-      "status",
-    ),
-  http.protected
-    .patch("/project/{projectID}", "project.update.missing")
-    .mutating()
-    .at((ctx) => ({
-      path: route("/project/{projectID}", { projectID: "project_httpapi_missing" }),
-      headers: ctx.headers(),
-      body: { name: "Missing Project" },
-    }))
-    .json(404, object, "status"),
-  http.protected
-    .post("/project/git/init", "project.initGit")
-    .mutating()
-    .inProject({ git: false })
-    .json(
-      200,
-      (body, ctx) => {
-        object(body)
-        check(body.worktree === ctx.directory, "git init should return current project")
-        check(body.vcs === "git", "git init should mark the project as git-backed")
-      },
-      "status",
-    ),
-  http.protected
-    .get("/project/{projectID}/directories", "project.directories")
-    .seeded((ctx) => ctx.project())
-    .at((ctx) => ({
-      path: route("/project/{projectID}/directories", { projectID: ctx.state.id }),
-      headers: ctx.headers(),
-    }))
-    .json(200, array, "status"),
+  ...projectScenarios,
   http.protected
     .post("/experimental/project/{projectID}/copy/generate-name", "experimental.projectCopy.generateName")
     .seeded((ctx) => ctx.project())
