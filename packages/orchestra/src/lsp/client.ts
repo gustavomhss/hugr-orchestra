@@ -2,7 +2,7 @@ import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from "vscode-jsonrpc/node"
 import type { Diagnostic as VSCodeDiagnostic } from "vscode-languageserver-types"
-import { Process } from "@/util/process"
+import { ClientLiveness } from "./client-liveness"
 import { LANGUAGE_EXTENSIONS } from "./language"
 import { Effect, Schema } from "effect"
 import type * as LSPServer from "./server"
@@ -134,21 +134,7 @@ export async function create(input: {
     new StreamMessageWriter(input.server.process.stdin as any),
   )
   input.server.process.stderr?.resume()
-  const state = { connected: true, shutdown: undefined as Promise<void> | undefined }
-  connection.onClose(() => {
-    state.connected = false
-  })
-  connection.onDispose(() => {
-    state.connected = false
-  })
-  void input.server.process.exited?.then(
-    () => {
-      state.connected = false
-    },
-    () => {
-      state.connected = false
-    },
-  )
+  const liveness = ClientLiveness.track(connection, input.server.process)
   // --- Connection state ---
 
   const pushDiagnostics = new Map<string, Diagnostic[]>()
@@ -560,7 +546,7 @@ export async function create(input: {
   const result = {
     root: input.root,
     get connected() {
-      return state.connected && input.server.process.exitCode === null && input.server.process.signalCode === null
+      return liveness.connected
     },
     get serverID() {
       return input.serverID
@@ -655,15 +641,7 @@ export async function create(input: {
       }
       await waitForFullDiagnostics({ path: normalizedPath, version: request.version, after: request.after })
     },
-    shutdown() {
-      state.shutdown ??= (async () => {
-        state.connected = false
-        connection.end()
-        connection.dispose()
-        await Process.stop(input.server.process)
-      })()
-      return state.shutdown
-    },
+    shutdown: liveness.shutdown,
   }
 
   return result
