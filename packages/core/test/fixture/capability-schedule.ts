@@ -16,6 +16,7 @@ import { Project, ProjectV2 } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
+import { ScheduledTaskPort } from "@orchestra/core/scheduled-task/port"
 import { ScheduledTaskTable } from "@orchestra/core/scheduled-task/sql"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
@@ -41,7 +42,7 @@ const projects = Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
   resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
   directories: () => Effect.succeed([]), commit: () => Effect.void }))
 export const layer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node,
-  SessionStore.node, SessionV2.node, ScheduledTask.node, PermissionV2.node, PermissionSaved.node, AgentV2.node,
+  SessionStore.node, SessionV2.node, ScheduledTask.node, ScheduledTaskPort.node, PermissionV2.node, PermissionSaved.node, AgentV2.node,
   Location.node, ToolRegistry.node]), [
   [Database.node, Database.layerFromPath(join(tmp.path, "schedule.sqlite"))],
   [Location.node, Layer.succeed(Location.Service, Location.Service.of(placement))],

@@ -11,6 +11,7 @@ import { SessionV2 } from "./session"
 import { SessionInput } from "./session/input"
 import { ScheduledTaskCapability } from "./scheduled-task/capability"
 import { ScheduledTaskModel } from "./scheduled-task/model"
+import { ScheduledTaskPort } from "./scheduled-task/port"
 import { ScheduledTaskShared } from "./scheduled-task/shared"
 import { ScheduledTaskRunTable, ScheduledTaskTable } from "./scheduled-task/sql"
 
@@ -301,6 +302,8 @@ const layer = Layer.effect(
       yield* Effect.forEach(due, (task) => serve(task.id, now).pipe(Effect.catchCause(logFailure)), { discard: true })
     }).pipe(Effect.withSpan("ScheduledTask.tick"))
 
+    const capability = cap.api({ dispatch, settle })
+    yield* ScheduledTaskPort.bind(capability)
     return Service.of({
       list: Effect.fn("ScheduledTask.list")(function* (directory) {
         const tasks = yield* db
@@ -425,12 +428,13 @@ const layer = Layer.effect(
         return { sessionID: outcome.sessionID }
       }),
       tick,
-      capability: cap.api({ dispatch, settle }),
+      capability,
     })
   }),
 )
 
 export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, SessionV2.node] })
+
 
 /** Serves due slots on the server whether or not any client is open, starting with a pass at boot. */
 export const daemonNode = makeGlobalNode({

@@ -3,7 +3,8 @@ export * as CapabilitySchedule from "./index"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Clock, Context, Effect, Exit } from "effect"
 import { Location } from "../../location"
-import { ScheduledTask } from "../../scheduled-task"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
+import { ScheduledTaskPort } from "../../scheduled-task/port"
 import { ScheduledTaskCapabilityModel } from "../../scheduled-task/capability-model"
 import { ScheduledTaskModel } from "../../scheduled-task/model"
 import { Tool } from "../../tool/tool"
@@ -19,7 +20,7 @@ const LIST_LIMIT = 64
 export const make = () => Effect.gen(function* () {
   const location = yield* Location.Service
   const policy = yield* CapabilityPolicy.make
-  const schedules = yield* ScheduledTask.Service
+  const schedules = { capability: yield* ScheduledTaskPort.Service }
   const placement = { projectID: location.project.id,
     location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) }
 

@@ -48,7 +48,7 @@ it.live("Location capability producer registers canonical leaves and settlement 
   yield* CapabilityPolicyFixture.setRules(rules)
   const materialized = yield* registry.materialize(rules)
   const names = ["channel_read", "channel_send", "channel_update", "image_create", "video_create",
-    "document_read", "document_edit", "sheet_read", "sheet_edit", "service_find", "service_describe", "service_call", "process_control",
+    "document_read", "document_edit", "sheet_read", "sheet_edit", "service_find", "service_describe", "service_call", "process_control", "schedule_manage",
     ...CapabilityServiceProviders.platformNames]
   names.forEach((name) => {
     expect(materialized.definition(name)).toBeDefined()
