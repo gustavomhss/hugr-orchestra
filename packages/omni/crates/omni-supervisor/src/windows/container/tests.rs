@@ -34,6 +34,10 @@ fn parses_grants_routes_and_the_command() {
 fn refuses_relative_paths_bad_names_ports_and_missing_commands() {
     for bad in [
         &["orchestra", "--read", r"w", "--app", "a", "--line", "l"][..],
+        &["orchestra", "--toolchain", r"go"],
+        &["orchestra", "--toolchain", r"C:\go", "--app", "a", "--line", "l"],
+        &["orchestra", "--toolchain", r"C:\go", "--read", r"C:\w"],
+        &["orchestra", "--toolchain", r"C:\go", "--revoke"],
         &["orchestra", "--route", r"0=C:\t\0.sock", "--app", "a", "--line", "l"],
         &["orchestra", "--route", r"5432", "--app", "a", "--line", "l"],
         &["bad name", "--app", "a", "--line", "l"],
@@ -43,6 +47,10 @@ fn refuses_relative_paths_bad_names_ports_and_missing_commands() {
     ] {
         assert!(parse(args(bad)).is_err(), "{bad:?}");
     }
+    assert_eq!(
+        parse(args(&["orchestra", "--toolchain", r"C:\go"])).unwrap().toolchain,
+        [std::path::PathBuf::from(r"C:\go")]
+    );
     assert!(
         parse(args(&["orchestra", "--read", r"C:\w", "--revoke"]))
             .unwrap()

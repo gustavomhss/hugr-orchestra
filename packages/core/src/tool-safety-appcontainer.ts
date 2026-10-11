@@ -4,10 +4,12 @@ import os from "os"
 import path from "path"
 import which from "which"
 import { createHash } from "crypto"
+import { execFile } from "child_process"
 import { Context, Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { BackendToolkit } from "./backend-toolkit"
 import { FSUtil } from "./fs-util"
+import { Global } from "./global"
 import { Omni } from "./omni"
 import { Shell } from "./shell"
 import { ToolSafety } from "./tool-safety"
@@ -15,7 +17,9 @@ import { ToolSafety } from "./tool-safety"
 // The Windows shell jail: the omni supervisor's AppContainer launch mode (`--appcontainer`). The command runs as an
 // AppContainer process with no capabilities (no network), inside a kill-on-close Job, and opens only what the
 // launcher grants its profile's SID: read on the native placement and the toolkit cache, write on the write roots.
-// Everything else stays closed, but nothing inside a grant can be closed again (a deny ACE for the SID did not hold), so
+// The host toolchain (PATH folders outside Windows and Program Files, which every AppContainer may already read) is
+// granted read once per host to a capability every Orchestra container holds, so bun, node, python and go start in any
+// profile; that first walk runs in the background (prepare). Everything else stays closed, but nothing inside a grant can be closed again (a deny ACE for the SID did not hold), so
 // a denied or protected path inside a granted tree makes the policy inexpressible. Exact loopback endpoints reach their
 // fixed upstream through the launcher's own AF_UNIX broker. Profiles are keyed by their grant set, so a reused profile
 // finds its ACEs already in place and never re-walks a tree; per-command scratch and broker folders are fresh and small.
@@ -31,8 +35,9 @@ export const Launcher = Context.Reference<string | undefined>("@orchestra/ToolSa
   },
 })
 
-/** Only pwsh and cmd run in an AppContainer: Git Bash and Bun crash there, Windows PowerShell 5.1 is denied its own
- * working directory (measured on windows-latest). */
+/** Only pwsh and cmd run as the AppContainer's shell: Git Bash does not start there, Windows PowerShell 5.1 is denied its
+ * own working directory (measured on windows-latest). Inside, no command may open the null device (`NUL`, which git opens
+ * as it starts), so git and `> nul` redirections fail there; they never run outside it. */
 export const shell = (file: string) => ["pwsh", "cmd"].includes(Shell.name(file))
 
 /** Whether this command is one the AppContainer launcher can run: pwsh with its arguments, or a cmd.exe shell. */
@@ -79,6 +84,12 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     entries.some((entry) => roots.some((root) => FSUtil.contains(root, entry) || FSUtil.contains(entry, root)))
   if (overlaps(input.deny, granted) || overlaps(input.protectedWrites, writes))
     return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-deny-inside-grant-unenforceable" })
+  // A toolchain folder holding or inside a denied path is left unreadable rather than refusing the command. One inside
+  // another listed folder is already covered by its walk.
+  const found = (yield* Effect.forEach(toolchainFolders(input.env), (entry) =>
+    fs.realPath(entry).pipe(Effect.map((real) => [real]), Effect.orElseSucceed(() => []))))
+    .flat().filter((entry) => !overlaps(input.deny, [entry]))
+  prepare(input.supervisor, [...new Set(found)].filter((entry, _, all) => !all.some((other) => other !== entry && FSUtil.contains(other, entry))))
   const name = `orchestra-${createHash("sha256").update(JSON.stringify([reads, writes, input.ports])).digest("hex").slice(0, 32)}`
   const broker = input.ports.length
     ? yield* fs.makeTempDirectoryScoped({ directory: os.tmpdir(), prefix: "otcp-" }).pipe(
@@ -103,6 +114,43 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
       `${route.port}:${Buffer.from(route.socket, "utf8").toString("hex")}`).join(";") } : {} },
   })
 })
+
+const preparing = new Map<string, Promise<void>>()
+
+/**
+ * Grants each toolchain folder not yet started in this process to the toolchain capability, in one background launcher
+ * run. A first grant walks the folder's tree (minutes on a runner with ~200k toolchain files), which must never sit
+ * inside a command's deadline: a command that starts first runs without the folders not granted yet.
+ */
+function prepare(supervisor: string, folders: readonly string[]) {
+  const pending = folders.filter((folder) => !preparing.has(folder))
+  if (!pending.length) return
+  const done = new Promise<void>((resolve) => {
+    execFile(supervisor, ["--appcontainer", "orchestra-toolchain", ...pending.flatMap((folder) => ["--toolchain", folder])],
+      { windowsHide: true }, () => resolve())
+  })
+  for (const folder of pending) preparing.set(folder, done)
+}
+
+/** Waits for this process's toolchain grants in flight; it never fails. */
+export const settled = Effect.promise(() => Promise.all(preparing.values()).then(() => undefined))
+
+/**
+ * The toolchain the container may read, by the rule of ToolSafetySandbox.toolchain: every PATH folder, and the install
+ * prefix of one named `bin` (Go's GOROOT) unless that prefix is a home's direct child (~/.bun, ~/.cargo, which hold user
+ * data). Folders under Windows and Program Files are left out: every AppContainer may already read them and their ACLs
+ * belong to the system. Nothing that contains a home is ever listed.
+ */
+function toolchainFolders(env: Record<string, string | undefined>) {
+  const value = (name: string) => Object.entries(env).find(([key]) => key.toUpperCase() === name.toUpperCase())?.[1]
+  const homes = [...new Set([Global.Path.home, os.homedir()])]
+  const system = ["SystemRoot", "ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"].flatMap((name) => value(name) ?? [])
+  const bins = (value("PATH") ?? "").split(path.delimiter).filter((entry) => path.isAbsolute(entry))
+  const prefixes = bins.filter((entry) => path.basename(entry).toLowerCase() === "bin").map((entry) => path.dirname(entry))
+    .filter((prefix) => !homes.some((home) => path.relative(home, path.dirname(prefix)) === ""))
+  return [...bins, ...prefixes].map((entry) => path.resolve(entry))
+    .filter((entry) => !system.some((root) => FSUtil.contains(root, entry)) && !homes.some((home) => FSUtil.contains(entry, home)))
+}
 
 /**
  * Windows builds an AppContainer process's environment from LOCALAPPDATA, which it points at the profile's own folder;

@@ -17,8 +17,8 @@ use windows_sys::Win32::Security::Isolation::{
 };
 use windows_sys::Win32::Security::{
     ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, ACL_SIZE_INFORMATION, AclSizeInformation, CONTAINER_INHERIT_ACE,
-    DACL_SECURITY_INFORMATION, EqualSid, FreeSid, GetAce, GetAclInformation, INHERITED_ACE, OBJECT_INHERIT_ACE,
-    PSECURITY_DESCRIPTOR, PSID,
+    DACL_SECURITY_INFORMATION, DeriveCapabilitySidsFromName, EqualSid, FreeSid, GetAce, GetAclInformation,
+    INHERITED_ACE, OBJECT_INHERIT_ACE, PSECURITY_DESCRIPTOR, PSID,
 };
 use windows_sys::Win32::Storage::FileSystem::{DELETE, FILE_GENERIC_EXECUTE, FILE_GENERIC_READ, FILE_GENERIC_WRITE};
 
@@ -45,8 +45,8 @@ impl Grant {
     }
 }
 
-/// The profile's SID, freed on drop.
-pub(super) struct Sid(PSID);
+/// A profile's SID (freed with FreeSid) or a capability's (LocalFree), freed on drop.
+pub(super) struct Sid(PSID, bool);
 
 impl Sid {
     pub(super) fn raw(&self) -> PSID {
@@ -56,8 +56,44 @@ impl Sid {
 
 impl Drop for Sid {
     fn drop(&mut self) {
-        // SAFETY: a SID from CreateAppContainerProfile or DeriveAppContainerSidFromAppContainerName.
-        unsafe { FreeSid(self.0) };
+        // SAFETY: a SID from CreateAppContainerProfile or DeriveAppContainerSidFromAppContainerName (FreeSid), or one
+        // DeriveCapabilitySidsFromName allocated (LocalFree).
+        unsafe {
+            if self.1 {
+                LocalFree(self.0);
+            } else {
+                FreeSid(self.0);
+            }
+        }
+    }
+}
+
+/// The SID of the named custom capability. Every Orchestra container holds it, so a toolchain grant made to it once
+/// serves every profile and no other principal: an AppContainer passes the access check on an ACE for a capability its
+/// token holds. A capability that names no network service adds no network.
+pub(super) fn capability(name: &str) -> io::Result<Sid> {
+    let name = wide(name);
+    let (mut groups, mut group_count, mut sids, mut count) = (std::ptr::null_mut(), 0u32, std::ptr::null_mut(), 0u32);
+    // SAFETY: a NUL-terminated name and out pointers for two LocalAlloc'd arrays of LocalAlloc'd SIDs.
+    if unsafe { DeriveCapabilitySidsFromName(name.as_ptr(), &mut groups, &mut group_count, &mut sids, &mut count) } == 0
+    {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: the arrays and their SIDs came from the call above; only the first capability SID is kept.
+    unsafe {
+        for index in 0..group_count as usize {
+            LocalFree(*groups.add(index));
+        }
+        LocalFree(groups.cast());
+        for index in 1..count as usize {
+            LocalFree(*sids.add(index));
+        }
+        let first = if count > 0 { *sids } else { std::ptr::null_mut() };
+        LocalFree(sids.cast());
+        if first.is_null() {
+            return Err(io::Error::other("no capability SID"));
+        }
+        Ok(Sid(first, true))
     }
 }
 
@@ -79,9 +115,9 @@ pub(super) fn profile(name: &str) -> io::Result<Sid> {
     if hr == hresult(ERROR_ALREADY_EXISTS) {
         // SAFETY: a NUL-terminated name and an out pointer for the SID.
         let hr = unsafe { DeriveAppContainerSidFromAppContainerName(name.as_ptr(), &mut sid) };
-        return checked(hr).map(|()| Sid(sid));
+        return checked(hr).map(|()| Sid(sid, false));
     }
-    checked(hr).map(|()| Sid(sid))
+    checked(hr).map(|()| Sid(sid, false))
 }
 
 /// Deletes the named profile; a missing one is already gone.
