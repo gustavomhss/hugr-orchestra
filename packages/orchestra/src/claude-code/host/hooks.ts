@@ -1,0 +1,267 @@
+export * as ClaudeHostHooks from "./hooks"
+
+// The SDK `hooks` option of one Claude Code host session: in-process callbacks, never plugin shell hooks, so every
+// record they write comes from inside Orchestra's process.
+// - PreToolUse: the policy gate (gate.ts) for every call, then the Agent dispatch record (delegation.ts) and Jimmy's
+//   per-call allowance charge. Any failure here is a deny.
+// - PostToolUse: output inspection, the native safety evidence, Jimmy's provenance and byte charges, and the Agent
+//   settlement record.
+// - SubagentStop: the subagent's last text (a background run's author, recorded only once it is delivered).
+// - The join's `task_notification` frames (join.ts, fed by HOST's stream consumer): background deliveries.
+// - SessionStart(compact): Orchestra's working memory from durable state only, with no model call.
+// - PostCompact: Claude Code's summary archived for `context_recall`.
+import { and, desc, eq, like } from "drizzle-orm"
+import { Effect, Exit, Option } from "effect"
+import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
+import type { SessionV1 } from "@orchestra/core/v1/session"
+import { Database } from "@orchestra/core/database/database"
+import { EventTable } from "@orchestra/core/event/sql"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { Archive } from "@/continuity/archive"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { LogicalTask } from "@/maestro/logical-task"
+import { readPlanRevision } from "@/maestro/plan-revision"
+import { MessageID, PartID, type SessionID } from "@/session/schema"
+import { Session } from "@/session/session"
+import { Todo } from "@/session/todo"
+import { ClaudeCodeTools } from "../tools"
+import { ClaudeHostDelegation } from "./delegation"
+import { ClaudeHostGate } from "./gate"
+import type { ClaudeHostJoin } from "./join"
+
+/**
+ * What HOST hands the hooks. `run`, `join` and the optional ports are HOOKS additions to the brief's base fields:
+ * - `run` runs an Orchestra effect with the engine's services and instance placement, as the engine's own `run` does;
+ * - `join` is the session's identity registry (ClaudeHostJoin.make()); HOST's stream consumer feeds it `task_started`
+ *   and `task_notification`, and reads `join.child(toolUseID)` to mirror a subagent's frames into its child Session;
+ * - `parts` is the mirror's part API, so records land on the mirrored parts and a later stream frame cannot overwrite them;
+ * - `grants` is PLUGIN's `ClaudeHostMcp.grants` (until it lands, no grant exists and write-roots seats are denied);
+ * - `research` is Jimmy's allowance and provenance port (until it lands, Jimmy is not dispatched);
+ * - `policy` replaces the live gate checks (tests only).
+ */
+export type Context = {
+  readonly sessionID: SessionID
+  readonly directory: string
+  readonly worktree: string
+  /** The main conversation's seat id (Maestro). */
+  readonly agent: string
+  readonly abort: AbortController
+  readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Promise<A>
+  readonly join: ClaudeHostJoin.Join
+  readonly parts?: ClaudeHostDelegation.Parts
+  readonly grants?: (sessionID: string) => Map<string, ClaudeHostDelegation.Grant>
+  readonly research?: Research
+  readonly policy?: ClaudeHostGate.Ports
+}
+
+/**
+ * Jimmy's research allowance and provenance (src/research on jimmy-land: ResearchExecution and ResearchSourceCapture).
+ * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
+ */
+export type Research = {
+  /** Bind the dispatch's allowance to the child Session, at `PreToolUse[Agent]`. */
+  readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
+  /** Charge one tool call before it runs. */
+  readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
+  /** Record the returned bytes as retained source evidence, charging them first. */
+  readonly capture: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
+}
+
+/** Claude Code's native reads whose results Jimmy may cite only through recorded provenance. */
+const CAPTURED = ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "LSP"]
+const MEMORY_LIMIT = 6000
+
+export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
+  const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
+    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, grants: ctx.grants, parts: ctx.parts })
+  const unsubscribe = ctx.join.subscribe((frame) => {
+    ctx.run(delegation.notify(frame)).catch(() => undefined)
+  })
+  ctx.abort.signal.addEventListener("abort", unsubscribe, { once: true })
+  const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
+  const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
+    : ctx.run(ClaudeHostGate.live({ abort: ctx.abort.signal, part: ctx.parts?.tool }))
+
+  // A defect in Orchestra's own checks denies the call: the gate fails closed.
+  const pre: HookCallback = (input) => {
+    if (input.hook_event_name !== "PreToolUse") return Promise.resolve({})
+    return ctx.run(Effect.gen(function* () {
+      const actor = yield* delegation.actor(input.agent_id)
+      if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
+      const args = record(input.tool_input)
+      const decision = yield* ClaudeHostGate.decide(yield* Effect.promise(ports), actor, input.tool_name, args, input.tool_use_id)
+      if (!decision.allow) {
+        yield* evidence(actor, input.tool_name, input.tool_use_id, "held", decision.reason)
+        return ClaudeHostGate.output(decision)
+      }
+      if (ClaudeHostGate.agentCall(input.tool_name)) {
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
+          return ClaudeHostGate.deny("HOLD: jimmy's research allowance and provenance are not available on this host, so it was not dispatched.")
+        yield* delegation.dispatch(input, actor)
+        const dispatched = delegation.child(input.tool_use_id)
+        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
+      }
+      if (actor.seat !== "jimmy") return ClaudeHostGate.output(decision)
+      if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+      yield* ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name)
+      return ClaudeHostGate.output(decision)
+    }).pipe(Effect.catchCause((cause) => Effect.succeed(ClaudeHostGate.deny(ClaudeCodeTools.failure(cause)))),
+      // A call denied after its jail was set up never runs, so nothing else would release that jail.
+      Effect.tap((output) => ClaudeHostGate.denied(output) ? release(input.tool_use_id) : Effect.void)))
+  }
+
+  const post: HookCallback = (input) => {
+    if (input.hook_event_name !== "PostToolUse") return Promise.resolve({})
+    return ctx.run(Effect.gen(function* () {
+      yield* release(input.tool_use_id)
+      const actor = yield* delegation.actor(input.agent_id)
+      const agent = ClaudeHostGate.agentCall(input.tool_name)
+      // Today's output boundary for Orchestra's tools: a recognized credential never reaches the model or a record.
+      const inspected = yield* Effect.exit(ToolSafety.inspect(input.tool_response))
+      const refused = Exit.isFailure(inspected) ? ClaudeCodeTools.failure(inspected.cause) : undefined
+      if ("hold" in actor) return {}
+      yield* evidence(actor, input.tool_name, input.tool_use_id, refused ? "held" : "success", refused)
+      const context = agent ? yield* delegation.settle(input, refused) : undefined
+      if (refused) return withheld(refused, context)
+      if (actor.seat === "jimmy" && CAPTURED.includes(input.tool_name)) {
+        if (!ctx.research) return withheld("jimmy's provenance capture is not available on this host")
+        const captured = yield* Effect.exit(ctx.research.capture(actor.sessionID, input.tool_use_id, input.tool_name,
+          input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
+        if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
+      }
+      return context ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context } } : {}
+    }).pipe(Effect.catchCause((cause) => Effect.succeed({ systemMessage: `Orchestra could not record this call: ${ClaudeCodeTools.failure(cause)}` }))))
+  }
+
+  // A failed call holds a jail too; nothing else is recorded for it here.
+  const failed: HookCallback = (input) => {
+    if (input.hook_event_name !== "PostToolUseFailure") return Promise.resolve({})
+    return ctx.run(release(input.tool_use_id)).then(() => ({}))
+  }
+
+  const stop: HookCallback = (input) => {
+    if (input.hook_event_name === "SubagentStop") delegation.stop(input.agent_id, input.last_assistant_message)
+    return Promise.resolve({})
+  }
+
+  const compact: HookCallback = (input) => {
+    if (input.hook_event_name !== "SessionStart") return Promise.resolve({})
+    return ctx.run(memory()).then((text): HookJSONOutput => text ? { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: text } } : {})
+  }
+
+  const archive: HookCallback = (input) => {
+    if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
+    return ctx.run(summary(input.compact_summary, input.trigger)).then(() => ({}))
+  }
+
+  return {
+    PreToolUse: [{ hooks: [pre] }],
+    PostToolUse: [{ hooks: [post] }],
+    PostToolUseFailure: [{ hooks: [failed] }],
+    SubagentStop: [{ hooks: [stop] }],
+    SessionStart: [{ matcher: "compact", hooks: [compact] }],
+    PostCompact: [{ hooks: [archive] }],
+  }
+
+  function release(toolUseID: string) {
+    return Effect.promise(ports).pipe(Effect.flatMap((policy) => policy.release(toolUseID)))
+  }
+
+  // Durable safety evidence per call, on the mirrored call's message. A call the mirror has not seen yet has no anchor.
+  function evidence(actor: ClaudeHostGate.Actor, tool: string, callID: string, outcome: "success" | "held", reason: string | undefined) {
+    return Effect.gen(function* () {
+      const observations = yield* Effect.serviceOption(ArsenalObservations.Service)
+      const part = ctx.parts?.tool(callID)
+      if (Option.isNone(observations) || !part) return
+      const store = yield* Session.Service
+      const session = yield* store.get(actor.sessionID)
+      yield* observations.value.emit({ sessionID: actor.sessionID, assistantMessageID: part.messageID, callID,
+        placement: { directory: session.directory, projectID: session.projectID },
+        fact: { source: "native-host", version: 1, kind: "safety", tool: tool.slice(0, 128), outcome,
+          ...(reason ? { reason: reason.slice(0, 4096) } : {}) } })
+    })
+  }
+
+  // Working memory after a compaction, from durable records only: open logical tasks with their grants and receipts,
+  // pending delegations and grants, and the plan state. No model is called.
+  function memory() {
+    return Effect.gen(function* () {
+      const store = yield* Session.Service
+      const todos = yield* Todo.Service
+      const history = yield* store.messages({ sessionID: ctx.sessionID })
+      const calls = history.flatMap((message) => message.parts).filter((part): part is SessionV1.ToolPart =>
+        part.type === "tool" && ClaudeHostGate.agentCall(part.tool))
+      const tasks = yield* Effect.forEach(yield* store.children(ctx.sessionID), (session) => Effect.gen(function* () {
+        const binding = yield* LogicalTask.read(session.id).pipe(Effect.catch(() => Effect.succeed(undefined)))
+        if (!binding) return []
+        const call = calls.find((part) => part.state.status !== "pending" && part.state.metadata?.sessionId === session.id)
+        const metadata = call?.state.status === "pending" ? undefined : call?.state.metadata
+        const receipt = record(record(metadata?.workResult).terminal).reason
+        if (call?.state.status === "completed" && receipt === "ended") return []
+        const grant = record(metadata?.claudeCodeDispatch)
+        return [`- ${binding.taskId} · ${binding.memberID} · ${session.title} · ${call?.state.status ?? "no call"}` +
+          (typeof receipt === "string" ? ` · receipt ${receipt}` : "") + (typeof metadata?.hold === "string" ? ` · ${metadata.hold}` : "") +
+          (typeof grant.grantID === "string" ? ` · grant ${grant.grantID} ${JSON.stringify(grant.writeRoots ?? [])}` : "")]
+      }))
+      const pending = delegation.summaries().filter((item) => !item.settled).map((item) =>
+        `- ${item.toolUseID} · ${item.seat} · ${item.background ? "background" : "foreground"}${item.hold ? ` · ${item.hold}` : ""}`)
+      const grants = delegation.grants().map((grant) => `- ${grant.grantID} · ${grant.seat} · ${JSON.stringify(grant.writePaths)} · ${grant.purpose}`)
+      const plan = yield* planState(ctx.sessionID)
+      const todo = (yield* todos.get(ctx.sessionID)).filter((item) => item.status !== "completed" && item.status !== "cancelled")
+        .map((item) => `- [${item.status}] ${item.content}`)
+      const sections = [
+        ["Open logical tasks", tasks.flat()],
+        ["Pending delegations", pending],
+        ["Unbound write grants", grants],
+        ["Plan", [...plan, ...todo]],
+      ] as const
+      const body = sections.filter((section) => section[1].length).map((section) => [`## ${section[0]}`, ...section[1]].join("\n"))
+      if (!body.length) return undefined
+      const text = ["# Orchestra working memory (from durable records, after Claude Code's compaction)", ...body].join("\n\n")
+      return text.length > MEMORY_LIMIT ? `${text.slice(0, MEMORY_LIMIT)}\n… (truncated; use context_recall for more)` : text
+    })
+  }
+
+  // Claude Code's compaction summary goes to the session archive, where `context_recall` finds it. It is not a message.
+  function summary(text: string, trigger: string) {
+    return Effect.gen(function* () {
+      const archive = yield* Archive.Service
+      const store = yield* Session.Service
+      const user = (yield* store.messages({ sessionID: ctx.sessionID })).findLast((message) => message.info.role === "user")
+      if (user?.info.role !== "user") return
+      const now = Date.now()
+      const info = { id: MessageID.ascending(), sessionID: ctx.sessionID, parentID: user.info.id, role: "assistant", mode: ctx.agent,
+        agent: ctx.agent, path: { cwd: ctx.directory, root: ctx.worktree }, summary: true, cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, modelID: user.info.model.modelID,
+        providerID: user.info.model.providerID, time: { created: now, completed: now }, finish: "stop" } satisfies SessionV1.Assistant
+      yield* archive.publish({ sessionID: ctx.sessionID, messages: [{ info, parts: [{ id: PartID.ascending(), sessionID: ctx.sessionID,
+        messageID: info.id, type: "text", synthetic: true, text: `Claude Code compaction summary (${trigger}):\n\n${text}` }] }] })
+    })
+  }
+}
+
+function planState(sessionID: SessionID) {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    const row = yield* database.db.select({ id: EventTable.id }).from(EventTable)
+      .where(and(eq(EventTable.aggregate_id, sessionID), like(EventTable.type, "maestro.plan_revision.recorded%")))
+      .orderBy(desc(EventTable.seq)).limit(1).get().pipe(Effect.orDie)
+    const revision = row ? yield* readPlanRevision(row.id).pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
+    if (!revision) return []
+    return [`- Plan revision ${revision.id} (${revision.status}): ${revision.goal.value}`,
+      ...revision.acceptance.slice(0, 8).map((item) => `  - accept: ${item.value}`)]
+  })
+}
+
+function withheld(reason: string, context?: string): HookJSONOutput {
+  return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: `Orchestra withheld this output: ${reason}`,
+    ...(context ? { additionalContext: context } : {}) } }
+}
+
+function record(value: unknown): { readonly [key: string]: unknown } {
+  return isRecord(value) ? value : {}
+}
+
+function isRecord(value: unknown): value is { readonly [key: string]: unknown } {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
