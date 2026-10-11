@@ -8,7 +8,6 @@ const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready
   config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
 })
 const calls: Config[] = []
-const toasts: unknown[] = []
 const transport = { reject: true }
 const sync = {
   data: state,
@@ -22,8 +21,8 @@ const sync = {
     setState("config", "tool_output", config.tool_output!)
   },
 }
-// External context fixtures only; render real SettingsGeneralV2, settings provider, controller and switch. Fixtures
-// replace the solidDom() copies (./solid-dom) that the rendered graph imports.
+// External context fixtures only; render real SettingsGeneralV2 and settings provider, and drive the real backend config
+// controller through its default context wiring. Fixtures replace the solidDom() copies (./solid-dom) those modules import.
 const sdk: typeof import("@/context/server-sdk") = await import(solidDom("@/context/server-sdk", import.meta.dir))
 const serverSync: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
 const permission: typeof import("@/context/permission") = await import(solidDom("@/context/permission", import.meta.dir))
@@ -36,7 +35,6 @@ mock.module(solidDom("@/context/permission", import.meta.dir), () => ({ ...permi
 mock.module(solidDom("@/orchestra/palette/context", import.meta.dir), () => ({
   useOrchestraPalette: () => ({ palettes: [], id: () => "dark" }),
 }))
-mock.module(solidDom("@/utils/toast", import.meta.dir), () => ({ showToast: (options: unknown) => toasts.push(options) }))
 const { SettingsGeneralV2 }: typeof import("@/components/settings-v2/general") = await import(
   solidDom("@/components/settings-v2/general", import.meta.dir)
 )
@@ -53,10 +51,14 @@ const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await 
 )
 const { dict }: typeof import("@/i18n/en") = await import(solidDom("@/i18n/en", import.meta.dir))
 
-test("active SettingsGeneralV2 mounts backend Lean controls; unavailable capability cannot write", async () => {
+// The first Lean UI, a global toggle in Settings, was rejected (2026-10-10): Lean lives on its profile screen, with
+// per-profile KPIs, covered items, bytes and tokens saved and per-item switches. That screen's live controls are covered
+// by lean-profile-view (pending, failure, unsupported and paused states), lean-controller (unsupported blocks writes,
+// failures keep data, pending lanes confirm only HTTP snapshots), lean-chapter-route and lean-native-product (persisted
+// disable through the real backend). An accidental re-mount in Settings must fail here.
+test("active SettingsGeneralV2 renders no Lean controls, whether the Lean capability is unavailable or editable", async () => {
   const host = document.createElement("div")
   document.body.appendChild(host)
-  const owned = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController() }))
   const dispose = render(() => createComponent(PlatformProvider, {
     value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
     get children() { return createComponent(LanguageProvider, {
@@ -69,40 +71,58 @@ test("active SettingsGeneralV2 mounts backend Lean controls; unavailable capabil
       },
     }) },
   }), host)
-  const row = () => host.querySelector('[data-action="settings-lean"]')
-  const input = () => row()?.querySelector<HTMLInputElement>('input[type="checkbox"]')
+  const lean = [
+    dict["lean.settings.title"], dict["lean.settings.description"], dict["lean.settings.unavailable"],
+    dict["lean.settings.saving"], dict["lean.settings.failed"],
+  ]
   try {
-    await Bun.sleep(20)
-    expect(row()).not.toBeNull()
-    expect(host.textContent).toContain(dict["lean.settings.title"])
+    for (const capability of [
+      { protocol: undefined, ready: false, error: undefined }, { protocol: "v1" as const, ready: true, error: undefined },
+    ]) {
+      setState(capability)
+      await Bun.sleep(20)
+      // Positive control: the real General section rendered, so the absence below is not an empty mount.
+      expect(host.querySelector('[data-action="settings-language"]')).not.toBeNull()
+      expect(host.textContent).toContain(dict["settings.general.row.language.title"])
+      expect(host.querySelector('[data-action^="settings-lean"]')).toBeNull()
+      for (const text of lean) expect(host.textContent).not.toContain(text)
+    }
+    expect(calls).toHaveLength(0)
+  } finally { dispose(); host.remove() }
+})
+
+test("live backend Lean config controller: unavailable capability cannot write; rejected write stays visible; refetched config is authoritative", async () => {
+  setState({ protocol: undefined, ready: false, error: undefined })
+  const owned = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController() }))
+  try {
     for (const capability of [
       { protocol: undefined, ready: true, error: undefined }, { protocol: "v2" as const, ready: true, error: undefined },
       { protocol: "v1" as const, ready: false, error: undefined }, { protocol: "v1" as const, ready: true, error: new Error("offline") },
     ]) {
       setState(capability)
-      expect(row()?.textContent).toContain(dict["lean.settings.unavailable"])
-      expect(input()).toBeNull()
+      expect(owned.lean.editable()).toBe(false)
       expect(owned.lean.enabled()).toBeUndefined()
       await owned.lean.set(true)
       expect(calls).toHaveLength(0)
     }
     setState({ protocol: "v1", ready: true, error: undefined })
-    expect(input()?.checked).toBe(false)
-    input()!.click()
-    expect(input()?.disabled).toBe(true)
-    expect(row()?.textContent).toContain(dict["lean.settings.saving"])
-    await Bun.sleep(10)
+    expect(owned.lean.editable()).toBe(true)
+    expect(owned.lean.enabled()).toBe(false)
+    const rejected = owned.lean.set(true)
+    expect(owned.lean.pending()).toBe(true)
+    await owned.lean.set(false)
+    expect(calls).toHaveLength(1)
+    await expect(rejected).rejects.toThrow("write denied")
     expect(calls).toEqual([{ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: true } } }])
-    expect(input()?.checked).toBe(false)
-    expect(row()?.querySelector('[role="alert"]')?.textContent).toBe(dict["lean.settings.failed"])
-    expect(toasts).toEqual([{ variant: "error", title: dict["lean.settings.failed"], description: "write denied" }])
+    expect(owned.lean.pending()).toBe(false)
+    expect(owned.lean.failed()).toBe(true)
+    expect(owned.lean.enabled()).toBe(false)
     transport.reject = false
-    input()!.click()
-    await Bun.sleep(10)
-    expect(input()?.checked).toBe(true)
-    input()!.click()
-    await Bun.sleep(10)
-    expect(input()?.checked).toBe(false)
+    await owned.lean.set(true)
+    expect(owned.lean.failed()).toBe(false)
+    expect(owned.lean.enabled()).toBe(true)
+    await owned.lean.set(false)
+    expect(owned.lean.enabled()).toBe(false)
     expect(calls[2]).toEqual({ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } })
-  } finally { dispose(); owned.dispose(); host.remove() }
+  } finally { owned.dispose() }
 })
