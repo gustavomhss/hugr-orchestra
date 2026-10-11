@@ -42,12 +42,13 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const scope = yield* Scope.fork(registryScope)
     const stdin = yield* Queue.unbounded<Uint8Array, Cause.Done>()
     const handle = yield* restore(spec.prepare(spec.command).pipe(
-      Effect.flatMap((command) => command._tag === "StandardCommand"
-        ? appProcess.spawn(ChildProcess.make(command.command, command.args, {
+      Effect.flatMap((command) => Effect.gen(function* () {
+        if (command._tag !== "StandardCommand") return yield* unsupported("Piped commands are not supported")
+        return yield* appProcess.spawn(ChildProcess.make(command.command, command.args, {
           ...command.options, stdout: "pipe", stderr: "pipe", forceKillAfter: "2 seconds",
           stdin: { stream: Stream.fromQueue(stdin), endOnDone: true },
         }))
-        : unsupported("Piped commands are not supported")),
+      })),
       Scope.provide(scope),
       Effect.tapCause((cause) => Effect.logWarning("process start failed", cause)),
       Effect.mapError((error) => error instanceof Capability.Failure
