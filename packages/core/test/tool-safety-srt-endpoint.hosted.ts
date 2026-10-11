@@ -1,6 +1,6 @@
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 // Linux CI only: it relaxes the runner's AppArmor user-namespace restriction for bubblewrap, installs the sandbox's
-// system dependencies when absent, and runs a real Apache Cassandra in Docker on a host loopback port.
+// system dependencies when absent, and runs a real Apache Cassandra and a real ScyllaDB in Docker on host loopback ports.
 import { expect } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
@@ -21,25 +21,36 @@ if (process.platform !== "linux" || process.env.CI !== "true")
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
 const CASSANDRA = "cassandra:5.0.5"
+const SCYLLA = ["scylladb/scylla:6.1.2", "scylladb/scylla:2026.1.14"]
 const SCHEMA = "CREATE KEYSPACE shop WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}; " +
   "CREATE TABLE shop.carts (user_id text, item_id text, quantity int, added_at timestamp, PRIMARY KEY (user_id, item_id));"
 
-it.live("Linux srt exact endpoint: real Cassandra generation through the toolkit path; other ports and raw TCP refused", () =>
-  Effect.gen(function* () {
-    const fs = yield* FSUtil.Service
-    const processes = yield* AppProcess.Service
-    const host = (command: string, args: string[]) =>
-      processes.run(ChildProcess.make(command, args), { timeout: "10 minutes" }).pipe(Effect.flatMap(AppProcess.requireSuccess))
-    yield* host("sudo", ["sysctl", "-w", "kernel.apparmor_restrict_unprivileged_userns=0"])
-    if (!(yield* ToolSafetySandbox.available("bwrap")) || !(yield* ToolSafetySandbox.available("socat")) || !(yield* ToolSafetySandbox.available("psql")))
-      yield* host("sudo", ["apt-get", "install", "-y", "--no-install-recommends", "bubblewrap", "socat", "postgresql-client"])
-    const node = yield* ToolSafetySandbox.available("node")
-    if (!node) throw new Error("BLOCKED: node unavailable")
+const MODELS_SHA256 = "6112e7c58a90b3958f39ce98c7db1cfa6bf83aa9098ef263b46ae6df6d1706e4"
 
+const host = (command: string, args: string[]) =>
+  Effect.gen(function* () {
+    const processes = yield* AppProcess.Service
+    return yield* processes.run(ChildProcess.make(command, args), { timeout: "10 minutes" }).pipe(Effect.flatMap(AppProcess.requireSuccess))
+  })
+
+const prepareHost = Effect.gen(function* () {
+  yield* host("sudo", ["sysctl", "-w", "kernel.apparmor_restrict_unprivileged_userns=0"])
+  if (!(yield* ToolSafetySandbox.available("bwrap")) || !(yield* ToolSafetySandbox.available("socat")) || !(yield* ToolSafetySandbox.available("psql")))
+    yield* host("sudo", ["apt-get", "install", "-y", "--no-install-recommends", "bubblewrap", "socat", "postgresql-client"])
+  const node = yield* ToolSafetySandbox.available("node")
+  if (!node) throw new Error("BLOCKED: node unavailable")
+  return node
+})
+
+// Starts a detached database container, waits for its health check (a CQL round trip) and returns its loopback port.
+const database = (image: string, args: string[], cqlsh: string[], healthCommand: string) =>
+  Effect.gen(function* () {
+    const processes = yield* AppProcess.Service
     const id = yield* Effect.acquireRelease(
-      host("docker", ["run", "-d", "-p", "127.0.0.1::9042", "-e", "MAX_HEAP_SIZE=512M", "-e", "HEAP_NEWSIZE=128M",
-        "--health-cmd", "cqlsh -e 'describe keyspaces'", "--health-interval", "5s", "--health-retries", "60", "--health-start-period", "20s",
-        CASSANDRA]).pipe(Effect.map((result) => result.stdout.toString().trim())),
+      host("docker", ["run", "-d", "-p", "127.0.0.1::9042", ...args,
+        "--health-cmd", healthCommand, "--health-interval", "5s", "--health-retries", "60", "--health-start-period", "20s",
+        image, ...(image.startsWith("scylladb/") ? ["--smp", "1", "--memory", "512M", "--overprovisioned", "1", "--developer-mode", "1"] : [])]).pipe(
+        Effect.map((result) => result.stdout.toString().trim())),
       (id) => processes.run(ChildProcess.make("docker", ["rm", "-f", id])).pipe(Effect.ignore),
     )
     const port = Number((yield* host("docker", ["port", id, "9042/tcp"])).stdout.toString().split("\n")[0].trim().split(":").at(-1))
@@ -47,8 +58,39 @@ it.live("Linux srt exact endpoint: real Cassandra generation through the toolkit
       Effect.flatMap((result) => result.stdout.toString().trim() === "healthy" ? Effect.void : Effect.fail(result.stdout.toString().trim())),
       Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 72 }),
     )
-    yield* host("docker", ["exec", id, "cqlsh", "-e", SCHEMA])
-    console.info(`cassandra ${CASSANDRA} healthy on 127.0.0.1:${port}`)
+    yield* host("docker", ["exec", id, ...cqlsh])
+    console.info(`${image} healthy on 127.0.0.1:${port}`)
+    return port
+  })
+
+// A work directory, a private toolkit root and a runner of sandboxed commands granted exactly one loopback port.
+const sandboxFor = (port: number) =>
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const processes = yield* AppProcess.Service
+    const work = yield* fs.makeTempDirectoryScoped({ prefix: "srt-endpoint-" }).pipe(Effect.flatMap(fs.realPath))
+    yield* fs.makeDirectory(path.join(work, "models"))
+    const root = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "srt-endpoint-toolkit-" }), (root) => Effect.gen(function* () {
+      yield* AppProcess.requireSuccess(yield* processes.run(ChildProcess.make("chmod", ["-R", "u+w", root])))
+      yield* fs.remove(root, { recursive: true, force: true })
+    }).pipe(Effect.orDie))
+    const profile = { requireSandbox: true, writeRoots: ["models"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
+      allowedLoopbackEndpoints: [{ directory: work, host: "127.0.0.1" as const, port }] } } satisfies ToolSafety.Profile
+    const sandboxed = (script: string, env?: Record<string, string>) => Effect.scoped(Effect.gen(function* () {
+      const command = yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", script], { cwd: work, env })).pipe(
+        Effect.provideService(ToolSafety.RuntimeProfile, profile),
+        Effect.provideService(ToolSafety.NativeContext, { directory: work }),
+      )
+      return yield* processes.run(command, { timeout: "2 minutes" })
+    }))
+    return { work, root, sandboxed }
+  })
+
+it.live("Linux srt exact endpoint: real Cassandra generation through the toolkit path; other ports and raw TCP refused", () =>
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const node = yield* prepareHost
+    const port = yield* database(CASSANDRA, ["-e", "MAX_HEAP_SIZE=512M", "-e", "HEAP_NEWSIZE=128M"], ["cqlsh", "-e", SCHEMA], "cqlsh -e 'describe keyspaces'")
 
     // A real host service on another loopback port: the sandboxed command must never reach it.
     const other = { accepted: 0, clients: new Set<Socket>() }
@@ -65,21 +107,7 @@ it.live("Linux srt exact endpoint: real Cassandra generation through the toolkit
     const address = server.address()
     if (!address || typeof address === "string") throw new Error("other loopback service unavailable")
 
-    const work = yield* fs.makeTempDirectoryScoped({ prefix: "srt-endpoint-" }).pipe(Effect.flatMap(fs.realPath))
-    yield* fs.makeDirectory(path.join(work, "models"))
-    const root = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "srt-endpoint-toolkit-" }), (root) => Effect.gen(function* () {
-      yield* AppProcess.requireSuccess(yield* processes.run(ChildProcess.make("chmod", ["-R", "u+w", root])))
-      yield* fs.remove(root, { recursive: true, force: true })
-    }).pipe(Effect.orDie))
-    const profile = { requireSandbox: true, writeRoots: ["models"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
-      allowedLoopbackEndpoints: [{ directory: work, host: "127.0.0.1" as const, port }] } } satisfies ToolSafety.Profile
-    const sandboxed = (script: string, env?: Record<string, string>) => Effect.scoped(Effect.gen(function* () {
-      const command = yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", script], { cwd: work, env })).pipe(
-        Effect.provideService(ToolSafety.RuntimeProfile, profile),
-        Effect.provideService(ToolSafety.NativeContext, { directory: work }),
-      )
-      return yield* processes.run(command, { timeout: "2 minutes" })
-    }))
+    const { work, root, sandboxed } = yield* sandboxFor(port)
 
     // Before srt is installed, the grant refuses instead of running unconfined; that call starts the acquisition.
     const runtime = yield* ToolSafetySandboxRuntime.resolve(false)
@@ -100,7 +128,7 @@ it.live("Linux srt exact endpoint: real Cassandra generation through the toolkit
     const text = Buffer.from(models).toString("utf8")
     console.info(`generated models.go: ${models.length} bytes, sha256 ${createHash("sha256").update(models).digest("hex")}`)
     // The same 496 bytes the cassandra2 Darwin deployment generated for this schema (cassandra-build.md).
-    expect(createHash("sha256").update(models).digest("hex")).toBe("6112e7c58a90b3958f39ce98c7db1cfa6bf83aa9098ef263b46ae6df6d1706e4")
+    expect(createHash("sha256").update(models).digest("hex")).toBe(MODELS_SHA256)
     expect(text).toStartWith('// Code generated by "gocqlx/cmd/schemagen"; DO NOT EDIT.')
     expect(text).toContain("package models")
     expect(text).toMatch(/Name:\s+"carts"/)
@@ -137,4 +165,36 @@ Promise.all([connect(${port}),connect(${address.port}),raw(${port}),raw(${addres
     console.info(`sandboxed psql: ${psql.stderr.toString().trim()}`)
     expect(other.accepted).toBe(0)
   }), 20 * 60_000,
+)
+
+// Scylla runtime proof: the same toolkit path, schema and sandbox as above against a real single-node ScyllaDB, which
+// takes the driver's present-`scylla_tables` branch that Cassandra never reaches. Scylla listens on its container
+// address, so cqlsh must name it.
+SCYLLA.forEach((image) =>
+  it.live(`Linux srt exact endpoint: real ${image} generation through the toolkit path equals the Cassandra models.go`, () =>
+    Effect.gen(function* () {
+      const fs = yield* FSUtil.Service
+      yield* prepareHost
+      const cqlsh = (statement: string) => ["sh", "-c", `cqlsh "$(hostname -i)" -e "${statement}"`]
+      const port = yield* database(image, [], cqlsh(SCHEMA), `cqlsh "$(hostname -i)" -e 'describe keyspaces'`)
+      const { work, root, sandboxed } = yield* sandboxFor(port)
+      // Starts the srt acquisition when this test runs alone; already present after the Cassandra proof.
+      yield* sandboxed("true").pipe(Effect.ignore)
+      yield* ToolSafetySandboxRuntime.resolve(false).pipe(
+        Effect.flatMap((value) => "directory" in value ? Effect.void : Effect.fail(value.reason)),
+        Effect.retry({ schedule: Schedule.spaced("1 second"), times: 300 }),
+      )
+
+      const command = `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen" -cluster 127.0.0.1:${port} -keyspace shop -pkgname models -output models`
+      yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
+      const prepared = yield* BackendToolkit.prepare(command).pipe(Effect.provideService(BackendToolkit.Root, root))
+      expect(prepared.blocked).toBeUndefined()
+      const generated = yield* sandboxed(command, prepared.env)
+      expect(generated.exitCode, generated.stderr.toString()).toBe(0)
+      const models = yield* fs.readFile(path.join(work, "models", "models.go"))
+      const digest = createHash("sha256").update(models).digest("hex")
+      console.info(`${image} generated models.go: ${models.length} bytes, sha256 ${digest}`)
+      expect(digest, Buffer.from(models).toString("utf8")).toBe(MODELS_SHA256)
+    }), 20 * 60_000,
+  ),
 )
