@@ -15,6 +15,7 @@
   python3,
   apple-sdk,
   darwin,
+  xcbuild,
   node_modules ? callPackage ./node_modules.nix { inherit bun; },
   omni ? callPackage ./omni.nix { inherit nodejs; },
 }:
@@ -40,11 +41,13 @@ stdenv.mkDerivation (finalAttrs: {
     nodejs
     installShellFiles
     makeBinaryWrapper
+    python3
     writableTmpDirAsHomeHook
-  ] ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf python3 ]
-    ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk darwin.sigtool ];
+  ] ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf ]
+    # gyp on Darwin needs xcodebuild/xcrun for the tree-sitter bindings build.ts compiles.
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk darwin.sigtool xcbuild ];
 
-  # stdenv supplies the native C compiler; apple-sdk supplies headers and
+  # stdenv supplies the native C/C++ compiler (Bun FFI cc, node-gyp); apple-sdk supplies headers and
   # libSystem stubs for Bun FFI cc's variadic-openat shim on both Darwin CPUs.
   buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk ];
 
@@ -62,6 +65,9 @@ stdenv.mkDerivation (finalAttrs: {
     ORCHESTRA_DISABLE_MODELS_FETCH = "1";
     ORCHESTRA_VERSION = finalAttrs.version;
     ORCHESTRA_CHANNEL = "prod";
+    # build.ts (resolveTreeSitter) compiles missing or mislabeled tree-sitter bindings with the
+    # lockfile node-gyp; these Node headers keep it from downloading any.
+    npm_config_nodedir = "${nodejs}";
   } // lib.optionalAttrs stdenv.hostPlatform.isDarwin {
     ORCHESTRA_ARTIFACT_DARWIN_SDK = apple-sdk.sdkroot;
     SDKROOT = apple-sdk.sdkroot;
@@ -139,6 +145,10 @@ stdenv.mkDerivation (finalAttrs: {
     # realpath(process.execPath), the real leaf below, never the bin/ wrapper.
     install -Dm755 ${finalAttrs.omni}/hugr-omni-supervisor "$out/share/orchestra/cli/hugr-omni-supervisor"
     install -Dm755 ${finalAttrs.omni}/hugr_omni.node "$out/share/orchestra/cli/hugr_omni.node"
+    # maestro-arsenal loads tree-sitter/ beside the same real leaf. The desktop stages a producer
+    # directory's bundle from tree-sitter-<target>/ (packages/desktop/scripts/cli-staging.ts).
+    cp -R packages/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter"
+    cp -R packages/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter-${target}"
     install -Dm644 schema.json $out/share/orchestra/schema.json
     makeWrapper "$out/share/orchestra/cli/orchestra-${target}" $out/bin/orchestra \
       --prefix PATH : ${lib.makeBinPath ([ ripgrep ] ++ lib.optional stdenv.hostPlatform.isDarwin sysctl)}
@@ -167,10 +177,15 @@ stdenv.mkDerivation (finalAttrs: {
     cmp schema-installcheck.json $out/share/orchestra/schema.json
     cmp ${finalAttrs.omni}/hugr_omni.node $out/share/orchestra/cli/hugr_omni.node
     cmp ${finalAttrs.omni}/hugr-omni-supervisor $out/share/orchestra/cli/hugr-omni-supervisor
+    diff -r packages/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter
+    diff -r packages/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter-${target}
     bun --bun --eval '
-      const { verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
+      const { cliTreeSitterTarget, verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
+      const { requireTreeSitterBundle } = await import("./packages/script/src/tree-sitter-prebuilds.ts")
       const artifact = await verifyCliArtifact(process.env.out + "/share/orchestra/cli", "${target}")
       if (artifact.version !== "${finalAttrs.version}") throw new Error("NIX_CLI_ARTIFACT_VERSION_MISMATCH")
+      for (const name of ["tree-sitter", "tree-sitter-${target}"])
+        requireTreeSitterBundle(process.env.out + "/share/orchestra/cli/" + name, cliTreeSitterTarget("${target}"))
     '
   '';
 
