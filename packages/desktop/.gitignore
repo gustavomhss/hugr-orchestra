@@ -26,6 +26,7 @@ out/
 native/build/
 
 resources/orchestra-cli*
+resources/cli/
 resources/icons
 resources/*.metainfo.xml
 artifacts/

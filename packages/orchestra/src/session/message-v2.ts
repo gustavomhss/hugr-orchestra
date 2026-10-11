@@ -238,7 +238,15 @@ export const toModelMessagesEffect = Effect.fnUntraced(function* (
           })
         }
       }
-      if (userMessage.parts.length > 0) result.push(userMessage)
+      if (userMessage.parts.length > 0) {
+        userMessage.parts.push(
+          ...(msg.info.promptContext?.reminders ?? []).map((note) => ({
+            type: "text" as const,
+            text: `Hook reminder:\n${note}`,
+          })),
+        )
+        result.push(userMessage)
+      }
     }
 
     if (msg.info.role === "assistant") {

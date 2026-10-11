@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import type { RelayArm } from "@orchestra/schema/relay-arm"
 
 export type TaskIntent = {
   subagentType: string
@@ -13,6 +14,8 @@ export type TaskHashBinding = TaskIntent & {
   validationHash: string
   contextHash: string
   policyHash: string
+  workflowBinding?: RelayArm.WorkflowDefinition
+  writePaths?: readonly string[]
 }
 
 export function taskHash(input: TaskHashBinding) {
@@ -28,7 +31,16 @@ export function taskHash(input: TaskHashBinding) {
         validationHash: input.validationHash,
         contextHash: input.contextHash,
         policyHash: input.policyHash,
+        ...(input.workflowBinding ? { bindingVersion: "workflow-v1", workflowBinding: canonical(input.workflowBinding),
+          writePaths: input.writePaths ?? [] } : {}),
       }),
     )
     .digest("hex")
+}
+
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical)
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value)
+    .sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, canonical(item)]))
+  return value
 }

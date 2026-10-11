@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "42eb48d6-5e64-4669-ac1b-1b986184bd6c",
+  "id": "4fe5dce9-5006-47df-9665-2fe3d2f9a0c6",
   "prevIds": [
-    "01c44789-486e-45cd-80d2-d40cd25d9c03"
+    "4e0f9b56-600e-45e5-b7bd-cf7b50f9f89d"
   ],
   "ddl": [
     {
@@ -16,6 +16,10 @@
     },
     {
       "name": "project_checkpoint",
+      "entityType": "tables"
+    },
+    {
+      "name": "session_v1_prompt_admission",
       "entityType": "tables"
     },
     {
@@ -293,6 +297,56 @@
       "name": "payload",
       "entityType": "columns",
       "table": "project_checkpoint"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "1",
+      "generated": null,
+      "name": "identity_version",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "identity",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
     },
     {
       "type": "integer",
@@ -1336,6 +1390,16 @@
     },
     {
       "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "prompt_context",
+      "entityType": "columns",
+      "table": "session_input"
+    },
+    {
+      "type": "text",
       "notNull": true,
       "autoincrement": false,
       "default": null,
@@ -1896,6 +1960,21 @@
     },
     {
       "columns": [
+        "session_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_session_v1_prompt_admission_session_id_session_id_fk",
+      "entityType": "fks",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "columns": [
         "active_account_id"
       ],
       "tableTo": "account",
@@ -2144,6 +2223,15 @@
       "nameExplicit": false,
       "name": "project_checkpoint_pk",
       "table": "project_checkpoint",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "session_v1_prompt_admission_pk",
+      "table": "session_v1_prompt_admission",
       "entityType": "pks"
     },
     {

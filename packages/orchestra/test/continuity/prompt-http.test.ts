@@ -92,13 +92,16 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const review: Match = (hit) => reviewing(hit.body)
-// The real producer role's first line: the isolated transport sends it as system, a replay as the last user message.
-const PRODUCER = PROMPT.split("\n")[0]
+// The producer's own first line: its system prompt (fresh pass) or final user turn (cache replay) starts with it;
+// its single self-check retry ends with the host's correction note. Windows checkouts may carry CRLF.
+const PRODUCER = PROMPT.split(/\r?\n/, 1)[0]
+const opens = (text: string) => text.startsWith(PRODUCER) && /^\r?\n/.test(text.slice(PRODUCER.length))
 const maintenance: Match = (hit) => {
   if (review(hit)) return false
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes(PRODUCER)) ||
-    (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
+  const last = wire.at(-1)
+  return wire.some((message) => message.role === "system" && opens(message.content)) ||
+    (last?.role === "user" && (opens(last.content) || last.content.startsWith("HOST CHECK FAILED. ")))
 }
 const parent = (marker: string): Match => (hit) => !review(hit) && !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
@@ -169,9 +172,11 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(PRODUCER.startsWith("CONTEXT CONTINUITY CHECKPOINT")).toBe(true)
+  expect(PRODUCER).toBe("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(maintenance(control(PROMPT, "system"))).toBe(true)
-  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
+  expect(maintenance(control(`${PRODUCER}\nprotocol`, "user"))).toBe(true)
+  expect(maintenance(control(`Quoted: ${PRODUCER}\nprotocol`, "user"))).toBe(false)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(false)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
   const reviewing: Hit = { ...control('{"candidate":{"now":{"src":["a1"]}},"marker":"TRIGGER"}', "user"), body: {
@@ -411,8 +416,14 @@ it.instance("queued caller during outgoing preparation rebinds agent/model/permi
   yield* awaitWithTimeout(Deferred.await(entered), "Caller preparation never reached plugin", "15 seconds").pipe(Effect.catch((error) =>
     Effect.fail(new Error(`${error.message}; caller=${String(old.pollUnsafe())}`))))
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  // The in-process prompt API takes decoded Format classes; HTTP JSON is decoded at the route boundary.
+  const format = Schema.decodeUnknownSync(SessionV1.Format)({ type: "json_schema",
+    schema: { type: "object", properties: { accepted: { type: "boolean" } } } })
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "alternate", model: { providerID: model.providerID, modelID: ModelV2.ID.make("alternate-model") },
-    tools: { bash: false }, format: { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+    tools: { bash: false }, format, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+  if (newer.info.role !== "user" || !newer.info.format) throw new Error("New caller structured format was not durably admitted")
+  expect(Schema.encodeSync(SessionV1.Format)(newer.info.format)).toEqual(Schema.encodeSync(SessionV1.Format)(format))
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
   yield* Deferred.succeed(release, undefined)
   const result = yield* Fiber.join(old)
   expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id, agent: "alternate", modelID: "alternate-model", structured: { accepted: true } })
@@ -483,7 +494,7 @@ for (const drift of ["unchanged", "agent", "tools", "format", "permission", "sys
   if (drift === "permission") yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "/owner-drift/*", action: "deny" }] })
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: drift === "agent" ? "alternate" : "build", model,
     tools: drift === "tools" ? { bash: false } : undefined, system: drift === "system" ? "OWNER_SYSTEM_DRIFT" : undefined,
-    format: drift === "format" ? { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } } : undefined,
+    format: drift === "format" ? Schema.decodeUnknownSync(SessionV1.Format)({ type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }) : undefined,
     parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
   // Release the paid catch-up only once U2's admission is durable.
   expect((yield* sessions.messages({ sessionID: chat.id })).some((message) => message.info.id === newer.info.id)).toBe(true)

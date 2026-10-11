@@ -3,7 +3,9 @@ import { createHash } from "crypto"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { Context } from "effect"
+import { createServer } from "node:http"
+import { ConfigProvider, Context, Layer } from "effect"
+import { HttpRouter } from "effect/unstable/http"
 import { Global } from "@orchestra/core/global"
 import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
 import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
@@ -20,11 +22,18 @@ const ALICE = { authorization: `Basic ${Buffer.from("alice:secret").toString("ba
 
 type Json = Record<string, any>
 
-async function call(directory: string, method: string, route: string, body?: unknown, headers?: Json) {
+async function call(
+  directory: string,
+  method: string,
+  route: string,
+  body?: unknown,
+  headers?: Json,
+  web = HttpApiApp.webHandler(),
+) {
   const sent = new Headers(headers)
   sent.set("x-orchestra-directory", directory)
   if (body !== undefined) sent.set("content-type", "application/json")
-  const response = await HttpApiApp.webHandler().handler(
+  const response = await web.handler(
     new Request(`http://localhost${route}`, {
       method,
       headers: sent,
@@ -249,22 +258,93 @@ describe("relay documents", () => {
     expect(types.hook.map((item: Json) => item.type)).toContain("relay.hookBlock")
   })
 
-  test("check grades a step in the project directory and records nothing", async () => {
-    await using tmp = await tmpdir({ git: true })
-    const workflow = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("test -f marker.txt"))
-    const route = `/api/relay/document/${workflow.id}/check`
-    expect(await ok(tmp.path, "POST", route, {})).toEqual({ outcome: "check", i: 0, wp: "build", failing: ["marker"] })
-    await fs.writeFile(path.join(tmp.path, "marker.txt"), "")
-    expect(await ok(tmp.path, "POST", route, { position: "build" })).toEqual({
-      outcome: "check",
-      i: 0,
-      wp: "build",
-      failing: [],
+  test("public checks require Maestro without shell, judge, run, ledger or Session effects; authoring remains available", async () => {
+    const requests: string[] = []
+    const judge = createServer((request, response) => {
+      requests.push(request.url ?? "")
+      response.setHeader("content-type", "application/json")
+      response.end(JSON.stringify({ content: [{ type: "text", text: "VERDICT: PASS" }] }))
     })
-    expect(await ok(tmp.path, "POST", route, { counter: 1 })).toEqual({ outcome: "complete", i: 1 })
-    const { root } = await relayRoot(tmp.path)
-    expect(await fs.stat(path.join(root, "arms")).catch(() => undefined)).toBeUndefined()
-    expect(await fs.stat(path.join(root, "hooks")).catch(() => undefined)).toBeUndefined()
+    await new Promise<void>((resolve) => judge.listen(0, "127.0.0.1", resolve))
+    await using judgeScope = {
+      [Symbol.asyncDispose]: () =>
+        new Promise<void>((resolve, reject) => judge.close((error) => (error ? reject(error) : resolve()))),
+    }
+    const address = judge.address()
+    if (!address || typeof address === "string") throw new Error("Judge listener did not bind TCP")
+    const baseURL = `http://127.0.0.1:${address.port}`
+    // Positive control: the request recorder must see real traffic before its unchanged count proves non-execution.
+    expect((await fetch(`${baseURL}/v1/messages`, { method: "POST" })).status).toBe(200)
+    expect(requests).toEqual(["/v1/messages"])
+    await using tmp = await tmpdir({
+      git: true,
+      config: { relay: { judge: { backend: "api", baseURL } } },
+    })
+    const web = HttpRouter.toWebHandler(
+      HttpApiApp.routes.pipe(
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              ORCHESTRA_SERVER_PASSWORD: "secret",
+              ORCHESTRA_SERVER_USERNAME: "alice",
+            }),
+          ),
+        ),
+      ),
+      { disableLogger: true },
+    )
+    await using webScope = { [Symbol.asyncDispose]: web.dispose }
+    const request = (method: string, route: string, body?: unknown, headers = ALICE) =>
+      call(tmp.path, method, route, body, headers, web)
+    const definition = workflowDocument("printf executed > public-check-marker.txt")
+    definition.nodes[1].parameters.checklist = JSON.stringify([
+      { id: "marker", cmd: "printf executed > public-check-marker.txt" },
+      { id: "judge", judge: "Marker is correct", files: ["public-check-marker.txt"] },
+    ])
+    const created = await request("POST", "/api/relay/document", definition)
+    expect(created.status).toBe(200)
+    const route = `/api/relay/document/${created.body.data.id}`
+    const saved = await request("PATCH", route, { name: "Saved", versionId: created.body.data.versionId })
+    expect(saved.status).toBe(200)
+    expect(saved.body.data.meta.relay.diagnostics).toEqual([])
+    const sprint = await request("GET", `${route}/sprint`)
+    expect(sprint.status).toBe(200)
+    expect(sprint.body.data.sprint.work_packages[0].checklist).toHaveLength(2)
+    const exported = await request("GET", `${route}/export`)
+    expect(exported.status).toBe(200)
+    expect(exported.body.data).toMatchObject({ kind: "workflow", definition: sprint.body.data.sprint })
+    const published = await request("POST", `${route}/publish`, { versionId: saved.body.data.versionId })
+    expect(published.status).toBe(200)
+    expect(published.body.data.active).toBe(true)
+    const scopes = await request("GET", "/api/relay/scope")
+    expect(scopes.status).toBe(200)
+    const root = path.join(await fs.realpath(Global.Path.data), "relay", scopes.body.location.project.id)
+    const files = (await fs.readdir(root, { recursive: true })).sort()
+    expect(files).toContain("authoring.sqlite3")
+    const sessions = await request("GET", "/api/session")
+    expect(sessions.status).toBe(200)
+    expect(sessions.body.data).toEqual([])
+    expect((await request("POST", `${route}/check`, {}, { authorization: "" })).status).toBe(401)
+    const results = await Promise.all([
+      request("POST", `${route}/check`, { position: "build", params: { crafted: "yes" } }),
+      request("POST", "/api/relay/document/missing/check", {}),
+    ])
+    // Inspect effects even under the old handler mutation, before the refusal assertion stops the test.
+    expect(await Bun.file(path.join(tmp.path, "public-check-marker.txt")).exists()).toBe(false)
+    expect(requests).toEqual(["/v1/messages"])
+    expect((await fs.readdir(root, { recursive: true })).sort()).toEqual(files)
+    expect((await request("GET", "/api/session")).body).toEqual(sessions.body)
+    results.forEach((result) =>
+      expect(result).toEqual({
+        status: 403,
+        body: {
+          _tag: "RelayForbiddenError",
+          code: "maestro-execution-required",
+          message: "Executable workflow checks are owned by Maestro.",
+        },
+      }),
+    )
+    expect((await request("GET", route)).body.data).toEqual(published.body.data)
   })
 
   test("scopes are case-insensitive names, expanded on the documents that carry them", async () => {

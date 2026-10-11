@@ -1,0 +1,119 @@
+name: runtime-wsl
+# Prepared manual harness; validation unrun. Scope: installer + foreground wslServeScript helpers.
+on:
+  workflow_dispatch:
+    inputs:
+      runners_x64: {type: string, required: true, description: "Native Windows x64 WSL runner labels JSON", default: '["self-hosted","Windows","X64","orchestra-wsl"]'}
+      runners_arm64: {type: string, required: true, description: "Native Windows ARM64 WSL runner labels JSON", default: '["self-hosted","Windows","ARM64","orchestra-wsl"]'}
+      distro_x64: {type: string, required: true, description: "Already-installed native x64 glibc WSL distro name"}
+      distro_arm64: {type: string, required: true, description: "Already-installed native ARM64 glibc WSL distro name"}
+permissions:
+  contents: read
+jobs:
+  producer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults: {run: {shell: bash}}
+    outputs:
+      x64: ${{ steps.runners.outputs.x64 }}
+      arm64: ${{ steps.runners.outputs.arm64 }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+      - name: Require explicit native runner labels
+        id: runners
+        env:
+          LABELS_X64: ${{ inputs.runners_x64 }}
+          LABELS_ARM64: ${{ inputs.runners_arm64 }}
+          DISTRO_X64: ${{ inputs.distro_x64 }}
+          DISTRO_ARM64: ${{ inputs.distro_arm64 }}
+        run: |
+          bun -e '
+          const outputs = ["x64", "arm64"].map(cpu => {
+            const distro = process.env[`DISTRO_${cpu.toUpperCase()}`];
+            if (!distro?.trim() || /[\r\n\0]/.test(distro)) throw Error(`DISTRO_NAME_REQUIRED_OR_INVALID:${cpu}`);
+            const labels = (() => { try { return JSON.parse(process.env[`LABELS_${cpu.toUpperCase()}`]); } catch { throw Error(`RUNNER_LABELS_INVALID_JSON:${cpu}`); } })();
+            if (!Array.isArray(labels) || labels.length < 4 || labels.some(x => typeof x !== "string" || !x || x !== x.trim() || /[\r\n\0]/.test(x))) throw Error(`RUNNER_LABELS_INVALID:${cpu}`);
+            const normalized = labels.map(x => x.toLowerCase());
+            if (new Set(normalized).size !== labels.length || !["self-hosted", "windows", cpu, "orchestra-wsl"].every(x => normalized.includes(x)) || normalized.some(x => ["x64", "arm64", "arm"].includes(x) && x !== cpu)) throw Error(`RUNNER_NATIVE_ARCH_INVALID:${cpu}`);
+            return `${cpu}=${JSON.stringify(labels)}`;
+          });
+          await Bun.write(process.env.GITHUB_OUTPUT, outputs.join("\n") + "\n");'
+      - name: Require native Linux producer and exact Bun
+        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+      - name: Install dependencies once without lifecycle scripts
+        run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Build and export both actual Linux guest products
+        run: |
+          set -euo pipefail
+          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          export ORCHESTRA_VERSION
+          for target in linux-x64-baseline linux-arm64; do
+            bun packages/cli/script/build.ts --skip-install --target "$target"
+          done
+          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out wsl-resources --version "$ORCHESTRA_VERSION" --target linux-x64-baseline --target linux-arm64
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wsl-resources
+          path: wsl-resources/
+          if-no-files-found: error
+  native-wsl:
+    needs: producer
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {cpu: x64, guest: x86_64, target: linux-x64-baseline}
+          - {cpu: arm64, guest: aarch64, target: linux-arm64}
+    runs-on: ${{ fromJSON(needs.producer.outputs[matrix.cpu]) }}
+    timeout-minutes: 15
+    defaults: {run: {shell: pwsh}}
+    env:
+      CPU: ${{ matrix.cpu }}
+      GUEST_CPU: ${{ matrix.guest }}
+      TARGET: ${{ matrix.target }}
+      DISTRO: ${{ matrix.cpu == 'x64' && inputs.distro_x64 || inputs.distro_arm64 }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+          bun-download-url: ${{ matrix.cpu == 'arm64' && 'https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-windows-aarch64.zip' || '' }}
+      - name: Require matching native Windows process and kernel CPU
+        run: bun packages/cli/script/runtime-proof.ts --target "${{ matrix.cpu == 'x64' && 'windows-x64-baseline' || 'windows-arm64' }}" --host
+      - name: Install dependencies once for actual Desktop helpers
+        run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: wsl-resources
+          path: wsl-resources
+      - name: Require both real producer resources and source version
+        run: |
+          bun -e '
+          const { readCliManifest, verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts");
+          const manifest = await readCliManifest("wsl-resources").catch(() => { throw Error("PRODUCER_MANIFEST_MISSING_OR_INVALID"); });
+          const targets = ["linux-x64-baseline", "linux-arm64"];
+          if (manifest.version !== (await Bun.file("packages/cli/package.json").json()).version || manifest.artifacts.length !== 2 || !targets.every(target => manifest.artifacts.some(x => x.target === target))) throw Error("PRODUCER_TARGETS_OR_VERSION_MISMATCH");
+          await Promise.all(targets.map(target => verifyCliArtifact("wsl-resources", target)));'
+      - name: Execute actual installer retry corruption auth and owned-HOME proof
+        run: bun packages/desktop/scripts/wsl-product-proof.ts --resources wsl-resources --distro "$env:DISTRO" --report wsl-proof.json
+      - name: Require matching passed report and redact artifact fields
+        run: |
+          bun -e '
+          if (!await Bun.file("wsl-proof.json").exists()) throw Error("WSL_REPORT_MISSING");
+          const report = await Bun.file("wsl-proof.json").json().catch(() => { throw Error("WSL_REPORT_INVALID_JSON"); });
+          const manifest = await Bun.file("wsl-resources/manifest.json").json();
+          const flags = ["newInstall", "exactRetry", "wrongDigestRefused", "alteredHostCacheRefused", "alteredGuestCacheRefused", "authenticatedHealthy", "wrongAuthRefused", "missingAuthRefused"];
+          if (!report || typeof report !== "object" || Array.isArray(report) || report.status !== "passed" || report.hostOS !== "win32" || report.hostCPU !== process.env.CPU || report.guestCPU !== process.env.GUEST_CPU || report.target !== process.env.TARGET || report.distro !== process.env.DISTRO || report.version !== manifest.version || report.digest !== manifest.artifacts.find(x => x.target === report.target)?.sha256 || flags.some(x => report[x] !== true)) throw Error("WSL_REPORT_EVIDENCE_MISMATCH");
+          await Bun.write("wsl-proof.json", JSON.stringify(Object.fromEntries(["status", "hostOS", "hostCPU", "guestCPU", "target", "version", "digest", ...flags].map(key => [key, report[key]]))) + "\n");'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: wsl-proof-${{ matrix.cpu }}
+          path: wsl-proof.json
+          if-no-files-found: error

@@ -180,6 +180,7 @@ export const Decided = define({
     sessionID: SessionID,
     callID: optional(Schema.String),
     assistantMessageID: optional(SessionMessage.ID),
+    messageID: optional(SessionMessage.ID),
     agent: optional(Schema.String),
     subject: Schema.String,
     outcome: RelayLedger.HookOutcome,
