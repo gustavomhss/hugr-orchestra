@@ -13,17 +13,16 @@ import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import type { Snapshot } from "@/snapshot"
 import type { Agent } from "@/agent/agent"
+import { PREFIX } from "./tools"
 
-/** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. */
+/** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. Orchestra's
+ * tools drop their MCP prefix. */
 export const NAMES: Record<string, string> = {
   Bash: "bash",
   Grep: "grep",
   Glob: "glob",
   WebFetch: "webfetch",
   WebSearch: "websearch",
-  mcp__orchestra__read: "read",
-  mcp__orchestra__edit: "edit",
-  mcp__orchestra__write: "write",
 }
 
 const FINISH: Record<string, string> = {
@@ -179,7 +178,7 @@ export function create(input: {
           }
           if (block.type === "tool_use") {
             const part: SessionV1.ToolPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "tool",
-              callID: block.id, tool: NAMES[block.name] ?? block.name,
+              callID: block.id, tool: block.name.startsWith(PREFIX) ? block.name.slice(PREFIX.length) : NAMES[block.name] ?? block.name,
               state: { status: "running", input: block.input as Record<string, unknown>, time: { start: Date.now() } },
               metadata: { providerExecuted: true, claudeCodeTool: block.name } }
             tools.set(block.id, part)

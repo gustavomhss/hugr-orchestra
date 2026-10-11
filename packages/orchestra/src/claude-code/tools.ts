@@ -1,19 +1,17 @@
-// Orchestra's read, edit and write, handed to Claude Code as in-process SDK tools. Claude Code calls them by name; the
-// handler runs Orchestra's own implementation on the mirrored session and writes the result on the mirrored part.
+// Orchestra's tools, handed to Claude Code as in-process SDK tools. Claude Code calls them by name; the handler runs
+// Orchestra's own implementation (the registry's, with its allowance and source capture) on the mirrored session and
+// writes the result on the mirrored part.
 import { Cause, Effect, Exit } from "effect"
 import { z } from "zod"
 import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type * as Tool from "@/tool/tool"
+import { ToolJsonSchema } from "@/tool/json-schema"
+import { isRecord } from "@/util/record"
 
 export const SERVER = "orchestra"
-
-const SHAPES = {
-  read: { filePath: z.string(), offset: z.number().int().optional(), limit: z.number().int().positive().optional() },
-  edit: { filePath: z.string(), oldString: z.string(), newString: z.string(), replaceAll: z.boolean().optional() },
-  write: { filePath: z.string(), content: z.string() },
-}
-export const NAMES = Object.keys(SHAPES).map((name) => `mcp__${SERVER}__${name}`)
+/** Claude Code's name for an Orchestra tool is this prefix and the tool's id. */
+export const PREFIX = `mcp__${SERVER}__`
 
 /** A rejected or failed call, as the model reads it. */
 export function failure(cause: Cause.Cause<unknown>) {
@@ -32,10 +30,8 @@ export function server(input: {
   context: (part: SessionV1.ToolPart) => Tool.Context
   complete: (part: SessionV1.ToolPart) => Effect.Effect<void>
 }) {
-  const handler = (name: keyof typeof SHAPES) => async (args: Record<string, unknown>) => input.run(Effect.gen(function* () {
-    const def = input.defs.find((item) => item.id === name)
-    if (!def) return { content: [{ type: "text" as const, text: `Orchestra tool ${name} is not available.` }], isError: true }
-    const part = yield* input.claim(name)
+  const handler = (def: Tool.Def) => async (args: Record<string, unknown>) => input.run(Effect.gen(function* () {
+    const part = yield* input.claim(def.id)
     const start = part.state.status === "running" ? part.state.time.start : Date.now()
     const exit = yield* def.execute(args as never, input.context(part)).pipe(Effect.exit)
     if (Exit.isFailure(exit)) {
@@ -54,10 +50,34 @@ export function server(input: {
   }))
   return createSdkMcpServer({
     name: SERVER,
-    tools: (Object.keys(SHAPES) as (keyof typeof SHAPES)[]).flatMap((name) => {
-      const def = input.defs.find((item) => item.id === name)
-      // Loaded up front: Claude Code otherwise defers MCP tools behind a search, and the model falls back to its own.
-      return def ? [tool(name, def.description, SHAPES[name], handler(name), { alwaysLoad: true })] : []
-    }),
+    // Loaded up front: Claude Code otherwise defers MCP tools behind a search, and the model falls back to its own.
+    tools: input.defs.map((def) => tool(def.id, def.description, shape(ToolJsonSchema.fromTool(def)), handler(def), { alwaysLoad: true })),
   })
+}
+
+// The SDK takes a Zod shape; Orchestra's tools declare their own schemas. The shape only describes the call to the
+// model: each tool still decodes its arguments with its own schema, so constraints Zod is not given here still hold.
+function shape(schema: unknown) {
+  const required = isRecord(schema) && Array.isArray(schema.required) ? schema.required : []
+  const properties = isRecord(schema) && isRecord(schema.properties) ? schema.properties : {}
+  return Object.fromEntries(Object.entries(properties).map(([key, value]) =>
+    [key, required.includes(key) ? zod(value) : zod(value).optional()]))
+}
+
+function zod(schema: unknown): z.ZodType {
+  if (!isRecord(schema)) return z.unknown()
+  const described = (type: z.ZodType) => typeof schema.description === "string" ? type.describe(schema.description) : type
+  const options = Array.isArray(schema.anyOf) ? schema.anyOf : Array.isArray(schema.oneOf) ? schema.oneOf : []
+  if (options.length > 1) return described(z.union(options.map(zod) as [z.ZodType, z.ZodType, ...z.ZodType[]]))
+  if (Array.isArray(schema.enum) && schema.enum.length > 0 && schema.enum.every((item) => typeof item === "string"))
+    return described(z.enum(schema.enum as [string, ...string[]]))
+  if (typeof schema.const === "string" || typeof schema.const === "number" || typeof schema.const === "boolean")
+    return described(z.literal(schema.const))
+  if (schema.type === "string") return described(z.string())
+  if (schema.type === "integer") return described(z.number().int())
+  if (schema.type === "number") return described(z.number())
+  if (schema.type === "boolean") return described(z.boolean())
+  if (schema.type === "array") return described(z.array(zod(schema.items)))
+  if (schema.type === "object") return described(z.looseObject(shape(schema)))
+  return described(z.unknown())
 }

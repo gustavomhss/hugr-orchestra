@@ -27,20 +27,21 @@ import { TestInstance } from "../../fixture/fixture"
 import { TestLLMServer } from "../../lib/llm-server"
 import { testProviderConfig } from "../../lib/test-provider"
 
-export const layer = TestAppNodeBuilder.build(LayerNode.group([
+export const make = (replacements: LayerNode.Replacements = []) => TestAppNodeBuilder.build(LayerNode.group([
   SessionPrompt.node, SessionCompaction.node, ToolRegistry.node, Session.node, SessionProjector.node, Agent.node, Provider.node,
   Permission.node, ResearchRecords.node, ResearchArtifacts.node, ResearchExecution.node, BackgroundJob.node,
   Database.node, EventV2.node, EventV2Bridge.node, FSUtil.node,
   LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] }),
-]), [[RuntimeFlags.node, RuntimeFlags.layer({ experimentalBackgroundSubagents: true })]])
+]), [[RuntimeFlags.node, RuntimeFlags.layer({ experimentalBackgroundSubagents: true })], ...replacements])
+export const layer = make()
 
-export const setup = Effect.fn("NativeResearchTask.setup")(function* () {
+export const setup = Effect.fn("NativeResearchTask.setup")(function* (config: Record<string, unknown> = {}) {
   const remote = yield* TestLLMServer
   const fs = yield* FSUtil.Service
   const instance = yield* TestInstance
   yield* fs.writeFileString(path.join(instance.directory, "orchestra.json"), JSON.stringify({
     ...testProviderConfig(remote.url), model: "test/test-model", small_model: "test/test-model",
-    plugin: [], mcp: {}, compaction: { auto: false }, continuity: { trigger: 1 },
+    plugin: [], mcp: {}, compaction: { auto: false }, continuity: { trigger: 1 }, ...config,
   }))
   const sessions = yield* Session.Service
   const prompt = yield* SessionPrompt.Service

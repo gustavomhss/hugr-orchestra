@@ -1,6 +1,8 @@
 import { expect } from "bun:test"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { Effect, Fiber, Layer } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
@@ -56,6 +58,15 @@ it.instance("a Claude Code agent's turn is mirrored and the loop ends on it; the
     expect(queries[0].options.settingSources).toEqual([])
     expect(queries[0].options.disallowedTools).toEqual(["Read", "Edit", "Write", "NotebookEdit", "Task"])
     expect(queries[0].options.model).toBe("claude-haiku-4-5-20251001")
+    // Outside a native research dispatch Claude Code keeps its own tools, turn count and compaction.
+    expect(queries[0].options.tools).toBeUndefined()
+    expect(queries[0].options.maxTurns).toBeUndefined()
+    expect(queries[0].options.settings).toBeUndefined()
+    const client = new Client({ name: "claude-code", version: "1.0.0" })
+    const [local, remote] = InMemoryTransport.createLinkedPair()
+    yield* Effect.promise(() => Promise.all([client.connect(local), queries[0].options.mcpServers.orchestra.instance.connect(remote)]))
+    expect((yield* Effect.promise(() => client.listTools())).tools.map((tool) => tool.name).toSorted()).toEqual(["edit", "read", "write"])
+    yield* Effect.promise(() => client.close())
     expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ sessionId: "sdk-1", cost: 0.01 })
 
     const second = yield* prompt.prompt({ sessionID: chat.id, ...say("again") })

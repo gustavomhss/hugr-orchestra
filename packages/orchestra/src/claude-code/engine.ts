@@ -4,21 +4,28 @@ export * as ClaudeCode from "./engine"
 // machine's Claude Code login) instead of Orchestra's loop. Claude Code keeps the loop, the model and its own tools;
 // Orchestra contributes the agent prompt and instructions, read/edit/write, and every approval. Each turn is mirrored
 // into the Orchestra session (mirror.ts), so the UI, revert and the archive work as for any session.
+// Inside a native research dispatch, Claude Code's own tools are off: the agent gets only the Orchestra tools it may
+// use, so every source it reads is captured and charged, and the dispatch allowance bounds the SDK's model turns.
 // Design: specs/claude-code-engine.md.
 import { Cause, Context, Effect, Layer } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Shell } from "@orchestra/core/shell"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
+import { ModelV2 } from "@orchestra/core/model"
+import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
+import { nativeProfiles } from "@/maestro/roster"
 import { Permission } from "@/permission"
+import { ResearchExecution } from "@/research/allowance"
 import { Session } from "@/session/session"
 import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
+import { SystemPrompt } from "@/session/system"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
 import { ToolRegistry } from "@/tool/registry"
@@ -26,7 +33,7 @@ import * as ShellScan from "@/tool/shell/scan"
 import type * as Tool from "@/tool/tool"
 import { ClaudeCodeSDK } from "./sdk"
 import { create as mirror } from "./mirror"
-import { server, SERVER } from "./tools"
+import { PREFIX, server, SERVER } from "./tools"
 import { canUseTool, preToolUse } from "./permissions"
 
 export interface Interface {
@@ -52,6 +59,8 @@ const layer = Layer.effect(
     const registry = yield* ToolRegistry.Service
     const instruction = yield* Instruction.Service
     const config = yield* Config.Service
+    const research = yield* ResearchExecution.Service
+    const system = yield* SystemPrompt.Service
     const sdk = yield* ClaudeCodeSDK.Service
     const fs = yield* FSUtil.Service
     const spawner = yield* ChildProcessSpawner
@@ -71,6 +80,8 @@ const layer = Layer.effect(
         .flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : []))
         .join("\n\n").trim()
       const ruleset = Permission.merge(agent.permission, session.permission ?? [])
+      // A native seat's profile is a floor no Session grant lifts, as on Orchestra's loop.
+      const floor = agent.native && agent.id && nativeProfiles[agent.id] ? Permission.fromConfig(nativeProfiles[agent.id]) : undefined
       const view = mirror({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
         sessions, snapshot })
       if (!prompt) {
@@ -85,22 +96,24 @@ const layer = Layer.effect(
         const messageID = part?.messageID ?? view.current()?.id ?? MessageID.ascending()
         const callID = part?.callID
         return {
-          sessionID, messageID, callID, agent: agent.name, agentID: agent.id, abort, messages: history, extra: {},
+          sessionID, messageID, callID, agent: agent.name, agentID: agent.id, permission: ruleset, abort, messages: history, extra: {},
           metadata: (value) => Effect.gen(function* () {
             const current = callID ? view.tool(callID) : undefined
             if (!current || current.state.status !== "running") return
             yield* view.complete({ ...current, state: { ...current.state, title: value.title ?? current.state.title,
               metadata: { ...current.state.metadata, ...value.metadata } } })
           }),
-          ask: (request) => permission.ask({ ...request, sessionID, ...(callID ? { tool: { messageID, callID } } : {}), ruleset })
-            .pipe(Effect.orDie),
+          ask: (request) => Effect.gen(function* () {
+            if (floor && request.patterns.some((pattern) => Permission.evaluate(request.permission, pattern, floor).action === "deny"))
+              return yield* new PermissionV1.DeniedError({ ruleset: floor })
+            return yield* permission.ask({ ...request, sessionID, ...(callID ? { tool: { messageID, callID } } : {}), ruleset })
+          }).pipe(Effect.orDie),
         }
       }
 
       const cfg = yield* config.get()
       const shell = Shell.acceptable(cfg.shell)
       const abort = new AbortController()
-      const defs = (yield* registry.all()).filter((def) => ["read", "edit", "write"].includes(def.id))
       const claim = (tool: string) => Effect.gen(function* () {
         // Claude Code may call the tool before the mirror has seen its tool_use block: wait for it.
         for (let round = 0; round < 1500; round++) {
@@ -110,41 +123,66 @@ const layer = Layer.effect(
         }
         return yield* Effect.die(new Error(`no ${tool} call to run`))
       })
-      const gate = { run, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
-        shell: (ctx: Tool.Context, command: string) => ShellScan.approve(ctx, { command, cwd: instance.directory, shell }).pipe(
-          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
-
-      const options = {
-        cwd: instance.directory,
-        model,
-        resume: state.sessionId,
-        systemPrompt: { type: "preset" as const, preset: "claude_code" as const,
-          append: [agent.prompt, ...instructions].filter(Boolean).join("\n\n") || undefined },
-        disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
-        toolAliases: { Read: `mcp__${SERVER}__read`, Edit: `mcp__${SERVER}__edit`, Write: `mcp__${SERVER}__write` },
-        mcpServers: { [SERVER]: server({ defs, run, claim, complete: view.complete,
-          context: (part) => toolContext(part, abort.signal) }) },
-        // Orchestra is the only policy: no Claude Code settings (their allow rules would approve calls Orchestra never
-        // sees), and every call goes through Orchestra before Claude Code's own permission logic.
-        settingSources: [],
-        hooks: { PreToolUse: preToolUse(gate) },
-        canUseTool: canUseTool(gate),
-        includePartialMessages: true,
-        abortController: abort,
-      }
 
       const outcome = yield* Effect.gen(function* () {
         // Same seam as LLM.stream: the caller's pre-model guard runs once before any SDK process.
         yield* PromptGuard.check(sessionID)
+        // Provider calls left in the native research dispatch this turn runs in, or undefined outside one.
+        const turns = yield* research.turns(sessionID)
+        const defs = turns === undefined
+          ? (yield* registry.all()).filter((def) => ["read", "edit", "write"].includes(def.id))
+          : yield* registry.tools({ agent, permission: session.permission, providerID: input.user.model.providerID,
+              modelID: ModelV2.ID.make(input.user.model.modelID) })
+        // Claude Code's skills are off with its tools; the agent's own are listed as on Orchestra's loop.
+        const skills = turns === undefined ? undefined : yield* system.skills(agent)
+        const gate = { run, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
+          shell: (ctx: Tool.Context, command: string) => ShellScan.approve(ctx, { command, cwd: instance.directory, shell }).pipe(
+            Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)),
+          orchestraOnly: turns !== undefined }
+        const options = {
+          cwd: instance.directory,
+          model,
+          resume: state.sessionId,
+          systemPrompt: { type: "preset" as const, preset: "claude_code" as const,
+            append: [agent.prompt, ...instructions, skills].filter(Boolean).join("\n\n") || undefined },
+          disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
+          toolAliases: { Read: `${PREFIX}read`, Edit: `${PREFIX}edit`, Write: `${PREFIX}write` },
+          mcpServers: { [SERVER]: server({ defs, run, claim, complete: view.complete,
+            context: (part) => toolContext(part, abort.signal) }) },
+          // Orchestra is the only policy: no Claude Code settings (their allow rules would approve calls Orchestra never
+          // sees), and every call goes through Orchestra before Claude Code's own permission logic.
+          settingSources: [],
+          hooks: { PreToolUse: preToolUse(gate) },
+          canUseTool: canUseTool(gate),
+          includePartialMessages: true,
+          abortController: abort,
+          // No built-in tool, and no more model turns than the dispatch has provider calls left. Claude Code's own
+          // compaction is off: the study charges maintenance before it runs and checkpoints it in Atlas, and Claude Code
+          // compacts unannounced and outside both.
+          ...(turns === undefined ? {} : { tools: [], maxTurns: turns, settings: { autoCompactEnabled: false } }),
+        }
+        const charged = new Set<string>()
         yield* Effect.tryPromise({
           try: async () => {
-          for await (const message of sdk.query({ prompt, options })) {
-            if (message.type === "system" && message.subtype === "init" && message.session_id !== state.sessionId)
-              await run(sessions.setMetadata({ sessionID, metadata: { ...session.metadata,
-                claudeCode: { ...state, sessionId: message.session_id } } }))
-            await run(view.on(message))
+            for await (const message of sdk.query({ prompt, options })) {
+              if (message.type === "system" && message.subtype === "init" && message.session_id !== state.sessionId)
+                await run(sessions.setMetadata({ sessionID, metadata: { ...session.metadata,
+                  claudeCode: { ...state, sessionId: message.session_id } } }))
+              // One provider call per model message, on its first frame; a compaction Claude Code still reports is a
+              // maintenance call, which the dispatch allowance includes.
+              const call = message.type === "stream_event" && message.event.type === "message_start" ? message.event.message.id
+                : message.type === "assistant" ? message.message.id
+                : message.type === "system" && message.subtype === "compact_boundary" ? message.uuid : undefined
+              if (turns !== undefined && call && !charged.has(call) && !("parent_tool_use_id" in message && message.parent_tool_use_id)) {
+                charged.add(call)
+                await run(research.provider({ sessionID, agent }, Effect.void))
+              }
+              await run(view.on(message))
+              // Claude Code stopped at the turn bound: the ledger names the exhaustion.
+              if (turns !== undefined && message.type === "result" && message.subtype === "error_max_turns")
+                await run(research.turns(sessionID))
               if (message.type === "result" && message.subtype !== "success")
                 throw new Error("errors" in message && message.errors?.length ? message.errors.join("; ") : message.subtype)
             }
@@ -179,5 +217,5 @@ export const node = LayerNode.make({
   service: Service,
   layer,
   deps: [Agent.node, Session.node, Snapshot.node, Permission.node, ToolRegistry.node, Instruction.node, Config.node,
-    FSUtil.node, CrossSpawnSpawner.node, ClaudeCodeSDK.node],
+    FSUtil.node, CrossSpawnSpawner.node, ClaudeCodeSDK.node, ResearchExecution.node, SystemPrompt.node],
 })
