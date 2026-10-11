@@ -26,6 +26,5 @@ prefix evidence lives at `fixtures/profiles/*/cases.json` in the pinned MIT sour
 identification is attribution, not proof that every command grammar reduces.
 Playwright's witnessed Node CLI path contains `@`, rejected by the frozen tokenizer:
 those invocations remain exact and unattributed. No invented direct/npx aliases.
-The retained `hugr-lean-0.2.0.tgz` is historical; dependency selects only the new pin.
 Schema engine metadata stamp is parent-owned and must be updated before expanded
 metadata claims. Package pin alone does not certify native telemetry or dashboard UI.
