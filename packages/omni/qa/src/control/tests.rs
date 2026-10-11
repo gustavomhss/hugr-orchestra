@@ -27,20 +27,25 @@ fn named(name: &str) -> (PathBuf, Setup) {
     (named, setup)
 }
 
-/// A stranger to the controls: started by the test, never by a control, sleeping past every lifetime.
-fn sleeper() -> Child {
+/// A stranger to the controls: started by the test, never by a control. It has no lifetime of its own: it reads its
+/// stdin, which the test holds, to the end, so it outlives the control however long a loaded machine makes that, and
+/// ends with the test (its stdin closes) even if the test fails first. A sleep (it was 20 s) lets it end on its own
+/// under load, which the test then took for a signal.
+fn outsider() -> Child {
     Command::new(test_fixture())
-        .arg("sleep=20000")
-        .stdin(Stdio::null())
+        .arg("count-stdin")
+        .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
         .unwrap()
 }
 
-/// Whether `pid` is listed alive (a killed child of the test would be a zombie, which is not listed).
-fn listed(pid: u32) -> bool {
-    oracle::snapshot().unwrap().iter().any(|p| p.pid == pid)
+/// Whether the test's own child `c` is still running, asked of its handle: the test alone holds it, so nobody else
+/// reaps it and its pid is not reused. An outsider cannot end on its own (`outsider`), so `Some` is a signal (or a
+/// crash): the status says which.
+fn ended(c: &mut Child) -> Option<String> {
+    c.try_wait().unwrap().map(|status| status.to_string())
 }
 
 /// The processes alive under `name`.
@@ -84,7 +89,7 @@ fn a_logged_pid_reused_by_a_stranger_is_never_taken_nor_killed() {
     let stranger: Mutex<Option<Child>> = Mutex::new(None);
     let reused = |log: &Path, held: &Held| {
         if log.to_string_lossy().contains("tree") {
-            let other = sleeper();
+            let other = outsider();
             let mut pids = read_pids(log);
             *pids.last_mut().unwrap() = other.id();
             let text: String = pids.iter().map(|p| format!("{p}\n")).collect();
@@ -96,12 +101,12 @@ fn a_logged_pid_reused_by_a_stranger_is_never_taken_nor_killed() {
     let result = control_with(&setup, Duration::from_secs(2), &reused);
     assert!(matches!(&result, Err(e) if e.contains("not proven")), "{result:?}");
     let mut other = stranger.lock().unwrap().take().unwrap();
-    let spared = listed(other.id());
+    let ended = ended(&mut other);
     let _ = other.kill();
     let _ = other.wait();
     let left = alive("omni-qa-ctl2");
     let _ = std::fs::remove_file(&named);
-    assert!(spared, "the stranger was killed");
+    assert_eq!(ended, None, "the stranger was killed");
     assert!(left.is_empty(), "left behind: {left:?}");
 }
 
@@ -115,7 +120,7 @@ fn a_wrongly_identified_stranger_is_never_signalled() {
     let fooled = |log: &Path, held: &Held| {
         let mut found = identify(log, held)?;
         if log.to_string_lossy().contains("tree") {
-            let pid = stranger.lock().unwrap().insert(sleeper()).id();
+            let pid = stranger.lock().unwrap().insert(outsider()).id();
             *found.last_mut().unwrap() = oracle::snapshot()?.into_iter().find(|p| p.pid == pid).unwrap();
         }
         Ok(found)
@@ -123,12 +128,12 @@ fn a_wrongly_identified_stranger_is_never_signalled() {
     let result = control_with(&setup, Duration::from_secs(2), &fooled);
     let mut other = stranger.lock().unwrap().take().unwrap();
     let c = other.id();
-    let spared = listed(c);
+    let ended = ended(&mut other);
     let _ = other.kill();
     let _ = other.wait();
     let left = alive("omni-qa-ctl3");
     let _ = std::fs::remove_file(&named);
-    assert!(spared, "C was signalled");
+    assert_eq!(ended, None, "C was signalled");
     assert!(
         matches!(&result, Err(e) if e.contains(&format!("[{c}]")) && e.contains("still alive")),
         "{result:?}"
