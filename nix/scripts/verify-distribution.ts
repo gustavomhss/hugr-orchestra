@@ -2,6 +2,8 @@
 // Deferred native output check. Uses the shipped consumer admission, then checks
 // actual image headers and execution. No GUI, service, OAuth or arbitrary-CPU claim.
 import { spawnSync } from "node:child_process"
+import { closeSync, mkdtempSync, openSync, readFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { lstat, readdir, realpath, stat } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { parseArgs } from "node:util"
@@ -123,12 +125,12 @@ async function omni(directory: string, runtime: string, env: Record<string, stri
   await image(addon, "OMNI_IMAGE_MISMATCH")
   await image(supervisor, "OMNI_IMAGE_MISMATCH")
   // No --version/--help: with no arguments it must refuse its command line (exit 2), which only a native run can do.
-  const started = spawnSync(supervisor, [], { encoding: "utf8", timeout: 30_000 })
+  const started = captured(supervisor, [], { encoding: "utf8", timeout: 30_000 })
   if (started.error || started.status !== 2 || !started.stderr.startsWith("hugr-omni-supervisor: missing --host-pid"))
     fail(`OMNI_SUPERVISOR_EXECUTION:${supervisor}:${started.error?.message ?? `${started.status}:${started.signal}:${started.stderr}`}`)
   // Inherited HUGR_OMNI_* would let the native side pick another supervisor than the shipped one.
   const inherited = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("HUGR_OMNI_")))
-  const loaded = spawnSync(runtime, ["-e", String.raw`
+  const loaded = captured(runtime, ["-e", String.raw`
     const dlopen = process.dlopen
     const opened = []
     process.dlopen = function (module, file, ...rest) { opened.push(file); return dlopen.call(this, module, file, ...rest) }
@@ -162,7 +164,7 @@ async function treeSitter(directory: string, runtime: string, env: Record<string
   }
   await Promise.resolve().then(() => requireTreeSitterBundle(directory, cliTreeSitterTarget(target)))
     .catch((error: unknown) => fail(`TREE_SITTER_BUNDLE_INCOMPLETE:${error instanceof Error ? error.message : error}`))
-  const loaded = spawnSync(runtime, ["-e", String.raw`
+  const loaded = captured(runtime, ["-e", String.raw`
     const path = require("node:path")
     const dir = process.env.NIX_TREE_SITTER_DIR
     const dlopen = process.dlopen
@@ -213,7 +215,7 @@ function fail(label: string): never {
 }
 
 function execute(file: string, argv: string[], electron = false) {
-  const result = spawnSync(file, argv, {
+  const result = captured(file, argv, {
     env: { ...process.env, ORCHESTRA_DISABLE_MODELS_FETCH: "1", ...(electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
     encoding: "utf8", timeout: 60_000,
   })
@@ -224,7 +226,7 @@ function execute(file: string, argv: string[], electron = false) {
 function packagedPty(executable: string, resources: string) {
   // electron-vite rewrites @lydell/node-pty to this platform package. Use the
   // same createRequire context as its packaged main bundle, not a .node shortcut.
-  const result = spawnSync(executable, ["-e", String.raw`
+  const result = captured(executable, ["-e", String.raw`
     const { createRequire } = require("node:module")
     const fs = require("node:fs")
     const path = require("node:path")
@@ -286,4 +288,17 @@ async function nativeAddons(directory: string): Promise<string[]> {
     if (entry.isDirectory()) return nativeAddons(file)
     return entry.isFile() && entry.name.endsWith(".node") ? [file] : []
   }))).flat()
+}
+
+// Every child writes to files, never pipes: on Linux, Electron's crash handler inherits the pipes and keeps them open
+// after a crashing load, so a piped spawnSync would wait forever instead of reporting the failure. SIGKILL ends hangs.
+function captured(command: string, args: string[], options: { env?: Record<string, string | undefined>; timeout: number; encoding?: string }) {
+  const logs = mkdtempSync(join(tmpdir(), "nix-verify-"))
+  const out = openSync(join(logs, "stdout"), "w")
+  const err = openSync(join(logs, "stderr"), "w")
+  const result = spawnSync(command, args, { env: options.env, timeout: options.timeout, stdio: ["ignore", out, err], killSignal: "SIGKILL" })
+  closeSync(out)
+  closeSync(err)
+  return { error: result.error, status: result.status, signal: result.signal,
+    stdout: readFileSync(join(logs, "stdout"), "utf8"), stderr: readFileSync(join(logs, "stderr"), "utf8") }
 }
