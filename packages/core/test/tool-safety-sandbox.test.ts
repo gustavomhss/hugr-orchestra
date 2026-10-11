@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import os from "os"
 import path from "path"
 import { createServer } from "node:net"
 import { Effect } from "effect"
@@ -214,18 +215,32 @@ live("a confined-read command's TMPDIR is its own scratch, where it can create a
   }), 30_000,
 )
 
-test("the confined-read toolchain names exactly what a rustup-proxied cargo needs, never cargo's credentials or config", () => {
+test("home grants name exactly git's config files and what a rustup-proxied cargo needs, never a credential store", () => {
   const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
-  const rustup = path.join(base, "rustup")
-  const cargo = path.join(base, "cargo")
-  const listed = ToolSafetySandbox.toolchain({ PATH: "", RUSTUP_HOME: rustup, CARGO_HOME: cargo })
+  const [rustup, cargo, xdg] = ["rustup", "cargo", "xdg"].map((name) => path.join(base, name))
+  const listed = ToolSafetySandbox.toolchain({ PATH: "", RUSTUP_HOME: rustup, CARGO_HOME: cargo, XDG_CONFIG_HOME: xdg })
   expect(listed.filter((entry) => entry.startsWith(base)).sort()).toEqual([
-    path.join(cargo, "bin"), path.join(cargo, "git"), path.join(cargo, "registry"),
-    path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
-  ])
-  // Without RUSTUP_HOME and CARGO_HOME the same entries come from the home directory, and the home's .cargo and .rustup
-  // themselves (with cargo's credentials and config, rustup's downloads, tmp and update hashes) stay out.
-  const home = ToolSafetySandbox.toolchain({ PATH: "" }).filter((entry) => /[\\/]\.(?:cargo|rustup)(?:[\\/]|$)/.test(entry))
-  expect(home.length).toBeGreaterThan(0)
-  expect(home.every((entry) => /[\\/]\.(?:cargo[\\/](?:bin|registry|git)|rustup[\\/](?:settings\.toml|toolchains))$/.test(entry))).toBe(true)
+    path.join(cargo, "bin"), path.join(cargo, "registry", "cache"), path.join(cargo, "registry", "index"),
+    path.join(cargo, "registry", "src"), path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
+    path.join(xdg, "git", "attributes"), path.join(xdg, "git", "config"), path.join(xdg, "git", "ignore"),
+  ].sort())
+  // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it.
+  const defaults = ToolSafetySandbox.homeGrants({}).map((grant) => grant.entry)
+  const homes = [...new Set(defaults.map((entry) => entry.slice(0, entry.lastIndexOf(`${path.sep}.`))))]
+  expect(defaults.map((entry) => path.relative(homes.find((home) => entry.startsWith(home + path.sep)) ?? "", entry)).sort()).toEqual(
+    homes.flatMap(() => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
+      path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"), path.join(".cargo", "bin"),
+      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))]).sort(),
+  )
+})
+
+test("an environment home that is relative, a home or above one grants nothing", () => {
+  const home = os.homedir()
+  for (const value of ["relative/cargo", home, path.dirname(home), path.parse(home).root]) {
+    const grants = ToolSafetySandbox.homeGrants({ CARGO_HOME: value, RUSTUP_HOME: value, XDG_CONFIG_HOME: value })
+    // Only ~/.gitconfig and ~/.config/git remain, which no variable names.
+    expect(grants.map((grant) => grant.entry).filter((entry) => !/[\\/](?:\.gitconfig|\.config[\\/]git[\\/]\w+)$/.test(entry))).toEqual([])
+    expect(grants.some((grant) => [path.join(home, "bin"), path.join(home, "registry"), path.join(home, "git")]
+      .some((entry) => grant.entry.startsWith(entry)))).toBe(false)
+  }
 })
