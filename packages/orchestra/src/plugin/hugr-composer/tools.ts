@@ -2,29 +2,11 @@ import path from "node:path"
 import { lstat, realpath } from "node:fs/promises"
 import { tool, type ToolContext } from "@orchestra/plugin"
 import { Option, Schema } from "effect"
-import { composerFailure, type HugrComposerClient } from "./client"
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+import { ComposerFailure, composerFailure, type HugrComposerClient } from "./client"
+import { ERROR_CODES, OUTCOME_KEY, outcome, producerCodeOf, type Outcome } from "./outcome"
 
-// Mirrors mcp_tools/error_codes.py in the Composer backend. Only these codes cross the boundary;
-// free-text backend detail (what_happened, error) stays redacted.
-const ERROR_CODES = new Set([
-  "missing-selection",
-  "unknown-recipe",
-  "unknown-primitive",
-  "recipe-mismatch",
-  "domain-boundary",
-  "empty-query",
-  "not-found",
-  "unknown-skill",
-  "unknown-bundle",
-  "path-rejected",
-  "target-exists",
-  "invalid-output",
-  "scaffold-failed",
-  "backend-unavailable",
-  "catalog-invalid",
-  "audit-failed",
-  "verify-failed",
-])
+const CLOSED_CODES: ReadonlySet<string> = new Set(ERROR_CODES)
 
 function output(result: {
   content: ReadonlyArray<{ type: string; text?: string }>
@@ -41,7 +23,7 @@ function output(result: {
     return true
   }
   const code = (value: unknown) =>
-    typeof value === "object" && value !== null && "code" in value && typeof value.code === "string" && ERROR_CODES.has(value.code)
+    typeof value === "object" && value !== null && "code" in value && typeof value.code === "string" && CLOSED_CODES.has(value.code)
       ? value.code
       : "unknown"
   if (result.isError) throw composerFailure("backend-error")
@@ -74,21 +56,22 @@ export function createHuGRTools(client: HugrComposerClient) {
       async execute(args, context) {
         const outputDir = await resolveOutputDirectory(args.output_dir, context)
         if (!args.dry_run) await authorizeWrite(context, outputDir, "compose")
-        const result = await client.callTool(
-          "fastapi_meta_compose",
-          compact({
-            output_dir: outputDir,
-            primitives: args.primitives,
-            recipe_id: args.recipe_id,
-            name: args.name,
-            mount_path: args.mount_path,
-            dry_run: args.dry_run,
-            force: args.force,
-          }),
-          context.abort,
-          { retry: false },
+        return owned("hugr-compose", `Composed ${args.name ?? args.recipe_id ?? "FastAPI composition"}`, args.dry_run, context, () =>
+          client.callTool(
+            "fastapi_meta_compose",
+            compact({
+              output_dir: outputDir,
+              primitives: args.primitives,
+              recipe_id: args.recipe_id,
+              name: args.name,
+              mount_path: args.mount_path,
+              dry_run: args.dry_run,
+              force: args.force,
+            }),
+            context.abort,
+            { retry: false },
+          ),
         )
-        return { title: `Composed ${args.name ?? args.recipe_id ?? "FastAPI composition"}`, output: output(result) }
       },
     }),
     "hugr-search": tool({
@@ -129,21 +112,22 @@ export function createHuGRTools(client: HugrComposerClient) {
       async execute(args, context) {
         const outputDir = await resolveOutputDirectory(args.output_dir, context)
         await authorizeWrite(context, outputDir, "scaffold")
-        const result = await client.callTool(
-          "fastapi_meta_scaffold",
-          compact({
-            name: args.name,
-            output_dir: outputDir,
-            models: args.models,
-            owner_models: args.owner_models,
-            shared_models: args.shared_models,
-            profile: args.profile,
-            with_auth: args.with_auth,
-          }),
-          context.abort,
-          { retry: false },
+        return owned("hugr-scaffold", `Scaffolded project: ${args.name ?? "app"}`, false, context, () =>
+          client.callTool(
+            "fastapi_meta_scaffold",
+            compact({
+              name: args.name,
+              output_dir: outputDir,
+              models: args.models,
+              owner_models: args.owner_models,
+              shared_models: args.shared_models,
+              profile: args.profile,
+              with_auth: args.with_auth,
+            }),
+            context.abort,
+            { retry: false },
+          ),
         )
-        return { title: `Scaffolded project: ${args.name ?? "app"}`, output: output(result) }
       },
     }),
     "hugr-describe": tool({
@@ -175,6 +159,45 @@ export function createHuGRTools(client: HugrComposerClient) {
       },
     }),
   }
+}
+
+// An owned write settles through the real failure path, so its outcome is streamed into the running metadata first
+// (F4.27): the processor keeps it on the errored tool part, where the backend work result reads it back (F4.25).
+async function owned(
+  name: Outcome["tool"],
+  title: string,
+  dryRun: boolean | undefined,
+  context: Pick<ToolContext, "abort" | "metadata">,
+  call: () => Promise<CallToolResult>,
+) {
+  try {
+    const result = await call()
+    const text = output(result)
+    const envelopes = [result.structuredContent, ...result.content.map((item) => (item.type === "text" ? parseJson(item.text) : undefined))]
+    // A success carrying a code breaks the producer's own invariant: its effects cannot be trusted.
+    if (envelopes.some((value) => isRecord(value) && value.ok === true && value.code != null)) throw composerFailure("unknown")
+    // A result that is no envelope at all is returned as before, without an outcome claim.
+    if (!envelopes.some((value) => isRecord(value) && value.ok === true)) return { title, output: text }
+    return { title, output: text, metadata: { [OUTCOME_KEY]: outcome(name, { ok: true, dryRun }) } }
+  } catch (error) {
+    const settled = context.abort.aborted
+      ? outcome(name, { interrupted: true })
+      : outcome(name, {
+          ok: false,
+          dryRun,
+          producerCode: error instanceof ComposerFailure ? producerCodeOf(error.code) : "backend-error",
+        })
+    await Promise.resolve(context.metadata({ title, metadata: { [OUTCOME_KEY]: settled } })).catch(() => undefined)
+    throw error
+  }
+}
+
+function parseJson(text: string | undefined) {
+  return text ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)) : undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function compact(input: Record<string, unknown>) {

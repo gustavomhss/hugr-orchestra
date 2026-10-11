@@ -18,8 +18,14 @@ type ComposerCommand = {
 }
 
 /** Redacted backend failure: only a closed-set reason code, never backend text. */
+export class ComposerFailure extends Error {
+  constructor(readonly code: string) {
+    super(`HuGR Composer backend operation failed: ${code}`)
+  }
+}
+
 export function composerFailure(code: string) {
-  return Object.assign(new Error(`HuGR Composer backend operation failed: ${code}`), { code })
+  return new ComposerFailure(code)
 }
 
 export class HugrComposerClient {

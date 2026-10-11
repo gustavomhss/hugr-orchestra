@@ -11,7 +11,9 @@ const error = mode?.endsWith("object")
     : mode?.endsWith("zero")
       ? 0
       : secret
-const envelope = mode?.includes("coded")
+const envelope = mode?.includes("envelope-ok")
+  ? { ok: true, code: mode.includes("ok-code") ? "target-exists" : null, what_happened: secret, result: { files_written: [secret] } }
+  : mode?.includes("coded")
   ? { ok: false, code: mode.includes("bad-coded") ? secret : "target-exists", what_happened: secret }
   : mode?.includes("error")
     ? { error }

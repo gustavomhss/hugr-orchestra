@@ -11,6 +11,7 @@ import { Permission } from "@/permission"
 import { Session } from "@/session/session"
 import { Skill } from "@/skill"
 import { HugrComposerClient } from "@/plugin/hugr-composer/client"
+import { OUTCOME_KEY, readOutcome } from "@/plugin/hugr-composer/outcome"
 import { createHuGRTools } from "@/plugin/hugr-composer/tools"
 import { requireInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -83,6 +84,47 @@ cases.forEach(({ mode, expected, code }) => {
         )
         yield* Effect.promise(async () => {
           expect(await Bun.file(fixture.marker).text()).toBe("initialize\n" + "tools/call\n".repeat(5))
+          // Only the two owned writes report an outcome; each failed call streams it before it throws.
+          expect(fixture.metadata).toEqual(
+            code === undefined
+              ? []
+              : [
+                  streamed("Composed FastAPI composition", failed("hugr-compose", code)),
+                  streamed("Scaffolded project: app", failed("hugr-scaffold", code)),
+                ],
+          )
+        })
+      }),
+    { config: { permission: { edit: "allow" } } },
+    { timeout: 30_000 },
+  )
+})
+
+// Composer's real envelope today: ok, code, free text, no status or effects (F4.24 fallback).
+;["structured", "text"].forEach((carrier) => {
+  it.instance(
+    `Composer ${carrier} success envelope: owned writes carry an outcome, nothing else does`,
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* composerFixture(`${carrier}-envelope-ok`)
+        yield* Effect.promise(async () => {
+          const compose = await fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context)
+          const dry = await fixture.tools["hugr-compose"].execute({ output_dir: "generated", dry_run: true }, fixture.context)
+          const scaffold = await fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context)
+          const search = await fixture.tools["hugr-search"].execute({ query: "cache" }, fixture.context)
+          const results = [compose, dry, scaffold].map((result) => {
+            if (typeof result !== "object" || result === null) throw new Error("Expected Composer output")
+            return result.metadata
+          })
+          expect(results).toEqual([
+            { [OUTCOME_KEY]: success("hugr-compose", "unknown") },
+            { [OUTCOME_KEY]: success("hugr-compose", "none") },
+            { [OUTCOME_KEY]: success("hugr-scaffold", "unknown") },
+          ])
+          expect(typeof search === "object" && search !== null ? search.metadata : "string").toBeUndefined()
+          expect(readOutcome(results[0]?.[OUTCOME_KEY], "hugr-compose")).toEqual(success("hugr-compose", "unknown"))
+          // Free backend text still never crosses the boundary through the outcome.
+          expect(JSON.stringify(results)).not.toContain("secret")
           expect(fixture.metadata).toEqual([])
         })
       }),
@@ -90,6 +132,68 @@ cases.forEach(({ mode, expected, code }) => {
     { timeout: 30_000 },
   )
 })
+
+it.instance(
+  "Composer success envelope carrying a code is malformed and fails closed",
+  () =>
+    Effect.gen(function* () {
+      const fixture = yield* composerFixture("structured-envelope-ok-code")
+      yield* Effect.promise(async () => {
+        expect(await rejection(fixture.tools["hugr-compose"].execute({ output_dir: "generated" }, fixture.context))).toMatchObject({
+          message: "HuGR Composer backend operation failed: unknown",
+        })
+        expect(fixture.metadata).toEqual([streamed("Composed FastAPI composition", failed("hugr-compose", "unknown"))])
+      })
+    }),
+  { config: { permission: { edit: "allow" } } },
+  { timeout: 30_000 },
+)
+
+it.instance(
+  "Composer failed dry-run compose has no effects; a failed scaffold cannot claim any",
+  () =>
+    Effect.gen(function* () {
+      const fixture = yield* composerFixture("structured-coded")
+      yield* Effect.promise(async () => {
+        await rejection(fixture.tools["hugr-compose"].execute({ output_dir: "generated", dry_run: true }, fixture.context))
+        await rejection(fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context))
+        expect(fixture.metadata).toEqual([
+          streamed("Composed FastAPI composition", { ...failed("hugr-compose", "target-exists"), effects: "none" }),
+          streamed("Scaffolded project: app", failed("hugr-scaffold", "target-exists")),
+        ])
+      })
+    }),
+  { config: { permission: { edit: "allow" } } },
+  { timeout: 30_000 },
+)
+
+it.instance(
+  "Composer aborted owned write is interrupted with unknown effects and never reaches the backend",
+  () =>
+    Effect.gen(function* () {
+      const fixture = yield* composerFixture("plain")
+      const controller = new AbortController()
+      controller.abort()
+      yield* Effect.promise(async () => {
+        await rejection(
+          fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, { ...fixture.context, abort: controller.signal }),
+        )
+        expect(fixture.metadata).toEqual([
+          streamed("Scaffolded project: app", {
+            schema: "hugr-composer-outcome-v1",
+            tool: "hugr-scaffold",
+            ok: false,
+            status: "interrupted",
+            effects: "unknown",
+            error: { code: "CANCELLED" },
+          }),
+        ])
+        expect(await Bun.file(fixture.marker).exists()).toBe(false)
+      })
+    }),
+  { config: { permission: { edit: "allow" } } },
+  { timeout: 30_000 },
+)
 
 it.instance(
   "Composer native denied compose/scaffold never start backend",
@@ -129,13 +233,38 @@ Array.of("compose", "scaffold").forEach((operation) => {
               : fixture.tools["hugr-scaffold"].execute({ output_dir: "generated" }, fixture.context)
           expect(await rethrow(call)).toThrow()
           expect(await Bun.file(fixture.marker).text()).toBe("initialize\ntools/call\n")
-          expect(fixture.metadata).toEqual([])
+          // A transport failure carries no envelope but may have written: effects are unknown, not none.
+          expect(fixture.metadata).toEqual([
+            streamed(
+              operation === "compose" ? "Composed FastAPI composition" : "Scaffolded project: app",
+              failed(operation === "compose" ? "hugr-compose" : "hugr-scaffold", "backend-error"),
+            ),
+          ])
         })
       }),
     { config: { permission: { edit: "allow" } } },
     { timeout: 30_000 },
   )
 })
+
+function failed(tool: "hugr-compose" | "hugr-scaffold", producerCode: string) {
+  return {
+    schema: "hugr-composer-outcome-v1",
+    tool,
+    ok: false,
+    status: "failed",
+    effects: "unknown",
+    error: { code: "PRODUCER_FAILED", producerCode },
+  }
+}
+
+function success(tool: "hugr-compose" | "hugr-scaffold", effects: "none" | "unknown") {
+  return { schema: "hugr-composer-outcome-v1", tool, ok: true, effects } as const
+}
+
+function streamed(title: string, outcome: unknown) {
+  return { title, metadata: { [OUTCOME_KEY]: outcome } }
+}
 
 function composerFixture(mode: string) {
   return Effect.gen(function* () {
