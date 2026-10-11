@@ -7,11 +7,12 @@ import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq, sql } from "drizzle-orm"
-import { Effect, Exit } from "effect"
+import { Deferred, Effect, Exit, Fiber, Tracer } from "effect"
 import { CapabilityArtifacts } from "../src/capability/artifact"
 import { CapabilityArtifactMutations } from "../src/capability/artifact/management-mutation"
 import type { CapabilityOperatorContract } from "../src/capability/operator/contract"
 import { CapabilityOperator } from "../src/capability/operator/index"
+import type { CapabilityRequestContract } from "../src/capability/operator/request-contract"
 import { CapabilityArtifactPinTable, CapabilityArtifactReferenceTable, CapabilityArtifactTable, CapabilityRequestTable } from "../src/capability/sql"
 import { Database } from "../src/database/database"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
@@ -60,6 +61,32 @@ function fixture(scope: (ids: { artifact: Capability.ArtifactRef; peer: SessionI
       .where(eq(CapabilityArtifactReferenceTable.session_id, sessionID)).all()
     const receipts = () => db.select().from(CapabilityRequestTable).all()
     return { db, mutations, run, source, peer, outsider, artifact, references, receipts }
+  })
+}
+
+/** Runs `change` in a real immediate writer that starts exactly when the facade enters the ledger commit,
+ * after its pre-ledger authority and placement checks, and holds the lock until the change is committed. */
+function interleaved<A, E, R>(database: Database.Interface, effect: Effect.Effect<A, E, R>,
+  change: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<unknown, unknown>) {
+  return Effect.gen(function* () {
+    const scope = yield* Effect.scope
+    const locked = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const state: { writer?: Fiber.Fiber<void, unknown> } = {}
+    const tracer = Tracer.make({ span: (options) => {
+      if (options.name === "CapabilityArtifactMutations.commit" && !state.writer)
+        state.writer = Effect.runFork(database.db.transaction((tx) => Effect.gen(function* () {
+          yield* change(tx)
+          yield* Deferred.succeed(locked, undefined)
+          yield* Deferred.await(release)
+        }), { behavior: "immediate" })).pipe(Fiber.runIn(scope))
+      return new Tracer.NativeSpan(options)
+    } })
+    const pending = yield* effect.pipe(Effect.withTracer(tracer), Effect.forkChild)
+    yield* Deferred.await(locked)
+    yield* Deferred.succeed(release, undefined)
+    if (state.writer) yield* Fiber.await(state.writer)
+    return yield* Fiber.await(pending)
   })
 }
 
@@ -160,4 +187,35 @@ it.live("a failing receipt write rolls back the domain mutation and leaves no re
   }).pipe(Effect.ensuring(f.db.run("DROP TRIGGER artifact_receipt_abort").pipe(Effect.orDie)))
   expect((yield* f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer }))).reused).toBe(false)
   expect(yield* f.references(f.peer)).toHaveLength(1)
+}))
+
+it.live("verify rejects a source Session moved after the pre-ledger check", () => Effect.gen(function* () {
+  const f = yield* fixture()
+  const database = yield* Database.Service
+  expect(codes(yield* interleaved(database, f.run(f.mutations.pin(f.source, f.artifact, { pinned: true })),
+    (tx) => tx.update(SessionTable).set({ directory: foreign.location.directory }).where(eq(SessionTable.id, f.source)).run())))
+    .toEqual(["artifact_unavailable"])
+  expect((yield* f.references(f.source))[0].pinned).toBe(false)
+  expect(yield* f.db.select().from(CapabilityArtifactPinTable).all()).toHaveLength(0)
+  expect(yield* f.receipts()).toHaveLength(0)
+}))
+
+it.live("a fresh write fails when the source reference disappears after the pre-ledger check", () => Effect.gen(function* () {
+  const f = yield* fixture()
+  const database = yield* Database.Service
+  expect(codes(yield* interleaved(database, f.run(f.mutations.share(f.source, f.artifact, { sessionID: f.peer })),
+    (tx) => tx.delete(CapabilityArtifactReferenceTable).where(eq(CapabilityArtifactReferenceTable.session_id, f.source)).run())))
+    .toEqual(["artifact_unavailable"])
+  expect(yield* f.references(f.peer)).toHaveLength(0)
+  expect(yield* f.receipts()).toHaveLength(0)
+}))
+
+it.live("pin with a changed payload under the same key conflicts and leaves state unchanged", () => Effect.gen(function* () {
+  const f = yield* fixture()
+  yield* f.run(f.mutations.pin(f.source, f.artifact, { pinned: true }))
+  expect(codes(yield* f.run(f.mutations.pin(f.source, f.artifact, { pinned: false })).pipe(Effect.exit)))
+    .toEqual(["outcome_unknown"])
+  expect((yield* f.references(f.source))[0].pinned).toBe(true)
+  expect(yield* f.db.select().from(CapabilityArtifactPinTable).all()).toHaveLength(1)
+  expect(yield* f.receipts()).toHaveLength(1)
 }))

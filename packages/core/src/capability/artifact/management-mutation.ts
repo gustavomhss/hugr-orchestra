@@ -36,6 +36,7 @@ export const make = (options: CapabilityArtifactManagementContract.Options) => E
     const target = { action, placement, resource: { kind: "artifact", id: value.artifact.id } }
     yield* authorize(target)
     // Share also needs authority over the target Session at its own stored placement; the ledger target stays the artifact.
+    // Intentional: target authority runs before replay, so a share retry after the target Session is deleted is unavailable.
     if (sharedWith !== undefined) yield* authorize({ action, placement: yield* sessionPlacement(db, sharedWith),
       resource: { kind: "session", id: sharedWith } })
     // Replay reconciles after the reference is gone, but never across a moved Session or a collected record.
