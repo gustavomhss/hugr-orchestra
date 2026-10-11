@@ -1,9 +1,24 @@
 import { isAbsolute, join } from "node:path"
 import { Effect, FileSystem, PlatformError, Schema, SchemaAST, SchemaRepresentation } from "effect"
-import { HttpMethod, type HttpRouter } from "effect/unstable/http"
+import type { HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
-import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
+import { renderEffectMake } from "./effect-headers"
+import { GenerationError } from "./error-symbol"
+import { assertPromiseEndpoint, renderPromiseClient, renderPromiseTypes } from "./promise"
+import {
+  assertPortable,
+  isDataEnvelope,
+  isStreamSchema,
+  metadataPortable,
+  resolveHttpApiEncoding,
+  resolveHttpApiStatus,
+  responseSchemas,
+  sameEncoding,
+  streamDataSchema,
+  streamEffectPortable,
+  taggedErrorFields,
+} from "./schema-analysis"
 
 export type InputField = {
   readonly name: string
@@ -62,9 +77,6 @@ type Slot = {
   readonly schema: Schema.Top
 }
 
-const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus")
-const resolveHttpApiEncoding = SchemaAST.resolveAt<HttpApiSchema.Encoding>("~httpApiEncoding")
-const resolveContentSchema = SchemaAST.resolveAt<SchemaAST.AST>("contentSchema")
 const Manifest = Schema.fromJsonString(Schema.Array(Schema.String))
 const manifestName = ".httpapi-codegen.json"
 
@@ -261,41 +273,6 @@ export function emitPromise(
   }
 }
 
-function assertPromiseEndpoint(endpoint: Endpoint) {
-  const name = `${endpoint.group}.${endpoint.endpoint.name}`
-  const payload = endpoint.payloads[0]
-  const payloadEncoding = payload === undefined ? undefined : resolveHttpApiEncoding(payload.ast)
-  if (
-    payload !== undefined &&
-    (payloadEncoding?._tag ?? (HttpMethod.hasBody(endpoint.endpoint.method) ? "Json" : "FormUrlEncoded")) !== "Json"
-  ) {
-    throw new GenerationError({ reason: `Unsupported Promise payload encoding: ${name}` })
-  }
-  const success = endpoint.successes[0]
-  if (isStreamSchema(success)) {
-    if (
-      success._tag !== "StreamSse" ||
-      success.sseMode !== "data" ||
-      !SchemaAST.isNever(Schema.toType(success.error).ast)
-    ) {
-      throw new GenerationError({ reason: `Unsupported Promise stream: ${name}` })
-    }
-  } else if (
-    !HttpApiSchema.isNoContent(success.ast) &&
-    (resolveHttpApiEncoding(success.ast)?._tag ?? "Json") !== "Json"
-  ) {
-    throw new GenerationError({ reason: `Unsupported Promise success encoding: ${name}` })
-  }
-  for (const error of endpoint.errors) {
-    if (declaredErrorFields(error.schema) === undefined) {
-      throw new GenerationError({ reason: `Promise error must have a literal discriminator: ${name}` })
-    }
-    if ((resolveHttpApiEncoding(error.schema.ast)?._tag ?? "Json") !== "Json") {
-      throw new GenerationError({ reason: `Unsupported Promise error encoding: ${name}` })
-    }
-  }
-}
-
 function operations(groups: ReadonlyArray<Group>) {
   return groups.flatMap((group) => group.endpoints.map((endpoint) => endpoint.operation))
 }
@@ -422,181 +399,8 @@ function renderImportedProjection(groups: ReadonlyArray<Group>, endpoints: Reado
   return { imports: [...new Set(imports)], source }
 }
 
-function renderPromiseTypes(
-  groups: ReadonlyArray<Group>,
-  outputTypes?: Readonly<Record<string, { readonly name: string; readonly import: string }>>,
-) {
-  const types = new Map<SchemaAST.AST, string>()
-  const typeOf = (schema: Schema.Top, decoded = false) => {
-    const projected = decoded ? Schema.toType(schema) : Schema.toEncoded(schema)
-    const cached = types.get(projected.ast)
-    if (cached !== undefined) return cached
-    const type = structuralType(projected)
-    types.set(projected.ast, type)
-    return type
-  }
-  const errors = errorSymbols(
-    groups.flatMap((group) =>
-      group.endpoints.flatMap((endpoint) =>
-        endpoint.errors.flatMap((error) => {
-          const tagged = declaredErrorFields(error.schema)
-          return tagged === undefined ? [] : [tagged]
-        }),
-      ),
-    ),
-  )
-  const errorTypes = Array.from(errors, ([identifier, error]) => {
-    const fields = error.fields
-      .map(([name, schema, optional]) => `readonly ${JSON.stringify(name)}${optional ? "?" : ""}: ${typeOf(schema)}`)
-      .join("; ")
-    return `export type ${identifier} = { readonly ${JSON.stringify(error.key)}: ${JSON.stringify(error.tag)}; ${fields} }\nexport const is${identifier} = (value: unknown): value is ${identifier} => typeof value === "object" && value !== null && ${JSON.stringify(error.key)} in value && value[${JSON.stringify(error.key)}] === ${JSON.stringify(error.tag)}`
-  })
-  const operations = groups
-    .flatMap((group) =>
-      group.endpoints.flatMap((endpoint) => {
-        const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
-        const schemas = {
-          params: endpoint.params,
-          query: endpoint.query,
-          headers: endpoint.headers,
-          payload: endpoint.payloads[0],
-        }
-        const input = endpoint.input
-          .map((field) => {
-            const schema = schemas[field.source]
-            if (schema === undefined)
-              throw new GenerationError({ reason: `Missing input schema: ${prefix}.${field.name}` })
-            return `readonly ${JSON.stringify(field.name)}${field.optional ? "?" : ""}: (${typeOf(schema, field.source === "query")})[${JSON.stringify(field.name)}]`
-          })
-          .join("; ")
-        const successSchema = endpoint.successes[0]
-        const success =
-          outputTypes?.[`${group.identifier}.${endpoint.operation.name}`]?.name ??
-          typeOf(
-            isStreamSchema(successSchema) && successSchema._tag === "StreamSse"
-              ? successSchema.sseMode === "data"
-                ? streamEncodedDataSchema(successSchema)
-                : successSchema.events
-              : successSchema,
-          )
-        return [
-          ...(endpoint.operation.inputMode === "none" ? [] : [`export type ${prefix}Input = { ${input} }`]),
-          `export type ${prefix}Output = ${endpoint.unwrapData ? `(${success})["data"]` : success}`,
-        ]
-      }),
-    )
-    .join("\n\n")
-  const json = Array.from(types.values()).some((type) => type.includes("JsonValue"))
-    ? "export type JsonValue = null | boolean | number | string | ReadonlyArray<JsonValue> | { readonly [key: string]: JsonValue }"
-    : ""
-  const imports = [...new Set(Object.values(outputTypes ?? {}).map((override) => override.import))]
-  assertErrorSymbols(
-    errors.keys(),
-    [...imports, json, operations].filter(Boolean).join("\n\n"),
-    errorTypes.join("\n\n"),
-  )
-  return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
-}
-
-function renderPromiseClient(groups: ReadonlyArray<Group>) {
-  const imports = groups.flatMap((group) =>
-    group.endpoints.flatMap((endpoint) => {
-      const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
-      return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
-    }),
-  )
-  const fields = groups.map((group) => {
-    const methods = group.endpoints.map((endpoint) => {
-      const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
-      const argument =
-        endpoint.operation.inputMode === "none"
-          ? "requestOptions?: RequestOptions"
-          : `input${endpoint.operation.inputMode === "optional" ? "?" : ""}: ${prefix}Input, requestOptions?: RequestOptions`
-      const path = promisePath(endpoint.endpoint.path, endpoint.input)
-      const access = (name: string) =>
-        `input${endpoint.operation.inputMode === "optional" ? "?." : ""}[${JSON.stringify(name)}]`
-      const part = (source: InputField["source"]) => {
-        const inputs = endpoint.input.filter((field) => field.source === source)
-        return inputs.length === 0
-          ? undefined
-          : `{ ${inputs.map((field) => `${JSON.stringify(field.name)}: ${access(field.name)}`).join(", ")} }`
-      }
-      const parts = [
-        endpoint.query === undefined ? undefined : `query: ${part("query")}`,
-        endpoint.headers === undefined ? undefined : `headers: ${part("headers")}`,
-        endpoint.payloads.length === 0 ? undefined : `body: ${part("payload")}`,
-      ].filter((value): value is string => value !== undefined)
-      const declaredStatuses = [...new Set(endpoint.errors.map((error) => error.status))]
-      const descriptor = `{ method: ${JSON.stringify(endpoint.endpoint.method)}, path: ${path}${parts.length === 0 ? "" : `, ${parts.join(", ")}`}, successStatus: ${resolveHttpApiStatus(endpoint.successes[0].ast) ?? 200}, declaredStatuses: [${declaredStatuses.join(", ")}], empty: ${endpoint.operation.success === "void"} }`
-      if (endpoint.operation.success === "stream") {
-        const success = endpoint.successes[0]
-        if (!isStreamSchema(success) || success._tag !== "StreamSse" || success.sseMode !== "data") {
-          throw new GenerationError({
-            reason: `Promise stream emission is not implemented: ${group.identifier}.${endpoint.endpoint.name}`,
-          })
-        }
-        return `${JSON.stringify(endpoint.operation.name)}: (${argument}): AsyncIterable<${prefix}Output> => sse<${prefix}Output>(${descriptor}, requestOptions)`
-      }
-      const unwrap = endpoint.unwrapData ? ".then((value) => value.data)" : ""
-      return `${JSON.stringify(endpoint.operation.name)}: (${argument}) => request<${endpoint.unwrapData ? `{ readonly data: ${prefix}Output }` : `${prefix}Output`}>(${descriptor}, requestOptions)${unwrap}`
-    })
-    if (group.endpoints[0]?.topLevel) return methods.join(", ")
-    return `${JSON.stringify(group.identifier)}: { ${methods.join(", ")} }`
-  })
-  return `import type { ${imports.join(", ")} } from "./types"\nimport { ClientError } from "./client-error"\n\nexport interface ClientOptions {\n  readonly baseUrl: string\n  readonly fetch?: typeof globalThis.fetch\n  readonly headers?: HeadersInit\n}\n\nexport interface RequestOptions {\n  readonly signal?: AbortSignal\n  readonly headers?: HeadersInit\n}\n\ninterface RequestDescriptor {\n  readonly method: string\n  readonly path: string\n  readonly query?: Record<string, unknown>\n  readonly headers?: Record<string, unknown>\n  readonly body?: unknown\n  readonly successStatus: number\n  readonly declaredStatuses: ReadonlyArray<number>\n  readonly empty: boolean\n}\n\nexport function make(options: ClientOptions) {\n  const fetch = options.fetch ?? globalThis.fetch\n\n  const prepare = (descriptor: RequestDescriptor, requestOptions?: RequestOptions) => {\n    const url = new URL(descriptor.path, options.baseUrl)\n    for (const [key, value] of Object.entries(descriptor.query ?? {})) appendQuery(url.searchParams, key, value)\n    const headers = new Headers(options.headers)\n    for (const [key, value] of Object.entries(descriptor.headers ?? {})) {\n      if (value !== undefined && value !== null) headers.set(key, String(value))\n    }\n    for (const [key, value] of new Headers(requestOptions?.headers)) headers.set(key, value)\n    if (descriptor.body !== undefined && !headers.has("content-type")) headers.set("content-type", "application/json")\n    return {\n      url,\n      init: {\n        method: descriptor.method,\n        signal: requestOptions?.signal,\n        headers,\n        body: descriptor.body === undefined ? undefined : JSON.stringify(descriptor.body),\n      } satisfies RequestInit,\n    }\n  }\n\n  const execute = async (descriptor: RequestDescriptor, requestOptions?: RequestOptions) => {\n    try {\n      const prepared = prepare(descriptor, requestOptions)\n      return await fetch(prepared.url, prepared.init)\n    } catch (cause) {\n      throw new ClientError("Transport", { cause })\n    }\n  }\n\n  const responseError = async (response: Response, descriptor: RequestDescriptor): Promise<never> => {\n    if (descriptor.declaredStatuses.includes(response.status)) throw await json(response)\n    try {\n      await response.body?.cancel()\n    } catch {}\n    throw new ClientError("UnexpectedStatus", { cause: { status: response.status } })\n  }\n\n  const request = async <A>(descriptor: RequestDescriptor, requestOptions?: RequestOptions): Promise<A> => {\n    const response = await execute(descriptor, requestOptions)\n    if (response.status !== descriptor.successStatus) return responseError(response, descriptor)\n    if (descriptor.empty) {\n      try {\n        await response.body?.cancel()\n      } catch {}\n      return undefined as A\n    }\n    return await json(response) as A\n  }\n\n  const sse = <A>(descriptor: RequestDescriptor, requestOptions?: RequestOptions): AsyncIterable<A> => ({\n    async *[Symbol.asyncIterator]() {\n      const response = await execute(descriptor, requestOptions)\n      if (response.status !== descriptor.successStatus) await responseError(response, descriptor)\n      if (!isContentType(response, "text/event-stream")) {\n        try {\n          await response.body?.cancel()\n        } catch {}\n        throw new ClientError("UnsupportedContentType")\n      }\n      if (response.body === null) throw new ClientError("MalformedResponse")\n      const reader = response.body.getReader()\n      const decoder = new TextDecoder()\n      let buffer = ""\n      try {\n        while (true) {\n          let next: ReadableStreamReadResult<Uint8Array>\n          try {\n            next = await reader.read()\n          } catch (cause) {\n            throw new ClientError("Transport", { cause })\n          }\n          buffer += decoder.decode(next.value, { stream: !next.done })\n          if (buffer.length > 1_048_576) throw new ClientError("MalformedResponse")\n          const trailingCarriageReturn = !next.done && buffer.endsWith("\\r")\n          if (trailingCarriageReturn) buffer = buffer.slice(0, -1)\n          buffer = buffer.replaceAll("\\r\\n", "\\n").replaceAll("\\r", "\\n")\n          if (trailingCarriageReturn) buffer += "\\r"\n          if (next.done && buffer !== "") buffer += "\\n\\n"\n          let boundary = buffer.indexOf("\\n\\n")\n          while (boundary >= 0) {\n            const block = buffer.slice(0, boundary)\n            buffer = buffer.slice(boundary + 2)\n            const data = block.split("\\n").flatMap((line) => line.startsWith("data:") ? [line.slice(5).trimStart()] : []).join("\\n")\n            if (data !== "") {\n              try {\n                yield JSON.parse(data) as A\n              } catch (cause) {\n                throw new ClientError("MalformedResponse", { cause })\n              }\n            }\n            boundary = buffer.indexOf("\\n\\n")\n          }\n          if (next.done) return\n        }\n      } finally {\n        try {\n          await reader.cancel()\n        } catch {}\n        reader.releaseLock()\n      }\n    },\n  })\n\n  return { ${fields.join(", ")} }\n}\n\nfunction appendQuery(params: URLSearchParams, key: string, value: unknown): void {\n  if (value === undefined || value === null) return\n  if (Array.isArray(value)) {\n    for (const item of value) appendQuery(params, key, item)\n    return\n  }\n  if (typeof value === "object") {\n    for (const [child, item] of Object.entries(value)) appendQuery(params, \`\${key}[\${child}]\`, item)\n    return\n  }\n  params.append(key, String(value))\n}\n\nasync function json(response: Response): Promise<unknown> {\n  if (!isContentType(response, "application/json") && !response.headers.get("content-type")?.includes("+json")) {\n    try {\n      await response.body?.cancel()\n    } catch {}\n    throw new ClientError("UnsupportedContentType")\n  }\n  let text: string\n  try {\n    text = await response.text()\n  } catch (cause) {\n    throw new ClientError("Transport", { cause })\n  }\n  if (text === "") throw new ClientError("MalformedResponse")\n  try {\n    return JSON.parse(text)\n  } catch (cause) {\n    throw new ClientError("MalformedResponse", { cause })\n  }\n}\n\nfunction isContentType(response: Response, expected: string) {\n  return response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() === expected\n}\n`
-}
-
-function promiseTypePrefix(group: string, endpoint: string) {
-  return `${identifierPart(group)}${identifierPart(endpoint)}`
-}
-
 function clientEndpointName(name: string) {
   return name.slice(name.lastIndexOf(".") + 1)
-}
-
-function structuralType(schema: Schema.Top) {
-  const document = SchemaRepresentation.toCodeDocument(SchemaRepresentation.fromASTs([schema.ast]))
-  if (
-    document.artifacts.some(
-      (artifact) =>
-        artifact._tag !== "Import" || artifact.importDeclaration !== 'import type * as Brand from "effect/Brand"',
-    ) ||
-    Object.keys(document.references.recursives).length > 0
-  ) {
-    throw new GenerationError({ reason: "Referenced Promise types are not implemented" })
-  }
-  const references = new Map(
-    document.references.nonRecursives.map((reference) => [reference.$ref, reference.code.Type]),
-  )
-  const expand = (type: string, seen = new Set<string>()): string => {
-    for (const [reference, value] of references) {
-      const pattern = `(?<![A-Za-z0-9_$.'"])${reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![A-Za-z0-9_$.'"])`
-      if (!new RegExp(pattern).test(type)) continue
-      if (seen.has(reference)) {
-        throw new GenerationError({ reason: `Recursive Promise types are not implemented: ${reference}` })
-      }
-      type = type.replace(new RegExp(pattern, "g"), `(${expand(value, new Set([...seen, reference]))})`)
-    }
-    return type
-  }
-  return expand(document.codes[0].Type)
-    .replaceAll(/ & Brand\.Brand<"[^"]+">/g, "")
-    .replaceAll("Schema.Json", "JsonValue")
-}
-
-function promisePath(path: string, input: ReadonlyArray<InputField>) {
-  if (path.includes("*")) throw new GenerationError({ reason: `Unsupported Promise path wildcard: ${path}` })
-  const fields = new Set(input.filter((field) => field.source === "params").map((field) => field.name))
-  const segments = path.split(/(:[A-Za-z_][A-Za-z0-9_]*)/g).filter(Boolean)
-  const template = segments
-    .map((segment) => {
-      if (!segment.startsWith(":")) return segment.replaceAll("`", "\\`")
-      const name = segment.slice(1)
-      if (!fields.has(name)) throw new GenerationError({ reason: `Missing path parameter: ${name}` })
-      return `\${encodeURIComponent(input.${name})}`
-    })
-    .join("")
-  return `\`${template}\``
 }
 
 function uniqueModule(base: string, index: number, modules: ReadonlySet<string>) {
@@ -649,63 +453,6 @@ function normalizeTransport(
 
 function isPathInput(path: string): path is HttpRouter.PathInput {
   return path === "*" || path.startsWith("/")
-}
-
-function sameEncoding(left: SchemaAST.AST, right: SchemaAST.AST): boolean {
-  if (left._tag !== right._tag || left.encoding?.length !== right.encoding?.length) return false
-  if (
-    left.encoding?.some((link, index) => {
-      const other = right.encoding?.[index]
-      return other === undefined || link.transformation !== other.transformation || !sameEncoding(link.to, other.to)
-    })
-  )
-    return false
-  if (!sameChecks(left.checks, right.checks) || !sameContext(left.context, right.context)) return false
-  if (SchemaAST.isSuspend(left) && SchemaAST.isSuspend(right)) return sameEncoding(left.thunk(), right.thunk())
-  if (SchemaAST.isUnion(left) && SchemaAST.isUnion(right)) {
-    return (
-      left.types.length === right.types.length &&
-      left.types.every((ast, index) => sameEncoding(ast, right.types[index]))
-    )
-  }
-  if (SchemaAST.isArrays(left) && SchemaAST.isArrays(right)) {
-    return (
-      left.elements.length === right.elements.length &&
-      left.rest.length === right.rest.length &&
-      left.elements.every((ast, index) => sameEncoding(ast, right.elements[index])) &&
-      left.rest.every((ast, index) => sameEncoding(ast, right.rest[index]))
-    )
-  }
-  if (SchemaAST.isObjects(left) && SchemaAST.isObjects(right)) {
-    return (
-      left.propertySignatures.length === right.propertySignatures.length &&
-      left.indexSignatures.length === right.indexSignatures.length &&
-      left.propertySignatures.every((field, index) => sameEncoding(field.type, right.propertySignatures[index].type)) &&
-      left.indexSignatures.every(
-        (field, index) =>
-          sameEncoding(field.parameter, right.indexSignatures[index].parameter) &&
-          sameEncoding(field.type, right.indexSignatures[index].type),
-      )
-    )
-  }
-  return true
-}
-
-function sameChecks(left: SchemaAST.Checks | undefined, right: SchemaAST.Checks | undefined): boolean {
-  if (left?.length !== right?.length) return false
-  if (left === undefined || right === undefined) return true
-  return left.every((check, index) => {
-    const other = right[index]
-    if (other === undefined || check._tag !== other._tag) return false
-    if (check._tag === "Filter" && other._tag === "Filter") {
-      return check.run === other.run && check.aborted === other.aborted
-    }
-    return check._tag === "FilterGroup" && other._tag === "FilterGroup" && sameChecks(check.checks, other.checks)
-  })
-}
-
-function sameContext(left: SchemaAST.Context | undefined, right: SchemaAST.Context | undefined) {
-  return left?.isOptional === right?.isOptional && left?.isMutable === right?.isMutable
 }
 
 export function write(
@@ -795,222 +542,6 @@ function inputFields(schema: Schema.Top | undefined, source: InputField["source"
       optional: SchemaAST.isOptional(field.type),
     }
   })
-}
-
-function responseSchemas(schema: Schema.Top, path: string): Array<readonly [string, Schema.Top]> {
-  if (HttpApiSchema.isNoContent(schema.ast)) return []
-  if (!isStreamSchema(schema)) return [[path, schema]]
-  if (schema._tag === "StreamUint8Array") return []
-  const value = schema.sseMode === "data" ? streamDataSchema(schema) : schema.events
-  return [
-    [`${path}.${schema.sseMode}`, value],
-    [`${path}.error`, schema.error],
-  ]
-}
-
-function assertPortable(schema: Schema.Top, path: string, portable: Map<SchemaAST.AST, boolean>) {
-  const visiting = new Set<SchemaAST.AST>()
-  const taggedError = taggedErrorFields(schema)
-  const visit = (ast: SchemaAST.AST): boolean => {
-    const cached = portable.get(ast)
-    if (cached !== undefined) return cached
-    if (visiting.has(ast)) return true
-    visiting.add(ast)
-    const result = visitCurrent(ast)
-    visiting.delete(ast)
-    portable.set(ast, result)
-    return result
-  }
-  const visitCurrent = (ast: SchemaAST.AST): boolean => {
-    if (!annotationsPortable(ast.annotations)) return false
-    if (!checksPortable(ast.checks) || ("encodingChecks" in ast && !checksPortable(ast.encodingChecks))) return false
-    if (SchemaAST.isDeclaration(ast)) {
-      return generationPortable(ast.annotations?.generation) && ast.typeParameters.every(visit)
-    }
-    if (ast.encoding !== undefined && ast.annotations?.generation === undefined) return false
-    if (SchemaAST.isSuspend(ast)) return visit(ast.thunk())
-    if (SchemaAST.isUnion(ast)) return ast.types.every(visit)
-    if (SchemaAST.isArrays(ast)) {
-      return ast.elements.every(visit) && ast.rest.every(visit)
-    }
-    if (SchemaAST.isObjects(ast)) {
-      return (
-        ast.propertySignatures.every((field) => visit(field.type)) &&
-        ast.indexSignatures.every((index) => visit(index.parameter) && visit(index.type))
-      )
-    }
-    if (SchemaAST.isTemplateLiteral(ast)) return ast.parts.every(visit)
-    return true
-  }
-  if (taggedError !== undefined && SchemaAST.isDeclaration(schema.ast)) {
-    if (
-      schema.ast.checks !== undefined ||
-      ("encodingChecks" in schema.ast && !checksPortable(schema.ast.encodingChecks)) ||
-      schema.ast.typeParameters.some((ast) => ast.checks !== undefined) ||
-      !schema.ast.typeParameters.every(visit)
-    ) {
-      throw new GenerationError({ reason: `Unportable schema: ${path}` })
-    }
-    return
-  }
-  if (!visit(schema.ast)) throw new GenerationError({ reason: `Unportable schema: ${path}` })
-}
-
-function checksPortable(checks: SchemaAST.Checks | undefined): boolean {
-  if (checks === undefined) return true
-  return checks.every((check) =>
-    check._tag === "Filter"
-      ? !check.aborted &&
-        check.annotations?.meta !== undefined &&
-        typeof check.annotations.arbitrary === "object" &&
-        check.annotations.arbitrary !== null &&
-        "constraint" in check.annotations.arbitrary
-      : checksPortable(check.checks),
-  )
-}
-
-function metadataPortable(ast: SchemaAST.AST, seen: Set<SchemaAST.AST>): boolean {
-  if (seen.has(ast)) return true
-  seen.add(ast)
-  if (!annotationsPortable(ast.annotations) || !checksPortable(ast.checks)) return false
-  if ("encodingChecks" in ast && !checksPortable(ast.encodingChecks)) return false
-  if (ast.encoding?.some((link) => !metadataPortable(link.to, seen))) return false
-  if (SchemaAST.isDeclaration(ast)) return ast.typeParameters.every((item) => metadataPortable(item, seen))
-  if (SchemaAST.isSuspend(ast)) return metadataPortable(ast.thunk(), seen)
-  if (SchemaAST.isUnion(ast)) return ast.types.every((item) => metadataPortable(item, seen))
-  if (SchemaAST.isArrays(ast)) {
-    return (
-      ast.elements.every((item) => metadataPortable(item, seen)) &&
-      ast.rest.every((item) => metadataPortable(item, seen))
-    )
-  }
-  if (SchemaAST.isObjects(ast)) {
-    return (
-      ast.propertySignatures.every((field) => metadataPortable(field.type, seen)) &&
-      ast.indexSignatures.every(
-        (field) => metadataPortable(field.parameter, seen) && metadataPortable(field.type, seen),
-      )
-    )
-  }
-  return true
-}
-
-function generationPortable(generation: unknown): boolean {
-  if (typeof generation !== "object" || generation === null) return false
-  const value = generation as {
-    readonly runtime?: unknown
-    readonly Type?: unknown
-    readonly importDeclaration?: unknown
-  }
-  if (typeof value.runtime !== "string" || typeof value.Type !== "string") return false
-  if (value.importDeclaration !== undefined) {
-    if (
-      typeof value.importDeclaration !== "string" ||
-      !/from ["']effect(?:\/[^"']+)?["']$/.test(value.importDeclaration)
-    ) {
-      return false
-    }
-  }
-  const namespace =
-    typeof value.importDeclaration === "string"
-      ? /import(?: type)? \* as ([A-Za-z_$][\w$]*)/.exec(value.importDeclaration)?.[1]
-      : undefined
-  return value.runtime.startsWith("Schema.") || (namespace !== undefined && value.runtime.startsWith(`${namespace}.`))
-}
-
-function annotationsPortable(annotations: Schema.Annotations.Annotations | undefined) {
-  if (annotations === undefined) return true
-  return Object.entries(annotations).every(([key, value]) => {
-    if (
-      ["toCodec", "toCodecJson", "toArbitrary", "toFormatter", "toEquivalence", "~effect/Schema/Class"].includes(key)
-    ) {
-      return true
-    }
-    if (key === "generation") return generationPortable(value)
-    return serializable(value)
-  })
-}
-
-function serializable(value: unknown): boolean {
-  if (value === null || ["string", "number", "boolean"].includes(typeof value)) return true
-  if (Array.isArray(value)) return value.every(serializable)
-  if (typeof value !== "object") return false
-  return Object.values(value).every(serializable)
-}
-
-function taggedErrorFields(schema: Schema.Top) {
-  const fields = declaredErrorFields(schema)
-  return fields?.key === "_tag" ? fields : undefined
-}
-
-function declaredErrorFields(schema: Schema.Top) {
-  if (!SchemaAST.isDeclaration(schema.ast) || schema.ast.annotations?.["~effect/Schema/Class"] === undefined) {
-    return undefined
-  }
-  const fields = schema.ast.typeParameters[0]
-  if (!SchemaAST.isObjects(fields) || fields.indexSignatures.length > 0) return undefined
-  const key = fields.propertySignatures.find((field) => field.name === "_tag" || field.name === "name")?.name
-  if (key !== "_tag" && key !== "name") return undefined
-  const tag = fields.propertySignatures.find((field) => field.name === key)?.type
-  if (tag === undefined || !SchemaAST.isLiteral(tag) || typeof tag.literal !== "string") return undefined
-  return {
-    ast: fields,
-    // The class-bound factory is canonical across transport/status AST copies, unlike the shared fields Struct.
-    declaration: schema.ast.annotations["~effect/Schema/Class"],
-    key,
-    tag: tag.literal,
-    identifier: SchemaAST.resolveIdentifier(schema.ast) ?? tag.literal,
-    fields: fields.propertySignatures.flatMap((field) =>
-      field.name === key || typeof field.name !== "string"
-        ? []
-        : [[field.name, Schema.make(field.type), SchemaAST.isOptional(field.type)] as const],
-    ),
-  }
-}
-
-function isDataEnvelope(schema: Schema.Top) {
-  if (isStreamSchema(schema) || HttpApiSchema.isNoContent(schema.ast)) return false
-  const ast = Schema.toType(schema).ast
-  return (
-    SchemaAST.isObjects(ast) &&
-    ast.indexSignatures.length === 0 &&
-    ast.propertySignatures.length === 1 &&
-    ast.propertySignatures[0]?.name === "data"
-  )
-}
-
-function isStreamSchema(schema: Schema.Top): schema is HttpApiSchema.StreamSchema {
-  return "_tag" in schema && (schema._tag === "StreamSse" || schema._tag === "StreamUint8Array")
-}
-
-function streamDataSchema(schema: Extract<HttpApiSchema.StreamSchema, { readonly _tag: "StreamSse" }>) {
-  return Schema.make(streamDataAst(Schema.toType(schema.events).ast))
-}
-
-function streamEncodedDataSchema(schema: Extract<HttpApiSchema.StreamSchema, { readonly _tag: "StreamSse" }>) {
-  const data = streamDataAst(schema.events.ast)
-  const encodedAst = data.encoding?.at(-1)?.to
-  if (encodedAst === undefined) throw new GenerationError({ reason: "Invalid SSE data schema" })
-  const encoded = resolveContentSchema(encodedAst)
-  if (!SchemaAST.isAST(encoded)) throw new GenerationError({ reason: "Invalid SSE data schema" })
-  return Schema.make(encoded)
-}
-
-function streamDataAst(ast: SchemaAST.AST) {
-  if (!SchemaAST.isObjects(ast)) throw new GenerationError({ reason: "Invalid SSE data schema" })
-  const data = ast.propertySignatures.find((field) => field.name === "data")?.type
-  if (data === undefined) throw new GenerationError({ reason: "Invalid SSE data schema" })
-  return data
-}
-
-function streamEffectPortable(schema: Schema.Top) {
-  if (!isStreamSchema(schema) || schema._tag === "StreamUint8Array" || schema.sseMode === "events") return true
-  const rebuilt = HttpApiSchema.StreamSse({
-    data: streamDataSchema(schema),
-    error: schema.error,
-    contentType: schema.contentType,
-  })
-  return sameEncoding(schema.events.ast, rebuilt.events.ast)
 }
 
 function renderGroup(group: Group, groupIndex: number) {
@@ -1183,40 +714,4 @@ function renderClient(groups: ReadonlyArray<Group>) {
     return [`...adaptGroup${index}(${raw})`]
   })
   return `// Generated by @orchestra/httpapi-codegen. Do not edit.\nimport { Effect } from "effect"\nimport { HttpClient, HttpClientRequest } from "effect/unstable/http"\nimport { HttpApi, HttpApiClient } from "effect/unstable/httpapi"\n${imports}\n\nconst Api = ${api}\nconst adaptClient = (raw: HttpApiClient.ForApi<typeof Api>) => ({ ${fields.join(", ")} })\n\n${renderEffectMake("Api")}\n`
-}
-
-function renderEffectMake(api: string) {
-  return `export const make = (options?: { readonly baseUrl?: URL | string; readonly headers?: Readonly<Record<string, string>> }) => {
-  if (options?.headers === undefined) return HttpApiClient.make(${api}, options).pipe(Effect.map(adaptClient))
-  // Snapshot and validate host configuration now, before this Effect can be executed or reused.
-  const headers = snapshotHeaders(options.headers)
-  if (Object.keys(headers).length === 0) return HttpApiClient.make(${api}, options).pipe(Effect.map(adaptClient))
-  // Fetch must supply the multipart boundary; only explicit request headers may override it.
-  const formHeaders = Object.fromEntries(Object.entries(headers).filter(([name]) => name !== "content-type"))
-  return HttpApiClient.make(${api}, {
-    baseUrl: options.baseUrl,
-    transformClient: (client) => HttpClient.mapRequest(client, (request) =>
-      HttpClientRequest.setHeaders(request, { ...(request.body._tag === "FormData" ? formHeaders : headers), ...request.headers })),
-  }).pipe(Effect.map(adaptClient))
-}
-
-function snapshotHeaders(input: Readonly<Record<string, string>>) {
-  if (typeof input !== "object" || input === null ||
-    (Object.getPrototypeOf(input) !== Object.prototype && Object.getPrototypeOf(input) !== null)) {
-    throw new TypeError("Invalid client headers")
-  }
-  const entries = Object.entries(Object.getOwnPropertyDescriptors(input)).flatMap(([name, descriptor]) => {
-    if (!/^[!#$%&'*+.^_|~0-9A-Za-z\\x60-]+$/.test(name) || !("value" in descriptor) ||
-      typeof descriptor.value !== "string" || /[\\r\\n]/.test(descriptor.value)) {
-      throw new TypeError("Invalid client headers")
-    }
-    return descriptor.enumerable ? [[name, descriptor.value] as const] : []
-  })
-  try {
-    return Object.freeze(Object.fromEntries(new Headers(Object.fromEntries(entries))))
-  } catch (error) {
-    if (error instanceof TypeError) throw new TypeError("Invalid client headers")
-    throw error
-  }
-}`
 }
