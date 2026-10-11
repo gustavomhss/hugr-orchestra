@@ -276,8 +276,8 @@ it.instance(
         mode: "delegated",
         acceptance: { state: "pending" },
         verification: { state: "not-host-verified" },
-        memory: { reads: [], writes: [] },
         workerEvidence: { changes: [], checks: [] },
+        memory: { reads: [], writes: [] },
         writeRoots: [],
         ...(yield* ToolSafetySandbox.status()),
       })

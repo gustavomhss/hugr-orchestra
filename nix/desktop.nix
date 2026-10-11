@@ -19,7 +19,15 @@
   ripgrep,
   sysctl,
   orchestra,
+  omni ? orchestra.omni,
 }:
+let
+  resources =
+    if stdenv.hostPlatform.isDarwin then
+      "/Applications/HuGR Orchestra.app/Contents/Resources"
+    else
+      "/opt/orchestra-desktop/resources";
+in
 assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
   "Orchestra Desktop requires a matching native build platform";
 stdenv.mkDerivation (finalAttrs: {
@@ -75,6 +83,14 @@ stdenv.mkDerivation (finalAttrs: {
   preBuild = ''
     cp -r "${electron.dist}" $HOME/.electron-dist
     chmod -R u+w $HOME/.electron-dist
+
+    # Prod prebuild (stage-omni.ts) requires OMNI_ARTIFACTS: a directory with
+    # hugr_omni.node beside the supervisor. A writable copy keeps later packaging
+    # and Darwin ad hoc signing from inheriting read-only store modes.
+    mkdir -p "$TMPDIR/omni-artifacts"
+    cp ${omni}/hugr_omni.node ${omni}/hugr-omni-supervisor "$TMPDIR/omni-artifacts/"
+    chmod u+w "$TMPDIR/omni-artifacts/hugr_omni.node" "$TMPDIR/omni-artifacts/hugr-omni-supervisor"
+    export OMNI_ARTIFACTS="$TMPDIR/omni-artifacts"
 
     cp -R ${finalAttrs.node_modules}/. .
     chmod -R u+w node_modules packages/*/node_modules
@@ -162,13 +178,21 @@ stdenv.mkDerivation (finalAttrs: {
     runHook preInstallCheck
     bun --bun --eval '
       const { verifyPackagedCli } = await import("./scripts/cli-packaging.ts")
-      await verifyPackagedCli(process.env.out + "${if stdenv.hostPlatform.isDarwin then "/Applications/HuGR Orchestra.app/Contents/Resources/cli" else "/opt/orchestra-desktop/resources/cli"}", "${if stdenv.hostPlatform.isDarwin then "darwin" else "linux"}", "${if stdenv.hostPlatform.isAarch64 then "arm64" else "x64"}", "${finalAttrs.version}")
+      await verifyPackagedCli(process.env.out + "${resources}/cli", "${if stdenv.hostPlatform.isDarwin then "darwin" else "linux"}", "${if stdenv.hostPlatform.isAarch64 then "arm64" else "x64"}", "${finalAttrs.version}")
     '
+  '' + (if stdenv.hostPlatform.isDarwin then ''
+    # autoSignDarwinBinariesHook re-signs Resources/omni in place: presence only.
+    test -s "$out${resources}/omni/hugr_omni.node"
+    test -x "$out${resources}/omni/hugr-omni-supervisor"
+  '' else ''
+    cmp ${omni}/hugr_omni.node "$out${resources}/omni/hugr_omni.node"
+    cmp ${omni}/hugr-omni-supervisor "$out${resources}/omni/hugr-omni-supervisor"
+  '') + ''
     runHook postInstallCheck
   '';
 
   passthru = {
-    inherit electron;
+    inherit electron omni;
     cliArtifacts = orchestra.cliArtifacts;
     validationStatus = "UNVALIDATED: native package and Electron/addon ABI checks pending";
   };

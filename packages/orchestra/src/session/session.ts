@@ -2,8 +2,6 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Slug } from "@orchestra/core/util/slug"
 import { SessionV1 } from "@orchestra/core/v1/session"
-import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
-import { PromptHost } from "./prompt-host"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import path from "path"
 import { BackgroundJob } from "@/background/job"
@@ -45,10 +43,6 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { SessionMessage } from "@orchestra/schema/session-message"
-import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
-import { UpstreamTaskSettlement, TaskSettlementHeld, type TaskSettlementInput } from "./upstream-task-settlement"
-
-export { TaskSettlementHeld, type TaskSettlementInput }
 
 const parentTitlePrefix = "New session - "
 const childTitlePrefix = "Child session - "
@@ -439,15 +433,6 @@ export interface Interface {
   readonly children: (parentID: SessionID) => Effect.Effect<Info[]>
   readonly remove: (sessionID: SessionID) => Effect.Effect<void, NotFound>
   readonly updateMessage: <T extends SessionV1.Info>(msg: T) => Effect.Effect<T>
-  readonly reconcilePrompt: (input: {
-    sessionID: SessionID
-    messageID: MessageID
-    identity: string
-  }) => Effect.Effect<SessionV1.WithParts | undefined, PromptAdmission.Conflict>
-  readonly admitPrompt: (payload: PromptAdmission.Payload, commitCache?: Effect.Effect<void>) => Effect.Effect<
-    { created: boolean; message: SessionV1.WithParts },
-    PromptAdmission.Conflict
-  >
   readonly removeMessage: (input: { sessionID: SessionID; messageID: MessageID }) => Effect.Effect<MessageID>
   readonly removePart: (input: { sessionID: SessionID; messageID: MessageID; partID: PartID }) => Effect.Effect<PartID>
   readonly getPart: (input: {
@@ -456,8 +441,6 @@ export interface Interface {
     partID: PartID
   }) => Effect.Effect<SessionV1.Part | undefined>
   readonly updatePart: <T extends SessionV1.Part>(part: T) => Effect.Effect<T>
-  /** Private native Task boundary; never a generic metadata callback or a public prompt input. */
-  readonly settleUpstreamTask: (input: TaskSettlementInput) => Effect.Effect<boolean, TaskSettlementHeld>
   readonly updatePartDelta: (input: {
     sessionID: SessionID
     messageID: MessageID
@@ -660,11 +643,11 @@ const layer: Layer.Layer<
       }
     })
 
-    const reconcilePrompt: Interface["reconcilePrompt"] = (input) => PromptAdmission.reconcile(db, input)
-    const admitPrompt: Interface["admitPrompt"] = (payload, commitCache) => PromptHost.admit(db, events, payload, commitCache)
-
-    // Only persist ordinary message/part updates when cross-instance sync is enabled.
-    // Creation receipts always use one durable admission event, independently of this streaming-edit policy.
+    // Only persist message/part updates to the durable event log when
+    // workspaces (cross-instance sync) are enabled. Locally the projected
+    // tables are the sole reader (UI/SSE/LLM); the event rows are dead weight
+    // that grew the log superlinearly for long streaming turns. Workspaces ON
+    // keeps them, preserving byte-identical sync behavior.
     const updateMessage = <T extends SessionV1.Info>(msg: T): Effect.Effect<T> =>
       Effect.gen(function* () {
         yield* events.publish(
@@ -677,22 +660,17 @@ const layer: Layer.Layer<
 
     const updatePart = <T extends SessionV1.Part>(part: T): Effect.Effect<T> =>
       Effect.gen(function* () {
-        const clean = part.type === "tool" && "metadata" in part.state ? { ...part, state: { ...part.state,
-          metadata: SessionMessageUpdater.taskMetadata({}, part.state.metadata ?? {}, { sessionID: part.sessionID,
-            messageID: part.messageID, callID: part.callID, tool: part.tool, input: part.state.input }) } } : part
         yield* events.publish(
           SessionV1.Event.PartUpdated,
           {
             sessionID: part.sessionID,
-            part: structuredClone(clean),
+            part: structuredClone(part),
             time: Date.now(),
           },
           { persist: flags.experimentalWorkspaces },
         )
         return part
       }).pipe(Effect.withSpan("Session.updatePart"))
-
-    const settleUpstreamTask: Interface["settleUpstreamTask"] = UpstreamTaskSettlement.make({ database, events })
 
     const getPart: Interface["getPart"] = Effect.fn("Session.getPart")(function* (input) {
       const row = yield* db
@@ -973,12 +951,9 @@ const layer: Layer.Layer<
       children,
       remove,
       updateMessage,
-      reconcilePrompt,
-      admitPrompt,
       removeMessage,
       removePart,
       updatePart,
-      settleUpstreamTask,
       getPart,
       updatePartDelta,
       findMessage,

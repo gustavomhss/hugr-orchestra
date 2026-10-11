@@ -15,24 +15,21 @@ test("starts every configured WSL server on initialization", () => {
   ).toEqual(["wsl:Debian", "wsl:Ubuntu-24.04"])
 })
 
-test("installs owned WSL artifact and checks descriptor version after admission", async () => {
+// Orchestra has no Linux server binary yet, and installing the upstream one is refused.
+test("refuses to install or update the server in a distro and runs nothing", async () => {
   persistedServers = []
-  const installed: string[] = []
-  const options = {
+  const resolved: string[] = []
+  const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
     ...testControllerOptions(),
-    installArtifact: async (distro: string, opts: { signal?: AbortSignal }) => {
-      expect(opts.signal?.aborted).toBe(false)
-      installed.push(distro)
+    resolveOrchestra: async (distro) => {
+      resolved.push(distro)
+      return null
     },
-    resolveOrchestra: async () => "/home/me/.orchestra/bin/orchestra",
-  }
-  const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), options)
+  })
 
-  await controller.installServer("Debian")
+  await expect(controller.installServer("Debian")).rejects.toThrow("Installing the server in WSL is not available yet")
   expect(controller.getState().job).toBeNull()
-  expect(installed).toEqual(["Debian"])
-  expect(controller.getState().orchestraChecks.Debian?.matchesDesktop).toBe(true)
-  expect(controller.getState().orchestraChecks.Debian?.expectedVersion).toBe("1.16.2")
+  expect(resolved).toEqual([])
 })
 
 test("clears cached distro probes when removing a WSL server", () => {

@@ -17,10 +17,6 @@ import { renderPresentation, type ApprovalResult } from "@/maestro/approval"
 import { taskHash } from "@/maestro/task-hash"
 import { Session } from "@/session/session"
 import { Tool } from "./tool"
-import { WorkflowBinding } from "@/maestro/workflow-binding"
-import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
-import { ProjectID } from "@orchestra/schema/project-id"
-import { Event } from "@orchestra/schema/event"
 
 const PresentationParameters = Schema.Struct({
   planRevisionID: Schema.String,
@@ -114,15 +110,6 @@ export const MaestroPresentApprovalTool = Tool.define(
               new Error(`Approval presentation requires ${(yield* agents.get("lucy"))?.name ?? "lucy"} APPROVE`),
             )
           const validationHash = validationRecordHash(validation)
-          const workflowBinding = plan.revision === "v3" ? plan.workflowBinding : undefined
-          if (workflowBinding) {
-            const host = yield* WorkflowBinding.NativeHost
-            if (!host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
-            const port = yield* host.publication({ directory: session.directory,
-              projectID: ProjectID.make(session.projectID) })
-            yield* RelayWorkflowBinding.revalidate(port, workflowBinding)
-            yield* host.verifyUpstream(Event.ID.make(plan.id))
-          }
           const canonicalTaskHash = taskHash({
             ..._params.intent,
             planRevisionID: plan.id,
@@ -131,8 +118,6 @@ export const MaestroPresentApprovalTool = Tool.define(
             validationHash,
             contextHash: context.contextHash,
             policyHash: validation.reviewPolicyHash,
-            workflowBinding,
-            writePaths: workflowBinding?.writePaths,
           })
           if (_params.taskHash !== undefined && _params.taskHash !== canonicalTaskHash)
             return yield* Effect.fail(

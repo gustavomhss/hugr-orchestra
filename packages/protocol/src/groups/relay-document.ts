@@ -16,14 +16,6 @@ export class RelayInvalidError extends Schema.TaggedErrorClass<RelayInvalidError
   httpApiStatus: 400,
 }) {}
 
-export class RelayForbiddenError extends Schema.TaggedErrorClass<RelayForbiddenError>()(
-  "RelayForbiddenError",
-  refusal,
-  {
-    httpApiStatus: 403,
-  },
-) {}
-
 export class RelayNotFoundError extends Schema.TaggedErrorClass<RelayNotFoundError>()("RelayNotFoundError", refusal, {
   httpApiStatus: 404,
 }) {}
@@ -90,7 +82,7 @@ export const RelayExport = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("workflow"), definition: Sprint }),
 ]).annotate({ identifier: "RelayExport" })
 
-/** Legacy executable check input. Public authoring refuses execution; Maestro owns native workflow checks. */
+/** The dry "Check now" of one step, run in the project directory with the given params. Nothing is recorded. */
 export const RelayCheckInput = Schema.Struct({
   position: Schema.optionalKey(Schema.String),
   counter: Schema.optionalKey(NonNegativeInt),
@@ -260,14 +252,14 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
       query: LocationQuery,
       payload: RelayCheckInput,
       success: Location.response(RelayArm.CheckOutcome),
-      error: [...RelayErrors, RelayForbiddenError],
+      error: RelayErrors,
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
         docs(
           "v2.relay.document.check",
           "Check workflow step",
-          "Public authoring cannot execute workflow checks. This endpoint returns 403 maestro-execution-required; executable workflow checks are owned by Maestro through its approved native binding.",
+          "Grade one step of a workflow in the project directory without recording anything or charging retries.",
         ),
       ),
   )

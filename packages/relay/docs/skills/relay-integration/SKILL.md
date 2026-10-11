@@ -23,10 +23,8 @@ Use when wiring gate outcomes into harness continuation. Choose one driver per r
 - Harness owns dispatch, the first WP prompt, workdir, environment, state isolation, and escalation handling.
 - Gate owns checklist evaluation and trace append; verifier owns integrity and recorded-control reporting.
 - Judge supplies non-independent semantic opinions. It never becomes a deterministic oracle.
-- Installed authoring uses native Server `RelayDocumentHandler`, `RelayPublishHandler` and
-  `RelayHookHandler`, reached through App's generated Client adapter. The Python authoring host is
-  retained for direct regression imports, not UI startup; see [authoring](../relay-authoring/SKILL.md)
-  and the [authoring API](../../../docs/authoring-api.md) for exact source routing.
+- [Authoring](../relay-authoring/SKILL.md) owns the authoring API. Its gate-only evaluation is not
+  Orchestra session dispatch or hook installation; see the [authoring API](../../../docs/authoring-api.md).
 
 ## Contracts
 
@@ -38,11 +36,6 @@ Use when wiring gate outcomes into harness continuation. Choose one driver per r
 | HTTP | `POST /gate/eval` invokes that CLI; JSON response plus HTTP status | Host-local `state_dir` |
 
 The benchmark's [Stop hook](../../../benchmark/relay_hook.sh) is a separate single-runner driver using `RELAY_RUN_DIR`, `RELAY_SPRINT`, `RELAY_GATE`, and `<run>/.relay-state`.
-The HTTP row above describes the separately owned standalone daemon and its regression callers;
-it is not the installed authoring transport. Native public workflow checks return 403
-`maestro-execution-required`; hook installation uses the native published-snapshot binding.
-See [runtime disposition](../../../docs/python-runtime-disposition.md). Missing native profile tools
-remain unavailable even when corresponding standalone Python tools exist.
 
 Common sprint shape; use globally unique WP and checklist IDs and substantive controls:
 

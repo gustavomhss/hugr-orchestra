@@ -1,11 +1,10 @@
 export * as LinuxWorkspaceAccess from "./linux-workspace-access"
 
-import { execFile, spawn } from "node:child_process"
+import { spawn } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import type { Readable, Writable } from "node:stream"
-import { promisify } from "node:util"
 import type { Command } from "./app-dock-runtime-backend"
-import { DesktopOmni } from "./omni-process"
+import { LinuxWorkspaceOmni } from "./linux-workspace-omni"
 
 export type Connection = { endpoint: string; workspaceID: string; key: string }
 export type Input = { argv: string[]; cwd?: string; env?: Record<string, string>; timeoutMs?: number; stdin?: string }
@@ -21,7 +20,7 @@ type Terminal = {
   owner: string
   connection: Connection
   runID: string
-  process: DesktopOmni.Terminal
+  process: LinuxWorkspaceOmni.Terminal
   buffer: string
   dropped: boolean
   exitCode?: number
@@ -31,14 +30,7 @@ type Terminal = {
 }
 const helper = "/opt/orchestra/workspace-access.py"
 const limit = 1024 * 1024
-const legacyExec = promisify(execFile)
-// Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER every host process below runs through omni; legacy stays the default.
-// shell() keeps child_process: it needs the real terminal (stdio inherit, plan section 3).
-const exec = (
-  file: string,
-  args: string[],
-  options: { env: Record<string, string | undefined>; timeout: number; maxBuffer: number },
-) => (DesktopOmni.enabled() ? DesktopOmni.execFile(file, args, options) : legacyExec(file, args, options))
+const exec = LinuxWorkspaceOmni.exec
 
 export function create(options: {
   prepare: () => Promise<Connection>
@@ -62,9 +54,7 @@ export function create(options: {
     const value = requireInput(input)
     await new Promise<void>((resolve, reject) => {
       const host = options.command(connection, { argv: ["python3", helper, "prepare", runID] })
-      const child: Pick<DesktopOmni.Spawned, "stdin" | "kill" | "once"> = DesktopOmni.enabled()
-        ? DesktopOmni.spawn(host.file, host.args, { env: host.env, output: "ignore" })
-        : spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "ignore", "ignore"] })
+      const child = LinuxWorkspaceOmni.spawnPrepare(host)
       const timer = setTimeout(() => child.kill("SIGKILL"), 10_000)
       child.stdin.on("error", () => reject(new Error("workspace-prepare-failed")))
       child.once("error", () => {
@@ -157,9 +147,7 @@ export function create(options: {
         await options.verify(connection)
         const result = await new Promise<Result>((resolve, reject) => {
           const host = options.command(connection, { argv: ["python3", helper, "run", runID] })
-          const child: DesktopOmni.Spawned = DesktopOmni.enabled()
-            ? DesktopOmni.spawn(host.file, host.args, { env: host.env })
-            : spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "pipe", "pipe"] })
+          const child = LinuxWorkspaceOmni.spawnRun(host)
           const stdout: Buffer[] = []
           const stderr: Buffer[] = []
           const escalation = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
@@ -302,11 +290,7 @@ export function create(options: {
         await options.verify(connection)
         if (lifecycle.closing) throw new Error("workspace-closing")
         const host = options.command(connection, { argv: ["python3", helper, "terminal", runID], tty: true })
-        const pty = { name: "xterm-256color", cols, rows, cwd: "/", env: host.env }
-        const legacy = DesktopOmni.enabled() ? undefined : await import("@lydell/node-pty")
-        const process: DesktopOmni.Terminal = legacy
-          ? legacy.spawn(host.file, host.args, pty)
-          : await DesktopOmni.terminal(host.file, host.args, pty)
+        const process = await LinuxWorkspaceOmni.terminal(host, { cols, rows })
         const ended = Promise.withResolvers<void>()
         const ready = Promise.withResolvers<void>()
         const marker = `\u001b]777;orchestra-ready=${runID}\u0007`

@@ -326,11 +326,12 @@ const layer = Layer.effect(
           Glob.scanSync("{tool,tools}/*.{js,ts}", { cwd: dir, absolute: true, dot: true, symlink: true }),
         )
         if (matches.length) yield* config.waitForDependencies()
+        if (matches.length) yield* Effect.promise(() => PluginSdkRuntime.install())
         for (const match of matches) {
           const namespace = path.basename(match, path.extname(match))
           // `match` is an absolute filesystem path from `Glob.scanSync(..., { absolute: true })`.
           // Import it as `file://` so Node on Windows accepts the dynamic import.
-          const mod = yield* Effect.promise(() => loadExternalTool(match))
+          const mod = yield* Effect.promise(() => import(pathToFileURL(match).href))
           for (const [id, def] of Object.entries(mod)) {
             if (!isPluginTool(def)) continue
             custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
@@ -514,15 +515,13 @@ const layer = Layer.effect(
     })
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
-      const upstream = input.agent.id === "archie" && input.agent.native === true ? yield* agents.get("archie") : undefined
       const filtered = (yield* definitions(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool) => {
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
-          (input.agent.id !== "maestro" || input.agent.native !== true) &&
-          !(upstream?.id === "archie" && upstream.native === true)
+          (input.agent.id !== "maestro" || input.agent.native !== true)
         )
           return false
         if (
@@ -762,13 +761,5 @@ export const node = LayerNode.make({
     LocationServiceMap.node,
   ],
 })
-
-// Shared by custom-tool discovery and its loader conformance checks.
-export async function loadExternalTool(file: string) {
-  const specifier = pathToFileURL(file).href
-  await PluginSdkRuntime.prepareExternalImport(specifier, path.dirname(file))
-  await PluginSdkRuntime.install()
-  return import(specifier)
-}
 
 export * as ToolRegistry from "./registry"

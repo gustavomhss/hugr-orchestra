@@ -11,7 +11,6 @@ import { ascending } from "../identifier"
 import { SessionID } from "../session-id"
 import { WorkspaceID } from "../workspace-id"
 import { PermissionV1 } from "./permission"
-import { PromptContext } from "../prompt-context"
 
 const Timestamp = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))
 
@@ -352,7 +351,6 @@ export const User = Schema.Struct({
   }),
   system: Schema.optional(Schema.String),
   tools: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
-  promptContext: optional(PromptContext.Info),
 }).annotate({ identifier: "UserMessage" })
 export type User = Types.DeepMutable<Schema.Schema.Type<typeof User>>
 
@@ -525,7 +523,7 @@ const SessionTokens = Schema.Struct({
   }),
 })
 
-export const SessionRevert = Schema.Struct({
+const SessionRevert = Schema.Struct({
   messageID: MessageID,
   partID: optional(PartID),
   snapshot: optional(Schema.String),
@@ -565,16 +563,6 @@ export const SessionInfo = Schema.Struct({
 }).annotate({ identifier: "Session" })
 export type SessionInfo = typeof SessionInfo.Type
 
-export const PromptTransition = Schema.Struct({
-  expectedRevert: Schema.NullOr(SessionRevert),
-  removeMessageIDs: Schema.Array(MessageID),
-  removePartIDs: Schema.Array(PartID),
-  permission: optional(PermissionV1.Ruleset),
-  // Let the projector name omission/undefined consistently for both typed publication and replay.
-  expectedPermission: Schema.optional(Schema.NullOr(PermissionV1.Ruleset)),
-  timeUpdated: NonNegativeInt,
-}).annotate({ identifier: "SessionV1PromptTransition" })
-
 const events = {
   Created: define({
     type: "session.created",
@@ -598,20 +586,6 @@ const events = {
     schema: {
       sessionID: SessionID,
       info: SessionInfo,
-    },
-  }),
-  PromptAdmitted: define({
-    type: "session.v1.prompt.admitted",
-    ...options,
-    dataIdentifier: "SessionV1PromptAdmission",
-    schema: {
-      sessionID: SessionID,
-      messageID: MessageID,
-      identityVersion: Schema.Literal(1),
-      identity: Schema.String,
-      info: User,
-      parts: Schema.Array(Part),
-      transition: optional(PromptTransition),
     },
   }),
   MessageUpdated: define({
@@ -686,7 +660,6 @@ export const Event = {
     events.Created,
     events.Updated,
     events.Deleted,
-    events.PromptAdmitted,
     events.MessageUpdated,
     events.MessageRemoved,
     events.PartUpdated,

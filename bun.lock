@@ -118,7 +118,7 @@
       "name": "@orchestra/cli",
       "version": "1.18.27",
       "bin": {
-        "orchestra": "./bin/orchestra.cjs",
+        "lildax": "./bin/lildax.cjs",
       },
       "dependencies": {
         "@effect/platform-node": "catalog:",
@@ -240,7 +240,6 @@
         "hugr-omni": "workspace:*",
         "ignore": "7.0.5",
         "immer": "11.1.4",
-        "jose": "6.2.3",
         "jsonc-parser": "3.3.1",
         "mime-types": "3.0.2",
         "minimatch": "10.2.5",
@@ -494,7 +493,6 @@
         "@orchestra/maestro-arsenal": "workspace:*",
         "@orchestra/plugin": "workspace:*",
         "@orchestra/protocol": "workspace:*",
-        "@orchestra/relay": "workspace:*",
         "@orchestra/schema": "workspace:*",
         "@orchestra/script": "workspace:*",
         "@orchestra/sdk": "workspace:*",
@@ -646,10 +644,8 @@
         "semver": "^7.6.3",
       },
       "devDependencies": {
-        "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@types/semver": "^7.5.8",
-        "@typescript/native-preview": "catalog:",
       },
     },
     "packages/sdk-next": {

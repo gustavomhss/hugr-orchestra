@@ -51,13 +51,16 @@ by a lead decision. Their bodies and every private item belong to the module's o
 - **Never block the host:** not the Node main thread, not the tokio executor. The one exception is spawning,
   which blocks for bounded round trips, like `std::process::Command::spawn`: one for a pipe child, two for a Unix
   PTY child (`client::spawn`, then `Tree::go`).
-- **File size:** at most 650 lines per code file (ideal ≤ 400). Split inside your module before 600.
+- **File size:** at most 400 lines per code file, tests included (owner rule; per file, never per change). Split
+  inside your module before you reach it.
 - **Tests assert.** A timeout or an incomplete observation is a failure. Synchronize on fixture markers, never on
   `sleep`.
 - **Contract scenarios** (`conformance/scenarios`, `crates/hugr-omni/tests`) are read-only for implementers
   (INV-13).
-- **Error texts** live in `crates/hugr-omni/src/error/messages.rs` as `pub(crate)` `Error` constructors. It is
-  append-only and shared: each WP adds its own `impl Error` block at the end, and never edits another WP's texts.
+- **Error texts** live in `crates/hugr-omni/src/error/messages/` as `pub(crate)` `Error` constructors, one
+  submodule per WP (`messages/<wp>.rs`; shared helpers in `messages/mod.rs`). They are append-only: each WP adds
+  its own `impl Error` blocks at the end of its own submodule (a new WP adds a new one), and never edits another
+  WP's texts.
 - **Test crates only** may start with `#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]`. Every
   test crate needs a `//!` doc line, because `missing_docs` is denied.
 

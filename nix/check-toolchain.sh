@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Gate extension: locked native Bun/Electron only; no CLI/desktop closure claim.
+# Rust (nix/omni.nix) gets the static record/drift checks here, not native build evidence.
 set -euo pipefail
 export PYTHONPATH="$PWD/nix"
 fail() { printf 'TOOLCHAIN_GATE_FAILURE:%s\n' "$*" >&2; exit 1; }
@@ -30,7 +31,7 @@ run native-system nix eval --impure --raw --expr 'builtins.currentSystem'
 [[ $(<"$dir/native-system.stdout") == "$TOOLCHAIN_SYSTEM" ]] || fail NATIVE_SYSTEM_MISMATCH
 run declared-systems nix eval --impure --json --expr 'builtins.attrNames (builtins.getFlake (toString ./.)).packages'
 python3 - "$dir" "$TOOLCHAIN_SYSTEM" <<'PY'
-import base64, json, sys
+import base64, json, sys, tomllib
 from pathlib import Path
 from toolchain_metadata import read_json, systems_from
 def need(condition, name):
@@ -44,7 +45,12 @@ desktop = read_json("packages/desktop/package.json")
 need(root["packageManager"] == "bun@" + m["bun"]["version"], "ROOT_BUN_VERSION_DRIFT")
 need(desktop["devDependencies"]["electron"] == m["electron"]["version"], "DESKTOP_ELECTRON_VERSION_DRIFT")
 need(read_json("flake.lock")["nodes"]["nixpkgs"]["locked"]["rev"] == m["nixpkgsRevision"], "NIXPKGS_PIN_DRIFT")
-for tool in ("bun", "electron"):
+omni = tomllib.loads(Path("packages/omni/rust-toolchain.toml").read_text())
+need(omni["toolchain"]["channel"] == m["rust"]["version"], "OMNI_RUST_VERSION_DRIFT")
+for system, source in m["rust"]["sources"].items():
+    url = "https://static.rust-lang.org/dist/rust-" + m["rust"]["version"] + "-" + source["target"] + ".tar.gz"
+    need(source["url"] == url and source["publishedChecksumUrl"] == url + ".sha256", "SOURCE_URL_RECORD:rust")
+for tool in ("bun", "electron", "rust"):
     need(set(m[tool]["sources"]) == set(systems), "SOURCE_SYSTEMS_MISMATCH:" + tool)
     for key, source in m[tool]["sources"].items():
         need(source["system"] == key, "SOURCE_SYSTEM_FIELD:" + tool)

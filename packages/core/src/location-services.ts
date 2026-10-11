@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, LayerMap } from "effect"
+import { Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
 import { AISDK } from "./aisdk"
 import { BehaviorV2 } from "./behavior"
@@ -27,7 +27,6 @@ import { QuestionV2 } from "./question"
 import { Reference } from "./reference"
 import { ReferenceGuidance } from "./reference/guidance"
 import { Relay } from "./relay"
-import { RelayHookRecovery } from "./relay-hook-recovery"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionTodo } from "./session/todo"
@@ -82,7 +81,6 @@ export const locationServices = LayerNode.group([
   SessionRunnerModel.node,
   Snapshot.node,
   Relay.node,
-  RelayHookRecovery.node,
   SessionRunnerLLM.node,
 ])
 
@@ -110,15 +108,10 @@ export function buildLocationServiceMap(
 
         return LayerNode.compile(location.node).pipe(
           Layer.fresh,
-          Layer.tap((context) =>
-            Effect.gen(function* () {
-              const recovery = Context.get(context, RelayHookRecovery.Service)
-              yield* Effect.logInfo("booting location services", {
-                directory: ref.directory,
-                workspaceID: ref.workspaceID,
-              })
-              // Start only after the entire graph succeeds; the Location scope owns this one pass.
-              yield* recovery.recover().pipe(Effect.forkScoped)
+          Layer.tap(() =>
+            Effect.logInfo("booting location services", {
+              directory: ref.directory,
+              workspaceID: ref.workspaceID,
             }),
           ),
           Layer.provide(LayerNode.compile(location.hoisted)),

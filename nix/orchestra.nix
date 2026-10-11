@@ -16,16 +16,24 @@
   apple-sdk,
   darwin,
   node_modules ? callPackage ./node_modules.nix { inherit bun; },
+  omni ? callPackage ./omni.nix { inherit nodejs; },
 }:
 let
   target = lib.removePrefix "bun-" bun.compileTarget;
+  # packages/script/src/omni.ts maps each CLI target to hugr-omni's platform id.
+  omniId = {
+    "linux-x64-baseline" = "linux-x64-gnu";
+    "linux-arm64" = "linux-arm64-gnu";
+    "darwin-x64-baseline" = "darwin-x64";
+    "darwin-arm64" = "darwin-arm64";
+  }.${target};
 in
 assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
   "Orchestra CLI artifacts require a matching native build platform";
 stdenv.mkDerivation (finalAttrs: {
   pname = "orchestra";
   inherit (node_modules) version src;
-  inherit node_modules;
+  inherit node_modules omni;
 
   nativeBuildInputs = [
     bun
@@ -72,6 +80,10 @@ stdenv.mkDerivation (finalAttrs: {
   '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
     ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
   '' + ''
+    # A --target build requires OMNI_ARTIFACTS laid out as <dir>/<omni id>/{addon,supervisor}.
+    omniArtifacts="$(mktemp -d)"
+    ln -s ${finalAttrs.omni} "$omniArtifacts/${omniId}"
+    export OMNI_ARTIFACTS="$omniArtifacts"
     # Bun 1.3.14's automatic Nix-host detection can miss relocated ELF metadata.
     # Preserve the selected Nix compiler's interpreter, then verify emitted paths below.
     ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}${if stdenv.hostPlatform.isLinux then "\"$BUN_INSTALL_CACHE_DIR/native-bun-template\"" else "bun"} --bun packages/cli/script/build.ts --target ${target} --skip-install
@@ -123,6 +135,10 @@ stdenv.mkDerivation (finalAttrs: {
     bun --bun packages/cli/script/export-artifacts.ts \
       --dist packages/cli/dist --out "$out/share/orchestra/cli" \
       --version "${finalAttrs.version}" --target ${target}
+    # Omni is on by default: core/src/omni.ts resolves both files next to
+    # realpath(process.execPath), the real leaf below, never the bin/ wrapper.
+    install -Dm755 ${finalAttrs.omni}/hugr-omni-supervisor "$out/share/orchestra/cli/hugr-omni-supervisor"
+    install -Dm755 ${finalAttrs.omni}/hugr_omni.node "$out/share/orchestra/cli/hugr_omni.node"
     install -Dm644 schema.json $out/share/orchestra/schema.json
     makeWrapper "$out/share/orchestra/cli/orchestra-${target}" $out/bin/orchestra \
       --prefix PATH : ${lib.makeBinPath ([ ripgrep ] ++ lib.optional stdenv.hostPlatform.isDarwin sysctl)}
@@ -149,6 +165,8 @@ stdenv.mkDerivation (finalAttrs: {
   postInstallCheck = ''
     bun --bun packages/cli/script/schema.ts schema-installcheck.json
     cmp schema-installcheck.json $out/share/orchestra/schema.json
+    cmp ${finalAttrs.omni}/hugr_omni.node $out/share/orchestra/cli/hugr_omni.node
+    cmp ${finalAttrs.omni}/hugr-omni-supervisor $out/share/orchestra/cli/hugr-omni-supervisor
     bun --bun --eval '
       const { verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
       const artifact = await verifyCliArtifact(process.env.out + "/share/orchestra/cli", "${target}")
@@ -160,14 +178,14 @@ stdenv.mkDerivation (finalAttrs: {
     jsonschema = "${finalAttrs.finalPackage}/share/orchestra/schema.json";
     cliArtifacts = "${finalAttrs.finalPackage}/share/orchestra/cli";
     cliTarget = target;
-    inherit bun;
+    inherit bun omni;
     env = finalAttrs.env;
     validationStatus = "UNVALIDATED: native builds and dependency measurements pending";
   };
 
   meta = {
-    description = "The open source coding agent";
-    homepage = "https://opencode.ai";
+    description = "Orchestra coding agent CLI";
+    homepage = "https://github.com/gustavomhss/hugr-orchestra";
     license = lib.licenses.mit;
     mainProgram = "orchestra";
     inherit (node_modules.meta) platforms;

@@ -1,9 +1,6 @@
 // Copy owned by the Workflows screen (and the parts Hooks shares with it). Add new keys here instead of
 // i18n/orchestra.ts so screens merge without conflicts.
 export const WORKFLOWS_COPY = {
-  "orchestra.workflows.maestroOnly":
-    "Maestro alone starts workflows, checks executable gates and releases parked runs. This view authors definitions and reads recorded results.",
-  "orchestra.workflows.receipt.refreshAudit": "Refresh recorded audit",
   "orchestra.nav.workflows": "Workflows",
   "orchestra.nav.workflows.awaiting": "{{count}} waiting for you",
   "orchestra.palette.relay": "Workflows and Hooks",
@@ -17,7 +14,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.eyebrow": "{{profile}} / profile automation",
   "orchestra.workflows.title": "Workflows",
   "orchestra.workflows.description":
-    "Author workflow definitions and observe recorded runs. Drafts save as you edit. Maestro alone owns execution.",
+    "Sprints of work packages, run phase by phase through acceptance gates. Drafts save as you edit. Runs use the published version.",
   "orchestra.workflows.unsupported": "This server does not support workflows yet.",
   "orchestra.workflows.loading": "Loading workflows…",
   "orchestra.workflows.error": "Could not load workflows. {{reason}}",
@@ -136,7 +133,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.dialog.close": "Close",
   "orchestra.workflows.create.title": "New workflow",
   "orchestra.workflows.create.description":
-    "Start from a template or a blank canvas. You can change everything afterwards. Publishing never starts a run.",
+    "Start from a template or a blank canvas. You can change everything afterwards; nothing runs until you publish.",
   "orchestra.workflows.create.name": "Name",
   "orchestra.workflows.create.nameRequired": "Name the workflow.",
   "orchestra.workflows.create.template": "Template",
@@ -149,7 +146,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.delete.confirm": "Delete",
   "orchestra.workflows.publish.title": "Publish v{{version}}",
   "orchestra.workflows.publish.workflow":
-    "Publish this definition for Maestro to select. Publishing does not arm or schedule work. Runs already in progress keep their version.",
+    "New runs use this version. Runs already in progress keep the version they started with.",
   "orchestra.workflows.publish.name": "Name",
   "orchestra.workflows.publish.live": "Now live",
   "orchestra.workflows.publish.nothing": "Nothing yet",
@@ -339,7 +336,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.phase": "{{phase}} phase",
   "orchestra.workflows.details.inputRun": "Input · run #{{id}}",
   "orchestra.workflows.details.outputRun": "Output · run #{{id}}",
-  "orchestra.workflows.details.noRun": "No runs yet. Recorded inputs appear here when Maestro executes this step.",
+  "orchestra.workflows.details.noRun": "No runs yet. Run the published version to see what this step receives.",
   "orchestra.workflows.details.noRunStart": "No runs yet. The work package appears here when a run starts.",
   "orchestra.workflows.details.notReached": "Run #{{id}} has not reached this step.",
   "orchestra.workflows.details.workPackage": "Work package",

@@ -2,7 +2,6 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Image } from "@/image/image"
 import { SessionV1 } from "@orchestra/core/v1/session"
-import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
 import { Cause, Deferred, Effect, Exit, Layer, Context, Scope, Schema } from "effect"
 import * as Stream from "effect/Stream"
 import { Agent } from "@/agent/agent"
@@ -176,10 +175,7 @@ const layer = Layer.effect(
             status: "completed",
             input: match.part.state.input,
             output: output.output,
-            metadata: SessionMessageUpdater.taskMetadata(match.part.state.metadata ?? {}, output.metadata, {
-              sessionID: match.part.sessionID, messageID: match.part.messageID, callID: match.part.callID,
-              tool: match.part.tool, input: match.part.state.input,
-            }),
+            metadata: output.metadata,
             title: output.title,
             time: { start: match.part.state.time.start, end: Date.now() },
             attachments: output.attachments,

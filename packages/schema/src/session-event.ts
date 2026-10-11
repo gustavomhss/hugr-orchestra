@@ -12,7 +12,6 @@ import { SessionID } from "./session-id"
 import { Location } from "./location"
 import { SessionMessage } from "./session-message"
 import { Revert } from "./revert"
-import { PromptContext } from "./prompt-context"
 
 export { FileAttachment }
 
@@ -33,7 +32,6 @@ const PromptFields = {
   ...Base,
   messageID: SessionMessage.ID,
   prompt: Prompt,
-  promptContext: PromptContext.Info.pipe(optional),
   delivery: Delivery,
 }
 

@@ -166,6 +166,14 @@ def check(directory, phase, expected_context=None):
             require(output["system"] == system and output["status"] == "NATIVE_OUTPUT_CHECK_OK" and bool(output["addons"])
                     and len(output["artifacts"]) == 2 and pty["status"] == "PACKAGED_PTY_OK" and pty["package"] == package
                     and pty["exports"]["spawn"] == "function" and bool(pty["bindings"]), "NATIVE_OUTPUT_CAPTURE:" + system)
+            # Both omni pairs must have been found, executed and dlopened; an absent record is a named failure.
+            omni = output.get("omni")
+            require(isinstance(omni, dict) and set(omni) == {"cli", "desktop"} and all(
+                isinstance(item, dict) and item.get("status") == "OMNI_OK" and item.get("supervisorExit") == 2
+                and str(item.get("addon")).endswith("/hugr_omni.node") and str(item.get("supervisor")).endswith("/hugr-omni-supervisor")
+                and item.get("opened") == [item.get("addon")] and "configure" in (item.get("exports") or [])
+                for item in omni.values()) and str(omni["desktop"]["addon"]).endswith("/omni/hugr_omni.node")
+                and omni["cli"]["addon"] == str(Path(str(output["artifacts"][0].get("path"))).parent / "hugr_omni.node"), "NATIVE_OUTPUT_CAPTURE:" + system)
             check_controls(worker)
         for label in phases:
             require(read(worker / (label + ".exit")).strip() == "0", "FAILED_CAPTURE:" + system + ":" + label)

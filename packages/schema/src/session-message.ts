@@ -8,7 +8,6 @@ import { FileAttachment, Prompt } from "./prompt"
 import { DateTimeUtcFromMillis, RelativePath, statics } from "./schema"
 import { SessionID } from "./session-id"
 import { ascending } from "./identifier"
-import { PromptContext } from "./prompt-context"
 
 export const ID = Schema.String.check(Schema.isStartsWith("msg_")).pipe(
   Schema.brand("Session.Message.ID"),
@@ -48,7 +47,6 @@ export const User = Schema.Struct({
   text: Prompt.fields.text,
   files: Prompt.fields.files,
   agents: Prompt.fields.agents,
-  promptContext: PromptContext.Info.pipe(optional),
   type: Schema.Literal("user"),
 }).annotate({ identifier: "Session.Message.User" })
 

@@ -1,11 +1,6 @@
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import path from "path"
-import { Effect, Layer, Record, Result, Schema, Context, Semaphore } from "effect"
-import { isDeepStrictEqual } from "node:util"
-import { randomUUID } from "node:crypto"
-import { Flock } from "@orchestra/core/util/flock"
-import { PrivateFile } from "@orchestra/core/util/private-file"
-import { makeRuntime } from "../effect/run-service"
+import { Effect, Layer, Record, Result, Schema, Context } from "effect"
 import { NonNegativeInt } from "@orchestra/core/schema"
 import { Global } from "@orchestra/core/global"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -13,25 +8,6 @@ import { FSUtil } from "@orchestra/core/fs-util"
 export const OAUTH_DUMMY_KEY = "orchestra-oauth-dummy-key"
 
 const file = path.join(Global.Path.data, "auth.json")
-const revisionFile = path.join(Global.Path.data, "auth-revisions.json")
-const locks = new Map<string, Semaphore.Semaphore>()
-
-// Only public store paths/provider names enter lock keys; the critical body stays
-// masked until native promises settle, so cancellation cannot release a live lease.
-function locked<A, E, R>(key: string, body: Effect.Effect<A, E, R>) {
-  const semaphore = locks.get(key) ?? Semaphore.makeUnsafe(1)
-  locks.set(key, semaphore)
-  return Effect.uninterruptibleMask((restore) => restore(semaphore.take(1)).pipe(
-    Effect.flatMap(() => Effect.acquireUseRelease(
-      Effect.tryPromise({ try: () => Flock.acquire(key, { dir: path.join(path.dirname(file), ".auth-locks") }), catch: fail("Failed to acquire auth lease") }),
-      () => body,
-      (lease) => Effect.tryPromise({ try: () => lease.release(), catch: fail("Failed to release auth lease") }),
-    ).pipe(Effect.ensuring(semaphore.release(1)))),
-  ))
-}
-
-export const withRefreshLease = <A, E, R>(providerID: string, body: Effect.Effect<A, E, R>) =>
-  locked(`auth-refresh:${file}:${providerID}`, body)
 
 const fail = (message: string) => (cause: unknown) => new AuthError({ message, cause })
 
@@ -42,7 +18,6 @@ export class Oauth extends Schema.Class<Oauth>("OAuth")({
   expires: NonNegativeInt,
   accountId: Schema.optional(Schema.String),
   enterpriseUrl: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }) {}
 
 export class Api extends Schema.Class<Api>("ApiAuth")({
@@ -67,11 +42,9 @@ export class AuthError extends Schema.TaggedErrorClass<AuthError>()("AuthError",
 
 export interface Interface {
   readonly get: (providerID: string) => Effect.Effect<Info | undefined, AuthError>
-  readonly snapshot: (providerID: string) => Effect.Effect<{ value: Info | undefined; revision: string }, AuthError>
   readonly all: () => Effect.Effect<Record<string, Info>, AuthError>
   readonly set: (key: string, info: Info) => Effect.Effect<void, AuthError>
   readonly remove: (key: string) => Effect.Effect<void, AuthError>
-  readonly replaceIf: (providerID: string, expected: Info | undefined, next: Info, revision?: string) => Effect.Effect<boolean, AuthError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Auth") {}
@@ -97,71 +70,28 @@ const layer = Layer.effect(
       return (yield* all())[providerID]
     })
 
-    const revisions = Effect.fn("Auth.revisions")(function* () {
-      return yield* fsys.readFileString(revisionFile).pipe(
-        Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed("{}")),
-        Effect.flatMap(Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Record(Schema.String, Schema.String.check(Schema.isUUID(4)))))),
-        Effect.mapError(fail("Failed to read auth revisions")),
-      )
-    })
-
-    const snapshot = (key: string) => locked(`auth-store:${file}`, Effect.gen(function* () {
-      const norm = key.replace(/\/+$/, "")
-      return { value: (yield* all())[norm], revision: (yield* revisions())[norm] ?? "initial" }
-    }))
-
-    const write = (destination: string, data: unknown) => Effect.acquireUseRelease(
-        fsys.makeTempFile({ directory: path.dirname(file), prefix: ".auth-" }),
-        (temporary) => fsys.writeJson(temporary, data, 0o600).pipe(
-          Effect.andThen(Effect.tryPromise({ try: () => PrivateFile.protect(temporary), catch: fail("Failed to protect auth data") })),
-          Effect.andThen(fsys.rename(temporary, destination)),
-        ),
-        (temporary) => fsys.remove(path.dirname(temporary), { recursive: true }).pipe(Effect.ignore),
-      ).pipe(Effect.mapError(fail("Failed to write auth data")))
-
-    const advance = Effect.fn("Auth.advance")(function* (norm: string) {
-      // Persist the tombstone first: a crash may invalidate an attempt, but cannot
-      // let a stale callback miss a disconnect or an empty -> account -> empty ABA.
-      const current = yield* revisions()
-      yield* write(revisionFile, { ...current, [norm]: randomUUID() })
-    })
-
-    const set = (key: string, info: Info) => locked(`auth-store:${file}`, Effect.gen(function* () {
+    const set = Effect.fn("Auth.set")(function* (key: string, info: Info) {
       const norm = key.replace(/\/+$/, "")
       const data = yield* all()
       if (norm !== key) delete data[key]
       delete data[norm + "/"]
-      yield* advance(norm)
-      yield* write(file, { ...data, [norm]: info })
-    }))
+      yield* fsys
+        .writeJson(file, { ...data, [norm]: info }, 0o600)
+        .pipe(Effect.mapError(fail("Failed to write auth data")))
+    })
 
-    const remove = (key: string) => locked(`auth-store:${file}`, Effect.gen(function* () {
+    const remove = Effect.fn("Auth.remove")(function* (key: string) {
       const norm = key.replace(/\/+$/, "")
       const data = yield* all()
       delete data[key]
       delete data[norm]
-      yield* advance(norm)
-      yield* write(file, data)
-    }))
+      yield* fsys.writeJson(file, data, 0o600).pipe(Effect.mapError(fail("Failed to write auth data")))
+    })
 
-    const replaceIf = (key: string, expected: Info | undefined, next: Info, revision?: string) => locked(`auth-store:${file}`, Effect.gen(function* () {
-      if (process.env.ORCHESTRA_AUTH_CONTENT) return false
-      const norm = key.replace(/\/+$/, "")
-      if (revision !== undefined && revision !== ((yield* revisions())[norm] ?? "initial")) return false
-      const data = yield* all()
-      const current = data[norm]
-      if (!isDeepStrictEqual(current === undefined ? undefined : Schema.encodeSync(Info)(current),
-        expected === undefined ? undefined : Schema.encodeSync(Info)(expected))) return false
-      yield* advance(norm)
-      yield* write(file, { ...data, [norm]: next })
-      return true
-    }))
-
-    return Service.of({ get, snapshot, all, set, remove, replaceIf })
+    return Service.of({ get, all, set, remove })
   }),
 )
 
 export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node] })
-export const runPromise = makeRuntime(Service, LayerNode.compile(node)).runPromise
 
 export * as Auth from "."

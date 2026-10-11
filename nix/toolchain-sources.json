@@ -113,5 +113,64 @@
         "publishedSha256": "13844d9b50c72d1f8aeb5315398119798bdb5bd3fa9e2d89f4306fd501c48c8d"
       }
     }
+  },
+  "rust": {
+    "version": "1.98.0",
+    "consumer": "packages/omni (rust-toolchain.toml channel); nix/omni.nix builds hugr-omni-node and omni-supervisor",
+    "channelManifestUrl": "https://static.rust-lang.org/dist/channel-rust-1.98.0.toml",
+    "measurement": {
+      "date": "2026-10-10",
+      "hashMode": "flat SHA-256 of the complete official standalone dist tar.gz, encoded as SRI",
+      "source": "Each sha256 is the published .sha256 file next to its archive (curl), not a local download measurement.",
+      "secondControl": "Each digest equals pkg.rust.target.<target>.hash in channel-rust-1.98.0.toml (date 2026-08-20, rustc 1.98.0 88d9e12ae 2026-08-18). Sizes are the published Content-Length.",
+      "lockedNixpkgsRustc": "1.94.0 at nixpkgsRevision (pkgs/development/compilers/rust/1_94.nix), below the 1.98 workspace floor, so the pinned dist archive is required.",
+      "nixValidation": "Not executed: local Nix is unavailable. The fixed-output fetch, toolchain install and omni build remain required on each native system."
+    },
+    "sources": {
+      "x86_64-linux": {
+        "system": "x86_64-linux",
+        "target": "x86_64-unknown-linux-gnu",
+        "archive": "rust-1.98.0-x86_64-unknown-linux-gnu.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.98.0-x86_64-unknown-linux-gnu.tar.gz",
+        "publishedChecksumUrl": "https://static.rust-lang.org/dist/rust-1.98.0-x86_64-unknown-linux-gnu.tar.gz.sha256",
+        "size": 381691823,
+        "hash": "sha256-qjBAmvpnvRraJEzv2Cx5gOamW8ETu5eOk0skE8deOQA=",
+        "sha256": "aa30409afa67bd1ada244cefd82c7980e6a65bc113bb978e934b2413c75e3900",
+        "publishedSha256": "aa30409afa67bd1ada244cefd82c7980e6a65bc113bb978e934b2413c75e3900"
+      },
+      "aarch64-linux": {
+        "system": "aarch64-linux",
+        "target": "aarch64-unknown-linux-gnu",
+        "archive": "rust-1.98.0-aarch64-unknown-linux-gnu.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.98.0-aarch64-unknown-linux-gnu.tar.gz",
+        "publishedChecksumUrl": "https://static.rust-lang.org/dist/rust-1.98.0-aarch64-unknown-linux-gnu.tar.gz.sha256",
+        "size": 333434930,
+        "hash": "sha256-X7tCgkAwRtUqRnJ2XGdhqAm/nzPmmbF+brepOrd3DMM=",
+        "sha256": "5fbb4282403046d52a4672765c6761a809bf9f33e699b17e6eb7a93ab7770cc3",
+        "publishedSha256": "5fbb4282403046d52a4672765c6761a809bf9f33e699b17e6eb7a93ab7770cc3"
+      },
+      "x86_64-darwin": {
+        "system": "x86_64-darwin",
+        "target": "x86_64-apple-darwin",
+        "archive": "rust-1.98.0-x86_64-apple-darwin.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.98.0-x86_64-apple-darwin.tar.gz",
+        "publishedChecksumUrl": "https://static.rust-lang.org/dist/rust-1.98.0-x86_64-apple-darwin.tar.gz.sha256",
+        "size": 229287977,
+        "hash": "sha256-ZvTi4XJ1dT3quoQ3OA3iEHK1a1oIPPlUustjdt8INPw=",
+        "sha256": "66f4e2e17275753deaba8437380de21072b56b5a083cf954bacb6376df0834fc",
+        "publishedSha256": "66f4e2e17275753deaba8437380de21072b56b5a083cf954bacb6376df0834fc"
+      },
+      "aarch64-darwin": {
+        "system": "aarch64-darwin",
+        "target": "aarch64-apple-darwin",
+        "archive": "rust-1.98.0-aarch64-apple-darwin.tar.gz",
+        "url": "https://static.rust-lang.org/dist/rust-1.98.0-aarch64-apple-darwin.tar.gz",
+        "publishedChecksumUrl": "https://static.rust-lang.org/dist/rust-1.98.0-aarch64-apple-darwin.tar.gz.sha256",
+        "size": 296260138,
+        "hash": "sha256-Am7HW+yB+4wQsR35jxM27jn0vBHgTWdF3/6fyoHlwLU=",
+        "sha256": "026ec75bec81fb8c10b11df98f1336ee39f4bc11e04d6745dffe9fca81e5c0b5",
+        "publishedSha256": "026ec75bec81fb8c10b11df98f1336ee39f4bc11e04d6745dffe9fca81e5c0b5"
+      }
+    }
   }
 }

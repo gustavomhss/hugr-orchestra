@@ -15,9 +15,6 @@ import { taskHash } from "./task-hash"
 import { recordApproval } from "./approval-record"
 import { canonicalMemberId } from "./roster"
 import { WriteRoots } from "./write-roots"
-import { readPlanRevision } from "./plan-revision"
-import type { RelayArm } from "@orchestra/schema/relay-arm"
-import { isDeepStrictEqual } from "node:util"
 
 export function childPermissions(input: { parent: Session.Info; next: Agent.Info; primaryTools?: string[] }) {
   const inherited = deriveSubagentSessionPermission({
@@ -76,8 +73,6 @@ export const reserve = Effect.fn("MaestroGovernedTaskReservation.reserve")(funct
   database: Database.Interface
   events: EventV2.Interface
   sessions: Session.Interface
-  workflowBinding?: RelayArm.WorkflowDefinition
-  writePaths?: readonly string[]
 }) {
   const caller = yield* input.agentService.get(input.agentID ?? input.agent)
   if (caller?.id !== "maestro" || caller.native !== true) {
@@ -90,12 +85,6 @@ export const reserve = Effect.fn("MaestroGovernedTaskReservation.reserve")(funct
   if (input.governed.memberID !== caller.id) {
     return yield* Effect.fail(new Error("Governed Task denied: request-actor-mismatch"))
   }
-  if (input.workflowBinding) {
-    const plan = yield* readPlanRevision(input.governed.planRevisionID).pipe(Effect.provideService(Database.Service, input.database))
-    if (!plan || plan.revision !== "v3" || plan.revisionHash !== input.governed.revisionHash ||
-      !plan.workflowBinding || !isDeepStrictEqual(plan.workflowBinding, input.workflowBinding))
-      return yield* Effect.fail(new Error("Governed Task denied: workflow-plan-binding-mismatch"))
-  }
   if (
     input.governed.taskHash !==
     taskHash({
@@ -103,8 +92,6 @@ export const reserve = Effect.fn("MaestroGovernedTaskReservation.reserve")(funct
       prompt: input.prompt,
       model: input.model,
       ...input.governed,
-      workflowBinding: input.workflowBinding,
-      writePaths: input.writePaths,
     })
   ) {
     return yield* Effect.fail(new Error("Governed Task denied: task-hash-mismatch"))

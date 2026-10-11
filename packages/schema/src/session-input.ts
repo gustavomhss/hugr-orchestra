@@ -3,7 +3,6 @@ export * as SessionInput from "./session-input"
 import { Schema } from "effect"
 import { optional } from "./schema"
 import { Prompt } from "./prompt"
-import { PromptContext } from "./prompt-context"
 import { DateTimeUtcFromMillis, NonNegativeInt } from "./schema"
 import { SessionDelivery } from "./session-delivery"
 import { SessionID } from "./session-id"
@@ -18,7 +17,6 @@ export const Admitted = Schema.Struct({
   id: SessionMessage.ID,
   sessionID: SessionID,
   prompt: Prompt,
-  promptContext: PromptContext.Info.pipe(optional),
   delivery: Delivery,
   timeCreated: DateTimeUtcFromMillis,
   promotedSeq: NonNegativeInt.pipe(optional),
