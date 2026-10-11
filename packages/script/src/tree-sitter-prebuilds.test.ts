@@ -18,6 +18,7 @@ import path from "node:path"
 import {
   NATIVE_MACHINES,
   copyTreeSitter,
+  exportTreeSitter,
   lockfileNodeGyp,
   nativeMachines,
   prepareTreeSitterPrebuilds,
@@ -249,6 +250,40 @@ test("a build for a target this host cannot provide stops before resolving any f
   expect(() => resolveTreeSitter({ root, os: platform!, arch: arch! })).toThrow(
     /^TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /,
   )
+})
+
+test("a cross build ships the target's exported bundle, refuses a foreign binding there, and without one still stops", () => {
+  const foreign = Object.keys(NATIVE_MACHINES).find((name) => name !== host && !name.startsWith(`${process.platform}-`))!
+  const [platform, arch] = foreign.split("-")
+  const target = { os: platform!, arch: arch! }
+  const artifacts = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-artifacts-"))
+  fixtures.push(artifacts)
+  renameSync(bundleFixture(target), path.join(artifacts, foreign))
+  expect(resolveTreeSitter({ root, ...target, artifacts })).toEqual(
+    treeSitterBundle(target).map((file) => ({ from: path.join(artifacts, foreign, ...file.split("/")), to: file })),
+  )
+  // Another target's artifacts directory is no bundle for this one: the host path and its named error apply.
+  const other = Object.keys(NATIVE_MACHINES).find((name) => name !== foreign && !name.startsWith(`${process.platform}-`))!
+  const [otherPlatform, otherArch] = other.split("-")
+  expect(() => resolveTreeSitter({ root, os: otherPlatform!, arch: otherArch!, artifacts })).toThrow(
+    /^TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /,
+  )
+  const binding = path.join(artifacts, foreign, "tree-sitter", "prebuilds", foreign, "tree-sitter.node")
+  copyFileSync(foreignTo(foreign), binding)
+  expect(() => resolveTreeSitter({ root, ...target, artifacts })).toThrow(
+    `TREE_SITTER_BUNDLE_INCOMPLETE: ${foreign} in ${path.join(artifacts, foreign)}: tree-sitter/prebuilds/${foreign}/tree-sitter.node is not a ${foreign} binary`,
+  )
+})
+
+test("exporting a target's bundle on another host stops with the named error and exports nothing", () => {
+  const foreign = Object.keys(NATIVE_MACHINES).find((name) => name !== host && !name.startsWith(`${process.platform}-`))!
+  const [platform, arch] = foreign.split("-")
+  const out = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-export-"))
+  fixtures.push(out)
+  expect(() => exportTreeSitter({ root, os: platform!, arch: arch!, out })).toThrow(
+    /^TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /,
+  )
+  expect(readdirSync(out)).toEqual([])
 })
 
 // Python's published prebuild for a CPU other than `name`'s.
