@@ -2,7 +2,7 @@ export * as CapabilityProcessControl from "./index"
 
 import { Capability } from "@orchestra/schema/capability"
 import { eq } from "drizzle-orm"
-import { Cause, Context, Duration, Effect, Exit } from "effect"
+import { Cause, Context, Duration, Effect, Exit, Option } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Database } from "../../database/database"
 import { FSUtil } from "../../fs-util"
@@ -16,7 +16,7 @@ import { ToolSafety } from "../../tool-safety"
 import { ToolSafetyGit } from "../../tool-safety-git"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { CapabilityInvocation } from "../invocation"
-import type { CapabilityJobs } from "../job"
+import { CapabilityJobs } from "../job"
 import { CapabilityJobTable } from "../sql"
 import { CapabilityProcessContract } from "./contract"
 import { CapabilityProcessRegistry } from "./registry"
@@ -56,9 +56,9 @@ export const make = (options: { jobs: CapabilityProcessContract.Jobs }) => Effec
   const proofOf = Effect.fn("CapabilityProcessControl.proof")(function* (ref: Capability.JobRef) {
     const row = yield* database.db.select().from(CapabilityJobTable).where(eq(CapabilityJobTable.id, ref.id)).get()
       .pipe(Effect.orDie)
-    if (!row) return yield* failure("target_denied")
-    const proof: CapabilityJobs.ProducerProof = { owner: row.owner, producer: row.invocation, rootToolName: name }
-    return { proof, generation: row.generation, state: row.state }
+    const proof = row ? CapabilityJobs.proofFromRow(row) : Option.none()
+    if (!row || Option.isNone(proof)) return yield* failure("target_denied")
+    return { proof: proof.value, generation: row.generation, state: row.state }
   })
   const observe = (ref: Capability.JobRef, state: Capability.JobState, observation: CapabilityJobs.Observation) =>
     Effect.gen(function* () {

@@ -49,7 +49,7 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, Event
 ]))
 const allow: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allow" }]
 const child = (script: string) => [process.execPath, "-e", script]
-const echo = child(`process.stdin.on("data", (d) => process.stdout.write("got:" + d)); process.stdin.on("end", () => process.exit(3))`)
+const echo = child(`process.stdout.write("key:" + process.env.CUSTOM_API_KEY + "\\n"); process.stdin.on("data", (d) => process.stdout.write("got:" + d)); process.stdin.on("end", () => process.exit(3))`)
 
 const setup = Effect.gen(function* () {
   const database = yield* Database.Service
@@ -72,8 +72,8 @@ const setup = Effect.gen(function* () {
         assistantMessageID: context.assistantMessageID, callID: toolCallID, name: "process_control", timestamp: DateTime.makeUnsafe(1) })
       const owner = { projectID: placement.project.id, location: { directory: placement.directory },
         sessionID: context.sessionID, agentID: context.agent }
-      return yield* CapabilityInvocation.withContext({ issuer: "core", owner, invocation: { ...owner, ...context, callID: toolCallID,
-        agentID: context.agent }, rootToolName: "process_control", effectiveRules: allow, nativeDenyFloor: [] },
+      return yield* CapabilityInvocation.withContext({ issuer: "core", owner, invocation: { sessionID: context.sessionID, agentID: context.agent,
+        assistantMessageID: context.assistantMessageID, callID: toolCallID }, rootToolName: "process_control", effectiveRules: allow, nativeDenyFloor: [] },
       Tool.settle(leaf.tools.process_control, { type: "tool-call", id: toolCallID, name: "process_control", input },
         { ...context, toolCallID }))
     })
@@ -85,7 +85,8 @@ const setup = Effect.gen(function* () {
   const durable = (id: string, state: Capability.JobState) => database.db.select().from(CapabilityJobTable)
     .where(eq(CapabilityJobTable.id, Capability.JobID.make(id))).get().pipe(Effect.orDie,
       Effect.filterOrFail((row) => row?.state === state), Effect.retry(Schedule.spaced("20 millis").pipe(Schedule.take(250))))
-  const count = database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie, Effect.map((rows) => rows.length))
+  const count = (sessionID: string) => database.db.select().from(CapabilityJobTable).all()
+    .pipe(Effect.orDie, Effect.map((rows) => rows.filter((row) => row.owner.sessionID === sessionID).length))
   return { session, durable, count }
 })
 
@@ -106,6 +107,7 @@ it.live("pipe process lifecycle: start, input, output, wait, settle completed/fa
   yield* f.durable(id, "failed")
   const log = yield* s.output({ action: "log", id, cursor: 0 })
   if (log.action !== "log") throw new Error("expected log")
+  expect(log.chunk.text).toContain("key:bound")
   expect(log.chunk.text).toContain("got:a")
   expect(log.chunk.text).toContain("b\n")
   expect(log.status).toMatchObject({ state: "failed", input: "closed", exit: { code: 3 } })
@@ -124,12 +126,14 @@ it.live("pty and denied bash permission create no job and no process", () => Eff
   const f = yield* setup
   const s = yield* f.session()
   const registry = yield* CapabilityProcessRegistry.Service
+  const running = registry.live().size
   expect(yield* s.failure({ action: "start", argv: echo, mode: "pty" })).toContain("unsupported_operation")
   yield* CapabilityPolicyFixture.setRules([...allow, { action: "bash", resource: "*", effect: "deny" }])
   expect(yield* s.failure({ action: "start", argv: echo })).toContain("Blocked")
   yield* CapabilityPolicyFixture.setRules(allow)
-  expect(yield* f.count).toBe(0)
-  expect(registry.live().size).toBe(0)
+  expect(yield* f.count(s.context.sessionID)).toBe(0)
+  expect(registry.live().size).toBe(running)
+  expect(yield* s.output({ action: "list" })).toEqual({ action: "list", items: [] })
 }))
 
 it.live("foreign and unknown IDs fail identically; transfer moves only child to parent", () => Effect.gen(function* () {
@@ -147,6 +151,7 @@ it.live("foreign and unknown IDs fail identically; transfer moves only child to 
     { action: "stop", id }, { action: "transfer", id }]
   for (const input of actions) expect(yield* foreign.failure(input)).toBe(unknown)
   expect(yield* foreign.output({ action: "list" })).toEqual({ action: "list", items: [] })
+  expect(yield* s.output({ action: "status", id })).toMatchObject({ status: { state: "running", input: "open" } })
   expect(yield* foreign.failure({ action: "transfer", id })).toBe(unknown)
   expect(yield* s.output({ action: "transfer", id })).toMatchObject({ action: "transfer", status: { state: "running" } })
   expect(yield* s.failure({ action: "status", id })).toBe(unknown)
