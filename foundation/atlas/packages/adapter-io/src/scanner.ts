@@ -29,6 +29,9 @@
 //     adapter own name says so -- see `NO_SCANNER_NAME` below) rather than a silent pass.
 
 import { execFileSync } from "node:child_process"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import type { MemoryRecord, NamedScanner } from "@atlas/memory"
 
 /** The three-value scan outcome. `scan()` on the `NamedScanner` seam is boolean (block/pass) by contract
@@ -145,8 +148,12 @@ export function runScanner(
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): ScanVerdict {
   const input = JSON.stringify(record)
+  // gitleaks reads ./.gitleaks.toml and ./.gitleaksignore from its cwd; in the workspace a planted allowlist makes every
+  // scan clean (measured on 8.30.1). An empty private directory leaves it the built-in rules.
+  const cwd = mkdtempSync(join(tmpdir(), "atlas-scan-"))
   try {
     execFileSync(spec.command, spec.args as string[], {
+      cwd,
       input,
       timeout: timeoutMs,
       stdio: ["pipe", "pipe", "pipe"],
@@ -160,6 +167,8 @@ export function runScanner(
     if (code !== null && spec.cleanExitCodes.includes(code)) return "clean"
     // Timeout, spawn failure, or an exit code neither spec documents -- fail closed, never clean.
     return "could-not-run"
+  } finally {
+    rmSync(cwd, { recursive: true, force: true })
   }
 }
 
