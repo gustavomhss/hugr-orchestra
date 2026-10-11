@@ -151,6 +151,7 @@ type Live = {
   chain?: string
   pump: Promise<void>
   processJoin: () => Promise<void>
+  callbacks: Set<Promise<unknown>>
   closed?: boolean
   owned?: Set<Live>
   closing?: Promise<void>
@@ -164,7 +165,7 @@ type Live = {
   /** Why the session's stream ended, once it has. */
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
-  run: <A>(effect: Effect.Effect<A, unknown>) => Promise<A>
+  run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
 }
 
 const layer = Layer.effect(
@@ -300,6 +301,7 @@ const layer = Layer.effect(
         await live.pump
         // A failed spawn has no process to join; the pump retains its error for the waiting turn.
         await live.processJoin().catch(() => undefined)
+        while (live.callbacks.size) await Promise.allSettled([...live.callbacks])
         if (!live.stopping) retire(live)
       })()
       return live.closing
@@ -421,10 +423,16 @@ const layer = Layer.effect(
         sessionID: input.sessionID, inbox: inbox(), abort, agent: input.agent, model: input.model, discard: false, background: 0,
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
-        chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {},
+        chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {}, callbacks: new Set(),
         known: { calls: new Map(), tasks: new Map() }, children: new Map(), join: ClaudeHostJoin.make(),
         query: undefined as unknown as Query,
-        run: (effect) => Effect.runPromiseWith(context)(effect),
+        run: (effect, teardown) => {
+          // Late SDK callbacks are cancelled too; only our reconciliation may run after shutdown.
+          const running = Effect.runPromiseWith(context)(effect, { signal: teardown ? undefined : abort.signal })
+          live.callbacks.add(running)
+          void running.finally(() => live.callbacks.delete(running)).catch(() => {})
+          return running
+        },
         make: (user) => ClaudeHostMirror.create({ sessionID: input.sessionID, user, agent: input.agent,
           path: { cwd: instance.directory, root: instance.worktree }, sessions, snapshot, todo, status, child: child(live), known: live.known,
           state: (patch) => write(input.sessionID, patch),
@@ -503,11 +511,11 @@ const layer = Layer.effect(
       live.stopping = (async () => {
         const interrupted = await receipt
         await close(live)
-        if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }))
-        await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }))
+        if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }), true)
+        await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }), true)
         if (turn) {
-          await live.run(turn.view.fail({ aborted: true, message: "The owner stopped the turn." }))
-          await live.run(summarize(live, turn))
+          await live.run(turn.view.fail({ aborted: true, message: "The owner stopped the turn." }), true)
+          await live.run(summarize(live, turn), true)
         }
       })().finally(() => {
         settle(live, { ok: false, aborted: true, message: "The owner stopped the turn." })
