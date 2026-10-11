@@ -331,7 +331,7 @@ freeze. Core Omni `37943566437` on unrelated `f3b2b67` is not Maestro evidence o
 | V1 pilot launcher | `fe3760f621` | Runtime source consumed; prepare-only default, real execution remains qualification work |
 | Native-product / WSL harness | `260d` / `80f3ebecfc` | Runtime source consumed through `56659216d6`; execution proof still pending |
 
-W6 working branch/worktree: `relay-workflow`, temporary OpenCode work directory.
+W6 working branch/worktree: `relay-workflow`, temporary Orchestra work directory.
 Nix working branch/worktree: `nix-closure`. Integrator: `relay-next`.
 
 ## Implementation and qualification boundary
@@ -385,7 +385,7 @@ Dirty alternative BackendWork delivery implementation was not consumed. Preserve
 
 ## Coordination and recovery
 
-Current existing OpenCode server: `http://127.0.0.1:50407`; old `49246` stopped.
+Current existing Orchestra server: `http://127.0.0.1:50407`; old `49246` stopped.
 Server was discovered, not restarted. Basic auth comes from environment; never log secrets.
 Runtime: `ses_ee888bf80ffeckSbRi0RP57V1s`; upstream: `ses_ee6d55370ffe6CYDCP42Ox46NN`.
 Recovered host author: `ses_ee10c03f9ffe7gsM6XAunvvWRt`; resumed on live server with
