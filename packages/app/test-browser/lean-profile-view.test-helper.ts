@@ -1,11 +1,18 @@
-import { createComponent, createStore, render } from "./lean-project-metrics.test-helper"
-import { LeanCoverage } from "@orchestra/schema/lean-coverage"
+import { createComponent, createStore, render } from "./lean-dom.test-helper"
+import type { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { LeanViewProps } from "@/orchestra/chapters/lean-view-contract"
+import { solidDom } from "./solid-dom"
 
-const { LeanProfileView } = await import("@/orchestra/chapters/lean-view")
-const { PlatformProvider } = await import("@/context/platform")
-const { LanguageProvider } = await import("@/context/language")
+// The rendered view and its catalogue load as solidDom() copies (./solid-dom).
+const coverage: typeof import("@orchestra/schema/lean-coverage") = await import(
+  solidDom("@orchestra/schema/lean-coverage", import.meta.dir)
+)
+const { LeanProfileView }: typeof import("@/orchestra/chapters/lean-view") = await import(
+  solidDom("@/orchestra/chapters/lean-view", import.meta.dir)
+)
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
 type MutableProps = { -readonly [K in keyof LeanViewProps]: LeanViewProps[K] }
 
 export function info(profileID = "profile-one"): LeanDashboard.Info {
@@ -16,7 +23,7 @@ export function info(profileID = "profile-one"): LeanDashboard.Info {
     coverage: "saved-profile-history",
     complete: true,
     savings: { bytesSaved: 1024, tokensSaved: -4, calls: 2, tokenCalls: 2 },
-    items: LeanCoverage.items.map((item) => ({
+    items: coverage.LeanCoverage.items.map((item) => ({
       id: item.id,
       enabled: true,
       savings: { bytesSaved: 0, tokensSaved: 0, calls: 0, tokenCalls: 0 },

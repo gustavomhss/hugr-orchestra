@@ -24,7 +24,7 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
         composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
         rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
       }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
+        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: app, stdout: "pipe", stderr: "pipe", timeout: 120000 })
       const [out, err, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
@@ -33,15 +33,23 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
     } finally { await rm(scratch, { recursive: true, force: true }) }
   }, 180000)
 } else {
-  const { createComponent, render, decision } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, render, decision } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-wrapper-assets", setup(build) {
     build.onLoad({ filter: /\?(worker&)?url$/ }, (args) => ({ contents: `export default ${JSON.stringify(args.path)}`, loader: "js" }))
   } })
-  const { PART_MAPPING, ToolRegistry } = await import("../../session-ui/src/components/message-part")
-  const { DataProvider } = await import("../../session-ui/src/context/data")
-  const { LanguageProvider } = await import("@/context/language")
-  const { PlatformProvider } = await import("@/context/platform")
-  const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
+  // Rendered session-ui, app and schema modules load as solidDom() copies (./solid-dom).
+  const { solidDom } = await import("./solid-dom")
+  const { PART_MAPPING, ToolRegistry }: typeof import("../../session-ui/src/components/message-part") = await import(
+    solidDom("../../session-ui/src/components/message-part", import.meta.dir)
+  )
+  const { DataProvider }: typeof import("../../session-ui/src/context/data") = await import(
+    solidDom("../../session-ui/src/context/data", import.meta.dir)
+  )
+  const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
+  const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+  const { LeanMetrics }: typeof import("@orchestra/schema/lean-metrics") = await import(
+    solidDom("@orchestra/schema/lean-metrics", import.meta.dir)
+  )
   const session: Session = { id: "session", projectID: "repo", directory: "/repo", slug: "fixture", title: "fixture", version: "fixture", time: { created: 1, updated: 1 } }
   const message: AssistantMessage = { id: "message", sessionID: "session", role: "assistant", parentID: "user",
     providerID: "provider", modelID: "model", mode: "build", agent: "build", path: { cwd: "/repo", root: "/repo" },

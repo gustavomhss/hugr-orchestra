@@ -56,7 +56,7 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
         // core's omni loader imports with explicit .ts extensions, which the bundler-driven packages already allow.
         compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, allowImportingTsExtensions: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
-        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
+        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
       }))
       console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
     } catch (error) { errors.push(error) }
@@ -64,20 +64,36 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
     if (errors.length) throw new AggregateError(errors, "Proof typecheck primary and cleanup errors")
   }, 600000)
 } else {
-  const { createComponent, createRoot, createStore, render } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, createRoot, createStore, render } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-native-product-assets", setup(build) {
     build.onLoad({ filter: /\?(worker&)?url$/ }, (args) => ({ contents: `export default ${JSON.stringify(args.path)}`, loader: "js" }))
   } })
-  const { createLeanController } = await import("@/orchestra/chapters/lean-controller")
-  const { LeanProfileView } = await import("@/orchestra/chapters/lean-view")
-  const { LeanDashboard } = await import("@orchestra/schema/lean-dashboard")
+  // Rendered app, session-ui and schema modules load as solidDom() copies (./solid-dom).
+  const { solidDom } = await import("./solid-dom")
+  const { createLeanController }: typeof import("@/orchestra/chapters/lean-controller") = await import(
+    solidDom("@/orchestra/chapters/lean-controller", import.meta.dir)
+  )
+  const { LeanProfileView }: typeof import("@/orchestra/chapters/lean-view") = await import(
+    solidDom("@/orchestra/chapters/lean-view", import.meta.dir)
+  )
+  const { LeanDashboard }: typeof import("@orchestra/schema/lean-dashboard") = await import(
+    solidDom("@orchestra/schema/lean-dashboard", import.meta.dir)
+  )
   const { Schema } = await import("effect")
   const { verifyProfileRows } = await import("./lean-native-product.test-helper")
-  const { LanguageProvider, useLanguage } = await import("@/context/language")
-  const { PlatformProvider } = await import("@/context/platform")
-  const { PART_MAPPING, ToolRegistry } = await import("../../session-ui/src/components/message-part")
-  const { DataProvider } = await import("../../session-ui/src/context/data")
-  const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
+  const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
+    solidDom("@/context/language", import.meta.dir)
+  )
+  const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+  const { PART_MAPPING, ToolRegistry }: typeof import("../../session-ui/src/components/message-part") = await import(
+    solidDom("../../session-ui/src/components/message-part", import.meta.dir)
+  )
+  const { DataProvider }: typeof import("../../session-ui/src/context/data") = await import(
+    solidDom("../../session-ui/src/context/data", import.meta.dir)
+  )
+  const { LeanMetrics }: typeof import("@orchestra/schema/lean-metrics") = await import(
+    solidDom("@orchestra/schema/lean-metrics", import.meta.dir)
+  )
 
   test("real Node Go30: durable owners/bytes/estimates, shell DOM, replay, privacy and persisted disable", async () => {
     if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Package builds require CI")
