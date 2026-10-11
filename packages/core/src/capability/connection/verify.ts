@@ -37,28 +37,36 @@ export const make = (options: Options = {}) => {
       })
       return Effect.gen(function* () {
         if (!captured.ok) return yield* failure("unsupported_schema")
-        const selected = captured.value
-        const descriptor = CapabilityVerifiers.descriptor(selected.provider)
-        // Origin, auth scheme and headers are descriptor-fixed; only the trusted fixture may swap the origin.
-        const call: CapabilityVerifierContract.Call = (route) => request(descriptor.origin, descriptor.authorization(selected.key),
-          { method: route.method, path: route.path, body: route.body, headers: descriptor.headers }, transport.value).pipe(
-          // Map the whole Cause without dropping other failures, defects, interrupts or annotations.
-          Effect.catchCause((cause) => Effect.failCause(transportCause(cause))),
-        )
-        const identified = yield* descriptor.identify(call)
-        // Credential-only identify proves validity alone and returns the literal "key"; anything else fails `accepts`.
-        const subjectID = descriptor.verification === "verified" ? identified
-          : identified === "key" ? CapabilityVerifiers.fingerprint(selected.key) : ""
-        if (!CapabilityVerifiers.accepts(selected.provider, subjectID, selected.key)) return yield* failure("connection_unavailable")
-        // This fingerprint binds identity and exact key, not vendor action entitlement.
-        return Object.freeze({ provider: selected.provider, endpoint: descriptor.endpoint, subjectID,
-          integrationID: descriptor.integrationID,
-          scopeHash: createHash("sha256").update(JSON.stringify([selected.provider, descriptor.endpoint, subjectID,
-            createHash("sha256").update(selected.key).digest("hex")])).digest("hex"),
-        }) satisfies CapabilityConnectionSetupContract.Proof
+        return yield* prove(CapabilityVerifiers.descriptor(captured.value.provider), captured.value.key, transport.value)
       })
     }
     return Object.freeze({ verify }) satisfies CapabilityConnectionSetupContract.Verifier
+  })
+}
+
+/** Descriptor dispatch. Exported so a test descriptor can prove the shared rules without joining the registry. */
+export function prove(descriptor: CapabilityVerifierContract.Descriptor, key: string, options: Options) {
+  return Effect.gen(function* () {
+    if (!validateOptions(options)) return yield* failure("unsupported_schema")
+    // Before any network call; `search` ignores global/sticky lastIndex state on a shared RegExp.
+    if (descriptor.keyPattern && key.search(descriptor.keyPattern) === -1) return yield* failure("unsupported_operation")
+    // Origin, auth scheme and headers are descriptor-fixed; only the trusted fixture may swap the origin.
+    const call: CapabilityVerifierContract.Call = (route) => request(descriptor.origin, descriptor.authorization(key),
+      { method: route.method, path: route.path, body: route.body, headers: descriptor.headers }, options).pipe(
+      // Map the whole Cause without dropping other failures, defects, interrupts or annotations.
+      Effect.catchCause((cause) => Effect.failCause(transportCause(cause))),
+    )
+    const identified = yield* descriptor.identify(call)
+    // Credential-only identify proves validity alone and returns the literal "key"; anything else fails `accepts`.
+    const subjectID = descriptor.verification === "verified" ? identified
+      : identified === "key" ? CapabilityVerifiers.fingerprint(key) : ""
+    if (!CapabilityVerifiers.accepts(descriptor, subjectID, key)) return yield* failure("connection_unavailable")
+    // This fingerprint binds identity and exact key, not vendor action entitlement.
+    return Object.freeze({ provider: descriptor.provider, endpoint: descriptor.endpoint, subjectID,
+      integrationID: descriptor.integrationID,
+      scopeHash: createHash("sha256").update(JSON.stringify([descriptor.provider, descriptor.endpoint, subjectID,
+        createHash("sha256").update(key).digest("hex")])).digest("hex"),
+    }) satisfies CapabilityConnectionSetupContract.Proof
   })
 }
 

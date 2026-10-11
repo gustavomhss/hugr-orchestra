@@ -71,7 +71,7 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
         // The registry, not the verifier, decides endpoint, integration, subject shape and verification level.
         if (!proof.ok || proof.value.provider !== value.input.provider ||
           proof.value.endpoint !== descriptor.endpoint || proof.value.integrationID !== descriptor.integrationID ||
-          !CapabilityVerifiers.accepts(value.input.provider, proof.value.subjectID, value.input.key))
+          !CapabilityVerifiers.accepts(descriptor, proof.value.subjectID, value.input.key))
           return yield* unavailable()
         if (proof.value.scopeHash.toLowerCase() !== createHash("sha256").update(JSON.stringify([
           value.input.provider, proof.value.endpoint, proof.value.subjectID,

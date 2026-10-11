@@ -1,9 +1,11 @@
 import { expect } from "bun:test"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { createHash } from "node:crypto"
+import { Integration } from "@orchestra/schema/integration"
 import { Effect, Schema } from "effect"
 import { CapabilityConnectionSetup } from "../src/capability/connection/setup"
 import { CapabilityConnectionVerification } from "../src/capability/connection/verify"
+import type { CapabilityVerifierContract } from "../src/capability/connection/verifiers/contract"
 import { CapabilityVerifiers } from "../src/capability/connection/verifiers/index"
 import { CapabilityConnectionSetupFixture } from "./fixture/capability-connection-setup"
 import { testEffect } from "./lib/effect"
@@ -64,6 +66,26 @@ it.live("verified and credential-only proofs bind descriptor endpoint, fixed hea
     { path: "/v1/models", authorization: `Bearer ${key}-other`, version: null },
     { path: "/v1/organization", authorization: `Bearer ${key}`, version: "2024-11-06" },
   ])
+}))
+
+it.live("descriptor keyPattern refuses other key shapes before any network call", () => Effect.gen(function* () {
+  const seen: string[] = []
+  const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
+    fetch(request) { seen.push(new URL(request.url).pathname); return Response.json({ id: "acct_1" }) } })),
+  (server) => Effect.promise(() => server.stop(true)))
+  // Test-only descriptor; a global flag proves shared RegExp state cannot flip consecutive checks.
+  const restricted = { provider: "stripe", endpoint: "https://api.stripe.com/v1", origin: "https://api.stripe.com",
+    integrationID: Integration.ID.make("capability.stripe"), verification: "verified", keyPattern: /^rk_[A-Za-z0-9_]+$/g,
+    authorization: (value: string) => `Bearer ${value}`,
+    identify: (call) => call({ method: "GET", path: "/v1/account" }).pipe(Effect.map(() => "acct_1")),
+  } satisfies CapabilityVerifierContract.Descriptor
+  const options = { fixtureOrigin: server.url.origin }
+  yield* Effect.forEach(["sk_live_secret", "rk_", "xrk_test_1"], (value) => CapabilityConnectionVerification.prove(restricted,
+    value, options).pipe(Effect.exit, Effect.tap((exit) => Effect.sync(() =>
+      CapabilityConnectionSetupFixture.expectCode(exit, "unsupported_operation", [value])))))
+  expect(seen).toEqual([])
+  yield* Effect.forEach(["rk_test_1", "rk_test_2"], (value) => CapabilityConnectionVerification.prove(restricted, value, options))
+  expect(seen).toEqual(["/v1/account", "/v1/account"])
 }))
 
 it.live("rejected keys and keyed subjects fail without proof", () => Effect.gen(function* () {

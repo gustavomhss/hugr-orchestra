@@ -16,6 +16,8 @@ import { SupabaseVerifier } from "./supabase"
 
 // Known limit: Cloudflare account-owned tokens (`cfat_…`) cannot pass `/user/tokens/verify` and report
 // `authentication_required`; only user API tokens verify until an account-scoped route is designed.
+// Linear answers bad keys with HTTP 400 or 401 plus a GraphQL error body; bodies are never parsed on error, so 400
+// rejections surface as `connection_unavailable` and only 401/403 as `authentication_required`.
 // `satisfies` makes a provider added to CapabilitySetup.Provider without a descriptor a type error.
 export const descriptors = Object.freeze({
   slack: CapabilitySlackVerifier.descriptor, discord: CapabilityDiscordVerifier.descriptor,
@@ -38,8 +40,8 @@ export function fingerprint(key: string) {
 }
 
 /** Shared by the verifier and setup: a stored subject is bounded, canonical, keyless, and fits its provider. */
-export function accepts(provider: CapabilitySetup.Provider, subject: string, key: string) {
+export function accepts(selected: CapabilityVerifierContract.Descriptor, subject: string, key: string) {
   if (!subject || subject.length > 4096 || /[\s\u0000-\u001f\u007f]/.test(subject) || subject.includes(key)) return false
-  if (descriptors[provider].verification === "credential-only") return subject === fingerprint(key)
-  return subjects[provider]?.(subject) ?? true
+  if (selected.verification === "credential-only") return subject === fingerprint(key)
+  return subjects[selected.provider]?.(subject) ?? true
 }
