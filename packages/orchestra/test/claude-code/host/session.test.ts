@@ -10,7 +10,7 @@ test("Claude Code's session id is a stable v5 UUID derived 1:1 from the Orchestr
   expect(ClaudeHost.claudeSessionID("ses_0123456789abcdeg")).not.toBe(a)
 })
 
-test("a steer reaches Claude Code at the next tool boundary; a turn's prompt carries no priority", () => {
+test("SDK steering input carries next priority; a turn's prompt carries no priority", () => {
   const steer = ClaudeHost.userInput("Use Postgres instead", "next")
   expect(steer).toMatchObject({ type: "user", message: { role: "user", content: "Use Postgres instead" }, parent_tool_use_id: null, priority: "next" })
   expect(steer.uuid).toBeString()

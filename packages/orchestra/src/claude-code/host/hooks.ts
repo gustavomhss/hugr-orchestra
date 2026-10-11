@@ -47,12 +47,14 @@ export type Context = {
   /** The main conversation's seat id (Maestro). */
   readonly agent: string
   readonly abort: AbortController
-  readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Promise<A>
+  readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>, teardown?: boolean) => Promise<A>
   readonly join: ClaudeHostJoin.Join
   readonly parts?: ClaudeHostDelegation.Parts
   readonly granted: ClaudeHostGate.Ports["granted"]
   readonly research?: Research
   readonly policy?: ClaudeHostGate.Ports
+  /** Accepted per-call MCP dispatches and their SDK cancellation signals, owned by the query bridge. */
+  readonly calls?: ClaudeHostMcp.Calls
 }
 
 /**
@@ -85,16 +87,18 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   ctx.abort.signal.addEventListener("abort", () => {
     unsubscribe()
     ClaudeHostMcp.release(ctx.sessionID)
-    if (policy.value) policy.value.then((value) => ctx.run(value.close)).catch(() => undefined)
+    if (policy.value) policy.value.then((value) => ctx.run(value.close, true)).catch(() => undefined)
   }, { once: true })
 
   // A defect in Orchestra's own checks denies the call: the gate fails closed.
-  const pre: HookCallback = (input) => {
+  const pre: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "PreToolUse") return Promise.resolve({})
     return ctx.run(Effect.gen(function* () {
       const actor = yield* delegation.actor(input.agent_id)
       if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
       const args = record(input.tool_input)
+      if (ClaudeCodeTools.orchestra(input.tool_name) && Object.hasOwn(args, ClaudeHostMcp.DISPATCH))
+        return ClaudeHostGate.deny("HOLD: the MCP dispatch receipt is supplied by the host, so model-supplied receipts are refused.")
       const decision = yield* ClaudeHostGate.decide(yield* Effect.promise(ports), actor, input.tool_name, args, input.tool_use_id)
       if (!decision.allow) {
         yield* evidence(actor, input.tool_name, input.tool_use_id, "held", decision.reason)
@@ -107,9 +111,15 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         const dispatched = delegation.child(input.tool_use_id)
         if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
       }
-      if (actor.seat !== "jimmy") return ClaudeHostGate.output(decision)
-      if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
-      yield* ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name)
+      if (actor.seat === "jimmy") {
+        if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+        yield* ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name)
+      }
+      const own = ClaudeCodeTools.orchestra(input.tool_name)
+      if (own && ctx.calls) return ClaudeHostGate.output({ ...decision, input: ctx.calls.reserve({
+        callID: input.tool_use_id, sessionID: actor.sessionID, seat: actor.seat,
+        tool: own, input: args, args: decision.input ?? args, signal: options.signal,
+      }) })
       return ClaudeHostGate.output(decision)
     }).pipe(Effect.catchCause((cause) => Effect.succeed(ClaudeHostGate.deny(ClaudeCodeTools.failure(cause)))),
       // A call denied after its jail was set up never runs, so nothing else would release that jail.
@@ -118,6 +128,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
 
   const post: HookCallback = (input) => {
     if (input.hook_event_name !== "PostToolUse") return Promise.resolve({})
+    ctx.calls?.release(input.tool_use_id)
     return ctx.run(Effect.gen(function* () {
       // A background process keeps its jail until the session ends; any other call's jail ends with the call.
       if (ClaudeCodeTools.orchestra(input.tool_name) !== ClaudeHostGate.PROCESS) yield* release(input.tool_use_id)
@@ -143,6 +154,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   // A failed call holds a jail too; nothing else is recorded for it here.
   const failed: HookCallback = (input) => {
     if (input.hook_event_name !== "PostToolUseFailure") return Promise.resolve({})
+    ctx.calls?.cancel(input.tool_use_id)
+    ctx.calls?.release(input.tool_use_id)
     return ctx.run(release(input.tool_use_id)).then(() => ({}))
   }
 

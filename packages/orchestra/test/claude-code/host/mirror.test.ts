@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Effect } from "effect"
 import type { ModelUsage, SDKAssistantMessage, SDKMessage, SDKPartialAssistantMessage, SDKResultSuccess, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
@@ -14,11 +14,10 @@ import { Todo } from "@/session/todo"
 import { Snapshot } from "@/snapshot"
 import { Provider } from "@/provider/provider"
 import { TestInstance } from "../../fixture/fixture"
-import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { testEffect } from "../../lib/effect"
 import { makeHttp } from "../../session/prompt.fixture"
 
-const it = testEffect(Layer.merge(makeHttp(), TestAppNodeBuilder.build(ModelsDev.node)))
+const it = testEffect(makeHttp())
 const base = { parent_tool_use_id: null, session_id: "sdk-mirror", uuid: crypto.randomUUID() }
 const requested = "claude-haiku-4-5-20251001"
 const usage: SDKAssistantMessage["message"]["usage"] = { input_tokens: 10, output_tokens: 20,

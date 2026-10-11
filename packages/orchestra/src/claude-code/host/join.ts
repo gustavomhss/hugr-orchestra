@@ -67,6 +67,8 @@ export function make() {
     toolUse: (agentID: string) => tasks.get(agentID),
     get: (toolUseID: string): Readonly<Entry> | undefined => entries.get(toolUseID),
     child: (toolUseID: string) => entries.get(toolUseID)?.child,
+    /** Ownership lookup for Tasks-panel interruption, including children with no stream frames yet. */
+    children: () => [...entries.values()].flatMap((item) => item.child ? [[item.toolUseID, item.child] as const] : []),
     /** Every id Claude Code reported for one run must be the same one; otherwise the run HOLDs. */
     confirm: (toolUseID: string, reported: readonly (string | undefined)[]): { readonly agentID: string } | { readonly hold: string } => {
       const item = entries.get(toolUseID)

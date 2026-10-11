@@ -68,6 +68,8 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
     history?: SessionV1.WithParts[],
   ) => Effect.Effect<{ info: SessionV1.User; parts: SessionV1.Part[] }, Image.Error>
   loop: SessionPrompt.Interface["loop"]
+  beforeAdmission?: (session: Session.Info, request: SessionPrompt.PromptInput) => Effect.Effect<void>
+  admitted?: (message: SessionV1.WithParts) => Effect.Effect<void>
 }) {
   const safety = yield* ToolSafety.make
   const locations = yield* LocationServiceMap.Service
@@ -123,6 +125,7 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
       ? yield* dependencies.sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
       : undefined
     const boundary = history?.findIndex((message) => message.info.id === session.revert?.messageID) ?? -1
+    yield* dependencies.beforeAdmission?.(session, request) ?? Effect.void
     const draft = yield* dependencies.build(
       { ...Schema.decodeUnknownSync(dependencies.schema)(structuredClone(original)), messageID },
       notes.length ? { reminders: notes } : undefined,
@@ -174,6 +177,7 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
       return request.noReply === true ? message : yield* dependencies.loop({ sessionID: session.id })
 
     if (request.noReply === true) return message
+    yield* dependencies.admitted?.(message) ?? Effect.void
     return yield* dependencies.loop({ sessionID: session.id })
   }, Effect.scoped)
 })

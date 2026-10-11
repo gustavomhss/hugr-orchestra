@@ -61,6 +61,11 @@ export const MCP_SERVER = "orchestra"
 /** Claude Code's todo tools are off by default on current models; this only turns Claude Code's own tool on. */
 export const ENV_FLAGS = { CLAUDE_CODE_ENABLE_TODO_TOOLS: "1" } as const
 
+const REVIEW_NOTICE =
+  "`maestro_request_review` is unavailable in Claude mode: it requires Orchestra's prompt executor to dispatch " +
+  "a review. Claude Code owns delegation here. Use `Agent` with `subagent_type: \"orchestra:lucy\"` for a review; " +
+  "automatic governed review requests need a native dispatch integration before they can run."
+
 /** Seats that return a proposal Maestro must read in the same turn (contract V2: foreground only). */
 export const FOREGROUND_SEATS = ["archie", "backend"]
 
@@ -125,6 +130,7 @@ export function append(seat: string, seats: Record<string, string>) {
     "owner's main conversation. Orchestra shows your work to the owner and adds its own tools beside Claude Code's, under",
     "the `mcp__orchestra__` prefix. For a long-running or background command (a dev server, a watcher, a long build or",
     "test run) use `mcp__orchestra__process`, so the owner can follow its output live; use Bash for short commands.",
+    REVIEW_NOTICE,
   ].join(" ")
 }
 
@@ -156,6 +162,7 @@ function maestro(seats: Record<string, string>) {
         "watchers and long builds or test runs. Use it for those, so the owner can follow their output live in the " +
         "Processes panel; use Bash for short commands.",
       "- `mcp__orchestra__maestro_*` tools run Orchestra's governed workflow: admission, plans, reviews and approvals.",
+      `- ${REVIEW_NOTICE}`,
       "- `mcp__orchestra__atlas_*` tools read and record Atlas project memory; `mcp__orchestra__dock_*` tools operate " +
         "apps in the owner's App Dock.",
       "- `mcp__orchestra__context_recall` brings back earlier work from this session after Claude Code compacted it.",
