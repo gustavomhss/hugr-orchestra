@@ -360,6 +360,8 @@ export const nixfmt: Info = {
 
 export const rustfmt: Info = {
   name: "rustfmt",
+  // rustfmt is usually the rustup proxy, which runs the toolchain a workspace `rust-toolchain.toml` names, by path too.
+  confine: "file",
   extensions: [".rs"],
   async enabled() {
     const match = which("rustfmt")

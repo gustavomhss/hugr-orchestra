@@ -255,7 +255,7 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
   readonly args: ReadonlyArray<string>
   readonly cwd: string
   readonly env: NodeJS.ProcessEnv
-  /** Existing files the program may rewrite in place. */
+  /** Existing files inside `cwd` the program may rewrite in place. */
   readonly write?: ReadonlyArray<string>
 }) {
   if (process.platform !== "darwin" && process.platform !== "linux")
@@ -268,7 +268,14 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
         ? ToolSafetySandboxRuntime.settled().pipe(Effect.andThen(pick(false, true)))
         : Effect.succeed(picked)))
   if (sandbox.kind === "none") return yield* new ToolSafety.Denied({ reason: sandbox.reason })
+  // A granted file is checked through the same physical path the policy grants, so a symlink planted at it or at a
+  // parent cannot carry the grant outside cwd.
   const write = yield* Effect.forEach(input.write ?? [], (file) => io("sandbox-write-file-acquisition", () => realpath(file)))
+  if (write.length) {
+    const cwd = yield* io("sandbox-cwd-acquisition", () => realpath(input.cwd))
+    if (write.some((file) => !FSUtil.contains(cwd, file)))
+      return yield* new ToolSafety.Denied({ reason: "sandbox-write-file-outside-cwd" })
+  }
   const deny = yield* Effect.forEach([Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"),
     path.join(Global.Path.home, ".aws"), path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc")],
   (entry) => io("sandbox-deny-path-acquisition", () => physical(entry)))

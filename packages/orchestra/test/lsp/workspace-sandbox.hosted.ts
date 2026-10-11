@@ -7,10 +7,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { NodeFileSystem } from "@effect/platform-node"
 import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
+import { rm, symlink } from "node:fs/promises"
 import { createServer } from "node:net"
 import os from "node:os"
 import path from "node:path"
-import { Effect, Layer } from "effect"
+import { Effect, Fiber, Layer } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Format } from "../../src/format"
@@ -180,6 +181,107 @@ describe("workspace programs run confined", () => {
             `const fs = require("fs")
 try { fs.writeFileSync(${JSON.stringify(marker)}, "escaped") } catch {}
 require("child_process").spawnSync("curl", ["-s", "--max-time", "5", "http://127.0.0.1:${port}/"])
+module.exports = { semi: false }
+`,
+          )
+        }),
+    },
+    240_000,
+  )
+
+  confinedFormat(
+    "rustfmt runs confined: the rustup proxy executes the toolchain a workspace rust-toolchain.toml names",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const file = path.join(directory, "main.rs")
+        yield* Effect.promise(() => Bun.write(file, "fn main() {}\n"))
+        // Positive control: the planted toolchain's rustfmt ran (through the rustup proxy) and rewrote its file.
+        expect(yield* Format.use.file(file)).toBe(true)
+        expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("fn main() {}\nformatted out=denied sibling=denied\n")
+        expect(existsSync(marker)).toBe(false)
+        expect(existsSync(path.join(directory, "planted.txt"))).toBe(false)
+      }),
+    {
+      config: { formatter: true },
+      init: (directory) =>
+        Effect.promise(async () => {
+          if (!Bun.which("rustfmt")) throw new Error("this proof needs the runner's rustup rustfmt proxy on PATH")
+          const toolchain = path.join(directory, "toolchain")
+          await Bun.write(path.join(directory, "rust-toolchain.toml"), `[toolchain]\npath = ${JSON.stringify(toolchain)}\n`)
+          await Bun.write(path.join(toolchain, "lib", ".keep"), "")
+          const bin = path.join(toolchain, "bin", "rustfmt")
+          await Bun.write(bin, `#!/bin/sh\n${probes(directory)}\necho "formatted $probe" >> "$1"\n`)
+          await Bun.$`chmod +x ${bin}`
+        }),
+    },
+    180_000,
+  )
+
+  confinedFormat(
+    "a file formatter is refused when the formatted path is a symlink leading outside the workspace",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const victim = path.join(outside, "victim.php")
+        yield* Effect.promise(async () => {
+          await Bun.write(victim, "<?php\n")
+          await symlink(victim, path.join(directory, "a.php"))
+        })
+        yield* Format.use.file(path.join(directory, "a.php"))
+        expect(yield* Effect.promise(() => Bun.file(victim).text())).toBe("<?php\n")
+      }),
+    {
+      config: { formatter: true },
+      init: (directory) =>
+        Effect.promise(async () => {
+          await Bun.write(path.join(directory, "composer.json"), JSON.stringify({ "require-dev": { "laravel/pint": "*" } }))
+          const bin = path.join(directory, "vendor", "bin", "pint")
+          await Bun.write(bin, `#!/bin/sh\necho escaped >> "$1"\n`)
+          await Bun.$`chmod +x ${bin}`
+        }),
+    },
+    180_000,
+  )
+
+  confinedFormat(
+    "a stdin formatter's output is not written through a symlink swapped in while it ran",
+    () =>
+      Effect.gen(function* () {
+        const directory = (yield* TestInstance).directory
+        const victim = path.join(outside, "victim.ts")
+        const file = path.join(directory, "a.ts")
+        yield* Effect.promise(async () => {
+          await Bun.write(victim, "const victim = 1\n")
+          await Bun.write(path.join(directory, "warm.ts"), "const warm   =   1;\n")
+          await Bun.write(file, "const x   =   1;\n")
+        })
+        // Warm up first so prettier is resolved; then a.ts's config holds until the swap below is done.
+        yield* Format.use.file(path.join(directory, "warm.ts"))
+        expect(yield* Effect.promise(() => Bun.file(path.join(directory, "warm.ts")).text())).toBe("const warm = 1\n")
+        const formatting = yield* Effect.forkChild(Format.use.file(file))
+        yield* Effect.sleep("3 seconds")
+        yield* Effect.promise(async () => {
+          await rm(file)
+          await symlink(victim, file)
+          await Bun.write(path.join(directory, "swapped"), "")
+        })
+        yield* Fiber.join(formatting)
+        expect(yield* Effect.promise(() => Bun.file(victim).text())).toBe("const victim = 1\n")
+      }),
+    {
+      config: { formatter: true },
+      init: (directory) =>
+        Effect.promise(async () => {
+          await Bun.write(path.join(directory, "package.json"), JSON.stringify({ devDependencies: { prettier: "*" } }))
+          await Bun.write(
+            path.join(directory, ".prettierrc.cjs"),
+            `const fs = require("fs")
+if (process.argv.some((arg) => arg.endsWith("a.ts"))) {
+  const deadline = Date.now() + 60_000
+  while (!fs.existsSync(${JSON.stringify(path.join(directory, "swapped"))}) && Date.now() < deadline)
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50)
+}
 module.exports = { semi: false }
 `,
           )
