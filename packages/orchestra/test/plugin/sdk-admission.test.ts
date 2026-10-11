@@ -175,13 +175,23 @@ test("bridge validation rejects oversized bytes and unknown deep directories wit
   await Bun.write(path.join(project, "package.json"), '{"name":"fixture"}')
   const bridge = path.join(project, "node_modules", name)
   await PluginSdkPackage.write(bridge)
+  const mark = path.join(tmp.path, "evaluated")
   const entry = path.join(project, "entry.js")
-  await Bun.write(entry, `await import(${JSON.stringify(name + "/unlisted")})`)
-  await Bun.write(path.join(bridge, "index.js"), "x".repeat(PluginSdkLimits.limits.packageBytes + 1))
-  expect((await run("plugin", entry)).error).toContain("file-byte bound")
+  await Bun.write(entry, `await Bun.write(${JSON.stringify(mark)}, "ran")\nawait import(${JSON.stringify(name + "/unlisted")})`)
+  // An oversized bundled SDK file is an altered tree: refused and left intact.
+  const oversized = "x".repeat(PluginSdkLimits.limits.packageBytes + 1)
+  await Bun.write(path.join(bridge, "index.js"), oversized)
+  expect((await run("plugin", entry)).error).toContain("Foreign or altered SDK tree")
+  expect(await readFile(path.join(bridge, "index.js"), "utf8")).toBe(oversized)
   await Bun.write(path.join(bridge, "index.js"), PluginSdkPackage.sources["index.js"])
+  // The file-byte bound still applies to the installed metadata admission reads.
+  const neighbor = path.join(project, "node_modules", "neighbor", "package.json")
+  await Bun.write(neighbor, JSON.stringify({ name: "neighbor", version: "1.0.0", description: oversized }))
+  expect((await run("plugin", entry)).error).toContain("file-byte bound")
+  await rm(path.dirname(neighbor), { recursive: true })
   await mkdir(path.join(bridge, "extra", ...Array(80).fill("deep")), { recursive: true })
   expect((await run("plugin", entry)).error).toContain("PluginSdkSetupError")
+  expect(await Bun.file(mark).exists()).toBe(false)
 })
 
 test("warm SDK version and changed alias requests fail locally before reconciling files", async () => {
