@@ -51,8 +51,7 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { nativeT, setNativeTranslations } from "./native-translations"
-import { OmniHost } from "./omni-host"
-import { OmniSmoke } from "./omni-smoke"
+import { OmniBoot } from "./omni-boot"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -156,7 +155,7 @@ const main = Effect.gen(function* () {
   initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
-  OmniHost.setup()
+  OmniBoot.setup()
 
   const wslServers = createWslServersController(
     app.getVersion(),
@@ -418,11 +417,7 @@ const main = Effect.gen(function* () {
       }),
     )
     server = listener
-    yield* Deferred.succeed(serverReady, {
-      url,
-      username: "orchestra",
-      password,
-    })
+    yield* Deferred.succeed(serverReady, { url, username: "orchestra", password })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -436,11 +431,7 @@ const main = Effect.gen(function* () {
         }),
       ),
     )
-    yield* Effect.promise(() =>
-      OmniSmoke.report({ url, username: "orchestra", password }).catch((error: unknown) =>
-        logger.error("omni smoke report failed", error),
-      ),
-    )
+    yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
 
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
