@@ -70,7 +70,7 @@ const native = (profile: Profile | undefined): Profile | undefined => {
 /** Host fact about the write jail of sandbox-bound shell commands. */
 export type ShellFact = {
   readonly shellWrites: "enforced" | "unenforced"
-  readonly shellSandbox: { readonly kind: "seatbelt" | "srt" | "none"; readonly reason?: string }
+  readonly shellSandbox: { readonly kind: "seatbelt" | "srt" | "appcontainer" | "none"; readonly reason?: string }
 }
 
 /** Per-invocation cell that ToolSafetySandbox.wrap fills and ToolSafety.run attaches to its observation. */

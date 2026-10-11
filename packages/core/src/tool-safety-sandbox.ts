@@ -8,8 +8,10 @@ import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
+import { ToolSafetyAppContainer } from "./tool-safety-appcontainer"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 import { SandboxParents } from "./sandbox-parents"
+import { Shell } from "./shell"
 import { TcpProxy } from "./tcp-proxy"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
@@ -85,7 +87,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   }), { discard: true })
   if (!profile?.requireSandbox && !profile?.sandbox?.enabled && grants.length === 0 && endpointGrants.length === 0) return ordinary
   // Exact endpoint/socket capabilities never permit unconfined fallback, including during runtime acquisition.
-  if (endpointGrants.length && process.platform !== "darwin" && process.platform !== "linux")
+  if (endpointGrants.length && !["darwin", "linux", "win32"].includes(process.platform))
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
   if (grants.length && process.platform !== "darwin" && process.platform !== "linux")
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-platform-unsupported" })
@@ -93,7 +95,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-domain-policy-unenforceable" })
   if (grants.length && profile?.sandbox?.allowedDomains?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-domain-policy-unenforceable" })
-  const discovered = grants.length || endpointGrants.length ? undefined : yield* pick(true)
+  const discovered = grants.length || endpointGrants.length ? undefined : yield* pick(true, false, command)
   if (discovered?.kind === "none") {
     if (!profile?.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
       reason: process.platform === "darwin" || process.platform === "linux"
@@ -141,7 +143,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac. Linux endpoints use srt's
   // own strict-allowlist proxy, only from the pinned, hash-verified runtime (an `srt` on PATH is unverified and may
   // lack seccomp, which would leave Unix sockets open); without a ready pinned srt they refuse below and never run unconfined.
-  const sandbox = discovered ?? (process.platform === "linux" ? yield* pick(true, endpointGrants.length > 0) : yield* available("/usr/bin/sandbox-exec").pipe(
+  const sandbox = discovered ?? (process.platform !== "darwin" ? yield* pick(true, endpointGrants.length > 0, command) : yield* available("/usr/bin/sandbox-exec").pipe(
     Effect.map((binary) => binary
       ? { kind: "seatbelt" as const, binary }
       : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }),
@@ -202,6 +204,21 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     fs.makeDirectory(path.join(scratch, name)).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-cache-acquisition" })),
     ), { discard: true })
+  if (sandbox.kind === "appcontainer") {
+    const launched = yield* ToolSafetyAppContainer.command({
+      command, supervisor: sandbox.supervisor, cwd, directory, roots: declared, scratch, deny, protectedWrites,
+      env: confined, ports: endpoints, domains: profile?.sandbox?.allowedDomains?.length ?? 0,
+    }).pipe(Effect.result)
+    // A policy the ACLs cannot express is an unavailable sandbox for this command, never for an exact endpoint.
+    if (launched._tag === "Failure") {
+      if (endpoints.length || !profile?.sandbox?.unconfinedFallback) return yield* launched.failure
+      yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: launched.failure.reason } })
+      return ordinary
+    }
+    if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
+    yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
+    return launched.success
+  }
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
     // file-write* also covers mode, flag, owner and xattr changes (chmod, chflags), so those stay inside the roots.
@@ -244,10 +261,19 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
 
 /**
  * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by
- * this process's own JavaScript runtime. `start` lets a Linux host begin fetching that runtime on first need.
+ * this process's own JavaScript runtime; on Windows the omni supervisor's AppContainer mode, for pwsh and cmd only.
+ * `start` lets a Linux host begin fetching that runtime on first need.
  * `pinned` (exact endpoint grants) ignores PATH and accepts only the verified runtime that ships its seccomp filter.
  */
-const pick = Effect.fnUntraced(function* (start: boolean, pinned = false) {
+const pick = Effect.fnUntraced(function* (start: boolean, pinned = false, command?: ChildProcess.StandardCommand) {
+  if (process.platform === "win32") {
+    const supervisor = yield* ToolSafetyAppContainer.Launcher
+    if (!supervisor) return { kind: "none" as const, reason: "sandbox-appcontainer-launcher-unavailable" }
+    // Without a command, the shell this host's shell tool uses by default.
+    if (!(command ? ToolSafetyAppContainer.confinable(command) : ToolSafetyAppContainer.shell(Shell.acceptable())))
+      return { kind: "none" as const, reason: "sandbox-appcontainer-shell-unsupported" }
+    return { kind: "appcontainer" as const, supervisor }
+  }
   if (process.platform !== "darwin" && process.platform !== "linux")
     return { kind: "none" as const, reason: `sandbox-platform-unsupported: ${process.platform}` }
   const binary = pinned ? undefined : yield* available()
@@ -304,8 +330,9 @@ const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory:
   const target = path.resolve(directory, entry)
   // Seatbelt supports literal subtrees, not arbitrary shell globs. A trailing /** names that subtree.
   const literal = seatbelt && target.endsWith("/**") ? target.slice(0, -3) : target
-  if (/[*?[]/.test(literal) && (seatbelt || process.platform === "linux")) return yield* new ToolSafety.Denied({
-    reason: seatbelt ? "sandbox-seatbelt-glob-policy-unenforceable" : "sandbox-linux-glob-policy-unenforceable",
+  if (/[*?[]/.test(literal) && (seatbelt || process.platform !== "darwin")) return yield* new ToolSafety.Denied({
+    reason: seatbelt ? "sandbox-seatbelt-glob-policy-unenforceable"
+      : process.platform === "win32" ? "sandbox-appcontainer-glob-policy-unenforceable" : "sandbox-linux-glob-policy-unenforceable",
   })
   return yield* canonical(fs, literal)
 })

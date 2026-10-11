@@ -18,7 +18,8 @@ import { pollWithTimeout, testEffect } from "../lib/effect"
 
 const it = testEffect(Layer.mergeAll(TestLLMServer.layer, NodeServices.layer, LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node]))))
 const sandbox = await Effect.runPromise(ToolSafetySandbox.status())
-const prepared = sandbox.shellWrites === "enforced" ? it.live : it.live.skip
+// Windows' AppContainer grants need existing roots, so a missing output leaf never reaches parent preparation there.
+const prepared = sandbox.shellWrites === "enforced" && sandbox.shellSandbox.kind !== "appcontainer" ? it.live : it.live.skip
 if (sandbox.shellWrites === "unenforced") console.info(`Native preparation conformance skipped: ${sandbox.shellSandbox.reason}`)
 
 const fixture = (shell: "allow" | "ask" = "allow") => Effect.gen(function* () {
@@ -238,9 +239,10 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
       expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
       return
     }
-    // Linux CI has no ready srt here; an exact endpoint grant refuses rather than running unconfined.
+    // Linux CI has no ready srt here; Windows' AppContainer cannot grant the missing output leaf. Either way an exact
+    // endpoint grant refuses rather than running unconfined.
     const reason = process.platform === "linux"
-      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-loopback-endpoint-exact-policy-unsupported"
+      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-appcontainer-write-root-missing"
     expect(tools.some((part) => part.state.status === "error" && part.state.error.includes(`Tool safety HOLD: ${reason}`))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
     expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
