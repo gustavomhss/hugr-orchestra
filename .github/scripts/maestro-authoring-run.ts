@@ -17,7 +17,8 @@ const inventoryDigest = "80bdd0f9e2cb3195fbdc64ad7d1e8fb1d2e06bb55ceabcb213e28e4
 const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats/index.ts", "maestro/roster.ts",
   "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "tool/task-background.ts",
   "session/prompt-guard.ts", "session/task-prompt-ops.ts", "effect/app-runtime.ts", "cli/cmd/run.ts"]
-const deadline = 10 * 60_000
+// A large revision on Opus plus a cold Instance boot can pass ten minutes; measured 2026-10-11.
+const deadline = 20 * 60_000
 class AuthoringError extends Error {}
 function requireAuthoring(value: unknown, code: string): asserts value { if (!value) throw new AuthoringError(code) }
 function decode<S extends { readonly Type: unknown }>(schema: S, value: unknown, code: string): S["Type"] {
