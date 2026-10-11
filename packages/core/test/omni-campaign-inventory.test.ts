@@ -383,7 +383,8 @@ async function instrumentCopy(home: string, lib = (source: string) => source, wi
   await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
     .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
   await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "packages/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
-  await Bun.write(path.join(home, "delivery-fixtures.ts"), await Bun.file(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts")).text())
+  for (const name of ["delivery-fixtures.ts", "fake-llm.ts", "isolated-user.ts", "process-rows.ts", "server-client.ts", "wait.ts"])
+    await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "packages/omni/campaign", name)).text())
 }
 
 async function controller(script: string, env: Record<string, string>) {

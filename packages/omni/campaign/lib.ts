@@ -11,33 +11,21 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
 import { tree } from "../../core/test/fixture/process-tree.ts"
-import type * as FakeLLM from "./fake-llm.ts"
-import type * as IsolatedUser from "./isolated-user.ts"
-import type * as ProcessRows from "./process-rows.ts"
-import type { Identity, Row } from "./process-rows.ts"
-import type * as ServerClient from "./server-client.ts"
-import type * as Wait from "./wait.ts"
+import { fakeLLM, provider } from "./fake-llm.ts"
+import { isolated } from "./isolated-user.ts"
+import { birth, decodeUnixTable, hasNonce, matches, type Identity, type Row } from "./process-rows.ts"
+import { client } from "./server-client.ts"
+import { sleep, until } from "./wait.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
 export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
 export type { ToolCall } from "./fake-llm.ts"
 export type { Identity, Row } from "./process-rows.ts"
 
-// The stateless parts of the harness live in modules of their own. omni-campaign-inventory.test.ts instruments a
-// copy of this file in a temp dir (beside copies of windows-inventory.ts and delivery-fixtures.ts only) and rewrites
-// the process-tree import above to an absolute path, so those modules are loaded from the directory of that import:
-// it resolves to this campaign directory from both places.
-const CAMPAIGN = path.resolve(path.dirname(fileURLToPath(import.meta.resolve("../../core/test/fixture/process-tree.ts"))), "../../../omni/campaign")
-const part = <T>(name: string): Promise<T> => import(path.join(CAMPAIGN, name))
-export const { sleep, until } = await part<typeof Wait>("wait.ts")
-export const { isolated } = await part<typeof IsolatedUser>("isolated-user.ts")
-export const { provider, fakeLLM } = await part<typeof FakeLLM>("fake-llm.ts")
-export const { client } = await part<typeof ServerClient>("server-client.ts")
-const processRows = await part<typeof ProcessRows>("process-rows.ts")
-export const { decodeUnixTable, matches, hasNonce } = processRows
-const { birth } = processRows
+// The stateless parts of the harness live in modules of their own; this file re-exports them, so importers keep one
+// entry point. omni-campaign-inventory.test.ts instruments a copy of this file beside copies of those modules.
+export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, sleep, until }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
 export const ORCHESTRA = path.join(ROOT, "packages/orchestra")
