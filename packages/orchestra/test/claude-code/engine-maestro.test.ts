@@ -150,10 +150,14 @@ ClaudeEngineFixture.it.instance("a background teammate's task return reaches Mae
     ClaudeEngineFixture.reset()
     const { prompt, chat } = yield* setup()
     const text = '<task_result id="tsk_1" state="completed">Checked: the release flag is on.</task_result>'
-    ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("The teammate confirmed the flag.", "return-api"))
+    ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("A teammate is checking.", "start-api"),
+      ClaudeEngineFixture.reply("The teammate confirmed the flag.", "return-api"))
+    yield* prompt.prompt({ sessionID: chat.id, ...ask("Is the release flag on?") })
+    // What TaskBackground delivers when the teammate settles: a synthetic task return, after Maestro's turn ended.
     const answer = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", parts: [{ type: "text", text, synthetic: true,
       metadata: { source: { type: "task-return", task_id: "ses_teammate", state: "completed" } } }] })
-    expect(ClaudeEngineFixture.state.queries.map((query) => query.prompt)).toEqual([text])
+    expect(ClaudeEngineFixture.state.queries.map((query) => query.prompt)).toEqual(["Is the release flag on?", text])
+    expect(ClaudeEngineFixture.state.queries[1].options?.resume).toBe("sdk-1")
     expect(answer.info.role === "assistant" && answer.info.finish).toBe("stop")
     expect(answer.parts.some((part) => part.type === "text" && part.text === "The teammate confirmed the flag.")).toBe(true)
   }), 60_000)
