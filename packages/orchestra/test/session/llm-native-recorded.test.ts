@@ -3,7 +3,7 @@ import { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { HttpRecorder } from "@orchestra/http-recorder"
 import { HttpRecorderInternal } from "@orchestra/http-recorder/internal"
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { tool, type ModelMessage, type JSONValue } from "ai"
 import { Effect, Layer, Option, Schema, Stream } from "effect"
 import path from "node:path"
@@ -50,7 +50,6 @@ type RecordedScenario = {
   readonly recordAuth?: () => Auth.Info | undefined
   readonly replayAuth?: Auth.Info
   readonly stableID?: string
-  readonly legacyCodexReadonly?: boolean
   readonly config: (model: ModelsDev.Provider["models"][string]) => Partial<ConfigV1.Info>
 }
 
@@ -148,7 +147,6 @@ const RECORDED_SCENARIOS = [
     recordAuth: recordOpenAIOAuth,
     replayAuth: replayOpenAIOAuth,
     stableID: "openai-oauth",
-    legacyCodexReadonly: true,
     config: (model) =>
       providerConfig({
         providerID: ProviderV2.ID.openai,
@@ -410,27 +408,6 @@ describe("session.llm native recorded", () => {
       continue
     }
     const it = testEffect(recordedNativeLLMLayer(scenario))
-    const legacyAuth = scenario.legacyCodexReadonly ? (shouldRecord ? scenario.recordAuth?.() : scenario.replayAuth) : undefined
-    if (!legacyAuth) {
-      it.instance(`${scenario.name}: drives a tool loop to a final text answer`, () => driveToolLoop(scenario))
-      continue
-    }
-    // Unregistered Codex OAuth is served only by the explicit read-only legacy consumer,
-    // which requires the selected credential to be the inherited ORCHESTRA_AUTH_CONTENT.
-    // Set before the instance bootstraps plugins; restore so other scenarios keep the default path.
-    describe("legacy Codex read-only", () => {
-      const previous = { readonly: process.env.ORCHESTRA_LEGACY_CODEX_READONLY, content: process.env.ORCHESTRA_AUTH_CONTENT }
-      beforeAll(() => {
-        process.env.ORCHESTRA_LEGACY_CODEX_READONLY = "1"
-        process.env.ORCHESTRA_AUTH_CONTENT = JSON.stringify({ [scenario.providerID]: legacyAuth })
-      })
-      afterAll(() => {
-        if (previous.readonly === undefined) delete process.env.ORCHESTRA_LEGACY_CODEX_READONLY
-        else process.env.ORCHESTRA_LEGACY_CODEX_READONLY = previous.readonly
-        if (previous.content === undefined) delete process.env.ORCHESTRA_AUTH_CONTENT
-        else process.env.ORCHESTRA_AUTH_CONTENT = previous.content
-      })
-      it.instance(`${scenario.name}: drives a tool loop to a final text answer`, () => driveToolLoop(scenario))
-    })
+    it.instance(`${scenario.name}: drives a tool loop to a final text answer`, () => driveToolLoop(scenario))
   }
 })

@@ -5,8 +5,8 @@ import { iife } from "@/util/iife"
 import { setTimeout as sleep } from "node:timers/promises"
 import { CopilotModels } from "./models"
 import { MessageV2 } from "@/session/message-v2"
-import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 
+const CLIENT_ID = "Ov23li8tweQw6odWQebz"
 const API_VERSION = "2026-06-01"
 const UTILITY_MODELS = ["gpt-5.4-nano", "gpt-4.1", "gpt-4o", "gpt-4o-mini"]
 // Add a small safety buffer when polling to avoid hitting the server
@@ -220,7 +220,6 @@ export async function CopilotAuthPlugin(input: PluginInput): Promise<Hooks> {
             },
           ],
           async authorize(inputs = {}) {
-            const clientID = OwnOAuthApp.requireClientID("copilot")
             const deploymentType = inputs.deploymentType || "github.com"
 
             let domain = "github.com"
@@ -240,7 +239,7 @@ export async function CopilotAuthPlugin(input: PluginInput): Promise<Hooks> {
                 "User-Agent": `opencode/${InstallationVersion}`,
               },
               body: JSON.stringify({
-                client_id: clientID,
+                client_id: CLIENT_ID,
                 scope: "read:user",
               }),
             })
@@ -270,7 +269,7 @@ export async function CopilotAuthPlugin(input: PluginInput): Promise<Hooks> {
                       "User-Agent": `opencode/${InstallationVersion}`,
                     },
                     body: JSON.stringify({
-                      client_id: clientID,
+                      client_id: CLIENT_ID,
                       device_code: deviceData.device_code,
                       grant_type: "urn:ietf:params:oauth:grant-type:device_code",
                     }),

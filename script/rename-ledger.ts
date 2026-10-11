@@ -214,16 +214,6 @@ export const protectedStrings: Protected[] = [
     paths: /\/test\/plugin\/xai\.test\.ts$/,
     reason: "xAI User-Agent and referrer, kept until probed",
   },
-  {
-    pattern: /headers\.set\("originator", "opencode"\)|`opencode\/\$\{InstallationVersion\} \(\$\{os\.platform\(\)\} \$\{os\.release\(\)\}; \$\{os\.arch\(\)\}\)`/g,
-    paths: /^packages\/orchestra\/src\/plugin\/openai\/legacy-codex-readonly\.ts$/,
-    reason: "Codex originator/User-Agent kept until live probe; ChatGPT plan access is tied to the registered originator",
-  },
-  {
-    pattern: /get\("originator"\)\)\.toBe\("opencode"\)|headers\.originator\)\.toBe\("opencode"\)|\["User-Agent"\]\)\.toStartWith\("opencode\/"\)/g,
-    paths: /^packages\/orchestra\/test\/plugin\/(?:codex-siwc|legacy-codex-readonly)\.test\.ts$/,
-    reason: "Codex originator/User-Agent kept until live probe; ChatGPT plan access is tied to the registered originator",
-  },
 
   // Unrelated words
   {

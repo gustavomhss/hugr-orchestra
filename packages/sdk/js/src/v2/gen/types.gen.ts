@@ -148,9 +148,6 @@ export type OAuth = {
   expires: number
   accountId?: string
   enterpriseUrl?: string
-  metadata?: {
-    [key: string]: unknown
-  }
 }
 
 export type ApiAuth = {
