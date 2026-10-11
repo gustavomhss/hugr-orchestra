@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import path from "node:path"
+import os from "node:os"
 import { createRequire } from "node:module"
 import { connect } from "node:net"
 import { readFile, writeFile } from "node:fs/promises"
@@ -79,6 +80,9 @@ export async function launchCandidate(executable: string, root: string, recorder
   const { _electron } = appRequire("@playwright/test") as typeof import("@playwright/test")
   const env = Object.fromEntries(["PATH", "LANG", "LC_ALL", "GOROOT", "RUSTUP_HOME"].flatMap((key) =>
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
+  // The candidate owns HOME, so rustup's default (~/.rustup) would point at an empty owned root and Cargo finds no
+  // toolchain. Name the runner's real toolchain location, as GOROOT does for Go; it holds no user data.
+  env.RUSTUP_HOME ??= path.join(os.homedir(), ".rustup")
   // --use-mock-keychain: on quit Chromium creates the "<name> Safe Storage" keychain item, and an unattended runner
   // never answers the keychain authorization prompt, so the process hangs (sampled stack: SecItemAdd ->
   // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
