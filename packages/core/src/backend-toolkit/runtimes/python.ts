@@ -23,6 +23,14 @@ export default {
   version: CPYTHON,
   license: "PSF-2.0",
   upstream: "astral-sh/python-build-standalone",
+  // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "10.15" },
+    "linux-arm64": { glibc: "2.17" },
+    "linux-x64": { glibc: "2.17" },
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": unix("aarch64-apple-darwin", "sha256-2JddffTwj3sceq/N+svdzsPTZkFfLBpyskZraFCBWTM="),
     "darwin-x64": unix("x86_64-apple-darwin", "sha256-jpywhzBb+4lp9oqQX3n0FGnUqlIgwapxraf8mVO9ug8="),
