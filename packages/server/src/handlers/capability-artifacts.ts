@@ -73,7 +73,7 @@ function parseRange(range: string | undefined, size: number) {
     return { start: Math.max(0, size - suffix), end: size - 1 }
   }
   const start = Number(match[1])
-  const last = match[2] === "" ? size - 1 : Number(match[2])
+  const last = match[2] === "" ? Number.POSITIVE_INFINITY : Number(match[2])
   if (last < start) return undefined
   if (start >= size) return "unsatisfiable" as const
   return { start, end: Math.min(last, size - 1) }
