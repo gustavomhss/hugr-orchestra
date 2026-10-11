@@ -1,4 +1,6 @@
+import { existsSync } from "node:fs"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Plugin } from "../plugin"
 import { Format } from "../format"
 import { LSP } from "@/lsp/lsp"
@@ -9,6 +11,9 @@ import { InstanceState } from "@/effect/instance-state"
 import { Effect, Layer } from "effect"
 import { Config } from "@/config/config"
 import { Service } from "./bootstrap-service"
+import { Agent } from "@/agent/agent"
+import { LocationServiceMap, locationServiceMapLayer } from "@orchestra/core/location-services"
+import { UpstreamV2 } from "@/maestro/upstream-v2"
 
 export { Service } from "./bootstrap-service"
 export type { Interface } from "./bootstrap-service"
@@ -26,6 +31,7 @@ const layer = Layer.effect(
     const project = yield* Project.Service
     const snapshot = yield* Snapshot.Service
     const vcs = yield* Vcs.Service
+    const upstream = yield* UpstreamV2.make
 
     const run = Effect.gen(function* () {
       const ctx = yield* InstanceState.context
@@ -34,6 +40,8 @@ const layer = Layer.effect(
       yield* config.get()
       // Plugin can mutate config so it has to be initialized before anything else.
       yield* plugin.init()
+      // A routed directory that does not exist (the raw-path fallback) has no native placement to register.
+      if (existsSync(ctx.directory)) yield* upstream(ctx)
       // Each service self-manages its own slow work via Effect.forkScoped against
       // its per-instance state scope. We just await materialization here.
       yield* Effect.forEach(
@@ -47,10 +55,23 @@ const layer = Layer.effect(
   }),
 )
 
+// Bound here like Agent's own map, so an Instance boots without the app runtime supplying the map.
+const locationServiceMapNode = LayerNode.make({ service: LocationServiceMap.Service, layer: locationServiceMapLayer, deps: [] })
+
 export const node = makeGlobalNode({
   service: Service,
   layer: layer,
-  deps: [Config.node, Format.node, LSP.node, Plugin.node, Project.node, Snapshot.node, Vcs.node],
+  deps: [
+    Config.node,
+    Format.node,
+    LSP.node,
+    Plugin.node,
+    Project.node,
+    Snapshot.node,
+    Vcs.node,
+    Agent.node,
+    locationServiceMapNode,
+  ],
 })
 
 export * as InstanceBootstrap from "./bootstrap"
