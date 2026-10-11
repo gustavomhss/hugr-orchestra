@@ -175,6 +175,9 @@ describe("Claude Code Agent dispatch records", () => {
     if (author?.info.role !== "assistant") throw new Error("expected the author message")
     expect(author.info.agent).toBe("archie")
     expect(author.parts.flatMap((item) => item.type === "text" ? [item.text] : [])).toEqual([final])
+    // No mirrored child turn exists here, so the host recorded the author and says so on every text part.
+    expect(author.parts.flatMap((item) => item.type === "text" ? [item.metadata] : []))
+      .toEqual([{ source: "claude-code-agent-output", agentID: "a5e1c0ffee" }])
 
     const observed = yield* UpstreamProvenance.observe({ projectID: fixture.parent.projectID, parentSessionID: fixture.parent.id,
       parentMessageID: SessionMessage.ID.make(fixture.message.id), parentCallID: "toolu_01", authorSessionID: child,
