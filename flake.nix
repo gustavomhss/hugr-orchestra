@@ -21,8 +21,8 @@
       devShells = forEachSystem (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            (callPackage ./nix/bun.nix { })
-            nodejs_24
+            bun
+            nodejs_20
             pkg-config
             openssl
             git
@@ -34,20 +34,16 @@
         default =
           final: _prev:
           let
-            bun = final.callPackage ./nix/bun.nix { bun = _prev.bun; };
-            electron = final.callPackage ./nix/electron.nix { };
             node_modules = final.callPackage ./nix/node_modules.nix {
-              inherit rev bun;
+              inherit rev;
             };
           in
           rec {
             orchestra = final.callPackage ./nix/orchestra.nix {
-              inherit node_modules bun;
-              nodejs = final.nodejs_24;
+              inherit node_modules;
             };
             orchestra-desktop = final.callPackage ./nix/desktop.nix {
-              inherit orchestra bun electron;
-              nodejs = final.nodejs_24;
+              inherit orchestra;
             };
           };
       };
@@ -55,22 +51,17 @@
       packages = forEachSystem (
         pkgs:
         let
-          bun = pkgs.callPackage ./nix/bun.nix { };
-          electron = pkgs.callPackage ./nix/electron.nix { };
           node_modules = pkgs.callPackage ./nix/node_modules.nix {
-            inherit rev bun;
+            inherit rev;
           };
         in
         rec {
           default = orchestra;
-          inherit bun electron node_modules;
           orchestra = pkgs.callPackage ./nix/orchestra.nix {
-            inherit node_modules bun;
-            nodejs = pkgs.nodejs_24;
+            inherit node_modules;
           };
           orchestra-desktop = pkgs.callPackage ./nix/desktop.nix {
-            inherit orchestra bun electron;
-            nodejs = pkgs.nodejs_24;
+            inherit orchestra;
           };
           # Updater derivation with fakeHash - build fails and reveals correct hash
           node_modules_updater = node_modules.override {
