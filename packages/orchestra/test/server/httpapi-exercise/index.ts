@@ -38,6 +38,7 @@ import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { scheduleScenarios } from "./schedule"
+import { leanScenarios } from "./lean"
 import { skillScenarios } from "./skill"
 import { catalogScenarios } from "./catalog"
 import { disposeApps } from "./backend"
@@ -114,6 +115,7 @@ const scenarios: Scenario[] = [
     check(body.worktree === ctx.directory, "worktree should resolve from x-orchestra-directory")
   }),
   ...vcsScenarios,
+  ...leanScenarios,
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
