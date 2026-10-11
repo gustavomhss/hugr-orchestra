@@ -199,11 +199,17 @@ linux("an exact endpoint grant gives srt only its IP-literal port under a strict
     expect(granted.settings.network).toEqual({ allowedDomains: ["127.0.0.1:9042"], deniedDomains: [], strictAllowlist: true,
       allowUnixSockets: [], allowAllUnixSockets: false, allowLocalBinding: false })
     expect(granted.env.ORCHESTRA_TCP_PROXY_CONNECT).toBe("9042")
+    // The host-written forwarder runs first, on this runtime, with the granted ports; its directory is denied writes.
+    const forwarder = granted.argv[4]
+    expect(granted.argv.slice(2)).toEqual(["--", process.execPath, forwarder, "9042", process.execPath, "-e", expect.stringContaining("writeFileSync")])
+    expect(path.basename(forwarder)).toBe("orchestra-endpoint-forwarder.cjs")
+    expect(granted.settings.filesystem.denyWrite).toContain(path.dirname(forwarder))
     // A grant bound to another placement leaves this command with no network at all.
     const elsewhere = yield* sandboxed({ ...endpoint, sandbox: { ...endpoint.sandbox,
       allowedLoopbackEndpoints: [{ directory: f.directory, host: "127.0.0.1" as const, port: 9042 }] } })
     expect(elsewhere.settings.network.allowedDomains).toEqual([])
     expect(elsewhere.env.ORCHESTRA_TCP_PROXY_CONNECT).toBeUndefined()
+    expect(elsewhere.argv.slice(2)).toEqual(["--", process.execPath, "-e", expect.stringContaining("writeFileSync")])
     expect(yield* f.fs.exists(f.outside)).toBe(false)
   }), 30_000,
 )

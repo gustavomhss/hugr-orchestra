@@ -222,8 +222,17 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-directory-acquisition" })),
   )
   const policy = path.join(temp, "settings.json")
+  // Plain TCP clients (libpq, SQLx, PGLS) cannot speak CONNECT. This host-written forwarder runs first inside the same
+  // sandbox and network namespace, on this process's own runtime: it listens on each granted 127.0.0.1 port there,
+  // tunnels every connection through srt's proxy (which still enforces the allowlist), runs the command as its child and
+  // exits with it. A port it cannot bind refuses the command. Its directory is denied writes, and it holds no privilege
+  // the command lacks: the namespace has no other route.
+  const forwarder = endpoints.length ? path.join(temp, "orchestra-endpoint-forwarder.cjs") : undefined
+  if (forwarder) yield* fs.writeFileString(forwarder, FORWARDER, { mode: 0o400 }).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-forwarder-write" })),
+  )
   yield* fs.writeFileString(policy, JSON.stringify({
-    filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites] },
+    filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites, ...forwarder ? [temp] : []] },
     // An exact endpoint is an IP-literal host:port entry; its network namespace has no other route. Domain and
     // endpoint grants are mutually exclusive above. Never allowAllUnixSockets: it would expose host daemons.
     network: {
@@ -236,7 +245,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
   yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
-  return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--", ...invocation], {
+  return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--",
+    ...forwarder ? [process.execPath, forwarder, endpoints.join(";")] : [], ...invocation], {
     ...command.options, cwd, shell: false, extendEnv: false,
     env: { ...confined, ...sandbox.env, ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
   })
@@ -309,3 +319,64 @@ const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory:
   })
   return yield* canonical(fs, literal)
 })
+
+
+// CommonJS for Node, Bun and Electron-as-Node alike. Exit 125 names a refusal before the command ran.
+const FORWARDER = String.raw`"use strict"
+const net = require("net")
+const { spawn } = require("child_process")
+const { constants } = require("os")
+const fail = (reason, code = 125) => {
+  process.stderr.write("orchestra-endpoint-forwarder:" + reason + "\n")
+  process.exit(code)
+}
+const ports = (process.argv[2] || "").split(";").map(Number)
+if (ports.some((port) => !Number.isSafeInteger(port) || port < 1 || port > 65535)) fail("invalid-ports")
+const proxy = URL.canParse(process.env.HTTP_PROXY || "") ? new URL(process.env.HTTP_PROXY) : undefined
+if (!proxy || proxy.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(proxy.hostname) || !/^\d+$/.test(proxy.port))
+  fail("invalid-proxy")
+const auth = proxy.username
+  ? "Proxy-Authorization: Basic " +
+    Buffer.from(decodeURIComponent(proxy.username) + ":" + decodeURIComponent(proxy.password)).toString("base64") + "\r\n"
+  : ""
+const tunnel = (port) => (client) => {
+  // Bun drops bytes that arrive on a paused socket, so early client bytes are held until the tunnel is up.
+  const early = []
+  const hold = (chunk) => early.push(chunk)
+  client.on("data", hold)
+  const upstream = net.connect({ host: "127.0.0.1", port: Number(proxy.port), allowHalfOpen: true })
+  const close = () => {
+    client.destroy()
+    upstream.destroy()
+  }
+  client.on("error", close)
+  upstream.on("error", close)
+  upstream.once("connect", () =>
+    upstream.write("CONNECT 127.0.0.1:" + port + " HTTP/1.1\r\nHost: 127.0.0.1:" + port + "\r\n" + auth + "\r\n"))
+  let head = Buffer.alloc(0)
+  const reply = (chunk) => {
+    head = Buffer.concat([head, chunk])
+    const end = head.indexOf("\r\n\r\n")
+    if (end === -1) return head.length > 16384 && close()
+    upstream.off("data", reply)
+    if (!/^HTTP\/1\.[01] 200 /.test(head.toString("latin1", 0, end))) return close()
+    if (head.length > end + 4) client.write(head.subarray(end + 4))
+    client.off("data", hold)
+    for (const chunk of early) upstream.write(chunk)
+    upstream.pipe(client)
+    client.pipe(upstream)
+  }
+  upstream.on("data", reply)
+}
+const start = () => {
+  const child = spawn(process.argv[3], process.argv.slice(4), { stdio: "inherit" })
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => child.kill(signal))
+  child.once("error", (error) => fail("spawn-failed:" + error.code, 127))
+  child.once("exit", (code, signal) => process.exit(code ?? 128 + (constants.signals[signal] || 0)))
+}
+let pending = ports.length
+for (const port of ports)
+  net.createServer({ allowHalfOpen: true }, tunnel(port))
+    .once("error", (error) => fail("listen-failed:" + port + ":" + error.code))
+    .listen(port, "127.0.0.1", () => --pending || start())
+`
