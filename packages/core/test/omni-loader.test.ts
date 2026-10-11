@@ -154,6 +154,20 @@ describe("Omni.locate", () => {
     process.env.HUGR_OMNI_SUPERVISOR = fixture.shipped.supervisor
     expect(Omni.locate({})).toEqual({ addon, supervisor: fixture.shipped.supervisor })
   })
+
+  test("a binary in cli/ finds the pair in ../omni (the desktop's standalone CLI), after its own directory", async () => {
+    await using fixture = await locateFixture()
+    const cli = path.join(fixture.dir, "cli")
+    const omni = path.join(fixture.dir, "omni")
+    const sibling = { addon: path.join(cli, "hugr_omni.node"), supervisor: path.join(cli, fixture.name) }
+    const shared = { addon: path.join(omni, "hugr_omni.node"), supervisor: path.join(omni, fixture.name) }
+    await Promise.all([cli, omni].map((dir) => mkdir(dir)))
+    await Promise.all([path.join(cli, "orchestra"), ...Object.values(shared)].map((file) => writeFile(file, "")))
+    process.execPath = path.join(cli, "orchestra")
+    expect(Omni.locate({})).toEqual(shared)
+    await Promise.all(Object.values(sibling).map((file) => writeFile(file, "")))
+    expect(Omni.locate({})).toEqual(sibling)
+  })
 })
 
 // No native load or spawn: provide a real on-disk alternate candidate to expose silent fallback.
