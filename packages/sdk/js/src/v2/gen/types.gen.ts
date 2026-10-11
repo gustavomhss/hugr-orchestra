@@ -1418,7 +1418,7 @@ export type GlobalEvent = {
           revisionHash: string
           createdAt: number
           workflowBinding?: RelayArmWorkflowDefinition
-          upstreamAttribution?: MaestroUpstreamAttributionV1
+          upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
           grounding?: MaestroGrounding
         }
       }
@@ -4227,6 +4227,33 @@ export type MaestroUpstreamAttributionV1 = {
   logicalTaskID: string
 }
 
+export type MaestroUpstreamAttributionOrchestraTaskDispatch = {
+  kind: "orchestra-task"
+}
+
+export type MaestroUpstreamAttributionClaudeCodeAgentDispatch = {
+  kind: "claude-code-agent"
+  tool: "Agent" | "Task"
+  subagentType: "orchestra:archie"
+  executor: "claude-code-host"
+  agentID: string
+  grantID: string
+}
+
+export type MaestroUpstreamAttributionV2 = {
+  schema: "maestro-upstream-attribution-v2"
+  projectID: string
+  memberID: string
+  profile: "upstream"
+  authorSessionID: string
+  authorMessageID: string
+  parentSessionID: string
+  parentMessageID: string
+  parentCallID: string
+  logicalTaskID: string
+  dispatch: MaestroUpstreamAttributionOrchestraTaskDispatch | MaestroUpstreamAttributionClaudeCodeAgentDispatch
+}
+
 export type MaestroGrounding = {
   catalogVersion: string
   snapshot: string
@@ -5202,7 +5229,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       revisionHash: string
       createdAt: number
       workflowBinding?: RelayArmWorkflowDefinition
-      upstreamAttribution?: MaestroUpstreamAttributionV1
+      upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
       grounding?: MaestroGrounding
     }
   }
@@ -7279,7 +7306,7 @@ export type MaestroPlanRevisionRecorded = {
     revisionHash: string
     createdAt: number
     workflowBinding?: RelayArmWorkflowDefinition
-    upstreamAttribution?: MaestroUpstreamAttributionV1
+    upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
     grounding?: MaestroGrounding
   }
 }
@@ -9519,7 +9546,7 @@ export type EventMaestroPlanRevisionRecorded = {
     revisionHash: string
     createdAt: number
     workflowBinding?: RelayArmWorkflowDefinition
-    upstreamAttribution?: MaestroUpstreamAttributionV1
+    upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
     grounding?: MaestroGrounding
   }
 }

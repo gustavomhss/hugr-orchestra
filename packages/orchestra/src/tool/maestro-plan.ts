@@ -32,6 +32,7 @@ const Parameters = Schema.Struct({
     authorSessionID: UpstreamAttribution.V1.fields.authorSessionID,
     authorMessageID: UpstreamAttribution.V1.fields.authorMessageID,
     logicalTaskID: UpstreamAttribution.V1.fields.logicalTaskID,
+    dispatchKind: Schema.optional(Schema.Literals(["orchestra-task", "claude-code-agent"])),
   })),
   workflow: Schema.optional(Schema.Struct({ documentID: Schema.NonEmptyString,
     parameters: Schema.Record(Schema.String, Schema.String), writePaths: Schema.Array(Schema.NonEmptyString) })),

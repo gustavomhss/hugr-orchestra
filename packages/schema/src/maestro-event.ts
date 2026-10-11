@@ -246,7 +246,7 @@ export namespace PlanRevision {
     assumptions: Schema.Array(FieldV3),
     risks: Schema.Array(FieldV3),
     // Let explicit undefined reach the named missing check; optional still omits it when encoding.
-    upstreamAttribution: optional(Schema.UndefinedOr(UpstreamAttribution.V1)),
+    upstreamAttribution: optional(Schema.UndefinedOr(UpstreamAttribution.Any)),
     grounding: optional(MaestroContext.Grounding),
   }).check(
     Schema.makeFilter((data) =>
