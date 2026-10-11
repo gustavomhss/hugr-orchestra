@@ -17,7 +17,7 @@ const PAUSED = "The Claude Code engine is paused until its meta-harness plan is 
 test("without the owner's approval a real SDK query is refused before any spawn", async () => {
   await using dir = await tmpdir()
   let spawned = 0
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const },
     env: { HOME: dir.path, PATH: dir.path, CLAUDE_CONFIG_DIR: dir.path }, pathToClaudeCodeExecutable: process.execPath,
     spawnClaudeCodeProcess: () => {
       spawned++
@@ -34,7 +34,7 @@ test("without the owner's approval a real SDK query is refused before any spawn"
 test("with the owner's approval the real spawn path reaches the transport with the owner's environment", async () => {
   await using dir = await tmpdir()
   const environments: Record<string, string | undefined>[] = []
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: { type: "preset" as const, preset: "claude_code" as const },
     env: { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: dir.path, PATH: dir.path, CLAUDE_CONFIG_DIR: dir.path },
     spawnClaudeCodeProcess: (options) => {
       environments.push(options.env)

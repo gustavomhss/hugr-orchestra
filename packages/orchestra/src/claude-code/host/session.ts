@@ -38,6 +38,8 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeCodeTranscript } from "../transcript"
 import { asks } from "../permissions"
+import { ClaudeHostHooks } from "./hooks"
+import { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
@@ -66,11 +68,10 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ClaudeHost") {}
 
 /**
- * Overrides of the plugin, MCP, hook and join builders. The plugin and the MCP server default to agent PLUGIN's
- * (`plugin.ts`, `mcp.ts`). TODO(claude-host, agent HOOKS): default `hooks` to `ClaudeHostHooks.create` and `join` to
- * `ClaudeHostJoin` when they land; until then no in-process hook runs and nothing reads the join frames.
+ * Overrides of the plugin, MCP and hook builders (tests). They default to `plugin.ts`, `mcp.ts` and `hooks.ts`. The
+ * hooks are Orchestra's policy gate: ClaudeHostOptions.build refuses a session whose hooks carry no PreToolUse gate.
  */
-export const Adapters = Context.Reference<Partial<ClaudeHostOptions.Adapters>>("@orchestra/ClaudeHost/Adapters", {
+export const Adapters = Context.Reference<Partial<Omit<ClaudeHostOptions.Adapters, "join">>>("@orchestra/ClaudeHost/Adapters", {
   defaultValue: () => ({}),
 })
 
@@ -136,8 +137,13 @@ type Live = {
   background: number
   uuids: Record<string, string>
   known: { calls: Map<string, ClaudeHostMirror.Mirror>; tasks: Map<string, string> }
-  join?: ClaudeHostOptions.Join
+  /** The child session of each subagent run, by its Agent `tool_use_id`. */
+  children: Map<string, SessionID>
+  /** The Agent-call identity join the hooks share with this stream consumer (spikes S3, S12). */
+  join: ClaudeHostJoin.Join
   idle?: ReturnType<typeof setTimeout>
+  /** Why the session's stream ended, once it has. */
+  ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>) => Promise<A>
 }
@@ -167,29 +173,42 @@ const layer = Layer.effect(
         claudeCode: { ...(ClaudeCodeTranscript.record(latest.claudeCode) ? latest.claudeCode : {}), ...value } } })
     })
 
-    /** The seat session an Agent call runs in, once the delegation hooks recorded it on the call (contract V2 §2). */
+    /**
+     * The child session a subagent's frames mirror into. A seat dispatch gets it from the delegation hooks at
+     * `PreToolUse[Agent]` (contract V2 §2); any other subagent gets one here at its first frame, keyed by the Agent
+     * `tool_use_id`. Either way it exists before the subagent's first tool call, so an `orchestra` MCP call made by the
+     * subagent finds its mirrored part.
+     */
     const child = (live: Live) => (call: SessionV1.ToolPart) => Effect.gen(function* () {
+      const input = call.state.input as Record<string, unknown>
+      const seat = String(input.subagent_type ?? "").replace(/^orchestra:/, "")
       const stored = yield* sessions.getPart({ sessionID: call.sessionID, messageID: call.messageID, partID: call.id })
-      const id = stored?.type === "tool" ? stored.metadata?.sessionId : undefined
-      if (typeof id !== "string") return undefined
-      const childID = SessionID.make(id)
-      const info = yield* sessions.get(childID).pipe(Effect.option)
-      if (info._tag === "None") return undefined
-      const dispatch = stored?.type === "tool" ? stored.metadata?.claudeCodeDispatch : undefined
-      const type = String((call.state.input as Record<string, unknown>).subagent_type ?? "")
-      const seat = ClaudeCodeTranscript.record(dispatch) && typeof dispatch.seat === "string" ? dispatch.seat : type.replace(/^orchestra:/, "")
-      const agent = yield* agents.get(seat).pipe(Effect.option)
-      if (agent._tag === "None") return undefined
-      const messages = yield* sessions.messages({ sessionID: childID }).pipe(Effect.orDie)
-      const existing = messages.findLast((message) => message.info.role === "user")?.info
-      if (existing?.role === "user") return { sessionID: childID, user: existing, agent: agent.value }
+      const recorded = live.children.get(call.callID) ?? live.join.child(call.callID) ?? (stored?.type === "tool" ? childOf(stored) : undefined)
+      const existing = recorded ? yield* sessions.get(recorded).pipe(Effect.option) : undefined
+      const agent = (yield* agents.get(seat).pipe(Effect.orElseSucceed(() => undefined))) ?? live.agent
+      const session = existing?._tag === "Some" ? existing.value : yield* Effect.gen(function* () {
+        const parent = yield* sessions.get(call.sessionID).pipe(Effect.orDie)
+        const created = yield* sessions.create({ parentID: call.sessionID, agent: agent.id ?? agent.name, permission: parent.permission,
+          title: `${String(input.description ?? seat)} (@${agent.name} subagent)` })
+        // The Agent card links its child session, as a seat dispatch's card does.
+        const owner = live.known.calls.get(call.callID)
+        const current = owner?.tool(call.callID)
+        if (owner && current?.state.status === "running")
+          yield* owner.complete({ ...current, state: { ...current.state,
+            metadata: { ...current.state.metadata, parentSessionId: call.sessionID, sessionId: created.id } } })
+        return created
+      })
+      live.children.set(call.callID, session.id)
+      const messages = yield* sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
+      const brief = messages.findLast((message) => message.info.role === "user")?.info
+      if (brief?.role === "user") return { sessionID: session.id, user: brief, agent }
       // No brief recorded yet: show the Agent call's prompt as the child's first message.
-      const user: SessionV1.User = { id: MessageID.ascending(), sessionID: childID, role: "user", agent: seat,
+      const user: SessionV1.User = { id: MessageID.ascending(), sessionID: session.id, role: "user", agent: agent.id ?? agent.name,
         model: live.turn?.user.model ?? { providerID: "anthropic", modelID: live.model ?? "" } as SessionV1.User["model"], time: { created: Date.now() } }
       yield* sessions.updateMessage(user)
-      yield* sessions.updatePart({ id: PartID.ascending(), sessionID: childID, messageID: user.id, type: "text",
-        text: String((call.state.input as Record<string, unknown>).prompt ?? ""), synthetic: true })
-      return { sessionID: childID, user, agent: agent.value }
+      yield* sessions.updatePart({ id: PartID.ascending(), sessionID: session.id, messageID: user.id, type: "text",
+        text: String(input.prompt ?? ""), synthetic: true })
+      return { sessionID: session.id, user, agent }
     })
 
     /** Approvals Claude Code still asks for: AskUserQuestion opens the question dock, the rest Orchestra's permission. */
@@ -223,7 +242,9 @@ const layer = Layer.effect(
       claim: (name) => Effect.gen(function* () {
         // Claude Code may call the tool before the mirror has seen its tool_use block: wait for it.
         for (let round = 0; round < 1500; round++) {
-          const part = live.turn?.view.claim(name)
+          // The running turn first, then the mirrors of earlier turns, whose background subagents may still call.
+          const part = live.turn?.view.claim(name) ??
+            [...new Set(live.known.calls.values())].map((mirror) => mirror.claim(name)).find((found) => found !== undefined)
           if (part) return part
           yield* Effect.sleep("20 millis")
         }
@@ -275,8 +296,8 @@ const layer = Layer.effect(
       if (message.type === "system" && message.subtype === "background_tasks_changed") live.background = message.tasks.length
       // The Agent-call join reads these whatever turn they arrive in (spikes S3, S12).
       if (message.type === "system" && message.subtype === "task_started" && message.tool_use_id)
-        live.join?.taskStarted({ toolUseID: message.tool_use_id, taskID: message.task_id })
-      if (message.type === "system" && message.subtype === "task_notification") live.join?.taskNotification(message)
+        live.join.taskStarted({ toolUseID: message.tool_use_id, taskID: message.task_id })
+      if (message.type === "system" && message.subtype === "task_notification") live.join.taskNotification(message)
       if (live.discard) {
         if (message.type === "result") live.discard = false
         return
@@ -327,6 +348,7 @@ const layer = Layer.effect(
     const start = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
       const instance = yield* InstanceState.context
       const overrides = yield* Adapters
+      const env = yield* ClaudeCodeSDK.Environment
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
       // The registry tools of Maestro and every seat, resolved once per live session (agent PLUGIN's prepare).
       const prepared = overrides.plugin && overrides.mcp ? undefined
@@ -344,7 +366,7 @@ const layer = Layer.effect(
       const live: Live = {
         sessionID: input.sessionID, inbox: inbox(), abort, agent: input.agent, model: input.model, discard: false, background: 0,
         uuids: Object.fromEntries(Object.entries(uuids).flatMap(([key, value]) => typeof value === "string" ? [[key, value]] : [])),
-        known: { calls: new Map(), tasks: new Map() },
+        known: { calls: new Map(), tasks: new Map() }, children: new Map(), join: ClaudeHostJoin.make(),
         query: undefined as unknown as Query,
         run: (effect) => Effect.runPromiseWith(context)(effect),
         make: (user) => ClaudeHostMirror.create({ sessionID: input.sessionID, user, agent: input.agent,
@@ -354,16 +376,19 @@ const layer = Layer.effect(
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
         agent: input.agent.id ?? input.agent.name, abort }
-      live.join = overrides.join?.(ctx)
       const adapters: ClaudeHostOptions.Adapters = {
         plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge: bridge(live, ctx), tools: prepared?.tools ?? [] })),
-        hooks: overrides.hooks ?? (() => ({})),
-        ...(overrides.join ? { join: overrides.join } : {}),
+        // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
+        hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {},
+          // The hooks' effects need only what this session's context provides.
+          run: live.run as ClaudeHostHooks.Context["run"],
+          parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
+            complete: (part) => bridge(live, ctx).complete(part) } })),
       }
       const options = yield* Effect.tryPromise(() => ClaudeHostOptions.build({
         ctx: { ...ctx, join: live.join },
-        adapters, model: input.model, session: resume, abortController: abort, canUseTool: permit(live),
+        adapters, model: input.model, session: resume, abortController: abort, canUseTool: permit(live), env,
       }))
       live.query = sdk.query({ prompt: live.inbox, options: ClaudeCodeSDK.processLifetime(options).options })
       lives.set(input.sessionID, live)
@@ -371,12 +396,16 @@ const layer = Layer.effect(
         const failure = await (async () => {
           for await (const message of live.query) await live.run(handle(live, message, release))
         })().then(() => undefined, (error: unknown) => error)
+        live.ended = failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished."
         close(live)
-        settle(live, { ok: false, message: failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished." })
+        settle(live, { ok: false, message: live.ended })
       })()
       // Sign-in state without a model turn and without secrets (spike S2). Email and organization are never read here.
-      const account = yield* Effect.tryPromise(() => live.query.accountInfo()).pipe(Effect.option)
-      if (account._tag === "Some") {
+      // A session whose process never started (the plan-approval lock, a failed spawn) ends instead of answering.
+      const account = yield* Effect.tryPromise(() => Promise.race([live.query.accountInfo(), pump.then(() => undefined)])).pipe(Effect.option)
+      // No turn waits on this session yet, so its end is this start's failure.
+      if (live.ended !== undefined) return yield* Effect.fail(new Error(live.ended))
+      if (account._tag === "Some" && account.value) {
         const signedIn = account.value.tokenSource !== "none" || account.value.apiKeySource !== undefined
         yield* write(input.sessionID, { account: { signedIn, subscriptionType: account.value.subscriptionType, apiProvider: account.value.apiProvider } })
         if (!signedIn) {
@@ -436,6 +465,8 @@ const layer = Layer.effect(
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [] }
       host.turn = turn
       const outcome = new Promise<Outcome>((resolve) => turn.waiters.push(resolve))
+      // The session's stream may have ended while this turn was being set up: nothing would answer it.
+      if (host.ended !== undefined) settle(host, { ok: false, message: host.ended })
       if (prompt) host.inbox.push(userInput(prompt, running ? "next" : undefined))
       if (prompt) yield* write(sessionID, { delivered: [...delivered, ...users.map((message) => message.info.id)] })
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
@@ -482,6 +513,12 @@ const layer = Layer.effect(
     return Service.of({ turn, steer, interrupt, setModel, fork, release })
   }),
 )
+
+/** The child session an Agent part names, as the delegation hooks or this host recorded it. */
+function childOf(part: SessionV1.ToolPart) {
+  const id = part.state.status === "pending" ? undefined : part.state.metadata?.sessionId ?? part.metadata?.sessionId
+  return typeof id === "string" ? SessionID.make(id) : undefined
+}
 
 /** Users a session answered before it had a delivery cursor, such as turns run on Orchestra's loop. */
 function answered(history: readonly SessionV1.WithParts[]) {

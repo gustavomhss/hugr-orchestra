@@ -121,7 +121,7 @@ test("the session's join reaches the MCP server and the hooks through the contex
   await ClaudeHostOptions.build({ ctx, session: {}, abortController: new AbortController(), env: {}, adapters: {
     plugin: async () => ({ path: "/p", seats: {} }),
     mcp: (value) => { seen.push(value.join); return server },
-    hooks: (value) => { seen.push(value.join); return {} },
+    hooks: (value) => { seen.push(value.join); return hooks },
     join: () => join,
   } })
   expect(seen).toEqual([join, join])
@@ -133,9 +133,19 @@ test("seats the plugin defines through the SDK go in the agents option; the main
   const options = await ClaudeHostOptions.build({ ctx, session: {}, abortController: new AbortController(), env: {}, adapters: {
     plugin: async () => ({ path: "/p", seats: { "orchestra:backend": "backend" }, sdkAgents }),
     mcp: () => server,
-    hooks: () => ({}),
+    hooks: () => hooks,
   } })
   expect(options.agents).toEqual(sdkAgents)
   expect(options.agent).toBeUndefined()
   expect(options.systemPrompt).toMatchObject({ type: "preset", preset: "claude_code" })
+})
+
+test("a session whose hooks carry no PreToolUse policy gate never starts", async () => {
+  const { ctx } = setup("maestro")
+  for (const missing of [{}, { PreToolUse: [] }, { PostToolUse: hooks.PreToolUse }])
+    await expect(ClaudeHostOptions.build({ ctx, session: {}, abortController: new AbortController(), env: {}, adapters: {
+      plugin: async () => ({ path: "/p", seats: {} }),
+      mcp: () => server,
+      hooks: () => missing,
+    } })).rejects.toThrow("Orchestra's policy gate is missing")
 })

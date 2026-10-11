@@ -11,8 +11,8 @@ test("every Claude Code query must carry the claude_code preset; custom, string,
     { type: "preset", preset: "other" }])
     expect(() => ClaudeCodeSDK.processLifetime({ systemPrompt } as unknown as Options))
       .toThrow("must keep the claude_code system prompt preset")
-  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset("Maestro's prompt") })
-  expect(lifetime.options.systemPrompt).toEqual({ type: "preset", preset: "claude_code", append: "Maestro's prompt", snapshot: true })
+  const systemPrompt = { type: "preset" as const, preset: "claude_code" as const, append: "Maestro's prompt" }
+  expect(ClaudeCodeSDK.processLifetime({ systemPrompt }).options.systemPrompt).toEqual(systemPrompt)
 })
 
 test("a billing refusal repeats Anthropic's message verbatim and never reads as an overflow", () => {

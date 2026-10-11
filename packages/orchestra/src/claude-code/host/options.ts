@@ -35,12 +35,14 @@ export type Context = {
   join?: Join
 }
 
-/** Local stub of `ClaudeHostJoin` (agent HOOKS) until it lands: the stream frames only HOST sees. */
+/** What the plugin, MCP and hook builders need of the session's join (`ClaudeHostJoin`): the frames only HOST sees. */
 export type Join = {
   /** `system/task_started`: the only frame carrying both the Agent `tool_use_id` and the agent id (spike S3). */
   taskStarted: (input: { toolUseID: string; taskID: string }) => void
   /** `system/task_notification`: the background delivery source (spike S12). */
   taskNotification: (frame: SDKTaskNotificationMessage) => void
+  /** The child session the delegation hooks created for an Agent call. */
+  child?: (toolUseID: string) => SessionID | undefined
 }
 
 /** The builders agents PLUGIN and HOOKS own (build brief, "Fixed interfaces"), injected so each side stays testable. */
@@ -77,6 +79,9 @@ export async function build(input: {
 }): Promise<Options & { systemPrompt: Preset }> {
   const plugin = await input.adapters.plugin(input.ctx)
   const ctx = { ...input.ctx, seats: plugin.seats, join: input.ctx.join ?? input.adapters.join?.(input.ctx) }
+  const hooks = input.adapters.hooks(ctx)
+  // Every call Claude Code makes passes Orchestra's PreToolUse policy gate first (spike S7): never run ungated.
+  if (!hooks.PreToolUse?.length) throw new Error("The Claude Code host cannot start: Orchestra's policy gate is missing.")
   return {
     cwd: input.ctx.directory,
     ...(input.model ? { model: input.model } : {}),
@@ -86,7 +91,7 @@ export async function build(input: {
     // Seats that need `permissionMode` or their own MCP server, which plugin agent files ignore. Never the main thread.
     ...(Object.keys(plugin.sdkAgents ?? {}).length ? { agents: plugin.sdkAgents } : {}),
     mcpServers: { [MCP_SERVER]: input.adapters.mcp(ctx) },
-    hooks: input.adapters.hooks(ctx),
+    hooks,
     // CLAUDE.md and project agents load; the owner's user-level settings stay the owner's own Claude Code's.
     settingSources: ["project"],
     // Approvals reach Orchestra's dialogs through canUseTool, as with `claude` in its default mode.

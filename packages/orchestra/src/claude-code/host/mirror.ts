@@ -191,8 +191,8 @@ export function create(input: {
 
   /** The child mirror of an Agent call, resolved once the child session exists. */
   const childOf = (callID: string) => Effect.gen(function* () {
-    const known = children.get(callID)
-    if (known) return known.mirror
+    const cached = children.get(callID)
+    if (cached) return cached.mirror
     const part = tool(callID)
     const resolved = part && input.child ? yield* input.child(part) : undefined
     if (!resolved) return undefined

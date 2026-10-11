@@ -1,9 +1,8 @@
 // Mirrors one Claude Code turn into Orchestra's session: the same message and part writes the processor makes, so the
-// UI, the database, revert and the archive need no change.
+// UI, the database, revert and the archive need no change. host/mirror.ts builds on it for a Claude-hosted session.
 // - One Orchestra assistant message per Claude API message (`message.id`); Claude Code streams it block by block.
 // - Claude Code's own tool parts carry `metadata.providerExecuted`: Claude Code runs them, so Orchestra's loop never
-//   waits on them. Orchestra's in-process tools (tools.ts) do not: Orchestra ran them, and the governance that reads a
-//   `task` call (work results, settlement, provenance) accepts only calls Orchestra executed.
+//   waits on them. Orchestra's MCP tools (tools.ts) do not: Orchestra ran them.
 // - Each assistant message is a step: `step-start`/`step-finish` with snapshots and a `patch` part, as the processor
 //   writes them, so revert restores files whichever tool changed them.
 import { Effect } from "effect"
@@ -53,7 +52,6 @@ export function create(input: {
   sessions: Session.Interface
   snapshot: Snapshot.Interface
   record?: (input: { apiID?: string; uuid?: string; messageID: MessageID }) => Effect.Effect<void>
-  onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>
 }) {
   const { sessionID, sessions, snapshot } = input
   const tools = new Map<string, SessionV1.ToolPart>()
@@ -120,9 +118,6 @@ export function create(input: {
     current.info = { ...current.info, tokens, finish, error, time: { ...current.info.time, completed: now } }
     yield* sessions.updateMessage(current.info)
     last = current.info
-    if (!error && ["stop", "tool-calls"].includes(finish) && !current.open.length && input.onStep &&
-      ![...tools.values()].some((part) => part.messageID === current.info.id &&
-        (part.state.status === "pending" || part.state.status === "running"))) yield* input.onStep(current.info)
   })
 
   const toolResult = (block: { tool_use_id: string; content?: unknown; is_error?: boolean | null }) => Effect.gen(function* () {
@@ -163,7 +158,7 @@ export function create(input: {
         if (step && message.stop_reason) step.stop = message.stop_reason
         return
       }
-      // Claude Code's own subagent frames are not mirrored: its Task is disallowed; Orchestra's task runs a child session.
+      // A subagent's frames belong to its seat's child session: host/mirror.ts hands them to that session's mirror.
       if ("parent_tool_use_id" in message && message.parent_tool_use_id) return
       if (message.type === "stream_event") {
         const event = message.event
@@ -279,7 +274,7 @@ export function create(input: {
       const error = cause.aborted
         ? new AbortedError({ message: cause.message }).toObject()
         : new NamedError.Unknown({ message: cause.message }).toObject()
-      // Persist the failure before best-effort snapshots, without touching the failed native store.
+      // Persist the failure before best-effort snapshots.
       const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
         mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, path: input.path,
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
@@ -291,7 +286,7 @@ export function create(input: {
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
       step = undefined
       yield* sessions.updateMessage(last)
-      // Native persistence is not part of this path. Healthy snapshots still retain actual undo evidence on Stop.
+      // Healthy snapshots still retain actual undo evidence on Stop.
       const patch = current?.start ? yield* snapshot.patch(current.start).pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       const end = current?.start ? yield* snapshot.track().pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       if (patch?.files.length) yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "patch", hash: patch.hash, files: patch.files })
