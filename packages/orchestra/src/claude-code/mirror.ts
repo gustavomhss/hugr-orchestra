@@ -1,3 +1,5 @@
+export * as ClaudeCodeMirror from "./mirror"
+
 // Mirrors one Claude Code turn into Orchestra's session: the same message and part writes the processor makes, so the
 // UI, the database, revert and the archive need no change. host/mirror.ts builds on it for a Claude-hosted session.
 // - One Orchestra assistant message per Claude API message (`message.id`); Claude Code streams it block by block.
@@ -10,6 +12,7 @@ import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { AbortedError } from "@orchestra/core/v1/session"
 import { NamedError } from "@orchestra/core/util/error"
+import { ModelV2 } from "@orchestra/core/model"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import type { Snapshot } from "@/snapshot"
@@ -41,6 +44,7 @@ type Step = {
   /** Text and reasoning parts the complete blocks have not closed yet, in order. */
   open: (SessionV1.TextPart | SessionV1.ReasoningPart)[]
   usage: Usage
+  reasoning: number
   stop?: string
 }
 
@@ -61,6 +65,8 @@ export function create(input: {
   let last: SessionV1.Assistant | undefined
   let cost = 0
   let ended = false
+  let parentID = input.user.id
+  const finished = new Map<MessageID, { info: SessionV1.Assistant; part: SessionV1.StepFinishPart }>()
 
   const open = (apiID: string) => Effect.gen(function* () {
     if (step?.apiID === apiID) return step
@@ -69,13 +75,13 @@ export function create(input: {
       return yield* Effect.die(new Error("Claude Code began a step before prior tools finished"))
     yield* close()
     const info: SessionV1.Assistant = {
-      id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
+      id: MessageID.ascending(), sessionID, parentID, role: "assistant",
       mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, variant: input.user.model.variant,
       path: input.path, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       modelID: input.user.model.modelID, providerID: input.user.model.providerID, time: { created: Date.now() },
     }
     yield* sessions.updateMessage(info)
-    step = { info, apiID, blocks: new Map(), open: [], usage: {} }
+    step = { info, apiID, blocks: new Map(), open: [], usage: {}, reasoning: 0 }
     if (input.record) yield* input.record({ apiID, messageID: info.id })
     if (ended) return yield* Effect.interrupt
     const start = yield* snapshot.track()
@@ -102,13 +108,14 @@ export function create(input: {
     const now = Date.now()
     for (const part of current.open) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
     const usage = current.usage
-    const tokens = { input: usage.input_tokens ?? 0, output: usage.output_tokens ?? 0, reasoning: 0,
+    const tokens = { input: usage.input_tokens ?? 0, output: Math.max(0, (usage.output_tokens ?? 0) - current.reasoning), reasoning: current.reasoning,
       cache: { read: usage.cache_read_input_tokens ?? 0, write: usage.cache_creation_input_tokens ?? 0 } }
     // A failed step still finishes ("error"), so the loop sees the turn answered and ends.
     const finish = error ? "error" : FINISH[current.stop ?? ""] ?? "other"
     const end = yield* snapshot.track()
-    yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: current.info.id, type: "step-finish",
-      reason: finish, snapshot: end, cost: 0, tokens })
+    const part: SessionV1.StepFinishPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "step-finish",
+      reason: finish, snapshot: end, cost: 0, tokens }
+    yield* sessions.updatePart(part)
     if (current.start) {
       const patch = yield* snapshot.patch(current.start)
       if (patch.files.length)
@@ -118,6 +125,7 @@ export function create(input: {
     current.info = { ...current.info, tokens, finish, error, time: { ...current.info.time, completed: now } }
     yield* sessions.updateMessage(current.info)
     last = current.info
+    finished.set(current.info.id, { info: current.info, part })
   })
 
   const toolResult = (block: { tool_use_id: string; content?: unknown; is_error?: boolean | null }) => Effect.gen(function* () {
@@ -134,7 +142,8 @@ export function create(input: {
     })
     const start = part.state.status === "running" ? part.state.time.start : Date.now()
     const next: SessionV1.ToolPart = block.is_error
-      ? { ...part, state: { status: "error", input: part.state.input, error: output || "Tool failed", time: { start, end: Date.now() } } }
+      ? { ...part, state: { status: "error", input: part.state.input, error: output || "Tool failed",
+          metadata: { ...(part.state.status === "running" ? part.state.metadata : {}), output }, time: { start, end: Date.now() } } }
       : { ...part, state: { status: "completed", input: part.state.input, output,
           title: String((part.state.input as Record<string, unknown>).description ?? (part.state.input as Record<string, unknown>).command ?? part.tool),
           metadata: { output }, attachments, time: { start, end: Date.now() } } }
@@ -164,6 +173,8 @@ export function create(input: {
         const event = message.event
         if (event.type === "message_start") {
           const current = yield* open(event.message.id)
+          current.info = { ...current.info, modelID: ModelV2.ID.make(event.message.model || current.info.modelID) }
+          yield* sessions.updateMessage(current.info)
           current.usage = { ...current.usage, ...event.message.usage }
           return
         }
@@ -187,6 +198,8 @@ export function create(input: {
       }
       if (message.type === "assistant") {
         const current = yield* open(message.message.id)
+        current.info = { ...current.info, modelID: ModelV2.ID.make(message.message.model || current.info.modelID) }
+        yield* sessions.updateMessage(current.info)
         uuids.set(message.uuid, current.info.id)
         if (input.record) yield* input.record({ apiID: message.message.id, uuid: message.uuid, messageID: current.info.id })
         current.usage = { ...current.usage, ...message.message.usage }
@@ -219,12 +232,42 @@ export function create(input: {
 
     /** The open step's message, and a mirrored tool call by its `tool_use_id`. */
     current: () => step?.info,
+    /** A receipt may first arrive with the complete assistant for an already-open stream. */
+    parent: (next: MessageID) => Effect.gen(function* () {
+      parentID = next
+      if (!step) return
+      step.info = { ...step.info, parentID: next }
+      yield* sessions.updateMessage(step.info)
+    }),
+    /** SDK thinking totals include output tokens. Reconcile newest matching steps first, preserving total tokens. */
+    reasoning: (modelID: string, tokens: number) => Effect.gen(function* () {
+      const candidates = [step, ...[...finished.values()].reverse()].filter((item) => item?.info.modelID === modelID)
+      let remaining = tokens
+      for (const item of candidates) {
+        if (!item || remaining <= 0) continue
+        const available = "usage" in item ? (item.usage.output_tokens ?? 0) - item.reasoning : item.info.tokens.output
+        const reasoning = Math.min(available, remaining)
+        remaining -= reasoning
+        if ("usage" in item) {
+          item.reasoning += reasoning
+          continue
+        }
+        item.info = { ...item.info, tokens: { ...item.info.tokens,
+          output: item.info.tokens.output - reasoning, reasoning: item.info.tokens.reasoning + reasoning } }
+        item.part = { ...item.part, tokens: item.info.tokens }
+        if (last?.id === item.info.id) last = item.info
+        yield* sessions.updateMessage(item.info)
+        yield* sessions.updatePart(item.part)
+      }
+      return remaining
+    }),
     tool: (callID: string) => tools.get(callID),
     retract: (ids: readonly string[]) => Effect.gen(function* () {
       const messages = new Set(ids.flatMap((id) => uuids.get(id) ? [uuids.get(id) as MessageID] : []))
       for (const messageID of messages) {
         if (step?.info.id === messageID) step = undefined
         if (last?.id === messageID) last = undefined
+        finished.delete(messageID)
         for (const [callID, part] of tools) if (part.messageID === messageID) tools.delete(callID)
         yield* sessions.removeMessage({ sessionID, messageID })
       }
@@ -267,6 +310,7 @@ export function create(input: {
         if (part.state.status !== "running" && part.state.status !== "pending") continue
         const aborted: SessionV1.ToolPart = { ...part, metadata: { ...part.metadata, interrupted: true },
           state: { status: "error", input: part.state.input, error: "Tool execution aborted",
+            metadata: { ...(part.state.status === "running" ? part.state.metadata : {}), aborted: true },
             time: { start: part.state.status === "running" ? part.state.time.start : now, end: now } } }
         tools.set(part.callID, aborted)
         yield* sessions.updatePart(aborted)
@@ -275,12 +319,12 @@ export function create(input: {
         ? new AbortedError({ message: cause.message }).toObject()
         : new NamedError.Unknown({ message: cause.message }).toObject()
       // Persist the failure before best-effort snapshots.
-      const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
+      const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID, role: "assistant",
         mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, path: input.path,
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: now } }
       const usage = current?.usage
-      const tokens = { input: usage?.input_tokens ?? 0, output: usage?.output_tokens ?? 0, reasoning: 0,
+      const tokens = { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - (current?.reasoning ?? 0)), reasoning: current?.reasoning ?? 0,
         cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
       for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }

@@ -10,7 +10,7 @@ export * as ClaudeHostMirror from "./mirror"
 // - retry status, compaction dividers, rate limits, cost, model usage and context window.
 // A steer that Claude Code reads mid-turn starts the next step under the steering user message.
 import { Effect } from "effect"
-import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { ModelUsage, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Agent } from "@/agent/agent"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
@@ -18,7 +18,10 @@ import type { Session } from "@/session/session"
 import type { SessionStatus } from "@/session/status"
 import type { Todo } from "@/session/todo"
 import type { Snapshot } from "@/snapshot"
-import { create as turnMirror, NAMES } from "../mirror"
+import { Provider } from "@/provider/provider"
+import { ModelV2 } from "@orchestra/core/model"
+import type { ModelsDev } from "@orchestra/core/models-dev"
+import { ClaudeCodeMirror, NAMES } from "../mirror"
 import { ClaudeCodeTranscript } from "../transcript"
 
 /** Claude Code built-ins shown under the Orchestra tool id whose card renders them. */
@@ -67,6 +70,7 @@ export function toolMetadata(name: string, structured: unknown, output: string, 
     const exit = failed ? Number(/exit code (\d+)/i.exec(output)?.[1] ?? 1) : 0
     return { exit, truncated: structured.persistedOutputPath !== undefined, outputPath: structured.persistedOutputPath,
       timeout: structured.timedOutAfterMs !== undefined, aborted: structured.interrupted === true,
+      timedOutAfterMs: structured.timedOutAfterMs, interrupted: structured.interrupted,
       ...(structured.backgroundTaskId ? { backgroundTaskId: structured.backgroundTaskId } : {}) }
   }
   if (name === "Edit" || name === "Write") {
@@ -113,10 +117,14 @@ export type Child = { sessionID: SessionID; user: SessionV1.User; agent: Agent.I
 export interface Mirror {
   /** Apply one SDK frame; subagent frames go to the child session of their Agent call. */
   on(message: SDKMessage): Effect.Effect<void>
-  /** The owner's steer was handed to Claude Code; it answers it from the next step on. */
-  steer(user: SessionV1.User): Effect.Effect<void>
+  /** Register the UUID of each user send before it enters the SDK input queue. */
+  sent(user: SessionV1.User, uuid: string): Effect.Effect<void>
+  /** Without a sent UUID a steer stays pending; only an SDK receipt can consume it. */
+  steer(user: SessionV1.User, uuid?: string): Effect.Effect<void>
   /** A steer Claude Code has not answered yet. */
   pending(): SessionV1.User | undefined
+  pendingInputs(): readonly { user: SessionV1.User; uuid?: string }[]
+  consumed(): readonly SessionV1.User[]
   annotate(callID: string, patch: Input): Effect.Effect<void>
   /** A subagent ended: close its child session's last step. */
   settle(callID: string): Effect.Effect<void>
@@ -140,6 +148,10 @@ export function create(input: {
   snapshot: Snapshot.Interface
   todo: Todo.Interface
   status: SessionStatus.Interface
+  /** The UI reads provider.models[id].limit, not session metadata. */
+  provider?: Provider.Interface
+  /** Native Claude sessions can run without a connected API provider; seed their UI model data from the catalog. */
+  catalog?: ModelsDev.Interface
   /** The child session of an Agent call, once its delegation record exists; undefined keeps only the card. */
   child?: (call: SessionV1.ToolPart) => Effect.Effect<Child | undefined>
   /** Session-level host facts (cost, usage, rate limit, model) for the session's `claudeCode` metadata. */
@@ -149,20 +161,24 @@ export function create(input: {
    * Agent calls and task ids by the mirror that owns them, shared by every turn of one live session: a background
    * subagent's frames and notification arrive after the turn that dispatched it has ended (spike S12).
    */
-  known?: { calls: Map<string, Mirror>; tasks: Map<string, string> }
+  known?: { calls: Map<string, Mirror>; tasks: Map<string, string>; usage?: Map<string, ModelUsage> }
 }): Mirror {
   const { sessionID, sessions } = input
-  const known = input.known ?? { calls: new Map<string, Mirror>(), tasks: new Map<string, string>() }
+  const known: NonNullable<typeof input.known> = input.known ?? { calls: new Map<string, Mirror>(), tasks: new Map<string, string>() }
+  const modelUsage = known.usage ??= new Map<string, ModelUsage>()
   const views = [view(input.user)]
   const children = new Map<string, { mirror: Mirror } | undefined>()
   const raw = new Map<string, string>()
-  let steered: SessionV1.User | undefined
+  const sends = new Map<string, SessionV1.User>()
+  const pending = new Map<MessageID, { user: SessionV1.User; uuid?: string }>()
+  const consumed = new Map<MessageID, SessionV1.User>()
+  let answering = input.user
   let apiID: string | undefined
   let retrying = false
   let model: string | undefined
 
   function view(user: SessionV1.User) {
-    return turnMirror({ sessionID, user, agent: input.agent, path: input.path, sessions, snapshot: input.snapshot, record: input.record })
+    return ClaudeCodeMirror.create({ sessionID, user, agent: input.agent, path: input.path, sessions, snapshot: input.snapshot, record: input.record })
   }
   const current = () => views[views.length - 1]
   const tool = (callID: string) => views.findLast((item) => item.tool(callID))?.tool(callID)
@@ -262,8 +278,6 @@ export function create(input: {
 
   const self: Mirror = {
     on: (message) => Effect.gen(function* () {
-      if (message.type === "system") return yield* system(message)
-      if (message.type === "rate_limit_event") return yield* state({ rateLimit: message.rate_limit_info })
       const parent = "parent_tool_use_id" in message ? message.parent_tool_use_id : null
       if (parent) {
         if (!tool(parent)) {
@@ -280,11 +294,24 @@ export function create(input: {
         retrying = false
         yield* input.status.set(sessionID, { type: "busy" })
       }
-      // Claude Code read a steer between steps: the next step answers the steering message.
-      if (step && step !== apiID && steered && apiID) {
-        yield* current().finish(0)
-        views.push(view(steered))
-        steered = undefined
+      // Receipts can include several batched sends and can arrive on the complete assistant after message_start.
+      const receipts = "user_message_uuids" in message && message.user_message_uuids
+        ? message.user_message_uuids : "user_message_uuid" in message && message.user_message_uuid ? [message.user_message_uuid] : []
+      for (const uuid of receipts) {
+        const user = sends.get(uuid)
+        if (!user || consumed.has(user.id)) continue
+        consumed.set(user.id, user)
+        pending.delete(user.id)
+        answering = user
+      }
+      if (message.type === "system") return yield* system(message)
+      if (message.type === "rate_limit_event") return yield* state({ rateLimit: message.rate_limit_info })
+      if (step && answering.id !== current().current()?.parentID && answering.id !== input.user.id) {
+        if (step === apiID) yield* current().parent(answering.id)
+        if (step !== apiID) {
+          yield* current().finish(0)
+          views.push(view(answering))
+        }
       }
       if (step) apiID = step
       if (message.type === "assistant" && message.message.model) model = message.message.model
@@ -304,8 +331,7 @@ export function create(input: {
         if (!part || (part.state.status !== "completed" && part.state.status !== "error")) continue
         const output = part.state.status === "completed" ? part.state.output : part.state.error
         const metadata = toolMetadata(name, message.tool_use_result, output, block.is_error === true)
-        yield* write({ ...part, ...(part.state.status === "completed"
-          ? { state: { ...part.state, metadata: { ...part.state.metadata, ...metadata } } } : {}) }, before[index])
+        yield* write({ ...part, state: { ...part.state, metadata: { ...part.state.metadata, ...metadata } } }, before[index])
         if (name === "TodoWrite" && Array.isArray(metadata.todos))
           yield* input.todo.update({ sessionID, todos: metadata.todos as Todos })
         if ((name === "Agent" || name === "Task") && ClaudeCodeTranscript.record(message.tool_use_result) &&
@@ -313,8 +339,18 @@ export function create(input: {
       }
     }),
 
-    steer: (user) => Effect.sync(() => { steered = user }),
-    pending: () => steered,
+    sent: (user, uuid) => Effect.sync(() => {
+      if (sends.has(uuid) && sends.get(uuid)?.id !== user.id) throw new Error("SDK send UUID reused for another user message")
+      sends.set(uuid, user)
+      if (user.id !== input.user.id && !consumed.has(user.id)) pending.set(user.id, { user, uuid })
+    }),
+    steer: (user, uuid) => Effect.sync(() => {
+      if (uuid) sends.set(uuid, user)
+      if (!consumed.has(user.id)) pending.set(user.id, { user, uuid })
+    }),
+    pending: () => [...pending.values()].at(-1)?.user,
+    pendingInputs: () => [...pending.values()],
+    consumed: () => [...consumed.values()],
     annotate,
     settle: (callID) => Effect.gen(function* () {
       const child = children.get(callID)?.mirror
@@ -341,6 +377,24 @@ export function create(input: {
   const usage = (message: Extract<SDKMessage, { type: "result" }>) => Effect.gen(function* () {
     const models = message.modelUsage ?? {}
     const main = models[model ?? ""] ?? Object.values(models).find((item) => item.canonicalModel === model)
+    const providers = input.provider ? yield* input.provider.list() : undefined
+    const catalog = input.catalog ? yield* input.catalog.get() : undefined
+    const providerID = input.user.model.providerID
+    const provider = providers?.[providerID] ?? (catalog?.[providerID] ? Provider.fromModelsDevProvider(catalog[providerID]) : undefined)
+    for (const [id, usage] of Object.entries(models)) {
+      // modelUsage is cumulative across the live query; preserve the baseline across mirrors and turns.
+      let remaining = Math.max(0, (usage.thinkingTokens ?? 0) - (modelUsage.get(id)?.thinkingTokens ?? 0))
+      for (const item of [...views].reverse()) remaining = yield* item.reasoning(id, remaining)
+      modelUsage.set(id, usage)
+      if (!provider || !providers) continue
+      const catalogModel = provider.models[id] ?? Object.values(provider.models).find((item) =>
+        item.api.id === id || item.id === usage.canonicalModel)
+      const previous = catalogModel ?? provider.models[input.user.model.modelID]
+      if (!previous) continue
+      provider.models[id] = { ...previous, id: ModelV2.ID.make(id), name: catalogModel?.name ?? id, api: { ...previous.api, id },
+        limit: { ...previous.limit, context: usage.contextWindow, output: usage.maxOutputTokens } }
+      providers[providerID] = provider
+    }
     yield* state({ cost: message.total_cost_usd, modelUsage: models,
       ...(main ? { contextWindow: main.contextWindow, maxOutputTokens: main.maxOutputTokens } : {}) })
   })
