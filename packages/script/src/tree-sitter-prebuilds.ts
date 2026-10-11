@@ -8,7 +8,8 @@
 // Only the Desktop ships node_modules. A compiled CLI (packages/cli, packages/orchestra, nix/orchestra.nix) bundles
 // maestro-arsenal, which loads tree-sitter through createRequire at runtime, and has no node_modules to resolve it
 // from: both builds ship the packages arsenal parses with in bin/tree-sitter/ (resolveTreeSitter, copyTreeSitter), and
-// arsenal loads them from beside realpath(execPath).
+// arsenal loads them from beside realpath(execPath). A cross build takes another target's bundle from
+// TREE_SITTER_ARTIFACTS, exported on that target's own host, since only that host can build its core binding.
 // This runs under Node too (electron-builder loads the Desktop config there), so it uses node: APIs only.
 import { spawnSync } from "node:child_process"
 import {
@@ -127,18 +128,39 @@ export function treeSitterBundle(input: Target) {
 }
 
 /**
- * Where each bin/tree-sitter/ file of a build comes from: maestro-arsenal's own dependencies under `root`, once
- * prepareTreeSitterPrebuilds has repaired or built the target's bindings, or stopped with its named error (another
- * target's core binding cannot be built on this host). Resolve every build before building any.
+ * Where each bin/tree-sitter/ file of a build comes from. `artifacts` (TREE_SITTER_ARTIFACTS, as OMNI_ARTIFACTS for
+ * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds.ts <os> <arch> --out <artifacts>`),
+ * one per <os>-<arch>/ directory; a target with one there ships it once every file and every binding's CPU checks out.
+ * A target without one takes maestro-arsenal's own dependencies under `root`, once prepareTreeSitterPrebuilds has
+ * repaired or built its bindings, or stops with that function's named error (another target's core binding cannot be
+ * built on this host). Resolve every build before building any.
  */
-export function resolveTreeSitter(input: Target & { root: string }) {
+export function resolveTreeSitter(input: Target & { root: string; artifacts?: string }) {
   const files = treeSitterBundle(input)
+  const exported = input.artifacts ? path.join(input.artifacts, `${input.os}-${input.arch}`) : ""
+  if (files.length > 0 && exported && existsSync(exported)) {
+    requireTreeSitterBundle(exported, input)
+    return files.map((file) => ({ from: path.join(exported, ...file.split("/")), to: file }))
+  }
   if (files.length > 0) prepareTreeSitterPrebuilds({ root: input.root, os: input.os, arch: input.arch })
   const resolve = createRequire(path.join(input.root, "packages", "maestro-arsenal", "package.json")).resolve
   return files.map((file) => {
     const [name, ...rest] = file.split("/")
     return { from: path.join(realpathSync(path.dirname(resolve(`${name}/package.json`))), ...rest), to: file }
   })
+}
+
+/**
+ * Exports the target's CLI bundle to `out`/<os>-<arch>/ for a cross build's TREE_SITTER_ARTIFACTS. Run it on the
+ * target's own host: anywhere else resolveTreeSitter stops with its named error rather than export another CPU's
+ * bindings.
+ */
+export function exportTreeSitter(input: Target & { root: string; out: string }) {
+  const dir = path.join(path.resolve(input.out), `${input.os}-${input.arch}`)
+  const files = resolveTreeSitter({ root: input.root, os: input.os, arch: input.arch, abi: input.abi })
+  rmSync(dir, { recursive: true, force: true })
+  copyTreeSitter(files, dir, input)
+  return { target: `${input.os}-${input.arch}`, exported: dir, files: files.map((file) => file.to) }
 }
 
 /** Copies resolved files into `dir` (a build's bin/tree-sitter) and checks the result as every consumer does. */
@@ -268,9 +290,11 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
 }
 
 if (import.meta.main) {
-  const [os, arch] = process.argv.slice(2)
-  if (!os || !arch) throw new Error("Usage: tree-sitter-prebuilds.ts <os> <arch>")
+  const [os, arch, flag, out] = process.argv.slice(2)
+  if (!os || !arch || (flag !== undefined && (flag !== "--out" || !out)))
+    throw new Error("Usage: tree-sitter-prebuilds.ts <os> <arch> [--out <dir>]")
+  const root = path.resolve(import.meta.dirname, "../../..")
   console.log(
-    JSON.stringify(prepareTreeSitterPrebuilds({ root: path.resolve(import.meta.dirname, "../../.."), os, arch })),
+    JSON.stringify(out ? exportTreeSitter({ root, os, arch, out }) : prepareTreeSitterPrebuilds({ root, os, arch })),
   )
 }
