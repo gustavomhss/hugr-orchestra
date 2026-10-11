@@ -127,14 +127,20 @@ ClaudeEngineFixture.it.instance("Maestro on Claude Code delegates through Orches
     expect(call.state.metadata).toMatchObject({ sessionId: child.id, parentSessionId: chat.id })
     expect(call.state.output).toContain("Checked: the release flag is on.")
 
-    // Maestro's own prompt and toolset: no Claude Code preset, no SDK subagents or built-in replacements for its tools.
+    // Maestro's prompt rides on Claude Code's preset (a replaced prompt is billed as a third-party app) and claims
+    // precedence; its toolset has no SDK subagents or built-in replacements for its tools.
     const options = ClaudeEngineFixture.state.queries[0].options
     const system = options?.systemPrompt
-    if (typeof system !== "object" || Array.isArray(system) || system.type !== "custom") throw new Error("expected a custom system prompt")
+    if (typeof system !== "object" || Array.isArray(system) || system.type !== "preset") throw new Error("expected the preset")
+    expect(system.preset).toBe("claude_code")
     const agents = yield* Agent.Service
     const maestro = yield* agents.get("maestro")
-    expect(String(system.prompt).startsWith(maestro.prompt ?? "missing")).toBe(true)
-    expect(String(system.prompt)).toContain("mcp__orchestra__task")
+    const [precedence] = (system.append ?? "").split("\n\n")
+    expect(precedence).toContain("follow them")
+    expect(maestro.prompt?.length).toBeGreaterThan(0)
+    expect(system.append?.startsWith(`${precedence}\n\n${maestro.prompt}`)).toBe(true)
+    expect(system.append).toContain("delegate with `mcp__orchestra__task`")
+    expect(system.append).toContain("`mcp__orchestra__todowrite`")
     expect(options?.disallowedTools).toContain("Task")
     expect(options?.tools).toContain("Bash")
     for (const name of ["Task", "Agent", "TodoWrite", "Skill", "AskUserQuestion", "Read", "Edit", "Write"])
@@ -177,4 +183,20 @@ ClaudeEngineFixture.it.instance("a background teammate's task return reaches Mae
     expect(ClaudeEngineFixture.state.queries[1].options?.resume).toBe("sdk-1")
     expect(answer.info.role === "assistant" && answer.info.finish).toBe("stop")
     expect(answer.parts.some((part) => part.type === "text" && part.text === "The teammate confirmed the flag.")).toBe(true)
+  }), 60_000)
+
+ClaudeEngineFixture.it.instance("a third-party billing refusal fails Maestro's turn with that cause and is not retried", () =>
+  Effect.gen(function* () {
+    ClaudeEngineFixture.reset()
+    const { prompt, chat } = yield* setup()
+    ClaudeEngineFixture.state.scripts.push(async function* () {
+      yield { type: "system", subtype: "init", ...frame }
+      yield { type: "result", subtype: "success", is_error: true, ...frame,
+        result: "API Error: 400 Third-party apps now draw from your extra usage, not your plan limits." }
+    })
+    const answer = yield* prompt.prompt({ sessionID: chat.id, ...ask("Is the release flag on?") })
+    const error = answer.info.role === "assistant" ? answer.info.error : undefined
+    expect(error?.data).toMatchObject({ message: expect.stringContaining("billed it as a third-party app") })
+    expect(JSON.stringify(error)).not.toContain("native overflow")
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
   }), 60_000)
