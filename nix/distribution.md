@@ -1,7 +1,7 @@
 # Native distribution checkpoint — source-bound component evidence
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
+{"ready": true, "phase": "measure", "sourceParent": "1a7aaa99b19efc0f6c99e6f40f9a760efaf70023", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
 ## Qualified Nix component
