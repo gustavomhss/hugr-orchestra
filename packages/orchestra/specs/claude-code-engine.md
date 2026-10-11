@@ -1,6 +1,37 @@
 # Claude Code as Orchestra's harness
 
-Status: 2026-10-09. Owner-approved implementation and cold-review repairs complete; publication and final bundle CI pending. Historical prototype and verification records below retain their original scope.
+Status: 2026-10-11. **Paused** (see "Paused" below): no real engine run starts until the owner approves a new
+meta-harness plan. Historical prototype and verification records below retain their original scope.
+
+## Paused
+
+All real Claude Code engine runs are on hold until the owner approves a new meta-harness plan.
+
+**Why.**
+
+- **Token intermediation.** Orchestra drives Claude Code through its own loop, and the engine does extract and inject
+  the machine's login today: `ClaudeCodeSDK.processLifetime` reads the Claude Code OAuth token from the Keychain (or
+  `.credentials.json`) and injects it into the CLI as `CLAUDE_CODE_OAUTH_TOKEN`. That may count as intermediating
+  session tokens under Anthropic's terms. Earlier text in this spec said Orchestra "never reads or extracts tokens";
+  that was false (corrected in 4.3).
+- **Billing finding.** Anthropic billed a query whose system prompt replaced Claude Code's preset as a third-party app
+  drawing on extra usage (`400 Third-party apps now draw from your extra usage`, 4.3). The preset guard fixes that one
+  case; it does not settle whether Orchestra's loop around Claude Code is first-party use of the plan.
+- **Known gap.** In-process tools run `def.execute` directly (`claude-code/tools.ts`), so they skip ToolSafety and the
+  plugin `tool.execute.before`/`after` hooks that Orchestra's loop applies (`session/tools.ts`).
+
+The meta-harness plan resolves all three.
+
+**Enforcement.** `ClaudeCodeSDK.requirePlanApproval` runs inside `processLifetime`'s `spawnClaudeCodeProcess`, the
+point every real SDK `query()` passes before a Claude Code process exists, and ahead of the login read. Unless the
+environment sets `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1`, it throws "The Claude Code engine is paused until its
+meta-harness plan is approved by the owner." The agent, seat or Maestro configured with `engine: "claude-code"`
+gets that as its turn error; it is never retried and never falls back to another transport, and the Keychain is never
+read. Recorded test transports never spawn, so they run without the flag. `script/claude-code-engine/proto.ts`, which
+calls `query()` directly, and the Archie authoring pair's login read hold the same flag.
+
+**What lifts it.** The owner approves the new meta-harness plan; only then does an operator set
+`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1` in the server environment.
 
 ## 1. Goal
 
@@ -88,8 +119,10 @@ On Claude Code, Maestro stays Maestro:
 
 - **Terms posture, unchanged from seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
   `query()` on the machine's Claude Code login, exactly as for seats. Orchestra never calls the Anthropic API with
-  subscription credentials, never reads or extracts tokens, and adds no auth path; delegation only adds in-process
-  tools to that `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
+  subscription credentials, but it does extract and inject the login: `processLifetime` reads the OAuth token from
+  the Keychain and hands it to the CLI as `CLAUDE_CODE_OAUTH_TOKEN` (an earlier "never reads or extracts tokens" here
+  was false). That is one reason the engine is paused ("Paused" above). Delegation only adds in-process tools to that
+  `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
   transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
   Every query on the login, turns and continuity maintenance alike, keeps Claude Code's `claude_code` system prompt
   preset and only appends to it (`ClaudeCodeSDK.preset`). Anthropic bills a query whose system prompt replaces the

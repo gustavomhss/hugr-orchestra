@@ -86,6 +86,8 @@ export async function claudeLoginSecrets(candidate: string, raw: string, minimum
 }
 // The same store sdk.ts reads per spawn: the unsuffixed Keychain item (CLAUDE_SECURESTORAGE_CONFIG_DIR=""), else its file.
 export async function readClaudeLogin(candidate: string, home: string, user: string, minimumValidMs: number) {
+  // The Claude Code engine is paused until the owner approves its plan (sdk.ts requirePlanApproval): no login read.
+  requireFact(process.env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED === "1", "PAIR_CLAUDE_CODE_ENGINE_PAUSED")
   const { ClaudeCodeSDK } = await import(join(candidate, "packages/orchestra/src/claude-code/sdk.ts"))
   const storage = ClaudeCodeSDK.credentialStorage({ CLAUDE_SECURESTORAGE_CONFIG_DIR: "" }, home)
   const keychain = process.platform === "darwin" ? Bun.spawnSync(["security", "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(user) ? user : "claude-code-user", "-w", "-s", storage.service],
