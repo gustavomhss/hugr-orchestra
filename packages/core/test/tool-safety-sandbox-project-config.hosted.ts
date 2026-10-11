@@ -84,6 +84,10 @@ live("creating a project config that does not exist yet is refused: write, mkdir
     const normal = yield* p.run("echo ok > normal.txt && mkdir -p sub/deep && echo ok > sub/deep/f && echo ok > orchestra.json.bak && mkdir .orchestra-cache && echo ok > notorchestra.json && mkdir -p sub/.orchestra-x")
     expect(normal.exitCode).toBe(0)
     expect(yield* p.fs.readFileString(path.join(p.root, "sub/deep/f"))).toBe("ok\n")
+    // Whatever blocks the absent names inside the jail must not break ordinary reads of the workspace. The glob skips
+    // dotfiles: srt's own guards for absent ones (.bashrc, .gitconfig) cannot be opened.
+    const reads = yield* p.run("grep -r ok * && ls -l && find . -type f")
+    expect({ exitCode: reads.exitCode, stderr: reads.stderr.toString() }).toEqual({ exitCode: 0, stderr: expect.any(String) })
     expect(names.filter(p.present)).toEqual([])
   }), 240_000,
 )

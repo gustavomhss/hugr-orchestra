@@ -221,12 +221,14 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
         let data='';c.on('data',chunk=>data+=chunk);c.on('end',()=>{c.destroy();resolve(data.split('\\r\\n\\r\\n').slice(1).join('\\r\\n\\r\\n'))});
         c.on('error',e=>{c.destroy();resolve(e.code)});c.setTimeout(1000,()=>{c.destroy();resolve('TIMEOUT')})});
       (async()=>{const raw=await read({host:'127.0.0.1',port:${address.port}});
+        // Nothing is granted on port 1: raw TCP there is refused by the jail on every host.
+        const rawOther=await read({host:'127.0.0.1',port:1});
         const prefix='${address.port}:';
         const route=process.env.ORCHESTRA_TCP_PROXY_ROUTES?.split(';').find(value=>value.startsWith(prefix));
         const connect=process.env.ORCHESTRA_TCP_PROXY_CONNECT?.split(';').includes('${address.port}');
         const broker=route?await read({path:Buffer.from(route.slice(prefix.length),'hex').toString('utf8')}):connect?await tunnel(${address.port}):'NO_ROUTES';
-        console.log(JSON.stringify({siblingDenied,raw,broker}));
-        if(!siblingDenied||!['EPERM','ECONNREFUSED'].includes(raw)||broker!=='listener-loopback-response')process.exitCode=3;
+        console.log(JSON.stringify({siblingDenied,raw,rawOther,broker}));
+        if(!siblingDenied||!['EPERM','ECONNREFUSED'].includes(rawOther)||broker!=='listener-loopback-response')process.exitCode=3;
       })().catch(error=>{console.error(error);process.exitCode=4});
     `)
     const grants = [{ directory: f.directory, host: "127.0.0.1" as const, port: address.port }]
@@ -240,11 +242,14 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
     const child = yield* f.child(listener)
     const tools = yield* f.invoke(listener, child, "bash", { command: "node probe.cjs", description: "listener loopback endpoint probe", timeout: 5000 })
     if (jail) {
-      // Seatbelt denies raw TCP outright; nothing listens on the port inside srt's network namespace.
-      const raw = jail === "seatbelt" ? "EPERM" : "ECONNREFUSED"
-      expect(tools.some((part) => part.state.status === "completed" && part.state.metadata.exit === 0 &&
-        part.state.output === `${JSON.stringify({ siblingDenied: true, raw, broker: "listener-loopback-response" })}\n`)).toBe(true)
-      expect(connections.accepted).toBe(2)
+      // Seatbelt denies raw TCP outright. srt's network namespace has no route out: raw TCP to the granted port reaches
+      // only the in-jail endpoint forwarder, which tunnels through srt's allowlisting proxy; any other port is refused.
+      const raw = jail === "seatbelt" ? "EPERM" : "listener-loopback-response"
+      const rawOther = jail === "seatbelt" ? "EPERM" : "ECONNREFUSED"
+      const output = `${JSON.stringify({ siblingDenied: true, raw, rawOther, broker: "listener-loopback-response" })}\n`
+      expect(tools.map((part) => part.state.status === "completed" ? { exit: part.state.metadata.exit, output: part.state.output } : part.state.status))
+        .toContainEqual({ exit: 0, output })
+      expect(connections.accepted).toBe(jail === "seatbelt" ? 2 : 3)
       expect(yield* f.fs.isDir(path.join(f.directory, "nested"))).toBe(true)
       expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
       return

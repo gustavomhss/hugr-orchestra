@@ -1,4 +1,5 @@
 import { describe, expect } from "bun:test"
+import os from "node:os"
 import path from "node:path"
 import { createServer } from "node:net"
 import { cp, link, readFile, stat, writeFile, mkdir } from "node:fs/promises"
@@ -335,8 +336,9 @@ windows("journals guard protection under the per-user location so instances shar
     yield* Effect.promise(() => writeFile(path.join(f.workspace, "orchestra.json"), "{}"))
     const command = yield* f.wrap(f.ps("'x'"), { requireSandbox: true, writeRoots: [f.workspace] })
     if (command._tag !== "StandardCommand") throw new Error("expected one command")
+    // The test runner's environment may lack LOCALAPPDATA; the journal then still lands under the user's default.
     expect(command.args[command.args.indexOf("--journal") + 1]).toBe(
-      path.join(process.env.LOCALAPPDATA ?? "", "orchestra", "appcontainer-guard"))
+      path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData", "Local"), "orchestra", "appcontainer-guard"))
   }), 60_000,
 )
 

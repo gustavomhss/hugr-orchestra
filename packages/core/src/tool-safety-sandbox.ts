@@ -239,9 +239,10 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     const launched = yield* ToolSafetyAppContainer.command({
       command, supervisor: sandbox.supervisor, cwd, directory, roots: declared, scratch, deny, guards: guarded,
       // The guard journal must be the same location for every Orchestra instance on the machine, or one instance's
-      // restore would race another's protection. It is keyed per user (%LOCALAPPDATA%), not per instance-state dir;
-      // multiple OS users sharing one checkout is out of scope.
-      journal: path.join(process.env.LOCALAPPDATA ?? Global.Path.state, "orchestra", "appcontainer-guard"),
+      // restore would race another's protection. It is keyed per user (%LOCALAPPDATA%, or its default when this
+      // process's environment lacks it), never per instance-state dir; multiple OS users sharing one checkout is out of
+      // scope.
+      journal: path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData", "Local"), "orchestra", "appcontainer-guard"),
       env: confined, ports: endpoints, domains: profile?.sandbox?.allowedDomains?.length ?? 0,
     }).pipe(Effect.result)
     // A policy the ACLs cannot express is an unavailable sandbox for this command, never for an exact endpoint.
@@ -310,6 +311,14 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-directory-acquisition" })),
   )
   const policy = path.join(temp, "settings.json")
+  // bwrap blocks creating an absent deny path by binding /dev/null there, which its nodev bind makes unreadable:
+  // `grep -r`, `ls -l` and `find` fail on the ghost. srt binds a read-only empty directory instead when the absent name
+  // is the parent of another deny path: just as uncreatable, and it reads as empty. Only in an existing directory, where
+  // bwrap can make that mount point.
+  const absent = process.platform === "linux"
+    ? yield* Effect.filter(guarded, (entry) => fs.isDir(path.dirname(entry)).pipe(
+        Effect.map((directory) => directory && !lstatSync(entry, { throwIfNoEntry: false }))))
+    : []
   // Plain TCP clients (libpq, SQLx, PGLS) cannot speak CONNECT. This host-written forwarder runs first inside the same
   // sandbox and network namespace, on this process's own runtime: it listens on each granted 127.0.0.1 port there,
   // tunnels every connection through srt's proxy (which still enforces the allowlist), runs the command as its child and
@@ -326,7 +335,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       allowRead: readable ? [...readable, ...(forwarder ? [temp, path.dirname(process.execPath)] : [])] : [],
       denyRead: readable ? ["/", ...deny, ...nested] : deny,
       allowWrite: roots,
-      denyWrite: [...deny, ...guarded, ...(forwarder ? [temp] : [])],
+      denyWrite: [...deny, ...guarded, ...(forwarder ? [temp] : []), ...absent.map((entry) => path.join(entry, "orchestra-guard"))],
     },
     // An exact endpoint is an IP-literal host:port entry; its network namespace has no other route. Domain and
     // endpoint grants are mutually exclusive above. Never allowAllUnixSockets: it would expose host daemons.
