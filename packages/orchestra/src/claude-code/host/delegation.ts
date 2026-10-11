@@ -29,6 +29,7 @@ import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
+import { ClaudeHostMcp } from "./mcp"
 
 /** Plugin-scoped seat names: `orchestra:<seat id>`. */
 export const PREFIX = "orchestra:"
@@ -49,23 +50,6 @@ export type Evidence = {
   readonly seat: string
   readonly writeRoots: readonly string[]
   readonly background: boolean
-}
-
-// MIRROR of PLUGIN's `ClaudeHostMcp.Grant` (host/mcp.ts, `task_grant`). Replace this type, the empty default store and
-// `referenced` with the real exports once host/mcp.ts lands on claude-host.
-export type Grant = {
-  readonly grantID: string
-  readonly sessionID: string
-  readonly seat: string
-  readonly writePaths: readonly string[]
-  readonly writeRoots: readonly string[]
-  readonly purpose: string
-  readonly time: number
-}
-
-/** The grant an Agent prompt names on its own `grantID: <id>` line, as `task_grant` tells Maestro to write it. */
-export function referenced(prompt: string) {
-  return /^grantID:\s*(grt_[A-Za-z0-9]+)\s*$/m.exec(prompt)?.[1]
 }
 
 /** The mirror's part API for mirrored tool calls (HOST host/mirror.ts): a part by `tool_use_id`, and its write. */
@@ -108,12 +92,10 @@ export function make(input: {
   readonly agent: string
   readonly path: { readonly cwd: string; readonly root: string }
   readonly join: ClaudeHostJoin.Join
-  readonly grants?: (sessionID: string) => Map<string, Grant>
   readonly parts?: Parts
 }) {
   const records = new Map<string, Record>()
   const join = input.join
-  const grants = input.grants ?? (() => new Map<string, Grant>())
 
   /**
    * Who makes a call: the main conversation, the joined seat's child Session, or a HOLD. A child's hook may run before
@@ -181,7 +163,8 @@ export function make(input: {
     const prompt = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: child.id, agent: seat.id,
       model: brief.model, time: { created: Date.now() } } satisfies SessionV1.User)
     yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: prompt.id, type: "text", text: text(args, "prompt") ?? "" })
-    if (grant) grants(dispatcher.sessionID).delete(grant.grantID)
+    // Bound to this tool use only: the grant cannot be named by a second dispatch.
+    if (grant) ClaudeHostMcp.grants(dispatcher.sessionID).delete(grant.grantID)
     const entry = { ...base, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
       writeRoots: WriteRoots.read(permission) ?? [] }
     records.set(hook.tool_use_id, entry)
@@ -279,15 +262,15 @@ export function make(input: {
       seat: entry.seat.id, taskId: entry.logical?.taskId,
     }] : []),
     /** The grants issued in this host session that no dispatch has bound yet. */
-    grants: () => [...grants(input.sessionID).values()],
+    grants: () => [...ClaudeHostMcp.grants(input.sessionID).values()],
   }
 
   function take(seat: Seat, prompt: string, sessionID: string) {
     return Effect.gen(function* () {
-      const id = referenced(prompt)
+      const id = ClaudeHostMcp.referenced(prompt)
       const how = `Call mcp__orchestra__task_grant with seat "${seat.id}" and its writePaths, then put "grantID: <id>" on its own line in the Agent prompt.`
       if (!id) return yield* refuse(`HOLD: ${seat.id} needs a write-root grant for this dispatch. ${how}`)
-      const grant = grants(sessionID).get(id)
+      const grant = ClaudeHostMcp.grants(sessionID).get(id)
       if (!grant || grant.seat !== seat.id || grant.sessionID !== sessionID)
         return yield* refuse(`HOLD: ${id} is not an unused ${seat.id} grant of this session. ${how}`)
       return grant

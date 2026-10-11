@@ -28,6 +28,7 @@ import { ClaudeCodeTools } from "../tools"
 import { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
+import { ClaudeHostMcp } from "./mcp"
 
 /**
  * What HOST hands the hooks. `run`, `join` and the optional ports are HOOKS additions to the brief's base fields:
@@ -35,7 +36,7 @@ import type { ClaudeHostJoin } from "./join"
  * - `join` is the session's identity registry (ClaudeHostJoin.make()); HOST's stream consumer feeds it `task_started`
  *   and `task_notification`, and reads `join.child(toolUseID)` to mirror a subagent's frames into its child Session;
  * - `parts` is the mirror's part API, so records land on the mirrored parts and a later stream frame cannot overwrite them;
- * - `grants` is PLUGIN's `ClaudeHostMcp.grants` (until it lands, no grant exists and write-roots seats are denied);
+ * - `granted` is `ClaudeHostMcp.prepare().granted`: the Orchestra tools each seat may call through the shared server;
  * - `research` is Jimmy's allowance and provenance port (until it lands, Jimmy is not dispatched);
  * - `policy` replaces the live gate checks (tests only).
  */
@@ -49,7 +50,7 @@ export type Context = {
   readonly run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Promise<A>
   readonly join: ClaudeHostJoin.Join
   readonly parts?: ClaudeHostDelegation.Parts
-  readonly grants?: (sessionID: string) => Map<string, ClaudeHostDelegation.Grant>
+  readonly granted: ClaudeHostGate.Ports["granted"]
   readonly research?: Research
   readonly policy?: ClaudeHostGate.Ports
 }
@@ -73,14 +74,19 @@ const MEMORY_LIMIT = 6000
 
 export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
-    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, grants: ctx.grants, parts: ctx.parts })
+    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts })
+  const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
+  const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
+    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
   const unsubscribe = ctx.join.subscribe((frame) => {
     ctx.run(delegation.notify(frame)).catch(() => undefined)
   })
-  ctx.abort.signal.addEventListener("abort", unsubscribe, { once: true })
-  const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
-  const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
-    : ctx.run(ClaudeHostGate.live({ abort: ctx.abort.signal, part: ctx.parts?.tool }))
+  // The session's end releases its notices, its unbound grants and the jails its background processes still hold.
+  ctx.abort.signal.addEventListener("abort", () => {
+    unsubscribe()
+    ClaudeHostMcp.release(ctx.sessionID)
+    if (policy.value) policy.value.then((value) => ctx.run(value.close)).catch(() => undefined)
+  }, { once: true })
 
   // A defect in Orchestra's own checks denies the call: the gate fails closed.
   const pre: HookCallback = (input) => {
@@ -113,7 +119,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const post: HookCallback = (input) => {
     if (input.hook_event_name !== "PostToolUse") return Promise.resolve({})
     return ctx.run(Effect.gen(function* () {
-      yield* release(input.tool_use_id)
+      // A background process keeps its jail until the session ends; any other call's jail ends with the call.
+      if (ClaudeCodeTools.orchestra(input.tool_name) !== ClaudeHostGate.PROCESS) yield* release(input.tool_use_id)
       const actor = yield* delegation.actor(input.agent_id)
       const agent = ClaudeHostGate.agentCall(input.tool_name)
       // Today's output boundary for Orchestra's tools: a recognized credential never reaches the model or a record.

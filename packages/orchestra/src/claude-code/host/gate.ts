@@ -32,6 +32,8 @@ import { approve } from "@/tool/shell/scan"
 import type { Tool } from "@/tool/tool"
 import { asks } from "../permissions"
 import { ClaudeCodeTools } from "../tools"
+import { ClaudeHostMcp } from "./mcp"
+import { ClaudeHostProcess } from "./process-tool"
 
 type Input = Record<string, unknown>
 
@@ -49,6 +51,11 @@ export type Call = { readonly tool: string; readonly args: Input }
 
 /** The checks one call goes through. Each one denies by failing; none of them can allow past another's failure. */
 export type Ports = {
+  /**
+   * The registry tool ids each agent may call (ClaudeHostMcp.prepare().granted). The `orchestra` MCP server is shared
+   * by the whole session and its calls do not say who calls, so the gate scopes them by the caller's seat.
+   */
+  readonly granted: Readonly<{ [agent: string]: readonly string[] }>
   /** Governance HOLDs that refuse a call before any policy is evaluated. */
   readonly hold: (actor: Actor, name: string, input: Input) => Effect.Effect<void, unknown>
   /** ToolSafety, evaluated with the actor Session's profile, so a subagent's write roots are its own grant's. */
@@ -64,13 +71,17 @@ export type Ports = {
   readonly confine: (actor: Actor, command: string, toolUseID: string) => Effect.Effect<string | undefined, unknown>
   /** Releases what a confined call holds (the jail's policy and scratch files) once the call has ended. */
   readonly release: (toolUseID: string) => Effect.Effect<void>
+  /** Releases every jail still held, such as a background `process`'s, when the host session ends. */
+  readonly close: Effect.Effect<void>
 }
 
 export type Decision = { readonly allow: true; readonly input?: Input } | { readonly allow: false; readonly reason: string }
 
 /** Orchestra's decision on one call. In-process Orchestra tools ask inside their own implementation, so they skip `ask`. */
-export const decide = Effect.fn("ClaudeHostGate.decide")(function* (ports: Ports, actor: Actor, name: string, input: Input, toolUseID: string) {
+export const decide = Effect.fn("ClaudeHostGate.decide")(function* (ports: Ports, actor: Actor, name: string, input: Input, toolUseID: string): Effect.fn.Return<Decision> {
   const own = ClaudeCodeTools.orchestra(name)
+  const scoped = scope(ports.granted, actor, name, input)
+  if (scoped) return { allow: false, reason: scoped }
   const checks = [
     ports.hold(actor, name, input),
     ports.safety(actor, invocation(name, input), toolUseID),
@@ -78,12 +89,13 @@ export const decide = Effect.fn("ClaudeHostGate.decide")(function* (ports: Ports
   ]
   for (const check of checks) {
     const exit = yield* Effect.exit(check)
-    if (Exit.isFailure(exit)) return { allow: false, reason: ClaudeCodeTools.failure(exit.cause) } satisfies Decision
+    if (Exit.isFailure(exit)) return { allow: false, reason: ClaudeCodeTools.failure(exit.cause) }
   }
-  if (name !== "Bash") return { allow: true } satisfies Decision
+  // Bash and the `process` tool both run a shell command; a write-roots seat runs either only inside its write jail.
+  if (name !== "Bash" && !(own === PROCESS && input.action === "start")) return { allow: true }
   const confined = yield* Effect.exit(ports.confine(actor, typeof input.command === "string" ? input.command : "", toolUseID))
-  if (Exit.isFailure(confined)) return { allow: false, reason: ClaudeCodeTools.failure(confined.cause) } satisfies Decision
-  return (confined.value === undefined ? { allow: true } : { allow: true, input: { ...input, command: confined.value } }) satisfies Decision
+  if (Exit.isFailure(confined)) return { allow: false, reason: ClaudeCodeTools.failure(confined.cause) }
+  return (confined.value === undefined ? { allow: true } : { allow: true, input: { ...input, command: confined.value } })
 })
 
 /** The hook answer for a decision. A deny names its reason so the model can act on it. */
@@ -114,6 +126,30 @@ export function invocation(name: string, input: Input): Call {
   return { tool: name, args: input }
 }
 
+/** The `process` MCP tool: a background shell command whose jail lives until the host session ends. */
+export const PROCESS = ClaudeHostProcess.ID
+
+/**
+ * What a seat may reach at all: its own entry skills (plugin agents cannot restrict skills), and the Orchestra MCP tools
+ * the registry grants it. Returns the reason a call is out of scope.
+ */
+export function scope(granted: Ports["granted"], actor: Actor, name: string, input: Input) {
+  const own = ClaudeCodeTools.orchestra(name)
+  if (own) {
+    // A write grant is part of delegating, so it goes to the agents that may delegate.
+    const allowed = granted[actor.seat]?.includes(own === ClaudeHostMcp.GRANT ? "task" : own)
+    return allowed ? undefined : `${actor.seat} is not granted the Orchestra tool ${own}, so the call did not run.`
+  }
+  if (name !== "Skill") return undefined
+  const requested = (text(input, "skill") ?? text(input, "command") ?? "").replace(/^\//, "").replace(/^orchestra:/, "")
+  const owner = Object.values(Seats.all).find((seat) => seat.skills.includes(requested))
+  if (owner) return owner.id === actor.seat ? undefined : `${requested} is ${owner.id}'s skill, so ${actor.seat} cannot use it.`
+  // The main conversation keeps its playbooks and the owner's own skills; a seat has only its entry skills.
+  if (!actor.agentID) return undefined
+  const skills = Seats.find(actor.seat)?.skills ?? []
+  return `${actor.seat} may use only its own skills${skills.length ? ` (${skills.join(", ")})` : ""}; ${requested || "that skill"} is not one of them.`
+}
+
 export function agentCall(name: string) {
   return name === "Agent" || name === "Task"
 }
@@ -124,6 +160,7 @@ export function agentCall(name: string) {
  * `part` finds the mirrored part of a call, so a permission prompt is shown on it.
  */
 export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
+  readonly granted: Ports["granted"]
   readonly abort: AbortSignal
   readonly part?: (toolUseID: string) => SessionV1.ToolPart | undefined
 }) {
@@ -161,6 +198,8 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
   })
 
   return {
+    granted: input.granted,
+    close: Effect.forEach([...scopes.keys()], release, { discard: true }),
     hold: (actor, name) => Effect.gen(function* () {
       // A workflow-bound Session runs its bound work only; it never starts teammates (task.ts parity).
       if (agentCall(name) && (yield* WorkflowBinding.read(actor.sessionID).pipe(Effect.provideService(Database.Service, database))))
