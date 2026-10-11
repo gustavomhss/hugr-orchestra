@@ -18,7 +18,9 @@ export function failure(cause: Cause.Cause<unknown>) {
   const error = Cause.squash(cause) as { feedback?: string; message?: string; _tag?: string; name?: string }
   if (typeof error?.feedback === "string") return `The user rejected this call with feedback: ${error.feedback}`
   const tag = error?._tag ?? error?.name ?? ""
-  if (/Rejected|Denied/.test(tag)) return "The user rejected this call. Stop and wait for the user's next message."
+  // A rule denial is policy, not the user: like Orchestra's own loop, show the rule and let the model carry on.
+  if (/Denied/.test(tag)) return error?.message ?? "A permission rule denies this call."
+  if (/Rejected/.test(tag)) return "The user rejected this call. Stop and wait for the user's next message."
   return error?.message ?? String(error)
 }
 
