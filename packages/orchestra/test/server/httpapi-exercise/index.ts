@@ -45,6 +45,7 @@ import { runtime } from "./runtime"
 import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
+import { sessionInitScenarios } from "./session-init"
 
 function cursor(input: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(input)).toString("base64url")
@@ -1283,30 +1284,7 @@ const scenarios: Scenario[] = [
     .json(200, (body) => {
       check(body === true, "missing session abort should remain a no-op success")
     }),
-  http.protected
-    .post("/session/{sessionID}/init", "session.init")
-    .preserveDatabase()
-    .withLlm()
-    .seeded((ctx) =>
-      Effect.gen(function* () {
-        const session = yield* ctx.session({ title: "Init session" })
-        const message = yield* ctx.message(session.id, { text: "initialize" })
-        yield* ctx.llmText("initialized")
-        yield* ctx.llmText("initialized")
-        return { session, message }
-      }),
-    )
-    .at((ctx) => ({
-      path: route("/session/{sessionID}/init", { sessionID: ctx.state.session.id }),
-      headers: ctx.headers(),
-      body: { providerID: "test", modelID: "test-model", messageID: ctx.state.message.info.id },
-    }))
-    .jsonEffect(200, (body, ctx) =>
-      Effect.gen(function* () {
-        check(body === true, "init should return true")
-        yield* ctx.llmWait(1)
-      }),
-    ),
+  ...sessionInitScenarios,
   http.protected
     .post("/session/{sessionID}/message", "session.prompt")
     .preserveDatabase()
