@@ -226,6 +226,9 @@ describe("TUI inline tool wrapping", () => {
   test("falls back for unknown tool names", () => {
     expect(toolDisplay("bash")).toBe("bash")
     expect(toolDisplay("plugin_tool")).toBe("generic")
+    // Claude Code delegates through its own Agent tool (Task on older binaries); both render as a task.
+    expect(toolDisplay("Agent")).toBe("task")
+    expect(toolDisplay("Task")).toBe("task")
   })
 
   test("replaces pending copy when a tool fails before completion", async () => {
