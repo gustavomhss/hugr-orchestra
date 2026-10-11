@@ -40,7 +40,7 @@ export const AtlasMemoryRecallTool = Tool.define(
         ),
       },
       description:
-        'Recall your own Atlas Memory records for one task or PR: {"kind":"task","taskId":...} or {"kind":"pr","prId":...}. Only your own task and PR records are reachable; other owners, project rules and the logbook are not. The result names the store state: complete (an empty list means nothing is recorded), partial (some lines could not be read, so the list may be incomplete) or unavailable (nothing could be read; never an empty result).',
+        'Recall your own Atlas Memory records for one task or PR: {"kind":"task","taskId":...} or {"kind":"pr","prId":...}. Only your own task and PR records are reachable; records of other memory owners, project rules and the logbook are not. The result names the store state: complete (an empty list means nothing is recorded), partial (some lines could not be read, so the list may be incomplete) or unavailable (nothing could be read; never an empty result).',
       execute: (input: Schema.Schema.Type<typeof RecallParameters>, ctx: Tool.Context) =>
         Effect.gen(function* () {
           yield* ctx.ask({

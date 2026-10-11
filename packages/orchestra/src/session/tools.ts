@@ -137,6 +137,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             if (Permission.evaluate(req.permission, pattern, nativePermission).action !== "deny") continue
             return yield* new PermissionV1.DeniedError({
               ruleset: nativePermission,
+              reason: req.permission === "external_directory"
+                ? `${pattern.replace(/[\\/]\*$/, "")} is outside the workspace. The owner's rules keep this agent inside ` +
+                  "it, and it cannot ask for an exception: work with paths inside the workspace."
+                : undefined,
             })
           }
         }

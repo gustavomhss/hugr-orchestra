@@ -62,6 +62,7 @@
     "packages/orchestra/src/mcp/index.ts": ["StdioClientTransport"],
     "packages/orchestra/src/plugin/hugr-composer/client.ts": ["StdioClientTransport"],
     "packages/orchestra/src/util/process.ts": ["child_process", "cross-spawn"],
+    "packages/script/src/tree-sitter-prebuilds.ts": ["child_process"],
     "packages/sdk/js/src/process.ts": ["child_process"],
     "packages/sdk/js/src/server.ts": ["cross-spawn"],
     "packages/sdk/js/src/v2/server.ts": ["cross-spawn"],

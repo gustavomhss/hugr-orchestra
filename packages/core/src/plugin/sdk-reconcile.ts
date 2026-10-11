@@ -7,6 +7,9 @@ import { PluginSdkPackage } from "./sdk-package"
 
 export async function reconcile(tree: Arborist.Node, directory: string, dist: { tarball: string; integrity: string }, cache: string) {
   const nodes = Array.from(tree.inventory.values())
+  // Bundled or previously installed copies never pass through the scope registry.
+  const foreign = nodes.find((node) => !node.isRoot && (PluginSdkPackage.scoped(node.name) || PluginSdkPackage.scoped(node.package.name)))
+  if (foreign) throw new PluginSdkPackage.ScopeError({ requested: foreign.package.name ?? foreign.name })
   const targets = new Set(nodes.filter((node) => !node.isRoot && !node.linksIn.size && (node.package.name === PluginSdkPackage.manifest.name || node.name === PluginSdkPackage.manifest.name)))
   nodes.forEach((node) => node.edgesOut.forEach((edge) => {
     if (PluginSdkPackage.request(edge.name, edge.spec) && edge.to) targets.add(edge.to)
