@@ -27,7 +27,7 @@ function decode(schema: Schema.Top | undefined, value: unknown) {
 
 describe("capability artifact projections", () => {
   test("group id, endpoints and Location-then-authorization middleware are frozen", () => {
-    expect(group.identifier).toBe("capability.artifact")
+    expect(group.identifier).toBe("server.capability.artifacts")
     expect(Object.keys(group.endpoints).sort()).toEqual(cases.map((entry) => entry.name).sort())
     Object.values(group.endpoints).forEach((endpoint) =>
       expect([...endpoint.middlewares]).toEqual([FixtureLocation, CapabilityAuthorization]))
@@ -35,8 +35,9 @@ describe("capability artifact projections", () => {
 
   test.each([...cases])("$name projects route, auth errors and idempotency", (entry) => {
     const operation = spec.paths[entry.path]?.[entry.method]
-    expect(operation?.operationId).toBe(`capability.artifact.${entry.name}`)
-    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(["200", "400", "401", "403", "409", "500"])
+    expect(operation?.operationId).toBe(`server.capability.artifacts.${entry.name}`)
+    expect(Object.keys(operation?.responses ?? {}).sort()).toEqual(entry.name === "capability.artifact.content"
+      ? ["200", "206", "400", "401", "403", "409", "416", "500"] : ["200", "400", "401", "403", "409", "500"])
     const headers = group.endpoints[entry.name].headers
     if (!entry.mutation) return
     expect(decode(headers, { "idempotency-key": "retry-1" })).toEqual({ "idempotency-key": "retry-1" })
@@ -48,9 +49,13 @@ describe("capability artifact projections", () => {
 
   test("artifact selectors require branded IDs and canonical non-negative revisions", () => {
     const params = group.endpoints["capability.artifact.get"].params
-    expect(decode(params, { sessionID: "ses_x", artifactID, revision: "3" })).toEqual({ sessionID: "ses_x", artifactID, revision: 3 })
+    ;["0", "3", "10", "1".repeat(16)].forEach((revision) => expect(decode(params, { sessionID: "ses_x", artifactID, revision }))
+      .toEqual({ sessionID: "ses_x", artifactID, revision: Number(revision) }))
     ;[{ artifactID: "cconn_" + "1".repeat(26), revision: "0" }, { artifactID, revision: "-1" },
-      { artifactID, revision: "1.5" }, { artifactID, revision: "x" }].forEach((value) =>
+      { artifactID, revision: "1.5" }, { artifactID, revision: "x" }, { artifactID, revision: "01" },
+      { artifactID, revision: "+3" }, { artifactID, revision: "1e2" }, { artifactID, revision: "0x10" },
+      { artifactID, revision: " 3" }, { artifactID, revision: "3 " }, { artifactID, revision: "" },
+      { artifactID, revision: "1".repeat(17) }].forEach((value) =>
       expect(() => decode(params, { sessionID: "ses_x", ...value })).toThrow())
     expect(() => decode(params, { sessionID: "nope", artifactID, revision: "0" })).toThrow()
   })
@@ -59,7 +64,10 @@ describe("capability artifact projections", () => {
     const content = group.endpoints["capability.artifact.content"]
     expect(decode(content.headers, {})).toEqual({})
     expect(decode(content.headers, { range: "bytes=0-1" })).toEqual({ range: "bytes=0-1" })
-    expect(spec.paths[`${item}/content`]?.get?.responses[200]?.content).toHaveProperty("application/octet-stream")
+    const responses = spec.paths[`${item}/content`]?.get?.responses
+    expect(responses?.[200]?.content).toHaveProperty("application/octet-stream")
+    expect(responses?.[206]?.content).toHaveProperty("application/octet-stream")
+    expect(responses?.[416]?.content).toBeUndefined()
     const query = group.endpoints["capability.artifact.list"].query
     expect(decode(query, { limit: "32", after: `${artifactID}:0` })).toEqual({ limit: 32, after: `${artifactID}:0` })
     ;["0", "33", "x"].forEach((limit) => expect(() => decode(query, { limit })).toThrow())

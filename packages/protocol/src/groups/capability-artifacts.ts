@@ -13,7 +13,9 @@ const SessionParams = { sessionID: SessionID }
 const ArtifactParams = {
   sessionID: SessionID,
   artifactID: Capability.ArtifactID,
-  revision: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt)),
+  // Canonical decimal only, matching ArtifactCursor: no sign, exponent, hex, padding or leading zeros.
+  revision: Schema.String.check(Schema.isPattern(/^(0|[1-9][0-9]{0,15})(?![\s\S])/)).pipe(
+    Schema.decodeTo(Schema.NumberFromString), Schema.decodeTo(NonNegativeInt)),
 }
 const ArtifactQuery = Schema.Struct({
   ...LocationQuery.fields,
@@ -30,8 +32,9 @@ const path = "/api/capability/sessions/:sessionID/artifacts"
 const item = `${path}/:artifactID/:revision`
 // One mapper serves every endpoint; reads never produce 409 but share the declared set.
 const errors = [InvalidRequestError, ConflictError, UnknownError]
+const Bytes = Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array())
 
-export const CapabilityArtifactsGroup = HttpApiGroup.make("capability.artifact")
+export const CapabilityArtifactsGroup = HttpApiGroup.make("server.capability.artifacts")
   .add(
     HttpApiEndpoint.get("capability.artifact.list", path, {
       params: SessionParams, query: ArtifactQuery, success: CapabilityArtifactManagement.ArtifactPage, error: errors,
@@ -41,7 +44,7 @@ export const CapabilityArtifactsGroup = HttpApiGroup.make("capability.artifact")
     }),
     HttpApiEndpoint.get("capability.artifact.content", `${item}/content`, {
       params: ArtifactParams, query: LocationQuery, headers: ContentHeaders,
-      success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()), error: errors,
+      success: [Bytes, Bytes.pipe(HttpApiSchema.status(206))], error: [...errors, HttpApiSchema.Empty(416)],
     }).annotateMerge(OpenApi.annotations({
       summary: "Read artifact bytes",
       description: "Verified artifact bytes with attachment, sandbox and no-store headers. Supports one `bytes=` Range.",

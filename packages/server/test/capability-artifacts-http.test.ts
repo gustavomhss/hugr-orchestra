@@ -1,5 +1,7 @@
 import { expect } from "bun:test"
 import { createHash } from "node:crypto"
+import { chmod, readdir, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { CapabilityArtifactTable } from "@orchestra/core/capability/sql"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityArtifactManagement } from "@orchestra/schema/capability-artifact-management"
@@ -134,8 +136,23 @@ it.live("HTTP malformed selectors are 400 and corrupt blobs are a constant 500 w
   const seeded = yield* f.seed({ data: body })
   const base = `/api/capability/sessions/${f.sessionID}/artifacts`
   yield* Effect.forEach([`${base}/not-an-id/0`, `${base}/${seeded.ref.id}/-1`, `${base}/${seeded.ref.id}/x`,
+    ...["01", "+3", "1e2", "0x10", "%203"].map((revision) => `${base}/${seeded.ref.id}/${revision}`),
     `/api/capability/sessions/not-a-session/artifacts`, `${base}?limit=33`, `${base}?after=foreign`], (path) =>
     f.request(path, { auth }).pipe(Effect.map((response) => expect([path, response.status]).toEqual([path, 400]))))
+  // Same size, different bytes at the real content-addressed path: only the SHA-256 check can catch this.
+  const tampered = yield* f.seed({ data: body })
+  const names = yield* Effect.promise(() => readdir(join(f.directory, "data"), { recursive: true }))
+  const blob = join(f.directory, "data", names.find((name) => name.endsWith(tampered.hash)) ?? "missing-blob")
+  yield* Effect.promise(async () => {
+    await chmod(blob, 0o600)
+    await writeFile(blob, new TextEncoder().encode("9876543210"))
+    await chmod(blob, 0o400)
+  })
+  const mismatch = yield* f.request(`${f.url(tampered.ref)}/content`, { auth })
+  expect(mismatch.status).toBe(500)
+  expect(yield* Effect.promise(() => mismatch.json())).toEqual({ _tag: "UnknownError", message: "Artifact request failed" })
+  expect(mismatch.headers.get("etag")).toBeNull()
+  // A missing blob for the recorded hash is the IO branch of the same constant 500.
   yield* f.database.db.update(CapabilityArtifactTable).set({ hash: "f".repeat(64) })
     .where(eq(CapabilityArtifactTable.id, seeded.ref.id)).run()
   const corrupt = yield* f.request(`${f.url(seeded.ref)}/content`, { auth })

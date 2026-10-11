@@ -119,7 +119,7 @@ export function make() {
         headers: { ...input.headers, "content-type": "application/json", ...(input.auth ? { authorization: input.auth } : {}),
           ...(input.key ? { "idempotency-key": input.key } : {}) },
         body: input.payload === undefined ? undefined : JSON.stringify(input.payload) }))
-      const text = await response.clone().text()
+      const text = `${JSON.stringify([...response.headers])}\n${await response.clone().text()}`
       Array.of(secret, directory).forEach((value) => expect(text).not.toContain(value))
       return response
     })

@@ -4,7 +4,6 @@ import { Database } from "@orchestra/core/database/database"
 import { ConflictError, ForbiddenError, InvalidRequestError, UnknownError } from "@orchestra/protocol/errors"
 import { makeCapabilityArtifactsGroup } from "@orchestra/protocol/groups/capability-artifacts"
 import { Capability } from "@orchestra/schema/capability"
-import type { CapabilityArtifactManagement as ArtifactSchema } from "@orchestra/schema/capability-artifact-management"
 import { Cause, Context, Effect } from "effect"
 import { HttpServerResponse } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
@@ -15,7 +14,7 @@ import { ServerOperator } from "../operator"
 // Same group identity as the aggregate Api; the layer key depends only on the group name.
 const Api = HttpApi.make("server").add(makeCapabilityArtifactsGroup(LocationMiddleware))
 
-export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "capability.artifact", (handlers) =>
+export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capability.artifacts", (handlers) =>
   Effect.gen(function* () {
     const operators = yield* ServerOperator.Service
     const database = yield* Database.Service
@@ -45,7 +44,7 @@ export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "capability.
 )
 
 /** Single `bytes=` ranges only; multi-range or malformed headers fall back to the full verified body (RFC 9110 14.2). */
-export function contentResponse(artifact: ArtifactSchema.Artifact, data: Uint8Array, range: string | undefined) {
+export function contentResponse(artifact: Readonly<{ hash: string; mime: string }>, data: Uint8Array, range: string | undefined) {
   const size = data.byteLength
   const headers = {
     "content-disposition": "attachment",
