@@ -743,9 +743,11 @@ describe("CapabilityArtifacts durable lifecycle", () => {
 
   it.live("missing storageID fixture adapters share identity by real DB object, not artifact factory", () => Effect.gen(function* () {
     const f = yield* fixture()
-    const first = yield* CapabilityArtifacts.make().pipe(Effect.provideService(Database.Service, { db: f.database.db }))
+    // Omit only storageID. Commits still require the real transaction identity and die closed without it.
+    const adapter = { db: f.database.db, inTransaction: f.database.inTransaction }
+    const first = yield* CapabilityArtifacts.make().pipe(Effect.provideService(Database.Service, adapter))
     const ref = yield* CapabilityInvocation.withContext(f.binding, first.publish(f.context, input))
-    const second = yield* CapabilityArtifacts.make().pipe(Effect.provideService(Database.Service, { db: f.database.db }))
+    const second = yield* CapabilityArtifacts.make().pipe(Effect.provideService(Database.Service, adapter))
     expect((yield* CapabilityInvocation.withContext(f.binding, second.read(f.context, ref))).data).toEqual(input.data)
   }), 30_000)
 
