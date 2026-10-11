@@ -18,6 +18,7 @@
   makeDesktopItem,
   ripgrep,
   sysctl,
+  xcbuild,
   orchestra,
   omni ? orchestra.omni,
 }:
@@ -104,6 +105,13 @@ stdenv.mkDerivation (finalAttrs: {
     # node-gyp-build packages (tree-sitter grammars) ship every platform's prebuilds;
     # only the host's can load, so the others must not reach app.asar.unpacked.
     python3 ${./scripts/prune-foreign-prebuilds.py} "$PWD" '${stdenv.hostPlatform.system}'
+    # Some upstream host prebuilds are another CPU's binary (tree-sitter-typescript
+    # 0.23.2 ships x86-64 ELF as linux-arm64). Rebuild those offline from binding.gyp
+    # with npm's bundled node-gyp against these Node headers (N-API is ABI-stable).
+    # gyp on Darwin needs xcodebuild/xcrun; xcbuild's stubs are scoped to this step.
+    ${lib.optionalString stdenv.hostPlatform.isDarwin "PATH=${lib.makeBinPath [ xcbuild ]}:$PATH "}python3 -B ${./scripts/repair-host-prebuilds.py} \
+      "$PWD" '${stdenv.hostPlatform.system}' ${nodejs} \
+      ${nodejs}/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js
   '';
 
   buildPhase = ''
