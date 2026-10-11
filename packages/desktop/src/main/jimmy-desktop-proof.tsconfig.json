@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun", "node", "electron", "vite/client"]
+  },
+  "references": [],
+  "include": ["jimmy-desktop-proof.fixture.ts", "jimmy-desktop-proof.test.ts", "jimmy-desktop-proof.vite.ts"],
+  "exclude": []
+}
