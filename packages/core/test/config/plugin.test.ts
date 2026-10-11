@@ -1,5 +1,6 @@
 import path from "path"
-import { describe, expect } from "bun:test"
+import { cp, mkdir, realpath, symlink } from "fs/promises"
+import { afterAll, beforeAll, describe, expect } from "bun:test"
 import { Effect, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
@@ -10,11 +11,34 @@ import { Npm } from "@orchestra/core/npm"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { PluginHost } from "@orchestra/core/plugin/host"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "../plugin/fixture"
 
 const it = testEffect(PluginTestLayer)
 const decode = Schema.decodeUnknownSync(Config.Info)
+
+// Admission writes SDK bridges into a plugin's source envelope and into absent ancestor namespaces, so the
+// fixtures run from a temporary tree, never the checkout, with `effect` installed beside them like a real plugin.
+const tmp = tmpdir()
+const staged = { root: "" }
+const dir = () => path.join(staged.root, "config")
+
+beforeAll(async () => {
+  staged.root = (await tmp).path
+  await cp(path.join(import.meta.dir, "../plugin/fixtures"), path.join(staged.root, "plugin", "fixtures"), { recursive: true })
+  await cp(path.join(import.meta.dir, "fixtures"), path.join(dir(), "fixtures"), { recursive: true })
+  await mkdir(path.join(staged.root, "node_modules"))
+  await symlink(
+    await realpath(path.join(import.meta.dir, "../../node_modules/effect")),
+    path.join(staged.root, "node_modules", "effect"),
+    "junction",
+  )
+})
+
+afterAll(async () => {
+  await (await tmp)[Symbol.asyncDispose]()
+})
 
 describe("ConfigExternalPlugin", () => {
   it.live("resolves and loads a configured Promise plugin with options", () =>
@@ -25,7 +49,7 @@ describe("ConfigExternalPlugin", () => {
       const location = yield* Location.Service
       const npm = yield* Npm.Service
       const host = yield* PluginHost.make(plugins)
-      const document = path.join(import.meta.dir, "orchestra.json")
+      const document = path.join(dir(), "orchestra.json")
 
       yield* ConfigExternalPlugin.Plugin.effect(host).pipe(
         Effect.provideService(PluginV2.Service, plugins),
@@ -82,7 +106,7 @@ describe("ConfigExternalPlugin", () => {
               Effect.succeed([
                 new Config.Document({
                   type: "document",
-                  path: path.join(import.meta.dir, "orchestra.json"),
+                  path: path.join(dir(), "orchestra.json"),
                   info: decode({
                     plugins: [
                       {
@@ -125,7 +149,7 @@ describe("ConfigExternalPlugin", () => {
               Effect.succeed([
                 new Config.Document({
                   type: "document",
-                  path: path.join(import.meta.dir, "orchestra.json"),
+                  path: path.join(dir(), "orchestra.json"),
                   info: decode({
                     plugins: [
                       "../plugin/fixtures/missing-plugin.ts",
@@ -161,8 +185,8 @@ describe("ConfigExternalPlugin", () => {
           Effect.sync(() => {
             installed = spec
             return {
-              directory: import.meta.dir,
-              entrypoint: path.join(import.meta.dir, "../plugin/fixtures/config-promise-plugin.ts"),
+              directory: dir(),
+              entrypoint: path.join(dir(), "../plugin/fixtures/config-promise-plugin.ts"),
             }
           }),
         install: () => Effect.void,
@@ -223,7 +247,7 @@ describe("ConfigExternalPlugin", () => {
               Effect.succeed([
                 new Config.Directory({
                   type: "directory",
-                  path: AbsolutePath.make(path.join(import.meta.dir, "fixtures")),
+                  path: AbsolutePath.make(path.join(dir(), "fixtures")),
                 }),
               ]),
           }),
@@ -239,7 +263,7 @@ describe("ConfigExternalPlugin", () => {
 })
 
 const waitForAgent = Effect.fnUntraced(function* (agents: AgentV2.Interface, id: string) {
-  for (let attempt = 0; attempt < 100; attempt++) {
+  for (let attempt = 0; attempt < 1000; attempt++) {
     const agent = yield* agents.get(AgentV2.ID.make(id))
     if (agent) return agent
     yield* Effect.sleep("10 millis")

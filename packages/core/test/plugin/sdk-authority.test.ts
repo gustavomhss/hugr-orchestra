@@ -16,13 +16,13 @@ for (const runtime of ["bun", "node", "compiled"] as const) {
     const publicSpecifiers = Object.keys(sdk.exports).map((key) => key === "." ? sdk.name : sdk.name + key.slice(1))
     const unknown = [`${sdk.name}/unknown`, `${sdk.name}/src/tool.ts`, `${sdk.name}/v2/effect/deep`]
     const binary = path.join(tmp.path, process.platform === "win32" ? "authority.exe" : "authority")
-    const build = runtime !== "node" ? undefined : await Bun.build({
-      entrypoints: [source], target: "node", format: "esm", outdir: path.join(tmp.path, "dist"),
-    })
-    if (build) expect(build.success).toBe(true)
-    if (runtime === "compiled") {
-      // A fresh compiler process keeps prior Bun.build module state out of compiled-file reads.
-      const compile = Bun.spawn([process.execPath, "build", "--compile", source, "--outfile", binary], { stdout: "pipe", stderr: "pipe" })
+    if (runtime !== "bun") {
+      // A fresh compiler process keeps prior in-process Bun.build module state out of file reads; a second
+      // in-process build in one test process read other files' bytes ("Unexpected reading file", parse errors).
+      const args = runtime === "node"
+        ? ["--target", "node", "--format", "esm", "--outdir", path.join(tmp.path, "dist")]
+        : ["--compile", "--outfile", binary]
+      const compile = Bun.spawn([process.execPath, "build", source, ...args], { stdout: "pipe", stderr: "pipe" })
       const [stderr, code] = await Promise.all([new Response(compile.stderr).text(), compile.exited])
       expect({ code, stderr }).toEqual({ code: 0, stderr: "" })
     }
