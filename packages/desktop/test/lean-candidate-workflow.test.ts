@@ -11,6 +11,7 @@ const pins = {
   checkout: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
   node: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
   bun: "oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6",
+  go: "actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5",
   cache: "actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
   upload: "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
 }
@@ -78,7 +79,7 @@ function check(input: unknown) {
   expect(Array.isArray(job.steps)).toBe(true)
   const steps = (job.steps as unknown[]).map(object)
   expect(steps.map((step) => step.id)).toEqual([
-    "checkout", "host", "node", "bun", "cache", "install", "versions", "omni", "contract", "build", "package",
+    "checkout", "host", "node", "bun", "go", "cache", "install", "versions", "omni", "contract", "build", "package",
     "typecheck", "verify", "archive", "upload", "diagnostics",
   ])
   for (const step of steps) {
@@ -93,6 +94,7 @@ function check(input: unknown) {
     "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-darwin-x64-baseline.zip" })
   expect(by.cache.with).toEqual({ path: "${{ runner.temp }}/lean-candidate-bun-cache", key:
     "lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'patches/**') }}" })
+  expect(by.go.with).toEqual({ "go-version": "1.24", cache: false })
   expect(by.install.env).toEqual({ BUN_INSTALL_CACHE_DIR: "${{ runner.temp }}/lean-candidate-bun-cache" })
   // In-repo composite action at the exact candidate checkout; it never saves the shared omni cache.
   expect(by.omni.uses).toBe("./.github/actions/omni-binaries")
