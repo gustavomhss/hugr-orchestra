@@ -81,11 +81,12 @@ test("active SettingsGeneralV2 renders no Lean controls, whether the Lean capabi
     ]) {
       setState(capability)
       await Bun.sleep(20)
-      // Positive control: the real General section rendered, so the absence below is not an empty mount.
-      expect(host.querySelector('[data-action="settings-language"]')).not.toBeNull()
-      expect(host.textContent).toContain(dict["settings.general.row.language.title"])
-      expect(host.querySelector('[data-action="settings-lean"]')).toBeNull()
+      // Positive control: the real General section rendered its rows, so the absence below is not an empty mount.
+      const actions = [...host.querySelectorAll("*")].flatMap((node) => node.getAttribute("data-action") ?? [])
+      expect(actions).toContain("settings-language")
+      expect(actions.filter((action) => action.startsWith("settings-lean"))).toEqual([])
       const text = host.textContent ?? ""
+      expect(text).toContain(dict["settings.general.row.language.title"])
       expect(lean.filter((value) => text.includes(value))).toEqual([])
     }
     expect(calls).toHaveLength(0)
