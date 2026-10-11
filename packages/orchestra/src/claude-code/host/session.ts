@@ -11,7 +11,7 @@ export * as ClaudeHost from "./session"
 // - an idle session releases its process; the next turn resumes it.
 // The entry mirrors claude-code/engine.ts `turn`, so the engine can hand a turn to this host with a small diff.
 import { createHash } from "node:crypto"
-import { Context, Effect, Exit, Layer } from "effect"
+import { Context, Effect, Exit, Layer, Semaphore } from "effect"
 import type { CanUseTool, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import type { SessionV1 } from "@orchestra/core/v1/session"
@@ -131,7 +131,7 @@ export function inbox() {
 }
 
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
-type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string }
+type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string; errorUUID?: string }
 type Live = {
   sessionID: SessionID
   query: Query
@@ -180,6 +180,12 @@ const layer = Layer.effect(
     // What resolving the served registry tools needs (ClaudeHostMcp.prepare: registry, config, the process tool).
     const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>>>()
     const lives = new Map<SessionID, Live>()
+    const startups = new Map<SessionID, Semaphore.Semaphore>()
+    const exclusive = <A, E, R>(sessionID: SessionID, effect: Effect.Effect<A, E, R>) => Effect.suspend(() => {
+      const lock = startups.get(sessionID) ?? Semaphore.makeUnsafe(1)
+      startups.set(sessionID, lock)
+      return lock.withPermits(1)(effect)
+    })
 
     const read = (sessionID: SessionID) => sessions.get(sessionID).pipe(Effect.orDie, Effect.map((session) => {
       const value = session.metadata?.claudeCode
@@ -287,7 +293,8 @@ const layer = Layer.effect(
       shutdown(live)
       live.closing = (async () => {
         await live.pump
-        await live.processJoin()
+        // A failed spawn has no process to join; the pump retains its error for the waiting turn.
+        await live.processJoin().catch(() => undefined)
         if (!live.stopping) retire(live)
       })()
       return live.closing
@@ -326,11 +333,15 @@ const layer = Layer.effect(
         }
         return
       }
-      if (message.type === "assistant" && message.error) {
+      if (message.type === "assistant" && !message.parent_tool_use_id && message.error) {
+        turn.errorUUID = message.uuid
         turn.error = ClaudeCodeSDK.signedOut(message) ? ClaudeCodeSDK.SIGNED_OUT
           : message.message.content.flatMap((block) => block.type === "text" ? [block.text] : []).join("\n") || message.error
       }
-      if (message.type === "assistant" && message.supersedes?.length) yield* turn.view.retract(message.supersedes)
+      if (message.type === "assistant" && message.supersedes?.length) {
+        if (turn.errorUUID && message.supersedes.includes(turn.errorUUID)) turn.error = undefined
+        yield* turn.view.retract(message.supersedes)
+      }
       if (message.type === "system" && message.subtype === "model_refusal_fallback" && message.retracted_message_uuids?.length)
         yield* turn.view.retract(message.retracted_message_uuids)
       const previous = turn.view.current()?.parentID ?? turn.user.id
@@ -365,7 +376,7 @@ const layer = Layer.effect(
       if (pending) live.turn = { view: live.make(pending), user: pending, cost, waiters: [], answered: new Set([pending.id]) }
     })
 
-    const start = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
+    const launch = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
       const instance = yield* InstanceState.context
       const overrides = yield* Adapters
       const env = yield* ClaudeCodeSDK.Environment
@@ -423,7 +434,7 @@ const layer = Layer.effect(
         const failure = await (async () => {
           for await (const message of live.query) await live.run(handle(live, message, release))
         })().then(() => undefined, (error: unknown) => error)
-        live.ended = failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished."
+        live.ended = live.turn?.error ?? (failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished.")
         // Do not await close from inside the pump: close itself joins this pump.
         shutdown(live)
         if (!live.stopping) settle(live, { ok: false, message: live.ended })
@@ -448,6 +459,14 @@ const layer = Layer.effect(
       }
       return live
     })
+
+    const start = (input: Parameters<typeof launch>[0]) => exclusive(input.sessionID, Effect.gen(function* () {
+      const owner = lives.get(input.sessionID)
+      if (owner?.closing || owner?.stopping) yield* Effect.promise(() => owner.stopping ?? owner.closing!)
+      const existing = lives.get(input.sessionID)
+      if (existing) return existing
+      return yield* launch({ ...input, state: yield* read(input.sessionID) })
+    }))
 
     const stop = (live: Live) => Effect.promise(() => {
       if (live.stopping) return live.stopping
@@ -478,11 +497,11 @@ const layer = Layer.effect(
       const agent = yield* agents.get(input.user.agent).pipe(Effect.orElseSucceed(() => undefined))
       if (agent?.engine !== "claude-code") return false
       const instance = yield* InstanceState.context
-      const history = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)
       const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
       yield* reconcileRevert(session)
+      const history = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
       const state = yield* read(sessionID)
       const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : answered(history))
       const users = history.filter((message) => (RequestSource.actual(message) ||
@@ -550,16 +569,20 @@ const layer = Layer.effect(
     const setModel: Interface["setModel"] = (input) => Effect.gen(function* () {
       const live = lives.get(input.sessionID)
       if (!live || live.closing || live.stopping) return
+      if (live.model === input.model) return
+      yield* Effect.promise(() => live.query.setModel(input.model))
       live.model = input.model
-      yield* Effect.promise(() => live.query.setModel(input.model).catch(() => undefined))
     })
 
     const forkState = (source: Session.Info, messageID?: MessageID) => Effect.gen(function* () {
       const state = yield* read(source.id)
       const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
       const at = messageID ? ClaudeHostBoundary.resolve(history, state, messageID) : undefined
+      const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
+      const nativeID = typeof state.sessionId === "string" ? state.sessionId
+        : typeof inherited?.sessionId === "string" ? inherited.sessionId : claudeSessionID(source.id)
       return { ...state, uuids: state.uuids, ends: state.ends, delivered: state.delivered, forkFrom: !messageID || at ? {
-        sessionId: typeof state.sessionId === "string" ? state.sessionId : claudeSessionID(source.id), ...(at ? { at } : {}),
+        sessionId: nativeID, ...(at ? { at } : {}),
       } : undefined, sessionId: undefined, freshSessionId: undefined, resumeAt: undefined, chain: at, cost: 0 }
     })
     const fork: Interface["fork"] = (input) => Effect.gen(function* () {
@@ -573,12 +596,12 @@ const layer = Layer.effect(
       if (input.sessionID) yield* write(input.sessionID, native)
       return { ...source.metadata, claudeCode: native }
     })
-    const release: Interface["release"] = (sessionID) => Effect.gen(function* () {
+    const release: Interface["release"] = (sessionID) => exclusive(sessionID, Effect.gen(function* () {
       const live = lives.get(sessionID)
       if (!live) return yield* interrupt(sessionID)
       if (live.turn && !live.stopping) return yield* stop(live)
       yield* Effect.promise(() => live.stopping ?? close(live))
-    })
+    }))
     const reconcileRevert: Interface["reconcileRevert"] = (session) => Effect.gen(function* () {
       if (!session.revert || !session.metadata?.claudeCode) return
       const state = yield* read(session.id)
@@ -589,8 +612,11 @@ const layer = Layer.effect(
       yield* release(session.id)
       const kept = history.slice(0, history.findIndex((message) => message.info.id === session.revert!.messageID))
       const ids = new Map<string, string>(kept.map((message) => [message.info.id, message.info.id]))
+      const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
       yield* write(session.id, { resumeAt: at, sessionId: at ? state.sessionId : undefined,
-        freshSessionId: at ? undefined : crypto.randomUUID(), forkFrom: undefined, chain: at,
+        freshSessionId: at ? undefined : crypto.randomUUID(),
+        forkFrom: at && typeof state.sessionId !== "string" && typeof inherited?.sessionId === "string"
+          ? { sessionId: inherited.sessionId, at } : undefined, chain: at,
         uuids: ClaudeHostBoundary.remap(state.uuids, ids), ends: ClaudeHostBoundary.remap(state.ends, ids),
         delivered: Array.isArray(state.delivered) ? state.delivered.filter((id) => ids.has(String(id))) : undefined })
     })

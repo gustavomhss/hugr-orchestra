@@ -254,3 +254,51 @@ ClaudeEngineFixture.it.instance("admit-only input waits for the next turn, while
   expect(users[0].info.summary?.diffs).toEqual(expect.arrayContaining([expect.objectContaining({ file: "first.txt", additions: 1 })]))
   expect(users[1].info.summary?.diffs).toEqual(expect.arrayContaining([expect.objectContaining({ file: "steer.txt", additions: 1 })]))
 }), { git: true }, 30_000)
+
+ClaudeEngineFixture.it.instance("a replacement query waits for the real process exit after its pump has ended", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const child = Promise.withResolvers<import("@anthropic-ai/claude-agent-sdk").SpawnedProcess>()
+  ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
+    const spawn = params.options?.spawnClaudeCodeProcess
+    if (!spawn) throw new Error("missing real host spawner")
+    const processChild = spawn({ command: process.execPath, args: ["-e", `
+      process.on("SIGTERM", () => setTimeout(() => process.exit(0), 200));
+      setInterval(() => {}, 1000); process.stdout.write("ready");
+    `], cwd: params.options?.cwd, env: params.options?.env, signal: params.options?.abortController?.signal })
+    child.resolve(processChild)
+    await new Promise<void>((resolve) => processChild.stdout.once("data", () => resolve()))
+    yield* ClaudeEngineFixture.replies("first answer")(input, params)
+  }, async function* (input, params) {
+    const previous = await child.promise
+    expect(previous.exitCode !== null || previous.signalCode != null).toBe(true)
+    yield* ClaudeEngineFixture.replies("replacement answer")(input, params)
+  })
+  const { ClaudeCodeSDK } = yield* Effect.promise(() => import("@/claude-code/sdk"))
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start process") }).pipe(
+    Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }))
+  const host = yield* ClaudeHost.Service
+  yield* host.release(setup.chat.id)
+  const exited = yield* Effect.promise(() => child.promise)
+  expect(exited.exitCode !== null || exited.signalCode != null).toBe(true)
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("replace") })
+  expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
+}), 30_000)
+
+ClaudeEngineFixture.it.instance("a visible boundary with no native mapping and a partial revert both fail closed", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.replies("one", "two"))
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("first") })
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("second") })
+  const history = yield* setup.sessions.messages({ sessionID: setup.chat.id })
+  const users = history.filter((item) => item.info.role === "user")
+  yield* setup.sessions.setMetadata({ sessionID: setup.chat.id, metadata: { claudeCode: { sessionId: "sdk-1", uuids: {}, ends: {} } } })
+  const fork = yield* setup.sessions.fork({ sessionID: setup.chat.id, messageID: users[1].info.id }).pipe(Effect.exit)
+  expect(Exit.isFailure(fork)).toBe(true)
+  yield* setup.sessions.setRevert({ sessionID: setup.chat.id, revert: { messageID: users[0].info.id, partID: users[0].parts[0].id } })
+  const continuation = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("must not admit") }).pipe(Effect.exit)
+  expect(Exit.isFailure(continuation)).toBe(true)
+  expect((yield* setup.sessions.messages({ sessionID: setup.chat.id })).filter((item) => item.info.role === "user")).toHaveLength(2)
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+}), 30_000)
