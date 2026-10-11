@@ -9,13 +9,13 @@ import type { Tool } from "@/tool/tool"
 import { AtlasMemory } from "./atlas-memory"
 import { LogicalTask } from "./logical-task"
 
-// F3 clauses 15-20, rulings F3-D3 and S-3: when Maestro dispatches a backend resume for a unit, the host pushes that
+// When Maestro dispatches a supported native Atlas resume for a unit, the host pushes that
 // unit's latest admitted checkpoint into the child Session once per logical resume. Every verdict, a fold or a refusal,
 // becomes one synthetic part whose metadata carries the Admission with the exact text the seat reads.
 
 export const Param = AtlasMemory.UnitParam.annotate({
   description:
-    "Backend specialist resume only: the task or PR unit whose latest admitted Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for other agents.",
+    "Native Atlas specialist resume only: the task or PR unit whose latest admitted own Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for unsupported agents.",
 })
 
 export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
@@ -26,11 +26,12 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
 }) {
   const unit = input.unit
   const callID = input.ctx.callID
-  if (!unit || !AtlasMemory.supports(input.agent) || !callID) return []
+  const member = AtlasMemory.owner(input.agent)
+  if (!unit || !member || !callID) return []
   const instance = yield* InstanceRef
   const key: AtlasMemory.AdmissionKey = {
     projectID: instance?.project.id ?? "",
-    memoryOwner: AtlasMemory.MEMBER,
+    memoryOwner: member,
     logicalResumeID: LogicalTask.resumeRef(input.ctx.sessionID, callID),
     kind: unit.kind,
     id: unit.id,
@@ -39,7 +40,10 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
   const history = yield* sessions.messages({ sessionID: input.sessionID })
   // Once per logical resume: a replay of the same dispatch call finds its admission and adds nothing.
   if (AtlasMemory.findAdmission(history, key)) return []
-  const memory = yield* AtlasMemory.open({ sessionID: input.sessionID, callID, assistantMessageID: input.ctx.messageID })
+  const memory = yield* AtlasMemory.open(
+    { sessionID: input.sessionID, callID, assistantMessageID: input.ctx.messageID },
+    input.agent,
+  )
   const verdict: FoldVerdict =
     "unavailable" in memory
       ? { ok: false, refusal: "store-unavailable", reason: memory.unavailable }
@@ -69,7 +73,7 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
 // F3 clause 16: the latest admitted emit receipt for the unit in this Session's own tool evidence names the checkpoint.
 // Refused, unavailable and uncertain writes never advance it, and neither does an identical resubmission of a record an
 // earlier receipt already admitted. Without a receipt Atlas selects (one own record) or refuses (none, or several).
-function selectedRef(history: readonly SessionV1.WithParts[], key: AtlasMemory.AdmissionKey) {
+export function selectedRef(history: readonly SessionV1.WithParts[], key: AtlasMemory.AdmissionKey) {
   const admitted = history
     .flatMap((msg) => msg.parts)
     .flatMap((part) => {

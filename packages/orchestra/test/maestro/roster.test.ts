@@ -86,7 +86,7 @@ describe("Maestro roster", () => {
         memberId: "jimmy",
         role: "codebase exploration",
         abilityClass: "read-only discovery",
-        returnCard: "grounded findings card",
+        returnCard: "jimmy-result",
         forbiddenActions: ["ratify alone", "edit product"],
       },
       {

@@ -12,6 +12,8 @@ import { InstanceState } from "@/effect/instance-state"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
 import { BackendEvidence } from "./backend-evidence"
+import { DiscoveryResult } from "./discovery-result"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { UpstreamResult } from "./upstream-result"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import type { Seat } from "./seats"
@@ -27,6 +29,7 @@ export function track(input: {
   readonly memberId?: string
   readonly authoritySessionId?: SessionID
   readonly armed?: boolean
+  readonly research?: ResearchRecords.Interface
   // Host fact: the write roots ToolSafety enforces for the child (F2.14); empty means read-only.
   readonly writeRoots?: ReadonlyArray<string>
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
@@ -64,6 +67,18 @@ export function track(input: {
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
   })
   const history = () => MessageV2.stream(input.sessionID)
+  const discovery = input.seat?.id === "jimmy" && input.seat.workResult === "discovery-work-result-v1"
+  const assemble = (message: SessionV1.WithParts, session: readonly SessionV1.WithParts[]) =>
+    discovery
+      ? DiscoveryResult.assemble(message, session).pipe(input.research ? Effect.provideService(ResearchRecords.Service, input.research) : (effect) => effect)
+      : Effect.succeed(BackendResult.assemble(message, session, input.seat))
+  const hostEnded = (message: SessionV1.WithParts | undefined, session: readonly SessionV1.WithParts[], reason: "failed" | "interrupted" | "running", detail: string) =>
+    message && discovery
+      ? assemble(message, session).pipe(Effect.map((result) => ({ ...result, terminal: { reason, hostDetail: detail } })))
+      : Effect.succeed({
+          ...BackendResult.hostEnded({ message, session, reason, detail }, input.seat),
+          ...(discovery ? { referencesChecked: false } : {}),
+        })
   const publish = Effect.fn("SeatWork.publish")((effect: Effect.Effect<void>) => effect.pipe(Effect.catchCause((cause) => {
     // Publication is part of completion: a defect after observation also revokes the pass receipt.
     if (completion.projection?.verification.state === "host-verified") {
@@ -77,6 +92,7 @@ export function track(input: {
   })))
 
   return {
+    report: (text: string) => evidence.value ? DiscoveryResult.report(text, evidence.value) : text,
     publish,
     observe: Effect.fn("SeatWork.observe")(function* (facts: ArsenalCompletion.Facts) {
       completion.observed = true
@@ -104,7 +120,7 @@ export function track(input: {
       if (!input.enabled) return
       const snapshot = structuredClone(message)
       const session = structuredClone(yield* history())
-      const captured = yield* bound(BackendResult.assemble(snapshot, session, input.seat), session)
+      const captured = yield* bound(yield* assemble(snapshot, session), session)
       returned.value = structuredClone(captured)
       evidence.value = structuredClone(captured)
       yield* input.publish(structuredClone(captured))
@@ -125,7 +141,7 @@ export function track(input: {
       const session = prior ? [] : structuredClone(yield* history())
       const captured = structuredClone(prior
         ? { ...prior, terminal: ended.value?.terminal ?? { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session))
+        : yield* bound(yield* hostEnded(lastAssistant(session), session, reason, detail), session))
       // Historical evidence is not an assistant returned by this dispatch.
       if (!returned.value) delete captured.author
       evidence.value = captured
@@ -140,7 +156,7 @@ export function track(input: {
       const captured = returned.value ?? ended.value
       // Nothing returned or ended: still report the host facts (bound roots, shell fact) of a child with no message.
       if (!captured)
-        return yield* bound(BackendResult.hostEnded({ reason: "interrupted", detail: "No completed child message" }, input.seat), [])
+        return yield* bound(yield* hostEnded(undefined, [], "interrupted", "No completed child message"), [])
       // A completion-shaped notice cannot erase a later observed host failure.
       return structuredClone(project(returned.value && ended.value ? { ...captured, terminal: ended.value.terminal } : captured))
     }),
