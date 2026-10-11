@@ -99,7 +99,7 @@ describe("ScheduledTaskCapabilityModel.nextAfter", () => {
     expect(next(daily("09:30", "Mars/Olympus"), 0)).toBeUndefined()
     expect(next(cron("0 0 30 2 *"), 0)).toBeUndefined()
     expect(next(cron("0 0 * * *"), Number.NaN)).toBeUndefined()
-    expect(next(timing({ kind: "interval", minutes: 5 }), 9e15)).toBeUndefined()
+    expect(next(timing({ kind: "interval", minutes: 5 }, { next: 8e15 - 1 }), 8e15 - 1)).toBeUndefined()
   })
 
   test("rare rules are found across their full cycle", () => {
