@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
 import type { ModelUsage, SDKAssistantMessage, SDKMessage, SDKPartialAssistantMessage, SDKResultSuccess, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
@@ -14,16 +14,17 @@ import { Todo } from "@/session/todo"
 import { Snapshot } from "@/snapshot"
 import { Provider } from "@/provider/provider"
 import { TestInstance } from "../../fixture/fixture"
+import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { testEffect } from "../../lib/effect"
 import { makeHttp } from "../../session/prompt.fixture"
 
-const it = testEffect(makeHttp())
-const base = { parent_tool_use_id: null, session_id: "sdk-mirror", uuid: "frame" }
+const it = testEffect(Layer.merge(makeHttp(), TestAppNodeBuilder.build(ModelsDev.node)))
+const base = { parent_tool_use_id: null, session_id: "sdk-mirror", uuid: crypto.randomUUID() }
 const requested = "claude-haiku-4-5-20251001"
 const usage: SDKAssistantMessage["message"]["usage"] = { input_tokens: 10, output_tokens: 20,
   cache_read_input_tokens: 0, cache_creation_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null }
 const assistant = (id: string, content: SDKAssistantMessage["message"]["content"], parent: string | null = null,
-  model = requested): SDKAssistantMessage => ({ ...base, type: "assistant", parent_tool_use_id: parent, uuid: `u-${id}`,
+  model = requested): SDKAssistantMessage => ({ ...base, type: "assistant", parent_tool_use_id: parent, uuid: crypto.randomUUID(),
   message: { id, model, content, role: "assistant", type: "message", container: null, context_management: null,
     stop_reason: "end_turn", stop_sequence: null, usage } })
 const result = (id: string, content: string, structured: unknown, error = false, parent: string | null = null): SDKUserMessage =>
