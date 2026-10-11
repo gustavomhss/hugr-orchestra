@@ -20,7 +20,7 @@ import { Seats } from "@/maestro/seats"
 import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
-import type { Tool } from "@/tool/tool"
+import { Tool } from "@/tool/tool"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeHostProcess } from "./process-tool"
 
@@ -96,7 +96,7 @@ export const prepare = Effect.fn("ClaudeHostMcp.prepare")(function* (input: {
     registry.tools({ ...input.model, agent, permission: agent === input.agent ? input.permission : undefined }).pipe(
       Effect.map((defs) => ({ id: agent.id ?? agent.name, defs })),
     ))
-  const process = yield* Effect.flatMap(ClaudeHostProcess.ProcessTool, (info) => info.init())
+  const process = yield* Effect.flatMap(ClaudeHostProcess.ProcessTool, Tool.init)
   const served = resolved.flatMap((item) => exposed(item.defs))
   const tools = [...served.filter((def, index) => served.findIndex((other) => other.id === def.id) === index), process]
   const granted = Object.fromEntries(resolved.map((item) => [item.id, [

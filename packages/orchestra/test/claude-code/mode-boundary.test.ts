@@ -16,6 +16,8 @@ const INTERFACE = [
   "agent/agent", "config/config", "effect/instance-state", "permission", "provider/provider", "snapshot",
   "session/instruction", "session/prompt-guard", "session/schema", "session/session", "session/system",
   "tool/external-directory", "tool/json-schema", "tool/registry", "tool/shell/scan", "tool/task", "tool/tool",
+  // The Claude host's widgets: the question dock (AskUserQuestion), the todo dock (TodoWrite) and the retry row.
+  "question", "session/status", "session/todo",
   // Orchestra's archive and continuity records, which the native transcript store keeps in step.
   "continuity/alias", "continuity/archive-format", "continuity/masking", "continuity/memory-types", "continuity/request-source",
   "continuity/service", "continuity/trigger",
@@ -28,6 +30,8 @@ const INTERFACE = [
   "continuity/archive", "id/id", "maestro/arsenal-bindings", "maestro/arsenal-observations", "maestro/backend-work",
   "maestro/governed-task-reservation", "maestro/logical-task", "maestro/plan-revision", "maestro/route-grant",
   "maestro/session-authority", "maestro/workflow-binding", "session/todo",
+  // The host session provides what resolving the served tools needs: the tool-output truncation service.
+  "tool/truncate",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
