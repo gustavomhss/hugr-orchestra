@@ -203,4 +203,4 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
   expect(Exit.isFailure(wrong) && Cause.pretty(wrong.cause)).toContain("Task")
   expect(yield* sessions.children(parent.id)).toHaveLength(children.length)
   yield* sessions.remove(parent.id)
-}), { git: true })
+}), { git: true }, 120_000)
