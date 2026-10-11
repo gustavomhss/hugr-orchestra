@@ -238,11 +238,13 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
       expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
       return
     }
-    const reason = "sandbox-loopback-endpoint-exact-policy-unsupported"
+    // Linux CI has no ready srt here; an exact endpoint grant refuses rather than running unconfined.
+    const reason = process.platform === "linux"
+      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-loopback-endpoint-exact-policy-unsupported"
     expect(tools.some((part) => part.state.status === "error" && part.state.error.includes(`Tool safety HOLD: ${reason}`))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
     expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
     expect(connections.accepted).toBe(1)
-    console.info(`${process.platform}: real V1 child loopback grant propagated; unsupported endpoint policy HOLD measured`)
+    console.info(`${process.platform}: real V1 child loopback grant propagated; endpoint HOLD without a ready sandbox measured`)
   }), 60_000,
 )
