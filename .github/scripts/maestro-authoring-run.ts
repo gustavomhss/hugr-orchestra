@@ -146,7 +146,7 @@ async function main() {
     : { model, default_agent: "maestro", agent: { maestro: maestroConfig } }) + "\n", { flag: "wx", mode: 0o600 })
   // Render one exact Task string without the source file's final LF; original input hashes remain byte-exact.
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`.trimEnd()
-  const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]), ...(claude ? { claude } : {}), ...(args.direct ? { direct: true } : {}) }
+  const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]), ...(claude ? { claude } : {}), ...(args.direct ? { direct: true, readPaths: inventory.map((item) => item.path), hiddenPath: join(packet, "DOMAIN-RUBRIC-PRIVATE.md") } : {}) }
   const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi,
     ...(claude ? { ...claude, authConsumerPins: "not-applicable" } : { consumerReview, consumerPinReview }),
     ...(args.direct ? { dispatch: "direct-archie", parentSession: null,
@@ -355,7 +355,7 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
   return { text: Buffer.concat(chunks).toString("utf8"), stderr: Buffer.concat(diagnostics).toString("utf8"), code,
     launcher: { primaryPid: child.pid ?? null, ownedGroupId: state.identity?.pgid ?? null, signalGroupTarget: child.pid ?? null, groupCreation: "detached-owned-spawn", startedAt, endedAt: state.endedAt ?? null, observationAt: Date.now(), deadlineMs: budget, identity: state.identity ?? null, admittedAlive: state.admittedAlive ?? false, exitObserved: state.exitObserved, closeObserved: state.closeObserved, exitStatus: state.status ?? null, exitSignal: state.signal ?? null, primaryEsrchObserved: state.primaryGone ?? false, groupEsrchObserved: state.groupGone ?? false, failure: state.failure ?? null, cleanupFailure: state.cleanupFailure ?? null } }
 }
-function initializer(job: { candidate: string; project: string; model: string; assignment: string; preflightOnly: boolean; claude?: { archieModel: string; parentModel: string | null }; direct?: boolean }) {
+function initializer(job: { candidate: string; project: string; model: string; assignment: string; preflightOnly: boolean; claude?: { archieModel: string; parentModel: string | null }; direct?: boolean; readPaths?: string[]; hiddenPath?: string }) {
   // Adapter uses the real candidate runtime and CLI command in one owned process; restores every wrapped method.
   return `import { createRequire } from "node:module"
 import { relative, dirname } from "node:path"
@@ -477,7 +477,12 @@ const contextPattern = relative(loaded.ctx.worktree, job.project + "/README.md")
 const direct = job.direct ? await AppRuntime.runPromise(Effect.gen(function* () {
   const rules = yield* WriteRoots.bind("archie", [dispatchPath], loaded.denies)
   requireFact(JSON.stringify(WriteRoots.read(rules)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_NOT_OWNER_PROPOSAL")
-  return yield* loaded.sessions.create({ agent: "archie", title: "direct-archie-authoring", permission: [...rules, { permission: "edit", pattern: proposalPattern, action: "allow" as const }] })
+  // Reads are exact: deny all, then allow the project and each inventoried input; private judge files stay hidden.
+  const reads = [{ permission: "read", pattern: "*", action: "deny" as const },
+    { permission: "read", pattern: relative(loaded.ctx.worktree, job.project).split(String.fromCharCode(92)).join("/") + "/*", action: "allow" as const },
+    ...(job.readPaths ?? []).map((path) => ({ permission: "read", pattern: relative(loaded.ctx.worktree, path).split(String.fromCharCode(92)).join("/"), action: "allow" as const })),
+    ...[...new Set((job.readPaths ?? []).map((path) => dirname(path)))].map((dir) => ({ permission: "external_directory", pattern: dir + "/*", action: "allow" as const }))]
+  return yield* loaded.sessions.create({ agent: "archie", title: "direct-archie-authoring", permission: [...rules, ...reads, { permission: "edit", pattern: proposalPattern, action: "allow" as const }] })
 }).pipe(Effect.provideService(InstanceRef, loaded.ctx), Effect.provide(LayerNode.compile(filesystem)))) : undefined
 const directCheck = direct ? Effect.gen(function* () {
   stage("child_pre_model", "before")
@@ -490,6 +495,8 @@ const directCheck = direct ? Effect.gen(function* () {
   }))
   requireFact(canonicalRoot === proposalRoot && JSON.stringify(WriteRoots.read(child.permission)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_CHANGED_BEFORE_MODEL")
   requireFact(Permission.evaluate("edit", proposalPattern, archie.permission, child.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, archie.permission, child.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", archie.permission, child.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
+  const readable = (path: string) => Permission.evaluate("read", relative(loaded.ctx.worktree, path).split(String.fromCharCode(92)).join("/"), archie.permission, child.permission ?? []).action === "allow"
+  requireFact((job.readPaths ?? []).length > 0 && (job.readPaths ?? []).every(readable) && job.hiddenPath && !readable(job.hiddenPath), "AUTHORING_DIRECT_READ_BOUNDARY_INVALID")
   state.childChecks++
   stage("child_pre_model", "after")
 }).pipe(Effect.provideService(InstanceRef, loaded.ctx)) : undefined
