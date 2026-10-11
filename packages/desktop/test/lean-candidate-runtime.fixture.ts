@@ -3,6 +3,7 @@ import path from "node:path"
 import { createRequire } from "node:module"
 import { connect } from "node:net"
 import { readFile } from "node:fs/promises"
+import { execFileSync } from "node:child_process"
 import { setTimeout as sleep } from "node:timers/promises"
 import type { ElectronApplication, Page } from "@playwright/test"
 import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
@@ -29,6 +30,24 @@ export async function until(label: string, check: () => Promise<boolean>, ms = 3
     await sleep(100)
   }
   throw new Error(`${label} did not settle within ${ms} ms`)
+}
+
+// Descendants of an owned process: [pid, command] pairs from one ps snapshot. Taken before quit, because survivors
+// re-parent to launchd once the owned main process exits.
+export function descendants(root: number) {
+  const rows = execFileSync("ps", ["-A", "-o", "pid=,ppid=,comm="], { encoding: "utf8" }).trim().split("\n")
+    .map((line) => /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line)).filter((match) => match !== null)
+    .map((match) => ({ pid: Number(match[1]), ppid: Number(match[2]), command: path.basename(match[3]!) }))
+  const found = new Map<number, string>()
+  for (let frontier = [root]; frontier.length; ) {
+    frontier = rows.filter((row) => frontier.includes(row.ppid) && !found.has(row.pid)).map((row) => (found.set(row.pid, row.command), row.pid))
+  }
+  return [...found]
+}
+
+const running = (pid: number) => {
+  try { process.kill(pid, 0); return true }
+  catch (error) { return !(error instanceof Error && "code" in error && error.code === "ESRCH") }
 }
 
 export function inside(root: string, value: string, label: string) {
@@ -72,11 +91,24 @@ export async function launchCandidate(executable: string, root: string, recorder
   const close = async () => {
     if (state.closed) return
     try {
-      // The first native run measured more than 15 s for this quit (before-quit waits up to 6 s for the sidecar,
-      // then Electron exits under Playwright). Keep a bound, and print the measured duration as evidence.
+      // Quit through the app's own path (app.quit, as Cmd+Q) and wait for the main process to exit, not for its
+      // stdio pipes to close: native runs never saw Playwright's close() return, although main logged its exit.
+      const child = application.process()
+      const exited = child.exitCode !== null || child.signalCode !== null
+        ? Promise.resolve() : new Promise<void>((resolve) => child.once("exit", () => resolve()))
+      const tree = child.pid ? descendants(child.pid) : []
       const started = performance.now()
-      await bounded("owned Electron quit", application.close(), 60000)
-      console.log(`owned Electron quit ms=${Math.round(performance.now() - started)}`)
+      await bounded("owned Electron quit request", application.evaluate(({ app }) => { setImmediate(() => app.quit()) }), 10000)
+      await bounded("owned Electron quit", exited, 60000)
+      console.log(`owned Electron quit ms=${Math.round(performance.now() - started)} descendants=${tree.length}`)
+      // Descendants still alive after main exited would hold inherited pipes open; name them, then end them.
+      const survivors = tree.filter(([pid]) => running(pid))
+      if (survivors.length) {
+        recorder.fail("cleanup", "owned descendants survived quit", new Error(`Survivors: ${JSON.stringify(survivors)}`))
+        for (const [pid] of survivors) { try { process.kill(pid, "SIGKILL") } catch {} }
+      }
+      child.stdout?.destroy()
+      child.stderr?.destroy()
       if (state.backend) await portClosed(state.backend.url)
       state.closed = true
     } catch (error) {

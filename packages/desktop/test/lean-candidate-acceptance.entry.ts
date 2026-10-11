@@ -7,3 +7,5 @@ const input = process.argv[2]
 if (!input) throw new Error("LEAN_CANDIDATE_ACCEPTANCE_INPUT_REQUIRED")
 if (process.versions.bun) throw new Error("LEAN_CANDIDATE_ACCEPTANCE_REQUIRES_NODE")
 await proveNativeCandidate(JSON.parse(await readFile(input, "utf8")))
+// Playwright connection handles can outlive the owned apps; acceptance is complete, so end this runner explicitly.
+process.exit(0)
