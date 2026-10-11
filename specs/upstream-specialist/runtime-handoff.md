@@ -6,12 +6,12 @@ Status: reviewed candidate slice, not landed, deployed or end-to-end qualified. 
 
 ## Source identity
 
-- Runtime worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/archie-runtime`.
+- Runtime worktree: `$TMPDIR/archie-runtime`.
 - Branch: `archie-runtime`; baseline HEAD `73651a0e69` includes seat-framework #93 and capability baseline #100.
 - Latest reviewed code snapshot: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
 - Earlier registration/bundle proof snapshot: `d363d39e393b9e4f89031c48a43838e8ba45ebf1`.
 - Latest snapshot differs from the earlier one only in the result/parser and their tests. Registration/assets are unchanged.
-- Original planning/research worktree and its dirty work remain preserved at `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/archie-planning`.
+- Original planning/research worktree and its dirty work remain preserved at `$TMPDIR/archie-planning`.
 - This handoff document was written after the latest code snapshot; it is not part of that SHA.
 
 ## Implemented candidate scope

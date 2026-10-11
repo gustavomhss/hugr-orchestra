@@ -21,7 +21,7 @@ export const armBudgetMs = 40 * 60_000
 export const totalBudgetMs = 2 * armBudgetMs + 2 * 60_000
 const outputLimit = 32 * 1024 * 1024
 // Credential stores stay outside every read grant even though no arm is given their paths.
-const credentialPaths = (home: string) => [join(home, ".local/share/opencode/auth.json"), join(home, ".claude/.credentials.json"), join(home, ".claude.json")]
+const credentialPaths = (home: string) => [join(home, ".claude/.credentials.json"), join(home, ".claude.json")]
 const runtimeFiles = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/registry.ts", "session/prompt.ts", "session/session.ts",
   "session/prompt-guard.ts", "maestro/seats/archie.ts", "maestro/roster.ts", "maestro/write-roots.ts", "maestro/backend-result.ts", "effect/app-runtime.ts",
   "claude-code/engine.ts", "claude-code/sdk.ts", "claude-code/mirror.ts", "claude-code/permissions.ts", "claude-code/tools.ts"]
