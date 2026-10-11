@@ -207,7 +207,8 @@ describe("native research dispatch attribution", () => {
         expect(job).toBeDefined()
         if (!job) return yield* Effect.die("Expected actual native continuity job")
         const terminal = yield* jobs.wait({ id: job.id, timeout: 30_000 })
-        expect(terminal?.info?.status).toBe("error")
+        // Continuity settles a refused producer call as a failed pass, not a failed job; the refusal stops before HTTP.
+        expect(terminal?.info?.status).toBe("completed")
         expect(yield* fixture.remote.calls).toBe(24)
         expect(failure(yield* Effect.exit(llm.stream({ ...fixture.input, small: true,
           agent: { name: "title", mode: "subagent", options: {}, permission: [] } }).pipe(Stream.runDrain)))).toMatchObject({ code: "budget_exhausted" })

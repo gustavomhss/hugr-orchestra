@@ -136,6 +136,8 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
     cwd: project,
     env: {
       ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "TMPDIR"].includes(key.toUpperCase()))),
+      // omni is on by default; a packaged host gets its addon paths as the desktop sidecar does (OmniHost.sidecarEnv).
+      ...Object.fromEntries(["HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"].flatMap((key) => process.env[key] ? [[key, process.env[key]!]] : [])),
       HOME: home, USERPROFILE: home, APPDATA: path.join(home, "AppData/Roaming"), LOCALAPPDATA: path.join(home, "AppData/Local"),
       XDG_CACHE_HOME: path.join(tmp.path, "cache"), XDG_DATA_HOME: path.join(tmp.path, "data"), XDG_CONFIG_HOME: path.join(tmp.path, "config"),
       XDG_STATE_HOME: path.join(tmp.path, "state"), ORCHESTRA_DB: path.join(tmp.path, "native.db"), ORCHESTRA_INHERIT_CREDENTIALS: "0",

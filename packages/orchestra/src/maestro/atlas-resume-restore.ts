@@ -48,10 +48,8 @@ export const request = Effect.fn("AtlasResumeRestore.request")(function* (input:
 }) {
   const member = AtlasMemory.owner(input.agent)
   if (!member) return input.prepared
-  const info = yield* input.session.get(input.sessionID).pipe(Effect.orElseSucceed(() => undefined))
-  if (!info) return input.prepared
   const history = yield* input.session.messages({ sessionID: input.sessionID }).pipe(Effect.orElseSucceed(() => []))
-  const restored = evicted(history, input.prepared.messages, member, info.projectID)
+  const restored = evicted(history, input.prepared.messages, member)
   const target = input.prepared.messages.find((message) => message.info.id === input.user)
   const boundary = input.prepared.coverage
     ? history.findIndex((message) => message.info.id === input.prepared.coverage?.boundary)
@@ -69,11 +67,11 @@ export const request = Effect.fn("AtlasResumeRestore.request")(function* (input:
   }
 })
 
-// The member's latest admitted fold in this project, as its restored copy, when it is missing from the kept view and
-// was never restored.
-function evicted(history: readonly SessionV1.WithParts[], kept: readonly SessionV1.WithParts[], member: string, projectID: string) {
+// The member's latest admitted fold (in the project, when given), as its restored copy, when it is missing from the kept
+// view and was never restored.
+function evicted(history: readonly SessionV1.WithParts[], kept: readonly SessionV1.WithParts[], member: string, projectID?: string) {
   const all = admissions(history).filter(
-    (admission) => admission.key.memoryOwner === member && admission.key.projectID === projectID,
+    (admission) => admission.key.memoryOwner === member && (projectID === undefined || admission.key.projectID === projectID),
   )
   const latest = all.findLast((admission) => admission.residency === "admitted")
   if (!latest?.verdict.ok) return

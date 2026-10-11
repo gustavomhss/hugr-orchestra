@@ -1,10 +1,9 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Cause, Deferred, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { ResearchRecords } from "@orchestra/core/research/records"
-import { SessionV1 } from "@orchestra/core/v1/session"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { BackgroundJob } from "@/background/job"
@@ -32,7 +31,6 @@ it.instance("background native Task is running before worker facts and delivers 
   const records = yield* ResearchRecords.Service
   const release = Promise.withResolvers<void>()
   yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
-  const notice = yield* Deferred.make<Schema.Schema.Type<typeof result>>()
   const state: { source?: Research.SourceReceipt; document?: Research.DocumentReceipt } = {}
   const body = "Only version 1 is applicable. Disabled operation rejects the request [source](research:condition)."
   yield* fixture.fs.writeFileString(path.join(fixture.instance.directory, "conditions.txt"), "Only version 1.\nDisabled operation rejects the request.\n")
@@ -56,13 +54,7 @@ it.instance("background native Task is running before worker facts and delivers 
         coverage: { examined: ["conditions.txt"], excluded: ["runtime"], failures: [] }, limitations: ["Static source only"], nextActions: [] }
       yield* fixture.remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`)
       yield* fixture.remote.text("Parent received completed background research.")
-      return
     }
-    if (event.type !== SessionV1.Event.PartUpdated.type) return
-    const part = Schema.decodeUnknownSync(SessionV1.Event.PartUpdated.data)(event.data).part
-    if (part.sessionID !== fixture.parent.id || part.type !== "text" || part.metadata?.source?.type !== "task-return") return
-    const decoded = Schema.decodeUnknownSync(result)(part.metadata.workResult)
-    yield* Deferred.succeed(notice, decoded)
   }))
   yield* Effect.addFinalizer(() => unsubscribe)
   yield* fixture.remote.push(reply().tool("read", { filePath: "conditions.txt" }).wait(release.promise))
@@ -79,7 +71,12 @@ it.instance("background native Task is running before worker facts and delivers 
   expect(state).toEqual({})
   expect(yield* fixture.remote.calls).toBe(1)
   release.resolve()
-  const completed = yield* Deferred.await(notice).pipe(Effect.timeout("30 seconds"))
+  // The return is delivered durably to the parent; read the persisted part rather than a streamed update.
+  const delivered = yield* pollWithTimeout(fixture.sessions.messages({ sessionID: fixture.parent.id }).pipe(
+    Effect.map((history) => history.flatMap((message) => message.parts).find((part) => part.type === "text" &&
+      part.metadata?.source?.type === "task-return")),
+  ), "Background Task did not deliver its work result", "30 seconds")
+  const completed = Schema.decodeUnknownSync(result)(delivered.type === "text" ? delivered.metadata?.workResult : undefined)
   if (!state.document || !state.source) throw new Error("Native background worker omitted admitted source/document")
   expect(completed).toMatchObject({ terminal: { reason: "ended" }, card: { parsed: true }, referencesChecked: true })
   expect(completed.discovery).toMatchObject({ sufficiency: "answered", documentRefs: [state.document.ref], evidenceRefs: [state.document.citations.condition] })
