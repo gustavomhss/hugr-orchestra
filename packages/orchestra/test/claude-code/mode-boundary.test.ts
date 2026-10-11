@@ -19,6 +19,9 @@ const INTERFACE = [
   // Orchestra's archive and continuity records, which the native transcript store keeps in step.
   "continuity/alias", "continuity/archive-format", "continuity/masking", "continuity/memory-types", "continuity/request-source",
   "continuity/service", "continuity/trigger",
+  // The host adapter (claude-code/host): seat definitions and skills for the generated plugin, Task's write-root
+  // validation for task_grant, the skill playbooks, and the background process registry the `process` tool feeds.
+  "maestro/seats", "maestro/seat-skill-root", "maestro/write-roots", "skill", "background/process",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
