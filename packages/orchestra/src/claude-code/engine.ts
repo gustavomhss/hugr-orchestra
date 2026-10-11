@@ -32,7 +32,7 @@ import { ToolRegistry } from "@/tool/registry"
 import * as ShellScan from "@/tool/shell/scan"
 import type * as Tool from "@/tool/tool"
 import { ClaudeCodeSDK } from "./sdk"
-import { create as mirror } from "./mirror"
+import { create as mirror, NAMES } from "./mirror"
 import { PREFIX, server, SERVER } from "./tools"
 import { canUseTool, preToolUse } from "./permissions"
 
@@ -137,10 +137,15 @@ const layer = Layer.effect(
               modelID: ModelV2.ID.make(input.user.model.modelID) })
         // Claude Code's skills are off with its tools; the agent's own are listed as on Orchestra's loop.
         const skills = turns === undefined ? undefined : yield* system.skills(agent)
+        // Claude Code resolves a called name through these before looking it up. Models call an Orchestra tool by its
+        // bare id (as the agent prompt names it) or by the Claude Code tool it stands for; either would otherwise end in
+        // "No such tool available". Only tools this turn has are aliased, so Claude Code's own stay its own.
+        const aliases = Object.fromEntries(defs.flatMap((def) =>
+          [def.id, ...Object.keys(NAMES).filter((name) => NAMES[name] === def.id)].map((name) => [name, `${PREFIX}${def.id}`])))
         const gate = { run, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
           shell: (ctx: Tool.Context, command: string) => ShellScan.approve(ctx, { command, cwd: instance.directory, shell }).pipe(
             Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)),
-          orchestraOnly: turns !== undefined }
+          aliases, orchestraOnly: turns !== undefined }
         const options = {
           cwd: instance.directory,
           model,
@@ -148,7 +153,7 @@ const layer = Layer.effect(
           systemPrompt: { type: "preset" as const, preset: "claude_code" as const,
             append: [agent.prompt, ...instructions, skills].filter(Boolean).join("\n\n") || undefined },
           disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
-          toolAliases: { Read: `${PREFIX}read`, Edit: `${PREFIX}edit`, Write: `${PREFIX}write` },
+          toolAliases: aliases,
           mcpServers: { [SERVER]: server({ defs, run, claim, complete: view.complete,
             context: (part) => toolContext(part, abort.signal) }) },
           // Orchestra is the only policy: no Claude Code settings (their allow rules would approve calls Orchestra never

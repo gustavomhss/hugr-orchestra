@@ -16,8 +16,12 @@ import type { Agent } from "@/agent/agent"
 import { PREFIX } from "./tools"
 
 /** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. Orchestra's
- * tools drop their MCP prefix. */
+ * tools drop their MCP prefix. Where the engine aliases a Claude Code name to the Orchestra tool, the call is Orchestra's
+ * under the same name, so its handler finds the mirrored part. */
 export const NAMES: Record<string, string> = {
+  Read: "read",
+  Edit: "edit",
+  Write: "write",
   Bash: "bash",
   Grep: "grep",
   Glob: "glob",

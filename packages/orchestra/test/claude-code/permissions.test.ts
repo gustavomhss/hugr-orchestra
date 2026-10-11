@@ -72,3 +72,14 @@ test("with Claude Code's own tools off, only Orchestra's tools pass and nothing 
     expect((await hook(name, {})).hookSpecificOutput.permissionDecision).toBe("deny")
   expect(calls).toEqual([])
 })
+
+test("a name Claude Code aliases to an Orchestra tool passes as that tool when Claude Code's own tools are off", async () => {
+  const { ctx, calls } = context()
+  const [matcher] = preToolUse({ run, context: () => ctx, shell: () => Effect.void, orchestraOnly: true,
+    aliases: { grep: "mcp__orchestra__grep", Grep: "mcp__orchestra__grep" } })
+  const hook = (tool_name: string) => matcher.hooks[0]({ hook_event_name: "PreToolUse", tool_name, tool_input: {},
+    tool_use_id: "toolu_1" } as never, "toolu_1", { signal: new AbortController().signal }) as Promise<any>
+  for (const name of ["grep", "Grep"]) expect((await hook(name)).hookSpecificOutput.permissionDecision).toBe("allow")
+  expect((await hook("Glob")).hookSpecificOutput.permissionDecision).toBe("deny")
+  expect(calls).toEqual([])
+})

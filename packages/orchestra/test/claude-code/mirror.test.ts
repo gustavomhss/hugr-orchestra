@@ -92,6 +92,16 @@ test("an Orchestra tool call is claimed once, in order, and its full result is k
   expect(read.state.metadata).toEqual({ preview: "A" })
 })
 
+test("a call under a name Claude Code aliases to an Orchestra tool is claimed by that tool", async () => {
+  const { view, feed } = setup()
+  await feed([assistant("msg_1", [
+    { type: "tool_use", id: "toolu_a", name: "grep", input: { pattern: "x" } },
+    { type: "tool_use", id: "toolu_b", name: "Read", input: { filePath: "/repo/a" } },
+  ])])
+  expect(view.claim("grep")?.callID).toBe("toolu_a")
+  expect(view.claim("read")?.callID).toBe("toolu_b")
+})
+
 test("a stopped turn aborts running tools and leaves an answered, failed assistant", async () => {
   const { view, feed, messages, ofType } = setup()
   await feed([assistant("msg_1", [{ type: "tool_use", id: "toolu_1", name: "Bash", input: { command: "sleep 100" } }])])

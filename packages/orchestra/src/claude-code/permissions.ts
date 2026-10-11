@@ -41,6 +41,8 @@ type Gate = {
   /** The context of the call: the mirrored part's message and call, and Orchestra's ask. */
   context: (toolUseID: string) => Tool.Context
   shell: (ctx: Tool.Context, command: string) => Effect.Effect<void, unknown, never>
+  /** Names Claude Code resolves to an Orchestra tool (its `toolAliases`). */
+  aliases?: Record<string, string>
   /** Claude Code's own tools are off for this turn: any call that is not an Orchestra tool is denied. */
   orchestraOnly?: boolean
 }
@@ -48,7 +50,7 @@ type Gate = {
 /** Orchestra's decision on one call. Orchestra's own tools ask inside their implementation, so they pass here. */
 function decide(gate: Gate, name: string, toolInput: Input, toolUseID: string) {
   return gate.run(Effect.gen(function* () {
-    if (name.startsWith(PREFIX)) return { allow: true as const }
+    if ((gate.aliases?.[name] ?? name).startsWith(PREFIX)) return { allow: true as const }
     if (gate.orchestraOnly) return { allow: false as const, message: `${name} is not available: use the Orchestra tools you were given.` }
     const ctx = gate.context(toolUseID)
     const exit = yield* asks(name, toolInput, ctx, (command) => gate.shell(ctx, command)).pipe(Effect.exit)

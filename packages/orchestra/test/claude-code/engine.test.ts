@@ -58,6 +58,10 @@ it.instance("a Claude Code agent's turn is mirrored and the loop ends on it; the
     expect(queries[0].options.settingSources).toEqual([])
     expect(queries[0].options.disallowedTools).toEqual(["Read", "Edit", "Write", "NotebookEdit", "Task"])
     expect(queries[0].options.model).toBe("claude-haiku-4-5-20251001")
+    // Only the Orchestra tools this turn has are aliased: Claude Code's own Grep stays its own.
+    const orchestra = (id: string) => `mcp__orchestra__${id}`
+    expect(queries[0].options.toolAliases).toEqual({ read: orchestra("read"), Read: orchestra("read"), edit: orchestra("edit"),
+      Edit: orchestra("edit"), write: orchestra("write"), Write: orchestra("write") })
     // Outside a native research dispatch Claude Code keeps its own tools, turn count and compaction.
     expect(queries[0].options.tools).toBeUndefined()
     expect(queries[0].options.maxTurns).toBeUndefined()

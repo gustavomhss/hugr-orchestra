@@ -22,6 +22,7 @@ import { testEffect } from "../lib/effect"
 type Options = {
   tools?: string[]
   maxTurns?: number
+  toolAliases?: Record<string, string>
   settings?: { autoCompactEnabled?: boolean }
   systemPrompt: { append?: string }
   mcpServers: Record<string, { instance: { connect: (transport: InMemoryTransport) => Promise<void> } }>
@@ -91,6 +92,11 @@ it.instance("a native research dispatch runs on Claude Code with only its Orches
     expect(queries[0].maxTurns).toBe(24)
     expect(queries[0].settings).toEqual({ autoCompactEnabled: false })
     expect(queries[0].systemPrompt.append).toContain("jimmy-research")
+    // A tool called by its bare id or by the Claude Code tool it stands for resolves to the Orchestra tool, not to
+    // "No such tool available"; a tool the dispatch does not have is not aliased.
+    expect(queries[0].toolAliases).toMatchObject({ grep: "mcp__orchestra__grep", Grep: "mcp__orchestra__grep",
+      glob: "mcp__orchestra__glob", Glob: "mcp__orchestra__glob", read: "mcp__orchestra__read", Read: "mcp__orchestra__read" })
+    expect(queries[0].toolAliases).not.toHaveProperty("Edit")
     expect(seen.tools).toEqual(expect.arrayContaining(["read", "research_capture", "research_record", "research_view", "atlas_context"]))
     for (const name of ["bash", "edit", "write", "task", "apply_patch"]) expect(seen.tools).not.toContain(name)
     // Union-parameter tools reach Claude Code with every variant's fields, not an empty object: the model must be able to
