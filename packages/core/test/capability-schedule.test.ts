@@ -1,6 +1,9 @@
 import { expect } from "bun:test"
 import { CapabilityScheduleContract } from "@orchestra/core/capability/schedule/contract"
+import { Database } from "@orchestra/core/database/database"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
+import { ScheduledTaskTable } from "@orchestra/core/scheduled-task/sql"
+import { eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { ScheduleFixture } from "./fixture/capability-schedule"
@@ -96,4 +99,57 @@ it.live("foreign and unknown IDs fail identically for every action; list shows o
   for (const input of actions) expect(yield* foreign.failure(input)).toBe(unknown)
   expect(yield* foreign.output({ action: "list" })).toEqual({ action: "list", items: [] })
   expect(created(yield* s.output({ action: "get", id }))).toMatchObject({ id, revision: 0, enabled: true })
+}))
+
+// Under a deny rule an authorization attempt fails target_denied, so any other code proves no ask happened.
+const denyAll = CapabilityPolicyFixture.setRules([...ScheduleFixture.allow,
+  { action: "schedule.manage", resource: "*", effect: "deny" }])
+
+it.live("an owner holds at most 64 schedules; the 65th is refused before authorization", () => Effect.gen(function* () {
+  const f = yield* ScheduleFixture.setup
+  const s = yield* f.session
+  for (const n of Array.from({ length: 64 }, (_, i) => i))
+    yield* s.output({ ...base, name: `Check ${n}`, cadence: { kind: "interval", minutes: 5 + n } })
+  yield* denyAll
+  expect(yield* s.failure({ ...base, cadence: { kind: "interval", minutes: 5 } })).toBe("quota_exceeded")
+  yield* CapabilityPolicyFixture.setRules(ScheduleFixture.allow)
+  expect(yield* s.failure({ ...base, cadence: { kind: "interval", minutes: 5 } })).toBe("quota_exceeded")
+  const list = yield* s.output({ action: "list" })
+  expect(list.action === "list" ? list.items.length : 0).toBe(64)
+  const other = yield* f.session
+  expect(created(yield* other.output({ ...base, cadence: { kind: "interval", minutes: 5 } })).revision).toBe(0)
+}))
+
+it.live("resume of an exhausted or past once schedule and an update that never fires are refused before asking", () =>
+  Effect.gen(function* () {
+    const f = yield* ScheduleFixture.setup
+    const s = yield* f.session
+    const database = yield* Database.Service
+    const past = created(yield* s.output({ ...base, cadence: { kind: "once", at: Date.now() - DAY }, enabled: false })).id
+    const exhausted = created(yield* s.output({ ...base, cadence: { kind: "interval", minutes: 5 }, repeat: 2 })).id
+    yield* database.db.update(ScheduledTaskTable).set({ runs: 2, enabled: false, disabled_reason: "exhausted" })
+      .where(eq(ScheduledTaskTable.id, exhausted)).run().pipe(Effect.orDie)
+    const live = created(yield* s.output({ ...base, cadence: { kind: "daily", time: "10:00" } })).id
+    yield* denyAll
+    expect(yield* s.failure({ action: "resume", id: past })).toBe("unsupported_schema")
+    expect(yield* s.failure({ action: "resume", id: exhausted })).toBe("unsupported_schema")
+    expect(yield* s.failure({ action: "update", id: live, cadence: { kind: "cron", expression: "0 0 31 2 *" } }))
+      .toBe("unsupported_schema")
+    expect(yield* s.failure({ action: "update", id: live, cadence: { kind: "once", at: Date.now() - DAY } }))
+      .toBe("unsupported_schema")
+    expect(yield* s.failure({ action: "update", id: live, name: "Renamed" })).toBe("target_denied")
+    yield* CapabilityPolicyFixture.setRules(ScheduleFixture.allow)
+    expect(created(yield* s.output({ action: "get", id: live }))).toMatchObject({ revision: 0, cadence: { kind: "daily" } })
+  }))
+
+it.live("the schedule name is an authorization resource", () => Effect.gen(function* () {
+  const f = yield* ScheduleFixture.setup
+  const s = yield* f.session
+  yield* CapabilityPolicyFixture.setRules([...ScheduleFixture.allow,
+    { action: "schedule.manage", resource: "name:Secret*", effect: "deny" }])
+  expect(yield* s.failure({ ...base, name: "Secret sync", cadence: { kind: "interval", minutes: 5 } })).toBe("target_denied")
+  const id = created(yield* s.output({ ...base, name: "Public sync", cadence: { kind: "interval", minutes: 5 } })).id
+  expect(yield* s.failure({ action: "update", id, name: "Secret sync" })).toBe("target_denied")
+  expect(created(yield* s.output({ action: "update", id, name: "Public sync 2" }))).toMatchObject({ revision: 1 })
+  yield* CapabilityPolicyFixture.setRules(ScheduleFixture.allow)
 }))
