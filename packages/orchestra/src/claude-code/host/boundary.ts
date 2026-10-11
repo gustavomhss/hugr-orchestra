@@ -7,7 +7,10 @@ import { ClaudeCodeTranscript } from "../transcript"
 export function resolve(history: readonly SessionV1.WithParts[], state: Record<string, unknown>, messageID: string) {
   const index = history.findIndex((message) => message.info.id === messageID)
   if (index < 0) throw new Error(`Claude Code cannot resolve the history boundary ${messageID}`)
+  if (history[index].info.role !== "user") throw new Error("Claude Code requires a user-message history boundary")
   if (index === 0) return undefined
+  const before = strings(state.starts)[messageID]
+  if (before) return before
   const ends = strings(state.ends)
   const uuids = strings(state.uuids)
   const previous = history.slice(0, index).findLast((message) => message.info.role === "assistant")

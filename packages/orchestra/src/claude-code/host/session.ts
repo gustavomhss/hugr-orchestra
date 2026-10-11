@@ -145,6 +145,8 @@ type Live = {
   background: number
   uuids: Record<string, string>
   delivered: Set<string>
+  starts: Record<string, string>
+  sends: Map<string, SessionV1.User>
   ends: Record<string, string>
   chain?: string
   pump: Promise<void>
@@ -345,8 +347,11 @@ const layer = Layer.effect(
         if (turn.errorUUID && message.supersedes.some((uuid) => uuid === turn.errorUUID)) turn.error = undefined
         yield* turn.view.retract(message.supersedes)
       }
-      if (message.type === "system" && message.subtype === "model_refusal_fallback" && message.retracted_message_uuids?.length)
+      if (message.type === "system" && message.subtype === "model_refusal_fallback" && message.retracted_message_uuids?.length) {
+        if (message.retracted_message_uuids.some((uuid) => uuid === turn.errorUUID)) turn.error = undefined
         yield* turn.view.retract(message.retracted_message_uuids)
+      }
+      const submitted = message.type === "user" && message.uuid ? live.sends.get(message.uuid) : undefined
       const previous = turn.view.current()?.parentID ?? turn.user.id
       const chain = live.chain
       yield* turn.view.on(message)
@@ -354,14 +359,18 @@ const layer = Layer.effect(
       if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { resumeAt: undefined, freshSessionId: undefined })
       const parent = turn.view.current()?.parentID ?? turn.user.id
       turn.answered.add(parent)
-      if (previous !== parent && chain) live.ends[previous] = chain
+      if (previous !== parent && chain) {
+        live.ends[previous] = chain
+        live.starts[parent] ??= chain
+      }
+      if (submitted && chain) live.starts[submitted.id] = chain
       if ((message.type === "assistant" || message.type === "user") && !message.parent_tool_use_id && message.uuid) {
         live.chain = message.uuid
-        live.ends[parent] = message.uuid
+        live.ends[submitted?.id ?? parent] = message.uuid
       }
       if (message.type !== "result") return
       idle(live, release)
-      yield* write(live.sessionID, { uuids: live.uuids, ends: live.ends, chain: live.chain, resumeAt: undefined })
+      yield* write(live.sessionID, { uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined })
       if (turn.error || message.subtype !== "success" || message.is_error) {
         const detail = message.subtype === "success" && message.is_error ? message.result
           : "errors" in message && message.errors?.length ? message.errors.join("; ") : turn.error ?? message.subtype
@@ -374,7 +383,7 @@ const layer = Layer.effect(
       const { cost } = yield* turn.view.finish(turn.cost)
       yield* summarize(live, turn)
       const context = yield* Effect.tryPromise(() => live.query.getContextUsage()).pipe(Effect.option)
-      yield* write(live.sessionID, { cost, uuids: live.uuids, ends: live.ends, chain: live.chain, resumeAt: undefined, ...(context._tag === "Some"
+      yield* write(live.sessionID, { cost, uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined, ...(context._tag === "Some"
         ? { context: { totalTokens: context.value.totalTokens, maxTokens: context.value.maxTokens, percentage: context.value.percentage } } : {}) })
       if (live.discard) return
       settle(live, { ok: true })
@@ -405,7 +414,7 @@ const layer = Layer.effect(
       const live: Live = {
         sessionID: input.sessionID, inbox: inbox(), abort, agent: input.agent, model: input.model, discard: false, background: 0,
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
-        uuids: ClaudeHostBoundary.strings(uuids), ends: ClaudeHostBoundary.strings(input.state.ends),
+        uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
         chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {},
         known: { calls: new Map(), tasks: new Map() }, children: new Map(), join: ClaudeHostJoin.make(),
         query: undefined as unknown as Query,
@@ -489,7 +498,7 @@ const layer = Layer.effect(
         const interrupted = await receipt
         if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }))
         await close(live)
-        await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, ends: live.ends, chain: live.chain }))
+        await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }))
         if (turn) {
           await live.run(turn.view.fail({ aborted: true, message: "The owner stopped the turn." }))
           await live.run(summarize(live, turn))
@@ -549,7 +558,9 @@ const layer = Layer.effect(
         delivered.forEach((id) => host.delivered.add(id))
         users.forEach((message) => host.delivered.add(message.info.id))
         yield* write(sessionID, { delivered: [...host.delivered] })
-        host.inbox.push(userInput(prompt, running ? "next" : undefined))
+        const message = userInput(prompt, running ? "next" : undefined)
+        if (message.uuid) host.sends.set(message.uuid, input.user)
+        host.inbox.push(message)
       }
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
       if (!result.ok) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
@@ -560,23 +571,33 @@ const layer = Layer.effect(
       const live = lives.get(input.sessionID)
       const prompt = ClaudeCodeTranscript.hostPrompt([input.user])
       if (!live?.turn || live.stopping || live.closing || !prompt || input.user.info.role !== "user") return false
+      const message = userInput(prompt, "next")
+      if (message.uuid) live.sends.set(message.uuid, input.user.info)
       live.delivered.add(input.user.info.id)
       yield* live.turn.view.steer(input.user.info)
       yield* write(input.sessionID, { delivered: [...live.delivered] })
       if ("model" in input) yield* setModel({ sessionID: input.sessionID, model: input.model })
-      if (!live.stopping && !live.closing) live.inbox.push(userInput(prompt, "next"))
+      if (!live.stopping && !live.closing) live.inbox.push(message)
       return true
     })
 
     const interrupt: Interface["interrupt"] = (sessionID) => {
       const live = lives.get(sessionID)
       if (live) return stop(live)
-      const owner = [...lives.values()].flatMap((candidate) => [...new Map([...candidate.children, ...candidate.join.children()])].flatMap(([callID, child]) => {
-        if (child !== sessionID) return []
-        const joined = candidate.join.get(callID)
-        return joined?.taskID && !joined.hold ? [{ live: candidate, taskID: joined.taskID }] : []
-      }))[0]
-      return owner ? Effect.promise(() => owner.live.query.stopTask(owner.taskID)) : Effect.void
+      const owner = [...lives.values()].flatMap((candidate) => [...new Map([...candidate.children, ...candidate.join.children()])]
+        .flatMap(([callID, child]) => child === sessionID ? [{ live: candidate, callID }] : []))[0]
+      if (!owner) return Effect.void
+      return Effect.gen(function* () {
+        // A hook can publish the child before task_started reaches the pump. Keep the Stop until the join arrives.
+        for (let round = 0; round < 500; round++) {
+          const joined = owner.live.join.get(owner.callID)
+          if (owner.live.closed || joined?.hold) return
+          const taskID = joined?.taskID
+          if (taskID) return yield* Effect.promise(() => owner.live.query.stopTask(taskID))
+          yield* Effect.sleep("20 millis")
+        }
+        return yield* Effect.die(new Error(`Claude Code has no native task id for child ${sessionID}`))
+      })
     }
 
     const setModel: Interface["setModel"] = (input) => Effect.gen(function* () {
@@ -595,7 +616,7 @@ const layer = Layer.effect(
       const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
       const nativeID = typeof state.sessionId === "string" ? state.sessionId
         : typeof inherited?.sessionId === "string" ? inherited.sessionId : claudeSessionID(source.id)
-      return { ...state, uuids: state.uuids, ends: state.ends, delivered: state.delivered, forkFrom: !messageID || at ? {
+      return { ...state, uuids: state.uuids, starts: state.starts, ends: state.ends, delivered: state.delivered, forkFrom: !messageID || at ? {
         sessionId: nativeID, ...(at ? { at } : {}),
       } : undefined, sessionId: undefined, freshSessionId: undefined, resumeAt: undefined, chain: at, cost: 0 }
     })
@@ -605,6 +626,7 @@ const layer = Layer.effect(
       const state = yield* forkState(source, input.messageID)
       const native = { ...state,
         uuids: input.ids ? ClaudeHostBoundary.remap(state.uuids, input.ids) : state.uuids,
+        starts: input.ids ? ClaudeHostBoundary.remap(state.starts, input.ids) : state.starts,
         ends: input.ids ? ClaudeHostBoundary.remap(state.ends, input.ids) : state.ends,
         delivered: input.ids && Array.isArray(state.delivered) ? state.delivered.flatMap((id) => input.ids!.get(String(id)) ?? []) : state.delivered }
       if (input.sessionID) yield* write(input.sessionID, native)
@@ -631,7 +653,7 @@ const layer = Layer.effect(
         freshSessionId: at ? undefined : crypto.randomUUID(),
         forkFrom: at && typeof state.sessionId !== "string" && typeof inherited?.sessionId === "string"
           ? { sessionId: inherited.sessionId, at } : undefined, chain: at,
-        uuids: ClaudeHostBoundary.remap(state.uuids, ids), ends: ClaudeHostBoundary.remap(state.ends, ids),
+        uuids: ClaudeHostBoundary.remap(state.uuids, ids), starts: ClaudeHostBoundary.remap(state.starts, ids), ends: ClaudeHostBoundary.remap(state.ends, ids),
         delivered: Array.isArray(state.delivered) ? state.delivered.filter((id) => ids.has(String(id))) : undefined })
     })
 

@@ -96,6 +96,7 @@ export const replies = (...texts: string[]): Script => async function* (input) {
     if (next.done) return
     // Claude Code opens each turn with its init frame.
     yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+    yield { ...next.value, session_id: frame.session_id }
     const id = `msg_${index}`
     yield { type: "assistant", message: { id, model: "claude-haiku-4-5-20251001", content: [{ type: "text", text }], stop_reason: "end_turn",
       usage: { input_tokens: 5, output_tokens: 2 } }, ...frame, uuid: id }

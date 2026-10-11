@@ -309,3 +309,50 @@ ClaudeEngineFixture.it.instance("a visible boundary with no native mapping and a
   expect((yield* setup.sessions.messages({ sessionID: setup.chat.id })).filter((item) => item.info.role === "user")).toHaveLength(2)
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
 }), 30_000)
+
+ClaudeEngineFixture.it.instance("switching to a normal agent releases the old Claude process before the normal transport runs", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.replies("answer"))
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("Claude request") })
+  yield* setup.prompt.prompt({ sessionID: setup.chat.id, agent: "maestro", parts: [{ type: "text", text: "normal request" }] }).pipe(Effect.exit)
+  expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
+  expect(ClaudeEngineFixture.state.apiCalls).toBeGreaterThan(0)
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+}), 30_000)
+
+ClaudeEngineFixture.it.instance("a steer fork cuts before its native user echo and keeps the preceding tool-result carrier", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const host = yield* ClaudeHost.Service
+  const engine = yield* ClaudeCode.Service
+  const scope = yield* Scope.Scope
+  const ready = Promise.withResolvers<void>()
+  ClaudeEngineFixture.state.scripts.push(async function* (input) {
+    const reader = input[Symbol.asyncIterator]()
+    const first = await reader.next()
+    if (first.done) return
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+    yield { type: "assistant", ...frame, uuid: "first", user_message_uuid: first.value.uuid, message: { id: "msg_first",
+      content: [{ type: "tool_use", id: "toolu_read", name: "Read", input: { file_path: "answer.txt" } }], usage: {} } }
+    yield { type: "user", ...frame, uuid: "kept-tail", message: { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_read", content: "read" }] } }
+    ready.resolve()
+    const second = await reader.next()
+    if (second.done) return
+    yield { ...second.value, session_id: frame.session_id }
+    yield { type: "assistant", ...frame, uuid: "second", user_message_uuid: second.value.uuid, user_message_uuids: [first.value.uuid, second.value.uuid],
+      message: { id: "msg_second", content: [{ type: "text", text: "steered answer" }], stop_reason: "end_turn", usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0, ...frame }
+    for await (const _ of input) {}
+  }, ClaudeEngineFixture.replies("fork answer"))
+  const first = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("first"), noReply: true })
+  if (first.info.role !== "user") throw new Error("missing first user")
+  const running = yield* host.turn({ sessionID: setup.chat.id, user: first.info }).pipe(Effect.forkIn(scope))
+  yield* Effect.promise(() => ready.promise)
+  const steer = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("steer"), noReply: true })
+  yield* engine.admitted(steer)
+  yield* Fiber.join(running)
+  const fork = yield* setup.sessions.fork({ sessionID: setup.chat.id, messageID: steer.info.id })
+  yield* setup.prompt.prompt({ sessionID: fork.id, ...ClaudeEngineFixture.say("branch") })
+  expect(ClaudeEngineFixture.state.queries[1].options?.resumeSessionAt).toBe("kept-tail")
+}), 30_000)
