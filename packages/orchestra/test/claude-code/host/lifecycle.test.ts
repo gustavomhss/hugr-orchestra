@@ -1,6 +1,8 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { Effect, Exit, Fiber, Scope } from "effect"
+import type { SpawnedProcess } from "@anthropic-ai/claude-agent-sdk"
+import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeCode } from "@/claude-code/engine"
 import { InstanceStore } from "@/project/instance-store"
@@ -88,11 +90,14 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
     if (params.options?.abortController?.signal.aborted) return
     throw new Error("A queued steer survived Stop")
   }, ClaudeEngineFixture.replies("new reply"))
-  const first = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start") }).pipe(Effect.forkIn(scope))
+  const starting = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start"), noReply: true })
+  if (starting.info.role !== "user") throw new Error("missing starting user")
+  const first = yield* host.turn({ sessionID: setup.chat.id, user: starting.info }).pipe(Effect.forkIn(scope))
   yield* Effect.promise(() => entered.promise)
-  const followup = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("steer") }).pipe(Effect.forkIn(scope))
+  const followup = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("steer"), noReply: true })
+  yield* engine.admitted(followup)
   yield* Effect.promise(() => queued.promise)
-  const stopped = yield* setup.prompt.cancel(setup.chat.id).pipe(Effect.forkIn(scope))
+  const stopped = yield* engine.interrupt(setup.chat.id).pipe(Effect.forkIn(scope))
   // The query closes synchronously, but the pending iterator still belongs to the old owner.
   yield* Effect.yieldNow
   yield* engine.setModel({ sessionID: setup.chat.id, model: "unused-after-stop" })
@@ -104,11 +109,13 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
   drain.resolve()
   yield* Fiber.join(stopped)
   yield* Fiber.await(first)
-  yield* Fiber.await(followup)
   yield* Fiber.join(next)
   expect(ClaudeEngineFixture.state.inputs).toEqual(["start", "steer", "new request"])
   expect(ClaudeEngineFixture.state.messages[1].priority).toBe("next")
   expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
+  const grants = ClaudeHostMcp.grants(setup.chat.id)
+  yield* Effect.yieldNow
+  expect(ClaudeHostMcp.grants(setup.chat.id)).toBe(grants)
   expect(ClaudeEngineFixture.state.models).not.toContain("unused-after-stop")
   expect((yield* setup.sessions.get(setup.chat.id)).metadata?.claudeCode).toMatchObject({ stoppedQueued: [ClaudeEngineFixture.state.messages[1].uuid] })
   yield* host.release(setup.chat.id)
@@ -258,14 +265,14 @@ ClaudeEngineFixture.it.instance("admit-only input waits for the next turn, while
 ClaudeEngineFixture.it.instance("a replacement query waits for the real process exit after its pump has ended", () => Effect.gen(function* () {
   ClaudeEngineFixture.reset()
   const setup = yield* ClaudeEngineFixture.setup()
-  const child = Promise.withResolvers<import("@anthropic-ai/claude-agent-sdk").SpawnedProcess>()
+  const child = Promise.withResolvers<SpawnedProcess>()
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     const spawn = params.options?.spawnClaudeCodeProcess
-    if (!spawn) throw new Error("missing real host spawner")
+    if (!spawn || !params.options?.abortController || !params.options.env) throw new Error("missing real host spawner")
     const processChild = spawn({ command: process.execPath, args: ["-e", `
       process.on("SIGTERM", () => setTimeout(() => process.exit(0), 200));
       setInterval(() => {}, 1000); process.stdout.write("ready");
-    `], cwd: params.options?.cwd, env: params.options?.env, signal: params.options?.abortController?.signal })
+    `], cwd: params.options.cwd, env: params.options.env, signal: params.options.abortController.signal })
     child.resolve(processChild)
     await new Promise<void>((resolve) => processChild.stdout.once("data", () => resolve()))
     yield* ClaudeEngineFixture.replies("first answer")(input, params)

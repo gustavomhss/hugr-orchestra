@@ -53,9 +53,9 @@ const layer = Layer.effect(
       if (user.info.role !== "user") return
       const agent = yield* agents.get(user.info.agent)
       if (agent?.engine !== "claude-code") return
-      yield* host.setModel({ sessionID: user.info.sessionID,
-        model: user.info.model.providerID === "anthropic" ? user.info.model.modelID : undefined })
-      yield* host.steer({ sessionID: user.info.sessionID, user })
+      const model = user.info.model.providerID === "anthropic" ? user.info.model.modelID : undefined
+      const steered = yield* host.steer({ sessionID: user.info.sessionID, user, model })
+      if (!steered) yield* host.setModel({ sessionID: user.info.sessionID, model })
     })
     const reconcileRevert: Interface["reconcileRevert"] = (session, seat) => Effect.gen(function* () {
       if (!session.revert) return
