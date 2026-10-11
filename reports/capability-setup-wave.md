@@ -25,3 +25,50 @@ Baseline `bbdc4a7d68`; owner requested continuation. This wave delivers key-base
 Lead owns Schema/SQL+migrations, contracts, Protocol/Server API wiring, generated clients, App manifest/navigation/copy aggregates and integration. Author slices are disjoint: ledger reconciliation; identity verifier; setup+binding services/shared input snapshot; actual Orchestra host seam; App controller/model; App screen/dialog/CSS/copy. Dependent slices consume frozen anchors, then merge approved dependencies for runtime checks. Cold slices <=400 changed LOC; measured mutation failures/restoration before landing. Up to10 agents, at most6 nontrivial authors concurrently. Push first compiling checkpoint and final; no intermediate PR/CI.
 
 Focused local tests explicitly authorized from package dirs; `bun typecheck` only package dirs. No paid/live calls, account/login mutations, vendor downloads, global guards/env changes, full suites or app restart. All credential operations in tests use temporary SQLite and loopback fixtures. Preserve original user checkout and untracked planning references.
+
+## Landing results
+
+The wave landed on `native-capabilities`. The production head is `bd78c022a3`. The test-only proof branches were merged after five independent cold reviews of at most 400 LOC each, and all five approved:
+
+| Branch | Head | Content |
+|---|---|---|
+| `setup-api-proof` | `bb41cdf431` | Server HTTP, bindings and implicit-local setup; sdk-next Effect and Promise clients; full Orchestra host. |
+| `integration-ui-proof` | `49da85da9e` | Integrations chapter end to end: generated Client, protected handler, verifier and SQL in a child process. |
+
+### Review fixes
+
+The reviewers raised checks that could not fail. Each one now has teeth, measured red then restored green:
+- Current-actor bindings had no guard on `workspace_id` or `project_id`. A foreign row now catches each filter if it regresses.
+- The denied body is now compared with the missing body.
+- The UI secret-scanner gained a real positive control.
+- The malformed-bearer check now counts wire calls.
+- Remount identity is now asserted through a mount counter.
+- The private read-error check now records the response and asserts it never reaches the DOM.
+- Fixture control helpers now throw when a response is not ok.
+- The fixture child now exits when stdin hits EOF, so a hard-killed runner does not orphan it.
+- Absence checks now wait for the held response to be delivered.
+
+### Lead integration fix
+
+The UI fixture imported `drizzle-orm`, which `packages/app` did not declare. It resolved only through a hand-made workspace symlink. It is now an app devDependency, and the lockfile change is that single line.
+
+### Verification
+
+This is a local focused run, not campaign CI:
+
+| Package | Result |
+|---|---|
+| server: setup HTTP, bindings, local | 4, 2 and 1 child cases pass |
+| sdk-next setup | 4 pass |
+| orchestra host setup | 3 pass |
+| app `integrations-native*` | 20 pass |
+
+Typecheck passes in app, server, sdk-next and orchestra.
+
+Under a load average above 100, the orchestra parent `test/preload.ts` `afterAll` (`AppRuntime.dispose`) timed out. It passes at normal load and fails the same way without these changes.
+
+### Product follow-ups
+
+- Malformed JSON and a poisoned Location on capability routes return HTTP 500. They should return 400. The tests pin the current behaviour with a comment.
+- A provider-rejected key (bad or expired) shows "Host authorization is required or no longer permits this request". Host authority is fine in that case, so the copy is misleading. It needs a distinct localized provider-credential-rejected error. The test pins the current copy.
+- `sdk-next` and `packages/orchestra` tests import Schema and Client through relative paths, because those packages are not declared dependencies there.
