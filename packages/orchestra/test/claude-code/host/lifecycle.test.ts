@@ -6,6 +6,7 @@ import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeCode } from "@/claude-code/engine"
 import { InstanceStore } from "@/project/instance-store"
+import { Question } from "@/question"
 import { MessageID } from "@/session/schema"
 import { pollWithTimeout } from "../../lib/effect"
 import { TestInstance } from "../../fixture/fixture"
@@ -355,4 +356,33 @@ ClaudeEngineFixture.it.instance("a steer fork cuts before its native user echo a
   const fork = yield* setup.sessions.fork({ sessionID: setup.chat.id, messageID: steer.info.id })
   yield* setup.prompt.prompt({ sessionID: fork.id, ...ClaudeEngineFixture.say("branch") })
   expect(ClaudeEngineFixture.state.queries[1].options?.resumeSessionAt).toBe("kept-tail")
+}), 30_000)
+
+ClaudeEngineFixture.it.instance("Stop cancels and joins an unanswered SDK question and refuses late callbacks", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const questions = yield* Question.Service
+  const scope = yield* Scope.Scope
+  const settled = Promise.withResolvers<void>()
+  ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
+    await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+    const permit = params.options?.canUseTool
+    if (!permit) throw new Error("missing SDK permission callback")
+    await permit("AskUserQuestion", { questions: [{ question: "Continue?", header: "Continue", options: [] }] },
+      { signal: new AbortController().signal, toolUseID: "unanswered" }).catch(() => undefined)
+    settled.resolve()
+    for await (const _ of input) {}
+  })
+  const running = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("ask me") }).pipe(Effect.forkIn(scope))
+  yield* pollWithTimeout(questions.list().pipe(Effect.map((pending) => pending.length === 1 ? true : undefined)), "question was not published")
+  yield* setup.prompt.cancel(setup.chat.id)
+  yield* Effect.promise(() => settled.promise)
+  yield* Fiber.await(running)
+  expect(yield* questions.list()).toHaveLength(0)
+  const permit = ClaudeEngineFixture.state.queries[0].options?.canUseTool
+  if (!permit) throw new Error("missing SDK permission callback")
+  yield* Effect.promise(() => permit("AskUserQuestion", { questions: [{ question: "Late?", header: "Late", options: [] }] },
+    { signal: new AbortController().signal, toolUseID: "late" }).catch(() => undefined))
+  expect(yield* questions.list()).toHaveLength(0)
 }), 30_000)
