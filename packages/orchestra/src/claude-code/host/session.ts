@@ -359,6 +359,7 @@ const layer = Layer.effect(
       if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { resumeAt: undefined, freshSessionId: undefined })
       const parent = turn.view.current()?.parentID ?? turn.user.id
       turn.answered.add(parent)
+      turn.view.consumed().forEach((user) => turn.answered.add(user.id))
       if (previous !== parent && chain) {
         live.ends[previous] = chain
         live.starts[parent] ??= chain
@@ -379,7 +380,7 @@ const layer = Layer.effect(
         if (live.discard) return
         return settle(live, { ok: false, message: detail })
       }
-      const pending = turn.view.pending()
+      const pending = turn.view.pendingInputs()
       const { cost } = yield* turn.view.finish(turn.cost)
       yield* summarize(live, turn)
       const context = yield* Effect.tryPromise(() => live.query.getContextUsage()).pipe(Effect.option)
@@ -388,7 +389,12 @@ const layer = Layer.effect(
       if (live.discard) return
       settle(live, { ok: true })
       // A steer Claude Code did not read before the turn ended starts the next turn: that turn answers it.
-      if (pending) live.turn = { view: live.make(pending), user: pending, cost, waiters: [], answered: new Set([pending.id]) }
+      if (pending.length) {
+        const user = pending[0].user
+        const view = live.make(user)
+        live.turn = { view, user, cost, waiters: [], answered: new Set([user.id]) }
+        yield* Effect.forEach(pending, (item) => item.uuid ? view.sent(item.user, item.uuid) : view.steer(item.user), { discard: true })
+      }
     })
 
     const launch = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
@@ -496,16 +502,17 @@ const layer = Layer.effect(
       shutdown(live)
       live.stopping = (async () => {
         const interrupted = await receipt
-        if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }))
         await close(live)
+        if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }))
         await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }))
         if (turn) {
           await live.run(turn.view.fail({ aborted: true, message: "The owner stopped the turn." }))
           await live.run(summarize(live, turn))
         }
+      })().finally(() => {
         settle(live, { ok: false, aborted: true, message: "The owner stopped the turn." })
         retire(live)
-      })()
+      })
       return live.stopping
     })
 
@@ -559,7 +566,10 @@ const layer = Layer.effect(
         users.forEach((message) => host.delivered.add(message.info.id))
         yield* write(sessionID, { delivered: [...host.delivered] })
         const message = userInput(prompt, running ? "next" : undefined)
-        if (message.uuid) host.sends.set(message.uuid, input.user)
+        if (message.uuid) {
+          host.sends.set(message.uuid, input.user)
+          yield* turn.view.sent(input.user, message.uuid)
+        }
         host.inbox.push(message)
       }
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
@@ -574,7 +584,7 @@ const layer = Layer.effect(
       const message = userInput(prompt, "next")
       if (message.uuid) live.sends.set(message.uuid, input.user.info)
       live.delivered.add(input.user.info.id)
-      yield* live.turn.view.steer(input.user.info)
+      yield* live.turn.view.steer(input.user.info, message.uuid)
       yield* write(input.sessionID, { delivered: [...live.delivered] })
       if ("model" in input) yield* setModel({ sessionID: input.sessionID, model: input.model })
       if (!live.stopping && !live.closing) live.inbox.push(message)
@@ -623,6 +633,9 @@ const layer = Layer.effect(
     const fork: Interface["fork"] = (input) => Effect.gen(function* () {
       const source = yield* sessions.get(input.from).pipe(Effect.orDie)
       if (!source.metadata?.claudeCode) return undefined
+      const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
+      const latest = history.findLast((message) => message.info.role === "user")?.info
+      if (latest?.role === "user" && (yield* agents.get(latest.agent))?.engine !== "claude-code") return undefined
       const state = yield* forkState(source, input.messageID)
       const native = { ...state,
         uuids: input.ids ? ClaudeHostBoundary.remap(state.uuids, input.ids) : state.uuids,
