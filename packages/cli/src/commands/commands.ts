@@ -24,7 +24,13 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     }),
     Spec.make("debug", {
       description: "Debugging and troubleshooting tools",
-      commands: [Spec.make("agents", { description: "List all agents" })],
+      commands: [
+        Spec.make("agents", { description: "List all agents" }),
+        Spec.make("symbols", {
+          description: "Extract a file's top-level symbols with Maestro's native parser",
+          params: { file: Argument.string("file") },
+        }),
+      ],
     }),
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {

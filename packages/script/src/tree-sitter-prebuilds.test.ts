@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readdirSync,
   realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -14,7 +15,16 @@ import {
 import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
-import { NATIVE_MACHINES, lockfileNodeGyp, nativeMachines, prepareTreeSitterPrebuilds } from "./tree-sitter-prebuilds"
+import {
+  NATIVE_MACHINES,
+  copyTreeSitter,
+  lockfileNodeGyp,
+  nativeMachines,
+  prepareTreeSitterPrebuilds,
+  requireTreeSitterBundle,
+  resolveTreeSitter,
+  treeSitterBundle,
+} from "./tree-sitter-prebuilds"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const host = `${process.platform}-${process.arch}`
@@ -169,6 +179,83 @@ function foreignPython() {
   const dir = readdirSync(path.join(python, "prebuilds")).find(
     (name) =>
       !nativeMachines(path.join(python, "prebuilds", name, "tree-sitter-python.node")).includes(NATIVE_MACHINES[host]!),
+  )!
+  return path.join(python, "prebuilds", dir, "tree-sitter-python.node")
+}
+
+// Python's published prebuilds carry the right CPU for every target, so they stand in for each binding of a bundle.
+function bundleFixture(target: { os: string; arch: string }) {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-bundle-"))
+  fixtures.push(dir)
+  treeSitterBundle(target).forEach((file) => {
+    const destination = path.join(dir, ...file.split("/"))
+    mkdirSync(path.dirname(destination), { recursive: true })
+    if (!file.endsWith(".node")) return writeFileSync(destination, file)
+    copyFileSync(path.join(python, "prebuilds", `${target.os}-${target.arch}`, "tree-sitter-python.node"), destination)
+  })
+  return dir
+}
+
+test.each(Object.keys(NATIVE_MACHINES))(
+  "the %s CLI bundle names the core, typescript and python bindings, and a gap or a foreign binding is refused",
+  (name) => {
+    const [platform, arch] = name.split("-")
+    const target = { os: platform!, arch: arch! }
+    expect(treeSitterBundle(target).filter((file) => file.endsWith(".node"))).toEqual([
+      `tree-sitter/prebuilds/${name}/tree-sitter.node`,
+      `tree-sitter-python/prebuilds/${name}/tree-sitter-python.node`,
+      `tree-sitter-typescript/prebuilds/${name}/tree-sitter-typescript.node`,
+    ])
+    const dir = bundleFixture(target)
+    requireTreeSitterBundle(dir, target)
+    // Each file is required: removing any one of them is a named failure.
+    treeSitterBundle(target).forEach((file) => {
+      const full = path.join(dir, ...file.split("/"))
+      renameSync(full, `${full}.away`)
+      expect(() => requireTreeSitterBundle(dir, target)).toThrow(
+        `TREE_SITTER_BUNDLE_INCOMPLETE: ${name} in ${dir}: ${file} is missing`,
+      )
+      renameSync(`${full}.away`, full)
+    })
+    const binding = path.join(dir, "tree-sitter", "prebuilds", name, "tree-sitter.node")
+    copyFileSync(foreignTo(name), binding)
+    expect(() => requireTreeSitterBundle(dir, target)).toThrow(
+      `TREE_SITTER_BUNDLE_INCOMPLETE: ${name} in ${dir}: tree-sitter/prebuilds/${name}/tree-sitter.node is not a ${name} binary`,
+    )
+  },
+)
+
+test("a musl CLI ships no tree-sitter, and its build resolves nothing", () => {
+  expect(treeSitterBundle({ os: "linux", arch: "x64", abi: "musl" })).toEqual([])
+  expect(resolveTreeSitter({ root, os: "linux", arch: "x64", abi: "musl" })).toEqual([])
+})
+
+test("copyTreeSitter places the bundle under the given directory and checks it there", () => {
+  const target = { os: process.platform, arch: process.arch }
+  const source = bundleFixture(target)
+  const bin = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-bin-"))
+  fixtures.push(bin)
+  const files = treeSitterBundle(target).map((file) => ({ from: path.join(source, ...file.split("/")), to: file }))
+  copyTreeSitter(files, path.join(bin, "tree-sitter"), target)
+  requireTreeSitterBundle(path.join(bin, "tree-sitter"), target)
+  expect(() => copyTreeSitter(files.slice(1), path.join(bin, "partial"), target)).toThrow(
+    `TREE_SITTER_BUNDLE_INCOMPLETE: ${host} in ${path.join(bin, "partial")}: ${files[0]!.to} is missing`,
+  )
+})
+
+test("a build for a target this host cannot provide stops before resolving any file", () => {
+  const foreign = Object.keys(NATIVE_MACHINES).find((name) => name !== host && !name.startsWith(`${process.platform}-`))!
+  const [platform, arch] = foreign.split("-")
+  expect(() => resolveTreeSitter({ root, os: platform!, arch: arch! })).toThrow(
+    /^TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /,
+  )
+})
+
+// Python's published prebuild for a CPU other than `name`'s.
+function foreignTo(name: string) {
+  const dir = readdirSync(path.join(python, "prebuilds")).find(
+    (other) =>
+      !nativeMachines(path.join(python, "prebuilds", other, "tree-sitter-python.node")).includes(NATIVE_MACHINES[name]!),
   )!
   return path.join(python, "prebuilds", dir, "tree-sitter-python.node")
 }
