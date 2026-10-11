@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { guestEnvironment, installGuestScript, installWslArtifact, linuxGuestTarget, omniCompanions, WslArtifactError } from "./artifact"
+import { writeTreeSitterBundle } from "../cli-tree-sitter.fixture"
 import { checkWslAuthentication } from "./startup"
 import { spawnWslSidecar, wslServeScript } from "./sidecar"
 import { normalizeWslCommandVersion, readWslCommandVersion, shellEscape } from "./runtime"
@@ -67,23 +68,38 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
   const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf 'orchestra v1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
   const sha = (text: string) => createHash("sha256").update(text).digest("hex")
-  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon")) => shell(
+  // The digest over `sha256sum` lines of the tree's files, sorted by path.
+  const treeSitter = join(root, "tree-sitter ' $(touch planted)")
+  const treeDigest = sha(`${sha("index")}  tree-sitter/index.js\n${sha("binding")}  tree-sitter/prebuilds/linux-x64/tree-sitter.node\n`)
+  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon"), treeHash = treeDigest) => shell(
     ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version,
-      addon, addonHash, supervisor, sha("supervisor")], root,
+      addon, addonHash, supervisor, sha("supervisor"), treeSitter, treeHash], root,
   )
   try {
     await Bun.write(source, bytes)
     await Bun.write(addon, "addon")
     await Bun.write(supervisor, "supervisor")
+    await Bun.write(join(treeSitter, "tree-sitter/index.js"), "index")
+    await Bun.write(join(treeSitter, "tree-sitter/prebuilds/linux-x64/tree-sitter.node"), "binding")
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     expect((await stat(destination)).mode & 0o777).toBe(0o755)
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[0]), "utf8")).toBe("addon")
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[1]), "utf8")).toBe("supervisor")
     expect((await stat(join(root, ".orchestra/bin", omniCompanions[1]))).mode & 0o777).toBe(0o755)
+    expect(await readFile(join(root, ".orchestra/bin/tree-sitter/tree-sitter/prebuilds/linux-x64/tree-sitter.node"), "utf8")).toBe("binding")
     await Bun.write(destination, "foreign-old")
     expect((await execute(source, digest, "1.16.2", "5s", "0".repeat(64))).code).toBe(84)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect((await execute(source, digest, "1.16.2", "5s", sha("addon"), "0".repeat(64))).code).toBe(84)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    // A symlink in the tree is not one of its regular files, so the digest no longer matches.
+    await rm(join(treeSitter, "tree-sitter/index.js"))
+    await symlink(source, join(treeSitter, "tree-sitter/index.js"))
+    expect((await execute(source)).code).toBe(84)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    await rm(join(treeSitter, "tree-sitter/index.js"))
+    await Bun.write(join(treeSitter, "tree-sitter/index.js"), "index")
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     await Bun.write(destination, "foreign-old")
@@ -107,11 +123,15 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
-    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra"].sort())
+    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "tree-sitter"].sort())
     const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
     await Bun.write(source, hung)
     expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    await rm(join(root, ".orchestra/bin/tree-sitter"), { recursive: true })
+    await symlink(treeSitter, join(root, ".orchestra/bin/tree-sitter"))
+    expect((await execute(source)).code).toBe(85)
+    await rm(join(root, ".orchestra/bin/tree-sitter"))
     await rm(destination)
     await symlink(source, destination)
     expect((await execute(source)).code).toBe(85)
@@ -128,6 +148,7 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   const abort = new AbortController()
   const directory = await mkdtemp(join(tmpdir(), "w4-seam-"))
   await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-arm64", name), name)))
+  await writeTreeSitterBundle(join(directory, "tree-sitter-linux-arm64"), "linux-arm64")
   const options = {
     directory,
     signal: abort.signal,
@@ -148,15 +169,18 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   expect(commands[1]).toEqual(["wslpath", "-u", "--", "C:\\CLI ' $()\\owned"])
   expect(commands[2]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[0])])
   expect(commands[3]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[1])])
-  expect(commands[4]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
-  expect(commands[4]?.slice(-7)).toEqual([
+  expect(commands[4]).toEqual(["wslpath", "-u", "--", join(directory, "tree-sitter-linux-arm64")])
+  expect(commands[5]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
+  expect(commands[5]?.slice(-9, -1)).toEqual([
     "/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2",
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[0]).digest("hex"),
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[1]).digest("hex"),
+    "/mnt/c/CLI ' $()/owned",
   ])
+  expect(commands[5]?.at(-1)).toMatch(/^[a-f0-9]{64}$/)
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
-  expect(commands.length).toBe(5)
+  expect(commands.length).toBe(6)
   const duringVerification = new AbortController()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", {
     ...options, signal: duringVerification.signal,
@@ -165,12 +189,14 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
       return { path: "unused", version: "1.16.2" }
     },
   })).rejects.toThrow()
-  expect(commands.length).toBe(6)
+  expect(commands.length).toBe(7)
   await rm(directory, { recursive: true, force: true })
 })
 
-test("bundle without the Linux omni pair refuses the install by name before any transfer", async () => {
+test("bundle without the Linux omni pair or tree-sitter refuses the install by name before any transfer", async () => {
   const directory = await mkdtemp(join(tmpdir(), "w4-unavailable-"))
+  const treeSitter = join(directory, "tree-sitter-linux-x64-baseline")
+  await writeTreeSitterBundle(treeSitter, "linux-x64-baseline")
   const commands: string[][] = []
   const install = () => installWslArtifact("Ubuntu", "1.16.2", {
     directory,
@@ -192,11 +218,17 @@ test("bundle without the Linux omni pair refuses the install by name before any 
       expect((error as WslArtifactError).message).toBe("Installing the server in WSL is not available yet")
       expect(commands.map((args) => args[0])).toEqual(["bash"])
     }
-    // Control: with both companions present the same seam reaches the guest transfer.
     await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-x64-baseline", name), name)))
+    const binding = join(treeSitter, "tree-sitter", "prebuilds", "linux-x64", "tree-sitter.node")
+    await rename(binding, `${binding}.away`)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    await rename(`${binding}.away`, binding)
+    // Control: with both companions and tree-sitter present the same seam reaches the guest transfer.
     commands.length = 0
     expect(await install()).toBeUndefined()
-    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "timeout"])
+    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "wslpath", "timeout"])
   } finally {
     await rm(directory, { recursive: true, force: true })
   }

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, readdir, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixture } from "./fixture.ts";
 import { extractSymbols } from "../src/onboard/extract.ts";
@@ -32,8 +32,8 @@ test("real tree parser extracts TS and Python; partial and unsupported parse tri
 });
 
 test("without a loadable tree-sitter binding extraction is named unavailable, never a crash or empty success", async () => {
-  // A compiled binary carries arsenal without node_modules or its package files, exactly like the shipped CLI, so no
-  // binding and no parser-worker asset can resolve, whatever this checkout's install left behind.
+  // A compiled binary carries arsenal without node_modules or its package files, like the shipped CLI, and here nothing
+  // ships beside it: no binding resolves, whatever this checkout's install left behind, and no parser-worker is tried.
   const dir = await realpath(await mkdtemp(join(tmpdir(), "arsenal-no-binding-")));
   try {
     const extract = fileURLToPath(new URL("../src/onboard/extract.ts", import.meta.url));
@@ -48,7 +48,8 @@ console.log(JSON.stringify(await extractSymbols("a.ts", "export const a = 1", co
     const result = JSON.parse(run.stdout.toString());
     expect(result).toMatchObject({ path: "a.ts", symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } });
     expect(result.coverage.detail).toStartWith("native symbol extraction unavailable: ");
-    expect(result.coverage.detail).toContain("; parser-worker failed: exit -1");
+    expect(result.coverage.detail).toContain(join(basename(dir), "tree-sitter", "tree-sitter"));
+    expect(result.coverage.detail).not.toContain("parser-worker");
   } finally { await rm(dir, { recursive: true, force: true }); }
 }, 120_000);
 

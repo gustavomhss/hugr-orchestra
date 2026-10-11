@@ -2,6 +2,7 @@ import { constants } from "node:fs"
 import { lstat, open, realpath } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { join, resolve } from "node:path"
+import { copyTreeSitter, requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
 
 export type CliArtifactManifest = {
   schema: 1
@@ -13,6 +14,20 @@ export function nativeCliTarget(platform: string, arch: string): string {
   if (!["darwin", "win32", "linux"].includes(platform) || !["arm64", "x64"].includes(arch))
     throw new Error(`Unsupported CLI platform: ${platform}/${arch}`)
   return `${platform === "win32" ? "windows" : platform}-${arch}${arch === "x64" ? "-baseline" : ""}`
+}
+
+// A CLI loads maestro-arsenal's tree-sitter from tree-sitter/ beside its binary. The bundle keeps each target's copy in
+// tree-sitter-<target>/, staged from the CLI build's bin/tree-sitter.
+export function cliTreeSitterTarget(target: string) {
+  const [platform, arch] = target.split("-")
+  return { os: platform === "windows" ? "win32" : platform!, arch: arch!, abi: target.endsWith("-musl") ? "musl" : undefined }
+}
+
+/** Copies a target's tree-sitter bundle from `from` to `to`, refusing by name one that lacks a file or a binding. */
+export function copyCliTreeSitter(from: string, to: string, target: string) {
+  const bundle = cliTreeSitterTarget(target)
+  requireTreeSitterBundle(from, bundle)
+  copyTreeSitter(treeSitterBundle(bundle).map((file) => ({ from: join(from, file), to: file })), to, bundle)
 }
 
 export async function readCliManifest(directory: string): Promise<CliArtifactManifest> {

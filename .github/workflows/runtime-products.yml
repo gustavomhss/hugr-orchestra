@@ -39,12 +39,23 @@ jobs:
           path: models-api.json
           if-no-files-found: error
 
+  # Every native lane but Windows ARM64 (omni off) ships an omni pair; the Linux x64 Windows ARM64 producer takes its
+  # tree-sitter bundle from a Windows ARM64 host.
+  omni:
+    uses: ./.github/workflows/omni-artifacts.yml
+
+  tree-sitter:
+    if: ${{ !inputs.windows_x64_only }}
+    uses: ./.github/workflows/tree-sitter-artifacts.yml
+    with:
+      targets: '["win32-arm64"]'
+
   native:
-    needs: models
+    needs: [models, omni]
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.windows_x64_only && '[{"host":"windows-2022","target":"windows-x64-baseline"}]' || '[{"host":"macos-15-intel","target":"darwin-x64-baseline"},{"host":"macos-15","target":"darwin-arm64"},{"host":"ubuntu-24.04","target":"linux-x64-baseline"},{"host":"ubuntu-24.04-arm","target":"linux-arm64"},{"host":"windows-2022","target":"windows-x64-baseline"}]') }}
+        include: ${{ fromJSON(inputs.windows_x64_only && '[{"host":"windows-2022","target":"windows-x64-baseline","omni":"win32-x64-msvc"}]' || '[{"host":"macos-15-intel","target":"darwin-x64-baseline","omni":"darwin-x64"},{"host":"macos-15","target":"darwin-arm64","omni":"darwin-arm64"},{"host":"ubuntu-24.04","target":"linux-x64-baseline","omni":"linux-x64-gnu"},{"host":"ubuntu-24.04-arm","target":"linux-arm64","omni":"linux-arm64-gnu"},{"host":"windows-2022","target":"windows-x64-baseline","omni":"win32-x64-msvc"}]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 25
     defaults:
@@ -75,17 +86,24 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or $version.Trim() -ne '1.3.14') { throw 'BASELINE_BINARY_VERSION_MISMATCH' }
           (Split-Path -Parent $binary) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           Write-Output "BASELINE_COMPILER_VERIFIED version=$version archive_sha256=538f9c846355d9e847b2671bc00c47da4229a0befb24df3282b739770f3b475f"
-      - name: Require matching native host and exact Bun
-        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --host
       - name: Install once without lifecycle scripts
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
+      - name: Require matching native host and exact Bun
+        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
+      # OMNI_ARTIFACTS=<dir>/<omni id>/, as build.ts reads it.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-${{ matrix.omni }}
+          path: ${{ runner.temp }}/omni-artifacts/${{ matrix.omni }}
       - name: Build the owned CLI with its package version
         env:
           MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
+          OMNI_ARTIFACTS: ${{ runner.temp }}/omni-artifacts
         run: |
           set -euo pipefail
           ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
@@ -109,7 +127,7 @@ jobs:
 
   windows-arm64-producer:
     if: ${{ !inputs.windows_x64_only }}
-    needs: models
+    needs: [models, tree-sitter]
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     defaults:
@@ -122,17 +140,23 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: "1.3.14"
-      - name: Require native Linux producer
-        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
       - name: Install once without lifecycle scripts
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Require native Linux producer
+        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
+      # TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads it.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-win32-arm64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/win32-arm64
       - name: Build and export the actual Windows ARM64 CLI
         env:
           MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
+          TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
         run: |
           set -euo pipefail
           ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
@@ -160,6 +184,9 @@ jobs:
         with:
           bun-version: "1.3.14"
           bun-download-url: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-windows-aarch64.zip
+      - name: Install once without lifecycle scripts
+        run: bun install --frozen-lockfile --ignore-scripts
+      # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
       - name: Require native Windows ARM64 Bun
         run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
