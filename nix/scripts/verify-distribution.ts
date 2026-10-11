@@ -53,12 +53,13 @@ const omniCli = await omni(dirname(artifacts[0].path), process.execPath, {})
 // The packaged CLI (Resources/cli) resolves Resources/omni through ../omni: check it before that CLI runs too.
 // Resources/omni is outside app.asar.unpacked, so the addon scan below never sees it; packaged Electron loads it here.
 const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
+// The owned CLI prints exactly its version for --version (packages/cli/src/index.ts).
 artifacts.forEach((artifact) => {
   const reported = execute(artifact.path, ["--version"]).trim()
-  if (![version, `orchestra v${version}`].includes(reported)) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)
+  if (reported !== version) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)
 })
 const wrapped = execute(join(cli, "bin/orchestra"), ["--version"]).trim()
-if (![version, `orchestra v${version}`].includes(wrapped)) fail(`WRAPPED_CLI_VERSION:${wrapped}`)
+if (wrapped !== version) fail(`WRAPPED_CLI_VERSION:${wrapped}`)
 await Promise.all([
   join(cli, "share/orchestra/schema.json"),
   join(cli, "share/bash-completion/completions/orchestra.bash"),

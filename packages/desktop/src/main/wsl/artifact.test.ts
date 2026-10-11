@@ -49,12 +49,26 @@ linuxGuestTest("startup admits only descriptor-bound guest bytes before credenti
       expect(await Bun.file(marker).exists()).toBe(scenario === "stale")
       if (scenario === "stale") expect(await readFile(marker, "utf8")).toBe("--version\n")
     }
-    expect(normalizeWslCommandVersion("1.16.2\n")).toBe("1.16.2")
-    for (const output of ["", "orchestra v1.16.2", " 1.16.2", "1.16.2 extra", "1.16.2\nextra"]) {
-      expect(normalizeWslCommandVersion(output)).toBeNull()
-    }
   } finally {
     await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("guest version output is admitted only as the bare SemVer version owned builds print", () => {
+  for (const [output, version] of [
+    ["1.16.2\n", "1.16.2"],
+    ["1.16.2\r\n", "1.16.2"],
+    ["1.18.27-w3-integration", "1.18.27-w3-integration"],
+    ["1.18.27-dev-202610111200", "1.18.27-dev-202610111200"],
+    ["1.18.27+build.5", "1.18.27+build.5"],
+  ]) {
+    expect(normalizeWslCommandVersion(output!)).toBe(version!)
+  }
+  for (const output of [
+    "", "orchestra", "--help", "local", "orchestra v1.16.2", "v1.16.2", "1.16", "01.16.2", " 1.16.2",
+    "1.16.2 extra", "1.16.2\nextra", "1.16.2\n\n",
+  ]) {
+    expect(normalizeWslCommandVersion(output)).toBeNull()
   }
 })
 
@@ -276,23 +290,25 @@ linuxGuestTest("real owned V2 CLI guest credential authenticates foreground serv
   }
 }, 30_000)
 
-linuxGuestTest("real owned CLI --version output passes guest install and admission", async () => {
-  // The guest checks run against what the owned CLI really prints, not a hand-written imitation of it.
+linuxGuestTest("owned CLI source entry (bun, built version defined) passes guest install and admission", async () => {
+  // The guest checks run against what the owned CLI entry really prints, not a hand-written imitation of it. It runs
+  // from source through bun, not as a compiled binary, with ORCHESTRA_VERSION defined as a build defines it.
   const root = await mkdtemp(join(tmpdir(), "w4-real-version-"))
   const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
   const executable = join(root, "owned ' $()")
-  const bytes = `#!/bin/bash\nexec ${shellEscape(process.execPath)} ${shellEscape(cli)} "$@"\n`
+  const version = "1.18.27-wsl-source"
+  const define = `ORCHESTRA_VERSION:${JSON.stringify(version)}`
+  const bytes = `#!/bin/bash\nexec ${shellEscape(process.execPath)} --define ${shellEscape(define)} ${shellEscape(cli)} "$@"\n`
   const targets = ["linux-x64-baseline", "linux-arm64"]
-  // A source run reports InstallationVersion "local", as a compiled CLI reports the version it was built with.
   const options = {
     directory: root,
     timeoutMs: 20_000,
     readManifest: async () => ({
       schema: 1 as const,
-      version: "local",
+      version,
       artifacts: targets.map((target) => ({ target, file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") })),
     }),
-    verifyArtifact: async () => ({ path: executable, version: "local" }),
+    verifyArtifact: async () => ({ path: executable, version }),
     // On a Linux host the host path already is the guest path.
     run: async (args: string[]) =>
       args[0] === "wslpath" ? { code: 0, signal: null, stdout: args[3]!, stderr: "" } : { ...(await shell(args, root)), signal: null },
@@ -302,8 +318,8 @@ linuxGuestTest("real owned CLI --version output passes guest install and admissi
     await chmod(executable, 0o755)
     await Promise.all(targets.flatMap((target) => omniCompanions.map((name) => Bun.write(join(root, `omni-${target}`, name), name))))
     await Promise.all(targets.map((target) => writeTreeSitterBundle(join(root, `tree-sitter-${target}`), target)))
-    await installWslArtifact("Ubuntu", "local", options)
-    expect(await readWslCommandVersion(join(root, ".orchestra/bin/orchestra"), "Ubuntu", options)).toBe("local")
+    await installWslArtifact("Ubuntu", version, options)
+    expect(await readWslCommandVersion(join(root, ".orchestra/bin/orchestra"), "Ubuntu", options)).toBe(version)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
