@@ -99,22 +99,23 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
   await build(["--single", "--target", native])
   const identity = await run([binary, "--version"])
   expect(identity.code).toBe(0)
-  expect(identity.stdout).toBe(`orchestra v${version}`)
+  // Artifact consumers read the bare version (src/index.ts formatVersion).
+  expect(identity.stdout).toBe(version)
   const help = await run([binary, "--help"])
   expect(help.code).toBe(0)
   expect(help.stdout).toContain("orchestra")
   expect(help.stdout).not.toContain("lildax")
   const launched = await run(["node", "bin/orchestra.cjs", "--version"], 30_000, { ORCHESTRA_BIN_PATH: binary })
   expect(launched.code).toBe(0)
-  expect(launched.stdout).toBe(`orchestra v${version}`)
+  expect(launched.stdout).toBe(version)
   const launcher = path.join(home, "launcher/bin/orchestra.cjs")
   await Bun.write(launcher, Bun.file(path.join(root, "bin/orchestra.cjs")))
   await copyFile(binary, path.join(home, "launcher/bin/.orchestra"))
-  expect((await run(["node", launcher, "--version"])).stdout).toBe(`orchestra v${version}`)
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
   const installed = path.join(home, `launcher/node_modules/@orchestra/cli-${native}/bin`)
   await mkdir(installed, { recursive: true })
   await rename(path.join(home, "launcher/bin/.orchestra"), path.join(installed, path.basename(binary)))
-  expect((await run(["node", launcher, "--version"])).stdout).toBe(`orchestra v${version}`)
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
   const manifest = await Bun.file(path.join(root, `dist/cli-${native}/package.json`)).json()
   expect(manifest.version).toBe(version)
   expect(manifest.repository.url).toBe("git+https://github.com/gustavomhss/hugr-orchestra.git")
@@ -218,6 +219,15 @@ test("all explicit targets produce correct executable format/architecture and pr
   const artifacts = new Map<string, string>()
   const handed = await handedArtifacts()
   await Bun.write(sentinel, "preserve these bytes")
+  // test-ci installs for its own host; the other targets need the builder's all-platform install, with the runner's
+  // own package cache (the isolated HOME would download everything again).
+  const install = Bun.spawnSync([process.execPath, "install", "--frozen-lockfile", "--os=*", "--cpu=*"], {
+    cwd: root,
+    stdout: "pipe",
+    stderr: "pipe",
+    timeout: 600_000,
+  })
+  if (install.exitCode !== 0) throw new Error(`All-platform install failed (${install.exitCode}):\n${install.stderr}`)
   // A cross target with no exported bundle still stops on its named error before anything is built.
   const foreign = namedTargets.find((item) => item.os !== process.platform && item.abi === undefined)!
   const refused = await run(
