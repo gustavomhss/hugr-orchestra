@@ -384,15 +384,20 @@ export function create(input: {
     for (const [id, usage] of Object.entries(models)) {
       // modelUsage is cumulative across the live query; preserve the baseline across mirrors and turns.
       let remaining = Math.max(0, (usage.thinkingTokens ?? 0) - (modelUsage.get(id)?.thinkingTokens ?? 0))
-      for (const item of [...views].reverse()) remaining = yield* item.reasoning(id, remaining)
+      for (const item of [...views].reverse()) remaining = yield* item.reasoning(id, remaining, usage.canonicalModel)
       modelUsage.set(id, usage)
       if (!provider || !providers) continue
       const catalogModel = provider.models[id] ?? Object.values(provider.models).find((item) =>
         item.api.id === id || item.id === usage.canonicalModel)
-      const previous = catalogModel ?? provider.models[input.user.model.modelID]
-      if (!previous) continue
-      provider.models[id] = { ...previous, id: ModelV2.ID.make(id), name: catalogModel?.name ?? id, api: { ...previous.api, id },
-        limit: { ...previous.limit, context: usage.contextWindow, output: usage.maxOutputTokens } }
+      // SDK usage keys can be aliases while the assistant and the UI catalog use the canonical model id.
+      for (const key of new Set([id, ...(usage.canonicalModel ? [usage.canonicalModel] : []), ...(catalogModel ? [catalogModel.id] : [])])) {
+        const existing = provider.models[key]
+        const previous = existing ?? catalogModel ?? provider.models[input.user.model.modelID]
+        if (!previous) continue
+        provider.models[key] = { ...previous, id: ModelV2.ID.make(key), name: existing?.name ?? catalogModel?.name ?? key,
+          api: { ...previous.api, id: existing?.api.id ?? key },
+          limit: { ...previous.limit, context: usage.contextWindow, output: usage.maxOutputTokens } }
+      }
       providers[providerID] = provider
     }
     yield* state({ cost: message.total_cost_usd, modelUsage: models,

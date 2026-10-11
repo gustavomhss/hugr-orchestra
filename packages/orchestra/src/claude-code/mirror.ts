@@ -240,8 +240,9 @@ export function create(input: {
       yield* sessions.updateMessage(step.info)
     }),
     /** SDK thinking totals include output tokens. Reconcile newest matching steps first, preserving total tokens. */
-    reasoning: (modelID: string, tokens: number) => Effect.gen(function* () {
-      const candidates = [step, ...[...finished.values()].reverse()].filter((item) => item?.info.modelID === modelID)
+    reasoning: (modelID: string, tokens: number, canonicalModel?: string) => Effect.gen(function* () {
+      const candidates = [step, ...[...finished.values()].reverse()].filter((item) =>
+        item && (item.info.modelID === modelID || item.info.modelID === canonicalModel))
       let remaining = tokens
       for (const item of candidates) {
         if (!item || remaining <= 0) continue

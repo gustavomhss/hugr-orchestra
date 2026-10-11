@@ -206,10 +206,10 @@ it.instance("batched and delayed receipts reconcile every sent UUID without gues
 it.instance("actual fallback model, thinking tokens and context limits reach the fields the UI reads", () => Effect.gen(function* () {
   const ctx = yield* setup()
   const fallback = "claude-sonnet-4-5-20250929"
-  const model = { inputTokens: 10, outputTokens: 20, thinkingTokens: 7, cacheReadInputTokens: 0,
+  const model = { canonicalModel: fallback, inputTokens: 10, outputTokens: 20, thinkingTokens: 7, cacheReadInputTokens: 0,
     cacheCreationInputTokens: 0, webSearchRequests: 0, costUSD: 0.42, contextWindow: 500000, maxOutputTokens: 32000 }
   yield* ctx.feed([stream(assistant("fallback", [], null, fallback)),
-    assistant("fallback", [{ type: "text", text: "Fallback", citations: null }], null, fallback), finish({ [fallback]: model }, 0.42)])
+    assistant("fallback", [{ type: "text", text: "Fallback", citations: null }], null, fallback), finish({ "sdk-fallback-alias": model }, 0.42)])
   yield* ctx.mirror.finish(0)
   const reply = (yield* ctx.read()).find((item) => item.info.role === "assistant")
   expect(reply?.info).toMatchObject({ modelID: fallback, tokens: { input: 10, output: 13, reasoning: 7 }, cost: 0.42 })
@@ -217,7 +217,7 @@ it.instance("actual fallback model, thinking tokens and context limits reach the
   expect((yield* ctx.provider.list())[ctx.user.model.providerID].models[fallback].limit).toMatchObject({ context: 500000, output: 32000 })
   const next = ctx.make(yield* ctx.steer())
   yield* ctx.feed([assistant("next", [{ type: "text", text: "Next", citations: null }], null, fallback),
-    finish({ [fallback]: { ...model, thinkingTokens: 10, outputTokens: 40 } }, 0.5)], next)
+    finish({ "sdk-fallback-alias": { ...model, thinkingTokens: 10, outputTokens: 40 } }, 0.5)], next)
   yield* next.finish(0.42)
   expect((yield* ctx.read()).findLast((item) => item.info.role === "assistant")?.info).toMatchObject({ tokens: { output: 17, reasoning: 3 } })
 }))
