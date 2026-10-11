@@ -16,6 +16,7 @@
   apple-sdk,
   darwin,
   node_modules ? callPackage ./node_modules.nix { inherit bun; },
+  omni ? callPackage ./omni.nix { inherit nodejs; },
 }:
 let
   target = lib.removePrefix "bun-" bun.compileTarget;
@@ -25,7 +26,7 @@ assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
 stdenv.mkDerivation (finalAttrs: {
   pname = "orchestra";
   inherit (node_modules) version src;
-  inherit node_modules;
+  inherit node_modules omni;
 
   nativeBuildInputs = [
     bun
@@ -123,6 +124,10 @@ stdenv.mkDerivation (finalAttrs: {
     bun --bun packages/cli/script/export-artifacts.ts \
       --dist packages/cli/dist --out "$out/share/orchestra/cli" \
       --version "${finalAttrs.version}" --target ${target}
+    # Omni is on by default: core/src/omni.ts resolves both files next to
+    # realpath(process.execPath), the real leaf below, never the bin/ wrapper.
+    install -Dm755 ${finalAttrs.omni}/hugr-omni-supervisor "$out/share/orchestra/cli/hugr-omni-supervisor"
+    install -Dm755 ${finalAttrs.omni}/hugr_omni.node "$out/share/orchestra/cli/hugr_omni.node"
     install -Dm644 schema.json $out/share/orchestra/schema.json
     makeWrapper "$out/share/orchestra/cli/orchestra-${target}" $out/bin/orchestra \
       --prefix PATH : ${lib.makeBinPath ([ ripgrep ] ++ lib.optional stdenv.hostPlatform.isDarwin sysctl)}
@@ -149,6 +154,8 @@ stdenv.mkDerivation (finalAttrs: {
   postInstallCheck = ''
     bun --bun packages/cli/script/schema.ts schema-installcheck.json
     cmp schema-installcheck.json $out/share/orchestra/schema.json
+    cmp ${finalAttrs.omni}/hugr_omni.node $out/share/orchestra/cli/hugr_omni.node
+    cmp ${finalAttrs.omni}/hugr-omni-supervisor $out/share/orchestra/cli/hugr-omni-supervisor
     bun --bun --eval '
       const { verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
       const artifact = await verifyCliArtifact(process.env.out + "/share/orchestra/cli", "${target}")
@@ -160,7 +167,7 @@ stdenv.mkDerivation (finalAttrs: {
     jsonschema = "${finalAttrs.finalPackage}/share/orchestra/schema.json";
     cliArtifacts = "${finalAttrs.finalPackage}/share/orchestra/cli";
     cliTarget = target;
-    inherit bun;
+    inherit bun omni;
     env = finalAttrs.env;
     validationStatus = "UNVALIDATED: native builds and dependency measurements pending";
   };
