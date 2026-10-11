@@ -2448,6 +2448,8 @@ export type PtysCreateInput = {
     readonly cwd?: string
     readonly title?: string
     readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
   }["command"]
   readonly args?: {
     readonly command?: string
@@ -2455,6 +2457,8 @@ export type PtysCreateInput = {
     readonly cwd?: string
     readonly title?: string
     readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
   }["args"]
   readonly cwd?: {
     readonly command?: string
@@ -2462,6 +2466,8 @@ export type PtysCreateInput = {
     readonly cwd?: string
     readonly title?: string
     readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
   }["cwd"]
   readonly title?: {
     readonly command?: string
@@ -2469,6 +2475,8 @@ export type PtysCreateInput = {
     readonly cwd?: string
     readonly title?: string
     readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
   }["title"]
   readonly env?: {
     readonly command?: string
@@ -2476,7 +2484,27 @@ export type PtysCreateInput = {
     readonly cwd?: string
     readonly title?: string
     readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
   }["env"]
+  readonly cols?: {
+    readonly command?: string
+    readonly args?: ReadonlyArray<string>
+    readonly cwd?: string
+    readonly title?: string
+    readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
+  }["cols"]
+  readonly rows?: {
+    readonly command?: string
+    readonly args?: ReadonlyArray<string>
+    readonly cwd?: string
+    readonly title?: string
+    readonly env?: { readonly [x: string]: string }
+    readonly cols?: number
+    readonly rows?: number
+  }["rows"]
 }
 
 export type PtysCreateOutput = {

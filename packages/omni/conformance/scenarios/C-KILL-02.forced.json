@@ -1,0 +1,9 @@
+{
+  "id": "C-KILL-02.forced",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "ignore-term", "tree=2:resist", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|PID \\d \\d+)$", "count": 3}, "capture": {"d": "^PID \\d (\\d+)$"}},
+    {"stop": "c", "graceMs": 2000, "expect": {"reason": "killed", "elapsedMs": {"gte": 1900, "lt": 3000}}},
+    {"os": "dead", "pids": ["${c.pid}", "${d}"]}
+  ]
+}

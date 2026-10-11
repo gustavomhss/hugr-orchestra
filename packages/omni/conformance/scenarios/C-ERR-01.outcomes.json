@@ -1,0 +1,12 @@
+{
+  "id": "C-ERR-01.outcomes",
+  "files": {"notexec.txt": "not a program\n"},
+  "steps": [
+    {"spawn": ["omni-no-such-program"], "expect": {"error": "NOT_FOUND", "message": ["\"omni-no-such-program\"", "was not found in any directory of the child's PATH", "pass the program's full path"]}},
+    {"run": ["omni-no-such-program"], "expect": {"error": "NOT_FOUND", "message": ["\"omni-no-such-program\"", "was not found in any directory of the child's PATH", "pass the program's full path"]}},
+    {"spawn": ["${TMP}/missing${EXE}"], "expect": {"error": "NOT_FOUND", "message": ["missing${EXE}", "was not found at", "Check the path and cwd"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"cwd": "${TMP}/no-such-dir"}, "expect": {"error": "INVALID_CWD", "message": ["no-such-dir", "does not exist", "Create the directory, or pass an existing one as cwd"]}},
+    {"run": ["${FIXTURE}"], "options": {"cwd": "${TMP}/no-such-dir"}, "expect": {"error": "INVALID_CWD", "message": ["no-such-dir", "does not exist", "Create the directory, or pass an existing one as cwd"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"cwd": "${TMP}/notexec.txt"}, "expect": {"error": "INVALID_CWD", "message": ["notexec.txt", "is not a directory", "Pass a directory as cwd"]}}
+  ]
+}

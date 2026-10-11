@@ -2,6 +2,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { and, eq, sql } from "drizzle-orm"
 import { Database } from "@orchestra/core/database/database"
 import { ProjectDirectoryTable, ProjectTable } from "@orchestra/core/project/sql"
+import { ProjectCheckpointTable } from "@orchestra/core/project/checkpoint.sql"
 import { ProjectDirectories } from "@orchestra/core/project/directories"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { WorkspaceTable } from "@orchestra/core/control-plane/workspace.sql"
@@ -184,6 +185,8 @@ const layer = Layer.effect(
                 .set({ project_id: newID })
                 .where(eq(WorkspaceTable.project_id, oldID))
                 .run()
+              yield* d.update(ProjectCheckpointTable).set({ project_id: newID })
+                .where(eq(ProjectCheckpointTable.project_id, oldID)).run()
 
               if (oldProject) yield* d.delete(ProjectTable).where(eq(ProjectTable.id, oldID)).run()
             }),
@@ -289,12 +292,12 @@ const layer = Layer.effect(
         .pipe(Effect.orDie)
 
       if (projectID !== ProjectV2.ID.global) {
-        yield* db
-          .update(SessionTable)
-          .set({ project_id: projectID })
-          .where(and(eq(SessionTable.project_id, ProjectV2.ID.global), eq(SessionTable.directory, data.directory)))
-          .run()
-          .pipe(Effect.orDie)
+        yield* db.transaction((tx) => Effect.gen(function* () {
+          yield* tx.update(SessionTable).set({ project_id: projectID })
+            .where(and(eq(SessionTable.project_id, ProjectV2.ID.global), eq(SessionTable.directory, data.directory))).run()
+          yield* tx.update(ProjectCheckpointTable).set({ project_id: projectID })
+            .where(and(eq(ProjectCheckpointTable.project_id, ProjectV2.ID.global), eq(ProjectCheckpointTable.directory, data.directory))).run()
+        }), { behavior: "immediate" }).pipe(Effect.orDie)
       }
 
       yield* saveProjectDirectory({

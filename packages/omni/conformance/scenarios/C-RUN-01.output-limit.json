@@ -1,0 +1,11 @@
+{
+  "id": "C-RUN-01.output-limit",
+  "steps": [
+    {"run": ["${FIXTURE}", "pidlog=${TMP}/l.pids", "hold=60000", "watch=stderr:2:${TMP}/l.pids", "out=HEAD", "bytes=stdout:100000", "hang"], "options": {"maxOutputBytes": 1000}, "expect": {"error": "OUTPUT_LIMIT", "message": ["stdout"], "result": {"stdout": {"regex": "^HEADabc[a-z]{993}$"}}}},
+    {"spawn": ["${FIXTURE}", "watch=stdout:2:${TMP}/l.pids"], "as": "w"},
+    {"read": "w", "until": "end", "capture": {"lp": "^LOGGED (\\d+)$"}},
+    {"os": "dead", "pids": "${lp}"},
+    {"run": ["${FIXTURE}", "bytes=stderr:5000", "hang"], "options": {"maxOutputBytes": 1000}, "expect": {"error": "OUTPUT_LIMIT", "message": ["stderr"], "result": {"stderr": {"length": 1000}}}},
+    {"run": ["${FIXTURE}", "bytes=stdout:1000", "exit=0"], "options": {"maxOutputBytes": 1000}, "expect": {"exitCode": 0, "stdout": {"length": 1000}}}
+  ]
+}

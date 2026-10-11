@@ -1,14 +1,28 @@
 import { resolve } from "node:path"
 import { type GovernanceContext, requireValue } from "./contracts.ts"
+import { processRunner } from "../process-runner.ts"
 export const PROCESS_BYTES = 512 * 1024
+const TIMEOUT_MS = 15000
 export async function processBytes(context: GovernanceContext, directory: string, argv: string[], stdin?: string, beforeSpawn?: () => Promise<void>) {
   await context.authorize({ effect: "process", paths: [directory], commands: [argv.map((arg) => `'${arg.replaceAll("'", "'\\''")}'`).join(" ")] })
   if (beforeSpawn) await beforeSpawn()
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_PAGER: "cat", GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" }
+  const launchFailed = (error: unknown) => new Error(`PROCESS_LAUNCH_FAILED: ${error instanceof Error ? error.message : String(error)}`)
+  const runner = processRunner()
+  if (runner) {
+    // The host's runner (omni under the flag): the whole tree is stopped on timeout, overflow or exit.
+    const defined = Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => entry[1] !== undefined))
+    const result = await runner({ argv, cwd: directory, env: defined, input: stdin, timeoutMs: TIMEOUT_MS, maxOutputBytes: PROCESS_BYTES }).catch((error: unknown) => { throw launchFailed(error) })
+    if (result.overflow) throw new Error("PROCESS_OUTPUT_OVERFLOW")
+    requireValue(!result.timedOut, `PROCESS_TIMEOUT: ${argv[0]}`)
+    requireValue(result.exitCode === 0, `PROCESS_ACQUISITION_FAILED: ${argv[0]} (${result.exitCode}): ${Buffer.from(result.stderr).toString("utf8").slice(0, 2048)}`)
+    return Buffer.from(result.stdout)
+  }
   const child = await Promise.resolve().then(() => Bun.spawn(argv, { cwd: directory, stdin: stdin === undefined ? "ignore" : new TextEncoder().encode(stdin), stdout: "pipe", stderr: "pipe",
-    env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_PAGER: "cat", GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
-  })).catch((error: unknown) => { throw new Error(`PROCESS_LAUNCH_FAILED: ${error instanceof Error ? error.message : String(error)}`) })
+    env,
+  })).catch((error: unknown) => { throw launchFailed(error) })
   const state = { timedOut: false }
-  const timer = setTimeout(() => { state.timedOut = true; child.kill() }, 15000)
+  const timer = setTimeout(() => { state.timedOut = true; child.kill() }, TIMEOUT_MS)
   const collect = async (stream: ReadableStream<Uint8Array>) => {
     const reader = stream.getReader()
     const chunks: Uint8Array[] = []

@@ -9,7 +9,7 @@ const OUTPUT: Record<SessionContinuity.Compacted, string> = {
   applied: "Working memory updated: the covered history is now summarized and archived; context_recall restores any of it.",
   masked: "Old tool output was replaced by one-line records; context_recall restores any of it.",
   fits: "Nothing new to compact: the working memory already covers the history up to the recent turns.",
-  over: "Compaction ran but the context is still large; continue, and compact again after the next milestone.",
+  over: "Context compaction could not complete within its safety or size limits. Check maintenance diagnostics before retrying.",
   disabled: "Context continuity is disabled for this project.",
 }
 

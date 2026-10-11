@@ -1,0 +1,19 @@
+{
+  "id": "C-KILL-01.tree",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "tree=3", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|PID \\d \\d+)$", "count": 4}, "capture": {"d": "^PID \\d (\\d+)$"}},
+    {"os": "alive", "pids": "${d}"},
+    {"stop": "c", "graceMs": 5000, "expect": {"reason": "killed", "elapsedMs": {"lt": 1000}}},
+    {"os": "dead", "pids": ["${c.pid}", "${d}"]},
+    {"stop": "c", "expect": {"reason": "killed", "elapsedMs": {"lt": 1000}}},
+    {"spawn": ["${FIXTURE}", "tree=2", "read-line", "exit=5"], "options": {"stdin": "pipe"}, "as": "e"},
+    {"read": "e", "until": {"match": "^PID \\d \\d+$", "count": 2}, "capture": {"f": "^PID \\d (\\d+)$"}},
+    {"write": "e", "data": "go\n"},
+    {"wait": "e", "expect": {"exitCode": 5, "reason": "exit"}},
+    {"os": "alive", "pids": "${f}"},
+    {"stop": "e", "graceMs": 1000, "expect": {"exitCode": 5, "reason": "exit"}},
+    {"os": "dead", "pids": "${f}"},
+    {"stop": "e", "expect": {"exitCode": 5, "reason": "exit"}}
+  ]
+}

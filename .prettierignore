@@ -5,5 +5,7 @@ packages/client/src/generated-effect/
 packages/atlas-boundary/src/generated/
 # Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
 foundation/atlas/.orchestra/skills/own/
+# hugr-omni keeps its own gate (packages/omni/scripts/ci.mjs).
+packages/omni/**
 # Exact-byte palette stylesheets belong to packages/app/script/orchestra-palettes.ts.
 packages/app/src/orchestra/palette/generated/

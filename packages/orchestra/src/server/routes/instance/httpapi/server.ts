@@ -8,6 +8,7 @@ import { Account } from "@/account/account"
 import { Agent } from "@/agent/agent"
 import { Auth } from "@/auth"
 import { BackgroundJob } from "@/background/job"
+import { BackgroundProcess } from "@/background/process"
 import { Command } from "@/command"
 import { Config } from "@/config/config"
 import { Credential } from "@orchestra/core/credential"
@@ -98,6 +99,7 @@ import { providerHandlers } from "./handlers/provider"
 import { ptyConnectHandlers, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
 import { sessionHandlers } from "./handlers/session"
+import { sessionProcessHandlers } from "./handlers/session-process"
 import { syncHandlers } from "./handlers/sync"
 import { tuiHandlers } from "./handlers/tui"
 import { handlers } from "@orchestra/server/handlers"
@@ -167,6 +169,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     permissionHandlers,
     providerHandlers,
     sessionHandlers,
+    sessionProcessHandlers,
     syncHandlers,
     tuiHandlers,
     workspaceHandlers,
@@ -238,6 +241,7 @@ const app = LayerNode.group([
   SessionProjector.node,
   SessionStatus.node,
   BackgroundJob.node,
+  BackgroundProcess.node,
   RuntimeFlags.node,
   EventV2Bridge.node,
   SessionRunState.node,

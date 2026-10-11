@@ -1,0 +1,15 @@
+{
+  "id": "C-ERR-02.inputs",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "tty"], "options": {"pty": {"cols": 0, "rows": 24}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["cols"]}},
+    {"spawn": ["${FIXTURE}", "tty"], "options": {"pty": {"cols": 80, "rows": 40000}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["rows"]}},
+    {"run": ["${FIXTURE}", "tty"], "options": {"pty": {"cols": 80, "rows": 0}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["rows"]}},
+    {"spawn": ["${FIXTURE}", "out=a\u0000b"], "expect": {"error": "INVALID_ARGUMENT", "message": ["arg"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"cwd": "${TMP}\u0000x"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["cwd"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"env": {"OMNI_K": "v\u0000"}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["env"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"env": {"OMNI=K": "v"}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["env"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"env": {"": "v"}}, "expect": {"error": "INVALID_ARGUMENT", "message": ["env"]}},
+    {"spawn": ["${FIXTURE}"], "options": {"timeoutMs": 4294967296}, "expect": {"error": "INVALID_ARGUMENT", "message": ["timeout"]}},
+    {"run": ["${FIXTURE}"], "options": {"graceMs": 4294967296}, "expect": {"error": "INVALID_ARGUMENT", "message": ["grace"]}}
+  ]
+}

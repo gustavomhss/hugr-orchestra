@@ -52,6 +52,8 @@ import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
+import { OmniHost } from "./omni-host"
+import { OmniSmoke } from "./omni-smoke"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -155,6 +157,7 @@ const main = Effect.gen(function* () {
   initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
+  OmniHost.setup()
 
   const wslVersion = yield* Effect.promise(() =>
     readWslExpectedVersion(
@@ -439,6 +442,11 @@ const main = Effect.gen(function* () {
         Effect.sync(() => {
           logger.error("sidecar health check failed", e.toString())
         }),
+      ),
+    )
+    yield* Effect.promise(() =>
+      OmniSmoke.report({ url, username: "orchestra", password }).catch((error: unknown) =>
+        logger.error("omni smoke report failed", error),
       ),
     )
 

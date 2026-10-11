@@ -623,6 +623,33 @@ export namespace Task {
   export type Bound = typeof Bound.Type
 }
 
+export namespace WorkResult {
+  // Shared transitional contract: host verification and Maestro acceptance remain independent facts.
+  export const Decided = Event.define({
+    type: "maestro.work_result.decided",
+    durable: { version: 1, aggregate: "authoritySessionID" },
+    schema: {
+      projectID: Schema.NonEmptyString,
+      memberID: Schema.Literal("backend"),
+      taskId: Schema.NonEmptyString,
+      authoritySessionID: Schema.NonEmptyString,
+      executionSessionID: Schema.NonEmptyString,
+      resultRef: Schema.Struct({
+        parentSessionID: Schema.NonEmptyString,
+        messageID: Schema.NonEmptyString,
+        partID: Schema.NonEmptyString,
+        callID: Schema.NonEmptyString,
+      }),
+      workResultHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+      decision: Schema.Literals(["accepted", "rejected"]),
+      verificationState: Schema.Literals(["not-host-verified", "host-verified", "host-failed", "host-incomplete"]),
+      terminalReason: Schema.Literals(["ended", "blocked", "failed", "interrupted"]),
+      reason: optional(Schema.String),
+    },
+  })
+  export type Decided = typeof Decided.Type
+}
+
 export const Definitions = Event.inventory(
   Approval.Presented,
   Approval.Decided,
@@ -649,4 +676,5 @@ export const Definitions = Event.inventory(
   Dispatch.ReservedV2,
   Task.Bound,
   Task.WorkflowBound,
+  WorkResult.Decided,
 )

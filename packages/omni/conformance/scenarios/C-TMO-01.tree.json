@@ -1,0 +1,10 @@
+{
+  "id": "C-TMO-01.tree",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "ignore-term", "tree=2:resist", "ready", "hang"], "options": {"timeoutMs": 2000, "graceMs": 500}, "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|PID \\d \\d+)$", "count": 3}, "capture": {"d": "^PID \\d (\\d+)$"}},
+    {"wait": "c", "expect": {"reason": "timeout", "success": false, "elapsedMs": {"lt": 3500}}},
+    {"os": "dead", "pids": ["${c.pid}", "${d}"], "withinMs": 1000},
+    {"run": ["${FIXTURE}", "out=PARTIAL\\n", "tree=1", "hang"], "options": {"timeoutMs": 2000}, "expect": {"reason": "timeout", "success": false, "stdout": {"regex": "^PARTIAL\\nPID 1 \\d+\\n$"}, "elapsedMs": {"gte": 1995, "lt": 5000}}}
+  ]
+}

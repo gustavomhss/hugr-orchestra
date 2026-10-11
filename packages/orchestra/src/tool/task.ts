@@ -108,12 +108,7 @@ export const Parameters = Schema.Struct({
   }),
 })
 
-function renderOutput(input: {
-  id: string
-  state: "running" | "completed" | "error"
-  summary?: string
-  text: string
-}) {
+function renderOutput(input: { id: string; state: "running" | "completed" | "error"; summary?: string; text: string }) {
   const tag = input.state === "error" ? "task_error" : "task_result"
   return [
     `<task id="${input.id}" state="${input.state}">`,
@@ -473,14 +468,14 @@ export const TaskTool = Tool.define(
         seat,
         sessionID: nextSession.id,
         taskId: logical?.taskId,
+        memberId: nextID,
+        authoritySessionId: authority.rootID,
+        armed: completionReceipt !== undefined,
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
 
-      yield* ctx.metadata({
-        title: params.description,
-        metadata,
-      })
+      yield* ctx.metadata({ title: params.description, metadata })
 
       if (governedChildID && reserved) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
@@ -510,12 +505,13 @@ export const TaskTool = Tool.define(
           const failure = completionReceipt
             ? "Tool safety HOLD: completion-worker-not-finished"
             : "Governed Task denied: reserved-child-incomplete"
-          yield* work.hostEnded("interrupted", failure)
+          yield* work.hostEnded(completed?.info.role === "assistant" && (completed.info.error ||
+            completed.parts.some((part) => part.type === "tool" && part.state.status === "error")) ? "failed" : "interrupted", failure)
           return yield* Effect.fail(new Error(failure))
         }
         if (!completed) yield* work.hostEnded("interrupted", "No completed child message to replay")
         const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
-        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id, work.observe)
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
@@ -592,10 +588,7 @@ export const TaskTool = Tool.define(
           {
             messageID: promptID,
             sessionID: nextSession.id,
-            model: {
-              modelID: model.modelID,
-              providerID: model.providerID,
-            },
+            model: { modelID: model.modelID, providerID: model.providerID },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
             parts: [...parts, ...own, ...resume],
@@ -626,13 +619,18 @@ export const TaskTool = Tool.define(
         }
         if (completionReceipt && (result.info.role !== "assistant" || !result.info.finish ||
           ["tool-calls", "unknown"].includes(result.info.finish) ||
-          result.parts.some((part) => part.type === "tool" && part.state.status !== "completed")))
+          result.parts.some((part) => part.type === "tool" && part.state.status !== "completed"))) {
+          yield* work.hostEnded("interrupted", "Tool safety HOLD: completion-worker-not-finished").pipe(Effect.provideService(Database.Service, database))
           return yield* Effect.fail(new Error("Tool safety HOLD: completion-worker-not-finished"))
-        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
-        if (verified) {
-          completionEvidence.value = verified
-          yield* ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) })
         }
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id, work.observe)
+        if (verified) {
+          yield* work.publish(ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) }))
+          completionEvidence.value = verified
+        }
+        // The background return carries the host verification observed above. Read the returned result, not the latest
+        // streamed one: a concurrent "running" start snapshot must not replace the returned terminal.
+        if (returned) backgroundDispatch.capture({ ...returned, workResult: yield* work.notice(returned.state, returned.text) })
         type Part = (typeof result.parts)[number]
         const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
           item.type === "text" && item.text.trim() !== ""
@@ -659,7 +657,6 @@ export const TaskTool = Tool.define(
 
       const runCancel = yield* EffectBridge.make()
       const cancel = ops.cancel(nextSession.id)
-
       function onAbort() {
         runCancel.fork(cancel)
       }

@@ -1,4 +1,3 @@
-import type { ChildProcessWithoutNullStreams } from "child_process"
 import path from "path"
 import os from "os"
 import { Global } from "@orchestra/core/global"
@@ -10,7 +9,7 @@ import { Archive } from "@/util/archive"
 import { Process } from "@/util/process"
 import { which } from "@orchestra/core/util/which"
 import { Module } from "@orchestra/core/util/module"
-import { spawn } from "./launch"
+import { spawn, type Child } from "./launch"
 import { Npm } from "@orchestra/core/npm"
 import type { RuntimeFlags } from "@/effect/runtime-flags"
 
@@ -23,7 +22,7 @@ const run = (cmd: string[], opts: Process.RunOptions = {}) => Process.run(cmd, {
 const output = (cmd: string[], opts: Process.RunOptions = {}) => Process.text(cmd, { ...opts, nothrow: true })
 
 export interface Handle {
-  process: ChildProcessWithoutNullStreams
+  process: Child
   initialization?: Record<string, any>
 }
 
