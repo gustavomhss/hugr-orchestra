@@ -177,7 +177,7 @@ for (const abort of [false, true]) {
       }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
     } }
     const worker = yield* Stream.runCollect(ClaudeCodeLLM.create(sdk).stream(input)).pipe(
-      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path,
+      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path,
         ANTHROPIC_API_KEY: "paid", ANTHROPIC_AUTH_TOKEN: "paid", ANTHROPIC_BASE_URL: "https://wrong.invalid",
         CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "override" }),
       Effect.onExit(() => Deferred.succeed(stopped, undefined)), Effect.forkChild,

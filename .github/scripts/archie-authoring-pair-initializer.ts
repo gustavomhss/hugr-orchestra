@@ -16,10 +16,11 @@ const requireCandidate = createRequire(job.candidate + "/packages/orchestra/pack
 const { Cause, Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
 const driverPath = ${JSON.stringify(fileURLToPath(new URL("./archie-authoring-pair.ts", import.meta.url)))}
 const driverSha256 = ${JSON.stringify(job.driverSha256)}
-const { evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring, requireStageObserved, readClaudeLogin } = await import(driverPath)
+const { evidenceDecoder, requireSecretFree, serializedEvidence, saveEvidence, admitArm, requireArmTime, boundaryRules, stageInventory, requireReadBoundary, requireSuccessfulAuthoring, requireStageObserved } = await import(driverPath)
 const decodeJson = await evidenceDecoder(job.candidate)
 // Preflight never reads the login secret (presence only, below). A run holds it in memory, only to redact evidence.
-const secrets = job.preflightOnly ? [] : await readClaudeLogin(job.candidate, process.env.HOME ?? "", process.env.USER ?? "", Number(process.env.PAIR_ARM_BUDGET_MS))
+// No Claude credential is ever read here; the Claude Code binary authenticates through its own flow.
+const secrets: string[] = []
 requireSecretFree({ global: job.packet.global, sources: job.packet.sources, stages: job.packet.stages }, secrets, decodeJson)
 const redact = (text: string) => secrets.reduce((result, secret) => result.split(secret).join(""), text)
 const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
@@ -201,10 +202,6 @@ for (const arm of [job.arm]) {
   }).pipe(Effect.provideService(InstanceRef, placement))
   try {
     if (job.preflightOnly) {
-      // Presence only: no -w, so the Keychain secret is never read here; sdk.ts reads it when a turn spawns.
-      const { ClaudeCodeSDK } = await import(job.candidate + "/packages/orchestra/src/claude-code/sdk.ts")
-      const keychain = Bun.spawnSync(["security", "find-generic-password", "-a", process.env.USER ?? "", "-s", ClaudeCodeSDK.credentialStorage(process.env, process.env.HOME ?? "").service], { env: process.env, stdout: "ignore", stderr: "ignore" })
-      fact(keychain.exitCode === 0, "PAIR_CLAUDE_CODE_KEYCHAIN_LOGIN_MISSING")
       // The exact pre-model guard over stage 1's grants, run once without a model on the tool view the engine builds.
       const bound = await run(services.sessions.get(session.id))
       await run(services.registry.tools({ ...Provider.parseModel(model), agent: services.archie, permission: bound.permission }))

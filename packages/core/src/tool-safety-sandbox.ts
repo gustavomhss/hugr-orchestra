@@ -3,8 +3,9 @@ export * as ToolSafetySandbox from "./tool-safety-sandbox"
 import os from "os"
 import path from "path"
 import which from "which"
+import { closeSync, lstatSync, openSync, unlinkSync, type BigIntStats } from "node:fs"
 import { lstat, mkdtemp, open, realpath, rm, writeFile } from "node:fs/promises"
-import { Context, Effect, Schedule, Scope } from "effect"
+import { Context, Effect, Result, Schedule, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
@@ -282,6 +283,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       ...command.options, cwd, shell: false, env: { ...confined, ...proxy?.env }, extendEnv: false,
     })
   }
+  if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
+  // srt binds only write roots that exist and leaves a missing one read-only, so a command could never create its
+  // declared output file (go.sum, gen/out.ts). Each missing root whose parent exists gets an empty file for this
+  // command, removed when it ends unless the command wrote it. A missing root meant as a directory stays unwritable.
+  yield* Effect.forEach(roots, (root) => roots.some((other) => other !== root && FSUtil.contains(other, root)) ||
+    [...deny, ...protectedWrites].some((entry) => FSUtil.contains(entry, root))
+    ? Effect.void
+    : Effect.asVoid(Effect.acquireRelease(Effect.sync(() => placeholder(root)), (created) => Effect.sync(() => created && release(root, created)))),
+  { discard: true })
   // srt re-mounts a landing's readable paths read-only after its write roots, so a readable path holding an existing
   // write root (a bound root inside the worktree) would cover it. Denying that root's reads too makes it a deeper landing
   // of its own, which srt processes later and restores writable.
@@ -319,13 +329,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
     ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
-  if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
   yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
   return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--",
     ...forwarder ? [process.execPath, ...RUNTIME_FLAGS, forwarder, endpoints.join(";")] : [], ...invocation], {
     ...command.options, cwd, shell: false, extendEnv: false,
-    env: { ...confined, ...sandbox.env, ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
+    // srt replaces the child's TMPDIR with CLAUDE_CODE_TMPDIR, by default a /tmp/claude that does not exist in the jail;
+    // pin it to the command's own (its scratch directory when it has one).
+    env: { ...confined, ...sandbox.env, CLAUDE_CODE_TMPDIR: confined.TMPDIR ?? os.tmpdir(),
+      ...endpoints.length ? { ORCHESTRA_TCP_PROXY_CONNECT: endpoints.join(";") } : {} },
   })
 })
 
@@ -513,10 +525,11 @@ const ETC = [
 
 /**
  * What a confined-read command may read besides its roots: the system's programs, libraries and essential /etc entries,
- * this process's runtime install, every PATH directory, and git's global config (git refuses to start when that file
- * exists but cannot be read). A PATH directory named `bin` also exposes its install prefix (node's lib beside its bin),
- * unless that prefix is the home directory or one of its direct children, such as ~/.local or ~/.cargo, which hold user
- * data and credentials. Nothing that contains the home directory is ever listed.
+ * this process's runtime install, every PATH directory, rustup toolchains and cargo crate sources, and git's global
+ * config (git refuses to start when that file exists but cannot be read). A PATH directory named `bin` also exposes its
+ * install prefix (node's lib beside its bin), unless that prefix is the home directory or one of its direct children,
+ * such as ~/.local or ~/.cargo, which hold user data and credentials. Nothing that contains the home directory is ever
+ * listed.
  */
 export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   // The account's home and the one Orchestra uses (a test home differs); neither is ever exposed.
@@ -530,8 +543,32 @@ export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   const prefixes = bins.filter((entry) => path.basename(entry) === "bin").map((entry) => path.dirname(entry))
     .filter((prefix) => !homes.includes(path.dirname(prefix)))
   const git = homes.flatMap((home) => [path.join(home, ".gitconfig"), path.join(home, ".config", "git")])
-  return [...system, ...bins, ...prefixes, ...git, ...(env.XDG_CONFIG_HOME ? [path.join(env.XDG_CONFIG_HOME, "git")] : [])]
+  // rustup's cargo and rustc proxies resolve their toolchain under RUSTUP_HOME, and cargo builds read crate sources
+  // from CARGO_HOME's registry and git checkouts. CARGO_HOME's credentials stay unreadable.
+  const rust = [
+    ...(env.RUSTUP_HOME ? [env.RUSTUP_HOME] : homes.map((home) => path.join(home, ".rustup"))),
+    ...(env.CARGO_HOME ? [env.CARGO_HOME] : homes.map((home) => path.join(home, ".cargo")))
+      .flatMap((cargo) => [path.join(cargo, "registry"), path.join(cargo, "git")]),
+  ]
+  return [...system, ...bins, ...prefixes, ...git, ...rust, ...(env.XDG_CONFIG_HOME ? [path.join(env.XDG_CONFIG_HOME, "git")] : [])]
     .filter((entry) => !homes.some((home) => FSUtil.contains(entry, home)))
+}
+
+/** An exclusively created empty file at a missing write root whose parent exists, with its identity; else undefined. */
+function placeholder(root: string) {
+  return Result.try(() => {
+    closeSync(openSync(root, "wx", 0o644))
+    return lstatSync(root, { bigint: true })
+  }).pipe(Result.getOrUndefined)
+}
+
+/** Removes the placeholder only while it is the same empty file nobody wrote (a write or truncation moves mtime). */
+function release(root: string, created: BigIntStats) {
+  Result.try(() => {
+    const info = lstatSync(root, { bigint: true })
+    if (info.isFile() && info.dev === created.dev && info.ino === created.ino && info.size === 0n &&
+      info.mtimeNs === created.mtimeNs && info.ctimeNs === created.ctimeNs) unlinkSync(root)
+  })
 }
 
 /**
@@ -578,8 +615,9 @@ const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: str
 
 const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, entry: string, seatbelt: boolean) {
   const target = path.resolve(directory, entry)
-  // Seatbelt supports literal subtrees, not arbitrary shell globs. A trailing /** names that subtree.
-  const literal = seatbelt && target.endsWith("/**") ? target.slice(0, -3) : target
+  // Seatbelt and srt on Linux enforce literal subtrees, not arbitrary shell globs. A trailing /** names that subtree.
+  // Windows' AppContainer ACLs take no globs at all.
+  const literal = (seatbelt || process.platform === "linux") && target.endsWith("/**") ? target.slice(0, -3) : target
   if (/[*?[]/.test(literal) && (seatbelt || process.platform !== "darwin")) return yield* new ToolSafety.Denied({
     reason: seatbelt ? "sandbox-seatbelt-glob-policy-unenforceable"
       : process.platform === "win32" ? "sandbox-appcontainer-glob-policy-unenforceable" : "sandbox-linux-glob-policy-unenforceable",

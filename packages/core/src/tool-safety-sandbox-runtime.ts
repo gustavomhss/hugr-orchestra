@@ -7,7 +7,7 @@ import { constants } from "fs"
 import { access, mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises"
 import { promisify } from "util"
 import which from "which"
-import { Context, Effect } from "effect"
+import { Context, Effect, Schedule } from "effect"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 
@@ -121,6 +121,16 @@ export const settled = Effect.fn("ToolSafetySandboxRuntime.settled")(function* (
   const source = yield* Source
   const done = source && attempts.get(source.directory)?.done
   if (done) yield* Effect.promise(() => done)
+})
+
+/** Like `resolve(true)`, but waits for an acquisition it starts or finds running: the installed directory, or why not. */
+export const ready = Effect.fn("ToolSafetySandboxRuntime.ready")(function* () {
+  yield* resolve(true)
+  return yield* resolve(false).pipe(Effect.repeat({
+    while: (runtime) => runtime.reason === "sandbox-runtime-acquiring",
+    schedule: Schedule.spaced("1 second"),
+    times: 300,
+  }))
 })
 
 /** Download, verify and extract every artifact into a staging dir, then move it into place in one rename. */
