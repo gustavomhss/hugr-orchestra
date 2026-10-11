@@ -9,9 +9,10 @@ export * as ClaudeHost from "./session"
 // - Claude Code's session id is derived 1:1 from the Orchestra session id, so resume and fork use the SDK's own
 //   `resume` / `forkSession` and need no transcript store;
 import { createHash } from "node:crypto"
-import { Context, Effect, Exit, Layer, Semaphore } from "effect"
+import { Context, Effect, Exit, FileSystem, Layer, Semaphore } from "effect"
 import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -433,9 +434,9 @@ const layer = Layer.effect(
         : yield* ClaudeHostMcp.prepare({ agent: input.agent, model: input.user.model, permission: session.permission }).pipe(
           Effect.provide(preparation))
       const release = yield* IdleRelease
-      // Layer dependencies are private to the service implementation; the turn caller only has exported services.
-      // Retain them for SDK callbacks while taking instance placement and request references from the caller.
-      const context = Context.merge(preparation, yield* Effect.context<never>())
+      // Retain private layer services and the real filesystem; HTTP callers can supply a noop filesystem.
+      // Instance placement and request references still come from the caller.
+      const context = Context.merge(preparation, Context.omit(FileSystem.FileSystem)(yield* Effect.context<never>()))
       const abort = new AbortController()
       const fork = ClaudeCodeTranscript.record(input.state.forkFrom) ? input.state.forkFrom : undefined
       const resume = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId,
@@ -745,5 +746,5 @@ export const node = LayerNode.make({
   layer,
   deps: [SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
-    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node],
+    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
 })

@@ -1,10 +1,12 @@
 import { expect } from "bun:test"
-import { Context, Effect } from "effect"
+import { Context, Effect, FileSystem } from "effect"
 import type { HookInput, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { AppProcess } from "@orchestra/core/process"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { ClaudeHost } from "@/claude-code/host/session"
+import { ClaudeHostMcp } from "@/claude-code/host/mcp"
+import { WriteRoots } from "@/maestro/write-roots"
 import { ClaudeEngineFixture } from "../engine-fixture"
 
 const pre = { hook_event_name: "PreToolUse", tool_name: "Read", tool_input: { file_path: "orchestra.json" },
@@ -43,6 +45,32 @@ ClaudeEngineFixture.it.instance("SDK callbacks retain host dependencies even whe
   yield* host.turn({ sessionID: setup.chat.id, user: admitted.info }).pipe(
     Effect.updateContext((context: Context.Context<never>) => Context.omit(AppProcess.Service)(context)))
   expect(decisions).toEqual([{ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow" } }])
+}), 30_000)
+
+ClaudeEngineFixture.it.instance("Agent grant binding retains the host filesystem when HTTP supplies a noop filesystem", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const host = yield* ClaudeHost.Service
+  const rules = yield* WriteRoots.bind("archie", ["proposal.md"], [])
+  const grantID = "grt_filesystem"
+  ClaudeHostMcp.grants(setup.chat.id).set(grantID, { grantID, sessionID: setup.chat.id, seat: "archie", writePaths: ["proposal.md"],
+    writeRoots: WriteRoots.read(rules) ?? [], purpose: "proposal", time: Date.now() })
+  const decisions: HookJSONOutput[] = []
+  ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
+    await input[Symbol.asyncIterator]().next()
+    const args = { subagent_type: "orchestra:archie", description: "bounded proposal", run_in_background: false, prompt: `grantID: ${grantID}\nWrite proposal.md.` }
+    yield { type: "assistant", ...ClaudeEngineFixture.frame, uuid: crypto.randomUUID(), message: { id: "dispatch", model: "claude-haiku-4-5-20251001",
+      content: [{ type: "tool_use", id: "toolu_agent", name: "Agent", input: args }], usage: {} } }
+    decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0]({ ...pre, tool_name: "Agent", tool_use_id: "toolu_agent", tool_input: args },
+      "toolu_agent", { signal: new AbortController().signal }))
+    yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...ClaudeEngineFixture.frame }
+    for await (const _ of input) {}
+  })
+  const admitted = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("write proposal"), noReply: true })
+  if (admitted.info.role !== "user") throw new Error("missing admitted user")
+  yield* host.turn({ sessionID: setup.chat.id, user: admitted.info }).pipe(
+    Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({})))
+  expect(decisions[0]).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
 }), 30_000)
 
 for (const event of ["PostToolUse", "PostToolUseFailure", "SubagentStop", "SessionStart", "PostCompact"] as const)
