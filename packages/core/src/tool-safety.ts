@@ -31,7 +31,7 @@ export type Profile = {
     readonly allowedDomains?: ReadonlyArray<string>
     /** Exact existing local sockets, granted only by the programmatic host and bound to native placement. */
     readonly allowedUnixSockets?: readonly { readonly directory: string; readonly path: string }[]
-    /** Host services for owned route-adapted clients: Darwin Unix broker, kernel TCP denied; Linux/Windows HOLD. */
+    /** Owned route-adapted clients only: Darwin Unix broker, Linux srt strict-allowlist CONNECT proxy; raw TCP denied; Windows HOLD. */
     readonly allowedLoopbackEndpoints?: readonly { readonly directory: string; readonly host: "127.0.0.1"; readonly port: number }[]
     readonly denyPaths?: ReadonlyArray<string>
     /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */
@@ -113,6 +113,8 @@ export type Approval = {
   readonly message?: string
   /** A Session event's hook asks with no tool call to bind: its event, such as `prompt.before`. */
   readonly trigger?: string
+  /** Final prompt identity captured by the Session host, never hook parameters. */
+  readonly messageID?: string
 }
 export const NativeHost = Context.Reference<
   | {
@@ -291,6 +293,8 @@ export type SessionEvent = {
   readonly projectDirectory?: string
   /** The prompt's text; hooks record only its sha256. */
   readonly text?: string
+  /** Final prompt identity supplied by the host, never hook or model data. */
+  readonly messageID?: string
 }
 
 /** Audit observations carry identities and outcomes only; they never grant execution authority. */
@@ -316,7 +320,7 @@ export interface Interface {
     outcome?: (value: A) => "success" | "failure" | "cancelled",
   ) => Effect.Effect<A, E | Denied, R>
   /** Installed hooks on a Session event, over the profile loaded for it; only a `prompt` denial has an effect to stop. */
-  readonly session: (input: SessionEvent) => Effect.Effect<void, Denied>
+  readonly session: (input: SessionEvent) => Effect.Effect<ReadonlyArray<string>, Denied>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ToolSafety") {}
@@ -552,9 +556,19 @@ export const make = Effect.gen(function* () {
   const session: Interface["session"] = (input) =>
     Effect.gen(function* () {
       const loader = yield* RuntimeProfileLoader
-      const loaded = loader ? yield* loader() : yield* RuntimeProfile
-      if (!loaded?.hooks) return
-      yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
+      // Profile loaders never read hooks from state inside the project, so that placement has no installs to fire:
+      // only the host profile applies. Every other acquisition failure still refuses the event, and tool calls keep
+      // refusing this placement.
+      const loaded = loader
+        ? yield* loader().pipe(
+            Effect.catchIf(
+              (error) => error.reason === "profile-state-inside-project",
+              () => RuntimeProfile,
+            ),
+          )
+        : yield* RuntimeProfile
+      if (!loaded?.hooks) return []
+      return yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
     })
 
   return Service.of({ before, inspect, run, session })

@@ -16,6 +16,7 @@ import eventSourcedSessionInputMigration from "@orchestra/core/database/migratio
 import contextEpochAgentMigration from "@orchestra/core/database/migration/20260605042240_add_context_epoch_agent"
 import simplifyIntegrationCredentialsMigration from "@orchestra/core/database/migration/20260611192811_lush_chimera"
 import simplifySessionInputMigration from "@orchestra/core/database/migration/20260622202450_simplify_session_input"
+import promptContextMigration from "@orchestra/core/database/migration/20261008025417_prompt_context"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
@@ -40,6 +41,38 @@ const run = <A, E>(effect: Effect.Effect<A, E, SqlClientService>) =>
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
 
 describe("DatabaseMigration", () => {
+  test("adds nullable prompt context while preserving historical inbox rows", async () => {
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* db.run(
+          sql`CREATE TABLE session_input (id text PRIMARY KEY, session_id text NOT NULL, prompt text NOT NULL, delivery text NOT NULL, admitted_seq integer NOT NULL, promoted_seq integer, time_created integer NOT NULL)`,
+        )
+        yield* db.run(
+          sql`INSERT INTO session_input VALUES ('msg_old', 'ses_old', '{"text":"old"}', 'queue', 1, NULL, 2)`,
+        )
+        yield* DatabaseMigration.applyOnly(db, [promptContextMigration])
+        expect(yield* db.get(sql`SELECT * FROM session_input`)).toEqual({
+          id: "msg_old",
+          session_id: "ses_old",
+          prompt: '{"text":"old"}',
+          delivery: "queue",
+          admitted_seq: 1,
+          promoted_seq: null,
+          time_created: 2,
+          prompt_context: null,
+        })
+        yield* db.run(
+          sql`UPDATE session_input SET prompt_context = '{"reminders":["first","second"]}' WHERE id = 'msg_old'`,
+        )
+        yield* DatabaseMigration.applyOnly(db, [promptContextMigration])
+        expect(yield* db.get(sql`SELECT prompt_context FROM session_input`)).toEqual({
+          prompt_context: '{"reminders":["first","second"]}',
+        })
+      }),
+    )
+  })
+
   test("defaults missing workspace names while preserving legacy workspace data", async () => {
     await run(
       Effect.gen(function* () {

@@ -24,6 +24,14 @@ const env = {
   ORCHESTRA_VERSION: process.env["ORCHESTRA_VERSION"],
   ORCHESTRA_RELEASE: process.env["ORCHESTRA_RELEASE"],
 }
+const BUMP = (() => {
+  const bump = env.ORCHESTRA_BUMP?.toLowerCase() || "patch"
+  if (bump === "major" || bump === "minor" || bump === "patch") return bump
+  throw new Error(`Invalid ORCHESTRA_BUMP: ${env.ORCHESTRA_BUMP}`)
+})()
+if (env.ORCHESTRA_VERSION && !semver.valid(env.ORCHESTRA_VERSION)) {
+  throw new Error(`Invalid ORCHESTRA_VERSION: ${env.ORCHESTRA_VERSION}`)
+}
 const CHANNEL = await (async () => {
   if (env.ORCHESTRA_CHANNEL) return env.ORCHESTRA_CHANNEL
   if (env.ORCHESTRA_BUMP) return "latest"
@@ -32,21 +40,14 @@ const CHANNEL = await (async () => {
 })()
 const IS_PREVIEW = CHANNEL !== "latest"
 
-const VERSION = await (async () => {
+const VERSION = (() => {
   if (env.ORCHESTRA_VERSION) return env.ORCHESTRA_VERSION
+  if (!semver.valid(pkg.version)) throw new Error(`Invalid source version: ${pkg.version}`)
   // Provider compatibility checks need the source version even for preview builds.
   if (IS_PREVIEW) return `${pkg.version}-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
-  const version = await fetch("https://registry.npmjs.org/orchestra-ai/latest")
-    .then((res) => {
-      if (!res.ok) throw new Error(res.statusText)
-      return res.json()
-    })
-    .then((data: any) => data.version)
-  const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
-  const t = env.ORCHESTRA_BUMP?.toLowerCase()
-  if (t === "major") return `${major + 1}.0.0`
-  if (t === "minor") return `${major}.${minor + 1}.0`
-  return `${major}.${minor}.${patch + 1}`
+  const version = semver.inc(pkg.version, BUMP)
+  if (!version) throw new Error(`Cannot ${BUMP} bump source version: ${pkg.version}`)
+  return version
 })()
 
 const bot = ["actions-user", "orchestra", "orchestra-agent[bot]"]

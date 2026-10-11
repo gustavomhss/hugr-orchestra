@@ -3,6 +3,8 @@ export * as LogicalTask from "./logical-task"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { fromRow } from "@orchestra/core/session/info"
+import { SessionTable } from "@orchestra/core/session/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Schema } from "effect"
@@ -10,8 +12,10 @@ import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Identifier } from "@/id/id"
+import { MessageV2 } from "@/session/message-v2"
 import { Session } from "@/session/session"
-import { SessionID } from "@/session/schema"
+import { MessageID, SessionID } from "@/session/schema"
+import { NotFoundError } from "@/storage/storage"
 import { canonicalMemberId } from "./roster"
 import { SessionAuthority } from "./session-authority"
 
@@ -130,6 +134,42 @@ export const resolveResume = Effect.fn("LogicalTask.resolveResume")(function* (i
   return session
 })
 
+// F2.11: each admitted logical resume has one `resumeRef`, the dispatching Session and Task call. The host writes it as
+// an ignored part of the resume prompt, which is durable and never reaches the model; the binding reads it back only
+// for calls answering that prompt, so a fresh dispatch or a later prompt carries none.
+const RESUME_KEY = "resumeRef"
+
+export function resumeRef(parentSessionID: string, callID: string) {
+  return `${parentSessionID}/${callID}`
+}
+
+export function resumeMarker(parentSessionID: string, callID: string) {
+  return {
+    type: "text" as const,
+    text: "",
+    ignored: true,
+    synthetic: true,
+    metadata: { [RESUME_KEY]: resumeRef(parentSessionID, callID) },
+  }
+}
+
+export const readResumeRef = Effect.fn("LogicalTask.readResumeRef")(function* (input: {
+  sessionID: SessionID
+  messageID: MessageID
+  parentSessionID: string | undefined
+}) {
+  const find = (messageID: MessageID) =>
+    MessageV2.get({ sessionID: input.sessionID, messageID }).pipe(
+      Effect.catchIf(NotFoundError.isInstance, () => Effect.succeed(undefined)),
+    )
+  const call = yield* find(input.messageID)
+  if (call?.info.role !== "assistant") return undefined
+  const prompt = yield* find(call.info.parentID)
+  const ref = prompt?.parts.flatMap((part) => (part.type === "text" ? [part.metadata?.[RESUME_KEY]] : [])).find(Boolean)
+  // The dispatching Session must be the execution Session's own parent.
+  return typeof ref === "string" && input.parentSessionID && ref.startsWith(`${input.parentSessionID}/`) ? ref : undefined
+})
+
 // Governed and authorized dispatch reserve a deterministic child Session per reservation; its logical task reuses the
 // reservation hash, so every replay of the reservation binds the same `taskId`. Other Task work gets a host id.
 export function origin(reservedChildID: string | undefined, governed: boolean): { source: Source; taskId?: string } {
@@ -177,11 +217,16 @@ const strictSession = Effect.fnUntraced(function* (input: { taskID: string; proj
 const reconcile = Effect.fn("LogicalTask.reconcile")(function* (
   stored: Binding,
   input?: Omit<Binding, "taskId"> & { taskId?: string },
-): Effect.fn.Return<Binding, Denied, Session.Service> {
+): Effect.fn.Return<Binding, Denied, Database.Service> {
   if (input && !sameTask(stored, input))
     return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
-  const sessions = yield* Session.Service
-  const authority = yield* SessionAuthority.make(sessions.get)(stored.executionSessionID, stored.projectID).pipe(
+  // Read consumers include the Session service itself; retained ancestry must not require that service recursively.
+  const database = yield* Database.Service
+  const authority = yield* SessionAuthority.make((id) =>
+    database.db.select().from(SessionTable).where(eq(SessionTable.id, id)).get().pipe(
+      Effect.map((row) => row ? fromRow(row) : undefined),
+    ),
+  )(stored.executionSessionID, stored.projectID).pipe(
     Effect.mapError((error) => new Denied({ stage: "binding", reason: error.reason })),
   )
   if (!validAuthority(stored.authoritySessionID, authority))

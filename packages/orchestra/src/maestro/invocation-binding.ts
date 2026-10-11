@@ -58,6 +58,14 @@ export const make = Effect.gen(function* () {
         task.authoritySessionID !== authority.rootID)
     )
       return yield* new Denied({ reason: "logical-task-mismatch" })
+    const resumeRef = yield* LogicalTask.readResumeRef({
+      sessionID: context.sessionID,
+      messageID: context.messageID,
+      parentSessionID: session.parentID,
+    }).pipe(
+      Effect.provideService(Database.Service, database),
+      Effect.catchCause(() => Effect.fail(new Denied({ reason: "resume-ref-unreadable" }))),
+    )
     return Object.freeze({
       projectId: instance.project.id,
       directory: session.location.directory,
@@ -69,6 +77,7 @@ export const make = Effect.gen(function* () {
       assistantMessageID: context.messageID,
       callID: context.callID,
       ...(task ? { taskId: task.taskId } : {}),
+      ...(resumeRef ? { resumeRef } : {}),
     } satisfies InvocationBinding)
   })
 })

@@ -19,6 +19,7 @@ import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Session } from "@/session/session"
+import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
@@ -141,11 +142,9 @@ const layer = Layer.effect(
         return [history.findIndex((user) => user.info.role === "user" && user.info.id === parent)]
       })) : -1
       const delivered = new Set(state.delivered ?? history.slice(0, answered + 1).flatMap((message) => message.info.role === "user" ? [message.info.id] : []))
-       const users = history.filter((message) => RequestSource.actual(message) && !delivered.has(message.info.id))
+      const users = history.filter((message) => RequestSource.actual(message) && !delivered.has(message.info.id))
       const userIDs = users.map((message) => message.info.id)
-      let prompt = users
-        .flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : []))
-        .join("\n\n").trim()
+      let prompt = ClaudeCodeTranscript.hostPrompt(users)
       const ruleset = Permission.merge(agent.permission, session.permission ?? [])
       const defs = (yield* registry.tools({ providerID: input.user.model.providerID, modelID: input.user.model.modelID,
         agent, permission: session.permission })).filter((def) => ["read", "edit", "write", "context_recall", "context_compact"].includes(def.id))
@@ -216,7 +215,7 @@ const layer = Layer.effect(
       stored.delivered.forEach((id) => delivered.add(MessageID.make(id)))
       const remaining = users.filter((message) => !delivered.has(message.info.id))
       userIDs.splice(0, userIDs.length, ...remaining.map((message) => message.info.id))
-      prompt = remaining.flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : [])).join("\n\n").trim()
+      prompt = ClaudeCodeTranscript.hostPrompt(remaining)
       if (!prompt) return yield* Effect.fail(new Error("Claude Code has no undelivered prompt to admit; previously handed inputs were not resent."))
       if (effective && state.sessionId) {
         const last = history.findLast((message) => message.info.role === "assistant")?.info
@@ -301,6 +300,8 @@ const layer = Layer.effect(
       }
 
       const outcome = yield* Effect.gen(function* () {
+           // Same seam as LLM.stream: the caller's pre-model guard runs once before any SDK process (compaction included).
+           yield* PromptGuard.check(sessionID)
            const materialized = yield* prepare
            // New SDK sessions must never fall into the legacy assistant-based delivery inference.
            if (!state.sessionId && state.delivered === undefined) yield* metadata({ delivered: [] })

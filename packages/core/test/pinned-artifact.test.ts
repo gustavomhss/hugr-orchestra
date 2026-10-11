@@ -23,7 +23,7 @@ const fixture = Effect.gen(function* () {
   if (tar.exitCode !== 0) throw new Error(`BLOCKED: tar unavailable: ${tar.stderr.toString()}`)
   const genuine = new Uint8Array(yield* Effect.promise(() => readFile(path.join(directory, "tool.tgz"))))
   const raw = new TextEncoder().encode("#!/bin/sh\necho raw\n")
-  const files: Record<string, Uint8Array> = {
+  const files: Record<string, Uint8Array<ArrayBuffer>> = {
     "/tool.tgz": genuine,
     "/tampered.tgz": new Uint8Array([...genuine.slice(0, -1), genuine[genuine.length - 1] ^ 1]),
     "/tool.zip": new Uint8Array(yield* Effect.promise(() => readFile(path.join(import.meta.dir, "fixture", "pinned-artifact", "tool.zip")))),
@@ -117,7 +117,6 @@ it.live("a raw download is the executable itself", () =>
   }), 30_000,
 )
 
-// PowerShell Expand-Archive alone can take most of half a minute on a loaded Windows runner.
 it.live("a zip extracts with the platform extractor, or names the one that is missing", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -128,7 +127,7 @@ it.live("a zip extracts with the platform extractor, or names the one that is mi
       format: "zip",
       entries: [{ from: "bin/tool", to: "tool", executable: true }],
     }
-    const extractor = process.platform === "win32" ? "powershell" : "unzip"
+    const extractor = process.platform === "win32" ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "unzip"
     if (!which.sync(extractor, { nothrow: true })) {
       expect(yield* refused(target, [artifact])).toBe(`extractor-missing:${extractor}`)
       expect(yield* f.leftovers()).toEqual([])

@@ -3,24 +3,15 @@
 import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
-import { Script } from "@orchestra/script"
-import { copyOmni, resolveOmni } from "@orchestra/script/omni"
-import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
-import pkg from "../package.json"
-import { modelsData } from "./generate"
 import { namedTargets } from "./targets"
 
 const dir = path.resolve(import.meta.dirname, "..")
 const binary = "orchestra"
-process.chdir(dir)
-
-await rm("dist", { recursive: true, force: true })
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
 const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
-const plugin = createSolidTransformPlugin()
 
 const targetArgs = process.argv.slice(2).flatMap((arg, index, args) =>
   arg === "--target" ? [args[index + 1] ?? ""] : arg.startsWith("--target=") ? [arg.slice(9)] : [],
@@ -40,16 +31,26 @@ const targets = targetArgs.length
       })
     : namedTargets
 
+// Validate before loading build-time snapshots/dependencies or replacing any artifact.
+process.chdir(dir)
+const { Script } = await import("@orchestra/script")
+const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
+const { modelsData } = await import("./generate")
+const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
+const plugin = createSolidTransformPlugin()
+if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
+
 // Resolved before anything is built, so a release build with a missing omni artifact fails at once.
 const builds = targets.map((item) => {
   const name = `cli-${item.target}`
   return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
 })
 
-if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
+if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
 for (const { item, name, omni, omniFiles } of builds) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
+  if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
   const result = await Bun.build({
     // The omni preflight runs first and imports ./src/index.ts.
     entrypoints: ["./src/omni-entry.ts"],
@@ -71,8 +72,8 @@ for (const { item, name, omni, omniFiles } of builds) {
       windows: {},
     },
     define: {
-      ORCHESTRA_VERSION: `'${Script.version}'`,
-      ORCHESTRA_CLI_NAME: `'${binary}'`,
+      ORCHESTRA_VERSION: JSON.stringify(Script.version),
+      ORCHESTRA_CLI_NAME: JSON.stringify(binary),
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
       OMNI_ENABLED: JSON.stringify(omni.enabled),
@@ -97,7 +98,7 @@ for (const { item, name, omni, omniFiles } of builds) {
         name: `@orchestra/${name}`,
         version: Script.version,
         license: "MIT",
-        repository: { type: "git", url: "git+https://github.com/anomalyco/opencode.git" },
+        repository: { type: "git", url: "git+https://github.com/gustavomhss/hugr-orchestra.git" },
         os: [item.os],
         cpu: [item.arch],
       },

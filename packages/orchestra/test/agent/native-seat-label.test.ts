@@ -171,3 +171,25 @@ describe("native seat label", () => {
     { config: { agent: { backend: { name: "x".repeat(40) }, rosie: { name: "ROSIE" } } } },
   )
 })
+
+// Native seats also accept an engine override; Maestro always stays on Orchestra's loop.
+it.instance(
+  "native subagent honors a configured engine while Maestro stays on Orchestra's loop",
+  () =>
+    Effect.gen(function* () {
+      const backend = yield* Agent.Service.use((svc) => svc.get("backend"))
+      expect(backend).toMatchObject({ id: "backend", native: true, mode: "subagent", engine: "claude-code" })
+      expect(String(backend?.model?.providerID)).toBe("anthropic")
+      const maestro = yield* Agent.Service.use((svc) => svc.get("maestro"))
+      expect(maestro).toMatchObject({ id: "maestro", mode: "primary" })
+      expect(maestro?.engine).toBeUndefined()
+    }),
+  {
+    config: {
+      agent: {
+        backend: { engine: "claude-code", model: "anthropic/claude-opus-5-5" },
+        maestro: { engine: "claude-code", mode: "subagent" },
+      },
+    },
+  },
+)

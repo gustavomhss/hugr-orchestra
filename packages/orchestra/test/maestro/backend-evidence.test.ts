@@ -11,6 +11,7 @@ import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { BackendEvidence } from "../../src/maestro/backend-evidence"
 import { BackendResult } from "../../src/maestro/backend-result"
+import { OUTCOME_KEY } from "../../src/plugin/hugr-composer/outcome"
 import { BackendWork } from "../../src/maestro/backend-work"
 import { Session } from "../../src/session/session"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
@@ -129,6 +130,28 @@ describe("BackendEvidence", () => {
       expect(JSON.stringify(result)).toBe(before)
       expect(result.workerEvidence).toBeUndefined()
     }
+  })
+
+  test("binds a claim to a generated owned-tool call through its observed inventory and nothing else", () => {
+    const file = path.join(directory, "written.txt")
+    const outcome = (tool: string, status: string, effects: string, observed_changes: { path: string; change: string }[]) => ({
+      [OUTCOME_KEY]: { schema: "hugr-owned-tool-v1", tool, status, effects, observed_changes },
+    })
+    const bindWith = (tool: string, metadata: Record<string, unknown>, input: Record<string, unknown> = {}) =>
+      BackendEvidence.bind(result, [call(tool, input, metadata)], placement)
+    const observed = [{ path: file, change: "created" }]
+    expect(bindWith("hugr-scaffold", outcome("hugr-scaffold", "generated", "observed", observed))).toEqual({ changes: bound, checks: unbound })
+    expect(bindWith("hugr-compose", outcome("hugr-compose", "generated", "observed", observed))).toEqual({ changes: bound, checks: unbound })
+    // A directory entry is not a file a claim can name, even when it spells the claimed path.
+    expect(bindWith("hugr-scaffold", outcome("hugr-scaffold", "generated", "observed", [...observed.map((c) => ({ ...c, path: c.path + "/" })), { path: path.join(directory, "other.py"), change: "created" }]))).toEqual({ changes: unbound, checks: unbound })
+    // Neither a preview, a block, nor a failure (partial writes are reconciled, not claimed), nor the producer's own lists, bind a claim.
+    expect(bindWith("hugr-compose", outcome("hugr-compose", "previewed", "none", []))).toEqual({ changes: unbound, checks: unbound })
+    expect(bindWith("hugr-scaffold", outcome("hugr-scaffold", "failed", "partial", observed))).toEqual({ changes: unbound, checks: unbound })
+    expect(bindWith("hugr-scaffold", { files_created: [file], planned_files: [file] }, { output_dir: directory })).toEqual({ changes: unbound, checks: unbound })
+    // A forged or illegal outcome, or one under another tool's name, binds nothing.
+    expect(bindWith("hugr-scaffold", outcome("hugr-scaffold", "generated", "none", observed))).toEqual({ changes: unbound, checks: unbound })
+    expect(bindWith("hugr-scaffold", outcome("hugr-compose", "generated", "observed", observed))).toEqual({ changes: unbound, checks: unbound })
+    expect(bindWith("bash", outcome("hugr-scaffold", "generated", "observed", observed))).toEqual({ changes: unbound, checks: unbound })
   })
 
   test("binds both host-observed move paths", () => {
