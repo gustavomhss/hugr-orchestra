@@ -11,6 +11,7 @@ import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetyAppContainer } from "./tool-safety-appcontainer"
+import { ToolSafetyGitHost } from "./tool-safety-git-host"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 import { SandboxParents } from "./sandbox-parents"
 import { SandboxProjectConfig } from "./sandbox-project-config"
@@ -228,6 +229,13 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-cache-acquisition" })),
     ), { discard: true })
   if (sandbox.kind === "appcontainer") {
+    // Git cannot start in the AppContainer: exactly one read-only git call runs on the host, any other one is held.
+    const git = ToolSafetyGitHost.words(command)
+    if (git) {
+      const host = yield* ToolSafetyGitHost.command({ words: git, command, cwd, directory, writes: roots, env: confined })
+      yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind, reason: "git-host-read-only" } })
+      return host
+    }
     const launched = yield* ToolSafetyAppContainer.command({
       command, supervisor: sandbox.supervisor, cwd, directory, roots: declared, scratch, deny, guards: guarded,
       // The guard journal must be the same location for every Orchestra instance on the machine, or one instance's

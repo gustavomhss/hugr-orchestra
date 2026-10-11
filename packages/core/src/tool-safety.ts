@@ -220,6 +220,10 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
     "The guard could not list what this command would stage (not a git repository, a path outside it, or too many files), so it did not run. Check the directory and stage fewer, explicit paths.",
   ],
   [
+    /^git-host-/,
+    "On Windows a confined command cannot start git, so only one plain read-only git call (status, diff, log, show, rev-parse, rev-list, ls-files, grep, blame, branch or tag listing, remote -v, describe, cat-file, merge-base) runs on the host, with Orchestra's own flags, from a worktree whose git directory the command cannot write; this one did not run. Run such calls alone, without pipes, redirects, `;`, `&&`, `$`, `-c` or `-C` (git inside a compound command fails with `could not open '/dev/null'`). Orchestra has no git tool for writing commands (add, commit, checkout, fetch, push, ...): leave the changes in the worktree and report them.",
+  ],
+  [
     /^recognized-secret-output$/,
     "The tool ran, but its output contained a credential-shaped value (a private key, or an AWS, GitHub, Stripe or OpenAI key), so the output was discarded. Do not print secrets or try to reveal them another way; to check that one is set, test it without printing its value.",
   ],
