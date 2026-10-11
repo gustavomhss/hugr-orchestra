@@ -1,11 +1,12 @@
 export * as CapabilityProcessRegistry from "./registry"
 
 import { Capability } from "@orchestra/schema/capability"
-import { Cause, Clock, Context, Deferred, Effect, Exit, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { Cause, Clock, Context, Deferred, Effect, Exit, Fiber, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import type { PlatformError } from "effect/PlatformError"
 import { ChildProcess } from "effect/unstable/process"
 import { makeGlobalNode } from "../../effect/app-node"
 import { AppProcess } from "../../process"
+import { ToolSafety } from "../../tool-safety"
 import type { CapabilityProcessContract } from "./contract"
 import { CapabilityProcessOutput } from "./output"
 
@@ -19,10 +20,12 @@ type Entry = { owner: Capability.Owner; exitedAt?: number; readonly live: Capabi
 
 export const make = (options: Options = {}) => Effect.gen(function* () {
   const appProcess = yield* AppProcess.Service
-  const registryScope = yield* Effect.scope
+  // Supervisors live in a parallel child of the layer Scope, so shutdown stops every tree concurrently.
+  const supervisors = yield* Scope.fork(yield* Effect.scope, "parallel")
   const retainMs = options.retainMs ?? 30 * 60_000
   const maxExited = options.maxExited ?? 32
   const entries = new Map<Capability.JobID, Entry>()
+  const reserved = new Set<Capability.JobID>()
   const startedAt = yield* Clock.currentTimeMillis
 
   // Exited entries stay readable for retainMs and at most maxExited of them are kept, oldest evicted first.
@@ -37,10 +40,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
 
   const start = (spec: CapabilityProcessContract.StartInput) => Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
     yield* prune
-    if (entries.has(spec.ref.id)) return yield* denied()
-    // The process Scope belongs to the registry, so the handle outlives the caller fiber.
-    const scope = yield* Scope.fork(registryScope)
-    const stdin = yield* Queue.unbounded<Uint8Array, Cause.Done>()
+    if (entries.has(spec.ref.id) || reserved.has(spec.ref.id)) return yield* denied()
+    // Reserved before prepare/spawn so a concurrent duplicate start cannot spawn a second process.
+    reserved.add(spec.ref.id)
+    // Detached from the caller fiber; its supervisor (below) owns and closes it.
+    const scope = yield* Scope.make()
+    const stdin = yield* Queue.bounded<Uint8Array, Cause.Done>(64)
     const handle = yield* restore(spec.prepare(spec.command).pipe(
       Effect.flatMap((command) => Effect.gen(function* () {
         if (command._tag !== "StandardCommand") return yield* unsupported("Piped commands are not supported")
@@ -51,10 +56,13 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       })),
       Scope.provide(scope),
       Effect.tapCause((cause) => Effect.logWarning("process start failed", cause)),
-      Effect.mapError((error) => error instanceof Capability.Failure
+      // A safety hold from prepare (sandbox wrap) propagates unchanged so settlement can escalate it.
+      Effect.mapError((error) => error instanceof Capability.Failure || error instanceof ToolSafety.Denied
         ? error
         : new Capability.Failure({ code: "acquisition_failed", message: "Process could not be started" })),
-    )).pipe(Effect.onExit((exit) => Exit.isSuccess(exit) ? Effect.void : Scope.close(scope, exit)))
+    )).pipe(Effect.onExit((exit) => Exit.isSuccess(exit)
+      ? Effect.void
+      : Effect.sync(() => reserved.delete(spec.ref.id)).pipe(Effect.andThen(closeBounded(scope)))))
 
     const lock = yield* Semaphore.make(1)
     const done = yield* Deferred.make<ExitInfo>()
@@ -71,7 +79,10 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         output,
         input: () => state.input,
         exit: () => state.exit,
-        write: (bytes) => lock.withPermits(1)(writable.pipe(Effect.andThen(Queue.offer(stdin, bytes)), Effect.asVoid)),
+        // Never suspends under the lock: a full stdin backlog fails instead of waiting for the child.
+        write: (bytes) => lock.withPermits(1)(writable.pipe(Effect.andThen(Effect.suspend(() => Queue.offerUnsafe(stdin, bytes)
+          ? Effect.void
+          : Effect.fail(new Capability.Failure({ code: "quota_exceeded", message: "Process input backlog is full" })))))),
         closeInput: () => lock.withPermits(1)(writable.pipe(
           Effect.andThen(Effect.sync(() => { state.input = "closed" })),
           Effect.andThen(Queue.end(stdin)),
@@ -88,14 +99,15 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         exited: Deferred.await(done),
         transfer: (from, to) => lock.withPermits(1)(Effect.suspend(() => {
           if (!sameOwner(entry.owner, from)) return Effect.fail(denied())
-          if (state.exit) return unsupported("Process is not running")
           entry.owner = to
           return Effect.void
         })),
       },
     }
     entries.set(spec.ref.id, entry)
+    reserved.delete(spec.ref.id)
 
+    // startImmediately installs the ensuring below before a racing shutdown can interrupt the supervisor.
     yield* Effect.gen(function* () {
       // handle.all merges stdout and stderr in arrival order.
       yield* Stream.runForEach(handle.all, (bytes) => Effect.sync(() => output.append(bytes))).pipe(
@@ -114,7 +126,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       // exited resolves only after settlement, so callers observe the durable job already settled.
       yield* Deferred.succeed(done, exit)
       yield* prune
-    }).pipe(Effect.ensuring(Scope.close(scope, Exit.void)), Effect.forkIn(registryScope))
+    }).pipe(Effect.ensuring(closeBounded(scope)), Effect.forkIn(supervisors, { startImmediately: true }))
     return entry.live
   }))
 
@@ -132,6 +144,16 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
 })
 
 export const layer = Layer.effect(Service, make())
+
+// The spawner release waits for pipe close without limit, and an escaped descendant (own session)
+// can hold the pipe forever. Bound the wait; the detached close finishes whenever the pipe closes.
+function closeBounded(scope: Scope.Closeable) {
+  return Effect.forkDetach(Scope.close(scope, Exit.void)).pipe(
+    Effect.flatMap((fiber) => Fiber.await(fiber).pipe(Effect.timeoutOption("5 seconds"))),
+    Effect.asVoid,
+  )
+}
+
 export const node = makeGlobalNode({ service: Service, layer, deps: [AppProcess.node] })
 
 // Unknown, foreign and evicted IDs must be indistinguishable.
@@ -148,7 +170,8 @@ function sameOwner(a: Capability.Owner, b: Capability.Owner) {
     a.location.directory === b.location.directory && a.location.workspaceID === b.location.workspaceID
 }
 
-// The spawner reports a signal exit only as this message (cross-spawn-spawner exitCode).
+// Depends on the spawner's exitCode failure text "Process interrupted due to receipt of signal: '<SIG>'"
+// (cross-spawn-spawner.ts); the handle exposes no structured signal.
 function signalOf(error: PlatformError) {
   return /signal: '([^']+)'/.exec(String(error.cause))?.[1] ?? "unknown"
 }
