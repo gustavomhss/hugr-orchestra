@@ -5,7 +5,7 @@ import os from "node:os"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import ts from "typescript"
-import { Effect } from "effect"
+import { Effect, Schedule } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import { leanPin } from "../script/lean-notices"
@@ -45,11 +45,13 @@ beforeAll(async () => {
   await mkdir(path.join(scratch, "archive"))
   const tar = process.platform === "win32" ? path.join(process.env.SystemRoot!, "System32/tar.exe") : "tar"
   await child([tar, "-xzf", `../core/vendor/${leanPin.artifact}`, "-C", path.join(scratch, "archive")], buildEnv).finish()
-  // The server finds rg on PATH before it downloads one; the product's own lookup resolves it once for every case.
+  // The server finds rg on PATH before it downloads one; the product's own lookup resolves it once for every case. That
+  // lookup downloads from GitHub, which answered 504 in 2 of 10 runs on 2026-10-12, so each attempt is bounded and a failed
+  // one is retried twice on a fresh layer (the service caches its first result).
   ripgrep = await Effect.runPromise(Effect.gen(function* () {
     const binary = yield* RipgrepBinary.Service
     return yield* binary.filepath
-  }).pipe(Effect.provide(LayerNode.compile(RipgrepBinary.node))))
+  }).pipe(Effect.timeout("60 seconds"), Effect.provide(LayerNode.compile(RipgrepBinary.node)), Effect.retry({ times: 2, schedule: Schedule.spaced("5 seconds") })))
   const warm = path.join(scratch, "go-warm")
   await mkdir(path.join(warm, "tmp"), { recursive: true })
   await Bun.write(path.join(warm, "go.mod"), "module example.test\n\ngo 1.20\n")
