@@ -24,7 +24,11 @@ import { DateTime, Effect, Stream } from "effect"
 import { eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 
-const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node, SessionSubagentModels.node])))
+const it = testEffect(
+  AppNodeBuilder.build(
+    LayerNode.group([Database.node, EventV2.node, SessionProjector.node, SessionSubagentModels.node]),
+  ),
+)
 const sessionID = SessionSchema.ID.make("ses_prompt_compaction")
 const model = Model.make({
   id: "summary-model",
