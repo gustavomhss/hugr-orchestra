@@ -109,17 +109,15 @@ export async function run(control?: "delete-blob") {
         const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
           existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
             : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
-            mkdirSync(path.dirname(destination), { recursive: true })
-            const logs = path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")
-            const output = [host.output(), ...(existsSync(logs) ? readdirSync(logs, { withFileTypes: true })
-              .filter((entry) => entry.isFile() && entry.name.endsWith(".log"))
-              .map((entry) => readFileSync(path.join(logs, entry.name), "utf8").slice(-100000)) : [])]
-              .join("\n").replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
-              .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
-              .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
-            writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
-              sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), output,
-            }))
+            try {
+              mkdirSync(path.dirname(destination), { recursive: true })
+              writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
+                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error),
+                output: startupDiagnostic(host.output(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")),
+              }))
+            } catch {
+              console.error("STARTUP_DIAGNOSTIC_UNAVAILABLE")
+            }
             throw error
           })
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
@@ -195,6 +193,17 @@ export async function run(control?: "delete-blob") {
   writeFileSync(`${destination}.tmp`, JSON.stringify(evidence, null, 2), { mode: 0o600 })
   renameSync(`${destination}.tmp`, destination)
   return evidence
+}
+
+function startupDiagnostic(captured: string, logs: string) {
+  const directories = existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory()).slice(0, 8).map((entry) => path.join(logs, entry.name))] : []
+  return [captured, ...directories.flatMap((directory) => readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".log")).slice(0, 8)
+    .map((entry) => readFileSync(path.join(directory, entry.name), "utf8").slice(-100000)))]
+    .join("\n").slice(-200000).replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
+    .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
+    .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
 }
 
 async function oracle(client: Debugger, expected: typeof documents) {

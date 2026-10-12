@@ -145,6 +145,7 @@ jobs:
       - name: Build actual unsigned app
         working-directory: packages/desktop
         env:
+          ORCHESTRA_VERSION: "1.18.27"
           TREE_SITTER_ARTIFACTS: ${{ github.workspace }}/packages/desktop/.desktop-guest-inputs/tree-sitter-layout
         run: |
           if [ "$RUNNER_OS" = Windows ]; then
