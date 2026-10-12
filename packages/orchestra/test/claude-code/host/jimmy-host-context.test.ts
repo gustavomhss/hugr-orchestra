@@ -135,6 +135,10 @@ ClaudeEngineFixture.it.instance("production host qualifies Jimmy's own retained 
     taskId: logical.taskId, memberId: "jimmy", executionSessionId: child.id, authoritySessionId: parent.id,
     qualifications: { records: [result.record], complete: true, omitted: 0, total: 1 } })
   expect(part.state.output).toStartWith("Retained finding qualifications")
+  const quotation = part.state.output.split("\n")[1]
+  expect(quotation).toStartWith("> ")
+  expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(quotation.slice(2)))
+    .toEqual({ records: [result.record], complete: true, omitted: 0, total: 1 })
   expect(part.state.output).toContain(JSON.stringify(result.record.conditions))
   expect(part.state.output).toEndWith(result.text)
   expect(result.handoff).toMatchObject({ hookSpecificOutput: { hookEventName: "PostToolUse",
