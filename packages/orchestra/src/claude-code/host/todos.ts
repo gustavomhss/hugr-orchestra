@@ -1,8 +1,9 @@
 export * as ClaudeHostTodos from "./todos"
 
 import { Effect, Schema } from "effect"
+import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Session } from "@/session/session"
-import type { SessionID } from "@/session/schema"
+import type { PartID, SessionID } from "@/session/schema"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeHostBoundary } from "./boundary"
 
@@ -14,6 +15,12 @@ const Snapshot = Schema.Struct({ schema: Schema.Literal("native-task-snapshot-v1
   name: Schema.Literals(["TaskCreate", "TaskUpdate", "TaskGet", "TaskList"]),
   args: Schema.Record(Schema.String, Schema.Unknown), result: Schema.Record(Schema.String, Schema.Unknown),
   tasks: Schema.Array(Task) })
+const Unavailable = Schema.Struct({ schema: Schema.Literal("native-task-unavailable-v1"), order: Schema.Number,
+  name: Schema.Literals(["TaskCreate", "TaskUpdate", "TaskGet", "TaskList"]),
+  reason: Schema.Literals(["NATIVE_TODO_STRUCTURED_RESULT_MISSING", "NATIVE_TODO_RESULT_UNCORRELATED",
+    "NATIVE_TODO_STRUCTURED_RESULT_INVALID", "NATIVE_TODO_PRIOR_RECEIPT_UNAVAILABLE"]),
+  locator: Schema.Struct({ sessionID: Schema.String, messageID: Schema.String, partID: Schema.String, callID: Schema.String }) })
+const Receipt = Schema.Union([Snapshot, Unavailable])
 
 export class InvalidNativeTodoReceipt extends Error {
   override readonly name = "InvalidNativeTodoReceipt"
@@ -23,30 +30,60 @@ export class InvalidNativeTodoReceipt extends Error {
 export function latest(view: ClaudeHostBoundary.Retained) {
   const receipts = view.history.flatMap((message) => message.parts).flatMap((part) => {
     if (part.type !== "tool" || part.state.status !== "completed" ||
-      part.tool !== "todowrite" && !TOOLS.includes(part.tool) || part.state.metadata.claudeCodeTodo === undefined) return []
-    const saved = Schema.decodeUnknownOption(Snapshot)(part.state.metadata.claudeCodeTodo)
+      part.tool !== "todowrite" && !TOOLS.includes(part.tool)) return []
+    if (part.state.metadata.claudeCodeTodo === undefined) {
+      if (typeof part.metadata?.claudeCodeTool === "string" && TOOLS.includes(part.metadata.claudeCodeTool) || TOOLS.includes(part.tool))
+        throw new InvalidNativeTodoReceipt(`NATIVE_TODO_RECEIPT_UNAVAILABLE ${JSON.stringify(locator(part))}`)
+      return []
+    }
+    const saved = Schema.decodeUnknownOption(Receipt)(part.state.metadata.claudeCodeTodo)
     if (saved._tag === "None") throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_INVALID")
     if (part.metadata?.providerExecuted !== true || part.metadata?.claudeCodeTool !== saved.value.name)
       throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_OWNER_MISMATCH")
     if (!Number.isSafeInteger(saved.value.order) || saved.value.order <= 0)
       throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_UNPROVABLE")
+    const snapshot = saved.value
+    if (snapshot.schema === "native-task-unavailable-v1" && (snapshot.locator.callID !== part.callID ||
+      snapshot.locator.sessionID === part.sessionID && (snapshot.locator.messageID !== part.messageID || snapshot.locator.partID !== part.id) ||
+      snapshot.locator.sessionID !== part.sessionID && !ClaudeHostBoundary.origins(view, part.messageID).some((origin) =>
+        origin.sessionID === snapshot.locator.sessionID && origin.messageID === snapshot.locator.messageID)))
+      throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_OWNER_MISMATCH")
     return [{ part, snapshot: saved.value }]
   }).sort((a, b) => a.snapshot.order - b.snapshot.order)
   const orders = new Set<number>()
   const tasks = new Map<string, typeof Task.Type>()
+  const state: { available: boolean; coverage: "retained-receipts" | "observed-tasks" | "task-list";
+    historical?: { status: "historical"; locator: ReturnType<typeof locator>; snapshot: typeof Snapshot.Type } } = {
+    available: true, coverage: "retained-receipts",
+  }
   receipts.forEach((receipt) => {
-    if (orders.has(receipt.snapshot.order)) throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_CONFLICT")
-    orders.add(receipt.snapshot.order)
-    if (!apply(tasks, receipt.snapshot.name, receipt.snapshot.args, receipt.snapshot.result))
+    const snapshot = receipt.snapshot
+    if (orders.has(snapshot.order)) throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_CONFLICT")
+    orders.add(snapshot.order)
+    if (snapshot.schema === "native-task-unavailable-v1") {
+      state.available = false
+      tasks.clear()
+      return
+    }
+    if (!state.available && snapshot.name !== "TaskList" && snapshot.name !== "TaskGet")
+      throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECOVERY_UNPROVABLE")
+    if (!apply(tasks, snapshot.name, snapshot.args, snapshot.result))
       throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_FAILED")
     const expected = [...tasks.values()]
-    if (expected.length !== receipt.snapshot.tasks.length || expected.some((task, index) => {
-      const saved = receipt.snapshot.tasks[index]
+    if (expected.length !== snapshot.tasks.length || expected.some((task, index) => {
+      const saved = snapshot.tasks[index]
       return task.id !== saved.id || task.subject !== saved.subject || task.status !== saved.status || task.activeForm !== saved.activeForm
     })) throw new InvalidNativeTodoReceipt("NATIVE_TODO_SNAPSHOT_CONFLICT")
+    state.coverage = snapshot.name === "TaskList" ? "task-list" : !state.available ? "observed-tasks" : state.coverage
+    state.available = true
+    state.historical = { status: "historical", locator: locator(receipt.part), snapshot }
   })
   const receipt = receipts.at(-1)
-  return receipt ? { ...receipt, todos: project(receipt.snapshot.tasks) } : undefined
+  if (!receipt) return
+  if (receipt.snapshot.schema === "native-task-unavailable-v1") return { status: "unavailable" as const,
+    order: receipt.snapshot.order, part: receipt.part, locator: locator(receipt.part), unavailable: receipt.snapshot, historical: state.historical }
+  return { status: "known" as const, order: receipt.snapshot.order, part: receipt.part, snapshot: receipt.snapshot,
+    locator: locator(receipt.part), coverage: state.coverage, todos: project(receipt.snapshot.tasks) }
 }
 
 /** Rebuild from retained native receipts, never from the uncut session aggregate or ID-less UI todos. */
@@ -56,18 +93,36 @@ export const update = Effect.fn("ClaudeHostTodos.update")(function* (input: {
   name: string
   args: Record<string, unknown>
   result: unknown
+  part: SessionV1.ToolPart
+  /** Completed native parts in this same SDK result frame, awaiting their own receipt writes. */
+  pending?: readonly PartID[]
+  reason?: typeof Unavailable.Type["reason"]
   /** Main-session writes use the host's serialized metadata merge, shared with prompt admission and SDK receipts. */
   state?: (patch: Record<string, unknown>) => Effect.Effect<void>
 }) {
-  if (!TOOLS.includes(input.name) || !ClaudeCodeTranscript.record(input.result)) return
-  if (input.result.success === false || input.result.error) return
+  if (!TOOLS.includes(input.name)) return
+  if (input.part.sessionID !== input.sessionID || input.part.state.status !== "completed" ||
+    input.part.metadata?.providerExecuted !== true || input.part.metadata?.claudeCodeTool !== input.name)
+    throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_OWNER_MISMATCH")
+  if (!input.reason && input.name === "TaskUpdate" && ClaudeCodeTranscript.record(input.result) &&
+    typeof input.args.taskId === "string" && input.result.taskId === input.args.taskId && (input.result.success === false || input.result.error)) return
   const session = yield* input.sessions.get(input.sessionID).pipe(Effect.orDie)
   const history = yield* input.sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie)
-  const previous = latest(ClaudeHostBoundary.retained(session, history))
-  const tasks = new Map((previous?.snapshot.tasks ?? []).map((task) => [task.id, task] as const))
-  if (!apply(tasks, input.name, input.args, input.result)) return
-  const order = (previous?.snapshot.order ?? 0) + 1
+  const view = ClaudeHostBoundary.retained(session, history)
+  // The mirror has already persisted these completions, but has not written their individual receipts yet.
+  const previous = latest({ ...view, history: view.history.map((message) => ({ ...message, parts: message.parts.filter((part) =>
+    !(part.type === "tool" && part.state.status === "completed" && part.state.metadata.claudeCodeTodo === undefined &&
+      (input.pending ?? [input.part.id]).includes(part.id))) })) })
+  const tasks = new Map((previous?.status === "known" ? previous.snapshot.tasks : []).map((task) => [task.id, task] as const))
+  const order = (previous?.order ?? 0) + 1
   if (!Number.isSafeInteger(order)) throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_UNPROVABLE")
+  const reason = input.reason ?? (input.result === undefined || input.result === null
+    ? "NATIVE_TODO_STRUCTURED_RESULT_MISSING" : !ClaudeCodeTranscript.record(input.result) || !apply(tasks, input.name, input.args, input.result)
+      ? "NATIVE_TODO_STRUCTURED_RESULT_INVALID" : previous?.status === "unavailable" && input.name !== "TaskList" && input.name !== "TaskGet"
+        ? "NATIVE_TODO_PRIOR_RECEIPT_UNAVAILABLE" : undefined)
+  if (reason) return { status: "unavailable" as const, todos: [], receipt: {
+    schema: "native-task-unavailable-v1", order, name: input.name, reason, locator: locator(input.part),
+  } }
   const snapshot = { schema: "native-task-snapshot-v1", order,
     name: input.name, args: input.args, result: input.result, tasks: [...tasks.values()] }
   const todos = project(snapshot.tasks)
@@ -79,8 +134,12 @@ export const update = Effect.fn("ClaudeHostTodos.update")(function* (input: {
     yield* input.sessions.setMetadata({ sessionID: input.sessionID, metadata: { ...latest.metadata,
       claudeCode: { ...latest.metadata?.claudeCode, todoTasks: saved } } })
   }
-  return { todos, snapshot }
+  return { status: "known" as const, todos, receipt: snapshot }
 })
+
+function locator(part: SessionV1.ToolPart) {
+  return { sessionID: part.sessionID, messageID: part.messageID, partID: part.id, callID: part.callID }
+}
 
 function project(tasks: readonly (typeof Task.Type)[]) {
   return tasks.map((task) => ({ content: task.subject, status: task.status, priority: "medium",
@@ -112,13 +171,13 @@ function apply(tasks: Map<string, typeof Task.Type>, name: string, args: Record<
   }
   if (name === "TaskCreate" || name === "TaskGet") {
     const task = read(result.task)
-    if (!task) return false
+    if (!task || name === "TaskCreate" && task.subject !== args.subject || name === "TaskGet" && task.id !== args.taskId) return false
     tasks.set(task.id, { ...task,
       ...(name === "TaskCreate" && typeof args.activeForm === "string" ? { activeForm: args.activeForm } : {}) })
     return true
   }
   if (name !== "TaskUpdate" || result.success !== true || typeof result.taskId !== "string" ||
-    !result.taskId || !Array.isArray(result.updatedFields)) return false
+    !result.taskId || result.taskId !== args.taskId || !Array.isArray(result.updatedFields)) return false
   const previous = tasks.get(result.taskId)
   const change = ClaudeCodeTranscript.record(result.statusChange) ? result.statusChange.to : undefined
   const status = typeof change === "string" ? change : result.updatedFields.includes("status") ? args.status : undefined

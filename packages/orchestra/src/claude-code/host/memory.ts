@@ -63,7 +63,7 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     (["todowrite", "TodoWrite"].includes(part.tool) || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
   // Cuts and legacy native calls without ordered receipts cannot safely use the latest aggregate todo table.
   const cut = view.cut
-  const todo = native ? native.todos : snapshot?.state.status === "completed"
+  const todo = native ? native.status === "known" ? native.todos : [] : snapshot?.state.status === "completed"
     ? Schema.decodeUnknownSync(TodoSnapshot, { onExcessProperty: "preserve" })(snapshot.state.metadata?.todos ?? snapshot.state.input.todos)
     : cut || calls.some((part) => ClaudeHostTodos.TOOLS.includes(part.tool) ||
       typeof part.metadata?.claudeCodeTool === "string" && ClaudeHostTodos.TOOLS.includes(part.metadata.claudeCodeTool))
@@ -91,7 +91,11 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
       sessionID: input.sessionID, history: view.history, live: input.grants,
     })],
     ["Plan revision (retained producing tool and admission)", plan],
-    ["Todos", todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))],
+    ["Todos", native?.status === "unavailable" ? [JSON.stringify({ status: "unavailable", reason: native.unavailable.reason,
+      order: native.order, locator: native.locator, recallExtent: "Owning tool input/output and unavailable marker only; current native task state is withheld." })]
+      : [...(native?.status === "known" && native.coverage === "observed-tasks"
+        ? ["Known native state covers observed task IDs only; remaining task inventory is unproven."] : []),
+        ...todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))]],
     ["Applicable owned continuity memory (historical)", memory],
     ["Atlas resume Admission (historical evidence; not new permission)", admission ? [admission.text, JSON.stringify({
       key: admission.key, residency: admission.residency, verdict: admission.verdict,
