@@ -9,8 +9,90 @@ import type {
 import { confirmedTodos } from "@orchestra/session-ui/confirmed-todos"
 import { createV2SessionReducer } from "../context/server-session-v2-reducer"
 import { normalizeSessionMessages } from "./session-message"
+import { adaptServerEvent } from "../context/server-sdk"
+import { SessionEvent } from "@orchestra/schema/session-event"
+import { Schema } from "effect"
 
 describe("normalizeSessionMessages", () => {
+  test("preserves native Task structured results through REST, running state and live success", () => {
+    const previous = {
+      sessionId: "ses_old",
+      workResult: { schema: "discovery-work-result-v1", answer: "Earlier result" },
+    }
+    const retained = {
+      sessionId: "ses_child",
+      workResult: { schema: "discovery-work-result-v1", answer: "Only version 1", referencesChecked: true },
+    }
+    const source: SessionMessageInfo[] = [
+      { id: "msg_user", type: "user", text: "inspect", time: { created: 1 } },
+      {
+        id: "msg_assistant",
+        type: "assistant",
+        agent: "maestro",
+        model: { id: "model", providerID: "provider" },
+        time: { created: 2 },
+        content: [
+          {
+            id: "call_previous",
+            type: "tool",
+            name: "task",
+            time: { created: 2, ran: 3, completed: 4 },
+            state: {
+              status: "completed",
+              input: {},
+              metadata: {},
+              content: [{ type: "text", text: "Earlier output" }],
+              ...{ structured: previous },
+            },
+          },
+          {
+            id: "call_live",
+            type: "tool",
+            name: "task",
+            time: { created: 5, ran: 6 },
+            state: { status: "running", input: { subagent_type: "jimmy" }, metadata: {}, ...{ structured: retained } },
+          },
+        ],
+      },
+    ]
+    const before = normalizeSessionMessages("ses_1", source).parts.get("msg_assistant")
+    expect(before).toEqual([
+      expect.objectContaining({ state: expect.objectContaining({ status: "completed", metadata: previous }) }),
+      expect.objectContaining({ state: expect.objectContaining({ status: "running", metadata: retained }) }),
+    ])
+    const native = Schema.encodeSync(SessionEvent.Tool.Success)(
+      Schema.decodeUnknownSync(SessionEvent.Tool.Success)({
+        id: "evt_native_success",
+        type: SessionEvent.Tool.Success.type,
+        location: { directory: "/repo" },
+        data: {
+          timestamp: 7,
+          sessionID: "ses_1",
+          assistantMessageID: "msg_assistant",
+          callID: "call_live",
+          structured: retained,
+          content: [{ type: "text", text: "...output truncated..." }],
+          provider: { executed: false },
+        },
+      }),
+    )
+    const adapted = adaptServerEvent(native)
+    if (adapted.current?.type !== "session.tool.success") throw new Error("Expected native Task success adaptation")
+    expect(adapted.current.durable).toBeUndefined()
+    expect(adapted.current).toMatchObject({
+      type: "session.tool.success",
+      created: 7,
+      data: { metadata: retained, structured: retained },
+    })
+    const live = createV2SessionReducer().reduce(source, adapted.current)
+    if (!live) throw new Error("Expected native Task success reduction")
+    expect(normalizeSessionMessages("ses_1", live.messages).parts.get("msg_assistant")).toEqual([
+      expect.objectContaining({ state: expect.objectContaining({ status: "completed", metadata: previous }) }),
+      expect.objectContaining({ state: expect.objectContaining({ status: "completed", metadata: retained }) }),
+    ])
+    expect(normalizeSessionMessages("ses_1", source).parts.get("msg_assistant")).toEqual(before)
+  })
+
   test("preserves live V2 structured confirmation like REST without replacing historical snapshots", () => {
     const previous = [{ content: "Earlier snapshot", status: "pending" }]
     const todos = [{ content: "Confirmed task", status: "completed" }]
