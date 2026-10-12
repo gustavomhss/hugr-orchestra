@@ -220,6 +220,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -230,6 +231,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -240,6 +242,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -250,16 +253,29 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
     readonly cursor?: string | undefined
   }["search"]
+  readonly includeArchived?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["includeArchived"]
   readonly directory?: {
     readonly workspace?: string | undefined
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -270,6 +286,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -280,6 +297,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -290,6 +308,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -304,6 +323,16 @@ export type SessionsListOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -366,6 +395,16 @@ export type SessionsCreateOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -404,6 +443,16 @@ export type SessionsGetOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -429,6 +478,49 @@ export type SessionsGetOutput = {
       }>
     }
   }
+}["data"]
+
+export type SessionsArchiveInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly archived: { readonly archived: boolean }["archived"]
+}
+
+export type SessionsArchiveOutput = void
+
+export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsGetSubagentModelsOutput = {
+  readonly data:
+    | { readonly mode: "inherit" }
+    | {
+        readonly mode: "allowlist"
+        readonly models: ReadonlyArray<{ readonly id: string; readonly providerID: string; readonly variant?: string }>
+      }
+}["data"]
+
+export type SessionsSetSubagentModelsInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly policy: {
+    readonly policy:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
+  }["policy"]
+}
+
+export type SessionsSetSubagentModelsOutput = {
+  readonly data:
+    | { readonly mode: "inherit" }
+    | {
+        readonly mode: "allowlist"
+        readonly models: ReadonlyArray<{ readonly id: string; readonly providerID: string; readonly variant?: string }>
+      }
 }["data"]
 
 export type SessionsSwitchAgentInput = {
@@ -777,6 +869,35 @@ export type SessionsHistoryOutput = {
           readonly messageID: string
           readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string }
         }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.subagent.models.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: {
+          readonly timestamp: number
+          readonly sessionID: string
+          readonly policy:
+            | { readonly mode: "inherit" }
+            | {
+                readonly mode: "allowlist"
+                readonly models: ReadonlyArray<{
+                  readonly id: string
+                  readonly providerID: string
+                  readonly variant?: string
+                }>
+              }
+        }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.archive.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: { readonly timestamp: number; readonly sessionID: string; readonly archived: number | null }
       }
     | {
         readonly id: string

@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { AppProcess } from "@orchestra/core/process"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { makeSessionGroup, SessionsCursor } from "../../protocol/src/groups/session"
 import { SchemaErrorMiddleware } from "../../protocol/src/middleware/schema-error"
@@ -24,7 +25,7 @@ import { SessionLocationMiddleware, sessionLocationLayer } from "../../server/sr
 import { schemaErrorLayer } from "../../server/src/middleware/schema-error"
 
 const services = AppNodeBuilder.build(
-  LayerNode.group([Database.node, LocationServiceMap.node, AppProcess.node, SessionV2.node]),
+  LayerNode.group([Database.node, LocationServiceMap.node, AppProcess.node, SessionV2.node, SessionExecution.node, SessionSubagentModels.node]),
   [[SessionExecution.node, SessionExecution.noopLayer]],
 )
 // Serve the actual Session group, handler and middleware over TCP; other API groups are outside this fixture.
