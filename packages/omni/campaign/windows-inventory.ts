@@ -1,5 +1,8 @@
 // Windows OS instrument only. A PowerShell 7 watchdog owns query handles and OS waits, including
 // executable startup. The caller's monotonic deadline independently rejects late observations.
+// Queries and the identity recorder run on that same pwsh runtime: watchdog readiness has already
+// started it and loaded CimCmdlets. Windows PowerShell 5.1 is not used: its first launches on a fresh
+// hosted runner spent over 9.5 s before running the first statement, inside a 10 s query budget.
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
@@ -174,7 +177,7 @@ export function publishRequest(file: string, text: string, written?: () => void)
 }
 
 export function query(command: string, timeoutMs = TIMEOUT_MS) {
-  return run("powershell", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(`[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${command}`, "utf16le").toString("base64")], timeoutMs)
+  return run("pwsh", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(`[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${command}`, "utf16le").toString("base64")], timeoutMs)
 }
 
 export function decode(input: unknown, queryPID: number): Row[] {
@@ -200,7 +203,7 @@ export function kill(pinned: Identity) {
 }
 
 /** Each recorder owns its exact child/close promise. Fault controls use real child executables through this boundary. */
-export function makeRecorder(input = { command: "powershell", args: ["-NoProfile", "-NonInteractive", "-Command", `
+export function makeRecorder(input = { command: "pwsh", args: ["-NoProfile", "-NonInteractive", "-Command", `
 $ErrorActionPreference='Stop'; Get-CimInstance Win32_Process -Filter 'ProcessId=${process.pid}' | Out-Null;
 Write-Output '{"ready":true}';
 while ($line=[Console]::ReadLine()) {
