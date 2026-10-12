@@ -93,11 +93,13 @@ export async function run(control?: "delete-blob") {
         assert.ok(mutation.seeded && placement.draftDB, "CONTROL_SEED_INCOMPLETE")
         assertOwned(placement.draftDB, root)
         const db = new Database(placement.draftDB, { create: false })
+        const remove = db.prepare("DELETE FROM blob WHERE id = ?")
+        const find = db.prepare("SELECT id FROM blob WHERE id = ?")
         try {
-          assert.equal(db.query("DELETE FROM blob WHERE id = ?").run(documents[0].id).changes, 1, "CONTROL_MUTATION_NOT_APPLIED")
-          assert.equal(db.query("SELECT id FROM blob WHERE id = ?").get(documents[0].id), null, "CONTROL_BLOB_STILL_PRESENT")
+          assert.equal(remove.run(documents[0].id).changes, 1, "CONTROL_MUTATION_NOT_APPLIED")
+          assert.equal(find.get(documents[0].id), null, "CONTROL_BLOB_STILL_PRESENT")
           mutation.deleted = true
-        } finally { db.close(true) }
+        } finally { remove.finalize(); find.finalize(); db.close(true) }
       }
       const reportFile = env.ORCHESTRA_DESKTOP_OMNI_SMOKE
       ;[reportFile, `${reportFile}.events`, `${reportFile}.quit`].forEach((file) => rmSync(file, { force: true }))
@@ -225,15 +227,17 @@ async function oracle(client: Debugger, expected: typeof documents) {
 
 function inspect(filename: string, expected: typeof documents) {
   const db = new Database(filename, { readonly: true, create: false })
+  const document = db.prepare<{ value: string }, [string]>("SELECT value FROM document WHERE key = ?")
+  const blob = db.prepare<{ data: Uint8Array }, [string]>("SELECT data FROM blob WHERE id = ?")
   try {
     expected.forEach((item) => {
-      assert.equal(db.query<{ value: string }, [string]>("SELECT value FROM document WHERE key = ?").get(item.key)?.value,
+      assert.equal(document.get(item.key)?.value,
         item.value, "DISK_DOCUMENT_NOT_COMMITTED")
-      const row = db.query<{ data: Uint8Array }, [string]>("SELECT data FROM blob WHERE id = ?").get(item.id)
+      const row = blob.get(item.id)
       assert.ok(row, "DISK_BLOB_NOT_COMMITTED")
       assert.deepEqual(Array.from(row.data), item.bytes, "DISK_BLOB_CHANGED")
     })
-  } finally { db.close(true) }
+  } finally { document.finalize(); blob.finalize(); db.close(true) }
 }
 
 function assertOwned(filename: string, root: string) {
@@ -280,7 +284,7 @@ if (import.meta.main) {
   const args = parseArgs({ options: { control: { type: "string" } }, allowPositionals: false }).values
   assert.ok(args.control === undefined || args.control === "delete-blob", "UNKNOWN_CONTROL")
   await run(args.control).catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : "DESKTOP_PERSISTENCE_FAILED")
+    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error.stack) : "DESKTOP_PERSISTENCE_FAILED")
     process.exitCode = 1
   })
 }
