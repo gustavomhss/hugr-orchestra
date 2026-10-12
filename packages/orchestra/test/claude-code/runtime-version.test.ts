@@ -10,6 +10,7 @@ import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { resolveClaudeCodeResource, stageClaudeCodeResource } from "../../script/claude-code-resources"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 
 const it = testEffect(AppNodeBuilder.build(CrossSpawnSpawner.node))
 
@@ -37,6 +38,7 @@ it.instance(
       }).options.pathToClaudeCodeExecutable
       if (!executable) throw new Error("No deployed Claude Code executable")
       yield* Effect.promise(() => fs.mkdir(path.join(instance.directory, "home")))
+      expectSpawn(import.meta.path)
       const child = yield* spawner.spawn(
         ChildProcess.make(executable, ["--version"], {
           cwd: path.dirname(resources),
