@@ -133,6 +133,15 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         }),
       )
       .handle(
+        "session.archive",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .archive({ sessionID: ctx.params.sessionID, archived: ctx.payload.archived })
+            .pipe(typedNotFound)
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
         "session.switchAgent",
         Effect.fn(function* (ctx) {
           yield* session.switchAgent({ sessionID: ctx.params.sessionID, agent: ctx.payload.agent }).pipe(

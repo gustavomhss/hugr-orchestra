@@ -16,6 +16,8 @@ import type {
   SessionsActiveOutput,
   SessionsGetInput,
   SessionsGetOutput,
+  SessionsArchiveInput,
+  SessionsArchiveOutput,
   SessionsGetSubagentModelsInput,
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
@@ -406,6 +408,7 @@ export function make(options: ClientOptions) {
               limit: input?.["limit"],
               order: input?.["order"],
               search: input?.["search"],
+              includeArchived: input?.["includeArchived"],
               directory: input?.["directory"],
               project: input?.["project"],
               subpath: input?.["subpath"],
@@ -456,6 +459,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ).then((value) => value.data),
+      archive: (input: SessionsArchiveInput, requestOptions?: RequestOptions) =>
+        request<SessionsArchiveOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/archive`,
+            body: { archived: input["archived"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
       getSubagentModels: (input: SessionsGetSubagentModelsInput, requestOptions?: RequestOptions) =>
         request<{ readonly data: SessionsGetSubagentModelsOutput }>(
           {
