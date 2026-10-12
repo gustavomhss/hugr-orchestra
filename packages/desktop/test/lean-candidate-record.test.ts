@@ -87,17 +87,28 @@ test("recorder redacts split-stream passwords discovered after capture and omits
   expect(chunks.join("")).toBe(password)
 })
 
-test("actual native proof entry fails by name on unsupported CI hosts before registering native tests", async () => {
+test("actual native proof entry fails by name on unsupported hosts under the candidate workflow; portable suites skip it", async () => {
   if (process.env.CI !== "true" || !process.env.GITHUB_RUN_ID) throw new Error("LEAN_CANDIDATE_NEGATIVE_PROBE_CI_REQUIRED")
   if (process.platform === "darwin" && process.arch === "x64") throw new Error("LEAN_CANDIDATE_NEGATIVE_PROBE_REQUIRES_UNSUPPORTED_HOST")
   const { desktop } = await import("./lean-candidate-archive.fixture")
-  const child = Bun.spawn([process.execPath, "test", "test/lean-candidate-package.test.ts"], { cwd: desktop,
-    env: { PATH: process.env.PATH!, CI: "true", GITHUB_ACTIONS: "false" }, stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
-  const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-  expect(code).toBe(1)
-  expect(child.signalCode).not.toBe("SIGKILL")
-  expect(out + error).toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM: proof requires native macOS x64")
-}, 15000)
+  const run = async (env: Record<string, string>) => {
+    const child = Bun.spawn([process.execPath, "test", "test/lean-candidate-package.test.ts"], { cwd: desktop,
+      env: { PATH: process.env.PATH!, CI: "true", GITHUB_ACTIONS: "false", ...env }, stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
+    const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+    expect(child.signalCode).not.toBe("SIGKILL")
+    return { code, output: out + error }
+  }
+  // Under the candidate workflow's name the proof fails closed, by name, before registering any native test.
+  const candidate = await run({ GITHUB_WORKFLOW: "lean-candidate" })
+  expect(candidate.code).toBe(1)
+  expect(candidate.output).toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM: proof requires native macOS x64")
+  // A portable suite skips every native test: none passes off-host.
+  const portable = await run({ ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" })
+  expect(portable.code).toBe(0)
+  expect(portable.output).toMatch(/\b0 pass\b/)
+  expect(portable.output).toMatch(/\b3 skip\b/)
+  expect(portable.output).not.toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM")
+}, 30000)
 
 test("recorder bounds deep cause chains, wide objects and whole projections with named overflow markers", () => {
   const recorder = new CandidateRecorder()
