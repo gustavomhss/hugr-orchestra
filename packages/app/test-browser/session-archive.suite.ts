@@ -4,6 +4,8 @@ import { createStore } from "solid-js/store"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
+import { createServerSession } from "@/context/server-session"
+import { createSdkForServer } from "@/utils/server"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import { base64Encode } from "@orchestra/core/util/encode"
 import {
@@ -30,11 +32,28 @@ const notices: SessionTabsRemovedDetail[] = []
 const toasts: unknown[] = []
 
 function state() {
-  const [data, set] = createStore({ session: ["shared", "neighbor"].map((id) => ({ id, title: id, directory: "/shared/repo", time: { created: 1, updated: 1, archived: undefined as number | undefined } })) })
+  const rows = ["shared", "neighbor"].map((id) => ({
+    id, slug: id, projectID: "project", version: "", title: id, directory: "/shared/repo",
+    time: { created: 1, updated: 1, archived: undefined as number | undefined },
+  }))
+  const [data, set] = createStore({ session: rows })
+  const canonical = new Map(rows.map((row) => [row.id, structuredClone(row)]))
+  const session = createServerSession(
+    createSdkForServer({
+      server: { url: "https://archive-fixture.test" },
+      fetch: Object.assign(async (input: string | URL | Request) => {
+        const id = new URL(input instanceof Request ? input.url : input).pathname.split("/").at(-1)!
+        return Response.json(canonical.get(id))
+      }, { preconnect: fetch.preconnect }),
+    }),
+    { protocol: Promise.resolve("v2") },
+  )
+  rows.forEach(session.remember)
   return {
     data,
     set,
-    session: { get: (id: string) => data.session.find((item) => item.id === id), evict: () => undefined },
+    session,
+    canonical,
   }
 }
 let stores = { A: state(), B: state() }
@@ -75,7 +94,10 @@ beforeAll(async () => {
     },
   }))
   mock.module("@/context/server-sync", () => ({
-    useServerSync: () => () => ({ homeSessions: { remove: () => undefined, apply: () => undefined }, session: { remember: () => undefined, resolve: async () => undefined } }),
+    useServerSync: () => {
+      const store = stores[active]
+      return () => ({ homeSessions: { remove: () => undefined, apply: () => undefined }, session: store.session })
+    },
   }))
   mock.module("@/context/server-sdk", () => ({
     useServerSDK: () => {
@@ -90,11 +112,17 @@ beforeAll(async () => {
           if (listFailure) throw new Error("history offline")
           return { data: stores[source].data.session, cursor: {} }
         } } },
-        sessionManagement: { archive: async (sessionID: string, archived: boolean, directory: string) => {
+        sessionManagement: { listArchived: async () => {
+          if (listFailure) throw new Error("history offline")
+          return [...stores[source].canonical.values()].filter((session) => session.time.archived !== undefined)
+        }, archive: async (sessionID: string, archived: boolean, directory: string) => {
           if (missing) throw new SessionManagementUnsupported()
+          const store = stores[source]
           writes.push({ source, input: { sessionID, archived, directory } })
           started.resolve()
           await request.promise
+          const row = store.canonical.get(sessionID)!
+          store.canonical.set(sessionID, { ...row, time: { ...row.time, updated: row.time.updated + 1, archived: archived ? 5 : undefined } })
         } },
         }
       }
@@ -229,6 +257,8 @@ test("real archive history DOM retries a failed load, then restores only its cap
   reactive = true
   listFailure = true
   stores.B.set("session", 0, "time", "archived", 5)
+  const row = stores.B.canonical.get("shared")!
+  stores.B.canonical.set("shared", { ...row, time: { ...row.time, archived: 5 } })
   const host = document.createElement("div")
   document.body.append(host)
   const dispose = render(() => createComponent(Root, { open: true, get children() {

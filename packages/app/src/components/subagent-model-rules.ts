@@ -5,7 +5,13 @@ import type { SessionSubagentModels } from "@orchestra/schema/session-subagent-m
 import type { Schema } from "effect"
 
 export type SubagentModelPolicy = Schema.Codec.Encoded<typeof SessionSubagentModels.Policy>
-export type ModelPolicySnapshot = { policy: SubagentModelPolicy; timestamp?: number; revision?: number }
+export type ModelPolicySnapshot = {
+  policy: SubagentModelPolicy
+  timestamp?: number
+  revision?: number
+  /** Local canonical-read receipt, not a durable sequence. */
+  readVersion?: number
+}
 
 export function sameModelPolicy(left: SubagentModelPolicy, right: SubagentModelPolicy) {
   if (left.mode !== right.mode) return false
@@ -47,6 +53,7 @@ export function createModelPolicyEditor(input: {
   const freshness = {
     timestamp: undefined as number | undefined,
     revision: undefined as number | undefined,
+    readVersion: undefined as number | undefined,
     caughtUp: false,
     predecessors: [] as SubagentModelPolicy[],
   }
@@ -58,9 +65,14 @@ export function createModelPolicyEditor(input: {
       freshness.caughtUp = true
       freshness.timestamp = current.timestamp
       freshness.revision = current.revision
+      freshness.readVersion = current.readVersion ?? freshness.readVersion
       freshness.predecessors = []
       return current.policy
     }
+    if (current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp > freshness.timestamp)
+      return current.policy
+    if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
+      return current.policy
     if (current.revision !== undefined && freshness.revision !== undefined && current.revision <= freshness.revision &&
       (current.timestamp ?? 0) <= (freshness.timestamp ?? 0))
       return acknowledged
@@ -85,6 +97,7 @@ export function createModelPolicyEditor(input: {
         if ("policy" in acknowledged) {
           freshness.timestamp = acknowledged.timestamp
           freshness.revision = acknowledged.revision
+          freshness.readVersion = acknowledged.readVersion
           freshness.caughtUp = true
           freshness.predecessors = []
           setState({ acknowledged: acknowledged.policy, retry: undefined })
