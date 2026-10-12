@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { LLM, LLMClient, Message } from "@orchestra/llm"
 import { RequestExecutor } from "@orchestra/llm/route"
 import { SqliteClient } from "@effect/sql-sqlite-bun"
-import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
+import { EffectDrizzleSqlite, EffectLogger } from "@orchestra/effect-drizzle-sqlite"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { Policy } from "@orchestra/schema/session-subagent-models"
 import { Catalog } from "@orchestra/core/catalog"
@@ -230,7 +230,7 @@ describe("SessionSubagentModels", () => {
     }),
   )
 
-  it.effect("rolls back policy, timestamp and event together when another projector fails", () =>
+  it.effect("preserves unexpected projector TypeError identity and stack while rolling back policy and event", () =>
     Effect.gen(function* () {
       yield* seed
       const database = yield* Database.Service
@@ -239,14 +239,207 @@ describe("SessionSubagentModels", () => {
       yield* policies.set(root, allow(a))
       const before = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, root)).get()
       const log = yield* database.db.select().from(EventTable).all()
-      yield* events.project(SessionEvent.SubagentModelsChanged, () => Effect.die("Projection rejected"))
-      expect(yield* policies.set(root, allow(b)).pipe(Effect.flip)).toMatchObject({
-        _tag: "SessionSubagentModels.StorageError",
-        message: "Projection rejected",
-      })
+      const defect = new TypeError("Policy projector programming defect")
+      const stack = defect.stack
+      yield* events.project(SessionEvent.SubagentModelsChanged, () => Effect.die(defect))
+      const exit = yield* policies.set(root, allow(b)).pipe(Effect.exit)
+      expect(exit._tag).toBe("Failure")
+      if (exit._tag !== "Failure") throw new Error("Expected projector defect")
+      expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(["Die"])
+      expect(Cause.squash(exit.cause)).toBe(defect)
+      expect(defect.stack).toBe(stack)
       expect(yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, root)).get()).toEqual(before)
       expect(yield* database.db.select().from(EventTable).all()).toEqual(log)
       expect(yield* EventV2.latestSequence(database.db, root)).toBe(0)
+    }),
+  )
+
+  test("notifies only committed policy; deferred foreign-key commit failure rolls back without notification", async () => {
+    await using dir = await tmpdir()
+    const filename = `${dir.path}/notification.db`
+    const persisted = AppNodeBuilder.build(nodes, [[Database.node, Database.layerFromPath(filename)]])
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seed
+        const database = yield* Database.Service
+        const events = yield* EventV2.Service
+        const policies = yield* SessionSubagentModels.Service
+        const reader = yield* Layer.build(Layer.fresh(Database.layerFromPath(filename)))
+        const readerDatabase = yield* Database.Service.pipe(Effect.provideContext(reader))
+        const observed: unknown[] = []
+        const unsubscribe = yield* events.listen((event) =>
+          Effect.gen(function* () {
+            if (event.type !== SessionEvent.SubagentModelsChanged.type) return
+            // Independent connection/context sees only committed rows, never the publisher's transaction.
+            const row = yield* readerDatabase.db
+              .select({ policy: SessionTable.subagent_models })
+              .from(SessionTable)
+              .where(eq(SessionTable.id, root))
+              .get()
+              .pipe(Effect.provideContext(reader), Effect.orDie)
+            observed.push({
+              event: event.data,
+              stored: row?.policy === undefined ? undefined : SessionSubagentModels.fromStorage(root, row.policy),
+              seq: yield* EventV2.latestSequence(readerDatabase.db, root).pipe(Effect.provideContext(reader)),
+            })
+          }),
+        )
+        yield* Effect.addFinalizer(() => unsubscribe)
+        yield* policies.set(root, allow(a))
+        expect(observed).toHaveLength(1)
+        expect(observed).toMatchObject([{ event: { policy: allow(a) }, stored: allow(a), seq: 0 }])
+        const before = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, root)).get()
+        const log = yield* database.db.select().from(EventTable).all()
+        yield* database.db.run(sql`
+          CREATE TABLE policy_deferred_fk (
+            id text PRIMARY KEY,
+            session_id text REFERENCES session(id) DEFERRABLE INITIALLY DEFERRED
+          )
+        `)
+        yield* events.project(SessionEvent.SubagentModelsChanged, (event) =>
+          event.data.policy.mode === "allowlist" && event.data.policy.models.length === 0
+            ? database.db
+                .run(sql`INSERT INTO policy_deferred_fk VALUES ('invalid', 'ses_missing_fk')`)
+                .pipe(Effect.asVoid, Effect.orDie)
+            : Effect.void,
+        )
+        expect(yield* policies.set(root, allow()).pipe(Effect.flip)).toBeInstanceOf(SessionSubagentModels.StorageError)
+        expect(yield* policies.get(root)).toEqual(allow(a))
+        expect(yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, root)).get()).toEqual(before)
+        expect(yield* database.db.select().from(EventTable).all()).toEqual(log)
+        expect(yield* database.db.all(sql`SELECT * FROM policy_deferred_fk`)).toEqual([])
+        expect(yield* EventV2.latestSequence(database.db, root)).toBe(0)
+        expect(observed).toHaveLength(1)
+        expect(observed).toMatchObject([{ event: { policy: allow(a) }, stored: allow(a), seq: 0 }])
+        yield* policies.set(root, allow(b))
+        expect(observed).toHaveLength(2)
+        expect(observed).toMatchObject([
+          { event: { policy: allow(a) }, stored: allow(a), seq: 0 },
+          { event: { policy: allow(b) }, stored: allow(b), seq: 1 },
+        ])
+      }).pipe(Effect.provide(persisted), Effect.scoped),
+    )
+  }, 30_000)
+
+  test("preserves unexpected query TypeError defects in get and ancestor walks", async () => {
+    const defect = new TypeError("Policy query logger programming defect")
+    const stack = defect.stack
+    const fault = { active: false }
+    const database = Layer.effect(
+      Database.Service,
+      Effect.gen(function* () {
+        const db = yield* EffectDrizzleSqlite.make().pipe(
+          Effect.provideService(
+            EffectLogger,
+            EffectLogger.fromDrizzle({
+              logQuery() {
+                if (fault.active) throw defect
+              },
+            }),
+          ),
+          Effect.provide(EffectDrizzleSqlite.DefaultServices),
+        )
+        yield* DatabaseMigration.apply(db)
+        return Database.Service.of({ db })
+      }),
+    ).pipe(Layer.provide(SqliteClient.layer({ filename: ":memory:", disableWAL: true })))
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* seed
+        const policies = yield* SessionSubagentModels.Service
+        fault.active = true
+        yield* Effect.forEach(
+          [
+            policies.get(root).pipe(Effect.asVoid),
+            policies.forSession(child).pipe(Effect.asVoid),
+            policies.forChild(root).pipe(Effect.asVoid),
+          ],
+          (operation) =>
+            Effect.gen(function* () {
+              const exit = yield* operation.pipe(Effect.exit)
+              expect(exit._tag).toBe("Failure")
+              if (exit._tag !== "Failure") throw new Error("Expected query defect")
+              expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(["Die"])
+              expect(Cause.squash(exit.cause)).toBe(defect)
+              expect(defect.stack).toBe(stack)
+            }),
+        )
+        fault.active = false
+        expect(yield* policies.get(root)).toEqual({ mode: "inherit" })
+        expect(yield* policies.forSession(child)).toEqual([])
+      }).pipe(Effect.provide(AppNodeBuilder.build(nodes, [[Database.node, database]])), Effect.scoped),
+    )
+  })
+
+  it.effect("keeps ordinary SQL storage failures and malformed JSON in the typed StorageError channel", () =>
+    Effect.gen(function* () {
+      yield* seed
+      const database = yield* Database.Service
+      const policies = yield* SessionSubagentModels.Service
+      const events = yield* EventV2.Service
+      yield* database.db.update(SessionTable).set({ subagent_models: "{" }).where(eq(SessionTable.id, root)).run()
+      const malformed = yield* policies.get(root).pipe(Effect.exit)
+      expect(malformed._tag).toBe("Failure")
+      if (malformed._tag !== "Failure") throw new Error("Expected malformed storage failure")
+      expect(malformed.cause.reasons.map((reason) => reason._tag)).toEqual(["Fail"])
+      expect(Cause.squash(malformed.cause)).toBeInstanceOf(SessionSubagentModels.StorageError)
+      yield* events.project(SessionEvent.SubagentModelsChanged, () =>
+        database.db
+          .insert(ProjectTable)
+          .values({ id: ProjectV2.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
+          .run()
+          .pipe(Effect.asVoid, Effect.orDie),
+      )
+      const constraint = yield* policies.set(root, allow(a)).pipe(Effect.exit)
+      expect(constraint._tag).toBe("Failure")
+      if (constraint._tag !== "Failure") throw new Error("Expected SQL constraint failure")
+      expect(constraint.cause.reasons.map((reason) => reason._tag)).toEqual(["Fail"])
+      const storage = Cause.squash(constraint.cause)
+      expect(storage).toBeInstanceOf(SessionSubagentModels.StorageError)
+      if (!(storage instanceof SessionSubagentModels.StorageError)) throw new Error("Expected typed SQL storage error")
+      expect(storage.message).toContain("Failed query:")
+      yield* database.db.run(sql`ALTER TABLE session RENAME TO unavailable_policy_session`)
+      yield* Effect.forEach(
+        [
+          policies.get(root).pipe(Effect.asVoid),
+          policies.forSession(child).pipe(Effect.asVoid),
+          policies.set(root, allow()).pipe(Effect.asVoid),
+        ],
+        (operation) =>
+          Effect.gen(function* () {
+            const exit = yield* operation.pipe(Effect.exit)
+            expect(exit._tag).toBe("Failure")
+            if (exit._tag !== "Failure") throw new Error("Expected SQL storage failure")
+            expect(Cause.squash(exit.cause)).toBeInstanceOf(SessionSubagentModels.StorageError)
+            expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(["Fail"])
+          }),
+      )
+    }),
+  )
+
+  it.effect("preserves NotFoundError for missing policy writes and rolls back missing-session replay", () =>
+    Effect.gen(function* () {
+      yield* seed
+      const database = yield* Database.Service
+      const events = yield* EventV2.Service
+      const policies = yield* SessionSubagentModels.Service
+      expect(yield* policies.set(missing, allow()).pipe(Effect.flip)).toBeInstanceOf(
+        SessionSubagentModels.NotFoundError,
+      )
+      const replay = yield* events
+        .replay({
+          id: EventV2.ID.create(),
+          type: EventV2.versionedType(SessionEvent.SubagentModelsChanged.type, 1),
+          aggregateID: missing,
+          seq: 0,
+          data: { sessionID: missing, timestamp: 0, policy: allow() },
+        })
+        .pipe(Effect.exit)
+      expect(replay._tag).toBe("Failure")
+      if (replay._tag !== "Failure") throw new Error("Expected missing replay Session")
+      expect(Cause.squash(replay.cause)).toBeInstanceOf(SessionSubagentModels.NotFoundError)
+      expect(yield* database.db.select().from(EventTable).all()).toEqual([])
+      expect(yield* EventV2.latestSequence(database.db, missing)).toBe(-1)
     }),
   )
 
