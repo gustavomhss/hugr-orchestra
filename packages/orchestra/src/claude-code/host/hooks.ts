@@ -73,10 +73,6 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts })
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
-  // Observed exact native session/actor pairs belong to this query, never a process-global registry.
-  const nativeOwners = new Map<string, ClaudeHostGate.Actor>()
-  const actorSessions = new Map<string, string>()
-  const conflicted = new Set<string>()
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
     : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
   const unsubscribe = ctx.join.subscribe((frame) => {
@@ -98,7 +94,6 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return ctx.run(Effect.gen(function* () {
       const actor = yield* delegation.actor(input.agent_id)
       if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
-      if (input.agent_id) yield* bind(input.session_id, actor)
       const exhausted = yield* researchStopReason(actor)
       if (exhausted) return { ...ClaudeHostGate.deny(exhausted), continue: false, stopReason: exhausted }
       const args = record(input.tool_input)
@@ -186,7 +181,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const compact: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
     return runMemory(Effect.gen(function* () {
-      const actor = yield* owner(input.session_id)
+      const actor = yield* owner(input.session_id, input.agent_id)
       const text = yield* ClaudeHostMemory.read({ sessionID: actor.sessionID, pending: delegation.summaries(),
         grants: actor.sessionID === ctx.sessionID ? delegation.grants() : [] })
       return text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}
@@ -196,7 +191,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const archive: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
     return runMemory(Effect.gen(function* () {
-      const actor = yield* owner(input.session_id)
+      const actor = yield* owner(input.session_id, input.agent_id)
       yield* ClaudeHostMemory.observe({ sessionID: actor.sessionID, nativeSessionID: input.session_id,
         text: input.compact_summary, trigger: input.trigger })
       return {}
@@ -266,46 +261,34 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     })
   }
 
-  function bind(nativeSessionID: string, actor: ClaudeHostGate.Actor) {
+  function owner(nativeSessionID: string, agentID: string | undefined) {
     return Effect.gen(function* () {
-      const sessions = yield* Session.Service
-      const root = yield* sessions.get(ctx.sessionID)
-      const nativeRoot = root.metadata?.claudeCode?.sessionId
-      const previous = nativeOwners.get(nativeSessionID)
-      if (!actor.agentID || actor.sessionID === ctx.sessionID || typeof nativeRoot !== "string" ||
-        nativeSessionID === nativeRoot || !nativeSessionID || conflicted.has(nativeSessionID) ||
-        previous && (previous.agentID !== actor.agentID || previous.sessionID !== actor.sessionID) ||
-        actorSessions.has(actor.agentID) && actorSessions.get(actor.agentID) !== nativeSessionID) {
-        conflicted.add(nativeSessionID)
-        if (actor.agentID && actorSessions.has(actor.agentID)) conflicted.add(actorSessions.get(actor.agentID)!)
-        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: native session/actor pair cannot be bound"))
+      // BaseHookInput.agent_id identifies subagent events even when session_id is shared with the root.
+      // The query's dispatch join owns that identity; a native session string cannot override it.
+      if (agentID === "")
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNAVAILABLE: an empty agent_id cannot identify the root"))
+      const actor = yield* delegation.actor(agentID)
+      if ("hold" in actor) {
+        const call = agentID ? ctx.join.toolUse(agentID) : undefined
+        return yield* Effect.fail(new Error(`${call && ctx.join.get(call)?.hold
+          ? "COMPACT_NATIVE_OWNER_CONFLICT" : "COMPACT_NATIVE_OWNER_UNAVAILABLE"}: ${actor.hold}`))
       }
-      nativeOwners.set(nativeSessionID, actor)
-      actorSessions.set(actor.agentID, nativeSessionID)
-    })
-  }
-
-  function owner(nativeSessionID: string) {
-    return Effect.gen(function* () {
       const sessions = yield* Session.Service
-      const root = yield* sessions.get(ctx.sessionID)
-      const nativeRoot = root.metadata?.claudeCode?.sessionId
-      if (conflicted.has(nativeSessionID)) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT"))
-      if (typeof nativeRoot !== "string" || !nativeRoot)
-        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNAVAILABLE: root init identity is not persisted"))
-      if (nativeOwners.has(nativeRoot)) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: root identity overlaps an observed child"))
-      if (nativeSessionID === nativeRoot) return { sessionID: ctx.sessionID, seat: ctx.agent }
-      const observed = nativeOwners.get(nativeSessionID)
-      if (!observed?.agentID) return yield* Effect.fail(new Error(
-        "COMPACT_NATIVE_OWNER_UNAVAILABLE: no joined PreToolUse native session/actor pair in this query (including after restart)"))
-      const actor = yield* delegation.actor(observed.agentID)
-      if ("hold" in actor || actor.sessionID !== observed.sessionID || actor.agentID !== observed.agentID)
-        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: observed actor is no longer joined"))
+      if (!agentID) {
+        const root = yield* sessions.get(ctx.sessionID)
+        const nativeRoot = root.metadata?.claudeCode?.sessionId
+        if (typeof nativeRoot !== "string" || !nativeRoot || nativeSessionID !== nativeRoot)
+          return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNAVAILABLE: root init identity is not persisted or does not match"))
+        return actor
+      }
       const child = yield* sessions.get(actor.sessionID)
-      if (!child.parentID) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: child has no dispatching Session"))
+      if (!child.parentID || child.id === ctx.sessionID)
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: joined child has no dispatching Session"))
       const parent = yield* ClaudeHostMemory.retained(child.parentID)
+      const call = ctx.join.toolUse(agentID)
       if (!parent.history.some((message) => message.parts.some((part) => part.type === "tool" &&
-        ClaudeHostGate.agentCall(part.tool) && part.state.status !== "pending" && part.state.metadata?.sessionId === child.id)))
+        ClaudeHostGate.agentCall(part.tool) && part.callID === call && part.state.status !== "pending" &&
+        part.state.metadata?.sessionId === child.id)))
         return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNRETAINED: joined Agent part is absent from its dispatcher's view"))
       return actor
     })

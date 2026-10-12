@@ -6,6 +6,7 @@ import { Agent } from "@/agent/agent"
 import { Archive } from "@/continuity/archive"
 import { ownedHistory, tailIndex } from "@/continuity/model"
 import { AtlasMemory } from "@/maestro/atlas-memory"
+import { readAdmission } from "@/maestro/admission-record"
 import { LogicalTask } from "@/maestro/logical-task"
 import { readPlanRevision } from "@/maestro/plan-revision"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
@@ -14,6 +15,7 @@ import { Todo } from "@/session/todo"
 import { ClaudeCodeTools } from "../tools"
 import type { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostGate } from "./gate"
+import { ClaudeHostGrantHistory } from "./grant-history"
 import type { ClaudeHostMcp } from "./mcp"
 
 /** The exclusive user cut is applied before every domain reader, including Archive coverage validation. */
@@ -64,22 +66,27 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
   const saved = yield* archive.readMemory(input.sessionID)
   const memory = saved?.context && tailIndex(saved.context, view.history) !== undefined ? [saved.context.text] : []
   const member = AtlasMemory.owner(view.session.agent ? yield* agents.get(view.session.agent) : undefined)
+  // A restored copy cannot resurrect an older admission after a later admitted refusal/revocation.
   const admission = member ? view.history.flatMap((message) => message.parts).flatMap((part) => [
     "metadata" in part ? part.metadata?.[AtlasMemory.ADMISSION_KEY] : undefined,
     part.type === "tool" && part.state.status !== "pending" ? part.state.metadata?.[AtlasMemory.ADMISSION_KEY] : undefined,
   ]).filter((value): value is AtlasMemory.Admission => value?.schema === "atlas-resume-admission-v1" &&
-    value.key?.memoryOwner === member && value.key.projectID === view.session.projectID &&
-    typeof value.key.logicalResumeID === "string" && typeof value.text === "string").at(-1) : undefined
+    value.residency === "admitted" && value.key?.memoryOwner === member && value.key.projectID === view.session.projectID &&
+    typeof value.key.logicalResumeID === "string" && (value.key.kind === "task" || value.key.kind === "pr") &&
+    typeof value.key.id === "string" && typeof value.text === "string" &&
+    (!binding || value.key.kind !== "task" || value.key.id === binding.taskId)).at(-1) : undefined
   const sections = [
     ["Owning logical task (retained binding and permissions)", binding ? [JSON.stringify({ binding, permission: view.session.permission })] : []],
     ["Open logical tasks (retained records)", tasks.flat()],
     ["Pending delegations (process-local; not recovered after restart)", input.pending.filter((item) =>
       !item.settled && calls.some((part) => part.callID === item.toolUseID)).map((item) => JSON.stringify(item))],
-    ["Unbound write grants (process-local; not recovered after restart)", cut ? [] : input.grants.map((grant) => JSON.stringify(grant))],
+    ["Write grants (retained issuance; exact live ownership or explicit invalidation)", ClaudeHostGrantHistory.read({
+      sessionID: input.sessionID, history: view.history, live: cut ? [] : input.grants,
+    })],
     ["Plan revision (retained producing tool and admission)", plan],
     ["Todos", todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))],
     ["Applicable owned continuity memory (historical)", memory],
-    ["Atlas resume Admission (historical evidence; not new permission)", admission?.verdict.ok ? [admission.text] : []],
+    ["Atlas resume Admission (historical evidence; not new permission)", admission?.verdict.ok ? [admission.text, JSON.stringify({ key: admission.key, ref: admission.verdict.ref })] : []],
   ] as const
   const body = sections.filter((section) => section[1].length).map((section) => [`## ${section[0]}`, ...section[1]].join("\n"))
   // The native SDK owns context budgeting. Every required record is rendered whole, without invented recall refs.
@@ -121,8 +128,13 @@ function planState(sessionID: SessionID, history: SessionV1.WithParts[], calls: 
       if (!revision) return yield* Effect.fail(new Error("COMPACT_PLAN_REVISION_UNAVAILABLE"))
       if (revision.sessionID !== sessionID) return yield* Effect.fail(new Error("COMPACT_PLAN_OWNER_MISMATCH"))
       if (!history.some((message) => message.info.id === revision.admissionMessageID)) return []
-      if (part.state.input.admissionMessageID !== revision.admissionMessageID)
+      if (part.state.input.admissionMessageID !== revision.admissionMessageID ||
+        (part.state.metadata?.revisionHash ?? (Option.isSome(output) ? record(output.value).revisionHash : undefined)) !== revision.revisionHash)
         return yield* Effect.fail(new Error("COMPACT_PLAN_ADMISSION_MISMATCH"))
+      const admission = yield* readAdmission({ sessionID, messageID: revision.admissionMessageID, methodVersion: "admit-request-v1" })
+      if (!admission || admission.sessionID !== sessionID || admission.messageID !== revision.admissionMessageID ||
+        admission.methodVersion !== "admit-request-v1" || admission.outcome !== "READY_TO_DRAFT")
+        return yield* Effect.fail(new Error("COMPACT_PLAN_ADMISSION_UNAVAILABLE"))
       return [JSON.stringify(revision)]
     }))
     return revisions.flat().slice(-1)

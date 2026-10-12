@@ -18,6 +18,8 @@ import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { Config } from "@/config/config"
 import { Archive } from "@/continuity/archive"
+import { recordAdmission } from "@/maestro/admission-record"
+import { recordPlanRevision } from "@/maestro/plan-revision"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -71,10 +73,11 @@ export const make = Effect.fnUntraced(function* (input: {
     return Effect.promise(() => callback(event, undefined, { signal }))
   }
   const base = { session_id: `native-${chat.id}`, transcript_path: path.join(chat.directory, "native.jsonl"), cwd: chat.directory }
-  const compact = (sessionID = base.session_id, signal = abort.signal) =>
-    fire({ ...base, session_id: sessionID, hook_event_name: "SessionStart", source: "compact" }, signal)
-  const summary = (text: string, trigger: "manual" | "auto" = "auto", sessionID = base.session_id, signal = abort.signal) =>
-    fire({ ...base, session_id: sessionID, hook_event_name: "PostCompact", compact_summary: text, trigger }, signal)
+  const compact = (sessionID = base.session_id, signal = abort.signal, agentID?: string) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "SessionStart", source: "compact", ...(agentID !== undefined ? { agent_id: agentID } : {}) }, signal)
+  const summary = (text: string, trigger: "manual" | "auto" = "auto", sessionID = base.session_id, signal = abort.signal, agentID?: string) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "PostCompact", compact_summary: text, trigger,
+      ...(agentID !== undefined ? { agent_id: agentID } : {}) }, signal)
   const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
   const user = input.user === false || input.sessionID ? undefined : yield* sessions.updateMessage({
     id: MessageID.ascending(), role: "user", sessionID: chat.id, agent: ctx.agent, model: ref, time: { created: Date.now() },
@@ -100,7 +103,21 @@ export const make = Effect.fnUntraced(function* (input: {
     })
     return child
   })
-  return { chat, ctx, hooks, compact, summary, fire, base, sessions, todos, archive, archiveDirectory, fs, user, assistant, task }
+  const plan = Effect.fnUntraced(function* (goal: string, owner = user, author = assistant) {
+    if (!owner || !author) throw new Error("Plan fixture requires a user and assistant")
+    yield* recordAdmission({ sessionID: chat.id, messageID: owner.id, methodVersion: "admit-request-v1", assessment: {
+      kind: "work", goal, known: [], proposals: [], unknowns: [], uncertainty: "none", activeWorkEffect: "none", reason: "Explicit work request." } })
+    const revision = yield* recordPlanRevision({ sessionID: chat.id, admissionMessageID: owner.id, methodVersion: "plan-v1",
+      goal: { value: goal, source: "stakeholder" }, acceptance: Array.from({ length: 10 }, (_, index) => ({
+        value: `${goal}-ACCEPT-${index}`, source: "stakeholder" as const })), scope: [], constraints: [{ value: "DO-NOT-DEPLOY", source: "stakeholder" }],
+      reviewRequirement: { value: "Cold review", source: "maestro" }, contextRequirement: "PENDING", assumptions: [], risks: [] })
+    const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: author.id, type: "tool",
+      tool: "mcp__orchestra__maestro_record_plan_revision", callID: `plan-${goal}`, state: { status: "completed",
+        input: { admissionMessageID: owner.id }, output: `${revision.status}: ${revision.id}\n\nBindings: ${JSON.stringify({ planRevisionID: revision.id, revisionHash: revision.revisionHash })}`,
+        title: "Plan", metadata: { planRevisionID: revision.id, revisionHash: revision.revisionHash }, time: { start: 1, end: 2 } } })
+    return { revision, part }
+  })
+  return { chat, ctx, hooks, compact, summary, fire, base, sessions, todos, archive, archiveDirectory, fs, user, assistant, task, plan }
 })
 
 export * as CompactionFixture from "./compaction-fixture"
