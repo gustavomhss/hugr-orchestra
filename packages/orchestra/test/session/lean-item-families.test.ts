@@ -64,7 +64,9 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
   const families = [
     // The pinned engine's Cargo grammar expects forward-slash artifact paths; Windows prints target\debug\deps\*.exe,
     // so the engine declines (unsupported_output) and the output stays whole there. Known engine gap, safe direction.
-    { itemID: "cargo", command: "cargo test", reduce: process.platform !== "win32" },
+    // Serial lib tests, as in lean-session-families: a plain `cargo test` interleaves the doctest header on stderr with
+    // the lib results on stdout, which the engine declines (unsupported_output) on some runs.
+    { itemID: "cargo", command: "cargo test --lib -- --test-threads=1", reduce: process.platform !== "win32" },
     { itemID: "pytest", command: "pytest", reduce: true },
     { itemID: "go", command: "go test -v .", reduce: true },
     { itemID: "vitest", command: "vitest run", reduce: false },
