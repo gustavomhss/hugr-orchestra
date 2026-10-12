@@ -64,7 +64,11 @@ export async function nativeFixture(candidate: OwnedCandidate, directory: string
     }))
     const address = provider.address()
     assert.ok(address && typeof address !== "string", "Missing loopback fixture port")
-    const observer = path.join(candidate.root, "public-fixture-observer.mjs")
+    // External plugin admission walks the whole directory of a plugin file as its source envelope, so the observer
+    // gets a directory of its own rather than the owned root (Chromium's profile, caches, the live singleton links).
+    const observerDirectory = path.join(candidate.root, "public-fixture-observer")
+    await mkdir(observerDirectory, { recursive: true })
+    const observer = path.join(observerDirectory, "observer.mjs")
     await writeFile(observer, `import { writeFile } from "node:fs/promises";
 export default async () => ({ "tool.execute.after": async (input, output) => {
   if (input.tool === "bash") await writeFile(${JSON.stringify(candidate.root)} + "/" + input.callID + ".json", JSON.stringify({ output: output.output, metadata: output.metadata }));
