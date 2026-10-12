@@ -1,4 +1,5 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
+import os from "os"
 import path from "path"
 import { createServer } from "node:net"
 import { Effect } from "effect"
@@ -193,3 +194,53 @@ live("scratch gives each confined command a private TMPDIR; read-only roots stil
     expect(yield* f.fs.exists(out.tmp)).toBe(false)
   }), 30_000,
 )
+
+live("a confined-read command's TMPDIR is its own scratch, where it can create a temporary directory", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // srt otherwise hands the child TMPDIR=/tmp/claude, which does not exist in the jail (go: creating work dir).
+    const script = "const fs=require('fs'),os=require('os'),p=require('path');const made=fs.mkdtempSync(p.join(os.tmpdir(),'probe-'));" +
+      "fs.writeFileSync(p.join(made,'file'),'t');" +
+      "process.stdout.write(JSON.stringify({tmp:process.env.TMPDIR,tmpdir:os.tmpdir(),made,read:fs.readFileSync(p.join(made,'file'),'utf8')}))"
+    const profile = { requireSandbox: true, writeRoots: [f.root], sandbox: { enabled: true, scratch: true, readRoots: [f.root] } }
+    const result = yield* Effect.scoped(f.run(script, profile))
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    const out = JSON.parse(result.stdout.toString())
+    expect(path.basename(out.tmp)).toStartWith("orchestra-tool-scratch-")
+    expect(out.tmpdir).toBe(out.tmp)
+    expect(path.dirname(out.made)).toBe(out.tmp)
+    expect(out.read).toBe("t")
+    // The scratch directory, and the temporary directory made in it, live only as long as the command's scope.
+    expect(yield* f.fs.exists(out.tmp)).toBe(false)
+  }), 30_000,
+)
+
+test("home grants name exactly git's config files and what a rustup-proxied cargo needs, never a credential store", () => {
+  const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
+  const [rustup, cargo, xdg] = ["rustup", "cargo", "xdg"].map((name) => path.join(base, name))
+  const listed = ToolSafetySandbox.toolchain({ PATH: "", RUSTUP_HOME: rustup, CARGO_HOME: cargo, XDG_CONFIG_HOME: xdg })
+  expect(listed.filter((entry) => entry.startsWith(base)).sort()).toEqual([
+    path.join(cargo, "bin"), path.join(cargo, "registry", "cache"), path.join(cargo, "registry", "index"),
+    path.join(cargo, "registry", "src"), path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
+    path.join(xdg, "git", "attributes"), path.join(xdg, "git", "config"), path.join(xdg, "git", "ignore"),
+  ].sort())
+  // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it.
+  const defaults = ToolSafetySandbox.homeGrants({}).map((grant) => grant.entry)
+  const homes = [...new Set(defaults.map((entry) => entry.slice(0, entry.lastIndexOf(`${path.sep}.`))))]
+  expect(defaults.map((entry) => path.relative(homes.find((home) => entry.startsWith(home + path.sep)) ?? "", entry)).sort()).toEqual(
+    homes.flatMap(() => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
+      path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"), path.join(".cargo", "bin"),
+      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))]).sort(),
+  )
+})
+
+test("an environment home that is relative, a home or above one grants nothing", () => {
+  const home = os.homedir()
+  for (const value of ["relative/cargo", home, path.dirname(home), path.parse(home).root]) {
+    const grants = ToolSafetySandbox.homeGrants({ CARGO_HOME: value, RUSTUP_HOME: value, XDG_CONFIG_HOME: value })
+    // Only ~/.gitconfig and ~/.config/git remain, which no variable names.
+    expect(grants.map((grant) => grant.entry).filter((entry) => !/[\\/](?:\.gitconfig|\.config[\\/]git[\\/]\w+)$/.test(entry))).toEqual([])
+    expect(grants.some((grant) => [path.join(home, "bin"), path.join(home, "registry"), path.join(home, "git")]
+      .some((entry) => grant.entry.startsWith(entry)))).toBe(false)
+  }
+})
