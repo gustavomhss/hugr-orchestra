@@ -1,6 +1,6 @@
 # Claude Code as Orchestra's host
 
-Status: 2026-10-11. **Paused** (see "Paused" below). The design is the meta-harness plan,
+Status: 2026-10-12. **Temporary rollout pause retired** (see "Rollout activation" below). The design is the meta-harness plan,
 `HuGR/_worktrees/archie-state/meta-harness/PLAN.md`: §2 compliance map, §3 Phase 0, §4 architecture, §8 acceptance.
 This file describes the code as it is. The first engine's design (Orchestra deciding turns, disabled and aliased
 built-ins, `settingSources: []`, a precedence-claiming prompt, `sessionStore.load` rewriting) is removed (plan §4.7);
@@ -49,8 +49,10 @@ under `src` and fails on any other crossing; its `INTERFACE` list is the declare
 
 Orchestra never touches Claude Code credentials. The binary signs in from its own store (`claude auth login`) or uses
 the owner's `ANTHROPIC_API_KEY` / `apiKeyHelper`. `ClaudeCodeSDK.processLifetime` spawns it with the owner's environment:
-it adds no token, scope, plan, tier or host-managed provider variable and strips nothing; only Orchestra's own
-`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED` flag stays in Orchestra's process. Sign-in status comes from `accountInfo()`
+it adds no token, scope, plan, tier or host-managed provider variable and strips no credential. The deprecated
+`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED` flag is stripped from the child environment as compatibility metadata, not an
+activation requirement. The host also drops inherited `CLAUDE_CODE_ENTRYPOINT` so the SDK identifies its own caller
+and enables documented task output (`host/options.ts`); neither collects credentials or sets billing controls. Sign-in status comes from `accountInfo()`
 (spike S2) and the init frame, never a secret. A signed-out session ends the turn with "Claude Code is not signed in.
 Run `claude auth login` in a terminal, then send your message again." A billing refusal ends it with "Anthropic
 returned: <message>", verbatim, and is never retried.
@@ -65,16 +67,19 @@ and keeps the session's Orchestra continuity paused. After a compaction, `Sessio
 working memory from durable records as `additionalContext`, and `PostCompact` archives Claude Code's summary for
 `context_recall` (`host/hooks.ts`, plan §4.6). Normal mode's continuity is unchanged.
 
-## Paused
+## Rollout activation
 
-All real Claude Code engine runs stay on hold until the plan's migration acceptance (§8) and the owner lifts the lock.
-
-**Enforcement.** `ClaudeCodeSDK.requirePlanApproval` runs inside `processLifetime`'s `spawnClaudeCodeProcess`, the
-point every real SDK `query()` passes before a Claude Code process exists. Unless the environment sets
-`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1`, it throws "The Claude Code engine is paused until its meta-harness plan is
-approved by the owner." The agent, seat or Maestro configured with `engine: "claude-code"` gets that as its turn error;
-it is never retried and never falls back to another transport. Recorded test transports never spawn, so they run
-without the flag (`test/claude-code/plan-approval.test.ts`).
-
-**What lifts it.** Plan §10 step 6, after migration acceptance; only then does an operator set
+The owner approved the original meta-harness plan and explicitly requested finishing the campaign through PR, CI and
+`dev`. Real Archie acceptance and S14 completed. Under that approved plan and current acceptance, the temporary
+rollout pause is retired: Claude mode and its documented account-status probe no longer require
 `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1` in the server environment.
+
+This retires only the fulfilled rollout condition. It does not grant new authorization, change billing, or guarantee
+blanket policy compliance. The structural `claude_code` preset guard, executable resolution and pinned binary,
+credential inheritance, real child-exit tracking, policy gates, write-root checks and account checks remain in force.
+Claude mode startup failures still end the turn without retry or fallback to Orchestra's API transport.
+
+`test/claude-code/plan-approval.test.ts` covers a real SDK query reaching an injected throwing spawner without the
+flag, a real scratch subprocess receiving credentials unchanged but no deprecated flag, and Maestro/Archie turns
+surfacing a real SDK spawn failure once with no API fallback. These checks make no model request or successful
+engine-acceptance claim.

@@ -4,17 +4,15 @@
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["transit"]
+    },
     "orchestra#typecheck": {
       "dependsOn": ["transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/.github/scripts/archie-host-acceptance.ts",
-        "$TURBO_ROOT$/.github/scripts/archie-host-evidence.ts",
-        "$TURBO_ROOT$/.github/scripts/archie-host-inputs.ts",
-        "$TURBO_ROOT$/.github/scripts/archie-host-plan.ts",
-        "$TURBO_ROOT$/.github/scripts/archie-host-process.ts",
-        "$TURBO_ROOT$/.github/scripts/archie-host-s14.ts"
+        "$TURBO_ROOT$/.github/scripts/archie-host-*.ts",
+        "$TURBO_ROOT$/.github/scripts/tsconfig.archie.json"
       ]
     },
     "build": {
@@ -104,6 +102,14 @@
       "outputs": []
     },
     "@orchestra/client#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/schema#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/protocol#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },

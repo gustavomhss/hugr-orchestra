@@ -524,7 +524,7 @@ const layer = Layer.effect(
         live.pump = pump
         void pump.then(() => close(live)).catch(() => {})
         // Sign-in state without a model turn and without secrets (spike S2). Email and organization are never read here.
-        // A session whose process never started (the plan-approval lock, a failed spawn) ends instead of answering.
+        // A session whose process never started (a failed spawn) ends instead of answering.
         const account = yield* Effect.tryPromise(() => Promise.race([live.query.accountInfo(), pump.then(() => undefined)])).pipe(Effect.option)
         // No turn waits on this session yet, so its end is this start's failure.
         if (live.closed || live.ended !== undefined) {

@@ -9,7 +9,6 @@ import { ClaudeHostOptions } from "./options"
 export const signedIn = Effect.gen(function* () {
   const sdk = yield* ClaudeCodeSDK.Service
   const env = yield* ClaudeCodeSDK.Environment
-  if (env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED !== "1") return false
   const abort = new AbortController()
   const lifetime = ClaudeCodeSDK.processLifetime({
     systemPrompt: { type: "preset", preset: "claude_code", append: "" },

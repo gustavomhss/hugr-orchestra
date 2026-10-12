@@ -4,7 +4,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { tmpdir } from "../fixture/fixture"
 
-// The real spawn path is paused until the owner approves the engine's plan (ClaudeCodeSDK.requirePlanApproval).
+// Retain the deprecated rollout flag here to exercise child-environment compatibility stripping.
 const approved = { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }
 
 for (const abort of [false, true]) {
