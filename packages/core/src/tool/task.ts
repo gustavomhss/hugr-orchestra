@@ -2,7 +2,7 @@ export * as TaskTool from "./task"
 
 import { createHash } from "node:crypto"
 import { ToolFailure } from "@orchestra/llm"
-import { DateTime, Effect, Layer, Schema } from "effect"
+import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { makeLocationNode, Node } from "../effect/app-node"
@@ -173,8 +173,8 @@ const layer = Layer.effectDiscard(
   }),
 )
 
-// A Location includes built-ins; Session's placement-map type includes that Location.
-// Keep this boundary explicit so acquiring the global Session does not recursively infer the whole graph.
+// Locations acquire the existing process-owned Session and execution services. Rebuilding
+// Session.node here would recursively compile the Location map during its own acquisition.
 export const node: LayerNode.Node<never, never, typeof Node.tags.values.location> = makeLocationNode({
   name: "tool/task",
   layer,
@@ -184,13 +184,31 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     AgentV2.node,
     Catalog.node,
     PermissionV2.node,
-    SessionV2.node,
+    captureGlobal(SessionV2.Service),
     SessionStore.node,
-    SessionExecution.node,
+    captureGlobal(SessionExecution.Service),
     EventV2.node,
     SessionSubagentModels.node,
   ],
 })
+
+function captureGlobal<I, A extends object>(service: Context.Key<I, A>) {
+  return Node.makeGlobalNode({
+    // Constructor replacements must not turn this capture back into a fresh global service graph.
+    name: `tool/task/global/${service.key}`,
+    layer: Layer.effect(
+      service,
+      Effect.serviceOption(service).pipe(
+        Effect.flatMap((current) =>
+          Option.isSome(current)
+            ? Effect.succeed(current.value)
+            : Effect.die(`Task requires an exported process-global service: ${service.key}`),
+        ),
+      ),
+    ),
+    deps: [],
+  })
+}
 
 const resolveModel = Effect.fn("TaskTool.resolveModel")(function* (
   catalog: Catalog.Interface,
