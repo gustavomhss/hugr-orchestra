@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { chmod, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
@@ -19,7 +19,9 @@ import { verifyPackagedCli } from "./cli-packaging"
 // whole desktop suite, 2.6 s wall for 0.4 s CPU. In 43 full test.yml lanes (2026-10-11/12) a test ran up to 17.8x its
 // own median, the slowest median is 0.7 s, and two lanes timed out at Bun's 5 s default. 30 s is twice that worst
 // slowdown of the slowest test. No test waits on a clock or another process except the build-helper child, which has
-// its own 15 s limit, so a hang still fails, after 30 s.
+// its own 15 s limit. A hang that still does I/O fails after 30 s. One that idles on a promise fails then on Linux and
+// macOS, but Bun 1.3.14 on Windows enforces a test timeout only while a timer is pending (test-ci 38294402595,
+// 38297239678), so there the step limit stops it, as it would have at the 5 s default.
 const STAGING_TIMEOUT = 30_000
 
 const roots: string[] = []
@@ -480,4 +482,45 @@ test("staging rejects symlink output directories and keeps previous resources", 
   await symlink(join(input.root, "foreign-bin"), binaryDirectory, process.platform === "win32" ? "junction" : "dir")
   await expect(stageCliArtifacts(input)).rejects.toThrow("regular")
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+}, STAGING_TIMEOUT)
+
+// GitHub's Windows runners briefly hold a CLI that the sign hook just ran (provjobd.exe, up to about 1 s), and Windows
+// refuses to rename a directory while a file in it is open. A handle the test owns stands in for that holder.
+test("a staged CLI held briefly after signing delays the rename into place instead of failing it", async () => {
+  const input = await fixture()
+  const start = performance.now()
+  await stageCliArtifacts({
+    ...input,
+    sign: async (path, _target, kind) => {
+      if (kind !== "cli") return
+      const held = await open(path, "r")
+      setTimeout(() => void held.close(), 300)
+    },
+  })
+  expect((await readCliManifest(input.directory)).version).toBe(input.version)
+  // Elsewhere an open file never blocked the rename; on Windows it did, so the rename waited for the release.
+  if (process.platform === "win32") expect(performance.now() - start).toBeGreaterThanOrEqual(250)
+}, STAGING_TIMEOUT)
+
+test("a staged CLI held past the bound fails the rename and keeps the previous resources", async () => {
+  if (process.platform !== "win32") return
+  const input = await fixture()
+  await stageCliArtifacts(input)
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const holds: Promise<void>[] = []
+  const error = await stageCliArtifacts({
+    ...input,
+    sign: async (path, _target, kind) => {
+      if (kind !== "cli") return
+      const held = await open(path, "r")
+      holds.push(new Promise((resolve) => setTimeout(() => void held.close().then(resolve), 8_000)))
+    },
+  }).then(
+    () => undefined,
+    (error: NodeJS.ErrnoException) => error,
+  )
+  // The rename fails with EPERM after the bound; removing the stage it still holds may then report EBUSY instead.
+  expect(["EPERM", "EBUSY"]).toContain(error?.code)
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  await Promise.all(holds)
 }, STAGING_TIMEOUT)
