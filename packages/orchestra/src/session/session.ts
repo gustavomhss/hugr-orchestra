@@ -745,28 +745,24 @@ const layer: Layer.Layer<
       const original = yield* get(input.sessionID)
       const msgs = yield* messages({ sessionID: input.sessionID })
       const target = input.messageID ? msgs.findIndex((msg) => msg.info.id === input.messageID) : msgs.length
-      const kept = msgs.slice(0, target < 0 ? msgs.length : target)
+      if (original.revert?.partID) return yield* Effect.die(new Error("SESSION_FORK_PARTIAL_REVERT_UNSUPPORTED"))
+      const reverted = original.revert ? msgs.findIndex((msg) => msg.info.id === original.revert?.messageID) : msgs.length
+      if (reverted < 0) return yield* Effect.die(new Error("SESSION_FORK_REVERT_BOUNDARY_UNAVAILABLE"))
+      const cut = Math.min(target < 0 ? msgs.length : target, reverted)
+      const kept = msgs.slice(0, cut)
       const idMap = new Map(kept.map((msg) => [msg.info.id, MessageID.ascending()]))
-      const metadata = yield* lifecycle.fork({ source: original, messageID: input.messageID, ids: idMap })
+      // The clone map and execution owner's exclusive cursor must describe the same visible prefix.
+      const metadata = yield* lifecycle.fork({ source: original,
+        messageID: original.revert ? msgs[cut].info.id : input.messageID, ids: idMap })
       const session = yield* createNext({ directory: ctx.directory, path: sessionPath(ctx.worktree, ctx.directory),
         workspaceID: original.workspaceID, title: getForkedTitle(original.title), metadata })
       for (const msg of kept) {
         const newID = idMap.get(msg.info.id)!
-
         const parentID = msg.info.role === "assistant" && msg.info.parentID ? idMap.get(msg.info.parentID) : undefined
-        const cloned = yield* updateMessage({
-          ...msg.info,
-          sessionID: session.id,
-          id: newID,
-          ...(parentID && { parentID }),
-        })
-
+        const cloned = yield* updateMessage({ ...msg.info, sessionID: session.id, id: newID, ...(parentID && { parentID }) })
         for (const part of msg.parts) {
           const p: SessionV1.Part = {
-            ...part,
-            id: PartID.ascending(),
-            messageID: cloned.id,
-            sessionID: session.id,
+            ...part, id: PartID.ascending(), messageID: cloned.id, sessionID: session.id,
           }
           if (p.type === "compaction" && p.tail_start_id) {
             p.tail_start_id = idMap.get(p.tail_start_id)
