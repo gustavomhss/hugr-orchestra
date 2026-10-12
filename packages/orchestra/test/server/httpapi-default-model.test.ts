@@ -9,26 +9,44 @@ import { Integration } from "@orchestra/core/integration"
 import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { Api } from "@orchestra/server/api"
+import { ModelGroup } from "@orchestra/protocol/groups/model"
 import { ServerAuth } from "@orchestra/server/auth"
 import { ModelHandler } from "@orchestra/server/handlers/model"
 import { LocationMiddleware, type LocationServices } from "@orchestra/server/location"
-import { authorizationLayer } from "@orchestra/server/middleware/authorization"
-import { schemaErrorLayer } from "@orchestra/server/middleware/schema-error"
+import { Authorization, authorizationLayer } from "@orchestra/server/middleware/authorization"
+import { SchemaErrorMiddleware, schemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { Context, Effect, Layer, Option } from "effect"
 import { HttpClient, HttpClientRequest, HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { testEffect } from "../lib/effect"
 
 const directory = AbsolutePath.make("/empty-catalog")
+const unexpectedIntegration = () =>
+  Effect.die("The empty-catalog handler must not use integration connections or attempts")
 const catalogLayer = AppNodeBuilder.build(LayerNode.group([Catalog.node, Location.node]), [
   [Location.node, Layer.succeed(Location.Service, { directory, project: { id: Project.ID.global, directory } })],
   // Isolate persistence and event I/O; the catalog selection and model handler are real.
   [Credential.node, Layer.mock(Credential.Service)({ all: () => Effect.succeed([]) })],
-  [Integration.node, Layer.mock(Integration.Service)({ list: () => Effect.succeed([]) })],
+  [
+    Integration.node,
+    Layer.mock(Integration.Service)({
+      list: () => Effect.succeed([]),
+      connection: {
+        active: unexpectedIntegration,
+        resolve: unexpectedIntegration,
+        key: unexpectedIntegration,
+        oauth: unexpectedIntegration,
+        update: unexpectedIntegration,
+        remove: unexpectedIntegration,
+      },
+      attempt: { status: unexpectedIntegration, complete: unexpectedIntegration, cancel: unexpectedIntegration },
+    }),
+  ],
   [EventV2.node, Layer.mock(EventV2.Service)({})],
 ])
-const api = HttpApi.make("server").add(Api.groups["server.model"])
+const api = HttpApi.make("server").add(
+  ModelGroup.middleware(LocationMiddleware).middleware(Authorization).middleware(SchemaErrorMiddleware),
+)
 const middleware = Layer.effect(
   LocationMiddleware,
   Effect.gen(function* () {
@@ -54,7 +72,7 @@ const it = testEffect(
   ).pipe(Layer.provideMerge(NodeHttpServer.layerTest), Layer.provideMerge(NodeServices.layer)),
 )
 
-it.effect("the actual default-model handler returns a required null in the empty-catalog envelope", () =>
+it.live("the actual default-model handler returns a required null in the empty-catalog envelope", () =>
   Effect.gen(function* () {
     const response = yield* HttpClient.execute(HttpClientRequest.get("/api/model/default"))
     expect(response.status).toBe(200)
