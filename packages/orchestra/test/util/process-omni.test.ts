@@ -7,6 +7,7 @@ import type { Readable } from "node:stream"
 import { Readable as NodeReadable, Writable as NodeWritable } from "node:stream"
 import { Flag } from "@orchestra/core/flag/flag"
 import { Process } from "@/util/process"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
 import { tmpdir } from "../fixture/fixture"
 
@@ -67,6 +68,7 @@ describe("util.process (omni)", () => {
   )
 
   test("shell: the command line goes through the shell", async () => {
+    expectSpawn(import.meta.path)
     const cmd = process.platform === "win32" ? "echo %OMNI_SHELL_TEST%" : 'echo "$OMNI_SHELL_TEST"'
     const out = await Process.run([cmd], { shell: true, env: { OMNI_SHELL_TEST: "via-shell" } })
     expect(out.code).toBe(0)

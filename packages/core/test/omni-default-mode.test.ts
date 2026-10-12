@@ -9,6 +9,7 @@ import { LayerNode } from "../src/effect/layer-node"
 import { Flag } from "../src/flag/flag"
 import { Omni } from "../src/omni"
 import { AppProcess } from "../src/process"
+import { expectSpawn } from "./fixture/omni-expect"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
@@ -16,6 +17,7 @@ const it = testEffect(LayerNode.compile(AppProcess.node))
 it.live("fresh AppProcess and spawner select Omni by default and preserve explicit legacy rollback", () =>
   Effect.gen(function* () {
     const app = yield* AppProcess.Service
+    expectSpawn(import.meta.path)
     const before = Omni.snapshot()
     for (const value of [undefined, "0", "1", "strict"] as const) {
       const env = { ...process.env }
