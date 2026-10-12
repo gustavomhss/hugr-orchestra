@@ -119,7 +119,11 @@ const layer = Layer.effect(
     const db = database.db
     const compaction = SessionCompaction.make({ events, llm, subagentModels, config: yield* config.entries() })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
-      const session = yield* store.get(sessionID)
+      const session = yield* store.get(sessionID).pipe(
+        Effect.catchDefect((cause) =>
+          cause instanceof SessionSubagentModels.StorageError ? Effect.fail(cause) : Effect.die(cause),
+        ),
+      )
       if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
       return session
     })
