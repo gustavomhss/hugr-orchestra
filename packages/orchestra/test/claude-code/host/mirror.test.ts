@@ -334,6 +334,7 @@ it.instance("nested children share the call map and cannot consume a root steer"
       user_message_uuid: "root-steer" },
   ])
   const [nested] = yield* ctx.tools(ctx.childID)
+  expect(ctx.mirror.author("agent")).toBeUndefined()
   yield* ctx.sessions.updatePart({ ...nested, metadata: { ...nested.metadata, sessionId: ctx.verifierID } })
   yield* ctx.feed([
     assistant("verifier", [{ type: "text", text: "Verified", citations: null }], "nested"),
@@ -429,7 +430,10 @@ it.instance("actual mirrored rejection preserves earlier repeated text and remov
   yield* ctx.feed([assistant("earlier", [{ type: "text", text: benign, citations: null }, { type: "text", text: benign, citations: null }], "rejected")])
   const earlierID = (yield* ctx.read(ctx.childID)).at(-1)!.info.id
   const rejected = "Rejected final sentinel"
-  yield* ctx.feed([assistant("final", [{ type: "text", text: benign, citations: null }, { type: "text", text: rejected, citations: null }], "rejected"),
+  const ending = assistant("final", [{ type: "text", text: benign, citations: null }, { type: "text", text: rejected, citations: null }], "rejected")
+  // Recorded forwarded child frames carry a null finish reason, unlike top-level SDK assistant messages.
+  ending.message.stop_reason = null
+  yield* ctx.feed([ending,
     result("rejected", rejected, { status: "completed", agentId: "task-rejected" })])
   const earlier = (yield* ctx.read(ctx.childID)).find((item) => item.info.id === earlierID)!
   const [completed] = yield* ctx.tools()

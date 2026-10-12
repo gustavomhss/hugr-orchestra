@@ -305,8 +305,10 @@ export function create(input: {
         if (child) {
           yield* child.on({ ...message, parent_tool_use_id: null } as SDKMessage)
           const cached = children.get(parent)
-          const author = message.type === "assistant" && message.message.stop_reason &&
-            !["tool_use", "pause_turn"].includes(message.message.stop_reason) &&
+          // Forwarded child blocks can carry a null stop_reason (recorded S4 frames). The returned block vector confirms
+          // the text-only candidate; a tool-calls frame can never identify a final author.
+          const author = message.type === "assistant" && message.message.stop_reason !== "tool_use" &&
+            message.message.stop_reason !== "pause_turn" && message.message.content.some((block) => block.type === "text") &&
             !message.message.content.some((block) => block.type === "tool_use") ? child.current()?.id : undefined
           if (cached && (message.type === "assistant" || (message.type === "stream_event" && message.event.type === "message_start")))
             cached.author = author
