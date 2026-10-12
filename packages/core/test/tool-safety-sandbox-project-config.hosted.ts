@@ -81,14 +81,29 @@ live("creating a project config that does not exist yet is refused: write, mkdir
       expect({ attack, present: names.filter(p.present) }).toEqual({ attack, present: [] })
     }
     // Names that only look similar, and everything else in the workspace, stay writable.
-    const normal = yield* p.run("echo ok > normal.txt && mkdir -p sub/deep && echo ok > sub/deep/f && echo ok > orchestra.json.bak && mkdir .orchestra-cache && echo ok > notorchestra.json && mkdir -p sub/.orchestra-x")
+    const normal = yield* p.run("echo ok > normal.txt && mkdir -p sub/deep .hidden/deep && echo ok > sub/deep/f && echo ok > .hidden/deep/sample.txt && echo ok > orchestra.json.bak && mkdir .orchestra-cache && echo ok > notorchestra.json && mkdir -p sub/.orchestra-x")
     expect(normal.exitCode).toBe(0)
     expect(yield* p.fs.readFileString(path.join(p.root, "sub/deep/f"))).toBe("ok\n")
-    // Whatever blocks the absent names inside the jail must not break ordinary reads of the workspace. The glob skips
-    // dotfiles: srt's own guards for absent ones (.bashrc, .gitconfig) cannot be opened.
-    const reads = yield* p.run("grep -r ok * && ls -l && find . -type f")
-    expect({ exitCode: reads.exitCode, stderr: reads.stderr.toString() }).toEqual({ exitCode: 0, stderr: expect.any(String) })
+    // Recursive grep from '.' visits hidden paths; srt's absent-name guards must not break ordinary reads.
+    const reads = yield* p.run("grep -r ok . && ls -la && find . -type f")
+    expect(reads.exitCode).toBe(0)
+    expect(reads.stdout.toString()).toContain("./sub/deep/f:ok")
+    expect(reads.stdout.toString()).toContain("./.hidden/deep/sample.txt:ok")
+    expect(reads.stderr.toString()).toBe("")
     expect(names.filter(p.present)).toEqual([])
+    if (process.platform === "linux") {
+      const protectedNames = [".bashrc", ".gitconfig", ".vscode"]
+      const attacks = ["echo x > .bashrc", "echo x > .gitconfig", "mkdir .vscode", "echo x > staged && mv staged .bashrc", "echo x > staged && ln -s staged .gitconfig", "ln -s /tmp .vscode"]
+      const control = yield* p.fs.makeTempDirectoryScoped({ prefix: "dotfile-control-" }).pipe(Effect.flatMap(p.fs.realPath))
+      for (const attack of attacks) {
+        expect((yield* p.unconfined(attack, control)).exitCode).toBe(0)
+        yield* p.fs.remove(control, { recursive: true, force: true })
+        yield* p.fs.makeDirectory(control)
+        const result = yield* p.run(attack)
+        expect({ attack, exitCode: result.exitCode }).not.toEqual({ attack, exitCode: 0 })
+        expect({ attack, present: protectedNames.filter(p.present) }).toEqual({ attack, present: [] })
+      }
+    }
   }), 240_000,
 )
 
