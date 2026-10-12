@@ -15,6 +15,13 @@ import { AbsolutePath } from "@orchestra/core/schema"
 
 const DefaultSessionsLimit = 50
 const DefaultSessionHistoryLimit = 50
+const typedNotFound = <A, R>(effect: Effect.Effect<A, SessionV2.NotFoundError, R>) =>
+  Effect.catchTag(
+    effect,
+    "Session.NotFoundError",
+    (error) =>
+      new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
+  )
 
 export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handlers) =>
   Effect.gen(function* () {
@@ -68,16 +75,14 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.create",
         Effect.fn(function* (ctx) {
           return {
-            data: yield* session.create({
-              id: ctx.payload.id,
-              agent: ctx.payload.agent,
-              model: ctx.payload.model,
-              location: ctx.payload.location ?? { directory: AbsolutePath.make(process.cwd()) },
-            }).pipe(
-              Effect.catchTag("Session.NotFoundError", (error) =>
-                new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
-              ),
-            ),
+            data: yield* session
+              .create({
+                id: ctx.payload.id,
+                agent: ctx.payload.agent,
+                model: ctx.payload.model,
+                location: ctx.payload.location ?? { directory: AbsolutePath.make(process.cwd()) },
+              })
+              .pipe(typedNotFound),
           }
         }),
       )
@@ -106,6 +111,15 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               ),
             ),
           }
+        }),
+      )
+      .handle(
+        "session.archive",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .archive({ sessionID: ctx.params.sessionID, archived: ctx.payload.archived })
+            .pipe(typedNotFound)
+          return HttpApiSchema.NoContent.make()
         }),
       )
       .handle(
