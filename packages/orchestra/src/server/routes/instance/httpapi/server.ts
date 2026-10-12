@@ -13,6 +13,7 @@ import { Command } from "@/command"
 import { Config } from "@/config/config"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { HostCatalog } from "./handlers/catalog"
+import { HostAgentExecution } from "./handlers/agent-execution"
 import { Credential } from "@orchestra/core/credential"
 import { Workspace } from "@/control-plane/workspace"
 import { Env } from "@/env"
@@ -185,6 +186,7 @@ const instanceRoutes = instanceApiRoutes.pipe(
 const serverRoutes = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(handlers),
   Layer.provide(HostCatalog.layer.pipe(Layer.provide(ClaudeCodeSDK.layer))),
+  Layer.provide(HostAgentExecution.layer),
   Layer.provide(PluginPtyEnvironment.layer),
   Layer.provide([serverHttpApiAuthLayer, v2SchemaErrorLayer]),
 )
