@@ -79,10 +79,64 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
       ),
   )
   .add(
+    HttpApiEndpoint.get("integration.oauth.status", "/api/integration/:integrationID/connect/oauth/:attemptID", {
+      params: { integrationID: Integration.ID, attemptID: Integration.AttemptID },
+      query: LocationQuery,
+      success: Location.response(Integration.AttemptStatus),
+      error: InvalidRequestError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.integration.oauth.status",
+          summary: "Get integration OAuth status",
+          description: "Compatibility route for polling an OAuth attempt owned by this integration.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post(
+      "integration.oauth.complete",
+      "/api/integration/:integrationID/connect/oauth/:attemptID/complete",
+      {
+        params: { integrationID: Integration.ID, attemptID: Integration.AttemptID },
+        query: LocationQuery,
+        payload: Schema.Struct({ code: Schema.optional(Schema.String) }),
+        success: HttpApiSchema.NoContent,
+        error: InvalidRequestError,
+      },
+    )
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.integration.oauth.complete",
+          summary: "Complete integration OAuth connection",
+          description: "Compatibility route for completing an OAuth attempt owned by this integration.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.delete("integration.oauth.cancel", "/api/integration/:integrationID/connect/oauth/:attemptID", {
+      params: { integrationID: Integration.ID, attemptID: Integration.AttemptID },
+      query: LocationQuery,
+      success: HttpApiSchema.NoContent,
+      error: InvalidRequestError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.integration.oauth.cancel",
+          summary: "Cancel integration OAuth connection",
+          description: "Compatibility route for cancelling an OAuth attempt owned by this integration.",
+        }),
+      ),
+  )
+  .add(
     HttpApiEndpoint.get("integration.attempt.status", "/api/integration/attempt/:attemptID", {
       params: { attemptID: Integration.AttemptID },
       query: LocationQuery,
       success: Location.response(Integration.AttemptStatus),
+      error: InvalidRequestError,
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(

@@ -46,6 +46,8 @@ import type {
   MessagesListOutput,
   ModelsListInput,
   ModelsListOutput,
+  ModelsDefaultInput,
+  ModelsDefaultOutput,
   ProvidersListInput,
   ProvidersListOutput,
   ProvidersGetInput,
@@ -58,6 +60,12 @@ import type {
   IntegrationsConnectKeyOutput,
   IntegrationsConnectOauthInput,
   IntegrationsConnectOauthOutput,
+  IntegrationsOauthStatusInput,
+  IntegrationsOauthStatusOutput,
+  IntegrationsOauthCompleteInput,
+  IntegrationsOauthCompleteOutput,
+  IntegrationsOauthCancelInput,
+  IntegrationsOauthCancelOutput,
   IntegrationsAttemptStatusInput,
   IntegrationsAttemptStatusOutput,
   IntegrationsAttemptCompleteInput,
@@ -622,6 +630,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      default: (input?: ModelsDefaultInput, requestOptions?: RequestOptions) =>
+        request<ModelsDefaultOutput>(
+          {
+            method: "GET",
+            path: `/api/model/default`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     providers: {
       list: (input?: ProvidersListInput, requestOptions?: RequestOptions) =>
@@ -700,6 +720,43 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      oauthStatus: (input: IntegrationsOauthStatusInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      oauthComplete: (input: IntegrationsOauthCompleteInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthCompleteOutput>(
+          {
+            method: "POST",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}/complete`,
+            query: { location: input["location"] },
+            body: { code: input["code"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      oauthCancel: (input: IntegrationsOauthCancelInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthCancelOutput>(
+          {
+            method: "DELETE",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
       attemptStatus: (input: IntegrationsAttemptStatusInput, requestOptions?: RequestOptions) =>
         request<IntegrationsAttemptStatusOutput>(
           {
@@ -707,7 +764,7 @@ export function make(options: ClientOptions) {
             path: `/api/integration/attempt/${encodeURIComponent(input.attemptID)}`,
             query: { location: input["location"] },
             successStatus: 200,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

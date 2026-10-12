@@ -1,5 +1,8 @@
 import { describe, expect } from "bun:test"
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
+import { LLM } from "@orchestra/llm"
+import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
+import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { HttpClient, HttpClientResponse } from "effect/unstable/http"
 import { Catalog } from "@orchestra/core/catalog"
 import { Credential } from "@orchestra/core/credential"
@@ -71,6 +74,47 @@ function withEnv<A, E, R>(vars: Record<string, string | undefined>, effect: () =
 const cost = (input: number, output = 0) => [{ input, output, cache: { read: 0, write: 0 } }]
 
 describe("OpencodePlugin", () => {
+  it.live(
+    "free catalog models authenticate real HTTP requests with the public sentinel and credentials override it",
+    () =>
+      Effect.gen(function* () {
+        const headers: Array<string | null> = []
+        const server = yield* Effect.acquireRelease(
+          Effect.sync(() =>
+            Bun.serve({
+              port: 0,
+              fetch: (request) => {
+                headers.push(request.headers.get("authorization"))
+                return new Response(
+                  'data: {"id":"test","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n',
+                  { headers: { "content-type": "text/event-stream" } },
+                )
+              },
+            }),
+          ),
+          (server) => Effect.promise(() => server.stop(true)),
+        )
+        const catalog = yield* Catalog.Service
+        yield* catalog.transform((draft) => {
+          draft.provider.update(ProviderV2.ID.opencode, (provider) => {
+            provider.api = { type: "aisdk", package: "@ai-sdk/openai-compatible", url: `${server.url.origin}/v1` }
+          })
+          draft.model.update(ProviderV2.ID.opencode, ModelV2.ID.make("free"), (model) => {
+            model.cost = cost(0)
+            model.limit = { context: 1000, output: 100 }
+          })
+        })
+        yield* addPlugin()
+        const free = required((yield* catalog.model.available()).find((model) => model.id === "free"))
+        for (const credential of [undefined, Credential.Key.make({ type: "key", key: "synthetic-request-key" })]) {
+          const model = yield* SessionRunnerModel.fromCatalogModel(free, credential)
+          yield* LLMClient.generate(LLM.request({ model, prompt: "Hello" })).pipe(
+            Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
+          )
+        }
+        expect(headers).toEqual(["Bearer public", "Bearer synthetic-request-key"])
+      }),
+  )
   it.effect("registers account and service account methods", () =>
     Effect.gen(function* () {
       yield* addPlugin()
@@ -256,7 +300,7 @@ describe("OpencodePlugin", () => {
     ),
   )
 
-  it.effect("leaves Zen unavailable without credentials, like any other provider", () =>
+  it.effect("keeps anonymous Zen free access model-scoped without marking the provider authenticated", () =>
     withEnv({ OPENCODE_API_KEY: undefined }, () =>
       Effect.gen(function* () {
         const catalog = yield* Catalog.Service
@@ -278,11 +322,14 @@ describe("OpencodePlugin", () => {
         })
         yield* addPlugin()
         expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBeUndefined()
-        expect((yield* catalog.provider.available()).map((provider) => provider.id)).not.toContain(
-          ProviderV2.ID.opencode,
-        )
-        expect((yield* catalog.model.available()).map((model) => model.providerID)).not.toContain(
-          ProviderV2.ID.opencode,
+        expect((yield* catalog.provider.available()).map((provider) => provider.id)).toContain(ProviderV2.ID.opencode)
+        expect(
+          (yield* catalog.model.available())
+            .filter((model) => model.providerID === ProviderV2.ID.opencode)
+            .map((model) => model.id),
+        ).toEqual([ModelV2.ID.make("free")])
+        expect((yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free")))?.request.body.apiKey).toBe(
+          "public",
         )
       }),
     ),
@@ -411,7 +458,9 @@ describe("OpencodePlugin", () => {
       const providerID = ProviderV2.ID.opencode
 
       yield* catalog.transform((catalog) => {
-        catalog.provider.update(providerID, () => {})
+        catalog.provider.update(providerID, (provider) => {
+          provider.request.body.apiKey = "synthetic-key"
+        })
         catalog.model.update(providerID, ModelV2.ID.make("cheap-mini"), (model) => {
           model.capabilities.input = ["text"]
           model.capabilities.output = ["text"]

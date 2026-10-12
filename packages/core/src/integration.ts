@@ -179,8 +179,10 @@ export interface Interface extends State.Transformable<Draft> {
     readonly remove: (credentialID: Credential.ID) => Effect.Effect<void, Credential.InheritedError>
   }
   readonly attempt: {
+    /** Checks an attempt's authoritative integration owner, including retained terminal states. */
+    readonly ownedBy: (attemptID: AttemptID, integrationID: ID) => Effect.Effect<boolean>
     /** Returns the current state of an OAuth attempt. */
-    readonly status: (attemptID: AttemptID) => Effect.Effect<AttemptStatus>
+    readonly status: (attemptID: AttemptID) => Effect.Effect<AttemptStatus, AuthorizationError>
     /** Completes the attempt and stores its credential. */
     readonly complete: (input: {
       /** Opaque handle returned by `oauth`. */
@@ -211,6 +213,7 @@ type PendingAttempt = {
   time: AttemptTime
 }
 type TerminalAttempt = {
+  integrationID: ID
   status: "complete" | "failed" | "expired"
   message?: string
   removeAt: number
@@ -325,8 +328,19 @@ export const locationLayer = Layer.effect(
         const attempt = current.get(attemptID)
         if (!attempt || attempt.status !== "pending") return [undefined, current]
         const terminal: TerminalAttempt = Exit.isSuccess(exit)
-          ? { status: "complete", time: attempt.time, removeAt: now + terminalRetention }
-          : { status: "failed", message: message(exit.cause), time: attempt.time, removeAt: now + terminalRetention }
+          ? {
+              status: "complete",
+              integrationID: attempt.integrationID,
+              time: attempt.time,
+              removeAt: now + terminalRetention,
+            }
+          : {
+              status: "failed",
+              integrationID: attempt.integrationID,
+              message: message(exit.cause),
+              time: attempt.time,
+              removeAt: now + terminalRetention,
+            }
         return [attempt, new Map(current).set(attemptID, terminal)]
       })
       if (!result) return
@@ -351,7 +365,12 @@ export const locationLayer = Layer.effect(
         for (const [id, attempt] of current) {
           if (attempt.status === "pending" && attempt.time.expires <= now) {
             scopes.push(attempt.scope)
-            next.set(id, { status: "expired", time: attempt.time, removeAt: now + terminalRetention })
+            next.set(id, {
+              status: "expired",
+              integrationID: attempt.integrationID,
+              time: attempt.time,
+              removeAt: now + terminalRetention,
+            })
             continue
           }
           if (attempt.status !== "pending" && attempt.removeAt <= now) next.delete(id)
@@ -472,9 +491,13 @@ export const locationLayer = Layer.effect(
         }),
       },
       attempt: {
+        ownedBy: Effect.fn("Integration.attempt.ownedBy")(function* (attemptID, integrationID) {
+          return (yield* SynchronizedRef.get(attempts)).get(attemptID)?.integrationID === integrationID
+        }),
         status: Effect.fn("Integration.attempt.status")(function* (attemptID) {
           const attempt = (yield* SynchronizedRef.get(attempts)).get(attemptID)
-          if (!attempt) return yield* Effect.die(`OAuth attempt not found: ${attemptID}`)
+          if (!attempt)
+            return yield* new AuthorizationError({ cause: new Error(`OAuth attempt not found: ${attemptID}`) })
           if (attempt.status === "failed") {
             return { status: attempt.status, message: attempt.message ?? "Authorization failed", time: attempt.time }
           }
@@ -487,7 +510,8 @@ export const locationLayer = Layer.effect(
             if (match.authorization.mode === "code" && input.code === undefined) return [match, current]
             return [match, new Map(current).set(input.attemptID, { ...match, completing: true })]
           })
-          if (!attempt) return yield* Effect.die(`OAuth attempt not found: ${input.attemptID}`)
+          if (!attempt)
+            return yield* new AuthorizationError({ cause: new Error(`OAuth attempt not found: ${input.attemptID}`) })
           if (attempt.status !== "pending") return
           if (attempt.authorization.mode === "code" && input.code === undefined) {
             return yield* new CodeRequiredError({ attemptID: input.attemptID })
