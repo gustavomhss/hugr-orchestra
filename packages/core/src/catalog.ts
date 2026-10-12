@@ -13,6 +13,14 @@ import { Integration } from "./integration"
 
 export const VIRTUAL_SEPARATOR = "#"
 
+// Anonymous access is a Zen-only contract. Missing pricing and a paid tier are not proof of free use.
+const isAnonymousOpenCodeModel = (model: ModelV2.Info) =>
+  model.providerID === ProviderV2.ID.opencode &&
+  model.enabled &&
+  model.status !== "deprecated" &&
+  model.cost.length > 0 &&
+  model.cost.every((cost) => cost.input === 0 && cost.output === 0 && cost.cache.read === 0 && cost.cache.write === 0)
+
 export const parseVirtualID = (id: ProviderV2.ID) => {
   const index = id.indexOf(VIRTUAL_SEPARATOR)
   if (index === -1) return undefined
@@ -83,8 +91,11 @@ const layer = Layer.effect(
 
     const available = (provider: ProviderV2.Info, integration: Integration.Info | undefined) => {
       if (provider.disabled) return false
-      if (typeof provider.request.body.apiKey === "string") return true
+      const key = provider.request.body.apiKey ?? provider.api.settings?.apiKey
+      if (typeof key === "string" && (provider.id !== ProviderV2.ID.opencode || (key.length > 0 && key !== "public")))
+        return true
       if (integration?.connections.length) return true
+      if (provider.id === ProviderV2.ID.opencode) return false
       return provider.integrationID === undefined && !integration
     }
 
@@ -102,6 +113,10 @@ const layer = Layer.effect(
         body: { ...provider.request.body, ...model.request.body },
         variant: model.request.variant,
       }
+      // The V2 runner and legacy AISDK path both read request.body.apiKey. Add the public sentinel only
+      // to explicitly free models; credentials still take precedence in the runner.
+      if (isAnonymousOpenCodeModel(model) && request.body.apiKey === undefined && api.settings?.apiKey === undefined)
+        request.body.apiKey = "public"
       return ModelV2.Info.make({
         ...model,
         api,
@@ -240,7 +255,12 @@ const layer = Layer.effect(
           const active = new Map((yield* integrations.list()).map((integration) => [integration.id, integration]))
           return (yield* result.provider.all()).filter((provider) => {
             if (virtualByID.has(provider.id)) return !provider.disabled
-            return available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))
+            if (available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))) return true
+            return (
+              !provider.disabled &&
+              provider.id === ProviderV2.ID.opencode &&
+              [...(state.get().providers.get(provider.id)?.models.values() ?? [])].some(isAnonymousOpenCodeModel)
+            )
           })
         }),
       },
@@ -273,23 +293,32 @@ const layer = Layer.effect(
         }),
 
         available: Effect.fn("CatalogV2.model.available")(function* () {
-          const providers = new Set((yield* result.provider.available()).map((provider) => provider.id))
-          return (yield* result.model.all()).filter((model) => providers.has(model.providerID) && model.enabled)
+          const providers = new Map((yield* result.provider.available()).map((provider) => [provider.id, provider]))
+          const opencode = providers.get(ProviderV2.ID.opencode)
+          const authenticated =
+            opencode &&
+            available(opencode, yield* integrations.get(opencode.integrationID ?? Integration.ID.make("opencode")))
+          return (yield* result.model.all()).filter(
+            (model) =>
+              providers.has(model.providerID) &&
+              model.enabled &&
+              (model.providerID !== ProviderV2.ID.opencode || authenticated || isAnonymousOpenCodeModel(model)),
+          )
         }),
 
         default: Effect.fn("CatalogV2.model.default")(function* () {
           const defaultModel = state.get().defaultModel
+          const models = yield* result.model.available()
           if (defaultModel) {
-            const provider = yield* result.provider.get(defaultModel.providerID)
-            if (provider && (yield* result.provider.available()).some((item) => item.id === provider.id)) {
-              const model = yield* result.model.get(defaultModel.providerID, defaultModel.modelID)
-              if (model?.enabled) return model
-            }
+            const model = models.find(
+              (item) => item.providerID === defaultModel.providerID && item.id === defaultModel.modelID,
+            )
+            if (model) return model
           }
 
           return Option.getOrUndefined(
             pipe(
-              yield* result.model.available(),
+              models,
               Array.sortWith((item) => item.time.released, Order.flip(Order.Number)),
               Array.head,
             ),
@@ -300,6 +329,7 @@ const layer = Layer.effect(
           const record = state.get().providers.get(providerID)
           if (!record) return
           const provider = record.provider
+          const models = (yield* result.model.available()).filter((model) => model.providerID === providerID)
 
           // TODO: Remove these provider-specific assumptions once model syncing reliably reports available deployments.
           if (providerID === ProviderV2.ID.azure || providerID === ProviderV2.ID.make("azure-cognitive-services")) {
@@ -307,12 +337,12 @@ const layer = Layer.effect(
           }
 
           if (providerID === ProviderV2.ID.opencode) {
-            const gpt5Nano = record.models.get(ModelV2.ID.make("gpt-5-nano"))
+            const gpt5Nano = models.find((model) => model.id === ModelV2.ID.make("gpt-5-nano"))
             if (gpt5Nano?.enabled && gpt5Nano.status === "active") return projectModel(gpt5Nano, provider)
           }
 
           const candidates = pipe(
-            Array.fromIterable(record.models.values()),
+            models,
             Array.filter(
               (model) =>
                 model.providerID === providerID &&

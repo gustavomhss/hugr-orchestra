@@ -133,4 +133,11 @@
     cursor: default;
     pointer-events: none;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="switch-control"],
+    [data-slot="switch-thumb"] {
+      transition: none;
+    }
+  }
 }

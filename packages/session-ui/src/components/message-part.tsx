@@ -65,6 +65,7 @@ import { TodoWrite } from "./todo-write"
 import { animate } from "motion"
 import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
+import { createEditTool } from "./message-part/edit"
 import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 
@@ -366,7 +367,7 @@ function getDirectory(path: string | undefined) {
 }
 
 import type { IconProps } from "@orchestra/ui/icon"
-import { normalize, resolveFileDiff } from "./session-diff"
+import { normalize } from "./session-diff"
 
 export type ToolInfo = {
   icon: IconProps["name"]
@@ -2151,108 +2152,14 @@ ToolRegistry.register({
 
 ToolRegistry.register({
   name: "edit",
-  render(props) {
-    const i18n = useI18n()
-    const fileComponent = useFileComponent()
-    const diagnostics = createMemo(() => getDiagnostics(props.metadata.diagnostics, props.input.filePath))
-    const path = createMemo(() => props.metadata?.filediff?.file || props.input.filePath || "")
-    const filename = () => getFilename(props.input.filePath ?? "")
-    const pending = () => props.status === "pending" || props.status === "running"
-    const diffSource = createMemo(
-      () => {
-        const filediff = props.metadata?.filediff
-        if (!filediff) return
-        return {
-          file: filediff.file || props.input.filePath || "",
-          patch: typeof filediff.patch === "string" ? filediff.patch : undefined,
-          before: typeof filediff.before === "string" ? filediff.before : undefined,
-          after: typeof filediff.after === "string" ? filediff.after : undefined,
-        }
-      },
-      undefined,
-      {
-        equals: (a, b) =>
-          a?.file === b?.file && a?.patch === b?.patch && a?.before === b?.before && a?.after === b?.after,
-      },
-    )
-
-    const fileCompProps = createMemo(() => {
-      try {
-        const source = diffSource()
-        if (source) {
-          const fileDiff = resolveFileDiff(source)
-          if (fileDiff) return { fileDiff, hunkSeparators: fileDiff.isPartial ? "simple" : "line-info-basic" }
-        }
-      } catch {}
-
-      return {
-        before: {
-          name: props.metadata?.filediff?.file || props.input.filePath,
-          contents: props.metadata?.filediff?.before || props.input.oldString || "",
-        },
-        after: {
-          name: props.metadata?.filediff?.file || props.input.filePath,
-          contents: props.metadata?.filediff?.after || props.input.newString || "",
-        },
-      }
-    })
-
-    return (
-      <div data-component="edit-tool">
-        <BasicTool
-          {...props}
-          icon="code-lines"
-          defer={props.deferContent !== false}
-          trigger={
-            <div data-component="edit-trigger">
-              <div data-slot="message-part-title-area">
-                <div data-slot="message-part-title">
-                  <span data-slot="message-part-title-text">
-                    <TextShimmer text={i18n.t("ui.messagePart.title.edit")} active={pending()} />
-                  </span>
-                  <Show when={!pending()}>
-                    <span data-slot="message-part-title-filename">{filename()}</span>
-                  </Show>
-                </div>
-                <Show when={!pending() && props.input.filePath?.includes("/")}>
-                  <div data-slot="message-part-path">
-                    <span data-slot="message-part-directory">{getDirectory(props.input.filePath!)}</span>
-                  </div>
-                </Show>
-              </div>
-              <div data-slot="message-part-actions">
-                <Show when={!pending() && props.metadata.filediff}>
-                  <DiffChanges changes={props.metadata.filediff} />
-                </Show>
-              </div>
-            </div>
-          }
-        >
-          <Show when={path()}>
-            <ToolFileAccordion
-              path={path()}
-              actions={
-                <Show when={!pending() && props.metadata.filediff}>
-                  <DiffChanges changes={props.metadata.filediff!} />
-                </Show>
-              }
-            >
-              <div data-component="edit-content">
-                <Dynamic
-                  component={fileComponent}
-                  mode="diff"
-                  virtualize={props.virtualizeDiff}
-                  onRendered={props.onContentRendered}
-                  {...fileCompProps()}
-                />
-              </div>
-            </ToolFileAccordion>
-          </Show>
-          <DiagnosticsDisplay diagnostics={diagnostics()} />
-        </BasicTool>
-      </div>
-    )
-  },
+  render: createEditTool({
+    directory: getDirectory,
+    FileAccordion: ToolFileAccordion,
+    Diagnostics(props) {
+      const diagnostics = createMemo(() => getDiagnostics(props.metadata.diagnostics, props.input.filePath))
+      return <DiagnosticsDisplay diagnostics={diagnostics()} />
+    },
+  }),
 })
 
 ToolRegistry.register({

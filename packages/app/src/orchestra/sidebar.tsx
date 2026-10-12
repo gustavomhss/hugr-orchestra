@@ -5,17 +5,7 @@ import { Icon } from "@orchestra/ui/v2/icon"
 import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import {
-  createEffect,
-  createMemo,
-  createRoot,
-  For,
-  getOwner,
-  onCleanup,
-  Show,
-  startTransition,
-  type JSX,
-} from "solid-js"
+import { createEffect, createMemo, createRoot, For, getOwner, onCleanup, Show, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { useCommand } from "@/context/command"
@@ -73,7 +63,12 @@ const icons = {
     '<circle cx="8" cy="8" r="2.3"/><path d="M8 1.9v1.6M8 12.5v1.6M14.1 8h-1.6M3.5 8H1.9M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1M12.3 12.3l-1.1-1.1M4.8 4.8 3.7 3.7"/>',
 }
 
-export function OrchestraSidebar(props: { compact: boolean; constrained: boolean; onToggle: () => void }) {
+export function OrchestraSidebar(props: {
+  compact: boolean
+  constrained: boolean
+  onToggle: () => void
+  onNavigate?: () => void
+}) {
   const layout = useLayout()
   const global = useGlobal()
   const server = useServer()
@@ -181,34 +176,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
       .join(" · ")
   }
 
-  // Chapter pages register no palette of their own; Home and sessions register theirs over this one.
-  command.register("orchestra.palette", () =>
-    layout.route().type === "chapter"
-      ? [{ id: "command.palette", title: language.t("command.palette"), hidden: true, onSelect: openPalette }]
-      : [],
-  )
-
-  async function openPalette() {
-    const conn = profile().conn ?? home.server.focused()
-    if (!conn) return
-    const ctx = global.ensureServerCtx(conn)
-    const { DialogHomeCommandPaletteV2 } = await import("@/components/dialog-command-palette-v2")
-    void dialog.show(() => (
-      <DialogHomeCommandPaletteV2
-        server={conn}
-        onSelectSession={(entry) => {
-          if (!entry.sessionID || !entry.directory || !entry.server) return
-          const sessionID = entry.sessionID
-          const server = entry.server
-          const directory = entry.project?.worktree ?? entry.directory
-          ctx.projects.open(directory)
-          ctx.projects.touch(directory)
-          void startTransition(() => tabs.select(tabs.addSessionTab({ server, sessionId: sessionID })))
-        }}
-      />
-    ))
-  }
-
   async function projectTab(conn: ServerConnection.Any, project: LocalProject) {
     const key = ServerConnection.key(conn)
     const ctx = global.ensureServerCtx(conn)
@@ -307,46 +274,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
     if (directory) layout.home.setSelection({ server: target.server, directory })
     navigate(`/orchestra/${id}${view}`)
   }
-
-  // Workflows and Hooks in the command palette, from every page.
-  command.register("orchestra.relay", () => {
-    const category = language.t("orchestra.palette.relay")
-    return [
-      {
-        id: "relay.workflows.open",
-        title: language.t("orchestra.nav.workflows"),
-        description: language.t("orchestra.palette.goTo"),
-        category,
-        onSelect: () => openChapter("workflows"),
-      },
-      {
-        id: "relay.hooks.open",
-        title: language.t("orchestra.nav.hooks"),
-        description: language.t("orchestra.palette.goTo"),
-        category,
-        onSelect: () => openChapter("hooks"),
-      },
-      {
-        id: "relay.executions.open",
-        title: language.t("orchestra.palette.executions"),
-        description: language.t("orchestra.palette.goTo"),
-        category,
-        onSelect: () => openChapter("workflows", "/executions"),
-      },
-      {
-        id: "relay.workflow.new",
-        title: language.t("orchestra.workflows.new"),
-        category,
-        onSelect: () => openChapter("workflows", "/new"),
-      },
-      {
-        id: "relay.hook.new",
-        title: language.t("orchestra.hooks.new"),
-        category,
-        onSelect: () => openChapter("hooks", "/new"),
-      },
-    ]
-  })
 
   function current(id: string) {
     const route = layout.route()
@@ -514,6 +441,7 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                       }
                       aria-current={current(item.id) ? "page" : undefined}
                       onClick={() => {
+                        props.onNavigate?.()
                         if (item.id === "home") return navigate("/")
                         if (item.id === "chat") return openChat()
                         if (item.id === "maestro") return openMaestro()

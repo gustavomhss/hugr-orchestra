@@ -35,6 +35,25 @@
   padding: 0;
   list-style: none;
 }
+.agents-roster {
+  min-inline-size: 0;
+}
+.agents-search {
+  max-inline-size: 360px;
+  margin-block-end: 12px;
+}
+.agents-search input {
+  min-inline-size: 0;
+}
+.agents-pages {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-start: 16px;
+}
+.agents-pages [aria-disabled="true"] {
+  opacity: 0.5;
+}
 .agent-top b {
   min-inline-size: 0;
   overflow: hidden;
@@ -91,6 +110,10 @@ html[data-color-scheme="light"] .agent-role {
    The app's preflight zeroes margins, so restore the UA centering of a modal dialog. */
 .agents-dialog {
   margin: auto;
+  inline-size: min(640px, calc(100vw - 24px));
+  max-inline-size: calc(100vw - 24px);
+  box-sizing: border-box;
+  container-type: inline-size;
 }
 .agents-dialog form {
   display: flex;
@@ -111,4 +134,40 @@ html[data-color-scheme="light"] .agent-role {
 }
 .agents-close {
   flex: none;
+}
+.agents-dialog .mx-field,
+.agents-dialog .mx-fields,
+.agents-dialog .mx-grow {
+  min-inline-size: 0;
+}
+.agents-dialog .mx-field input,
+.agents-dialog .mx-field select,
+.agents-dialog .mx-field textarea {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.agents-dialog .mx-note,
+.agents-dialog .mx-error {
+  overflow-wrap: anywhere;
+}
+@container (max-width: 440px) {
+  .agents-dialog .mx-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .agents-dialog .mx-dialog-head,
+  .agents-dialog .mx-dialog-body,
+  .agents-dialog .mx-dialog-foot {
+    padding-inline: 12px;
+  }
+  .agents-dialog .mx-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .agents-dialog .mx-row select {
+    flex: none;
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
 }

@@ -1,5 +1,7 @@
 import { type Accessor, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
+import { useNavigate } from "@solidjs/router"
+import { useSettings } from "@/context/settings"
 import { DragDropProvider, PointerSensor } from "@dnd-kit/solid"
 import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
 import { AutoScroller, Feedback, PointerActivationConstraints } from "@dnd-kit/dom"
@@ -157,12 +159,16 @@ export function HomeUtilityNav(props: {
   onOpenSettings: () => void
   language: ReturnType<typeof useLanguage>
 }) {
+  const navigate = useNavigate()
+  const settings = useSettings()
   return (
     <div class={`${props.class ?? ""} min-w-0 flex-col gap-1 pr-3`}>
       <HomeProjectNavButton
         type="button"
         class="text-v2-text-text-faint [&>[data-slot=icon-svg]]:text-v2-icon-icon-muted"
-        onClick={props.onOpenSettings}
+        onClick={() =>
+          settings.general.newLayoutDesigns() ? navigate("/orchestra/settings?section=general") : props.onOpenSettings()
+        }
       >
         <IconV2 name="settings-gear" size="small" />
         <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t("sidebar.settings")}</span>
@@ -198,6 +204,34 @@ function HomeServerRow(props: {
   })
   return (
     <div class="group/server relative flex h-7 min-w-0 items-center rounded-[6px]">
+      <button
+        type="button"
+        data-action="home-server-collapse"
+        class={`
+            inline-flex size-5 shrink-0 items-center justify-center
+            rounded-[4px] text-v2-icon-icon-muted
+          `}
+        classList={{
+          "hover:bg-v2-overlay-simple-overlay-hover": canToggle(),
+          "cursor-default opacity-40": !canToggle(),
+        }}
+        aria-label={props.collapsed ? props.language.t("home.server.expand") : props.language.t("home.server.collapse")}
+        disabled={!canToggle()}
+        aria-expanded={canToggle() ? !props.collapsed : undefined}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          if (!canToggle()) return
+          props.onToggleCollapsed(props.server)
+        }}
+      >
+        <IconV2
+          name="chevron-down"
+          size="small"
+          class="transition-transform duration-150 ease-in-out"
+          style={{ transform: `rotate(${props.collapsed ? -90 : 0}deg)` }}
+        />
+      </button>
       <HomeProjectNavButton
         type="button"
         class="pr-16 disabled:opacity-60"
@@ -205,36 +239,6 @@ function HomeServerRow(props: {
         disabled={!healthy()}
         onClick={() => props.onFocusServer(props.server)}
       >
-        <span
-          data-action="home-server-collapse"
-          class={`
-            -ml-0.5 -mr-1.5 inline-flex size-5 shrink-0 items-center justify-center
-            rounded-[4px] text-v2-icon-icon-muted
-          `}
-          classList={{
-            "hover:bg-v2-overlay-simple-overlay-hover": canToggle(),
-            "cursor-default opacity-40": !canToggle(),
-          }}
-          aria-label={
-            props.collapsed ? props.language.t("home.server.expand") : props.language.t("home.server.collapse")
-          }
-          aria-disabled={!canToggle()}
-          aria-expanded={canToggle() ? !props.collapsed : undefined}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (!canToggle()) return
-            props.onToggleCollapsed(props.server)
-          }}
-          onPointerDown={(event) => event.preventDefault()}
-        >
-          <IconV2
-            name="chevron-down"
-            size="small"
-            class="transition-transform duration-150 ease-in-out"
-            style={{ transform: `rotate(${props.collapsed ? -90 : 0}deg)` }}
-          />
-        </span>
         <div class="flex size-4 shrink-0 items-center justify-center -mr-0.5">
           <ServerHealthIndicator health={props.health} />
         </div>

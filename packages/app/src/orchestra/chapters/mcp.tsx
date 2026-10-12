@@ -101,7 +101,12 @@ export default function McpPage(props: ChapterPageProps) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
   const cards = createMemo(() =>
-    mcpCards(status.isPending || status.isError ? {} : (status.data ?? {}), config.data, entries.data, tools.data),
+    mcpCards(
+      status.isPending || status.isError ? {} : (status.data ?? {}),
+      config.isPending || config.isError ? undefined : config.data,
+      entries.isPending || entries.isError ? undefined : entries.data,
+      tools.isPending || tools.isError ? undefined : tools.data,
+    ),
   )
   const byName = createMemo(() => new Map(cards().map((card) => [card.name, card])))
   const label = (card: McpCard) => language.t(mcpBadges[card.status.status].label)
@@ -293,14 +298,31 @@ export default function McpPage(props: ChapterPageProps) {
           <McpEditDialog
             card={selected()}
             names={cards().map((card) => card.name)}
-            writable={v1() !== false}
+            writable={!v1.loading && v1() === true}
+            read={v1.loading || status.isPending ? "loading" : status.isError ? "error" : "ready"}
+            retrying={status.isFetching}
+            onRetry={() => void status.refetch()}
+            load={async () => {
+              const [config, entries] = await Promise.all([source.config(), source.entries()])
+              return { config, entries }
+            }}
             onSave={save}
             onRemove={() => setState("dialog", { type: "remove", name: state.dialog?.name })}
             onClose={close}
           />
         </Match>
         <Match when={state.dialog?.type === "tools" && selected()}>
-          {(card) => <McpToolsDialog card={card()} status={label(card())} supported={v1() !== false} onClose={close} />}
+          {(card) => (
+            <McpToolsDialog
+              card={card()}
+              status={label(card())}
+              supported={!v1.loading && v1() === true}
+              read={v1.loading || tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
+              retrying={tools.isFetching}
+              onRetry={() => void tools.refetch()}
+              onClose={close}
+            />
+          )}
         </Match>
         <Match when={state.dialog?.type === "remove" && state.dialog.name}>
           {(name) => (

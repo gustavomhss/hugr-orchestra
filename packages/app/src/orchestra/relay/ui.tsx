@@ -1,5 +1,6 @@
 import { createSignal, For, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { Portal } from "solid-js/web"
+import { Dialog } from "@kobalte/core/dialog"
 import { useLanguage } from "@/context/language"
 import { GLYPH, type Glyph, ICON } from "./catalog"
 import { ago } from "./format"
@@ -118,11 +119,61 @@ export function Menu(props: {
   )
 }
 
-// A native modal dialog in the kit's layout. Escape (the dialog's cancel event) calls onClose.
+// Use the same modal/focus stack as node details, including dialogs opened from a node's actions.
+export function RelayModal(props: {
+  class: string
+  label?: string
+  labelledby?: string
+  component?: string
+  busy?: boolean
+  children: JSX.Element
+  onClose: () => void
+  focus?: (dialog: HTMLElement) => void
+}) {
+  const previous = document.activeElement
+  return (
+    <Dialog open onOpenChange={(open) => !open && !props.busy && props.onClose()}>
+    <Dialog.Portal>
+      <div class="wf-scope">
+      <div class="wf-modal-layer">
+      <Dialog.Overlay class="wf-modal-backdrop" />
+      <Dialog.Content
+      class={props.class}
+      aria-label={props.label}
+      aria-labelledby={props.labelledby}
+      data-component={props.component ?? "relay-modal"}
+      aria-busy={props.busy}
+      onOpenAutoFocus={(event) => {
+        event.preventDefault()
+        const dialog = event.currentTarget as HTMLElement
+        if (props.focus) return props.focus(dialog)
+        ;(dialog.querySelector<HTMLElement>("[autofocus],input,textarea") ?? dialog.querySelector<HTMLElement>("button"))?.focus({ preventScroll: true })
+      }}
+      onCloseAutoFocus={(event) => {
+        event.preventDefault()
+        if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true })
+      }}
+      onEscapeKeyDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (!props.busy) props.onClose()
+      }}
+      onInteractOutside={(event) => props.busy && event.preventDefault()}
+    >
+      {props.children}
+      </Dialog.Content>
+      </div>
+      </div>
+    </Dialog.Portal>
+    </Dialog>
+  )
+}
+
 export function RelayDialog(props: {
   title: string
   description?: JSX.Element
   wide?: boolean
+  busy?: boolean
   label?: string
   children: JSX.Element
   foot: JSX.Element
@@ -130,30 +181,12 @@ export function RelayDialog(props: {
   onSubmit?: () => void
 }) {
   const copy = useRelayCopy()
-  let dialog!: HTMLDialogElement
-  onMount(() => dialog.showModal())
   return (
-    <dialog
-      ref={dialog}
-      class={`mx-dialog${props.wide ? " wide" : ""}`}
-      aria-label={props.label ?? props.title}
-      // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
-      // document and cancels the native close. The modal is the top layer, so it takes Escape first.
-      on:keydown={(event) => {
-        if (event.key !== "Escape" || event.defaultPrevented) return
-        event.preventDefault()
-        props.onClose()
-      }}
-      onCancel={(event) => {
-        event.preventDefault()
-        props.onClose()
-      }}
-    >
+    <RelayModal class={`mx-dialog${props.wide ? " wide" : ""}`} label={props.label ?? props.title} busy={props.busy} onClose={props.onClose}>
       <form
-        method="dialog"
         onSubmit={(event) => {
           event.preventDefault()
-          props.onSubmit?.()
+          if (!props.busy) props.onSubmit?.()
         }}
       >
         <header class="mx-dialog-head">
@@ -168,6 +201,7 @@ export function RelayDialog(props: {
             class="mx-btn icon"
             aria-label={copy.t("orchestra.workflows.dialog.close")}
             title={copy.t("orchestra.workflows.dialog.close")}
+            disabled={props.busy}
             onClick={props.onClose}
           >
             <Ic name="close" />
@@ -176,6 +210,6 @@ export function RelayDialog(props: {
         <div class="mx-dialog-body">{props.children}</div>
         <footer class="mx-dialog-foot">{props.foot}</footer>
       </form>
-    </dialog>
+    </RelayModal>
   )
 }

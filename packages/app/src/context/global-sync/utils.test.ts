@@ -6,8 +6,15 @@ import type {
   ProviderListOutput,
 } from "@opencode-ai/client/promise"
 import { directoryKey, normalizeAgentList, normalizePermissionRequest, normalizeProviderList } from "./utils"
+import { mixedEngineAgents, mixedEngineCatalog } from "@/testing/model-execution-fixture"
 
 describe("normalizeAgentList", () => {
+  test("preserves each explicit V2 engine without inferring Maestro from a secondary seat", () => {
+    expect(mixedEngineAgents("orchestra").map((agent) => [agent.id, agent.engine])).toEqual([
+      ["maestro", "orchestra"],
+      ["secondary", "claude-code"],
+    ])
+  })
   test("adapts current agents to the app agent shape", () => {
     const result = normalizeAgentList([
       {
@@ -69,6 +76,13 @@ describe("normalizePermissionRequest", () => {
 })
 
 describe("normalizeProviderList", () => {
+  test("preserves provider/model API settings exactly, including the host-only availability marker", () => {
+    const catalog = mixedEngineCatalog()
+    expect(catalog.all.get("anthropic")?.options).toEqual({ executionHost: "claude-code", tenant: "host" })
+    expect(catalog.all.get("anthropic#api-key")?.options).toEqual({ tenant: "key" })
+    expect(catalog.all.get("custom")?.models["host-only-model"].options).toEqual({ executionHost: "claude-code" })
+    expect(catalog.all.get("custom")?.models["api-model"].options).toEqual({})
+  })
   test("groups current models into the app provider catalog", () => {
     const result = normalizeProviderList(
       [{ id: "openai", name: "OpenAI", package: "@ai-sdk/openai" }] as ProviderListOutput["data"],

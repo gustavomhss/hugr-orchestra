@@ -8,8 +8,9 @@ import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
 import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
 import type { RelayRun } from "./runs"
 import { HookDetails, hookOperations, triggerName } from "./details-hook"
+import type { HookQueryState } from "./hook-status"
 import { WorkflowDetails } from "./details-workflow"
-import type { SaveState } from "./editor-head"
+import { SaveStatus, type SaveState } from "./editor-head"
 import type { EditorProps } from "./editor"
 import { runHandle, RUN_TONE } from "./format"
 import {
@@ -17,7 +18,6 @@ import {
   type Flow,
   type FlowEdge,
   type FlowNode,
-  flowFromDocument,
   type Issue,
   issueNode,
   nodeOf,
@@ -37,12 +37,17 @@ type Props = EditorProps & {
   kind: RelayKind
   document: RelayDocument
   flow: Flow
+  frozen?: Flow
+  readOnly?: boolean
   outputs: Outputs
   issues: Issue[]
   selected: string[]
   run: RelayRun | undefined
   runs: RelayRun[]
   decision: RelayDecision | undefined
+  decisionKnown?: boolean
+  decisionStatus?: HookQueryState
+  installExists?: boolean
   installed: RelayInstall | undefined
   test: { path: string[]; result: string; label: string } | undefined
   save: SaveState
@@ -54,6 +59,8 @@ type Props = EditorProps & {
   onTest: () => void
   onClearTest: () => void
   onUpdateInstall: (installID: string) => void
+  onRetry: () => void
+  onReload: () => void
 }
 
 // The Editor tab: the canvas with its banner, the add panel and node details, each layer on its own URL.
@@ -159,6 +166,7 @@ export function CanvasTab(props: Props) {
   }
   const panelAnchor = () => anchor() ?? defaultAnchor(props.flow, props.selected)
   const pick = (key: string, at?: { x: number; y: number }) => {
+    if (props.readOnly) return
     if (key === "phase") {
       const grouped = groupSelection(props.flow, props.selected, copy.t("orchestra.workflows.canvas.newPhase"))
       if (!grouped) return
@@ -191,6 +199,7 @@ export function CanvasTab(props: Props) {
     props.go(relayPath.node(props.kind, props.document.id, added.id), true)
   }
   const remove = (ids: string[]) => {
+    if (props.readOnly) return
     if (ids.some((id) => nodeOf(props.flow, id)?.type === START))
       showToast({ title: copy.t("orchestra.workflows.canvas.startStays") })
     const next = removeNodes(props.flow, ids)
@@ -199,6 +208,7 @@ export function CanvasTab(props: Props) {
     props.select([])
   }
   const onEdge = (edge: FlowEdge, action: "insert" | "remove") => {
+    if (props.readOnly) return
     if (action === "remove") return props.edit(removeEdge(props.flow, edge))
     setAnchor({ id: edge.from, port: edge.port })
     props.select([edge.from])
@@ -223,19 +233,6 @@ export function CanvasTab(props: Props) {
     api?.center(next)
   })
 
-  // Node details read the run's own version for "Instructions sent".
-  const frozen = useQuery(
-    () => ({
-      queryKey: props.source.key("version", props.document.id, String(props.run?.version ?? "")),
-      queryFn:
-        props.route.node && props.run?.version !== undefined
-          ? () => props.source.client.version(props.document.id, String(props.run!.version))
-          : skipToken,
-      retry: false,
-      staleTime: Infinity,
-    }),
-    props.source.queryClient,
-  )
   const skills = useQuery(
     () => ({
       queryKey: props.source.key("skills"),
@@ -332,8 +329,8 @@ export function CanvasTab(props: Props) {
                 : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
               props.decision
                 ? `${copy.t(`orchestra.hooks.outcome.${props.decision.outcome}`)} ${copy.when(decisionTime(props.decision))}`
-                : copy.t("orchestra.hooks.canvas.notFired"),
-            ].join(" · ")}
+                : props.decisionKnown !== false ? copy.t("orchestra.hooks.canvas.notFired") : undefined,
+            ].filter(Boolean).join(" · ")}
           </span>
           <Show when={!current && props.document.activeVersionId}>
             <button type="button" class="mx-btn primary" onClick={() => props.onUpdateInstall(installed.installID)}>
@@ -348,16 +345,19 @@ export function CanvasTab(props: Props) {
     }
   }
   const save = () => (
-    <span class="wf-save">
-      <Ic name="check" />
-      {props.save.dirty || props.save.state === "saving"
-        ? copy.t("orchestra.workflows.editor.saving")
-        : copy.t("orchestra.workflows.details.autosave", { version: props.document.versionCounter })}
-    </span>
+    <Show when={!props.readOnly} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
+    <SaveStatus
+      save={props.save}
+      saved={copy.t("orchestra.workflows.details.autosave", { version: props.document.versionCounter })}
+      onRetry={props.onRetry}
+      onReload={props.onReload}
+    />
+    </Show>
   )
 
   return (
     <Canvas
+      readOnly={props.readOnly}
       flow={props.flow}
       outputs={props.outputs}
       issues={issueNodes()}
@@ -386,7 +386,7 @@ export function CanvasTab(props: Props) {
           copy.count(count, "orchestra.workflows.count.step.one", "orchestra.workflows.count.step.other"),
       }}
       empty={
-        props.flow.nodes.length < 2 ? (
+        !props.readOnly && props.flow.nodes.length < 2 ? (
           <div class="mx-empty wf-empty wf-empty-canvas">
             <strong>
               {copy.t(workflow() ? "orchestra.workflows.canvas.emptyTitle" : "orchestra.hooks.canvas.emptyTitle")}
@@ -409,6 +409,7 @@ export function CanvasTab(props: Props) {
       onReject={() => showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })}
       onOpen={open}
       onAdd={(next) => {
+        if (props.readOnly) return
         setAnchor(next)
         if (next) props.select([next.id])
         props.go(relayPath.add(props.kind, props.document.id))
@@ -433,7 +434,7 @@ export function CanvasTab(props: Props) {
         props.api(value)
       }}
     >
-      <Show when={props.route.add}>
+      <Show when={props.route.add && !props.readOnly}>
         <AddPanel
           title={copy.t(workflow() ? "orchestra.workflows.add.title" : "orchestra.hooks.add.title")}
           subtitle={(() => {
@@ -467,6 +468,9 @@ export function CanvasTab(props: Props) {
                 outputs={props.outputs}
                 types={types()}
                 decision={props.decision}
+                decisionStatus={props.decisionStatus}
+                installed={props.installExists}
+                testResult={props.test ? copy.t("orchestra.hooks.canvas.test", { label: props.test.label, result: props.test.result }) : undefined}
                 issues={props.issues
                   .filter((issue) => issueNode(issue) === node().id)
                   .map((issue) => issueText(copy, props.flow, issue))}
@@ -489,7 +493,8 @@ export function CanvasTab(props: Props) {
               flow={props.flow}
               node={node()}
               run={props.run}
-              frozen={frozen.data ? flowFromDocument(frozen.data, "workflow") : undefined}
+              frozen={props.frozen}
+              readOnly={props.readOnly}
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
               skills={skills.data ?? []}
               focusPhase={focusPhase()}

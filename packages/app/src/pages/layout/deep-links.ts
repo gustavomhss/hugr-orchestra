@@ -48,3 +48,17 @@ export const drainPendingDeepLinks = (target: OrchestraWindow) => {
   if (target.__ORCHESTRA__) target.__ORCHESTRA__.deepLinks = []
   return pending
 }
+
+// Both shells use this ingress. A cancelable event acknowledges ownership to the desktop bridge.
+export function listenDeepLinks(target: OrchestraWindow, handle: (urls: string[]) => void) {
+  const listener = (event: Event) => {
+    const urls = (event as CustomEvent<{ urls?: unknown }>).detail?.urls
+    if (!Array.isArray(urls) || !urls.every((url) => typeof url === "string") || event.defaultPrevented) return
+    event.preventDefault()
+    handle(urls)
+  }
+  target.addEventListener(deepLinkEvent, listener)
+  handle(drainPendingDeepLinks(target))
+  target.dispatchEvent(new CustomEvent("orchestra:deep-link-ready"))
+  return () => target.removeEventListener(deepLinkEvent, listener)
+}

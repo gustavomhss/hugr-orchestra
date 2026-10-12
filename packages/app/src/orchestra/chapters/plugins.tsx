@@ -160,6 +160,11 @@ export default function PluginsPage(props: ChapterPageProps) {
             {language.t("orchestra.plugins.emptyHint")}
           </div>
         </Match>
+        <Match when={!visible().length}>
+          <div class="mx-empty" role="status">
+            {language.t("prompt.popover.emptyResults")}
+          </div>
+        </Match>
         <Match when={true}>
           <div class="mx-grid">
             <For each={visible()}>

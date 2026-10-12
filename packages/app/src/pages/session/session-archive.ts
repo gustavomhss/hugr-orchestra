@@ -1,4 +1,4 @@
-import { useNavigate } from "@solidjs/router"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { produce } from "solid-js/store"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import { useLanguage } from "@/context/language"
@@ -10,15 +10,21 @@ import { errorMessage } from "@/pages/layout/helpers"
 import { useSessionKey } from "@/pages/session/session-layout"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { showToast } from "@/utils/toast"
+import { useServerSDK } from "@/context/server-sdk"
+import { ServerConnection } from "@/context/server"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 export function useSessionArchive() {
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
+  const location = useLocation()
   const navigate = useNavigate()
   const sdk = useSDK()
   const sync = useSync()
   const serverSync = useServerSync()
+  const serverSDK = useServerSDK()
   const tabs = useTabs()
   const { params } = useSessionKey()
+  const available = () => serverSDK().protocolKind() === "v1"
 
   const navigateAfterRemoval = (sessionID: string, parentID?: string, nextSessionID?: string) => {
     if (params.id !== sessionID) return
@@ -40,27 +46,35 @@ export function useSessionArchive() {
   }
 
   const archive = async (sessionID: string) => {
-    const session = sync().session.get(sessionID)
+    const source = sdk()
+    const pathname = location.pathname
+    const state = sync()
+    const serverState = serverSync()
+    const server = ServerConnection.key(serverSDK().server)
+    const session = state.session.get(sessionID)
     if (!session) return
-    if ((await sdk().protocol) !== "v1") return
+    if ((await source.protocol) !== "v1") {
+      showToast({ title: language.t("session.archive.unavailable") })
+      return
+    }
 
-    const sessions = sync().data.session ?? []
+    const sessions = state.data.session ?? []
     const index = sessions.findIndex((s) => s.id === sessionID)
     const nextSession = index === -1 ? undefined : (sessions[index + 1] ?? sessions[index - 1])
 
-    await sdk()
-      .client.session.update({ sessionID, directory: sdk().directory, time: { archived: Date.now() } })
+    await source.client.session
+      .update({ sessionID, directory: source.directory, time: { archived: Date.now() } })
       .then(() => {
-        sync().set(
+        state.set(
           produce((draft) => {
             const index = draft.session.findIndex((s) => s.id === sessionID)
             if (index !== -1) draft.session.splice(index, 1)
           }),
         )
-        sync().session.evict(sessionID)
-        serverSync().homeSessions.remove(sessionID)
-        navigateAfterRemoval(sessionID, session.parentID, nextSession?.id)
-        notifySessionTabsRemoved({ directory: sdk().directory, sessionIDs: [sessionID] })
+        state.session.evict(sessionID)
+        serverState.homeSessions.remove(sessionID)
+        if (location.pathname === pathname) navigateAfterRemoval(sessionID, session.parentID, nextSession?.id)
+        notifySessionTabsRemoved({ server, directory: source.directory, sessionIDs: [sessionID] })
       })
       .catch((err) => {
         showToast({
@@ -70,5 +84,5 @@ export function useSessionArchive() {
       })
   }
 
-  return { archive, navigateAfterRemoval }
+  return { archive, available, navigateAfterRemoval }
 }

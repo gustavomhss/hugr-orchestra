@@ -53,6 +53,7 @@ import { startBackgroundCli } from "./background-cli"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
 import { OmniBoot } from "./omni-boot"
+import { createDeepLinkDelivery } from "./deep-links"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -74,7 +75,10 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 let logger: ReturnType<typeof initLogging>
 let server: SidecarListener | null = null
 
-const pendingDeepLinks: string[] = []
+const deepLinks = createDeepLinkDelivery(process.argv, (target, urls) => {
+  const win = BrowserWindow.getAllWindows().find((window) => window.webContents.id === target)
+  if (win && !win.isDestroyed()) sendDeepLinks(win, urls)
+})
 
 function useEnvProxy() {
   try {
@@ -87,9 +91,8 @@ function useEnvProxy() {
 
 function emitDeepLinks(urls: string[]) {
   if (urls.length === 0) return
-  pendingDeepLinks.push(...urls)
   const win = getLastFocusedWindow()
-  if (win) sendDeepLinks(win, urls)
+  deepLinks.enqueue(urls, win?.webContents.id)
 }
 
 async function killSidecar() {
@@ -242,6 +245,13 @@ const main = Effect.gen(function* () {
     logger.log("deep link received via open-url", { url })
     emitDeepLinks([url])
   })
+  app.on("browser-window-created", (_event, win) => {
+    const id = win.webContents.id
+    win.webContents.on("did-start-navigation", (_event, _url, _inPlace, mainFrame) => {
+      if (mainFrame) deepLinks.pause(id)
+    })
+    win.on("closed", () => deepLinks.pause(id))
+  })
 
   app.on("before-quit", (event) => {
     setAppQuitting()
@@ -327,14 +337,14 @@ const main = Effect.gen(function* () {
       },
       (e) => Effect.runPromise(e),
     ),
-    consumeInitialDeepLinks: () => pendingDeepLinks.splice(0),
+    consumeInitialDeepLinks: (target) => deepLinks.consume(target),
     getDefaultServerUrl: () => getDefaultServerUrl(),
     setDefaultServerUrl: (url) => setDefaultServerUrl(url),
     isFirstLaunchOnboardingPending,
     finishFirstLaunchOnboarding,
     isOldLayoutEligible,
     getDisplayBackend: async () => null,
-    setDisplayBackend: async () => undefined,
+    setDisplayBackend: async () => { throw new Error("Unsupported display backend setting") },
     checkAppExists: (appName) => checkAppExists(appName),
     resolveAppPath: async (appName) => resolveAppPath(appName),
     updater,

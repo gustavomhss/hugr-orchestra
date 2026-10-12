@@ -27,6 +27,53 @@ const layer = AppNodeBuilder.build(LayerNode.group([Catalog.node, Integration.no
 const it = testEffect(layer)
 
 describe("ModelsDevPlugin", () => {
+  it.effect("imported missing pricing cannot grant anonymous OpenCode access", () =>
+    Effect.gen(function* () {
+      const integrations = yield* Integration.Service
+      const catalog = yield* Catalog.Service
+      const models = ModelsDev.Service.of({
+        get: () =>
+          Effect.succeed({
+            opencode: {
+              id: "opencode",
+              name: "OpenCode",
+              env: ["MODEL_IMPORT_MISSING_KEY"],
+              npm: "@ai-sdk/openai-compatible",
+              models: Object.fromEntries(
+                [
+                  ["unknown", undefined],
+                  ["free", { input: 0, output: 0 }],
+                  ["paid", { input: 1, output: 2 }],
+                ].map(([id, cost]) => [
+                  String(id),
+                  {
+                    id: String(id),
+                    name: String(id),
+                    release_date: "2026-01-01",
+                    attachment: false,
+                    reasoning: false,
+                    temperature: false,
+                    tool_call: true,
+                    cost,
+                    limit: { context: 1000, output: 100 },
+                  },
+                ]),
+              ) as Record<string, ModelsDev.Model>,
+            },
+          }),
+        refresh: () => Effect.void,
+      })
+      yield* ModelsDevPlugin.effect(
+        host({ catalog: catalogHost(catalog), integration: integrationHost(integrations) }),
+      ).pipe(Effect.provideService(ModelsDev.Service, models))
+      expect((yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown")))?.cost).toEqual([])
+      expect(
+        (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown")))?.request.body.apiKey,
+      ).toBeUndefined()
+      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      expect((yield* catalog.model.default())?.request.body.apiKey).toBe("public")
+    }),
+  )
   it.effect("projects models.dev modes as separate models instead of variants", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service

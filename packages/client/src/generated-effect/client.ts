@@ -290,7 +290,12 @@ type Endpoint5_0Input = { readonly location?: Endpoint5_0Request["query"]["locat
 const Endpoint5_0 = (raw: RawClient["server.model"]) => (input?: Endpoint5_0Input) =>
   raw["model.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
 
-const adaptGroup5 = (raw: RawClient["server.model"]) => ({ list: Endpoint5_0(raw) })
+type Endpoint5_1Request = Parameters<RawClient["server.model"]["model.default"]>[0]
+type Endpoint5_1Input = { readonly location?: Endpoint5_1Request["query"]["location"] }
+const Endpoint5_1 = (raw: RawClient["server.model"]) => (input?: Endpoint5_1Input) =>
+  raw["model.default"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup5 = (raw: RawClient["server.model"]) => ({ list: Endpoint5_0(raw), default: Endpoint5_1(raw) })
 
 type Endpoint6_0Request = Parameters<RawClient["server.provider"]["provider.list"]>[0]
 type Endpoint6_0Input = { readonly location?: Endpoint6_0Request["query"]["location"] }
@@ -354,36 +359,74 @@ const Endpoint7_3 = (raw: RawClient["server.integration"]) => (input: Endpoint7_
     payload: { methodID: input["methodID"], inputs: input["inputs"], label: input["label"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint7_4Request = Parameters<RawClient["server.integration"]["integration.attempt.status"]>[0]
+type Endpoint7_4Request = Parameters<RawClient["server.integration"]["integration.oauth.status"]>[0]
 type Endpoint7_4Input = {
+  readonly integrationID: Endpoint7_4Request["params"]["integrationID"]
   readonly attemptID: Endpoint7_4Request["params"]["attemptID"]
   readonly location?: Endpoint7_4Request["query"]["location"]
 }
 const Endpoint7_4 = (raw: RawClient["server.integration"]) => (input: Endpoint7_4Input) =>
-  raw["integration.attempt.status"]({
-    params: { attemptID: input["attemptID"] },
+  raw["integration.oauth.status"]({
+    params: { integrationID: input["integrationID"], attemptID: input["attemptID"] },
     query: { location: input["location"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint7_5Request = Parameters<RawClient["server.integration"]["integration.attempt.complete"]>[0]
+type Endpoint7_5Request = Parameters<RawClient["server.integration"]["integration.oauth.complete"]>[0]
 type Endpoint7_5Input = {
+  readonly integrationID: Endpoint7_5Request["params"]["integrationID"]
   readonly attemptID: Endpoint7_5Request["params"]["attemptID"]
   readonly location?: Endpoint7_5Request["query"]["location"]
   readonly code?: Endpoint7_5Request["payload"]["code"]
 }
 const Endpoint7_5 = (raw: RawClient["server.integration"]) => (input: Endpoint7_5Input) =>
+  raw["integration.oauth.complete"]({
+    params: { integrationID: input["integrationID"], attemptID: input["attemptID"] },
+    query: { location: input["location"] },
+    payload: { code: input["code"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint7_6Request = Parameters<RawClient["server.integration"]["integration.oauth.cancel"]>[0]
+type Endpoint7_6Input = {
+  readonly integrationID: Endpoint7_6Request["params"]["integrationID"]
+  readonly attemptID: Endpoint7_6Request["params"]["attemptID"]
+  readonly location?: Endpoint7_6Request["query"]["location"]
+}
+const Endpoint7_6 = (raw: RawClient["server.integration"]) => (input: Endpoint7_6Input) =>
+  raw["integration.oauth.cancel"]({
+    params: { integrationID: input["integrationID"], attemptID: input["attemptID"] },
+    query: { location: input["location"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint7_7Request = Parameters<RawClient["server.integration"]["integration.attempt.status"]>[0]
+type Endpoint7_7Input = {
+  readonly attemptID: Endpoint7_7Request["params"]["attemptID"]
+  readonly location?: Endpoint7_7Request["query"]["location"]
+}
+const Endpoint7_7 = (raw: RawClient["server.integration"]) => (input: Endpoint7_7Input) =>
+  raw["integration.attempt.status"]({
+    params: { attemptID: input["attemptID"] },
+    query: { location: input["location"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint7_8Request = Parameters<RawClient["server.integration"]["integration.attempt.complete"]>[0]
+type Endpoint7_8Input = {
+  readonly attemptID: Endpoint7_8Request["params"]["attemptID"]
+  readonly location?: Endpoint7_8Request["query"]["location"]
+  readonly code?: Endpoint7_8Request["payload"]["code"]
+}
+const Endpoint7_8 = (raw: RawClient["server.integration"]) => (input: Endpoint7_8Input) =>
   raw["integration.attempt.complete"]({
     params: { attemptID: input["attemptID"] },
     query: { location: input["location"] },
     payload: { code: input["code"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint7_6Request = Parameters<RawClient["server.integration"]["integration.attempt.cancel"]>[0]
-type Endpoint7_6Input = {
-  readonly attemptID: Endpoint7_6Request["params"]["attemptID"]
-  readonly location?: Endpoint7_6Request["query"]["location"]
+type Endpoint7_9Request = Parameters<RawClient["server.integration"]["integration.attempt.cancel"]>[0]
+type Endpoint7_9Input = {
+  readonly attemptID: Endpoint7_9Request["params"]["attemptID"]
+  readonly location?: Endpoint7_9Request["query"]["location"]
 }
-const Endpoint7_6 = (raw: RawClient["server.integration"]) => (input: Endpoint7_6Input) =>
+const Endpoint7_9 = (raw: RawClient["server.integration"]) => (input: Endpoint7_9Input) =>
   raw["integration.attempt.cancel"]({
     params: { attemptID: input["attemptID"] },
     query: { location: input["location"] },
@@ -394,9 +437,12 @@ const adaptGroup7 = (raw: RawClient["server.integration"]) => ({
   get: Endpoint7_1(raw),
   connectKey: Endpoint7_2(raw),
   connectOauth: Endpoint7_3(raw),
-  attemptStatus: Endpoint7_4(raw),
-  attemptComplete: Endpoint7_5(raw),
-  attemptCancel: Endpoint7_6(raw),
+  oauthStatus: Endpoint7_4(raw),
+  oauthComplete: Endpoint7_5(raw),
+  oauthCancel: Endpoint7_6(raw),
+  attemptStatus: Endpoint7_7(raw),
+  attemptComplete: Endpoint7_8(raw),
+  attemptCancel: Endpoint7_9(raw),
 })
 
 type Endpoint8_0Request = Parameters<RawClient["server.credential"]["credential.update"]>[0]

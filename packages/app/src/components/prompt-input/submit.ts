@@ -28,13 +28,19 @@ import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
 import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
+import { draftSessionKey } from "./draft-session"
+import { createCompatibleApi } from "@/utils/server-compat"
+
+type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
+type Admission = { busy: boolean; directory?: string; session?: Session; rules?: boolean }
+const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
 
 type PendingPrompt = {
   abort: AbortController
   cleanup: VoidFunction
 }
 
-const pending = new Map<string, PendingPrompt>()
+const pending = new Map<string, Set<PendingPrompt>>()
 
 export type FollowupDraft = {
   sessionID: string
@@ -59,6 +65,7 @@ type FollowupSendInput = {
   optimisticBusy?: boolean
   // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
   pending?: boolean
+  signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
 }
 
@@ -72,15 +79,16 @@ const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? 
 const draftImages = (prompt: Prompt) => prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
 
 export async function sendFollowupDraft(input: FollowupSendInput) {
+  if (input.signal?.aborted) return false
   const text = draftText(input.draft.prompt)
   const images = draftImages(input.draft.prompt)
   const setBusy = () => {
-    if (!input.optimisticBusy) return
+    if (!input.optimisticBusy || input.signal?.aborted) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
   }
 
   const setIdle = () => {
-    if (!input.optimisticBusy) return
+    if (!input.optimisticBusy || input.signal?.aborted) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
   }
 
@@ -95,31 +103,34 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
     setBusy()
     try {
-      if (!(await wait())) {
+      if (!(await wait()) || input.signal?.aborted) {
         setIdle()
         return false
       }
 
       const messageID = Identifier.ascending("message")
-      await input.api.command({
-        sessionID: input.draft.sessionID,
-        id: messageID,
-        command: cmd,
-        arguments: tail.join(" "),
-        agent: input.draft.agent,
-        model: {
-          id: input.draft.model.modelID,
-          providerID: input.draft.model.providerID,
-          variant: input.draft.variant,
+      await input.api.command(
+        {
+          sessionID: input.draft.sessionID,
+          id: messageID,
+          command: cmd,
+          arguments: tail.join(" "),
+          agent: input.draft.agent,
+          model: {
+            id: input.draft.model.modelID,
+            providerID: input.draft.model.providerID,
+            variant: input.draft.variant,
+          },
+          delivery: input.draft.delivery,
+          files: await Promise.all(
+            images.map(async (attachment) => ({
+              uri: await blobDataUrl(attachment.blob, attachment.mime),
+              name: attachment.filename,
+            })),
+          ),
         },
-        delivery: input.draft.delivery,
-        files: await Promise.all(
-          images.map(async (attachment) => ({
-            uri: await blobDataUrl(attachment.blob, attachment.mime),
-            name: attachment.filename,
-          })),
-        ),
-      })
+        { signal: input.signal },
+      )
       return true
     } catch (err) {
       setIdle()
@@ -134,6 +145,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
     })),
   )
+  if (input.signal?.aborted) return false
   const { requestParts, optimisticParts } = buildRequestParts({
     prompt: input.draft.prompt,
     context: input.draft.context,
@@ -175,7 +187,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   })
 
   try {
-    if (!(await wait())) {
+    if (!(await wait()) || input.signal?.aborted) {
       batch(() => {
         setIdle()
         remove()
@@ -183,40 +195,43 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       return false
     }
 
-    await input.api.prompt({
-      sessionID: input.draft.sessionID,
-      id: messageID,
-      agent: input.draft.agent,
-      model: input.draft.model,
-      variant: input.draft.variant,
-      system: input.draft.system,
-      delivery: input.draft.delivery,
-      legacyParts: requestParts,
-      text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-      files: requestParts.flatMap((part) => {
-        if (part.type !== "file") return []
-        const text = part.source?.text
-        return [
-          {
-            uri: part.url,
-            name: part.filename,
-            mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
-          },
-        ]
-      }),
-      agents: requestParts.flatMap((part) =>
-        part.type === "agent"
-          ? [
-              {
-                name: part.name,
-                mention: part.source
-                  ? { start: part.source.start, end: part.source.end, text: part.source.value }
-                  : undefined,
-              },
-            ]
-          : [],
-      ),
-    })
+    await input.api.prompt(
+      {
+        sessionID: input.draft.sessionID,
+        id: messageID,
+        agent: input.draft.agent,
+        model: input.draft.model,
+        variant: input.draft.variant,
+        system: input.draft.system,
+        delivery: input.draft.delivery,
+        legacyParts: requestParts,
+        text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+        files: requestParts.flatMap((part) => {
+          if (part.type !== "file") return []
+          const text = part.source?.text
+          return [
+            {
+              uri: part.url,
+              name: part.filename,
+              mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
+            },
+          ]
+        }),
+        agents: requestParts.flatMap((part) =>
+          part.type === "agent"
+            ? [
+                {
+                  name: part.name,
+                  mention: part.source
+                    ? { start: part.source.start, end: part.source.end, text: part.source.value }
+                    : undefined,
+                },
+              ]
+            : [],
+        ),
+      },
+      { signal: input.signal },
+    )
     return true
   } catch (err) {
     batch(() => {
@@ -261,6 +276,7 @@ type PromptSubmitInput = {
   setMode: (mode: "normal" | "shell") => void
   setPopover: (popover: "at" | "slash" | null) => void
   newSessionWorktree?: Accessor<string | undefined>
+  pendingKey?: Accessor<string>
   onNewSessionWorktreeReset?: () => void
   shouldQueue?: Accessor<boolean>
   onQueue?: (draft: FollowupDraft) => void
@@ -285,7 +301,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
-  const pendingKey = (sessionID: string) => ScopedKey.from(sdk().scope, sessionID)
 
   const errorMessage = (err: unknown) => {
     if (err && typeof err === "object" && "message" in err && typeof err.message === "string") return err.message
@@ -300,50 +315,29 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const abort = async () => {
     const sessionID = params.id
     if (!sessionID) return Promise.resolve()
+    const source = sdk()
+    const serverState = serverSync()
 
-    serverSync().session.set("todo", sessionID, [])
+    serverState.session.set("todo", sessionID, [])
 
     input.onAbort?.()
 
-    const key = pendingKey(sessionID)
+    const key = ScopedKey.from(source.scope, sessionID)
     const queued = pending.get(key)
     if (queued) {
-      queued.abort.abort()
-      queued.cleanup()
       pending.delete(key)
-      return Promise.resolve()
-    }
-    return sdk()
-      .api.session.interrupt({ sessionID })
-      .catch(() => {})
-  }
-
-  const restoreCommentItems = (
-    target: ReturnType<ReturnType<typeof usePrompt>["capture"]>,
-    items: (ContextItem & { key: string })[],
-  ) => {
-    for (const item of items) {
-      target.context.add({
-        type: "file",
-        path: item.path,
-        selection: item.selection,
-        comment: item.comment,
-        commentID: item.commentID,
-        commentOrigin: item.commentOrigin,
-        preview: item.preview,
+      serverState.session.set("session_status", sessionID, { type: "idle" })
+      ;[...queued].reverse().forEach((job) => {
+        job.abort.abort()
+        job.cleanup()
       })
     }
+    return source.api.session.interrupt({ sessionID }).catch(() => {})
   }
 
-  const clearContext = (target: ReturnType<ReturnType<typeof usePrompt>["capture"]>) => {
-    for (const item of target.context.items()) {
-      target.context.remove(item.key)
-    }
-  }
-
-  const seed = (dir: string, info: Session) => {
-    serverSync().session.remember(info)
-    const [, setStore] = serverSync().child(dir)
+  const seed = (state: ServerSync, dir: string, info: Session) => {
+    state.session.remember(info)
+    const [, setStore] = state.child(dir)
     setStore("session", (list: Session[]) => {
       const result = Binary.search(list, info.id, (item) => item.id)
       const next = [...list]
@@ -356,10 +350,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     })
   }
 
-  const handleSubmit = async (event: Event) => {
-    event.preventDefault()
-
-    const target = prompt.capture()
+  const submit = async (target: PromptTarget, admission: Admission) => {
     const submission = createPromptSubmissionState({
       target,
       prompt: target.current(),
@@ -391,17 +382,38 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     input.addToHistory(currentPrompt, mode)
     input.resetHistoryNavigation()
 
-    const projectDirectory = sdk().directory
+    const directorySDK = sdk()
+    const server = serverSDK()
+    const serverState = serverSync()
+    const syncState = sync()
+    const projectDirectory = directorySDK.directory
     const permissionState = permission.currentServerState()
     const isNewSession = !params.id
+    const draftID = search.draftId
+    const draftServer = draftID ? tabs.draft(draftID).server : undefined
+    const ownsDraft = () =>
+      !draftID ||
+      (search.draftId === draftID &&
+        !params.id &&
+        sdk().scope === directorySDK.scope &&
+        sdk().directory === projectDirectory &&
+        tabs.store.some(
+          (tab) =>
+            tab.type === "draft" &&
+            tab.draftID === draftID &&
+            tab.server === draftServer &&
+            tab.directory === projectDirectory,
+        ))
+    const rulesKey = input.pendingKey?.() ?? draftSessionKey(directorySDK.scope, projectDirectory, draftID)
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const worktreeSelection = input.newSessionWorktree?.() || "main"
 
-    let sessionDirectory = projectDirectory
-    let client = sdk().client
+    let sessionDirectory = admission.directory ?? projectDirectory
+    const client = directorySDK.client
+    let session = admission.session ?? input.info()
 
     if (isNewSession) {
-      if (worktreeSelection === "create") {
+      if (!admission.directory && worktreeSelection === "create") {
         const createdWorktree = await client.worktree
           .create({ directory: projectDirectory })
           .then((x) => x.data)
@@ -420,29 +432,34 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           })
           return
         }
-        WorktreeState.pending(sdk().scope, createdWorktree.directory)
+        WorktreeState.pending(directorySDK.scope, createdWorktree.directory)
         sessionDirectory = createdWorktree.directory
+        admission.directory = sessionDirectory
       }
 
-      if (worktreeSelection !== "main" && worktreeSelection !== "create") {
+      if (!admission.directory && worktreeSelection !== "main" && worktreeSelection !== "create") {
         sessionDirectory = worktreeSelection
       }
 
       if (sessionDirectory !== projectDirectory) {
-        client = sdk().createClient({
-          directory: sessionDirectory,
-          throwOnError: true,
-        })
-        serverSync().child(sessionDirectory)
+        serverState.child(sessionDirectory)
       }
-
-      input.onNewSessionWorktreeReset?.()
     }
 
-    let session = input.info()
+    const api =
+      sessionDirectory === projectDirectory
+        ? directorySDK.api.session
+        : createCompatibleApi({
+            protocol: server.protocol,
+            current: server.currentApi,
+            legacy: (directory) =>
+              server.createClient({ directory: directory ?? sessionDirectory, throwOnError: true }),
+            directory: sessionDirectory,
+          }).session
+
     if (!session && isNewSession) {
-      const created = await sdk()
-        .api.session.create({
+      const created = await api
+        .create({
           agent: agentKey(currentAgent),
           model: { id: currentModel.id, providerID: currentModel.provider.id, variant },
           location: { directory: sessionDirectory },
@@ -456,39 +473,69 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           return undefined
         })
       if (created) {
-        seed(sessionDirectory, created)
+        admission.session = created
+        admission.directory = sessionDirectory
+        seed(serverState, sessionDirectory, created)
         session = created
-        // Flush draft subagent-model selections into session permission
-        // rules before the first prompt is sent — sequential here, so the
-        // first task call already observes them. No race by construction.
-        const draftRules = pendingRules(sessionDirectory)
-        if (draftRules.length > 0) {
-          clearPending(sessionDirectory)
-          if ((await serverSDK().protocol) === "v1") {
-            await serverSDK()
-              .client.session.update({
-                sessionID: created.id,
-                directory: sessionDirectory,
-                permission: draftRules,
-              })
-              .catch((err) => console.error("[tasks] draft rules flush failed", err))
-          }
-        }
-        await startTransition(() => {
-          if (!session) return
-          if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
-          local.session.promote(sessionDirectory, session.id, {
-            agent: agentKey(currentAgent),
-            model: { providerID: currentModel.provider.id, modelID: currentModel.id },
-            variant: variant ?? null,
-          })
-          layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
-          const draftID = search.draftId
-          if (draftID) tabs.promoteDraft(draftID, { server: tabs.draft(draftID).server, sessionId: session.id })
-          else navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
-          submission.retarget(prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id }))
-        })
       }
+    }
+    if (session && isNewSession) {
+      // The draft can change servers while admission waits. Leave its captured
+      // state and admitted session untouched rather than capture under the new SDK.
+      if (!ownsDraft()) return
+      // Keep the admitted session and worktree for retry until its rules are durable.
+      const draftRules = pendingRules(rulesKey)
+      if (draftRules.length > 0 || admission.rules) {
+        const saved = await (async () => {
+          if ((await server.protocol) !== "v1") throw new Error(language.t("common.requestFailed"))
+          let rules = draftRules
+          while (true) {
+            admission.rules = true
+            await server.client.session.update({
+              sessionID: session.id,
+              directory: sessionDirectory,
+              permission: rules.length ? rules : [{ permission: "task", pattern: "*/*", action: "allow" }],
+            })
+            const next = pendingRules(rulesKey)
+            // A picker edit during persistence needs its own durable acknowledgement.
+            if (JSON.stringify(next) !== JSON.stringify(rules)) {
+              rules = next
+              continue
+            }
+            if (!ownsDraft()) return false
+            clearPending(rulesKey)
+            admission.rules = false
+            return true
+          }
+        })().catch((err) => {
+          showToast({ title: language.t("common.requestFailed"), description: errorMessage(err) })
+          return false
+        })
+        if (!saved) return
+      }
+      const handoff = { accepted: false }
+      await startTransition(() => {
+        if (!session || !ownsDraft()) return
+        handoff.accepted = true
+        if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
+        local.session.promote(sessionDirectory, session.id, {
+          agent: agentKey(currentAgent),
+          model: { providerID: currentModel.provider.id, modelID: currentModel.id },
+          variant: variant ?? null,
+        })
+        layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
+        // Move later edits before promotion disposes the draft's persisted state.
+        submission.retarget(prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id }))
+        if (draftID && draftServer) {
+          tabs.promoteDraft(draftID, { server: draftServer, sessionId: session.id })
+          return
+        }
+        navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
+      })
+      if (!handoff.accepted) return
+      admission.session = undefined
+      admission.directory = undefined
+      input.onNewSessionWorktreeReset?.()
     }
     if (!session) {
       showToast({
@@ -514,8 +561,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       delivery: isNewSession ? undefined : input.delivery?.(),
     }
 
-    const clearInput = () => {
-      submission.clear()
+    const clearInput = (context: "none" | "comments" | "all" = "none") => {
+      if (!submission.clear(context) || !submission.current(prompt.capture())) return
       input.setMode("normal")
       input.setPopover(null)
     }
@@ -539,8 +586,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (!isNewSession && mode === "normal" && input.shouldQueue?.()) {
       input.onQueue?.(draft)
-      clearContext(submission.target())
-      clearInput()
+      clearInput("all")
       return
     }
 
@@ -548,28 +594,32 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (mode === "shell") {
       clearInput()
-      submitShellCommand({ api: sdk().api.session, sessionID: session.id, command: text, agent, model }).catch(
-        (err) => {
-          showToast({
-            title: language.t("prompt.toast.shellSendFailed.title"),
-            description: errorMessage(err),
-          })
-          restoreInput()
-        },
-      )
+      await submitShellCommand({
+        api,
+        sessionID: session.id,
+        command: text,
+        agent,
+        model,
+      }).catch((err) => {
+        showToast({
+          title: language.t("prompt.toast.shellSendFailed.title"),
+          description: errorMessage(err),
+        })
+        restoreInput()
+      })
       return
     }
 
     if (text.startsWith("/")) {
       const [cmdName, ...args] = text.split(" ")
       const commandName = cmdName.slice(1)
-      const customCommand = sync().data.command.find((c) => c.name === commandName)
+      const customCommand = syncState.data.command.find((c) => c.name === commandName)
       if (customCommand) {
         clearInput()
         const messageID = Identifier.ascending("message")
-        serverSync().session.set("session_status", session.id, { type: "busy" })
-        sdk()
-          .api.session.command({
+        serverState.session.set("session_status", session.id, { type: "busy" })
+        await api
+          .command({
             sessionID: session.id,
             id: messageID,
             command: commandName,
@@ -585,7 +635,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             ),
           })
           .catch((err) => {
-            serverSync().session.set("session_status", session.id, { type: "idle" })
+            serverState.session.set("session_status", session.id, { type: "idle" })
             showToast({
               title: language.t("prompt.toast.commandSendFailed.title"),
               description: formatServerError(err, language.t, language.t("common.requestFailed")),
@@ -596,38 +646,39 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       }
     }
 
-    const commentItems = context.filter((item) => item.type === "file" && !!item.comment?.trim())
     const messageID = Identifier.ascending("message")
 
     const removeOptimisticMessage = () => {
-      sync().session.optimistic.remove({
+      syncState.session.optimistic.remove({
         directory: sessionDirectory,
         sessionID: session.id,
         messageID,
       })
     }
 
-    for (const item of commentItems) submission.target().context.remove(item.key)
-    clearInput()
+    clearInput("comments")
+
+    const controller = new AbortController()
+    const key = ScopedKey.from(directorySDK.scope, session.id)
+    const jobs = pending.get(key) ?? new Set<PendingPrompt>()
+    const job = {
+      abort: controller,
+      cleanup: () => {
+        removeOptimisticMessage()
+        restoreInput()
+      },
+    }
+    jobs.add(job)
+    pending.set(key, jobs)
 
     const waitForWorktree = async () => {
-      const worktree = WorktreeState.get(sdk().scope, sessionDirectory)
+      if (controller.signal.aborted) return false
+      const worktree = WorktreeState.get(directorySDK.scope, sessionDirectory)
       if (!worktree || worktree.status !== "pending") return true
 
       if (sessionDirectory === projectDirectory) {
-        sync().set("session_status", session.id, { type: "busy" })
+        syncState.set("session_status", session.id, { type: "busy" })
       }
-
-      const controller = new AbortController()
-      const cleanup = () => {
-        if (sessionDirectory === projectDirectory) {
-          sync().set("session_status", session.id, { type: "idle" })
-        }
-        removeOptimisticMessage()
-        if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
-      }
-
-      pending.set(pendingKey(session.id), { abort: controller, cleanup })
 
       const abortWait = new Promise<Awaited<ReturnType<typeof WorktreeState.wait>>>((resolve) => {
         if (controller.signal.aborted) {
@@ -655,14 +706,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       })
 
       const result = await Promise.race([
-        WorktreeState.wait(sdk().scope, sessionDirectory),
+        WorktreeState.wait(directorySDK.scope, sessionDirectory),
         abortWait,
         timeout,
       ]).finally(() => {
         if (timer.id === undefined) return
         clearTimeout(timer.id)
       })
-      pending.delete(pendingKey(session.id))
       if (controller.signal.aborted) return false
       if (result.status === "failed") throw new Error(result.message)
       return true
@@ -670,35 +720,54 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     const queued = draft.delivery === "queue" && input.working()
     // The input is already cleared, so waiting on the profile's behaviors cannot resend this message.
-    void sendFollowupDraft({
-      api: sdk().api.session,
-      sync: sync(),
-      serverSync: serverSync(),
-      draft: { ...draft, system: await followupSystem(platform, sdk().scope, serverSync(), projectDirectory) },
+    await sendFollowupDraft({
+      api,
+      sync: syncState,
+      serverSync: serverState,
+      draft: { ...draft, system: await followupSystem(platform, directorySDK.scope, serverState, projectDirectory) },
       messageID,
       optimisticBusy: sessionDirectory === projectDirectory,
       pending: queued,
+      signal: controller.signal,
       before: waitForWorktree,
     })
       .then((sent) => {
         if (sent && queued) showToast({ title: language.t("orchestra.chat.delivery.queued") })
       })
       .catch((err) => {
-        pending.delete(pendingKey(session.id))
+        if (controller.signal.aborted) return
         if (sessionDirectory === projectDirectory && !queued) {
-          sync().set("session_status", session.id, { type: "idle" })
+          syncState.set("session_status", session.id, { type: "idle" })
         }
         showToast({
           title: language.t("prompt.toast.promptSendFailed.title"),
           description: errorMessage(err),
         })
         removeOptimisticMessage()
-        if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
+        restoreInput()
+      })
+      .finally(() => {
+        jobs.delete(job)
+        if (pending.get(key) === jobs && jobs.size === 0) pending.delete(key)
       })
   }
 
   return {
     abort,
-    handleSubmit,
+    handleSubmit(event: Event) {
+      event.preventDefault()
+      const target = prompt.capture()
+      if (params.id) return submit(target, { busy: false })
+      const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
+      const scoped = admissions.get(target) ?? new Map<string, Admission>()
+      admissions.set(target, scoped)
+      const admission = scoped.get(key) ?? { busy: false }
+      if (admission.busy) return Promise.resolve()
+      scoped.set(key, admission)
+      admission.busy = true
+      return submit(target, admission).finally(() => {
+        admission.busy = false
+      })
+    },
   }
 }

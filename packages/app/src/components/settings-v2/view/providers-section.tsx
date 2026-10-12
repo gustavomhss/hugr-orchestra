@@ -8,6 +8,7 @@ import { showToast } from "@/utils/toast"
 import { createProviderSettingsController, providerIdentity, type ProviderItem } from "../provider-controller"
 import { routeModel } from "./settings-data"
 import { SettingsSec } from "./settings-sec"
+import { ProviderDiscoveryStatus } from "../../dialog-connect-provider"
 
 export function ProvidersSection(props: { directory: string; onModels: () => void }) {
   const language = useLanguage()
@@ -51,9 +52,10 @@ export function ProvidersSection(props: { directory: string; onModels: () => voi
         })
       })
   }
-  const note = (item: { id: string; models: Record<string, unknown> }) => {
+  const note = (item: { id: string; models?: Record<string, unknown> }) => {
     const key = controller.note(providerIdentity(item.id).baseID)
     if (key) return language.t(key)
+    if (!item.models) return
     const count = Object.keys(item.models).length
     if (count === 1) return language.t("orchestra.settings.providers.model")
     return language.t("orchestra.settings.providers.models", { count })
@@ -98,19 +100,22 @@ export function ProvidersSection(props: { directory: string; onModels: () => voi
         </div>
       </Show>
       <h3 class="mx-section">{language.t("settings.providers.section.popular")}</h3>
+      <ProviderDiscoveryStatus source={controller.discovery} v2 />
       <div class="mx-table">
         <For
           each={controller.popular()}
           fallback={
-            <div class="mx-row">
-              <small>
-                {language.t(
-                  serverSync().child(props.directory)[0].provider_ready
-                    ? "orchestra.settings.providers.allListed"
-                    : "orchestra.settings.providers.loading",
-                )}
-              </small>
-            </div>
+            <Show when={!controller.discovery.loading() && !controller.discovery.error()}>
+              <div class="mx-row">
+                <small>
+                  {language.t(
+                    serverSync().child(props.directory)[0].provider_ready
+                      ? "orchestra.settings.providers.allListed"
+                      : "orchestra.settings.providers.loading",
+                  )}
+                </small>
+              </div>
+            </Show>
           }
         >
           {(item) => (
@@ -133,7 +138,7 @@ export function ProvidersSection(props: { directory: string; onModels: () => voi
 
 function ProviderCard(props: {
   item: ProviderItem
-  note: string
+  note?: string
   controller: ReturnType<typeof createProviderSettingsController>
   onModels: () => void
 }) {

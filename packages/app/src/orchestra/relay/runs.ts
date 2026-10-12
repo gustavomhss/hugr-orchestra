@@ -22,6 +22,7 @@ export type RelayRun = {
   runID: string
   documentID: string
   version: number | undefined
+  versionID?: string
   status: RelayRunStatus
   position: string | undefined
   failing: string[]
@@ -115,6 +116,8 @@ export function decodeRun(value: unknown): RelayRun[] {
       runID,
       documentID,
       version: num(value.version),
+      // RelayRun.Admitted.version is the immutable version ID, not the display counter.
+      versionID: str(value.version),
       status,
       position: str(value.position),
       failing: list(value.failing).filter((item): item is string => typeof item === "string"),

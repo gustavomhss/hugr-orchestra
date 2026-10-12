@@ -6,6 +6,7 @@ import { ConfigMCPV1 } from "./mcp"
 import { ConfigPermissionV1 } from "./permission"
 import { ConfigProviderV1 } from "./provider"
 import { ConfigProviderOptionsV1 } from "./provider-options"
+import { Wildcard } from "../../util/wildcard"
 
 const keys = new Set([
   "logLevel",
@@ -63,10 +64,35 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     plugins: info.plugin?.map((plugin) =>
       typeof plugin === "string" ? plugin : { package: plugin[0], options: plugin[1] },
     ),
-    experimental: info.experimental?.policies && { policies: info.experimental.policies },
+    experimental: policies(info),
     relay: info.relay,
     providers: providers(info.provider),
   }
+}
+
+function policies(info: typeof ConfigV1.Info.Type) {
+  const original = info.experimental?.policies ?? []
+  // Legacy allowlists and disabled providers are restrictions, not authentication. Preserve existing
+  // policy denials for allowed IDs, then place disabled IDs last so an allow cannot revive them.
+  const allowed = info.enabled_providers
+  const statements = [
+    ...original,
+    ...(allowed === undefined
+      ? []
+      : [
+          { action: "provider.use", effect: "deny" as const, resource: "*" },
+          ...allowed.map((id) => ({
+            action: "provider.use",
+            resource: id,
+            effect:
+              original.findLast(
+                (policy) => Wildcard.match("provider.use", policy.action) && Wildcard.match(id, policy.resource),
+              )?.effect ?? ("allow" as const),
+          })),
+        ]),
+    ...(info.disabled_providers ?? []).map((id) => ({ action: "provider.use", effect: "deny" as const, resource: id })),
+  ]
+  return statements.length ? { policies: statements } : undefined
 }
 
 function permissions(info?: ConfigPermissionV1.Info, tools?: Readonly<Record<string, boolean>>) {

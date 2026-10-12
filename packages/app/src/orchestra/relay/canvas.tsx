@@ -70,6 +70,7 @@ type Drag =
 // through onChange as whole flows; the editor owns persistence.
 export function Canvas(props: {
   flow: Flow
+  readOnly?: boolean
   outputs: Outputs
   issues: Set<string>
   selected: string[]
@@ -180,7 +181,7 @@ export function Canvas(props: {
     const nodeElement = target.closest<HTMLElement>(".wf-node")
     const grip = target.closest<HTMLElement>("[data-grip]")
     const base = { sx: event.clientX, sy: event.clientY, pointer: event.pointerId, moved: false }
-    if (port && nodeElement?.dataset.id)
+    if (!props.readOnly && port && nodeElement?.dataset.id)
       return setDrag({ mode: "connect", from: nodeElement.dataset.id, port: Number(port.dataset.port ?? 0), ...base })
     if (nodeElement?.dataset.id) {
       const id = nodeElement.dataset.id
@@ -193,6 +194,7 @@ export function Canvas(props: {
           ? props.selected
           : [id]
       props.onSelect(next)
+      if (props.readOnly) return
       return setDrag({
         mode: "node",
         ids: next,
@@ -201,6 +203,7 @@ export function Canvas(props: {
       })
     }
     if (grip?.dataset.grip) {
+      if (props.readOnly) return
       const ids = props.flow.phases.find((phase) => phase.id === grip.dataset.grip)?.nodeIds ?? []
       props.onSelect(ids)
       return setDrag({
@@ -280,7 +283,8 @@ export function Canvas(props: {
   }
 
   const wheel = (event: WheelEvent) => {
-    if (event.target instanceof Element && event.target.closest(".wf-drawer")) return
+    if (event.defaultPrevented || document.querySelector("dialog[open]")) return
+    if (event.target instanceof Element && event.target.closest(".wf-drawer,[role=dialog],dialog,input,textarea,select")) return
     event.preventDefault()
     setAnimate(false)
     if (event.ctrlKey || event.metaKey) {
@@ -329,6 +333,7 @@ export function Canvas(props: {
       role="application"
       aria-label={props.text.label}
       data-component="relay-canvas"
+      data-readonly={props.readOnly}
       style={{
         "background-size": `${20 * view().k}px ${20 * view().k}px`,
         "background-position": `${view().x}px ${view().y}px`,
@@ -344,6 +349,7 @@ export function Canvas(props: {
       }}
       onDragOver={(event) => event.dataTransfer?.types.includes("text/relay-kind") && event.preventDefault()}
       onDrop={(event) => {
+        if (props.readOnly) return
         const key = event.dataTransfer?.getData("text/relay-kind")
         if (!key || !props.onDrop) return
         event.preventDefault()

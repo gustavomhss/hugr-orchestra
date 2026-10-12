@@ -26,6 +26,7 @@ type Active = {
   onClose?: () => void
   closing: () => boolean
   setClosing: (closing: boolean) => void
+  focus: { opener?: HTMLElement; element?: HTMLDivElement }
 }
 
 const Context = createContext<ReturnType<typeof init>>()
@@ -34,8 +35,10 @@ function init() {
   const [stack, setStack] = createSignal<Active[]>([])
   const timer = { current: undefined as ReturnType<typeof setTimeout> | undefined }
   const lock = { value: false }
+  const life = { active: true }
 
   onCleanup(() => {
+    life.active = false
     if (timer.current === undefined) return
     clearTimeout(timer.current)
     timer.current = undefined
@@ -44,8 +47,28 @@ function init() {
   const remove = (id: string) => {
     const current = stack().find((item) => item.id === id)
     if (!current) return
+    const focused = document.activeElement
+    const restore =
+      stack().at(-1) === current &&
+      (focused === document.body || (focused instanceof Node && current.focus.element?.contains(focused)))
     current.dispose()
     setStack((items) => items.filter((item) => item.id !== id))
+    const next = stack().at(-1)
+    if (!restore) return
+    queueMicrotask(() => {
+      if (!life.active || stack().at(-1) !== next) return
+      const active = document.activeElement
+      if (active && active !== document.body && active.isConnected && active !== focused) return
+      const opener = current.focus.opener
+      if (opener?.isConnected && (!next || next.focus.element?.contains(opener))) {
+        opener.focus({ preventScroll: true })
+        return
+      }
+      // A removed opener must not send focus behind a still-open dialog.
+      next?.focus.element
+        ?.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled), [tabindex='0']")
+        ?.focus({ preventScroll: true })
+    })
   }
 
   const close = (id?: string) => {
@@ -82,9 +105,16 @@ function init() {
     makeEventListener(window, "keydown", onKeyDown, { capture: true })
   })
 
-  const mount = (element: DialogElement, owner: Owner, onClose: (() => void) | undefined, layer: number) => {
+  const mount = (
+    element: DialogElement,
+    owner: Owner,
+    onClose: (() => void) | undefined,
+    layer: number,
+    opener?: HTMLElement,
+  ) => {
     const id = Math.random().toString(36).slice(2)
     const zIndex = 50 + layer * 10
+    const focus: Active["focus"] = { opener }
     let dispose: (() => void) | undefined
     let closing: (() => boolean) | undefined
     let setClosing: ((closing: boolean) => void) | undefined
@@ -111,6 +141,7 @@ function init() {
                 onClick={() => close(id)}
               />
               <div
+                ref={(element) => (focus.element = element)}
                 data-dialog-layer={layer}
                 style={{
                   position: "fixed",
@@ -132,7 +163,7 @@ function init() {
 
     if (!dispose || !closing || !setClosing) return
 
-    const active: Active = { id, node, dispose, owner, onClose, closing, setClosing }
+    const active: Active = { id, node, dispose, owner, onClose, closing, setClosing, focus }
     setStack((items) => [...items, active])
     return id
   }
@@ -143,10 +174,22 @@ function init() {
       timer.current = undefined
     }
     lock.value = false
-    mount(element, owner, onClose, stack().length)
+    mount(
+      element,
+      owner,
+      onClose,
+      stack().length,
+      document.activeElement instanceof HTMLElement ? document.activeElement : undefined,
+    )
   }
 
   const show = (element: DialogElement, owner: Owner, onClose?: () => void) => {
+    const focused = document.activeElement
+    const opener = stack().some((item) => focused instanceof Node && item.focus.element?.contains(focused))
+      ? stack()[0]?.focus.opener
+      : focused instanceof HTMLElement
+        ? focused
+        : undefined
     for (const item of stack()) item.dispose()
     setStack([])
     if (timer.current !== undefined) {
@@ -154,7 +197,7 @@ function init() {
       timer.current = undefined
     }
     lock.value = false
-    return mount(element, owner, onClose, 0)
+    return mount(element, owner, onClose, 0, opener)
   }
 
   return {

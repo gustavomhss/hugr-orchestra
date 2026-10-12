@@ -1,4 +1,4 @@
-import { createSignal, Show } from "solid-js"
+import { createSignal, type JSX, Show } from "solid-js"
 import type { RelayDocument, RelayKind } from "./client"
 import { HeadBadge } from "./parts"
 import { relayPath } from "./route"
@@ -12,11 +12,13 @@ export function EditorHead(props: {
   kind: RelayKind
   document: RelayDocument
   name: string
+  readOnly?: boolean
   tab: "editor" | "runs"
   // Hidden while the server has no run routes.
   runCount: number | undefined
   // An install exists, so the toggle works even after an unpublish.
   installExists?: boolean
+  installKnown?: boolean
   save: SaveState
   issues: { text: string; node?: string }[]
   canPublish: boolean
@@ -30,6 +32,7 @@ export function EditorHead(props: {
   onTest: () => void
   onInstall: (next: boolean) => void
   onReload: () => void
+  onRetry?: () => void
 }) {
   const copy = useRelayCopy()
   const [menu, setMenu] = createSignal<HTMLElement>()
@@ -74,6 +77,7 @@ export function EditorHead(props: {
           <input
             class="wf-name"
             value={props.name}
+            readOnly={props.readOnly}
             size={Math.max(8, props.name.length)}
             aria-label={copy.t(workflow() ? "orchestra.workflows.editor.name" : "orchestra.hooks.editor.name")}
             onInput={(event) => (event.currentTarget.size = Math.max(8, event.currentTarget.value.length))}
@@ -93,7 +97,7 @@ export function EditorHead(props: {
           />
         </nav>
         <span class="wf-badges">
-          <HeadBadge document={props.document} />
+          <Show when={!props.readOnly}><HeadBadge document={props.document} /></Show>
         </span>
       </div>
       <div class="wf-range" role="tablist" aria-label={copy.t("orchestra.workflows.editor.view")}>
@@ -118,29 +122,9 @@ export function EditorHead(props: {
         </button>
       </div>
       <div class="wf-head-right">
-        <span
-          class="wf-save"
-          classList={{ bad: props.save.state === "error" || props.save.state === "conflict" }}
-          aria-live="polite"
-          data-save={props.save.state}
-        >
-          <Show when={props.save.state === "conflict"}>
-            {copy.t("orchestra.workflows.editor.conflict")}
-            <button type="button" class="mx-link" onClick={props.onReload}>
-              {copy.t("orchestra.workflows.editor.reload")}
-            </button>
-          </Show>
-          <Show when={props.save.state === "error"}>
-            <span title={props.save.error}>{copy.t("orchestra.workflows.editor.notSaved")}</span>
-          </Show>
-          <Show when={props.save.state === "saving" || (props.save.state === "saved" && props.save.dirty)}>
-            {copy.t("orchestra.workflows.editor.saving")}
-          </Show>
-          <Show when={props.save.state === "saved" && !props.save.dirty}>
-            <Ic name="check" />
-            {copy.t("orchestra.workflows.editor.saved")}
-          </Show>
-        </span>
+        <Show when={!props.readOnly} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
+          <SaveStatus save={props.save} onRetry={props.onRetry} onReload={props.onReload} />
+        </Show>
         <Show when={props.issues.length}>
           <button
             type="button"
@@ -176,6 +160,7 @@ export function EditorHead(props: {
           when={workflow()}
           fallback={
             <span class="wf-install">
+              <Show when={props.installKnown !== false} fallback={<span>{copy.t("orchestra.workflows.hookState.unknown")}</span>}>
               <button
                 type="button"
                 class="mx-toggle"
@@ -187,6 +172,7 @@ export function EditorHead(props: {
                 onClick={() => props.onInstall(!props.installed)}
               />
               {copy.t(props.installed ? "orchestra.hooks.installed" : "orchestra.hooks.notInstalled")}
+              </Show>
             </span>
           }
         >
@@ -240,5 +226,50 @@ export function EditorHead(props: {
         )}
       </Show>
     </header>
+  )
+}
+
+export function SaveStatus(props: {
+  save: SaveState
+  saved?: JSX.Element
+  onRetry?: () => void
+  onReload: () => void
+}) {
+  const copy = useRelayCopy()
+  return (
+    <span
+      class="wf-save"
+      classList={{ bad: props.save.state === "error" || props.save.state === "conflict" }}
+      role="status"
+      data-save={props.save.state}
+    >
+      <Show when={props.save.state === "conflict"}>
+        {copy.t("orchestra.workflows.editor.conflict")}
+        <button type="button" class="mx-link" onClick={(event) => {
+          // This button disappears after reload; leave focus on a stable modal control first.
+          const modal = event.currentTarget.closest<HTMLElement>('[role="dialog"]')
+          ;(modal?.querySelector<HTMLElement>("[data-relay-done]") ?? modal)?.focus({ preventScroll: true })
+          props.onReload()
+        }}>
+          {copy.t("orchestra.workflows.editor.reloadDiscard")}
+        </button>
+      </Show>
+      <Show when={props.save.state === "error"}>
+        <span>{copy.t("orchestra.workflows.editor.saveFailed")}</span>
+        <span class="wf-save-error">{props.save.error}</span>
+        <Show when={props.onRetry}>
+          <button type="button" class="mx-link" onClick={props.onRetry}>
+            {copy.t("orchestra.workflows.retry")}
+          </button>
+        </Show>
+      </Show>
+      <Show when={props.save.state === "saving" || (props.save.state === "saved" && props.save.dirty)}>
+        {copy.t("orchestra.workflows.editor.saving")}
+      </Show>
+      <Show when={props.save.state === "saved" && !props.save.dirty}>
+        <Ic name="check" />
+        {props.saved ?? copy.t("orchestra.workflows.editor.saved")}
+      </Show>
+    </span>
   )
 }

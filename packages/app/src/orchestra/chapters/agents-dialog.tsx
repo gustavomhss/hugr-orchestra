@@ -7,6 +7,7 @@ import {
   AGENT_MODES,
   agentDraft,
   agentFileInput,
+  agentFileTarget,
   agentUnavailable,
   draftError,
   errorKind,
@@ -16,9 +17,10 @@ import {
   PERMISSION_TOOLS,
   removeInput,
   type PermissionChoice,
+  type ModelGroup,
 } from "./agents-roster"
 
-export type ModelGroup = { id: string; name: string; models: { value: string; label: string }[] }
+export type { ModelGroup } from "./agents-roster"
 
 // Mock `editAgent` dialog: a native modal dialog, like the approved preview, so focus and Escape behave the same.
 export function AgentDialog(props: {
@@ -26,8 +28,10 @@ export function AgentDialog(props: {
   agents: readonly Agent[]
   directory: string
   models: readonly ModelGroup[]
-  load: (name: string) => Promise<AgentFileInfo>
-  save: (name: string, input: AgentFileInput) => Promise<void>
+  modelsStatus?: "pending" | "error" | "success"
+  onRetryModels?: () => void
+  load: (id: string) => Promise<AgentFileInfo>
+  save: (id: string, input: AgentFileInput) => Promise<void>
   onClose: () => void
 }) {
   const language = useLanguage()
@@ -113,7 +117,10 @@ export function AgentDialog(props: {
     if (!action) return language.t("orchestra.agents.choice.inherit")
     return language.t("orchestra.agents.choice.inheritValue", { action })
   }
-  const knownModel = () => props.models.some((group) => group.models.some((model) => model.value === draft.model))
+  const knownModel = () => props.models.flatMap((group) => group.models).find((model) => model.value === draft.model)
+  const modelsReady = () => !props.modelsStatus || props.modelsStatus === "success"
+  const modelIssue = () =>
+    modelsReady() && draft.model && (knownModel()?.unavailable ?? (!knownModel() ? "unavailable" : undefined))
 
   return (
     <dialog
@@ -147,14 +154,13 @@ export function AgentDialog(props: {
         onSubmit={(event) => {
           event.preventDefault()
           if (state.saving || readOnly() || state.phase === "loading") return
-          if (state.phase === "confirm") return commit(draft.name, removeInput(state.file))
-          const problem = draftError(
-            draft,
-            props.agents.map((agent) => agent.name),
-            !props.agent,
-          )
+          if (state.phase === "confirm") {
+            if (maestro) return
+            return commit(agentFileTarget(draft, props.agent), removeInput(state.file))
+          }
+          const problem = draftError(draft, props.agents.map(agentKey), !props.agent)
           if (problem) return setState("error", language.t(`orchestra.agents.error.${problem}`))
-          commit(draft.name.trim(), agentFileInput(draft, state.file, props.agent))
+          commit(agentFileTarget(draft, props.agent), agentFileInput(draft, state.file, props.agent))
         }}
       >
         <header class="mx-dialog-head">
@@ -212,6 +218,7 @@ export function AgentDialog(props: {
                       required
                       aria-labelledby="agents-field-name"
                       readOnly={!!props.agent}
+                      dir="auto"
                       value={draft.name}
                       onInput={(event) => setDraft("name", event.currentTarget.value)}
                     />
@@ -247,6 +254,7 @@ export function AgentDialog(props: {
                     required
                     aria-labelledby="agents-field-description"
                     value={draft.description}
+                    dir="auto"
                     onInput={(event) => setDraft("description", event.currentTarget.value)}
                   />
                 </label>
@@ -256,14 +264,17 @@ export function AgentDialog(props: {
                     <select
                       name="model"
                       aria-labelledby="agents-field-model"
+                      aria-describedby={modelIssue() ? "agents-model-issue" : undefined}
                       onChange={(event) => setDraft("model", event.currentTarget.value)}
                     >
                       <option value="" selected={draft.model === ""}>
-                        {language.t("orchestra.agents.defaultModel")}
+                        {language.t("orchestra.agents.choice.inherit")}
                       </option>
                       <Show when={draft.model && !knownModel()}>
-                        <option value={draft.model} selected>
-                          {draft.model}
+                        <option value={draft.model} selected disabled>
+                          {modelsReady()
+                            ? language.t("orchestra.agents.model.unavailable", { model: draft.model })
+                            : draft.model}
                         </option>
                       </Show>
                       <For each={props.models}>
@@ -271,8 +282,14 @@ export function AgentDialog(props: {
                           <optgroup label={group.name}>
                             <For each={group.models}>
                               {(model) => (
-                                <option value={model.value} selected={draft.model === model.value}>
-                                  {model.label}
+                                <option
+                                  value={model.value}
+                                  selected={draft.model === model.value}
+                                  disabled={!modelsReady() || !!model.unavailable}
+                                >
+                                  {model.unavailable
+                                    ? language.t(`orchestra.agents.model.${model.unavailable}`, { model: model.label })
+                                    : model.label}
                                 </option>
                               )}
                             </For>
@@ -280,6 +297,29 @@ export function AgentDialog(props: {
                         )}
                       </For>
                     </select>
+                    <Show when={!modelsReady() || props.models.every((group) => group.models.length === 0)}>
+                      <span class="mx-note" role={props.modelsStatus === "error" ? "alert" : "status"}>
+                        {language.t(
+                          props.modelsStatus === "pending"
+                            ? "orchestra.agents.models.loading"
+                            : props.modelsStatus === "error"
+                              ? "orchestra.agents.models.error"
+                              : "orchestra.agents.models.empty",
+                        )}
+                      </span>
+                      <Show when={props.modelsStatus === "error" && props.onRetryModels}>
+                        <button type="button" class="mx-btn" onClick={() => props.onRetryModels?.()}>
+                          {language.t("orchestra.agents.retry")}
+                        </button>
+                      </Show>
+                    </Show>
+                    <Show when={modelIssue()}>
+                      {(issue) => (
+                        <span id="agents-model-issue" class="mx-note" role="status">
+                          {language.t(`orchestra.agents.model.${issue()}`, { model: draft.model })}
+                        </span>
+                      )}
+                    </Show>
                   </label>
                   <label class="mx-field">
                     <span id="agents-field-steps">{language.t("orchestra.agents.steps")}</span>

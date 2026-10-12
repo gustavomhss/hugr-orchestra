@@ -220,7 +220,7 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
   function handleInputKey(event: KeyboardEvent) {
     const action = keyActions[event.key]
     if (!action) return
-    if (event.key === "Tab" && event.shiftKey) return
+    if (event.key === "Tab" && (event.shiftKey || !suggestionsOpen() || !activeSuggestionValue())) return
     event.preventDefault()
     action()
   }

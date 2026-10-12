@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { createSignal } from "solid-js"
+import { rendererHandlesZoomKey } from "../main/menu-zoom"
 
 const OS_NAME = (() => {
   if (navigator.userAgent.includes("Mac")) return "macos"
@@ -13,6 +14,7 @@ const OS_NAME = (() => {
 
 const [webviewZoom, setWebviewZoom] = createSignal(1)
 let requestedZoom = 1
+let zoomGeneration = 0
 let pinchZoomEnabled = false
 let wheelPinch = undefined as
   | {
@@ -32,23 +34,35 @@ const WHEEL_PINCH_END_DELAY = 160
 const clamp = (value: number) => Math.min(Math.max(value, MIN_ZOOM_LEVEL), MAX_ZOOM_LEVEL)
 
 const applyZoom = (next: number) => {
+  const generation = ++zoomGeneration
   requestedZoom = next
   void window.api
     .setZoomFactor(next)
     .then(() => {
-      if (requestedZoom !== next) return
+      if (generation !== zoomGeneration) return
       setWebviewZoom(next)
     })
     .catch(() => {
-      if (requestedZoom !== next) return
+      if (generation !== zoomGeneration) return
       requestedZoom = webviewZoom()
     })
 }
 
 window.api.onZoomFactorChanged((factor) => {
+  zoomGeneration++
   requestedZoom = clamp(factor)
   setWebviewZoom(requestedZoom)
 })
+
+const initialZoomGeneration = zoomGeneration
+void window.api
+  .getZoomFactor()
+  .then((factor) => {
+    if (initialZoomGeneration !== zoomGeneration) return
+    requestedZoom = clamp(factor)
+    setWebviewZoom(requestedZoom)
+  })
+  .catch(() => undefined)
 
 void window.api.getPinchZoomEnabled().then((enabled) => {
   pinchZoomEnabled = enabled
@@ -117,6 +131,7 @@ window.addEventListener(
 )
 
 window.addEventListener("keydown", (event) => {
+  if (!rendererHandlesZoomKey(OS_NAME)) return
   if (!(OS_NAME === "macos" ? event.metaKey : event.ctrlKey)) return
 
   if (event.key === "-") {

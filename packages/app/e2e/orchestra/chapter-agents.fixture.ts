@@ -1,5 +1,7 @@
 import { expect, type Page, type Request } from "@playwright/test"
+import type { ProviderListResponse } from "@orchestra/sdk/v2/client"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { agentProvider } from "./chapter-agents.models"
 
 export const serverA = "http://127.0.0.1:4096"
 export const serverB = "http://127.0.0.1:4097"
@@ -188,20 +190,11 @@ export async function setup(
     protocol: input.protocol,
     eventRetry: 60_000,
     provider: input.models
-      ? {
-          all: [
-            {
-              id: "example",
-              name: "Example",
-              models: {
-                builder: { id: "builder", name: "Builder", limit: { context: 200_000 } },
-                reasoner: { id: "reasoner", name: "Reasoner", limit: { context: 200_000 } },
-              },
-            },
-          ],
+      ? ({
+          all: [agentProvider],
           connected: ["example"],
           default: { example: "builder" },
-        }
+        } satisfies ProviderListResponse)
       : { all: [], connected: [], default: {} },
     directory,
     project: project("Atlas"),
@@ -272,9 +265,9 @@ export async function setup(
       return json(true)
     }
     if (url.pathname === "/agent" || url.pathname === "/api/agent") {
+      const state = input.response?.state
       if (url.origin === serverA && selectedDirectory === directory) await input.wait
       if (url.origin === serverA && selectedDirectory === otherDirectory) await input.waitOther
-      const state = input.response?.state
       if (state === "error" || state === "unavailable")
         return json({ message: "Agent endpoint failed" }, state === "error" ? 500 : 404)
       const data =

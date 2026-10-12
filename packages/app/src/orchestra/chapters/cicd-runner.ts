@@ -16,10 +16,18 @@ import {
   type PipelineStatus,
 } from "./cicd-data"
 
-type Input = { sdk: ServerSDK; platform: Platform; directory: string; t: ReturnType<typeof useLanguage>["t"] }
+type Input = {
+  sdk: ServerSDK
+  platform: Platform
+  directory: string
+  t: ReturnType<typeof useLanguage>["t"]
+  socket?: (url: string | URL) => WebSocket
+  reconnect?: (callback: () => void, delay: number) => void
+}
 type Live = {
   ptyID?: string
   socket?: WebSocket
+  connection: number
   cursor: number
   stopped: boolean
   attempts: number
@@ -46,13 +54,14 @@ export function profilePipelines(key: string, input: Input) {
   return created
 }
 
-function createPipelines(input: Input) {
+export function createPipelines(input: Input) {
   const target = { directory: input.directory }
   const t = input.t
   const storage = Persist.serverWorkspace(input.sdk.scope, input.directory, "cicd")
   const [store, setStore, , ready] = persisted(storage, createStore({ pipelines: [] as Pipeline[] }), input.platform)
   // Raw terminal output of active runs. Only the final plain log is persisted.
   const [output, setOutput] = createStore<Record<string, string | undefined>>({})
+  const [stopping, setStopping] = createStore<Record<string, { pending: boolean; error?: string } | undefined>>({})
   const live = new Map<string, Live>()
   const find = (id: string) => store.pipelines.find((item) => item.id === id)
   const update = (id: string, patch: Partial<Pipeline>) => setStore("pipelines", (item) => item.id === id, patch)
@@ -72,8 +81,12 @@ function createPipelines(input: Input) {
   }
   const close = (id: string, status: PipelineStatus, lines: string[]) => {
     const entry = live.get(id)
-    if (entry) flush(id, entry)
+    if (entry) {
+      entry.connection++
+      flush(id, entry)
+    }
     live.delete(id)
+    setStopping(id, undefined)
     update(id, { status, log: tailLog([log(id), ...lines].join("\n")), run: undefined })
     setOutput(id, undefined)
   }
@@ -81,7 +94,7 @@ function createPipelines(input: Input) {
   async function run(id: string, branch: string | undefined) {
     const item = find(id)
     if (!item || item.status === "running" || live.has(id)) return
-    const entry: Live = { cursor: 0, stopped: false, attempts: 0, pending: "" }
+    const entry: Live = { connection: 0, cursor: 0, stopped: false, attempts: 0, pending: "" }
     live.set(id, entry)
     setOutput(id, "")
     update(id, {
@@ -106,23 +119,26 @@ function createPipelines(input: Input) {
       .then((result) => ({ ptyID: result.data.id }))
       .catch((error: unknown) => ({ error: errorText(error) }))
     if ("error" in created) {
-      if (!entry.stopped) close(id, "error", ["", t("orchestra.cicd.log.startFailed", { detail: created.error })])
+      close(id, "error", ["", t("orchestra.cicd.log.startFailed", { detail: created.error })])
       return
     }
-    if (entry.stopped) return void kill(id, created.ptyID)
     entry.ptyID = created.ptyID
-    update(id, { run: { ptyID: created.ptyID, ready: false } })
+    update(id, { run: { ptyID: created.ptyID, ready: false, stopRequested: entry.stopped } })
+    if (entry.stopped) return void terminate(id, entry)
     void connect(id, entry)
   }
 
   async function connect(id: string, entry: Live) {
     const ptyID = entry.ptyID
-    if (!ptyID) return
+    if (!ptyID || entry.stopped || live.get(id) !== entry) return
+    const connection = ++entry.connection
+    const current = () => !entry.stopped && live.get(id) === entry && entry.connection === connection
     const protocol = await input.sdk.protocol
+    if (!current()) return
     const ticket = protocol === "v1" ? await connectTicket(ptyID).catch(() => undefined) : undefined
-    if (entry.stopped || live.get(id) !== entry) return
+    if (!current()) return
     const server = input.sdk.server
-    const socket = new WebSocket(
+    const socket = (input.socket ?? ((url) => new WebSocket(url)))(
       terminalWebSocketURL({
         protocol,
         url: input.sdk.url,
@@ -139,7 +155,7 @@ function createPipelines(input: Input) {
     socket.binaryType = "arraybuffer"
     entry.socket = socket
     socket.addEventListener("message", (event) => {
-      if (entry.stopped || live.get(id) !== entry) return
+      if (!current() || entry.socket !== socket) return
       if (typeof event.data === "string") {
         entry.cursor += event.data.length
         entry.pending = tailLog(`${entry.pending}${event.data}`)
@@ -153,33 +169,42 @@ function createPipelines(input: Input) {
       if (Option.isSome(meta)) entry.cursor = meta.value.cursor
       entry.attempts = 0
       // The control frame arrives once the server is streaming to this socket: release the start gate.
-      if (find(id)?.run?.ready !== false) return
+      if (find(id)?.run?.ready !== false || find(id)?.run?.stopRequested) return
       socket.send("\r")
       update(id, { run: { ptyID, ready: true } })
     })
-    socket.addEventListener("close", (event) => void closed(id, entry, event.code))
+    socket.addEventListener("close", (event) => void closed(id, entry, socket, connection, event.code))
   }
 
-  async function closed(id: string, entry: Live, code: number) {
-    if (entry.stopped || live.get(id) !== entry || !entry.ptyID) return
+  async function closed(id: string, entry: Live, socket: WebSocket, connection: number, code: number) {
+    const current = () => !entry.stopped && live.get(id) === entry && entry.connection === connection
+    if (!current() || entry.socket !== socket || !entry.ptyID) return
     entry.socket = undefined
     const ptyID = entry.ptyID
     const info = await inspect(ptyID)
-    if (entry.stopped || live.get(id) !== entry) return
-    if (info === "missing") return interrupt(id, entry, ptyID, t("orchestra.cicd.log.interrupted"))
+    if (!current()) return
+    if (info === "missing") return interrupt(id, entry, ptyID, t("orchestra.cicd.log.interrupted"), connection)
     if (info?.status === "exited") {
       finish(id, info.exitCode, code === 4404)
-      return void kill(id, ptyID)
+      return void removePty(ptyID)
     }
     // Still running, or the server is unreachable: reconnect from the consumed cursor with backoff.
     entry.attempts += 1
     if (entry.attempts > RECONNECT_LIMIT) {
-      await interrupt(id, entry, ptyID, t("orchestra.cicd.log.connectionLost"))
-      return void kill(id, ptyID)
+      const failure = await removePty(ptyID)
+      if (!current()) return
+      if (failure !== undefined) {
+        const error = t("orchestra.cicd.log.stopFailed", { detail: failure })
+        setStopping(id, { pending: false, error })
+        append(id, error)
+        return
+      }
+      await interrupt(id, entry, ptyID, t("orchestra.cicd.log.connectionLost"), connection)
+      return
     }
-    setTimeout(
+    ;(input.reconnect ?? setTimeout)(
       () => {
-        if (!entry.stopped && live.get(id) === entry) void connect(id, entry)
+        if (current()) void connect(id, entry)
       },
       Math.min(250 * 2 ** entry.attempts, 4000),
     )
@@ -202,10 +227,17 @@ function createPipelines(input: Input) {
   }
 
   // Another tab or window may own this run and have recorded its result; that record wins.
-  async function interrupt(id: string, entry: Live | undefined, ptyID: string | undefined, reason: string) {
+  async function interrupt(
+    id: string,
+    entry: Live | undefined,
+    ptyID: string | undefined,
+    reason: string,
+    connection?: number,
+  ) {
     const stored = await storedPipeline(id)
     // Bail out if the user stopped this run or started another one meanwhile.
     if (entry ? entry.stopped || live.get(id) !== entry : live.has(id)) return
+    if (entry && connection !== undefined && entry.connection !== connection) return
     if (stored && !(stored.status === "running" && stored.run?.ptyID === ptyID)) {
       if (entry) flush(id, entry)
       live.delete(id)
@@ -229,22 +261,38 @@ function createPipelines(input: Input) {
 
   function stop(id: string) {
     const item = find(id)
-    if (!item || item.status !== "running") return
-    const entry = live.get(id)
-    const ptyID = entry?.ptyID ?? item.run?.ptyID
-    if (entry) {
-      entry.stopped = true
-      entry.socket?.close(1000)
+    if (!item || item.status !== "running" || stopping[id]?.pending) return
+    const entry = live.get(id) ?? {
+      ptyID: item.run?.ptyID,
+      cursor: 0,
+      stopped: false,
+      attempts: 0,
+      connection: 0,
+      pending: "",
     }
-    close(id, "cancelled", [t("orchestra.cicd.log.cancelled")])
-    if (ptyID) void kill(id, ptyID)
+    live.set(id, entry)
+    entry.stopped = true
+    entry.connection++
+    if (item.run) update(id, { run: { ...item.run, stopRequested: true } })
+    setStopping(id, { pending: true, error: undefined })
+    entry.socket?.close(1000)
+    entry.socket = undefined
+    // Creation may still be in flight. Its completion records the PTY before terminating it.
+    if (entry.ptyID) void terminate(id, entry)
   }
 
-  // Ends the server process. A PTY that is already gone counts as stopped.
-  async function kill(id: string, ptyID: string) {
-    const failure = await removePty(ptyID)
-    if (failure === undefined || find(id)?.status !== "cancelled") return
-    append(id, t("orchestra.cicd.log.stopFailed", { detail: failure }))
+  // Keep both the live owner and persisted PTY until DELETE confirms termination (including 404).
+  async function terminate(id: string, entry: Live) {
+    if (!entry.ptyID) return
+    const failure = await removePty(entry.ptyID)
+    if (live.get(id) !== entry) return
+    if (failure === undefined) return close(id, "cancelled", [t("orchestra.cicd.log.cancelled")])
+    const error = t("orchestra.cicd.log.stopFailed", { detail: failure })
+    setStopping(id, { pending: false, error })
+    append(id, error)
+    entry.stopped = false
+    entry.attempts = 0
+    void connect(id, entry)
   }
 
   // Reattach runs left running by an earlier page lifetime. Idempotent for runs already attached.
@@ -253,8 +301,16 @@ function createPipelines(input: Input) {
       .filter((item) => item.status === "running" && !live.has(item.id))
       .forEach((item) => {
         if (!item.run) return void interrupt(item.id, undefined, undefined, t("orchestra.cicd.log.interrupted"))
-        const entry: Live = { ptyID: item.run.ptyID, cursor: 0, stopped: false, attempts: 0, pending: "" }
+        const entry: Live = {
+          ptyID: item.run.ptyID,
+          connection: 0,
+          cursor: 0,
+          stopped: false,
+          attempts: 0,
+          pending: "",
+        }
         live.set(item.id, entry)
+        if (item.run.stopRequested) setStopping(item.id, { pending: false, error: t("orchestra.cicd.stopUnconfirmed") })
         setOutput(item.id, "")
         void connect(item.id, entry)
       })
@@ -305,13 +361,14 @@ function createPipelines(input: Input) {
     log,
     run,
     stop,
+    stopping: (id: string) => stopping[id],
     resume,
     save(definition: PipelineDefinition) {
       if (find(definition.id)) return update(definition.id, definition)
       setStore("pipelines", store.pipelines.length, { ...definition, status: "idle", runs: 0, log: "" })
     },
     remove(id: string) {
-      stop(id)
+      if (find(id)?.status === "running" || live.has(id)) return false
       setStore(
         "pipelines",
         store.pipelines.filter((item) => item.id !== id),

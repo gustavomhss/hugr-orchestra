@@ -2,11 +2,8 @@ import type { ModelRule } from "./subagent-model-rules"
 
 import { createSignal } from "solid-js"
 
-/** Pending subagent-model selections for drafts (no session exists yet).
-    Keyed by directory; flushed into session permission rules right after
-    the session is created, before the first prompt is sent — so there is
-    no race with the first task call. Entries are tiny bounded sets; they
-    are cleared on flush. */
+/** Pending selections before a session exists. Callers supply an opaque scope key
+    (legacy callers may still use a directory), and own the flush/clear lifecycle. */
 const pending = new Map<string, Set<string>>()
 
 const [version, bumpVersion] = createSignal(0)
@@ -24,17 +21,12 @@ export function pendingSelection(directory: string): Set<string> {
   return set
 }
 
-export function togglePending(directory: string, providerID: string, modelID: string): boolean {
+export function togglePending(directory: string, providerID: string, modelID: string, allow?: boolean): boolean {
   const set = pendingSelection(directory)
   const key = modelKey(providerID, modelID)
-  let next: boolean
-  if (set.has(key)) {
-    set.delete(key)
-    next = false
-  } else {
-    set.add(key)
-    next = true
-  }
+  const next = allow ?? !set.has(key)
+  if (next) set.add(key)
+  if (!next) set.delete(key)
   bumpVersion((v) => v + 1)
   return next
 }

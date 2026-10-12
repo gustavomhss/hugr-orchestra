@@ -1,8 +1,9 @@
 import { createContext, useContext, type Accessor, type ParentProps } from "solid-js"
 import { I18nProvider } from "@kobalte/core/i18n"
 import { dict as en } from "../i18n/en"
+import { EDIT_REVIEW_COPY } from "../i18n/edit-review"
 
-export type UiI18nKey = keyof typeof en
+export type UiI18nKey = keyof typeof en | keyof typeof EDIT_REVIEW_COPY
 
 export const UI_PLURAL_KEYS = [
   "ui.sessionTurn.diffs.changed",
@@ -24,6 +25,7 @@ export type UiI18n = {
 }
 
 const rules = new Map<string, Intl.PluralRules>()
+const source: Record<string, string> = { ...en, ...EDIT_REVIEW_COPY }
 
 export function pluralCategory(locale: string, count: number): UiPluralCategory {
   const cached = rules.get(locale)
@@ -50,7 +52,7 @@ function resolveTemplate(text: string, params?: UiI18nParams) {
 const fallback: UiI18n = {
   locale: () => "en",
   t: (key, params) => {
-    const value = en[key] ?? String(key)
+    const value = source[key] ?? String(key)
     return resolveTemplate(value, params)
   },
   plural: (key, count, params) =>

@@ -2,20 +2,23 @@ import { useDialog } from "@orchestra/ui/context/dialog"
 import { useCommand } from "@/context/command"
 import { showToast } from "@/utils/toast"
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import { createEffect, createMemo, createSignal, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { MxPage } from "../chapters/kit"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
-import { documentDiagnostics, type RelayDocument, RelayError } from "./client"
+import { rememberDocument } from "./cache"
+import { documentDiagnostics, type RelayDocument } from "./client"
 import type { RelayRun } from "./runs"
-import { DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
-import { EditorHead, type SaveState } from "./editor-head"
+import { createAction, DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
+import { EditorHead } from "./editor-head"
+import { openDraft, profileDrafts } from "./drafts"
 import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { HookActivity, TestDialog } from "./hook-activity"
+import { HookQueryStatus } from "./hook-status"
+import { runVersion } from "./history"
 import { issueText } from "./parts"
 import { RunsUnavailable } from "./library"
 import { copyDocument } from "./presets"
@@ -37,13 +40,24 @@ export type EditorProps = {
 export function Editor(props: EditorProps) {
   const copy = useRelayCopy()
   const document = () => props.source.list().find((item) => item.id === props.route.id)
+    ?? profileDrafts(props.source).find((draft) => draft.state.base.id === props.route.id)?.state.base
   const library = () => relayPath.library(props.route.kind)
   return (
     <Switch>
-      <Match when={props.source.documents.isPending}>
+      <Match when={props.source.documents.isPending && !document()}>
         <p class="mx-empty" role="status" style={{ margin: "40px" }}>
           {copy.t("orchestra.workflows.loading")}
         </p>
+      </Match>
+      <Match when={props.source.documents.isError && !document()}>
+        <div class="mx-page">
+          <p class="mx-error" role="alert">
+            {copy.t("orchestra.workflows.error", { reason: failure(props.source.documents.error) })}
+          </p>
+          <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
+            {copy.t("orchestra.workflows.retry")}
+          </button>
+        </div>
       </Match>
       <Match when={!document()}>
         <MxPage
@@ -70,12 +84,29 @@ export function Editor(props: EditorProps) {
 function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const copy = useRelayCopy()
   const dialogs = useDialog()
+  const duplication = createAction()
+  const exporting = createAction()
   const kind = props.route.kind
   const server = () => props.source.list().find((item) => item.id === props.id)
-  const [base, setBase] = createSignal(props.initial)
-  const [flow, setFlow] = createSignal<Flow>(flowFromDocument(props.initial, kind))
-  const [name, setName] = createSignal(props.initial.name)
-  const [save, setSave] = createStore<SaveState>({ state: "saved", dirty: false, error: "" })
+  const draft = openDraft(props.source, props.initial, kind)
+  if (!draft) return (
+    <MxPage id="relay-drafts-full" title={copy.t("orchestra.workflows.drafts.full")} description={copy.t("orchestra.workflows.drafts.resolve")}>
+      <For each={profileDrafts(props.source)}>{(pending) => (
+        <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor(pending.state.flow.kind, pending.state.base.id))}>
+          {pending.state.name}
+        </button>
+      )}</For>
+    </MxPage>
+  )
+  const base = () => draft.state.base
+  const flow = () => draft.state.flow
+  const name = () => draft.state.name
+  const save = draft.state.save
+  const edit = (next: Flow) => { if (!props.route.view) draft.edit(next) }
+  const rename = (next: string) => { if (!props.route.view) draft.rename(next) }
+  const flush = draft.flush
+  const reload = draft.reload
+  onCleanup(draft.release)
   const [selected, setSelected] = createSignal<string[]>([])
   const [dialog, setDialog] = createSignal<"publish" | "delete" | "keys" | "test">()
   const [test, setTest] = createSignal<{ path: string[]; result: string; label: string }>()
@@ -84,7 +115,9 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const found = createMemo(() => issues(flow(), [...documentDiagnostics(base())]))
   const issueList = () => found().map((issue) => ({ text: issueText(copy, flow(), issue), node: issueNode(issue) }))
   const runs = () => (props.source.runs.data ?? []).filter((run) => run.documentID === props.id)
-  const installed = () => (props.source.installs.data ?? []).find((item) => item.document === props.id)
+  const installed = () => props.source.installs.isSuccess
+    ? (props.source.installs.data ?? []).find((item) => item.document === props.id)
+    : undefined
   const decisions = useQuery(() => {
     const current = installed()
     return {
@@ -107,80 +140,25 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const overlayRun = (): RelayRun | undefined => {
     if (kind !== "workflow") return
     if (!props.route.view) return newestFirst(runs())[0]
-    return runs().find((run) => run.runID === props.route.view) ?? viewed.data
+    const run = runs().find((run) => run.runID === props.route.view) ?? viewed.data
+    return run?.documentID === props.id ? run : undefined
   }
+  const frozen = useQuery(() => ({
+    queryKey: props.source.key("run-version", props.id, overlayRun()?.versionID ?? String(overlayRun()?.version ?? "")),
+    queryFn: overlayRun() ? () => runVersion(props.source.client, overlayRun()!) : skipToken,
+    retry: false,
+    staleTime: Infinity,
+  }), props.source.queryClient)
+  const frozenFlow = createMemo(() => frozen.data ? flowFromDocument(frozen.data, "workflow") : undefined)
   const canPublish = () =>
-    !found().length && !save.dirty && save.state === "saved" && base().activeVersionId !== base().versionId
+    !props.route.view && !found().length && !save.dirty && save.state === "saved" && base().activeVersionId !== base().versionId
 
-  // Autosave: every edit marks the draft dirty and saves shortly after; a save in flight finishes first.
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const flush = async () => {
-    clearTimeout(timer)
-    if (save.state === "saving" || !save.dirty || save.state === "conflict") return
-    setSave({ state: "saving", dirty: false, error: "" })
-    const result = await props.source.client.save(base(), { name: name(), ...documentFields(flow()) }).then(
-      (document) => ({ document }),
-      (error: unknown) => ({ error }),
-    )
-    if ("error" in result) {
-      setSave({
-        state: result.error instanceof RelayError && result.error.status === 409 ? "conflict" : "error",
-        dirty: true,
-        error: failure(result.error),
-      })
-      return
-    }
-    setBase(result.document)
-    props.source
-      .queryClient()
-      .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) =>
-        list?.map((item) => (item.id === result.document.id ? result.document : item)),
-      )
-    setSave("state", "saved")
-    if (save.dirty) schedule()
-  }
-  const schedule = () => {
-    clearTimeout(timer)
-    timer = setTimeout(() => void flush(), 600)
-  }
-  const edit = (next: Flow) => {
-    setFlow(next)
-    setSave({ dirty: true, state: save.state === "error" ? "saved" : save.state })
-    schedule()
-  }
-  const rename = (value: string) => {
-    setName(value)
-    setSave({ dirty: true, state: save.state === "error" ? "saved" : save.state })
-    schedule()
-  }
-  const reload = async () => {
-    const fresh = await props.source.client.document(props.id).catch(() => undefined)
-    if (!fresh) return
-    setBase(fresh)
-    setFlow(flowFromDocument(fresh, kind))
-    setName(fresh.name)
-    setSave({ state: "saved", dirty: false, error: "" })
-  }
-  onCleanup(() => {
-    clearTimeout(timer)
-    if (save.dirty && save.state !== "conflict")
-      void props.source.client.save(base(), { name: name(), ...documentFields(flow()) }).then(
-        () => props.source.invalidate("documents"),
-        () => undefined,
-      )
-  })
   // A newer server version (another window, a publish) replaces the copy when nothing local is pending.
   createEffect(
     on(
       server,
       (document) => {
-        if (!document || save.dirty || save.state === "saving") return
-        if (document.versionId === base().versionId && document.activeVersionId === base().activeVersionId) return
-        const changed = document.versionId !== base().versionId
-        setBase(document)
-        if (!changed) return
-        setFlow(flowFromDocument(document, kind))
-        setName(document.name)
+        if (document) draft.sync(document)
       },
       { defer: true },
     ),
@@ -206,7 +184,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   })
 
   const setInstalled = async (next: boolean) => {
-    if (install()) return
+    if (install() || !props.source.installs.isSuccess) return
     setInstall(true)
     const current = installed()
     const result = await (
@@ -221,6 +199,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   }
 
   const repin = async (installID: string) => {
+    if (!props.source.installs.isSuccess) return
     const result = await props.source.client.update(installID).then(
       () => undefined,
       (error: unknown) => failure(error),
@@ -229,20 +208,28 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
   }
 
-  const duplicate = async () => {
-    const created = await props.source.client
-      .create(copyDocument(base(), copy.t("orchestra.workflows.create.copyName", { name: name() })))
-      .catch(
-        (error: unknown) =>
-          void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
-      )
-    if (!created) return
-    props.source.invalidate("documents")
-    props.go(relayPath.editor(kind, created.id))
-  }
-  const download = async () => {
-    const value = await props.source.client.definition(props.id).catch(() => undefined)
-    const blob = new Blob([JSON.stringify(value ?? { name: name(), ...documentFields(flow()) }, null, 2)], {
+  const duplicate = () =>
+    duplication.run(async () => {
+      const created = await props.source.client
+        .create(copyDocument(base(), copy.t("orchestra.workflows.create.copyName", { name: name() })))
+        .catch(
+          (error: unknown) =>
+            void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
+        )
+      if (!created) return
+      await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      props.go(relayPath.editor(kind, created.id))
+    })
+  const download = () => exporting.run(async () => {
+    await flush()
+    if (!draft.active()) return
+    if (save.dirty || save.state !== "saved") throw new Error(save.error || copy.t("orchestra.workflows.export.unsaved"))
+    const version = base().versionId
+    const value = await props.source.client.definition(props.id)
+    if (!value || !draft.active()) return
+    if (save.dirty || save.state !== "saved" || base().versionId !== version)
+      throw new Error(copy.t("orchestra.workflows.export.unsaved"))
+    const blob = new Blob([JSON.stringify(value, null, 2)], {
       type: "application/json",
     })
     const link = window.document.createElement("a")
@@ -250,7 +237,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     link.download = `${name().replace(/[^A-Za-z0-9_.-]+/g, "-") || "relay"}.json`
     link.click()
     URL.revokeObjectURL(link.href)
-  }
+  })
   let api: CanvasApi | undefined
   let canvasKeys: ((event: KeyboardEvent) => void) | undefined
   const menu = (): MenuItem[] => [
@@ -261,6 +248,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       run: () => api?.fit(true),
     },
     { label: copy.t("orchestra.workflows.keys.title"), icon: "keys", run: () => setDialog("keys") },
+    ...(!props.route.view ? [
     ...(kind === "workflow"
       ? [
           {
@@ -270,17 +258,23 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
           },
         ]
       : []),
-    { label: copy.t("orchestra.workflows.menu.duplicate"), icon: "workflows", run: () => void duplicate() },
-    { label: copy.t("orchestra.workflows.menu.download"), icon: "download", run: () => void download() },
+    {
+      label: copy.t("orchestra.workflows.menu.duplicate"),
+      icon: "workflows",
+      disabled: duplication.busy(),
+      run: () => void duplicate(),
+    },
+    { label: copy.t("orchestra.workflows.menu.download"), icon: "download", disabled: exporting.busy(), run: () => void download() },
     "-",
     { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setDialog("delete") },
+    ] satisfies MenuItem[] : []),
   ]
 
   // Context actions in the command palette while this document is open.
   const command = useCommand()
   command.register("relay.editor", () => {
     const category = copy.t("orchestra.palette.relay")
-    const editorTab = props.route.tab === "editor"
+    const editorTab = props.route.tab === "editor" && !props.route.view
     return [
       ...(editorTab
         ? [
@@ -322,7 +316,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
 
   const closeLayer = () => props.close(layerBase(props.route))
   const keydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || window.document.querySelector("dialog[open]") || dialogs.active) return
+    if (event.defaultPrevented || window.document.querySelector('[role="dialog"][data-component="relay-modal"]') || dialogs.active) return
     const target = event.target instanceof HTMLElement ? event.target : undefined
     const typing = !!target?.closest("input,textarea,select,[contenteditable]")
     const mod = event.metaKey || event.ctrlKey
@@ -344,7 +338,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       return
     }
     const key = event.key
-    if (key === "n" || key === "N") return (event.preventDefault(), props.go(relayPath.add(kind, props.id)))
+    if (!props.route.view && (key === "n" || key === "N")) return (event.preventDefault(), props.go(relayPath.add(kind, props.id)))
     if (key === "1") return api?.fit(true)
     if (key === "0") return api?.zoomTo(1)
     if (key === "+" || key === "=") return api?.zoomBy(1.2)
@@ -359,18 +353,22 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       <EditorHead
         kind={kind}
         document={base()}
-        name={name()}
+        name={props.route.view ? frozen.data?.name ?? name() : name()}
+        readOnly={!!props.route.view}
         tab={props.route.tab}
         runCount={
           kind === "workflow"
             ? props.source.runsState() === "ready"
               ? runs().length
               : undefined
-            : (decisions.data?.length ?? 0)
+            : props.source.installs.isSuccess && (!installed() || decisions.isSuccess)
+              ? (decisions.data?.length ?? 0)
+              : undefined
         }
         installExists={!!installed()}
+        installKnown={props.source.installs.isSuccess}
         save={save}
-        issues={issueList()}
+        issues={props.route.view ? [] : issueList()}
         canPublish={canPublish()}
         installed={!!installed()?.enabled}
         installBusy={install()}
@@ -387,21 +385,56 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         onTest={() => setDialog("test")}
         onInstall={(next) => void setInstalled(next)}
         onReload={() => void reload()}
+        onRetry={() => void flush()}
       />
       <div class="wf-body">
+        <Show when={exporting.error()}>
+          <div class="wf-alert" role="alert" data-slot="relay-export-error">
+            <strong>{copy.t("orchestra.workflows.export.failed")}</strong>
+            <span>{exporting.error()}</span>
+          </div>
+        </Show>
+        <Show when={kind === "hook" && !props.source.installs.isSuccess}>
+          <HookQueryStatus kind="installs" query={props.source.installs} />
+        </Show>
+        <Show when={kind === "hook" && installed() && !decisions.isSuccess}>
+          <HookQueryStatus kind="activity" query={decisions} />
+        </Show>
         <Switch>
+          <Match when={props.route.view && !frozenFlow()}>
+            <div class="mx-page" data-slot="relay-history-unavailable">
+              <p role={viewed.isError || frozen.isError ? "alert" : "status"}>
+                {copy.t(viewed.isError || frozen.isError
+                  ? "orchestra.workflows.history.error"
+                  : (!overlayRun() && viewed.isPending) || (overlayRun() && frozen.isPending)
+                    ? "orchestra.workflows.history.loading"
+                    : "orchestra.workflows.history.unavailable")}
+              </p>
+              <Show when={viewed.isError || frozen.isError}>
+                <button type="button" class="mx-btn" onClick={() => void (viewed.isError ? viewed.refetch() : frozen.refetch())}>{copy.t("orchestra.workflows.retry")}</button>
+              </Show>
+              <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor(kind, props.id))}>{copy.t("orchestra.workflows.history.back")}</button>
+            </div>
+          </Match>
           <Match when={props.route.tab === "editor"}>
             <CanvasTab
               {...props}
               kind={kind}
               document={base()}
-              flow={flow()}
+              flow={props.route.view ? frozenFlow()! : flow()}
+              frozen={frozenFlow()}
+              readOnly={!!props.route.view}
               outputs={outputs()}
-              issues={found()}
+              issues={props.route.view ? issues(frozenFlow()!, [...(frozen.data?.meta.relay?.diagnostics ?? [])]) : found()}
               selected={selected()}
               run={overlayRun()}
               runs={runs()}
-              decision={(decisions.data ?? []).toSorted((a, b) => b.seq - a.seq)[0]}
+              decision={decisions.isSuccess ? decisions.data.toSorted((a, b) => b.seq - a.seq)[0] : undefined}
+              decisionKnown={props.source.installs.isSuccess && (!installed() || decisions.isSuccess)}
+              decisionStatus={!props.source.installs.isSuccess
+                ? { kind: "installs", query: props.source.installs }
+                : installed() && !decisions.isSuccess ? { kind: "activity", query: decisions } : undefined}
+              installExists={!!installed()}
               installed={installed()?.enabled ? installed() : undefined}
               test={test()}
               save={save}
@@ -413,6 +446,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               onTest={() => setDialog("test")}
               onClearTest={() => setTest(undefined)}
               onUpdateInstall={(installID) => void repin(installID)}
+              onRetry={() => void flush()}
+              onReload={() => void reload()}
             />
           </Match>
           <Match when={kind === "workflow" && props.source.runsState() !== "ready"}>
@@ -436,6 +471,9 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               onSession={props.openSession}
             />
           </Match>
+          <Match when={kind === "hook" && (!props.source.installs.isSuccess || (installed() && !decisions.isSuccess))}>
+            <></>
+          </Match>
           <Match when={true}>
             <HookActivity
               decisions={decisions.data ?? []}
@@ -449,7 +487,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       </div>
       <Switch>
         <Match when={dialog() === "publish"}>
-          <PublishDialog document={base()} flow={flow()} source={props.source} onClose={() => setDialog(undefined)} />
+          <PublishDialog document={base()} flow={flow()} source={props.source} active={draft.active}
+            retain={() => { draft.acquire(); return draft.release }} onClose={() => setDialog(undefined)} />
         </Match>
         <Match when={dialog() === "delete"}>
           <DeleteDialog
@@ -471,7 +510,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             onResult={(result) => {
               setDialog(undefined)
               setTest(result)
-              if (props.route.node || props.route.tab !== "editor") props.go(relayPath.editor(kind, props.id))
+              if (props.route.tab !== "editor") props.go(relayPath.editor(kind, props.id))
             }}
           />
         </Match>

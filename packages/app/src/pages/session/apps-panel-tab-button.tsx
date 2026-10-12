@@ -58,7 +58,7 @@ export function TabButton(props: {
         {props.tab.favicon ? (
           <img src={props.tab.favicon} alt="" />
         ) : (
-          new URL(props.tab.url).hostname.slice(0, 1).toUpperCase()
+          tabLabel(props.tab).slice(0, 1).toUpperCase()
         )}
       </span>
       <bdi dir="auto" class="zen-tab-title">

@@ -1,4 +1,4 @@
-import { createMemo, createResource, createSignal, Show, type JSX } from "solid-js"
+import { createEffect, createMemo, createSignal, on, onCleanup, Show, type JSX } from "solid-js"
 import type { SnapshotFileDiff, VcsFileDiff } from "@orchestra/sdk/v2"
 import type { FileDiffInfo } from "@opencode-ai/client/promise"
 import {
@@ -30,6 +30,8 @@ import {
 } from "@/pages/session/v2/review-diff-kinds"
 import type { ReviewPanelV2State } from "@/pages/session/v2/review-panel-v2-state"
 import { applyFileListKeyDown, SessionFileListV2 } from "@/pages/session/v2/session-file-list-v2"
+import { Button } from "@orchestra/ui/button"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 type ReviewDiff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
 
@@ -56,6 +58,7 @@ export type ReviewPanelV2Props = {
 
 export function ReviewPanelV2(props: ReviewPanelV2Props) {
   const sdk = useSDK()
+  const language = sessionRecoveryLanguage(useLanguage())
 
   const diffs = createMemo(() => props.diffs().filter(filterRenderableDiff))
   const filteredFiles = createMemo(() =>
@@ -86,18 +89,50 @@ export function ReviewPanelV2(props: ReviewPanelV2Props) {
     if (!diff || !load || !reviewDiffNeedsLoad(diff)) return
     return { diff, load, version: props.diffVersion }
   })
-  const [loadedDiff] = createResource(detailSource, async ({ diff, load, version }) => {
-    const value = await load(diff.file, version)
-    if (value?.file !== diff.file) return
-    return { source: diff, version, value }
+  // Preview loading must not suspend the route. Keep source identity unproxied so
+  // late detail results cannot replace a newer summary or another selected file.
+  const [detail, setDetail] = createSignal<{
+    source: RenderDiff
+    version?: number
+    state: "pending" | "failed" | "ready"
+    value?: RenderDiff
+  }>()
+  let revision = 0
+  const loadDetail = () => {
+    const source = detailSource()
+    const current = ++revision
+    if (!source) return setDetail(undefined)
+    setDetail({ source: source.diff, version: source.version, state: "pending" })
+    void source.load(source.diff.file, source.version).then(
+      (value) => {
+        if (current !== revision) return
+        const valid = value?.file === source.diff.file && !reviewDiffNeedsLoad(value)
+        setDetail({
+          source: source.diff,
+          version: source.version,
+          state: valid ? "ready" : "failed",
+          value: valid ? value : undefined,
+        })
+      },
+      () => {
+        if (current === revision) setDetail({ source: source.diff, version: source.version, state: "failed" })
+      },
+    )
+  }
+  createEffect(on(detailSource, loadDetail))
+  onCleanup(() => {
+    revision++
+  })
+
+  const currentDetail = createMemo(() => {
+    const loaded = detail()
+    if (loaded?.source !== sourceActiveItem() || loaded?.version !== props.diffVersion) return
+    return loaded
   })
 
   const activeItem = createMemo(() => {
-    const source = sourceActiveItem()
-    if (loadedDiff.state !== "ready") return source
-    const loaded = loadedDiff()
-    if (loaded && loaded.source === source && loaded.version === props.diffVersion) return loaded.value
-    return source
+    const loaded = currentDetail()
+    return loaded?.state === "ready" ? loaded.value : sourceActiveItem()
   })
 
   const readFile = async (path: string) =>
@@ -143,23 +178,38 @@ export function ReviewPanelV2(props: ReviewPanelV2Props) {
         // updates the mounted preview instead of remounting the whole viewer.
         <Show when={activeDiff()} keyed>
           {(file) => (
-            <Show when={activeItem()}>
-              {(diff) => (
-                <SessionReviewFilePreviewV2
-                  file={file}
-                  diff={diff()}
-                  diffStyle={props.diffStyle}
-                  expandMode={props.state.expandMode()}
-                  readFile={readFile}
-                  onLineComment={props.onLineComment}
-                  onLineCommentUpdate={props.onLineCommentUpdate}
-                  onLineCommentDelete={props.onLineCommentDelete}
-                  lineCommentActions={props.lineCommentActions}
-                  comments={props.comments}
-                  focusedComment={props.focusedComment}
-                  onFocusedCommentChange={props.onFocusedCommentChange}
-                />
-              )}
+            <Show
+              when={currentDetail()?.state !== "failed"}
+              fallback={
+                <div role="alert" data-slot="review-detail-error" class="flex flex-col gap-3 p-4 text-text-weak">
+                  <div>{language.t("session.review.detailFailed", { file })}</div>
+                  <Button onClick={loadDetail}>{language.t("common.retry")}</Button>
+                </div>
+              }
+            >
+              <Show
+                when={!detailSource() || currentDetail()?.state === "ready"}
+                fallback={<div class="p-4 text-text-weak">{language.t("session.review.loadingChanges")}</div>}
+              >
+                <Show when={activeItem()}>
+                  {(diff) => (
+                    <SessionReviewFilePreviewV2
+                      file={file}
+                      diff={diff()}
+                      diffStyle={props.diffStyle}
+                      expandMode={props.state.expandMode()}
+                      readFile={readFile}
+                      onLineComment={props.onLineComment}
+                      onLineCommentUpdate={props.onLineCommentUpdate}
+                      onLineCommentDelete={props.onLineCommentDelete}
+                      lineCommentActions={props.lineCommentActions}
+                      comments={props.comments}
+                      focusedComment={props.focusedComment}
+                      onFocusedCommentChange={props.onFocusedCommentChange}
+                    />
+                  )}
+                </Show>
+              </Show>
             </Show>
           )}
         </Show>

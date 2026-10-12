@@ -127,16 +127,16 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
   }
 
   const save = (edit: Extract<Dialog, { type: "edit" }>, form: FormData) => {
-    const fields: ScheduleFields = {
-      name: String(form.get("name") ?? "").trim(),
-      prompt: String(form.get("prompt") ?? "").trim(),
-      next: new Date(String(form.get("date") ?? "")).getTime(),
-      cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
-    }
+    const task = source.tasks().find((task) => task.id === edit.id)
+    const fields = scheduleEditorFields(form, task)
     if (!fields.name) return Promise.resolve(language.t("orchestra.schedule.error.name"))
     if (!fields.prompt) return Promise.resolve(language.t("orchestra.schedule.error.prompt"))
     if (!Number.isFinite(fields.next)) return Promise.resolve(language.t("orchestra.schedule.error.date"))
-    if (fields.next <= Date.now()) return Promise.resolve(language.t("orchestra.schedule.error.past"))
+    if (
+      fields.next <= Date.now() &&
+      (!task || fields.next !== task.next || fields.cadence !== task.cadence || edit.resume)
+    )
+      return Promise.resolve(language.t("orchestra.schedule.error.past"))
     return source.save(edit.id, fields, !!edit.resume)
   }
 
@@ -358,7 +358,7 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
                   closeLabel={language.t("orchestra.schedule.dialog.close")}
                   cancel={language.t("orchestra.schedule.cancel")}
                   submit={language.t("orchestra.schedule.confirm.submit")}
-                  onSubmit={() => source.remove(remove().id).then(() => undefined)}
+                  onSubmit={() => source.remove(remove().id)}
                   onClose={() => hide(current.key)}
                 >
                   <p class="mx-note">{language.t("orchestra.schedule.confirm.detail", { profile: profile() })}</p>
@@ -370,6 +370,17 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
       </Show>
     </MxPage>
   )
+}
+
+export function scheduleEditorFields(form: FormData, task?: Pick<ScheduleItem, "next">): ScheduleFields {
+  const date = String(form.get("date") ?? "")
+  return {
+    name: String(form.get("name") ?? "").trim(),
+    prompt: String(form.get("prompt") ?? "").trim(),
+    // datetime-local renders minutes only; an untouched input must keep the original instant.
+    next: task && date === localInput(task.next) ? task.next : new Date(date).getTime(),
+    cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
+  }
 }
 
 // Native modal dialog, as in the mock: top layer, focus trap, Escape and backdrop click close it.

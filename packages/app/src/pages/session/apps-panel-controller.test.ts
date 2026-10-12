@@ -1,11 +1,65 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import type { LinuxOpenResult } from "../../app-dock-linux"
-import { appDockProfile, createAppDockController, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
+import { appDockProfile, createAppDockController, tabLabel, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
 const profileB = appDockProfile("http://127.0.0.1:4097", "/work/shared repository")
 
 describe("App Dock controller", () => {
+  test("native shortcuts are delivered only for the visible current browser generation", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api)
+    const commands: string[] = []
+    controller.onShortcut((command) => commands.push(command))
+    const detach = controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    await controller.openNewTab()
+    dock.emit({ type: "shortcut", payload: { identity: tab("tab-1", 1), command: "address" } })
+    dock.emit({ type: "shortcut", payload: { identity: tab("tab-1", 2), command: "close-tab" } })
+    detach()
+    dock.emit({ type: "shortcut", payload: { identity: tab("tab-1", 1), command: "new-tab" } })
+    expect(commands).toEqual(["address"])
+  })
+  test("navigation persists the canonical reply and rejects superseded replies", async () => {
+    const dock = fakeDock()
+    const replies = [Promise.withResolvers<{ ok: boolean; url: string }>(), Promise.withResolvers<{ ok: boolean; url: string }>()]
+    const requests: string[] = []
+    dock.api.appDockNavigate = (_id, url) => replies[requests.push(url) - 1]!.promise
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    await controller.openNewTab()
+    controller.setURL("older search")
+    const first = controller.launch()
+    controller.setURL("example.com")
+    const second = controller.launch()
+    replies[1]!.resolve({ ok: true, url: "https://example.com/" })
+    await second
+    replies[0]!.resolve({ ok: true, url: "https://www.google.com/search?q=older+search" })
+    await first
+    await until(() => dock.manifest().tabs[profileA]?.[0]?.url === "https://example.com/")
+    expect(controller.state.tabs[0]?.url).toBe("https://example.com/")
+    expect(controller.state.url).toBe("https://example.com/")
+    expect(tabLabel(controller.state.tabs[0]!)).toBe("example.com")
+    expect(tabLabel({ ...tab("legacy", 1), url: "raw old search" })).toBe("raw old search")
+  })
+
+  test("a late navigation reply cannot overwrite newer native navigation state", async () => {
+    const dock = fakeDock()
+    const reply = Promise.withResolvers<{ ok: boolean; url: string }>()
+    dock.api.appDockNavigate = () => reply.promise
+    const controller = createAppDockController(dock.api)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    await controller.openNewTab()
+    controller.setURL("example.com")
+    const pending = controller.launch()
+    dock.emit({ type: "state", payload: { ...tab("tab-1", 1), url: "https://example.com/redirect", title: "Redirect", loading: false, audible: false } })
+    reply.resolve({ ok: true, url: "https://example.com/" })
+    await pending
+    expect(controller.state.tabs[0]?.url).toBe("https://example.com/redirect")
+    await until(() => dock.manifest().tabs[profileA]?.[0]?.url === "https://example.com/redirect")
+  })
   test("maps each repository profile to one stable, isolated native profile", () => {
     expect(appDockProfile("http://127.0.0.1:4096", "/work/shared repository")).toBe(profileA)
     expect(appDockProfile("http://127.0.0.1:4096", "/work/shared repository/")).toBe(profileA)
@@ -638,6 +692,7 @@ function fakeDock() {
     appDockLinuxWindows: async () => ({ status: "ready", windows: [] }),
     appDockNavigate: async (tabID: string, url: string) => {
       calls.push(["navigate", tabID, url])
+      return { ok: true, url }
     },
     appDockResize: async (target: TabIdentity, bounds: unknown) => {
       calls.push(["resize", target, bounds])

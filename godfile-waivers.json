@@ -391,22 +391,22 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 1146,
-      "reason": "Generated Effect V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'.",
-      "authorizedBy": "owner (gustavomhss), explicit four-output ceiling extension",
-      "authorizedAt": "2026-10-09"
+      "maximumLines": 1188,
+      "reason": "Generated Effect V2 HttpApi client; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
+      "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1637,
-      "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'.",
-      "authorizedBy": "owner (gustavomhss), explicit four-output ceiling extension",
-      "authorizedAt": "2026-10-09"
+      "maximumLines": 1694,
+      "reason": "Generated Promise V2 HttpApi client; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
+      "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 6674,
-      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Combines the approved promptContext/RelayForbiddenError outputs (6646) with dev's Session process routes (6661).",
-      "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
-      "authorizedAt": "2026-10-10"
+      "maximumLines": 6793,
+      "reason": "Generated V2 HttpApi types; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
+      "authorizedAt": "2026-10-12"
     },
     "packages/orchestra/src/provider/provider.ts": {
       "maximumLines": 1940,
