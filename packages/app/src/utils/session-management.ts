@@ -5,6 +5,8 @@ import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
 import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { SessionManagementUnsupported } from "./session-management-errors"
+import { normalizeSessionInfo, type AppSession } from "./session"
+import { directoryKey } from "@/context/global-sync/utils"
 
 /** Construct once inside the server SDK: fetch must carry that context's abort signal. */
 export function createSessionManagementForServer(input: {
@@ -40,6 +42,20 @@ export function createSessionManagementForServer(input: {
       : undefined,
   })
   return {
+    async listArchived(directory: string) {
+      if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+      const sessions: AppSession[] = []
+      let cursor: string | undefined
+      while (true) {
+        const page = await client.sessions.list({ directory, includeArchived: true, order: "desc", limit: 100, cursor })
+        sessions.push(...page.data.map(normalizeSessionInfo))
+        if (!page.data.length || !page.cursor.next) break
+        cursor = page.cursor.next
+      }
+      return sessions.filter((session) =>
+        session.time.archived !== undefined && directoryKey(session.directory) === directoryKey(directory),
+      )
+    },
     async getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
       if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
       return await client.sessions.getSubagentModels({ sessionID })

@@ -120,20 +120,26 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
     const key = ScopedKey.from(serverSDK.scope, sessionID)
     const session = info ?? state.session.get(sessionID)
     if (!session || operations[key]) return false
+    const initial = serverState.session.get(sessionID) ?? session
+    const revision = initial.archiveRevision
+    const timestamp = initial.archiveChangedAt ?? initial.time.updated
     if (serverSDK.protocolKind() !== "v2" || unsupported[serverSDK.scope]) {
       showToast({ title: language.t("session.restore.unavailable") })
       return false
     }
     setOperations(key, true)
     return serverSDK.sessionManagement.archive(sessionID, false, session.directory ?? input?.directory ?? source.directory)
-      .then(() => {
-        const restored = { ...session, time: { ...session.time, archived: undefined } }
-        serverState.session.remember(restored)
+      .then(async () => {
+        const current = serverState.session.get(sessionID)
+        if (current?.time.archived !== undefined &&
+          ((current.archiveRevision ?? -1) > (revision ?? -1) || (current.archiveChangedAt ?? current.time.updated) > timestamp)) return false
+        // A void ACK carries no archive revision. Read before projecting and respect remember's event fence.
+        const restored = serverState.session.remember(await serverState.session.resolve(sessionID, { force: true }))
+        if (restored.time.archived !== undefined) return false
         serverState.homeSessions.apply({ type: "session.updated", properties: { sessionID, info: restored } })
         state.set("session", (sessions) =>
           [...sessions.filter((item) => item.id !== sessionID), restored].sort((a, b) => a.id.localeCompare(b.id)),
         )
-        void serverState.session.resolve(sessionID, { force: true }).catch(() => {})
         return true
       })
       .catch((err: unknown) => {

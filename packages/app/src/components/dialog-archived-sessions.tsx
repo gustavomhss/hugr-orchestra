@@ -5,20 +5,20 @@ import { Button } from "@orchestra/ui/button"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
-import { listAllSessions } from "@/utils/session"
-import { directoryKey } from "@/context/global-sync/utils"
 import { useSessionArchive } from "@/pages/session/session-archive"
+import type { SessionManagement } from "@/utils/session-management"
 
 /** The dialog stays pinned to the server and directory where its history was opened. */
 export function DialogArchivedSessions(props: { directory: string }) {
   const language = sessionRecoveryLanguage(useLanguage())
   const source = useServerSDK()()
   const directory = props.directory
+  const management: SessionManagement = source.sessionManagement
   const actions = useSessionArchive({ server: source, directory })
   const [state, setState] = createStore({ restored: [] as string[] })
-  const [history, resource] = createResource(() => listAllSessions(source.api.session, { directory, order: "desc" })
+  const [history, resource] = createResource(() => management.listArchived(directory)
     .then((sessions) => ({
-      sessions: sessions.filter((session) => session.time.archived !== undefined && directoryKey(session.directory) === directoryKey(directory)),
+      sessions,
       error: undefined as unknown,
     }))
     .catch((error: unknown) => ({ sessions: [], error })))

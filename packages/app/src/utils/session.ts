@@ -5,6 +5,7 @@ import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { SessionsGetOutput } from "@orchestra/client"
 
 export type AppSession = Session & {
   subagentModels?: SubagentModelPolicy
@@ -15,7 +16,7 @@ export type AppSession = Session & {
   archiveRevision?: number
 }
 
-export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | AppSession): AppSession {
+export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | SessionsGetOutput | AppSession): AppSession {
   if (!("location" in input)) return input
   return {
     id: input.id,
@@ -93,9 +94,17 @@ export function applySessionManagementEvent(
 
 export function mergeSessionManagementInfo(current: AppSession | undefined, next: AppSession): AppSession {
   if (!current) return next
+  const keepPolicy = current.subagentModelsChangedAt !== undefined &&
+    (next.time.updated < current.subagentModelsChangedAt ||
+      (next.time.updated === current.subagentModelsChangedAt && current.subagentModelsRevision !== undefined &&
+        (next.subagentModelsRevision === undefined || next.subagentModelsRevision <= current.subagentModelsRevision)))
+  const keepArchive = current.archiveChangedAt !== undefined &&
+    (next.time.updated < current.archiveChangedAt ||
+      (next.time.updated === current.archiveChangedAt && current.archiveRevision !== undefined &&
+        (next.archiveRevision === undefined || next.archiveRevision <= current.archiveRevision)))
   return {
     ...next,
-    ...(current.subagentModelsChangedAt !== undefined && next.time.updated < current.subagentModelsChangedAt
+    ...(keepPolicy
       ? {
           subagentModels: current.subagentModels,
           subagentModelsChangedAt: current.subagentModelsChangedAt,
@@ -103,9 +112,9 @@ export function mergeSessionManagementInfo(current: AppSession | undefined, next
         }
       : {
           subagentModelsChangedAt: next.subagentModelsChangedAt ?? next.time.updated,
-          subagentModelsRevision: next.subagentModelsRevision ?? current.subagentModelsRevision,
+          subagentModelsRevision: next.subagentModelsRevision,
         }),
-    ...(current.archiveChangedAt !== undefined && next.time.updated < current.archiveChangedAt
+    ...(keepArchive
       ? {
           time: { ...next.time, archived: current.time.archived, updated: current.time.updated },
           archiveChangedAt: current.archiveChangedAt,
@@ -113,7 +122,7 @@ export function mergeSessionManagementInfo(current: AppSession | undefined, next
         }
       : {
           archiveChangedAt: next.archiveChangedAt ?? next.time.updated,
-          archiveRevision: next.archiveRevision ?? current.archiveRevision,
+          archiveRevision: next.archiveRevision,
         }),
   }
 }
