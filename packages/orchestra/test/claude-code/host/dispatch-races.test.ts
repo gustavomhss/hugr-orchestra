@@ -278,6 +278,41 @@ describe("background dispatch retention", () => {
     expect(fixture.join.get("a")?.hold).toBeUndefined()
   }))
 
+  it.instance("interrupted queued refusal keeps its admission through delivery and exact retry retains HOLD", () => Effect.gen(function* () {
+    const gate = yield* barrier()
+    const fixture = yield* host((part) => part.state.status === "completed" && part.state.metadata.delivery ? gate.pause : Effect.void)
+    yield* fixture.delegation.dispatch(yield* fixture.call("a", background), fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    fixture.delegation.stop("task-a", "Rejected final.")
+    const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+    yield* gate.wait
+    const hook = { ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected final." }] } }
+    // Immediate start admits the refusal and reaches the occupied semaphore before interruption.
+    const refusal = yield* fixture.delegation.settle(hook, "refused").pipe(Effect.forkChild({ startImmediately: true }))
+    yield* Fiber.interrupt(refusal)
+    yield* gate.open
+    yield* Fiber.join(delivery)
+    const delivered = yield* fixture.part("a")
+    expect(delivered?.state.status === "completed" && delivered.state.metadata.delivery).toMatchObject({ taskID: "task-a" })
+    expect(yield* fixture.delegation.settle(hook, "refused")).toContain("HOLD")
+    const held = yield* fixture.part("a")
+    if (held?.state.status !== "completed") throw new Error("Expected retried refusal HOLD")
+    expect(held.state.output).toBe("HOLD: Agent output refused by ToolSafety inspection")
+    expect(held.state.metadata.hold).toBe(held.state.output)
+    expect(held.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(held.state.metadata.delivery).toBeUndefined()
+    expect(held.state.metadata.workResult).toBeUndefined()
+    const history = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    expect(history.filter((message) => message.info.role === "assistant")).toHaveLength(1)
+    expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([held.state.output])
+    yield* fixture.delegation.settle(hook, "refused")
+    yield* fixture.delegation.notify(notice("task-a", "a"))
+    expect(yield* fixture.part("a")).toEqual(held)
+    expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })).toEqual(history)
+  }))
+
   it.instance("queued refusal retries a failed HOLD save after delivery without restoring attribution", () => Effect.gen(function* () {
     const gate = yield* barrier()
     const failures = { remaining: 1 }

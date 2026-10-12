@@ -505,6 +505,51 @@ it.instance("hook completion queued behind a provider save retains HOLD and nati
   expect((yield* ctx.tools())[0]).toEqual(held)
 }))
 
+it.instance("first child frame can publish owner placement while an external completion stays serialized", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  const agents = yield* Agent.Service
+  const snapshot = yield* Snapshot.Service
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  const known = { calls: new Map<string, ClaudeHostMirror.Mirror>(), tasks: new Map<string, string>() }
+  const mirror = ClaudeHostMirror.create({ sessionID: ctx.sessionID, user: ctx.user, agent: yield* agents.get("maestro"),
+    path: { cwd: "/repo", root: "/repo" }, sessions: ctx.sessions, snapshot, todo: ctx.todo, status: ctx.status, known,
+    child: (call) => Effect.gen(function* () {
+      const child = yield* ctx.sessions.create({ parentID: call.sessionID, agent: "maestro", title: "Generic child" })
+      const owner = known.calls.get(call.callID)
+      const current = owner?.tool(call.callID)
+      if (!owner || current?.state.status !== "running") throw new Error("Expected owning running Agent call")
+      const placement = { parentSessionId: call.sessionID, sessionId: child.id }
+      // The production session child callback makes this same owner.complete call under mirror.on.
+      yield* owner.complete({ ...current, metadata: { ...current.metadata, ...placement },
+        state: { ...current.state, metadata: { ...current.state.metadata, ...placement } } })
+      const user = yield* ctx.sessions.updateMessage({ ...ctx.user, id: MessageID.ascending(), sessionID: child.id })
+      yield* Deferred.succeed(entered, undefined)
+      yield* Deferred.await(release)
+      return { sessionID: child.id, user, agent: yield* agents.get("maestro") }
+    }).pipe(Effect.orDie) })
+  yield* mirror.on(assistant("generic-dispatch", [{ type: "tool_use", id: "generic", name: "Agent",
+    input: { subagent_type: "general-purpose", prompt: "Inspect", description: "Generic child" } }]))
+  const first = yield* mirror.on(assistant("generic-first", [{ type: "text", text: "First child frame", citations: null }], "generic"))
+    .pipe(Effect.forkChild)
+  yield* awaitWithTimeout(Deferred.await(entered), "child placement callback never completed owner.complete")
+  const [placed] = yield* ctx.tools()
+  if (placed.state.status !== "running" || typeof placed.metadata?.sessionId !== "string") throw new Error("Expected child placement")
+  const hold = "HOLD: external writer"
+  const external = yield* mirror.complete({ ...placed, state: { status: "completed", input: placed.state.input,
+    output: hold, title: "held", metadata: { hold }, time: { start: 1, end: 2 } } })
+    .pipe(Effect.forkChild({ startImmediately: true }))
+  expect((yield* ctx.tools())[0]).toEqual(placed)
+  yield* Deferred.succeed(release, undefined)
+  yield* Fiber.join(first)
+  yield* Fiber.join(external)
+  const [held] = yield* ctx.tools()
+  expect(held.metadata).toMatchObject({ sessionId: placed.metadata.sessionId, parentSessionId: ctx.sessionID })
+  expect(held.state.status === "completed" && held.state.output).toBe(hold)
+  expect((yield* ctx.read(SessionID.make(placed.metadata.sessionId))).flatMap((message) => message.parts)
+    .filter((part) => part.type === "text").map((part) => part.text)).toEqual(["First child frame"])
+}))
+
 test("tool names and inputs map to the cards Orchestra renders", () => {
   expect(["Bash", "Read", "Edit", "Write", "TodoWrite", "AskUserQuestion", "Skill", "Agent"].map(ClaudeHostMirror.toolName))
     .toEqual(["bash", "read", "edit", "write", "todowrite", "question", "skill", "Agent"])

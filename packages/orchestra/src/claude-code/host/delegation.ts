@@ -82,6 +82,8 @@ type Record = {
   notice?: SDKTaskNotificationMessage
   settled?: boolean
   delivered?: boolean
+  /** Admitted inspection refusal; survives cancellation of the fiber waiting to retain its HOLD. */
+  rejection?: PostToolUseHookInput
 }
 
 type Admission = {
@@ -233,16 +235,21 @@ export function make(input: {
    * `refused` is a reason the host already refuses this result for (a secret in its output).
    */
   const settle = Effect.fn("ClaudeHostDelegation.settle")(function* (hook: PostToolUseHookInput, refused?: string) {
-    // A refusal admitted while delivery is saving must survive that delivery's terminal transition.
-    // A refused replay arriving after settlement still withholds its output without rewriting accepted history.
-    const rejection = refused !== undefined && records.get(hook.tool_use_id)?.settled !== true
+    // Record admission before the interruptible semaphore wait. Delivery cannot consume this obligation.
+    const admitted = records.get(hook.tool_use_id)
+    if (refused !== undefined && admitted && !admitted.settled) admitted.rejection ??= structuredClone(hook)
     return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
       const entry = records.get(hook.tool_use_id)
-      if (entry?.settled && (!rejection || !entry.delivered)) return undefined
+      if (entry?.settled && (!entry.rejection || !entry.delivered)) {
+        entry.rejection = undefined
+        return undefined
+      }
+      // Dispatch admission may have been ahead of this settlement when its record was not yet published.
+      if (refused !== undefined && entry && !entry.settled) entry.rejection ??= structuredClone(hook)
       const researchControl = entry?.seat?.id === "jimmy" && entry.child
         ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
       const ended = ClaudeHostResearchResult.terminal(researchControl)
-      if (entry && rejection) return yield* reject(entry, hook, researchControl, ended)
+      if (entry?.rejection) return yield* reject(entry, entry.rejection, researchControl, ended)
       if (!entry?.seat || !entry.child) return undefined
       if (entry.launched) {
         if (entry.notice) yield* deliver(entry, entry.notice)
@@ -348,6 +355,7 @@ export function make(input: {
         background: entry.background, hold: reason, output: reason, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined,
         ...(researchControl ? { researchControl } : {}), terminal: ended ?? { reason: "failed", hostDetail: reason } })
       entry.settled = true
+      entry.rejection = undefined
       entry.notice = undefined
       return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
     })

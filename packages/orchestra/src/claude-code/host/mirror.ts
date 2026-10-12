@@ -184,6 +184,7 @@ export function create(input: {
   const pending = new Map<MessageID, { user: SessionV1.User; uuid?: string }>()
   const consumed = new Map<MessageID, SessionV1.User>()
   const writes = Semaphore.makeUnsafe(1)
+  const resolving = new Map<number, string>()
   let answering = input.user
   let apiID: string | undefined
   let retrying = false
@@ -225,7 +226,13 @@ export function create(input: {
     const cached = children.get(callID)
     if (cached) return cached.mirror
     const part = tool(callID)
-    const resolved = part && input.child ? yield* input.child(part) : undefined
+    const resolve = input.child
+    // The production child resolver publishes placement through owner.complete in this same fiber.
+    // Only that callback's call may reuse the already-held permit; forked/external writers still acquire it.
+    const resolved = part && resolve ? yield* Effect.withFiber((fiber) => Effect.suspend(() => {
+      resolving.set(fiber.id, callID)
+      return resolve(part)
+    }).pipe(Effect.ensuring(Effect.sync(() => { resolving.delete(fiber.id) })))) : undefined
     if (!resolved) return undefined
     const mirror = create({ ...input, known, sessionID: resolved.sessionID, user: resolved.user, agent: resolved.agent, state: undefined, record: undefined })
     children.set(callID, { mirror, sessionID: resolved.sessionID })
@@ -434,7 +441,8 @@ export function create(input: {
     // An Orchestra MCP call by Maestro or by a seat whose child session is mirrored.
     claim: (name) => current().claim(name) ??
       [...children.values()].map((item) => item?.mirror.claim(name)).find((part) => part !== undefined),
-    complete: (part) => tool(part.callID) ? writes.withPermits(1)(write(part, undefined, true))
+    complete: (part) => tool(part.callID) ? Effect.withFiber((fiber) => resolving.get(fiber.id) === part.callID
+      ? write(part, undefined, true) : writes.withPermits(1)(write(part, undefined, true)))
       : known.calls.get(part.callID)?.complete(part) ?? Effect.void,
     finish: (previousCost) => writes.withPermits(1)(Effect.gen(function* () {
       yield* Effect.forEach([...children.values()], (item) => item?.mirror.finish(0) ?? Effect.void, { discard: true })
