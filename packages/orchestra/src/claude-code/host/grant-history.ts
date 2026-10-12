@@ -50,9 +50,10 @@ export function read(input: {
       if (!consumed && call.state.status === "error") return []
       return [{ source: { message_id: call.messageID, part_id: call.id }, callID: call.callID,
         lifecycle: call.state.status, state: consumed ? "consumed" : "unresolved", input: call.state.input,
+        ...(call.state.status === "completed" ? { output: call.state.output } : {}),
         // context_recall returns input/output/lifecycle, but deliberately excludes dispatch/placement metadata.
         ...(consumed && Option.isSome(evidence) ? { host_metadata: { ...evidence.value, sessionId: call.state.status === "completed" ? call.state.metadata.sessionId : undefined } } : {}),
-        recall_fields: ["input", "output", "lifecycle"], host_metadata_recallable: false }]
+        recall_fields: ["input", "lifecycle", ...(call.state.status === "completed" ? ["output"] : [])], host_metadata_recallable: false }]
     })
     const live = input.live.filter((entry) => entry.grantID === grant.grantID)
     const registered = live.length ? ClaudeHostMcp.grants(input.sessionID).get(grant.grantID) : undefined
