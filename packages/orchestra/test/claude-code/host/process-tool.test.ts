@@ -41,6 +41,7 @@ import { AuthTest } from "../../fake/auth"
 import { NpmTest } from "../../fake/npm"
 import { TestInstance } from "../../fixture/fixture"
 import { pollWithTimeout, testEffect } from "../../lib/effect"
+import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 
 // The same layer as the shell tool's adoption tests: the process tool feeds the same BackgroundProcess registry.
 const it = testEffect(
@@ -134,6 +135,7 @@ describe("process MCP tool", () => {
       setInterval(() => console.log("tick " + tick++), 100)
     `,
         )
+        expectSpawn(import.meta.path)
         const started = yield* f.call({ action: "start", command, wait: 1_000 })
         expect(started.output).toContain("ready")
         expect(started.metadata.exit).toBeNull()
@@ -177,6 +179,7 @@ describe("process MCP tool", () => {
     () =>
       Effect.gen(function* () {
         const f = yield* fixture
+        expectSpawn(import.meta.path)
         const done = yield* f.call({
           action: "start",
           command: yield* f.node("done.cjs", `console.log("built")`),
@@ -210,6 +213,7 @@ describe("process MCP tool", () => {
     `,
           ),
         )
+        expectSpawn(import.meta.path)
         const started = yield* Effect.forEach(
           commands,
           (command) => f.call({ action: "start", command, wait: 1_000 }),
@@ -249,6 +253,7 @@ describe("process MCP tool", () => {
     `,
         )
         const ctx = f.context()
+        expectSpawn(import.meta.path)
         const short = yield* Effect.forkScoped(
           f.call(
             { action: "start", command, wait: 20_000 },
@@ -307,6 +312,7 @@ describe("process MCP tool", () => {
       catch { console.log("denied") }
     `,
         )
+        expectSpawn(import.meta.path)
         const result = yield* f.call(
           { action: "start", command, wait: 10_000 },
           { profile: { requireSandbox: true, writeRoots: [root] } },
@@ -390,6 +396,7 @@ describe("process MCP tool", () => {
       setInterval(probe, 100)
     `,
         )
+        expectSpawn(import.meta.path)
         const started = yield* f.call({ action: "start", command, wait: 1_000 }, { agent: "backend", profile })
         expect(started.metadata.exit).toBeNull()
         expect(started.output).toContain("denied")
@@ -454,6 +461,7 @@ describe("process MCP tool", () => {
         const updated = yield* gate.confine({ sessionID: f.session.id, seat: "backend" }, command, ctx.callID!, {})
         if (!updated) throw new Error("process start was not jailed by the gate")
         expect(updated).not.toBe(command)
+        expectSpawn(import.meta.path)
         const started = yield* f.call({ action: "start", command: updated, wait: 1_000 }, { ctx, profile })
         expect(started.metadata.pid).toBeGreaterThan(0)
         const scratch = /scratch=([^\r\n]+)/.exec(started.output)?.[1]

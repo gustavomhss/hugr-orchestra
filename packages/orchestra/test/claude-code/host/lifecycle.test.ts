@@ -11,6 +11,7 @@ import { MessageID } from "@/session/schema"
 import { pollWithTimeout } from "../../lib/effect"
 import { TestInstance } from "../../fixture/fixture"
 import { ClaudeEngineFixture } from "../engine-fixture"
+import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 
 const frame = ClaudeEngineFixture.frame
 
@@ -277,6 +278,7 @@ ClaudeEngineFixture.it.instance("answered user boundaries receive the real snaps
     yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...frame }
     for await (const _ of input) {}
   })
+  expectSpawn(import.meta.path)
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("edit answer.txt") })
   const history = yield* setup.sessions.messages({ sessionID: setup.chat.id })
   const user = history.find((item) => item.info.role === "user")
@@ -318,6 +320,7 @@ ClaudeEngineFixture.it.instance("admit-only input waits for the next turn, while
     yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", total_cost_usd: 0, ...frame }
     for await (const _ of input) {}
   })
+  expectSpawn(import.meta.path)
   const initial = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("initial") }).pipe(Effect.forkIn(scope))
   yield* Effect.promise(() => ready.promise)
   const steer = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("steer") }).pipe(Effect.forkIn(scope))

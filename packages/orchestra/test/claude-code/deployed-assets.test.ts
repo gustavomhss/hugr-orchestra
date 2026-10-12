@@ -11,6 +11,7 @@ import { seatSkillsFiles } from "../../script/seat-skills"
 import { resolveClaudeCodeResource, stageClaudeCodeResource } from "../../script/claude-code-resources"
 import { tmpdir } from "../fixture/fixture"
 import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 
 test.each(["bun", "node"] as const)(
   "%s deployed fixture resolves the pinned executable and publishes every embedded playbook",
@@ -67,6 +68,7 @@ test.each(["bun", "node"] as const)(
       Effect.scoped(
         Effect.gen(function* () {
           const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
+          expectSpawn(import.meta.path)
           const child = yield* spawner.spawn(
             ChildProcess.make(target === "bun" ? outfile : "node", target === "bun" ? [] : [outfile], {
               cwd: tmp.path,

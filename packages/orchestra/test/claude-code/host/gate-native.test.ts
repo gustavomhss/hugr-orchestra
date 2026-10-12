@@ -37,6 +37,7 @@ import { NpmTest } from "../../fake/npm"
 import { TestInstance, provideInstance, tmpdirScoped } from "../../fixture/fixture"
 import { seatShellRuns } from "../../fixture/seat-sandbox"
 import { pollWithTimeout, testEffect } from "../../lib/effect"
+import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 
 // Actual gate, profile loader, Session, Permission and filesystem. Only account/network integrations are replaced;
 // no SDK query, model, policy port or sandbox wrapper is scripted. Each git instance has its own project profile.
@@ -117,6 +118,7 @@ describe("native gate real policy", () => {
       expect(typeof decision.input?.command).toBe("string")
       expect(decision.input?.command).not.toBe("printf changed > protected.txt")
       const processes = yield* AppProcess.Service
+      expectSpawn(import.meta.path)
       yield* processes.run(ChildProcess.make("/bin/sh", ["-c", String(decision.input?.command)], { cwd: f.directory }))
       expect(yield* f.filesystem.readFileString(path.join(f.directory, "protected.txt"))).toBe("sentinel")
       // A harmless ordinary write is still permitted under the same effective project profile.
@@ -286,6 +288,7 @@ describe("native gate real policy", () => {
     const scratch = yield* Effect.forEach(decisions, (decision) => Effect.gen(function* () {
       expect(decision.allow).toBe(true)
       if (!decision.allow || typeof decision.input?.command !== "string") throw new Error("missing jailed Bash")
+      expectSpawn(import.meta.path)
       const result = yield* processes.run(ChildProcess.make("/bin/sh", ["-c", decision.input.command], { cwd: f.directory }))
       expect(result.exitCode).toBe(0)
       return result.stdout.toString()
