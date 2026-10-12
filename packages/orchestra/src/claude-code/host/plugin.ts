@@ -14,6 +14,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import type { AgentDefinition } from "@anthropic-ai/claude-agent-sdk"
 import { Global } from "@orchestra/core/global"
+import { Research } from "@orchestra/schema/research"
 import type { Agent } from "@/agent/agent"
 import { Seats } from "@/maestro/seats"
 import { SeatSkillRoot } from "@/maestro/seat-skill-root"
@@ -115,12 +116,13 @@ function definition(agent: Agent.Info, seat: string, granted: readonly string[])
       .filter(Boolean).join("\n\n") + "\n",
     tools: allowed,
     skills: Seats.find(seat)?.skills.slice(),
+    ...(seat === "jimmy" ? { maxTurns: Research.Limits.providerCalls } : {}),
     model: agent.model?.providerID === "anthropic" ? agent.model.modelID : "inherit",
   } satisfies AgentDefinition
 }
 
 // JSON strings are valid YAML double-quoted scalars, so no seat text can break the frontmatter.
-function markdown(id: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">>) {
+function markdown(id: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">> & Pick<AgentDefinition, "maxTurns">) {
   return [
     "---",
     `name: ${id}`,
@@ -128,6 +130,7 @@ function markdown(id: string, definition: Required<Pick<AgentDefinition, "descri
     `tools: ${definition.tools.join(", ")}`,
     `model: ${JSON.stringify(definition.model)}`,
     `skills: ${JSON.stringify(Seats.find(id)?.skills ?? [])}`,
+    ...(definition.maxTurns === undefined ? [] : [`maxTurns: ${definition.maxTurns}`]),
     "---",
     "",
     definition.prompt,

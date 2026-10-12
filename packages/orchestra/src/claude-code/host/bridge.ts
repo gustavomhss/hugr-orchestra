@@ -44,6 +44,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
     reserve: (reservation: ClaudeHostMcp.Reservation) => {
       if (admission.stopped || ctx.abort.signal.aborted) throw new Error("HOLD: this host turn was stopped, so no MCP call was admitted.")
       if (stoppedChildren.has(reservation.sessionID)) throw new Error("HOLD: this child was stopped, so no MCP call was admitted.")
+      if (services.research?.signal(reservation.sessionID)?.aborted) throw new Error("budget_exhausted: Research dispatch deadline exhausted.")
       if (calls.has(reservation.callID)) throw new Error(`HOLD: duplicate MCP reservation ${reservation.callID}.`)
       const receipt = crypto.randomUUID()
       calls.set(reservation.callID, { reservation: { ...reservation, input: structuredClone(reservation.input), args: structuredClone(reservation.args) },
@@ -74,7 +75,9 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
       if (call.reservation.tool !== name || !isDeepStrictEqual(call.reservation.args, ClaudeHostMcp.argumentsOf(args)))
         return yield* Effect.die(new Error(`HOLD: ${name} arguments do not match its accepted dispatch.`))
       call.claimed = true
-      call.signal = AbortSignal.any([ctx.abort.signal, signal, call.reservation.signal, call.abort.signal])
+      const research = services.research?.signal(call.reservation.sessionID)
+      call.signal = AbortSignal.any([ctx.abort.signal, signal, call.reservation.signal, call.abort.signal,
+        ...(research ? [research] : [])])
       for (let round = 0; round < 1500; round++) {
         if (call.signal.aborted) return yield* Effect.die(new Error(`MCP call ${call.reservation.callID} was cancelled.`))
         const part = tool(call.reservation.callID)

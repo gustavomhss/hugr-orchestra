@@ -317,6 +317,7 @@ const layer = Layer.effect(
       clearTimeout(live.idle)
       live.inbox.end()
       live.abort.abort()
+      if (live.research) void live.run(live.research.close, true).catch(() => {})
       live.query.close()
     }
     const retire = (live: Live) => {

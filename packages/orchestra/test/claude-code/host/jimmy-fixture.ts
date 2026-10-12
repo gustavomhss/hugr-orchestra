@@ -5,10 +5,14 @@ import { eq } from "drizzle-orm"
 import type { HookInput } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Database } from "@orchestra/core/database/database"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { AppProcess } from "@orchestra/core/process"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
@@ -22,8 +26,14 @@ import { ClaudeHostResearch } from "@/claude-code/host/research"
 import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { Permission } from "@/permission"
 import { ResearchExecution } from "@/research/allowance"
 import { Session } from "@/session/session"
+import { SessionStatus } from "@/session/status"
+import { Todo } from "@/session/todo"
+import { Snapshot } from "@/snapshot"
 import { MessageID, PartID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
@@ -33,6 +43,8 @@ import { testEffect } from "../../lib/effect"
 export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   ClaudeHost.node, ToolRegistry.node, Agent.node, Config.node, Session.node, SessionProjector.node,
   ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, Database.node, EventV2Bridge.node,
+  Permission.node, FSUtil.node, AppProcess.node, Git.node, ArsenalObservations.node, LocationServiceMap.node,
+  Snapshot.node, Todo.node, SessionStatus.node, filesystem,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true, experimentalEventSystem: true })]]))
 
 export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" }
@@ -51,6 +63,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
     cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() } } satisfies SessionV1.Assistant)
   const join = ClaudeHostJoin.make()
   const research = yield* ClaudeHostResearch.make
+  yield* Effect.addFinalizer(() => research.close)
   const seat = yield* agents.get("jimmy")
   const tools = yield* registry.tools({ agent: seat, ...ref })
   const granted = { maestro: ["task"], jimmy: tools.map((tool) => tool.id) }
@@ -79,6 +92,10 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
       agent: "jimmy", mode: "subagent" })
     const pre = (name: string, toolUseID: string, input: unknown = {}) => fire({ ...base, agent_id: `native-${callID}`,
       hook_event_name: "PreToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: input })
+    const post = (name: string, toolUseID: string) => fire({ ...base, agent_id: `native-${callID}`,
+      hook_event_name: "PostToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: {}, tool_response: "retained output" })
+    const settle = () => fire({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id: callID,
+      tool_input: args, tool_response: { status: "completed", agentId: `native-${callID}`, content: [{ type: "text", text: "Done" }] } })
     const run = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
       const tool = tools.find((tool) => tool.id === name)
       if (!tool) throw new Error(`Missing registry tool ${name}`)
@@ -93,9 +110,9 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
         metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
       return result
     })
-    return { child, message, output, pre, run, callID }
+    return { child, message, output, pre, post, settle, run, callID }
   })
-  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, mirrored, tools }
+  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, mirrored, tools, seat, abort }
 })
 
 export const charges = Effect.fn("ClaudeResearchFixture.charges")(function* (sessionID: string) {

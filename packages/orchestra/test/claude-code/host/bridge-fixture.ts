@@ -9,6 +9,7 @@ import { Agent } from "@/agent/agent"
 import { ClaudeHostBridge } from "@/claude-code/host/bridge"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostMirror } from "@/claude-code/host/mirror"
+import type { ClaudeHostResearch } from "@/claude-code/host/research"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { Permission } from "@/permission"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
@@ -28,7 +29,7 @@ export const connect = Effect.fnUntraced(function* (server: ReturnType<typeof Cl
 })
 
 /** Real persistence, real mirrors, real identity/permission/runtime services; only SDK frames are scripted. */
-export const make = Effect.fnUntraced(function* (sessionID?: SessionID) {
+export const make = Effect.fnUntraced(function* (sessionID?: SessionID, research?: ClaudeHostResearch.Runtime) {
   const instance = yield* TestInstance
   const sessions = yield* Session.Service
   const agents = yield* Agent.Service
@@ -46,7 +47,7 @@ export const make = Effect.fnUntraced(function* (sessionID?: SessionID) {
   const live: ClaudeHostBridge.Live & { turn?: { view: ClaudeHostMirror.Mirror } } = {
     sessionID: parent.id, known, run: <A>(effect: Effect.Effect<A, unknown>) => Effect.runPromiseWith(context)(effect),
   }
-  const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, withSession: bindings.withSession })
+  const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, research, withSession: bindings.withSession })
   const wire = new Map<string, Record<string, unknown>>()
   const mirrors = new Map<SessionID, ClaudeHostMirror.Mirror>()
   const mirror = Effect.fnUntraced(function* (id: SessionID, seat: string) {
