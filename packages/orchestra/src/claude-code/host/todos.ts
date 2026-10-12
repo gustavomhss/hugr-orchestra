@@ -15,6 +15,40 @@ const Snapshot = Schema.Struct({ schema: Schema.Literal("native-task-snapshot-v1
   args: Schema.Record(Schema.String, Schema.Unknown), result: Schema.Record(Schema.String, Schema.Unknown),
   tasks: Schema.Array(Task) })
 
+export class InvalidNativeTodoReceipt extends Error {
+  override readonly name = "InvalidNativeTodoReceipt"
+}
+
+/** One causal selector for readers and producers; transcript call position is not result order. */
+export function latest(view: ClaudeHostBoundary.Retained) {
+  const receipts = view.history.flatMap((message) => message.parts).flatMap((part) => {
+    if (part.type !== "tool" || part.state.status !== "completed" ||
+      part.tool !== "todowrite" && !TOOLS.includes(part.tool) || part.state.metadata.claudeCodeTodo === undefined) return []
+    const saved = Schema.decodeUnknownOption(Snapshot)(part.state.metadata.claudeCodeTodo)
+    if (saved._tag === "None") throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_INVALID")
+    if (part.metadata?.providerExecuted !== true || part.metadata?.claudeCodeTool !== saved.value.name)
+      throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_OWNER_MISMATCH")
+    if (!Number.isSafeInteger(saved.value.order) || saved.value.order <= 0)
+      throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_UNPROVABLE")
+    return [{ part, snapshot: saved.value }]
+  }).sort((a, b) => a.snapshot.order - b.snapshot.order)
+  const orders = new Set<number>()
+  const tasks = new Map<string, typeof Task.Type>()
+  receipts.forEach((receipt) => {
+    if (orders.has(receipt.snapshot.order)) throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_CONFLICT")
+    orders.add(receipt.snapshot.order)
+    if (!apply(tasks, receipt.snapshot.name, receipt.snapshot.args, receipt.snapshot.result))
+      throw new InvalidNativeTodoReceipt("NATIVE_TODO_RECEIPT_FAILED")
+    const expected = [...tasks.values()]
+    if (expected.length !== receipt.snapshot.tasks.length || expected.some((task, index) => {
+      const saved = receipt.snapshot.tasks[index]
+      return task.id !== saved.id || task.subject !== saved.subject || task.status !== saved.status || task.activeForm !== saved.activeForm
+    })) throw new InvalidNativeTodoReceipt("NATIVE_TODO_SNAPSHOT_CONFLICT")
+  })
+  const receipt = receipts.at(-1)
+  return receipt ? { ...receipt, todos: project(receipt.snapshot.tasks) } : undefined
+}
+
 /** Rebuild from retained native receipts, never from the uncut session aggregate or ID-less UI todos. */
 export const update = Effect.fn("ClaudeHostTodos.update")(function* (input: {
   sessionID: SessionID
@@ -29,34 +63,29 @@ export const update = Effect.fn("ClaudeHostTodos.update")(function* (input: {
   if (input.result.success === false || input.result.error) return
   const session = yield* input.sessions.get(input.sessionID).pipe(Effect.orDie)
   const history = yield* input.sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie)
-  const evidence = ClaudeHostBoundary.retained(session, history).history.flatMap((message) => message.parts)
-    .flatMap((part) => {
-      if (part.type !== "tool" || part.state.status !== "completed" ||
-        part.tool !== "todowrite" && !TOOLS.includes(part.tool)) return []
-      const saved = Schema.decodeUnknownOption(Snapshot)(part.state.metadata.claudeCodeTodo)
-      return saved._tag === "Some" && part.metadata?.providerExecuted === true &&
-        part.metadata?.claudeCodeTool === saved.value.name && Number.isSafeInteger(saved.value.order) && saved.value.order > 0
-        ? [saved.value] : []
-    }).sort((a, b) => a.order - b.order)
-  const tasks = new Map<string, typeof Task.Type>()
-  // Replay results rather than snapshots: an aggregate is never proof of an individual native task.
-  evidence.forEach((saved) => apply(tasks, saved.name, saved.args, saved.result))
+  const previous = latest(ClaudeHostBoundary.retained(session, history))
+  const tasks = new Map((previous?.snapshot.tasks ?? []).map((task) => [task.id, task] as const))
   if (!apply(tasks, input.name, input.args, input.result)) return
-  const snapshot = { schema: "native-task-snapshot-v1", order: (evidence.at(-1)?.order ?? 0) + 1,
+  const order = (previous?.snapshot.order ?? 0) + 1
+  if (!Number.isSafeInteger(order)) throw new InvalidNativeTodoReceipt("NATIVE_TODO_ORDER_UNPROVABLE")
+  const snapshot = { schema: "native-task-snapshot-v1", order,
     name: input.name, args: input.args, result: input.result, tasks: [...tasks.values()] }
-  const saved = [...tasks.values()].map((task) => [task.id, {
-    content: task.subject, status: task.status, priority: "medium",
-    ...(task.activeForm !== undefined ? { activeForm: task.activeForm } : {}),
-  }] as const)
-  if (input.state) yield* input.state({ todoTasks: Object.fromEntries(saved) })
+  const todos = project(snapshot.tasks)
+  const saved = Object.fromEntries(snapshot.tasks.map((task, index) => [task.id, todos[index]]))
+  if (input.state) yield* input.state({ todoTasks: saved })
   if (!input.state) {
     // Child mirrors have no parent host writer. Preserve unrelated child metadata.
     const latest = yield* input.sessions.get(input.sessionID).pipe(Effect.orDie)
     yield* input.sessions.setMetadata({ sessionID: input.sessionID, metadata: { ...latest.metadata,
-      claudeCode: { ...latest.metadata?.claudeCode, todoTasks: Object.fromEntries(saved) } } })
+      claudeCode: { ...latest.metadata?.claudeCode, todoTasks: saved } } })
   }
-  return { todos: saved.map((entry) => entry[1]), snapshot }
+  return { todos, snapshot }
 })
+
+function project(tasks: readonly (typeof Task.Type)[]) {
+  return tasks.map((task) => ({ content: task.subject, status: task.status, priority: "medium",
+    ...(task.activeForm !== undefined ? { activeForm: task.activeForm } : {}) }))
+}
 
 /** Only structured native success supplies identity; acknowledged fields supply changes. */
 function apply(tasks: Map<string, typeof Task.Type>, name: string, args: Record<string, unknown>, result: Record<string, unknown>) {

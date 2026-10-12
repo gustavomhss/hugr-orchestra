@@ -18,6 +18,7 @@ import { ClaudeHostGate } from "./gate"
 import { ClaudeHostGrantHistory } from "./grant-history"
 import { ClaudeHostBoundary } from "./boundary"
 import type { ClaudeHostMcp } from "./mcp"
+import { ClaudeHostTodos } from "./todos"
 
 /** The exclusive user cut is applied before every domain reader, including Archive coverage validation. */
 export const retained = Effect.fn("ClaudeHostMemory.retained")(function* (sessionID: SessionID) {
@@ -54,13 +55,19 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     return [JSON.stringify({ binding, title: child.title, call })]
   }))
   const plan = yield* planState(view, calls)
+  const native = ClaudeHostTodos.latest(view)
+  // Ordinary TodoWrite is a fallback, not evidence that supersedes a native receipt (including an empty one).
   const snapshot = calls.findLast((part) => part.state.status === "completed" &&
-    (["todowrite", "TodoWrite", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"].includes(part.tool) || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
-  // A known cut with no visible snapshot cannot safely use the latest aggregate todo table.
+    !ClaudeHostTodos.TOOLS.includes(part.tool) &&
+    !(typeof part.metadata?.claudeCodeTool === "string" && ClaudeHostTodos.TOOLS.includes(part.metadata.claudeCodeTool)) &&
+    (["todowrite", "TodoWrite"].includes(part.tool) || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
+  // Cuts and legacy native calls without ordered receipts cannot safely use the latest aggregate todo table.
   const cut = view.cut
-  const todo = snapshot?.state.status === "completed"
+  const todo = native ? native.todos : snapshot?.state.status === "completed"
     ? Schema.decodeUnknownSync(TodoSnapshot, { onExcessProperty: "preserve" })(snapshot.state.metadata?.todos ?? snapshot.state.input.todos)
-    : cut ? [] : yield* todos.get(input.sessionID)
+    : cut || calls.some((part) => ClaudeHostTodos.TOOLS.includes(part.tool) ||
+      typeof part.metadata?.claudeCodeTool === "string" && ClaudeHostTodos.TOOLS.includes(part.metadata.claudeCodeTool))
+      ? [] : yield* todos.get(input.sessionID)
   const saved = yield* archive.readMemory(input.sessionID)
   const memory = saved?.context && tailIndex(saved.context, view.history) !== undefined ? [saved.context.text] : []
   const member = AtlasMemory.owner(view.session.agent ? yield* agents.get(view.session.agent) : undefined)
