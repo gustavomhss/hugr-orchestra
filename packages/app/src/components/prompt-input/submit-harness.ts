@@ -48,6 +48,7 @@ export const savedPolicies: { sessionID: string; policy: SubagentModelPolicy }[]
 export const interrupts: string[] = []
 export const preparations: PromiseWithResolvers<void>[] = []
 export const statusWrites: { sessionID: string; type: string }[] = []
+export const sdkReads: { scope: string; directory: string }[] = []
 
 export const state = {
   serverSessionSyncs: 0,
@@ -299,7 +300,15 @@ beforeAll(async () => {
           return clientFor(opts.directory)
         },
       }
-      return () => state.sdkOverride ?? sdk
+      return () => {
+        const source = state.sdkOverride ?? sdk
+        if (
+          source && typeof source === "object" && "scope" in source && typeof source.scope === "string" &&
+          "directory" in source && typeof source.directory === "string"
+        )
+          sdkReads.push({ scope: source.scope, directory: source.directory })
+        return source
+      }
     },
   }))
 
@@ -394,6 +403,20 @@ beforeAll(async () => {
     }),
   }))
 
+  if (process.env.ORCHESTRA_SUBMIT_PROBE === "drop-owner") {
+    Bun.plugin({
+      name: "submit-owner-negative-control",
+      setup(build) {
+        build.onLoad({ filter: /\/prompt-input\/submit\.ts$/ }, async (args) => {
+          const source = await Bun.file(args.path).text()
+          const anchor = "const ownsDraft = () =>"
+          if (!source.includes(anchor)) throw new Error("Submit owner probe anchor missing")
+          // Test-only in-memory mutation; never changes the production file or the normal test path.
+          return { contents: source.replace(anchor, `${anchor} true ||`), loader: "ts" }
+        })
+      },
+    })
+  }
   const mod = await import("./submit")
   createPromptSubmit = mod.createPromptSubmit
   sendFollowupDraft = mod.sendFollowupDraft
@@ -440,6 +463,7 @@ beforeEach(() => {
   interrupts.length = 0
   preparations.length = 0
   statusWrites.length = 0
+  sdkReads.length = 0
   state.waiting = 0
   state.waitersReady = Promise.withResolvers<void>()
   state.serverSessionSyncs = 0

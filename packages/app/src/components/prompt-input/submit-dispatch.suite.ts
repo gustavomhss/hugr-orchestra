@@ -4,27 +4,33 @@ import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, createSdkForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
+import { clearPending, pendingRules, togglePending } from "../draft-subagent-models"
 import {
   clientFor,
   commands,
   createPromptSubmit,
   interrupts,
   optimistic,
+  promoted,
   preparations,
   promptInputs,
   sendFollowupDraft,
+  sdkReads,
   state,
   statusWrites,
+  storedSessions,
   submitInput,
 } from "./submit-harness"
 
 describe("prompt dispatch and cancellation", () => {
   test.each(["prompt_async", "shell", "command"] as const)(
-    "real V1 adapter binds %s to created worktree and originating server",
+    "real V1 adapter keeps %s bound to A after promotion while transport preparation waits",
     async (operation) => {
       const requests: Request[] = []
       const admitted = Promise.withResolvers<void>()
       const release = Promise.withResolvers<void>()
+      const prepared = Promise.withResolvers<void>()
+      const dispatch = Promise.withResolvers<void>()
       const server = { url: "http://origin.invalid" }
       const fetcher = Object.assign(
         async (input: string | URL | Request, init?: RequestInit) => {
@@ -47,7 +53,25 @@ describe("prompt dispatch and cancellation", () => {
       )
       const currentApi = createApiForServer({ server, fetch: fetcher })
       const createClient = (options: { directory?: string }) =>
-        createSdkForServer({ server, fetch: fetcher, ...options, throwOnError: true })
+        createSdkForServer({
+          server,
+          fetch: fetcher,
+          ...options,
+          throwOnError: true,
+          requestValidator: async (data: unknown) => {
+            if (!data || typeof data !== "object" || !("url" in data) || typeof data.url !== "string")
+              throw new Error("Missing SDK request options")
+            if (!data.url.endsWith(`/${operation}`)) return
+            // The SDK awaits this before body serialization, URL construction and fetch.
+            prepared.resolve()
+            await dispatch.promise
+            if (process.env.ORCHESTRA_SUBMIT_PROBE === "wrong-api") Reflect.set(data, "baseUrl", "http://other.invalid")
+            if (
+              process.env.ORCHESTRA_SUBMIT_PROBE === "wrong-directory" && "headers" in data && data.headers instanceof Headers
+            )
+              data.headers.set("x-orchestra-directory", encodeURIComponent("/wrong"))
+          },
+        })
       const original = {
         protocol: Promise.resolve("v1" as const),
         currentApi,
@@ -78,16 +102,32 @@ describe("prompt dispatch and cancellation", () => {
       })
       const result = submit.handleSubmit({ preventDefault: () => undefined } as Event)
       await admitted.promise
+      release.resolve()
+      await prepared.promise
+      expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: "created-v1" }])
+      expect(sdkReads.some((read) => read.scope === "origin" && read.directory === "/repo/main")).toBe(true)
+      expect(requests.map((request) => new URL(request.url).pathname)).toEqual(["/session"])
+      const otherServer = { url: "http://other.invalid" }
+      const otherClient = (options: { directory?: string }) =>
+        createSdkForServer({ server: otherServer, fetch: fetcher, ...options, throwOnError: true })
+      const otherApi = createApiForServer({ server: otherServer, fetch: fetcher })
       state.serverOverride = {
-        ...original,
-        currentApi: createApiForServer({ server: { url: "http://other.invalid" }, fetch: fetcher }),
+        protocol: Promise.resolve("v1"),
+        currentApi: otherApi,
+        createClient: otherClient,
+        client: otherClient({ directory: "/other" }),
       }
       state.sdkOverride = {
         scope: "other",
         directory: "/other",
-        api: (state.serverOverride as typeof original).currentApi,
+        api: createCompatibleApi({
+          protocol: Promise.resolve("v1"),
+          current: otherApi,
+          legacy: (directory) => otherClient({ directory }),
+          directory: "/other",
+        }),
       }
-      release.resolve()
+      dispatch.resolve()
       await result
       expect(requests.map((request) => new URL(request.url).origin)).toEqual([server.url, server.url])
       expect(requests.map((request) => request.headers.get("x-orchestra-directory"))).toEqual([
@@ -97,6 +137,88 @@ describe("prompt dispatch and cancellation", () => {
       expect(new URL(requests[1].url).pathname).toBe(`/session/created-v1/${operation}`)
     },
   )
+
+  test("V1 source change during admission holds A text/rules/created ID until owner A returns", async () => {
+    const requests: Request[] = []
+    const admitted = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const server = { url: "http://admission-a.invalid" }
+    const info = {
+      id: "created-held-a", directory: "/repo/worktree-a", projectID: "project", title: "Held A",
+      time: { created: 1, updated: 1 },
+    }
+    const fetcher = Object.assign(
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const request = new Request(input, init)
+        requests.push(request)
+        if (new URL(request.url).pathname === "/session") {
+          admitted.resolve()
+          await release.promise
+          return Response.json(info)
+        }
+        if (request.method === "PATCH") return Response.json(info)
+        return new Response(null, { status: 204 })
+      },
+      { preconnect: fetch.preconnect },
+    )
+    const currentApi = createApiForServer({ server, fetch: fetcher })
+    const createClient = (options: { directory?: string }) =>
+      createSdkForServer({ server, fetch: fetcher, ...options, throwOnError: true })
+    const original = {
+      protocol: Promise.resolve("v1" as const), currentApi, createClient,
+      client: createClient({ directory: "/repo/main" }),
+    }
+    const directorySDK = {
+      scope: "admission-a", directory: "/repo/main", client: original.client,
+      api: createCompatibleApi({
+        protocol: original.protocol, current: currentApi,
+        legacy: (directory) => createClient({ directory }), directory: "/repo/main",
+      }),
+    }
+    state.serverOverride = original
+    state.sdkOverride = directorySDK
+    const key = "admission-a\u0000draft\u0000full/slash/id"
+    togglePending(key, "provider", "team/model", true)
+    const rules = pendingRules(key)
+    const source = createPromptState({ prompt: "held A input" })
+    const destination = createPromptState()
+    const untouched = destination.current().slice()
+    const submit = createPromptSubmit({
+      ...submitInput(),
+      prompt: { ...source, capture: (scope) => (scope ? destination : source) }, info: () => undefined,
+      pendingKey: () => key, newSessionWorktree: () => "/repo/worktree-a",
+    })
+    const event = { preventDefault: () => undefined } as Event
+    const result = submit.handleSubmit(event)
+    await admitted.promise
+    state.serverOverride = {
+      ...original,
+      currentApi: createApiForServer({ server: { url: "http://admission-b.invalid" }, fetch: fetcher }),
+    }
+    state.sdkOverride = { scope: "admission-b", directory: "/other", api: currentApi }
+    release.resolve()
+    await result
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual(["/session"])
+    expect(requests.map((request) => new URL(request.url).origin)).toEqual([server.url])
+    expect(promoted).toEqual([])
+    expect(sdkReads.at(-1)).toEqual({ scope: "admission-b", directory: "/other" })
+    expect(source.current()[0]).toMatchObject({ content: "held A input" })
+    expect(destination.current()).toEqual(untouched)
+    expect(pendingRules(key)).toEqual(rules)
+    expect(storedSessions["/repo/worktree-a"]?.map((session) => session.id)).toEqual([info.id])
+    state.serverOverride = original
+    state.sdkOverride = directorySDK
+    await submit.handleSubmit(event)
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/session", `/session/${info.id}`, `/session/${info.id}/prompt_async`,
+    ])
+    expect(requests.every((request) => new URL(request.url).origin === server.url)).toBe(true)
+    expect(requests.filter((request) => new URL(request.url).pathname === "/session")).toHaveLength(1)
+    expect(await requests[1].json()).toMatchObject({ permission: rules })
+    expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: info.id }])
+    expect(pendingRules(key)).toEqual([])
+    clearPending(key)
+  })
 
   test("Stop cancels every preflight, including delayed preparation, without deleting later jobs", async () => {
     state.params = { id: "session-1" }
