@@ -1,5 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import type { PostToolUseHookInput, PreToolUseHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { AgentOutput } from "@anthropic-ai/claude-agent-sdk/sdk-tools"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Database } from "@orchestra/core/database/database"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
@@ -37,7 +38,8 @@ const args = (grantID: string) => ({ description: "write the proposal", subagent
 const background = { description: "review the plan", subagent_type: "orchestra:patty", run_in_background: true, prompt: "Review it." }
 const pre = (tool_use_id: string, tool_input: unknown): PreToolUseHookInput => ({ ...base, hook_event_name: "PreToolUse", tool_name: "Agent", tool_use_id, tool_input })
 const launch = (tool_use_id: string, agentId: string): PostToolUseHookInput => ({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id, tool_input: background,
-  tool_response: { status: "async_launched", agentId } })
+  tool_response: { status: "async_launched", agentId, description: background.description,
+    prompt: background.prompt, outputFile: "/tmp/output" } satisfies AgentOutput })
 const notice = (task_id: string, tool_use_id?: string): SDKTaskNotificationMessage => ({ type: "system", subtype: "task_notification", task_id, tool_use_id,
   status: "completed", summary: "Reviewed.", output_file: "/tmp/output", uuid: "00000000-0000-4000-8000-000000000001", session_id: "cc-session" })
 
@@ -250,6 +252,66 @@ describe("background dispatch retention", () => {
     expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([part.state.output])
     yield* fixture.delegation.notify(notice("task-a", "a"))
     expect(yield* fixture.part("a")).toEqual(part)
+    yield* fixture.delegation.dispatch(pre("a", background), fixture.actor)
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    yield* fixture.delegation.settle({ ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "different late refusal" }] } }, "refused")
+    expect(yield* fixture.part("a")).toEqual(part)
+    expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(history)
+  }))
+
+  it.instance("a refused replay admitted after delivery never rewrites settled history", () => Effect.gen(function* () {
+    const fixture = yield* host()
+    const call = yield* fixture.call("a", background)
+    yield* fixture.delegation.dispatch(call, fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    fixture.delegation.stop("task-a", "Accepted review.")
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    yield* fixture.delegation.notify(notice("task-a", "a"))
+    const parent = yield* fixture.part("a")
+    const child = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    yield* fixture.delegation.dispatch(call, fixture.actor)
+    expect(yield* fixture.delegation.settle({ ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected replay." }] } }, "refused")).toBeUndefined()
+    expect(yield* fixture.part("a")).toEqual(parent)
+    expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })).toEqual(child)
+    expect(fixture.join.get("a")?.hold).toBeUndefined()
+  }))
+
+  it.instance("queued refusal retries a failed HOLD save after delivery without restoring attribution", () => Effect.gen(function* () {
+    const gate = yield* barrier()
+    const failures = { remaining: 1 }
+    const fixture = yield* host((part) => {
+      if (part.state.status !== "completed") return Effect.void
+      if (part.state.metadata.delivery) return gate.pause
+      return Effect.sync(() => {
+        if (part.state.status === "completed" && part.state.metadata.hold && failures.remaining-- > 0)
+          throw new Error("HOLD persistence boundary failed")
+      })
+    })
+    yield* fixture.delegation.dispatch(yield* fixture.call("a", background), fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    fixture.delegation.stop("task-a", "Rejected final.")
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+    yield* gate.wait
+    const hook = { ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected final." }] } }
+    const refusal = yield* fixture.delegation.settle(hook, "refused").pipe(Effect.exit, Effect.forkChild({ startImmediately: true }))
+    yield* gate.open
+    yield* Fiber.join(delivery)
+    expect(Exit.isFailure(yield* Fiber.join(refusal))).toBe(true)
+    expect(fixture.delegation.summaries()[0].settled).toBe(false)
+    expect(yield* fixture.delegation.settle(hook, "refused")).toContain("HOLD")
+    const part = yield* fixture.part("a")
+    if (part?.state.status !== "completed") throw new Error("Expected retained HOLD retry")
+    expect(part.state.metadata.hold).toBe(part.state.output)
+    expect(part.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(part.state.metadata.delivery).toBeUndefined()
+    expect(fixture.delegation.summaries()[0].settled).toBe(true)
+    const history = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    expect(history.filter((message) => message.info.role === "assistant")).toHaveLength(1)
+    expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([part.state.output])
   }))
 
   it.instance("a crossed pair cannot settle B or swallow A; task-only notices deliver once", () => Effect.gen(function* () {

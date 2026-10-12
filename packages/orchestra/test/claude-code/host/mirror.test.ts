@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
-import { Effect } from "effect"
+import { Deferred, Effect, Fiber } from "effect"
 import type { ModelUsage, SDKAssistantMessage, SDKMessage, SDKPartialAssistantMessage, SDKResultSuccess, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { AgentOutput, TaskCreateOutput, TaskGetOutput, TaskListOutput, TaskUpdateOutput } from "@anthropic-ai/claude-agent-sdk/sdk-tools"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -16,7 +17,7 @@ import { Todo } from "@/session/todo"
 import { Snapshot } from "@/snapshot"
 import { Provider } from "@/provider/provider"
 import { TestInstance } from "../../fixture/fixture"
-import { testEffect } from "../../lib/effect"
+import { awaitWithTimeout, testEffect } from "../../lib/effect"
 import { makeHttp } from "../../session/prompt.fixture"
 
 const it = testEffect(makeHttp())
@@ -40,9 +41,10 @@ const finish = (modelUsage: Record<string, ModelUsage> = {}, cost = 0): SDKResul
     cache_creation: { ephemeral_5m_input_tokens: 0, ephemeral_1h_input_tokens: 0 },
     server_tool_use: { web_fetch_requests: 0, web_search_requests: 0 }, service_tier: "standard" } })
 
-const setup = () => Effect.gen(function* () {
+const setup = (beforeSave: (part: SessionV1.Part) => Effect.Effect<void> = () => Effect.void) => Effect.gen(function* () {
   const instance = yield* TestInstance
-  const sessions = yield* Session.Service
+  const service = yield* Session.Service
+  const sessions = { ...service, updatePart: <T extends SessionV1.Part>(part: T) => beforeSave(part).pipe(Effect.andThen(service.updatePart(part))) }
   const snapshot = yield* Snapshot.Service
   const todo = yield* Todo.Service
   const status = yield* SessionStatus.Service
@@ -76,6 +78,11 @@ const setup = () => Effect.gen(function* () {
       if (saved?.type !== "tool") return
       if (saved.metadata?.sessionId === child.id) return { sessionID: child.id, user: childUser, agent: archie }
       if (saved.metadata?.sessionId === verifier.id) return { sessionID: verifier.id, user: verifierUser, agent: lucy }
+      if (typeof saved.metadata?.sessionId !== "string") return
+      const session = yield* sessions.get(SessionID.make(saved.metadata.sessionId)).pipe(Effect.orDie)
+      const user = (yield* sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)).find((item) => item.info.role === "user")?.info
+      if (user?.role !== "user" || !session.agent) return
+      return { sessionID: session.id, user, agent: yield* agents.get(session.agent) }
     }),
   })
   const mirror = make(user)
@@ -184,15 +191,15 @@ it.instance("native tasks update real todos across mirrors and restart, without 
   yield* ctx.feed([
     assistant("create", [{ type: "tool_use", id: "create", name: "TaskCreate",
       input: { subject: "Inspect", description: "Read the file", activeForm: "Inspecting" } }]),
-    result("create", "Task #1 created", { task: { id: "1", subject: "Inspect" } }),
+    result("create", "Task #1 created", { task: { id: "1", subject: "Inspect" } } satisfies TaskCreateOutput),
   ])
   expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspect", status: "pending", priority: "medium" }])
   const next = ctx.make(yield* ctx.steer())
   yield* ctx.feed([
     assistant("update", [{ type: "tool_use", id: "update", name: "TaskUpdate", input: { taskId: "1", status: "in_progress" } }]),
-    result("update", "updated", { success: true, taskId: "1", updatedFields: ["status"], statusChange: { from: "pending", to: "in_progress" } }),
+    result("update", "updated", { success: true, taskId: "1", updatedFields: ["status"], statusChange: { from: "pending", to: "in_progress" } } satisfies TaskUpdateOutput),
     assistant("failed", [{ type: "tool_use", id: "failed", name: "TaskUpdate", input: { taskId: "1", status: "completed" } }]),
-    result("failed", "not updated", { success: false, taskId: "1", error: "failed" }),
+    result("failed", "not updated", { success: false, taskId: "1", updatedFields: [], error: "failed" } satisfies TaskUpdateOutput),
   ], next)
   expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspect", status: "in_progress", priority: "medium" }])
   // A fresh mirror with no shared call/task maps stands in for a new process reading the durable metadata.
@@ -203,7 +210,7 @@ it.instance("native tasks update real todos across mirrors and restart, without 
     snapshot: yield* Snapshot.Service, todo: ctx.todo, status: ctx.status })
   yield* ctx.feed([
     assistant("done", [{ type: "tool_use", id: "done", name: "TaskUpdate", input: { taskId: "1", status: "completed", subject: "Inspected" } }]),
-    result("done", "updated", { success: true, taskId: "1", updatedFields: ["status", "subject"] }),
+    result("done", "updated", { success: true, taskId: "1", updatedFields: ["status", "subject"] } satisfies TaskUpdateOutput),
   ], restored)
   expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Inspected", status: "completed", priority: "medium" }])
   expect(yield* ctx.todo.get(ctx.childID)).toEqual([])
@@ -215,11 +222,11 @@ it.instance("native tasks update real todos across mirrors and restart, without 
   expect(last.state.metadata.todos).toMatchObject([{ content: "Inspected", status: "completed" }])
   yield* ctx.feed([
     assistant("list", [{ type: "tool_use", id: "list", name: "TaskList", input: {} }]),
-    result("list", "tasks", { tasks: [{ id: "2", subject: "Build", status: "pending", blockedBy: [] }] }),
+    result("list", "tasks", { tasks: [{ id: "2", subject: "Build", status: "pending", blockedBy: [] }] } satisfies TaskListOutput),
     assistant("get", [{ type: "tool_use", id: "get", name: "TaskGet", input: { taskId: "2" } }]),
-    result("get", "task", { task: { id: "2", subject: "Build now", status: "in_progress", description: "", blocks: [], blockedBy: [] } }),
+    result("get", "task", { task: { id: "2", subject: "Build now", status: "in_progress", description: "", blocks: [], blockedBy: [] } } satisfies TaskGetOutput),
     assistant("delete", [{ type: "tool_use", id: "delete", name: "TaskUpdate", input: { taskId: "2", status: "deleted" } }]),
-    result("delete", "deleted", { success: true, taskId: "2", updatedFields: ["status"] }),
+    result("delete", "deleted", { success: true, taskId: "2", updatedFields: ["status"] } satisfies TaskUpdateOutput),
   ], restored)
   expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([])
 }))
@@ -230,12 +237,15 @@ it.instance("parent and child native tasks with the same ID remain independent",
   const [call] = yield* ctx.tools()
   yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: ctx.childID } })
   yield* ctx.feed([
+    // A parent can continue only after Claude Code's real launch receipt closes its Agent call.
+    result("child", "launched", { status: "async_launched", agentId: "task-child", description: "child",
+      prompt: "Child tasks", outputFile: "/tmp/child" } satisfies AgentOutput),
     assistant("parent-task", [{ type: "tool_use", id: "parent-create", name: "TaskCreate", input: { subject: "Parent", description: "" } }]),
-    result("parent-create", "created", { task: { id: "1", subject: "Parent" } }),
+    result("parent-create", "created", { task: { id: "1", subject: "Parent" } } satisfies TaskCreateOutput),
     assistant("child-task", [{ type: "tool_use", id: "child-create", name: "TaskCreate", input: { subject: "Child", description: "" } }], "child"),
-    result("child-create", "created", { task: { id: "1", subject: "Child" } }, false, "child"),
+    result("child-create", "created", { task: { id: "1", subject: "Child" } } satisfies TaskCreateOutput, false, "child"),
     assistant("child-done", [{ type: "tool_use", id: "child-update", name: "TaskUpdate", input: { taskId: "1", status: "completed" } }], "child"),
-    result("child-update", "updated", { success: true, taskId: "1", updatedFields: ["status"] }, false, "child"),
+    result("child-update", "updated", { success: true, taskId: "1", updatedFields: ["status"] } satisfies TaskUpdateOutput, false, "child"),
   ])
   expect(yield* ctx.todo.get(ctx.sessionID)).toEqual([{ content: "Parent", status: "pending", priority: "medium" }])
   expect(yield* ctx.todo.get(ctx.childID)).toEqual([{ content: "Child", status: "completed", priority: "medium" }])
@@ -417,33 +427,38 @@ it.instance("actual mirrored rejection preserves earlier repeated text and remov
   const agent = yield* ctx.sessions.get(ctx.sessionID)
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: "maestro", join: ctx.join,
     path: { cwd: agent.directory, root: agent.directory }, parts: { tool: ctx.mirror.tool, author: ctx.mirror.author, complete: ctx.mirror.complete } })
-  const args = { subagent_type: "general-purpose", description: "child", run_in_background: false }
+  const args = { subagent_type: "orchestra:patty", description: "child", prompt: "Review", run_in_background: true }
   yield* ctx.feed([assistant("dispatch", [{ type: "tool_use", id: "rejected", name: "Agent", input: args }])])
   yield* delegation.dispatch({ hook_event_name: "PreToolUse", session_id: "sdk-mirror", transcript_path: "/tmp/unused",
     cwd: agent.directory, tool_use_id: "rejected", tool_name: "Agent", tool_input: args }, { sessionID: ctx.sessionID, seat: "maestro" })
-  ctx.join.dispatched("rejected", { child: ctx.childID })
-  const [call] = yield* ctx.tools()
-  yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: ctx.childID } })
+  const childID = ctx.join.child("rejected")
+  if (!childID) throw new Error("Expected admitted patty child")
   yield* ctx.feed([{ ...base, type: "system", subtype: "task_started", tool_use_id: "rejected", task_id: "task-rejected",
     description: "child", task_type: "local_agent" }])
+  const launched = { status: "async_launched", agentId: "task-rejected", description: "child", prompt: "Review",
+    outputFile: "/tmp/rejected" } satisfies AgentOutput
+  yield* delegation.settle({ hook_event_name: "PostToolUse", session_id: "sdk-mirror", transcript_path: "/tmp/unused",
+    cwd: agent.directory, tool_use_id: "rejected", tool_name: "Agent", tool_input: args, tool_response: launched })
+  yield* ctx.feed([result("rejected", "launched", launched)])
+  const [accepted] = yield* ctx.tools()
+  if (accepted.state.status !== "completed") throw new Error("Expected retained launch")
+  expect(accepted.state.metadata.claudeCodeDispatch).toMatchObject({ agentID: "task-rejected", seat: "patty" })
   const benign = "Evidence café\r\n  exact\n"
   yield* ctx.feed([assistant("earlier", [{ type: "text", text: benign, citations: null }, { type: "text", text: benign, citations: null }], "rejected")])
-  const earlierID = (yield* ctx.read(ctx.childID)).at(-1)!.info.id
+  const earlierID = (yield* ctx.read(childID)).at(-1)!.info.id
   const rejected = "Rejected final sentinel"
   const ending = assistant("final", [{ type: "text", text: benign, citations: null }, { type: "text", text: rejected, citations: null }], "rejected")
   // Recorded forwarded child frames carry a null finish reason, unlike top-level SDK assistant messages.
   ending.message.stop_reason = null
   yield* ctx.feed([ending,
     result("rejected", rejected, { status: "completed", agentId: "task-rejected" })])
-  const earlier = (yield* ctx.read(ctx.childID)).find((item) => item.info.id === earlierID)!
+  const earlier = (yield* ctx.read(childID)).find((item) => item.info.id === earlierID)!
   const [completed] = yield* ctx.tools()
   if (completed.state.status !== "completed") throw new Error("Expected completed mirrored result")
-  yield* ctx.mirror.complete({ ...completed, state: { ...completed.state,
-    metadata: { ...completed.state.metadata, claudeCodeDispatch: { agentID: "task-rejected" }, workResult: { outcome: "done" }, delivery: { taskID: "task-rejected" } } } })
   yield* delegation.settle({ hook_event_name: "PostToolUse", session_id: "sdk-mirror", transcript_path: "/tmp/unused", cwd: agent.directory,
     tool_use_id: "rejected", tool_name: "Agent", tool_input: args,
     tool_response: { status: "completed", agentId: "task-rejected", content: [{ type: "text", text: benign }, { type: "text", text: rejected }] } }, "refused")
-  const history = yield* ctx.read(ctx.childID)
+  const history = yield* ctx.read(childID)
   expect(history.find((item) => item.info.id === earlier.info.id)).toEqual(earlier)
   expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([
     "HOLD: Agent output refused by ToolSafety inspection", "HOLD: Agent output refused by ToolSafety inspection",
@@ -456,8 +471,38 @@ it.instance("actual mirrored rejection preserves earlier repeated text and remov
   expect(held.state.metadata.claudeCodeDispatch).toBeUndefined()
   expect(held.state.metadata.workResult).toBeUndefined()
   expect(held.state.metadata.delivery).toBeUndefined()
-  expect(held.metadata).toMatchObject({ providerExecuted: true, claudeCodeTool: "Agent", sessionId: ctx.childID })
+  expect(held.metadata).toMatchObject({ providerExecuted: true, claudeCodeTool: "Agent", sessionId: childID })
   expect(held.state.metadata.claudeCodeAgent).toMatchObject({ agentId: "task-rejected", status: "completed" })
+  yield* ctx.feed([result("rejected", rejected, { status: "completed", agentId: "task-rejected" }),
+    { ...base, type: "system", subtype: "task_progress", task_id: "task-rejected", tool_use_id: "rejected",
+      description: "late progress", summary: "late progress", usage: { total_tokens: 1, tool_uses: 1, duration_ms: 1 } }])
+  expect((yield* ctx.tools())[0]).toEqual(held)
+  expect(yield* ctx.read(childID)).toEqual(history)
+}))
+
+it.instance("hook completion queued behind a provider save retains HOLD and native metadata", () => Effect.gen(function* () {
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  const ctx = yield* setup((part) => part.type === "tool" && part.callID === "held-race" &&
+    part.state.status === "completed" && part.state.output === "native output"
+    ? Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(release))) : Effect.void)
+  yield* ctx.feed([assistant("race", [{ type: "tool_use", id: "held-race", name: "Agent", input: {} }])])
+  const [call] = yield* ctx.tools()
+  const provider = yield* ctx.mirror.on(result("held-race", "native output", { status: "completed", agentId: "task-race" })).pipe(Effect.forkChild)
+  yield* awaitWithTimeout(Deferred.await(entered), "provider save was never reached")
+  const hold = "HOLD: Agent output refused by ToolSafety inspection"
+  const refusal = yield* ctx.mirror.complete({ ...call, state: { status: "completed", input: call.state.input,
+    output: hold, title: "held", metadata: { hold, output: hold, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined },
+    time: { start: 1, end: 2 } } }).pipe(Effect.forkChild({ startImmediately: true }))
+  yield* Deferred.succeed(release, undefined)
+  yield* Fiber.join(provider)
+  yield* Fiber.join(refusal)
+  const [held] = yield* ctx.tools()
+  if (held.state.status !== "completed") throw new Error("Expected retained HOLD")
+  expect(held.state.output).toBe(hold)
+  expect(held.state.metadata).toMatchObject({ hold, output: hold, claudeCodeAgent: { agentId: "task-race", status: "completed" } })
+  yield* ctx.mirror.on(result("held-race", "late output", { status: "completed", agentId: "late-id" }))
+  expect((yield* ctx.tools())[0]).toEqual(held)
 }))
 
 test("tool names and inputs map to the cards Orchestra renders", () => {

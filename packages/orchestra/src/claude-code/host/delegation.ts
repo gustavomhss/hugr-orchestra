@@ -81,6 +81,7 @@ type Record = {
   launched?: boolean
   notice?: SDKTaskNotificationMessage
   settled?: boolean
+  delivered?: boolean
 }
 
 type Admission = {
@@ -232,14 +233,16 @@ export function make(input: {
    * `refused` is a reason the host already refuses this result for (a secret in its output).
    */
   const settle = Effect.fn("ClaudeHostDelegation.settle")(function* (hook: PostToolUseHookInput, refused?: string) {
+    // A refusal admitted while delivery is saving must survive that delivery's terminal transition.
+    // A refused replay arriving after settlement still withholds its output without rewriting accepted history.
+    const rejection = refused !== undefined && records.get(hook.tool_use_id)?.settled !== true
     return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
       const entry = records.get(hook.tool_use_id)
-      // Hooks still withhold the inspected output on late refusal; terminal records are immutable here.
-      if (entry?.settled) return undefined
+      if (entry?.settled && (!rejection || !entry.delivered)) return undefined
       const researchControl = entry?.seat?.id === "jimmy" && entry.child
         ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
       const ended = ClaudeHostResearchResult.terminal(researchControl)
-      if (entry && refused !== undefined) return yield* reject(entry, hook, researchControl, ended)
+      if (entry && rejection) return yield* reject(entry, hook, researchControl, ended)
       if (!entry?.seat || !entry.child) return undefined
       if (entry.launched) {
         if (entry.notice) yield* deliver(entry, entry.notice)
@@ -324,6 +327,9 @@ export function make(input: {
       const identity = join.confirm(entry.toolUseID, [text(record(hook.tool_response), "agentId")])
       const blocks = content(record(hook.tool_response))
       join.hold(entry.toolUseID, reason)
+      // A failed HOLD save stays retryable even when the preceding delivery was already retained.
+      entry.settled = false
+      entry.delivered = false
       entry.final = undefined
       const child = entry.child ?? join.child(entry.toolUseID)
       const authorID = entry.author ?? input.parts?.author?.(entry.toolUseID)
@@ -378,6 +384,7 @@ export function make(input: {
         outputFile: message.output_file, ...(message.usage ? { usage: message.usage } : {}),
       } } } })
       entry.settled = true
+      entry.delivered = true
       entry.notice = undefined
       join.retained(message)
     })

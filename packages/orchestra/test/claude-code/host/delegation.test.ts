@@ -16,6 +16,7 @@ import { ClaudeHostGate } from "@/claude-code/host/gate"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
+import { ClaudeHostMirror } from "@/claude-code/host/mirror"
 import { Agent } from "@/agent/agent"
 import { BackgroundJob } from "@/background/job"
 import { Config } from "@/config/config"
@@ -28,10 +29,13 @@ import { UpstreamResult } from "@/maestro/upstream-result"
 import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID } from "@/session/schema"
 import { Session } from "@/session/session"
+import { SessionStatus } from "@/session/status"
+import { Snapshot } from "@/snapshot"
 import { Todo } from "@/session/todo"
 import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { disposeAllInstances } from "../../fixture/fixture"
 import { testEffect } from "../../lib/effect"
+import { DelegationFixture } from "./delegation-fixture"
 
 // Delegation records written from recorded hook payloads and stream frames (spikes S3, S12, S13): what the hooks write
 // must be exactly what the contract V2 observer accepts, and a failed join must leave nothing it would accept.
@@ -42,7 +46,7 @@ afterEach(async () => {
 
 const it = testEffect(TestAppNodeBuilder.build(
   LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node, SessionProjector.node,
-    EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node]),
+    EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Snapshot.node, SessionStatus.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
 
@@ -107,17 +111,12 @@ const host = Effect.fn("ClaudeHostDelegationTest.host")(function* () {
     mirrored.set(toolUseID, part)
     return part
   })
-  const grant = (writePaths: string[]) => Effect.gen(function* () {
-    const rules = yield* WriteRoots.bind("archie", writePaths, [])
-    const grantID = `grt_${Math.random().toString(36).slice(2)}`
-    ClaudeHostMcp.grants(parent.id).set(grantID, { grantID, sessionID: parent.id, seat: "archie", writePaths, writeRoots: WriteRoots.read(rules) ?? [],
-      purpose: "proposal", time: Date.now() })
-    return grantID
-  })
+  const grant = (writePaths: string[]) => DelegationFixture.grant({ sessions, sessionID: parent.id,
+    messageID: message.id, directory: parent.directory, writePaths })
   const finish = () => sessions.updateMessage({ ...message, finish: "tool-calls", time: { ...message.time, completed: Date.now() } })
   const part = (toolUseID: string) => sessions.messages({ sessionID: parent.id }).pipe(Effect.map((history) => history.flatMap((item) => item.parts)
     .find((item): item is SessionV1.ToolPart => item.type === "tool" && item.callID === toolUseID)))
-  return { parent, message, hooks, join, actors, call, grant, finish, part, sessions, authors }
+  return { parent, user, message, hooks, join, actors, call, grant, finish, part, sessions, authors }
 })
 
 const agentInput = (grantID: string | undefined, extra: Record<string, unknown> = {}) => ({
@@ -322,13 +321,23 @@ describe("Claude Code Agent dispatch records", () => {
   it.instance("a proposal seat is refused in the background, Claude Code's default, and keeps its grant", () => Effect.gen(function* () {
     const fixture = yield* host()
     const grantID = yield* fixture.grant(["docs/proposal"])
-    for (const input of [agentInput(grantID, { run_in_background: true }), { ...agentInput(grantID), run_in_background: undefined }]) {
-      const denied = yield* Effect.promise(() => fire(fixture.hooks, pre("toolu_06", input)))
+    for (const [index, input] of [agentInput(grantID, { run_in_background: true }), { ...agentInput(grantID), run_in_background: undefined }].entries()) {
+      const call = pre(`toolu_06_${index}`, input)
+      const denied = yield* Effect.promise(() => fire(fixture.hooks, call))
       expect(decision(denied)?.permissionDecision).toBe("deny")
       expect(decision(denied)?.permissionDecisionReason).toContain("run_in_background: false")
+      expect(yield* Effect.promise(() => fire(fixture.hooks, call))).toEqual(denied)
+      const conflict = yield* Effect.promise(() => fire(fixture.hooks, pre(call.tool_use_id, agentInput(grantID))))
+      expect(decision(conflict)?.permissionDecisionReason).toBe(`HOLD: conflicting reuse of ${call.tool_use_id}`)
     }
     expect(ClaudeHostMcp.grants(fixture.parent.id).has(grantID)).toBe(true)
     expect(yield* fixture.sessions.children(fixture.parent.id)).toEqual([])
+    const foreground = pre("toolu_06_foreground", agentInput(grantID))
+    yield* fixture.call(foreground.tool_use_id, agentInput(grantID))
+    expect(decision(yield* Effect.promise(() => fire(fixture.hooks, foreground)))?.permissionDecision).toBe("allow")
+    expect(ClaudeHostMcp.grants(fixture.parent.id).has(grantID)).toBe(false)
+    expect(decision(yield* Effect.promise(() => fire(fixture.hooks, foreground)))?.permissionDecision).toBe("allow")
+    expect(yield* fixture.sessions.children(fixture.parent.id)).toHaveLength(1)
   }))
 
   it.instance("a background seat is delivered from task_notification only, once", () => Effect.gen(function* () {
@@ -364,10 +373,25 @@ describe("Claude Code Agent dispatch records", () => {
 })
 
 describe("compaction hooks", () => {
-  it.instance("SessionStart(compact) returns working memory from durable records only", () => Effect.gen(function* () {
+  it.instance("SessionStart(compact) restores retained producers and reports exact live grant ownership", () => Effect.gen(function* () {
     const fixture = yield* host()
     const todos = yield* Todo.Service
-    yield* todos.update({ sessionID: fixture.parent.id, todos: [{ content: "land the adapter", status: "in_progress", priority: "high" }] })
+    const agents = yield* Agent.Service
+    const snapshot = yield* Snapshot.Service
+    const status = yield* SessionStatus.Service
+    const mirror = ClaudeHostMirror.create({ sessionID: fixture.parent.id, user: fixture.user,
+      agent: yield* agents.get("maestro"), path: { cwd: fixture.parent.directory, root: fixture.parent.directory },
+      sessions: fixture.sessions, snapshot, todo: todos, status })
+    yield* mirror.on({ type: "assistant", parent_tool_use_id: null, uuid: crypto.randomUUID(), session_id: base.session_id,
+      message: { id: "todo-producer", model: ref.modelID, role: "assistant", type: "message", container: null,
+        context_management: null, stop_reason: "tool_use", stop_sequence: null,
+        usage: { input_tokens: 1, output_tokens: 1, cache_creation_input_tokens: null, cache_read_input_tokens: null,
+          cache_creation: null, server_tool_use: null, service_tier: null },
+        content: [{ type: "tool_use", id: "todo-producer", name: "TodoWrite", input: { todos: [{ content: "land the adapter",
+          status: "in_progress", activeForm: "landing the adapter" }] } }] } })
+    yield* mirror.on({ type: "user", parent_tool_use_id: null, uuid: crypto.randomUUID(), session_id: base.session_id,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: "todo-producer", content: "updated" }] },
+      tool_use_result: { oldTodos: [], newTodos: [{ content: "land the adapter", status: "in_progress", activeForm: "landing the adapter" }] } })
     const grantID = yield* fixture.grant(["docs/proposal"])
     yield* fixture.call("toolu_08", agentInput(grantID))
     yield* Effect.promise(() => fire(fixture.hooks, pre("toolu_08", agentInput(grantID))))
@@ -379,7 +403,13 @@ describe("compaction hooks", () => {
     expect(text).toContain(logical!.taskId)
     expect(text).toContain("toolu_08")
     expect(text).toContain(spare)
-    expect(text).toContain("[in_progress] land the adapter")
+    expect(text).toContain('"content":"land the adapter","status":"in_progress"')
+    expect(text).toContain('"state":"unbound","usable":true')
+    ClaudeHostMcp.release(fixture.parent.id)
+    const reset = yield* Effect.promise(() => fire(fixture.hooks, { ...base, hook_event_name: "SessionStart", source: "compact" }))
+    if (!("hookSpecificOutput" in reset) || reset.hookSpecificOutput?.hookEventName !== "SessionStart") throw new Error("expected invalidated grant context")
+    expect(reset.hookSpecificOutput.additionalContext).toContain(spare)
+    expect(reset.hookSpecificOutput.additionalContext).toContain('"state":"invalidated","usable":false')
   }))
 
   it.instance("SessionStart(compact) with nothing durable to restore adds nothing", () => Effect.gen(function* () {
