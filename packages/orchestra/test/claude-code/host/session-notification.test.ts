@@ -62,12 +62,15 @@ for (const idle of [false, true]) ClaudeEngineFixture.it.instance(`Session notif
   const cards = () => setup.sessions.messages({ sessionID: setup.chat.id }).pipe(Effect.map((history) => history.flatMap((item) => item.parts)
     .filter((part): part is SessionV1.ToolPart => part.type === "tool" && ["a", "b"].includes(part.callID))))
   const beforeCards = yield* cards()
+  expect(beforeCards).toHaveLength(2)
+  expect(beforeCards.every((part) => part.state.status === "completed")).toBe(true)
   const childA = beforeCards.find((part) => part.callID === "a")?.metadata?.sessionId
   const childB = beforeCards.find((part) => part.callID === "b")?.metadata?.sessionId
   if (typeof childA !== "string" || typeof childB !== "string") throw new Error("Expected actual mirrored children")
   const children = yield* setup.sessions.children(setup.chat.id)
-  const a = children.find((child) => child.id === childA)!
-  const b = children.find((child) => child.id === childB)!
+  const a = children.find((child) => child.id === childA)
+  const b = children.find((child) => child.id === childB)
+  if (!a || !b || a.id === b.id) throw new Error("Expected distinct persisted mirrored children")
   const beforeA = yield* setup.sessions.messages({ sessionID: a.id })
   const beforeB = yield* setup.sessions.messages({ sessionID: b.id })
   emitCrossed.resolve()

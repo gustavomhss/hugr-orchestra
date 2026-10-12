@@ -302,12 +302,17 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     const cancelled = () => Effect.fail(new Error("COMPACT_HOOK_CANCELLED: native callback or owning host aborted"))
     return Effect.suspend(() => {
       if (signals.some((signal) => signal.aborted)) return cancelled()
+      const cleanup: { run?: () => void } = {}
       return Effect.raceFirst(work, Effect.callback<never, Error>((resume) => {
         const abort = () => resume(cancelled())
+        cleanup.run = () => signals.forEach((signal) => signal.removeEventListener("abort", abort))
         signals.forEach((signal) => signal.addEventListener("abort", abort, { once: true }))
         if (signals.some((signal) => signal.aborted)) abort()
-        return Effect.sync(() => signals.forEach((signal) => signal.removeEventListener("abort", abort)))
-      })).pipe(Effect.flatMap((value) => signals.some((signal) => signal.aborted) ? cancelled() : Effect.succeed(value)))
+      })).pipe(
+        // callback's returned cleanup runs only on interruption, not when abort resumes it with a failure.
+        Effect.ensuring(Effect.sync(() => cleanup.run?.())),
+        Effect.flatMap((value) => signals.some((signal) => signal.aborted) ? cancelled() : Effect.succeed(value)),
+      )
     })
   }
 }

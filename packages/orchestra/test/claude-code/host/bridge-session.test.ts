@@ -199,6 +199,10 @@ ClaudeEngineFixture.it.instance("interrupting a child with its own query also ca
       "stopped_agent", { signal: new AbortController().signal })).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
     yield { type: "system", subtype: "task_started", task_id: "stopped-task", tool_use_id: "stopped_agent", description: "Child recall",
       subagent_type: "general-purpose", is_backgrounded: true, task_type: "local_agent", ...frame }
+    // The background launch returns before the root can start another provider step.
+    yield { type: "user", ...frame, message: { role: "user", content: [
+      { type: "tool_result", tool_use_id: "stopped_agent", content: "launched" },
+    ] }, tool_use_result: { status: "async_launched", agentId: "stopped-task" } }
     const args = { query: "child brief" }
     yield { type: "assistant", ...frame, parent_tool_use_id: "stopped_agent", message: { id: "msg_child_stop_recall", content: [
       { type: "tool_use", id: "child_waiting", name: "mcp__orchestra__context_recall", input: args },
@@ -244,9 +248,9 @@ ClaudeEngineFixture.it.instance("interrupting a child with its own query also ca
   expect(reply.parts.some((part) => part.type === "text" && part.text === "Root remains live")).toBe(true)
   expect(Schema.decodeUnknownSync(Schema.Struct({ isError: Schema.Boolean }))(responses[0]).isError).toBe(true)
   expect(ClaudeEngineFixture.state.stoppedTasks).toEqual(["stopped-task"])
-      expect(ClaudeEngineFixture.state.closed).toEqual([ClaudeEngineFixture.state.queries[1]])
-      expect(ClaudeEngineFixture.state.queries[1].options?.abortController?.signal.aborted).toBe(true)
-      expect(ClaudeEngineFixture.state.queries[0].options?.abortController?.signal.aborted).toBe(false)
+  expect(ClaudeEngineFixture.state.closed).toEqual([ClaudeEngineFixture.state.queries[1]])
+  expect(ClaudeEngineFixture.state.queries[1].options?.abortController?.signal.aborted).toBe(true)
+  expect(ClaudeEngineFixture.state.queries[0].options?.abortController?.signal.aborted).toBe(false)
   expect((yield* permission.list()).some((request) => request.sessionID === pending.sessionID)).toBe(false)
   const part = (yield* f.sessions.messages({ sessionID: pending.sessionID })).flatMap((message) => message.parts)
     .find((part) => part.type === "tool" && part.callID === "child_waiting")

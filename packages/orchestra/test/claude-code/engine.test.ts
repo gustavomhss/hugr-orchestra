@@ -3,6 +3,8 @@ import { Effect } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeEngineFixture } from "./engine-fixture"
+import { ClaudeLifecycleFixture } from "./host/lifecycle-fixture"
+import { Provider } from "@/provider/provider"
 
 // The engine switch (specs/claude-code-engine.md): `agent.<id>.engine: "claude-code"` hands the turn to the Claude
 // Code host; any other agent stays on Orchestra's loop and the engine never builds a query.
@@ -43,9 +45,13 @@ ClaudeEngineFixture.it.instance("a Claude Code agent's turns run in one long-liv
 ClaudeEngineFixture.it.instance("an agent on Orchestra's loop never reaches the host", () =>
   Effect.gen(function* () {
     ClaudeEngineFixture.reset()
-    const { prompt, chat } = yield* ClaudeEngineFixture.setup()
+    const { prompt, chat } = yield* ClaudeLifecycleFixture.setup(yield* ClaudeLifecycleFixture.normalConfig)
+    const provider = yield* Provider.Service
+    expect((yield* provider.getModel(ClaudeLifecycleFixture.model.providerID, ClaudeLifecycleFixture.model.modelID)).id)
+      .toBe(ClaudeLifecycleFixture.model.modelID)
     // Orchestra's own transport is the one that runs (and fails, in this fixture); no Claude Code query is built.
-    yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", parts: [{ type: "text", text: "stay on the loop" }] }).pipe(Effect.exit)
+    yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
+      parts: [{ type: "text", text: "stay on the loop" }] }).pipe(Effect.exit)
     expect(ClaudeEngineFixture.state.apiCalls).toBeGreaterThan(0)
     expect(ClaudeEngineFixture.state.queries).toHaveLength(0)
   }), 30_000)

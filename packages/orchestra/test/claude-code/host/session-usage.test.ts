@@ -62,6 +62,7 @@ ClaudeEngineFixture.it.instance("successful, failed and replayed SDK totals char
         expect(JSON.stringify(last.error)).toContain("True SDK failure")
       }
       expect(saved.metadata?.claudeCode?.uuids[last.id]).toBeTruthy()
+      expect(saved.metadata?.claudeCode?.cost).toBeCloseTo(index === 3 || index === 4 ? 0.2 : result.cost)
       expect(last.tokens.reasoning).toBe(result.assistant ? 3 : 0)
       const total = index === 3 || index === 4 ? 0.2 : result.cost
       expect(replies.reduce((sum, reply) => sum + reply.cost, 0)).toBeCloseTo(total)
