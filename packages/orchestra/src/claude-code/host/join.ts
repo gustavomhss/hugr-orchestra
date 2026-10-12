@@ -26,7 +26,17 @@ export function make() {
   const tasks = new Map<string, string>()
   const delivered = new Set<string>()
   const listeners = new Set<(frame: SDKTaskNotificationMessage) => void>()
-  const notices: SDKTaskNotificationMessage[] = []
+  const notices = new Map<string, SDKTaskNotificationMessage>()
+
+  // A notification cannot establish identity; only task_started can do that. Reject a crossed pair without
+  // poisoning the established mapping, so the task's later legitimate notification can still be retained.
+  const notification = (frame: SDKTaskNotificationMessage) => {
+    const toolUseID = tasks.get(frame.task_id)
+    const item = toolUseID ? entries.get(toolUseID) : undefined
+    if (!item || item.hold || item.taskID !== frame.task_id ||
+      (frame.tool_use_id !== undefined && frame.tool_use_id !== toolUseID)) return undefined
+    return toolUseID
+  }
 
   const entry = (toolUseID: string) => {
     const existing = entries.get(toolUseID)
@@ -50,14 +60,22 @@ export function make() {
       tasks.set(frame.taskID, frame.toolUseID)
     },
     /**
-     * Stream side: `system/task_notification`, the only delivery of a background run (spike S12). A task notifies at
-     * most once here, however often Claude Code repeats it. A notice that arrives before any listener is kept for it.
+     * Stream side: `system/task_notification`, the only delivery of a background run (spike S12). Deduplication
+     * starts only after successful retention. Until then, repeats may retry processing and notices stay pending.
      */
     taskNotification: (frame: SDKTaskNotificationMessage) => {
-      if (!frame.tool_use_id || delivered.has(frame.task_id)) return
+      if (!notification(frame) || delivered.has(frame.task_id)) return
+      const pending = notices.get(frame.task_id) ?? frame
+      notices.set(frame.task_id, pending)
+      listeners.forEach((listener) => listener(pending))
+    },
+    /** Resolve only an established, agreeing task/call pair, including task-only notifications. */
+    notification,
+    /** Hook side: acknowledge a validated notification only after its delivery was durably retained. */
+    retained: (frame: SDKTaskNotificationMessage) => {
+      if (!notification(frame)) return
       delivered.add(frame.task_id)
-      if (!listeners.size) notices.push(frame)
-      listeners.forEach((listener) => listener(frame))
+      notices.delete(frame.task_id)
     },
     /** Hook side, `PreToolUse[Agent]`: what Orchestra bound to the call. */
     dispatched: (toolUseID: string, fields: Pick<Entry, "seat" | "grantID" | "child">) => {
@@ -87,7 +105,7 @@ export function make() {
     },
     subscribe: (listener: (frame: SDKTaskNotificationMessage) => void) => {
       listeners.add(listener)
-      notices.splice(0).forEach(listener)
+      notices.forEach(listener)
       return () => {
         listeners.delete(listener)
       }
