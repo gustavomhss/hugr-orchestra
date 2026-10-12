@@ -262,7 +262,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const granted = reads ? yield* existing(fs, reads) : []
   const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* contained(fs, homeGrants(confined))), ...(yield* programRoots(fs, [
     ...programs(confined),
-    ...(sandbox.kind === "srt" && sandbox.directory ? [sandbox.directory] : []),
+    ...(sandbox.kind === "srt" && sandbox.directory ? [{ entry: sandbox.directory, prefix: false }] : []),
   ]))].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
   const carved = granted.filter((entry) => deny.some((denied) => denied !== entry && FSUtil.contains(denied, entry)))
   if (seatbelt) {
@@ -545,7 +545,7 @@ const ETC = [
 
 /** Candidate program/home grants; programRoots validates physical program roots separately from requested reads. */
 export function toolchain(env: NodeJS.ProcessEnv = process.env) {
-  return [...programs(env), ...homeGrants(env).map((grant) => grant.entry)]
+  return [...programs(env).map((grant) => grant.entry), ...homeGrants(env).map((grant) => grant.entry)]
 }
 
 /** The account's home and the one Orchestra uses (a test home differs); neither is ever exposed. */
@@ -590,37 +590,35 @@ function programs(env: NodeJS.ProcessEnv) {
   const bins = [path.dirname(process.execPath), ...(env.PATH ?? env.Path ?? "").split(path.delimiter).filter((entry) => path.isAbsolute(entry))]
   const prefixes = bins.filter((entry) => path.basename(entry) === "bin").map((entry) => path.dirname(entry))
     .filter((prefix) => !homes().includes(path.dirname(prefix)))
-  return [...system(), ...bins, ...prefixes].filter((entry) => !homes().some((home) => FSUtil.contains(entry, home)))
+  return [...system(), ...bins].map((entry) => ({ entry, prefix: false })).concat(prefixes.map((entry) => ({ entry, prefix: true })))
+    .filter((grant) => !homes().some((home) => FSUtil.contains(grant.entry, home)))
 }
 
-const programRoots = (fs: FSUtil.Interface, entries: ReadonlyArray<string>) => Effect.gen(function* () {
+const programRoots = (fs: FSUtil.Interface, entries: ReturnType<typeof programs>) => Effect.gen(function* () {
   const places = [...homes().map((home) => path.resolve(home)), ...(yield* Effect.forEach(homes(), (home) => canonical(fs, path.resolve(home))))]
-  const found = yield* Effect.forEach(entries, (entry) => Effect.gen(function* () {
-    const real = yield* fs.realPath(entry).pipe(
+  const found = yield* Effect.forEach(entries, (grant) => Effect.gen(function* () {
+    const real = yield* fs.realPath(grant.entry).pipe(
       Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-program-root-acquisition" })),
     )
     if (real === undefined) return []
-    const pair = [path.resolve(entry), real]
+    const pair = [path.resolve(grant.entry), real]
     // xcrun also loads the enclosing Xcode bundle; validate that expansion before granting either spelling.
     const bundles = pair.flatMap((root) => /^(\/.+?\.app)\/Contents\/Developer$/.exec(root)?.[1] ?? [])
     const roots = [...pair, ...bundles, ...(yield* Effect.forEach(bundles, (bundle) => canonical(fs, bundle)))]
-    return roots.some((root) => places.some((home) => FSUtil.contains(root, home))) ? [] : roots
+    return roots.some((root) => places.some((home) => FSUtil.contains(root, home) ||
+      (grant.prefix && path.dirname(root) === home))) ? [] : roots
   }))
   return [...new Set(found.flat())]
 })
 
-/**
- * Precise git config and offline rustup/cargo registry grants, physically constrained by `within` or git's `names`.
- * No cargo config/credentials, git databases/checkouts, or rustup downloads/tmp/update hashes. Cargo's offline git
- * dependencies still need its denied database; vendored/path dependencies work. Environment homes must be absolute,
- * never home or above it; only ~/.gitconfig may sit directly in home. Named regular dotfiles links remain supported.
- */
+/** Precise git/offline rustup/cargo grants: no credentials, config, git databases or rustup downloads/tmp/update hashes.
+ * Environment roots cannot contain home; ~/.gitconfig is the only direct-home file. Named regular git links remain supported. */
 export function homeGrants(env: NodeJS.ProcessEnv = process.env) {
   const grants = [
     ...homes().map((home) => ({ entry: path.join(home, ".gitconfig"), within: undefined, names: [".gitconfig", "gitconfig"], file: true })),
     ...gitHomes(env).flatMap((root) => ["config", "ignore", "attributes"].map((name) =>
-      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)], file: true }))),
+      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)], file: true, configHome: path.dirname(root) }))),
     ...named(env.RUSTUP_HOME, ".rustup").flatMap((rustup) => ["settings.toml", "toolchains"].map((name) =>
       ({ entry: path.join(rustup, name), within: rustup, names: [], file: name === "settings.toml" }))),
     ...named(env.CARGO_HOME, ".cargo").flatMap((cargo) => ["bin", ...["index", "cache", "src"].map((name) => path.join("registry", name))]
@@ -630,13 +628,8 @@ export function homeGrants(env: NodeJS.ProcessEnv = process.env) {
     (path.dirname(grant.entry) === home && path.basename(grant.entry) !== ".gitconfig")))
 }
 
-/**
- * Existing grants must stay inside a validated physical `within` root, a system root, or be a named regular git file.
- * A physical grant cannot be a home, contain one, or (but ~/.gitconfig) sit directly in one; `within` cannot contain home.
- * Links at or above grants cannot expose private directories, nor can file grants expose directory contents.
- * Named regular dotfiles (~/.config/git/config -> ~/dotfiles/git/config) and system-managed links (Nix Home Manager's
- * /nix/store) still work, as do independent physical toolchain roots.
- */
+/** Physical grants stay inside validated roots, system roots or named regular git files; file grants never expose directories.
+ * Home/ancestor roots and direct-home directory grants are refused, including through links. */
 const contained = (fs: FSUtil.Interface, grants: ReturnType<typeof homeGrants>) => Effect.gen(function* () {
   const physical = (entry: string) => fs.realPath(entry).pipe(Effect.catch(() => Effect.succeed(undefined)))
   const places = [...new Set([...homes(), ...(yield* Effect.forEach(homes(), physical)).filter((home) => home !== undefined)])]
@@ -644,6 +637,8 @@ const contained = (fs: FSUtil.Interface, grants: ReturnType<typeof homeGrants>) 
     const real = yield* physical(grant.entry)
     if (real === undefined) return []
     if (grant.file && !(yield* fs.isFile(real))) return []
+    const configHome = "configHome" in grant ? yield* physical(grant.configHome) : undefined
+    if ("configHome" in grant && (configHome === undefined || places.some((home) => FSUtil.contains(configHome, home)))) return []
     const within = grant.within === undefined ? undefined : yield* physical(grant.within)
     if (within !== undefined && places.some((home) => FSUtil.contains(within, home))) return []
     if (places.some((home) => FSUtil.contains(real, home) || (grant.within !== undefined && path.dirname(real) === home))) return []
