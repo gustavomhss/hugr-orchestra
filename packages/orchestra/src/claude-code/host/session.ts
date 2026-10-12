@@ -10,7 +10,7 @@ export * as ClaudeHost from "./session"
 //   `resume` / `forkSession` and need no transcript store;
 import { createHash } from "node:crypto"
 import { Context, Effect, Exit, FileSystem, Layer, Semaphore } from "effect"
-import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import type { SessionV1 } from "@orchestra/core/v1/session"
@@ -43,6 +43,7 @@ import { SessionStatus } from "@/session/status"
 import { SessionSummary } from "@/session/summary"
 import { SessionLifecycle } from "@/session/lifecycle"
 import { ClaudeHostBoundary } from "./boundary"
+import { ClaudeHostAdmission } from "./admission"
 import { Todo } from "@/session/todo"
 import { Snapshot } from "@/snapshot"
 import type { TaskPromptOps } from "@/tool/task"
@@ -104,41 +105,8 @@ export function claudeSessionID(sessionID: string) {
 }
 const NAMESPACE = Buffer.from("8f0c5b3e6a2d4f1b9c7e0d2a4b6c8e1f", "hex")
 
-/** One SDK input message. The uuid comes back on Claude Code's replies. */
-export function userInput(prompt: string, priority?: "next"): SDKUserMessage {
-  return { type: "user", message: { role: "user", content: prompt }, parent_tool_use_id: null, uuid: crypto.randomUUID(),
-    ...(priority ? { priority } : {}) }
-}
-
-/** The streaming input of one live session: open until the session is released. */
-export function inbox() {
-  const queue: SDKUserMessage[] = []
-  const state: { closed: boolean; wake?: () => void } = { closed: false }
-  return {
-    push: (message: SDKUserMessage) => {
-      if (state.closed) return
-      queue.push(message)
-      state.wake?.()
-    },
-    end: () => {
-      queue.length = 0
-      state.closed = true
-      state.wake?.()
-    },
-    async *[Symbol.asyncIterator](): AsyncGenerator<SDKUserMessage> {
-      while (true) {
-        const next = queue.shift()
-        if (next) {
-          yield next
-          continue
-        }
-        if (state.closed) return
-        await new Promise<void>((resolve) => { state.wake = resolve })
-        state.wake = undefined
-      }
-    },
-  }
-}
+export const userInput = ClaudeHostAdmission.userInput
+export const inbox = ClaudeHostAdmission.inbox
 
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
 type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string; errorUUID?: string }
@@ -149,12 +117,15 @@ type Live = {
   inbox: ReturnType<typeof inbox>
   abort: AbortController
   agent: Agent.Info
+  seat: string
   model?: string
   turn?: Turn
   discard: boolean
   background: number
   uuids: Record<string, string>
   delivered: Set<string>
+  inputs: Record<string, ClaudeHostAdmission.Input>
+  queued: Set<string>
   starts: Record<string, string>
   sends: Map<string, SessionV1.User>
   ends: Record<string, string>
@@ -175,17 +146,6 @@ type Live = {
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
-}
-
-function send(live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") {
-  return Effect.gen(function* () {
-    const message = userInput(prompt, priority)
-    if (message.uuid) {
-      live.sends.set(message.uuid, user)
-      yield* view.sent(user, message.uuid)
-    }
-    return message
-  })
 }
 
 const layer = Layer.effect(
@@ -209,6 +169,8 @@ const layer = Layer.effect(
     const serviceState = { disposed: false }
     const lives = new Map<SessionID, Live>()
     const startups = new Map<SessionID, Semaphore.Semaphore>()
+    const releasing = new Set<SessionID>()
+    const revisions = new Map<SessionID, number>()
     const writes = new Map<SessionID, Semaphore.Semaphore>()
     const exclusive = <A, E, R>(locks: Map<SessionID, Semaphore.Semaphore>, sessionID: SessionID, effect: Effect.Effect<A, E, R>) => Effect.suspend(() => {
       const lock = locks.get(sessionID) ?? Semaphore.makeUnsafe(1)
@@ -225,6 +187,19 @@ const layer = Layer.effect(
       yield* sessions.setMetadata({ sessionID, metadata: { ...latest,
         claudeCode: { ...(ClaudeCodeTranscript.record(latest.claudeCode) ? latest.claudeCode : {}), ...value } } })
     }))
+
+    const send = (live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") => Effect.gen(function* () {
+      if (live.queued.has(user.id) || live.delivered.has(user.id)) return
+      const previous = live.inputs[user.id]
+      if (previous && previous.status !== "pending") return yield* Effect.die(new Error(`Claude Code input submission is unresolved for ${user.id}`))
+      const message = { ...userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
+      live.inputs[user.id] = { uuid: message.uuid, status: "pending" }
+      yield* write(live.sessionID, { inputs: live.inputs })
+      if (live.closed || live.stopping || live.closing || live.queued.has(user.id) || live.delivered.has(user.id)) return
+      live.sends.set(message.uuid, user)
+      yield* view.sent(user, message.uuid)
+      if (live.inbox.push(message)) live.queued.add(user.id)
+    })
 
     /**
      * The child session a subagent's frames mirror into. A seat dispatch gets it from the delegation hooks at
@@ -346,6 +321,7 @@ const layer = Layer.effect(
         // Stop closes the query; discarded frames never relinquish its ownership.
         return
       }
+      if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { sessionId: message.session_id })
       // Claude Code may start a turn on its own, for a background subagent's completion: it answers the latest message.
       if (!live.turn && (message.type === "assistant" || message.type === "stream_event")) {
         const latest = (yield* sessions.messages({ sessionID: live.sessionID }).pipe(Effect.orDie)).findLast((item) => item.info.role === "user")?.info
@@ -378,24 +354,29 @@ const layer = Layer.effect(
         if (message.retracted_message_uuids.some((uuid) => uuid === turn.errorUUID)) turn.error = undefined
         yield* turn.view.retract(message.retracted_message_uuids)
       }
-      const submitted = message.type === "user" && message.uuid ? live.sends.get(message.uuid) : undefined
+      const root = !("parent_tool_use_id" in message && message.parent_tool_use_id)
+      const submitted = root && message.type === "user" && message.uuid ? live.sends.get(message.uuid) : undefined
+      const receipts = root && "user_message_uuids" in message && message.user_message_uuids
+        ? message.user_message_uuids : root && "user_message_uuid" in message && message.user_message_uuid ? [message.user_message_uuid] : []
       const previous = turn.view.current()?.parentID ?? turn.user.id
       const chain = live.chain
       yield* turn.view.on(message)
       if (live.discard) return
       if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { resumeAt: undefined, freshSessionId: undefined })
+      const acknowledged = ClaudeHostAdmission.acknowledge(live.inputs, live.sends, receipts, submitted ? message.uuid : undefined)
+      acknowledged.forEach((id) => live.delivered.add(id))
       const parent = turn.view.current()?.parentID ?? turn.user.id
       turn.answered.add(parent)
       turn.view.consumed().forEach((user) => turn.answered.add(user.id))
       if (previous !== parent && chain) {
         live.ends[previous] = chain
-        live.starts[parent] ??= chain
       }
       if (submitted && chain) live.starts[submitted.id] = chain
       if ((message.type === "assistant" || message.type === "user") && !message.parent_tool_use_id && message.uuid) {
         live.chain = message.uuid
         live.ends[submitted?.id ?? parent] = message.uuid
       }
+      if (acknowledged.length || submitted) yield* write(live.sessionID, { ...("session_id" in message && typeof message.session_id === "string" ? { sessionId: message.session_id } : {}), inputs: live.inputs, delivered: [...live.delivered], starts: live.starts, ends: live.ends, chain: live.chain })
       if (message.type !== "result") return
       idle(live, release)
       yield* write(live.sessionID, { uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined })
@@ -408,7 +389,8 @@ const layer = Layer.effect(
         return settle(live, { ok: false, message: detail })
       }
       const pending = turn.view.pendingInputs()
-      const { cost } = yield* turn.view.finish(turn.cost)
+      // A restarted native producer can reset its cumulative counters. Charge the new epoch from zero.
+      const { cost } = yield* turn.view.finish(message.total_cost_usd < turn.cost ? 0 : turn.cost)
       yield* summarize(live, turn)
       const context = yield* Effect.tryPromise(() => live.query.getContextUsage()).pipe(Effect.option)
       yield* write(live.sessionID, { cost, uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined, ...(context._tag === "Some"
@@ -424,7 +406,8 @@ const layer = Layer.effect(
       }
     })
 
-    const launch = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown> }) => Effect.gen(function* () {
+    const launch = (input: { sessionID: SessionID; agent: Agent.Info; user: SessionV1.User; model?: string; state: Record<string, unknown>; revision: number }) => Effect.gen(function* () {
+      if (releasing.has(input.sessionID)) return yield* Effect.fail(new Error("Claude Code session is being released"))
       const ownership = yield* InstanceState.get(custody)
       const instance = yield* InstanceState.context
       const overrides = yield* Adapters
@@ -448,7 +431,18 @@ const layer = Layer.effect(
         ? ClaudeCodeTranscript.record(input.state.modelUsage) ? input.state.modelUsage : {} : {}
       const uuids = ClaudeCodeTranscript.record(input.state.uuids) ? input.state.uuids : {}
       const live: Live = {
-        sessionID: input.sessionID, inbox: inbox(), abort, agent: input.agent, model: input.model, discard: false, background: 0,
+        sessionID: input.sessionID, inbox: inbox(async (message) => {
+          const user = message.uuid ? live.sends.get(message.uuid) : undefined
+          if (!user || live.closed) return
+          live.inputs[user.id].status = "submitted"
+          await live.run(write(live.sessionID, { inputs: live.inputs }))
+        }, async (message) => {
+          const user = message.uuid ? live.sends.get(message.uuid) : undefined
+          if (!user) return
+          live.inputs[user.id].status = "pending"
+          await live.run(write(live.sessionID, { inputs: live.inputs }), true)
+        }), abort, agent: input.agent, seat: input.agent.id ?? input.user.agent, model: input.model, discard: false, background: 0,
+        inputs: ClaudeHostAdmission.read(input.state.inputs), queued: new Set(),
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
         chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {}, callbacks: new Set(),
@@ -469,7 +463,7 @@ const layer = Layer.effect(
           record: (value) => Effect.sync(() => { if (value.uuid) live.uuids[value.messageID] = value.uuid }) }),
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
-        agent: input.agent.id ?? input.agent.name, abort }
+        agent: live.seat, abort }
       const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, withSession: bindings.withSession })
       live.bridge = bridge
       const adapters: ClaudeHostOptions.Adapters = {
@@ -485,48 +479,52 @@ const layer = Layer.effect(
         ctx: { ...ctx, join: live.join },
         adapters, model: input.model, session: resume, abortController: abort, canUseTool: permit(live), env,
       }))
-      if (ownership.disposed || serviceState.disposed) return yield* Effect.fail(new Error("Claude Code host was disposed before startup completed"))
+      if (releasing.has(input.sessionID) || ownership.disposed || serviceState.disposed) return yield* Effect.fail(new Error("Claude Code host was disposed before startup completed"))
       const lifetime = ClaudeCodeSDK.processLifetime(options)
       live.processJoin = lifetime.join
       live.query = sdk.query({ prompt: live.inbox, options: lifetime.options })
       lives.set(input.sessionID, live)
       ownership.owned.add(live)
       live.owned = ownership.owned
-      const pump = (async () => {
-        const failure = await (async () => {
-          for await (const message of live.query) await live.run(handle(live, message, release))
-        })().then(() => undefined, (error: unknown) => error)
-        live.ended = live.turn?.error ?? (failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished.")
-        // Do not await close from inside the pump: close itself joins this pump.
-        shutdown(live)
-        if (!live.stopping) settle(live, { ok: false, message: live.ended })
-      })()
-      live.pump = pump
-      void pump.then(() => close(live)).catch(() => {})
-      // Sign-in state without a model turn and without secrets (spike S2). Email and organization are never read here.
-      // A session whose process never started (the plan-approval lock, a failed spawn) ends instead of answering.
-      const account = yield* Effect.tryPromise(() => Promise.race([live.query.accountInfo(), pump.then(() => undefined)])).pipe(Effect.option)
-      // No turn waits on this session yet, so its end is this start's failure.
-      if (live.ended !== undefined) {
-        yield* Effect.promise(() => close(live))
-        return yield* Effect.fail(new Error(live.ended))
-      }
-      if (account._tag === "Some" && account.value) {
-        const signedIn = account.value.tokenSource !== "none" || account.value.apiKeySource !== undefined
-        yield* write(input.sessionID, { account: { signedIn, subscriptionType: account.value.subscriptionType, apiProvider: account.value.apiProvider } })
-        if (!signedIn) {
+      return yield* Effect.gen(function* () {
+        const pump = (async () => {
+          const failure = await (async () => {
+            for await (const message of live.query) await live.run(handle(live, message, release))
+          })().then(() => undefined, (error: unknown) => error)
+          live.ended = live.turn?.error ?? (failure instanceof Error ? failure.message : "Claude Code ended the session before the turn finished.")
+          // Do not await close from inside the pump: close itself joins this pump.
+          shutdown(live)
+          if (!live.stopping) settle(live, { ok: false, message: live.ended })
+        })()
+        live.pump = pump
+        void pump.then(() => close(live)).catch(() => {})
+        // Sign-in state without a model turn and without secrets (spike S2). Email and organization are never read here.
+        // A session whose process never started (the plan-approval lock, a failed spawn) ends instead of answering.
+        const account = yield* Effect.tryPromise(() => Promise.race([live.query.accountInfo(), pump.then(() => undefined)])).pipe(Effect.option)
+        // No turn waits on this session yet, so its end is this start's failure.
+        if (live.closed || live.ended !== undefined) {
           yield* Effect.promise(() => close(live))
-          return yield* Effect.fail(new Error(ClaudeCodeSDK.SIGNED_OUT))
+          return yield* Effect.fail(new Error(live.ended ?? "Claude Code startup was cancelled"))
         }
-      }
-      return live
+        if (account._tag === "Some" && account.value) {
+          const signedIn = account.value.tokenSource !== "none" || account.value.apiKeySource !== undefined
+          yield* write(input.sessionID, { account: { signedIn, subscriptionType: account.value.subscriptionType, apiProvider: account.value.apiProvider } })
+          if (!signedIn) {
+            yield* Effect.promise(() => close(live))
+            return yield* Effect.fail(new Error(ClaudeCodeSDK.SIGNED_OUT))
+          }
+        }
+        return live
+      }).pipe(Effect.onInterrupt(() => Effect.promise(() => close(live))))
     })
 
     const start = (input: Parameters<typeof launch>[0]) => exclusive(startups, input.sessionID, Effect.gen(function* () {
+      if (input.revision !== (revisions.get(input.sessionID) ?? 0)) return yield* Effect.fail(new Error("Claude Code startup ownership was released"))
       const owner = lives.get(input.sessionID)
       if (owner?.closing || owner?.stopping) yield* Effect.promise(() => owner.stopping ?? owner.closing!)
       const existing = lives.get(input.sessionID)
-      if (existing) return existing
+      if (existing && existing.seat === (input.agent.id ?? input.user.agent)) return existing
+      if (existing) yield* stop(existing)
       return yield* launch({ ...input, state: yield* read(input.sessionID) })
     }))
 
@@ -543,8 +541,15 @@ const layer = Layer.effect(
       live.stopping = (async () => {
         const interrupted = await receipt
         await close(live)
+        Object.entries(live.inputs).forEach(([id, input]) => {
+          if (interrupted?.still_queued?.includes(input.uuid)) {
+            input.status = "pending"
+            live.delivered.delete(id)
+          }
+          if (input.status === "submitted") input.status = "uncertain"
+        })
         if (interrupted) await live.run(write(live.sessionID, { stoppedQueued: interrupted.still_queued }), true)
-        await live.run(write(live.sessionID, { delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }), true)
+        await live.run(write(live.sessionID, { inputs: live.inputs, delivered: [...live.delivered], uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain }), true)
         if (turn) {
           await live.run(turn.view.fail({ aborted: true, message: "The owner stopped the turn." }), true)
           await live.run(summarize(live, turn), true)
@@ -558,19 +563,25 @@ const layer = Layer.effect(
 
     const turn: Interface["turn"] = Effect.fn("ClaudeHost.turn")(function* (input) {
       const { sessionID } = input
+      const requestedRevision = revisions.get(sessionID) ?? 0
+      if (releasing.has(sessionID)) return yield* Effect.die(new Error("Claude Code session is being released"))
       const agent = yield* agents.get(input.user.agent).pipe(Effect.orElseSucceed(() => undefined))
       if (agent?.engine !== "claude-code") return false
       const instance = yield* InstanceState.context
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)
+      const seatOwner = lives.get(sessionID)
+      if (seatOwner && seatOwner.seat !== (agent.id ?? input.user.agent)) yield* stop(seatOwner)
       const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
       yield* reconcileRevert(session)
+      const revision = session.revert ? revisions.get(sessionID) ?? 0 : requestedRevision
       const history = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
       const state = yield* read(sessionID)
       const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : answered(history))
       const users = history.filter((message) => (RequestSource.actual(message) ||
         message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id))
-      const prompt = ClaudeCodeTranscript.hostPrompt(users)
+      const prompts = users.flatMap((message) => message.info.role === "user" ? [{ user: message.info, text: ClaudeCodeTranscript.hostPrompt([message]) }] : []).filter((item) => item.text)
+      const prompt = prompts.map((item) => item.text).join("\n")
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
       const existing = lives.get(sessionID)
       // Already handed over (a steer Claude Code answers in its own next turn): wait for that turn.
@@ -586,45 +597,54 @@ const layer = Layer.effect(
         yield* view.fail({ aborted: false, message: "Claude Code receives text only; this message has no text." })
         return true
       }
+      const inputs = ClaudeHostAdmission.read(state.inputs)
+      const unresolved = prompts.find((item) => inputs[item.user.id] && inputs[item.user.id].status !== "pending" && !existing?.queued.has(item.user.id))
+      if (unresolved) {
+        yield* view.fail({ aborted: false, message: `Claude Code input submission is unresolved for ${unresolved.user.id}` })
+        return true
+      }
+      prompts.forEach((item) => { inputs[item.user.id] ??= { uuid: crypto.randomUUID(), status: "pending" } })
+      if (existing) prompts.forEach((item) => { existing.inputs[item.user.id] ??= inputs[item.user.id] })
+      if (prompts.length) yield* write(sessionID, { inputs: existing?.inputs ?? inputs })
       if (prompt && typeof state.sessionId !== "string") yield* sessions.setTitle({ sessionID, title: prompt.split("\n")[0].slice(0, 80) })
-      const started = existing ? Exit.succeed(existing) : yield* start({ sessionID, agent, user: input.user, model, state }).pipe(Effect.exit)
+      const started = existing ? Exit.succeed(existing) : yield* start({ sessionID, agent, user: input.user, model, state, revision }).pipe(Effect.exit)
       if (Exit.isFailure(started)) {
+        if (revision !== (revisions.get(sessionID) ?? 0)) return true
         yield* view.fail({ aborted: false, message: ClaudeCodeTools.failure(started.cause) })
         return true
       }
       const host = started.value
       clearTimeout(host.idle)
-      if (model && model !== host.model) {
-        host.model = model
-        yield* Effect.promise(() => host.query.setModel(model).catch(() => undefined))
-      }
+      if (model && model !== host.model) yield* setModel({ sessionID, model })
       const running = host.turn
-      if (running && prompt) host.inbox.push(yield* send(host, running.view, input.user, prompt, "next"))
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [], answered: new Set([input.user.id]) }
       host.turn = turn
       if (!running) host.bridge?.resume()
       const outcome = new Promise<Outcome>((resolve) => turn.waiters.push(resolve))
       if (host.ended !== undefined) settle(host, { ok: false, message: host.ended })
-      if (prompt) {
-        delivered.forEach((id) => host.delivered.add(id))
-        users.forEach((message) => host.delivered.add(message.info.id))
-        yield* write(sessionID, { delivered: [...host.delivered] })
-        if (!running) host.inbox.push(yield* send(host, turn.view, input.user, prompt))
-      }
+      if (prompt) yield* Effect.forEach(prompts, (item) => send(host, turn.view, item.user, item.text, running ? "next" : undefined), { discard: true })
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
-      if (!result.ok) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
+      if (!result.ok && revision === (revisions.get(sessionID) ?? 0)) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
       return true
     })
 
     const steer: Interface["steer"] = Effect.fn("ClaudeHost.steer")(function* (input) {
       const live = lives.get(input.sessionID)
       const prompt = ClaudeCodeTranscript.hostPrompt([input.user])
-      if (!live?.turn || live.stopping || live.closing || !prompt || input.user.info.role !== "user") return false
-      const message = yield* send(live, live.turn.view, input.user.info, prompt, "next")
-      live.delivered.add(input.user.info.id)
-      yield* write(input.sessionID, { delivered: [...live.delivered] })
+      if (!live || live.stopping || live.closing || !prompt || input.user.info.role !== "user") return false
+      const agent = yield* agents.get(input.user.info.agent)
+      if ((agent?.id ?? input.user.info.agent) !== live.seat) {
+        yield* stop(live)
+        return false
+      }
+      // Bind the UUID before model control, but enqueue only after the control succeeds.
+      const identity = live.inputs[input.user.info.id] ?? { uuid: crypto.randomUUID(), status: "pending" as const }
+      live.inputs[input.user.info.id] = identity
+      yield* write(input.sessionID, { inputs: live.inputs })
+      if (!live.turn) return false
       if ("model" in input) yield* setModel({ sessionID: input.sessionID, model: input.model })
-      if (!live.stopping && !live.closing) live.inbox.push(message)
+      if (!live.turn || live.closed || live.stopping || live.closing) return false
+      yield* send(live, live.turn.view, input.user.info, prompt, "next")
       return true
     })
 
@@ -632,11 +652,9 @@ const layer = Layer.effect(
       // Child task Stop also cancels its Orchestra calls, independently of the SDK task's receipt.
       lives.forEach((owner) => owner.bridge?.interrupt(sessionID))
       const live = lives.get(sessionID)
-      if (live) return stop(live)
-      const owner = [...lives.values()].flatMap((candidate) => [...new Map([...candidate.children, ...candidate.join.children()])]
-        .flatMap(([callID, child]) => child === sessionID ? [{ live: candidate, callID }] : []))[0]
-      if (!owner) return Effect.void
-      return Effect.gen(function* () {
+      const owners = [...lives.values()].flatMap((candidate) => [...new Map([...candidate.children, ...candidate.join.children()])]
+        .flatMap(([callID, child]) => child === sessionID ? [{ live: candidate, callID }] : []))
+      return Effect.forEach([...(live ? [stop(live)] : []), ...owners.map((owner) => Effect.gen(function* () {
         // A hook can publish the child before task_started reaches the pump. Keep the Stop until the join arrives.
         for (let round = 0; round < 500; round++) {
           const joined = owner.live.join.get(owner.callID)
@@ -646,7 +664,7 @@ const layer = Layer.effect(
           yield* Effect.sleep("20 millis")
         }
         return yield* Effect.die(new Error(`Claude Code has no native task id for child ${sessionID}`))
-      })
+      }))], (effect) => effect, { concurrency: "unbounded", discard: true })
     })
 
     const setModel: Interface["setModel"] = (input) => Effect.gen(function* () {
@@ -661,22 +679,14 @@ const layer = Layer.effect(
     const forkState = (source: Session.Info, messageID?: MessageID) => Effect.gen(function* () {
       const state = yield* read(source.id)
       const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
-      const at = messageID ? ClaudeHostBoundary.resolve(history, state, messageID) : undefined
-      const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
-      const nativeID = typeof state.sessionId === "string" ? state.sessionId
-        : typeof inherited?.sessionId === "string" ? inherited.sessionId : claudeSessionID(source.id)
-      return { ...state, uuids: state.uuids, starts: state.starts, ends: state.ends, delivered: state.delivered, forkFrom: !messageID || at ? {
-        sessionId: nativeID, ...(at ? { at } : {}),
-      } : undefined, sessionId: undefined, freshSessionId: undefined, resumeAt: undefined, chain: at, cost: 0 }
+      return ClaudeHostBoundary.forkState(history, state, messageID)
     })
     const fork: Interface["fork"] = (input) => Effect.gen(function* () {
       const source = yield* sessions.get(input.from).pipe(Effect.orDie)
       if (!source.metadata?.claudeCode) return undefined
-      const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
-      const latest = history.findLast((message) => message.info.role === "user")?.info
-      if (latest?.role === "user" && (yield* agents.get(latest.agent))?.engine !== "claude-code") return undefined
       const state = yield* forkState(source, input.messageID)
       const native = { ...state,
+        inputs: input.ids ? ClaudeHostAdmission.remap(state.inputs, input.ids) : state.inputs,
         uuids: input.ids ? ClaudeHostBoundary.remap(state.uuids, input.ids) : state.uuids,
         starts: input.ids ? ClaudeHostBoundary.remap(state.starts, input.ids) : state.starts,
         ends: input.ids ? ClaudeHostBoundary.remap(state.ends, input.ids) : state.ends,
@@ -684,12 +694,19 @@ const layer = Layer.effect(
       if (input.sessionID) yield* write(input.sessionID, native)
       return { ...source.metadata, claudeCode: native }
     })
-    const release: Interface["release"] = (sessionID) => exclusive(startups, sessionID, Effect.gen(function* () {
-      const live = lives.get(sessionID)
-      if (!live) return yield* interrupt(sessionID)
-      if (live.turn && !live.stopping) return yield* stop(live)
-      yield* Effect.promise(() => live.stopping ?? close(live))
-    }))
+    const release: Interface["release"] = (sessionID) => Effect.gen(function* () {
+      // Startup may hold the semaphore while waiting for an account control. Cancel its acquired owner first.
+      releasing.add(sessionID)
+      revisions.set(sessionID, (revisions.get(sessionID) ?? 0) + 1)
+      const acquired = lives.get(sessionID)
+      if (acquired) yield* stop(acquired)
+      return yield* exclusive(startups, sessionID, Effect.gen(function* () {
+        const live = lives.get(sessionID)
+        if (!live) return yield* interrupt(sessionID)
+        if (live.turn && !live.stopping) return yield* stop(live)
+        yield* Effect.promise(() => live.stopping ?? close(live))
+      }))
+    }).pipe(Effect.ensuring(Effect.sync(() => releasing.delete(sessionID))))
     const reconcileRevert: Interface["reconcileRevert"] = (session) => Effect.gen(function* () {
       if (!session.revert || !session.metadata?.claudeCode) return
       const state = yield* read(session.id)
@@ -705,6 +722,7 @@ const layer = Layer.effect(
         freshSessionId: at ? undefined : crypto.randomUUID(),
         forkFrom: at && typeof state.sessionId !== "string" && typeof inherited?.sessionId === "string"
           ? { sessionId: inherited.sessionId, at } : undefined, chain: at,
+        inputs: ClaudeHostAdmission.remap(state.inputs, ids),
         uuids: ClaudeHostBoundary.remap(state.uuids, ids), starts: ClaudeHostBoundary.remap(state.starts, ids), ends: ClaudeHostBoundary.remap(state.ends, ids),
         delivered: Array.isArray(state.delivered) ? state.delivered.filter((id) => ids.has(String(id))) : undefined })
     })

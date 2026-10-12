@@ -57,10 +57,8 @@ const layer = Layer.effect(
       const steered = yield* host.steer({ sessionID: user.info.sessionID, user, model })
       if (!steered) yield* host.setModel({ sessionID: user.info.sessionID, model })
     })
-    const reconcileRevert: Interface["reconcileRevert"] = (session, seat) => Effect.gen(function* () {
-      if (!session.revert) return
-      const agent = seat ? yield* agents.get(seat) : yield* agents.defaultInfo()
-      if (agent?.engine === "claude-code") yield* host.reconcileRevert(session)
+    const reconcileRevert: Interface["reconcileRevert"] = (session) => Effect.gen(function* () {
+      if (session.revert && session.metadata?.claudeCode) yield* host.reconcileRevert(session)
     })
     return Service.of({ turn, admitted, steer: host.steer, interrupt: host.interrupt, setModel: host.setModel,
       fork: host.fork, release: host.release, reconcileRevert })
