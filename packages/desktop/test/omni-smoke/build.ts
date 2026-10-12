@@ -43,13 +43,8 @@ export async function build() {
   mkdirSync(path.join(native, platform), { recursive: true })
   copyFileSync(addon, path.join(native, platform, "hugr_omni.node"))
   copyFileSync(supervisor, path.join(native, platform, path.basename(supervisor)))
-  // A Windows bundle also builds its WSL guests' Linux CLIs, each from its own Linux omni pair under <omni id>/.
-  const guests = process.env.GUEST_OMNI_ARTIFACTS
-  if (win && !guests) throw new Error("a Windows desktop needs GUEST_OMNI_ARTIFACTS with its WSL guests' Linux omni pairs")
-  for (const id of win ? ["linux-x64-gnu", "linux-arm64-gnu"] : []) {
-    mkdirSync(path.join(native, id), { recursive: true })
-    for (const name of ["hugr_omni.node", "hugr-omni-supervisor"]) copyFileSync(path.join(guests!, id, name), path.join(native, id, name))
-  }
+  // A Windows bundle's CLIs come prebuilt from a Linux producer (omni-desktop-smoke.yml windows-cli).
+  if (win && !process.env.ORCHESTRA_CLI_PREBUILT_DIR) throw new Error("a Windows desktop needs ORCHESTRA_CLI_PREBUILT_DIR with its produced CLIs")
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
     at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
