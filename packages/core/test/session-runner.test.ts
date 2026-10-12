@@ -547,6 +547,20 @@ const verifyPartialFlushOnInterruption = (kind: FragmentKind) =>
   })
 
 describe("SessionRunnerLLM", () => {
+  it.effect("policy runner reports malformed projected storage as typed error before provider call", () =>
+    Effect.gen(function* () {
+      yield* setup
+      const database = yield* Database.Service
+      const session = yield* SessionV2.Service
+      const runner = yield* SessionRunner.Service
+      yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Malformed policy" }), resume: false })
+      yield* database.db.update(SessionTable).set({ subagent_models: "null" }).where(eq(SessionTable.id, sessionID)).run()
+      requests.length = 0
+      expect(yield* runner.run({ sessionID, force: true }).pipe(Effect.flip)).toBeInstanceOf(SessionSubagentModels.StorageError)
+      expect(requests).toHaveLength(0)
+    }),
+  )
+
   it.effect("policy runner leaves root own chat unrestricted even with outgoing deny-all", () =>
     Effect.gen(function* () {
       yield* setup

@@ -23,7 +23,14 @@ export const reference = (model: Model): ModelV2.Ref | undefined => references.g
 
 /** Captures catalog identity before transport/deployment lowering, including for embedded resolvers. */
 export const withReference = (model: Model, ref: ModelV2.Ref): Model => {
-  references.set(model, ModelV2.Ref.make({ id: ref.id, providerID: ref.providerID, ...(ref.variant === undefined ? {} : { variant: ref.variant }) }))
+  references.set(
+    model,
+    ModelV2.Ref.make({
+      id: ref.id,
+      providerID: ref.providerID,
+      ...(ref.variant === undefined ? {} : { variant: ref.variant }),
+    }),
+  )
   return model
 }
 
@@ -185,8 +192,12 @@ export const fromCatalogModel = (
 }
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
-  withVariant(model, session.model?.variant).pipe(Effect.flatMap((model) => fromCatalogModel(model, credential)),
-    Effect.map((value) => withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant })))
+  withVariant(model, session.model?.variant).pipe(
+    Effect.flatMap((model) => fromCatalogModel(model, credential)),
+    Effect.map((value) =>
+      withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant }),
+    ),
+  )
 
 export const supported = (model: ModelV2.Info) =>
   model.api.type === "aisdk" &&
@@ -206,15 +217,21 @@ export const locationLayer = Layer.effect(
         // Location plugins populate and filter the catalog asynchronously during layer startup.
         const ceilings = yield* policies.forSession(session.id)
         if (session.model && !SessionSubagentModels.permits(ceilings, session.model))
-          return yield* new SessionSubagentModels.ModelDeniedError({ sessionID: session.id, model: session.model, reason: "not-allowed" })
-        const candidates = (yield* catalog.model.available()).filter((model) => SessionSubagentModels.permits(ceilings, model))
+          return yield* new SessionSubagentModels.ModelDeniedError({
+            sessionID: session.id,
+            model: session.model,
+            reason: "not-allowed",
+          })
+        const candidates = (yield* catalog.model.available()).filter((model) =>
+          SessionSubagentModels.permits(ceilings, model),
+        )
         const defaultModel = session.model || candidates.length === 0 ? undefined : yield* catalog.model.default()
         const selected = session.model
-          ? candidates.find(
-              (model) => model.providerID === session.model?.providerID && model.id === session.model.id,
-            )
-          : candidates.find((model) => model.providerID === defaultModel?.providerID && model.id === defaultModel.id && supported(model))
-            ?? candidates.find(supported)
+          ? candidates.find((model) => model.providerID === session.model?.providerID && model.id === session.model.id)
+          : (candidates.find(
+              (model) =>
+                model.providerID === defaultModel?.providerID && model.id === defaultModel.id && supported(model),
+            ) ?? candidates.find(supported))
         if (!selected && session.model)
           return yield* new ModelUnavailableError({
             providerID: session.model.providerID,
@@ -248,4 +265,8 @@ export const locationLayer = Layer.effect(
   }),
 )
 
-export const node = makeLocationNode({ service: Service, layer: locationLayer, deps: [Catalog.node, Integration.node, SessionSubagentModels.node] })
+export const node = makeLocationNode({
+  service: Service,
+  layer: locationLayer,
+  deps: [Catalog.node, Integration.node, SessionSubagentModels.node],
+})
