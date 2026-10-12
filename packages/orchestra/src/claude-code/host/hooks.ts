@@ -37,7 +37,7 @@ import { ClaudeHostMcp } from "./mcp"
  *   and `task_notification`, and reads `join.child(toolUseID)` to mirror a subagent's frames into its child Session;
  * - `parts` is the mirror's part API, so records land on the mirrored parts and a later stream frame cannot overwrite them;
  * - `granted` is `ClaudeHostMcp.prepare().granted`: the Orchestra tools each seat may call through the shared server;
- * - `research` is Jimmy's allowance and provenance port (until it lands, Jimmy is not dispatched);
+ * - `research` is the discovery dispatch's native allowance port (required before dispatch);
  * - `policy` replaces the live gate checks (tests only).
  */
 export type Context = {
@@ -66,8 +66,8 @@ export type Research = {
   readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
-  /** Record the returned bytes as retained source evidence, charging them first. */
-  readonly capture: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
+  /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
+  readonly capture?: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
 }
 
 /** Claude Code's native reads whose results Jimmy may cite only through recorded provenance. */
@@ -146,7 +146,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       const context = agent ? yield* delegation.settle(input, refused) : undefined
       if (refused) return withheld(refused, context)
       if (actor.seat === "jimmy" && CAPTURED.includes(input.tool_name)) {
-        if (!ctx.research) return withheld("jimmy's provenance capture is not available on this host")
+        if (!ctx.research?.capture) return withheld("jimmy's provenance capture is not available on this host")
         const captured = yield* Effect.exit(ctx.research.capture(actor.sessionID, input.tool_use_id, input.tool_name,
           input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
         if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)

@@ -54,6 +54,9 @@ import { asks } from "../permissions"
 import { ClaudeHostBridge } from "./bridge"
 import { ClaudeHostHooks } from "./hooks"
 import { ClaudeHostJoin } from "./join"
+import { ClaudeHostResearch } from "./research"
+import { ResearchExecution } from "@/research/allowance"
+import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
@@ -146,6 +149,7 @@ type Live = {
   sessionID: SessionID
   query: Query
   bridge?: ReturnType<typeof ClaudeHostBridge.create>
+  research?: ClaudeHostResearch.Runtime
   inbox: ReturnType<typeof inbox>
   abort: AbortController
   agent: Agent.Info
@@ -191,6 +195,8 @@ function send(live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, p
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
+    const researchExecution = yield* ResearchExecution.Service
+    const researchAllowance = yield* ResearchAllowance.Service
     const bindings = yield* ArsenalBindings.make
     const lifecycle = yield* SessionLifecycle.Service
     const summary = yield* SessionSummary.Service
@@ -342,6 +348,7 @@ const layer = Layer.effect(
       if (message.type === "system" && message.subtype === "task_started" && message.tool_use_id)
         live.join.taskStarted({ toolUseID: message.tool_use_id, taskID: message.task_id })
       if (message.type === "system" && message.subtype === "task_notification") live.join.taskNotification(message)
+      if (live.research) yield* live.research.observe(live.join, message)
       if (live.discard) {
         // Stop closes the query; discarded frames never relinquish its ownership.
         return
@@ -470,13 +477,16 @@ const layer = Layer.effect(
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
         agent: input.agent.id ?? input.agent.name, abort }
-      const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, withSession: bindings.withSession })
+      const research = yield* ClaudeHostResearch.make.pipe(Effect.provideService(ResearchExecution.Service, researchExecution),
+        Effect.provideService(ResearchAllowance.Service, researchAllowance))
+      live.research = research
+      const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, research, withSession: bindings.withSession })
       live.bridge = bridge
       const adapters: ClaudeHostOptions.Adapters = {
         plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
-        hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge,
+        hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge, research,
           run: live.run as ClaudeHostHooks.Context["run"],
           parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
             complete: bridge.complete } })),
@@ -744,7 +754,7 @@ function answered(history: readonly SessionV1.WithParts[]) {
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
+  deps: [ResearchExecution.node, ResearchAllowance.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
 })
