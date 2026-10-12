@@ -5,6 +5,18 @@
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
     "typecheck": {},
+    "orchestra#typecheck": {
+      "dependsOn": ["transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.github/scripts/archie-host-acceptance.ts",
+        "$TURBO_ROOT$/.github/scripts/archie-host-evidence.ts",
+        "$TURBO_ROOT$/.github/scripts/archie-host-inputs.ts",
+        "$TURBO_ROOT$/.github/scripts/archie-host-plan.ts",
+        "$TURBO_ROOT$/.github/scripts/archie-host-process.ts",
+        "$TURBO_ROOT$/.github/scripts/archie-host-s14.ts"
+      ]
+    },
     "build": {
       "dependsOn": [],
       "outputs": ["dist/**"]

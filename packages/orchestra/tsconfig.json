@@ -2,6 +2,15 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@tsconfig/bun/tsconfig.json",
   "exclude": ["node_modules", "dist"],
+  "include": [
+    "**/*",
+    "../../.github/scripts/archie-host-acceptance.ts",
+    "../../.github/scripts/archie-host-evidence.ts",
+    "../../.github/scripts/archie-host-inputs.ts",
+    "../../.github/scripts/archie-host-plan.ts",
+    "../../.github/scripts/archie-host-process.ts",
+    "../../.github/scripts/archie-host-s14.ts"
+  ],
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "@opentui/solid",
