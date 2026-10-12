@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import type { SDKAssistantMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Database } from "@orchestra/core/database/database"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { LocationServiceMap } from "@orchestra/core/location-services"
@@ -12,6 +13,7 @@ import { Effect } from "effect"
 import { Agent } from "@/agent/agent"
 import { ClaudeHostMemory } from "@/claude-code/host/memory"
 import { ClaudeHostMirror } from "@/claude-code/host/mirror"
+import { ClaudeHostTodos } from "@/claude-code/host/todos"
 import { Archive } from "@/continuity/archive"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { SessionRevert } from "@/session/revert"
@@ -27,7 +29,7 @@ import { testEffect } from "../../lib/effect"
 // Real Session, revert, fork, mirror, Todo and compact readers. SDK result frames are inputs, not a mocked producer.
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   filesystem, CrossSpawnSpawner.node, LocationServiceMap.node, Session.node, SessionProjector.node,
-  SessionRevert.node, Snapshot.node, SessionStatus.node, Todo.node, Agent.node, Archive.node,
+  SessionRevert.node, Snapshot.node, SessionStatus.node, Todo.node, Agent.node, Archive.node, Database.node,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({})]]))
 const subject = "A-survives-完整🙂\n" + "complete subject ".repeat(80)
 const base = { session_id: "native-todos", parent_tool_use_id: null }
@@ -78,9 +80,9 @@ const setup = Effect.fnUntraced(function* () {
 
 for (const mode of ["revert", "fork"] as const)
   for (const last of ["surviving", "empty-list", "deleted", "missing-get"] as const)
-    for (const first of last === "surviving" || last === "empty-list"
+    for (const start of last === "surviving" || last === "empty-list"
       ? ["TaskCreate", "TaskUpdate", "TaskList", "TaskGet"] : ["TaskCreate"])
-    it.instance(`${mode}: ${first} before C preserves ${last} native tasks and cold compact context`, () =>
+    it.instance(`${mode}: ${start} before C preserves ${last} native tasks and cold compact context`, () =>
       Effect.gen(function* () {
         const f = yield* setup()
         const u1 = yield* f.user(f.chat.id)
@@ -116,13 +118,13 @@ for (const mode of ["revert", "fork"] as const)
         // Lifecycle metadata still carries B; the producer must ignore it even after the active cut clears.
         expect((yield* f.sessions.get(target.id)).metadata?.claudeCode?.todoTasks).toHaveProperty("native-B-29")
         const cold = f.make(yield* f.user(target.id))
-        if (first === "TaskUpdate") yield* f.native(cold, first, { taskId: "native-A-17" },
+        if (start === "TaskUpdate") yield* f.native(cold, start, { taskId: "native-A-17" },
           { success: true, taskId: "native-A-17", updatedFields: [] })
-        if (first === "TaskList") yield* f.native(cold, first, {}, { tasks: last === "surviving"
+        if (start === "TaskList") yield* f.native(cold, start, {}, { tasks: last === "surviving"
           ? [{ id: "native-A-17", subject, status: "in_progress", blockedBy: [] }] : [] })
-        if (first === "TaskGet") yield* f.native(cold, first, { taskId: "native-A-17" }, { task: last === "surviving"
+        if (start === "TaskGet") yield* f.native(cold, start, { taskId: "native-A-17" }, { task: last === "surviving"
           ? { id: "native-A-17", subject, status: "in_progress", description: "", blocks: [], blockedBy: [] } : null })
-        if (first !== "TaskCreate") {
+        if (start !== "TaskCreate") {
           expect((yield* f.sessions.get(target.id)).metadata?.claudeCode?.todoTasks).not.toHaveProperty("native-B-29")
           expect((yield* f.memory(target.id)) ?? "").not.toContain("B-EXCLUDED")
         }
@@ -134,6 +136,9 @@ for (const mode of ["revert", "fork"] as const)
           { content: "C-POST-CUT", status: "pending", priority: "medium" }])
         if (created.state.status !== "completed") throw new Error("TaskCreate did not complete")
         expect(created.state.metadata.todos).toEqual([...kept, { content: "C-POST-CUT", status: "pending", priority: "medium" }])
+        const causal = ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(target.id))
+        expect(causal?.part.id).toBe(created.id)
+        expect(causal?.todos).toEqual(created.state.metadata.todos)
         expect(created.state.metadata.claudeCodeTodo).toMatchObject({ schema: "native-task-snapshot-v1", name: "TaskCreate",
           result: { task: { id: "native-C-43", subject: "C-POST-CUT" } }, tasks: [
             ...(last === "surviving" ? [{ id: "native-A-17", subject, status: "in_progress", activeForm: "Reading 完整🙂" }] : []),
@@ -200,21 +205,101 @@ it.instance("native receipts replay in completion order rather than parallel cal
   yield* mirror.on(result("create-second", { task: { id: "cleared-ID", subject: "CLEARED" } }))
   yield* mirror.on(result("list-first", { tasks: [] }))
   expect(yield* f.todo.get(f.chat.id)).toEqual([])
+  const empty = ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))
+  expect(empty?.part.callID).toBe("list-first")
+  expect(empty?.snapshot.order).toBe(2)
+  expect(empty?.todos).toEqual([])
+  expect(yield* f.memory(f.chat.id)).toBeUndefined()
   yield* mirror.finish(0)
   const cold = f.make(yield* f.user(f.chat.id))
+  yield* f.native(cold, "TodoWrite", { todos: [{ content: "EMPTY-MUST-WIN", status: "pending" }] },
+    { newTodos: [{ content: "EMPTY-MUST-WIN", status: "pending" }] })
+  expect(yield* f.memory(f.chat.id)).toBeUndefined()
   yield* f.native(cold, "TaskCreate", { subject: "LATEST", description: "" }, { task: { id: "latest-ID", subject: "LATEST" } })
   expect(yield* f.todo.get(f.chat.id)).toEqual([{ content: "LATEST", status: "pending", priority: "medium" }])
   expect((yield* f.sessions.get(f.chat.id)).metadata?.claudeCode?.todoTasks).not.toHaveProperty("cleared-ID")
   yield* cold.finish(0)
 }))
 
+it.instance("retained A declared before B but completed after B wins causal selection and compact context", () => Effect.gen(function* () {
+  const f = yield* setup()
+  const mirror = f.make(yield* f.user(f.chat.id))
+  yield* mirror.on(assistant([
+    { type: "tool_use", id: "A-first", name: "TaskCreate", input: { subject: "PARALLEL-A", description: "" } },
+    { type: "tool_use", id: "B-second", name: "TaskCreate", input: { subject: "PARALLEL-B", description: "" } },
+  ]))
+  yield* mirror.on(result("B-second", { task: { id: "native-B", subject: "PARALLEL-B" } }))
+  yield* mirror.on(result("A-first", { task: { id: "native-A", subject: "PARALLEL-A" } }))
+  const retained = yield* ClaudeHostMemory.retained(f.chat.id)
+  expect(retained.history.flatMap((message) => message.parts).filter((part) => part.type === "tool").map((part) => part.callID))
+    .toEqual(["A-first", "B-second"])
+  const latest = ClaudeHostTodos.latest(retained)
+  expect(latest?.part.callID).toBe("A-first")
+  expect(latest?.snapshot.order).toBe(2)
+  expect(latest?.snapshot.tasks.map((task) => task.id)).toEqual(["native-B", "native-A"])
+  const context = yield* f.memory(f.chat.id)
+  expect(context).toContain("PARALLEL-A")
+  expect(context).toContain("PARALLEL-B")
+  yield* mirror.finish(0)
+  const cold = f.make(yield* f.user(f.chat.id))
+  yield* f.native(cold, "TodoWrite", { todos: [{ content: "LEGACY-ORDINARY", status: "pending" }] },
+    { newTodos: [{ content: "LEGACY-ORDINARY", status: "pending" }] })
+  expect(yield* f.memory(f.chat.id)).toEqual(context)
+  yield* cold.finish(0)
+}))
+
+it.instance("ordinary TodoWrite remains a real compact fallback without native receipts", () => Effect.gen(function* () {
+  const f = yield* setup()
+  const mirror = f.make(yield* f.user(f.chat.id))
+  yield* f.native(mirror, "TodoWrite", { todos: [{ content: "ORDINARY-FALLBACK", status: "pending" }] },
+    { newTodos: [{ content: "ORDINARY-FALLBACK", status: "pending" }] })
+  expect(ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))).toBeUndefined()
+  expect(yield* f.memory(f.chat.id)).toContain("ORDINARY-FALLBACK")
+  yield* mirror.finish(0)
+}))
+
+for (const invalid of ["unknown", "nonintegral", "duplicate", "reversed", "snapshot"] as const)
+  it.instance(`retained ${invalid} native receipt evidence fails named in both reader and producer`, () => Effect.gen(function* () {
+    const f = yield* setup()
+    const mirror = f.make(yield* f.user(f.chat.id))
+    const a = yield* f.native(mirror, "TaskCreate", { subject: "CONTROL-A", description: "" },
+      { task: { id: "native-A", subject: "CONTROL-A" } })
+    const b = yield* f.native(mirror, "TaskCreate", { subject: "CONTROL-B", description: "" },
+      { task: { id: "native-B", subject: "CONTROL-B" } })
+    if (a.state.status !== "completed" || b.state.status !== "completed") throw new Error("Missing successful native controls")
+    expect(yield* f.memory(f.chat.id)).toContain("CONTROL-A")
+    const receipt = ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))
+    if (!receipt) throw new Error("Missing validated native control")
+    if (invalid === "reversed") yield* f.sessions.updatePart({ ...a, state: { ...a.state, metadata: {
+      ...a.state.metadata, claudeCodeTodo: { ...a.state.metadata.claudeCodeTodo, order: 2 },
+    } } })
+    yield* f.sessions.updatePart({ ...b, state: { ...b.state, metadata: { ...b.state.metadata, claudeCodeTodo: {
+      ...receipt.snapshot,
+      ...(invalid === "unknown" ? { order: "unknown" } : invalid === "nonintegral" ? { order: 1.5 }
+        : invalid === "duplicate" || invalid === "reversed" ? { order: 1 }
+        : { tasks: [{ id: "invented", subject: "CONTROL-B", status: "pending" }] }),
+    } } } })
+    const code = invalid === "unknown" ? "NATIVE_TODO_RECEIPT_INVALID"
+      : invalid === "nonintegral" ? "NATIVE_TODO_ORDER_UNPROVABLE"
+      : invalid === "duplicate" ? "NATIVE_TODO_ORDER_CONFLICT" : "NATIVE_TODO_SNAPSHOT_CONFLICT"
+    const view = yield* ClaudeHostMemory.retained(f.chat.id)
+    expect(() => ClaudeHostTodos.latest(view)).toThrow(code)
+    expect(String(yield* f.memory(f.chat.id).pipe(Effect.exit))).toContain(code)
+    expect(String(yield* ClaudeHostTodos.update({ sessionID: f.chat.id, sessions: f.sessions, name: "TaskCreate",
+      args: { subject: "NEW", description: "" }, result: { task: { id: "native-new", subject: "NEW" } } }).pipe(Effect.exit)))
+      .toContain(code)
+    yield* mirror.finish(0)
+  }))
+
 it.instance("legacy aggregate and plain output cannot invent native task identity", () => Effect.gen(function* () {
   const f = yield* setup()
   yield* f.sessions.setMetadata({ sessionID: f.chat.id, metadata: { claudeCode: { todoTasks: {
     guessed: { content: "UNPROVEN", status: "pending", priority: "medium" },
   } } } })
+  yield* f.todo.update({ sessionID: f.chat.id, todos: [{ content: "UNPROVEN-TABLE", status: "pending", priority: "medium" }] })
   const mirror = f.make(yield* f.user(f.chat.id))
   yield* f.native(mirror, "TaskCreate", { subject: "MODEL-TEXT-ONLY", description: "" }, "Task #guessed created")
+  expect(yield* f.memory(f.chat.id)).toBeUndefined()
   yield* f.native(mirror, "TaskGet", { taskId: "real-ID" },
     { task: { id: "real-ID", subject: "TRUSTED-GET", status: "in_progress", description: "", blocks: [], blockedBy: [] } })
   expect(yield* f.todo.get(f.chat.id)).toEqual([{ content: "TRUSTED-GET", status: "in_progress", priority: "medium" }])
