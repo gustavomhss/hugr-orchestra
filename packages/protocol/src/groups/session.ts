@@ -5,7 +5,7 @@ import { Session } from "@orchestra/schema/session"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath, NonNegativeInt, PositiveInt, RelativePath, statics } from "@orchestra/schema/schema"
 import { Workspace } from "@orchestra/schema/workspace"
-import { Context, Effect, Encoding, Result, Schema, Struct } from "effect"
+import { Context, Effect, Encoding, Result, Schema, SchemaGetter, Struct } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 import {
   ConflictError,
@@ -31,6 +31,15 @@ const SessionsQueryFields = {
     description: "Session order for the first page. Use desc for newest first or asc for oldest first.",
   }),
   search: Schema.optional(Schema.String),
+  includeArchived: Schema.Literals(["true", "false"])
+    .pipe(
+      Schema.decodeTo(Schema.Boolean, {
+        decode: SchemaGetter.transform((value) => value === "true"),
+        encode: SchemaGetter.transform((value) => (value ? ("true" as const) : ("false" as const))),
+      }),
+      Schema.optional,
+    )
+    .annotate({ description: "Include archived sessions. Defaults to false; pagination cursors retain this setting." }),
 }
 
 const SessionsDirectoryQuery = Schema.Struct({
@@ -167,6 +176,22 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.get",
             summary: "Get session",
             description: "Retrieve a session by ID.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.archive", "/api/session/:sessionID/archive", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ archived: Schema.Boolean }),
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.archive",
+            summary: "Archive or restore session",
+            description: "Change session visibility without stopping execution or removing session history.",
           }),
         ),
     )
