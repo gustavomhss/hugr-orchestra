@@ -2,7 +2,8 @@ import { createHash } from "node:crypto"
 import { lstat, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
-import { cliTreeSitterTarget, readCliManifest, verifyCliArtifact } from "../cli-artifacts"
+import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
+import { cliRipgrepKey, cliTreeSitterTarget, readCliManifest, verifyCliArtifact } from "../cli-artifacts"
 import { nativeT } from "../native-translations"
 import { runWslInDistro, type RunWslOptions } from "./runtime"
 
@@ -110,6 +111,8 @@ export async function installWslArtifact(
     readManifest?: typeof readCliManifest
     verifyArtifact?: typeof verifyCliArtifact
     installedPath?: string
+    /** The sha256 a target's rg must have; the pin in packages/core/src/ripgrep/release.ts unless a test stands in. */
+    ripgrepPin?: (target: string) => string | undefined
   } = {},
 ) {
   const run = opts.run ?? runWslInDistro
@@ -144,6 +147,8 @@ export async function installWslArtifact(
   const companions = await Promise.all(omniCompanions.map((name) => companion(join(directory, `omni-${target}`, name))))
   const treeSitter = await treeSitterCompanion(join(directory, `tree-sitter-${target}`), target)
   const ripgrep = await companion(join(directory, `ripgrep-${target}`, "rg"))
+  // The guest's rg must be the pinned executable itself (Linux rg is never signed), not merely what the bundle holds.
+  if (ripgrep.sha256 !== (opts.ripgrepPin ?? pinnedRipgrep)(target)) throw new WslArtifactError("bytes")
   const guestPath = async (path: string) => {
     const converted = await command(["wslpath", "-u", "--", path])
     if (!converted.startsWith("/") || /[\r\n\0]/.test(converted)) throw new WslArtifactError("path")
@@ -159,6 +164,11 @@ export async function installWslArtifact(
     addon, companions[0].sha256, supervisor, companions[1].sha256, treeSitterPath, treeSitter.sha256,
     ripgrepPath, ripgrep.sha256,
   ])
+}
+
+function pinnedRipgrep(target: string) {
+  const key = cliRipgrepKey(target)
+  return key ? RipgrepRelease.archive(key)?.executable : undefined
 }
 
 // The bundle ships each Linux CLI's tree-sitter under tree-sitter-<target>/; without it maestro-arsenal in the guest

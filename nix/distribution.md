@@ -128,8 +128,8 @@ acceptance. Changed package inputs require a new four-native capture.
   `Applications/HuGR Orchestra.app/Contents/Resources`. Desktop wrapper supplies
   ripgrep and native sysctl where needed: `RIPGREP_BUNDLED=false` keeps the CLI build
   and Desktop staging from fetching the pinned rg other packages ship in `bin/ripgrep`
-  and `Resources/ripgrep`, and packaged CLIs never download one, so nixpkgs' rg on the
-  wrapper PATH is the one they run. Linux addon repair targets only
+  and `Resources/cli/ripgrep-<target>`, and packaged CLIs never download one, so nixpkgs'
+  rg on the wrapper PATH is the one they run. Linux addon repair targets only
   `app.asar.unpacked`; post-fixup install check re-admits packaged CLI digests.
 
 | System | Target | Native runner label |

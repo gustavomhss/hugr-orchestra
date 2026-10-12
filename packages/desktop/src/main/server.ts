@@ -96,7 +96,7 @@ export async function spawnLocalServer(
     env: {
       ...createSidecarEnv(options.candidateProfile),
       ...OmniHost.sidecarEnv(),
-      ...ripgrepEnv(app.isPackaged),
+      ...ripgrepEnv(app.isPackaged, process.resourcesPath),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
       // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
       // repository copy, since the bundled server cannot locate it from its own path.
