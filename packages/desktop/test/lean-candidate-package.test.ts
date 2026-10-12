@@ -5,15 +5,19 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { desktop, packagedCandidate, repository, requireNativeCI, verifyCandidateArchive } from "./lean-candidate-archive.fixture"
 import { CandidateRecorder } from "./lean-candidate-record.fixture"
 
-// No portable green/skip can stand in for the native packaged-app acceptance proof.
-requireNativeCI()
+// The native packaged-app proof belongs to the lean-candidate workflow, which names this file and then requires the
+// proof's renderer PNG and log. There it fails closed off native macOS x64 CI; portable suites (test.yml, test:ci) skip
+// it by name, and their skip is never a stand-in for that proof.
+const acceptance = process.env.GITHUB_WORKFLOW === "lean-candidate"
+if (acceptance) requireNativeCI()
+const native = test.skipIf(!acceptance)
 
-test("candidate proof and helpers typecheck through the standard desktop package command", async () => {
+native("candidate proof and helpers typecheck through the standard desktop package command", async () => {
   const { typecheckCandidateProof } = await import("./lean-candidate-types.fixture")
   await typecheckCandidateProof()
 }, 150000)
 
-test("candidate app.asar preserves compiled production entries, fonts, x64 PTY and all pinned Lean notices", async () => {
+native("candidate app.asar preserves compiled production entries, fonts, x64 PTY and all pinned Lean notices", async () => {
   const recorder = new CandidateRecorder()
   recorder.protectPath(repository, "repository")
   recorder.protectPath(os.homedir(), "runner-home")
@@ -25,7 +29,7 @@ test("candidate app.asar preserves compiled production entries, fonts, x64 PTY a
   }
 }, 120000)
 
-test("actual packaged candidate: owned backend/PTY, native Go30, renderer profiles and retained preferences", async () => {
+native("actual packaged candidate: owned backend/PTY, native Go30, renderer profiles and retained preferences", async () => {
   // Verified under Bun (Bun.Glob/git receipts), then driven under Node: Playwright cannot launch Electron from Bun.
   const candidate = await packagedCandidate()
   const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-candidate-acceptance-"))

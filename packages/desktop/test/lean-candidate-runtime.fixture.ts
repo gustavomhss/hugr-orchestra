@@ -84,9 +84,6 @@ export async function launchCandidate(executable: string, root: string, recorder
   // The candidate owns HOME, so rustup's default (~/.rustup) would point at an empty owned root and Cargo finds no
   // toolchain. Name the runner's real toolchain location, as GOROOT does for Go; it holds no user data.
   env.RUSTUP_HOME ??= path.join(os.homedir(), ".rustup")
-  // --use-mock-keychain: on quit Chromium creates the "<name> Safe Storage" keychain item, and an unattended runner
-  // never answers the keychain authorization prompt, so the process hangs (sampled stack: SecItemAdd ->
-  // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
   // A main that never reaches Chromium's DevTools endpoint leaves Playwright no handle, and its launch timeout kills
   // the process. Before that, keep this executable's native thread stacks (sanitized) as evidence.
   const watchdog = setTimeout(() => {
@@ -94,12 +91,21 @@ export async function launchCandidate(executable: string, root: string, recorder
       .map((line) => /^\s*(\d+)\s+(.*)$/.exec(line)).filter((match) => match !== null && match[2]!.startsWith(executable))
       .map((match) => Number(match![1]))
     for (const pid of owned) {
+      // A main-process exception before ready parks the main thread in Electron's error alert; keep its text too.
       try {
-        const sample = execFileSync("/usr/bin/sample", [String(pid), "3"], { encoding: "utf8", timeout: 10000, maxBuffer: 32 << 20 })
+        const alert = execFileSync("/usr/bin/osascript", ["-e", `tell application "System Events" to get value of every static text of every window of (first process whose unix id is ${pid})`],
+          { encoding: "utf8", timeout: 5000 })
+        writeFileSync(path.join(desktop, "dist-candidate/proof", `launch-sample-${pid}-alert.txt`), recorder.clean(alert))
+      } catch (error) { recorder.fail("cleanup", "owned Electron launch alert", error) }
+      try {
+        const sample = execFileSync("/usr/bin/sample", [String(pid), "3"], { encoding: "utf8", timeout: 8000, maxBuffer: 32 << 20 })
         writeFileSync(path.join(desktop, "dist-candidate/proof", `launch-sample-${pid}.txt`), recorder.clean(sample))
       } catch (error) { recorder.fail("cleanup", "owned Electron launch sample", error) }
     }
-  }, 45000)
+  }, 40000)
+  // --use-mock-keychain: on quit Chromium creates the "<name> Safe Storage" keychain item, and an unattended runner
+  // never answers the keychain authorization prompt, so the process hangs (sampled stack: SecItemAdd ->
+  // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
     args: ["--use-mock-keychain"], cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
     .finally(() => clearTimeout(watchdog))

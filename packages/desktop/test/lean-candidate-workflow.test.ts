@@ -60,6 +60,8 @@ function reviewedBodies(input: unknown) {
 function check(input: unknown) {
   const workflow = object(input)
   keys(workflow, ["name", "on", "permissions", "concurrency", "jobs"])
+  // lean-candidate-package.test.ts runs its native proof only under this workflow name.
+  expect(workflow.name).toBe("lean-candidate")
   expect(workflow.on).toEqual({ workflow_dispatch: null, push: { branches: ["lean-candidate-build"] } })
   expect(workflow.permissions).toEqual({ contents: "read" })
   const jobs = object(workflow.jobs)
@@ -225,7 +227,8 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
   } finally {
     await rm(root, { recursive: true, force: true })
   }
-})
+  // Each case spawns the real host shell; a cold Windows runner needs seconds, not the default 5.
+}, 60_000)
 
 test("workflow contract rejects empty extraction and planted YAML regressions", () => {
   for (const input of [null, {}, { jobs: {} }]) expect(() => check(input)).toThrow()
