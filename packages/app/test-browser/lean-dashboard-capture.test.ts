@@ -11,6 +11,9 @@ async function run(args: string[], env = process.env) {
   const child = Bun.spawn([process.execPath, ...args], { cwd: app, env, stdout: "pipe", stderr: "pipe", timeout: 900000 })
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   console.log(stdout + stderr)
+  // The unit lanes upload no Playwright results, so a failed capture prints each page snapshot Playwright saved.
+  if (code !== 0) for (const file of new Bun.Glob("e2e/test-results/orchestra-screenshots/**/error-context.md").scanSync(app))
+    console.log(`${file}:\n${await Bun.file(path.join(app, file)).text()}`)
   if (code !== 0) throw new Error(`${args.join(" ")} exited ${code}/${child.signalCode}`)
 }
 
