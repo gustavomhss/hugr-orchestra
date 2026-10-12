@@ -6,15 +6,13 @@ import path from "path"
 import type { Readable } from "node:stream"
 import { Readable as NodeReadable, Writable as NodeWritable } from "node:stream"
 import { Flag } from "@orchestra/core/flag/flag"
-import { Omni } from "@orchestra/core/omni"
 import { Process } from "@/util/process"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
 import { tmpdir } from "../fixture/fixture"
 
 const mode = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
 const omni = mode !== "off"
-// Process.spawn runs these children through omni when the flag is on: a focused run of this file must show it.
-Omni.expectSpawn(import.meta.path)
 
 function ready(stream: Readable | null, line: string) {
   return new Promise<void>((resolve, reject) => {
@@ -70,6 +68,7 @@ describe("util.process (omni)", () => {
   )
 
   test("shell: the command line goes through the shell", async () => {
+    expectSpawn(import.meta.path)
     const cmd = process.platform === "win32" ? "echo %OMNI_SHELL_TEST%" : 'echo "$OMNI_SHELL_TEST"'
     const out = await Process.run([cmd], { shell: true, env: { OMNI_SHELL_TEST: "via-shell" } })
     expect(out.code).toBe(0)
