@@ -68,7 +68,8 @@ export function create(input: {
   let lastFinish: SessionV1.StepFinishPart | undefined
   let lastModel: string | undefined
   let costModel: string | undefined
-  let cost = 0
+  let cost: number | undefined
+  let rejectedBaseline: number | undefined
   let ended = false
   let parentID = input.user.id
 
@@ -162,9 +163,10 @@ export function create(input: {
     on: (message: SDKMessage) => Effect.gen(function* () {
       if (ended) return
       if (message.type === "result") {
+        cost = undefined
         costModel = undefined
+        rejectedBaseline = undefined
         if (Number.isFinite(message.total_cost_usd) && message.total_cost_usd >= 0) {
-          cost = message.total_cost_usd
           const model = step?.model ?? lastModel
           const expected = model ?? input.user.model.modelID
           const reported = Object.entries(message.modelUsage ?? {}).find(([id, usage]) =>
@@ -173,6 +175,14 @@ export function create(input: {
           // Host owns query replay/reset admission; this mirror only projects the admitted allocation.
           costModel = message.modelUsage === undefined ? model
             : reported && reported.costBasis !== "unknown" && Number.isFinite(reported.costUSD) && reported.costUSD >= 0 ? expected : undefined
+          if (costModel) cost = message.total_cost_usd
+        }
+        if (cost === undefined && message.total_cost_usd !== undefined) {
+          // Host passes zero for lower totals, including rejected negatives. Capture its prior admitted scalar
+          // before host/mirror's usage observer writes the incoming total; this is not a valid counter reset.
+          const stored = yield* sessions.get(sessionID).pipe(Effect.orDie)
+          const previous = stored.metadata?.claudeCode?.cost
+          rejectedBaseline = typeof previous === "number" && Number.isFinite(previous) && previous >= 0 ? previous : undefined
         }
         if (!step && message.subtype === "success") {
           const current = yield* open(`result:${message.uuid}`)
@@ -290,10 +300,10 @@ export function create(input: {
       yield* sessions.updatePart(part)
     }),
 
-    /** Close the last step and project the host-admitted cost delta on its existing receipt and message. */
+    /** Host serializes on/finish/retract; receipt replacement does not synchronize concurrent callers. */
     finish: (previousCost: number) => Effect.gen(function* () {
       yield* close()
-      if (last && lastFinish?.messageID === last.id && costModel === last.modelID &&
+      if (cost !== undefined && last && lastFinish?.messageID === last.id && costModel === last.modelID &&
         Number.isFinite(previousCost) && previousCost >= 0 && cost > previousCost && last.cost !== cost - previousCost) {
         // Core aggregates parts, not assistant.cost. Reuse this receipt so retries replace, never append usage.
         const receipt = { ...lastFinish, cost: cost - previousCost }
@@ -303,7 +313,8 @@ export function create(input: {
         lastFinish = receipt
         last = info
       }
-      return { cost, last }
+      // Undefined means no accepted total, whereas an accepted zero is a genuine producer reset.
+      return { cost: cost ?? rejectedBaseline ?? previousCost, last }
     }),
 
     /** The turn failed or was cancelled: running tools are aborted and the open step carries the error. */

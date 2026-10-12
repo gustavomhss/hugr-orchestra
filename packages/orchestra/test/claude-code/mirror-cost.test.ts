@@ -174,3 +174,78 @@ ClaudeEngineFixture.it.instance("host replay, zero deltas, reset and reopen keep
     expect((yield* f.sessions.get(f.chat.id)).cost).toBe(reply.info.cost)
   }), 30_000,
 ))
+
+;[
+  { name: "negative", frame: completion(-1) },
+  { name: "NaN", frame: completion(Number.NaN) },
+  { name: "positive infinity", frame: completion(Number.POSITIVE_INFINITY) },
+  { name: "negative infinity", frame: completion(Number.NEGATIVE_INFINITY) },
+  { name: "overflow", frame: completion(Number.MAX_VALUE * 2) },
+  { name: "missing", frame: { ...completion(0.05), total_cost_usd: undefined } },
+  { name: "null", frame: { ...completion(0.05), total_cost_usd: null } },
+  { name: "non-number", frame: { ...completion(0.05), total_cost_usd: "-1" } },
+  { name: "unattributed model", frame: completion(0.05, "incompatible-model") },
+  { name: "unknown price basis", frame: { ...completion(0.05), modelUsage: {
+    [model]: { ...completion(0.05).modelUsage[model], costBasis: "unknown" as const },
+  } } },
+  { name: "overflowed model total", frame: { ...completion(0.05), modelUsage: {
+    [model]: { ...completion(0.05).modelUsage[model], costUSD: Number.MAX_VALUE * 2 },
+  } } },
+].forEach((invalid) => ClaudeEngineFixture.it.instance(
+  `host valid-${invalid.name}-valid observations preserve admitted baseline and accept a genuine zero reset`,
+  () => Effect.gen(function* () {
+    ClaudeEngineFixture.reset()
+    const f = yield* ClaudeEngineFixture.setup()
+    const host = yield* ClaudeHost.Service
+    const frames = [completion(0.1), invalid.frame, completion(0.14), completion(0), completion(0.03)]
+    ClaudeEngineFixture.state.scripts.push(async function* (input) {
+      for (const [index, frame] of frames.entries()) {
+        const send = await input[Symbol.asyncIterator]().next()
+        if (send.done) return
+        yield { type: "system", subtype: "init", model, ...ClaudeEngineFixture.frame }
+        yield { ...send.value, session_id: "sdk-1" }
+        if (index === 0 || index === 2 || index === 4) yield { type: "assistant", ...ClaudeEngineFixture.frame,
+          uuid: `baseline-answer-${index}`, user_message_uuid: send.value.uuid,
+          message: { id: `baseline-answer-${index}`, model, content: [{ type: "text", text: "observed answer" }],
+            stop_reason: "end_turn", usage: tokens } }
+        yield index === 1 || index === 3
+          ? { ...frame, subtype: "error_during_execution", is_error: true, errors: ["No assistant frame"],
+              user_message_uuid: send.value.uuid }
+          : frame
+      }
+      for await (const _ of input) {}
+    })
+    // Oracles are explicit: rejecting an observation keeps 0.10; the next valid total adds only 0.04.
+    const expected = [
+      { baseline: 0.1, total: 0.1, charge: 0.1, answers: 1 },
+      { baseline: 0.1, total: 0.1, charge: 0, answers: 1 },
+      { baseline: 0.14, total: 0.14, charge: 0.04, answers: 2 },
+      { baseline: 0, total: 0.14, charge: 0, answers: 2 },
+      { baseline: 0.03, total: 0.17, charge: 0.03, answers: 3 },
+    ]
+    for (const [index, oracle] of expected.entries()) {
+      yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say(`baseline observation ${index}`) })
+      const saved = yield* f.sessions.get(f.chat.id)
+      expect(saved.metadata?.claudeCode?.cost).toBeCloseTo(oracle.baseline)
+      expect(saved.cost).toBeCloseTo(oracle.total)
+      const replies = (yield* f.sessions.messages({ sessionID: f.chat.id })).filter((message) => message.info.role === "assistant")
+      const reply = replies.at(-1)
+      if (reply?.info.role !== "assistant") throw new Error("Missing settled baseline observation")
+      expect(reply.info.cost).toBeCloseTo(oracle.charge)
+      const receipts = reply.parts.filter((part) => part.type === "step-finish")
+      expect(receipts).toHaveLength(1)
+      expect(receipts[0].messageID).toBe(reply.info.id)
+      expect(receipts[0].cost).toBeCloseTo(oracle.charge)
+      expect(receipts[0].tokens).toEqual(reply.info.tokens)
+      expect(reply.info.tokens).toEqual(index === 1 || index === 3
+        ? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
+        : { input: 10, output: 5, reasoning: 3, cache: { read: 2, write: 1 } })
+      expect(saved.tokens).toEqual({ input: oracle.answers * 10, output: oracle.answers * 5,
+        reasoning: oracle.answers * 3, cache: { read: oracle.answers * 2, write: oracle.answers } })
+      expect(replies.reduce((sum, message) => sum + (message.info.role === "assistant" ? message.info.cost : 0), 0)).toBeCloseTo(oracle.total)
+      expect(replies.flatMap((message) => message.parts.filter((part) => part.type === "step-finish"))
+        .reduce((sum, part) => sum + part.cost, 0)).toBeCloseTo(oracle.total)
+    }
+    yield* host.release(f.chat.id)
+  }), 30_000,
+))
