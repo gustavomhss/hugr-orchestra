@@ -96,14 +96,20 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
       hook_event_name: "PostToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: {}, tool_response: "retained output" })
     const settle = () => fire({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id: callID,
       tool_input: {}, tool_response: { status: "completed", agentId: taskID, content: [{ type: "text", text: "Done" }] } })
-    const run = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
+    const run = (name: string, args: Record<string, unknown>, toolUseID: string) => Effect.gen(function* () {
       const tool = tools.find((tool) => tool.id === name)
       if (!tool) throw new Error(`Missing registry tool ${name}`)
-      return yield* research.execute(child, tool.execute(args, {
+      // Direct registry execution still needs the native assistant's exact persisted call, as the MCP mirror supplies.
+      const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: message.id, callID: toolUseID,
+        type: "tool", tool: name, state: { status: "running", input: args, time: { start: Date.now() } } })
+      const result = yield* research.execute(child, tool.execute(args, {
         sessionID: child, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
         permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
         ask: () => Effect.void, metadata: () => Effect.void,
       } satisfies Tool.Context))
+      yield* sessions.updatePart({ ...part, state: { status: "completed", input: args, output: result.output, title: result.title,
+        metadata: result.metadata, time: { start: part.state.status === "running" ? part.state.time.start : Date.now(), end: Date.now() } } })
+      return result
     })
     return { ...admitted, child, message, taskID, pre, post, settle, run }
   })

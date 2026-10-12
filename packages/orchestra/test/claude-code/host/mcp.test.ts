@@ -56,6 +56,25 @@ it.instance("the orchestra server lists no tool that duplicates a Claude Code bu
   expect(new Set(listed).size).toBe(listed.length)
 }), 60_000)
 
+it.instance("direct server keeps the first duplicate definition for both listing and execution and owns task_grant", () => Effect.gen(function* () {
+  const fixture = yield* BridgeFixture.make()
+  const first: Tool.Def = { ...fake("fixture_duplicate"), description: "First definition",
+    parameters: Schema.Struct({ value: Schema.String }),
+    execute: (args) => Effect.succeed({ title: "First", output: JSON.stringify(args), metadata: {} }) }
+  const later: Tool.Def = { ...fake(first.id), description: "Later definition", parameters: Schema.Struct({ later: Schema.Number }) }
+  const client = yield* fixture.client([first, later, fake(ClaudeHostMcp.GRANT), fake("bash"), fake("context_compact")])
+  const listed = (yield* Effect.promise(() => client.listTools())).tools
+  expect(listed.map((tool) => tool.name)).toEqual([first.id, ClaudeHostMcp.GRANT])
+  expect(listed[0]).toMatchObject({ description: first.description, inputSchema: { required: ["value"], properties: { value: { type: "string" } } } })
+  expect(listed[1].inputSchema).toMatchObject({ required: ["seat", "writePaths", "purpose"] })
+  const args = { value: "accepted first definition" }
+  yield* fixture.call({ id: "first-definition", tool: first.id, args })
+  const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: first.id,
+    arguments: fixture.arguments("first-definition") })))
+  expect(result.isError).toBeUndefined()
+  expect(result.content[0].text).toBe(JSON.stringify(args))
+}), 60_000)
+
 it.instance("task_grant validates like Task, round-trips to the per-session grant map, and is named back from a prompt", () => Effect.gen(function* () {
   const sessions = yield* Session.Service
   const instance = yield* TestInstance

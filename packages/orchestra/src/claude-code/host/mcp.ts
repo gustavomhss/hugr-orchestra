@@ -107,7 +107,8 @@ export type Context = {
 
 /** The `orchestra` server for one host session: the served registry tools plus `task_grant`. */
 export function server(ctx: Context): McpSdkServerConfigWithInstance {
-  const defs = [...exposed(ctx.tools ?? []).filter((def) => def.id !== GRANT), grant(ctx.sessionID)]
+  const served = exposed(ctx.tools ?? []).filter((def) => def.id !== GRANT)
+  const defs = [...served.filter((def, index) => served.findIndex((other) => other.id === def.id) === index), grant(ctx.sessionID)]
   const bridge = ctx.bridge
   const server = createSdkMcpServer({ name: NAME, tools: [] })
   server.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: defs.map((def) => ({
