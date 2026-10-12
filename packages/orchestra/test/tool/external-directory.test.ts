@@ -2,6 +2,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { describe, expect } from "bun:test"
 import path from "path"
+import fs from "fs/promises"
 import { Effect } from "effect"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import type { Tool } from "@/tool/tool"
@@ -92,6 +93,37 @@ describe("tool.assertExternalDirectory", () => {
       expect(req).toBeDefined()
       expect(req!.patterns).toEqual([expected])
       expect(req!.always).toEqual([expected])
+    }),
+  )
+
+  it.instance("asks for the real directory when a workspace symlink leads outside", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { requests, ctx } = makeCtx()
+      const outside = yield* tmpdirScoped()
+      yield* Effect.promise(() => Bun.write(path.join(outside, "rc"), "x"))
+      // A junction on Windows, where file symlinks need a privilege; a directory link behaves the same everywhere.
+      yield* Effect.promise(() => fs.symlink(outside, path.join(test.directory, "linked"), "junction"))
+
+      yield* assertExternalDirectoryEffect(ctx, path.join(test.directory, "linked", "rc"))
+
+      const req = requests.find((r) => r.permission === "external_directory")
+      expect(req).toBeDefined()
+      expect(req!.patterns).toEqual([glob(path.join(outside, "*"))])
+      expect(req!.metadata.filepath).toBe(path.join(outside, "rc"))
+    }),
+  )
+
+  it.instance("does not ask for a workspace symlink that stays inside", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { requests, ctx } = makeCtx()
+      yield* Effect.promise(() => fs.mkdir(path.join(test.directory, "real")))
+      yield* Effect.promise(() => fs.symlink(path.join(test.directory, "real"), path.join(test.directory, "alias"), "junction"))
+
+      yield* assertExternalDirectoryEffect(ctx, path.join(test.directory, "alias", "file.txt"))
+
+      expect(requests.length).toBe(0)
     }),
   )
 

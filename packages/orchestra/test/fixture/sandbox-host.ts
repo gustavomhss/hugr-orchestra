@@ -11,4 +11,7 @@ export const sandboxHost = await Effect.runPromise(
   ToolSafetySandboxRuntime.ready().pipe(Effect.andThen(ToolSafetySandbox.status())),
 )
 
-export const jail = sandboxHost.shellWrites === "enforced" ? sandboxHost.shellSandbox.kind : undefined
+// Windows' AppContainer confines pwsh and cmd only (tool-safety-appcontainer.test.ts), so the node-based probes that branch
+// on `jail` treat it as no jail and take their named-HOLD path.
+export const jail = sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer"
+  ? sandboxHost.shellSandbox.kind : undefined

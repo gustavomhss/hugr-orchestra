@@ -19,6 +19,14 @@ export default {
   version: VERSION,
   license: "Apache-2.0",
   upstream: "bufbuild/buf",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   dependencies: ["protoc-gen-es"],
   targets: {
     "darwin-arm64": target("Darwin-arm64", "sha256-bm3w/vRSLk5D3+fDQYc8PywpzrRanfpeC61VgLiyAi8="),

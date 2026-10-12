@@ -15,6 +15,7 @@ export const navigation = [
   { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
   { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },
   { id: "hooks", label: "orchestra.nav.hooks", chapter: "C04" },
+  { id: "lean", label: "orchestra.nav.lean", chapter: undefined },
   { id: "cicd", label: "orchestra.nav.cicd", chapter: "C07", wip: true },
   { id: "schedule", label: "orchestra.nav.schedule", chapter: "C08" },
   { id: "env", label: "orchestra.nav.env", chapter: "C09" },

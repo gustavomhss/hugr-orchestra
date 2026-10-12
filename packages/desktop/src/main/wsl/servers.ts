@@ -16,7 +16,7 @@ import { getStore } from "../store"
 import { pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
 import { clearWslDistroState } from "./policy"
 import { nativeT } from "../native-translations"
-import { installWslArtifact } from "./artifact"
+import { installWslArtifact, WslArtifactError } from "./artifact"
 import {
   installWslDistro,
   installWslRuntimeElevated,
@@ -132,12 +132,32 @@ export function createWslServersController(
     })
   }
 
+  // Each check of a distro takes a generation, and a result from an older one is dropped: a slow background check
+  // cannot overwrite what a later probe or install found.
+  const checkGenerations = new Map<string, number>()
+  const beginCheck = (distro: string) => {
+    const generation = (checkGenerations.get(distro) ?? 0) + 1
+    checkGenerations.set(distro, generation)
+    return generation
+  }
+  const currentCheck = (generation: number, check: WslOrchestraCheck) => checkGenerations.get(check.distro) === generation
+  const storeCheck = (generation: number, check: WslOrchestraCheck) => {
+    if (currentCheck(generation, check)) setOrchestraCheck(check.distro, check)
+  }
+
+  // Reading the version admits the installed guest CLI against this desktop's bundle; admissionCheck says what a refusal
+  // means. A guest command that failed for any other reason (exit 124 from its timeout, a WSL error) proves nothing about
+  // the install, so it stays an error for the caller.
   const checkOrchestra = async (distro: string, opts?: { signal?: AbortSignal }) => {
     const resolved = await (options?.resolveOrchestra ?? resolveWslOrchestra)(distro, opts)
-    const version = resolved
-      ? await (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts)
-      : null
-    return orchestraCheck(distro, resolved, version, expectedVersion)
+    if (!resolved) return orchestraCheck(distro, null, null, expectedVersion)
+    return (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts).then(
+      (version) => orchestraCheck(distro, resolved, version, expectedVersion),
+      (error: unknown) => {
+        if (!(error instanceof WslArtifactError) || error.reason === "command") throw error
+        return admissionCheck(distro, resolved, expectedVersion, error)
+      },
+    )
   }
 
   const probeAddableDistros = async (distros: string[], opts?: { signal?: AbortSignal }) => {
@@ -151,14 +171,25 @@ export function createWslServersController(
       setState({ distroProbes: { ...state.distroProbes, ...Object.fromEntries(distroProbes) } })
     }
 
-    const orchestraChecks = await Promise.all(
-      unique
-        .filter((distro) => distroProbeReady(state.distroProbes[distro]))
-        .filter((distro) => !state.orchestraChecks[distro])
-        .map(async (distro) => [distro, await checkOrchestra(distro, opts)] as const),
-    )
-    if (orchestraChecks.length) {
-      setState({ orchestraChecks: { ...state.orchestraChecks, ...Object.fromEntries(orchestraChecks) } })
+    // Each distro settles on its own. One whose check failed (a WSL command error or timeout) is stored as a check to
+    // retry, with its error: the user sees which distro failed, the others keep their checks, and the next probe
+    // repeats it. An aborted probe stores nothing.
+    const checking = unique
+      .filter((distro) => distroProbeReady(state.distroProbes[distro]))
+      .filter((distro) => !state.orchestraChecks[distro] || state.orchestraChecks[distro].problem === "retry")
+    const generations = checking.map(beginCheck)
+    const settled = await Promise.allSettled(checking.map((distro) => checkOrchestra(distro, opts)))
+    opts?.signal?.throwIfAborted()
+    const checks = settled
+      .map((result, index) => {
+        if (result.status === "fulfilled") return result.value
+        const message = result.reason instanceof Error ? result.reason.message : String(result.reason)
+        logger?.error("wsl orchestra check failed", { distro: checking[index], message })
+        return retryCheck(checking[index]!, expectedVersion, message)
+      })
+      .filter((check, index) => currentCheck(generations[index]!, check))
+    if (checks.length) {
+      setState({ orchestraChecks: { ...state.orchestraChecks, ...Object.fromEntries(checks.map((check) => [check.distro, check])) } })
     }
   }
 
@@ -167,10 +198,11 @@ export function createWslServersController(
   }
 
   const refreshOrchestraCheckBackground = (id: string, distro: string) => {
+    const generation = beginCheck(distro)
     void checkOrchestra(distro)
       .then((check) => {
         if (!hasServer(id, distro)) return
-        setOrchestraCheck(distro, check)
+        storeCheck(generation, check)
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error)
@@ -180,11 +212,12 @@ export function createWslServersController(
 
   const refreshOrchestraChecks = async () => {
     await Promise.all(
-      state.servers.map((item) =>
-        checkOrchestra(item.config.distro)
+      state.servers.map((item) => {
+        const generation = beginCheck(item.config.distro)
+        return checkOrchestra(item.config.distro)
           .then((check) => {
             if (!hasServer(item.config.id, item.config.distro)) return
-            setOrchestraCheck(item.config.distro, check)
+            storeCheck(generation, check)
           })
           .catch((error) => {
             const message = error instanceof Error ? error.message : String(error)
@@ -193,8 +226,8 @@ export function createWslServersController(
               distro: item.config.distro,
               message,
             })
-          }),
-      ),
+          })
+      }),
     )
   }
 
@@ -317,7 +350,13 @@ export function createWslServersController(
 
     async refreshDistros() {
       await runJob({ kind: "distros", startedAt: Date.now() }, async (abort) => {
-        setState(await refreshDistroLists({ signal: abort.signal }))
+        // "Check again" lands here: checks that failed transiently are dropped, so the next probe repeats them.
+        setState({
+          ...(await refreshDistroLists({ signal: abort.signal })),
+          orchestraChecks: Object.fromEntries(
+            Object.entries(state.orchestraChecks).filter(([, check]) => check.problem !== "retry"),
+          ),
+        })
       })
     },
 
@@ -360,11 +399,12 @@ export function createWslServersController(
     async installServer(name: string) {
       await runJob({ kind: "install-server", distro: name, startedAt: Date.now() }, async (abort) => {
         const opts = { signal: abort.signal }
+        const generation = beginCheck(name)
         await (options?.installArtifact ?? ((distro, opts) => installWslArtifact(distro, expectedVersion, opts)))(name, opts)
         abort.signal.throwIfAborted()
         const check = await checkOrchestra(name, opts)
         abort.signal.throwIfAborted()
-        setOrchestraCheck(name, check)
+        storeCheck(generation, check)
       })
     },
 
@@ -391,6 +431,7 @@ export function createWslServersController(
 
     async removeServer(id: string) {
       const distro = state.servers.find((item) => item.config.id === id)?.config.distro
+      if (distro) beginCheck(distro)
       invalidateStartAttempt(id)
       await stopServerInternal(id)
       const remaining = readServers().filter((item) => item.id !== id)
@@ -457,6 +498,26 @@ function normalizePersistedServer(value: unknown): WslServerConfig[] {
       distro,
     },
   ]
+}
+
+// What a refused admission of an installed guest CLI means. The guest refusing its bytes (exit 84) or version (82) is an
+// install from another desktop build, which every desktop update leaves behind: a server to update. Anything else (the
+// guest's ABI or architecture, its install path, or this desktop's own bundle failing a host-side check) is not fixed
+// by reinstalling, so the check carries that error's message and offers no install.
+function admissionCheck(
+  distro: string,
+  resolvedPath: string,
+  expectedVersion: string,
+  error: WslArtifactError,
+): WslOrchestraCheck {
+  if (error.guestExit === 82 || error.guestExit === 84) {
+    return { distro, resolvedPath, version: null, expectedVersion, matchesDesktop: false, error: null }
+  }
+  return { distro, resolvedPath, version: null, expectedVersion, matchesDesktop: null, error: error.message, problem: "unfixable" }
+}
+
+function retryCheck(distro: string, expectedVersion: string, error: string): WslOrchestraCheck {
+  return { distro, resolvedPath: null, version: null, expectedVersion, matchesDesktop: null, error, problem: "retry" }
 }
 
 function orchestraCheck(

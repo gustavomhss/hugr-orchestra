@@ -1,6 +1,8 @@
+import { dict as leanEn } from "./lean/en"
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  ...leanEn,
   ...DESKTOP_NATIVE_ENGLISH,
   "command.category.suggested": "Suggested",
   "command.category.view": "View",
