@@ -7,7 +7,11 @@ import { nativeT } from "../native-translations"
 import { runWslInDistro, type RunWslOptions } from "./runtime"
 
 export class WslArtifactError extends Error {
-  constructor(readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command" | "unavailable") {
+  // guestExit is the exit code when a guest command refused; checks of this desktop's own bundle leave it unset.
+  constructor(
+    readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command" | "unavailable",
+    readonly guestExit?: number,
+  ) {
     super(nativeT(reason === "unavailable" ? "desktop.wsl.error.installUnavailable" : "desktop.wsl.error.serverCannotRun"))
     this.name = "WslArtifactError"
   }
@@ -107,6 +111,7 @@ export async function installWslArtifact(
       throw new WslArtifactError(
         result.code === 82 ? "version" : result.code === 83 ? "abi" :
         result.code === 84 ? "bytes" : result.code === 85 ? "path" : "command",
+        result.code ?? undefined,
       )
     }
     return result.stdout.trim()
