@@ -5,7 +5,7 @@ import { createRequire } from "node:module"
 import { connect } from "node:net"
 import { readFile, writeFile } from "node:fs/promises"
 import { writeFileSync } from "node:fs"
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawn } from "node:child_process"
 import { setTimeout as sleep } from "node:timers/promises"
 import type { ElectronApplication, Page } from "@playwright/test"
 import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
@@ -74,6 +74,47 @@ export async function portClosed(url: string) {
   }))
 }
 
+// A main-process exception before ready parks the main thread in Electron's error alert, and its console output never
+// reaches a pipe. A second, owned instance under its own root runs with the Node inspector paused at start, so its
+// console calls and uncaught exceptions are read over the inspector (sanitized) before it is killed.
+async function inspectFailedLaunch(executable: string, root: string, env: Record<string, string>, recorder: CandidateRecorder) {
+  recorder.protectPath(root, "candidate-launch-diagnostic")
+  const child = spawn(executable, ["--inspect-brk=0", "--use-mock-keychain"], {
+    cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root }, stdio: ["ignore", "ignore", "pipe"] })
+  const events: unknown[] = []
+  try {
+    const url = await bounded("owned launch diagnostic inspector", new Promise<string>((resolve) => {
+      let text = ""
+      child.stderr.on("data", (bytes: Buffer) => {
+        text += bytes.toString()
+        const match = /Debugger listening on (ws:\/\/\S+)/.exec(text)
+        if (match) resolve(match[1]!)
+      })
+    }), 30000)
+    const socket = new WebSocket(url)
+    socket.onmessage = (message) => {
+      const event = JSON.parse(String(message.data)) as { method?: string; params?: {
+        type?: string; args?: { description?: string; value?: unknown }[]
+        exceptionDetails?: { text?: string; exception?: { description?: string } }
+      } }
+      if (event.method === "Runtime.consoleAPICalled")
+        events.push({ console: event.params?.type, args: event.params?.args?.map((arg) => arg.description ?? arg.value) })
+      if (event.method === "Runtime.exceptionThrown")
+        events.push({ exception: event.params?.exceptionDetails?.exception?.description ?? event.params?.exceptionDetails?.text })
+    }
+    await bounded("owned launch diagnostic connection", new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject }), 10000)
+    socket.send(JSON.stringify({ id: 1, method: "Runtime.enable" }))
+    socket.send(JSON.stringify({ id: 2, method: "Runtime.runIfWaitingForDebugger" }))
+    await sleep(20000)
+    socket.close()
+  } catch (error) { recorder.fail("cleanup", "owned launch diagnostic", error) }
+  finally {
+    try { child.kill("SIGKILL") } catch {}
+    await writeFile(path.join(desktop, "dist-candidate/proof", `launch-sample-${child.pid}-inspector.txt`),
+      recorder.clean(JSON.stringify(events, null, 2))).catch((error) => recorder.fail("cleanup", "owned launch diagnostic output", error))
+  }
+}
+
 export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder) {
   assert.ok(path.isAbsolute(root), "Candidate ROOT must be absolute")
   recorder.protectPath(root, "candidate-root")
@@ -91,12 +132,6 @@ export async function launchCandidate(executable: string, root: string, recorder
       .map((line) => /^\s*(\d+)\s+(.*)$/.exec(line)).filter((match) => match !== null && match[2]!.startsWith(executable))
       .map((match) => Number(match![1]))
     for (const pid of owned) {
-      // A main-process exception before ready parks the main thread in Electron's error alert; keep its text too.
-      try {
-        const alert = execFileSync("/usr/bin/osascript", ["-e", `tell application "System Events" to get value of every static text of every window of (first process whose unix id is ${pid})`],
-          { encoding: "utf8", timeout: 5000 })
-        writeFileSync(path.join(desktop, "dist-candidate/proof", `launch-sample-${pid}-alert.txt`), recorder.clean(alert))
-      } catch (error) { recorder.fail("cleanup", "owned Electron launch alert", error) }
       try {
         const sample = execFileSync("/usr/bin/sample", [String(pid), "3"], { encoding: "utf8", timeout: 8000, maxBuffer: 32 << 20 })
         writeFileSync(path.join(desktop, "dist-candidate/proof", `launch-sample-${pid}.txt`), recorder.clean(sample))
@@ -108,6 +143,10 @@ export async function launchCandidate(executable: string, root: string, recorder
   // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
     args: ["--use-mock-keychain"], cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
+    .catch(async (error: unknown) => {
+      await inspectFailedLaunch(executable, path.join(path.dirname(root), "launch-diagnostic"), env, recorder)
+      throw error
+    })
     .finally(() => clearTimeout(watchdog))
   // Recorder-owned bounded streams join chunks before redaction; overflow publishes only a named marker.
   const stdout = recorder.stream("owned Electron main stdout")
