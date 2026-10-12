@@ -10,6 +10,7 @@ import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
+import { applyCandidateEnvironment, candidateEnvironment, type CandidateProfile } from "./candidate-profile"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -41,6 +42,7 @@ function validateSidecarPath(sidecarPath: string): string {
 
 type SpawnLocalServerOptions = {
   userDataPath: string
+  candidateProfile?: CandidateProfile
   sidecarPath?: string
   onStdout?: (message: string) => void
   onStderr?: (message: string) => void
@@ -62,7 +64,11 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
-export function preferAppEnv(userDataPath: string) {
+export function preferAppEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
+  if (candidateProfile) {
+    applyCandidateEnvironment(candidateProfile)
+    return null
+  }
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
@@ -88,7 +94,7 @@ export async function spawnLocalServer(
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
     env: {
-      ...createSidecarEnv(),
+      ...createSidecarEnv(options.candidateProfile),
       ...OmniHost.sidecarEnv(),
       ...ripgrepEnv(app.isPackaged),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
@@ -262,10 +268,12 @@ export async function checkHealth(url: string, password?: string | null): Promis
   return false
 }
 
-function createSidecarEnv(): Record<string, string> {
+export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<string, string> {
+  if (candidateProfile) return candidateEnvironment(candidateProfile)
   const env = Object.fromEntries(
     Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
   )
+  delete env.ORCHESTRA_LEAN_CANDIDATE // Only a validated compile-time candidate may enable backend isolation mode.
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env
