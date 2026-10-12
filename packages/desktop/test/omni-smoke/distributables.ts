@@ -21,7 +21,8 @@ const run = async (args: string[], cwd = desktop) => {
     cwd,
     stdout: "inherit",
     stderr: "inherit",
-    env: { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: "false" },
+    // The channel the --dir app was built for (build.ts), so the config graph names the same metainfo files.
+    env: { ...process.env, ORCHESTRA_CHANNEL: "beta", CSC_IDENTITY_AUTO_DISCOVERY: "false" },
   })
   if ((await child.exited) !== 0) throw new Error(`failed: ${args.join(" ")}`)
 }
