@@ -72,7 +72,7 @@ export async function build(input: Input) {
     ...await skills(seats.map((item) => item.seat.id), input.playbooks ?? Skill.PLAYBOOKS_DIR),
   ])
   return {
-    path: await publish(input.root ?? path.join(Global.Path.cache, "claude-host", "plugin"), files),
+    path: await publish(input.root ?? path.join(Global.Path.cache, "claude-host", "plugin-v2"), files),
     seats: Object.fromEntries(defined.map((item) => [`${NAME}:${item.id}`, item.id])),
     sdkAgents: Object.fromEntries(defined.flatMap((item) => {
       const sdk = input.sdk?.[item.id]
@@ -136,7 +136,10 @@ function markdown(id: string, definition: Required<Pick<AgentDefinition, "descri
 async function skills(seats: readonly string[], playbooks: string) {
   const sources = [
     ...seats.flatMap((id) => (Seats.find(id)?.skills ?? []).map((name) => ({ name, dir: path.join(SeatSkillRoot.roots[id], name) }))),
-    ...(await fs.readdir(playbooks, { withFileTypes: true }).catch(() => []))
+    ...(await fs.readdir(playbooks, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return []
+      throw error
+    }))
       .filter((entry) => entry.isDirectory())
       .map((entry) => ({ name: entry.name, dir: path.join(playbooks, entry.name) })),
   ]
@@ -157,55 +160,74 @@ async function tree(dir: string): Promise<(readonly [string, Uint8Array])[]> {
     (await fs.readdir(current, { withFileTypes: true })).map(async (entry) => {
       const target = path.join(current, entry.name)
       if (entry.isDirectory()) return visit(target)
-      if (!entry.isFile()) throw new Error(`Not a regular file in an Orchestra skill: ${target}`)
+      if (!entry.isFile()) throw new NotRegularFile(`Not a regular file in an Orchestra skill: ${target}`)
       return [[path.relative(dir, target).split(path.sep).join("/"), new Uint8Array(await fs.readFile(target))] as const]
     }),
   )).flat()
   return visit(dir)
 }
 
-// The directory is named by the content digest and replaced whole, through a sibling temp directory, only when what
-// is there differs. Directories of earlier content are kept: a running session may still be reading one.
+// Published trees are immutable: rename arbitrates clean-root contention, and corrupt targets stay intact for
+// readers that may still hold them. Only this build's staging directory is ever removed.
 async function publish(root: string, files: ReadonlyMap<string, Uint8Array>) {
   const expected = digest([...files])
   const dir = path.join(root, expected.slice(0, 16))
-  if (await existing(dir) === expected) return dir
-  const temp = `${dir}.${randomUUID()}.tmp`
-  // Like SeatSkillRoot.extract: never steal a lock from a publisher that may still be alive.
-  const lock = `${dir}.lock`
   await fs.mkdir(root, { recursive: true })
-  const deadline = Date.now() + 10_000
-  const acquire = async (): Promise<void> => {
-    const error = await fs.mkdir(lock).then(() => undefined, (error: NodeJS.ErrnoException) => error)
-    if (!error) return
-    if (error.code !== "EEXIST" || Date.now() >= deadline)
-      throw new Error(`Cannot acquire Orchestra plugin publication lock: ${dir}`, { cause: error })
-    await new Promise((resolve) => setTimeout(resolve, 50))
-    return acquire()
-  }
-  await acquire()
+  const current = await existing(dir)
+  if (current === expected) return dir
+  const repaired = await repair(root, dir, expected)
+  if (repaired) return repaired
+  const temp = await fs.mkdtemp(`${dir}.stage-`)
   try {
-    // A competing build may have published while we waited. Keep the directory it handed to Claude intact.
-    if (await existing(dir) === expected) return dir
-    await Promise.all([...files].map(async ([file, bytes]) => {
+    // Await each write so failure cleanup cannot race another write into the staging directory.
+    for (const [file, bytes] of files) {
       const target = path.join(temp, ...file.split("/"))
       await fs.mkdir(path.dirname(target), { recursive: true })
       await fs.writeFile(target, bytes)
-    }))
-    await fs.rm(dir, { recursive: true, force: true })
-    await fs.rename(temp, dir)
-    if (await existing(dir) !== expected) throw new Error(`Cannot publish the Orchestra plugin at ${dir}`)
-    return dir
+    }
+    if (await existing(temp) !== expected) throw new Error(`Incomplete Orchestra plugin staging directory: ${temp}`)
+    // POSIX rename can replace an EMPTY directory. Never attempt it against a known corrupt target.
+    if (current === undefined) {
+      const error = await fs.rename(temp, dir).then(() => undefined, (error: NodeJS.ErrnoException) => error)
+      if (!error) return dir
+      if (!["EEXIST", "ENOTEMPTY", "ENOTDIR"].includes(error.code ?? "")) throw error
+      const winner = await existing(dir)
+      if (winner === expected) return dir
+      if (winner === undefined) throw error
+    }
+    const repaired = await repair(root, dir, expected)
+    if (repaired) return repaired
+    const target = `${dir}.repair-${randomUUID()}`
+    await fs.rename(temp, target)
+    return target
   } finally {
     await fs.rm(temp, { recursive: true, force: true })
-    await fs.rmdir(lock)
   }
 }
 
+async function repair(root: string, dir: string, expected: string) {
+  const prefix = `${path.basename(dir)}.repair-`
+  for (const entry of (await fs.readdir(root, { withFileTypes: true })).toSorted((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isDirectory() || !entry.name.startsWith(prefix)) continue
+    const target = path.join(root, entry.name)
+    if (await existing(target) === expected) return target
+  }
+}
+
+class NotRegularFile extends Error {}
+
 async function existing(dir: string) {
-  const stat = await fs.lstat(dir).catch(() => undefined)
-  if (!stat?.isDirectory()) return undefined
-  return digest(await tree(dir).catch(() => [[`\0unreadable`, new Uint8Array()] as const]))
+  const stat = await fs.lstat(dir).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return undefined
+    throw error
+  })
+  if (!stat) return undefined
+  if (!stat.isDirectory()) return null
+  const entries = await tree(dir).catch((error: NodeJS.ErrnoException) => {
+    if (error instanceof NotRegularFile || error.code === "ENOENT" || error.code === "ENOTDIR") return null
+    throw error
+  })
+  return entries && digest(entries)
 }
 
 function digest(entries: readonly (readonly [string, Uint8Array])[]) {
