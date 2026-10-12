@@ -14,6 +14,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import type { AgentDefinition } from "@anthropic-ai/claude-agent-sdk"
 import { Global } from "@orchestra/core/global"
+import { Research } from "@orchestra/schema/research"
 import type { Agent } from "@/agent/agent"
 import { Seats } from "@/maestro/seats"
 import { SeatSkillRoot } from "@/maestro/seat-skill-root"
@@ -45,9 +46,8 @@ export type Input = {
  * per-subagent tool scoping; the built-ins stay on for the session.
  */
 export const CAPTURE: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  jimmy: ["research_capture", "research_view", "research_record"],
+  jimmy: ["research_capture", "research_view", "research_record", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "skill"],
 })
-const SOURCE_READERS = ["Read", "Grep", "Glob", "LSP", "WebFetch", "WebSearch"]
 
 /**
  * Seat prompt text that describes Orchestra's own loop, and its Claude Code equivalent. Nothing else in a seat prompt
@@ -84,14 +84,11 @@ export async function build(input: Input) {
 /** A seat's Claude Code tool allow-list: built-in names for built-in duplicates, `mcp__orchestra__*` for the rest. */
 export function tools(seat: string, granted: readonly string[]) {
   const capture = CAPTURE[seat]
-  const names = granted.flatMap((id) => {
+  const names = granted.filter((id) => !capture || capture.includes(id)).flatMap((id) => {
     if (Object.hasOwn(ClaudeHostMcp.BUILTINS, id)) return ClaudeHostMcp.BUILTINS[id]
     return ClaudeHostMcp.servable(id) ? [`mcp__${ClaudeHostMcp.NAME}__${id}`] : []
   })
-  return [...new Set([
-    ...(capture ? names.filter((name) => !SOURCE_READERS.includes(name)) : names),
-    ...(capture ?? []).map((id) => `mcp__${ClaudeHostMcp.NAME}__${id}`),
-  ])].toSorted()
+  return [...new Set(names)].toSorted()
 }
 
 function definition(agent: Agent.Info, seat: string, granted: readonly string[]) {
@@ -111,21 +108,29 @@ function definition(agent: Agent.Info, seat: string, granted: readonly string[])
   ].join("\n") : undefined
   return {
     description: agent.description,
-    prompt: [LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), agent.prompt.trim()), note]
+    prompt: [LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), agent.prompt.trim()), note, ...(CAPTURE[seat] ? [
+      "Source access in this host is scoped to Orchestra MCP capture tools. Use research_capture for files, URLs and " +
+        "committed history, and research_view to reopen retained evidence. Claude Code built-in source readers are outside " +
+        "this seat’s scope. End with the native return card; the host appends retained finding qualifications.",
+    ] : [])]
       .filter(Boolean).join("\n\n") + "\n",
     tools: allowed,
+    skills: Seats.find(seat)?.skills.slice(),
+    ...(seat === "jimmy" ? { maxTurns: Research.Limits.providerCalls } : {}),
     model: agent.model?.providerID === "anthropic" ? agent.model.modelID : "inherit",
   } satisfies AgentDefinition
 }
 
 // JSON strings are valid YAML double-quoted scalars, so no seat text can break the frontmatter.
-function markdown(id: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">>) {
+function markdown(id: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">> & Pick<AgentDefinition, "maxTurns">) {
   return [
     "---",
     `name: ${id}`,
     `description: ${JSON.stringify(definition.description)}`,
     `tools: ${definition.tools.join(", ")}`,
     `model: ${JSON.stringify(definition.model)}`,
+    `skills: ${JSON.stringify(Seats.find(id)?.skills ?? [])}`,
+    ...(definition.maxTurns === undefined ? [] : [`maxTurns: ${definition.maxTurns}`]),
     "---",
     "",
     definition.prompt,

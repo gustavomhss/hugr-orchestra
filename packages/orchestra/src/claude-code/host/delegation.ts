@@ -19,6 +19,7 @@ import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import { Identifier } from "@/id/id"
 import { SeatWork } from "@/maestro/backend-work"
+import { DiscoveryResult } from "@/maestro/discovery-result"
 import { GovernedTaskReservation } from "@/maestro/governed-task-reservation"
 import { LogicalTask } from "@/maestro/logical-task"
 import { lookupRouteGrant } from "@/maestro/route-grant"
@@ -266,9 +267,10 @@ export function make(input: {
       }
       const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
       const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
-      yield* write(entry, reply, { ...base, ...(workResult ? { workResult } : {}) })
+      const report = workResult ? DiscoveryResult.report(reply, workResult) : reply
+      yield* write(entry, report, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
-      return undefined
+      return workResult?.schema === "discovery-work-result-v1" ? report : undefined
     }))
   })
 

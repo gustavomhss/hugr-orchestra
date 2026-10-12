@@ -30,7 +30,7 @@ import { ClaudeHostMemory } from "./memory"
  *   and `task_notification`, and reads `join.child(toolUseID)` to mirror a subagent's frames into its child Session;
  * - `parts` is the mirror's part API, so records land on the mirrored parts and a later stream frame cannot overwrite them;
  * - `granted` is `ClaudeHostMcp.prepare().granted`: the Orchestra tools each seat may call through the shared server;
- * - `research` is Jimmy's allowance and provenance port (until it lands, Jimmy is not dispatched);
+ * - `research` is the discovery dispatch's native allowance port (required before dispatch);
  * - `policy` replaces the live gate checks (tests only).
  */
 export type Context = {
@@ -59,8 +59,10 @@ export type Research = {
   readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
-  /** Record the returned bytes as retained source evidence, charging them first. */
-  readonly capture: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
+  readonly stopReason?: (executionSessionID: SessionID) => Effect.Effect<string | undefined>
+  readonly settle?: (executionSessionID: SessionID) => Effect.Effect<void>
+  /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
+  readonly capture?: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
 }
 
 /** Claude Code's native reads whose results Jimmy may cite only through recorded provenance. */
@@ -97,6 +99,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       const actor = yield* delegation.actor(input.agent_id)
       if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
       if (input.agent_id) yield* bind(input.session_id, actor)
+      const exhausted = yield* researchStopReason(actor)
+      if (exhausted) return { ...ClaudeHostGate.deny(exhausted), continue: false, stopReason: exhausted }
       const args = record(input.tool_input)
       if (ClaudeCodeTools.orchestra(input.tool_name) && Object.hasOwn(args, ClaudeHostMcp.DISPATCH))
         return ClaudeHostGate.deny("HOLD: the MCP dispatch receipt is supplied by the host, so model-supplied receipts are refused.")
@@ -106,15 +110,20 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
-        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
-          return ClaudeHostGate.deny("HOLD: jimmy's research allowance and provenance are not available on this host, so it was not dispatched.")
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy`)
+          return ClaudeHostGate.deny("HOLD: NATIVE_RESEARCH_PROVIDER_ADMISSION_UNAVAILABLE: this SDK exposes no documented per-dispatch pre-provider admission for Jimmy's durable allowance; use Jimmy on Orchestra's loop.")
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
         if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
       }
       if (actor.seat === "jimmy") {
         if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
-        yield* ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name)
+        const charged = yield* Effect.exit(ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name))
+        const reason = yield* researchStopReason(actor)
+        if (reason) return { ...ClaudeHostGate.deny(reason), continue: false, stopReason: reason }
+        if (Exit.isFailure(charged)) {
+          return ClaudeHostGate.deny(ClaudeCodeTools.failure(charged.cause))
+        }
       }
       const own = ClaudeCodeTools.orchestra(input.tool_name)
       if (own && ctx.calls) return ClaudeHostGate.output({ ...decision, input: ctx.calls.reserve({
@@ -131,10 +140,13 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     if (input.hook_event_name !== "PostToolUse") return Promise.resolve({})
     ctx.calls?.release(input.tool_use_id)
     return ctx.run(Effect.gen(function* () {
+      const agent = ClaudeHostGate.agentCall(input.tool_name)
+      if (agent) yield* settleResearch(input.tool_use_id)
       // A background process keeps its jail until the session ends; any other call's jail ends with the call.
       if (ClaudeCodeTools.orchestra(input.tool_name) !== ClaudeHostGate.PROCESS) yield* release(input.tool_use_id)
       const actor = yield* delegation.actor(input.agent_id)
-      const agent = ClaudeHostGate.agentCall(input.tool_name)
+      const exhausted = "hold" in actor ? undefined : yield* researchStopReason(actor)
+      if (exhausted) return { ...withheld(exhausted), continue: false, stopReason: exhausted }
       // Today's output boundary for Orchestra's tools: a recognized credential never reaches the model or a record.
       const inspected = yield* Effect.exit(ToolSafety.inspect(input.tool_response))
       const refused = Exit.isFailure(inspected) ? ClaudeCodeTools.failure(inspected.cause) : undefined
@@ -143,7 +155,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       const context = agent ? yield* delegation.settle(input, refused) : undefined
       if (refused) return withheld(refused, context)
       if (actor.seat === "jimmy" && CAPTURED.includes(input.tool_name)) {
-        if (!ctx.research) return withheld("jimmy's provenance capture is not available on this host")
+        if (!ctx.research?.capture) return withheld("jimmy's provenance capture is not available on this host")
         const captured = yield* Effect.exit(ctx.research.capture(actor.sessionID, input.tool_use_id, input.tool_name,
           input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
         if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
@@ -157,7 +169,13 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     if (input.hook_event_name !== "PostToolUseFailure") return Promise.resolve({})
     ctx.calls?.cancel(input.tool_use_id)
     ctx.calls?.release(input.tool_use_id)
-    return ctx.run(release(input.tool_use_id)).then(() => ({}))
+    return ctx.run(Effect.gen(function* () {
+      if (ClaudeHostGate.agentCall(input.tool_name)) yield* settleResearch(input.tool_use_id)
+      yield* release(input.tool_use_id)
+      const actor = yield* delegation.actor(input.agent_id)
+      const exhausted = "hold" in actor ? undefined : yield* researchStopReason(actor)
+      return exhausted ? { continue: false, stopReason: exhausted } : {}
+    }))
   }
 
   const stop: HookCallback = (input) => {
@@ -220,6 +238,17 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   function release(toolUseID: string) {
     // No acquired policy means no jail to release. Never initialize policy during denial cleanup.
     return policy.value ? Effect.promise(() => policy.value!).pipe(Effect.flatMap((policy) => policy.release(toolUseID))) : Effect.void
+  }
+
+  function settleResearch(toolUseID: string) {
+    const child = delegation.child(toolUseID)
+    return child && delegation.seat(toolUseID) === "jimmy" && ctx.research?.settle ? ctx.research.settle(child) : Effect.void
+  }
+
+  function researchStopReason(actor: ClaudeHostGate.Actor) {
+    // Tool-hook stop control ends the calling loop (CLI 2.1.289), never the parent's Agent return hook.
+    return actor.seat === "jimmy" && actor.agentID && ctx.research?.stopReason
+      ? ctx.research.stopReason(actor.sessionID) : Effect.succeed(undefined)
   }
 
   // Durable safety evidence per call, on the mirrored call's message. A call the mirror has not seen yet has no anchor.

@@ -37,6 +37,7 @@ import { asks } from "../permissions"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostProcess } from "./process-tool"
+import { ClaudeHostPlugin } from "./plugin"
 
 type Input = Record<string, unknown>
 
@@ -139,6 +140,9 @@ export const PROCESS = ClaudeHostProcess.ID
  */
 export function scope(granted: Ports["granted"], actor: Actor, name: string, input: Input) {
   const own = ClaudeCodeTools.orchestra(name)
+  const capture = ClaudeHostPlugin.CAPTURE[actor.seat]
+  if (capture && !(own && capture.includes(own)) && !(name === "Skill" && capture.includes("skill")))
+    return `${actor.seat} source access is scoped to Orchestra capture tools; ${name} did not run.`
   if (own) {
     // A write grant is part of delegating, so it goes to the agents that may delegate.
     const allowed = granted[actor.seat]?.includes(own === ClaudeHostMcp.GRANT ? "task" : own)
