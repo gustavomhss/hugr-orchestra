@@ -182,6 +182,25 @@ CompactionFixture.it.instance("required critical content beyond 6000 code units 
     expect(text).not.toContain("context_recall for more")
   }))
 
+CompactionFixture.it.instance("the last native task snapshot preserves exact IDs and a later empty ordinary snapshot clears stale side todos", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    if (!f.assistant) throw new Error("Missing native todo fixture")
+    yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "SIDE-TODO-FUTURE", status: "pending", priority: "high" }] })
+    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
+      type: "tool", tool: "TaskList", callID: "native-task-list", state: { status: "completed", input: {}, output: "native task snapshot",
+        title: "Tasks", metadata: { todos: [{ id: "EXACT-NATIVE-ID", content: "NATIVE-TODO-KEPT", status: "pending", priority: "high" }] },
+        time: { start: 1, end: 2 } } })
+    const native = memory(yield* f.compact())
+    expect(native).toContain("NATIVE-TODO-KEPT")
+    expect(native).toContain("EXACT-NATIVE-ID")
+    expect(native).not.toContain("SIDE-TODO-FUTURE")
+    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
+      type: "tool", tool: "todowrite", callID: "empty-task-snapshot", state: { status: "completed", input: {}, output: "cleared",
+        title: "Todos", metadata: { todos: [] }, time: { start: 3, end: 4 } } })
+    expect(yield* f.compact()).toEqual({})
+  }))
+
 CompactionFixture.it.instance("equal PostCompact summaries remain distinct observations with exact bytes, trigger and native owner", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()

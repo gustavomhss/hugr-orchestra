@@ -75,6 +75,27 @@ CompactionFixture.it.instance("foreign native compact identity with a matching a
     expect(yield* f.archive.list(f.chat.id)).toEqual([])
   }))
 
+CompactionFixture.it.instance("a foreign PostCompact callback cannot add an observation to the trusted root archive", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    yield* f.summary("OWN-OBSERVATION positive control")
+    const before = yield* f.archive.list(f.chat.id)
+    expect(before.length).toBeGreaterThan(0)
+    expect(yield* f.summary("FOREIGN-OBSERVATION", "auto", "foreign-native")).toMatchObject({ continue: false,
+      stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNAVAILABLE") })
+    expect(yield* f.archive.list(f.chat.id)).toEqual(before)
+  }))
+
+CompactionFixture.it.instance("missing persisted root init identity is a named refusal without root memory injection", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    yield* f.sessions.setMetadata({ sessionID: f.chat.id, metadata: { claudeCode: {} } })
+    yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "ROOT-UNBOUND-CONTROL", status: "pending", priority: "high" }] })
+    const output = yield* f.compact()
+    expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNAVAILABLE") })
+    expect(JSON.stringify(output)).not.toContain("ROOT-UNBOUND-CONTROL")
+  }))
+
 CompactionFixture.it.instance("query restart refuses a child identity without an observed join; display name supplies no recovery", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
@@ -248,4 +269,21 @@ CompactionFixture.it.instance("successful compact/archive callbacks remove both 
     expect(getEventListeners(sdk.signal, "abort")).toHaveLength(0)
     expect(getEventListeners(f.ctx.abort.signal, "abort")).toHaveLength(before)
     expect((yield* f.archive.list(f.chat.id)).length).toBeGreaterThan(0)
+  }))
+
+CompactionFixture.it.instance("SDK cancellation between actual Effect completion and callback delivery withholds the computed context", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    const sdk = new AbortController()
+    yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "LATE-CONTEXT-CONTROL", status: "pending", priority: "high" }] })
+    const hooks = ClaudeHostHooks.create({ ...f.ctx, run: (effect) => f.ctx.run(effect).then((value) => {
+      sdk.abort()
+      return value
+    }) })
+    const callback = hooks.SessionStart?.[0]?.hooks[0]
+    if (!callback) throw new Error("Missing compact hook")
+    const output = yield* Effect.promise(() => callback({ ...f.base, hook_event_name: "SessionStart", source: "compact" },
+      undefined, { signal: sdk.signal }))
+    expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_HOOK_CANCELLED") })
+    expect(JSON.stringify(output)).not.toContain("LATE-CONTEXT-CONTROL")
   }))

@@ -42,7 +42,7 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
   const binding = yield* LogicalTask.read(input.sessionID)
   const calls = view.history.flatMap((message) => message.parts).filter((part): part is SessionV1.ToolPart => part.type === "tool")
   const tasks = yield* Effect.forEach(yield* sessions.children(input.sessionID), (child) => Effect.gen(function* () {
-    const call = calls.findLast((part) => ClaudeHostGate.agentCall(part.tool) && part.state.status !== "pending" &&
+    const call = calls.findLast((part) => (part.tool === "task" || ClaudeHostGate.agentCall(part.tool)) && part.state.status !== "pending" &&
       part.state.metadata?.sessionId === child.id)
     // A side-store binding without its retained producing Agent part is not evidence in this view.
     if (!call || call.state.status === "pending") return []
@@ -54,7 +54,7 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
   }))
   const plan = yield* planState(input.sessionID, view.history, calls)
   const snapshot = calls.findLast((part) => part.state.status === "completed" &&
-    (part.tool === "todowrite" || part.tool === "TodoWrite" || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
+    (["todowrite", "TodoWrite", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"].includes(part.tool) || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
   const host = view.session.metadata?.claudeCode
   // A known cut with no visible snapshot cannot safely use the latest aggregate todo table.
   const cut = !!view.session.revert || !!host?.forkFrom || !!host?.resumeAt

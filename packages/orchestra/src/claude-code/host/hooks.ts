@@ -167,22 +167,22 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
 
   const compact: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
-    return ctx.run(cancellable(Effect.gen(function* () {
+    return runMemory(Effect.gen(function* () {
       const actor = yield* owner(input.session_id)
       const text = yield* ClaudeHostMemory.read({ sessionID: actor.sessionID, pending: delegation.summaries(),
         grants: actor.sessionID === ctx.sessionID ? delegation.grants() : [] })
       return text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}
-    }), options.signal))
+    }), options.signal)
   }
 
   const archive: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
-    return ctx.run(cancellable(Effect.gen(function* () {
+    return runMemory(Effect.gen(function* () {
       const actor = yield* owner(input.session_id)
       yield* ClaudeHostMemory.observe({ sessionID: actor.sessionID, nativeSessionID: input.session_id,
         text: input.compact_summary, trigger: input.trigger })
       return {}
-    }), options.signal))
+    }), options.signal)
   }
 
   return {
@@ -279,6 +279,14 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         ClaudeHostGate.agentCall(part.tool) && part.state.status !== "pending" && part.state.metadata?.sessionId === child.id)))
         return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNRETAINED: joined Agent part is absent from its dispatcher's view"))
       return actor
+    })
+  }
+
+  function runMemory<A, R>(work: Effect.Effect<A, unknown, R>, signal: AbortSignal) {
+    // Also close the Promise delivery gap after the Effect interpreter settles, before the SDK accepts the result.
+    return ctx.run(cancellable(work, signal)).then((value) => {
+      if (signal.aborted || ctx.abort.signal.aborted) throw new Error("COMPACT_HOOK_CANCELLED: callback delivery was aborted")
+      return value
     })
   }
 
