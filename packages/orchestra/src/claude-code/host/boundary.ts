@@ -1,29 +1,48 @@
 export * as ClaudeHostBoundary from "./boundary"
 
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { ClaudeHostAdmission } from "./admission"
 import { ClaudeCodeTranscript } from "../transcript"
+
+export class UnresolvedNativeBoundary extends Error {
+  override readonly name = "UnresolvedNativeBoundary"
+}
 
 /** The UI's boundary is exclusive; the SDK's resumeSessionAt is inclusive. Never omit an unresolved cut. */
 export function resolve(history: readonly SessionV1.WithParts[], state: Record<string, unknown>, messageID: string) {
   const index = history.findIndex((message) => message.info.id === messageID)
-  if (index < 0) throw new Error(`Claude Code cannot resolve the history boundary ${messageID}`)
-  if (history[index].info.role !== "user") throw new Error("Claude Code requires a user-message history boundary")
+  if (index < 0) throw new UnresolvedNativeBoundary(`Claude Code cannot resolve the history boundary ${messageID}`)
+  if (history[index].info.role !== "user")
+    throw new UnresolvedNativeBoundary("Claude Code requires a user-message history boundary")
   if (index === 0) return undefined
+  const input = ClaudeHostAdmission.read(state.inputs)[messageID]
+  if (input?.inseparable && input.inseparable.indexOf(messageID) > 0)
+    throw new UnresolvedNativeBoundary(
+      `Claude Code cannot cut inside an inseparable native input batch at ${messageID}`,
+    )
   const before = strings(state.starts)[messageID]
   if (before) return before
+  // A receipt for several UUIDs proves consumption, not an exclusive chain position for each send.
+  // Without its user echo, a consumed input cannot supply a guessed interior cut.
+  if (input && input.status !== "pending")
+    throw new UnresolvedNativeBoundary(`Claude Code has no exact native input boundary for ${messageID}`)
+  const previousUser = history.slice(0, index).findLast((message) => message.info.role === "user")
   const ends = strings(state.ends)
-  const uuids = strings(state.uuids)
-  const previous = history.slice(0, index).findLast((message) => message.info.role === "assistant")
-  const at = previous?.info.role === "assistant" ? ends[previous.info.parentID] ?? uuids[previous.info.id] : undefined
-  if (!at) throw new Error(`Claude Code has no native chain boundary preceding ${messageID}`)
+  const at = previousUser ? ends[previousUser.info.id] : undefined
+  if (!at) throw new UnresolvedNativeBoundary(`Claude Code has no native chain boundary preceding ${messageID}`)
   return at
 }
 
 export function strings(value: unknown): Record<string, string> {
   return ClaudeCodeTranscript.record(value)
-    ? Object.fromEntries(Object.entries(value).flatMap(([key, item]) => typeof item === "string" ? [[key, item]] : [])) : {}
+    ? Object.fromEntries(
+        Object.entries(value).flatMap(([key, item]) => (typeof item === "string" ? [[key, item]] : [])),
+      )
+    : {}
 }
 
 export function remap(value: unknown, ids: ReadonlyMap<string, string>) {
-  return Object.fromEntries(Object.entries(strings(value)).flatMap(([key, item]) => ids.has(key) ? [[ids.get(key)!, item]] : []))
+  return Object.fromEntries(
+    Object.entries(strings(value)).flatMap(([key, item]) => (ids.has(key) ? [[ids.get(key)!, item]] : [])),
+  )
 }

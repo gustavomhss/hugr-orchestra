@@ -80,7 +80,9 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
   const drain = Promise.withResolvers<void>()
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     const reader = input[Symbol.asyncIterator]()
-    await reader.next()
+    const first = await reader.next()
+    if (first.done) return
+    yield { ...first.value, session_id: frame.session_id }
     yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
     yield { type: "assistant", ...frame, uuid: "active", message: { id: "msg_active", content: [{ type: "text", text: "working" }], usage: {} } }
     entered.resolve()
@@ -90,7 +92,19 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
     await drain.promise
     if (params.options?.abortController?.signal.aborted) return
     throw new Error("A queued steer survived Stop")
-  }, ClaudeEngineFixture.replies("new reply"))
+  }, async function* (input) {
+    const reader = input[Symbol.asyncIterator]()
+    const pending = await reader.next()
+    const current = await reader.next()
+    if (pending.done || current.done) return
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+    yield { ...pending.value, session_id: frame.session_id }
+    yield { ...current.value, session_id: frame.session_id }
+    yield { type: "assistant", ...frame, uuid: "replacement-answer", user_message_uuid: current.value.uuid,
+      user_message_uuids: [pending.value.uuid, current.value.uuid], message: { id: "replacement-answer", content: [{ type: "text", text: "new reply" }], usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...frame }
+    for await (const _ of input) {}
+  })
   const starting = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start"), noReply: true })
   if (starting.info.role !== "user") throw new Error("missing starting user")
   const first = yield* host.turn({ sessionID: setup.chat.id, user: starting.info }).pipe(Effect.forkIn(scope))
@@ -111,7 +125,8 @@ ClaudeEngineFixture.it.instance("Stop retains ownership until the pump exits and
   yield* Fiber.join(stopped)
   yield* Fiber.await(first)
   yield* Fiber.join(next)
-  expect(ClaudeEngineFixture.state.inputs).toEqual(["start", "steer", "new request"])
+  expect(ClaudeEngineFixture.state.inputs).toEqual(["start", "steer", "steer", "new request"])
+  expect(ClaudeEngineFixture.state.messages[2].uuid).toBe(ClaudeEngineFixture.state.messages[1].uuid)
   expect(ClaudeEngineFixture.state.messages[1].priority).toBe("next")
   expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
   const grants = ClaudeHostMcp.grants(setup.chat.id)
@@ -132,11 +147,15 @@ ClaudeEngineFixture.it.instance("Stop after a delivered steer ends its revisit a
   const queued = Promise.withResolvers<void>()
   ClaudeEngineFixture.state.scripts.push(async function* (input) {
     const reader = input[Symbol.asyncIterator]()
-    await reader.next()
+    const first = await reader.next()
+    if (first.done) return
+    yield { ...first.value, session_id: frame.session_id }
     yield { type: "assistant", ...frame, uuid: crypto.randomUUID(), message: {
       id: "working", model: "claude-haiku-4-5-20251001", content: [{ type: "text", text: "working" }], usage: {} } }
     entered.resolve()
-    await reader.next()
+    const second = await reader.next()
+    if (second.done) return
+    yield { ...second.value, session_id: frame.session_id }
     queued.resolve()
     for await (const _ of input) {}
   })
