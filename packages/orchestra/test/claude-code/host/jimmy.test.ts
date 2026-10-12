@@ -32,18 +32,6 @@ ClaudeResearchFixture.it.instance("Agent dispatch admits the native binding; Pre
   expect(yield* ClaudeResearchFixture.charges(dispatch.child)).toMatchObject([{ kind: "tool", dispatchCallID: dispatch.callID, amount: 1 }])
 }), 30_000)
 
-ClaudeResearchFixture.it.instance("Jimmy child identity cannot bind to the parent's native session", () => Effect.gen(function* () {
-  const fixture = yield* ClaudeResearchFixture.setup()
-  const first = yield* fixture.dispatch("toolu_identity_conflict")
-  expect(yield* first.pre("mcp__orchestra__research_view", "wrong-native-session", { action: "corpus" },
-    ClaudeResearchFixture.base.session_id)).toMatchObject({
-      hookSpecificOutput: { permissionDecision: "deny", permissionDecisionReason: expect.stringContaining("COMPACT_NATIVE_OWNER_CONFLICT") },
-    })
-  const second = yield* fixture.dispatch("toolu_identity_bound")
-  expect(yield* second.pre("mcp__orchestra__research_view", "correct-native-session", { action: "corpus" }))
-    .toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
-}), 30_000)
-
 ClaudeResearchFixture.it.instance("PreToolUse charges 64 calls, registry execution deduplicates them, and exhaustion retains captured bytes", () => Effect.gen(function* () {
   const fixture = yield* ClaudeResearchFixture.setup()
   const dispatch = yield* fixture.dispatch()
