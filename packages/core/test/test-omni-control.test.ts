@@ -56,7 +56,8 @@ test("declared: a declaring test that made no omni spawn fails the run and names
 }, 60_000)
 
 test("declared: another file's spawn does not satisfy a declaring test that made none", async () => {
-  const run = await control({ "silent.test.ts": silent, "other.test.ts": other }, declared)
+  // Named files run in the given order: the other file's spawn is counted before the declaring test starts.
+  const run = await control({ "other.test.ts": other, "silent.test.ts": silent }, declared)
   expect(run.output).toMatch(/silent\.test\.ts: 1 of 1 declaring test\(s\) made no omni spawn of their own/)
   expect(run.code).not.toBe(0)
 }, 60_000)
@@ -90,7 +91,7 @@ test("suite (unset, as in test.yml and whole-package test:ci): a run that made n
 }, 60_000)
 
 test("suite: a declaring test that made no omni spawn fails even though another test spawned", async () => {
-  const run = await control({ "silent.test.ts": silent, "other.test.ts": other }, {})
+  const run = await control({ "other.test.ts": other, "silent.test.ts": silent }, {})
   expect(run.output).toMatch(/omni positive control: FAIL \(suite: every run must spawn through omni\)\. [^\n]*silent\.test\.ts: 1 of 1/)
   expect(run.code).not.toBe(0)
 }, 60_000)
