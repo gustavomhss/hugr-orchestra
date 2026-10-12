@@ -47,7 +47,7 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
       }
       if (target === nativeCliTarget(process.platform, process.arch)) {
         const reported = (await $`${path} --version`.text()).trim()
-        if (![version, `orchestra v${version}`].includes(reported))
+        if (reported !== version)
           throw new Error(`Owned CLI compiled version mismatch: ${target}`)
       }
     },

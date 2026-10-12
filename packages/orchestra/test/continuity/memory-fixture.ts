@@ -41,7 +41,7 @@ export function messages(roles: ("user" | "assistant")[] = Array.from({ length: 
         model: { providerID: model.providerID, modelID: model.id, variant: "parent-variant" },
       } : {
         role, id, sessionID, parentID: MessageID.make(`msg_${index - 1}`),
-        time: { created: index, completed: index + 1 }, agent: "parent-agent", mode: "build",
+        time: { created: index, completed: index + 1 }, agent: "parent-agent", mode: "maestro",
         modelID: model.id, providerID: model.providerID, path: { cwd: "/test", root: "/test" }, cost: 0,
         finish: "stop", tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       },

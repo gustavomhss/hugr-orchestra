@@ -57,3 +57,16 @@ it.effect("never installs the plugin SDK or anything else into a config director
     expect(yield* FSUtil.use.existsSafe(path.join(configDir, "package.json"))).toBe(false)
   }).pipe(Effect.provide(testInstanceStoreLayer)),
 )
+
+it.effect("ignores config file names occupied by a sandbox guard placeholder directory", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped()
+    // While a confined command runs (or after a crash, until recovery), a missing config name is held by a locked
+    // placeholder directory. The loader must treat `orchestra.json`-as-a-directory and an empty `.orchestra` as absent
+    // rather than fail trying to read a directory as text.
+    yield* FSUtil.use.makeDirectory(path.join(dir, "orchestra.json"), { recursive: true })
+    yield* FSUtil.use.makeDirectory(path.join(dir, ".orchestra"), { recursive: true })
+    const config = yield* Config.Service.use((svc) => svc.get()).pipe(provideInstanceEffect(dir))
+    expect(config.model).toBeUndefined()
+  }).pipe(Effect.provide(testInstanceStoreLayer)),
+)

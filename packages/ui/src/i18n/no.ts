@@ -152,6 +152,19 @@ export const dict: Record<Keys, string> = {
   "ui.tool.agent": "{{type}}-agent",
   "ui.tool.agent.default": "Agent",
 
+  "ui.research.terminal.ended": "Undersøkelsesoppgave avsluttet",
+  "ui.research.terminal.blocked": "Undersøkelsesoppgave blokkert",
+  "ui.research.terminal.failed": "Undersøkelsesoppgave mislyktes",
+  "ui.research.terminal.interrupted": "Undersøkelsesoppgave avbrutt",
+  "ui.research.terminal.running": "Undersøkelsesoppgave kjører",
+  "ui.research.sufficiency.answered": "Spørsmål besvart",
+  "ui.research.sufficiency.partial": "Delvis svar",
+  "ui.research.sufficiency.blocked": "Svar blokkert",
+  "ui.research.unverified":
+    "Det endelige undersøkelseskortet eller referansene kunne ikke bekreftes. Prøv å åpne de lagrede dokumentene på nytt.",
+  "ui.research.documentUnavailable": "Undersøkelsesdokument utilgjengelig",
+  "ui.research.documentLoading": "Laster undersøkelsesdokument",
+
   "ui.common.file.one": "fil",
   "ui.common.file.other": "filer",
   "ui.common.question.one": "spørsmål",

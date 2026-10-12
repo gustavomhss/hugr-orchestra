@@ -5,7 +5,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Watcher } from "@orchestra/core/filesystem/watcher"
 import { InstanceState } from "@/effect/instance-state"
 import { createTwoFilesPatch, diffLines } from "diff"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import { trimDiff } from "./edit"
 import { LSP } from "@/lsp/lsp"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -14,6 +14,7 @@ import DESCRIPTION from "./apply_patch.txt"
 import { FileSystem } from "@orchestra/core/filesystem"
 import { Format } from "../format"
 import * as Bom from "@/util/bom"
+import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
 
 export const Parameters = Schema.Struct({
   patchText: Schema.String.annotate({ description: "The full patch text that describes all changes to be made" }),
@@ -54,6 +55,10 @@ export const ApplyPatchTool = Tool.define(
       // Validate file paths and check permissions
       const fileChanges: Array<{
         filePath: string
+        // Real locations resolved before any permission is asked; reads and writes use these, never `filePath`.
+        physical: string
+        removable: string
+        movePhysical?: string
         oldContent: string
         newContent: string
         type: "add" | "update" | "delete" | "move"
@@ -68,7 +73,12 @@ export const ApplyPatchTool = Tool.define(
 
       for (const hunk of hunks) {
         const filePath = path.resolve(instance.directory, hunk.path)
-        yield* assertExternalDirectoryEffect(ctx, filePath)
+        const physical = yield* Effect.promise(() => physicalPath(filePath))
+        // Removing a link removes the link itself, found through its real parent directory.
+        const removable = yield* Effect.promise(async () =>
+          path.join(await physicalPath(path.dirname(filePath)), path.basename(filePath)),
+        )
+        yield* assertExternalDirectoryEffect(ctx, filePath, { real: physical })
 
         switch (hunk.type) {
           case "add": {
@@ -87,6 +97,8 @@ export const ApplyPatchTool = Tool.define(
 
             fileChanges.push({
               filePath,
+              physical,
+              removable,
               oldContent,
               newContent: next.text,
               type: "add",
@@ -102,14 +114,14 @@ export const ApplyPatchTool = Tool.define(
 
           case "update": {
             // Check if file exists for update
-            const stats = yield* afs.stat(filePath).pipe(Effect.catch(() => Effect.succeed(undefined)))
+            const stats = yield* afs.stat(physical).pipe(Effect.catch(() => Effect.succeed(undefined)))
             if (!stats || stats.type === "Directory") {
               return yield* Effect.fail(
                 new Error(`apply_patch verification failed: Failed to read file to update: ${filePath}`),
               )
             }
 
-            const source = yield* Bom.readFile(afs, filePath)
+            const source = yield* Bom.readFile(afs, physical)
             const oldContent = source.text
 
             // Apply the update chunks to get new content
@@ -129,10 +141,14 @@ export const ApplyPatchTool = Tool.define(
             }
 
             const movePath = hunk.movePath ? path.resolve(instance.directory, hunk.movePath) : undefined
-            yield* assertExternalDirectoryEffect(ctx, movePath)
+            const movePhysical = movePath ? yield* Effect.promise(() => physicalPath(movePath)) : undefined
+            yield* assertExternalDirectoryEffect(ctx, movePath, { real: movePhysical })
 
             fileChanges.push({
               filePath,
+              physical,
+              removable,
+              movePhysical,
               oldContent,
               newContent,
               type: hunk.movePath ? "move" : "update",
@@ -148,7 +164,7 @@ export const ApplyPatchTool = Tool.define(
           }
 
           case "delete": {
-            const source = yield* Bom.readFile(afs, filePath).pipe(
+            const source = yield* Bom.readFile(afs, physical).pipe(
               Effect.catch((error) =>
                 Effect.fail(
                   new Error(
@@ -164,6 +180,8 @@ export const ApplyPatchTool = Tool.define(
 
             fileChanges.push({
               filePath,
+              physical,
+              removable,
               oldContent: contentToDelete,
               newContent: "",
               type: "delete",
@@ -192,9 +210,17 @@ export const ApplyPatchTool = Tool.define(
 
       // Check permissions if needed
       const relativePaths = fileChanges.map((c) => path.relative(instance.worktree, c.filePath).replaceAll("\\", "/"))
+      const patterns = yield* Effect.promise(() =>
+        Promise.all(
+          fileChanges.flatMap((c) => [
+            editPatterns(instance.worktree, c.filePath, c.physical),
+            ...(c.movePath && c.movePhysical ? [editPatterns(instance.worktree, c.movePath, c.movePhysical)] : []),
+          ]),
+        ),
+      )
       yield* ctx.ask({
         permission: "edit",
-        patterns: relativePaths,
+        patterns: [...new Set(patterns.flat().map((item) => item.replaceAll("\\", "/")))],
         always: ["*"],
         metadata: {
           filepath: relativePaths.join(", "),
@@ -212,35 +238,35 @@ export const ApplyPatchTool = Tool.define(
           case "add":
             // Create parent directories (recursive: true is safe on existing/root dirs)
 
-            yield* afs.writeWithDirs(change.filePath, Bom.join(change.newContent, change.bom))
+            yield* Effect.promise(() => writePhysical(change.physical, Bom.join(change.newContent, change.bom)))
             updates.push({ file: change.filePath, event: "add" })
             break
 
           case "update":
-            yield* afs.writeWithDirs(change.filePath, Bom.join(change.newContent, change.bom))
+            yield* Effect.promise(() => writePhysical(change.physical, Bom.join(change.newContent, change.bom)))
             updates.push({ file: change.filePath, event: "change" })
             break
 
-          case "move":
-            if (change.movePath) {
-              // Create parent directories (recursive: true is safe on existing/root dirs)
-
-              yield* afs.writeWithDirs(change.movePath!, Bom.join(change.newContent, change.bom))
-              yield* afs.remove(change.filePath)
+          case "move": {
+            const movePhysical = change.movePhysical
+            if (change.movePath && movePhysical !== undefined) {
+              yield* Effect.promise(() => writePhysical(movePhysical, Bom.join(change.newContent, change.bom)))
+              yield* afs.remove(change.removable)
               updates.push({ file: change.filePath, event: "unlink" })
               updates.push({ file: change.movePath, event: "add" })
             }
             break
+          }
 
           case "delete":
-            yield* afs.remove(change.filePath)
+            yield* afs.remove(change.removable)
             updates.push({ file: change.filePath, event: "unlink" })
             break
         }
 
         if (edited) {
           if (yield* format.file(edited)) {
-            yield* Bom.syncFile(afs, edited, change.bom)
+            yield* Bom.syncFile(afs, change.movePhysical ?? change.physical, change.bom)
           }
           yield* events.publish(FileSystem.Event.Edited, { file: edited })
         }

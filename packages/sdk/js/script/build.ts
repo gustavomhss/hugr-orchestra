@@ -45,6 +45,7 @@ if (schemas) {
   await Bun.write("./openapi.json", JSON.stringify(document))
 }
 
+const researchTypes = new Set<string>()
 await createClient({
   input: "./openapi.json",
   output: {
@@ -56,6 +57,15 @@ await createClient({
     {
       name: "@hey-api/typescript",
       exportFromIndex: false,
+      "~hooks": {
+        symbols: {
+          getFilePath: (symbol) => {
+            if (!symbol.name.startsWith("Research") && !symbol.name.startsWith("V2Research")) return
+            researchTypes.add(symbol.name)
+            return "research"
+          },
+        },
+      },
     },
     {
       name: "@hey-api/sdk",
@@ -72,7 +82,10 @@ await createClient({
   ],
 })
 
-const generatedTypes = await Bun.file("./src/v2/gen/types.gen.ts").text()
+if (researchTypes.size === 0) throw new Error("Research type routing produced no declarations")
+const generatedTypes =
+  (await Bun.file("./src/v2/gen/types.gen.ts").text()) +
+  `\nexport type { ${Array.from(researchTypes).sort().join(", ")} } from "./research.gen.js"\n`
 if (/export type SessionNext\w+1 =/.test(generatedTypes)) {
   throw new Error("Session history generated duplicate Session event variants")
 }

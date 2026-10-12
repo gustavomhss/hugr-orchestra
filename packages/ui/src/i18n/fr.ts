@@ -179,6 +179,19 @@ export const dict = {
   "ui.tool.agent": "Agent {{type}}",
   "ui.tool.agent.default": "Agent",
 
+  "ui.research.terminal.ended": "Tâche de recherche terminée",
+  "ui.research.terminal.blocked": "Tâche de recherche bloquée",
+  "ui.research.terminal.failed": "Échec de la tâche de recherche",
+  "ui.research.terminal.interrupted": "Tâche de recherche interrompue",
+  "ui.research.terminal.running": "Tâche de recherche en cours",
+  "ui.research.sufficiency.answered": "Réponse apportée à la question",
+  "ui.research.sufficiency.partial": "Réponse partielle",
+  "ui.research.sufficiency.blocked": "Réponse bloquée",
+  "ui.research.unverified":
+    "Impossible de vérifier la fiche finale de recherche ou les références. Essayez de rouvrir les documents conservés.",
+  "ui.research.documentUnavailable": "Document de recherche indisponible",
+  "ui.research.documentLoading": "Chargement du document de recherche",
+
   "ui.common.file.one": "fichier",
   "ui.common.file.other": "fichiers",
   "ui.common.question.one": "question",

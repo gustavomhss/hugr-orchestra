@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { BACKEND_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
 
 describe("Maestro roster", () => {
   test("declares exact nine contract seats in deterministic order", () => {
@@ -40,6 +40,24 @@ describe("Maestro roster", () => {
         ],
       },
       {
+        displayName: UPSTREAM_DEFAULT_LABEL,
+        memberId: "archie",
+        role: "product, architecture, specification and planning",
+        abilityClass: "scoped proposal authoring",
+        returnCard: "upstream-result",
+        forbiddenActions: [
+          "inventing owner facts or approval",
+          "product implementation",
+          "dispatch or workflow execution",
+          "delegation",
+          "self-approval or acceptance claims",
+          "commit, push, branch, merge or pull request",
+          "installing tools",
+          "working around permission denials or safety holds",
+          "editing Atlas memory files",
+        ],
+      },
+      {
         displayName: "Patty",
         memberId: "patty",
         role: "frontend execution",
@@ -56,14 +74,6 @@ describe("Maestro roster", () => {
         forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
       },
       {
-        displayName: "Bobby",
-        memberId: "bobby",
-        role: "architecture review",
-        abilityClass: "read-only contract review",
-        returnCard: "seam/contract verdict",
-        forbiddenActions: ["implement product", "merge"],
-      },
-      {
         displayName: "Billy",
         memberId: "billy",
         role: "security review",
@@ -76,7 +86,7 @@ describe("Maestro roster", () => {
         memberId: "jimmy",
         role: "codebase exploration",
         abilityClass: "read-only discovery",
-        returnCard: "grounded findings card",
+        returnCard: "jimmy-result",
         forbiddenActions: ["ratify alone", "edit product"],
       },
       {
@@ -102,6 +112,13 @@ describe("Maestro roster", () => {
 
   test("looks up valid member ID", () => {
     expect(lookupRosterMember("backend")).toEqual({ status: "FOUND", member: roster[1] })
+    expect(lookupRosterMember("archie")).toEqual({ status: "FOUND", member: roster[2] })
+  })
+
+  test("rejects retired upstream ID and profile name as routing IDs", () => {
+    expect(lookupRosterMember("walt")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+    expect(lookupRosterMember("upstream")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+    expect(lookupRosterMember(UPSTREAM_DEFAULT_LABEL)).toEqual({ status: "HOLD", reason: "malformed-member-id" })
   })
 
   test("holds unknown or malformed member ID", () => {
@@ -125,5 +142,13 @@ describe("Maestro roster", () => {
 
     expect(lookupRosterMember("backend", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
     expect(lookupRosterMember("ana", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+  })
+
+  test("upstream display rename preserves exact routing ID and behavior profile", () => {
+    const renamed = createRoster([{ ...roster[2]!, displayName: "Configured Planner" }])
+
+    expect(lookupRosterMember("archie", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
+    expect(renamed[0]?.nativeProfile).toBe("upstream")
+    expect(lookupRosterMember("configured-planner", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
   })
 })

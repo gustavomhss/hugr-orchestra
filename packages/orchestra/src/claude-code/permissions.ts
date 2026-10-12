@@ -46,7 +46,7 @@ type Gate = {
 /** Orchestra's decision on one call. Orchestra's own tools ask inside their implementation, so they pass here. */
 function decide(gate: Gate, name: string, toolInput: Input, toolUseID: string) {
   return gate.run(Effect.gen(function* () {
-    if (ClaudeCodeTools.NAMES.includes(name)) return { allow: true as const }
+    if (ClaudeCodeTools.orchestra(name)) return { allow: true as const }
     const ctx = gate.context(toolUseID)
     const exit = yield* asks(name, toolInput, ctx, (command) => gate.shell(ctx, command)).pipe(Effect.exit)
     return Exit.isSuccess(exit) ? { allow: true as const } : { allow: false as const, message: ClaudeCodeTools.failure(exit.cause) }

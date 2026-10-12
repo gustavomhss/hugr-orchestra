@@ -37,7 +37,7 @@ function parent(overrides: Partial<LLM.StreamInput> = {}, ids = history.map((mes
   const parentMessages: ModelMessage[] = [{ role: "user", content: "parent history" }]
   const captured = ParentReceipt.capture({
     input: {
-      user, sessionID, model, agent: { name: "build", mode: "primary", permission: [], options: {} },
+      user, sessionID, model, agent: { name: "maestro", mode: "primary", permission: [], options: {} },
       system: ["parent system"], messages: parentMessages,
       tools: { read }, toolChoice: "auto", contextMemory: false, ...overrides,
     } as LLM.StreamInput,

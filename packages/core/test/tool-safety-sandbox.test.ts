@@ -1,4 +1,5 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
+import os from "os"
 import path from "path"
 import { createServer } from "node:net"
 import { Effect } from "effect"
@@ -9,10 +10,12 @@ import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
+import { jail } from "./lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
-const backend = ["darwin", "linux"].includes(process.platform) && await Effect.runPromise(ToolSafetySandbox.available())
-// Live confinement is measured only with a real backend; the absent-backend HOLD case always runs below.
+const backend = jail
+// Live confinement is measured with the host's real jail (seatbelt, or srt where bubblewrap is present); the
+// absent-backend HOLD case always runs below.
 const live = backend ? it.live : it.live.skip
 const fixture = Effect.gen(function* () {
   const fs = yield* FSUtil.Service
@@ -98,7 +101,7 @@ live("real read denials and protected writes use captured physical policy, while
     const managed = [alias]
     const profile = { requireSandbox: true, writeRoots: [f.root], managedPaths: managed, neverTouch: ["never/**"],
       sandbox: { enabled: true, denyPaths: ["denied"] }, protectedWrites: ["instructions"] }
-    const script = `const fs=require('fs');const denied=${JSON.stringify(names)}.map(name=>{try{fs.readFileSync(name);return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});let writeDenied=false;try{fs.writeFileSync('instructions','changed')}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;writeDenied=true}process.stdout.write(JSON.stringify({denied,writeDenied,protectedRead:fs.readFileSync('instructions','utf8'),dependency:fs.readFileSync(process.execPath).length>0}))`
+    const script = `const fs=require('fs');const denied=${JSON.stringify(names)}.map(name=>{try{fs.readFileSync(name);return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});let writeDenied=false;try{fs.writeFileSync('instructions','changed')}catch(e){if(!['EPERM','EACCES','EROFS'].includes(e.code))throw e;writeDenied=true}process.stdout.write(JSON.stringify({denied,writeDenied,protectedRead:fs.readFileSync('instructions','utf8'),dependency:fs.readFileSync(process.execPath).length>0}))`
     const baseline = yield* f.run(script)
     expect(baseline.exitCode).toBe(0)
     expect(JSON.parse(baseline.stdout.toString()).denied).toEqual([false, false, false])
@@ -131,7 +134,8 @@ live("real network denial blocks loopback TCP against a working local server", (
     expect(connections).toEqual(["connected"])
     const result = yield* f.run(script, { requireSandbox: true, writeRoots: [f.root] })
     expect(result.exitCode).toBe(3)
-    expect(result.stderr.toString()).toMatch(/EPERM|EACCES/)
+    // Seatbelt denies the connect; srt's network namespace has nothing listening on the host's port.
+    expect(result.stderr.toString()).toMatch(backend === "seatbelt" ? /EPERM|EACCES/ : /ECONNREFUSED/)
     expect(connections).toEqual(["connected"])
   }), 30_000,
 )
@@ -158,7 +162,7 @@ it.live("unbound pipelines and invalid physical roots HOLD before side effects; 
       Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true }),
     ))
     expect(pipeline.reason).toBe("sandbox-pipeline-unbound")
-    if (backend === "/usr/bin/sandbox-exec") {
+    if (backend === "seatbelt") {
       const domains = yield* Effect.flip(ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, {
         requireSandbox: true, sandbox: { enabled: true, allowedDomains: ["example.invalid"] },
       })))
@@ -190,3 +194,53 @@ live("scratch gives each confined command a private TMPDIR; read-only roots stil
     expect(yield* f.fs.exists(out.tmp)).toBe(false)
   }), 30_000,
 )
+
+live("a confined-read command's TMPDIR is its own scratch, where it can create a temporary directory", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // srt otherwise hands the child TMPDIR=/tmp/claude, which does not exist in the jail (go: creating work dir).
+    const script = "const fs=require('fs'),os=require('os'),p=require('path');const made=fs.mkdtempSync(p.join(os.tmpdir(),'probe-'));" +
+      "fs.writeFileSync(p.join(made,'file'),'t');" +
+      "process.stdout.write(JSON.stringify({tmp:process.env.TMPDIR,tmpdir:os.tmpdir(),made,read:fs.readFileSync(p.join(made,'file'),'utf8')}))"
+    const profile = { requireSandbox: true, writeRoots: [f.root], sandbox: { enabled: true, scratch: true, readRoots: [f.root] } }
+    const result = yield* Effect.scoped(f.run(script, profile))
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    const out = JSON.parse(result.stdout.toString())
+    expect(path.basename(out.tmp)).toStartWith("orchestra-tool-scratch-")
+    expect(out.tmpdir).toBe(out.tmp)
+    expect(path.dirname(out.made)).toBe(out.tmp)
+    expect(out.read).toBe("t")
+    // The scratch directory, and the temporary directory made in it, live only as long as the command's scope.
+    expect(yield* f.fs.exists(out.tmp)).toBe(false)
+  }), 30_000,
+)
+
+test("home grants name exactly git's config files and what a rustup-proxied cargo needs, never a credential store", () => {
+  const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
+  const [rustup, cargo, xdg] = ["rustup", "cargo", "xdg"].map((name) => path.join(base, name))
+  const listed = ToolSafetySandbox.toolchain({ PATH: "", RUSTUP_HOME: rustup, CARGO_HOME: cargo, XDG_CONFIG_HOME: xdg })
+  expect(listed.filter((entry) => entry.startsWith(base)).sort()).toEqual([
+    path.join(cargo, "bin"), path.join(cargo, "registry", "cache"), path.join(cargo, "registry", "index"),
+    path.join(cargo, "registry", "src"), path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
+    path.join(xdg, "git", "attributes"), path.join(xdg, "git", "config"), path.join(xdg, "git", "ignore"),
+  ].sort())
+  // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it.
+  const defaults = ToolSafetySandbox.homeGrants({}).map((grant) => grant.entry)
+  const homes = [...new Set(defaults.map((entry) => entry.slice(0, entry.lastIndexOf(`${path.sep}.`))))]
+  expect(defaults.map((entry) => path.relative(homes.find((home) => entry.startsWith(home + path.sep)) ?? "", entry)).sort()).toEqual(
+    homes.flatMap(() => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
+      path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"), path.join(".cargo", "bin"),
+      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))]).sort(),
+  )
+})
+
+test("an environment home that is relative, a home or above one grants nothing", () => {
+  const home = os.homedir()
+  for (const value of ["relative/cargo", home, path.dirname(home), path.parse(home).root]) {
+    const grants = ToolSafetySandbox.homeGrants({ CARGO_HOME: value, RUSTUP_HOME: value, XDG_CONFIG_HOME: value })
+    // Only ~/.gitconfig and ~/.config/git remain, which no variable names.
+    expect(grants.map((grant) => grant.entry).filter((entry) => !/[\\/](?:\.gitconfig|\.config[\\/]git[\\/]\w+)$/.test(entry))).toEqual([])
+    expect(grants.some((grant) => [path.join(home, "bin"), path.join(home, "registry"), path.join(home, "git")]
+      .some((entry) => grant.entry.startsWith(entry)))).toBe(false)
+  }
+})

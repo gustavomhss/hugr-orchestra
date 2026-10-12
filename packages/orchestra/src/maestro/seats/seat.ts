@@ -17,7 +17,7 @@ export type Seat = {
   /** The charter, a label template (roster.ts `LABEL`). */
   readonly prompt: string
   /** The shared base profile (roster.ts `baseProfiles`) the seat's own grants extend. */
-  readonly profile: "execution" | "review"
+  readonly profile: "execution" | "review" | "discovery"
   /** Optional stable profile projection, independent of agent routing and the shared permission base. */
   readonly profileKey?: string
   /** How the task tool lists the seat to Maestro: role, access and return, never the label. */
@@ -32,7 +32,7 @@ export type Seat = {
   readonly writeRoots: boolean
   /** A `task_id` resume must name a retained logical task of this seat (strict LogicalTask resolution). */
   readonly strictResume: boolean
-  /** Atlas Memory: recall/emit tools, the running header and resume admission. Single owner, see AtlasMemory.MEMBER. */
+  /** Atlas Memory: recall/emit tools, running header and resume admission. Only approved native owners. */
   readonly atlasMemory: boolean
   /** The shell fetches the backend toolkit's pinned engines for this seat's commands. */
   readonly toolkit: boolean
@@ -45,8 +45,8 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`Native seat role and description must be nonempty: ${seat.id}`)
   if (seat.profileKey !== undefined && (!/^[a-z]+(?:-[a-z]+)*$/.test(seat.profileKey) || reserved.has(seat.profileKey)))
     throw new Error(`Invalid native seat profile key: ${seat.profileKey}`)
-  if (seat.atlasMemory && seat.id !== "backend")
-    throw new Error(`Atlas Memory supports only the backend owner: ${seat.id}`)
+  if (seat.atlasMemory && seat.id !== "backend" && seat.id !== "jimmy")
+    throw new Error(`Atlas Memory supports only backend and jimmy owners: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
   if (seat.writeRoots && seat.profile !== "execution")

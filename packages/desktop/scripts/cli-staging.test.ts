@@ -1,18 +1,23 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
-import { stageCliArtifacts, desktopCliTargets } from "./cli-staging"
+import { stageCliArtifacts, desktopCliTargets, WslOmniPairMissingError } from "./cli-staging"
+// The pair's names come from the installer, so staging is held to what the WSL install reads.
+import { installGuestScript, installWslArtifact, omniCompanions } from "../src/main/wsl/artifact"
 import { installCliArtifact } from "../src/main/cli-install"
+import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
 import { verifyPackagedCli } from "./cli-packaging"
 
 const roots: string[] = []
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
-async function fixture(targets = ["linux-x64-baseline"]) {
+// Linux CLIs ship the omni pair next to the binary, as the shared omni build step leaves them in dist, and every CLI
+// ships its tree-sitter in bin/tree-sitter.
+async function fixture(targets = ["linux-x64-baseline"], binary = (target: string) => `owned ${target}`) {
   const root = await mkdtemp(join(tmpdir(), "orchestra-stage-test-"))
   roots.push(root)
   const dist = join(root, "dist")
@@ -21,10 +26,10 @@ async function fixture(targets = ["linux-x64-baseline"]) {
       const dir = join(dist, `cli-${target}`)
       await mkdir(join(dir, "bin"), { recursive: true })
       await writeFile(join(dir, "package.json"), JSON.stringify({ version: "1.18.27" }))
-      await writeFile(
-        join(dir, "bin", target.startsWith("windows-") ? "orchestra.exe" : "orchestra"),
-        `owned ${target}`,
-      )
+      await writeFile(join(dir, "bin", target.startsWith("windows-") ? "orchestra.exe" : "orchestra"), binary(target))
+      await writeTreeSitterBundle(join(dir, "bin", "tree-sitter"), target)
+      if (target.startsWith("linux-"))
+        await Promise.all(omniCompanions.map((name) => writeFile(join(dir, "bin", name), `${name} ${target}`)))
     }),
   )
   return { root, dist, directory: join(root, "cli"), version: "1.18.27", targets }
@@ -73,6 +78,111 @@ test("Windows staging carries both Linux WSL architectures", async () => {
   await stageCliArtifacts(input)
   expect((await readCliManifest(input.directory)).artifacts.map((entry) => entry.target)).toEqual(targets)
   await Promise.all(targets.map((target) => verifyCliArtifact(input.directory, target)))
+})
+
+test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and refuses a partial bundle", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  await Promise.all(
+    ["linux-arm64", "linux-x64-baseline"].flatMap((target) =>
+      omniCompanions.map(async (name) => {
+        const path = join(input.directory, `omni-${target}`, name)
+        expect(await readFile(path, "utf8")).toBe(`${name} ${target}`)
+        if (process.platform !== "win32" && name === "hugr-omni-supervisor")
+          expect((await stat(path)).mode & 0o777).toBe(0o755)
+      }),
+    ),
+  )
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  for (const name of omniCompanions) {
+    const path = join(input.dist, "cli-linux-arm64", "bin", name)
+    await rename(path, `${path}.away`)
+    const error = await stageCliArtifacts(input).catch((error: unknown) => error)
+    expect(error).toBeInstanceOf(WslOmniPairMissingError)
+    expect((error as Error).message).toContain(`linux-arm64: ${path}`)
+    expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+    expect(await readFile(join(input.directory, "omni-linux-arm64", name), "utf8")).toBe(`${name} linux-arm64`)
+    await rename(`${path}.away`, path)
+  }
+  // A missing Linux CLI fails the Windows build as well.
+  await rm(join(input.dist, "cli-linux-x64-baseline"), { recursive: true })
+  await expect(stageCliArtifacts(input)).rejects.toThrow()
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  // Only WSL guests carry the pair: a native Linux bundle stages the binary and its tree-sitter alone.
+  const native = await fixture()
+  await stageCliArtifacts(native)
+  expect((await readdir(native.directory)).sort()).toEqual([
+    "manifest.json",
+    "orchestra-linux-x64-baseline",
+    "tree-sitter-linux-x64-baseline",
+  ])
+})
+
+test("prebuilt handoff carries the omni pair and refuses a producer without it", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  const received = { ...input, dist: join(input.root, "no-local-build"), prebuilt: input.directory, directory: join(input.root, "consumer") }
+  await stageCliArtifacts(received)
+  expect(await readFile(join(received.directory, "omni-linux-x64-baseline", "hugr_omni.node"), "utf8")).toBe(
+    "hugr_omni.node linux-x64-baseline",
+  )
+  await rm(join(input.directory, "omni-linux-x64-baseline", "hugr-omni-supervisor"))
+  await expect(stageCliArtifacts(received)).rejects.toBeInstanceOf(WslOmniPairMissingError)
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toBeInstanceOf(
+    WslOmniPairMissingError,
+  )
+})
+
+test("WSL install accepts the staged Windows bundle end to end through the real artifact reader", async () => {
+  // Like the real omni CLI preflight, the guest binary exits early unless the pair sits next to it.
+  const input = await fixture(desktopCliTargets("win32", "x64"), (target) =>
+    target.startsWith("linux-")
+      ? `#!/bin/bash\n[[ -f "\${0%/*}/hugr_omni.node" && -x "\${0%/*}/hugr-omni-supervisor" ]] || exit 9\nprintf '1.18.27\\n'\n`
+      : `owned ${target}`,
+  )
+  await stageCliArtifacts(input)
+  const home = join(input.root, "home")
+  await mkdir(home)
+  const sha = async (path: string) => createHash("sha256").update(await readFile(path)).digest("hex")
+  // wslpath: a Linux host path is already the guest path; a Windows one maps under /mnt/<drive>.
+  const guest = (path: string) =>
+    process.platform === "win32" ? path.replace(/^([A-Za-z]):/, (_, drive: string) => `/mnt/${drive.toLowerCase()}`).replaceAll("\\", "/") : path
+  const installs: string[][] = []
+  await installWslArtifact("Ubuntu", input.version, {
+    directory: input.directory,
+    run: async (args) => {
+      if (args[0] === "bash") return { code: 0, signal: null, stdout: "x86_64\nglibc 2.39\n", stderr: "" }
+      if (args[0] === "wslpath") return { code: 0, signal: null, stdout: guest(args[3]!), stderr: "" }
+      installs.push(args)
+      // The guest script needs GNU coreutils; elsewhere the arguments it would receive are checked below.
+      if (process.platform !== "linux") return { code: 0, signal: null, stdout: "", stderr: "" }
+      const child = Bun.spawn(args, { env: { ...process.env, HOME: home }, cwd: home, stdout: "pipe", stderr: "pipe" })
+      const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()])
+      return { code, signal: null, stdout, stderr }
+    },
+  })
+  const omni = join(input.directory, "omni-linux-x64-baseline")
+  const binary = await verifyCliArtifact(input.directory, "linux-x64-baseline")
+  expect(installs).toEqual([[
+    "timeout", "--kill-after=1s", "18s", "bash", "-c", installGuestScript, "orchestra-install",
+    guest(binary.path), await sha(binary.path), input.version,
+    guest(join(omni, "hugr_omni.node")), await sha(join(omni, "hugr_omni.node")),
+    guest(join(omni, "hugr-omni-supervisor")), await sha(join(omni, "hugr-omni-supervisor")),
+    guest(join(input.directory, "tree-sitter-linux-x64-baseline")), expect.stringMatching(/^[a-f0-9]{64}$/),
+  ]])
+  // On Linux the real guest script ran and accepted the host's tree-sitter digest.
+  if (process.platform !== "linux") return
+  await Promise.all(
+    [...omniCompanions, "orchestra"].map(async (name) =>
+      expect(await sha(join(home, ".orchestra/bin", name))).toBe(
+        await sha(name === "orchestra" ? binary.path : join(omni, name)),
+      ),
+    ),
+  )
+  const binding = join("tree-sitter-typescript", "prebuilds", "linux-x64", "tree-sitter-typescript.node")
+  expect(await sha(join(home, ".orchestra/bin/tree-sitter", binding))).toBe(
+    await sha(join(input.directory, "tree-sitter-linux-x64-baseline", binding)),
+  )
 })
 
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
@@ -168,6 +278,44 @@ test("installed cache checks bytes, repairs tampering, rejects tampered source",
   await writeFile(bundled.path, "foreign source")
   await expect(installCliArtifact(input.directory, input.targets[0]!, cache)).rejects.toThrow("digest")
   expect(await readFile(first.path, "utf8")).toBe(`owned ${input.targets[0]}`)
+})
+
+test("every CLI target carries its tree-sitter through staging, handoff, packaging and install, or stops by name", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version)
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const binding = join("tree-sitter", "prebuilds", "linux-arm64", "tree-sitter.node")
+  const built = join(input.dist, "cli-linux-arm64", "bin", "tree-sitter", binding)
+  const arm = await readFile(built)
+  // A missing binding, or one for another CPU, fails the build and keeps the previous resources.
+  for (const replace of [() => rm(built), () => writeFile(built, Buffer.alloc(128))]) {
+    await replace()
+    await expect(stageCliArtifacts(input)).rejects.toThrow(`TREE_SITTER_BUNDLE_INCOMPLETE: linux-arm64`)
+    expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+    await writeFile(built, arm)
+  }
+  // A producer directory hands its staged copies on.
+  const received = { ...input, dist: join(input.root, "no-local-build"), prebuilt: input.directory, directory: join(input.root, "consumer") }
+  await stageCliArtifacts(received)
+  expect(await readFile(join(received.directory, "tree-sitter-linux-arm64", binding))).toEqual(arm)
+  // The packaging check refuses a bundle without it, for the native target as for a guest.
+  for (const target of ["windows-x64-baseline", "linux-arm64"]) {
+    const staged = join(received.directory, `tree-sitter-${target}`)
+    await rename(staged, `${staged}.away`)
+    await expect(verifyPackagedCli(received.directory, "win32", "x64", input.version)).rejects.toThrow(
+      `TREE_SITTER_BUNDLE_INCOMPLETE: ${target.startsWith("windows-") ? "win32-x64" : "linux-arm64"}`,
+    )
+    await rename(`${staged}.away`, staged)
+  }
+  // The installed CLI finds its tree-sitter beside itself; an install missing it is repaired.
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(received.directory, "windows-x64-baseline", cache)
+  const index = join(dirname(installed.path), "tree-sitter", "tree-sitter", "index.js")
+  expect(await readFile(index, "utf8")).toBe("tree-sitter/index.js windows-x64-baseline")
+  await rm(index)
+  await installCliArtifact(received.directory, "windows-x64-baseline", cache)
+  expect(await readFile(index, "utf8")).toBe("tree-sitter/index.js windows-x64-baseline")
 })
 
 test("packaging verifies effective root version and all Windows guest bytes", async () => {

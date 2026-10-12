@@ -93,6 +93,8 @@ test("an Orchestra tool call is claimed once, in order, and its full result is k
   await feed([result([{ type: "tool_result", tool_use_id: "toolu_a", content: "A (as Claude Code saw it)" }])])
   const read = ofType("tool").find((part) => part.callID === "toolu_a")!
   expect(read.tool).toBe("read")
+  // Orchestra ran it, so it is not a provider-executed call.
+  expect(read.metadata).toEqual({ claudeCodeTool: "mcp__orchestra__read" })
   if (read.state.status !== "completed") throw new Error("expected completed")
   expect(read.state.metadata).toEqual({ preview: "A" })
 })
