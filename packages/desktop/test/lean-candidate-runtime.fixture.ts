@@ -4,6 +4,7 @@ import os from "node:os"
 import { createRequire } from "node:module"
 import { connect } from "node:net"
 import { readFile, writeFile } from "node:fs/promises"
+import { writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { setTimeout as sleep } from "node:timers/promises"
 import type { ElectronApplication, Page } from "@playwright/test"
@@ -86,8 +87,22 @@ export async function launchCandidate(executable: string, root: string, recorder
   // --use-mock-keychain: on quit Chromium creates the "<name> Safe Storage" keychain item, and an unattended runner
   // never answers the keychain authorization prompt, so the process hangs (sampled stack: SecItemAdd ->
   // makeLoginAuthUI -> AuthorizationCopyRights). The proof never needs or touches the runner's real keychain.
+  // A main that never reaches Chromium's DevTools endpoint leaves Playwright no handle, and its launch timeout kills
+  // the process. Before that, keep this executable's native thread stacks (sanitized) as evidence.
+  const watchdog = setTimeout(() => {
+    const owned = execFileSync("ps", ["-A", "-o", "pid=,args="], { encoding: "utf8" }).split("\n")
+      .map((line) => /^\s*(\d+)\s+(.*)$/.exec(line)).filter((match) => match !== null && match[2]!.startsWith(executable))
+      .map((match) => Number(match![1]))
+    for (const pid of owned) {
+      try {
+        const sample = execFileSync("/usr/bin/sample", [String(pid), "3"], { encoding: "utf8", timeout: 10000, maxBuffer: 32 << 20 })
+        writeFileSync(path.join(desktop, "dist-candidate/proof", `launch-sample-${pid}.txt`), recorder.clean(sample))
+      } catch (error) { recorder.fail("cleanup", "owned Electron launch sample", error) }
+    }
+  }, 45000)
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
     args: ["--use-mock-keychain"], cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
+    .finally(() => clearTimeout(watchdog))
   // Recorder-owned bounded streams join chunks before redaction; overflow publishes only a named marker.
   const stdout = recorder.stream("owned Electron main stdout")
   const stderr = recorder.stream("owned Electron main stderr")
