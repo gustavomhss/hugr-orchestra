@@ -258,7 +258,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
       if (background) yield* ShellExecution.handoff(ctx, {
         command: updated, originalCommand: command, prepareParents, cwd, agentID: ctx.agentID, wrapped: jailed, resources: scope,
         onTake: () => { scopes.delete(toolUseID) },
-      })
+      }).pipe(Effect.tapCause(() => release(toolUseID)))
       return updated
     })),
     release,
@@ -280,7 +280,8 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         const physical = yield* canonical(fs, filepath, name === "Write")
         const worktree = yield* fs.realPath(projectDirectory)
         const targets = [...new Set([filepath, physical])]
-        yield* Effect.forEach(targets, (target) => assertExternalDirectoryEffect(ctx, target))
+        const directory = name === "Read" && (yield* fs.stat(physical)).type === "Directory"
+        yield* Effect.forEach(targets, (target) => assertExternalDirectoryEffect(ctx, target, { kind: directory ? "directory" : "file" }))
         return yield* ctx.ask({ permission: name === "Read" ? "read" : "edit",
           patterns: targets.map((target) => path.relative(worktree, target).replaceAll("\\", "/")),
           always: ["*"], metadata: { filepath, physical } })
