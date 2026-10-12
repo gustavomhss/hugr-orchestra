@@ -588,9 +588,11 @@ const layer = Layer.effect(
       const revision = session.revert ? revisions.get(sessionID) ?? 0 : requestedRevision
       const history = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
       const state = yield* read(sessionID)
-      const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : answered(history))
+      const inputs = ClaudeHostAdmission.read(state.inputs)
+      const historic = new Set(answered(history).filter((id) => !inputs[id]))
+      const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : [])
       const users = history.filter((message) => (RequestSource.actual(message) ||
-        message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id))
+        message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id) && !historic.has(message.info.id))
       const prompts = users.flatMap((message) => message.info.role === "user" ? [{ user: message.info, text: ClaudeCodeTranscript.hostPrompt([message]) }] : []).filter((item) => item.text)
       const prompt = prompts.map((item) => item.text).join("\n")
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
@@ -608,7 +610,6 @@ const layer = Layer.effect(
         yield* view.fail({ aborted: false, message: "Claude Code receives text only; this message has no text." })
         return true
       }
-      const inputs = ClaudeHostAdmission.read(state.inputs)
       const unresolved = prompts.find((item) => inputs[item.user.id] && inputs[item.user.id].status !== "pending" && !existing?.queued.has(item.user.id))
       if (unresolved) {
         yield* view.fail({ aborted: false, message: `Claude Code input submission is unresolved for ${unresolved.user.id}` })

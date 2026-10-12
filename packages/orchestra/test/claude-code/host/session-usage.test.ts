@@ -38,7 +38,7 @@ function usageReply(input = { thinking: 9, totalThinking: 9, cost: 0.1, totalOut
       total_cost_usd: input.cost,
       modelUsage: {
         [model]: {
-          inputTokens: 10,
+          inputTokens: input.totalOutput / 2,
           outputTokens: input.totalOutput,
           thinkingTokens: input.totalThinking,
           cacheReadInputTokens: 0,
@@ -84,7 +84,7 @@ ClaudeEngineFixture.it.instance(
         usageReply(),
         usageReply({ thinking: 5, totalThinking: 14, cost: 0.14, totalOutput: 40 }),
         usageReply({ thinking: 3, totalThinking: 3, cost: 0.02, totalOutput: 20 }),
-        usageReply({ thinking: 4, totalThinking: 7, cost: 0.03, totalOutput: 40 }),
+        usageReply({ thinking: 4, totalThinking: 4, cost: 0.03, totalOutput: 20 }),
       )
       yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("first turn") })
       yield* host.release(setup.chat.id)

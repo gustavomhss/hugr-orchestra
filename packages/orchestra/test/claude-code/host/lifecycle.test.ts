@@ -14,6 +14,30 @@ import { ClaudeEngineFixture } from "../engine-fixture"
 
 const frame = ClaudeEngineFixture.frame
 
+ClaudeEngineFixture.it.instance("a completed projection without a native receipt cannot acknowledge a registered send after reopening", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const setup = yield* ClaudeEngineFixture.setup()
+  const host = yield* ClaudeHost.Service
+  ClaudeEngineFixture.state.scripts.push(async function* (input) {
+    await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+    yield { type: "assistant", ...frame, uuid: "unacknowledged-answer", message: { id: "unacknowledged-answer",
+      content: [{ type: "text", text: "answer with no send receipt" }], stop_reason: "end_turn", usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...frame }
+    // Natural stream exit deliberately leaves no Stop receipt or delivered cursor to supply acknowledgment.
+  })
+  const admitted = yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("unacknowledged"), noReply: true })
+  if (admitted.info.role !== "user") throw new Error("missing user")
+  yield* host.turn({ sessionID: setup.chat.id, user: admitted.info })
+  const before = yield* setup.sessions.messages({ sessionID: setup.chat.id })
+  expect(before.findLast((item) => item.info.role === "assistant")?.info).toMatchObject({ time: { completed: expect.any(Number) } })
+  expect((yield* setup.sessions.get(setup.chat.id)).metadata?.claudeCode?.delivered ?? []).not.toContain(admitted.info.id)
+  yield* host.turn({ sessionID: setup.chat.id, user: admitted.info })
+  const last = (yield* setup.sessions.messages({ sessionID: setup.chat.id })).findLast((item) => item.info.role === "assistant")
+  expect(last?.info).toMatchObject({ error: { data: { message: expect.stringContaining("input submission is unresolved") } } })
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+}), 30_000)
+
 ClaudeEngineFixture.it.instance("UI forks exclude the selected user and use the preceding native chain entry", () => Effect.gen(function* () {
   ClaudeEngineFixture.reset()
   const setup = yield* ClaudeEngineFixture.setup()
