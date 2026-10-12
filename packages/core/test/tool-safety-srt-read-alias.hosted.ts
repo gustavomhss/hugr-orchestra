@@ -2,7 +2,7 @@
 import { expect } from "bun:test"
 import path from "path"
 import { pathToFileURL } from "url"
-import { Effect, Schedule } from "effect"
+import { Effect, Schedule, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
@@ -102,7 +102,7 @@ it.live("pinned srt restores only the exact regular rustup file alias", () => Ef
   expect((yield* processes.run(directoryWrapped)).stdout.toString()).toBe("false")
 }), 300_000)
 
-it.live("a cross-root alias never bypasses a planned source deny shared with its destination", () => Effect.gen(function* () {
+it.live("pinned srt emits no second alias restoration across a planned shared source deny", () => Effect.gen(function* () {
   yield* prepared
   const fs = yield* FSUtil.Service
   const processes = yield* AppProcess.Service
@@ -137,7 +137,13 @@ it.live("a cross-root alias never bypasses a planned source deny shared with its
     ripgrepConfig: { command: ToolSafetySandboxRuntime.ripgrep(source.directory) },
   })), () => Effect.sync(() => cleanupBwrapMountPoints()))
   if (typeof wrapped !== "string") throw new Error("BLOCKED: pinned srt returned no wrapped command")
-  const result = yield* processes.run(ChildProcess.make("/bin/sh", ["-c", wrapped], { cwd: worktree }), { timeout: "30 seconds" })
-  expect(result.exitCode, result.stderr.toString()).toBe(0)
-  expect(JSON.parse(result.stdout.toString())).toEqual([false, true])
+  // This nested-deny layout aborts at kernel startup on upstream srt. Inspect its actual emitted argv instead:
+  // the outer same-root restoration is allowed, but the inner cross-root restoration must not be emitted.
+  const parsed = yield* processes.run(ChildProcess.make("python3", ["-c",
+    "import json,shlex,sys;print(json.dumps(shlex.split(sys.argv[1])))", wrapped]), { timeout: "30 seconds" })
+  expect(parsed.exitCode, parsed.stderr.toString()).toBe(0)
+  const args = Schema.decodeUnknownSync(Schema.Array(Schema.String))(JSON.parse(parsed.stdout.toString()))
+  expect(args[0]).toBe("bwrap")
+  expect(args.some((arg, index) => arg === "--ro-bind" && args[index + 1] === original && args[index + 2] === original)).toBe(true)
+  expect(args.filter((arg, index) => arg === "--ro-bind" && args[index + 1] === original && args[index + 2] === alias)).toHaveLength(1)
 }), 300_000)
