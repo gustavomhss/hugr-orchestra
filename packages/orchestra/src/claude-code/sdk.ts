@@ -4,6 +4,7 @@ import { Context, Layer } from "effect"
 import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { spawn } from "node:child_process"
+import { ClaudeCodeExecutable } from "./executable"
 
 type QueryOptions = NonNullable<Parameters<typeof query>[0]["options"]>
 
@@ -57,6 +58,7 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
   return {
     options: {
       ...options,
+      pathToClaudeCodeExecutable: ClaudeCodeExecutable.resolve({ executable: options.pathToClaudeCodeExecutable, env: source }),
       env,
       spawnClaudeCodeProcess: (input) => {
         // Only a real SDK query spawns, so recorded transports run without the flag.
