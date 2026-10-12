@@ -78,6 +78,7 @@ ClaudeEngineFixture.it.instance("host Stop cancels the real MCP execution instea
   const frame = ClaudeEngineFixture.frame
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
     const args = { query: "waiting for permission" }
     yield { type: "assistant", ...frame, uuid: "cancel-tool-frame", message: { id: "msg_cancel_tool", content: [
       { type: "tool_use", id: "host_waiting", name: "mcp__orchestra__context_recall", input: args },
@@ -125,6 +126,7 @@ ClaudeEngineFixture.it.instance("generic subagent MCP calls join the mirrored ch
   const responses: unknown[] = []
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
     const pre = params.options?.hooks?.PreToolUse?.[0].hooks[0]
     if (!pre) throw new Error("missing gate")
     const base = { session_id: "sdk-1", transcript_path: "/tmp/scripted-transcript", cwd: params.options?.cwd ?? "/tmp" }
@@ -185,6 +187,7 @@ ClaudeEngineFixture.it.instance("interrupting a child with its own query also ca
   const frame = ClaudeEngineFixture.frame
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
     const pre = params.options?.hooks?.PreToolUse?.[0].hooks[0]
     if (!pre) throw new Error("missing gate")
     const base = { session_id: "sdk-1", transcript_path: "/tmp/scripted-transcript", cwd: params.options?.cwd ?? "/tmp" }
