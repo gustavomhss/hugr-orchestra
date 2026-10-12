@@ -61,12 +61,23 @@ test("Maestro's append delegates through Agent with plugin seats and names Orche
   expect(append).not.toMatch(/<env>|working directory:|precedence|follow them|override|instead of the Claude Code/i)
 })
 
-test("another seat as the main thread gets a short seat-scoped append", async () => {
-  const append = (await setup("backend").build()).systemPrompt.append ?? ""
-  expect(append).toContain("`backend` seat")
-  expect(append).toContain("mcp__orchestra__process")
-  expect(append).not.toContain("Maestro")
-  expect(append.length).toBeLessThan(600)
+test("another main-thread seat keeps a short scoped body plus the exact native review limitation", async () => {
+  // Repair: the required review-dispatch limitation is additional context, not seat-body growth.
+  // Keep the existing <600 bound on the body, in UTF-8 bytes, and budget only this exact notice plus one space.
+  const notice = "`maestro_request_review` is unavailable in Claude mode: it requires Orchestra's prompt executor to dispatch " +
+    "a review. Claude Code owns delegation here. Use `Agent` with `subagent_type: \"orchestra:lucy\"` for a review; " +
+    "automatic governed review requests need a native dispatch integration before they can run."
+  for (const seat of ["backend", "jimmy"]) {
+    const append = (await setup(seat).build()).systemPrompt.append ?? ""
+    expect(append).toContain(`\`${seat}\` seat`)
+    expect(append).toContain("owner's main conversation")
+    expect(append).toContain("mcp__orchestra__process")
+    expect(append).toContain("use Bash for short commands")
+    expect(append).not.toContain("Maestro")
+    expect(append.endsWith(` ${notice}`)).toBe(true)
+    expect(Buffer.byteLength(append.slice(0, -notice.length - 1), "utf8")).toBeLessThan(600)
+    expect(Buffer.byteLength(append, "utf8")).toBeLessThan(600 + 1 + Buffer.byteLength(notice, "utf8"))
+  }
 })
 
 test("the environment is the owner's own plus non-auth flags: nothing stripped, no credential added", async () => {
