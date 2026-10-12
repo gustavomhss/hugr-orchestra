@@ -8,10 +8,8 @@ import type {
   WslServersState,
 } from "./types"
 
-export type AddServerText = {
-  key: string
-  params?: Record<string, string>
-}
+// A translation key, or text the desktop already localized (a check's error).
+export type AddServerText = { key: string; params?: Record<string, string> } | { text: string }
 
 export type DistroStatusTone = "success" | "warning" | "muted"
 
@@ -52,7 +50,7 @@ export const wslRuntimeRetryable = (runtime: WslServerRuntime) =>
   runtime.kind === "failed" || runtime.kind === "stopped"
 
 export function wslOrchestraAction(check?: WslOrchestraCheck) {
-  if (!check) return
+  if (!check || check.problem) return
   if (!check.resolvedPath) return "wsl.onboarding.installServer"
   if (check.matchesDesktop === false) return "wsl.onboarding.updateServer"
 }
@@ -172,6 +170,8 @@ function addServerDistroStatus(input: {
     }
     return
   }
+  if (check.problem === "retry") return { label: { key: "wsl.onboarding.checkAgain" }, tone: "warning" }
+  if (check.problem === "unfixable") return { label: { text: check.error ?? "" }, tone: "warning" }
   if (check.matchesDesktop === false) return { label: { key: "wsl.onboarding.updateServer" }, tone: "warning" }
   if (!check.resolvedPath) return { label: { key: "wsl.onboarding.distroStatus.serverMissing" }, tone: "warning" }
   if (check.error) return { label: { key: "wsl.onboarding.installServer" }, tone: "warning" }
@@ -200,7 +200,8 @@ function addServerPrimaryButton(input: {
           input.state.job.distros.includes(input.selectedDistro))))
   const installingOrchestra =
     input.state?.job?.kind === "install-server" && input.state.job.distro === input.selectedDistro
-  if (!ready || probingOrchestra) {
+  // A server that cannot run for good, or a check to repeat, offers neither install nor add.
+  if (!ready || probingOrchestra || input.orchestraCheck?.problem) {
     return {
       variant: "contrast",
       label: probingSelected ? { key: "wsl.onboarding.distroStatus.checking" } : { key: "wsl.server.add" },

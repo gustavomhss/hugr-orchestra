@@ -313,8 +313,15 @@ export async function readWslCommandVersion(command: string, distro: string, opt
   return normalizeWslCommandVersion((await verifyWslGuestArtifact(distro, command, opts)) ?? "")
 }
 
+// An owned CLI build reports a SemVer version without a prefix: packages/script/src/index.ts takes ORCHESTRA_VERSION only
+// when semver-valid and otherwise derives it from the package version. Source runs without that define print "local",
+// which no shipped CLI does.
+const semverPattern =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/
+
 export function normalizeWslCommandVersion(output: string) {
-  return /^orchestra v([^\s]+)\r?\n?$/.exec(output)?.[1] ?? null
+  const version = output.replace(/\r?\n$/, "")
+  return semverPattern.test(version) ? version : null
 }
 
 export function openWslTerminal(distro?: string | null) {

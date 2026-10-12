@@ -7,6 +7,14 @@ export default {
   version: VERSION,
   license: "Apache-2.0",
   upstream: "kubernetes-sigs/controller-tools",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   // Pins are the GitHub release assets' sha256 digests in SRI form;
   // the darwin-x64 asset matched its digest and runs as a bare executable.
   targets: {

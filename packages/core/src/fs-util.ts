@@ -4,8 +4,9 @@ import { realpathSync } from "fs"
 import * as NFS from "fs/promises"
 import { lookup } from "mime-types"
 import { Context, Effect, FileSystem, Layer, Schema } from "effect"
-import type { PlatformError } from "effect/PlatformError"
+import { systemError, type PlatformError } from "effect/PlatformError"
 import { Glob } from "./util/glob"
+import { PhysicalPath } from "./util/physical-path"
 import { serviceUse } from "./effect/service-use"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem } from "./effect/app-node-platform"
@@ -37,6 +38,12 @@ export namespace FSUtil {
     readonly writeJson: (path: string, data: unknown, mode?: number) => Effect.Effect<void, Error>
     readonly ensureDir: (path: string) => Effect.Effect<void, Error>
     readonly writeWithDirs: (path: string, content: string | Uint8Array, mode?: number) => Effect.Effect<void, Error>
+    /** Write to a path already resolved to its real location, refusing any link found there at write time. */
+    readonly writePhysical: (
+      path: string,
+      content: string | Uint8Array,
+      options?: { exclusive?: boolean },
+    ) => Effect.Effect<void, Error>
     readonly readDirectoryEntries: (path: string) => Effect.Effect<DirEntry[], Error>
     readonly resolve: (path: string) => Effect.Effect<string>
     readonly findUp: (target: string, start: string, stop?: string) => Effect.Effect<string[], Error>
@@ -144,6 +151,24 @@ export namespace FSUtil {
         if (mode) yield* fs.chmod(path, mode)
       })
 
+      const writePhysical = Effect.fn("FileSystem.writePhysical")(function* (
+        path: string,
+        content: string | Uint8Array,
+        options?: { exclusive?: boolean },
+      ) {
+        yield* Effect.tryPromise({
+          try: () => PhysicalPath.writePhysical(path, content, options),
+          catch: (cause) =>
+            systemError({
+              _tag: cause instanceof Error && "code" in cause && cause.code === "EEXIST" ? "AlreadyExists" : "Unknown",
+              module: "FileSystem",
+              method: "writePhysical",
+              pathOrDescriptor: path,
+              cause,
+            }),
+        })
+      })
+
       const glob = Effect.fn("FileSystem.glob")(function* (pattern: string, options?: Glob.Options) {
         return yield* Effect.tryPromise({
           try: () => Glob.scan(pattern, options),
@@ -209,6 +234,7 @@ export namespace FSUtil {
         writeJson,
         ensureDir,
         writeWithDirs,
+        writePhysical,
         findUp,
         up,
         globUp,

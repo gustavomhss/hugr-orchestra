@@ -76,7 +76,7 @@ const native = (profile: Profile | undefined): Profile | undefined => {
 /** Host fact about the write jail of sandbox-bound shell commands. */
 export type ShellFact = {
   readonly shellWrites: "enforced" | "unenforced"
-  readonly shellSandbox: { readonly kind: "seatbelt" | "srt" | "none"; readonly reason?: string }
+  readonly shellSandbox: { readonly kind: "seatbelt" | "srt" | "appcontainer" | "none"; readonly reason?: string }
 }
 
 /** Per-invocation cell that ToolSafetySandbox.wrap fills and ToolSafety.run attaches to its observation. */
@@ -218,6 +218,10 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   [
     /^git-hygiene-(?:query-failed-or-overflow|path-acquisition)$/,
     "The guard could not list what this command would stage (not a git repository, a path outside it, or too many files), so it did not run. Check the directory and stage fewer, explicit paths.",
+  ],
+  [
+    /^git-host-/,
+    "On Windows a confined command cannot start git, so only one plain read-only git call (status, diff, log, show, rev-parse, rev-list, ls-files, grep, blame, branch or tag listing, remote -v, describe, cat-file, merge-base) runs on the host, with Orchestra's own flags, from a worktree whose git directory the command cannot write; this one did not run. Run such calls alone, without pipes, redirects, `;`, `&&`, `$`, `-c` or `-C` (git inside a compound command fails with `could not open '/dev/null'`). Orchestra has no git tool for writing commands (add, commit, checkout, fetch, push, ...): leave the changes in the worktree and report them.",
   ],
   [
     /^recognized-secret-output$/,
@@ -363,6 +367,9 @@ export const make = Effect.gen(function* () {
             Effect.mapError(() => new Denied({ reason: "path-acquisition-stat" })),
           )
           if (info && info.type !== "Directory") return yield* new Denied({ reason: "path-acquisition-non-directory" })
+          // A dangling symlink is not missing: a write through it creates the file where it points.
+          const link = yield* fs.readLink(target).pipe(Effect.orElseSucceed(() => undefined))
+          if (link !== undefined) return yield* canonical(path.resolve(anchor, link))
           return path.join(anchor, path.basename(target))
         }),
       ),

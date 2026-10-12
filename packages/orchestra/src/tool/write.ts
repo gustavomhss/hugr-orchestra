@@ -12,8 +12,9 @@ import { Format } from "../format"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { InstanceState } from "@/effect/instance-state"
 import { trimDiff } from "./edit"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import * as Bom from "@/util/bom"
+import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
 
 const MAX_PROJECT_DIAGNOSTICS_FILES = 5
 
@@ -41,10 +42,12 @@ export const WriteTool = Tool.define(
           const filepath = path.isAbsolute(params.filePath)
             ? params.filePath
             : path.join(instance.directory, params.filePath)
-          yield* assertExternalDirectoryEffect(ctx, filepath)
+          // Resolved once, before any permission is asked: everything below judges and writes this real location.
+          const physical = yield* Effect.promise(() => physicalPath(filepath))
+          yield* assertExternalDirectoryEffect(ctx, filepath, { real: physical })
 
-          const exists = yield* fs.existsSafe(filepath)
-          const source = exists ? yield* Bom.readFile(fs, filepath) : { bom: false, text: "" }
+          const exists = yield* fs.existsSafe(physical)
+          const source = exists ? yield* Bom.readFile(fs, physical) : { bom: false, text: "" }
           const next = Bom.split(params.content)
           const desiredBom = source.bom || next.bom
           const contentOld = source.text
@@ -53,7 +56,7 @@ export const WriteTool = Tool.define(
           const diff = trimDiff(createTwoFilesPatch(filepath, filepath, contentOld, contentNew))
           yield* ctx.ask({
             permission: "edit",
-            patterns: [path.relative(instance.worktree, filepath)],
+            patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filepath, physical)),
             always: ["*"],
             metadata: {
               filepath,
@@ -61,9 +64,9 @@ export const WriteTool = Tool.define(
             },
           })
 
-          yield* fs.writeWithDirs(filepath, Bom.join(contentNew, desiredBom))
+          yield* Effect.promise(() => writePhysical(physical, Bom.join(contentNew, desiredBom)))
           if (yield* format.file(filepath)) {
-            yield* Bom.syncFile(fs, filepath, desiredBom)
+            yield* Bom.syncFile(fs, physical, desiredBom)
           }
           yield* events.publish(FileSystem.Event.Edited, { file: filepath })
           yield* events.publish(Watcher.Event.Updated, {
