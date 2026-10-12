@@ -7,7 +7,9 @@ import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { ModelV2 } from "@orchestra/core/model"
+import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import type { SessionV1 } from "@orchestra/core/v1/session"
@@ -21,10 +23,12 @@ import { Archive } from "@/continuity/archive"
 import { recordAdmission } from "@/maestro/admission-record"
 import { recordPlanRevision } from "@/maestro/plan-revision"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { LogicalTask } from "@/maestro/logical-task"
+import { Permission } from "@/permission"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { Todo } from "@/session/todo"
@@ -36,7 +40,8 @@ import { testEffect } from "../../lib/effect"
 export const it = testEffect(TestAppNodeBuilder.build(
   LayerNode.group([filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
     SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
-    ArsenalBindings.node, Git.node, Skill.node]),
+    ArsenalBindings.node, Git.node, Skill.node, Permission.node, AppProcess.node, ArsenalObservations.node,
+    LocationServiceMap.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
 

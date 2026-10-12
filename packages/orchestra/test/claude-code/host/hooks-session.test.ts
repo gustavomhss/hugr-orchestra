@@ -34,6 +34,7 @@ ClaudeEngineFixture.it.instance("SDK callbacks retain host dependencies even whe
   const decisions: HookJSONOutput[] = []
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...ClaudeEngineFixture.frame, session_id: pre.session_id }
     decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0](pre, pre.tool_use_id, { signal: new AbortController().signal }))
     yield { type: "assistant", ...ClaudeEngineFixture.frame, uuid: crypto.randomUUID(),
       message: { id: "answer", model: "claude-haiku-4-5-20251001", content: [{ type: "text", text: "allowed" }], usage: {} } }
@@ -58,6 +59,7 @@ ClaudeEngineFixture.it.instance("Agent grant binding retains the host filesystem
   const decisions: HookJSONOutput[] = []
   ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
     await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...ClaudeEngineFixture.frame, session_id: pre.session_id }
     const args = { subagent_type: "orchestra:archie", description: "bounded proposal", run_in_background: false, prompt: `grantID: ${grantID}\nWrite proposal.md.` }
     yield { type: "assistant", ...ClaudeEngineFixture.frame, uuid: crypto.randomUUID(), message: { id: "dispatch", model: "claude-haiku-4-5-20251001",
       content: [{ type: "tool_use", id: "toolu_agent", name: "Agent", input: args }], usage: {} } }
