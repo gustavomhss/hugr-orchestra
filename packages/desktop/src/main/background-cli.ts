@@ -20,8 +20,15 @@ type Logger = {
 export async function startBackgroundCli(logger: Logger, shellStateHome?: string) {
   const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
   const target = nativeCliTarget(process.platform, process.arch)
+  // The installed copy takes the app's rg along. Only a package that puts rg on PATH itself (Nix) has none.
+  const ripgrep = join(process.resourcesPath, "ripgrep")
   const artifact = app.isPackaged
-    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"))
+    ? await installCliArtifact(
+        directory,
+        target,
+        join(app.getPath("userData"), "cli"),
+        existsSync(ripgrep) ? ripgrep : undefined,
+      )
     : await verifyCliArtifact(directory, target)
   const binary = artifact.path
   logger.log("v2 CLI executable resolved", { binary, version: artifact.version, packaged: app.isPackaged })

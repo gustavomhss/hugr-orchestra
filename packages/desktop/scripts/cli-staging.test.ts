@@ -1,22 +1,24 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { cliRipgrepKey, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import { stageCliArtifacts, desktopCliTargets, WslOmniPairMissingError } from "./cli-staging"
 // The pair's names come from the installer, so staging is held to what the WSL install reads.
 import { installGuestScript, installWslArtifact, omniCompanions } from "../src/main/wsl/artifact"
 import { installCliArtifact } from "../src/main/cli-install"
 import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
-import { verifyPackagedCli } from "./cli-packaging"
+import { writeRipgrepBundle } from "../src/main/cli-ripgrep.fixture"
+import { verifyPackagedCli, verifyPackagedRipgrep } from "./cli-packaging"
 
 const roots: string[] = []
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 // Linux CLIs ship the omni pair next to the binary, as the shared omni build step leaves them in dist, and every CLI
-// ships its tree-sitter in bin/tree-sitter.
+// ships its tree-sitter in bin/tree-sitter and its rg in bin/ripgrep.
 async function fixture(targets = ["linux-x64-baseline"], binary = (target: string) => `owned ${target}`) {
   const root = await mkdtemp(join(tmpdir(), "orchestra-stage-test-"))
   roots.push(root)
@@ -28,6 +30,7 @@ async function fixture(targets = ["linux-x64-baseline"], binary = (target: strin
       await writeFile(join(dir, "package.json"), JSON.stringify({ version: "1.18.27" }))
       await writeFile(join(dir, "bin", target.startsWith("windows-") ? "orchestra.exe" : "orchestra"), binary(target))
       await writeTreeSitterBundle(join(dir, "bin", "tree-sitter"), target)
+      await writeRipgrepBundle(join(dir, "bin", "ripgrep"), cliRipgrepKey(target)!)
       if (target.startsWith("linux-"))
         await Promise.all(omniCompanions.map((name) => writeFile(join(dir, "bin", name), `${name} ${target}`)))
     }),
@@ -169,6 +172,8 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
     guest(join(omni, "hugr_omni.node")), await sha(join(omni, "hugr_omni.node")),
     guest(join(omni, "hugr-omni-supervisor")), await sha(join(omni, "hugr-omni-supervisor")),
     guest(join(input.directory, "tree-sitter-linux-x64-baseline")), expect.stringMatching(/^[a-f0-9]{64}$/),
+    guest(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
+    await sha(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
   ]])
   // On Linux the real guest script ran and accepted the host's tree-sitter digest.
   if (process.platform !== "linux") return
@@ -183,7 +188,105 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   expect(await sha(join(home, ".orchestra/bin/tree-sitter", binding))).toBe(
     await sha(join(input.directory, "tree-sitter-linux-x64-baseline", binding)),
   )
+  // The guest CLI finds rg in ripgrep/ beside itself (packages/core/src/ripgrep/binary.ts), executable.
+  expect(await sha(join(home, ".orchestra/bin/ripgrep/rg"))).toBe(
+    await sha(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
+  )
+  expect((await stat(join(home, ".orchestra/bin/ripgrep/rg"))).mode & 0o777).toBe(0o755)
 })
+
+test("Windows staging places each Linux CLI's pinned rg in ripgrep-<target>/ and refuses a bundle without it", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version)
+  for (const [target, key] of [["linux-arm64", "arm64-linux"], ["linux-x64-baseline", "x64-linux"]] as const) {
+    const manifest = JSON.parse(await readFile(join(input.directory, `ripgrep-${target}`, "manifest.json"), "utf8"))
+    expect(manifest.key).toBe(key)
+    expect(await readFile(join(input.directory, `ripgrep-${target}`, "rg"), "utf8")).toBe(`rg ${key}`)
+    if (process.platform !== "win32")
+      expect((await stat(join(input.directory, `ripgrep-${target}`, "rg"))).mode & 0o777).toBe(0o755)
+  }
+  // A producer directory hands its staged copies on.
+  const received = { ...input, dist: join(input.root, "no-local-build"), prebuilt: input.directory, directory: join(input.root, "consumer") }
+  await stageCliArtifacts(received)
+  expect(await readFile(join(received.directory, "ripgrep-linux-arm64", "rg"), "utf8")).toBe("rg arm64-linux")
+  // The build stops when a guest's rg is missing or is not the pinned build for its CPU, keeping what was staged.
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const built = join(input.dist, "cli-linux-arm64", "bin", "ripgrep")
+  await rename(built, `${built}.away`)
+  await expect(stageCliArtifacts(input)).rejects.toThrow("ripgrep bundle missing")
+  await writeRipgrepBundle(built, "x64-linux")
+  await expect(stageCliArtifacts(input)).rejects.toThrow("is not the pinned ripgrep")
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  await rm(built, { recursive: true })
+  await rename(`${built}.away`, built)
+  // The packaging check refuses a bundle whose guest rg is gone or changed.
+  const staged = join(input.directory, "ripgrep-linux-x64-baseline", "rg")
+  await writeFile(staged, "changed")
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toThrow(
+    "differs from the pinned archive's",
+  )
+  await rm(staged)
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toThrow(
+    "missing its executable",
+  )
+})
+
+test("the installed CLI takes the desktop's rg along, and an install missing it is repaired", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  const resources = join(input.root, "Resources", "ripgrep")
+  await writeRipgrepBundle(resources, "arm64-darwin")
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, resources)
+  const rg = join(dirname(installed.path), "ripgrep", "rg")
+  expect(await readFile(rg, "utf8")).toBe("rg arm64-darwin")
+  await rm(join(dirname(installed.path), "ripgrep"), { recursive: true })
+  await installCliArtifact(input.directory, "darwin-arm64", cache, resources)
+  expect(await readFile(rg, "utf8")).toBe("rg arm64-darwin")
+  // Resources without its rg refuses the install by name.
+  await rm(join(resources, "rg"))
+  await rm(join(dirname(installed.path), "ripgrep"), { recursive: true })
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache, resources)).rejects.toThrow(
+    "missing its executable",
+  )
+})
+
+// The six desktop packages electron-builder makes: each ships Resources/ripgrep with the pinned rg for its own OS and
+// CPU, executable, with the license texts, and the packaging check (afterPack/afterSign) refuses anything else.
+for (const [platform, arch, key] of [
+  ["darwin", "arm64", "arm64-darwin"],
+  ["darwin", "x64", "x64-darwin"],
+  ["linux", "arm64", "arm64-linux"],
+  ["linux", "x64", "x64-linux"],
+  ["win32", "arm64", "arm64-win32"],
+  ["win32", "x64", "x64-win32"],
+] as const)
+  test(`the ${platform}-${arch} package must ship the pinned rg in Resources/ripgrep`, async () => {
+    const root = await mkdtemp(join(tmpdir(), "orchestra-ripgrep-package-"))
+    roots.push(root)
+    const resources = join(root, "ripgrep")
+    const executable = join(resources, platform === "win32" ? "rg.exe" : "rg")
+    await writeRipgrepBundle(resources, key)
+    const manifest = await verifyPackagedRipgrep(resources, platform, arch, false)
+    expect(manifest?.archive.sha256).toBe(RipgrepRelease.archive(key)!.sha256)
+    if (process.platform !== "win32" && platform !== "win32") expect((await stat(executable)).mode & 0o111).toBe(0o111)
+    // Another CPU's rg is refused.
+    const other = await verifyPackagedRipgrep(resources, platform, arch === "x64" ? "arm64" : "x64", false).catch(
+      (error: Error) => error,
+    )
+    expect(other).toBeInstanceOf(Error)
+    // Signing changes the bytes: only the signed check accepts that.
+    await writeFile(executable, "signed")
+    await expect(verifyPackagedRipgrep(resources, platform, arch, false)).rejects.toThrow("differs")
+    await verifyPackagedRipgrep(resources, platform, arch, true)
+    if (process.platform !== "win32" && platform !== "win32") {
+      await chmod(executable, 0o644)
+      await expect(verifyPackagedRipgrep(resources, platform, arch, true)).rejects.toThrow("not executable")
+    }
+    await rm(executable)
+    await expect(verifyPackagedRipgrep(resources, platform, arch, true)).rejects.toThrow("missing its executable")
+  })
 
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))

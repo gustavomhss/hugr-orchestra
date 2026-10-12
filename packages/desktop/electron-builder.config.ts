@@ -18,13 +18,17 @@ const legacyDesktopEntry = path.join(packageDir, "resources", "linux", "orchestr
 const legacyDesktopEntryFpm = `${legacyDesktopEntry}=/usr/share/applications/orchestra-desktop.desktop`
 
 // hugr-omni (D-L8): the addon and the supervisor ship as real files in Resources/omni, staged by scripts/stage-omni.ts.
+// The pinned rg ships in Resources/ripgrep, staged by scripts/utils.ts (stageRipgrepToResources). Neither needs the
+// Electron helpers' JIT entitlements, so all three are signed with the empty entitlements.omni.plist.
 const omniEntitlements = path.join(packageDir, "resources", "entitlements.omni.plist")
 const omniBinaries = ["hugr-omni-supervisor", "hugr_omni.node"].map((name) => `Contents/Resources/omni/${name}`)
+const helperBinaries = [...omniBinaries, "Contents/Resources/ripgrep/rg"]
 
 type MacSign = Extract<NonNullable<NonNullable<Configuration["mac"]>["sign"]>, (...args: never[]) => unknown>
 
 // electron-builder signs every nested binary with entitlementsInherit, the Electron helpers' JIT entitlements. omni's
-// two files get the empty entitlements.omni.plist instead; everything else goes through electron-builder's own signer.
+// two files and rg get the empty entitlements.omni.plist instead; everything else goes through electron-builder's own
+// signer, with the hardened runtime, and is notarized with the app.
 async function signMac(...[options]: Parameters<MacSign>) {
   const builder = createRequire(import.meta.url).resolve("electron-builder")
   const signer = createRequire(builder)("app-builder-lib/out/codeSign/macCodeSign") as {
@@ -35,7 +39,7 @@ async function signMac(...[options]: Parameters<MacSign>) {
     ...options,
     optionsForFile: (file) => {
       const base = forFile?.(file) ?? {}
-      return omniBinaries.some((binary) => file.endsWith(binary)) ? { ...base, entitlements: omniEntitlements } : base
+      return helperBinaries.some((binary) => file.endsWith(binary)) ? { ...base, entitlements: omniEntitlements } : base
     },
   })
 }
@@ -43,6 +47,7 @@ async function signMac(...[options]: Parameters<MacSign>) {
 const metainfoFpm = (appId: string) =>
   `${path.join(packageDir, "resources", `${appId}.metainfo.xml`)}=/usr/share/metainfo/${appId}.metainfo.xml`
 
+// Every .exe outside Resources/cli comes through here, Resources/ripgrep/rg.exe included.
 async function signWindows(configuration: { path: string }) {
   // CLI bytes are already signed and hashed by staging. Re-signing would invalidate their manifest.
   if (configuration.path.replaceAll("\\", "/").includes("/resources/cli/")) return
@@ -68,14 +73,21 @@ const APP_IDS = {
   prod: "ai.hugr.orchestra",
 } as const
 
-async function verifyPackagedResources(context: AfterPackContext) {
-  const { verifyPackagedCli } = await import("./scripts/cli-packaging")
+// After packing, rg must be the pinned archive's bytes; after signing, macOS and Windows signatures have changed them.
+async function verifyPackagedResources(context: AfterPackContext, signed: boolean) {
+  const { verifyPackagedCli, verifyPackagedRipgrep } = await import("./scripts/cli-packaging")
   const { Arch } = await import("electron-builder")
-  const directory =
+  const resources =
     context.electronPlatformName === "darwin"
-      ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
-      : path.join(context.appOutDir, "resources/cli")
-  await verifyPackagedCli(directory, context.electronPlatformName, Arch[context.arch], context.packager.appInfo.version)
+      ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources")
+      : path.join(context.appOutDir, "resources")
+  await verifyPackagedCli(
+    path.join(resources, "cli"),
+    context.electronPlatformName,
+    Arch[context.arch],
+    context.packager.appInfo.version,
+  )
+  await verifyPackagedRipgrep(path.join(resources, "ripgrep"), context.electronPlatformName, Arch[context.arch], signed)
 }
 
 const getBase = (appId: string): Configuration => ({
@@ -97,9 +109,17 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/cli{,/**/*}", "!resources/icons/**/*", "!resources/omni/**"],
+  files: [
+    "out/**/*",
+    "resources/**/*",
+    "!resources/orchestra-cli*",
+    "!resources/cli{,/**/*}",
+    "!resources/icons/**/*",
+    "!resources/omni/**",
+    "!resources/ripgrep/**",
+  ],
   beforePack: async (context) => {
-    const { verifyPackagedCli } = await import("./scripts/cli-packaging")
+    const { verifyPackagedCli, verifyPackagedRipgrep } = await import("./scripts/cli-packaging")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
@@ -117,9 +137,15 @@ const getBase = (appId: string): Configuration => ({
       Arch[context.arch],
       context.packager.appInfo.version,
     )
+    await verifyPackagedRipgrep(
+      path.join(packageDir, "resources/ripgrep"),
+      context.electronPlatformName,
+      Arch[context.arch],
+      false,
+    )
   },
-  afterPack: verifyPackagedResources,
-  afterSign: verifyPackagedResources,
+  afterPack: (context) => verifyPackagedResources(context, false),
+  afterSign: (context) => verifyPackagedResources(context, true),
   extraResources: [
     // Native windows and the macOS Dock read process.resourcesPath/icons outside app.asar.
     {
@@ -145,6 +171,7 @@ const getBase = (appId: string): Configuration => ({
       from: "resources/omni",
       to: "omni",
     },
+    { from: "resources/ripgrep", to: "ripgrep" },
   ],
   mac: {
     signIgnore: ["/Resources/cli/"],
@@ -154,7 +181,7 @@ const getBase = (appId: string): Configuration => ({
     gatekeeperAssess: false,
     entitlements: "resources/entitlements.plist",
     entitlementsInherit: "resources/entitlements.plist",
-    binaries: omniBinaries,
+    binaries: helperBinaries,
     sign: signMac,
     notarize: true,
     target: ["dmg", "zip"],
@@ -172,7 +199,7 @@ const getBase = (appId: string): Configuration => ({
       sign: signWindows,
     },
     target: ["nsis"],
-    // The supervisor (.exe) is signed by default; the omni addon is a .node.
+    // The supervisor and rg (.exe) are signed by default; the omni addon is a .node.
     signExts: [".node"],
     verifyUpdateCodeSignature: false,
   },

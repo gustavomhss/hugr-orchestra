@@ -1,5 +1,7 @@
 import { $ } from "bun"
+import { rm } from "node:fs/promises"
 import { join, resolve } from "node:path"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
 import { nativeCliTarget } from "../src/main/cli-artifacts"
 
@@ -16,8 +18,7 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
   const cli = resolve(desktop, "../cli")
   const version =
     process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(desktop, "../orchestra/package.json")).json()).version
-  const targets =
-    input.targets ?? (RUST_TARGET ? targetsForRust(RUST_TARGET) : desktopCliTargets(process.platform, process.arch))
+  const targets = input.targets ?? desktopCliTargets(...placement())
   const prebuilt = input.prebuilt ?? process.env.ORCHESTRA_CLI_PREBUILT_DIR
   if (prebuilt === undefined) {
     await targets.reduce(async (previous, target) => {
@@ -54,7 +55,27 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
   })
 }
 
-function targetsForRust(target: string) {
+/**
+ * Stages the pinned rg for the desktop's own platform in resources/ripgrep, which electron-builder ships as
+ * Resources/ripgrep: the server finds it at process.resourcesPath/ripgrep, the bundled CLI at ../ripgrep, and the
+ * background CLI gets a copy (src/main/cli-install.ts). RIPGREP_BUNDLED=false (Nix) stages nothing.
+ */
+export async function stageRipgrepToResources() {
+  const directory = resolve(import.meta.dir, "..", "resources", "ripgrep")
+  await rm(directory, { recursive: true, force: true })
+  if (!RipgrepBundle.enabled()) return console.warn(`stage-ripgrep: ${RipgrepBundle.BUNDLED}=false, nothing staged`)
+  const [platform, arch] = placement()
+  const manifest = await RipgrepBundle.stage({
+    key: `${arch}-${platform}`,
+    directory,
+    archives: process.env[RipgrepBundle.ARCHIVES],
+  })
+  console.log(`stage-ripgrep: ${manifest.archive.url} (sha256 ${manifest.archive.sha256}) -> ${directory}`)
+}
+
+// The desktop's own platform and architecture: RUST_TARGET's when set, else this host's.
+function placement(): [string, string] {
+  if (!RUST_TARGET) return [process.platform, process.arch]
   const placement = {
     "aarch64-apple-darwin": ["darwin", "arm64"],
     "x86_64-apple-darwin": ["darwin", "x64"],
@@ -62,7 +83,7 @@ function targetsForRust(target: string) {
     "x86_64-pc-windows-msvc": ["win32", "x64"],
     "aarch64-unknown-linux-gnu": ["linux", "arm64"],
     "x86_64-unknown-linux-gnu": ["linux", "x64"],
-  }[target]
-  if (!placement) throw new Error(`Unsupported desktop CLI build target: ${target}`)
-  return desktopCliTargets(placement[0]!, placement[1]!)
+  }[RUST_TARGET]
+  if (!placement) throw new Error(`Unsupported desktop CLI build target: ${RUST_TARGET}`)
+  return [placement[0]!, placement[1]!]
 }

@@ -75,6 +75,13 @@ jobs:
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
           bun test/omni-smoke/packaged.ts --require main,shell,terminal --diagnose-main
 
+      # Resources/ripgrep: pinned bytes, refused when moved away, and the packaged CLI (Resources/cli and its installed
+      # copy) searches with it and never downloads one, each with its mutant (test/omni-smoke/ripgrep.ts).
+      - name: Packaged ripgrep, used by the packaged CLI and never downloaded, mutants then restored
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: packages/desktop
+        run: bun test/omni-smoke/ripgrep.ts
+
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()
         uses: actions/upload-artifact@v4

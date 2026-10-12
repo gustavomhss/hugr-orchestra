@@ -1,5 +1,6 @@
 import path from "path"
 import { createHash } from "crypto"
+import { existsSync, realpathSync } from "fs"
 import { Cause, Context, Deferred, Duration, Effect, Exit, Layer, Option, Schedule, Schema, Scope, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
@@ -11,68 +12,33 @@ import { FSUtil } from "../fs-util"
 import { Global } from "../global"
 import { which } from "../util/which"
 import { EffectFlock } from "../util/effect-flock"
+import { RipgrepRelease } from "./release"
+
+// false in builds that ship their own rg (packages/cli/script/build.ts); unset in source runs.
+declare const ORCHESTRA_RIPGREP_DOWNLOAD: boolean | undefined
 
 /**
- * Finds the ripgrep executable: `rg` on PATH first (Nix builds and CI put it there), then a copy this host
- * downloaded before, and only then a download of the pinned release. A download is checked against its pinned
- * digest before extraction, runs in the background once per process (and once per host, under a file lock), and
- * each attempt has a deadline. A caller waits at most `wait` for it; past that it fails with a clear message while
+ * Finds the ripgrep executable: the `rg` a packaged build ships (ripgrep/ beside the CLI binary or in the desktop's
+ * Resources) first, then `rg` on PATH (Nix builds and CI put it there), then a copy this host downloaded before, and
+ * only then a download of the pinned release (release.ts). Packaged builds never download: a compiled CLI is built
+ * with ORCHESTRA_RIPGREP_DOWNLOAD false, and the packaged desktop sets DISABLE_DOWNLOAD for its server. A download is
+ * checked against its pinned digest before extraction, runs in the background once per process (and once per host,
+ * under a file lock), and each attempt has a deadline. A caller waits at most `wait` for it; past that it fails with a clear message while
  * the download carries on for the next caller. A failed download is not retried for `cooldown`.
  */
 export namespace RipgrepBinary {
-  export const VERSION = "15.1.0"
+  export const VERSION = RipgrepRelease.VERSION
   /** `1` or `true` forbids the download: a missing `rg` then fails naming this variable. CI sets it. */
   export const DISABLE_DOWNLOAD = "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"
 
-  // sha256 of each upstream release archive. Pinned 2026-10-12: each matched upstream's .sha256 file, and the two
-  // Linux archives match the sha512 pins in tool-safety-sandbox-runtime.ts.
-  const PLATFORM = {
-    "arm64-darwin": {
-      platform: "aarch64-apple-darwin",
-      extension: "tar.gz",
-      sha256: "378e973289176ca0c6054054ee7f631a065874a352bf43f0fa60ef079b6ba715",
-    },
-    "arm64-linux": {
-      platform: "aarch64-unknown-linux-gnu",
-      extension: "tar.gz",
-      sha256: "2b661c6ef508e902f388e9098d9c4c5aca72c87b55922d94abdba830b4dc885e",
-    },
-    "x64-darwin": {
-      platform: "x86_64-apple-darwin",
-      extension: "tar.gz",
-      sha256: "64811cb24e77cac3057d6c40b63ac9becf9082eedd54ca411b475b755d334882",
-    },
-    "x64-linux": {
-      platform: "x86_64-unknown-linux-musl",
-      extension: "tar.gz",
-      sha256: "1c9297be4a084eea7ecaedf93eb03d058d6faae29bbc57ecdaf5063921491599",
-    },
-    "arm64-win32": {
-      platform: "aarch64-pc-windows-msvc",
-      extension: "zip",
-      sha256: "00d931fb5237c9696ca49308818edb76d8eb6fc132761cb2a1bd616b2df02f8e",
-    },
-    "ia32-win32": {
-      platform: "i686-pc-windows-msvc",
-      extension: "zip",
-      sha256: "725be85a1e8f92878a548f40ee4f6df64bc93b809586462b3c6d884e1de1e83a",
-    },
-    "x64-win32": {
-      platform: "x86_64-pc-windows-msvc",
-      extension: "zip",
-      sha256: "124510b94b6baa3380d051fdf4650eaa80a302c876d611e9dba0b2e18d87493a",
-    },
-  } as const
-
   /** One downloadable archive: where it is, its digest, and the directory inside it that holds the executable. */
-  export type Release = {
-    readonly url: string
-    readonly sha256: string
-    readonly extension: "tar.gz" | "zip"
-    readonly root: string
-  }
+  export type Release = RipgrepRelease.Archive
 
   export type Options = {
+    /** Where a packaged build keeps its own `rg`, in the order they are tried. */
+    readonly bundled: () => readonly string[]
+    /** Whether this is a packaged build, which never downloads, whatever `download` says. */
+    readonly packaged: boolean
     /** The `rg` on PATH, if any. */
     readonly system: () => string | undefined
     /** Where a downloaded `rg` is kept. */
@@ -105,19 +71,29 @@ export namespace RipgrepBinary {
 
   export class Service extends Context.Service<Service, Interface>()("@orchestra/RipgrepBinary") {}
 
-  export const release = (key = `${process.arch}-${process.platform}`): Release | undefined => {
-    const config = PLATFORM[key as keyof typeof PLATFORM]
-    if (!config) return undefined
-    const root = `ripgrep-${VERSION}-${config.platform}`
-    return {
-      url: `https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}/${root}.${config.extension}`,
-      sha256: config.sha256,
-      extension: config.extension,
-      root,
-    }
+  export const release = RipgrepRelease.archive
+
+  const packaged = typeof ORCHESTRA_RIPGREP_DOWNLOAD !== "undefined" && !ORCHESTRA_RIPGREP_DOWNLOAD
+
+  /**
+   * ripgrep/ beside the running binary (a CLI build, the desktop's installed CLI, a WSL guest), in ../ripgrep from
+   * there (the desktop's CLI run from Resources/cli), and in process.resourcesPath (the desktop's server).
+   */
+  export const bundled = () => {
+    const executable = RipgrepRelease.executable()
+    const binary = path.dirname(existsSync(process.execPath) ? realpathSync(process.execPath) : process.execPath)
+    const resources =
+      "resourcesPath" in process && typeof process.resourcesPath === "string" ? process.resourcesPath : ""
+    return [
+      path.join(binary, "ripgrep", executable),
+      path.join(binary, "..", "ripgrep", executable),
+      ...(resources ? [path.join(resources, "ripgrep", executable)] : []),
+    ]
   }
 
   export const defaults = (env: Record<string, string | undefined> = process.env): Options => ({
+    bundled,
+    packaged,
     system: () => which(process.platform === "win32" ? "rg.exe" : "rg") ?? undefined,
     directory: Global.Path.bin,
     release: release(),
@@ -285,6 +261,8 @@ export namespace RipgrepBinary {
       })
 
     const locate = Effect.gen(function* () {
+      const bundled = options.bundled()
+      for (const file of bundled) if (yield* fs.isFile(file)) return file
       const system = options.system()
       if (system && (yield* fs.isFile(system))) return system
       if (yield* fs.isFile(target)) return target
@@ -293,9 +271,11 @@ export namespace RipgrepBinary {
         return yield* unavailable(
           `ripgrep publishes no build for ${process.arch}-${process.platform}; install ripgrep (rg) on PATH`,
         )
-      if (!options.download) {
+      if (options.packaged || !options.download) {
         const error = unavailable(
-          `ripgrep (rg) is not on PATH and ${DISABLE_DOWNLOAD} forbids downloading it; install ripgrep (rg) on PATH`,
+          options.packaged
+            ? `ripgrep (rg) is missing from this packaged build (looked at ${bundled.join(", ")}) and is not on PATH; packaged builds never download it, so reinstall Orchestra or install ripgrep (rg) on PATH`
+            : `ripgrep (rg) is not on PATH and ${DISABLE_DOWNLOAD} forbids downloading it; install ripgrep (rg) on PATH`,
         )
         yield* Effect.logWarning(error.message)
         return yield* error

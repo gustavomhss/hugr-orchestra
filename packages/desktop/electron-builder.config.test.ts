@@ -145,13 +145,39 @@ for (const channel of ["dev", "beta", "prod"] as const) {
     expect(config.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
     expect(config.files).toContain("!resources/omni/**")
     expect(JSON.stringify(config.extraResources)).not.toContain("native/")
-    expect(config.mac?.binaries).toEqual([
+    expect(config.mac?.binaries).toEqual(expect.arrayContaining([
       "Contents/Resources/omni/hugr-omni-supervisor",
       "Contents/Resources/omni/hugr_omni.node",
-    ])
+    ]))
     expect(typeof config.mac?.sign).toBe("function")
     expect(config.win?.signExts).toContain(".node")
     const entitlements = await Bun.file("resources/entitlements.omni.plist").text()
     expect(entitlements).toContain("<dict/>")
+  })
+}
+
+for (const channel of ["dev", "beta", "prod"] as const) {
+  test(`ships the pinned rg in Resources/ripgrep for ${channel}, signed and checked on every pack`, async () => {
+    const previous = process.env.ORCHESTRA_CHANNEL
+    process.env.ORCHESTRA_CHANNEL = channel
+    const module = await import(`./electron-builder.config.ts?ripgrep=${channel}`)
+    const config = module.default as Configuration
+    if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
+    else process.env.ORCHESTRA_CHANNEL = previous
+
+    // Outside app.asar, where the server (process.resourcesPath/ripgrep) and the CLI (../ripgrep) can run it.
+    expect(config.extraResources).toContainEqual({ from: "resources/ripgrep", to: "ripgrep" })
+    expect(config.files).toContain("!resources/ripgrep/**")
+    // macOS: signed by the app's signer with the hardened runtime and notarized with the app; Windows: rg.exe is an
+    // .exe, which electron-builder signs unless signExts excludes it.
+    expect(config.mac?.binaries).toContain("Contents/Resources/ripgrep/rg")
+    expect(config.mac?.hardenedRuntime).toBe(true)
+    expect(config.mac?.notarize).toBe(true)
+    expect(config.mac?.signIgnore).not.toContainEqual(expect.stringContaining("ripgrep"))
+    expect(config.win?.signExts ?? []).not.toContain("!.exe")
+    // beforePack checks the staged copy; afterPack and afterSign the packaged one.
+    expect(typeof config.beforePack).toBe("function")
+    expect(typeof config.afterPack).toBe("function")
+    expect(typeof config.afterSign).toBe("function")
   })
 }
