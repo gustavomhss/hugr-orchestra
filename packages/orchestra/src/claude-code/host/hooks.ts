@@ -8,27 +8,20 @@ export * as ClaudeHostHooks from "./hooks"
 //   settlement record.
 // - SubagentStop: the subagent's last text (a background run's author, recorded only once it is delivered).
 // - The join's `task_notification` frames (join.ts, fed by HOST's stream consumer): background deliveries.
-// - SessionStart(compact): Orchestra's working memory from durable state only, with no model call.
+// - SessionStart(compact): owned retained memory and honestly labelled query-local state, with no model call.
 // - PostCompact: Claude Code's summary archived for `context_recall`.
-import { and, desc, eq, like } from "drizzle-orm"
 import { Effect, Exit, Option } from "effect"
 import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
-import type { SessionV1 } from "@orchestra/core/v1/session"
-import { Database } from "@orchestra/core/database/database"
-import { EventTable } from "@orchestra/core/event/sql"
 import { ToolSafety } from "@orchestra/core/tool-safety"
-import { Archive } from "@/continuity/archive"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
-import { LogicalTask } from "@/maestro/logical-task"
-import { readPlanRevision } from "@/maestro/plan-revision"
-import { MessageID, PartID, type SessionID } from "@/session/schema"
+import type { SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
-import { Todo } from "@/session/todo"
 import { ClaudeCodeTools } from "../tools"
 import { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
+import { ClaudeHostMemory } from "./memory"
 
 /**
  * What HOST hands the hooks. `run`, `join` and the optional ports are HOOKS additions to the brief's base fields:
@@ -72,13 +65,16 @@ export type Research = {
 
 /** Claude Code's native reads whose results Jimmy may cite only through recorded provenance. */
 const CAPTURED = ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "LSP"]
-const MEMORY_LIMIT = 6000
 
 export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
     path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts })
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
+  // Observed exact native session/actor pairs belong to this query, never a process-global registry.
+  const nativeOwners = new Map<string, ClaudeHostGate.Actor>()
+  const actorSessions = new Map<string, string>()
+  const conflicted = new Set<string>()
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
     : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
   const unsubscribe = ctx.join.subscribe((frame) => {
@@ -100,6 +96,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return ctx.run(Effect.gen(function* () {
       const actor = yield* delegation.actor(input.agent_id)
       if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
+      if (input.agent_id) yield* bind(input.session_id, actor)
       const args = record(input.tool_input)
       if (ClaudeCodeTools.orchestra(input.tool_name) && Object.hasOwn(args, ClaudeHostMcp.DISPATCH))
         return ClaudeHostGate.deny("HOLD: the MCP dispatch receipt is supplied by the host, so model-supplied receipts are refused.")
@@ -168,14 +165,24 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return Promise.resolve({})
   }
 
-  const compact: HookCallback = (input) => {
-    if (input.hook_event_name !== "SessionStart") return Promise.resolve({})
-    return ctx.run(memory()).then((text): HookJSONOutput => text ? { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: text } } : {})
+  const compact: HookCallback = (input, _toolUseID, options) => {
+    if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
+    return ctx.run(cancellable(Effect.gen(function* () {
+      const actor = yield* owner(input.session_id)
+      const text = yield* ClaudeHostMemory.read({ sessionID: actor.sessionID, pending: delegation.summaries(),
+        grants: actor.sessionID === ctx.sessionID ? delegation.grants() : [] })
+      return text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}
+    }), options.signal))
   }
 
-  const archive: HookCallback = (input) => {
+  const archive: HookCallback = (input, _toolUseID, options) => {
     if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
-    return ctx.run(summary(input.compact_summary, input.trigger)).then(() => ({}))
+    return ctx.run(cancellable(Effect.gen(function* () {
+      const actor = yield* owner(input.session_id)
+      yield* ClaudeHostMemory.observe({ sessionID: actor.sessionID, nativeSessionID: input.session_id,
+        text: input.compact_summary, trigger: input.trigger })
+      return {}
+    }), options.signal))
   }
 
   return {
@@ -230,75 +237,64 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     })
   }
 
-  // Working memory after a compaction, from durable records only: open logical tasks with their grants and receipts,
-  // pending delegations and grants, and the plan state. No model is called.
-  function memory() {
+  function bind(nativeSessionID: string, actor: ClaudeHostGate.Actor) {
     return Effect.gen(function* () {
-      const store = yield* Session.Service
-      const todos = yield* Todo.Service
-      const history = yield* store.messages({ sessionID: ctx.sessionID })
-      const calls = history.flatMap((message) => message.parts).filter((part): part is SessionV1.ToolPart =>
-        part.type === "tool" && ClaudeHostGate.agentCall(part.tool))
-      const tasks = yield* Effect.forEach(yield* store.children(ctx.sessionID), (session) => Effect.gen(function* () {
-        const binding = yield* LogicalTask.read(session.id).pipe(Effect.catch(() => Effect.succeed(undefined)))
-        if (!binding) return []
-        const call = calls.find((part) => part.state.status !== "pending" && part.state.metadata?.sessionId === session.id)
-        const metadata = call?.state.status === "pending" ? undefined : call?.state.metadata
-        const receipt = record(record(metadata?.workResult).terminal).reason
-        if (call?.state.status === "completed" && receipt === "ended") return []
-        const grant = record(metadata?.claudeCodeDispatch)
-        return [`- ${binding.taskId} · ${binding.memberID} · ${session.title} · ${call?.state.status ?? "no call"}` +
-          (typeof receipt === "string" ? ` · receipt ${receipt}` : "") + (typeof metadata?.hold === "string" ? ` · ${metadata.hold}` : "") +
-          (typeof grant.grantID === "string" ? ` · grant ${grant.grantID} ${JSON.stringify(grant.writeRoots ?? [])}` : "")]
-      }))
-      const pending = delegation.summaries().filter((item) => !item.settled).map((item) =>
-        `- ${item.toolUseID} · ${item.seat} · ${item.background ? "background" : "foreground"}${item.hold ? ` · ${item.hold}` : ""}`)
-      const grants = delegation.grants().map((grant) => `- ${grant.grantID} · ${grant.seat} · ${JSON.stringify(grant.writePaths)} · ${grant.purpose}`)
-      const plan = yield* planState(ctx.sessionID)
-      const todo = (yield* todos.get(ctx.sessionID)).filter((item) => item.status !== "completed" && item.status !== "cancelled")
-        .map((item) => `- [${item.status}] ${item.content}`)
-      const sections = [
-        ["Open logical tasks", tasks.flat()],
-        ["Pending delegations", pending],
-        ["Unbound write grants", grants],
-        ["Plan", [...plan, ...todo]],
-      ] as const
-      const body = sections.filter((section) => section[1].length).map((section) => [`## ${section[0]}`, ...section[1]].join("\n"))
-      if (!body.length) return undefined
-      const text = ["# Orchestra working memory (from durable records, after Claude Code's compaction)", ...body].join("\n\n")
-      return text.length > MEMORY_LIMIT ? `${text.slice(0, MEMORY_LIMIT)}\n… (truncated; use context_recall for more)` : text
+      const sessions = yield* Session.Service
+      const root = yield* sessions.get(ctx.sessionID)
+      const nativeRoot = root.metadata?.claudeCode?.sessionId
+      const previous = nativeOwners.get(nativeSessionID)
+      if (!actor.agentID || actor.sessionID === ctx.sessionID || typeof nativeRoot !== "string" ||
+        nativeSessionID === nativeRoot || !nativeSessionID || conflicted.has(nativeSessionID) ||
+        previous && (previous.agentID !== actor.agentID || previous.sessionID !== actor.sessionID) ||
+        actorSessions.has(actor.agentID) && actorSessions.get(actor.agentID) !== nativeSessionID) {
+        conflicted.add(nativeSessionID)
+        if (actor.agentID && actorSessions.has(actor.agentID)) conflicted.add(actorSessions.get(actor.agentID)!)
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: native session/actor pair cannot be bound"))
+      }
+      nativeOwners.set(nativeSessionID, actor)
+      actorSessions.set(actor.agentID, nativeSessionID)
     })
   }
 
-  // Claude Code's compaction summary goes to the session archive, where `context_recall` finds it. It is not a message.
-  function summary(text: string, trigger: string) {
+  function owner(nativeSessionID: string) {
     return Effect.gen(function* () {
-      const archive = yield* Archive.Service
-      const store = yield* Session.Service
-      const user = (yield* store.messages({ sessionID: ctx.sessionID })).findLast((message) => message.info.role === "user")
-      if (user?.info.role !== "user") return
-      const now = Date.now()
-      const info = { id: MessageID.ascending(), sessionID: ctx.sessionID, parentID: user.info.id, role: "assistant", mode: ctx.agent,
-        agent: ctx.agent, path: { cwd: ctx.directory, root: ctx.worktree }, summary: true, cost: 0,
-        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, modelID: user.info.model.modelID,
-        providerID: user.info.model.providerID, time: { created: now, completed: now }, finish: "stop" } satisfies SessionV1.Assistant
-      yield* archive.publish({ sessionID: ctx.sessionID, messages: [{ info, parts: [{ id: PartID.ascending(), sessionID: ctx.sessionID,
-        messageID: info.id, type: "text", synthetic: true, text: `Claude Code compaction summary (${trigger}):\n\n${text}` }] }] })
+      const sessions = yield* Session.Service
+      const root = yield* sessions.get(ctx.sessionID)
+      const nativeRoot = root.metadata?.claudeCode?.sessionId
+      if (conflicted.has(nativeSessionID)) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT"))
+      if (typeof nativeRoot !== "string" || !nativeRoot)
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNAVAILABLE: root init identity is not persisted"))
+      if (nativeOwners.has(nativeRoot)) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: root identity overlaps an observed child"))
+      if (nativeSessionID === nativeRoot) return { sessionID: ctx.sessionID, seat: ctx.agent }
+      const observed = nativeOwners.get(nativeSessionID)
+      if (!observed?.agentID) return yield* Effect.fail(new Error(
+        "COMPACT_NATIVE_OWNER_UNAVAILABLE: no joined PreToolUse native session/actor pair in this query (including after restart)"))
+      const actor = yield* delegation.actor(observed.agentID)
+      if ("hold" in actor || actor.sessionID !== observed.sessionID || actor.agentID !== observed.agentID)
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: observed actor is no longer joined"))
+      const child = yield* sessions.get(actor.sessionID)
+      if (!child.parentID) return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_CONFLICT: child has no dispatching Session"))
+      const parent = yield* ClaudeHostMemory.retained(child.parentID)
+      if (!parent.history.some((message) => message.parts.some((part) => part.type === "tool" &&
+        ClaudeHostGate.agentCall(part.tool) && part.state.status !== "pending" && part.state.metadata?.sessionId === child.id)))
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNRETAINED: joined Agent part is absent from its dispatcher's view"))
+      return actor
     })
   }
-}
 
-function planState(sessionID: SessionID) {
-  return Effect.gen(function* () {
-    const database = yield* Database.Service
-    const row = yield* database.db.select({ id: EventTable.id }).from(EventTable)
-      .where(and(eq(EventTable.aggregate_id, sessionID), like(EventTable.type, "maestro.plan_revision.recorded%")))
-      .orderBy(desc(EventTable.seq)).limit(1).get().pipe(Effect.orDie)
-    const revision = row ? yield* readPlanRevision(row.id).pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
-    if (!revision) return []
-    return [`- Plan revision ${revision.id} (${revision.status}): ${revision.goal.value}`,
-      ...revision.acceptance.slice(0, 8).map((item) => `  - accept: ${item.value}`)]
-  })
+  function cancellable<A, R>(work: Effect.Effect<A, unknown, R>, signal: AbortSignal) {
+    const signals = [...new Set([signal, ctx.abort.signal])]
+    const cancelled = () => Effect.fail(new Error("COMPACT_HOOK_CANCELLED: native callback or owning host aborted"))
+    return Effect.suspend(() => {
+      if (signals.some((signal) => signal.aborted)) return cancelled()
+      return Effect.raceFirst(work, Effect.callback<never, Error>((resume) => {
+        const abort = () => resume(cancelled())
+        signals.forEach((signal) => signal.addEventListener("abort", abort, { once: true }))
+        if (signals.some((signal) => signal.aborted)) abort()
+        return Effect.sync(() => signals.forEach((signal) => signal.removeEventListener("abort", abort)))
+      })).pipe(Effect.flatMap((value) => signals.some((signal) => signal.aborted) ? cancelled() : Effect.succeed(value)))
+    })
+  }
 }
 
 function withheld(reason: string, context?: string): HookJSONOutput {
