@@ -74,9 +74,10 @@ export async function portClosed(url: string) {
   }))
 }
 
-// A main-process exception before ready parks the main thread in Electron's error alert, and its console output never
-// reaches a pipe. A second, owned instance under its own root runs with the Node inspector paused at start, so its
-// console calls and uncaught exceptions are read over the inspector (sanitized) before it is killed.
+// A main-process exception before ready parks the main thread in Electron's error alert, and a packaged app reports
+// it nowhere else: not to a pipe, not as an inspector console call. A second, owned instance under its own root runs
+// with the Node inspector paused at start and pausing on every exception, so the exceptions it threw before hanging
+// (the last ones name the failure) are read over the inspector (sanitized) before it is killed.
 async function inspectFailedLaunch(executable: string, root: string, env: Record<string, string>, recorder: CandidateRecorder) {
   recorder.protectPath(root, "candidate-launch-diagnostic")
   const child = spawn(executable, ["--inspect-brk=0", "--use-mock-keychain"], {
@@ -92,20 +93,31 @@ async function inspectFailedLaunch(executable: string, root: string, env: Record
       })
     }), 30000)
     const socket = new WebSocket(url)
+    let id = 0
+    const send = (method: string, params: Record<string, unknown> = {}) => socket.send(JSON.stringify({ id: ++id, method, params }))
     socket.onmessage = (message) => {
       const event = JSON.parse(String(message.data)) as { method?: string; params?: {
         type?: string; args?: { description?: string; value?: unknown }[]
         exceptionDetails?: { text?: string; exception?: { description?: string } }
+        reason?: string; data?: { description?: string }
       } }
+      if (event.method === "Debugger.paused") {
+        if (event.params?.reason !== "Break on start")
+          events.push({ paused: event.params?.reason, exception: event.params?.data?.description?.slice(0, 2000) })
+        if (events.length > 60) events.splice(0, events.length - 60)
+        send("Debugger.resume")
+      }
       if (event.method === "Runtime.consoleAPICalled")
         events.push({ console: event.params?.type, args: event.params?.args?.map((arg) => arg.description ?? arg.value) })
       if (event.method === "Runtime.exceptionThrown")
         events.push({ exception: event.params?.exceptionDetails?.exception?.description ?? event.params?.exceptionDetails?.text })
     }
     await bounded("owned launch diagnostic connection", new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject }), 10000)
-    socket.send(JSON.stringify({ id: 1, method: "Runtime.enable" }))
-    socket.send(JSON.stringify({ id: 2, method: "Runtime.runIfWaitingForDebugger" }))
-    await sleep(20000)
+    send("Runtime.enable")
+    send("Debugger.enable")
+    send("Debugger.setPauseOnExceptions", { state: "all" })
+    send("Runtime.runIfWaitingForDebugger")
+    await sleep(30000)
     socket.close()
   } catch (error) { recorder.fail("cleanup", "owned launch diagnostic", error) }
   finally {
