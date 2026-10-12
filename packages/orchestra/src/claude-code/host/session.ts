@@ -174,7 +174,7 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const catalog = yield* ModelsDev.Service
     // What resolving the served registry tools needs (ClaudeHostMcp.prepare: registry, config, the process tool).
-    const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>>>()
+    const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>> | ResearchRecords.Service>()
     const serviceState = { disposed: false }
     const lives = new Map<SessionID, Live>()
     const startups = new Map<SessionID, Semaphore.Semaphore>()
