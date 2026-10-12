@@ -228,7 +228,8 @@ live("credential names absent at policy allocation stay denied after creation un
     yield* f.fs.writeFileString(allowed, "public-control")
     const names = ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db", "probe"),
       path.join("xdg", "git", "credentials")]
-    const files = names.map((name) => path.join(alias, name))
+    // A whole-root alias can be unreadable without any credential deny; probe physical paths as well.
+    const files = names.flatMap((name) => [path.join(cargo, name), path.join(alias, name)])
     yield* Effect.forEach(files, (file) => Effect.gen(function* () {
       expect(yield* f.fs.exists(file)).toBe(false)
     }), { discard: true })
