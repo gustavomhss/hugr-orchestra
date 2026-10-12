@@ -56,6 +56,9 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
   const registry = yield* ToolRegistry.Service
   const context = yield* Effect.context<never>()
   const parent = yield* sessions.create({ agent: "maestro", title: "Research authority" })
+  yield* sessions.setMetadata({ sessionID: parent.id, metadata: {
+    ...parent.metadata, claudeCode: { ...parent.metadata?.claudeCode, sessionId: base.session_id },
+  } })
   const user = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "user", agent: "maestro",
     model: ref, time: { created: Date.now() } } satisfies SessionV1.User)
   const assistant = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "assistant", parentID: user.id,
@@ -78,6 +81,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
   })
   const fire = (input: HookInput) => Effect.promise(() => hooks[input.hook_event_name]![0].hooks[0](input, undefined, { signal: abort.signal }))
   const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research") {
+    const nativeSessionID = `native-child-${callID}`
     const args = { subagent_type: "orchestra:jimmy", description: "Investigate conditions", prompt: "Find the applicability conditions.", run_in_background: false }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: parent.id, type: "tool",
       tool: "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } }, metadata: { providerExecuted: true } })
@@ -90,9 +94,10 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
     if (!prompt) throw new Error("Missing dispatch prompt")
     const message = yield* sessions.updateMessage({ ...assistant, id: MessageID.ascending(), sessionID: child, parentID: prompt.info.id,
       agent: "jimmy", mode: "subagent" })
-    const pre = (name: string, toolUseID: string, input: unknown = {}) => fire({ ...base, agent_id: `native-${callID}`,
+    const pre = (name: string, toolUseID: string, input: unknown = {}, sessionID = nativeSessionID) => fire({ ...base,
+      session_id: sessionID, agent_id: `native-${callID}`,
       hook_event_name: "PreToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: input })
-    const post = (name: string, toolUseID: string) => fire({ ...base, agent_id: `native-${callID}`,
+    const post = (name: string, toolUseID: string) => fire({ ...base, session_id: nativeSessionID, agent_id: `native-${callID}`,
       hook_event_name: "PostToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: {}, tool_response: "retained output" })
     const settle = () => fire({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id: callID,
       tool_input: args, tool_response: { status: "completed", agentId: `native-${callID}`, content: [{ type: "text", text: "Done" }] } })
@@ -110,7 +115,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
         metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
       return result
     })
-    return { child, message, output, pre, post, settle, run, callID }
+    return { child, message, output, pre, post, settle, run, callID, nativeSessionID }
   })
   return { parent, assistant, sessions, hooks, join, research, fire, dispatch, mirrored, tools, seat, abort }
 })
