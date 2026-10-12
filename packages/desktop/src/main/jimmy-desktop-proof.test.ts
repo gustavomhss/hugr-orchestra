@@ -285,7 +285,10 @@ async function runProof(root: string, install: string, electron: string, mutant:
   const child = spawn(executable, process.platform === "linux" ? ["-a", electron, "--no-sandbox", entry] : [entry], {
     cwd: project, stdio: ["pipe", "pipe", "pipe"], detached: true,
     env: {
-      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "TMPDIR", "DISPLAY", "XAUTHORITY"].includes(key))),
+      // The relocated install ships no omni files; the run's omni mode and CI's explicit omni-binaries paths
+      // (HUGR_OMNI_*, see desktop omni-host.ts) are what spawnLocalServer's sidecarEnv locates.
+      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "TMPDIR", "DISPLAY", "XAUTHORITY",
+        "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"].includes(key))),
       HOME: path.join(owned, "home"), XDG_CACHE_HOME: path.join(owned, "cache"), XDG_DATA_HOME: path.join(owned, "data"), XDG_CONFIG_HOME: path.join(owned, "config"), XDG_STATE_HOME: path.join(owned, "state"),
       ORCHESTRA_DB: path.join(owned, "native.db"), ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_TEST_HOME: path.join(owned, "home"), ORCHESTRA_TEST_MANAGED_CONFIG_DIR: path.join(owned, "managed"),
       ORCHESTRA_CONFIG_CONTENT: "{}", ORCHESTRA_CLIENT: "desktop", ORCHESTRA_PURE: "true", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "true", ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "true", ORCHESTRA_DISABLE_MODELS_FETCH: "true", ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", ORCHESTRA_DISABLE_EMBEDDED_WEB_UI: "true", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
