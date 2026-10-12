@@ -5,8 +5,10 @@ import { createRequire } from "node:module"
 import { spawn } from "node:child_process"
 import { tmpdir } from "node:os"
 import { omniTargets } from "@orchestra/script/omni"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { leanPin, sha256 } from "../../orchestra/script/lean-notices"
 import { nativeCliTarget } from "../src/main/cli-artifacts"
+import { verifyPackagedRipgrep } from "./cli-packaging"
 
 const desktop = path.resolve(import.meta.dirname, "..")
 const root = path.resolve(desktop, "../..")
@@ -17,6 +19,8 @@ const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
 const heapBudgetMiB = 8192
 const omniFiles = ["hugr_omni.node", "hugr-omni-supervisor"]
+// The candidate is a native Intel build: Resources/ripgrep holds the pinned x64 macOS rg.
+const ripgrepKey = "x64-darwin"
 
 type CommandResult = {
   exitCode: number | null; signal: string | null; stdout: string; stderr: string; timedOut: boolean; error?: string
@@ -212,6 +216,12 @@ export async function verifyMaterials(directory: string) {
   return { ...leanPin, materials }
 }
 
+/** The build record's pin of a staged ripgrep: its verified manifest and the digest of each shipped file. */
+export async function ripgrepRecord(directory: string) {
+  const manifest = await RipgrepBundle.verify(directory, ripgrepKey)
+  return { key: ripgrepKey, manifest, files: await inventory(directory) }
+}
+
 export function assertMachOX64(bytes: Buffer, name: string) {
   if (bytes.length < 8 || bytes.readUInt32LE(0) !== 0xfeedfacf || bytes.readUInt32LE(4) !== 0x01000007) {
     throw new Error(`Expected x64 Mach-O: ${name}`)
@@ -306,6 +316,10 @@ export async function candidate(action: string) {
     } finally {
       await rm(cliOmni, { recursive: true, force: true })
     }
+    // Like the production prebuild: the base config's beforePack and afterPack refuse a package without the pinned rg
+    // in resources/ripgrep, and the packaged CLI and server never download one.
+    await command(["bun", "-e", 'await (await import("./scripts/utils.ts")).stageRipgrepToResources()'], env)
+    const ripgrep = await ripgrepRecord(path.join(desktop, "resources/ripgrep"))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
@@ -333,7 +347,7 @@ export async function candidate(action: string) {
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
       backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
-      buildResources, omni, resources: await inventory(path.join(desktop, "resources")),
+      buildResources, omni, ripgrep, resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
   }
@@ -409,6 +423,11 @@ export async function candidate(action: string) {
     }
   }
   await verifyOmni(path.join(resources, "omni"), manifest.omni)
+  // The unsigned candidate ships rg as the pinned archive's bytes, with the manifest the build recorded.
+  await verifyPackagedRipgrep(path.join(resources, "ripgrep"), "darwin", "x64", false)
+  if (JSON.stringify(await ripgrepRecord(path.join(resources, "ripgrep"))) !== JSON.stringify(manifest.ripgrep)) {
+    throw new Error("Packaged ripgrep differs from the build record")
+  }
   for (const icon of ["icon.png", "icon.ico", "dock.png"]) {
     const original = new Uint8Array(await Bun.file(path.join(desktop, "resources/icons", icon)).arrayBuffer())
     const packaged = new Uint8Array(await Bun.file(path.join(resources, "icons", icon)).arrayBuffer())
