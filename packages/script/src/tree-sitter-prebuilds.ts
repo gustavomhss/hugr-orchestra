@@ -288,13 +288,3 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
       .forEach((name) => rmSync(path.join(dir, name), { recursive: true, force: true }))
   }
 }
-
-if (import.meta.main) {
-  const [os, arch, flag, out] = process.argv.slice(2)
-  if (!os || !arch || (flag !== undefined && (flag !== "--out" || !out)))
-    throw new Error("Usage: tree-sitter-prebuilds.ts <os> <arch> [--out <dir>]")
-  const root = path.resolve(import.meta.dirname, "../../..")
-  console.log(
-    JSON.stringify(out ? exportTreeSitter({ root, os, arch, out }) : prepareTreeSitterPrebuilds({ root, os, arch })),
-  )
-}
