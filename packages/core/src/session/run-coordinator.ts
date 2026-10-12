@@ -2,12 +2,17 @@ export * as SessionRunCoordinator from "./run-coordinator"
 
 import { Deferred, Effect, Exit, Fiber, FiberSet, Scope } from "effect"
 
+export type RunOptions = {
+  /** Cancels only the active entry started by this waiter; joining never acquires ownership. */
+  readonly interruptOnCancel?: boolean
+}
+
 /** Serializes execution for each key while allowing different keys to run concurrently. */
 export interface Coordinator<Key, E> {
   /** Snapshots keys with an execution owned by this coordinator. */
   readonly active: Effect.Effect<ReadonlySet<Key>>
   /** Starts execution while idle or joins the active execution. */
-  readonly run: (key: Key) => Effect.Effect<void, E>
+  readonly run: (key: Key, options?: RunOptions) => Effect.Effect<void, E>
   /** Registers one coalesced follow-up after newly recorded work. */
   readonly wake: (key: Key) => Effect.Effect<void>
   /** Stops active execution and waits for its cleanup. */
@@ -64,18 +69,20 @@ export const make = <Key, E>(options: {
       Deferred.doneUnsafe(entry.done, exit)
     }
 
-    const run = (key: Key): Effect.Effect<void, E> =>
+    const run = (key: Key, runOptions?: RunOptions): Effect.Effect<void, E> =>
       Effect.uninterruptibleMask((restore) => {
         const entry = active.get(key)
         if (entry !== undefined) {
-          if (entry.stopping) return restore(Deferred.await(entry.done).pipe(Effect.andThen(run(key))))
+          if (entry.stopping) return restore(Deferred.await(entry.done).pipe(Effect.andThen(run(key, runOptions))))
           return restore(Deferred.await(entry.done))
         }
 
         const next = makeEntry()
         active.set(key, next)
         start(key, next, true)
-        return restore(Deferred.await(next.done))
+        return restore(Deferred.await(next.done)).pipe(
+          Effect.onInterrupt(() => runOptions?.interruptOnCancel ? stop(key, next) : Effect.void),
+        )
       })
 
     const wake = (key: Key) =>
@@ -91,14 +98,15 @@ export const make = <Key, E>(options: {
         start(key, next, false)
       })
 
-    const interrupt = (key: Key): Effect.Effect<void> =>
+    const stop = (key: Key, expected?: Entry<E>): Effect.Effect<void> =>
       Effect.suspend(() => {
         const entry = active.get(key)
-        if (entry?.owner === undefined) return Effect.void
+        // The entry object is process-local ownership. A completed waiter's successor is a different owner.
+        if (entry?.owner === undefined || (expected !== undefined && entry !== expected)) return Effect.void
         entry.stopping = true
         entry.pendingWake = false
         return Fiber.interrupt(entry.owner)
       })
 
-    return { active: Effect.sync(() => new Set(active.keys())), run, wake, interrupt }
+    return { active: Effect.sync(() => new Set(active.keys())), run, wake, interrupt: (key) => stop(key) }
   })
