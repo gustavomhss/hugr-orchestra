@@ -92,10 +92,10 @@ describe("createServerProtocolPromise", () => {
     try {
       const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
       const chain = protocol.then((kind) => kind)
-      const failed = expect(Promise.resolve(chain)).rejects.toBe(reason)
+      const failed = Promise.resolve(chain).catch((error: unknown) => error)
       await reached.promise
       abort.abort(reason)
-      await failed
+      expect(await failed).toBe(reason)
       await expect(Promise.resolve(protocol)).rejects.toBe(reason)
       expect(probes).toBe(1)
     } finally {
