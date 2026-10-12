@@ -238,6 +238,9 @@ describe("PublicApi OpenAPI v2 errors", () => {
     expect(componentName(responseRef(spec.paths["/api/model"]?.get?.responses?.["503"]) ?? "")).toBe(
       "ServiceUnavailableError",
     )
+    expect(componentName(responseRef(spec.paths["/api/model/default"]?.get?.responses?.["503"]) ?? "")).toBe(
+      "ServiceUnavailableError",
+    )
     expect(componentName(responseRef(spec.paths["/api/provider/{providerID}"]?.get?.responses?.["404"]) ?? "")).toBe(
       "ProviderNotFoundError",
     )

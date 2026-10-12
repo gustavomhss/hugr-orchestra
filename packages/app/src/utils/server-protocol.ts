@@ -13,7 +13,8 @@ function headers(server: ServerConnection.HttpBase) {
 async function probe(server: ServerConnection.HttpBase, fetch: typeof globalThis.fetch, path: string) {
   const response = await fetch(new URL(path, server.url), {
     headers: headers(server),
-    signal: AbortSignal.timeout(5_000),
+    // Cold local servers can take longer than five seconds to initialize their Location services.
+    signal: AbortSignal.timeout(20_000),
   })
   if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return
   const value: unknown = await response.json()
@@ -31,5 +32,5 @@ export async function detectServerProtocol(
   const current = await probe(server, fetch, "/api/health").catch(() => undefined)
   if (current && "pid" in current && typeof current.pid === "number") return "v2"
   if (current && "healthy" in current && current.healthy === true) return "v1"
-  return "v2"
+  throw new Error("Unable to detect Orchestra server protocol: neither health endpoint reported ready.")
 }
