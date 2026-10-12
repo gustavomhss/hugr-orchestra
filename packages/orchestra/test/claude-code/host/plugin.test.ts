@@ -277,9 +277,11 @@ for (const killed of [false, true]) {
       const child = yield* spawner.spawn(publisher(input, prefix, true))
       yield* Effect.addFinalizer(() => Effect.gen(function* () {
         if (yield* child.isRunning) yield* child.kill({ killSignal: "SIGKILL" })
-      }))
-      const ready = yield* child.stdout.pipe(Stream.decodeText, Stream.splitLines, Stream.runHead,
-        awaitWithTimeout("publisher never reached staging", "20 seconds"))
+      }).pipe(Effect.orDie))
+      const ready = yield* awaitWithTimeout(
+        child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+        "publisher never reached staging", "20 seconds",
+      )
       const staging = path.join(root, Option.getOrThrow(ready))
       const inode = yield* Effect.promise(async () => {
         expect(path.basename(staging)).toStartWith(`${prefix}.stage-`)
@@ -316,11 +318,15 @@ it.instance(
     const prefix = path.basename(reference.path)
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
     const child = yield* spawner.spawn(publisher({ seats: f.seats, tools, root }, prefix, false))
-    const ready = yield* child.stdout.pipe(Stream.decodeText, Stream.splitLines, Stream.runHead,
-      awaitWithTimeout("publisher never reached staging", "20 seconds"))
+    const ready = yield* awaitWithTimeout(
+      child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+      "publisher never reached staging", "20 seconds",
+    )
     expect(Option.getOrThrow(ready)).toStartWith(`${prefix}.stage-`)
-    const stderr = yield* child.stderr.pipe(Stream.decodeText, Stream.runCollect,
-      awaitWithTimeout("publisher did not reject staging", "20 seconds"))
+    const stderr = yield* awaitWithTimeout(
+      child.stderr.pipe(Stream.decodeText(), Stream.runCollect),
+      "publisher did not reject staging", "20 seconds",
+    )
     expect((yield* child.exitCode)).not.toBe(0)
     expect(stderr.join("")).toContain("Incomplete Orchestra plugin staging directory")
     expect(yield* Effect.promise(() => fs.readdir(root))).toEqual([])
