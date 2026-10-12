@@ -10,7 +10,7 @@ export * as ClaudeHostDelegation from "./delegation"
 // - for a background non-proposal seat: the delivery, from the stream's `task_notification` only, never `SubagentStop`.
 // The parent part keeps Claude Code's raw tool name; no record ever claims a `task` call Orchestra did not run.
 import { isDeepStrictEqual } from "node:util"
-import { Effect } from "effect"
+import { Effect, Exit, Semaphore } from "effect"
 import type { PreToolUseHookInput, PostToolUseHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
@@ -78,6 +78,15 @@ type Record = {
   settled?: boolean
 }
 
+type Admission = {
+  readonly args: unknown
+  readonly toolName: string
+  readonly dispatcher: ClaudeHostGate.Actor
+  grant?: ClaudeHostMcp.Grant
+  grants?: Map<string, ClaudeHostMcp.Grant>
+  spent: boolean
+}
+
 export type Summary = Pick<Record, "toolUseID" | "subagentType" | "child" | "grantID" | "writeRoots" | "background" | "settled"> & {
   readonly hold?: string
   readonly seat?: string
@@ -96,6 +105,13 @@ export function make(input: {
 }) {
   const records = new Map<string, Record>()
   const join = input.join
+  const locks = new Map<string, Semaphore.Semaphore>()
+  const admissions = new Map<string, Admission>()
+  const exclusive = <A, E, R>(toolUseID: string, effect: Effect.Effect<A, E, R>) => Effect.suspend(() => {
+    const lock = locks.get(toolUseID) ?? Semaphore.makeUnsafe(1)
+    locks.set(toolUseID, lock)
+    return lock.withPermits(1)(effect)
+  })
 
   /**
    * Who makes a call: the main conversation, the joined seat's child Session, or a HOLD. A child's hook may run before
@@ -134,51 +150,69 @@ export function make(input: {
 
   /** `PreToolUse[Agent]`, after the gate allowed it. Fails with the reason the dispatch is denied. */
   const dispatch = Effect.fn("ClaudeHostDelegation.dispatch")(function* (hook: PreToolUseHookInput, dispatcher: ClaudeHostGate.Actor) {
-    const args = record(hook.tool_input)
-    // Claude Code runs a subagent in the background unless the call says otherwise; an absent type is its default agent.
-    const subagentType = text(args, "subagent_type") ?? "general-purpose"
-    const base = { toolUseID: hook.tool_use_id, toolName: hook.tool_name === "Task" ? "Task" as const : "Agent" as const, subagentType,
-      description: text(args, "description") ?? subagentType, dispatcher, background: args.run_in_background !== false,
-      writeRoots: [] }
-    if (!subagentType.startsWith(PREFIX)) {
-      records.set(hook.tool_use_id, base)
-      join.dispatched(hook.tool_use_id, {})
-      return
-    }
-    const seat = yield* resolve(subagentType)
-    const registry = yield* Agent.Service
-    const sessions = yield* Session.Service
-    const config = yield* Config.Service
-    const next = yield* registry.get(seat.id)
-    if (!next || next.mode === "primary") return yield* refuse(`${subagentType} cannot be started as a subagent.`)
-    // Proposal seats settle through the parent part: Claude Code's background delivery has no host settlement (B3).
-    if (seat.workResult !== undefined && base.background)
-      return yield* refuse(`HOLD: ${seat.id} runs in the foreground only. Call ${base.toolName} again with run_in_background: false.`)
-    if (seat.workResult !== undefined && args.isolation !== undefined)
-      return yield* refuse(`${seat.id} writes only its granted roots in this worktree. Call ${base.toolName} again without isolation.`)
-    const parent = yield* sessions.get(dispatcher.sessionID)
-    const cfg = yield* config.get()
-    const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, parent.projectID)
-    if (authority.ancestry.length - 1 >= (cfg.subagent_depth ?? 1))
-      return yield* refuse("You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.")
-    const grant = seat.writeRoots ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID) : undefined
-    const permission = yield* WriteRoots.bind(seat.id, grant?.writePaths,
-      GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }))
-    const brief = yield* lastUser(parent.id)
-    const child = yield* sessions.create({ parentID: parent.id, title: `${base.description} (@${next.name} subagent)`, agent: seat.id, permission })
-    // The binding exists before Claude Code starts the subagent, so its first frame already has a logical task.
-    const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: authority.rootID,
-      projectID: parent.projectID, memberID: seat.id, source: "host" })
-    const prompt = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: child.id, agent: seat.id,
-      model: brief.model, time: { created: Date.now() } } satisfies SessionV1.User)
-    yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: prompt.id, type: "text", text: text(args, "prompt") ?? "" })
-    // Bound to this tool use only: the grant cannot be named by a second dispatch.
-    if (grant) ClaudeHostMcp.grants(dispatcher.sessionID).delete(grant.grantID)
-    const entry = { ...base, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
-      writeRoots: WriteRoots.read(permission) ?? [] }
-    records.set(hook.tool_use_id, entry)
-    join.dispatched(hook.tool_use_id, { seat: seat.id, grantID: entry.grantID, child: child.id })
-    yield* running(entry)
+    return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
+      const prior = admissions.get(hook.tool_use_id)
+      if (prior && (prior.toolName !== hook.tool_name || !isDeepStrictEqual(prior.args, hook.tool_input) ||
+        !isDeepStrictEqual(prior.dispatcher, dispatcher))) return yield* refuse(`HOLD: conflicting reuse of ${hook.tool_use_id}`)
+      const existing = records.get(hook.tool_use_id)
+      if (existing) return existing.seat ? yield* running(existing) : undefined
+      if (prior?.spent) return yield* refuse(`HOLD: admission for ${hook.tool_use_id} already spent its grant; no new child may be created`)
+      const ownership: Admission = { args: structuredClone(hook.tool_input), toolName: hook.tool_name, dispatcher: { ...dispatcher }, spent: false }
+      admissions.set(hook.tool_use_id, ownership)
+      return yield* Effect.gen(function* () {
+        const args = record(hook.tool_input)
+        // Claude Code runs a subagent in the background unless the call says otherwise; an absent type is its default agent.
+        const subagentType = text(args, "subagent_type") ?? "general-purpose"
+        const base = { toolUseID: hook.tool_use_id, toolName: hook.tool_name === "Task" ? "Task" as const : "Agent" as const, subagentType,
+          description: text(args, "description") ?? subagentType, dispatcher, background: args.run_in_background !== false,
+          writeRoots: [] }
+        if (!subagentType.startsWith(PREFIX)) {
+          records.set(hook.tool_use_id, base)
+          join.dispatched(hook.tool_use_id, {})
+          return
+        }
+        const seat = yield* resolve(subagentType)
+        const registry = yield* Agent.Service
+        const sessions = yield* Session.Service
+        const config = yield* Config.Service
+        const next = yield* registry.get(seat.id)
+        if (!next || next.mode === "primary") return yield* refuse(`${subagentType} cannot be started as a subagent.`)
+        // Proposal seats settle through the parent part: Claude Code's background delivery has no host settlement (B3).
+        if (seat.workResult !== undefined && base.background)
+          return yield* refuse(`HOLD: ${seat.id} runs in the foreground only. Call ${base.toolName} again with run_in_background: false.`)
+        if (seat.workResult !== undefined && args.isolation !== undefined)
+          return yield* refuse(`${seat.id} writes only its granted roots in this worktree. Call ${base.toolName} again without isolation.`)
+        const parent = yield* sessions.get(dispatcher.sessionID)
+        const cfg = yield* config.get()
+        const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, parent.projectID)
+        if (authority.ancestry.length - 1 >= (cfg.subagent_depth ?? 1))
+          return yield* refuse("You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.")
+        const grant = seat.writeRoots ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID, ownership) : undefined
+        const permission = yield* WriteRoots.bind(seat.id, grant?.writePaths,
+          GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }))
+        const brief = yield* lastUser(parent.id)
+        // Once child creation starts, failures are closed: restoring this capability could authorize another child.
+        ownership.spent = true
+        const child = yield* sessions.create({ parentID: parent.id, title: `${base.description} (@${next.name} subagent)`, agent: seat.id, permission })
+        // The binding exists before Claude Code starts the subagent, so its first frame already has a logical task.
+        const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: authority.rootID,
+          projectID: parent.projectID, memberID: seat.id, source: "host" })
+        const prompt = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: child.id, agent: seat.id,
+          model: brief.model, time: { created: Date.now() } } satisfies SessionV1.User)
+        yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: prompt.id, type: "text", text: text(args, "prompt") ?? "" })
+        const entry = { ...base, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
+          writeRoots: WriteRoots.read(permission) ?? [] }
+        records.set(hook.tool_use_id, entry)
+        join.dispatched(hook.tool_use_id, { seat: seat.id, grantID: entry.grantID, child: child.id })
+        yield* running(entry)
+      }).pipe(Effect.onExit((exit) => Effect.sync(() => {
+        if (!Exit.isFailure(exit) || ownership.spent || admissions.get(hook.tool_use_id) !== ownership) return
+        const grants = ClaudeHostMcp.grants(dispatcher.sessionID)
+        if (ownership.grant && ownership.grants === grants && !grants.has(ownership.grant.grantID))
+          grants.set(ownership.grant.grantID, ownership.grant)
+        ownership.grant = undefined
+      })))
+    }))
   })
 
   /** `SubagentStop`: the subagent's last text. It delivers nothing (spike S12): a background run is delivered on notice. */
@@ -192,66 +226,103 @@ export function make(input: {
    * `refused` is a reason the host already refuses this result for (a secret in its output).
    */
   const settle = Effect.fn("ClaudeHostDelegation.settle")(function* (hook: PostToolUseHookInput, refused?: string) {
-    const entry = records.get(hook.tool_use_id)
-    if (!entry?.seat || !entry.child || entry.settled || entry.launched) return undefined
-    const agentID = join.get(entry.toolUseID)?.taskID
-    const response = record(hook.tool_response)
-    const status = text(response, "status")
-    // AgentOutput.content is the subagent's own final text, byte for byte (spike S13); the tool result Maestro reads
-    // wraps it in a hand-back frame.
-    const blocks = content(response)
-    const reply = blocks.join("\n")
-    const identity = join.confirm(entry.toolUseID, [text(response, "agentId"), agentID])
-    const hold = refused ?? ("hold" in identity ? identity.hold : undefined) ??
-      (status === "async_launched" && entry.seat.workResult !== undefined ? "a proposal seat ran in the background" : undefined) ??
-      (status !== "completed" && status !== "async_launched" ? `Claude Code returned ${status ?? "no status"}` : undefined) ??
-      (status === "completed" && !blocks.length ? "the subagent returned no final text" : undefined)
-    if (hold !== undefined || "hold" in identity) {
+    return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
+      const entry = records.get(hook.tool_use_id)
+      if (entry && refused !== undefined) return yield* reject(entry)
+      if (!entry?.seat || !entry.child) return undefined
+      if (entry.settled) return undefined
+      if (entry.launched) {
+        if (entry.notice) yield* deliver(entry, entry.notice)
+        return undefined
+      }
+      const agentID = join.get(entry.toolUseID)?.taskID
+      const response = record(hook.tool_response)
+      const status = text(response, "status")
+      // AgentOutput.content is the subagent's own final text, byte for byte (spike S13); the tool result Maestro reads
+      // wraps it in a hand-back frame.
+      const blocks = content(response)
+      const reply = blocks.join("\n")
+      const identity = join.confirm(entry.toolUseID, [text(response, "agentId"), agentID])
+      const hold = ("hold" in identity ? identity.hold : undefined) ??
+        (status === "async_launched" && entry.seat.workResult !== undefined ? "a proposal seat ran in the background" : undefined) ??
+        (status !== "completed" && status !== "async_launched" ? `Claude Code returned ${status ?? "no status"}` : undefined) ??
+        (status === "completed" && !blocks.length ? "the subagent returned no final text" : undefined)
+      if (hold !== undefined || "hold" in identity) {
+        const reason = `HOLD: ${hold ?? "join failed"}`
+        join.hold(entry.toolUseID, reason)
+        yield* write(entry, reply, { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: entry.background, hold: reason })
+        entry.settled = true
+        return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
+      }
+      const evidence = { executor: "claude-code-host", toolName: entry.toolName, toolUseID: entry.toolUseID, agentID: identity.agentID,
+        grantID: entry.grantID ?? "", subagentType: entry.subagentType, seat: entry.seat.id, writeRoots: [...entry.writeRoots],
+        background: status === "async_launched" } satisfies Evidence
+      const base = { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: evidence.background, claudeCodeDispatch: evidence }
+      if (status === "async_launched") {
+        yield* write(entry, reply, base)
+        entry.launched = true
+        if (entry.notice) yield* deliver(entry, entry.notice)
+        return undefined
+      }
+      const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
+      const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
+      yield* write(entry, reply, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
-      const reason = `HOLD: ${hold ?? "join failed"}`
-      join.hold(entry.toolUseID, reason)
-      yield* write(entry, reply, { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: entry.background, hold: reason })
-      return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
-    }
-    const evidence = { executor: "claude-code-host", toolName: entry.toolName, toolUseID: entry.toolUseID, agentID: identity.agentID,
-      grantID: entry.grantID ?? "", subagentType: entry.subagentType, seat: entry.seat.id, writeRoots: [...entry.writeRoots],
-      background: status === "async_launched" } satisfies Evidence
-    const base = { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: evidence.background, claudeCodeDispatch: evidence }
-    if (status === "async_launched") {
-      entry.launched = true
-      yield* write(entry, reply, base)
-      if (entry.notice) yield* deliver(entry, entry.notice)
       return undefined
-    }
-    entry.settled = true
-    const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
-    const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
-    yield* write(entry, reply, { ...base, ...(workResult ? { workResult } : {}) })
-    return undefined
+    }))
   })
+
+  function reject(entry: Record) {
+    return Effect.gen(function* () {
+      const reason = `HOLD: ${entry.toolName} output refused by ToolSafety inspection`
+      join.hold(entry.toolUseID, reason)
+      entry.final = undefined
+      const child = entry.child ?? join.child(entry.toolUseID)
+      // Child frames may have been mirrored before inspection. Clear rejected content while keeping its source
+      // metadata truthful, without turning it into an accepted author or inventing success evidence.
+      if (child) {
+        const sessions = yield* Session.Service
+        const history = yield* sessions.messages({ sessionID: child })
+        yield* Effect.forEach(history.flatMap((message) => message.info.role === "assistant" ? message.parts : []), (part) =>
+          part.type === "text" ? sessions.updatePart({ ...part, text: reason }).pipe(Effect.asVoid) : Effect.void)
+      }
+      yield* write(entry, reason, { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}), background: entry.background, hold: reason })
+      entry.settled = true
+      entry.notice = undefined
+      return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
+    })
+  }
 
   /** `task_notification` from the stream (through the join): the only source of a background delivery record. */
   const notify = Effect.fn("ClaudeHostDelegation.notify")(function* (message: SDKTaskNotificationMessage) {
-    const entry = message.tool_use_id ? records.get(message.tool_use_id) : undefined
-    if (!entry?.seat || !entry.child || entry.settled) return
-    if (!entry.launched) {
-      entry.notice = message
-      return
-    }
-    yield* deliver(entry, message)
+    const toolUseID = join.notification(message)
+    if (!toolUseID) return
+    yield* exclusive(toolUseID, Effect.gen(function* () {
+      const entry = records.get(toolUseID)
+      if (!entry?.seat || !entry.child || entry.settled) return
+      if (join.notification(message) !== entry.toolUseID) return
+      entry.notice ??= message
+      if (!entry.launched) {
+        return
+      }
+      yield* deliver(entry, entry.notice)
+    }))
   })
 
   function deliver(entry: Record, message: SDKTaskNotificationMessage) {
     return Effect.gen(function* () {
       if (entry.settled || !entry.seat || !entry.child) return
-      entry.settled = true
-      if (message.status === "completed" && entry.final !== undefined) yield* authored(entry.child, entry.seat.id, message.task_id, [entry.final], undefined)
+      if (join.notification(message) !== entry.toolUseID) return
       const part = yield* find(entry)
-      if (!part || part.state.status !== "completed") return
+      if (!part || part.state.status !== "completed") return yield* refuse(`HOLD: launch part for ${entry.toolUseID} is not retained`)
+      if (message.status === "completed" && entry.final !== undefined) yield* authored(entry.child, entry.seat.id, message.task_id, [entry.final], undefined)
       yield* save({ ...part, state: { ...part.state, metadata: { ...part.state.metadata, delivery: {
         source: "claude-code-task-notification", taskID: message.task_id, status: message.status, summary: message.summary,
         outputFile: message.output_file, ...(message.usage ? { usage: message.usage } : {}),
       } } } })
+      entry.settled = true
+      entry.notice = undefined
+      join.retained(message)
     })
   }
 
@@ -274,14 +345,19 @@ export function make(input: {
     grants: () => [...ClaudeHostMcp.grants(input.sessionID).values()],
   }
 
-  function take(seat: Seat, prompt: string, sessionID: string) {
+  function take(seat: Seat, prompt: string, sessionID: string, ownership: Admission) {
     return Effect.gen(function* () {
       const id = ClaudeHostMcp.referenced(prompt)
       const how = `Call mcp__orchestra__task_grant with seat "${seat.id}" and its writePaths, then put "grantID: <id>" on its own line in the Agent prompt.`
       if (!id) return yield* refuse(`HOLD: ${seat.id} needs a write-root grant for this dispatch. ${how}`)
-      const grant = ClaudeHostMcp.grants(sessionID).get(id)
+      const grants = ClaudeHostMcp.grants(sessionID)
+      const grant = grants.get(id)
       if (!grant || grant.seat !== seat.id || grant.sessionID !== sessionID)
         return yield* refuse(`HOLD: ${id} is not an unused ${seat.id} grant of this session. ${how}`)
+      // No yield between lookup and removal: this reservation belongs to this call before admission does I/O.
+      ownership.grant = grant
+      ownership.grants = grants
+      grants.delete(id)
       return grant
     })
   }

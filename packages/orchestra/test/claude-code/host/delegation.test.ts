@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
@@ -159,6 +160,7 @@ describe("Claude Code Agent dispatch records", () => {
     const recorded = yield* fixture.part("toolu_01")
     if (recorded?.state.status !== "completed") throw new Error("expected the completed Agent part")
     expect(recorded.tool).toBe("Agent")
+    expect(recorded.state.output).toBe(final)
     expect(recorded.metadata?.providerExecuted).toBe(true)
     // The mirror resolves the child Session from the part's own metadata.
     expect(recorded.metadata?.sessionId).toBe(child)
@@ -208,6 +210,48 @@ describe("Claude Code Agent dispatch records", () => {
       authorMessageID: SessionMessage.ID.make(MessageID.ascending()), logicalTaskID: logical!.taskId, dispatchKind: "claude-code-agent" }))
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) expect((Cause.squash(exit.cause) as UpstreamProvenance.Denied).code).toBe("UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
+  }))
+
+  it.instance("ToolSafety-refused Agent output replaces mirrored parent and child text with a named HOLD", () => Effect.gen(function* () {
+    const fixture = yield* host()
+    const input = agentInput(yield* fixture.grant(["docs/proposal"]))
+    const mirrored = yield* fixture.call("toolu_rejected", input)
+    yield* Effect.promise(() => fire(fixture.hooks, pre("toolu_rejected", input)))
+    fixture.join.taskStarted({ toolUseID: "toolu_rejected", taskID: "task-rejected" })
+    const child = fixture.join.child("toolu_rejected")!
+    const rejected = "Rejected sentinel: sk-proj-" + "fixturecredential".repeat(3)
+    expect(Exit.isFailure(yield* Effect.exit(ToolSafety.inspect(output("task-rejected", rejected))))).toBe(true)
+    // A frame can arrive before PostToolUse inspection; retain it using the actual Session service first.
+    yield* fixture.sessions.updatePart({ ...mirrored, state: { status: "completed", input, output: rejected, title: "native Agent",
+      metadata: {}, time: { start: Date.now(), end: Date.now() } } })
+    const prompt = (yield* fixture.sessions.messages({ sessionID: child })).find((item) => item.info.role === "user")!
+    const author = yield* fixture.sessions.updateMessage({ ...fixture.message, id: MessageID.ascending(), sessionID: child,
+      parentID: prompt.info.id, agent: "archie", mode: "archie", finish: "stop", time: { created: Date.now(), completed: Date.now() } })
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: author.id, type: "text", text: rejected,
+      metadata: { source: "claude-code-stream", agentID: "task-rejected" } })
+    const result = yield* Effect.promise(() => fire(fixture.hooks, post("toolu_rejected", output("task-rejected", rejected))))
+    expect(JSON.stringify(result)).toContain("HOLD")
+    const recorded = yield* fixture.part("toolu_rejected")
+    if (recorded?.state.status !== "completed") throw new Error("expected a sanitized completed Agent part")
+    expect(recorded.state.output).toBe("HOLD: Agent output refused by ToolSafety inspection")
+    expect(recorded.state.metadata.hold).toBe(recorded.state.output)
+    expect(recorded.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(recorded.state.metadata.workResult).toBeUndefined()
+    expect(recorded.metadata).toMatchObject({ providerExecuted: true, claudeCodeTool: "Agent", sessionId: child })
+    const history = yield* fixture.sessions.messages({ sessionID: child })
+    expect(JSON.stringify([recorded, history])).not.toContain(rejected)
+    const text = history.flatMap((item) => item.parts).find((part) => part.type === "text" && part.messageID === author.id)
+    expect(text?.type === "text" && text.text).toBe(recorded.state.output)
+    expect(text?.type === "text" ? text.metadata : undefined).toEqual({ source: "claude-code-stream", agentID: "task-rejected" })
+    expect((yield* fixture.sessions.messages({ sessionID: fixture.parent.id })).flatMap((item) => item.parts)
+      .filter((part) => part.type === "tool" && part.tool === "task")).toEqual([])
+    yield* fixture.finish()
+    const logical = yield* LogicalTask.read(child)
+    const denied = yield* Effect.exit(UpstreamProvenance.observe({ projectID: fixture.parent.projectID, parentSessionID: fixture.parent.id,
+      parentMessageID: SessionMessage.ID.make(fixture.message.id), parentCallID: "toolu_rejected", authorSessionID: child,
+      authorMessageID: SessionMessage.ID.make(author.id), logicalTaskID: logical!.taskId, dispatchKind: "claude-code-agent" }))
+    expect(Exit.isFailure(denied)).toBe(true)
+    if (Exit.isFailure(denied)) expect((Cause.squash(denied.cause) as UpstreamProvenance.Denied).code).toBe("UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
   }))
 
   it.instance("a run Claude Code never reported a task_started for HOLDs, and its unjoined calls are denied", () => Effect.gen(function* () {
