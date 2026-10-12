@@ -3,13 +3,37 @@ import path from "node:path"
 import ts from "typescript"
 
 // The two modes stay separate (specs/claude-code-engine.md, "Two modes"). Normal mode reaches Claude mode only through
-// its entry point, and Claude mode reaches normal mode only through the shared services listed in INTERFACE, never
+// its entry point or the exact adapters in ADAPTER_EDGES, and Claude mode reaches normal mode only through INTERFACE, never
 // through the loop itself. Imports are parsed, not grepped: static, type-only, re-exports, dynamic import() and require.
 
 const ORCHESTRA = path.resolve(import.meta.dir, "../..")
 const SRC = path.join(ORCHESTRA, "src")
 const CLAUDE_MODE = "claude-code"
 const ENTRY = "claude-code/engine"
+
+/** Reviewed runtime-audit adapters, scoped to the importing file and target module; never a host-directory allowance. */
+const ADAPTER_EDGES = [
+  {
+    file: "server/routes/instance/httpapi/handlers/catalog.ts",
+    target: "claude-code/sdk",
+    reason: "Catalog status probes use the pinned SDK service.",
+  },
+  {
+    file: "server/routes/instance/httpapi/handlers/catalog.ts",
+    target: "claude-code/host/provider",
+    reason: "Catalog availability adapts the host sign-in status.",
+  },
+  {
+    file: "server/routes/instance/httpapi/handlers/provider.ts",
+    target: "claude-code/host/provider",
+    reason: "Legacy provider discovery adapts the host sign-in status.",
+  },
+  {
+    file: "server/routes/instance/httpapi/server.ts",
+    target: "claude-code/sdk",
+    reason: "Server composition supplies the SDK service for host catalog probes.",
+  },
+]
 
 /** Normal-mode modules Claude mode may import: shared services and types, never the loop. Add one only with a reason. */
 const INTERFACE = [
@@ -35,6 +59,10 @@ const INTERFACE = [
   "session/lifecycle", "session/summary",
   // Native issued research frames and the qualification packet at Claude Agent settlement.
   "research/allowance", "maestro/discovery-result",
+  // Reviewed runtime-audit additions: shared continuity/memory, provider configuration, location lifecycle,
+  // event projection, Git operations and shell execution; none owns the normal provider loop.
+  "tool/shell/execution", "continuity/model", "maestro/atlas-memory", "provider/provider", "event-v2-bridge", "git",
+  "project/instance-store",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
@@ -59,6 +87,51 @@ test("the boundary rules catch a normal-mode import of a Claude-mode internal an
   ])
 })
 
+test("reviewed adapters allow only their exact module edges", () => {
+  expect(
+    violations(ADAPTER_EDGES.map((edge) => ({ file: edge.file, text: `import { Adapter } from "@/${edge.target}"` }))),
+  ).toEqual([])
+  for (const edge of ADAPTER_EDGES) {
+    expect(violations([{ file: "session/unreviewed.ts", text: `import { Adapter } from "@/${edge.target}"` }])).toEqual(
+      [`session/unreviewed.ts imports ${edge.target}; normal mode may import only ${ENTRY}`],
+    )
+    expect(violations([{ file: edge.file, text: 'import { Gate } from "@/claude-code/host/gate"' }])).toEqual([
+      `${edge.file} imports claude-code/host/gate; normal mode may import only ${ENTRY}`,
+    ])
+  }
+})
+
+test("every normal-loop module remains forbidden from Claude mode", () => {
+  for (const target of LOOP) {
+    expect(violations([{ file: "claude-code/host/probe.ts", text: `const loop = require("@/${target}")` }])).toEqual([
+      `claude-code/host/probe.ts imports ${target}, part of Orchestra's loop`,
+    ])
+  }
+})
+
+test("the parser keeps static, type-only, re-export, dynamic and require edges while ignoring prose", () => {
+  expect(
+    imports({
+      file: "session/probe.ts",
+      text: [
+        'import { SDK } from "@/claude-code/sdk"',
+        'import type { Engine } from "@/claude-code/engine"',
+        'export { Tools } from "../claude-code/tools.ts"',
+        'const options = import("@/claude-code/host/options")',
+        'const host = require("@/claude-code/host/provider")',
+        '// import { Loop } from "@/session/llm"',
+        "const prose = 'import { Loop } from \"@/session/prompt\"'",
+      ].join("\n"),
+    }),
+  ).toEqual([
+    "claude-code/sdk",
+    "claude-code/engine",
+    "claude-code/tools",
+    "claude-code/host/options",
+    "claude-code/host/provider",
+  ])
+})
+
 test("normal mode imports only Claude mode's entry point, and Claude mode imports only its declared interface", async () => {
   const files = await sources()
   const claude = files.filter((item) => inClaudeMode(item.file))
@@ -72,13 +145,32 @@ test("normal mode imports only Claude mode's entry point, and Claude mode import
   // Ledger honesty: every INTERFACE entry is still used, so the list never grows stale.
   const used = new Set(claude.flatMap(imports))
   expect(INTERFACE.filter((module) => !used.has(module))).toEqual([])
+  expect(staleAdapterEdges(files)).toEqual([])
+  for (const edge of ADAPTER_EDGES) {
+    expect(edge.reason.trim().length).toBeGreaterThan(0)
+    // Real-source mutation controls: removing an actual adapter must stale its exact ledger edge.
+    expect(staleAdapterEdges(files.filter((item) => item.file !== edge.file))).toContain(
+      `${edge.file} -> ${edge.target}`,
+    )
+    const source = files.find((item) => item.file === edge.file)!
+    expect(
+      violations([{ ...source, text: `${source.text}\nimport { Gate } from "@/claude-code/host/gate"` }]),
+    ).toContain(`${edge.file} imports claude-code/host/gate; normal mode may import only ${ENTRY}`)
+  }
 })
+
+function staleAdapterEdges(files: File[]) {
+  return ADAPTER_EDGES.filter(
+    (edge) => !files.some((item) => item.file === edge.file && imports(item).includes(edge.target)),
+  ).map((edge) => `${edge.file} -> ${edge.target}`)
+}
 
 function violations(files: File[]) {
   return files.flatMap((item) => imports(item).flatMap((target) => {
     const from = inClaudeMode(item.file)
     const to = inClaudeMode(target)
-    if (!from && to && target !== ENTRY) return [`${item.file} imports ${target}; normal mode may import only ${ENTRY}`]
+    if (!from && to && target !== ENTRY && !ADAPTER_EDGES.some((edge) => edge.file === item.file && edge.target === target))
+      return [`${item.file} imports ${target}; normal mode may import only ${ENTRY}`]
     if (from && !to && LOOP.includes(target)) return [`${item.file} imports ${target}, part of Orchestra's loop`]
     if (from && !to && !INTERFACE.includes(target)) return [`${item.file} imports ${target}, which is not in Claude mode's INTERFACE`]
     return []
