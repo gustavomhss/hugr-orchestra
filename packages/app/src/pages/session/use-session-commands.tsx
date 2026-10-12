@@ -427,10 +427,30 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.session.archive"),
       description: sessionArchive.available() ? undefined : language.t("session.archive.unavailable"),
       keybind: "mod+shift+backspace",
-      disabled: !params.id || !sessionArchive.available(),
+      disabled: !params.id || info()?.time.archived !== undefined || !sessionArchive.available() || sessionArchive.busy(params.id),
       onSelect: () => {
         const id = params.id
         if (id) void sessionArchive.archive(id)
+      },
+    }),
+    sessionCommand({
+      id: "session.restore",
+      title: language.t("session.restore.title"),
+      disabled: !params.id || info()?.time.archived === undefined || !sessionArchive.restorable() || sessionArchive.busy(params.id),
+      onSelect: () => {
+        const id = params.id
+        if (id) void sessionArchive.restore(id)
+      },
+    }),
+    sessionCommand({
+      id: "session.archived",
+      title: language.t("session.archived.title"),
+      disabled: !sessionArchive.restorable(),
+      onSelect: () => {
+        const directory = sdk().directory
+        void openDialog(() => import("@/components/dialog-archived-sessions"), (module) => {
+          dialog.show(() => <module.DialogArchivedSessions directory={directory} />)
+        })
       },
     }),
   ]

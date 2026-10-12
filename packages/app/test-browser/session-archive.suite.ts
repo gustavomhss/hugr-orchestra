@@ -1,5 +1,10 @@
+import "./real-ui-solid"
 import { beforeAll, beforeEach, expect, mock, test } from "bun:test"
 import { createStore } from "solid-js/store"
+import { createComponent } from "solid-js"
+import { render } from "solid-js/web"
+import { Root } from "@kobalte/core/dialog"
+import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import { base64Encode } from "@orchestra/core/util/encode"
 import {
   readSessionTabsRemovedDetail,
@@ -13,7 +18,11 @@ let active: "A" | "B" = "B"
 let pathname = "/source-B/shared"
 let request = Promise.withResolvers<void>()
 let started = Promise.withResolvers<void>()
+let missing = false
+let listFailure = false
+let reactive = false
 let useSessionArchive: typeof import("@/pages/session/session-archive").useSessionArchive
+let DialogArchivedSessions: typeof import("@/components/dialog-archived-sessions").DialogArchivedSessions
 const writes: { source: string; input: unknown }[] = []
 const navigated: string[] = []
 const drafts: unknown[] = []
@@ -21,7 +30,7 @@ const notices: SessionTabsRemovedDetail[] = []
 const toasts: unknown[] = []
 
 function state() {
-  const [data, set] = createStore({ session: [{ id: "shared" }, { id: "neighbor" }] })
+  const [data, set] = createStore({ session: ["shared", "neighbor"].map((id) => ({ id, title: id, directory: "/shared/repo", time: { created: 1, updated: 1, archived: undefined as number | undefined } })) })
   return {
     data,
     set,
@@ -66,12 +75,29 @@ beforeAll(async () => {
     },
   }))
   mock.module("@/context/server-sync", () => ({
-    useServerSync: () => () => ({ homeSessions: { remove: () => undefined } }),
+    useServerSync: () => () => ({ homeSessions: { remove: () => undefined, apply: () => undefined }, session: { remember: () => undefined, resolve: async () => undefined } }),
   }))
   mock.module("@/context/server-sdk", () => ({
     useServerSDK: () => {
-      const key = servers[active]
-      return () => ({ server: { type: "http", http: { url: key } }, protocolKind: () => kind })
+      const captured = active
+      return () => {
+        const source = reactive ? active : captured
+        const key = servers[source]
+        return {
+        scope: `${key}:${missing}`,
+        server: { type: "http", http: { url: key } }, protocolKind: () => kind,
+        api: { session: { list: async () => {
+          if (listFailure) throw new Error("history offline")
+          return { data: stores[source].data.session, cursor: {} }
+        } } },
+        sessionManagement: { archive: async (sessionID: string, archived: boolean, directory: string) => {
+          if (missing) throw new SessionManagementUnsupported()
+          writes.push({ source, input: { sessionID, archived, directory } })
+          started.resolve()
+          await request.promise
+        } },
+        }
+      }
     },
   }))
   mock.module("@/context/tabs", () => ({ useTabs: () => ({ newDraft: (draft: unknown) => drafts.push(draft) }) }))
@@ -93,10 +119,15 @@ beforeAll(async () => {
   })
   const module = await import("@/pages/session/session-archive")
   useSessionArchive = module.useSessionArchive
+  const history = await import("@/components/dialog-archived-sessions")
+  DialogArchivedSessions = history.DialogArchivedSessions
 })
 
 beforeEach(() => {
   kind = "v1"
+  missing = false
+  listFailure = false
+  reactive = false
   active = "B"
   pathname = "/source-B/shared"
   request = Promise.withResolvers<void>()
@@ -105,14 +136,16 @@ beforeEach(() => {
   writes.length = navigated.length = drafts.length = notices.length = toasts.length = 0
 })
 
-test("V2 archive is unavailable and direct calls explain the unsupported operation", async () => {
+test("old V2 archive explains unsupported operations without removing sessions or tabs", async () => {
   kind = "v2"
+  missing = true
   const action = useSessionArchive()
-  expect(action.available()).toBe(false)
+  expect(action.available()).toBe(true)
   await action.archive("shared")
+  expect(action.available()).toBe(false)
   expect(writes).toEqual([])
   expect(notices).toEqual([])
-  expect(toasts).toEqual([{ title: "Archive unavailable on this server" }])
+  expect(toasts[0]).toMatchObject({ title: "Archive unavailable on this server" })
 })
 
 test("late archive stays source scoped even when its disposed SDK accessor stays frozen", async () => {
@@ -125,7 +158,7 @@ test("late archive stays source scoped even when its disposed SDK accessor stays
   request.resolve()
   await pending
   expect(writes).toEqual([
-    { source: "B", input: { sessionID: "shared", directory: "/shared/repo", time: { archived: expect.any(Number) } } },
+    { source: "B", input: { sessionID: "shared", directory: "/shared/repo", archived: true } },
   ])
   expect(stores.B.data.session.map((item) => item.id)).toEqual(["neighbor"])
   expect(stores.A.data.session.map((item) => item.id)).toEqual(["shared", "neighbor"])
@@ -153,3 +186,77 @@ test("failed archive preserves both servers' sessions and tabs", async () => {
   expect(navigated).toEqual([])
   expect(toasts).toHaveLength(1)
 })
+
+test("V2 archive coalesces duplicate clicks until acknowledgement", async () => {
+  kind = "v2"
+  const action = useSessionArchive()
+  const pending = action.archive("shared")
+  await started.promise
+  expect(action.busy("shared")).toBe(true)
+  await action.archive("shared")
+  expect(writes).toHaveLength(1)
+  expect(stores.B.data.session.map((item) => item.id)).toEqual(["shared", "neighbor"])
+  request.resolve()
+  await pending
+  expect(action.busy("shared")).toBe(false)
+  expect(stores.B.data.session.map((item) => item.id)).toEqual(["neighbor"])
+})
+
+test("V2 restore keeps archived session intact on failure and restores within its origin scope on retry", async () => {
+  kind = "v2"
+  stores.B.set("session", 0, "time", "archived", 5)
+  const action = useSessionArchive()
+  const failed = action.restore("shared")
+  await started.promise
+  request.reject(new Error("restore failed"))
+  expect(await failed).toBe(false)
+  expect(stores.B.data.session[0].time.archived).toBe(5)
+  request = Promise.withResolvers<void>()
+  started = Promise.withResolvers<void>()
+  const retry = action.restore("shared")
+  await started.promise
+  active = "A"
+  pathname = "/source-A/shared"
+  request.resolve()
+  expect(await retry).toBe(true)
+  expect(writes.at(-1)).toEqual({ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } })
+  expect(stores.B.data.session.find((item) => item.id === "shared")?.time.archived).toBeUndefined()
+  expect(notices).toEqual([])
+})
+
+test("real archive history DOM retries a failed load, then restores only its captured server and directory", async () => {
+  kind = "v2"
+  reactive = true
+  listFailure = true
+  stores.B.set("session", 0, "time", "archived", 5)
+  const host = document.createElement("div")
+  document.body.append(host)
+  const dispose = render(() => createComponent(Root, { open: true, get children() {
+    return createComponent(DialogArchivedSessions, { directory: "/shared/repo" })
+  } }), host)
+  await until(() => !!host.querySelector('[role="alert"]'))
+  expect(host.textContent).toContain("Could not load archived sessions.")
+  listFailure = false
+  const retry = [...host.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "Retry")!
+  retry.click()
+  await until(() => !!host.querySelector('[data-session-id="shared"]'))
+  expect(host.querySelector('[data-session-id="neighbor"]')).toBeNull()
+  active = "A"
+  pathname = "/source-A/shared"
+  const restore = [...host.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "Restore session")!
+  restore.click()
+  await started.promise
+  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } }])
+  expect(restore.disabled).toBe(true)
+  request.resolve()
+  await until(() => !host.querySelector('[data-session-id="shared"]'))
+  expect(stores.A.data.session.map((session) => session.id)).toEqual(["shared", "neighbor"])
+  expect(notices).toEqual([])
+  dispose()
+  host.remove()
+}, 30_000)
+
+async function until(check: () => boolean) {
+  for (let turn = 0; turn < 100 && !check(); turn++) await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(check()).toBe(true)
+}

@@ -39,6 +39,7 @@ import type { SessionActiveOutput } from "@opencode-ai/client/promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
+import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 
 export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
 export type { QueryOptionsApi } from "./server-queries"
@@ -438,6 +439,24 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     session.apply(event)
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
+    }
+    if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
+      const properties = event.properties
+      if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
+        const update = (info: Parameters<typeof session.remember>[0]) => {
+          homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
+          if (eventType !== "session.next.archive.changed") return
+          if (info.time.archived === undefined) {
+            indexSession(info)
+            return
+          }
+          homeSessions.remove(info.id)
+          notifySessionTabsRemoved({ server: ServerConnection.key(serverSDK.server), directory: info.directory, sessionIDs: [info.id] })
+        }
+        const info = session.get(properties.sessionID)
+        if (info) update(info)
+        if (!info) void session.resolve(properties.sessionID).then(update).catch(() => {})
+      }
     }
     homeSessions.refresh(event.type)
     if (eventType === "integration.connection.updated") void refreshProviders()

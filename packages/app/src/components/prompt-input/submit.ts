@@ -16,7 +16,10 @@ import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
-import { clearPending, pendingRules } from "@/components/draft-subagent-models"
+import { clearPending, pendingPolicy, pendingRules } from "@/components/draft-subagent-models"
+import { sameModelPolicy } from "@/components/subagent-model-rules"
+import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
@@ -297,7 +300,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const permission = usePermission()
   const prompt = input.prompt
   const layout = useLayout()
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
@@ -392,18 +395,17 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const draftID = search.draftId
     const draftServer = draftID ? tabs.draft(draftID).server : undefined
     const ownsDraft = () =>
-      !draftID ||
-      (search.draftId === draftID &&
-        !params.id &&
-        sdk().scope === directorySDK.scope &&
-        sdk().directory === projectDirectory &&
+      !params.id &&
+      sdk().scope === directorySDK.scope &&
+      sdk().directory === projectDirectory &&
+      (!draftID || (search.draftId === draftID &&
         tabs.store.some(
           (tab) =>
             tab.type === "draft" &&
             tab.draftID === draftID &&
             tab.server === draftServer &&
             tab.directory === projectDirectory,
-        ))
+         )))
     const rulesKey = input.pendingKey?.() ?? draftSessionKey(directorySDK.scope, projectDirectory, draftID)
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const worktreeSelection = input.newSessionWorktree?.() || "main"
@@ -485,9 +487,24 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       if (!ownsDraft()) return
       // Keep the admitted session and worktree for retry until its rules are durable.
       const draftRules = pendingRules(rulesKey)
-      if (draftRules.length > 0 || admission.rules) {
+      if (draftRules.length > 0 || pendingPolicy(rulesKey).mode === "allowlist" || admission.rules) {
         const saved = await (async () => {
-          if ((await server.protocol) !== "v1") throw new Error(language.t("common.requestFailed"))
+          if ((await server.protocol) === "v2") {
+            let policy = pendingPolicy(rulesKey)
+            while (true) {
+              admission.rules = true
+              await server.sessionManagement.setSubagentModels(session.id, policy)
+              const next = pendingPolicy(rulesKey)
+              if (!sameModelPolicy(next, policy)) {
+                policy = next
+                continue
+              }
+              if (!ownsDraft()) return false
+              clearPending(rulesKey)
+              admission.rules = false
+              return true
+            }
+          }
           let rules = draftRules
           while (true) {
             admission.rules = true
@@ -508,7 +525,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             return true
           }
         })().catch((err) => {
-          showToast({ title: language.t("common.requestFailed"), description: errorMessage(err) })
+          showToast({
+            title: language.t("common.requestFailed"),
+            description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
+          })
           return false
         })
         if (!saved) return

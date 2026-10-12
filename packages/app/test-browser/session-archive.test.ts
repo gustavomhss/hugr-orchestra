@@ -15,7 +15,7 @@ test("archive actions with isolated context fixtures", async () => {
       cwd: path.resolve(import.meta.dir, ".."),
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 60_000,
+      timeout: 180_000,
     },
   )
   const [code, stdout, stderr] = await Promise.all([
@@ -24,4 +24,4 @@ test("archive actions with isolated context fixtures", async () => {
     Bun.readableStreamToText(child.stderr),
   ])
   expect(code, stdout + stderr).toBe(0)
-}, 65_000)
+}, 185_000)

@@ -8,14 +8,18 @@ import { useLanguage } from "@/context/language"
 import { ModelTooltip } from "./model-tooltip"
 import {
   connectedSubagentModels,
+  createModelPolicyEditor,
   createModelRuleEditor,
   effectiveModelState,
   hasModelScope,
   modelUnavailable,
   parseModelKey,
   type ModelRule,
+  type ModelPolicySnapshot,
+  type SubagentModelPolicy,
 } from "./subagent-model-rules"
-import { clearPending, draftVersion, modelKey, pendingSelection, togglePending } from "./draft-subagent-models"
+import { clearPending, draftVersion, modelKey, pendingPolicy, pendingSelection, togglePending } from "./draft-subagent-models"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 /** The picker owns interaction; its caller supplies the selected directory's catalog and session persistence. */
 export function SubagentModelPicker(props: {
@@ -25,12 +29,18 @@ export function SubagentModelPicker(props: {
   providers: readonly Provider[]
   status: "pending" | "error" | "success"
   supported: boolean | undefined
+  protocol?: "v1" | "v2"
+  loadFailed?: boolean
   rulesReady: boolean
   readRules: () => ModelRule[]
   writeRules: (rules: ModelRule[]) => Promise<ModelRule[]>
+  policy?: {
+    read: () => ModelPolicySnapshot
+    write: (policy: SubagentModelPolicy) => Promise<SubagentModelPolicy | ModelPolicySnapshot>
+  }
   onRetry: () => void
 }) {
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const pendingKey = () => props.pendingKey ?? props.directory
   const models = createMemo(() => connectedSubagentModels(props.providers))
   const modelIndex = createMemo(() => new Map(models().map((model) => [modelKey(model.provider.id, model.id), model])))
@@ -38,25 +48,51 @@ export function SubagentModelPicker(props: {
     read: props.readRules,
     write: props.writeRules,
   })
+  const policyEditor = createModelPolicyEditor({
+    read: () => props.policy?.read() ?? { policy: { mode: "inherit" } },
+    write: (policy) => {
+      if (!props.policy) return Promise.reject(new Error(language.t("session.subagentModels.unsupported")))
+      return props.policy.write(policy)
+    },
+  })
+  const policy = () => {
+    draftVersion()
+    return props.sessionID ? policyEditor.policy() : pendingPolicy(pendingKey())
+  }
+  const saving = () => props.protocol === "v2" ? policyEditor.state.saving : editor.state.saving
+  const denyAll = () => {
+    const current = policy()
+    return current.mode === "allowlist" && current.models.length === 0
+  }
 
   const inherited = () => {
     draftVersion()
+    if (props.protocol === "v2") return policy().mode === "inherit"
     return props.sessionID ? !hasModelScope(editor.rules()) : pendingSelection(pendingKey()).size === 0
   }
   const unavailable = createMemo(
     () => {
       draftVersion()
       if (props.status !== "success" || !props.rulesReady) return []
-      const selected = props.sessionID
-        ? editor
-            .rules()
-            .filter((rule) => rule.permission === "task" && !/[?*]/.test(rule.pattern))
-            .map((rule) => rule.pattern)
-        : [...pendingSelection(pendingKey())]
+      const current = policy()
+      const selected =
+        props.protocol === "v2"
+          ? current.mode === "allowlist"
+            ? current.models.map((model) => modelKey(model.providerID, model.id))
+            : []
+          : props.sessionID
+            ? editor
+                .rules()
+                .filter((rule) => rule.permission === "task" && !/[?*]/.test(rule.pattern))
+                .map((rule) => rule.pattern)
+            : [...pendingSelection(pendingKey())]
       return [...new Set(selected)].flatMap((key) => {
         const parsed = parseModelKey(key)
         if (!parsed || modelIndex().has(key)) return []
-        if (props.sessionID && effectiveModelState(editor.rules(), parsed.providerID, parsed.modelID) !== "allow")
+        if (
+          props.protocol !== "v2" && props.sessionID &&
+          effectiveModelState(editor.rules(), parsed.providerID, parsed.modelID) !== "allow"
+        )
           return []
         return [{ key, ...parsed }]
       })
@@ -78,6 +114,11 @@ export function SubagentModelPicker(props: {
   ])
 
   const isAllowed = (providerID: string, modelID: string) => {
+    if (props.protocol === "v2") {
+      const current = policy()
+      return current.mode === "allowlist" &&
+        current.models.some((model) => model.providerID === providerID && model.id === modelID)
+    }
     // Drafts have no session yet: truth is the pending selection.
     // draftVersion() subscribes so plain-Set mutations re-render.
     if (!props.sessionID) {
@@ -94,9 +135,15 @@ export function SubagentModelPicker(props: {
       togglePending(pendingKey(), providerID, modelID, allow)
       return
     }
+    if (props.protocol === "v2") return policyEditor.set(providerID, modelID, allow)
     await editor.set(providerID, modelID, allow)
   }
-  const canChange = () => props.supported && props.status === "success" && props.rulesReady && !editor.state.saving
+  const canChange = () => props.supported && props.status === "success" && props.rulesReady && !saving()
+  const inherit = () => {
+    if (!canChange()) return
+    if (!props.sessionID) return clearPending(pendingKey())
+    if (props.protocol === "v2") return policyEditor.inherit()
+  }
 
   return (
     <Dialog
@@ -105,15 +152,31 @@ export function SubagentModelPicker(props: {
     >
       <Show when={props.supported === false}>
         <p class="text-12-regular text-text-weak px-3" role="status">
-          {language.t("dialog.subagentModels.unsupported")}
+          {language.t(props.protocol === "v2" ? "session.subagentModels.unsupported" : "dialog.subagentModels.unsupported")}
         </p>
       </Show>
-      <Show when={editor.state.failed}>
+      <Show when={props.protocol === "v2" ? policyEditor.state.failed : editor.state.failed}>
         <p class="text-12-regular text-text-weak px-3" role="alert">
           {language.t("dialog.subagentModels.saveFailed")}
         </p>
+        <Show when={props.protocol === "v2"}>
+          <button
+            type="button" class="text-12-regular text-text-weak px-3"
+            disabled={!canChange()} onClick={() => void policyEditor.retry()}
+          >
+            {language.t("common.retry")}
+          </button>
+        </Show>
       </Show>
-      <Show when={!props.rulesReady || props.supported === undefined}>
+      <Show when={props.loadFailed}>
+        <p class="text-12-regular text-text-weak px-3" role="alert">
+          {language.t("session.subagentModels.loadFailed")}
+        </p>
+        <button type="button" class="text-12-regular text-text-weak px-3" onClick={props.onRetry}>
+          {language.t("common.retry")}
+        </button>
+      </Show>
+      <Show when={!props.loadFailed && props.supported !== false && (!props.rulesReady || props.supported === undefined)}>
         <p class="text-12-regular text-text-weak px-3" role="status">
           {language.t("orchestra.agents.loadingFile")}
         </p>
@@ -128,16 +191,17 @@ export function SubagentModelPicker(props: {
           props.rulesReady &&
           props.status === "success" &&
           !inherited() &&
-          models().length > 0 &&
-          models().every((model) => !isAllowed(model.provider.id, model.id))
+          (props.protocol === "v2"
+            ? denyAll()
+            : models().length > 0 && models().every((model) => !isAllowed(model.provider.id, model.id)))
         }
       >
         <p class="text-12-regular text-text-weak px-3" role="status" data-status="none-allowed">
-          {language.t("dialog.subagentModels.noneAllowed")}
+          {language.t(props.protocol === "v2" ? "session.subagentModels.denyAll" : "dialog.subagentModels.noneAllowed")}
         </p>
       </Show>
-      <Show when={!props.sessionID && !inherited()}>
-        <button class="text-12-regular text-text-weak px-3" type="button" onClick={() => clearPending(pendingKey())}>
+      <Show when={(!props.sessionID || props.protocol === "v2") && !inherited()}>
+        <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canChange()} onClick={() => void inherit()}>
           {language.t("orchestra.agents.choice.inherit")}
         </button>
       </Show>
@@ -186,12 +250,13 @@ export function SubagentModelPicker(props: {
                   checked={isAllowed(item.provider.id, item.id)}
                   disabled={
                     !props.supported ||
+                    props.status !== "success" ||
                     !props.rulesReady ||
                     (!!modelUnavailable(item.model) && !isAllowed(item.provider.id, item.id))
                   }
-                  readOnly={editor.state.saving}
-                  aria-disabled={editor.state.saving || undefined}
-                  aria-busy={editor.state.saving || undefined}
+                  readOnly={saving()}
+                  aria-disabled={saving() || undefined}
+                  aria-busy={saving() || undefined}
                   onChange={(checked) => void setAllowed(item.provider.id, item.id, checked)}
                   hideLabel
                 >

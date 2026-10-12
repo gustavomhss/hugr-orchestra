@@ -5,6 +5,7 @@ import { pendingRules } from "../draft-subagent-models"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer } from "@/utils/server"
+import type { SubagentModelPolicy } from "../subagent-model-rules"
 
 export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
@@ -43,6 +44,7 @@ export const behaviors = { system: undefined as string | undefined, fail: false 
 export const events: string[] = []
 export const profileProjects = [{ id: "project", worktree: "/repo/main", sandboxes: ["/repo/worktree-a"] }]
 export const savedRules: { sessionID: string; directory: string; permission: ReturnType<typeof pendingRules> }[] = []
+export const savedPolicies: { sessionID: string; policy: SubagentModelPolicy }[] = []
 export const interrupts: string[] = []
 export const preparations: PromiseWithResolvers<void>[] = []
 export const statusWrites: { sessionID: string; type: string }[] = []
@@ -307,6 +309,15 @@ beforeAll(async () => {
         protocol: Promise.resolve(state.protocol),
         client: rootClient,
         currentApi,
+        sessionManagement: {
+          setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
+            savedPolicies.push({ sessionID, policy })
+            state.rulesStarted.resolve()
+            await state.rulesGate
+            if (state.rulesFailure) throw new Error("policy persistence failed")
+            return policy
+          },
+        },
         createClient: (opts: { directory?: string }) => clientFor(opts.directory ?? "/repo/main"),
       },
   }))
@@ -421,6 +432,7 @@ beforeEach(() => {
   state.rulesGate = undefined
   state.rulesStarted = Promise.withResolvers<void>()
   savedRules.length = 0
+  savedPolicies.length = 0
   state.worktreeCreates = 0
   state.sdkOverride = undefined
   state.serverOverride = undefined
