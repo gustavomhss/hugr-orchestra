@@ -67,6 +67,7 @@ jobs:
         with:
           name: desktop-data-cli-${{ matrix.target }}
           path: packages/desktop/${{ matrix.target == 'linux-arm64-gnu' && '.guest-cli-linux-arm64' || '.guest-cli-linux-x64-baseline' }}/
+          include-hidden-files: true
           if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
