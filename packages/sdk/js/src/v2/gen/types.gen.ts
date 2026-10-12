@@ -5606,6 +5606,7 @@ export type PermissionV2Ruleset = Array<PermissionV2Rule>
 
 export type AgentV2Info = {
   id: string
+  engine?: "orchestra" | "claude-code"
   model?: ModelRef
   request: ProviderRequest
   system?: string
@@ -15708,7 +15709,7 @@ export type V2ModelDefaultResponses = {
    */
   200: {
     location: LocationInfo
-    data: ModelV2Info
+    data: ModelV2Info | null
   }
 }
 
