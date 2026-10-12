@@ -1219,9 +1219,7 @@ it.instance(
         expect(exitA.value.info.id).toBe(exitB.value.info.id)
       }
     }),
-  // No git repository: what this checks is the runner handing one cancelled run to every queued caller. In a git
-  // repository the processor first snapshots the worktree, spawning git several times before the provider call. On
-  // windows-latest that was about 1 s of a 2 s body, and in full lanes the test ran up to 8.2 s and once past 10 s.
+  // No git repo: this checks one cancelled run reaching every queued caller; git snapshots took ~1 s on Windows.
   10_000,
 )
 
