@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
 import { Effect } from "effect"
+import type { ModelUsage } from "@anthropic-ai/claude-agent-sdk"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { Provider } from "@/provider/provider"
@@ -34,6 +35,14 @@ ClaudeEngineFixture.it.instance("successful, failed and replayed SDK totals char
             content: [{ type: "text", text: "provider response" }], stop_reason: "end_turn",
             usage: { input_tokens: 10, output_tokens: 8, output_tokens_details: { thinking_tokens: 3 } } } }
         yield { type: "result", ...ClaudeEngineFixture.frame, uuid: result.uuid, total_cost_usd: result.cost,
+          // Requested model alone cannot attribute a no-frame failure. SDK reports its own compatible model total.
+          ...(!result.assistant ? { modelUsage: { [model]: {
+            inputTokens: 50, outputTokens: 40, thinkingTokens: 15,
+            cacheReadInputTokens: 0, cacheCreationInputTokens: 0, webSearchRequests: 0,
+            costUSD: result.cost, contextWindow, maxOutputTokens,
+            // SDK documents an omitted basis as list; make this observed fixture's known basis explicit.
+            costBasis: "list",
+          } satisfies ModelUsage } } : {}),
           ...(result.error ? result.assistant ? { subtype: "error_during_execution", is_error: true, errors: ["True SDK failure"] }
             : { subtype: "success", is_error: true, result: "True SDK failure" }
             : { subtype: "success", is_error: false, stop_reason: "end_turn" }) }
@@ -64,6 +73,7 @@ ClaudeEngineFixture.it.instance("successful, failed and replayed SDK totals char
       expect(saved.metadata?.claudeCode?.uuids[last.id]).toBeTruthy()
       expect(saved.metadata?.claudeCode?.cost).toBeCloseTo(index === 3 || index === 4 ? 0.2 : result.cost)
       expect(last.tokens.reasoning).toBe(result.assistant ? 3 : 0)
+      if (!result.assistant) expect(last.tokens).toEqual({ input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } })
       const total = index === 3 || index === 4 ? 0.2 : result.cost
       expect(replies.reduce((sum, reply) => sum + reply.cost, 0)).toBeCloseTo(total)
       // Aggregate projection stays correct when the client only loaded the failed reply's page.
