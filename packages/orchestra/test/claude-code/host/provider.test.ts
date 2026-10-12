@@ -56,11 +56,37 @@ for (const [label, account, expected] of [
     }),
   )
 
-ClaudeEngineFixture.it.instance("the provider status check respects the plan gate before constructing a query", () =>
+ClaudeEngineFixture.it.instance("the provider status check queries a signed-out account without the retired flag or a model prompt", () =>
   Effect.gen(function* () {
     ClaudeEngineFixture.reset()
+    const accounts: boolean[] = []
+    const closed: boolean[] = []
+    const inputs: Promise<IteratorResult<unknown>>[] = []
+    ClaudeEngineFixture.state.construct = (params) => {
+      if (typeof params.prompt === "string") throw new Error("Account status must not submit a model prompt")
+      // Start reading before cleanup aborts the probe; an empty stream must finish without yielding a user message.
+      inputs.push(params.prompt[Symbol.asyncIterator]().next())
+      return Object.assign((async function* () {})(), {
+        accountInfo: async (): Promise<AccountInfo> => {
+          accounts.push(true)
+          return { tokenSource: "none", apiKeySource: "none" }
+        },
+        close: () => {
+          closed.push(true)
+        },
+      }) as unknown as Query
+    }
     expect(yield* ClaudeHostProvider.signedIn.pipe(Effect.provideService(ClaudeCodeSDK.Environment, {}))).toBe(false)
-    expect(ClaudeEngineFixture.state.queries).toEqual([])
+    expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+    expect(accounts).toEqual([true])
+    expect(closed).toEqual([true])
+    expect(inputs).toHaveLength(1)
+    expect(yield* Effect.promise(() => inputs[0])).toEqual({ done: true, value: undefined })
+    const options = ClaudeEngineFixture.state.queries[0].options
+    expect(options?.env?.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED).toBeUndefined()
+    expect(options?.abortController?.signal.aborted).toBe(true)
+    expect(ClaudeEngineFixture.state.inputs).toEqual([])
+    expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
   }),
 )
 

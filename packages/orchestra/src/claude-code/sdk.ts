@@ -31,16 +31,6 @@ export function signedOut(message: SDKMessage) {
 }
 
 /**
- * Paused (specs/claude-code-engine.md, "Paused"): no real engine process starts until the owner approves the engine's
- * meta-harness plan.
- */
-export function requirePlanApproval(env: NonNullable<QueryOptions["env"]>) {
-  if (env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED === "1") return
-  throw new Error("The Claude Code engine is paused until its meta-harness plan is approved by the owner. " +
-    "Set ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1 only after approval.")
-}
-
-/**
  * Starts the unmodified Claude Code binary with the owner's own environment. Claude Code signs in from its own
  * credential store (`claude auth login`) or the owner's `ANTHROPIC_API_KEY` / `apiKeyHelper`; Orchestra reads, adds and
  * removes no credential. SDK 0.3.289 Query.return races waitForExit against 2000ms, so it is not an exit receipt.
@@ -52,7 +42,7 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
     !("type" in system) || system.type !== "preset" || !("preset" in system) || system.preset !== "claude_code")
     throw new Error("Claude Code turns must keep the claude_code system prompt preset")
   const source = options.env ?? process.env
-  // The approval flag gates this process only; the child gets the owner's environment as it is.
+  // Strip the retired rollout flag as compatibility metadata, not a credential or an activation requirement.
   const env = Object.fromEntries(Object.entries(source).filter(([key]) => key !== "ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED"))
   const exits: Promise<void>[] = []
   return {
@@ -61,8 +51,6 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
       pathToClaudeCodeExecutable: ClaudeCodeExecutable.resolve({ executable: options.pathToClaudeCodeExecutable, env: source }),
       env,
       spawnClaudeCodeProcess: (input) => {
-        // Only a real SDK query spawns, so recorded transports run without the flag.
-        requirePlanApproval(source)
         const spawner = options.spawnClaudeCodeProcess ?? ((input) => {
           const child = spawn(input.command, input.args, {
             cwd: input.cwd, env: input.env, signal: input.signal,
