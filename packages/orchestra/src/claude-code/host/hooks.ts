@@ -22,6 +22,7 @@ import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMemory } from "./memory"
+import { ClaudeHostResearchResult } from "./research-result"
 
 /**
  * What HOST hands the hooks. `run`, `join` and the optional ports are HOOKS additions to the brief's base fields:
@@ -54,13 +55,11 @@ export type Context = {
  * Jimmy's research allowance and provenance (src/research on jimmy-land: ResearchExecution and ResearchSourceCapture).
  * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
  */
-export type Research = {
+export type Research = ClaudeHostResearchResult.Port & {
   /** Bind the dispatch's allowance to the child Session, at `PreToolUse[Agent]`. */
   readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
-  readonly stopReason?: (executionSessionID: SessionID) => Effect.Effect<string | undefined>
-  readonly settle?: (executionSessionID: SessionID) => Effect.Effect<void>
   /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
   readonly capture?: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
 }
@@ -70,7 +69,7 @@ const CAPTURED = ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "LSP"]
 
 export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
-    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts })
+    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts, research: ctx.research })
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
@@ -136,7 +135,6 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     ctx.calls?.release(input.tool_use_id)
     return ctx.run(Effect.gen(function* () {
       const agent = ClaudeHostGate.agentCall(input.tool_name)
-      if (agent) yield* settleResearch(input.tool_use_id)
       // A background process keeps its jail until the session ends; any other call's jail ends with the call.
       if (ClaudeCodeTools.orchestra(input.tool_name) !== ClaudeHostGate.PROCESS) yield* release(input.tool_use_id)
       const actor = yield* delegation.actor(input.agent_id)
@@ -155,21 +153,22 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
           input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
         if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
       }
-      return context ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context } } : {}
+      return context ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context, updatedToolOutput: context } } : {}
     }))
   }
 
-  // A failed call holds a jail too; nothing else is recorded for it here.
+  // A failed Agent call settles its existing parent part without manufacturing a child output or delivery.
   const failed: HookCallback = (input) => {
     if (input.hook_event_name !== "PostToolUseFailure") return Promise.resolve({})
     ctx.calls?.cancel(input.tool_use_id)
     ctx.calls?.release(input.tool_use_id)
     return ctx.run(Effect.gen(function* () {
-      if (ClaudeHostGate.agentCall(input.tool_name)) yield* settleResearch(input.tool_use_id)
+      const context = ClaudeHostGate.agentCall(input.tool_name) ? yield* delegation.fail(input) : undefined
       yield* release(input.tool_use_id)
       const actor = yield* delegation.actor(input.agent_id)
       const exhausted = "hold" in actor ? undefined : yield* researchStopReason(actor)
-      return exhausted ? { continue: false, stopReason: exhausted } : {}
+      if (exhausted) return { continue: false, stopReason: exhausted }
+      return context ? { hookSpecificOutput: { hookEventName: "PostToolUseFailure", additionalContext: context } } : {}
     }))
   }
 
@@ -235,15 +234,11 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return policy.value ? Effect.promise(() => policy.value!).pipe(Effect.flatMap((policy) => policy.release(toolUseID))) : Effect.void
   }
 
-  function settleResearch(toolUseID: string) {
-    const child = delegation.child(toolUseID)
-    return child && delegation.seat(toolUseID) === "jimmy" && ctx.research?.settle ? ctx.research.settle(child) : Effect.void
-  }
-
   function researchStopReason(actor: ClaudeHostGate.Actor) {
     // Tool-hook stop control ends the calling loop (CLI 2.1.289), never the parent's Agent return hook.
     return actor.seat === "jimmy" && actor.agentID && ctx.research?.stopReason
-      ? ctx.research.stopReason(actor.sessionID) : Effect.succeed(undefined)
+      ? ctx.research.stopReason(actor.sessionID).pipe(Effect.flatMap((text) =>
+        text === undefined ? Effect.succeed(undefined) : ClaudeHostResearchResult.diagnostic(text))) : Effect.succeed(undefined)
   }
 
   // Durable safety evidence per call, on the mirrored call's message. A call the mirror has not seen yet has no anchor.

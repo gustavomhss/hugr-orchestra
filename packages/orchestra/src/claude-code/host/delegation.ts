@@ -11,7 +11,7 @@ export * as ClaudeHostDelegation from "./delegation"
 // The parent part keeps Claude Code's raw tool name; no record ever claims a `task` call Orchestra did not run.
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Exit, Semaphore } from "effect"
-import type { PreToolUseHookInput, PostToolUseHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { PreToolUseHookInput, PostToolUseHookInput, PostToolUseFailureHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
 import type { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
@@ -31,6 +31,7 @@ import { Session } from "@/session/session"
 import type { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
+import { ClaudeHostResearchResult } from "./research-result"
 
 /** Plugin-scoped seat names: `orchestra:<seat id>`. */
 export const PREFIX = "orchestra:"
@@ -106,6 +107,7 @@ export function make(input: {
   readonly path: { readonly cwd: string; readonly root: string }
   readonly join: ClaudeHostJoin.Join
   readonly parts?: Parts
+  readonly research?: ClaudeHostResearchResult.Port
 }) {
   const records = new Map<string, Record>()
   const join = input.join
@@ -232,9 +234,13 @@ export function make(input: {
   const settle = Effect.fn("ClaudeHostDelegation.settle")(function* (hook: PostToolUseHookInput, refused?: string) {
     return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
       const entry = records.get(hook.tool_use_id)
-      if (entry && refused !== undefined) return yield* reject(entry, hook)
+      // Hooks still withhold the inspected output on late refusal; terminal records are immutable here.
+      if (entry?.settled) return undefined
+      const researchControl = entry?.seat?.id === "jimmy" && entry.child
+        ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
+      const ended = ClaudeHostResearchResult.terminal(researchControl)
+      if (entry && refused !== undefined) return yield* reject(entry, hook, researchControl, ended)
       if (!entry?.seat || !entry.child) return undefined
-      if (entry.settled) return undefined
       if (entry.launched) {
         if (entry.notice) yield* deliver(entry, entry.notice)
         return undefined
@@ -254,14 +260,17 @@ export function make(input: {
       if (hold !== undefined || "hold" in identity) {
         const reason = `HOLD: ${hold ?? "join failed"}`
         join.hold(entry.toolUseID, reason)
-        yield* write(entry, reply, { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: entry.background, hold: reason })
+        yield* write(entry, ended ? ClaudeHostResearchResult.report(reply, ended) : reply,
+          { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: entry.background, hold: reason,
+            ...(researchControl ? { researchControl } : {}), ...(ended ? { terminal: ended } : {}) })
         entry.settled = true
-        return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
+        return `${ended ? `Orchestra research ${ended.reason}: ${ended.hostDetail}. ` : ""}Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
       }
       const evidence = { executor: "claude-code-host", toolName: entry.toolName, toolUseID: entry.toolUseID, agentID: identity.agentID,
         grantID: entry.grantID ?? "", subagentType: entry.subagentType, seat: entry.seat.id, writeRoots: [...entry.writeRoots],
         background: status === "async_launched" } satisfies Evidence
-      const base = { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: evidence.background, claudeCodeDispatch: evidence }
+      const base = { parentSessionId: entry.dispatcher.sessionID, sessionId: entry.child, background: evidence.background, claudeCodeDispatch: evidence,
+        ...(researchControl ? { researchControl } : {}) }
       if (status === "async_launched") {
         yield* write(entry, reply, base)
         entry.launched = true
@@ -270,15 +279,46 @@ export function make(input: {
       }
       const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
       entry.author = author.info.id
-      const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
-      const report = workResult ? DiscoveryResult.report(reply, workResult) : reply
+      const recorded = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
+      const workResult = recorded && ended ? { ...recorded, terminal: ended } : recorded
+      const retained = workResult ? DiscoveryResult.report(reply, workResult) : reply
+      const report = ended ? ClaudeHostResearchResult.report(retained, ended) : retained
       yield* write(entry, report, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
-      return workResult?.schema === "discovery-work-result-v1" ? report : undefined
+      return ended || workResult?.schema === "discovery-work-result-v1" ? report : undefined
     }))
   })
 
-  function reject(entry: Record, hook: PostToolUseHookInput) {
+  /** SDK failure facts only: no AgentOutput, invented task identity, author, or physical delivery. */
+  const fail = Effect.fn("ClaudeHostDelegation.fail")(function* (hook: PostToolUseFailureHookInput) {
+    return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
+      const entry = records.get(hook.tool_use_id)
+      if (!entry || entry.settled) return undefined
+      const error = yield* ClaudeHostResearchResult.diagnostic(hook.error)
+      const researchControl = entry.seat?.id === "jimmy" && entry.child
+        ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
+      const part = yield* find(entry)
+      if (!part) return yield* refuse(`HOLD: the ${entry.toolName} call ${entry.toolUseID} has no mirrored part to record`)
+      const terminal = { reason: hook.is_interrupt ? "interrupted" : "failed", hostDetail: error }
+      const ended = ClaudeHostResearchResult.terminal(researchControl)
+      const reason = `CLAUDE_CODE_AGENT_${hook.is_interrupt ? "INTERRUPTED" : "FAILED"}: ${error}${ended ? `\nResearch ${ended.reason}: ${ended.hostDetail}` : ""}`
+      const child = entry.child ?? join.child(entry.toolUseID)
+      yield* save({ ...part, metadata: { ...part.metadata, ...placement(entry), providerExecuted: true, claudeCodeTool: entry.toolName },
+        state: { status: "error", input: part.state.input, error: reason,
+          metadata: { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}), background: entry.background,
+            terminal, nativeError: { source: "claude-code-post-tool-use-failure", name: "CLAUDE_CODE_AGENT_FAILURE",
+              message: error, interrupted: hook.is_interrupt === true },
+            ...(researchControl ? { researchControl } : {}) },
+          time: { start: part.state.status === "running" ? part.state.time.start : Date.now(), end: Date.now() } } })
+      entry.final = undefined
+      entry.notice = undefined
+      entry.settled = true
+      return `${reason}. Orchestra retained a ${terminal.reason} Agent part; no authored result or delivery was recorded.`
+    }))
+  })
+
+  function reject(entry: Record, hook: PostToolUseHookInput, researchControl: ClaudeHostResearchResult.Diagnostic | undefined,
+    ended: ReturnType<typeof ClaudeHostResearchResult.terminal>) {
     return Effect.gen(function* () {
       const reason = `HOLD: ${entry.toolName} output refused by ToolSafety inspection`
       const identity = join.confirm(entry.toolUseID, [text(record(hook.tool_response), "agentId")])
@@ -299,7 +339,8 @@ export function make(input: {
             part.type === "text" ? sessions.updatePart({ ...part, text: reason }).pipe(Effect.asVoid) : Effect.void)
       }
       yield* write(entry, reason, { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}),
-        background: entry.background, hold: reason, output: reason, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined })
+        background: entry.background, hold: reason, output: reason, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined,
+        ...(researchControl ? { researchControl } : {}), terminal: ended ?? { reason: "failed", hostDetail: reason } })
       entry.settled = true
       entry.notice = undefined
       return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
@@ -347,6 +388,7 @@ export function make(input: {
     dispatch,
     stop,
     settle,
+    fail,
     notify,
     /** The child Session of a dispatch, for mirroring its `parent_tool_use_id` frames. */
     child: (toolUseID: string) => records.get(toolUseID)?.child,
