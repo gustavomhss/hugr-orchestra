@@ -6,7 +6,7 @@ name: toolkit-arm
 # runs each with its version flag, and lists the result per engine in the job summary.
 # Scope `tree-sitter` runs only the native grammar lane: the published linux-arm64 prebuilds must fail to load here,
 # and the core binding must be absent after an install without lifecycle scripts (as Nix and the release lanes install);
-# both then load and parse, under Node and Bun, after packages/script/src/tree-sitter-prebuilds.ts builds them from source,
+# both then load and parse, under Node and Bun, after packages/script/src/tree-sitter-prebuilds-cli.ts builds them from source,
 # and the compiled linux-arm64 CLI extracts symbols with the copies it ships in bin/tree-sitter.
 on:
   workflow_dispatch:
@@ -132,7 +132,7 @@ jobs:
           fi
 
       - name: Rebuild from source
-        run: bun packages/script/src/tree-sitter-prebuilds.ts linux arm64
+        run: bun packages/script/src/tree-sitter-prebuilds-cli.ts linux arm64
 
       - name: Every grammar loads and parses with the repaired prebuilds
         working-directory: packages/maestro-arsenal
@@ -157,7 +157,7 @@ jobs:
             console.log(JSON.stringify(result))
             if (!result.coverage.complete || result.symbols[0]?.name !== "a") process.exit(1)'
           # The guard now passes with nothing left to rebuild.
-          bun ../script/src/tree-sitter-prebuilds.ts linux arm64 | grep -F '"rebuilt":[]'
+          bun ../script/src/tree-sitter-prebuilds-cli.ts linux arm64 | grep -F '"rebuilt":[]'
 
       # A compiled CLI has no node_modules: it ships these bindings in bin/tree-sitter and parses from beside itself.
       - name: The compiled linux-arm64 CLI extracts real symbols with the tree-sitter it ships

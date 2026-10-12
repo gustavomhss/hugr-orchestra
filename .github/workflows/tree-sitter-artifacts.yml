@@ -2,7 +2,7 @@ name: tree-sitter-artifacts
 
 # The tree-sitter bundle a compiled CLI ships in bin/tree-sitter, per target, exported on that target's own OS and CPU:
 # only that host can build the core binding (and repair a mislabeled grammar prebuild), so a cross build cannot make it.
-# Each job runs packages/script/src/tree-sitter-prebuilds.ts <os> <arch> --out, which checks every file and every
+# Each job runs packages/script/src/tree-sitter-prebuilds-cli.ts <os> <arch> --out, which checks every file and every
 # binding's CPU, and uploads `tree-sitter-<os>-<arch>`. A cross build downloads it to <dir>/<os>-<arch>/ and passes
 # TREE_SITTER_ARTIFACTS=<dir> to the CLI build, as it passes OMNI_ARTIFACTS for omni-artifacts.yml's builds.
 on:
@@ -62,7 +62,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Export the bundle
-        run: bun packages/script/src/tree-sitter-prebuilds.ts "${TARGET%-*}" "${TARGET#*-}" --out "$RUNNER_TEMP/tree-sitter"
+        run: bun packages/script/src/tree-sitter-prebuilds-cli.ts "${TARGET%-*}" "${TARGET#*-}" --out "$RUNNER_TEMP/tree-sitter"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
