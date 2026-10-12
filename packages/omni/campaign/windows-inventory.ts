@@ -1,8 +1,11 @@
 // Windows OS instrument only. A PowerShell 7 watchdog owns query handles and OS waits, including
 // executable startup. The caller's monotonic deadline independently rejects late observations.
-// Queries and the identity recorder run on that same pwsh runtime: watchdog readiness has already
-// started it and loaded CimCmdlets. Windows PowerShell 5.1 is not used: its first launches on a fresh
-// hosted runner spent over 9.5 s before running the first statement, inside a 10 s query budget.
+// Only the watchdog and the identity recorder are long-lived. Each query is a fresh pwsh process that
+// the watchdog starts, owns and kills at the deadline, so a hung query cannot stall the watchdog and
+// every snapshot is a new observation. On windows-latest a query's pwsh start measured ~0.3 s (max
+// 1.1 s) and its CIM work ~0.25 s, first query of a fresh runner 0.95-1.5 s including watchdog start.
+// Windows PowerShell 5.1 is not used: nothing else on a hosted runner starts it, and its first launch
+// spent over 9.5 s before running its first statement, inside the 10 s query budget.
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
@@ -88,7 +91,7 @@ function ensureBroker(deadline: number) {
   broker.proc = proc
   proc.on("error", () => { broker.closed = true }) // Close still must confirm process/stdio teardown.
   proc.on("close", () => { broker.closed = true; close.resolve() })
-  if (!proc.pid) throw new Error("Windows watchdog has no PID; close unconfirmed")
+  if (!proc.pid) throw new Error("Windows watchdog could not start pwsh (PowerShell 7 is required on PATH); close unconfirmed")
   while (!existsSync(path.join(broker.dir, "ready.json")) && performance.now() < deadline) Bun.sleepSync(5)
   if (!existsSync(path.join(broker.dir, "ready.json"))) { proc.kill("SIGKILL"); throw new Error("Windows watchdog startup deadline expired; close unconfirmed") }
   const ready = JSON.parse(readFileSync(path.join(broker.dir, "ready.json"), "utf8")) as Identity
