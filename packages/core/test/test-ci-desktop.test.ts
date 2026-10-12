@@ -157,7 +157,8 @@ test("empty proof/typecheck markers and absent typecheck are named failures", as
 })
 
 test("stale marker: both records require current SHA/run ID; setup clears even same-run records", async () => {
-  const value = await fixture(["jimmy-desktop-proof"])
+  // A request naming the proof requires its records on every host.
+  const value = await fixture([proof])
   for (const name of ["proof", "typecheck"]) {
     for (const field of ["sha", "runID"]) {
       await markers(value.cwd)

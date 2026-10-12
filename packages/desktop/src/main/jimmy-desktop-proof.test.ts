@@ -14,6 +14,7 @@ import { reply } from "../../../orchestra/test/lib/llm-server"
 import { testProviderConfig } from "../../../orchestra/test/lib/test-provider"
 import ts from "typescript"
 import { cleanupProofRoot } from "./jimmy-desktop-cleanup.fixture"
+import { DesktopOmni } from "./omni-process"
 
 const desktop = path.resolve(import.meta.dir, "../..")
 const repo = path.resolve(desktop, "../..")
@@ -555,7 +556,16 @@ function waitForPortRefusal(port: number, timeout = 3000) {
   })
 }
 
+// Like the desktop's own spawn sites, the host's build and typecheck children go through omni when it is on, so a
+// run of this file alone meets the omni positive control (script/test-omni-control.ts) with real spawns.
 async function command(cmd: string[], cwd: string, env: Record<string, string | undefined>, timeout: number) {
+  if (DesktopOmni.enabled()) {
+    const result = await DesktopOmni.execFile(cmd[0], cmd.slice(1), { cwd, env, timeout, killSignal: "SIGKILL", maxBuffer: 256 * 1024 * 1024 })
+      .catch((error: Error & { code?: unknown; stdout?: string; stderr?: string }) => {
+        throw new Error(`${cmd.join(" ")} failed (${String(error.code)}):\n${error.stdout ?? ""}\n${error.stderr ?? ""}`, { cause: error })
+      })
+    return result.stdout
+  }
   const child = Bun.spawn(cmd, { cwd, env, stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout, killSignal: "SIGKILL" })
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   if (code !== 0) throw new Error(`${cmd.join(" ")} failed (${code}):\n${stdout}\n${stderr}`)
