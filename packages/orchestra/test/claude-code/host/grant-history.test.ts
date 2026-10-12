@@ -1,54 +1,24 @@
 import { afterEach, expect } from "bun:test"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
-import { Database } from "@orchestra/core/database/database"
-import { filesystem } from "@orchestra/core/effect/app-node-platform"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { FSUtil } from "@orchestra/core/fs-util"
-import { Global } from "@orchestra/core/global"
-import { LocationServiceMap } from "@orchestra/core/location-services"
-import { AppProcess } from "@orchestra/core/process"
-import { SessionProjector } from "@orchestra/core/session/projector"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect, Schema } from "effect"
-import { Agent } from "@/agent/agent"
-import { BackgroundJob } from "@/background/job"
 import { ClaudeHostDelegation } from "@/claude-code/host/delegation"
 import { ClaudeHostGrantHistory } from "@/claude-code/host/grant-history"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostMemory } from "@/claude-code/host/memory"
-import { Config } from "@/config/config"
-import { Archive } from "@/continuity/archive"
-import { RuntimeFlags } from "@/effect/runtime-flags"
-import { EventV2Bridge } from "@/event-v2-bridge"
-import { Git } from "@/git"
-import { ArsenalObservations } from "@/maestro/arsenal-observations"
-import { Permission } from "@/permission"
-import { InstanceStore } from "@/project/instance-store"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
-import { Session } from "@/session/session"
-import { SessionStatus } from "@/session/status"
-import { Snapshot } from "@/snapshot"
-import { Skill } from "@/skill"
-import { Todo } from "@/session/todo"
+import type { Session } from "@/session/session"
 import { ContextRecallTool } from "@/tool/context-recall"
 import { Tool } from "@/tool/tool"
-import { Truncate } from "@/tool/truncate"
-import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { disposeAllInstances } from "../../fixture/fixture"
 import { testEffect } from "../../lib/effect"
+import { makeHttpNoLLMServer } from "../../session/prompt.fixture"
 import { BridgeFixture } from "./bridge-fixture"
 
 afterEach(disposeAllInstances)
 
-// No model or SDK runtime: actual host MCP, bridge, SQLite projection, delegation and recall services.
-const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
-    SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
-    Git.node, Skill.node, Snapshot.node, SessionStatus.node, Permission.node,
-    Global.node, AppProcess.node, LocationServiceMap.node, InstanceStore.node, ArsenalObservations.node]),
-  [[RuntimeFlags.node, RuntimeFlags.layer({})]],
-))
+// Actual host MCP, bridge, SQLite projection, delegation and recall; only incoming SDK frames are scripted.
+const it = testEffect(makeHttpNoLLMServer())
 const Source = Schema.Struct({ message_id: Schema.String, part_id: Schema.String })
 const Record = Schema.Struct({
   grantID: Schema.String, sessionID: Schema.String, seat: Schema.String, purpose: Schema.String,
