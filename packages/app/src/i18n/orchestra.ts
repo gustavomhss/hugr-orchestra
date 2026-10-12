@@ -101,6 +101,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.brand.name": "Orchestra",
   "orchestra.brand.descriptor": "Human Guardrail",
   "orchestra.nav.chat": "Chat",
+  "orchestra.nav.lean": "Lean",
   "orchestra.nav.agents": "Agents",
   "orchestra.nav.maestro": "Maestro",
   "orchestra.nav.mcp": "MCP",

@@ -2,6 +2,7 @@ import { afterEach, expect, test } from "bun:test"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { promisify } from "node:util"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
 import { DesktopOmni } from "./omni-process"
 
@@ -44,6 +45,7 @@ const node = (script: string, ...args: string[]) => [process.execPath, ["-e", sc
 test.skipIf(!on)(
   "execFile resolves and rejects like child_process.execFile",
   async () => {
+    expectSpawn(import.meta.path)
     const cases = [
       node("process.stdout.write('out'); process.stderr.write('err')"),
       node("process.stderr.write('No such container: x\\n'); process.exit(1)"),
