@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import type { SDKAssistantMessage, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Database } from "@orchestra/core/database/database"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { LocationServiceMap } from "@orchestra/core/location-services"
@@ -27,7 +28,7 @@ import { testEffect } from "../../lib/effect"
 // Real Session, revert, fork, mirror, Todo and compact readers. SDK result frames are inputs, not a mocked producer.
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   filesystem, CrossSpawnSpawner.node, LocationServiceMap.node, Session.node, SessionProjector.node,
-  SessionRevert.node, Snapshot.node, SessionStatus.node, Todo.node, Agent.node, Archive.node,
+  SessionRevert.node, Snapshot.node, SessionStatus.node, Todo.node, Agent.node, Archive.node, Database.node,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({})]]))
 const subject = "A-survives-完整🙂\n" + "complete subject ".repeat(80)
 const base = { session_id: "native-todos", parent_tool_use_id: null }
@@ -78,9 +79,9 @@ const setup = Effect.fnUntraced(function* () {
 
 for (const mode of ["revert", "fork"] as const)
   for (const last of ["surviving", "empty-list", "deleted", "missing-get"] as const)
-    for (const first of last === "surviving" || last === "empty-list"
+    for (const start of last === "surviving" || last === "empty-list"
       ? ["TaskCreate", "TaskUpdate", "TaskList", "TaskGet"] : ["TaskCreate"])
-    it.instance(`${mode}: ${first} before C preserves ${last} native tasks and cold compact context`, () =>
+    it.instance(`${mode}: ${start} before C preserves ${last} native tasks and cold compact context`, () =>
       Effect.gen(function* () {
         const f = yield* setup()
         const u1 = yield* f.user(f.chat.id)
@@ -116,13 +117,13 @@ for (const mode of ["revert", "fork"] as const)
         // Lifecycle metadata still carries B; the producer must ignore it even after the active cut clears.
         expect((yield* f.sessions.get(target.id)).metadata?.claudeCode?.todoTasks).toHaveProperty("native-B-29")
         const cold = f.make(yield* f.user(target.id))
-        if (first === "TaskUpdate") yield* f.native(cold, first, { taskId: "native-A-17" },
+        if (start === "TaskUpdate") yield* f.native(cold, start, { taskId: "native-A-17" },
           { success: true, taskId: "native-A-17", updatedFields: [] })
-        if (first === "TaskList") yield* f.native(cold, first, {}, { tasks: last === "surviving"
+        if (start === "TaskList") yield* f.native(cold, start, {}, { tasks: last === "surviving"
           ? [{ id: "native-A-17", subject, status: "in_progress", blockedBy: [] }] : [] })
-        if (first === "TaskGet") yield* f.native(cold, first, { taskId: "native-A-17" }, { task: last === "surviving"
+        if (start === "TaskGet") yield* f.native(cold, start, { taskId: "native-A-17" }, { task: last === "surviving"
           ? { id: "native-A-17", subject, status: "in_progress", description: "", blocks: [], blockedBy: [] } : null })
-        if (first !== "TaskCreate") {
+        if (start !== "TaskCreate") {
           expect((yield* f.sessions.get(target.id)).metadata?.claudeCode?.todoTasks).not.toHaveProperty("native-B-29")
           expect((yield* f.memory(target.id)) ?? "").not.toContain("B-EXCLUDED")
         }
