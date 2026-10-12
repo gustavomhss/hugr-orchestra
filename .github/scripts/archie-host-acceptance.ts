@@ -8,7 +8,7 @@ import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, join, relative, resolve } from "node:path"
 import { isDeepStrictEqual, parseArgs } from "node:util"
-import type { HookCallbackMatcher, HookEvent, Query, SpawnedProcess, query } from "../../packages/orchestra/node_modules/@anthropic-ai/claude-agent-sdk"
+import type { HookCallbackMatcher, HookEvent, Query, SpawnedProcess, query } from "../../packages/orchestra/script/archie-host-sdk"
 import type { Plan } from "./archie-host-plan"
 import { billingDiagnostic, claimOutput, requireOrdinaryLoginEnvironment, stopOwned } from "./archie-host-process"
 import { assignmentMatches, demandFence, nativeEvidence, requestedModelsMatch } from "./archie-host-evidence"
@@ -322,7 +322,7 @@ async function tree(root: string, prefix = ""): Promise<Record<string, string>> 
 async function observe(plan: Plan) {
   const { mock } = await import("bun:test")
   const sdkPath = createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("@anthropic-ai/claude-agent-sdk")
-  const sdk = (await import(sdkPath)) as typeof import("../../packages/orchestra/node_modules/@anthropic-ai/claude-agent-sdk")
+  const sdk = (await import(sdkPath)) as typeof import("../../packages/orchestra/script/archie-host-sdk")
   const realQuery = sdk.query
   const write = (name: string, value: unknown) => appendFileSync(join(plan.out, name), JSON.stringify(value) + "\n")
   const halt = (reason: string, evidence: unknown, abort?: AbortController): never => {
