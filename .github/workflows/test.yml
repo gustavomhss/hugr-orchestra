@@ -11,6 +11,10 @@ on:
         description: Also run the e2e suite on Windows (unit tests always run on Windows)
         type: boolean
         default: false
+      cold:
+        description: Run every test, replaying no Turbo cache and skipping no recorded pass (measures cold lane times)
+        type: boolean
+        default: false
 
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
@@ -209,6 +213,7 @@ jobs:
 
       # Re-labeling an epic re-runs every job; a shard whose inputs already passed in this PR skips.
       - name: Check for a previous pass
+        if: ${{ !inputs.cold }}
         id: previous
         uses: ./.github/actions/previous-pass
         with:
@@ -352,7 +357,7 @@ jobs:
       # Turbo 2 keeps its local cache in .turbo/cache. A run restores its PR's newest entry, else the one cache-warm
       # saved on dev. Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
-        if: matrix.filters
+        if: matrix.filters && !inputs.cold
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
@@ -494,6 +499,7 @@ jobs:
 
       # e2e drives the app package; its Turbo hash covers the app plus every workspace dependency.
       - name: Check for a previous pass
+        if: ${{ !inputs.cold }}
         id: previous
         uses: ./.github/actions/previous-pass
         with:
