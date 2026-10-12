@@ -68,6 +68,8 @@ const binary = Effect.fnUntraced(function* (
         system: () => undefined,
         directory,
         release: { ...release, root: ROOT },
+        // CI sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD; these tests download only from their local server.
+        download: true,
         connectTimeout: "2 seconds",
         attemptTimeout: "5 seconds",
         attempts: 3,
