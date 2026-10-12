@@ -311,10 +311,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const policy = path.join(temp, "settings.json")
   // bwrap blocks creating an absent deny path by binding /dev/null there, which its nodev bind makes unreadable:
   // `grep -r`, `ls -l` and `find` fail on the ghost. srt binds a read-only empty directory instead when the absent name
-  // is the parent of another deny path: just as uncreatable, and it reads as empty. Only in an existing directory, where
-  // bwrap can make that mount point.
+  // is the parent of another deny path: just as uncreatable, and it reads as empty. Include srt 0.0.78's mandatory cwd
+  // denies (linuxGetCwdMandatoryDenyPaths), not only Orchestra config. The git leaves apply only to a real .git directory;
+  // a worktree's .git file must never get child mounts. Policy preparation creates no host-side placeholders.
   const absent = process.platform === "linux"
-    ? yield* Effect.filter(guarded, (entry) => fs.isDir(path.dirname(entry)).pipe(
+    ? yield* Effect.filter([...guarded, ...[
+        ".gitconfig", ".gitmodules", ".bashrc", ".bash_profile", ".zshrc", ".zprofile", ".profile", ".ripgreprc", ".mcp.json",
+        ".vscode", ".idea", ".claude/commands", ".claude/agents",
+        ...(yield* fs.isDir(path.join(cwd, ".git"))) ? [".git/hooks", ".git/config"] : [],
+      ].map((entry) => path.join(cwd, entry))], (entry) => fs.isDir(path.dirname(entry)).pipe(
         Effect.map((directory) => directory && !lstatSync(entry, { throwIfNoEntry: false }))))
     : []
   // Plain TCP clients (libpq, SQLx, PGLS) cannot speak CONNECT. This host-written forwarder runs first inside the same
