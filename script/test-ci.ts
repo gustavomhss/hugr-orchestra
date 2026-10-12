@@ -27,7 +27,7 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
-import { parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
+import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
   "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
@@ -281,6 +281,9 @@ type RunView = {
 
 async function report(view: RunView) {
   const tests = requireTestJobs(request.os, view.jobs)
+  const bunfig = Bun.file(path.join(root, "packages", request.package, "bunfig.toml"))
+  const control = request.runner === "bun" && (await bunfig.exists()) && preloadsControl(Bun.TOML.parse(await bunfig.text()))
+  let missing = false
   for (const job of tests) {
     const log = await waitFor(`${job.name}: nonempty job log`, 120_000, async () => {
       const result = await $`gh run view --repo ${repo} --job ${job.databaseId} --log`.quiet().nothrow()
@@ -290,9 +293,18 @@ async function report(view: RunView) {
     // Keep setup diagnostics for failed jobs; only summaries for successful jobs.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
+    if (!control) continue
+    // The control's verdict is required apart from the job's result: a job without exactly one verdict carrying its
+    // nonce fails this report even when every test passed.
+    try {
+      console.log(`test-ci: ${job.name} ${controlVerdict(job, log)}`)
+    } catch (error) {
+      missing = true
+      console.log(`test-ci: ${job.name} omni positive control: MISSING (${(error as Error).message})`)
+    }
   }
-  console.log(`\ntest-ci: ${view.conclusion}`)
-  return view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
+  console.log(`\ntest-ci: ${view.conclusion}${missing ? " (omni positive control verdict missing)" : ""}`)
+  return missing || view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
 }
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {

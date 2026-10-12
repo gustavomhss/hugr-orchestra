@@ -6,6 +6,7 @@ import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
+import { Global } from "../src/global"
 import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
@@ -215,6 +216,111 @@ live("a confined-read command's TMPDIR is its own scratch, where it can create a
   }), 30_000,
 )
 
+live("credential names absent at policy allocation stay denied after creation under a readable parent", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const cargo = path.join(f.directory, "cargo")
+    const alias = path.join(f.directory, "cargo-alias")
+    yield* f.fs.makeDirectory(path.join(cargo, "bin"), { recursive: true })
+    yield* f.fs.makeDirectory(path.join(cargo, "xdg", "git"), { recursive: true })
+    yield* f.fs.symlink(cargo, alias)
+    const allowed = path.join(cargo, "public")
+    yield* f.fs.writeFileString(allowed, "public-control")
+    const names = ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db", "probe"),
+      path.join("xdg", "git", "credentials")]
+    // A whole-root alias can be unreadable without any credential deny; probe physical paths as well.
+    const files = names.flatMap((name) => [path.join(cargo, name), path.join(alias, name)])
+    yield* Effect.forEach(files, (file) => Effect.gen(function* () {
+      expect(yield* f.fs.exists(file)).toBe(false)
+    }), { discard: true })
+    const script = `const fs=require('fs');process.stdout.write(JSON.stringify(${JSON.stringify([allowed, ...files])}.map(file=>{try{return fs.readFileSync(file,'utf8').length>0}catch{return false}})))`
+    const input = ChildProcess.make(f.node, ["-e", script], { cwd: f.root, env: {
+      CARGO_HOME: alias, XDG_CONFIG_HOME: path.join(alias, "xdg"),
+      PATH: [path.join(cargo, "bin"), process.env.PATH].join(path.delimiter),
+    } })
+    const wrapped = yield* ToolSafetySandbox.wrap(input).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, {
+        requireSandbox: true, writeRoots: [], sandbox: { enabled: true, readRoots: [f.root] },
+      }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.root }),
+    )
+    // Allocate the OS policy first, then create only synthetic secrets on the host.
+    yield* Effect.forEach(files, (file) => f.fs.writeWithDirs(file, "synthetic-late-secret"), { discard: true })
+    const control = yield* f.processes.run(input, { timeout: "5 seconds" })
+    expect(control.exitCode, control.stderr.toString()).toBe(0)
+    expect(JSON.parse(control.stdout.toString())).toEqual([true, ...files.map(() => true)])
+    const result = yield* f.processes.run(wrapped, { timeout: "5 seconds" })
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(JSON.parse(result.stdout.toString())).toEqual([true, ...files.map(() => false)])
+    expect(result.stdout.toString()).not.toContain("synthetic-late-secret")
+  }), 30_000,
+)
+
+live("physical XDG home aliases cannot turn the account home into a config grant", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const home = path.join(f.directory, "home")
+    const alias = path.join(f.directory, "xdg-alias")
+    const files = ["config", "ignore", "attributes"].map((name) => path.join(home, "git", name))
+    yield* Effect.forEach(files, (file) => f.fs.writeWithDirs(file, "synthetic config"), { discard: true })
+    yield* f.fs.symlink(home, alias)
+    yield* Effect.acquireRelease(Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_TEST_HOME
+      process.env.ORCHESTRA_TEST_HOME = home
+      return previous
+    }), (previous) => Effect.sync(() => {
+      if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+      if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+    }))
+    const script = `const fs=require('fs');console.log(JSON.stringify(${JSON.stringify(files)}.map(file=>{try{return fs.readFileSync(file).length>0}catch{return false}})))`
+    const input = ChildProcess.make(f.node, ["-e", script], { cwd: f.root, env: { XDG_CONFIG_HOME: alias } })
+    const control = yield* f.processes.run(input)
+    expect(control.exitCode, control.stderr.toString()).toBe(0)
+    expect(JSON.parse(control.stdout.toString())).toEqual([true, true, true])
+    const wrapped = yield* ToolSafetySandbox.wrap(input).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, readRoots: [f.root] } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.root }),
+    )
+    const result = yield* f.processes.run(wrapped)
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(JSON.parse(result.stdout.toString())).toEqual([false, false, false])
+  }), 30_000,
+)
+
+live("physical install prefixes directly under home stay private while their precise bin stays readable", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const home = path.join(f.directory, "home")
+    const prefix = path.join(home, ".vault")
+    const alias = path.join(f.directory, "install")
+    const bin = path.join(prefix, "bin", "public")
+    const privateFile = path.join(prefix, "private")
+    yield* f.fs.writeWithDirs(bin, "synthetic public")
+    yield* f.fs.writeFileString(privateFile, "synthetic private")
+    yield* f.fs.symlink(prefix, alias)
+    yield* Effect.acquireRelease(Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_TEST_HOME
+      process.env.ORCHESTRA_TEST_HOME = home
+      return previous
+    }), (previous) => Effect.sync(() => {
+      if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+      if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+    }))
+    const script = `const fs=require('fs');console.log(JSON.stringify(${JSON.stringify([bin, privateFile])}.map(file=>{try{return fs.readFileSync(file).length>0}catch{return false}})))`
+    const input = ChildProcess.make(f.node, ["-e", script], { cwd: f.root, env: { PATH: [path.join(alias, "bin"), process.env.PATH].join(path.delimiter) } })
+    const control = yield* f.processes.run(input)
+    expect(control.exitCode, control.stderr.toString()).toBe(0)
+    expect(JSON.parse(control.stdout.toString())).toEqual([true, true])
+    const wrapped = yield* ToolSafetySandbox.wrap(input).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, readRoots: [f.root] } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.root }),
+    )
+    const result = yield* f.processes.run(wrapped)
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(JSON.parse(result.stdout.toString())).toEqual([true, false])
+  }), 30_000,
+)
+
 test("home grants name exactly git's config files and what a rustup-proxied cargo needs, never a credential store", () => {
   const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
   const [rustup, cargo, xdg] = ["rustup", "cargo", "xdg"].map((name) => path.join(base, name))
@@ -226,11 +332,11 @@ test("home grants name exactly git's config files and what a rustup-proxied carg
   ].sort())
   // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it.
   const defaults = ToolSafetySandbox.homeGrants({}).map((grant) => grant.entry)
-  const homes = [...new Set(defaults.map((entry) => entry.slice(0, entry.lastIndexOf(`${path.sep}.`))))]
-  expect(defaults.map((entry) => path.relative(homes.find((home) => entry.startsWith(home + path.sep)) ?? "", entry)).sort()).toEqual(
-    homes.flatMap(() => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
+  const homes = [...new Set([Global.Path.home, os.homedir()])]
+  expect(defaults.sort()).toEqual(
+    homes.flatMap((home) => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
       path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"), path.join(".cargo", "bin"),
-      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))]).sort(),
+      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))].map((entry) => path.join(home, entry))).sort(),
   )
 })
 

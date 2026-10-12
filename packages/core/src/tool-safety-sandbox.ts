@@ -193,8 +193,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
     ...(profile?.managedPaths ?? []), ...(profile?.sandbox?.denyPaths ?? []), ...(profile?.neverTouch ?? []),
-    // Only those that exist: there is nothing to read in a missing one.
-    ...(reads ? yield* Effect.filter(ToolSafetySandboxHomes.secrets(env), fs.existsSafe) : []),
+    // Deny missing names too: credentials may be created after this policy is allocated.
+    ...(reads ? yield* ToolSafetySandboxHomes.secrets(env, cwd) : []),
   ])]
   const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
   const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
@@ -263,14 +263,10 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Confined reads: the granted roots, the write roots and the host toolchain. A toolchain path inside a denied path
   // stays denied; a granted root inside one (saved tool output under data) is carved out of it.
   const granted = reads ? yield* existing(fs, reads) : []
-  const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* ToolSafetySandboxHomes.contained(fs, ToolSafetySandboxHomes.homeGrants(confined))), ...(yield* existing(fs, [
+  const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* ToolSafetySandboxHomes.contained(fs, ToolSafetySandboxHomes.homeGrants(confined))), ...(yield* ToolSafetySandboxHomes.programRoots(fs, [
     ...ToolSafetySandboxHomes.programs(confined),
-    ...(sandbox.kind === "srt" && sandbox.directory ? [sandbox.directory] : []),
-  ])).flatMap((entry) => {
-    // xcode-select's developer directory lies inside an Xcode bundle, whose Info.plist and frameworks xcrun loads.
-    const bundle = /^(\/.+?\.app)\/Contents\/Developer$/.exec(entry)?.[1]
-    return bundle ? [entry, bundle] : [entry]
-  })].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
+    ...(sandbox.kind === "srt" && sandbox.directory ? [{ entry: sandbox.directory, prefix: false }] : []),
+  ]))].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
   const carved = granted.filter((entry) => deny.some((denied) => denied !== entry && FSUtil.contains(denied, entry)))
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
@@ -342,7 +338,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     // srt expands a "/" read deny into the root's children (never /proc, /dev or /sys) and re-mounts allowRead paths.
     // Under confined reads the endpoint forwarder still needs its own script and this process's runtime.
     filesystem: {
-      allowRead: readable ? [...readable, ...(forwarder ? [temp, path.dirname(process.execPath)] : [])] : [],
+      allowRead: readable ? [...readable, ...(forwarder ? [temp] : [])] : [],
       denyRead: readable ? ["/", ...deny, ...nested] : deny,
       allowWrite: roots,
       denyWrite: [...deny, ...guarded, ...(forwarder ? [temp] : []), ...absent.map((entry) => path.join(entry, "orchestra-guard"))],
@@ -589,16 +585,7 @@ export function readonlyGoCache(input: string) {
 }
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
-const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, ToolSafety.Denied> {
-  return yield* fs.realPath(target).pipe(
-    Effect.catchReason("PlatformError", "NotFound", () => Effect.gen(function* () {
-      const parent = path.dirname(target)
-      if (parent === target) return yield* new ToolSafety.Denied({ reason: "sandbox-deny-root-acquisition" })
-      return path.join(yield* canonical(fs, parent), path.basename(target))
-    })),
-    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-deny-path-acquisition" })),
-  )
-})
+const canonical = ToolSafetySandboxHomes.canonical
 
 const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, entry: string, seatbelt: boolean) {
   const target = path.resolve(directory, entry)

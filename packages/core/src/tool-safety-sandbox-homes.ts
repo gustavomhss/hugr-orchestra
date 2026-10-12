@@ -5,6 +5,7 @@ import path from "path"
 import { Effect } from "effect"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
+import { ToolSafety } from "./tool-safety"
 
 // What a confined-read command (a native seat's shell, ToolSafety.Profile.sandbox.readRoots) may read outside its roots:
 // the system toolchain, and the exact entries under the home directory or the homes its environment names. Applied by
@@ -27,7 +28,7 @@ const ETC = [
  * directory is ever listed.
  */
 export function toolchain(env: NodeJS.ProcessEnv = process.env) {
-  return [...programs(env), ...homeGrants(env).map((grant) => grant.entry)]
+  return [...programs(env).map((grant) => grant.entry), ...homeGrants(env).map((grant) => grant.entry)]
 }
 
 /** The account's home and the one Orchestra uses (a test home differs); neither is ever exposed. */
@@ -49,11 +50,17 @@ const gitHomes = (env: NodeJS.ProcessEnv) =>
  * Credential stores a confined-read command never reads, even where a readable root holds them (a CARGO_HOME under /usr
  * whose bin is on PATH): cargo's credentials and config, its bare git databases, and git's XDG credential store.
  */
-export const secrets = (env: NodeJS.ProcessEnv) => [
-  ...named(env.CARGO_HOME, ".cargo").flatMap((cargo) =>
-    ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db")].map((name) => path.join(cargo, name))),
-  ...gitHomes(env).map((root) => path.join(root, "credentials")),
-]
+export const secrets = (env: NodeJS.ProcessEnv, cwd: string) => Effect.gen(function* () {
+  if ([env.CARGO_HOME, env.XDG_CONFIG_HOME].some((value) => value !== undefined &&
+    (typeof value !== "string" || /[*?\[\]\0]/.test(value))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-credential-root-invalid" })
+  return [
+    ...(env.CARGO_HOME === undefined ? homes().map((home) => path.join(home, ".cargo")) : [path.resolve(cwd, env.CARGO_HOME)])
+      .flatMap((cargo) => ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db")].map((name) => path.join(cargo, name))),
+    ...homes().map((home) => path.join(home, ".config", "git", "credentials")),
+    ...(env.XDG_CONFIG_HOME === undefined ? [] : [path.join(path.resolve(cwd, env.XDG_CONFIG_HOME), "git", "credentials")]),
+  ]
+})
 
 /** The system roots: programs, libraries and the essential /etc entries. */
 const system = () => process.platform === "darwin"
@@ -68,8 +75,27 @@ export function programs(env: NodeJS.ProcessEnv) {
   const bins = [path.dirname(process.execPath), ...(env.PATH ?? env.Path ?? "").split(path.delimiter).filter((entry) => path.isAbsolute(entry))]
   const prefixes = bins.filter((entry) => path.basename(entry) === "bin").map((entry) => path.dirname(entry))
     .filter((prefix) => !homes().includes(path.dirname(prefix)))
-  return [...system(), ...bins, ...prefixes].filter((entry) => !homes().some((home) => FSUtil.contains(entry, home)))
+  return [...system(), ...bins].map((entry) => ({ entry, prefix: false })).concat(prefixes.map((entry) => ({ entry, prefix: true })))
+    .filter((grant) => !homes().some((home) => FSUtil.contains(grant.entry, home)))
 }
+
+/** Validate both spellings of program roots, preserving precise bins without expanding home install prefixes. */
+export const programRoots = (fs: FSUtil.Interface, entries: ReturnType<typeof programs>) => Effect.gen(function* () {
+  const places = [...homes().map((home) => path.resolve(home)), ...(yield* Effect.forEach(homes(), (home) => canonical(fs, path.resolve(home))))]
+  const found = yield* Effect.forEach(entries, (grant) => Effect.gen(function* () {
+    const real = yield* fs.realPath(grant.entry).pipe(
+      Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-program-root-acquisition" })),
+    )
+    if (real === undefined) return []
+    const pair = [path.resolve(grant.entry), real]
+    const bundles = pair.flatMap((root) => /^(\/.+?\.app)\/Contents\/Developer$/.exec(root)?.[1] ?? [])
+    const roots = [...pair, ...bundles, ...(yield* Effect.forEach(bundles, (bundle) => canonical(fs, bundle)))]
+    return roots.some((root) => places.some((home) => FSUtil.contains(root, home) ||
+      (grant.prefix && path.dirname(root) === home))) ? [] : roots
+  }))
+  return [...new Set(found.flat())]
+})
 
 /**
  * The single files and directories a confined-read command may read under the home directory or the homes its
@@ -89,23 +115,23 @@ export function programs(env: NodeJS.ProcessEnv) {
  */
 export function homeGrants(env: NodeJS.ProcessEnv = process.env) {
   const grants = [
-    ...homes().map((home) => ({ entry: path.join(home, ".gitconfig"), within: undefined, names: [".gitconfig", "gitconfig"] })),
+    ...homes().map((home) => ({ entry: path.join(home, ".gitconfig"), within: undefined, names: [".gitconfig", "gitconfig"], file: true })),
     ...gitHomes(env).flatMap((root) => ["config", "ignore", "attributes"].map((name) =>
-      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)] }))),
+      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)], file: true, configHome: path.dirname(root) }))),
     ...named(env.RUSTUP_HOME, ".rustup").flatMap((rustup) => ["settings.toml", "toolchains"].map((name) =>
-      ({ entry: path.join(rustup, name), within: rustup, names: [] }))),
+      ({ entry: path.join(rustup, name), within: rustup, names: [], file: name === "settings.toml" }))),
     ...named(env.CARGO_HOME, ".cargo").flatMap((cargo) => ["bin", ...["index", "cache", "src"].map((name) => path.join("registry", name))]
-      .map((name) => ({ entry: path.join(cargo, name), within: cargo, names: [] }))),
+      .map((name) => ({ entry: path.join(cargo, name), within: cargo, names: [], file: false }))),
   ]
   return grants.filter((grant) => !homes().some((home) => FSUtil.contains(grant.entry, home) ||
     (path.dirname(grant.entry) === home && path.basename(grant.entry) !== ".gitconfig")))
 }
 
 /**
- * The home grants that exist, each with its physical path. A grant is kept when it is not itself a link, or when its
- * physical path stays inside its physical `within` directory, inside a system root, or ends in one of its `names`; and
+ * The home grants that exist, each with its physical path. A grant is kept only when its
+ * physical path stays inside a validated physical `within` directory, inside a system root, or is a named regular file; and
  * never when its physical path is a home, contains one, or (but ~/.gitconfig) sits directly in one. So a link planted at
- * a grant (bin, settings.toml, a git config) cannot expose ~/.netrc or another tool's credentials, while a dotfiles
+ * a grant or an ancestor cannot expose ~/.netrc or another tool's credentials, while a dotfiles
  * link that keeps git's names (~/.config/git/config -> ~/dotfiles/git/config) or points into a system root (Nix Home
  * Manager's /nix/store) still works. A link above a grant (a whole home behind a link) is not followed in the jail.
  */
@@ -115,13 +141,27 @@ export const contained = (fs: FSUtil.Interface, grants: ReturnType<typeof homeGr
   const found = yield* Effect.forEach(grants, (grant) => Effect.gen(function* () {
     const real = yield* physical(grant.entry)
     if (real === undefined) return []
-    const parent = yield* physical(path.dirname(grant.entry))
+    if (grant.file && !(yield* fs.isFile(real))) return []
+    const configHome = "configHome" in grant ? yield* physical(grant.configHome) : undefined
+    if ("configHome" in grant && (configHome === undefined || places.some((home) => FSUtil.contains(configHome, home)))) return []
     const within = grant.within === undefined ? undefined : yield* physical(grant.within)
+    if (within !== undefined && places.some((home) => FSUtil.contains(within, home))) return []
     if (places.some((home) => FSUtil.contains(real, home) || (grant.within !== undefined && path.dirname(real) === home))) return []
-    const kept = real === (parent && path.join(parent, path.basename(grant.entry))) ||
-      (within !== undefined && FSUtil.contains(within, real)) || system().some((root) => FSUtil.contains(root, real)) ||
-      grant.names.some((name) => real.endsWith(path.sep + name))
+    const kept = (within !== undefined && FSUtil.contains(within, real)) || system().some((root) => FSUtil.contains(root, real)) ||
+      (grant.file && grant.names.some((name) => real.endsWith(path.sep + name)))
     return kept ? [path.resolve(grant.entry), real] : []
   }))
   return [...new Set(found.flat())]
+})
+
+/** Resolve missing leaves through existing parents; errors other than absence fail closed. */
+export const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, ToolSafety.Denied> {
+  return yield* fs.realPath(target).pipe(
+    Effect.catchReason("PlatformError", "NotFound", () => Effect.gen(function* () {
+      const parent = path.dirname(target)
+      if (parent === target) return yield* new ToolSafety.Denied({ reason: "sandbox-deny-root-acquisition" })
+      return path.join(yield* canonical(fs, parent), path.basename(target))
+    })),
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-deny-path-acquisition" })),
+  )
 })

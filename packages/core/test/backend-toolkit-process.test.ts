@@ -9,6 +9,7 @@ import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { Omni } from "../src/omni"
 import { PinnedArtifact } from "../src/pinned-artifact"
 import { it } from "./lib/effect"
+import { expectSpawn } from "./fixture/omni-expect"
 import { alive, reap, sweep, tree } from "./fixture/process-tree"
 
 type Config = {
@@ -123,6 +124,7 @@ it.live(
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
+      if (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1") expectSpawn(import.meta.path)
       const before = Omni.snapshot()
       yield* f.install({ output: "stdout", mib: 64 })
       if (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1") {

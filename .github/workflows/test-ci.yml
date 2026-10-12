@@ -51,7 +51,7 @@ jobs:
           node --input-type=module <<'NODE'
           import { appendFileSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
           import path from 'node:path'
-          import { validateRequest } from './script/test-ci-request.ts'
+          import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
               realpathSync(file).startsWith(realpathSync('.') + path.sep))
@@ -59,7 +59,8 @@ jobs:
           mkdirSync('test-ci-evidence', { recursive: true })
           writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
             platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
-          appendFileSync(process.env.GITHUB_OUTPUT, `package=${request.package}\nrunner=${request.runner}\n`)
+          appendFileSync(process.env.GITHUB_OUTPUT,
+            `package=${request.package}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
           NODE
 
       - name: Setup Bun
@@ -155,9 +156,20 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
+      # A per-run secret for the omni positive control's verdict line: script/test-omni-control.ts prints it in its one
+      # verdict line and removes it from the environment before any test loads; test-ci.ts accepts only that line.
+      - name: Omni control nonce
+        run: |
+          nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
+          echo "ORCHESTRA_OMNI_CONTROL_NONCE=$nonce" >> "$GITHUB_ENV"
+          echo "omni control nonce: $nonce"
+
+      # The control's scope comes from the request (script/test-ci-request.ts omniControlScope): a whole-package request
+      # is "suite" like every test.yml lane, a narrower one is "declared". Not an --env key; an empty value fails the run.
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          ORCHESTRA_OMNI_CONTROL: ${{ steps.request.outputs.omni_control }}
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |

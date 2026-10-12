@@ -10,6 +10,7 @@ import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { Omni } from "../src/omni"
 import { PinnedArtifact } from "../src/pinned-artifact"
+import { expectSpawn } from "./fixture/omni-expect"
 import { it } from "./lib/effect"
 
 const fixture = Effect.gen(function* () {
@@ -121,6 +122,7 @@ writeFileSync(path.join(process.env.GOCACHE, "..", "call.json"), JSON.stringify(
 
   it.live(`valid source executable publishes complete cache through ${api}`, () => Effect.gen(function* () {
     const f = yield* fixture
+    expectSpawn(import.meta.path)
     const before = Omni.snapshot()
     yield* f.install("valid", api)
     // Native extraction and builder spawns calibrate the hosted run's Omni positive control.
