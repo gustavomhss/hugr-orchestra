@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
@@ -82,7 +82,10 @@ export async function run(control?: "delete-blob") {
       return host.output().trim()
     })
     await git(["init", "--quiet", "--initial-branch=proof", `--template=${owned.empty}`, owned.home])
-    assert.equal(realpathSync(await git(["rev-parse", "--show-toplevel"])), owned.home, "GIT_ROOT_NOT_ISOLATED")
+    const gitRoot = statSync(await git(["rev-parse", "--show-toplevel"]))
+    const home = statSync(owned.home)
+    assert.ok(gitRoot.isDirectory() && home.isDirectory() && home.ino !== 0 &&
+      gitRoot.dev === home.dev && gitRoot.ino === home.ino, "GIT_ROOT_NOT_ISOLATED")
     await ["seed", "reopen-add", "third-reopen"].reduce(async (previous, phase, index) => {
       await previous
       if (control && index === 2) return

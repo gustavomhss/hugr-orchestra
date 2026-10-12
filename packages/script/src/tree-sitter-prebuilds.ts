@@ -289,7 +289,8 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
   }
 }
 
-if (import.meta.main) {
+// ESM bundlers can retain import.meta.main in Electron's main bundle. Only the documented standalone utility runs CLI parsing.
+if (import.meta.main && path.basename(process.argv[1] ?? "") === "tree-sitter-prebuilds.ts") {
   const [os, arch, flag, out] = process.argv.slice(2)
   if (!os || !arch || (flag !== undefined && (flag !== "--out" || !out)))
     throw new Error("Usage: tree-sitter-prebuilds.ts <os> <arch> [--out <dir>]")
