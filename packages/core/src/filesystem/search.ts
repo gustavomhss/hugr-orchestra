@@ -44,7 +44,11 @@ export const ripgrepLayer = Layer.effect(
             state.directories = Array.from(directories)
           }),
       })
-      .pipe(Effect.orDie, Effect.asVoid)
+      // Without ripgrep (offline, still downloading) the Location still opens, with an empty file index, as with fff.
+      .pipe(
+        Effect.asVoid,
+        Effect.catch((error) => Effect.logWarning("failed to index files with ripgrep", { error: error.message })),
+      )
     return Service.of({
       glob: (input) =>
         Effect.gen(function* () {

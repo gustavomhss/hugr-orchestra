@@ -224,6 +224,11 @@ jobs:
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
 
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.previous.outputs.hit != 'true'
+        uses: ./.github/actions/ripgrep
+
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
@@ -334,6 +339,10 @@ jobs:
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
 
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
@@ -516,6 +525,11 @@ jobs:
       - name: Setup Bun
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
+
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.previous.outputs.hit != 'true'
+        uses: ./.github/actions/ripgrep
 
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
