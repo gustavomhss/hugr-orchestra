@@ -82,9 +82,9 @@ export async function run(control?: "delete-blob") {
       return host.output().trim()
     })
     await git(["init", "--quiet", "--initial-branch=proof", `--template=${owned.empty}`, owned.home])
-    const gitRoot = statSync(await git(["rev-parse", "--show-toplevel"]))
-    const home = statSync(owned.home)
-    assert.ok(gitRoot.isDirectory() && home.isDirectory() && home.ino !== 0 &&
+    const gitRoot = statSync(await git(["rev-parse", "--show-toplevel"]), { bigint: true })
+    const home = statSync(owned.home, { bigint: true })
+    assert.ok(gitRoot.isDirectory() && home.isDirectory() && home.ino !== 0n &&
       gitRoot.dev === home.dev && gitRoot.ino === home.ino, "GIT_ROOT_NOT_ISOLATED")
     await ["seed", "reopen-add", "third-reopen"].reduce(async (previous, phase, index) => {
       await previous
