@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import path from "node:path"
 import http from "node:http"
-import { access, mkdir, readFile, writeFile } from "node:fs/promises"
+import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import type { Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
 import { LeanMetrics } from "../../schema/src/lean-metrics"
 import { bounded, inside, until, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
@@ -97,7 +97,9 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       const next = hits.flatMap((hit) => hit.messages).filter((message) => message.role === "tool" && message.tool_call_id === callID)
       assert.equal(next.length, 1, "Missing actual next HTTP model turn")
       assert.deepEqual(Buffer.from(next[0]!.content), Buffer.from(tool.state.output), "Next HTTP result differs from durable whole UTF-8 bytes")
-      const raw = JSON.parse(await readFile(path.join(candidate.root, `${callID}.json`), "utf8")) as { output: string; metadata: { output: string } }
+      const raw = JSON.parse(await readFile(path.join(candidate.root, `${callID}.json`), "utf8").catch(async (error: unknown) => {
+        throw new Error(`Observer plugin recorded no ${callID} output; owned plugin log lines:\n${await pluginLog(candidate.root)}`, { cause: error })
+      })) as { output: string; metadata: { output: string } }
       const metric = LeanMetrics.decode(tool.state.metadata.lean)
       assert.ok(metric, "Missing durable native Lean Decision")
       assert.equal(metric.engine, "hugr-lean@0.2.0:369206cd0a468904", "Actual native boundary used the wrong archive engine")
@@ -112,6 +114,16 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
     }
     return { session, hits, execute, close }
   } catch (error) { await close(); throw error }
+}
+
+// The owned backend and desktop logs' plugin lines (the recorder sanitizes them), for a hook that never ran.
+async function pluginLog(root: string) {
+  const lines = await Promise.all(["data/orchestra/log", "desktop/logs"].map(async (directory) => {
+    const files = await readdir(path.join(root, directory), { recursive: true }).catch(() => [] as string[])
+    return Promise.all(files.filter((file) => file.endsWith(".log")).map(async (file) =>
+      (await readFile(path.join(root, directory, file), "utf8").catch(() => "")).split("\n").filter((line) => /plugin/i.test(line))))
+  }))
+  return lines.flat(2).slice(-60).map((line) => line.slice(0, 600)).join("\n")
 }
 
 export async function nativePtySmoke(candidate: OwnedCandidate, directory: string, recorder: CandidateRecorder) {
