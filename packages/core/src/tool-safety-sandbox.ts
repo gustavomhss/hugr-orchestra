@@ -190,8 +190,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
     ...(profile?.managedPaths ?? []), ...(profile?.sandbox?.denyPaths ?? []), ...(profile?.neverTouch ?? []),
-    // Only those that exist: there is nothing to read in a missing one.
-    ...(reads ? yield* Effect.filter(secrets(env), fs.existsSafe) : []),
+    // Deny missing names too: credentials may be created after this policy is allocated.
+    ...(reads ? secrets(env) : []),
   ])]
   const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
   const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
@@ -612,25 +612,24 @@ function programs(env: NodeJS.ProcessEnv) {
  */
 export function homeGrants(env: NodeJS.ProcessEnv = process.env) {
   const grants = [
-    ...homes().map((home) => ({ entry: path.join(home, ".gitconfig"), within: undefined, names: [".gitconfig", "gitconfig"] })),
+    ...homes().map((home) => ({ entry: path.join(home, ".gitconfig"), within: undefined, names: [".gitconfig", "gitconfig"], file: true })),
     ...gitHomes(env).flatMap((root) => ["config", "ignore", "attributes"].map((name) =>
-      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)] }))),
+      ({ entry: path.join(root, name), within: root, names: [path.join("git", name)], file: true }))),
     ...named(env.RUSTUP_HOME, ".rustup").flatMap((rustup) => ["settings.toml", "toolchains"].map((name) =>
-      ({ entry: path.join(rustup, name), within: rustup, names: [] }))),
+      ({ entry: path.join(rustup, name), within: rustup, names: [], file: name === "settings.toml" }))),
     ...named(env.CARGO_HOME, ".cargo").flatMap((cargo) => ["bin", ...["index", "cache", "src"].map((name) => path.join("registry", name))]
-      .map((name) => ({ entry: path.join(cargo, name), within: cargo, names: [] }))),
+      .map((name) => ({ entry: path.join(cargo, name), within: cargo, names: [], file: false }))),
   ]
   return grants.filter((grant) => !homes().some((home) => FSUtil.contains(grant.entry, home) ||
     (path.dirname(grant.entry) === home && path.basename(grant.entry) !== ".gitconfig")))
 }
 
 /**
- * The home grants that exist, each with its physical path. A grant is kept when it is not itself a link, or when its
- * physical path stays inside its physical `within` directory, inside a system root, or ends in one of its `names`; and
- * never when its physical path is a home, contains one, or (but ~/.gitconfig) sits directly in one. So a link planted at
- * a grant (bin, settings.toml, a git config) cannot expose ~/.netrc or another tool's credentials, while a dotfiles
- * link that keeps git's names (~/.config/git/config -> ~/dotfiles/git/config) or points into a system root (Nix Home
- * Manager's /nix/store) still works. A link above a grant (a whole home behind a link) is not followed in the jail.
+ * Existing grants must stay inside a validated physical `within` root, a system root, or be a named regular git file.
+ * A physical grant cannot be a home, contain one, or (but ~/.gitconfig) sit directly in one; `within` cannot contain home.
+ * Links at or above grants cannot expose private directories, nor can file grants expose directory contents.
+ * Named regular dotfiles (~/.config/git/config -> ~/dotfiles/git/config) and system-managed links (Nix Home Manager's
+ * /nix/store) still work, as do independent physical toolchain roots.
  */
 const contained = (fs: FSUtil.Interface, grants: ReturnType<typeof homeGrants>) => Effect.gen(function* () {
   const physical = (entry: string) => fs.realPath(entry).pipe(Effect.catch(() => Effect.succeed(undefined)))
@@ -638,12 +637,12 @@ const contained = (fs: FSUtil.Interface, grants: ReturnType<typeof homeGrants>) 
   const found = yield* Effect.forEach(grants, (grant) => Effect.gen(function* () {
     const real = yield* physical(grant.entry)
     if (real === undefined) return []
-    const parent = yield* physical(path.dirname(grant.entry))
+    if (grant.file && !(yield* fs.isFile(real))) return []
     const within = grant.within === undefined ? undefined : yield* physical(grant.within)
+    if (within !== undefined && places.some((home) => FSUtil.contains(within, home))) return []
     if (places.some((home) => FSUtil.contains(real, home) || (grant.within !== undefined && path.dirname(real) === home))) return []
-    const kept = real === (parent && path.join(parent, path.basename(grant.entry))) ||
-      (within !== undefined && FSUtil.contains(within, real)) || system().some((root) => FSUtil.contains(root, real)) ||
-      grant.names.some((name) => real.endsWith(path.sep + name))
+    const kept = (within !== undefined && FSUtil.contains(within, real)) || system().some((root) => FSUtil.contains(root, real)) ||
+      (grant.file && grant.names.some((name) => real.endsWith(path.sep + name)))
     return kept ? [path.resolve(grant.entry), real] : []
   }))
   return [...new Set(found.flat())]

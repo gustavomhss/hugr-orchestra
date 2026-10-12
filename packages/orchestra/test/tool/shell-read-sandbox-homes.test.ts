@@ -179,6 +179,85 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
     }), 300_000,
   )
 
+  it.live("a registry ancestor link cannot expose a private directory outside the physical cargo root", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const cargo = path.join(root, "cargo")
+      const outside = path.join(root, "private")
+      const markers = ["index", "cache", "src"].map((name) => path.join(outside, name, "marker"))
+      const allowed = path.join(cargo, "bin", "probe")
+      yield* Effect.promise(() => Promise.all([plant(allowed), ...markers.map((file) => plant(file))]))
+      yield* Effect.promise(() => link(outside, path.join(cargo, "registry")))
+      yield* environment({ CARGO_HOME: cargo })
+      yield* exactly(directory, [allowed], [...markers, ...["index", "cache", "src"].map((name) =>
+        path.join(cargo, "registry", name, "marker"))])
+    }), 300_000,
+  )
+
+  it.live("cargo and rustup aliases of physical home or its ancestor cannot authorize grants", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const alias = path.join(root, "home-alias")
+      const cargo = path.join(root, "cargo-home-alias")
+      const rust = path.join(root, "rustup-home-alias")
+      const above = path.join(root, "ancestor-alias")
+      const names = [path.join("bin", "probe"), path.join("registry", "index", "marker"),
+        path.join("registry", "cache", "marker"), path.join("registry", "src", "marker"),
+        path.join("toolchains", "stable", "probe"), "settings.toml"]
+      yield* Effect.promise(() => Promise.all(names.map((name) => plant(path.join(home, name)))))
+      yield* Effect.promise(() => Promise.all([link(home, alias), link(home, cargo), link(home, rust), link(root, above),
+        ...names.map((name) => plant(path.join(root, name)))]))
+      // Distinct lexical aliases pass environment validation; only physical containment can reject them.
+      yield* environment({ ORCHESTRA_TEST_HOME: alias, CARGO_HOME: cargo, RUSTUP_HOME: rust })
+      yield* exactly(directory, [], names.flatMap((name) => [path.join(home, name), path.join(cargo, name), path.join(rust, name)]))
+      yield* environment({ CARGO_HOME: above, RUSTUP_HOME: above })
+      yield* exactly(directory, [], names.flatMap((name) => [path.join(root, name), path.join(above, name)]))
+      // A whole-root link to a genuinely independent physical toolchain still works.
+      const independent = path.join(root, "independent")
+      const toolchain = path.join(root, "toolchain-alias")
+      yield* Effect.promise(() => Promise.all(names.map((name) => plant(path.join(independent, name)))))
+      yield* Effect.promise(() => link(independent, toolchain))
+      yield* environment({ CARGO_HOME: toolchain, RUSTUP_HOME: toolchain })
+      yield* exactly(directory, names.map((name) => path.join(toolchain, name)), [])
+    }), 300_000,
+  )
+
+  it.live("file grants reject directories even with git's valid names, while named regular and system-managed links work", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const xdg = path.join(root, "xdg")
+      const rust = path.join(root, "rustup")
+      const targets = [path.join(root, "dotfiles", ".gitconfig"),
+        ...["config", "ignore", "attributes"].map((name) => path.join(root, "dotfiles", "git", name))]
+      const grants = [path.join(home, ".gitconfig"),
+        ...["config", "ignore", "attributes"].map((name) => path.join(xdg, "git", name))]
+      yield* Effect.promise(() => Promise.all(targets.map((target, index) =>
+        plant(path.join(target, "marker")).then(() => link(target, grants[index])))))
+      const settings = path.join(rust, "settings.toml", "marker")
+      yield* Effect.promise(() => plant(settings))
+      yield* environment({ ORCHESTRA_TEST_HOME: home, XDG_CONFIG_HOME: xdg, RUSTUP_HOME: rust })
+      yield* exactly(directory, [], [...targets, ...grants].map((entry) => path.join(entry, "marker")).concat(settings))
+
+      const regular = path.join(root, "regular", "git", "attributes")
+      const linked = path.join(root, "linked-xdg", "git", "attributes")
+      const gitconfig = path.join(root, "regular", ".gitconfig")
+      const linkedHome = path.join(root, "linked-home")
+      const system = path.join(root, "system-rustup", "settings.toml")
+      yield* Effect.promise(() => Promise.all([plant(regular).then(() => link(regular, linked)),
+        plant(gitconfig, "[probe]\n\tmarker = regular-config\n").then(() => link(gitconfig, path.join(linkedHome, ".gitconfig")))]))
+      // The same system-root exception supports Nix Home Manager's /nix/store links.
+      yield* Effect.promise(() => link("/usr/bin/env", system))
+      yield* environment({ ORCHESTRA_TEST_HOME: linkedHome,
+        XDG_CONFIG_HOME: path.dirname(path.dirname(linked)), RUSTUP_HOME: path.dirname(system) })
+      yield* exactly(directory, [linked, path.join(linkedHome, ".gitconfig"), system], [])
+    }), 300_000,
+  )
+
   it.live("a seat runs cargo through its rustup proxy and builds path and vendored dependencies offline", () =>
     Effect.gen(function* () {
       yield* rustup()
