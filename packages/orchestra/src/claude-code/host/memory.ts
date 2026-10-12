@@ -79,7 +79,7 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     ["Pending delegations (process-local; not recovered after restart)", input.pending.filter((item) =>
       !item.settled && calls.some((part) => part.callID === item.toolUseID)).map((item) => JSON.stringify(item))],
     ["Write grants (retained issuance; exact live ownership or explicit invalidation)", ClaudeHostGrantHistory.read({
-      sessionID: input.sessionID, history: view.history, live: cut ? [] : input.grants,
+      sessionID: input.sessionID, history: view.history, live: input.grants,
     })],
     ["Plan revision (retained producing tool and admission)", plan],
     ["Todos", todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))],
@@ -131,8 +131,8 @@ function planState(view: ClaudeHostBoundary.Retained, calls: SessionV1.ToolPart[
       if (part.state.input.admissionMessageID !== revision.admissionMessageID ||
         (part.state.metadata?.revisionHash ?? (Option.isSome(output) ? record(output.value).revisionHash : undefined)) !== revision.revisionHash)
         return yield* Effect.fail(new Error("COMPACT_PLAN_ADMISSION_MISMATCH"))
-      const admission = yield* readAdmission({ sessionID, messageID: revision.admissionMessageID, methodVersion: "admit-request-v1" })
-      if (!admission || admission.sessionID !== sessionID || admission.messageID !== revision.admissionMessageID ||
+      const admission = yield* readAdmission({ sessionID: revision.sessionID, messageID: revision.admissionMessageID, methodVersion: "admit-request-v1" })
+      if (!admission || admission.sessionID !== revision.sessionID || admission.messageID !== revision.admissionMessageID ||
         admission.methodVersion !== "admit-request-v1" || admission.outcome !== "READY_TO_DRAFT")
         return yield* Effect.fail(new Error("COMPACT_PLAN_ADMISSION_UNAVAILABLE"))
       return [JSON.stringify(revision)]
