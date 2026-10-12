@@ -15,6 +15,17 @@ import { InstallationHeaders } from "../../installation/headers"
 import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import { SessionSchema } from "../schema"
+import { SessionSubagentModels } from "../subagent-models"
+
+const references = new WeakMap<Model, ModelV2.Ref>()
+
+export const reference = (model: Model): ModelV2.Ref | undefined => references.get(model)
+
+/** Captures catalog identity before transport/deployment lowering, including for embedded resolvers. */
+export const withReference = (model: Model, ref: ModelV2.Ref): Model => {
+  references.set(model, ModelV2.Ref.make({ id: ref.id, providerID: ref.providerID, ...(ref.variant === undefined ? {} : { variant: ref.variant }) }))
+  return model
+}
 
 export class ModelNotSelectedError extends Schema.TaggedErrorClass<ModelNotSelectedError>()(
   "SessionRunnerModel.ModelNotSelectedError",
@@ -67,6 +78,7 @@ export class UnsupportedApiError extends Schema.TaggedErrorClass<UnsupportedApiE
 }
 
 export type Error =
+  | SessionSubagentModels.Error
   | ModelNotSelectedError
   | ModelUnavailableError
   | VariantUnavailableError
@@ -147,21 +159,21 @@ export const fromCatalogModel = (
       withDefaults(resolved, OpenAIResponses.route)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
     return Effect.succeed(
       withDefaults(resolved, AnthropicMessages.route)
         .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai-compatible" && resolved.api.url) {
     return Effect.succeed(
       withDefaults(resolved, OpenAICompatibleChat.route)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   return Effect.fail(
     new UnsupportedApiError({
@@ -173,7 +185,8 @@ export const fromCatalogModel = (
 }
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
-  withVariant(model, session.model?.variant).pipe(Effect.flatMap((model) => fromCatalogModel(model, credential)))
+  withVariant(model, session.model?.variant).pipe(Effect.flatMap((model) => fromCatalogModel(model, credential)),
+    Effect.map((value) => withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant })))
 
 export const supported = (model: ModelV2.Info) =>
   model.api.type === "aisdk" &&
@@ -187,17 +200,21 @@ export const locationLayer = Layer.effect(
   Effect.gen(function* () {
     const catalog = yield* Catalog.Service
     const integrations = yield* Integration.Service
+    const policies = yield* SessionSubagentModels.Service
     return Service.of({
       resolve: Effect.fn("SessionRunnerModel.resolve")(function* (session) {
         // Location plugins populate and filter the catalog asynchronously during layer startup.
-        const defaultModel = session.model ? undefined : yield* catalog.model.default()
+        const ceilings = yield* policies.forSession(session.id)
+        if (session.model && !SessionSubagentModels.permits(ceilings, session.model))
+          return yield* new SessionSubagentModels.ModelDeniedError({ sessionID: session.id, model: session.model, reason: "not-allowed" })
+        const candidates = (yield* catalog.model.available()).filter((model) => SessionSubagentModels.permits(ceilings, model))
+        const defaultModel = session.model || candidates.length === 0 ? undefined : yield* catalog.model.default()
         const selected = session.model
-          ? (yield* catalog.model.available()).find(
+          ? candidates.find(
               (model) => model.providerID === session.model?.providerID && model.id === session.model.id,
             )
-          : defaultModel && supported(defaultModel)
-            ? defaultModel
-            : (yield* catalog.model.available()).find(supported)
+          : candidates.find((model) => model.providerID === defaultModel?.providerID && model.id === defaultModel.id && supported(model))
+            ?? candidates.find(supported)
         if (!selected && session.model)
           return yield* new ModelUnavailableError({
             providerID: session.model.providerID,
@@ -231,4 +248,4 @@ export const locationLayer = Layer.effect(
   }),
 )
 
-export const node = makeLocationNode({ service: Service, layer: locationLayer, deps: [Catalog.node, Integration.node] })
+export const node = makeLocationNode({ service: Service, layer: locationLayer, deps: [Catalog.node, Integration.node, SessionSubagentModels.node] })

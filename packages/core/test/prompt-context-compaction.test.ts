@@ -17,13 +17,14 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { toLLMMessages } from "@orchestra/core/session/runner/to-llm-message"
 import { SessionSchema } from "@orchestra/core/session/schema"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionContextEpochTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { Prompt } from "@orchestra/schema/prompt"
 import { DateTime, Effect, Stream } from "effect"
 import { eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 
-const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node])))
+const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node, SessionSubagentModels.node])))
 const sessionID = SessionSchema.ID.make("ses_prompt_compaction")
 const model = Model.make({
   id: "summary-model",
@@ -42,6 +43,7 @@ const summary = "## Objective\n- Continue stored work"
 const seed = Effect.gen(function* () {
   const database = yield* Database.Service
   const events = yield* EventV2.Service
+  const subagentModels = yield* SessionSubagentModels.Service
   yield* database.db
     .insert(ProjectTable)
     .values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
@@ -68,6 +70,7 @@ const seed = Effect.gen(function* () {
     SessionCompaction.make({
       events,
       llm,
+      subagentModels,
       config: [
         new Config.Document({
           type: "document",
