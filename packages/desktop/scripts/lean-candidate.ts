@@ -5,8 +5,9 @@ import { createRequire } from "node:module"
 import { spawn } from "node:child_process"
 import { tmpdir } from "node:os"
 import { omniTargets } from "@orchestra/script/omni"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { leanPin, sha256 } from "../../orchestra/script/lean-notices"
-import { nativeCliTarget } from "../src/main/cli-artifacts"
+import { nativeCliTarget, signatureCheck } from "../src/main/cli-artifacts"
 
 const desktop = path.resolve(import.meta.dirname, "..")
 const root = path.resolve(desktop, "../..")
@@ -17,6 +18,9 @@ const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
 const heapBudgetMiB = 8192
 const omniFiles = ["hugr_omni.node", "hugr-omni-supervisor"]
+// The candidate is a native Intel build: its CLI bundle ships the pinned x64 macOS rg, signed (ad hoc) by staging.
+const ripgrepKey = "x64-darwin"
+const ripgrepDirectory = "cli/ripgrep-darwin-x64-baseline"
 
 type CommandResult = {
   exitCode: number | null; signal: string | null; stdout: string; stderr: string; timedOut: boolean; error?: string
@@ -212,6 +216,22 @@ export async function verifyMaterials(directory: string) {
   return { ...leanPin, materials }
 }
 
+/**
+ * The build record's pin of the CLI bundle's rg: its manifest checked against release.ts, whether staging signed it
+ * (macOS always does, ad hoc here, so its signature is checked with codesign), and the digest of each shipped file.
+ */
+export async function ripgrepRecord(directory: string) {
+  const checked = await RipgrepBundle.verify(directory, ripgrepKey, {
+    signed: "required",
+    signature: async (file) => {
+      const check = signatureCheck("darwin-x64-baseline", file)!
+      const result = await runCandidateCommand([check.command, ...check.args], process.env, desktop, 30_000, false)
+      return result.exitCode === 0 && !result.signal && !result.timedOut && check.valid(result.stdout)
+    },
+  })
+  return { key: ripgrepKey, ...checked, files: await inventory(directory) }
+}
+
 export function assertMachOX64(bytes: Buffer, name: string) {
   if (bytes.length < 8 || bytes.readUInt32LE(0) !== 0xfeedfacf || bytes.readUInt32LE(4) !== 0x01000007) {
     throw new Error(`Expected x64 Mach-O: ${name}`)
@@ -306,6 +326,8 @@ export async function candidate(action: string) {
     } finally {
       await rm(cliOmni, { recursive: true, force: true })
     }
+    // buildCliToResources staged the pinned rg with the CLI; the record pins it, signature checked.
+    const ripgrep = await ripgrepRecord(path.join(desktop, "resources", ripgrepDirectory))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
@@ -333,7 +355,7 @@ export async function candidate(action: string) {
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
       backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
-      buildResources, omni, resources: await inventory(path.join(desktop, "resources")),
+      buildResources, omni, ripgrep, resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
   }
@@ -409,6 +431,10 @@ export async function candidate(action: string) {
     }
   }
   await verifyOmni(path.join(resources, "omni"), manifest.omni)
+  // The packaged rg is the one the build recorded, byte for byte, and still passes its pin and signature checks.
+  if (JSON.stringify(await ripgrepRecord(path.join(resources, ripgrepDirectory))) !== JSON.stringify(manifest.ripgrep)) {
+    throw new Error("Packaged ripgrep differs from the build record")
+  }
   for (const icon of ["icon.png", "icon.ico", "dock.png"]) {
     const original = new Uint8Array(await Bun.file(path.join(desktop, "resources/icons", icon)).arrayBuffer())
     const packaged = new Uint8Array(await Bun.file(path.join(resources, "icons", icon)).arrayBuffer())

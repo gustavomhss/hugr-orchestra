@@ -41,6 +41,8 @@ export async function build() {
   // CLI builds resolve <root>/<platform>; Desktop staging also accepts the pair directly under <root>.
   copyFileSync(addon, path.join(path.dirname(native), "hugr_omni.node"))
   copyFileSync(supervisor, path.join(path.dirname(native), path.basename(supervisor)))
+  // A Windows bundle's CLIs come prebuilt from a Linux producer (omni-desktop-smoke.yml windows-cli).
+  if (win && !process.env.ORCHESTRA_CLI_PREBUILT_DIR) throw new Error("a Windows desktop needs ORCHESTRA_CLI_PREBUILT_DIR with its produced CLIs")
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
     at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))

@@ -80,12 +80,14 @@ jobs:
             bun packages/cli/script/build.ts --skip-install --target "$target"
           done
           bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out wsl-resources --version "$ORCHESTRA_VERSION" --target linux-x64-baseline --target linux-arm64
-          # The guest install takes each CLI's omni pair from omni-<target>/ and its tree-sitter from tree-sitter-<target>/.
+          # The guest install takes each CLI's omni pair from omni-<target>/, its tree-sitter from tree-sitter-<target>/
+          # and its rg from ripgrep-<target>/.
           for target in linux-x64-baseline linux-arm64; do
             bin="packages/cli/dist/cli-$target/bin"
             mkdir -p "wsl-resources/omni-$target"
             cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "wsl-resources/omni-$target/"
             cp -R "$bin/tree-sitter" "wsl-resources/tree-sitter-$target"
+            cp -R "$bin/ripgrep" "wsl-resources/ripgrep-$target"
           done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
