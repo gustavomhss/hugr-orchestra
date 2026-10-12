@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, test } from "bun:test"
-import { closestBase, parseResponse, rateLimitDelay, testPaths } from "../../../script/test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay, testPaths, workflowRun } from "../../../script/test-ci-upload"
 
 const repos: string[] = []
 
@@ -52,6 +52,27 @@ describe("test:ci base", () => {
     const tree = await rev(cwd, "HEAD^{tree}")
     expect(await closestBase(cwd, ["fork/missing", "fork/dev"], tree)).toBe(await rev(cwd, "start"))
     expect(await closestBase(cwd, ["fork/missing"], tree)).toBeUndefined()
+  })
+})
+
+describe("test:ci workflow run", () => {
+  const branch = "ci-run-linux-abc"
+  const sha = "abc123"
+  const run = (headBranch: string, headSha: string, workflowName = "test-ci") => ({
+    databaseId: 1,
+    url: "https://example.test/run/1",
+    workflowName,
+    headBranch,
+    headSha,
+  })
+
+  test("selects only the exact workflow, branch, and commit", () => {
+    const exact = run(branch, sha)
+    expect(
+      workflowRun([run("ci-run-macos-abc", sha), run(branch, "wrong"), run(branch, sha, "other"), exact], branch, sha),
+    ).toBe(exact)
+    expect(workflowRun([], branch, sha)).toBeUndefined()
+    expect(workflowRun([run("ci-run-macos-abc", sha), run(branch, "wrong"), run(branch, sha, "other")], branch, sha)).toBeUndefined()
   })
 })
 

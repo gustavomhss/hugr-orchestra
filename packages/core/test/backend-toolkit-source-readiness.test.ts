@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import path from "path"
 import { createHash } from "crypto"
-import { access, copyFile, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "fs/promises"
+import { access, copyFile, mkdir, mkdtemp, readFile, readdir, realpath, stat, writeFile } from "fs/promises"
 import { constants } from "fs"
 import { tmpdir } from "os"
 import { Effect } from "effect"
@@ -10,12 +10,14 @@ import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { Omni } from "../src/omni"
 import { PinnedArtifact } from "../src/pinned-artifact"
+import { expectSpawn } from "./fixture/omni-expect"
+import { removeExecuted } from "./fixture/tmpdir"
 import { it } from "./lib/effect"
 
 const fixture = Effect.gen(function* () {
   const root = yield* Effect.acquireRelease(
     Effect.promise(async () => realpath(await mkdtemp(path.join(tmpdir(), "toolkit-source-ready-")))),
-    (root) => Effect.promise(() => rm(root, { recursive: true, force: true })),
+    (root) => Effect.promise(() => removeExecuted(root)),
   )
   const host = BackendToolkitTarget.detect()
   if (!("target" in host)) throw new Error(`BLOCKED: unsupported toolkit host: ${host.unsupported}`)
@@ -121,6 +123,7 @@ writeFileSync(path.join(process.env.GOCACHE, "..", "call.json"), JSON.stringify(
 
   it.live(`valid source executable publishes complete cache through ${api}`, () => Effect.gen(function* () {
     const f = yield* fixture
+    expectSpawn(import.meta.path)
     const before = Omni.snapshot()
     yield* f.install("valid", api)
     // Native extraction and builder spawns calibrate the hosted run's Omni positive control.
