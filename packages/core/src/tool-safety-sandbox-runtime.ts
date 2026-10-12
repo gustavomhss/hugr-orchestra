@@ -10,6 +10,7 @@ import which from "which"
 import { Context, Effect, Schedule } from "effect"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
+import { ToolSafetySrtReadAlias } from "./tool-safety-srt-read-alias"
 
 // The Linux shell jail is Anthropic's sandbox-runtime (`srt`, npm `@anthropic-ai/sandbox-runtime`) over bubblewrap.
 // The host fetches it on first need from the npm registry and ripgrep's GitHub releases at pinned versions, checks each
@@ -59,7 +60,7 @@ export const Source = Context.Reference<Source | undefined>("@orchestra/ToolSafe
     const ripgrep = process.platform === "linux" ? RIPGREP_LINUX[process.arch as keyof typeof RIPGREP_LINUX] : undefined
     if (!ripgrep) return undefined
     return {
-      directory: path.join(Global.Path.cache, "sandbox-runtime", `${VERSION}-${process.arch}`),
+      directory: path.join(Global.Path.cache, "sandbox-runtime", `${VERSION}-${ToolSafetySrtReadAlias.REVISION}-${process.arch}`),
       dependencies: ["bwrap", "socat"],
       artifacts: [
         ...PACKAGES.map(([name, version, integrity]) => ({
@@ -140,6 +141,9 @@ export const acquire = Effect.fn("ToolSafetySandboxRuntime.acquire")(function* (
   const staging = yield* step("sandbox-runtime-staging", () => mkdtemp(path.join(parent, ".staging-")))
   yield* Effect.gen(function* () {
     yield* Effect.forEach(source.artifacts, (artifact) => unpack(staging, artifact), { discard: true })
+    if (source.artifacts.some((artifact) => artifact.integrity === PACKAGES[0][2] &&
+      artifact.target === path.join("node_modules", PACKAGES[0][0])))
+      yield* ToolSafetySrtReadAlias.apply(staging)
     yield* step("sandbox-runtime-marker", () => writeFile(path.join(staging, ".complete"), ""))
     // Another process may have installed it first; its complete install wins.
     yield* step("sandbox-runtime-install", () => rename(staging, source.directory)).pipe(
