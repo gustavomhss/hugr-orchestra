@@ -69,6 +69,9 @@ stdenv.mkDerivation (finalAttrs: {
     ORCHESTRA_DISABLE_MODELS_FETCH = "1";
     ORCHESTRA_VERSION = finalAttrs.version;
     ORCHESTRA_CHANNEL = "prod";
+    # rg comes from nixpkgs on the wrappers' PATH (below and in desktop.nix); the sandbox cannot fetch the pinned
+    # archive, so build.ts and the desktop staging bundle none (packages/core/src/ripgrep/bundle.ts).
+    RIPGREP_BUNDLED = "false";
     # build.ts (resolveTreeSitter) compiles missing or mislabeled tree-sitter bindings with the
     # lockfile node-gyp; these Node headers keep it from downloading any.
     npm_config_nodedir = "${nodejs}";
