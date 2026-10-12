@@ -590,7 +590,6 @@ const layer = Layer.effect(
       if (releasing.has(sessionID)) return yield* Effect.die(new Error("Claude Code session is being released"))
       const agent = yield* agents.get(input.user.agent).pipe(Effect.orElseSucceed(() => undefined))
       if (agent?.engine !== "claude-code") return false
-      ClaudeHostAdmission.supported(agent.id ?? input.user.agent)
       const instance = yield* InstanceState.context
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)

@@ -104,8 +104,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
-        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy`)
-          return ClaudeHostGate.deny("HOLD: NATIVE_RESEARCH_PROVIDER_ADMISSION_UNAVAILABLE: this SDK exposes no documented per-dispatch pre-provider admission for Jimmy's durable allowance; use Jimmy on Orchestra's loop.")
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
+          return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
         if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)

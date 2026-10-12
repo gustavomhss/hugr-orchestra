@@ -294,7 +294,7 @@ for (const outcome of ["failure", "completed"] as const)
     expect(fixture.parentControl).toEqual({ interrupts: 0, closes: 0 })
   }), 30_000)
 
-it.instance("unit parent observes after-frame provider exhaustion while the real hook keeps native admission on HOLD", () => Effect.gen(function* () {
+it.instance("unit parent observes after-frame provider exhaustion while a fresh real native dispatch has its own allowance", () => Effect.gen(function* () {
   const fixture = yield* DelegationTerminalFixture.setup()
   const dispatch = yield* fixture.admit()
   yield* Effect.forEach(Array.from({ length: Research.Limits.providerCalls }, (_, index) => index), (index) =>
@@ -316,7 +316,11 @@ it.instance("unit parent observes after-frame provider exhaustion while the real
   const children = yield* fixture.sessions.children(fixture.parent.id)
   const output = yield* Effect.promise(() => hooks.PreToolUse![0].hooks[0]({ ...dispatch.hook, tool_use_id: "native-attempt" },
     undefined, { signal: abort.signal }))
-  expect(JSON.stringify(output)).toContain("NATIVE_RESEARCH_PROVIDER_ADMISSION_UNAVAILABLE")
-  expect(yield* fixture.sessions.children(fixture.parent.id)).toEqual(children)
+  expect(output).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
+  const next = fixture.join.child("native-attempt")
+  if (!next) throw new Error("Expected admitted native child")
+  expect((yield* fixture.sessions.children(fixture.parent.id)).map((child) => child.id))
+    .toEqual(expect.arrayContaining([...children.map((child) => child.id), next]))
+  expect(yield* fixture.research.status(next)).toMatchObject({ closed: false, deadlineActive: true })
   expect(fixture.parentControl).toEqual({ interrupts: 0, closes: 0 })
 }), 30_000)

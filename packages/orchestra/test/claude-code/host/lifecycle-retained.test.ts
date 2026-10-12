@@ -3,7 +3,6 @@ import path from "node:path"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect, Exit } from "effect"
 import { ClaudeHost } from "@/claude-code/host/session"
-import { ClaudeHostAdmission } from "@/claude-code/host/admission"
 import { ClaudeHostBoundary } from "@/claude-code/host/boundary"
 import { recordAdmission, readAdmission } from "@/maestro/admission-record"
 import { recordPlanRevision, readPlanRevision } from "@/maestro/plan-revision"
@@ -168,7 +167,7 @@ ClaudeEngineFixture.it.instance("forking an uncleared revert copies only the vis
   }), 30_000)
 
 for (const engine of ["claude-code", "orchestra"] as const)
-  ClaudeEngineFixture.it.instance(`direct jimmy ${engine} turn refuses only the unsupported native admission before query`, () =>
+  ClaudeEngineFixture.it.instance(`direct jimmy ${engine} textless turn preserves the actual input boundary before query`, () =>
     Effect.gen(function* () {
       ClaudeEngineFixture.reset()
       const f = yield* ClaudeEngineFixture.setup()
@@ -182,7 +181,7 @@ for (const engine of ["claude-code", "orchestra"] as const)
       const result = yield* host.turn({ sessionID: f.chat.id, user }).pipe(Effect.exit)
       expect(ClaudeEngineFixture.state.queries).toEqual([])
       if (engine === "orchestra") return expect(result).toEqual(Exit.succeed(false))
-      expect(Exit.isFailure(result)).toBe(true)
-      expect(String(result)).toContain(ClaudeHostAdmission.UnsupportedNativeAdmission.name)
-      expect(String(result)).toContain("NATIVE_JIMMY_ADMISSION_UNSUPPORTED")
+      expect(result).toEqual(Exit.succeed(true))
+      const history = yield* f.sessions.messages({ sessionID: f.chat.id })
+      expect(JSON.stringify(history)).toContain("Claude Code receives text only; this message has no text.")
     }), 30_000)

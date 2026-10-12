@@ -4,15 +4,6 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 
-export class UnsupportedNativeAdmission extends Error {
-  override readonly name = "UnsupportedNativeAdmission"
-}
-
-/** Native research has no documented admission hook before the provider request. */
-export function supported(seat: string) {
-  if (seat === "jimmy") throw new UnsupportedNativeAdmission("NATIVE_JIMMY_ADMISSION_UNSUPPORTED: direct native turns require pre-provider admission")
-}
-
 /** A send identity survives control failure and reopening; submission is not acknowledgment. */
 export type Input = {
   uuid: NonNullable<SDKUserMessage["uuid"]>

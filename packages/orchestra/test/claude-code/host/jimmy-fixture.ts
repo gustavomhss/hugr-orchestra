@@ -51,7 +51,7 @@ export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" } satisfies BaseHookInput
 export const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
 
-export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
+export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: { research?: false } = {}) {
   const sessions = yield* Session.Service
   const agents = yield* Agent.Service
   const registry = yield* ToolRegistry.Service
@@ -74,10 +74,38 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
   const abort = new AbortController()
   yield* Effect.addFinalizer(() => Effect.sync(() => abort.abort()))
   const hooks = ClaudeHostHooks.create({ sessionID: parent.id, directory: parent.directory, worktree: parent.directory,
-    agent: "maestro", abort, join, granted, research,
+    agent: "maestro", abort, join, granted, research: input.research === false ? undefined : research,
     run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Effect.runPromiseWith(context)(effect as Effect.Effect<A, unknown>),
     parts: { tool: (callID) => mirrored.get(callID), complete: (part) => sessions.updatePart(part).pipe(
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) },
+  })
+  // Native admission goes through the real hook and retained logical Task. Only SDK task identity is scripted.
+  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research") {
+    const admitted = yield* dispatch(callID)
+    const child = join.child(callID)
+    if (!child) throw new Error(`Research dispatch denied: ${JSON.stringify(admitted.output)}`)
+    const taskID = `native-${callID}`
+    join.taskStarted({ toolUseID: callID, taskID })
+    const prompt = (yield* sessions.messages({ sessionID: child })).find((message) => message.info.role === "user")
+    if (!prompt) throw new Error("Missing dispatch prompt")
+    const message = yield* sessions.updateMessage({ ...assistant, id: MessageID.ascending(), sessionID: child,
+      parentID: prompt.info.id, agent: "jimmy", mode: "subagent" })
+    const pre = (name: string, toolUseID: string, input: unknown = {}) => fire({ ...base, agent_id: taskID,
+      hook_event_name: "PreToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: input })
+    const post = (name: string, toolUseID: string) => fire({ ...base, agent_id: taskID,
+      hook_event_name: "PostToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: {}, tool_response: "retained output" })
+    const settle = () => fire({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id: callID,
+      tool_input: {}, tool_response: { status: "completed", agentId: taskID, content: [{ type: "text", text: "Done" }] } })
+    const run = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
+      const tool = tools.find((tool) => tool.id === name)
+      if (!tool) throw new Error(`Missing registry tool ${name}`)
+      return yield* research.execute(child, tool.execute(args, {
+        sessionID: child, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
+        permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
+        ask: () => Effect.void, metadata: () => Effect.void,
+      } satisfies Tool.Context))
+    })
+    return { ...admitted, child, message, taskID, pre, post, settle, run }
   })
   const fire = (input: HookInput) => Effect.promise(() => hooks[input.hook_event_name]![0].hooks[0](input, undefined, { signal: abort.signal }))
   const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research",
@@ -116,7 +144,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
     })
     return { child: child.id, message, run, callID }
   })
-  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, serviceDispatch, mirrored, tools, seat, abort }
+  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, nativeDispatch, serviceDispatch, mirrored, tools, seat, abort }
 })
 
 export const charges = Effect.fn("ClaudeResearchFixture.charges")(function* (sessionID: string) {
