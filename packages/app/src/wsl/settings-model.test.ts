@@ -231,6 +231,51 @@ describe("WSL server settings presentation", () => {
     expect(model.primaryButton.action).toBe("install-server")
   })
 
+  test("a server reinstalling cannot fix shows its error, and a failed check asks to check again, neither offering install", () => {
+    const check = (distro: string, problem: "unfixable" | "retry", error: string) => ({
+      distro,
+      resolvedPath: problem === "unfixable" ? "/home/me/.orchestra/bin/orchestra" : null,
+      version: null,
+      expectedVersion: "1.2.3",
+      matchesDesktop: null,
+      error,
+      problem,
+    })
+    const model = (selectedDistro: string) =>
+      addServerViewModel({
+        state: {
+          ...readyWslState,
+          installed: [
+            { name: "Debian", version: 2, isDefault: true },
+            { name: "Ubuntu", version: 2, isDefault: false },
+          ],
+          distroProbes: {
+            Debian: { name: "Debian", canExecute: true, hasBash: true, error: null },
+            Ubuntu: { name: "Ubuntu", canExecute: true, hasBash: true, error: null },
+          },
+          orchestraChecks: {
+            Debian: check("Debian", "unfixable", "Installing the server in WSL is not available yet"),
+            Ubuntu: check("Ubuntu", "retry", "wsl.exe timed out"),
+          },
+        },
+        view: "main",
+        selectedDistro,
+        catalogSearch: "",
+        catalogTarget: null,
+        adding: false,
+        probingAddable: false,
+      })
+
+    expect(model("Debian").distroStatuses).toEqual({
+      Debian: { label: { text: "Installing the server in WSL is not available yet" }, tone: "warning" },
+      Ubuntu: { label: { key: "wsl.onboarding.checkAgain" }, tone: "warning" },
+    })
+    expect(model("Debian").primaryButton).toMatchObject({ action: null, disabled: true })
+    expect(model("Ubuntu").primaryButton).toMatchObject({ action: null, disabled: true })
+    expect(wslOrchestraAction(check("Debian", "unfixable", "The server is installed but could not run"))).toBeUndefined()
+    expect(wslOrchestraAction(check("Ubuntu", "retry", "wsl.exe timed out"))).toBeUndefined()
+  })
+
   test("delegates addable probe plans to one batch command", async () => {
     const calls: string[][] = []
 
