@@ -103,7 +103,13 @@ const setup = Effect.fnUntraced(function* (sessionID?: SessionID) {
   return { ...f, issue, read, lookup }
 })
 
-const dispatch = Effect.fnUntraced(function* (f: Effect.Success<ReturnType<typeof setup>>, issued: Effect.Success<ReturnType<typeof f.issue>>,
+const dispatch = Effect.fnUntraced(function* (f: {
+  parent: Pick<Session.Info, "id" | "directory">
+  sessions: Pick<Session.Interface, "updatePart">
+}, issued: {
+  grant: Pick<ClaudeHostMcp.Grant, "grantID">
+  part: Pick<SessionV1.ToolPart, "messageID">
+},
   messageID = issued.part.messageID) {
   const join = ClaudeHostJoin.make()
   const delegation = ClaudeHostDelegation.make({ sessionID: f.parent.id, agent: "maestro",
