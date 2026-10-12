@@ -237,10 +237,43 @@ describe("native gate real policy", () => {
     ] })
     yield* f.filesystem.writeFileString(path.join(outside, "sentinel.txt"), "outside sentinel")
     yield* Effect.promise(() => fs.symlink(outside, path.join(f.directory, "local-alias"), process.platform === "win32" ? "junction" : "dir"))
+    refused(yield* f.decide("Read", { file_path: outside }), "rule which prevents")
+    refused(yield* f.decide("Read", { file_path: path.join(outside, "sentinel.txt") }), "rule which prevents")
     refused(yield* f.decide("Read", { file_path: "local-alias" }), "rule which prevents")
     refused(yield* f.decide("Read", { file_path: "local-alias/sentinel.txt" }), "rule which prevents")
     refused(yield* f.decide("Write", { file_path: "local-alias/new/deep/file.txt", content: "harmless" }), "rule which prevents")
     expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
+    expect(yield* f.filesystem.readFileString(path.join(outside, "sentinel.txt"))).toBe("outside sentinel")
+  }), { git: true })
+
+  it.instance("external permission requests preserve canonical roots and missing descendants through directory aliases", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const outside = yield* f.filesystem.makeTempDirectoryScoped({ prefix: "native-gate-request-" }).pipe(
+      Effect.flatMap((directory) => f.filesystem.realPath(directory)),
+    )
+    yield* f.filesystem.writeFileString(path.join(outside, "sentinel.txt"), "outside sentinel")
+    yield* Effect.promise(() => fs.symlink(outside, path.join(f.directory, "local-alias"), process.platform === "win32" ? "junction" : "dir"))
+    yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [
+      { permission: "*", pattern: "*", action: "allow" },
+      { permission: "external_directory", pattern: "*", action: "ask" },
+    ] })
+    const permission = yield* Permission.Service
+    for (const call of [
+      { name: "Read", file: "local-alias", physical: outside, parent: outside },
+      { name: "Read", file: "local-alias/sentinel.txt", physical: path.join(outside, "sentinel.txt"), parent: outside },
+      { name: "Write", file: "local-alias/new/deep/file.txt", physical: path.join(outside, "new/deep/file.txt"), parent: path.join(outside, "new/deep") },
+    ]) {
+      const pending = yield* Effect.forkScoped(f.decide(call.name, { file_path: call.file, content: "harmless" }))
+      const request = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.sessionID === f.session.id))), "external permission never asked")
+      expect(request.permission).toBe("external_directory")
+      expect(request.patterns).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
+      expect(request.always).toEqual(request.patterns)
+      expect(request.metadata).toEqual({ filepath: call.physical, parentDir: call.parent })
+      yield* permission.reply({ requestID: request.id, reply: "reject" })
+      expect((yield* Fiber.join(pending)).allow).toBe(false)
+    }
+    expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
+    expect(yield* f.filesystem.exists(path.join(outside, "new"))).toBe(false)
     expect(yield* f.filesystem.readFileString(path.join(outside, "sentinel.txt"))).toBe("outside sentinel")
   }), { git: true })
 
@@ -260,8 +293,12 @@ describe("native gate real policy", () => {
     yield* f.sessions.setPermission({ sessionID: f.session.id, permission: yield* WriteRoots.bind("backend", ["docs"], [
       { permission: "*", pattern: "*", action: "allow" as const },
     ]).pipe(Effect.provideService(FileSystem.FileSystem, f.filesystem)) })
+    expect(WriteRoots.read((yield* f.sessions.get(f.session.id)).permission)).toEqual([
+      yield* f.filesystem.realPath(path.join(f.directory, "docs")),
+    ])
     yield* Effect.promise(() => fs.symlink(path.join(f.directory, "src"), path.join(f.directory, "docs", "alias"), process.platform === "win32" ? "junction" : "dir"))
     refused(yield* f.decide("Write", { file_path: "docs/alias/new.txt", content: "harmless" }), "write-outside-physical-roots")
+    refused(yield* f.decide("Write", { file_path: "docs-peer/new/deep/file.txt", content: "harmless" }), "write-outside-physical-roots")
     expect(yield* f.decide("Write", { file_path: "docs/permitted/new.txt", content: "harmless" })).toEqual({ allow: true })
   }), { git: true })
 

@@ -20,6 +20,7 @@ import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
 import { ClaudeHostProcess } from "@/claude-code/host/process-tool"
 import { Seats } from "@/maestro/seats"
 import { TestInstance, tmpdirScoped } from "../../fixture/fixture"
+import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Agent.node, RuntimeFlags.node, CrossSpawnSpawner.node]), [
@@ -98,23 +99,30 @@ async function snapshot(dir: string) {
   return Promise.all((await files(dir)).map(async (file) => [file, await fs.readFile(path.join(dir, file))] as const))
 }
 
-function publisher(input: ClaudeHostPlugin.Input & { root: string }, prefix: string, pause: boolean) {
-  return ChildProcess.make(process.execPath, ["--eval", `
+const publisher = Effect.fnUntraced(function* (input: ClaudeHostPlugin.Input & { root: string }, prefix: string, pause: boolean) {
+  // Seat prompts exceed Windows' command-line limit. Keep the real publisher and watcher in owned scoped files.
+  const directory = yield* tmpdirScoped()
+  yield* Effect.promise(() => Bun.write(path.join(directory, "input.json"), JSON.stringify({ input, prefix, pause })))
+  yield* Effect.promise(() => Bun.write(path.join(directory, "publisher.ts"), `
     import { watch, writeFileSync, writeSync } from "node:fs";
     import path from "node:path";
     import { ClaudeHostPlugin } from ${JSON.stringify(pathToFileURL(path.resolve(import.meta.dir, "../../../src/claude-code/host/plugin.ts")).href)};
+    const { input, prefix, pause } = await Bun.file(process.argv[2]).json();
     // Observe the real publisher's mkdir, without replacing any publisher or filesystem API.
-    const watcher = watch(${JSON.stringify(input.root)}, (event, name) => {
-      if (!name?.startsWith(${JSON.stringify(`${prefix}.stage-`)})) return;
+    const watcher = watch(input.root, (event, name) => {
+      if (!name?.startsWith(prefix + ".stage-")) return;
       watcher.close();
-      writeFileSync(path.join(${JSON.stringify(input.root)}, name, "sentinel"), "incomplete builder");
+      writeFileSync(path.join(input.root, name, "sentinel"), "incomplete builder");
       writeSync(1, name + "\\n");
-      if (${pause}) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);
+      if (pause) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);
     });
-    await ClaudeHostPlugin.build(${JSON.stringify(input)});
+    await ClaudeHostPlugin.build(input);
     throw new Error("publisher accepted the sabotaged staging directory");
-  `], { cwd: path.resolve(import.meta.dir, "../../.."), killSignal: "SIGKILL", stderr: pause ? "ignore" : "pipe" })
-}
+  `))
+  return ChildProcess.make(process.execPath, ["--tsconfig-override", path.resolve(import.meta.dir, "../../../tsconfig.json"),
+    path.join(directory, "publisher.ts"), path.join(directory, "input.json")],
+    { cwd: path.resolve(import.meta.dir, "../../.."), killSignal: "SIGKILL", stderr: pause ? "ignore" : "pipe" })
+})
 
 function boundedOutput<E, R>(stream: Stream.Stream<Uint8Array, E, R>, limit: number) {
   return stream.pipe(Stream.mapAccum(() => 0, (size, bytes) => {
@@ -301,7 +309,8 @@ for (const killed of [false, true]) {
         await fs.mkdir(lock)
         await fs.writeFile(path.join(lock, "sentinel"), "old-version owner")
       })
-      const child = yield* spawnPublisher(publisher(input, prefix, true))
+      expectSpawn(import.meta.path)
+      const child = yield* spawnPublisher(yield* publisher(input, prefix, true))
       const ready = yield* awaitWithTimeout(
         boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),
         "publisher never reached staging", "20 seconds",
@@ -340,7 +349,8 @@ it.instance(
     const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
     const root = yield* tmpdirScoped()
     const prefix = path.basename(reference.path)
-    const child = yield* spawnPublisher(publisher({ seats: f.seats, tools, root }, prefix, false))
+    expectSpawn(import.meta.path)
+    const child = yield* spawnPublisher(yield* publisher({ seats: f.seats, tools, root }, prefix, false))
     const ready = yield* awaitWithTimeout(
       boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),
       "publisher never reached staging", "20 seconds",

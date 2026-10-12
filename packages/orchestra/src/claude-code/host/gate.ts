@@ -31,7 +31,6 @@ import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { approve, resolvePath } from "@/tool/shell/scan"
 import { ShellExecution } from "@/tool/shell/execution"
-import { assertExternalDirectoryEffect } from "@/tool/external-directory"
 import type { Tool } from "@/tool/tool"
 import { asks } from "../permissions"
 import { ClaudeCodeTools } from "../tools"
@@ -285,7 +284,20 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         const worktree = yield* fs.realPath(projectDirectory)
         const targets = [...new Set([filepath, physical])]
         const directory = name === "Read" && (yield* fs.stat(physical)).type === "Directory"
-        yield* Effect.forEach(targets, (target) => assertExternalDirectoryEffect(ctx, target, { kind: directory ? "directory" : "file" }))
+        // Use the same realPath API for targets and roots. Re-normalizing with realpathSync.native on Windows
+        // can expand an 8.3 spelling differently from the permission pattern and silently miss its deny.
+        const roots = [instance.directory, projectDirectory]
+        const physicalRoots = [yield* fs.realPath(instance.directory), worktree]
+        const external = [...new Set([
+          ...(roots.some((root) => FSUtil.contains(root, filepath)) ? [] : [filepath]),
+          ...(physicalRoots.some((root) => FSUtil.contains(root, physical)) ? [] : [physical]),
+        ])]
+        yield* Effect.forEach(external, (target) => {
+          const parentDir = directory ? target : path.dirname(target)
+          const glob = path.join(parentDir, "*").replaceAll("\\", "/")
+          return ctx.ask({ permission: "external_directory", patterns: [glob], always: [glob],
+            metadata: { filepath: target, parentDir } })
+        })
         return yield* ctx.ask({ permission: name === "Read" ? "read" : "edit",
           patterns: targets.map((target) => path.relative(worktree, target).replaceAll("\\", "/")),
           always: ["*"], metadata: { filepath, physical } })
