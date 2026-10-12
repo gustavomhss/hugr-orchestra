@@ -25,11 +25,11 @@ async function remove(dir: string, retries = 30): Promise<void> {
 }
 
 /**
- * Removes a fixture root holding executables the test just ran. On GitHub's Windows runners provjobd.exe, a hosted-runner
- * process outside the test's process tree, opens each newly run image for a moment after its process exits, so deleting
- * it fails with EBUSY. Restart Manager named provjobd.exe as the only holder in all 11 holds caught (10 in 1,704 runs of
- * a fresh node.exe copy, 1 in a whole core run); each released within 152 ms. Only EBUSY is retried, for at most 5 s:
- * any other failure, or a holder that outlasts the bound, still fails the test.
+ * Removes a fixture root holding executables the test just ran. On GitHub's Windows runners, provjobd.exe<n> (started
+ * from %TEMP% by GitHub's hosted-compute-agent, outside the test's process tree) opens each newly run image for a moment
+ * after its process exits, so deleting it fails with EBUSY. Restart Manager named it as the only holder in all 11 holds
+ * caught (10 in 1,704 runs of a fresh node.exe copy, 1 in a whole core run); each released within 152 ms. Only EBUSY is
+ * retried, for at most 5 s: any other failure, or a holder that outlasts the bound, still fails the test.
  */
 export async function removeExecuted(dir: string) {
   const deadline = performance.now() + 5_000
