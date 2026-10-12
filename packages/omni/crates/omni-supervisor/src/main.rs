@@ -1,6 +1,9 @@
 //! `hugr-omni-supervisor`: started lazily by the hugr-omni host, once per host process; creates, contains,
 //! stops and reaps every managed child (ADR-0005, `docs/protocol.md`).
 //!
+//! Windows also has a second, separate mode, `hugr-omni-supervisor --appcontainer <profile> …` (`windows::container`):
+//! the host runs it as a managed child that starts one command confined to an AppContainer.
+//!
 //! Command line (frozen in W00): `hugr-omni-supervisor --host-pid <pid> [--pipe <name>]`.
 //! Unix: the channel is the socket on fd 0. Windows: the channel is the named pipe `<name>`, created by
 //! the host, which checks the connecting client's pid. Exit code 0 after a clean shutdown (host gone,
@@ -48,6 +51,10 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Args, String> {
 }
 
 fn main() -> ExitCode {
+    #[cfg(windows)]
+    if std::env::args().nth(1).as_deref() == Some("--appcontainer") {
+        windows::container::main(std::env::args().skip(2));
+    }
     let args = match parse(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(e) => {

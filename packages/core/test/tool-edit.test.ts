@@ -71,6 +71,8 @@ const filesystem = Layer.effect(
           ),
       writeWithDirs: (target, content, mode) =>
         Effect.sync(() => writes.push(target)).pipe(Effect.andThen(fs.writeWithDirs(target, content, mode))),
+      writePhysical: (target, content, options) =>
+        Effect.sync(() => writes.push(target)).pipe(Effect.andThen(fs.writePhysical(target, content, options))),
       writeFile: (target, content, options) =>
         Effect.sync(() => writes.push(target)).pipe(Effect.andThen(fs.writeFile(target, content, options))),
       writeFileString: (target, content, options) =>

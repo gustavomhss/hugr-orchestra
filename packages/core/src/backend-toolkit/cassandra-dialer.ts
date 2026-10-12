@@ -5,11 +5,11 @@ import { PinnedArtifact } from "../pinned-artifact"
 
 // Command-only overlay for the Apache-2.0 gocqlx v3.0.4 source. The pinned Scylla v1.15.3 Dialer API stays unchanged.
 export const BEFORE = "614ecf03874e6ad19f6ba7878998cffc00e9bd85ddd6f3b03cd3d8ced22b15a7"
-export const AFTER = "eaae89f157fd288df1d8b658aa71da4fa002b64c5e7ea32d5b9fba94faaf0fd5"
+export const AFTER = "a60679b063cac909587c6d84c0cc6524e113f995fdb61684aca70f24df201fde"
 
-// Darwin hands over fixed-target Unix broker routes; Linux hands over the granted ports, reached through the srt
-// sandbox's own strict-allowlist HTTP CONNECT proxy. Exactly one mode may be present.
-export const HOOK = String.raw`	// Orchestra cassandra3: host-owned exact routes use the driver's public Dialer API.
+// Darwin and Windows hand over fixed-target Unix broker routes; Linux hands over the granted ports, reached through the
+// srt sandbox's own strict-allowlist HTTP CONNECT proxy. Exactly one mode may be present.
+export const HOOK = String.raw`	// Orchestra cassandra4: host-owned exact routes use the driver's public Dialer API.
 	routes, unix := os.LookupEnv("ORCHESTRA_TCP_PROXY_ROUTES")
 	ports, connect := os.LookupEnv("ORCHESTRA_TCP_PROXY_CONNECT")
 	if unix || connect {
@@ -36,7 +36,7 @@ export const HOOK = String.raw`	// Orchestra cassandra3: host-owned exact routes
 `
 
 export const SOURCE = String.raw`
-// Orchestra cassandra3: private generator transport; no library or driver API modification.
+// Orchestra cassandra4: private generator transport; no library or driver API modification.
 type orchestraGeneratorDialer struct {
 	routes map[string]string
 	proxy  string
@@ -61,7 +61,7 @@ func newOrchestraGeneratorDialer(text string, timeout time.Duration) (*orchestra
 		}
 		decoded, err := hex.DecodeString(encoded)
 		socket := string(decoded)
-		if err != nil || !utf8.Valid(decoded) || strings.ContainsRune(socket, 0) || !path.IsAbs(socket) || path.Clean(socket) != socket || len(decoded) >= 104 {
+		if err != nil || !utf8.Valid(decoded) || strings.ContainsRune(socket, 0) || !orchestraAbsolute(socket) || len(decoded) >= 104 {
 			return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
 		}
 		if _, duplicate := routes[port]; duplicate || paths[socket] {
@@ -71,6 +71,15 @@ func newOrchestraGeneratorDialer(text string, timeout time.Duration) (*orchestra
 		paths[socket] = true
 	}
 	return &orchestraGeneratorDialer{routes: routes, dialer: net.Dialer{Timeout: timeout}}, nil
+}
+
+// Darwin routes are slash paths; Windows broker routes are drive-qualified (a drive-less path would resolve against
+// the dialer's current drive, not the broker's).
+func orchestraAbsolute(socket string) bool {
+	if runtime.GOOS == "windows" && filepath.IsAbs(socket) && filepath.Clean(socket) == socket {
+		return true
+	}
+	return path.IsAbs(socket) && path.Clean(socket) == socket
 }
 
 // The proxy is the sandbox's own loopback listener; its strict allowlist, not this parser, enforces the grant.
@@ -197,6 +206,8 @@ export function patch(source: Uint8Array) {
     .replace('\t"bytes"\n', '\t"bytes"\n\t"context"\n\t"encoding/base64"\n\t"encoding/hex"\n')
     .replace('\t"io/fs"\n', '\t"io"\n\t"io/fs"\n')
     .replace('\t"os"\n', '\t"net"\n\t"net/url"\n\t"os"\n')
+    .replace('\t"path"\n', '\t"path"\n\t"path/filepath"\n')
+    .replace('\t"regexp"\n', '\t"regexp"\n\t"runtime"\n')
     .replace('\t"strings"\n', '\t"strconv"\n\t"strings"\n\t"time"\n\t"unicode/utf8"\n')
     .replace('\treturn gocqlx.WrapSession(cluster.CreateSession())\n', `${HOOK}\treturn gocqlx.WrapSession(cluster.CreateSession())\n`) + SOURCE)
   const hash = createHash("sha256").update(patched).digest("hex")
