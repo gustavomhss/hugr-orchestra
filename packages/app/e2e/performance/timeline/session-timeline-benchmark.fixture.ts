@@ -124,6 +124,19 @@ export async function setupTimelineBenchmark(
     events: () => events.splice(0, eventBatch),
     eventRetry: 16,
   })
+  // The build retains the base config's default backend port while performance workers mock the app port.
+  // Bridge that authority through the shared mock so failed health probes cannot select a different protocol.
+  const server = new URL(`http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:4096`)
+  const mock = new URL(
+    `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
+  )
+  if (server.origin !== mock.origin) {
+    await page.route((url) => url.origin === server.origin, (route) => {
+      const url = new URL(route.request().url())
+      url.host = mock.host
+      return route.fallback({ url: url.href })
+    })
+  }
   await page.addInitScript(
     (input) => {
       localStorage.setItem(

@@ -42,8 +42,11 @@ def main():
     require(addons, "NO_HOST_PREBUILDS")
     mismatched = {}
     for addon in addons:
-        if machine not in machines(addon, kind):
-            mismatched.setdefault(addon.parent.parent.parent, []).append(addon)
+        package = addon.parent.parent.parent
+        # Linux x64 npm tree-sitter prebuilds loaded in Bun end the process silently (exit 0, no output), so on
+        # Linux every tree-sitter binding is built here with the same Nix toolchain as the arm64 rebuilds.
+        if machine not in machines(addon, kind) or (kind == "elf" and package.name.startswith("tree-sitter")):
+            mismatched.setdefault(package, []).append(addon)
     rebuilt = [rebuild(package, files, root, kind, machine, node, nodedir, node_gyp) for package, files in sorted(mismatched.items())]
     print(json.dumps({"status": "HOST_PREBUILDS_VERIFIED", "system": system, "checked": len(addons), "rebuilt": rebuilt}))
 

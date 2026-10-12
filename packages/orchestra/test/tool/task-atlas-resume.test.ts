@@ -84,7 +84,7 @@ const remember = Effect.fn("TaskAtlasResumeTest.remember")(function* (...entries
   const directory = (yield* TestInstance).directory
   const command = yield* Effect.promise(() => fakeScanner("clean", directory))
   const memory = yield* offline(
-    AtlasMemory.open({ sessionID: "ses_seed", callID: "call_seed", assistantMessageID: "msg_seed" }),
+    AtlasMemory.open({ sessionID: "ses_seed", callID: "call_seed", assistantMessageID: "msg_seed" }, { id: "backend", native: true }),
   )
   if ("unavailable" in memory) throw new Error(memory.unavailable)
   const pinned = createNativeMemory({ ...memory.binding, scanner: { name: "gitleaks", command } })

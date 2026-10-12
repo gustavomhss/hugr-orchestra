@@ -17,6 +17,7 @@ import { ContextRecallTool } from "./context-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
+import { ResearchRegistry } from "./research-registry"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
@@ -182,6 +183,7 @@ const layer = Layer.effect(
     const compact = yield* ContextCompactTool
     const atlasRecall = yield* AtlasMemoryRecallTool
     const atlasEmit = yield* AtlasMemoryEmitTool
+    const research = yield* ResearchRegistry.make
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -358,6 +360,7 @@ const layer = Layer.effect(
           compact: Tool.init(compact),
           atlasRecall: Tool.init(atlasRecall),
           atlasEmit: Tool.init(atlasEmit),
+          research: research.init,
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -398,6 +401,7 @@ const layer = Layer.effect(
             tool.compact,
             tool.atlasRecall,
             tool.atlasEmit,
+            ...tool.research,
             tool.glob,
             tool.grep,
             tool.edit,
@@ -423,7 +427,7 @@ const layer = Layer.effect(
             tool.skill,
             tool.patch,
             ...(tool.execute ? [tool.execute] : []),
-            ...(flags.experimentalLspTool ? [tool.lsp] : []),
+            tool.lsp,
           ],
           task: tool.task,
           read: tool.read,
@@ -444,7 +448,7 @@ const layer = Layer.effect(
             runtime
               .withSession(
                 context.sessionID,
-                runtime.run(
+                research.charge(definition, args, context, (execute) => runtime.run(
                   {
                     tool: definition.id,
                     args,
@@ -456,17 +460,19 @@ const layer = Layer.effect(
                     projectID: instance.project.id,
                     projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
                   },
-                  definition.execute(args, context),
+                  execute,
                   durableSafety,
                   () => context.abort.aborted,
-                ),
+                )),
               )
               .pipe(Effect.orDie),
         })),
         ...s.custom.map((definition) => ({
           ...definition,
           execute: (args: unknown, context: Tool.Context) =>
-            definition.executeWithSafety(args, context, durableSafety, requiredBinding),
+            context.agentID === "jimmy"
+              ? Effect.die(new Error("Discovery cannot execute configured plugin tools"))
+              : definition.executeWithSafety(args, context, durableSafety, requiredBinding),
         })),
       ]
     })
@@ -519,10 +525,11 @@ const layer = Layer.effect(
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
       const upstream = input.agent.id === "archie" && input.agent.native === true ? yield* agents.get("archie") : undefined
+      const s = yield* InstanceState.get(state)
       const filtered = (yield* definitions(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
-      )).filter((tool) => {
+      )).filter((tool, index) => {
         if (
           tool.id === MaestroRecordResultDecisionTool.id &&
           (input.agent.id !== "maestro" || input.agent.native !== true)
@@ -552,6 +559,8 @@ const layer = Layer.effect(
           return false
         }
         if (
+          // Builtins are listed first: a later index is a configured plugin tool.
+          ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length) ||
           Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
           Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
@@ -560,6 +569,7 @@ const layer = Layer.effect(
         if (tool.id === WebSearchTool.id) {
           return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
         }
+        if (tool.id === LspTool.id) return flags.experimentalLspTool || ResearchRegistry.discovery(input.agent)
 
         const usePatch =
           input.modelID.includes("gpt-") && !input.modelID.includes("oss") && !input.modelID.includes("gpt-4")
@@ -766,6 +776,7 @@ export const node = LayerNode.make({
     InstanceStore.node,
     Permission.node,
     Ripgrep.node,
+    ...ResearchRegistry.nodes,
     // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
     LocationServiceMap.node,
   ],

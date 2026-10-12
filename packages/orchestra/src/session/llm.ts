@@ -29,6 +29,7 @@ import { LLMNativeRuntime } from "./llm/native-runtime"
 import { LLMRequestPrep } from "./llm/request"
 import { LLMContextBudget } from "./llm/context-budget"
 import { PromptGuard } from "./prompt-guard"
+import { ResearchExecution } from "@/research/allowance"
 import { LLMPrepared } from "./llm/prepared"
 
 export const OUTPUT_TOKEN_MAX = ProviderTransform.OUTPUT_TOKEN_MAX
@@ -74,7 +75,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/L
 
 export const use = serviceUse(Service)
 
-const live: Layer.Layer<
+export const live: Layer.Layer<
   Service,
   never,
   | Auth.Service
@@ -85,6 +86,7 @@ const live: Layer.Layer<
   | EventV2Bridge.Service
   | LLMClientService
   | RuntimeFlags.Service
+  | ResearchExecution.Service
 > = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -96,6 +98,7 @@ const live: Layer.Layer<
     const events = yield* EventV2Bridge.Service
     const llmClient = yield* LLMClient.Service
     const flags = yield* RuntimeFlags.Service
+    const research = yield* ResearchExecution.Service
 
     const plans = new WeakMap<LLMPrepared.Plan, PlanData>()
     const preflight = Effect.fn("LLM.preflight")(function* (request: StreamInput) {
@@ -285,6 +288,7 @@ const live: Layer.Layer<
       // Runtime seam: native is an opt-in adapter over @orchestra/llm. It
       // either returns a ready LLMEvent stream or a concrete fallback reason.
       yield* PromptGuard.check(input.sessionID, input.small !== true)
+      yield* research.provider(input, Effect.void)
       if (flags.experimentalNativeLlm) {
         const native = LLMNativeRuntime.stream({
           model: prepared.model,
@@ -462,6 +466,7 @@ export const node = LayerNode.make({
     EventV2Bridge.node,
     llmClient,
     RuntimeFlags.node,
+    ResearchExecution.node,
   ],
 })
 

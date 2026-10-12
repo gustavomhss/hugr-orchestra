@@ -1,10 +1,11 @@
-import { Effect, Schema } from "effect"
+import { Effect, Schema, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { Parser } from "htmlparser2"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import TurndownService from "turndown"
 import DESCRIPTION from "./webfetch.txt"
 import { isImageAttachment } from "@/util/media"
+import { ResearchSourceCapture } from "@/research/source-capture"
 
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024 // 5MB
 const DEFAULT_TIMEOUT = 30 * 1000 // 30 seconds
@@ -98,21 +99,30 @@ export const WebFetchTool = Tool.define(
             throw new Error("Response too large (exceeds 5MB limit)")
           }
 
-          const arrayBuffer = yield* response.arrayBuffer
-          if (arrayBuffer.byteLength > MAX_RESPONSE_SIZE) {
-            throw new Error("Response too large (exceeds 5MB limit)")
-          }
+          const chunks = yield* Stream.runFoldEffect(response.stream,
+            () => ({ chunks: Array<Uint8Array>(), bytes: 0 }), (state, chunk) => {
+              if (state.bytes + chunk.byteLength > MAX_RESPONSE_SIZE)
+                return Effect.die(new Error("Response too large (exceeds 5MB limit)"))
+              state.chunks.push(chunk)
+              return Effect.succeed({ chunks: state.chunks, bytes: state.bytes + chunk.byteLength })
+            }).pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.die(new Error("Request timed out")) }))
+          const arrayBuffer = Buffer.concat(chunks.chunks)
 
           const contentType = response.headers["content-type"] || ""
           const mime = contentType.split(";")[0]?.trim().toLowerCase() || ""
           const title = `${params.url} (${contentType})`
+          const capture = yield* ResearchSourceCapture.Current
+          const received = capture ? yield* capture({
+            origin: { kind: "url", uri: response.request.url }, representation: "received", mediaType: contentType || "application/octet-stream",
+            content: arrayBuffer, complete: true,
+          }) : undefined
 
           if (isImageAttachment(mime)) {
             const base64Content = Buffer.from(arrayBuffer).toString("base64")
             return {
               title,
               output: "Image fetched successfully",
-              metadata: {},
+              metadata: { ...(received ? { researchSource: received } : {}) },
               attachments: [
                 {
                   type: "file" as const,
@@ -123,39 +133,28 @@ export const WebFetchTool = Tool.define(
             }
           }
 
-          const content = new TextDecoder().decode(arrayBuffer)
+          const content = yield* Effect.try({
+            try: () => new TextDecoder("utf-8", { fatal: capture !== undefined }).decode(arrayBuffer),
+            catch: () => new Error("Research response is not lossless UTF-8 text"),
+          })
 
           // Handle content based on requested format and actual content type
-          switch (params.format) {
-            case "markdown":
-              if (contentType.includes("text/html")) {
-                const markdown = convertHTMLToMarkdown(content)
-                return {
-                  output: markdown,
-                  title,
-                  metadata: {},
-                }
-              }
-              return { output: content, title, metadata: {} }
-
-            case "text":
-              if (contentType.includes("text/html")) {
-                return { output: extractTextFromHTML(content), title, metadata: {} }
-              }
-              return { output: content, title, metadata: {} }
-
-            case "html":
-              return { output: content, title, metadata: {} }
-
-            default:
-              return { output: content, title, metadata: {} }
-          }
+          const html = contentType.includes("text/html")
+          const output = html && params.format === "markdown" ? convertHTMLToMarkdown(content)
+            : html && params.format === "text" ? extractTextFromHTML(content) : content
+          const selected = capture && received ? yield* capture({
+            origin: received.origin, representation: params.format,
+            mediaType: params.format === "html" ? "text/html" : params.format === "markdown" ? "text/markdown" : "text/plain",
+            content: output, complete: true, derivedFrom: received.ref,
+            transformation: html && params.format !== "html" ? `webfetch-${params.format}-v1` : "utf8-decode-v1",
+          }) : undefined
+          return { output, title, metadata: { ...(selected ? { researchSource: selected, researchReceived: received } : {}) } }
         }).pipe(Effect.orDie),
     }
   }),
 )
 
-function extractTextFromHTML(html: string) {
+export function extractTextFromHTML(html: string) {
   let text = ""
   let skipDepth = 0
 
@@ -179,7 +178,7 @@ function extractTextFromHTML(html: string) {
   return text.trim()
 }
 
-function convertHTMLToMarkdown(html: string): string {
+export function convertHTMLToMarkdown(html: string): string {
   const turndownService = new TurndownService({
     headingStyle: "atx",
     hr: "---",
