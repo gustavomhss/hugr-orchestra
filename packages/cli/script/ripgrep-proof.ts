@@ -74,7 +74,10 @@ if (args.mutate) {
   await rename(ripgrep, `${ripgrep}.away`)
   const missing = await search(true).finally(() => rename(`${ripgrep}.away`, ripgrep))
   if (missing.matched) throw new Error("MUTANT_SURVIVED: the CLI found files without its bundled rg")
-  if (!missing.failClosed) throw new Error(`MUTANT_NOT_FAIL_CLOSED: no packaged fail-closed message in the CLI logs`)
+  if (!missing.failClosed)
+    throw new Error(
+      `MUTANT_NOT_FAIL_CLOSED: no packaged fail-closed message in the CLI logs:\n${missing.lines.join("\n")}`,
+    )
   console.log(
     `RIPGREP_MUTANT_KILLED ${JSON.stringify({ matched: false, failClosed: true, downloads: missing.downloads })}`,
   )
@@ -158,6 +161,11 @@ async function search(failClosed = false) {
         body,
         matched: body.includes(`${token}.txt`),
         failClosed: logs.includes(FAIL_CLOSED),
+        // What the service logged about ripgrep, for a failure message.
+        lines: logs
+          .split("\n")
+          .filter((line) => /ripgrep/i.test(line))
+          .slice(-10),
         downloads: downloads.length,
       }
     })
