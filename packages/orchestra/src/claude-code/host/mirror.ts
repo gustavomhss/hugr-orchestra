@@ -357,14 +357,15 @@ export function create(input: {
         const name = raw.get(block.tool_use_id) ?? ""
         if (!part || (part.state.status !== "completed" && part.state.status !== "error")) continue
         const output = part.state.status === "completed" ? part.state.output : part.state.error
+        // A batched result frame supplies no per-block join for its single structured native receipt.
         const nativeTodos = part.state.status === "completed" && block.is_error !== true
           ? yield* ClaudeHostTodos.update({ sessionID, sessions, name, args: part.state.input,
-            result: message.tool_use_result, state: input.state })
+            result: results(message).length === 1 ? message.tool_use_result : undefined, state: input.state })
           : undefined
         const metadata = { ...toolMetadata(name, message.tool_use_result, output, block.is_error === true),
-          ...(nativeTodos ? { todos: nativeTodos } : {}) }
+          ...(nativeTodos ? { todos: nativeTodos.todos, claudeCodeTodo: nativeTodos.snapshot } : {}) }
         yield* write({ ...part, state: { ...part.state,
-          ...(nativeTodos ? { input: { ...part.state.input, todos: nativeTodos } } : {}),
+          ...(nativeTodos ? { input: { ...part.state.input, todos: nativeTodos.todos } } : {}),
           metadata: { ...part.state.metadata, ...metadata } } }, before[index])
         if ((name === "TodoWrite" || ClaudeHostTodos.TOOLS.includes(name)) && Array.isArray(metadata.todos))
           yield* input.todo.update({ sessionID, todos: metadata.todos as Todos })
