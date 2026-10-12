@@ -1,6 +1,10 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator"
 
+// GlobalRegistrator 20.12 has no exclusion option. Keep Bun's HTTP/Abort family together:
+// Bun.serve rejects Happy DOM Responses, and Happy DOM fetch adds browser CORS preflights.
+const native = { fetch, Request, Response, Headers, FormData, Blob, File, AbortController, AbortSignal, DOMException }
 GlobalRegistrator.register()
+Object.assign(globalThis, native)
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext
 // @ts-expect-error - we're overriding with a simplified mock
