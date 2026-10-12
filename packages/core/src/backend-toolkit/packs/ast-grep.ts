@@ -20,6 +20,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "ast-grep/ast-grep",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "10.12" },
+    "linux-arm64": { glibc: "2.18" },
+    "linux-x64": { glibc: "2.34" },
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": target(
       "darwin-arm64",

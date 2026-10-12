@@ -9,7 +9,7 @@ import { attempts, INSTALL_MS, NotReady } from "./attempts"
 import { hosted } from "./hosted"
 import { executable, fileReady, launchText, shim } from "./launcher"
 import { ENGINES, RUNTIMES, type Engine, type EngineId, type Runtime, type RuntimeId } from "./manifest"
-import { detect, type TargetId } from "./target"
+import { below, current, detect, type Host, type TargetId } from "./target"
 
 export { NotReady } from "./attempts"
 export { hosted } from "./hosted"
@@ -50,6 +50,11 @@ export const Runtimes = Context.Reference<Readonly<Record<RuntimeId, Runtime>>>(
 /** The host's toolkit target, or why it has none. */
 export const Target = Context.Reference<ReturnType<typeof detect>>("@orchestra/BackendToolkit/Target", {
   defaultValue: () => detect(),
+})
+
+/** The host the measured floors of F5.4 are checked against; tests inject descriptions instead of probing. */
+export const Machine = Context.Reference<Host>("@orchestra/BackendToolkit/Machine", {
+  defaultValue: () => current(),
 })
 
 // Acquisition outlives a shell call. A cold source build must not consume an entire model scenario in silence.
@@ -145,15 +150,41 @@ export function dependencyOrder(manifest: Readonly<Record<EngineId, Engine>>, id
   return visit(id) ?? ordered
 }
 
+/**
+ * Why the host is below the measured floor of an engine, its owned dependencies or the runtimes they run on (F5.4),
+ * e.g. `glibc-below-2.34`. Each pack records only what its own binaries need, so the engine's floor is the maximum.
+ */
+function belowFloor(
+  manifest: Readonly<Record<EngineId, Engine>>,
+  runtimes: Readonly<Record<RuntimeId, Runtime>>,
+  id: EngineId,
+  target: TargetId,
+  machine: Host,
+) {
+  const order = dependencyOrder(manifest, id)
+  if (typeof order === "string") return
+  return [id, ...order]
+    .flatMap((engine) => {
+      const item = manifest[engine]
+      return [item.floor?.[target], "runtime" in item ? runtimes[item.runtime].floor?.[target] : undefined]
+    })
+    .map((floor) => below(machine, target, floor))
+    .find((reason) => reason !== undefined)
+}
+
 const request = Effect.fnUntraced(function* (id: EngineId, target: TargetId, host: boolean) {
   const root = yield* Root
   const manifest = yield* Manifest
   const runtimes = yield* Runtimes
+  const machine = yield* Machine
   const dependencies = dependencyOrder(manifest, id)
   if (typeof dependencies === "string") return yield* new NotReady({ reason: dependencies })
   const engine = manifest[id]
   const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
   if (unsupported) return yield* new NotReady({ reason: `unsupported-target:${unsupported}` })
+  // Before any fetch. A cross-target prefetch (`host` false) is never executed here, so it has no floor to meet.
+  const floor = host ? belowFloor(manifest, runtimes, id, target, machine) : undefined
+  if (floor) return yield* new NotReady({ reason: `unsupported-target:${id}:${floor}` })
   const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
   const cause = yield* attempts.once(requestKey(directory, host), Effect.gen(function* () {
     yield* Effect.forEach([...dependencies, id], (dependency) => acquire(root, manifest[dependency], runtimes, target, host), { discard: true })
@@ -192,6 +223,7 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
   const manifest = yield* Manifest
   const runtimes = yield* Runtimes
   const host = yield* Target
+  const machine = yield* Machine
   const local = "target" in host && host.target === target
   return yield* Effect.forEach(ids, (id) =>
     Effect.gen(function* () {
@@ -202,6 +234,8 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       if (typeof dependencies === "string") return { ...base, status: "failed", cause: dependencies, at: 0 } satisfies State
       const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
       if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State
+      const floor = local ? belowFloor(manifest, runtimes, id, target, machine) : undefined
+      if (floor) return { ...base, status: "unsupported", reason: floor } satisfies State
       // A complete parent artifact cannot hide a failed request, missing dependency, launcher or host shim.
       for (const dependency of [id, ...dependencies]) {
         const item = manifest[dependency]

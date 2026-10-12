@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { benchmarkEnvironment, parseOptions, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
+import { benchmarkEnvironment, controlVerdict, omniControlScope, parseOptions, preloadsControl, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
 
 const config = "e2e/playwright.production.config.ts"
 const spec = "e2e/regression/session-research-result.spec.ts"
@@ -135,4 +135,54 @@ test("successful report requires step metadata, step log, endgroup and nonempty 
 test("failed setup report retains setup diagnostics without requiring Run tests", () => {
   expect(reportLines({ name: "test (macos-14)", conclusion: "failure", steps: [{ name: "Setup Bun", conclusion: "failure" }] },
     "test (macos-14)\tSetup Bun\tinstallation failed")).toEqual(["installation failed"])
+})
+
+test("omniControlScope: a whole-package request is suite; files, filters and -t narrow it to declared", () => {
+  const bun = (args: string[]) => omniControlScope({ runner: "bun", args })
+  expect(bun(["--timeout", "120000"])).toBe("suite")
+  expect(bun([])).toBe("suite")
+  expect(bun(["--timeout", "120000", "--bail", "--only-failures"])).toBe("suite")
+  expect(bun(["./test/a.test.ts", "--timeout", "120000"])).toBe("declared")
+  expect(bun(["test/tool", "--timeout", "120000"])).toBe("declared")
+  expect(bun(["--timeout", "120000", "-t", "pattern"])).toBe("declared")
+  expect(bun(["--timeout", "120000", "--test-name-pattern", "pattern"])).toBe("declared")
+  // A pattern or timeout value is never mistaken for a selection, and an unknown option keeps the stronger scope.
+  expect(bun(["--timeout", "test/a.test.ts"])).toBe("suite")
+  expect(bun(["./test/a.test.ts", "--rerun-each", "3"])).toBe("suite")
+  expect(omniControlScope({ runner: "pytest", args: ["tests/test_a.py"] })).toBe("suite")
+})
+
+test("preloadsControl reads the package's own preload list", () => {
+  expect(preloadsControl({ test: { preload: ["../../script/test-guard.ts", "../../script/test-omni-control.ts"] } })).toBe(true)
+  expect(preloadsControl({ test: { preload: ["..\\..\\script\\test-omni-control.ts"] } })).toBe(true)
+  expect(preloadsControl({ test: { preload: ["../../script/test-guard.ts"] } })).toBe(false)
+  expect(preloadsControl({ test: { preload: ["../../script/not-test-omni-control.ts"] } })).toBe(false)
+  expect(preloadsControl({})).toBe(false)
+})
+
+test("controlVerdict accepts exactly one verdict line carrying this job's nonce, nothing else", () => {
+  const job = { name: "test (ubuntu-latest)" }
+  const nonce = "0123456789abcdef0123456789abcdef"
+  const row = (step: string, text: string) => `test (ubuntu-latest)\t${step}\t2026-10-12T03:10:05.9742438Z ${text}`
+  const nonceRow = row("Omni control nonce", `omni control nonce: ${nonce}`)
+  const header = row("Omni control nonce", 'echo "omni control nonce: $nonce"')
+  const verdict = row("Run tests", `omni positive control [${nonce}]: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.`)
+  const thrown = row("Run tests", `error: omni positive control [${nonce}]: FAIL (suite: every run must spawn through omni). no omni spawn.`)
+  const fake = row("Run tests", "omni positive control: pass (suite: every run must spawn through omni); 9 omni spawn(s), 0 delegated.")
+  const otherNonce = row("Run tests", "omni positive control [ffffffffffffffffffffffffffffffff]: pass (suite: ...)")
+  const frame = row("Run tests", " 70 |   if (problem) throw new Error(`${tag}: FAIL (${reason}). ${problem}`)")
+  expect(controlVerdict(job, [header, nonceRow, fake, otherNonce, frame, verdict].join("\n")))
+    .toBe("omni positive control: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.")
+  expect(controlVerdict(job, [nonceRow, thrown].join("\r\n")))
+    .toBe("omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.")
+  // Interleaved output on the verdict's line still yields the verdict.
+  const interleaved = row("Run tests", `(pass) a [1ms]omni positive control [${nonce}]: not applicable (focused: no declaring test ran); nothing.`)
+  expect(controlVerdict(job, [nonceRow, interleaved].join("\n"))).toBe("omni positive control: not applicable (focused: no declaring test ran); nothing.")
+  // Step attribution can read UNKNOWN STEP; the nonce still counts unless it was printed by the tests.
+  expect(controlVerdict(job, [row("UNKNOWN STEP", `omni control nonce: ${nonce}`), verdict].join("\n"))).toContain("pass")
+  expect(() => controlVerdict(job, [nonceRow, fake].join("\n"))).toThrow("expected one omni positive control verdict for this run's nonce, found 0")
+  expect(() => controlVerdict(job, [nonceRow, verdict, verdict].join("\n"))).toThrow("found 2")
+  expect(() => controlVerdict(job, [verdict].join("\n"))).toThrow("expected one omni control nonce, found 0")
+  expect(() => controlVerdict(job, [row("Run tests", `omni control nonce: ${nonce}`), verdict].join("\n"))).toThrow("found 0")
+  expect(() => controlVerdict(job, [nonceRow, nonceRow, verdict].join("\n"))).toThrow("expected one omni control nonce, found 2")
 })

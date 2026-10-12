@@ -137,7 +137,7 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   // Like the real omni CLI preflight, the guest binary exits early unless the pair sits next to it.
   const input = await fixture(desktopCliTargets("win32", "x64"), (target) =>
     target.startsWith("linux-")
-      ? `#!/bin/bash\n[[ -f "\${0%/*}/hugr_omni.node" && -x "\${0%/*}/hugr-omni-supervisor" ]] || exit 9\nprintf 'orchestra v1.18.27\\n'\n`
+      ? `#!/bin/bash\n[[ -f "\${0%/*}/hugr_omni.node" && -x "\${0%/*}/hugr-omni-supervisor" ]] || exit 9\nprintf '1.18.27\\n'\n`
       : `owned ${target}`,
   )
   await stageCliArtifacts(input)

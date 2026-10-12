@@ -46,6 +46,7 @@ async function probe(
       abort.signal.throwIfAborted()
       return fetcher(new URL(path, server.url), { headers: headers(server), signal: abort.signal })
     }).then(async (response) => {
+      if (response.status === 503) throw new ServerProtocolUnresolvedError()
       if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return
       const value: unknown = await response.json()
       if (!value || typeof value !== "object") return
@@ -56,6 +57,24 @@ async function probe(
     clearTimeout(timer)
     signal.removeEventListener("abort", onAbort)
     abort.signal.removeEventListener("abort", rejectAbort)
+  })
+}
+
+// Retry an unanswered or not-yet-ready endpoint before trying the other API generation. Exhaustion stays unknown;
+// only a ready health response may become the connection's cached protocol.
+const probeAttempts = 3
+
+function answer(
+  server: ServerConnection.HttpBase,
+  fetcher: typeof fetch,
+  path: string,
+  signal: AbortSignal,
+  timeoutMs: number,
+  attempt = 1,
+): Promise<object | undefined> {
+  return probe(server, fetcher, path, signal, timeoutMs).catch(() => {
+    signal.throwIfAborted()
+    return attempt < probeAttempts ? answer(server, fetcher, path, signal, timeoutMs, attempt + 1) : undefined
   })
 }
 
@@ -77,13 +96,11 @@ export async function detectServerProtocol(
     retry(async () => {
       abort.signal.throwIfAborted()
       // Cold local servers can take longer than five seconds to initialize their Location services.
-      const legacy = await probe(server, fetcher, "/global/health", abort.signal, options.probeTimeoutMs ?? 20_000)
-        .catch(() => undefined)
+      const legacy = await answer(server, fetcher, "/global/health", abort.signal, options.probeTimeoutMs ?? 20_000)
       abort.signal.throwIfAborted()
       if (legacy && "healthy" in legacy && legacy.healthy === true) return "v1" as const
 
-      const current = await probe(server, fetcher, "/api/health", abort.signal, options.probeTimeoutMs ?? 20_000)
-        .catch(() => undefined)
+      const current = await answer(server, fetcher, "/api/health", abort.signal, options.probeTimeoutMs ?? 20_000)
       abort.signal.throwIfAborted()
       if (current && "pid" in current && typeof current.pid === "number") return "v2" as const
       if (current && "healthy" in current && current.healthy === true) return "v1" as const

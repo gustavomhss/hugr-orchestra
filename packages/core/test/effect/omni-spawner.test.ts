@@ -10,6 +10,7 @@ import { Omni } from "@orchestra/core/omni"
 import { OmniAdoption } from "@orchestra/core/omni-adoption"
 import { OmniBackground } from "@orchestra/core/omni-background"
 import { AppProcess } from "@orchestra/core/process"
+import { expectSpawn } from "../fixture/omni-expect"
 import { gone, sweep, tree } from "../fixture/process-tree"
 import { BOUND, bytes, exiting, fx, LONG, mode, ready, records, Spawner, swept, until } from "./omni-spawner-fixture"
 
@@ -21,6 +22,7 @@ describe.skipIf(mode === "off")("omni spawner", () => {
     () =>
       Effect.gen(function* () {
         const svc = yield* Spawner
+        expectSpawn(import.meta.path)
         const stopped = tree(1)
         const started = Date.now()
         const code = yield* Effect.scoped(

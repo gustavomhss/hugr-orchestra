@@ -47,7 +47,7 @@ describe("detectServerProtocol", () => {
     try {
       expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe(kind)
       expect(counts.legacy).toBe(3)
-      expect(counts.current).toBe(kind === "v1" ? 2 : 3)
+      expect(counts.current).toBe(kind === "v1" ? 0 : 3)
     } finally {
       listener.stop(true)
     }
@@ -81,7 +81,7 @@ describe("detectServerProtocol", () => {
       await expect(detectServerProtocol({ url: listener.url.origin }, fetch, {
         attempts: 2, retryDelayMs: 10,
       })).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
-      expect(probes).toBe(4)
+      expect(probes).toBe(12)
     } finally {
       listener.stop(true)
     }
@@ -141,4 +141,62 @@ describe("detectServerProtocol", () => {
       listener.stop(true)
     }
   }, 10_000)
+  test("an injected unanswered probe retries the same endpoint before advancing", async () => {
+    const calls: string[] = []
+    const listener = listen((request) => {
+      expect(request.headers.get("X-Protocol-Probe")).toBe("injected")
+      return Response.json({ healthy: true })
+    })
+    const fetcher = Object.assign((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+      calls.push(new URL(input instanceof Request ? input.url : String(input)).pathname)
+      if (calls.length === 1) return Promise.reject(new TypeError("Failed to fetch"))
+      const headers = new Headers(init?.headers)
+      headers.set("X-Protocol-Probe", "injected")
+      return fetch(input, { ...init, headers })
+    }, { preconnect: fetch.preconnect })
+    try {
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetcher, { attempts: 1 })).toBe("v1")
+      expect(calls).toEqual(["/global/health", "/global/health"])
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("exhausted unanswered probes reject as unknown and a later detection recovers", async () => {
+    const calls: string[] = []
+    const state = { ready: false }
+    const listener = listen(() => Response.json({ healthy: true }))
+    const fetcher = Object.assign((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+      calls.push(new URL(input instanceof Request ? input.url : String(input)).pathname)
+      return state.ready ? fetch(input, init) : Promise.reject(new TypeError("Failed to fetch"))
+    }, { preconnect: fetch.preconnect })
+    try {
+      const server = { url: listener.url.origin }
+      await expect(detectServerProtocol(server, fetcher, { attempts: 1 }))
+        .rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(calls).toEqual([...Array(3).fill("/global/health"), ...Array(3).fill("/api/health")])
+      state.ready = true
+      expect(await detectServerProtocol(server, fetcher, { attempts: 1 })).toBe("v1")
+      expect(calls).toHaveLength(7)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("an answered non-V1 legacy probe advances without retry", async () => {
+    const paths: string[] = []
+    const listener = listen((request) => {
+      const path = new URL(request.url).pathname
+      paths.push(path)
+      return path === "/global/health"
+        ? Response.json({}, { status: 404 })
+        : Response.json({ healthy: true, version: "2.0.0", pid: 123 })
+    })
+    try {
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v2")
+      expect(paths).toEqual(["/global/health", "/api/health"])
+    } finally {
+      listener.stop(true)
+    }
+  })
 })

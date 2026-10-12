@@ -40,24 +40,58 @@ export function detect(host: Host = current()): { readonly target: TargetId } | 
 
 /**
  * Why a host on a supported target is still below the toolkit's floor. The OS minimums are Node 22's (glibc 2.28,
- * macOS 11 = Darwin 20, Windows 10), the runtime every hosted engine shares. They are lower bounds, not the
- * whole-closure maximum F5.4 requires: that audit and its owner acceptance (F5-D1) are open, so a higher floor must be
- * measured and added here rather than assumed.
+ * macOS 11 = Darwin 20, Windows 10), the runtime every hosted engine shares. They are lower bounds: the measured
+ * floor of each pinned engine and runtime (F5.4) is recorded on its pack and checked per engine by `below`.
  */
 function floor(host: Host) {
   if (host.arch === "x64" && !host.avx2) return "cpu-baseline"
   const kernel = Number.parseInt(host.kernel, 10)
   if (host.platform === "darwin" && kernel < 20) return "macos-below-11"
   if (host.platform === "win32" && kernel < 10) return "windows-below-10"
-  // Compared as major then minor: "2.9" is older than "2.28". An unreadable glibc applies no floor.
-  const [major = 0, minor = 0] = host.glibc?.split(".").map(Number) ?? [Infinity]
-  if (host.platform === "linux" && (major < 2 || (major === 2 && minor < 28))) return "glibc-below-2.28"
+  // An unreadable glibc applies no floor.
+  if (host.platform === "linux" && host.glibc && compareVersions(host.glibc, "2.28") < 0) return "glibc-below-2.28"
+}
+
+/** The minimum host an engine or runtime needs on one target, measured with `script/toolkit-floors.ts`. */
+export type Floor = {
+  /** Highest glibc symbol version the binaries import, e.g. `2.34`. */
+  readonly glibc?: string
+  /** Lowest macOS the binaries declare, e.g. `12.0`; only the major is compared (macOS 11-15 is Darwin N + 9, macOS 26 is Darwin 25). */
+  readonly macos?: string
+  /** Lowest Windows build the binaries import APIs from, e.g. `10.0.17763`. */
+  readonly windows?: string
+}
+
+/** Numeric dotted-version order: `2.9` is older than `2.28`. */
+export function compareVersions(a: string, b: string) {
+  const left = a.split(".").map(Number)
+  const right = b.split(".").map(Number)
+  const length = Math.max(left.length, right.length)
+  for (let index = 0; index < length; index++) {
+    const difference = (left[index] ?? 0) - (right[index] ?? 0)
+    if (difference) return difference
+  }
+  return 0
+}
+
+/**
+ * Why a host is below a measured floor, as `glibc-below-2.34`, `macos-below-12` or `windows-below-10.0.17763`. A host
+ * on another platform than the target (a cross-target prefetch) and an unreadable glibc apply no floor.
+ */
+export function below(host: Host, target: TargetId, floor: Floor | undefined) {
+  if (!floor || !target.startsWith(host.platform)) return
+  if (host.platform === "linux" && floor.glibc && host.glibc && compareVersions(host.glibc, floor.glibc) < 0)
+    return `glibc-below-${floor.glibc}`
+  const major = Number.parseInt(floor.macos ?? "", 10)
+  if (host.platform === "darwin" && major >= 11 && Number.parseInt(host.kernel, 10) < (major >= 26 ? major - 1 : major + 9)) return `macos-below-${major}`
+  if (host.platform === "win32" && floor.windows && compareVersions(host.kernel, floor.windows) < 0)
+    return `windows-below-${floor.windows}`
 }
 
 // Probing spawns processes (ldd, sysctl), so the host is described once per process.
 let probed: Host | undefined
 
-function current(): Host {
+export function current(): Host {
   if (probed) return probed
   const ldd = process.platform === "linux" ? lddOutput() : ""
   const rosetta =
