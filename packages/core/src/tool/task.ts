@@ -100,8 +100,8 @@ const layer = Layer.effectDiscard(
           })
           // Approval may wait while placement, ancestry, or the hard ceiling changes.
           yield* requireParent(store, location, context, input)
-          yield* revalidateTarget(existing)
           yield* policy.assertChild(context.sessionID, model)
+          yield* revalidateTarget(existing)
           const child = yield* sessions.create({
             id: childID,
             parentID: context.sessionID,

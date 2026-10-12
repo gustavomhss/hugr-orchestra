@@ -391,20 +391,20 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 1188,
-      "reason": "Generated Effect V2 HttpApi client; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "maximumLines": 1218,
+      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy and archive contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
       "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
       "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1694,
-      "reason": "Generated Promise V2 HttpApi client; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "maximumLines": 1729,
+      "reason": "Generated Promise V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy and archive contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
       "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
       "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 6793,
-      "reason": "Generated V2 HttpApi types; regenerated model-default and owned OAuth compatibility routes plus optional agent engine. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "maximumLines": 6822,
+      "reason": "Generated V2 HttpApi types; regenerated model-default, owned OAuth, agent engine, session model-policy and archive contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
       "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
       "authorizedAt": "2026-10-12"
     },

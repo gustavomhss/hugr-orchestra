@@ -2,7 +2,7 @@
   "date": "2026-10-12",
   "branch": "frontend-recovery",
   "baseline": "49ab2cec4f77bdbb33314503da4d85fcd075114e",
-  "delivery": "Uncommitted working-tree changes; production web build completed. Installed desktop app not updated.",
+  "delivery": "Published recovery branch plus composed native V2 policy, Task and archive/restore. Production web build completed; final integration CI and desktop candidate pending.",
   "auditCoverage": [
     "Shell, Home, navigation, settings and startup recovery",
     "Provider discovery, credentials, OAuth, models and execution-host filtering",
@@ -67,12 +67,16 @@
     "CI was not run or published in this task.",
     "No live model turns using owner credentials were performed.",
     "Packaged desktop behavior on Windows/Linux and real screen-reader coverage remain unverified.",
-    "V2 session subagent-model permission updates lack a public endpoint; UI shows unsupported capability instead of silently pretending to save.",
-    "V2 archive lacks a compatible endpoint; unsupported actions are disabled with explanatory copy."
+    "Core V2 model policy and Task enforcement are implemented. CCSDK execution requires its host consumer of the same guard; native Task explicitly rejects unsupported CC targets.",
+    "Older V2 servers lacking the new endpoints receive explanatory unsupported states; current V2 supports model policy, archive, archived listing and restore."
   ],
   "generatedCeilingAuthorization": {
     "ownerAnswer": "Autorizar só gerados",
     "scope": ["packages/client/src/generated-effect/client.ts", "packages/client/src/generated/client.ts", "packages/client/src/generated/types.ts"],
     "handwrittenLimits": "unchanged"
+  },
+  "prBudgetAuthorization": {
+    "ownerAnswer": "Fonte pequena, provas juntas",
+    "scope": "Small contract/journey source PRs may carry the larger directly related tests and fixtures. Independent review and code gates remain required. Bundle heads for one full integration CI run."
   }
 }

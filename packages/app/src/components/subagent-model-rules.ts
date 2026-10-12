@@ -69,6 +69,8 @@ export function createModelPolicyEditor(input: {
       freshness.predecessors = []
       return current.policy
     }
+    if (!freshness.caughtUp && freshness.predecessors.some((item) => sameModelPolicy(item, current.policy)))
+      return acknowledged
     if (current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp > freshness.timestamp)
       return current.policy
     if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
@@ -78,8 +80,6 @@ export function createModelPolicyEditor(input: {
       return acknowledged
     if ((current.revision === undefined || freshness.revision === undefined) &&
       current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp <= freshness.timestamp)
-      return acknowledged
-    if (!freshness.caughtUp && freshness.predecessors.some((item) => sameModelPolicy(item, current.policy)))
       return acknowledged
     return current.policy
   }
