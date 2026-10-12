@@ -10,7 +10,7 @@ export * as ClaudeHostMirror from "./mirror"
 // - retry status, compaction dividers, rate limits, cost, model usage and context window.
 // A steer that Claude Code reads mid-turn starts the next step under the steering user message.
 import { Effect } from "effect"
-import type { ModelUsage, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { ModelUsage, SDKMessage, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Agent } from "@/agent/agent"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
@@ -136,6 +136,8 @@ export interface Mirror {
   settle(callID: string): Effect.Effect<void>
   current(): SessionV1.Assistant | undefined
   tool(callID: string): SessionV1.ToolPart | undefined
+  /** The child assistant observed for this Agent call, retained across step closure. */
+  author(callID: string): MessageID | undefined
   retract(ids: readonly string[]): Effect.Effect<void>
   claim(name: string): SessionV1.ToolPart | undefined
   complete(part: SessionV1.ToolPart): Effect.Effect<void>
@@ -160,6 +162,8 @@ export function create(input: {
   catalog?: ModelsDev.Interface
   /** The child session of an Agent call, once its delegation record exists; undefined keeps only the card. */
   child?: (call: SessionV1.ToolPart) => Effect.Effect<Child | undefined>
+  /** Resolve notifications through the live identity join. Omission fails closed; a supplied call id is not ownership. */
+  notification?: (message: SDKTaskNotificationMessage) => string | undefined
   /** Session-level host facts (cost, usage, rate limit, model) for the session's `claudeCode` metadata. */
   state?: (patch: Input) => Effect.Effect<void>
   record?: (input: { apiID?: string; uuid?: string; messageID: MessageID }) => Effect.Effect<void>
@@ -167,13 +171,14 @@ export function create(input: {
    * Agent calls and task ids by the mirror that owns them, shared by every turn of one live session: a background
    * subagent's frames and notification arrive after the turn that dispatched it has ended (spike S12).
    */
-  known?: { calls: Map<string, Mirror>; tasks: Map<string, string>; usage?: Map<string, ModelUsage> }
+  known?: { calls: Map<string, Mirror>; tasks: Map<string, string>; usage?: Map<string, ModelUsage>; notified?: Set<string> }
 }): Mirror {
   const { sessionID, sessions } = input
   const known: NonNullable<typeof input.known> = input.known ?? { calls: new Map<string, Mirror>(), tasks: new Map<string, string>() }
   const modelUsage = known.usage ??= new Map<string, ModelUsage>()
+  const notified = known.notified ??= new Set<string>()
   const views = [view(input.user)]
-  const children = new Map<string, { mirror: Mirror; sessionID: SessionID } | undefined>()
+  const children = new Map<string, { mirror: Mirror; sessionID: SessionID; author?: MessageID } | undefined>()
   const raw = new Map<string, string>()
   const sends = new Map<string, SessionV1.User>()
   const pending = new Map<MessageID, { user: SessionV1.User; uuid?: string }>()
@@ -247,10 +252,13 @@ export function create(input: {
     }
     if (message.subtype === "task_started" || message.subtype === "task_progress" || message.subtype === "task_updated" ||
       message.subtype === "task_notification") {
-      const callID = "tool_use_id" in message && message.tool_use_id ? message.tool_use_id : known.tasks.get(message.task_id)
+      const callID = message.subtype === "task_notification"
+        ? input.notification?.(message)
+        : "tool_use_id" in message && message.tool_use_id ? message.tool_use_id : known.tasks.get(message.task_id)
       if (message.subtype === "task_started" && callID) known.tasks.set(message.task_id, callID)
       const target = callID ? owner(callID) : undefined
       if (!callID || !target) return
+      if (message.subtype === "task_notification" && notified.has(message.task_id)) return
       const patch = message.subtype === "task_started"
         ? { taskID: message.task_id, status: "running", description: message.description, subagentType: message.subagent_type,
             background: message.is_backgrounded === true, depth: message.spawn_depth }
@@ -261,7 +269,10 @@ export function create(input: {
             : { taskID: message.task_id, status: message.status, summary: message.summary, usage: message.usage }
       yield* target.annotate(callID, patch)
       // A background subagent ends with its notification, not with the Agent call's immediate result.
-      if (message.subtype === "task_notification") yield* target.settle(callID)
+      if (message.subtype === "task_notification") {
+        yield* target.settle(callID)
+        notified.add(message.task_id)
+      }
     }
   })
 
@@ -291,7 +302,15 @@ export function create(input: {
           return yield* other && other !== self ? other.on(message) : Effect.void
         }
         const child = yield* childOf(parent)
-        if (child) yield* child.on({ ...message, parent_tool_use_id: null } as SDKMessage)
+        if (child) {
+          yield* child.on({ ...message, parent_tool_use_id: null } as SDKMessage)
+          const cached = children.get(parent)
+          const author = message.type === "assistant" && message.message.stop_reason &&
+            !["tool_use", "pause_turn"].includes(message.message.stop_reason) &&
+            !message.message.content.some((block) => block.type === "tool_use") ? child.current()?.id : undefined
+          if (cached && (message.type === "assistant" || (message.type === "stream_event" && message.event.type === "message_start")))
+            cached.author = author
+        }
         return
       }
       const step = message.type === "stream_event" && message.event.type === "message_start" ? message.event.message.id
@@ -383,6 +402,10 @@ export function create(input: {
     }),
     current: () => current().current(),
     tool,
+    author: (callID) => {
+      const target = known.calls.get(callID)
+      return children.get(callID)?.author ?? (target && target !== self ? target.author(callID) : undefined)
+    },
     retract: (ids) => Effect.forEach(views, (item) => item.retract(ids), { discard: true }),
     // An Orchestra MCP call by Maestro or by a seat whose child session is mirrored.
     claim: (name) => current().claim(name) ??

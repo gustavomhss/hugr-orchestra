@@ -55,6 +55,8 @@ export type Evidence = {
 /** The mirror's part API for mirrored tool calls (HOST host/mirror.ts): a part by `tool_use_id`, and its write. */
 export type Parts = {
   readonly tool: (callID: string) => SessionV1.ToolPart | undefined
+  /** The exact child author observed under this call's parent_tool_use_id, retained even after its step closes. */
+  readonly author?: (callID: string) => MessageID | undefined
   readonly complete: (part: SessionV1.ToolPart) => Effect.Effect<void>
 }
 
@@ -73,6 +75,7 @@ type Record = {
   readonly logical?: LogicalTask.Binding
   /** The subagent's last text from `SubagentStop`: the author of a background run, recorded only once it is delivered. */
   final?: string
+  author?: MessageID
   launched?: boolean
   notice?: SDKTaskNotificationMessage
   settled?: boolean
@@ -228,7 +231,7 @@ export function make(input: {
   const settle = Effect.fn("ClaudeHostDelegation.settle")(function* (hook: PostToolUseHookInput, refused?: string) {
     return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
       const entry = records.get(hook.tool_use_id)
-      if (entry && refused !== undefined) return yield* reject(entry)
+      if (entry && refused !== undefined) return yield* reject(entry, hook)
       if (!entry?.seat || !entry.child) return undefined
       if (entry.settled) return undefined
       if (entry.launched) {
@@ -265,6 +268,7 @@ export function make(input: {
         return undefined
       }
       const author = yield* authored(entry.child, entry.seat.id, identity.agentID, blocks, text(response, "resolvedModel"))
+      entry.author = author.info.id
       const workResult = entry.seat.workResult !== undefined ? yield* work(entry, entry.child, author) : undefined
       yield* write(entry, reply, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
@@ -272,21 +276,28 @@ export function make(input: {
     }))
   })
 
-  function reject(entry: Record) {
+  function reject(entry: Record, hook: PostToolUseHookInput) {
     return Effect.gen(function* () {
       const reason = `HOLD: ${entry.toolName} output refused by ToolSafety inspection`
+      const identity = join.confirm(entry.toolUseID, [text(record(hook.tool_response), "agentId")])
+      const blocks = content(record(hook.tool_response))
       join.hold(entry.toolUseID, reason)
       entry.final = undefined
       const child = entry.child ?? join.child(entry.toolUseID)
-      // Child frames may have been mirrored before inspection. Clear rejected content while keeping its source
-      // metadata truthful, without turning it into an accepted author or inventing success evidence.
-      if (child) {
+      const authorID = entry.author ?? input.parts?.author?.(entry.toolUseID)
+      // The dispatch/mirror supplies the author identity; text equality only confirms its returned block boundary.
+      // Earlier turns can repeat even the entire final text and must never be selected by a history search.
+      if (child && authorID && "agentID" in identity && blocks.length) {
         const sessions = yield* Session.Service
         const history = yield* sessions.messages({ sessionID: child })
-        yield* Effect.forEach(history.flatMap((message) => message.info.role === "assistant" ? message.parts : []), (part) =>
-          part.type === "text" ? sessions.updatePart({ ...part, text: reason }).pipe(Effect.asVoid) : Effect.void)
+        const author = history.find((message) => message.info.id === authorID)
+        if (author?.info.role === "assistant" && (!entry.seat || author.info.agent === entry.seat.id) &&
+          isDeepStrictEqual(author.parts.flatMap((part) => part.type === "text" ? [part.text] : []), blocks))
+          yield* Effect.forEach(author.parts, (part) =>
+            part.type === "text" ? sessions.updatePart({ ...part, text: reason }).pipe(Effect.asVoid) : Effect.void)
       }
-      yield* write(entry, reason, { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}), background: entry.background, hold: reason })
+      yield* write(entry, reason, { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}),
+        background: entry.background, hold: reason, output: reason, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined })
       entry.settled = true
       entry.notice = undefined
       return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
@@ -315,7 +326,10 @@ export function make(input: {
       if (join.notification(message) !== entry.toolUseID) return
       const part = yield* find(entry)
       if (!part || part.state.status !== "completed") return yield* refuse(`HOLD: launch part for ${entry.toolUseID} is not retained`)
-      if (message.status === "completed" && entry.final !== undefined) yield* authored(entry.child, entry.seat.id, message.task_id, [entry.final], undefined)
+      if (message.status === "completed" && entry.final !== undefined) {
+        const author = yield* authored(entry.child, entry.seat.id, message.task_id, [entry.final], undefined)
+        entry.author = author.info.id
+      }
       yield* save({ ...part, state: { ...part.state, metadata: { ...part.state.metadata, delivery: {
         source: "claude-code-task-notification", taskID: message.task_id, status: message.status, summary: message.summary,
         outputFile: message.output_file, ...(message.usage ? { usage: message.usage } : {}),

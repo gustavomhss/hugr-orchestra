@@ -211,6 +211,47 @@ describe("dispatch admission races", () => {
 })
 
 describe("background dispatch retention", () => {
+  it.instance("refusal queued behind delivery sanitizes its recorded author and durably replaces the parent with HOLD", () => Effect.gen(function* () {
+    const gate = yield* barrier()
+    const fixture = yield* host((part) => part.state.status === "completed" && part.state.metadata.delivery ? gate.pause : Effect.void)
+    yield* fixture.delegation.dispatch(yield* fixture.call("a", background), fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    const child = fixture.join.child("a")!
+    const prompt = (yield* fixture.sessions.messages({ sessionID: child }))[0].info
+    const benign = "Earlier review café\r\n  exact evidence\n"
+    const earlier = yield* fixture.sessions.updateMessage({ id: MessageID.ascending(), sessionID: child, parentID: prompt.id, role: "assistant",
+      agent: "patty", mode: "patty", modelID: model.modelID, providerID: model.providerID,
+      path: { cwd: fixture.parent.directory, root: fixture.parent.directory }, cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, finish: "stop", time: { created: 1, completed: 2 } })
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "text", text: benign })
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "text", text: benign })
+    const before = (yield* fixture.sessions.messages({ sessionID: child })).find((item) => item.info.id === earlier.id)!
+    const rejected = `${benign}Rejected final sentinel`
+    fixture.delegation.stop("task-a", rejected)
+    const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+    yield* gate.wait
+    const refusal = yield* fixture.delegation.settle({ ...launch("a", "task-a"),
+      tool_response: { status: "completed", agentId: "task-a", content: [{ type: "text", text: rejected }] } }, "refused")
+      .pipe(Effect.forkChild({ startImmediately: true }))
+    yield* gate.open
+    yield* Fiber.join(delivery)
+    expect(yield* Fiber.join(refusal)).toContain("HOLD")
+    const part = yield* fixture.part("a")
+    if (part?.state.status !== "completed") throw new Error("Expected retained HOLD")
+    expect(part.state.output).toBe("HOLD: Agent output refused by ToolSafety inspection")
+    expect(part.state.metadata.hold).toBe(part.state.output)
+    expect(part.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(part.state.metadata.delivery).toBeUndefined()
+    expect(part.state.metadata.workResult).toBeUndefined()
+    const history = yield* fixture.sessions.messages({ sessionID: child })
+    expect(history.find((item) => item.info.id === earlier.id)).toEqual(before)
+    expect(history.filter((item) => item.info.role === "assistant")).toHaveLength(2)
+    expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([part.state.output])
+    yield* fixture.delegation.notify(notice("task-a", "a"))
+    expect(yield* fixture.part("a")).toEqual(part)
+  }))
+
   it.instance("a crossed pair cannot settle B or swallow A; task-only notices deliver once", () => Effect.gen(function* () {
     const fixture = yield* host()
     for (const id of ["a", "b"]) {

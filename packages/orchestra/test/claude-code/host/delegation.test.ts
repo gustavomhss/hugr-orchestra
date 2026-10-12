@@ -72,6 +72,7 @@ const host = Effect.fn("ClaudeHostDelegationTest.host")(function* () {
     agent: "maestro", mode: "maestro", modelID: ref.modelID, providerID: ref.providerID, path: { cwd: parent.directory, root: parent.directory },
     cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() } } satisfies SessionV1.Assistant)
   const mirrored = new Map<string, SessionV1.ToolPart>()
+  const authors = new Map<string, MessageID>()
   const actors: ClaudeHostGate.Actor[] = []
   const join = ClaudeHostJoin.make()
   const abort = new AbortController()
@@ -91,6 +92,7 @@ const host = Effect.fn("ClaudeHostDelegationTest.host")(function* () {
     run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Effect.runPromiseWith(context)(effect as unknown as Effect.Effect<A, unknown>),
     parts: {
       tool: (callID) => mirrored.get(callID),
+      author: (callID) => authors.get(callID),
       complete: (part) => sessions.updatePart(part).pipe(Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid),
     },
   })
@@ -112,7 +114,7 @@ const host = Effect.fn("ClaudeHostDelegationTest.host")(function* () {
   const finish = () => sessions.updateMessage({ ...message, finish: "tool-calls", time: { ...message.time, completed: Date.now() } })
   const part = (toolUseID: string) => sessions.messages({ sessionID: parent.id }).pipe(Effect.map((history) => history.flatMap((item) => item.parts)
     .find((item): item is SessionV1.ToolPart => item.type === "tool" && item.callID === toolUseID)))
-  return { parent, message, hooks, join, actors, call, grant, finish, part, sessions }
+  return { parent, message, hooks, join, actors, call, grant, finish, part, sessions, authors }
 })
 
 const agentInput = (grantID: string | undefined, extra: Record<string, unknown> = {}) => ({
@@ -212,7 +214,7 @@ describe("Claude Code Agent dispatch records", () => {
     if (Exit.isFailure(exit)) expect((Cause.squash(exit.cause) as UpstreamProvenance.Denied).code).toBe("UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
   }))
 
-  it.instance("ToolSafety-refused Agent output replaces mirrored parent and child text with a named HOLD", () => Effect.gen(function* () {
+  it.instance("ToolSafety refusal sanitizes only the joined final author and preserves repeated benign history", () => Effect.gen(function* () {
     const fixture = yield* host()
     const input = agentInput(yield* fixture.grant(["docs/proposal"]))
     const mirrored = yield* fixture.call("toolu_rejected", input)
@@ -225,11 +227,23 @@ describe("Claude Code Agent dispatch records", () => {
     yield* fixture.sessions.updatePart({ ...mirrored, state: { status: "completed", input, output: rejected, title: "native Agent",
       metadata: {}, time: { start: Date.now(), end: Date.now() } } })
     const prompt = (yield* fixture.sessions.messages({ sessionID: child })).find((item) => item.info.role === "user")!
+    const benign = "Earlier evidence: café\r\n  exact spacing\n"
+    const earlier = yield* fixture.sessions.updateMessage({ ...fixture.message, id: MessageID.ascending(), sessionID: child,
+      parentID: prompt.info.id, agent: "archie", mode: "archie", finish: "stop", time: { created: Date.now(), completed: Date.now() } })
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "text", text: benign })
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "text", text: benign })
+    const evidence = yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "tool",
+      callID: "earlier-read", tool: "Read", state: { status: "completed", input: { file_path: "evidence.md" }, output: benign,
+        title: "evidence", metadata: { providerExecuted: true }, time: { start: 1, end: 2 } } })
+    const retained = (yield* fixture.sessions.messages({ sessionID: child })).find((item) => item.info.id === earlier.id)!
     const author = yield* fixture.sessions.updateMessage({ ...fixture.message, id: MessageID.ascending(), sessionID: child,
       parentID: prompt.info.id, agent: "archie", mode: "archie", finish: "stop", time: { created: Date.now(), completed: Date.now() } })
     yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: author.id, type: "text", text: rejected,
       metadata: { source: "claude-code-stream", agentID: "task-rejected" } })
-    const result = yield* Effect.promise(() => fire(fixture.hooks, post("toolu_rejected", output("task-rejected", rejected))))
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: author.id, type: "text", text: benign })
+    fixture.authors.set("toolu_rejected", author.id)
+    const response = { ...output("task-rejected", rejected), content: [{ type: "text", text: rejected }, { type: "text", text: benign }] }
+    const result = yield* Effect.promise(() => fire(fixture.hooks, post("toolu_rejected", response)))
     expect(JSON.stringify(result)).toContain("HOLD")
     const recorded = yield* fixture.part("toolu_rejected")
     if (recorded?.state.status !== "completed") throw new Error("expected a sanitized completed Agent part")
@@ -239,6 +253,9 @@ describe("Claude Code Agent dispatch records", () => {
     expect(recorded.state.metadata.workResult).toBeUndefined()
     expect(recorded.metadata).toMatchObject({ providerExecuted: true, claudeCodeTool: "Agent", sessionId: child })
     const history = yield* fixture.sessions.messages({ sessionID: child })
+    expect(history.find((item) => item.info.id === earlier.id)).toEqual(retained)
+    expect(history.flatMap((item) => item.parts).find((part) => part.id === evidence.id)).toEqual(evidence)
+    expect(history.find((item) => item.info.id === author.id)?.parts.every((part) => part.type !== "text" || part.text === recorded.state.output)).toBe(true)
     expect(JSON.stringify([recorded, history])).not.toContain(rejected)
     const text = history.flatMap((item) => item.parts).find((part) => part.type === "text" && part.messageID === author.id)
     expect(text?.type === "text" && text.text).toBe(recorded.state.output)
@@ -252,6 +269,27 @@ describe("Claude Code Agent dispatch records", () => {
       authorMessageID: SessionMessage.ID.make(author.id), logicalTaskID: logical!.taskId, dispatchKind: "claude-code-agent" }))
     expect(Exit.isFailure(denied)).toBe(true)
     if (Exit.isFailure(denied)) expect((Cause.squash(denied.cause) as UpstreamProvenance.Denied).code).toBe("UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
+  }))
+
+  it.instance("refusal without a mirrored final author never selects earlier evidence by identical bytes", () => Effect.gen(function* () {
+    const fixture = yield* host()
+    const input = agentInput(yield* fixture.grant(["docs/proposal"]))
+    yield* fixture.call("no-final", input)
+    yield* Effect.promise(() => fire(fixture.hooks, pre("no-final", input)))
+    fixture.join.taskStarted({ toolUseID: "no-final", taskID: "task-no-final" })
+    const child = fixture.join.child("no-final")!
+    const prompt = (yield* fixture.sessions.messages({ sessionID: child }))[0].info
+    const earlier = yield* fixture.sessions.updateMessage({ ...fixture.message, id: MessageID.ascending(), sessionID: child,
+      parentID: prompt.id, agent: "archie", mode: "archie", finish: "tool-calls", time: { created: 1, completed: 2 } })
+    const bytes = "Earlier evidence café\r\n  repeated exact bytes\n"
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: earlier.id, type: "text", text: bytes })
+    const before = yield* fixture.sessions.messages({ sessionID: child })
+    // ToolSafety may reject non-text response fields even when returned text repeats benign historical evidence.
+    yield* Effect.promise(() => fire(fixture.hooks, post("no-final", { ...output("task-no-final", bytes),
+      prompt: "sk-proj-" + "fixturecredential".repeat(3) })))
+    expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(before)
+    const part = yield* fixture.part("no-final")
+    expect(part?.state.status === "completed" && part.state.metadata.hold).toBe("HOLD: Agent output refused by ToolSafety inspection")
   }))
 
   it.instance("a run Claude Code never reported a task_started for HOLDs, and its unjoined calls are denied", () => Effect.gen(function* () {

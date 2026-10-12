@@ -6,6 +6,8 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { ClaudeHostMirror } from "@/claude-code/host/mirror"
+import { ClaudeHostJoin } from "@/claude-code/host/join"
+import { ClaudeHostDelegation } from "@/claude-code/host/delegation"
 import { Agent } from "@/agent/agent"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
@@ -60,8 +62,10 @@ const setup = () => Effect.gen(function* () {
   const childUser = yield* sessions.updateMessage(makeUser(child.id, "archie"))
   const verifierUser = yield* sessions.updateMessage(makeUser(verifier.id, "lucy"))
   const known = { calls: new Map<string, ClaudeHostMirror.Mirror>(), tasks: new Map<string, string>() }
+  const join = ClaudeHostJoin.make()
   const make = (user: SessionV1.User) => ClaudeHostMirror.create({ sessionID: chat.id, user, agent,
     path: { cwd: instance.directory, root: instance.directory }, sessions, snapshot, todo, status, provider, catalog, known,
+    notification: join.notification,
     state: (patch) => Effect.gen(function* () {
       const latest = yield* sessions.get(chat.id).pipe(Effect.orDie)
       yield* sessions.setMetadata({ sessionID: chat.id, metadata: { ...latest.metadata,
@@ -75,12 +79,16 @@ const setup = () => Effect.gen(function* () {
     }),
   })
   const mirror = make(user)
-  const feed = (frames: SDKMessage[], view = mirror) => Effect.forEach(frames, (message) => view.on(message), { discard: true })
+  const feed = (frames: SDKMessage[], view = mirror) => Effect.forEach(frames, (message) => {
+    if (message.type === "system" && message.subtype === "task_started")
+      join.taskStarted({ toolUseID: message.tool_use_id, taskID: message.task_id })
+    return view.on(message)
+  }, { discard: true })
   const read = (sessionID = chat.id) => sessions.messages({ sessionID }).pipe(Effect.orDie)
   const tools = (sessionID = chat.id) => read(sessionID).pipe(Effect.map((messages) => messages.flatMap((item) => item.parts)
     .filter((part): part is SessionV1.ToolPart => part.type === "tool")))
   const steer = () => sessions.updateMessage(makeUser(chat.id, "maestro"))
-  return { mirror, make, feed, tools, read, sessions, todo, status, provider, user, steer,
+  return { mirror, make, feed, tools, read, sessions, todo, status, provider, user, steer, join,
     sessionID: chat.id, childID: child.id, verifierID: verifier.id }
 })
 
@@ -364,6 +372,88 @@ it.instance("background child completions route through an earlier mirror after 
   const reply = (yield* ctx.read(ctx.childID)).flatMap((item) => item.info.role === "assistant" ? [item.info] : []).at(-1)
   expect(reply?.time.completed).toBeDefined()
   expect((yield* ctx.tools())[0].metadata).toMatchObject({ claudeCodeTask: { taskID: "task-bg", status: "completed", summary: "BG-RESULT" } })
+}))
+
+it.instance("joined notifications preserve sibling bytes and finish only the correct child once across turns", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([assistant("dispatch", ["a", "b"].map((id) => ({ type: "tool_use", id, name: "Agent", input: { run_in_background: true } })))])
+  const calls = yield* ctx.tools()
+  for (const [index, call] of calls.entries()) {
+    yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: index === 0 ? ctx.childID : ctx.verifierID } })
+    yield* ctx.feed([{ ...base, type: "system", subtype: "task_started", task_id: `task-${call.callID}`, tool_use_id: call.callID,
+      description: "background", task_type: "local_agent" }, result(call.callID, "launched", { status: "async_launched" })])
+  }
+  yield* ctx.mirror.finish(0)
+  const later = ctx.make(yield* ctx.steer())
+  yield* ctx.feed([assistant("a-final", [{ type: "text", text: "A\r\n exact", citations: null }], "a"),
+    assistant("b-final", [{ type: "text", text: "B\r\n exact", citations: null }], "b")], later)
+  const beforeA = yield* ctx.read(ctx.childID)
+  const beforeB = yield* ctx.read(ctx.verifierID)
+  const beforeCards = yield* ctx.tools()
+  const notice = { ...base, type: "system", subtype: "task_notification", task_id: "task-a", status: "completed",
+    output_file: "/tmp/o", summary: "A completed" } as const
+  yield* ctx.feed([{ ...notice, tool_use_id: "b" }], later)
+  expect(yield* ctx.read(ctx.childID)).toEqual(beforeA)
+  expect(yield* ctx.read(ctx.verifierID)).toEqual(beforeB)
+  expect(yield* ctx.tools()).toEqual(beforeCards)
+  yield* ctx.feed([notice], later)
+  const accepted = yield* ctx.read(ctx.childID)
+  const acceptedCards = yield* ctx.tools()
+  expect(accepted.flatMap((item) => item.parts).filter((part) => part.type === "step-finish")).toHaveLength(1)
+  expect(acceptedCards[0].metadata?.claudeCodeTask).toMatchObject({ taskID: "task-a", summary: "A completed", status: "completed" })
+  expect(yield* ctx.read(ctx.verifierID)).toEqual(beforeB)
+  yield* ctx.feed([{ ...notice, tool_use_id: "a", summary: "duplicate" }], later)
+  expect(yield* ctx.read(ctx.childID)).toEqual(accepted)
+  expect(yield* ctx.tools()).toEqual(acceptedCards)
+  ctx.join.hold("b", "HOLD: conflicting identity")
+  yield* ctx.feed([{ ...notice, task_id: "task-b", tool_use_id: "b" }], later)
+  expect(yield* ctx.read(ctx.verifierID)).toEqual(beforeB)
+  expect(yield* ctx.tools()).toEqual(acceptedCards)
+}))
+
+it.instance("actual mirrored rejection preserves earlier repeated text and removes accepted parent attribution", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  const agent = yield* ctx.sessions.get(ctx.sessionID)
+  const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: "maestro", join: ctx.join,
+    path: { cwd: agent.directory, root: agent.directory }, parts: { tool: ctx.mirror.tool, author: ctx.mirror.author, complete: ctx.mirror.complete } })
+  const args = { subagent_type: "general-purpose", description: "child", run_in_background: false }
+  yield* ctx.feed([assistant("dispatch", [{ type: "tool_use", id: "rejected", name: "Agent", input: args }])])
+  yield* delegation.dispatch({ hook_event_name: "PreToolUse", session_id: "sdk-mirror", transcript_path: "/tmp/unused",
+    cwd: agent.directory, tool_use_id: "rejected", tool_name: "Agent", tool_input: args }, { sessionID: ctx.sessionID, seat: "maestro" })
+  ctx.join.dispatched("rejected", { child: ctx.childID })
+  const [call] = yield* ctx.tools()
+  yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: ctx.childID } })
+  yield* ctx.feed([{ ...base, type: "system", subtype: "task_started", tool_use_id: "rejected", task_id: "task-rejected",
+    description: "child", task_type: "local_agent" }])
+  const benign = "Evidence café\r\n  exact\n"
+  yield* ctx.feed([assistant("earlier", [{ type: "text", text: benign, citations: null }, { type: "text", text: benign, citations: null }], "rejected")])
+  const earlierID = (yield* ctx.read(ctx.childID)).at(-1)!.info.id
+  const rejected = "Rejected final sentinel"
+  yield* ctx.feed([assistant("final", [{ type: "text", text: benign, citations: null }, { type: "text", text: rejected, citations: null }], "rejected"),
+    result("rejected", rejected, { status: "completed", agentId: "task-rejected" })])
+  const earlier = (yield* ctx.read(ctx.childID)).find((item) => item.info.id === earlierID)!
+  const [completed] = yield* ctx.tools()
+  if (completed.state.status !== "completed") throw new Error("Expected completed mirrored result")
+  yield* ctx.mirror.complete({ ...completed, state: { ...completed.state,
+    metadata: { ...completed.state.metadata, claudeCodeDispatch: { agentID: "task-rejected" }, workResult: { outcome: "done" }, delivery: { taskID: "task-rejected" } } } })
+  yield* delegation.settle({ hook_event_name: "PostToolUse", session_id: "sdk-mirror", transcript_path: "/tmp/unused", cwd: agent.directory,
+    tool_use_id: "rejected", tool_name: "Agent", tool_input: args,
+    tool_response: { status: "completed", agentId: "task-rejected", content: [{ type: "text", text: benign }, { type: "text", text: rejected }] } }, "refused")
+  const history = yield* ctx.read(ctx.childID)
+  expect(history.find((item) => item.info.id === earlier.info.id)).toEqual(earlier)
+  expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([
+    "HOLD: Agent output refused by ToolSafety inspection", "HOLD: Agent output refused by ToolSafety inspection",
+  ])
+  const [held] = yield* ctx.tools()
+  if (held.state.status !== "completed") throw new Error("Expected persisted HOLD")
+  expect(held.state.output).toBe("HOLD: Agent output refused by ToolSafety inspection")
+  expect(held.state.metadata.output).toBe(held.state.output)
+  expect(JSON.stringify(held)).not.toContain(rejected)
+  expect(held.state.metadata.claudeCodeDispatch).toBeUndefined()
+  expect(held.state.metadata.workResult).toBeUndefined()
+  expect(held.state.metadata.delivery).toBeUndefined()
+  expect(held.metadata).toMatchObject({ providerExecuted: true, claudeCodeTool: "Agent", sessionId: ctx.childID })
+  expect(held.state.metadata.claudeCodeAgent).toMatchObject({ agentId: "task-rejected", status: "completed" })
 }))
 
 test("tool names and inputs map to the cards Orchestra renders", () => {
