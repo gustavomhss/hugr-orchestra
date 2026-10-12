@@ -84,6 +84,14 @@ type Record = {
   delivered?: boolean
   /** Admitted inspection refusal; survives cancellation of the fiber waiting to retain its HOLD. */
   rejection?: PostToolUseHookInput
+  rejectionHold?: string
+  /** Exact cleanup target captured while the native identity join still accepts this author. */
+  rejectionCleanup?: {
+    readonly agentID: string
+    readonly sessionID: SessionID
+    readonly messageID: MessageID
+    parts?: readonly SessionV1.TextPart[]
+  }
 }
 
 type Admission = {
@@ -303,7 +311,7 @@ export function make(input: {
   const fail = Effect.fn("ClaudeHostDelegation.fail")(function* (hook: PostToolUseFailureHookInput) {
     return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
       const entry = records.get(hook.tool_use_id)
-      if (!entry || entry.settled) return undefined
+      if (!entry || entry.settled || entry.rejection) return undefined
       const error = yield* ClaudeHostResearchResult.diagnostic(hook.error)
       const researchControl = entry.seat?.id === "jimmy" && entry.child
         ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
@@ -331,34 +339,68 @@ export function make(input: {
     ended: ReturnType<typeof ClaudeHostResearchResult.terminal>) {
     return Effect.gen(function* () {
       const reason = `HOLD: ${entry.toolName} output refused by ToolSafety inspection`
-      const identity = join.confirm(entry.toolUseID, [text(record(hook.tool_response), "agentId")])
       const blocks = content(record(hook.tool_response))
-      join.hold(entry.toolUseID, reason)
       // A failed HOLD save stays retryable even when the preceding delivery was already retained.
       entry.settled = false
       entry.delivered = false
       entry.final = undefined
       const child = entry.child ?? join.child(entry.toolUseID)
       const authorID = entry.author ?? input.parts?.author?.(entry.toolUseID)
-      // The dispatch/mirror supplies the author identity; text equality only confirms its returned block boundary.
-      // Earlier turns can repeat even the entire final text and must never be selected by a history search.
-      if (child && authorID && "agentID" in identity && blocks.length) {
-        const sessions = yield* Session.Service
-        const history = yield* sessions.messages({ sessionID: child })
-        const author = history.find((message) => message.info.id === authorID)
-        if (author?.info.role === "assistant" && (!entry.seat || author.info.agent === entry.seat.id) &&
-          isDeepStrictEqual(author.parts.flatMap((part) => part.type === "text" ? [part.text] : []), blocks))
-          yield* Effect.forEach(author.parts, (part) =>
-            part.type === "text" ? sessions.updatePart({ ...part, text: reason }).pipe(Effect.asVoid) : Effect.void)
+      if (!entry.rejectionHold && !entry.rejectionCleanup) {
+        const identity = join.confirm(entry.toolUseID, [text(record(hook.tool_response), "agentId")])
+        if (child && authorID && "agentID" in identity && blocks.length)
+          entry.rejectionCleanup = { agentID: identity.agentID, sessionID: child, messageID: authorID }
       }
+      const cleanup = entry.rejectionCleanup
+      // Capture the exact part vector before publishing our HOLD. Cancellation during validation retains the target.
+      if (cleanup && !cleanup.parts) {
+        const sessions = yield* Session.Service
+        const author = (yield* sessions.messages({ sessionID: cleanup.sessionID })).find((message) => message.info.id === cleanup.messageID)
+        if (author?.info.role !== "assistant" || author.info.sessionID !== cleanup.sessionID ||
+          entry.seat && author.info.agent !== entry.seat.id ||
+          !isDeepStrictEqual(author.parts.flatMap((part) => part.type === "text" ? [part.text] : []), blocks))
+          return yield* refuse(`HOLD: rejected author ownership changed for ${entry.toolUseID}`)
+        const parts = author.parts.filter((part): part is SessionV1.TextPart => part.type === "text")
+        if (parts.some((part) => part.sessionID !== cleanup.sessionID || part.messageID !== cleanup.messageID))
+          return yield* refuse(`HOLD: rejected part ownership changed for ${entry.toolUseID}`)
+        cleanup.parts = parts
+      }
+      if (!cleanupJoined(entry, reason))
+        return yield* refuse(`HOLD: conflicting native identity prevents rejected author cleanup for ${entry.toolUseID}`)
+      join.hold(entry.toolUseID, reason)
+      entry.rejectionHold = reason
+      if (cleanup?.parts) {
+        const sessions = yield* Session.Service
+        yield* Effect.forEach(cleanup.parts, (original) => Effect.gen(function* () {
+          const part = yield* sessions.getPart({ sessionID: cleanup.sessionID, messageID: cleanup.messageID, partID: original.id })
+          if (part?.type !== "text" || part.id !== original.id || part.sessionID !== cleanup.sessionID || part.messageID !== cleanup.messageID ||
+            part.text !== original.text && part.text !== reason)
+            return yield* refuse(`HOLD: rejected part ownership changed for ${entry.toolUseID}`)
+          if (!cleanupJoined(entry, reason))
+            return yield* refuse(`HOLD: conflicting native identity prevents rejected author cleanup for ${entry.toolUseID}`)
+          // A partially completed cleanup is idempotent; never select an older turn by its bytes.
+          if (part.text !== reason) yield* sessions.updatePart({ ...part, text: reason })
+        }))
+      }
+      if (!cleanupJoined(entry, reason))
+        return yield* refuse(`HOLD: conflicting native identity prevents rejected author cleanup for ${entry.toolUseID}`)
       yield* write(entry, reason, { parentSessionId: entry.dispatcher.sessionID, ...(child ? { sessionId: child } : {}),
         background: entry.background, hold: reason, output: reason, claudeCodeDispatch: undefined, workResult: undefined, delivery: undefined,
         ...(researchControl ? { researchControl } : {}), terminal: ended ?? { reason: "failed", hostDetail: reason } })
       entry.settled = true
       entry.rejection = undefined
+      entry.rejectionCleanup = undefined
+      entry.rejectionHold = undefined
       entry.notice = undefined
       return `Orchestra recorded no attributed result for this ${entry.toolName} call (${reason}). Do not treat it as accepted work.`
     })
+  }
+
+  function cleanupJoined(entry: Record, reason: string) {
+    const joined = join.get(entry.toolUseID)
+    return (joined?.hold === undefined || entry.rejectionHold === reason && joined.hold === reason) &&
+      (!entry.rejectionCleanup || joined?.taskID === entry.rejectionCleanup.agentID &&
+        join.toolUse(entry.rejectionCleanup.agentID) === entry.toolUseID)
   }
 
   /** `task_notification` from the stream (through the join): the only source of a background delivery record. */
