@@ -123,3 +123,16 @@ bun run test:ci desktop src/main/jimmy-desktop-proof.test.ts --os linux --timeou
 ```
 
 The test rejects local execution and unsupported platforms explicitly. Production source and the live owner application were not changed or restarted.
+
+## Repair after native omni became the default
+
+The runs above predate `d4a32678c6`, which turned omni on by default. On `dev` after #334 the proof then failed: the Electron fixture's allow-listed environment dropped CI's `HUGR_OMNI_ADDON`/`HUGR_OMNI_SUPERVISOR`, so `spawnLocalServer`'s `sidecarEnv` could not locate the addon in the relocated install. A run of the proof file alone also failed the omni positive control (`script/test-omni-control.ts`) because the host made no omni spawn. The proof now forwards those paths and the run's `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` mode to the fixture, and its host build and typecheck children go through `DesktopOmni.execFile` whenever omni is on.
+
+`script/test-ci-desktop.ts` (`desktopProof`) opts in on the proof's platforms (Linux, macOS arm64) for every selection that contains it. On Windows and Intel macOS a directory or whole-package run leaves it skipped. A request that names it alone still opts in there and fails with `Unsupported desktop proof platform`.
+
+| Lane | Run | Result |
+| --- | --- | --- |
+| Whole-package `desktop --os both` | [38199568299](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38199568299) | Linux ran and passed the proof (artifact `jimmy-desktop-ubuntu-latest-1`); Windows skipped it; both green |
+| Proof alone, `ubuntu-latest` | [38199582846](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38199582846) | Proof, typecheck and evidence gate passed |
+| Proof alone, `macos-14` arm64 | [38199598119](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38199598119) | Proof, typecheck and evidence gate passed |
+| Proof alone, `windows-latest` | [38199613800](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38199613800) | Fails as designed: platform refusal and missing completion record |
