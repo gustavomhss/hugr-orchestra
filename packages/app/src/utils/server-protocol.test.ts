@@ -1,67 +1,139 @@
 import { describe, expect, test } from "bun:test"
-import { detectServerProtocol } from "./server-protocol"
+import { detectServerProtocol, ServerProtocolUnresolvedError } from "./server-protocol"
 
-const server = { url: "http://localhost:4096" }
-const json = (value: unknown, status = 200) =>
-  new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } })
-const mockFetch = (run: (input: string | URL | Request) => Promise<Response>) =>
-  Object.assign(run, { preconnect: globalThis.fetch.preconnect })
+const listen = (fetch: (request: Request) => Response | Promise<Response>) =>
+  Bun.serve({ port: 0, hostname: "127.0.0.1", fetch })
 
 describe("detectServerProtocol", () => {
   test("prefers the legacy health endpoint when both API generations exist", async () => {
-    const fetcher = mockFetch((input) => {
-      const path = new URL(input instanceof Request ? input.url : input).pathname
-      if (path === "/global/health") return Promise.resolve(json({ healthy: true, version: "1.18.4" }))
-      return Promise.resolve(json({ healthy: true, version: "2.0.0", pid: 123 }))
-    })
-
-    expect(await detectServerProtocol(server, fetcher)).toBe("v1")
-  })
-
-  test("recognizes V2 health by its process identifier", async () => {
-    const fetcher = mockFetch((input) => {
-      const path = new URL(input instanceof Request ? input.url : input).pathname
-      if (path === "/global/health") return Promise.resolve(json({}, 404))
-      return Promise.resolve(json({ healthy: true, version: "2.0.0", pid: 123 }))
-    })
-
-    expect(await detectServerProtocol(server, fetcher)).toBe("v2")
-  })
-
-  test("recognizes the transitional V1 API health response", async () => {
-    const fetcher = mockFetch((input) => {
-      const path = new URL(input instanceof Request ? input.url : input).pathname
-      if (path === "/global/health") return Promise.resolve(json({}, 404))
-      return Promise.resolve(json({ healthy: true }))
-    })
-
-    expect(await detectServerProtocol(server, fetcher)).toBe("v1")
-  })
-
-  test("does not invent a protocol when real endpoints are unavailable", async () => {
-    const listener = Bun.serve({
-      port: 0,
-      hostname: "127.0.0.1",
-      fetch: () => Response.json({ error: "unavailable" }, { status: 503 }),
+    const paths: string[] = []
+    const listener = listen((request) => {
+      paths.push(new URL(request.url).pathname)
+      return Response.json({ healthy: true, version: "2.0.0", pid: 123 })
     })
     try {
-      await expect(detectServerProtocol({ url: listener.url.origin }, fetch)).rejects.toThrow(
-        "Unable to detect Orchestra server protocol: neither health endpoint reported ready.",
-      )
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v1")
+      expect(paths).toEqual(["/global/health"])
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test.each([
+    { body: { healthy: true, version: "2.0.0", pid: 123 }, kind: "v2" },
+    { body: { healthy: true }, kind: "v1" },
+  ])("recognizes API health $kind", async ({ body, kind }) => {
+    const listener = listen((request) => new URL(request.url).pathname === "/global/health"
+      ? Response.json({}, { status: 404 }) : Response.json(body))
+    try {
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe(kind)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test.each(["v1", "v2"] as const)("retries real 503 probes until %s is ready", async (kind) => {
+    const counts = { legacy: 0, current: 0 }
+    const listener = listen((request) => {
+      if (new URL(request.url).pathname === "/global/health") {
+        counts.legacy++
+        if (kind === "v2") return Response.json({}, { status: 404 })
+        return counts.legacy < 3 ? Response.json({}, { status: 503 }) : Response.json({ healthy: true })
+      }
+      counts.current++
+      if (kind === "v1") return Response.json({}, { status: 503 })
+      return counts.current < 3 ? Response.json({}, { status: 503 }) : Response.json({ pid: 123 })
+    })
+    try {
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe(kind)
+      expect(counts.legacy).toBe(3)
+      expect(counts.current).toBe(kind === "v1" ? 2 : 3)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("a timed out health probe can recover on the next actual probe", async () => {
+    let probes = 0
+    const listener = listen(async (request) => {
+      if (new URL(request.url).pathname !== "/global/health") return Response.json({}, { status: 404 })
+      probes++
+      if (probes === 1) await Bun.sleep(200)
+      return Response.json({ healthy: true })
+    })
+    try {
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, {
+        probeTimeoutMs: 50, retryDelayMs: 10, timeoutMs: 1_000,
+      })).toBe("v1")
+      expect(probes).toBe(2)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("does not invent a protocol when real endpoints stay unavailable", async () => {
+    let probes = 0
+    const listener = listen(() => {
+      probes++
+      return Response.json({ error: "unavailable" }, { status: 503 })
+    })
+    try {
+      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, {
+        attempts: 2, retryDelayMs: 10,
+      })).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(probes).toBe(4)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("the startup deadline bounds a slow actual health request", async () => {
+    const listener = listen(async () => {
+      await Bun.sleep(500)
+      return Response.json({ healthy: true })
+    })
+    try {
+      const start = Date.now()
+      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, { timeoutMs: 50 }))
+        .rejects.toMatchObject({ name: "ServerProtocolUnresolvedError" })
+      expect(Date.now() - start).toBeLessThan(400)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("connection cancellation stops detection without a second endpoint probe", async () => {
+    const reached = Promise.withResolvers<void>()
+    const paths: string[] = []
+    const listener = listen(async (request) => {
+      paths.push(new URL(request.url).pathname)
+      reached.resolve()
+      await Bun.sleep(500)
+      return Response.json({ healthy: true })
+    })
+    const abort = new AbortController()
+    const reason = new DOMException("Connection disposed", "AbortError")
+    try {
+      const protocol = detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })
+      const rejected = expect(protocol).rejects.toBe(reason)
+      await reached.promise
+      abort.abort(reason)
+      await rejected
+      await Bun.sleep(20)
+      expect(paths).toEqual(["/global/health"])
+      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal }))
+        .rejects.toBe(reason)
+      expect(paths).toHaveLength(1)
     } finally {
       listener.stop(true)
     }
   })
 
   test("a cold legacy health response is not replaced with an invented V2 selection", async () => {
-    const listener = Bun.serve({
-      port: 0,
-      hostname: "127.0.0.1",
-      fetch: async (request) => {
-        if (new URL(request.url).pathname !== "/global/health") return Response.json({}, { status: 404 })
-        await Bun.sleep(5_100)
-        return Response.json({ healthy: true })
-      },
+    const listener = listen(async (request) => {
+      if (new URL(request.url).pathname !== "/global/health") return Response.json({}, { status: 404 })
+      await Bun.sleep(5_100)
+      return Response.json({ healthy: true })
     })
     try {
       expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v1")

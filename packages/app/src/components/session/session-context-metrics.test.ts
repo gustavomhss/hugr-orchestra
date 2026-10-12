@@ -141,11 +141,26 @@ test("native context uses the validated current snapshot and falls back when any
   expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, context } }))
     .toMatchObject({ total: 5000, limit: 200000, usage: 2.5 })
   expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, context } })?.input).toBeUndefined()
-  for (const invalid of [undefined, { ...context, totalTokens: -1 }, { ...context, totalTokens: NaN },
-    { ...context, totalTokens: 200001 }, { ...context, maxTokens: 0 }, { ...context, maxTokens: Infinity },
-    { ...context, percentage: NaN }, { ...context, percentage: 101 }, { ...context, percentage: -1 }]) {
+  for (const invalid of [undefined, { ...context, totalTokens: -1 }, { ...context, totalTokens: NaN }, { ...context, totalTokens: Infinity },
+    { ...context, maxTokens: 0 }, { ...context, maxTokens: -1 }, { ...context, maxTokens: NaN }, { ...context, maxTokens: Infinity },
+    { ...context, percentage: NaN }, { ...context, percentage: Infinity }, { ...context, percentage: -1 }]) {
     expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, context: invalid } }))
       .toMatchObject({ total: 120020, limit: 200000, usage: 60 })
   }
   expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, uuids: {}, context } })?.limit).toBeUndefined()
+})
+
+
+test("native SDK context snapshots preserve overflow and exact fractional percentages", () => {
+  const messages = [assistant("native", { input: 120000, output: 20, reasoning: 0, read: 0, write: 0 }, 0.12, "anthropic", "model")]
+  const host = { uuids: { native: "sdk-native" }, modelUsage: { model: { contextWindow: 200000 } } }
+  for (const context of [
+    { totalTokens: 210000, maxTokens: 200000, percentage: 105 },
+    { totalTokens: 210001, maxTokens: 200000, percentage: 105.0005 },
+    { totalTokens: 0, maxTokens: 200000, percentage: 0 },
+  ]) {
+    expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, context } }))
+      .toMatchObject({ total: context.totalTokens, limit: context.maxTokens, usage: context.percentage })
+    expect(getSessionContext(messages, [], {}, { claudeCode: { ...host, context } })?.input).toBeUndefined()
+  }
 })
