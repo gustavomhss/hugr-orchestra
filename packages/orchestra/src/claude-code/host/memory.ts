@@ -96,6 +96,10 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
       : [...(native?.status === "known" && native.coverage === "observed-tasks"
         ? ["Known native state covers observed task IDs only; remaining task inventory is unproven."] : []),
         ...todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))]],
+    ["Native task records (validated retained receipt; explicit inventory coverage)", native?.status === "known"
+      ? native.snapshot.tasks.filter((task) => task.status !== "completed" && task.status !== "cancelled").map((task) => JSON.stringify({
+        status: native.status, coverage: native.coverage, order: native.order, locator: native.locator, task,
+      })) : []],
     ["Applicable owned continuity memory (historical)", memory],
     ["Atlas resume Admission (historical evidence; not new permission)", admission ? [admission.text, JSON.stringify({
       key: admission.key, residency: admission.residency, verdict: admission.verdict,

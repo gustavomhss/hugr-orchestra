@@ -12,6 +12,7 @@ import { Archive } from "@/continuity/archive"
 import { ContinuityChecklist } from "@/continuity/checklist"
 import { aliases } from "@/continuity/alias"
 import { ClaudeHostMemory } from "@/claude-code/host/memory"
+import { ClaudeHostMirror } from "@/claude-code/host/mirror"
 import { ClaudeHostTodos } from "@/claude-code/host/todos"
 import { completeSnapshot } from "@/continuity/fork"
 import { decode } from "@/continuity/memory"
@@ -224,11 +225,58 @@ CompactionFixture.it.instance("an empty native receipt overrides later ordinary 
     expect(yield* reopened.compact()).toEqual({})
   }))
 
-CompactionFixture.it.instance("compact native task context retains the producer's exact task ID", () =>
+CompactionFixture.it.instance("compact native records retain full task fields across cold updates and withhold historical state across a gap", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
-    yield* f.taskList([{ id: "EXACT-NATIVE-ID", subject: "NATIVE-TODO-KEPT", status: "pending" }])
+    if (!f.assistant) throw new Error("Missing native record producer")
+    const author = f.assistant
+    const task = { id: "EXACT-NATIVE-ID", subject: "NATIVE-TODO-KEPT 🦴\r\nexact trailing blanks  ", status: "pending" }
+    yield* f.taskList([task, { id: "FINISHED-ID", subject: "FINISHED-NATIVE", status: "completed" },
+      { id: "CANCELLED-ID", subject: "CANCELLED-NATIVE", status: "cancelled" }])
     expect(memory(yield* f.compact())).toContain("EXACT-NATIVE-ID")
+    const reopened = yield* CompactionFixture.make({ sessionID: f.chat.id })
+    // Every call invokes the actual stateless producer over durable history, including cold updates and unavailable receipts.
+    const record = Effect.fnUntraced(function* (name: "TaskUpdate" | "TaskGet", args: Record<string, unknown>, result: unknown) {
+      const part = yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: author.id,
+        type: "tool", tool: ClaudeHostMirror.toolName(name), callID: crypto.randomUUID(),
+        metadata: { providerExecuted: true, claudeCodeTool: name }, state: { status: "completed", input: args,
+          output: "native structured result", title: "Tasks", metadata: {}, time: { start: 1, end: 2 } } })
+      const native = yield* ClaudeHostTodos.update({ sessionID: f.chat.id, sessions: f.sessions, name, args, result, part })
+      if (!native || part.state.status !== "completed") throw new Error("Missing native producer receipt")
+      yield* f.sessions.updatePart({ ...part, state: { ...part.state, input: { ...args, todos: native.todos },
+        metadata: { todos: native.todos, claudeCodeTodo: native.receipt } } })
+      yield* f.todos.update({ sessionID: f.chat.id, todos: native.todos })
+    })
+    const activeForm = "Inspecting 🦴\r\nexact trailing blanks  "
+    yield* record("TaskUpdate", { taskId: task.id, status: "in_progress", activeForm },
+      { success: true, taskId: task.id, updatedFields: ["status", "activeForm"] })
+    const before = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const known = ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))
+    if (known?.status !== "known") throw new Error("Missing known native record")
+    const text = memory(yield* reopened.compact())
+    expect(text).toContain(JSON.stringify({ status: "known", coverage: "task-list", order: known.order,
+      locator: known.locator, task: { ...task, status: "in_progress", activeForm } }))
+    expect(text?.split("## Todos\n")[1]?.split("\n\n")[0]).toBe(JSON.stringify({ content: task.subject,
+      status: "in_progress", priority: "medium", activeForm }))
+    expect(text).not.toContain("FINISHED-ID")
+    expect(text).not.toContain("CANCELLED-ID")
+    expect(memory(yield* f.compact())).toBe(text)
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
+    yield* record("TaskGet", { taskId: task.id }, undefined)
+    const gap = ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))
+    expect(gap).toMatchObject({ status: "unavailable", historical: { snapshot: known.snapshot } })
+    const withheld = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const unavailable = memory(yield* reopened.compact())
+    expect(unavailable).toContain("NATIVE_TODO_STRUCTURED_RESULT_MISSING")
+    expect(unavailable).not.toContain("Native task records")
+    expect(unavailable).not.toContain(task.id)
+    expect(unavailable).not.toContain("NATIVE-TODO-KEPT")
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(withheld)
+    yield* record("TaskGet", { taskId: task.id }, { task })
+    const partial = memory(yield* reopened.compact())
+    expect(partial).toContain('"coverage":"observed-tasks"')
+    expect(partial).toContain(JSON.stringify(task))
+    expect(partial).toContain("remaining task inventory is unproven")
   }))
 
 CompactionFixture.it.instance("equal PostCompact summaries remain distinct observations with exact bytes, trigger and native owner", () =>
@@ -292,7 +340,7 @@ CompactionFixture.it.instance("foreign stored memory fails closed rather than ad
     expect(refused).toBeInstanceOf(Archive.ArchiveError)
     expect(refused.reason).toBe("archive-corrupt-memory")
     const result = yield* own.compact()
-    expect(result).toMatchObject({ continue: false, stopReason: expect.stringContaining("ContinuityArchiveError") })
+    expect(result).toMatchObject({ continue: false, stopReason: expect.stringContaining("archive-corrupt-memory") })
     expect(own.ctx.abort.signal.aborted).toBe(true)
     expect(yield* own.fs.readFileString(path.join(own.archiveDirectory, "memory.json"))).toBe(bytes)
   }))
