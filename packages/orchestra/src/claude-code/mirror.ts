@@ -33,7 +33,8 @@ const FINISH: Record<string, string> = {
 }
 
 type Usage = { input_tokens?: number | null; output_tokens?: number | null;
-  cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null }
+  cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null;
+  output_tokens_details?: { thinking_tokens?: number | null } | null }
 
 type Step = {
   info: SessionV1.Assistant
@@ -44,7 +45,6 @@ type Step = {
   /** Text and reasoning parts the complete blocks have not closed yet, in order. */
   open: (SessionV1.TextPart | SessionV1.ReasoningPart)[]
   usage: Usage
-  reasoning: number
   stop?: string
 }
 
@@ -66,7 +66,6 @@ export function create(input: {
   let cost = 0
   let ended = false
   let parentID = input.user.id
-  const finished = new Map<MessageID, { info: SessionV1.Assistant; part: SessionV1.StepFinishPart }>()
 
   const open = (apiID: string) => Effect.gen(function* () {
     if (step?.apiID === apiID) return step
@@ -81,7 +80,7 @@ export function create(input: {
       modelID: input.user.model.modelID, providerID: input.user.model.providerID, time: { created: Date.now() },
     }
     yield* sessions.updateMessage(info)
-    step = { info, apiID, blocks: new Map(), open: [], usage: {}, reasoning: 0 }
+    step = { info, apiID, blocks: new Map(), open: [], usage: {} }
     if (input.record) yield* input.record({ apiID, messageID: info.id })
     if (ended) return yield* Effect.interrupt
     const start = yield* snapshot.track()
@@ -108,7 +107,8 @@ export function create(input: {
     const now = Date.now()
     for (const part of current.open) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
     const usage = current.usage
-    const tokens = { input: usage.input_tokens ?? 0, output: Math.max(0, (usage.output_tokens ?? 0) - current.reasoning), reasoning: current.reasoning,
+    const reasoning = exactReasoning(usage)
+    const tokens = { input: usage.input_tokens ?? 0, output: Math.max(0, (usage.output_tokens ?? 0) - reasoning), reasoning,
       cache: { read: usage.cache_read_input_tokens ?? 0, write: usage.cache_creation_input_tokens ?? 0 } }
     // A failed step still finishes ("error"), so the loop sees the turn answered and ends.
     const finish = error ? "error" : FINISH[current.stop ?? ""] ?? "other"
@@ -125,7 +125,6 @@ export function create(input: {
     current.info = { ...current.info, tokens, finish, error, time: { ...current.info.time, completed: now } }
     yield* sessions.updateMessage(current.info)
     last = current.info
-    finished.set(current.info.id, { info: current.info, part })
   })
 
   const toolResult = (block: { tool_use_id: string; content?: unknown; is_error?: boolean | null }) => Effect.gen(function* () {
@@ -239,36 +238,12 @@ export function create(input: {
       step.info = { ...step.info, parentID: next }
       yield* sessions.updateMessage(step.info)
     }),
-    /** SDK thinking totals include output tokens. Reconcile newest matching steps first, preserving total tokens. */
-    reasoning: (modelID: string, tokens: number, canonicalModel?: string) => Effect.gen(function* () {
-      const candidates = [step, ...[...finished.values()].reverse()].filter((item) =>
-        item && (item.info.modelID === modelID || item.info.modelID === canonicalModel))
-      let remaining = tokens
-      for (const item of candidates) {
-        if (!item || remaining <= 0) continue
-        const available = "usage" in item ? (item.usage.output_tokens ?? 0) - item.reasoning : item.info.tokens.output
-        const reasoning = Math.min(available, remaining)
-        remaining -= reasoning
-        if ("usage" in item) {
-          item.reasoning += reasoning
-          continue
-        }
-        item.info = { ...item.info, tokens: { ...item.info.tokens,
-          output: item.info.tokens.output - reasoning, reasoning: item.info.tokens.reasoning + reasoning } }
-        item.part = { ...item.part, tokens: item.info.tokens }
-        if (last?.id === item.info.id) last = item.info
-        yield* sessions.updateMessage(item.info)
-        yield* sessions.updatePart(item.part)
-      }
-      return remaining
-    }),
     tool: (callID: string) => tools.get(callID),
     retract: (ids: readonly string[]) => Effect.gen(function* () {
       const messages = new Set(ids.flatMap((id) => uuids.get(id) ? [uuids.get(id) as MessageID] : []))
       for (const messageID of messages) {
         if (step?.info.id === messageID) step = undefined
         if (last?.id === messageID) last = undefined
-        finished.delete(messageID)
         for (const [callID, part] of tools) if (part.messageID === messageID) tools.delete(callID)
         yield* sessions.removeMessage({ sessionID, messageID })
       }
@@ -325,7 +300,8 @@ export function create(input: {
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: now } }
       const usage = current?.usage
-      const tokens = { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - (current?.reasoning ?? 0)), reasoning: current?.reasoning ?? 0,
+      const reasoning = exactReasoning(usage)
+      const tokens = { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - reasoning), reasoning,
         cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
       for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
@@ -339,4 +315,10 @@ export function create(input: {
       return last
     }),
   }
+}
+
+// Thinking is a subset of output. Missing or invalid per-message details remain unallocated.
+function exactReasoning(usage: Usage | undefined) {
+  const tokens = usage?.output_tokens_details?.thinking_tokens
+  return typeof tokens === "number" && Number.isFinite(tokens) && tokens >= 0 && tokens <= (usage?.output_tokens ?? 0) ? tokens : 0
 }

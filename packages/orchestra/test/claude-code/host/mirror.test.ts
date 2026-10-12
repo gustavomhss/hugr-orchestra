@@ -293,18 +293,25 @@ it.instance("actual fallback model, thinking tokens and context limits reach the
   const fallback = "claude-sonnet-4-5-20250929"
   const model = { canonicalModel: fallback, inputTokens: 10, outputTokens: 20, thinkingTokens: 7, cacheReadInputTokens: 0,
     cacheCreationInputTokens: 0, webSearchRequests: 0, costUSD: 0.42, contextWindow: 500000, maxOutputTokens: 32000 }
-  yield* ctx.feed([stream(assistant("fallback", [], null, fallback)),
-    assistant("fallback", [{ type: "text", text: "Fallback", citations: null }], null, fallback), finish({ "sdk-fallback-alias": model }, 0.42)])
+  const first = assistant("fallback", [{ type: "text", text: "Fallback", citations: null }], null, fallback)
+  first.message.usage = Object.assign({}, usage, { output_tokens_details: { thinking_tokens: 7 } })
+  yield* ctx.feed([stream(first), first, finish({ "sdk-fallback-alias": model }, 0.42)])
   yield* ctx.mirror.finish(0)
   const reply = (yield* ctx.read()).find((item) => item.info.role === "assistant")
+  expect(ctx.user.model.modelID).toBe(ModelV2.ID.make(requested))
   expect(reply?.info).toMatchObject({ modelID: fallback, tokens: { input: 10, output: 13, reasoning: 7 }, cost: 0.42 })
   expect(reply?.parts.find((part) => part.type === "step-finish")).toMatchObject({ tokens: { output: 13, reasoning: 7 } })
   expect((yield* ctx.provider.list())[ctx.user.model.providerID].models[fallback].limit).toMatchObject({ context: 500000, output: 32000 })
   const next = ctx.make(yield* ctx.steer())
-  yield* ctx.feed([assistant("next", [{ type: "text", text: "Next", citations: null }], null, fallback),
+  const second = assistant("next", [{ type: "text", text: "Next", citations: null }], null, fallback)
+  second.message.usage = Object.assign({}, usage, { output_tokens_details: { thinking_tokens: 3 } })
+  yield* ctx.feed([second,
     finish({ "sdk-fallback-alias": { ...model, thinkingTokens: 10, outputTokens: 40 } }, 0.5)], next)
   yield* next.finish(0.42)
-  expect((yield* ctx.read()).findLast((item) => item.info.role === "assistant")?.info).toMatchObject({ tokens: { output: 17, reasoning: 3 } })
+  expect((yield* ctx.read()).findLast((item) => item.info.role === "assistant")?.info).toMatchObject({ tokens: { output: 17, reasoning: 3 }, cost: 0.5 - 0.42 })
+  expect((yield* ctx.sessions.get(ctx.sessionID)).metadata?.claudeCode).toMatchObject({ cost: 0.5, modelUsage: {
+    "sdk-fallback-alias": { thinkingTokens: 10, outputTokens: 40, canonicalModel: fallback },
+  } })
 }))
 
 it.instance("nested children share the call map and cannot consume a root steer", () => Effect.gen(function* () {
@@ -364,3 +371,107 @@ test("tool names and inputs map to the cards Orchestra renders", () => {
     .toEqual(["bash", "read", "edit", "write", "todowrite", "question", "skill", "Agent"])
   expect(ClaudeHostMirror.toolInput("Skill", { skill: "release" })).toEqual({ skill: "release", name: "release" })
 })
+
+
+it.instance("background Bash launches have no exit until a terminal result supplies evidence", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([
+    assistant("launch", [
+      { type: "tool_use", id: "background", name: "Bash", input: { command: "sleep 30; exit 2", run_in_background: true } },
+      { type: "tool_use", id: "timed", name: "Bash", input: { command: "sleep 30" } },
+      { type: "tool_use", id: "echo-exit", name: "Bash", input: { command: "echo Exit code 2" } },
+    ]),
+    result("background", "Running in background", { stdout: "", stderr: "", interrupted: false, backgroundTaskId: "task-1" }),
+    result("timed", "Auto-backgrounded", { stdout: "", stderr: "", interrupted: false, timedOutAfterMs: 1000 }),
+    result("echo-exit", "Exit code 2", { stdout: "Exit code 2", stderr: "", interrupted: false }),
+    assistant("terminal", [{ type: "tool_use", id: "done", name: "Bash", input: { command: "wait" } }]),
+    result("done", "Exit code 2", { stdout: "", stderr: "", interrupted: false, backgroundTaskId: "task-1" }, true),
+  ])
+  const [background, timed, echo, done] = yield* ctx.tools()
+  if (background.state.status !== "completed" || timed.state.status !== "completed" || done.state.status !== "error")
+    throw new Error("Expected launch responses and terminal failure")
+  expect(background.state.metadata).toMatchObject({ status: "launched", backgroundTaskId: "task-1", aborted: false })
+  expect(background.state.metadata?.exit).toBeUndefined()
+  expect(timed.state.metadata).toMatchObject({ status: "launched", timeout: true, timedOutAfterMs: 1000 })
+  expect(timed.state.metadata?.exit).toBeUndefined()
+  expect(done.state.metadata).toMatchObject({ status: "completed", exit: 2, backgroundTaskId: "task-1" })
+  if (echo.state.status !== "completed") throw new Error("Expected completed echo")
+  expect(echo.state.metadata?.exit).toBe(0)
+}))
+
+it.instance("staged Edit preserves the real file and withholds applied diffs; an applied edit keeps its complete diff", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  const instance = yield* TestInstance
+  const file = `${instance.directory}/held.txt`
+  yield* Effect.promise(() => Bun.write(file, "one one"))
+  const edit = { filePath: file, oldString: "one", newString: "two", originalFile: "one one", replaceAll: false,
+    userModified: false, structuredPatch: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1, lines: ["-one one", "+two one"] }] }
+  yield* ctx.feed([
+    assistant("held", [{ type: "tool_use", id: "held", name: "Edit", input: { file_path: file, old_string: "one", new_string: "two" } }]),
+    result("held", "Held for review", { ...edit, staged: true }),
+  ])
+  expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("one one")
+  const [held] = yield* ctx.tools()
+  if (held.state.status !== "completed") throw new Error("Expected staged result")
+  expect(held.state.metadata).toMatchObject({ staged: true, filepath: file })
+  expect(held.state.metadata?.filediff).toBeUndefined()
+  expect(held.state.metadata?.diff).toBeUndefined()
+  yield* ctx.mirror.finish(0)
+  expect((yield* ctx.read()).flatMap((item) => item.parts).some((part) => part.type === "patch")).toBe(false)
+  yield* ctx.feed([assistant("applied", [{ type: "tool_use", id: "applied", name: "Edit",
+    input: { file_path: file, old_string: "one", new_string: "two" } }])])
+  yield* Effect.promise(() => Bun.write(file, "two one"))
+  yield* ctx.feed([result("applied", "Applied", { ...edit, staged: false })])
+  yield* ctx.mirror.finish(0)
+  const applied = (yield* ctx.tools()).at(-1)!
+  if (applied.state.status !== "completed") throw new Error("Expected applied result")
+  expect(applied.state.metadata?.filediff).toEqual({ file, before: "one one", after: "two one", additions: 1, deletions: 1 })
+  expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("two one")
+  const patch = (yield* ctx.read()).flatMap((item) => item.parts).find((part) => part.type === "patch")
+  expect(patch?.files).toContain(file)
+}), { git: true })
+
+it.instance("query thinking totals cannot manufacture parent reasoning, and child usage stays correlated", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([assistant("parent", [{ type: "tool_use", id: "agent-thinking", name: "Agent", input: {} }])])
+  const [call] = yield* ctx.tools()
+  yield* ctx.sessions.updatePart({ ...call, metadata: { ...call.metadata, sessionId: ctx.childID } })
+  const child = assistant("child-thinking", [{ type: "text", text: "Child", citations: null }], "agent-thinking")
+  child.message.usage = Object.assign({}, usage, { output_tokens_details: { thinking_tokens: 5 } })
+  yield* ctx.feed([
+    child,
+    result("agent-thinking", "Child done", { status: "completed", agentId: "sdk-child", resolvedModel: requested,
+      usage: { ...usage, output_tokens_details: { thinking_tokens: 25 } } }),
+    finish({ [requested]: { inputTokens: 30, outputTokens: 60, thinkingTokens: 40, cacheReadInputTokens: 0,
+      cacheCreationInputTokens: 0, webSearchRequests: 0, costUSD: 0.2, contextWindow: 200000, maxOutputTokens: 32000 } }, 0.2),
+  ])
+  yield* ctx.mirror.finish(0)
+  const parent = (yield* ctx.read()).find((item) => item.info.role === "assistant")!
+  expect(parent.info).toMatchObject({ tokens: { output: 20, reasoning: 0 } })
+  expect(parent.parts.find((part) => part.type === "step-finish")).toMatchObject({ tokens: { output: 20, reasoning: 0 } })
+  expect((yield* ctx.read(ctx.childID)).find((item) => item.info.role === "assistant")?.info)
+    .toMatchObject({ tokens: { output: 15, reasoning: 5 } })
+  expect((yield* ctx.sessions.get(ctx.childID)).metadata?.claudeCode).toMatchObject({ agentOutput: {
+    callID: "agent-thinking", agentId: "sdk-child", resolvedModel: requested, usage: { output_tokens_details: { thinking_tokens: 25 } },
+  } })
+  expect((yield* ctx.sessions.get(ctx.sessionID)).metadata?.claudeCode).toMatchObject({ modelUsage: {
+    [requested]: { thinkingTokens: 40 },
+  } })
+}))
+
+
+it.instance("missing or invalid per-message thinking remains unallocated even with aggregate thinking", () => Effect.gen(function* () {
+  const ctx = yield* setup()
+  yield* ctx.feed([undefined, -1, NaN, Infinity, 21].map((tokens, index) => {
+    const frame = assistant(`invalid-thinking-${index}`, [{ type: "text", text: "Answer", citations: null }])
+    frame.message.usage = Object.assign({}, usage, { output_tokens_details: { thinking_tokens: tokens } })
+    return frame
+  }))
+  yield* ctx.feed([finish({ [requested]: { inputTokens: 50, outputTokens: 100, thinkingTokens: 25,
+    cacheReadInputTokens: 0, cacheCreationInputTokens: 0, webSearchRequests: 0, costUSD: 0,
+    contextWindow: 200000, maxOutputTokens: 32000 } })])
+  yield* ctx.mirror.finish(0)
+  const replies = (yield* ctx.read()).flatMap((item) => item.info.role === "assistant" ? [item.info] : [])
+  expect(replies).toHaveLength(5)
+  expect(replies.every((reply) => reply.tokens.output === 20 && reply.tokens.reasoning === 0)).toBe(true)
+}))
