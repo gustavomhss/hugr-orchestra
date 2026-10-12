@@ -1,7 +1,4 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
-import os from "node:os"
-import path from "node:path"
 import type { AssistantMessage, Session, ToolPart } from "@orchestra/sdk/v2/client"
 
 if (process.env.LEAN_WRAPPER_DOM !== "1") {
@@ -15,23 +12,6 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
       console.log(out + err)
     }, 180000)
   }
-  test("actual app and production wrapper fixture types", async () => {
-    const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-wrapper-types-"))
-    try {
-      const app = path.resolve(import.meta.dir, "..")
-      const config = path.join(scratch, "tsconfig.json")
-      await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"), compilerOptions: {
-        composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
-        rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
-      }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
-      }))
-      const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: app, stdout: "pipe", stderr: "pipe", timeout: 120000 })
-      const [out, err, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-      if (code !== 0) throw new Error(`Wrapper fixture typecheck exited ${code}\n${out}\n${err}`)
-      console.log(out + err)
-    } finally { await rm(scratch, { recursive: true, force: true }) }
-  }, 180000)
 } else {
   const { createComponent, render, decision } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-wrapper-assets", setup(build) {

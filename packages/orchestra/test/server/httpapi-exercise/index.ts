@@ -22,7 +22,7 @@ import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
 import path from "path"
 import { array, boolean, check, data, isRecord, locationData, message, object, stable } from "./assertions"
-import { controlledPtyInput, http, route } from "./dsl"
+import { controlledPtyInput, cursor, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
   exerciseConfigDirectory,
@@ -46,10 +46,8 @@ import { runtime } from "./runtime"
 import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
-
-function cursor(input: Record<string, unknown>) {
-  return Buffer.from(JSON.stringify(input)).toString("base64url")
-}
+import { sessionInitScenarios } from "./session-init"
+import { researchArtifactScenarios } from "./research-artifact"
 
 const scenarios: Scenario[] = [
   http.protected
@@ -120,6 +118,7 @@ const scenarios: Scenario[] = [
   ...skillScenarios,
   ...relayScenarios,
   ...catalogScenarios,
+  ...researchArtifactScenarios,
   ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
@@ -1225,30 +1224,7 @@ const scenarios: Scenario[] = [
     .json(200, (body) => {
       check(body === true, "missing session abort should remain a no-op success")
     }),
-  http.protected
-    .post("/session/{sessionID}/init", "session.init")
-    .preserveDatabase()
-    .withLlm()
-    .seeded((ctx) =>
-      Effect.gen(function* () {
-        const session = yield* ctx.session({ title: "Init session" })
-        const message = yield* ctx.message(session.id, { text: "initialize" })
-        yield* ctx.llmText("initialized")
-        yield* ctx.llmText("initialized")
-        return { session, message }
-      }),
-    )
-    .at((ctx) => ({
-      path: route("/session/{sessionID}/init", { sessionID: ctx.state.session.id }),
-      headers: ctx.headers(),
-      body: { providerID: "test", modelID: "test-model", messageID: ctx.state.message.info.id },
-    }))
-    .jsonEffect(200, (body, ctx) =>
-      Effect.gen(function* () {
-        check(body === true, "init should return true")
-        yield* ctx.llmWait(1)
-      }),
-    ),
+  ...sessionInitScenarios,
   http.protected
     .post("/session/{sessionID}/message", "session.prompt")
     .preserveDatabase()

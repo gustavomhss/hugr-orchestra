@@ -9,29 +9,28 @@
 // Named test files run exactly and in the given order. Any other argument, such as a directory, is a Bun substring
 // filter that may match several files, which Bun runs in its own order.
 //
+// Playwright requires package app, existing .spec.ts files and one of the two explicit app configs.
 // --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
 // (*.node-smoke.mjs) with node instead of bun test.
 //
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms]
 //        [--env KEY=VALUE] [--runner bun|node]
+//        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
+// Performance config also requires --benchmark-renderer current|legacy.
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
 // --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
 // only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"
-import { existsSync, statSync } from "node:fs"
+import { existsSync, realpathSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
+import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
-  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node]"
-// Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
-const ENV_KEYS = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
-const ENV_VALUE = /^[A-Za-z0-9_]+$/
-// Each value is also a ci-run-<os>-* branch prefix that test-ci.yml maps to its runners.
-const OSES = ["linux", "windows", "macos", "macos-intel", "both", "all"]
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -86,32 +85,26 @@ const failed = await report(finished)
 process.exit(failed ? 1 : 0)
 
 function parse(argv: string[]) {
-  const positional: string[] = []
-  const options = { os: "linux", timeout: "120000", pattern: undefined as string | undefined, runner: "bun" }
-  const env: Record<string, string> = {}
-  for (let index = 0; index < argv.length; index++) {
-    const arg = argv[index]!
-    if (arg === "-t" || arg === "--test-name-pattern") options.pattern = argv[++index]
-    else if (arg === "--os") options.os = argv[++index] ?? ""
-    else if (arg === "--timeout") options.timeout = argv[++index] ?? ""
-    else if (arg === "--runner") options.runner = argv[++index] ?? ""
-    else if (arg === "--env") {
-      const pair = argv[++index] ?? ""
-      const key = pair.slice(0, pair.indexOf("="))
-      const value = pair.slice(pair.indexOf("=") + 1)
-      if (!ENV_KEYS.includes(key)) fail(`--env takes KEY=VALUE with KEY one of ${ENV_KEYS.join(", ")}\n${USAGE}`, 2)
-      if (!ENV_VALUE.test(value)) fail(`--env ${key} needs a value matching ${ENV_VALUE}\n${USAGE}`, 2)
-      env[key] = value
-    } else if (arg === "-h" || arg === "--help") fail(USAGE, 0)
-    else positional.push(arg)
-  }
+  if (argv.some((arg) => arg === "-h" || arg === "--help")) fail(USAGE, 0)
+  const parsed = parseOptions(argv)
+  const positional = parsed.positional
+  const options = { ...parsed.options, runner: parsed.options.runner ?? "bun" }
+  const env = parsed.env
   const name = positional[0]?.replace(/^packages\//, "").replace(/\/$/, "")
   if (!name) fail(USAGE, 2)
-  if (!OSES.includes(options.os)) fail(`--os must be one of ${OSES.join(", ")}\n${USAGE}`, 2)
-  if (!["bun", "node"].includes(options.runner)) fail(`--runner must be bun or node\n${USAGE}`, 2)
-  if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
-  if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
-    fail(`-t needs a pattern\n${USAGE}`, 2)
+  if (!/^[\w-]+(?:\/[\w-]+)*$/.test(name)) fail(`Invalid package: ${name}`, 2)
+  if (options.runner === "playwright")
+    return {
+      ...validateRequest(
+        { package: name, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
+        (file) => {
+          const full = path.join(root, file)
+          return (statSync(full, { throwIfNoEntry: false })?.isFile() ?? false) &&
+            realpathSync(full).startsWith(realpathSync(root) + path.sep)
+        },
+      ),
+      os: options.os,
+    }
   // Test paths may be given from the repository root or from the package directory.
   const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
   if (options.runner !== "node" && pytest(name, named))
@@ -186,10 +179,9 @@ async function snapshot() {
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
   const body = JSON.stringify({
-    package: request.package,
-    args: request.args,
-    runner: request.runner,
-    env: request.env,
+    package: request.package, runner: request.runner, args: request.args, env: request.env,
+    ...("config" in request && request.config ? { config: request.config } : {}),
+    ...("benchmarkRenderer" in request && request.benchmarkRenderer ? { benchmarkRenderer: request.benchmarkRenderer } : {}),
   })
   const blob = (await $`git hash-object -w --stdin < ${Buffer.from(body)}`.cwd(root).text()).trim()
   await $`git update-index --add --cacheinfo ${`100644,${blob},.ci-run.json`}`.cwd(root).env(env).quiet()
@@ -270,6 +262,7 @@ async function follow(id: number) {
     60 * 60_000,
     async () => {
       const view = await $`gh run view ${id} --repo ${repo} --json status,conclusion,jobs`.quiet().json()
+      if (!Array.isArray(view.jobs)) fail("test-ci: missing matrix jobs")
       for (const job of view.jobs as { name: string; status: string; conclusion: string }[]) {
         const state = job.conclusion || job.status
         if (seen.get(job.name) !== state) console.log(`test-ci: ${job.name} ${state}`)
@@ -283,35 +276,35 @@ async function follow(id: number) {
 
 type RunView = {
   conclusion: string
-  jobs: { databaseId: number; name: string; conclusion: string }[]
+  jobs: { databaseId: number; name: string; conclusion: string; steps?: { name: string; conclusion: string }[] }[]
 }
 
 async function report(view: RunView) {
-  const tests = view.jobs.filter((job) => job.name.startsWith("test "))
+  const tests = requireTestJobs(request.os, view.jobs)
+  const bunfig = Bun.file(path.join(root, "packages", request.package, "bunfig.toml"))
+  const control = request.runner === "bun" && (await bunfig.exists()) && preloadsControl(Bun.TOML.parse(await bunfig.text()))
+  let missing = false
   for (const job of tests) {
-    const log = await waitFor("the job log", 120_000, async () => {
+    const log = await waitFor(`${job.name}: nonempty job log`, 120_000, async () => {
       const result = await $`gh run view --repo ${repo} --job ${job.databaseId} --log`.quiet().nothrow()
-      return result.exitCode === 0 && result.stdout.length > 0 ? result.text() : undefined
+      return result.exitCode === 0 && result.text().trim() ? result.text() : undefined
     })
-    const step = log
-      .split("\n")
-      .filter((line) => line.split("\t")[1] === "Run tests")
-      .map((line) =>
-        line
-          .split("\t")
-          .slice(2)
-          .join("\t")
-          .replace(/^\uFEFF?\S+Z /, "")
-          .replace(/\x1b\[[0-9;]*m/g, ""),
-      )
-    // Drop the echoed step script that GitHub prints before the command output.
-    const lines = step.slice(step.findIndex((line) => line.startsWith("##[endgroup]")) + 1)
-    // A passing run needs only its summary; a failing one needs the errors printed above each (fail) line.
+    const lines = reportLines(job, log)
+    // Keep setup diagnostics for failed jobs; only summaries for successful jobs.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
+    if (!control) continue
+    // The control's verdict is required apart from the job's result: a job without exactly one verdict carrying its
+    // nonce fails this report even when every test passed.
+    try {
+      console.log(`test-ci: ${job.name} ${controlVerdict(job, log)}`)
+    } catch (error) {
+      missing = true
+      console.log(`test-ci: ${job.name} omni positive control: MISSING (${(error as Error).message})`)
+    }
   }
-  console.log(`\ntest-ci: ${view.conclusion}`)
-  return view.conclusion !== "success"
+  console.log(`\ntest-ci: ${view.conclusion}${missing ? " (omni positive control verdict missing)" : ""}`)
+  return missing || view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
 }
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {

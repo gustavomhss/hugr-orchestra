@@ -173,6 +173,19 @@ export const dict = {
   "ui.tool.agent": "เอเจนต์ {{type}}",
   "ui.tool.agent.default": "เอเจนต์",
 
+  "ui.research.terminal.ended": "งานค้นคว้าสิ้นสุดแล้ว",
+  "ui.research.terminal.blocked": "งานค้นคว้าถูกบล็อก",
+  "ui.research.terminal.failed": "งานค้นคว้าล้มเหลว",
+  "ui.research.terminal.interrupted": "งานค้นคว้าถูกขัดจังหวะ",
+  "ui.research.terminal.running": "งานค้นคว้ากำลังดำเนินการ",
+  "ui.research.sufficiency.answered": "ตอบคำถามแล้ว",
+  "ui.research.sufficiency.partial": "คำตอบบางส่วน",
+  "ui.research.sufficiency.blocked": "คำตอบถูกบล็อก",
+  "ui.research.unverified":
+    "ไม่สามารถตรวจสอบการ์ดสรุปการค้นคว้าหรือแหล่งอ้างอิงได้ ลองเปิดเอกสารที่เก็บไว้ใหม่",
+  "ui.research.documentUnavailable": "เอกสารค้นคว้าไม่พร้อมใช้งาน",
+  "ui.research.documentLoading": "กำลังโหลดเอกสารค้นคว้า",
+
   "ui.common.file.one": "ไฟล์",
   "ui.common.file.other": "ไฟล์",
   "ui.common.question.one": "คำถาม",

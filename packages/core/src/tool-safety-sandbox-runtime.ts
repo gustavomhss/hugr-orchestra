@@ -7,9 +7,10 @@ import { constants } from "fs"
 import { access, mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises"
 import { promisify } from "util"
 import which from "which"
-import { Context, Effect } from "effect"
+import { Context, Effect, Schedule } from "effect"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
+import { ToolSafetySrtReadAlias } from "./tool-safety-srt-read-alias"
 
 // The Linux shell jail is Anthropic's sandbox-runtime (`srt`, npm `@anthropic-ai/sandbox-runtime`) over bubblewrap.
 // The host fetches it on first need from the npm registry and ripgrep's GitHub releases at pinned versions, checks each
@@ -59,7 +60,7 @@ export const Source = Context.Reference<Source | undefined>("@orchestra/ToolSafe
     const ripgrep = process.platform === "linux" ? RIPGREP_LINUX[process.arch as keyof typeof RIPGREP_LINUX] : undefined
     if (!ripgrep) return undefined
     return {
-      directory: path.join(Global.Path.cache, "sandbox-runtime", `${VERSION}-${process.arch}`),
+      directory: path.join(Global.Path.cache, "sandbox-runtime", `${VERSION}-${ToolSafetySrtReadAlias.REVISION}-${process.arch}`),
       dependencies: ["bwrap", "socat"],
       artifacts: [
         ...PACKAGES.map(([name, version, integrity]) => ({
@@ -86,7 +87,7 @@ export const seccomp = (directory: string) => Effect.promise(() =>
   access(path.join(directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "vendor", "seccomp", process.arch, "apply-seccomp"), constants.X_OK)
     .then(() => true, () => false))
 
-const attempts = new Map<string, { readonly failed?: string; readonly at: number }>()
+const attempts = new Map<string, { readonly failed?: string; readonly at: number; readonly done?: Promise<void> }>()
 
 /**
  * The installed runtime directory, or the reason no jail is available. With `start`, a missing runtime begins
@@ -105,12 +106,32 @@ export const resolve = Effect.fn("ToolSafetySandboxRuntime.resolve")(function* (
   if (attempt?.failed && (!start || Date.now() - attempt.at < RETRY_MS))
     return { reason: `sandbox-runtime-acquisition-failed: ${attempt.failed}` }
   if (!start) return { reason: "sandbox-runtime-not-acquired" }
-  attempts.set(source.directory, { at: Date.now() })
-  Effect.runFork(acquire(source).pipe(Effect.match({
-    onSuccess: () => attempts.delete(source.directory),
-    onFailure: (error) => attempts.set(source.directory, { failed: error.reason, at: Date.now() }),
-  })))
+  // Acquisition is asynchronous from its first step, so its outcome always lands after this entry.
+  attempts.set(source.directory, {
+    at: Date.now(),
+    done: Effect.runPromise(acquire(source).pipe(Effect.match({
+      onSuccess: () => void attempts.delete(source.directory),
+      onFailure: (error) => void attempts.set(source.directory, { failed: error.reason, at: Date.now() }),
+    }))),
+  })
   return { reason: "sandbox-runtime-acquiring" }
+})
+
+/** Waits for this host's in-flight runtime acquisition, if one is running; it never fails. */
+export const settled = Effect.fn("ToolSafetySandboxRuntime.settled")(function* () {
+  const source = yield* Source
+  const done = source && attempts.get(source.directory)?.done
+  if (done) yield* Effect.promise(() => done)
+})
+
+/** Like `resolve(true)`, but waits for an acquisition it starts or finds running: the installed directory, or why not. */
+export const ready = Effect.fn("ToolSafetySandboxRuntime.ready")(function* () {
+  yield* resolve(true)
+  return yield* resolve(false).pipe(Effect.repeat({
+    while: (runtime) => runtime.reason === "sandbox-runtime-acquiring",
+    schedule: Schedule.spaced("1 second"),
+    times: 300,
+  }))
 })
 
 /** Download, verify and extract every artifact into a staging dir, then move it into place in one rename. */
@@ -120,6 +141,9 @@ export const acquire = Effect.fn("ToolSafetySandboxRuntime.acquire")(function* (
   const staging = yield* step("sandbox-runtime-staging", () => mkdtemp(path.join(parent, ".staging-")))
   yield* Effect.gen(function* () {
     yield* Effect.forEach(source.artifacts, (artifact) => unpack(staging, artifact), { discard: true })
+    if (source.artifacts.some((artifact) => artifact.integrity === PACKAGES[0][2] &&
+      artifact.target === path.join("node_modules", PACKAGES[0][0])))
+      yield* ToolSafetySrtReadAlias.apply(staging)
     yield* step("sandbox-runtime-marker", () => writeFile(path.join(staging, ".complete"), ""))
     // Another process may have installed it first; its complete install wins.
     yield* step("sandbox-runtime-install", () => rename(staging, source.directory)).pipe(

@@ -11,6 +11,7 @@ import { ToolSafetyGit } from "../src/tool-safety-git"
 import { ToolSafetyProfile } from "../src/tool-safety-profile"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
+import { jail } from "./lib/sandbox-host"
 import { tmpdir } from "./fixture/tmpdir"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([FSUtil.node, AppProcess.node, ToolSafety.node])))
@@ -115,8 +116,8 @@ it.live("tool-child inheritance strips credential names/values without mutating 
   }),
 )
 
-const binary = await Effect.runPromise(ToolSafetySandbox.available())
-test.skipIf(!binary || !["darwin", "linux"].includes(process.platform))("LIVE srt confines real descendant writes (SKIP when binary/platform unavailable)", async () => {
+// The host's real jail (seatbelt, or srt where bubblewrap is present): exactly one of the two tests below runs.
+test.skipIf(!jail)("LIVE jail confines real descendant writes", async () => {
   await Effect.gen(function* () {
     const project = yield* fixture
     const outside = yield* fixture
@@ -134,7 +135,7 @@ test.skipIf(!binary || !["darwin", "linux"].includes(process.platform))("LIVE sr
   }).pipe(Effect.scoped, Effect.provide(AppNodeBuilder.build(LayerNode.group([FSUtil.node, AppProcess.node]))), Effect.runPromise)
 })
 
-if (!binary || !["darwin", "linux"].includes(process.platform)) it.live("required real sandbox absence is a named HOLD, not an unsandboxed fallback", () =>
+if (!jail) it.live("required real sandbox absence is a named HOLD, not an unsandboxed fallback", () =>
   Effect.gen(function* () {
     const tmp = yield* fixture
     const outcome = yield* Effect.flip(ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", "touch denied"], { cwd: tmp.path })).pipe(

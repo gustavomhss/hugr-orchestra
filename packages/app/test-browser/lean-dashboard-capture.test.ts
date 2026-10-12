@@ -11,15 +11,18 @@ async function run(args: string[], env = process.env) {
   const child = Bun.spawn([process.execPath, ...args], { cwd: app, env, stdout: "pipe", stderr: "pipe", timeout: 900000 })
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   console.log(stdout + stderr)
+  // The unit lanes upload no Playwright results, so a failed capture prints each page snapshot Playwright saved.
+  if (code !== 0) for (const file of new Bun.Glob("e2e/test-results/orchestra-screenshots/**/error-context.md").scanSync(app))
+    console.log(`${file}:\n${await Bun.file(path.join(app, file)).text()}`)
   if (code !== 0) throw new Error(`${args.join(" ")} exited ${code}/${child.signalCode}`)
 }
 
 test("capture native production Lean page in CI Chromium; exact PNG/manifest artifact set", async () => {
   if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Visual capture/build requires CI")
   const source = execFileSync("git", ["rev-parse", "HEAD"], { cwd: app, encoding: "utf8" }).trim()
-  await run(["typecheck"])
-  await run(["run", "typecheck:e2e"])
-  await run(["x", "playwright", "install", "--with-deps", "chromium"])
+  // The capture runs headless, which launches Chromium's headless shell, never the full browser; Windows needs no system
+  // packages for it (the Windows e2e lane installs none), and the dependency step there installs Media Foundation.
+  await run(["x", "playwright", "install", ...(process.platform === "linux" ? ["--with-deps"] : []), "--only-shell", "chromium"])
   await rm(out, { recursive: true, force: true })
   await run(["x", "playwright", "test", "--config", "e2e/orchestra-screenshots/playwright.config.ts", "lean-dashboard.visual.ts", "--project", "chromium"],
     { ...process.env, NODE_ENV: "production", ORCHESTRA_VISUAL_OUT: out, LEAN_VISUAL_SOURCE: source, ORCHESTRA_CHANNEL: "prod" })

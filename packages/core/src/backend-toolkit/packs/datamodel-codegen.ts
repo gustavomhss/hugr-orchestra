@@ -6,6 +6,14 @@ export default {
   version: "0.83.0",
   license: "MIT",
   upstream: "koxudaxi/datamodel-code-generator",
+  // Measured with script/toolkit-floors.ts (F5.4): the highest requirement among the compiled wheels of each target.
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "10.13" },
+    "linux-arm64": { glibc: "2.17" },
+    "linux-x64": { glibc: "2.14" },
+    "win32-x64": {},
+  },
   runtime: "python",
   install: {
     kind: "pip",

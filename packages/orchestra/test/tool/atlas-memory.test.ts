@@ -73,8 +73,8 @@ const tools = (scanner?: FakeScanner) =>
     const directory = (yield* TestInstance).directory
     const command = scanner ? yield* Effect.promise(() => fakeScanner(scanner, directory)) : ""
     // The test pins its own scanner, so the toolkit never fetches one.
-    const open = (execution: AtlasMemory.Execution) =>
-      AtlasMemory.open(execution).pipe(
+    const open: typeof AtlasMemory.open = (execution, agent) =>
+      AtlasMemory.open(execution, agent).pipe(
         Effect.provideService(BackendToolkit.Target, { unsupported: "test-pins-its-scanner" }),
         Effect.map((memory) =>
           "unavailable" in memory || !scanner
@@ -267,6 +267,16 @@ it.instance(
       expect(receipt.refusal).toMatchObject({ ok: false, refusal: "scanner-unavailable" })
       expect(JSON.parse(exit.value.output).note).toBe("Not remembered.")
       expect(yield* lines).toBe(0)
+    }).pipe(Effect.provide(layer)),
+  { git: true },
+)
+
+it.instance(
+  "the scanner runs outside the workspace, where a planted .gitleaks.toml could allowlist every record",
+  () =>
+    Effect.gen(function* () {
+      const t = yield* tools("cwd")
+      expect(receiptOf(yield* t.emit(TASK))).toMatchObject({ op: "emit", outcome: "admitted" })
     }).pipe(Effect.provide(layer)),
   { git: true },
 )

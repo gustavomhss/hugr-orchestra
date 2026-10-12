@@ -1,29 +1,35 @@
 // Adapted from TechLead a68e7af, Copyright 2026 HuGR Labs, Apache-2.0.
 // Native addon loads only on supported-file extraction. Partial trees never certify coverage.
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import type Parser from "tree-sitter";
 import { type ArsenalContext } from "../contract.ts";
 import { AcquisitionError, requireContext } from "../engine/acquisition.ts";
 import { runProcess } from "../engine/process.ts";
 import { trustedAsset } from "../engine/trusted-assets.ts";
 import { type FileSymbols, type SymbolInfo, type SymbolKind, type FileImport } from "./contracts.ts";
+// A compiled CLI has no node_modules and no package files. It ships tree-sitter in tree-sitter/ beside
+// realpath(execPath), loaded there by path so a missing file never resolves through some ancestor's node_modules, and
+// it has no parser-worker asset, so a binding it lacks ends at parser-unavailable.
+const compiled = /[\\/](\$bunfs|~BUN)[\\/]/.test(decodeURIComponent(import.meta.url));
 const KINDS: Record<string, SymbolKind> = { function_declaration: "function", class_declaration: "class", abstract_class_declaration: "class", interface_declaration: "interface", type_alias_declaration: "type", enum_declaration: "enum", lexical_declaration: "const", variable_declaration: "const", function_definition: "function", class_definition: "class" };
 
 export async function extractSymbols(path: string, source: string, context?: ArsenalContext): Promise<FileSymbols> {
   if (source.length > 1_000_000) throw new AcquisitionError("PARSER_INPUT_CAP", "source exceeds 1M characters");
   const local = extractNative(path, source);
-  if (local.coverage.reason !== "parser-unavailable" || !process.versions.bun) return local;
+  if (local.coverage.reason !== "parser-unavailable" || !process.versions.bun || compiled) return local;
   // Some native packages ship Node builds but omit Bun's expected prebuild filename.
   // A fixed, package-owned Node worker preserves actual parsing; host authorizes launch.
   const host = requireContext(context);
-  const worker = trustedAsset("parser-worker").entry;
-  const result = await runProcess(["node", "--experimental-strip-types", worker], host.directory, host, JSON.stringify({ path, source })).catch((error: unknown) => {
-    if (!(error instanceof AcquisitionError)) throw error;
+  // Without its package files the worker asset itself is absent; that ends at parser-unavailable too, never a throw.
+  const result = await Promise.resolve().then(() => runProcess(["node", "--experimental-strip-types", trustedAsset("parser-worker").entry], host.directory, host, JSON.stringify({ path, source }))).catch((error: unknown) => {
+    if (!(error instanceof Error)) throw error;
     return { stdout: "", stderr: error.message, exit: -1 };
   });
-  if (result.exit !== 0 || !result.stdout || result.stdout.length > 2_000_000) return { ...local, coverage: { ...local.coverage, detail: `parser-worker failed: exit ${result.exit}; ${result.stderr.slice(0, 500)}` } };
+  if (result.exit !== 0 || !result.stdout || result.stdout.length > 2_000_000) return { ...local, coverage: { ...local.coverage, detail: `${local.coverage.detail}; parser-worker failed: exit ${result.exit}; ${result.stderr.slice(0, 500)}` } };
   const parsed: unknown = await Promise.resolve().then(() => JSON.parse(result.stdout)).catch(() => undefined);
-  if (!validResult(parsed, path)) return { ...local, coverage: { ...local.coverage, detail: "parser-worker malformed diagnostics" } };
+  if (!validResult(parsed, path)) return { ...local, coverage: { ...local.coverage, detail: `${local.coverage.detail}; parser-worker malformed diagnostics` } };
   return parsed;
 }
 
@@ -40,11 +46,13 @@ export function extractNative(path: string, source: string): FileSymbols {
   // Native require/parse is the genuinely fallible boundary; preserve reason instead of empty success.
   try {
     const require = createRequire(import.meta.url);
-    const ParserCtor = require("tree-sitter") as typeof import("tree-sitter");
+    const shipped = compiled ? join(dirname(realpathSync(process.execPath)), "tree-sitter") : undefined;
+    const load = (name: string): unknown => require(shipped ? join(shipped, name) : name);
+    const ParserCtor = load("tree-sitter") as typeof import("tree-sitter");
     const parser = new ParserCtor();
-    if (grammar === "python") parser.setLanguage(require("tree-sitter-python") as Parser.Language);
+    if (grammar === "python") parser.setLanguage(load("tree-sitter-python") as Parser.Language);
     if (grammar !== "python") {
-      const grammars = require("tree-sitter-typescript") as { typescript: Parser.Language; tsx: Parser.Language };
+      const grammars = load("tree-sitter-typescript") as { typescript: Parser.Language; tsx: Parser.Language };
       parser.setLanguage(grammars[grammar]);
     }
     const tree = parser.parse(source);
@@ -96,7 +104,8 @@ export function extractNative(path: string, source: string): FileSymbols {
     });
     const partial = tree.rootNode.hasError;
     return { path, symbols, imports, coverage: { complete: !partial && !state.unsupported, reason: partial ? "partial-parse" : state.unsupported ? "unsupported-syntax" : undefined, scope } };
-  } catch {
-    return { path, symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", scope } };
+  } catch (error) {
+    const cause = (error instanceof Error ? error.message : String(error)).split("\n")[0];
+    return { path, symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", scope, detail: `native symbol extraction unavailable: ${cause}` } };
   }
 }

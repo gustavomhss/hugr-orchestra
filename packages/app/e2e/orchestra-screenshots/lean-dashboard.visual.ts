@@ -87,7 +87,14 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   const rows = lean.locator("[data-lean-item]")
   const cargo = lean.locator('[data-lean-item="cargo"]')
   const search = lean.getByRole("searchbox", { name: "Buscar itens…", exact: true })
+  // goto settles on the load event, before the health gate, the lazily loaded Lean chunk and the profile owner have
+  // mounted the page. The mount itself sends this read, so wait for it rather than racing all three against the 10 s
+  // assertion timeout below; its own limit stays under the test's so a page that never mounts still fails with a snapshot.
+  const mounted = page.waitForResponse((response) => response.request().method() === "GET" &&
+    new URL(response.url()).pathname === "/project/lean" && new URL(response.url()).searchParams.get("directory") === profiles[0].worktree,
+  { timeout: 120_000 })
   await page.goto("/orchestra/lean")
+  expect((await mounted).status()).toBe(200)
   await expect(lean.getByRole("heading", { name: "Lean", exact: true })).toBeVisible()
   await expect(lean.locator(".mx-eyebrow")).toHaveText("Perfil Orchestra · HuGR-Lean")
   await expect(rows).toHaveCount(32)

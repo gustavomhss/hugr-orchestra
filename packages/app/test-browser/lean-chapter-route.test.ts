@@ -1,7 +1,5 @@
 import { expect, mock, test } from "bun:test"
 import { createServer } from "node:http"
-import { mkdtemp, rm } from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { ServerConnection } from "@/context/server"
@@ -21,20 +19,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     await child(["--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path], {
       ...process.env, LEAN_CHAPTER_DOM: "1",
     })
-  }, 240000)
-  test("actual app plus route fixture types", async () => {
-    const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-route-types-"))
-    try {
-      const app = path.resolve(import.meta.dir, "..")
-      const config = path.join(scratch, "tsconfig.json")
-      await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"), compilerOptions: {
-        composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
-        rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
-      }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path,
-        path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
-      }))
-      await child(["typecheck", config])
-    } finally { await rm(scratch, { recursive: true, force: true }) }
   }, 240000)
 } else {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")

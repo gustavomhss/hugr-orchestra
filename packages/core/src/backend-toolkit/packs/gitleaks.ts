@@ -23,6 +23,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "gitleaks/gitleaks",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "11.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": target("darwin_arm64.tar.gz", "sha256-tAqwrlXFBZY+Nl8nGo04Ru+8FwqhfyYH8T32EKmutqU="),
     "darwin-x64": target("darwin_x64.tar.gz", "sha256-3+EBpNsiVfyFEgrH89JeQ0LDwgz3SfLCChgIGvGVJwk="),

@@ -179,6 +179,19 @@ export const dict = {
   "ui.tool.agent": "{{type}} ajanı",
   "ui.tool.agent.default": "Ajan",
 
+  "ui.research.terminal.ended": "Araştırma görevi sona erdi",
+  "ui.research.terminal.blocked": "Araştırma görevi engellendi",
+  "ui.research.terminal.failed": "Araştırma görevi başarısız oldu",
+  "ui.research.terminal.interrupted": "Araştırma görevi kesintiye uğradı",
+  "ui.research.terminal.running": "Araştırma görevi sürüyor",
+  "ui.research.sufficiency.answered": "Soru yanıtlandı",
+  "ui.research.sufficiency.partial": "Kısmi yanıt",
+  "ui.research.sufficiency.blocked": "Yanıt engellendi",
+  "ui.research.unverified":
+    "Son araştırma kartı veya kaynaklar doğrulanamadı. Saklanan belgeleri yeniden açmayı deneyin.",
+  "ui.research.documentUnavailable": "Araştırma belgesi kullanılamıyor",
+  "ui.research.documentLoading": "Araştırma belgesi yükleniyor",
+
   "ui.common.file.one": "dosya",
   "ui.common.file.other": "dosya",
   "ui.common.question.one": "soru",

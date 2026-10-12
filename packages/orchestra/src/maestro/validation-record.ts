@@ -154,6 +154,21 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
   // Before the harness rewrite reworded the review, exploration and documentation seats' roles.
   ["d409ee796e265fb4f6ed0908bef20e2c5ac36b173231b7b86719ddd1d5e247f5", ROSTER_V2],
+  // The common roster before both the discovery seat gained its own profile, corpus tools, skills and Atlas owner path,
+  // and the architecture-only reviewer was retired and the upstream authoring seat was registered.
+  ["e956abbc3f4ce9c67a6e453f14616de06bf20231bca302ee412355eb33610695", ROSTER_V2],
+  // Discovery seat line: before its capability-accurate charter freeze.
+  ["18647c12823dcd3c1afbfd3efa5e65e34b662e11f7c5ca6b239c3898047931a4", ROSTER_V2],
+  // Discovery seat line: before its qualified publication and handoff closure procedure.
+  ["929cd402f4cf9a8a4b37ec12f9cfcab003a41301a989e0dff81ed65ada05c5ef", ROSTER_V2],
+  // Discovery seat line: before it verified answers beyond the first confirming source and stated verified claims directly.
+  ["9a00703e9ba953b12ae6bb03d5f5ce47dff0c1b7b63997a0b23183c6e97fb912", ROSTER_V2],
+  // Discovery seat line: its verify-depth roster, before it merged with the upstream authoring roster.
+  ["697b106693b751ffa6113f7507e149d47138944a47bf690a3e301b47e69effd8", ROSTER_V2],
+  // Upstream line: the retirement-only candidate roster, before upstream registration.
+  ["92b759346ac3366f26bc2940408770ba33767bc56108c9f3b0b5d13a58b9f127", ROSTER_V2],
+  // Upstream line: the upstream authoring roster, before it merged with the discovery seat.
+  ["a3299fc84b55ea2db06883778675d0f7747c0a585f26f815efd7a9db06f1f98c", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],

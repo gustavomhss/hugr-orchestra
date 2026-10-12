@@ -185,6 +185,19 @@ export const dict: Record<string, string> = {
   "ui.toolErrorCard.failed": "Gagal",
   "ui.toolErrorCard.copyError": "Salin pesan kesalahan",
 
+  "ui.research.terminal.ended": "Tugas penelitian berakhir",
+  "ui.research.terminal.blocked": "Tugas penelitian diblokir",
+  "ui.research.terminal.failed": "Tugas penelitian gagal",
+  "ui.research.terminal.interrupted": "Tugas penelitian terhenti",
+  "ui.research.terminal.running": "Tugas penelitian berjalan",
+  "ui.research.sufficiency.answered": "Pertanyaan terjawab",
+  "ui.research.sufficiency.partial": "Jawaban sebagian",
+  "ui.research.sufficiency.blocked": "Jawaban diblokir",
+  "ui.research.unverified":
+    "Kartu penelitian akhir atau referensi tidak dapat diverifikasi. Coba buka kembali dokumen yang disimpan.",
+  "ui.research.documentUnavailable": "Dokumen penelitian tidak tersedia",
+  "ui.research.documentLoading": "Memuat dokumen penelitian",
+
   "ui.common.file.one": "berkas",
   "ui.common.file.other": "berkas",
   "ui.common.question.one": "pertanyaan",
