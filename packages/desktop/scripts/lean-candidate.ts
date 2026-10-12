@@ -1,9 +1,12 @@
 #!/usr/bin/env bun
 import path from "node:path"
-import { lstat, readlink, readdir, rm } from "node:fs/promises"
+import { chmod, copyFile, lstat, mkdir, mkdtemp, readlink, readdir, rm } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { spawn } from "node:child_process"
+import { tmpdir } from "node:os"
+import { omniTargets } from "@orchestra/script/omni"
 import { leanPin, sha256 } from "../../orchestra/script/lean-notices"
+import { nativeCliTarget } from "../src/main/cli-artifacts"
 
 const desktop = path.resolve(import.meta.dirname, "..")
 const root = path.resolve(desktop, "../..")
@@ -287,6 +290,22 @@ export async function candidate(action: string) {
         const bytes = Buffer.from(await Bun.file(file).arrayBuffer())
         return { path: omniFiles[index]!, bytes: bytes.length, sha256: sha256(bytes) }
       })))
+    // The base config's beforePack and afterPack refuse a package without the owned CLI in resources/cli, which the
+    // production prebuild stages with buildCliToResources. That build reads omni from OMNI_ARTIFACTS/<omni id>/ under
+    // the shipped names, so the same verified release pair is laid out there for the native target only.
+    const cliOmni = await mkdtemp(path.join(tmpdir(), "lean-candidate-cli-omni-"))
+    try {
+      const omniId = path.join(cliOmni, omniTargets[nativeCliTarget(process.platform, process.arch)]!.id)
+      await mkdir(omniId)
+      await copyFile(omniBuild.addon, path.join(omniId, omniFiles[0]!))
+      await copyFile(omniBuild.supervisor, path.join(omniId, omniFiles[1]!))
+      await chmod(path.join(omniId, omniFiles[1]!), 0o755)
+      await verifyOmni(omniId, omni)
+      await command(["bun", "-e", 'await (await import("./scripts/utils.ts")).buildCliToResources()'],
+        { ...env, OMNI_ARTIFACTS: cliOmni })
+    } finally {
+      await rm(cliOmni, { recursive: true, force: true })
+    }
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
