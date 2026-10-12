@@ -56,7 +56,7 @@ describe("createServerProtocolPromise", () => {
         current: createApiForServer({ server, fetch }),
         legacy: (directory) => createSdkForServer({ server, fetch, directory, throwOnError: true }),
       })
-      await expect(api.project.list()).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      await expect(Promise.resolve(api.project.list())).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(state.detected).toBeUndefined()
       expect(state.probes).toBe(6)
       state.ready = true
@@ -92,11 +92,11 @@ describe("createServerProtocolPromise", () => {
     try {
       const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
       const chain = protocol.then((kind) => kind)
-      const failed = expect(chain).rejects.toBe(reason)
+      const failed = expect(Promise.resolve(chain)).rejects.toBe(reason)
       await reached.promise
       abort.abort(reason)
       await failed
-      await expect(protocol).rejects.toBe(reason)
+      await expect(Promise.resolve(protocol)).rejects.toBe(reason)
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)

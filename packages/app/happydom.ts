@@ -1,6 +1,16 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator"
 
+// Bun.serve and the SDK clients need one native Fetch implementation and matching constructors.
+// Happy DOM's Response is not a Bun server response, and its fetch crosses Bun's Node HTTP adapter.
+const network = Object.fromEntries(
+  ["fetch", "Request", "Response", "Headers", "AbortController", "AbortSignal"].map((key) => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, key)
+    if (!descriptor) throw new Error(`Missing native network global: ${key}`)
+    return [key, descriptor]
+  }),
+)
 GlobalRegistrator.register()
+Object.defineProperties(globalThis, network)
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext
 // @ts-expect-error - we're overriding with a simplified mock
