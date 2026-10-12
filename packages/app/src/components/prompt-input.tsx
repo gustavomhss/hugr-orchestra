@@ -50,7 +50,8 @@ import { useCommand } from "@/context/command"
 import { usePermission } from "@/context/permission"
 import { useLanguage } from "@/context/language"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
+import { draftVersion, pendingPolicy, pendingSelection } from "@/components/draft-subagent-models"
+import { useServerProtocol } from "@/context/server-sdk"
 import { useDraftSessionKey } from "./prompt-input/draft-session"
 import { useProviders } from "@/hooks/use-providers"
 import { usePlatform } from "@/context/platform"
@@ -1198,6 +1199,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   // Check provider variants directly: `variants` also includes the UI-only default option.
   const showVariantControl = createMemo(() => props.controls.model.selection.variant.list().length > 0)
   const pendingKey = useDraftSessionKey()
+  const subagentProtocol = useServerProtocol()
   const providers = useProviders(() => sdk().directory)
   const subagentRules = createMemo(() => {
     const id = props.controls.session.id
@@ -1206,6 +1208,12 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return Array.isArray(permission) ? permission : []
   })
   const subagentLabel = createMemo(() => {
+    draftVersion()
+    if (subagentProtocol() === "v2") {
+      const id = props.controls.session.id
+      const policy = id ? sync().session.get(id)?.subagentModels : pendingPolicy(pendingKey())
+      return policy?.mode === "allowlist" ? `${policy.models.length}` : language.t("session.tasks.models.all")
+    }
     if (!props.controls.session.id) {
       draftVersion()
       const n = pendingSelection(pendingKey()).size

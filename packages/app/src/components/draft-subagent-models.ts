@@ -1,4 +1,4 @@
-import type { ModelRule } from "./subagent-model-rules"
+import { parseModelKey, type ModelRule, type SubagentModelPolicy } from "./subagent-model-rules"
 
 import { createSignal } from "solid-js"
 
@@ -13,16 +13,12 @@ export const draftVersion = version
 export const modelKey = (providerID: string, modelID: string) => `${providerID}/${modelID}`
 
 export function pendingSelection(directory: string): Set<string> {
-  let set = pending.get(directory)
-  if (!set) {
-    set = new Set()
-    pending.set(directory, set)
-  }
-  return set
+  return pending.get(directory) ?? new Set()
 }
 
 export function togglePending(directory: string, providerID: string, modelID: string, allow?: boolean): boolean {
   const set = pendingSelection(directory)
+  pending.set(directory, set)
   const key = modelKey(providerID, modelID)
   const next = allow ?? !set.has(key)
   if (next) set.add(key)
@@ -33,6 +29,18 @@ export function togglePending(directory: string, providerID: string, modelID: st
 
 export function clearPending(directory: string) {
   if (pending.delete(directory)) bumpVersion((v) => v + 1)
+}
+
+export function pendingPolicy(key: string): SubagentModelPolicy {
+  const selected = pending.get(key)
+  if (!selected) return { mode: "inherit" }
+  return {
+    mode: "allowlist",
+    models: [...selected].flatMap((key) => {
+      const model = parseModelKey(key)
+      return model ? [{ providerID: model.providerID, id: model.modelID }] : []
+    }),
+  }
 }
 
 /** Builds the rule batch for a fresh selection: deny-all baseline plus one

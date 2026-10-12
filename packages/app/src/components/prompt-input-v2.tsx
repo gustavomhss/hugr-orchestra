@@ -27,7 +27,8 @@ import { useSync } from "@/context/sync"
 import { useProviders } from "@/hooks/use-providers"
 import { useDraftSessionKey } from "./prompt-input/draft-session"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
+import { draftVersion, pendingPolicy, pendingSelection } from "@/components/draft-subagent-models"
+import { useServerProtocol } from "@/context/server-sdk"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
@@ -503,6 +504,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   const sdk = useSDK()
   const sync = useSync()
   const providers = useProviders(() => sdk().directory)
+  const protocol = useServerProtocol()
+  const policy = () =>
+    props.sessionID
+      ? sync().session.get(props.sessionID)?.subagentModels ?? { mode: "inherit" as const }
+      : pendingPolicy(props.pendingKey)
+  const scoped = () => protocol() === "v2" ? policy().mode === "allowlist" : hasModelScope(rules())
 
   const rules = () => {
     const id = props.sessionID
@@ -511,6 +518,11 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
     return Array.isArray(permission) ? permission : []
   }
   const label = () => {
+    draftVersion()
+    if (protocol() === "v2") {
+      const current = policy()
+      return current.mode === "allowlist" ? `${current.models.length}` : language.t("session.tasks.models.all")
+    }
     // Drafts have no session yet: show the pending selection.
     if (!props.sessionID) {
       draftVersion()
@@ -550,12 +562,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
       >
         <span class="truncate leading-4">
           {props.sessionID
-            ? hasModelScope(rules())
+            ? scoped()
               ? language.t("orchestra.chat.models.count", { count: label() })
               : language.t("orchestra.chat.models.all")
             : language.t("session.tasks.models.label", { count: label() })}
         </span>
-        <span class="-ml-0.5 -mr-1 flex shrink-0">
+        <span class="-ms-0.5 -me-1 flex shrink-0">
           <Icon name="chevron-down" />
         </span>
       </ButtonV2>

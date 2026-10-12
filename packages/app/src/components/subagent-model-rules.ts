@@ -1,6 +1,109 @@
 import { matchWildcard } from "@/utils/wildcard"
 import { createStore } from "solid-js/store"
 import type { Provider } from "@orchestra/sdk/v2/client"
+import type { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
+import type { Schema } from "effect"
+
+export type SubagentModelPolicy = Schema.Codec.Encoded<typeof SessionSubagentModels.Policy>
+export type ModelPolicySnapshot = { policy: SubagentModelPolicy; timestamp?: number; revision?: number }
+
+export function sameModelPolicy(left: SubagentModelPolicy, right: SubagentModelPolicy) {
+  if (left.mode !== right.mode) return false
+  if (left.mode === "inherit" || right.mode === "inherit") return true
+  return (
+    left.models.length === right.models.length &&
+    left.models.every((model) => right.models.some((item) => item.providerID === model.providerID && item.id === model.id))
+  )
+}
+
+/** V2 replaces the whole policy, retaining identities missing from today's catalog. */
+export function toggleModelPolicy(
+  policy: SubagentModelPolicy,
+  providerID: string,
+  id: string,
+  allow: boolean,
+): SubagentModelPolicy {
+  const models = policy.mode === "allowlist" ? policy.models : []
+  return {
+    mode: "allowlist",
+    models: [
+      ...models.filter((model) => model.providerID !== providerID || model.id !== id),
+      ...(allow ? [{ providerID, id }] : []),
+    ],
+  }
+}
+
+/** Canonical snapshots fence ACKs. Policy-only callers retain the latest ACK over known delayed predecessors. */
+export function createModelPolicyEditor(input: {
+  read: () => ModelPolicySnapshot
+  write: (policy: SubagentModelPolicy) => Promise<SubagentModelPolicy | ModelPolicySnapshot>
+}) {
+  const [state, setState] = createStore({
+    saving: false,
+    failed: false,
+    acknowledged: undefined as SubagentModelPolicy | undefined,
+    retry: undefined as SubagentModelPolicy | undefined,
+  })
+  const freshness = {
+    timestamp: undefined as number | undefined,
+    revision: undefined as number | undefined,
+    caughtUp: false,
+    predecessors: [] as SubagentModelPolicy[],
+  }
+  const policy = () => {
+    const current = input.read()
+    const acknowledged = state.acknowledged
+    if (!acknowledged) return current.policy
+    if (sameModelPolicy(current.policy, acknowledged)) {
+      freshness.caughtUp = true
+      freshness.timestamp = current.timestamp
+      freshness.revision = current.revision
+      freshness.predecessors = []
+      return current.policy
+    }
+    if (current.revision !== undefined && freshness.revision !== undefined && current.revision <= freshness.revision &&
+      (current.timestamp ?? 0) <= (freshness.timestamp ?? 0))
+      return acknowledged
+    if ((current.revision === undefined || freshness.revision === undefined) &&
+      current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp <= freshness.timestamp)
+      return acknowledged
+    if (!freshness.caughtUp && freshness.predecessors.some((item) => sameModelPolicy(item, current.policy)))
+      return acknowledged
+    return current.policy
+  }
+  const replace = async (next: SubagentModelPolicy) => {
+    if (state.saving) return
+    const current = input.read()
+    freshness.predecessors.push(policy())
+    freshness.timestamp = current.timestamp
+    freshness.revision = current.revision
+    freshness.caughtUp = false
+    setState({ saving: true, failed: false, retry: next })
+    await input
+      .write(next)
+      .then((acknowledged) => {
+        if ("policy" in acknowledged) {
+          freshness.timestamp = acknowledged.timestamp
+          freshness.revision = acknowledged.revision
+          freshness.caughtUp = true
+          freshness.predecessors = []
+          setState({ acknowledged: acknowledged.policy, retry: undefined })
+          return
+        }
+        setState({ acknowledged, retry: undefined })
+      })
+      .catch(() => setState("failed", true))
+      .finally(() => setState("saving", false))
+  }
+  return {
+    state,
+    policy,
+    replace,
+    set: (providerID: string, id: string, allow: boolean) => replace(toggleModelPolicy(policy(), providerID, id, allow)),
+    inherit: () => replace({ mode: "inherit" }),
+    retry: () => state.retry ? replace(state.retry) : Promise.resolve(),
+  }
+}
 
 export interface ModelRule {
   permission: string
