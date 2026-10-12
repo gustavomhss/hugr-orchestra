@@ -63,13 +63,16 @@ console.log(
   })}`,
 )
 
+// What RipgrepBinary logs when a packaged build finds no rg (packages/core/src/ripgrep/binary.ts).
+const FAIL_CLOSED = "packaged builds never download it"
+
 const found = await search()
 if (!found.matched) throw new Error(`BUNDLED_SEARCH_FAILED: ${found.body}`)
 console.log(`RIPGREP_BUNDLED_SEARCH ${JSON.stringify({ binary, matched: true, downloads: found.downloads })}`)
 
 if (args.mutate) {
   await rename(ripgrep, `${ripgrep}.away`)
-  const missing = await search().finally(() => rename(`${ripgrep}.away`, ripgrep))
+  const missing = await search(true).finally(() => rename(`${ripgrep}.away`, ripgrep))
   if (missing.matched) throw new Error("MUTANT_SURVIVED: the CLI found files without its bundled rg")
   if (!missing.failClosed) throw new Error(`MUTANT_NOT_FAIL_CLOSED: no packaged fail-closed message in the CLI logs`)
   console.log(
@@ -80,8 +83,11 @@ if (args.mutate) {
   console.log('RIPGREP_RESTORED_SEARCH {"matched":true}')
 }
 
-/** One CLI service run in a fresh sandbox: does the project index (ripgrep) find the planted file? */
-async function search() {
+/**
+ * One CLI service run in a fresh sandbox: does the project index (ripgrep) find the planted file? With `failClosed`,
+ * the run waits (up to 20 s) for the service's batched file log to show the packaged fail-closed message.
+ */
+async function search(failClosed = false) {
   const sandbox = await realpath(await mkdtemp(join(tmpdir(), "orchestra-ripgrep-proof-")))
   await Promise.all(["data", "state", "config", "cache", "tmp", "project"].map((name) => mkdir(join(sandbox, name))))
   const token = `needle${createHash("sha256").update(sandbox).digest("hex").slice(0, 12)}`
@@ -138,6 +144,8 @@ async function search() {
       })
       const body = await response.text()
       if (!response.ok) throw new Error(`FIND_REQUEST_FAILED: HTTP ${response.status}: ${body.slice(0, 2000)}`)
+      const deadline = Date.now() + 20_000
+      while (failClosed && Date.now() < deadline && !(await text(sandbox)).includes(FAIL_CLOSED)) await Bun.sleep(500)
       return body
     })
     .finally(() => run(["service", "stop"]).catch(() => undefined))
@@ -149,7 +157,7 @@ async function search() {
       return {
         body,
         matched: body.includes(`${token}.txt`),
-        failClosed: logs.includes("packaged builds never download it"),
+        failClosed: logs.includes(FAIL_CLOSED),
         downloads: downloads.length,
       }
     })
