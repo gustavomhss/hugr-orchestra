@@ -148,6 +148,61 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
     }), 300_000,
   )
 
+  it.live("PATH aliases of physical home and its ancestor never widen reads, but precise bins and home worktrees remain readable", () =>
+    Effect.gen(function* () {
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const directory = path.join(home, "workspace")
+      const testHome = path.join(root, "test-home")
+      const alias = path.join(root, "path-home")
+      const ancestor = path.join(root, "path-ancestor")
+      const marker = path.join(home, "private", "marker")
+      const publicFile = path.join(directory, "public")
+      const bin = path.join(home, "bin", "public")
+      yield* Effect.promise(() => Promise.all([plant(marker), plant(publicFile), plant(bin)]))
+      yield* Effect.promise(() => Promise.all([link(home, testHome), link(home, alias), link(root, ancestor)]))
+      const inherited = process.env.PATH ?? ""
+      yield* environment({ ORCHESTRA_TEST_HOME: testHome, PATH: [alias, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(alias, "private", "marker")])
+      yield* environment({ PATH: [ancestor, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(ancestor, "home", "private", "marker")])
+      yield* environment({ PATH: [path.dirname(bin), inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile, bin], [marker])
+      // A missing test home still has a canonical physical parent, so its ancestor cannot become a program grant.
+      yield* environment({ ORCHESTRA_TEST_HOME: path.join(testHome, "missing-home"),
+        PATH: [ancestor, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(ancestor, "home", "private", "marker")])
+    }), 300_000,
+  )
+
+  it.live("effective home and relative credential roots stay denied beneath readable PATH children", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const alias = path.join(root, "home-alias")
+      const gitPublic = path.join(home, "git", "public")
+      const gitCredentials = path.join(home, "git", "credentials")
+      const cargoPublic = path.join(home, "cargo-store", "public")
+      const names = ["credentials", "credentials.toml", "config", "config.toml"]
+      const targets = names.map((name) => path.join(home, "cargo-store", name))
+      yield* Effect.promise(() => Promise.all([plant(gitPublic), plant(gitCredentials), plant(cargoPublic),
+        ...targets.map((target, index) => plant(target).then(() => link(target, path.join(home, names[index]))))]))
+      yield* Effect.promise(() => link(home, alias))
+      const inherited = process.env.PATH ?? ""
+      // XDG/CARGO equal Orchestra's lexical home, and resolve to its physical home: neither is grant-eligible.
+      yield* environment({ ORCHESTRA_TEST_HOME: alias, XDG_CONFIG_HOME: alias, CARGO_HOME: alias,
+        PATH: [path.dirname(gitPublic), path.dirname(cargoPublic), inherited].join(path.delimiter) })
+      const denied = [gitCredentials, path.join(alias, "git", "credentials"), ...targets,
+        ...names.flatMap((name) => [path.join(home, name), path.join(alias, name)])]
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+      yield* environment({ ORCHESTRA_TEST_HOME: home, XDG_CONFIG_HOME: home, CARGO_HOME: home })
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+      yield* environment({ XDG_CONFIG_HOME: path.relative(directory, alias), CARGO_HOME: path.relative(directory, alias) })
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+    }), 300_000,
+  )
+
   it.live("a link planted at a grant cannot expose what it points to; a dotfiles link keeping git's names still works", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true })
@@ -176,6 +231,83 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
       yield* Effect.promise(() => plant(dotfiles).then(() => link(dotfiles, path.join(linked, "git", "attributes"))))
       yield* environment({ XDG_CONFIG_HOME: linked })
       yield* exactly(directory, [path.join(linked, "git", "attributes")], [])
+    }), 300_000,
+  )
+
+  it.live("a registry ancestor link cannot expose a private directory outside the physical cargo root", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const cargo = path.join(root, "cargo")
+      const outside = path.join(root, "private")
+      const markers = ["index", "cache", "src"].map((name) => path.join(outside, name, "marker"))
+      const allowed = path.join(cargo, "bin", "probe")
+      yield* Effect.promise(() => Promise.all([plant(allowed), ...markers.map((file) => plant(file))]))
+      yield* Effect.promise(() => link(outside, path.join(cargo, "registry")))
+      yield* environment({ CARGO_HOME: cargo })
+      yield* exactly(directory, [allowed], [...markers, ...["index", "cache", "src"].map((name) =>
+        path.join(cargo, "registry", name, "marker"))])
+    }), 300_000,
+  )
+
+  it.live("cargo and rustup aliases of physical home or its ancestor cannot authorize grants", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const alias = path.join(root, "home-alias")
+      const cargo = path.join(root, "cargo-home-alias")
+      const rust = path.join(root, "rustup-home-alias")
+      const above = path.join(root, "ancestor-alias")
+      const names = [path.join("bin", "probe"), path.join("registry", "index", "marker"),
+        path.join("registry", "cache", "marker"), path.join("registry", "src", "marker"),
+        path.join("toolchains", "stable", "probe"), "settings.toml"]
+      yield* Effect.promise(() => Promise.all(names.map((name) => plant(path.join(home, name)))))
+      yield* Effect.promise(() => Promise.all([link(home, alias), link(home, cargo), link(home, rust), link(root, above),
+        ...names.map((name) => plant(path.join(root, name)))]))
+      // Distinct lexical aliases pass environment validation; only physical containment can reject them.
+      yield* environment({ ORCHESTRA_TEST_HOME: alias, CARGO_HOME: cargo, RUSTUP_HOME: rust })
+      yield* exactly(directory, [], names.flatMap((name) => [path.join(home, name), path.join(cargo, name), path.join(rust, name)]))
+      yield* environment({ CARGO_HOME: above, RUSTUP_HOME: above })
+      yield* exactly(directory, [], names.flatMap((name) => [path.join(root, name), path.join(above, name)]))
+      // Genuine independent physical toolchain roots are supported; whole-root alias traversal is not promised.
+      const independent = path.join(root, "independent")
+      yield* Effect.promise(() => Promise.all(names.map((name) => plant(path.join(independent, name)))))
+      yield* environment({ CARGO_HOME: independent, RUSTUP_HOME: independent })
+      yield* exactly(directory, names.map((name) => path.join(independent, name)), [])
+    }), 300_000,
+  )
+
+  it.live("file grants reject directories and preserve named regular files; system-link compatibility is explicit", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const xdg = path.join(root, "xdg")
+      const rust = path.join(root, "rustup")
+      const targets = [path.join(root, "dotfiles", ".gitconfig"),
+        ...["config", "ignore", "attributes"].map((name) => path.join(root, "dotfiles", "git", name))]
+      const grants = [path.join(home, ".gitconfig"),
+        ...["config", "ignore", "attributes"].map((name) => path.join(xdg, "git", name))]
+      yield* Effect.promise(() => Promise.all(targets.map((target, index) =>
+        plant(path.join(target, "marker")).then(() => link(target, grants[index])))))
+      const settings = path.join(rust, "settings.toml", "marker")
+      yield* Effect.promise(() => plant(settings))
+      yield* environment({ ORCHESTRA_TEST_HOME: home, XDG_CONFIG_HOME: xdg, RUSTUP_HOME: rust })
+      yield* exactly(directory, [], [...targets, ...grants].map((entry) => path.join(entry, "marker")).concat(settings))
+
+      const regular = path.join(root, "regular", "git", "attributes")
+      const linked = path.join(root, "linked-xdg", "git", "attributes")
+      const gitconfig = path.join(root, "regular", ".gitconfig")
+      const linkedHome = path.join(root, "linked-home")
+      const system = path.join(root, "system-rustup", "settings.toml")
+      yield* Effect.promise(() => Promise.all([plant(regular).then(() => link(regular, linked)),
+        plant(gitconfig, "[probe]\n\tmarker = regular-config\n").then(() => link(gitconfig, path.join(linkedHome, ".gitconfig")))]))
+      // Compatibility control, not Nix proof: pinned SRT refuses cross-root /usr-to-/tmp restoration.
+      yield* Effect.promise(() => link("/usr/bin/env", system))
+      yield* environment({ ORCHESTRA_TEST_HOME: linkedHome,
+        XDG_CONFIG_HOME: path.dirname(path.dirname(linked)), RUSTUP_HOME: path.dirname(system) })
+      yield* exactly(directory, [linked, path.join(linkedHome, ".gitconfig"), system], [])
     }), 300_000,
   )
 
