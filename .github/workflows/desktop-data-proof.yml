@@ -6,6 +6,12 @@ on:
     branches: [desktop-data-proof]
     paths: ["packages/desktop/test/desktop-persistence/**", ".github/workflows/desktop-data-proof.yml"]
   workflow_dispatch:
+    inputs:
+      scope:
+        description: "Package lane to qualify; default retains both platforms"
+        type: choice
+        options: [all, linux, windows]
+        default: all
 
 permissions:
   contents: read
@@ -57,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2022]
+        os: ${{ fromJSON(inputs.scope == 'linux' && '["ubuntu-24.04"]' || inputs.scope == 'windows' && '["windows-2022"]' || '["ubuntu-24.04","windows-2022"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
@@ -72,7 +78,7 @@ jobs:
         run: mkdir -p packages/desktop/.omni-desktop-evidence && git rev-parse HEAD > packages/desktop/.omni-desktop-evidence/source-sha.txt
       - uses: ./.github/actions/setup-bun
         with:
-          install-flags: --frozen-lockfile
+          install-flags: --frozen-lockfile --os='*' --cpu='*'
       - uses: ./.github/actions/omni-binaries
       - uses: ./.github/actions/ripgrep
       - name: Linux GUI display
