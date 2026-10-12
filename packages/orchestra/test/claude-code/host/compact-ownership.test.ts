@@ -4,10 +4,12 @@ import { Deferred, Effect, Fiber, Tracer } from "effect"
 import { getEventListeners } from "node:events"
 import { Database } from "@orchestra/core/database/database"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
+import { ClaudeHostMemory } from "@/claude-code/host/memory"
+import { ClaudeHostTodos } from "@/claude-code/host/todos"
 import { awaitWithTimeout } from "../../lib/effect"
 import { ClaudeHostGate } from "@/claude-code/host/gate"
 import { LogicalTask } from "@/maestro/logical-task"
-import { MessageID, PartID } from "@/session/schema"
+import { PartID } from "@/session/schema"
 import { disposeAllInstances } from "../../fixture/fixture"
 import { CompactionFixture } from "./compaction-fixture"
 
@@ -121,11 +123,10 @@ CompactionFixture.it.instance("a retained-view cut omits later todos and orphan 
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     if (!f.user || !f.assistant) throw new Error("Missing history fixture")
-    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
-      type: "tool", tool: "todowrite", callID: "old-todos", state: { status: "completed", input: {}, output: "saved", title: "Todos",
-        metadata: { todos: [{ content: "KEPT-ACTION", status: "pending", priority: "high" }] }, time: { start: 1, end: 2 } } })
-    const cut = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
-    const after = yield* f.sessions.updateMessage({ ...f.assistant, id: MessageID.ascending(), parentID: cut.id })
+    yield* f.taskList([{ id: "KEPT-NATIVE-ID", subject: "KEPT-ACTION", status: "pending" }])
+    const cut = yield* f.nextUser()
+    const after = yield* f.nextAssistant(cut)
+    yield* f.taskList([{ id: "FUTURE-NATIVE-ID", subject: "FUTURE-ACTION", status: "pending" }], after)
     const orphan = yield* f.task("ORPHAN-TASK")
     const call = (yield* f.sessions.messages({ sessionID: f.chat.id })).flatMap((message) => message.parts)
       .find((part) => part.type === "tool" && part.callID === "call-ORPHAN-TASK")
@@ -133,6 +134,8 @@ CompactionFixture.it.instance("a retained-view cut omits later todos and orphan 
     yield* f.sessions.removePart({ sessionID: f.chat.id, messageID: f.assistant.id, partID: call.id })
     yield* f.sessions.updatePart({ ...call, messageID: after.id })
     yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "FUTURE-ACTION", status: "pending", priority: "high" }] })
+    expect(memory(yield* f.compact())).toContain("FUTURE-ACTION")
+    expect(memory(yield* f.compact())).toContain("ORPHAN-TASK")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: cut.id }, summary: undefined })
     const text = memory(yield* f.compact())
     expect(text).toContain("KEPT-ACTION")
@@ -145,10 +148,8 @@ CompactionFixture.it.instance("real Session.fork reads its copied todo snapshot 
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     if (!f.user || !f.assistant) throw new Error("Missing fork fixture")
-    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
-      type: "tool", tool: "todowrite", callID: "fork-kept", state: { status: "completed", input: {}, output: "saved", title: "Todos",
-        metadata: { todos: [{ content: "FORK-KEPT", status: "pending", priority: "high", id: "EXACT-TODO-ID" }] }, time: { start: 1, end: 2 } } })
-    const boundary = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
+    yield* f.taskList([{ id: "EXACT-TODO-ID", subject: "FORK-KEPT", status: "pending" }])
+    const boundary = yield* f.nextUser()
     yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "SOURCE-FUTURE", status: "pending", priority: "high" }] })
     const fork = yield* f.sessions.fork({ sessionID: f.chat.id, messageID: boundary.id })
     yield* f.sessions.setMetadata({ sessionID: fork.id, metadata: { ...fork.metadata, claudeCode: {
@@ -157,13 +158,18 @@ CompactionFixture.it.instance("real Session.fork reads its copied todo snapshot 
     yield* LogicalTask.ensure({ executionSessionID: orphan.id, authoritySessionID: fork.id,
       projectID: fork.projectID, memberID: "backend", source: "user", taskId: "FORK-ORPHAN" })
     yield* f.todos.update({ sessionID: fork.id, todos: [{ content: "FORK-SIDE-FUTURE", status: "pending", priority: "high" }] })
+    const view = yield* ClaudeHostMemory.retained(fork.id)
+    expect(view.history.map((message) => message.info.role)).toEqual(["user", "assistant"])
+    expect(ClaudeHostTodos.latest(view)).toMatchObject({ status: "known", snapshot: {
+      tasks: [{ id: "EXACT-TODO-ID", subject: "FORK-KEPT", status: "pending" }],
+    } })
     const reopened = yield* CompactionFixture.make({ sessionID: fork.id })
     const text = memory(yield* reopened.compact())
     expect(text).toContain("FORK-KEPT")
-    expect(text).toContain("EXACT-TODO-ID")
     expect(text).not.toContain("SOURCE-FUTURE")
     expect(text).not.toContain("FORK-SIDE-FUTURE")
     expect(text).not.toContain("FORK-ORPHAN")
+    expect(text).toContain("EXACT-TODO-ID")
   }))
 
 CompactionFixture.it.instance("a joined child's compact hook is refused when its producing Agent part is outside the parent view", () =>

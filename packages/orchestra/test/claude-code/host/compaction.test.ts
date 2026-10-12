@@ -10,12 +10,16 @@ import { Effect, Layer, Schema } from "effect"
 import type { HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { Archive } from "@/continuity/archive"
 import { ContinuityChecklist } from "@/continuity/checklist"
+import { aliases } from "@/continuity/alias"
+import { ClaudeHostMemory } from "@/claude-code/host/memory"
+import { ClaudeHostTodos } from "@/claude-code/host/todos"
 import { completeSnapshot } from "@/continuity/fork"
 import { decode } from "@/continuity/memory"
 import { LogicalTask } from "@/maestro/logical-task"
 import { readPlanRevision } from "@/maestro/plan-revision"
+import { readAdmission } from "@/maestro/admission-record"
 import { AtlasMemory } from "@/maestro/atlas-memory"
-import { MessageID, PartID, SessionID } from "@/session/schema"
+import { PartID, SessionID } from "@/session/schema"
 import { ContextRecallTool } from "@/tool/context-recall"
 import { Tool } from "@/tool/tool"
 import { disposeAllInstances } from "../../fixture/fixture"
@@ -188,23 +192,43 @@ CompactionFixture.it.instance("required critical content beyond 6000 code units 
     expect(text).not.toContain("context_recall for more")
   }))
 
-CompactionFixture.it.instance("the last native task snapshot preserves exact IDs and a later empty ordinary snapshot clears stale side todos", () =>
+CompactionFixture.it.instance("an empty native receipt overrides later ordinary and side todos across a cold reopen", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     if (!f.assistant) throw new Error("Missing native todo fixture")
     yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "SIDE-TODO-FUTURE", status: "pending", priority: "high" }] })
-    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
-      type: "tool", tool: "TaskList", callID: "native-task-list", state: { status: "completed", input: {}, output: "native task snapshot",
-        title: "Tasks", metadata: { todos: [{ id: "EXACT-NATIVE-ID", content: "NATIVE-TODO-KEPT", status: "pending", priority: "high" }] },
-        time: { start: 1, end: 2 } } })
+    const subject = `${"native subject ".repeat(500)}NATIVE-TODO-KEPT 🦴\r\nexact trailing blanks  `
+    const kept = yield* f.taskList([{ id: "EXACT-NATIVE-ID", subject, status: "pending" }])
+    expect(ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))).toMatchObject({ status: "known", order: 1,
+      part: { id: kept.id }, snapshot: { tasks: [{ id: "EXACT-NATIVE-ID", subject, status: "pending" }] } })
     const native = memory(yield* f.compact())
-    expect(native).toContain("NATIVE-TODO-KEPT")
-    expect(native).toContain("EXACT-NATIVE-ID")
+    expect(native).toContain(JSON.stringify(subject))
     expect(native).not.toContain("SIDE-TODO-FUTURE")
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.assistant.id,
       type: "tool", tool: "todowrite", callID: "empty-task-snapshot", state: { status: "completed", input: {}, output: "cleared",
         title: "Todos", metadata: { todos: [] }, time: { start: 3, end: 4 } } })
+    expect(memory(yield* f.compact())).toBe(native)
+    const empty = yield* f.taskList([])
+    const later = yield* f.nextUser()
+    const after = yield* f.nextAssistant(later)
+    // A later ordinary snapshot and aggregate cannot resurrect state cleared by the native receipt.
+    yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: after.id,
+      type: "tool", tool: "todowrite", callID: "ordinary-resurrection", state: { status: "completed", input: {}, output: "saved",
+        title: "Todos", metadata: { todos: [{ content: "ORDINARY-RESURRECTION", status: "pending", priority: "high" }] },
+        time: { start: after.time.created, end: after.time.completed ?? after.time.created } } })
+    yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "SIDE-RESURRECTION", status: "pending", priority: "high" }] })
+    expect(ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(f.chat.id))).toMatchObject({ status: "known", order: 2,
+      part: { id: empty.id }, snapshot: { name: "TaskList", result: { tasks: [] }, tasks: [] }, todos: [] })
     expect(yield* f.compact()).toEqual({})
+    const reopened = yield* CompactionFixture.make({ sessionID: f.chat.id })
+    expect(yield* reopened.compact()).toEqual({})
+  }))
+
+CompactionFixture.it.instance("compact native task context retains the producer's exact task ID", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    yield* f.taskList([{ id: "EXACT-NATIVE-ID", subject: "NATIVE-TODO-KEPT", status: "pending" }])
+    expect(memory(yield* f.compact())).toContain("EXACT-NATIVE-ID")
   }))
 
 CompactionFixture.it.instance("equal PostCompact summaries remain distinct observations with exact bytes, trigger and native owner", () =>
@@ -232,7 +256,9 @@ CompactionFixture.it.instance("owned v5 memory is read cold and withheld after c
     const history = yield* f.sessions.messages({ sessionID: f.chat.id })
     const snapshot = completeSnapshot(f.chat.id, history)
     if (!snapshot) throw new Error("No safe complete snapshot")
-    const decoded = decode({ text: JSON.stringify({ now: { doing: "Verification pending", next: "OWNED-V5-NEXT", src: ["a1"] }, ops: [] }),
+    const source = aliases(history).find((source) => source.message.info.id === snapshot.boundary && source.alias.startsWith("a"))
+    if (!source) throw new Error("Missing actual completed boundary alias")
+    const decoded = decode({ text: JSON.stringify({ now: { doing: "Verification pending", next: "OWNED-V5-NEXT", src: [source.alias] }, ops: [] }),
       snapshot, producerID: SessionID.descending(), host: { history, delegations: {}, member: false }, budget: 20000 })
     if ("check" in decoded) throw new Error(JSON.stringify(decoded))
     const checked = ContinuityChecklist.check(decoded, snapshot, { history, delegations: {}, member: false })
@@ -246,11 +272,11 @@ CompactionFixture.it.instance("owned v5 memory is read cold and withheld after c
     expect(yield* f.fs.readFileString(path.join(f.archiveDirectory, "memory.json"))).toBe(bytes)
     expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
     yield* f.sessions.updatePart({ ...part, text: "Changed source invalidates fingerprint." })
-    expect(memory(yield* f.compact())).not.toContain("OWNED-V5-NEXT")
+    expect(yield* f.compact()).toEqual({})
     yield* f.sessions.updatePart(part)
     expect(memory(yield* f.compact())).toContain("OWNED-V5-NEXT")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: f.user.id }, summary: undefined })
-    expect(memory(yield* f.compact())).not.toContain("OWNED-V5-NEXT")
+    expect(yield* f.compact()).toEqual({})
   }))
 
 CompactionFixture.it.instance("foreign stored memory fails closed rather than adopting guessed owner metadata", () =>
@@ -258,12 +284,17 @@ CompactionFixture.it.instance("foreign stored memory fails closed rather than ad
     const own = yield* CompactionFixture.make()
     const foreign = yield* CompactionFixture.make()
     yield* own.summary("archive directory positive control")
-    yield* own.fs.writeFileString(path.join(own.archiveDirectory, "memory.json"), JSON.stringify({
+    const bytes = JSON.stringify({
       version: 1, sessionID: foreign.chat.id, entry: null, masks: [],
-    }))
+    })
+    yield* own.fs.writeFileString(path.join(own.archiveDirectory, "memory.json"), bytes)
+    const refused = yield* own.archive.readMemory(own.chat.id).pipe(Effect.flip)
+    expect(refused).toBeInstanceOf(Archive.ArchiveError)
+    expect(refused.reason).toBe("archive-corrupt-memory")
     const result = yield* own.compact()
-    expect(result).toMatchObject({ continue: false, stopReason: expect.stringContaining("archive-corrupt-memory") })
+    expect(result).toMatchObject({ continue: false, stopReason: expect.stringContaining("ContinuityArchiveError") })
     expect(own.ctx.abort.signal.aborted).toBe(true)
+    expect(yield* own.fs.readFileString(path.join(own.archiveDirectory, "memory.json"))).toBe(bytes)
   }))
 
 CompactionFixture.it.instance("latest own-project/member Atlas Admission survives whole and foreign or reverted Admissions stay absent", () =>
@@ -282,7 +313,7 @@ CompactionFixture.it.instance("latest own-project/member Atlas Admission survive
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.user.id,
       type: "text", synthetic: true, text: "FOREIGN-ATLAS", metadata: { [AtlasMemory.ADMISSION_KEY]: {
         ...admission, key: { ...admission.key, projectID: "foreign-project" }, text: "FOREIGN-ATLAS" } } })
-    const later = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
+    const later = yield* f.nextUser()
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: later.id,
       type: "text", synthetic: true, text: "FUTURE-ATLAS", metadata: { [AtlasMemory.ADMISSION_KEY]: { ...admission, text: "FUTURE-ATLAS" } } })
     expect(memory(yield* f.compact())).toContain("FUTURE-ATLAS")
@@ -302,14 +333,17 @@ CompactionFixture.it.instance("owned v4 Archive memory is applicable only while 
     if (!f.user || !f.assistant) throw new Error("Missing v4 history")
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: f.user.id,
       type: "text", text: "Retained user evidence." })
-    const second = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
-    const boundary = yield* f.sessions.updateMessage({ ...f.assistant, id: MessageID.ascending(), parentID: second.id })
+    const second = yield* f.nextUser()
+    const boundary = yield* f.nextAssistant(second)
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: boundary.id,
       type: "text", text: "Retained completed boundary." })
     const history = yield* f.sessions.messages({ sessionID: f.chat.id })
     const snapshot = { sessionID: f.chat.id, boundary: boundary.id, tailStart: second.id, head: history.slice(0, 2),
       tail: history.slice(2), canRecall: true }
-    const decoded = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "findings", src: ["u1"], fields: {
+    expect(history.map((message) => message.info.id)).toEqual([f.user.id, f.assistant.id, second.id, boundary.id])
+    const source = aliases(history).find((source) => source.message.info.id === f.user?.id && source.alias.startsWith("u"))
+    if (!source) throw new Error("Missing actual retained user alias")
+    const decoded = decode({ text: JSON.stringify({ ops: [{ op: "add", section: "findings", src: [source.alias], fields: {
       finding: "OWNED-V4-MEMORY", why: "Historical observation", status: "hypothesis", check: "Verify the retained receipt" } }] }),
       snapshot, producerID: SessionID.descending(), host: { history, delegations: {}, member: false }, budget: 20000 })
     if ("check" in decoded || decoded.artifact.version !== 4) throw new Error(JSON.stringify(decoded))
@@ -318,7 +352,7 @@ CompactionFixture.it.instance("owned v4 Archive memory is applicable only while 
       tailStart: artifact.tailStart, text: artifact.text, artifact }, masks: [] }))
     expect(memory(yield* f.compact())).toContain("OWNED-V4-MEMORY")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: second.id }, summary: undefined })
-    expect(memory(yield* f.compact())).not.toContain("OWNED-V4-MEMORY")
+    expect(yield* f.compact()).toEqual({})
   }))
 
 CompactionFixture.it.instance("plan is anchored to a visible producer/admission and retains acceptance beyond item eight across a cut", () =>
@@ -327,8 +361,8 @@ CompactionFixture.it.instance("plan is anchored to a visible producer/admission 
     if (!f.user || !f.assistant) throw new Error("Missing plan history")
     yield* f.plan("KEPT-PLAN")
     expect(memory(yield* f.compact())).toContain("KEPT-PLAN-ACCEPT-9")
-    const later = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
-    const after = yield* f.sessions.updateMessage({ ...f.assistant, id: MessageID.ascending(), parentID: later.id })
+    const later = yield* f.nextUser()
+    const after = yield* f.nextAssistant(later)
     yield* f.plan("FUTURE-PLAN", later, after)
     expect(memory(yield* f.compact())).toContain("FUTURE-PLAN")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: later.id }, summary: undefined })
@@ -423,7 +457,11 @@ CompactionFixture.it.instance("retained plan admission is revalidated durably wi
     expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
     const admission = events.find((row) => row.type === EventV2.versionedType(MaestroEvent.Admission.Decided.type, 1))
     if (!admission) throw new Error("Missing durable plan admission")
-    yield* database.db.update(EventTable).set({ data: { ...admission.data, outcome: "CLARIFY", reason: "revoked fixture" } })
+    const revoked = Schema.decodeUnknownSync(MaestroEvent.Admission.Decided.data)({ ...admission.data,
+      outcome: "CLARIFY", reason: "material-blocker" })
+    yield* database.db.update(EventTable).set({ data: revoked })
       .where(eq(EventTable.id, admission.id)).run().pipe(Effect.orDie)
+    expect(yield* readAdmission({ sessionID: f.chat.id, messageID: plan.revision.admissionMessageID,
+      methodVersion: "admit-request-v1" })).toEqual(revoked)
     expect(yield* f.compact()).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_PLAN_ADMISSION_UNAVAILABLE") })
   }))
