@@ -44,8 +44,12 @@ const metainfoFpm = (appId: string) =>
   `${path.join(packageDir, "resources", `${appId}.metainfo.xml`)}=/usr/share/metainfo/${appId}.metainfo.xml`
 
 async function signWindows(configuration: { path: string }) {
-  // CLI bytes are already signed and hashed by staging. Re-signing would invalidate their manifest.
-  if (configuration.path.replaceAll("\\", "/").includes("/resources/cli/")) return
+  // CLI and upstream Claude bytes are already hashed by staging. Re-signing would invalidate their manifests.
+  if (
+    ["/resources/cli/", "/resources/claude-code/"].some((directory) =>
+      configuration.path.replaceAll("\\", "/").includes(directory),
+    )
+  ) return
   if (process.platform !== "win32") return
   if (process.env.GITHUB_ACTIONS !== "true") return
 
@@ -70,12 +74,14 @@ const APP_IDS = {
 
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
+  const { verifyClaudeAsset } = await import("./scripts/stage-claude")
   const { Arch } = await import("electron-builder")
   const directory =
     context.electronPlatformName === "darwin"
       ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
       : path.join(context.appOutDir, "resources/cli")
   await verifyPackagedCli(directory, context.electronPlatformName, Arch[context.arch], context.packager.appInfo.version)
+  await verifyClaudeAsset(path.join(directory, "../claude-code"), context.electronPlatformName, Arch[context.arch])
 }
 
 const getBase = (appId: string): Configuration => ({
@@ -97,9 +103,10 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/cli{,/**/*}", "!resources/icons/**/*", "!resources/omni/**"],
+  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/cli{,/**/*}", "!resources/icons/**/*", "!resources/omni/**", "!resources/claude-code{,/**/*}"],
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
+    const { verifyClaudeAsset } = await import("./scripts/stage-claude")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
@@ -117,6 +124,7 @@ const getBase = (appId: string): Configuration => ({
       Arch[context.arch],
       context.packager.appInfo.version,
     )
+    await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), context.electronPlatformName, Arch[context.arch])
   },
   afterPack: verifyPackagedResources,
   afterSign: verifyPackagedResources,
@@ -141,13 +149,14 @@ const getBase = (appId: string): Configuration => ({
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
+    { from: "resources/claude-code", to: "claude-code" },
     {
       from: "resources/omni",
       to: "omni",
     },
   ],
   mac: {
-    signIgnore: ["/Resources/cli/"],
+    signIgnore: ["/Resources/cli/", "/Resources/claude-code/"],
     category: "public.app-category.developer-tools",
     icon: `resources/icons/icon.icns`,
     hardenedRuntime: true,
