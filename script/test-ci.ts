@@ -26,7 +26,7 @@ import { existsSync, realpathSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
+import { closestBase, parseResponse, rateLimitDelay, testPaths, workflowRun } from "./test-ci-upload"
 import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
@@ -72,11 +72,11 @@ const removeBranch = () => api("DELETE", `repos/${repo}/git/refs/heads/${branch}
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, () => void removeBranch().finally(() => process.exit(130)))
 
-// Look the run up by its unique commit: `--workflow` only resolves workflows that exist on the default branch.
+// Bind the run to both its temporary branch and commit; concurrent snapshots can share a commit SHA.
 const run = await waitFor("the workflow run to start", 180_000, async () => {
-  const runs: { databaseId: number; url: string; workflowName: string }[] =
-    await $`gh run list --repo ${repo} --commit ${commit.sha} --json databaseId,url,workflowName`.quiet().json()
-  return runs.find((entry) => entry.workflowName === "test-ci")
+  const runs: { databaseId: number; url: string; workflowName: string; headBranch: string; headSha: string }[] =
+    await $`gh run list --repo ${repo} --branch ${branch} --commit ${commit.sha} --json databaseId,url,workflowName,headBranch,headSha`.quiet().json()
+  return workflowRun(runs, branch, commit.sha)
 })
 console.log(`test-ci: ${run.url}`)
 const finished = await follow(run.databaseId)

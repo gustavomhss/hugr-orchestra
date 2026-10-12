@@ -41,6 +41,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # bun test lanes find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
+
       # The toolkit's installers run through the hugr-omni spawner, which cargo builds here on a cache miss.
       - name: omni binaries
         uses: ./.github/actions/omni-binaries
@@ -112,6 +116,10 @@ jobs:
         uses: ./.github/actions/setup-bun
         with:
           install-flags: --frozen-lockfile --ignore-scripts
+
+      # bun test lanes find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
 
       - name: Guard tests before any repair
         working-directory: packages/script

@@ -67,6 +67,11 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun
 
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.request.outputs.runner != 'pytest'
+        uses: ./.github/actions/ripgrep
+
       # setup-bun selects Node 24; match the existing e2e lane's extraction workaround afterwards.
       - name: Setup Playwright Node
         if: steps.request.outputs.runner == 'playwright'

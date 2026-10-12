@@ -224,6 +224,11 @@ jobs:
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
 
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.previous.outputs.hit != 'true'
+        uses: ./.github/actions/ripgrep
+
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
@@ -335,6 +340,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
+
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
@@ -392,6 +401,11 @@ jobs:
       - name: Run spawn-import gate
         if: matrix.part == 'packages'
         run: bun run check:spawn-imports
+
+      # Every pinned ripgrep digest, not only the runners' platforms, against upstream's .sha256 files.
+      - name: Run ripgrep pin gate
+        if: matrix.part == 'packages'
+        run: bun run check:ripgrep-pins
 
       - name: Run unit tests
         if: matrix.filters
@@ -516,6 +530,11 @@ jobs:
       - name: Setup Bun
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
+
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.previous.outputs.hit != 'true'
+        uses: ./.github/actions/ripgrep
 
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
