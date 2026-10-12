@@ -5,7 +5,7 @@ import { createHash } from "crypto"
 import { Effect } from "effect"
 import { ToolSafety } from "./tool-safety"
 
-export const REVISION = "read-alias-1"
+export const REVISION = "read-alias-2"
 
 // srt 0.0.78, dist/sandbox/linux-sandbox-utils.js, from the integrity-pinned npm archive.
 const ORIGINAL = "tu3rZpurMCnY0tUKGGII+JhDEbObzOYWfepEQ14DsTM="
@@ -23,9 +23,16 @@ export function transform(input: string) {
             readAllowPaths.some(grant => unit.nameLocation(grant) === source &&
                 unit.resolve(grant).resolved && unit.resolve(grant).canonical === source) &&
             !allowedWritePaths.some(root => isAtOrUnder(source, root)) &&
+            !unit.sourceReadDenied(source) &&
             fs.statSync(source).isFile())) {`,
     ],
     ["const placement = restorePlacementOf(allowPath);", "const placement = restorePlacementOf(allowPath, true);"],
+    [
+      "readDenialAround: restoreTarget => readDenialAround(restoreTarget, landing),",
+      `readDenialAround: restoreTarget => readDenialAround(restoreTarget, landing),
+                sourceReadDenied: target => readDeniedLocations.some(denied =>
+                    isAtOrUnder(target, denied) || isAtOrUnder(denied, target)),`,
+    ],
   ].reduce((source, change) => {
     if (source.split(change[0]).length !== 2) throw new Error("sandbox-runtime-read-alias-patch-mismatch")
     return source.replace(change[0], change[1])
