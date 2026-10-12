@@ -17,9 +17,9 @@ async function run(args: string[], env = process.env) {
 test("capture native production Lean page in CI Chromium; exact PNG/manifest artifact set", async () => {
   if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Visual capture/build requires CI")
   const source = execFileSync("git", ["rev-parse", "HEAD"], { cwd: app, encoding: "utf8" }).trim()
-  await run(["typecheck"])
-  await run(["run", "typecheck:e2e"])
-  await run(["x", "playwright", "install", "--with-deps", "chromium"])
+  // The capture runs headless, which launches Chromium's headless shell, never the full browser; Windows needs no system
+  // packages for it (the Windows e2e lane installs none), and the dependency step there installs Media Foundation.
+  await run(["x", "playwright", "install", ...(process.platform === "linux" ? ["--with-deps"] : []), "--only-shell", "chromium"])
   await rm(out, { recursive: true, force: true })
   await run(["x", "playwright", "test", "--config", "e2e/orchestra-screenshots/playwright.config.ts", "lean-dashboard.visual.ts", "--project", "chromium"],
     { ...process.env, NODE_ENV: "production", ORCHESTRA_VISUAL_OUT: out, LEAN_VISUAL_SOURCE: source, ORCHESTRA_CHANNEL: "prod" })
