@@ -25,48 +25,8 @@ import { ContinuityAdmission } from "./admission"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
 import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
-
-type Backend = { readonly model: Provider.Model; readonly llm: LLM.Interface; readonly revision: number }
-type Active = { generation: number; epoch: number; backend: Backend | null | undefined; boundary: MessageID;
-  registered: Deferred.Deferred<void>; done: Deferred.Deferred<void>; context?: string }
-type Pending = { message: SessionV1.Assistant; canRecall: boolean; model?: Provider.Model; context?: string }
-/** A checked catch-up whose caller was superseded, with everything its reuse must find unchanged. Revision counts history edits. */
-type Parked = { artifact: MemoryArtifact; selected: MemorySnapshot; model: Provider.Model; context: string; epoch: number;
-  backend: Backend | null | undefined; revision: number; prior?: ContinuityContext }
-type Entry = {
-  generation: number
-  revision?: number
-  parked?: Parked
-  safe?: MessageID
-  active?: Active
-  pending?: Pending
-  attempted?: MessageID
-  refresh: boolean
-  archived?: MessageID
-  /** Consecutive producer failures; maintenance stops for the session at MAX_FAILURES. */
-  failures?: number
-  /** How the last maintenance run ended. */
-  result?: string
-  admittedBoundary?: MessageID
-  /** No masking fallback until a failed mandatory checkpoint has been saved successfully. */
-  checkpointBlocked?: boolean
-}
-type State = {
-  backends: Map<SessionID, Backend | null>
-  epochs: Map<SessionID, number>
-  backendGates: Map<SessionID, Semaphore.Semaphore>
-  sessions: Map<SessionID, Entry>
-  contexts: ReturnType<typeof create>
-  scope: Scope.Scope
-  /** Latest parent model request per session, kept so maintenance can reuse its prompt cache. */
-  requests: Map<SessionID, ParentRequest>
-  /** The parent's measured system and tool overhead per session; it outlives the evicted request. */
-  overheads: Map<SessionID, number>
-  /** Masked tool part IDs per session, mapped to the archive reference with the full output. */
-  masks: Map<SessionID, Map<string, string>>
-  /** Sessions whose persisted memory was loaded, is loading, or must not load (invalidated or forgotten). */
-  loads: Map<SessionID, Deferred.Deferred<void>>
-}
+import { ResearchExecution } from "@/research/allowance"
+import { entry, type Active, type Backend, type Entry, type Parked, type Pending, type State } from "./service-state"
 
 // After this many consecutive failed or invalid maintenance runs, stop until the user edits history.
 export const MAX_FAILURES = 3
@@ -111,14 +71,6 @@ export type Compacted = "disabled" | "fits" | "applied" | "masked" | "over"
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/SessionContinuity") {}
 
-function entry(state: State, sessionID: SessionID) {
-  const existing = state.sessions.get(sessionID)
-  if (existing) return existing
-  const next: Entry = { generation: 0, refresh: false }
-  state.sessions.set(sessionID, next)
-  return next
-}
-
 // Provider causes may contain conversation content. Keep diagnostics structural.
 // One event per pass, whatever its outcome; a pass summary carries op kinds, sections and IDs, never contents.
 function diagnostic(sessionID: SessionID, boundary: MessageID | undefined, reason: string, pass?: Omit<Pass, "artifact">) {
@@ -141,6 +93,7 @@ const layer = Layer.effect(
     const archive = yield* Archive.Service
     const config = yield* Config.Service
     const checkpoints = yield* ProjectCheckpoint.Service
+    const research = yield* ResearchExecution.Service
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
@@ -535,7 +488,7 @@ const layer = Layer.effect(
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
               if (!live()) return "discarded"
-              const { artifact, ...pass }: Pass = reused ? { artifact: reused.artifact, retried: false, ops: [], size: 0 } : yield* run(selected, {
+              const { artifact, ...pass }: Pass = reused ? { artifact: reused.artifact, retried: false, ops: [], size: 0 } : yield* research.withAttribution(sessionID, run(selected, {
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                  llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
@@ -544,7 +497,7 @@ const layer = Layer.effect(
                 token.entry.checkpointBlocked = true
                 yield* checkpoints.save({ sessionID, ...input })
                 if (live()) token.entry.checkpointBlocked = false
-              }) })
+              }) })).pipe(Effect.provideService(ResearchExecution.Current, pending.attribution))
               // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
               if (!live()) {
@@ -648,7 +601,10 @@ const layer = Layer.effect(
     const start: Interface["start"] = Effect.fn("SessionContinuity.start")((input) =>
       Effect.gen(function* () {
         if (!isSafe(input.message) || input.message.sessionID !== input.sessionID) return
-        const pending: Pending = { message: input.message, canRecall: input.canRecall === true }
+        // A queued maintenance pass may start in an older worker's finalizer. Retain the initiating
+        // dispatch frame here, not whichever dispatch happens to be current when that worker finishes.
+        const pending: Pending = { message: input.message, canRecall: input.canRecall === true,
+          attribution: yield* ResearchExecution.Current }
         const current = yield* InstanceState.get(state)
         const parent = current.requests.get(input.sessionID)
         if (parent) ParentReceipt.complete(parent, input.message)
@@ -716,7 +672,8 @@ const layer = Layer.effect(
         item.attempted = undefined
         item.result = undefined
       })
-      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model, context: input.context })
+      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model, context: input.context,
+        attribution: yield* ResearchExecution.Current })
       yield* settle(current, sessionID)
       if (item.checkpointBlocked) return "over" as const
       const after = yield* pressure
@@ -779,5 +736,6 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-   deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ProjectCheckpoint.node],
+   deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ProjectCheckpoint.node,
+    ResearchExecution.node],
 })

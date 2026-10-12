@@ -1,5 +1,6 @@
 [
   "client-error.ts",
   "client.ts",
-  "index.ts"
+  "index.ts",
+  "research.ts"
 ]
