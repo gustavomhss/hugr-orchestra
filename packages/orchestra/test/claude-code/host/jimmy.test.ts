@@ -98,14 +98,16 @@ ClaudeResearchFixture.it.instance("service timer aborts outstanding MCP executio
   expect(yield* fixture.research.stopReason(dispatch.child)).toContain("deadline")
   const late = yield* Effect.exit(fixture.research.tool(dispatch.child, "late-call", "mcp__orchestra__research_view"))
   expect(Exit.isFailure(late)).toBe(true)
-  if (Exit.isFailure(late)) expect(Cause.squash(late.cause)).toMatchObject({ code: "budget_exhausted" })
+  if (Exit.isFailure(late)) expect(Cause.squash(late.cause)).toMatchObject({
+    _tag: "ClaudeHostResearch.TerminalClosed", message: expect.stringContaining("RESEARCH_TERMINAL_CLOSED"),
+  })
   yield* other.run("research_view", { action: "corpus" }, "other-call")
   expect(fixture.research.signal(other.child)?.aborted).toBe(false)
   // This service/MCP test has no native provider task to stop and makes no such claim.
 }).pipe(Effect.provide(TestClock.layer())), 30_000)
 
 for (const outcome of ["settle", "close"] as const)
-  ClaudeResearchFixture.it.instance(`service ${outcome} cancels its timer; this is not native terminal admission closure`, () => Effect.gen(function* () {
+  ClaudeResearchFixture.it.instance(`service ${outcome} closes admission and aborts its signal without native provider execution`, () => Effect.gen(function* () {
     const fixture = yield* ClaudeResearchFixture.setup()
     const dispatch = yield* fixture.serviceDispatch()
     expect(fixture.research.signal(dispatch.child)).toBeInstanceOf(AbortSignal)
@@ -114,5 +116,9 @@ for (const outcome of ["settle", "close"] as const)
     if (outcome === "close") yield* fixture.research.close
     yield* TestClock.adjust("601 seconds")
     expect(yield* fixture.research.stopReason(dispatch.child)).toBeUndefined()
-    expect(fixture.research.signal(dispatch.child)?.aborted).toBe(false)
+    expect(fixture.research.signal(dispatch.child)?.aborted).toBe(true)
+    expect(yield* fixture.research.status(dispatch.child)).toMatchObject({ closed: true, deadlineActive: false })
+    const late = yield* Effect.exit(fixture.research.tool(dispatch.child, "after-terminal", "research_view"))
+    expect(Exit.isFailure(late)).toBe(true)
+    if (Exit.isFailure(late)) expect(Cause.squash(late.cause)).toMatchObject({ _tag: "ClaudeHostResearch.TerminalClosed" })
   }).pipe(Effect.provide(TestClock.layer())), 30_000)
