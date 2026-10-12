@@ -5,6 +5,7 @@ import type { Event } from "@orchestra/sdk/v2/client"
 import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createApiForServer, createSdkForServer } from "@/utils/server"
+import { rejection } from "@/testing/rejection"
 
 describe("createServerProtocolPromise", () => {
   test("shares in-flight detection and retains a successful connection result", async () => {
@@ -56,7 +57,7 @@ describe("createServerProtocolPromise", () => {
         current: createApiForServer({ server, fetch }),
         legacy: (directory) => createSdkForServer({ server, fetch, directory, throwOnError: true }),
       })
-      await expect(api.project.list()).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(await rejection(api.project.list())).toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(state.detected).toBeUndefined()
       expect(state.probes).toBe(6)
       state.ready = true
@@ -92,11 +93,11 @@ describe("createServerProtocolPromise", () => {
     try {
       const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
       const chain = protocol.then((kind) => kind)
-      const failed = expect(chain).rejects.toBe(reason)
+      const failed = rejection(chain)
       await reached.promise
       abort.abort(reason)
-      await failed
-      await expect(protocol).rejects.toBe(reason)
+      expect(await failed).toBe(reason)
+      expect(await rejection(protocol)).toBe(reason)
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)

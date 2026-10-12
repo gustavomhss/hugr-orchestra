@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { detectServerProtocol, ServerProtocolUnresolvedError } from "./server-protocol"
+import { rejection } from "../testing/rejection"
 
 const listen = (fetch: (request: Request) => Response | Promise<Response>) =>
   Bun.serve({ port: 0, hostname: "127.0.0.1", fetch })
@@ -78,9 +79,9 @@ describe("detectServerProtocol", () => {
       return Response.json({ error: "unavailable" }, { status: 503 })
     })
     try {
-      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, {
+      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, {
         attempts: 2, retryDelayMs: 10,
-      })).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      }))).toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(probes).toBe(12)
     } finally {
       listener.stop(true)
@@ -94,8 +95,8 @@ describe("detectServerProtocol", () => {
     })
     try {
       const start = Date.now()
-      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, { timeoutMs: 50 }))
-        .rejects.toMatchObject({ name: "ServerProtocolUnresolvedError" })
+      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, { timeoutMs: 50 })))
+        .toMatchObject({ name: "ServerProtocolUnresolvedError" })
       expect(Date.now() - start).toBeLessThan(400)
     } finally {
       listener.stop(true)
@@ -115,14 +116,14 @@ describe("detectServerProtocol", () => {
     const reason = new DOMException("Connection disposed", "AbortError")
     try {
       const protocol = detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })
-      const rejected = expect(protocol).rejects.toBe(reason)
+      const rejected = rejection(protocol)
       await reached.promise
       abort.abort(reason)
-      await rejected
+      expect(await rejected).toBe(reason)
       await Bun.sleep(20)
       expect(paths).toEqual(["/global/health"])
-      await expect(detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal }))
-        .rejects.toBe(reason)
+      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })))
+        .toBe(reason)
       expect(paths).toHaveLength(1)
     } finally {
       listener.stop(true)
@@ -172,8 +173,8 @@ describe("detectServerProtocol", () => {
     }, { preconnect: fetch.preconnect })
     try {
       const server = { url: listener.url.origin }
-      await expect(detectServerProtocol(server, fetcher, { attempts: 1 }))
-        .rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(await rejection(detectServerProtocol(server, fetcher, { attempts: 1 })))
+        .toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(calls).toEqual([...Array(3).fill("/global/health"), ...Array(3).fill("/api/health")])
       state.ready = true
       expect(await detectServerProtocol(server, fetcher, { attempts: 1 })).toBe("v1")
