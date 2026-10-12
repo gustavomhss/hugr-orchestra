@@ -1,8 +1,8 @@
 export * as ClaudeResearchFixture from "./jimmy-fixture"
 
-import { Context, Effect, Schema } from "effect"
+import { Effect, Schema } from "effect"
 import { eq } from "drizzle-orm"
-import type { HookInput } from "@anthropic-ai/claude-agent-sdk"
+import type { BaseHookInput, HookInput } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -28,6 +28,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { LogicalTask } from "@/maestro/logical-task"
 import { Permission } from "@/permission"
 import { ResearchExecution } from "@/research/allowance"
 import { Session } from "@/session/session"
@@ -47,7 +48,7 @@ export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   Snapshot.node, Todo.node, SessionStatus.node, filesystem,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true, experimentalEventSystem: true })]]))
 
-export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" }
+export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" } satisfies BaseHookInput
 export const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
 
 export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
@@ -56,6 +57,8 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
   const registry = yield* ToolRegistry.Service
   const context = yield* Effect.context<never>()
   const parent = yield* sessions.create({ agent: "maestro", title: "Research authority" })
+  // Model root metadata retained after native init. Child hooks may share session_id (live S13).
+  yield* sessions.setMetadata({ sessionID: parent.id, metadata: { claudeCode: { sessionId: base.session_id } } })
   const user = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "user", agent: "maestro",
     model: ref, time: { created: Date.now() } } satisfies SessionV1.User)
   const assistant = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: parent.id, role: "assistant", parentID: user.id,
@@ -77,32 +80,33 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) },
   })
   const fire = (input: HookInput) => Effect.promise(() => hooks[input.hook_event_name]![0].hooks[0](input, undefined, { signal: abort.signal }))
-  const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research") {
-    const args = { subagent_type: "orchestra:jimmy", description: "Investigate conditions", prompt: "Find the applicability conditions.", run_in_background: false }
+  const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research",
+    input: { tool?: "Agent" | "Task"; subagentType?: string; background?: boolean } = {}) {
+    const args = { subagent_type: input.subagentType ?? "orchestra:jimmy", description: "Investigate conditions",
+      prompt: "Find the applicability conditions.", run_in_background: input.background ?? false }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: parent.id, type: "tool",
-      tool: "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } }, metadata: { providerExecuted: true } })
+      tool: input.tool ?? "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } }, metadata: { providerExecuted: true } })
     mirrored.set(callID, part)
-    const output = yield* fire({ ...base, hook_event_name: "PreToolUse", tool_name: "Agent", tool_input: args, tool_use_id: callID })
-    const child = join.child(callID)
-    if (!child) throw new Error(`Research dispatch denied: ${JSON.stringify(output)}`)
-    join.taskStarted({ toolUseID: callID, taskID: `native-${callID}` })
-    const prompt = (yield* sessions.messages({ sessionID: child })).find((message) => message.info.role === "user")
-    if (!prompt) throw new Error("Missing dispatch prompt")
-    const message = yield* sessions.updateMessage({ ...assistant, id: MessageID.ascending(), sessionID: child, parentID: prompt.info.id,
+    const output = yield* fire({ ...base, hook_event_name: "PreToolUse", tool_name: input.tool ?? "Agent", tool_input: args, tool_use_id: callID })
+    return { output, callID }
+  })
+  // Service-only setup: creates a real logical Task and calls exported admission directly.
+  // It does not claim that PreToolUse admits a native Jimmy child or starts an SDK query.
+  const serviceDispatch = Effect.fn("ClaudeResearchFixture.serviceDispatch")(function* (callID = "service-research") {
+    const child = yield* sessions.create({ parentID: parent.id, agent: "jimmy", title: "Research service fixture" })
+    yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parent.id,
+      projectID: parent.projectID, memberID: "jimmy", source: "host" })
+    const prompt = yield* sessions.updateMessage({ ...user, id: MessageID.ascending(), sessionID: child.id, agent: "jimmy" })
+    const message = yield* sessions.updateMessage({ ...assistant, id: MessageID.ascending(), sessionID: child.id, parentID: prompt.id,
       agent: "jimmy", mode: "subagent" })
-    const pre = (name: string, toolUseID: string, input: unknown = {}) => fire({ ...base, agent_id: `native-${callID}`,
-      hook_event_name: "PreToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: input })
-    const post = (name: string, toolUseID: string) => fire({ ...base, agent_id: `native-${callID}`,
-      hook_event_name: "PostToolUse", tool_name: name, tool_use_id: toolUseID, tool_input: {}, tool_response: "retained output" })
-    const settle = () => fire({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id: callID,
-      tool_input: args, tool_response: { status: "completed", agentId: `native-${callID}`, content: [{ type: "text", text: "Done" }] } })
+    yield* research.enter(child.id, callID)
     const run = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
       const tool = tools.find((tool) => tool.id === name)
       if (!tool) throw new Error(`Missing registry tool ${name}`)
-      const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: message.id, callID: toolUseID,
+      const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: message.id, callID: toolUseID,
         type: "tool", tool: name, state: { status: "running", input: {}, time: { start: Date.now() } } })
-      const result = yield* research.execute(child, tool.execute(args, {
-        sessionID: child, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
+      const result = yield* research.execute(child.id, tool.execute(args, {
+        sessionID: child.id, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
         permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
         ask: () => Effect.void, metadata: () => Effect.void,
       } satisfies Tool.Context))
@@ -110,9 +114,9 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* () {
         metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
       return result
     })
-    return { child, message, output, pre, post, settle, run, callID }
+    return { child: child.id, message, run, callID }
   })
-  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, mirrored, tools, seat, abort }
+  return { parent, assistant, sessions, hooks, join, research, fire, dispatch, serviceDispatch, mirrored, tools, seat, abort }
 })
 
 export const charges = Effect.fn("ClaudeResearchFixture.charges")(function* (sessionID: string) {
