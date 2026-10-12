@@ -121,9 +121,8 @@ function hostUsage(metadata: Record<string, unknown> | undefined, message: Assis
     context: record(host.context) &&
       typeof host.context.totalTokens === "number" && Number.isFinite(host.context.totalTokens) && host.context.totalTokens >= 0 &&
       typeof host.context.maxTokens === "number" && Number.isFinite(host.context.maxTokens) && host.context.maxTokens > 0 &&
-      host.context.totalTokens <= host.context.maxTokens &&
       typeof host.context.percentage === "number" && Number.isFinite(host.context.percentage) &&
-      host.context.percentage >= 0 && host.context.percentage <= 100
+      host.context.percentage >= 0
       ? { totalTokens: host.context.totalTokens, maxTokens: host.context.maxTokens, percentage: host.context.percentage } : undefined,
     contextWindow: typeof usage.contextWindow === "number" && Number.isFinite(usage.contextWindow) && usage.contextWindow > 0
       ? usage.contextWindow : undefined,
