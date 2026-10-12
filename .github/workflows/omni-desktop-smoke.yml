@@ -76,6 +76,8 @@ jobs:
         run: |
           bun packages/desktop/test/omni-smoke/wsl-inputs.ts seal "${{ matrix.target }}" "$RUNNER_TEMP/desktop-native/${{ matrix.target }}" "$RUNNER_TEMP/desktop-tree-sitter/${{ matrix.host }}" "$RUNNER_TEMP/desktop-wsl-input"
           bun packages/desktop/test/omni-smoke/wsl-inputs.ts assert
+      # Strict same-attempt custody: recovery requires 'Re-run all jobs'. Failed-only reruns intentionally
+      # fail closed when previous successful producers belong to an earlier attempt.
       - name: Upload only this source and run/attempt
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -136,6 +138,8 @@ jobs:
       - name: Exact-source release omni binaries
         uses: ./.github/actions/omni-binaries
 
+      # 'Re-run all jobs' required: successful producers from an earlier attempt cannot satisfy these names.
+      # Failed-only reruns intentionally fail closed; do not fall back to earlier-attempt artifacts.
       - name: Download same-run GNU x64 inputs
         if: runner.os == 'Windows'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093

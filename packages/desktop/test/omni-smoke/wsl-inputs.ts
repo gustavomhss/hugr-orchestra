@@ -1,9 +1,11 @@
 // Repair: supply native GNU inputs to the unchanged Windows three-target prebuild.
 // Extension: closed regular-file inventories bind source, locks and same-run custody.
+// Repair: canonical Omni byte validation closes the labels-and-digests-only verify boundary.
 import { createHash } from "node:crypto"
 import { copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { requireTreeSitterBundle, treeSitterBundle } from "../../../script/src/tree-sitter-prebuilds"
+import { inspect, validateBinaries } from "../../../omni/bindings/node/npm/pack.mjs"
 
 const root = path.resolve(import.meta.dirname, "../../../..")
 const evidence = path.join(root, "packages/desktop/.omni-desktop-evidence")
@@ -25,7 +27,8 @@ function git(...args: string[]) {
 
 export const hashFile = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
 
-// Inspect directories too: a linked ancestor or an unexpected empty directory is not a regular-file inventory.
+// Inspect supplied root and descendants, including directories; reject symlinks and unexpected empty directories.
+// Ancestors above supplied root are outside this check; workflow temp roots are hosted-owned.
 export function inventory(directory: string): Inventory {
   const walk = (dir: string, prefix = ""): [string, string][] => {
     const stat = lstatSync(dir, { throwIfNoEntry: false })
@@ -115,6 +118,11 @@ function proof(directory: string, descriptor: Descriptor) {
       native.source?.omniTreeHash !== git("rev-parse", "HEAD:packages/omni")) fail("WSL_INPUT_SOURCE", "native proof")
   if (`${native.host?.os}-${native.host?.cpu}` !== descriptor.host) fail("WSL_INPUT_HOST", "native proof")
   matchInventory(Object.fromEntries(["hugr_omni.node", "hugr-omni-supervisor"].map((file) => [file, hashFile(path.join(directory, "omni", file))])), native.sha256)
+  try {
+    validateBinaries(descriptor.target, path.join(directory, "omni/hugr_omni.node"), path.join(directory, "omni/hugr-omni-supervisor"))
+  } catch (error) {
+    throw new Error(`WSL_INPUT_NATIVE: ${error instanceof Error ? error.message : String(error)}`, { cause: error })
+  }
   requireTreeSitterBundle(path.join(directory, "tree-sitter"), tuple(descriptor.target))
 }
 
@@ -189,6 +197,10 @@ export function custodyControls(directory: string, target: string) {
     ["wrong-attempt", "WSL_INPUT_RUN"], ["wrong-target", "WSL_INPUT_TARGET"], ["wrong-host", "WSL_INPUT_HOST"],
     ["wrong-lock", "WSL_INPUT_LOCK"], ["empty", "WSL_INPUT_EMPTY"], ["missing", "WSL_INPUT_MISSING"],
     ["extra", "WSL_INPUT_EXTRA"], ["corruption", "WSL_INPUT_BYTE_MISMATCH"], ["symlink", "WSL_INPUT_SYMLINK"],
+    ["root-symlink", "WSL_INPUT_SYMLINK"], ["directory-symlink", "WSL_INPUT_SYMLINK"],
+    ["wrong-native-cpu", "WSL_INPUT_NATIVE"], ["wrong-native-abi", "WSL_INPUT_NATIVE"],
+    ["native-proof-source", "WSL_INPUT_SOURCE"], ["native-proof-host", "WSL_INPUT_HOST"],
+    ["wrong-tree-sitter-cpu", "TREE_SITTER_BUNDLE_INCOMPLETE"],
   ]
   try {
     controls.forEach(([control, predicate]) => {
@@ -218,6 +230,52 @@ export function custodyControls(directory: string, target: string) {
       if (control === "symlink") {
         rmSync(file)
         symlinkSync(path.join(directory, "omni/hugr_omni.node"), file, "file")
+      }
+      if (control === "root-symlink") {
+        rmSync(mutant, { recursive: true })
+        symlinkSync(directory, mutant, process.platform === "win32" ? "junction" : "dir")
+      }
+      if (control === "directory-symlink") {
+        rmSync(path.join(mutant, "omni"), { recursive: true })
+        symlinkSync(path.join(directory, "omni"), path.join(mutant, "omni"), process.platform === "win32" ? "junction" : "dir")
+      }
+      // These real-copy mutants keep both digest inventories consistent: rejection must reach the named semantic check.
+      if (["wrong-native-cpu", "wrong-native-abi", "native-proof-source", "native-proof-host"].includes(control!)) {
+        const proofFile = path.join(mutant, "omni/proof.json")
+        const native = JSON.parse(readFileSync(proofFile, "utf8")) as {
+          source: { headSHA: string }; host: { os: string; cpu: string }; sha256: Inventory
+        }
+        if (control === "wrong-native-cpu") {
+          const bytes = readFileSync(file)
+          if (bytes.readUInt32BE(0) !== 0x7f454c46 || bytes[5] !== 1 || bytes.readUInt16LE(18) !== (tuple(target).arch === "x64" ? 62 : 183))
+            fail("WSL_INPUT_CONTROL", "native CPU mutation requires matching little-endian ELF")
+          bytes.writeUInt16LE(tuple(target).arch === "x64" ? 183 : 62, 18)
+          writeFileSync(file, bytes)
+        }
+        if (control === "wrong-native-abi") {
+          if (!inspect(file).needed?.includes("libc.so.6")) fail("WSL_INPUT_CONTROL", "native ABI mutation requires actual DT_NEEDED libc.so.6")
+          writeFileSync(file, Buffer.from(readFileSync(file).toString("latin1").replaceAll("libc.so.6\0", "libc.so.X\0"), "latin1"))
+          const mutated = inspect(file)
+          if (mutated.needed?.includes("libc.so.6") || !mutated.needed?.includes("libc.so.X"))
+            fail("WSL_INPUT_CONTROL", "native ABI mutation missed actual dynamic dependency")
+        }
+        if (control === "native-proof-source") native.source.headSHA = "0".repeat(40)
+        if (control === "native-proof-host") native.host.cpu = tuple(target).arch === "x64" ? "arm64" : "x64"
+        native.sha256["hugr_omni.node"] = hashFile(file)
+        descriptor.files["omni/hugr_omni.node"] = native.sha256["hugr_omni.node"]!
+        writeFileSync(proofFile, JSON.stringify(native))
+        descriptor.files["omni/proof.json"] = hashFile(proofFile)
+        writeFileSync(path.join(mutant, "descriptor.json"), JSON.stringify(descriptor))
+      }
+      if (control === "wrong-tree-sitter-cpu") {
+        const binding = `tree-sitter/tree-sitter/prebuilds/${tuple(target).host}/tree-sitter.node`
+        const bytes = readFileSync(path.join(mutant, binding))
+        if (bytes.readUInt32BE(0) !== 0x7f454c46 || bytes[5] !== 1 || bytes.readUInt16LE(18) !== (tuple(target).arch === "x64" ? 62 : 183))
+          fail("WSL_INPUT_CONTROL", "tree-sitter CPU mutation requires matching little-endian ELF")
+        bytes.writeUInt16LE(tuple(target).arch === "x64" ? 183 : 62, 18)
+        writeFileSync(path.join(mutant, binding), bytes)
+        descriptor.files[binding] = hashFile(path.join(mutant, binding))
+        writeFileSync(path.join(mutant, "descriptor.json"), JSON.stringify(descriptor))
       }
       const observed = (() => {
         try { verifyInputs(mutant, target, source); return "accepted" }
