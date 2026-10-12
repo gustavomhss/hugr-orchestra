@@ -57,6 +57,7 @@ export function resolve(
     (typeof ORCHESTRA_LIBC !== "undefined" ? ORCHESTRA_LIBC : undefined) ??
     (platform === "linux" ? nativeLibc() : undefined)
   const expected = target(platform, input.arch ?? process.arch, libc)
+  const file = platform === "win32" ? "claude.exe" : "claude"
   // Bun executables ship a sibling directory; Node bundles ship it beside the entry module. Electron passes its
   // outside-asar resource directory explicitly, so neither lane can discover an arbitrary checkout or warm cache.
   const directory =
@@ -87,7 +88,7 @@ export function resolve(
     !("target" in manifest) ||
     manifest.target !== expected ||
     !("file" in manifest) ||
-    manifest.file !== (platform === "win32" ? "claude.exe" : "claude") ||
+    manifest.file !== file ||
     !("sha256" in manifest) ||
     typeof manifest.sha256 !== "string" ||
     !/^[a-f0-9]{64}$/.test(manifest.sha256)
@@ -95,7 +96,7 @@ export function resolve(
     throw new UnavailableError(
       `Invalid Claude Code resources for SDK ${SDK_VERSION}, Claude Code ${CODE_VERSION}, target ${expected}: ${directory}`,
     )
-  const resolved = realExecutable(path.join(directory, manifest.file))
+  const resolved = realExecutable(path.join(directory, file))
   if (path.dirname(resolved) !== fs.realpathSync(directory))
     throw new UnavailableError(`Claude Code resource escapes its deployed directory: ${directory}`)
   if (resourceDigest(resolved) !== manifest.sha256)
