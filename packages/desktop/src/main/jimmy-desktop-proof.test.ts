@@ -13,6 +13,7 @@ import { Research } from "../../../schema/src/research"
 import { reply } from "../../../orchestra/test/lib/llm-server"
 import { testProviderConfig } from "../../../orchestra/test/lib/test-provider"
 import ts from "typescript"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { cleanupProofRoot } from "./jimmy-desktop-cleanup.fixture"
 import { DesktopOmni } from "./omni-process"
 
@@ -57,6 +58,8 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     NODE_OPTIONS: "--max-old-space-size=5120",
   }
   try {
+    // The host's build commands run through DesktopOmni.execFile when omni is on (command() below).
+    expectSpawn(import.meta.path)
     await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), env, 60000)
     await command([process.execPath, "script/build-node.ts"], path.join(repo, "packages/orchestra"), env, 90000)
     const require = createRequire(path.join(desktop, "package.json"))
@@ -145,6 +148,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
 test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("owned desktop proof typechecks", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof typecheck")
   stage("typecheck-start")
+  expectSpawn(import.meta.path)
   await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), process.env, 60000)
   await command([process.execPath, "typecheck", "src/main/jimmy-desktop-proof.tsconfig.json"], desktop, process.env, 90000)
   await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-typecheck.json"), JSON.stringify({ schema: "jimmy-desktop-typecheck-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, passed: true }))
