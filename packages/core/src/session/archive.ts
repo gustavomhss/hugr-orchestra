@@ -11,35 +11,31 @@ import { fromRow } from "./info"
 import { SessionSchema } from "./schema"
 import { SessionTable } from "./sql"
 
+class Unchanged extends Error {}
+class NotFound extends Error {}
+
 /** Returns false only when the Session is missing. The caller owns its public NotFound error. */
 export const set = Effect.fn("SessionArchive.set")(function* (
-  db: Database.Interface["db"],
+  _db: Database.Interface["db"],
   events: EventV2.Interface,
   input: { readonly sessionID: SessionSchema.ID; readonly archived: boolean },
 ) {
-  // Keep the read and event append under one write lock, including concurrent exact retries.
-  return yield* db
-    .transaction(
-      () =>
-        Effect.gen(function* () {
-          const row = yield* db
-            .select({ archived: SessionTable.time_archived })
-            .from(SessionTable)
-            .where(eq(SessionTable.id, input.sessionID))
-            .get()
-          if (!row) return false
-          if ((row.archived !== null) === input.archived) return true
-          const timestamp = yield* DateTime.now
-          yield* events.publish(SessionEvent.ArchiveChanged, {
-            sessionID: input.sessionID,
-            timestamp,
-            archived: input.archived ? timestamp : null,
-          })
-          return true
-        }),
-      { behavior: "immediate" },
+  const timestamp = yield* DateTime.now
+  // EventV2 owns the write transaction and notifies only after COMMIT; the projector decides local no-ops atomically.
+  return yield* events
+    .publish(SessionEvent.ArchiveChanged, {
+      sessionID: input.sessionID,
+      timestamp,
+      archived: input.archived ? timestamp : null,
+    })
+    .pipe(
+      Effect.as(true),
+      Effect.catchDefect((defect) => {
+        if (defect instanceof Unchanged) return Effect.succeed(true)
+        if (defect instanceof NotFound) return Effect.succeed(false)
+        return Effect.die(defect)
+      }),
     )
-    .pipe(Effect.orDie)
 })
 
 /** Visibility is a SQL predicate, applied before pagination rather than trimming projected pages. */
@@ -91,8 +87,18 @@ const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const database = yield* Database.Service
     const events = yield* EventV2.Service
-    yield* events.project(SessionEvent.ArchiveChanged, (event) =>
+    yield* events.project(SessionEvent.ArchiveChanged, (event, origin) =>
       Effect.gen(function* () {
+        const row = yield* database.db
+          .select({ archived: SessionTable.time_archived })
+          .from(SessionTable)
+          .where(eq(SessionTable.id, event.data.sessionID))
+          .get()
+          .pipe(Effect.orDie)
+        if (!row) return yield* Effect.die(new NotFound())
+        // Replay is authoritative even when the boolean state matches: retain its timestamp, sequence and seal.
+        if (!origin.replay && (row.archived !== null) === (event.data.archived !== null))
+          return yield* Effect.die(new Unchanged())
         const updated = yield* database.db
           .update(SessionTable)
           .set({
@@ -103,8 +109,7 @@ const layer = Layer.effectDiscard(
           .returning({ id: SessionTable.id })
           .get()
           .pipe(Effect.orDie)
-        if (!updated)
-          return yield* Effect.die(new Error(`Archive projection Session not found: ${event.data.sessionID}`))
+        if (!updated) return yield* Effect.die(new NotFound())
       }),
     )
   }),
