@@ -111,16 +111,18 @@ jobs:
         run: |
           bun --eval "$(cat <<'BUN'
           import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-          import { desktopSelection } from './script/test-ci-desktop.ts'
+          import { desktopProof, desktopSelection } from './script/test-ci-desktop.ts'
           // A snapshot or rerun cannot supply completion records for this execution.
           for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
-          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
-          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(selected))
-          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${selected.includes('src/main/jimmy-desktop-proof.test.ts')}\n`)
+          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
+          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, 'packages/desktop')))
+          const proof = desktopProof(request, 'packages/desktop', { platform: process.platform, arch: process.arch })
+          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${proof}\n`)
           BUN
           )"
 
-      # Repair: exact files, directory/filter matches and whole-package runs share one selector.
+      # Repair: exact files, directory/filter matches and whole-package runs share one selector. Off the proof's
+      # platforms (Windows, Intel macOS) only a request naming the proof alone opts in, and then fails by name.
       - name: Setup Jimmy desktop Electron runtime
         if: steps.desktop-selection.outputs.proof == 'true'
         run: |
@@ -212,9 +214,10 @@ jobs:
         run: |
           bun --eval "$(cat <<'BUN'
           import { appendFileSync, readFileSync } from 'node:fs'
-          import { desktopSelection, requireDesktopEvidence } from './script/test-ci-desktop.ts'
-          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
-          if (requireDesktopEvidence(selected, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
+          import { desktopProof, requireDesktopEvidence } from './script/test-ci-desktop.ts'
+          const proof = desktopProof(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop',
+            { platform: process.platform, arch: process.arch })
+          if (requireDesktopEvidence(proof, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
               runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
             appendFileSync(process.env.GITHUB_OUTPUT, 'proof=true\n')
           BUN

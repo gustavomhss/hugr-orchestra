@@ -3,7 +3,7 @@ import { afterEach, expect, test } from "bun:test"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { desktopSelection } from "../../../script/test-ci-desktop"
+import { desktopProof, desktopSelection, proofPlatform } from "../../../script/test-ci-desktop"
 import { testPaths } from "../../../script/test-ci-upload"
 
 const root = path.resolve(import.meta.dir, "../../..")
@@ -53,17 +53,27 @@ async function markers(cwd: string) {
   }))
 }
 
-for (const [name, args, expected] of [
-  ["exact", [proof], [proof]],
-  ["exact dot path", [`./${proof}`], [proof]],
-  ["directory", ["src/main"], [proof, ordinary, extra]],
-  ["explicit directory", ["./src/main"], [proof, ordinary, extra]],
-  ["filter", ["jimmy-desktop-proof"], [proof, extra]],
-  ["package", [], [proof, ordinary, extra]],
-  ["package name-filter", ["-t", "fixture selected"], [proof, ordinary, extra]],
-  ["exact order", [ordinary, proof], [ordinary, proof]],
-  ["mixed path mode", [ordinary, "jimmy-desktop-proof"], [ordinary]],
-] as const) test(`${name}: actual Bun selection drives setup and missing-proof failure`, async () => {
+// `named`: some positional selects the proof alone, which keeps the opt-in off the proof's platforms.
+const cases = [
+  ["exact", [proof], [proof], true],
+  ["exact dot path", [`./${proof}`], [proof], true],
+  ["directory", ["src/main"], [proof, ordinary, extra], false],
+  ["explicit directory", ["./src/main"], [proof, ordinary, extra], false],
+  ["filter", ["jimmy-desktop-proof"], [proof, extra], false],
+  ["package", [], [proof, ordinary, extra], false],
+  ["package name-filter", ["-t", "fixture selected"], [proof, ordinary, extra], false],
+  ["exact order", [ordinary, proof], [ordinary, proof], true],
+  ["mixed path mode", [ordinary, "jimmy-desktop-proof"], [ordinary], false],
+] as const
+const hosts = [
+  { platform: "linux", arch: "x64", supported: true },
+  { platform: "linux", arch: "arm64", supported: true },
+  { platform: "darwin", arch: "arm64", supported: true },
+  { platform: "darwin", arch: "x64", supported: false },
+  { platform: "win32", arch: "x64", supported: false },
+] as const
+
+for (const [name, args, expected, named] of cases) test(`${name}: actual Bun selection drives setup and missing-proof failure`, async () => {
   const value = await fixture([...args])
   const selected = desktopSelection(value.request, value.desktop)
   expect([...selected].sort()).toEqual([...expected].sort())
@@ -73,11 +83,13 @@ for (const [name, args, expected] of [
   expect(actual.exitCode).toBe(0)
   expect(actual.stdout.toString().split(/\r?\n/).filter((line) => line.startsWith("SELECTED "))
     .map((line) => line.slice("SELECTED ".length)).sort()).toEqual([...expected].sort())
+  // The workflow steps decide on this runner's own platform.
+  const required = expected.some((file) => file === proof) && (proofPlatform(process.platform, process.arch) || named)
   const setup = run(selection, value.cwd)
   expect(setup.exitCode).toBe(0)
-  expect(await Bun.file(path.join(value.cwd, "output")).text()).toBe(`proof=${expected.some((file) => file === proof)}\n`)
+  expect(await Bun.file(path.join(value.cwd, "output")).text()).toBe(`proof=${required}\n`)
   const gate = run(completion, value.cwd)
-  if (!expected.some((file) => file === proof)) {
+  if (!required) {
     expect(gate.exitCode).toBe(0)
     return
   }
@@ -85,6 +97,26 @@ for (const [name, args, expected] of [
   expect(gate.stderr.toString()).toContain("Missing completed Jimmy desktop proof evidence")
   await markers(value.cwd)
   expect(run(completion, value.cwd).exitCode).toBe(0)
+})
+
+test("proof platforms opt in on every selection; elsewhere only a request naming the proof alone", async () => {
+  for (const [name, args, expected, named] of cases) {
+    const value = await fixture([...args])
+    for (const host of hosts) {
+      expect(proofPlatform(host.platform, host.arch), `${host.platform}/${host.arch}`).toBe(host.supported)
+      expect(desktopProof(value.request, value.desktop, host), `${name} on ${host.platform}/${host.arch}`)
+        .toBe(expected.some((file) => file === proof) && (host.supported || named))
+    }
+  }
+  // The real tree: a whole-package or directory run off the proof's platforms leaves it skipped, a named one fails there.
+  const real = (args: string[], host: { platform: string; arch: string }) =>
+    desktopProof({ package: "desktop", runner: "bun", args: [...args, "--timeout", "120000"] }, path.join(root, "packages/desktop"), host)
+  for (const host of hosts) {
+    for (const args of [[], ["src/main"], ["./src/main"], ["-t", "Jimmy"]]) expect(real(args, host)).toBe(host.supported)
+    for (const args of [[`./${proof}`], ["jimmy-desktop-proof"], ["./src/main/app-dock-native.test.ts", `./${proof}`]])
+      expect(real(args, host)).toBe(true)
+  }
+  expect(desktopProof({ package: "core", runner: "bun", args: [proof] }, "missing", { platform: "linux", arch: "x64" })).toBe(false)
 })
 
 test("ordinary exact and filter selections exclude proof without demanding markers", async () => {
@@ -125,7 +157,8 @@ test("empty proof/typecheck markers and absent typecheck are named failures", as
 })
 
 test("stale marker: both records require current SHA/run ID; setup clears even same-run records", async () => {
-  const value = await fixture(["jimmy-desktop-proof"])
+  // A request naming the proof requires its records on every host.
+  const value = await fixture([proof])
   for (const name of ["proof", "typecheck"]) {
     for (const field of ["sha", "runID"]) {
       await markers(value.cwd)
