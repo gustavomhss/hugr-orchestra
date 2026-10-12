@@ -105,7 +105,12 @@ for (const failure of ["reject", "stop"] as const)
         const sending = yield* host
           .steer({ sessionID: f.chat.id, user: steer, model: "different-model" })
           .pipe(Effect.exit, Effect.forkChild)
-        yield* Effect.promise(() => entered.promise)
+        yield* Effect.addFinalizer(() => Effect.sync(() => control.resolve()))
+        yield* awaitWithTimeout(
+          Effect.promise(() => entered.promise),
+          "model control was not reached",
+          "5 seconds",
+        )
         const bound = ClaudeHostAdmission.read((yield* f.sessions.get(f.chat.id)).metadata?.claudeCode?.inputs)[id]
         expect(bound).toMatchObject({ status: "pending" })
         expect(bound.uuid).toBeTruthy()
@@ -285,9 +290,78 @@ ClaudeEngineFixture.it.instance(
   30_000,
 )
 
-for (const echoed of [true, false])
+ClaudeEngineFixture.it.instance(
+  "a mixed fork retains the pending native revert cut before its source reopens",
+  () =>
+    Effect.gen(function* () {
+      ClaudeEngineFixture.reset()
+      const f = yield* ClaudeEngineFixture.setup()
+      const revert = yield* SessionRevert.Service
+      ClaudeEngineFixture.state.scripts.push(
+        ClaudeEngineFixture.replies("keep", "discard"),
+        async function* (input, params) {
+          const native = params.options?.sessionId
+          if (!native) throw new Error("missing fork native identity")
+          for await (const message of input) {
+            const uuid = crypto.randomUUID()
+            yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame, session_id: native }
+            yield { ...message, session_id: native }
+            yield {
+              type: "assistant",
+              ...frame,
+              uuid,
+              session_id: native,
+              user_message_uuid: message.uuid,
+              message: {
+                id: uuid,
+                content: [{ type: "text", text: "fork reply" }],
+                stop_reason: "end_turn",
+                usage: {},
+              },
+            }
+            yield {
+              type: "result",
+              subtype: "success",
+              is_error: false,
+              total_cost_usd: 0,
+              ...frame,
+              session_id: native,
+            }
+          }
+        },
+      )
+      yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("keep") })
+      yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("discard") })
+      const users = (yield* f.sessions.messages({ sessionID: f.chat.id })).filter((item) => item.info.role === "user")
+      yield* revert.revert({ sessionID: f.chat.id, messageID: users[1].info.id })
+      yield* f.prompt.prompt({
+        sessionID: f.chat.id,
+        agent: "maestro",
+        parts: [{ type: "text", text: "normal tail" }],
+        noReply: true,
+      })
+      expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+      const fork = yield* f.sessions.fork({ sessionID: f.chat.id })
+      expect(fork.metadata?.claudeCode).toMatchObject({ forkFrom: { sessionId: "sdk-1", at: "msg_0" } })
+      expect(
+        (yield* f.sessions.messages({ sessionID: fork.id }))
+          .flatMap((item) => item.parts)
+          .some((part) => part.type === "text" && part.text === "discard"),
+      ).toBe(false)
+      yield* f.prompt.prompt({ sessionID: fork.id, ...ClaudeEngineFixture.say("fork continuation") })
+      expect(ClaudeEngineFixture.state.queries[1].options).toMatchObject({
+        resume: "sdk-1",
+        forkSession: true,
+        resumeSessionAt: "msg_0",
+      })
+      expect((yield* f.sessions.get(f.chat.id)).metadata?.claudeCode?.resumeAt).toBe("msg_0")
+    }),
+  30_000,
+)
+
+for (const echoed of ["separate", "last", "none"] as const)
   ClaudeEngineFixture.it.instance(
-    `two queued users preserve native identity (${echoed ? "exact entries" : "inseparable SDK batch"})`,
+    `two queued users preserve native identity (${echoed === "separate" ? "exact entries" : `inseparable SDK batch: ${echoed} echo`})`,
     () =>
       Effect.gen(function* () {
         ClaudeEngineFixture.reset()
@@ -313,10 +387,21 @@ for (const echoed of [true, false])
           if (first.done || second.done) throw new Error("host did not send both durable users")
           expect(first.value.uuid).not.toBe(second.value.uuid)
           yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
-          if (echoed) {
-            yield { ...first.value, session_id: frame.session_id }
-            yield { ...second.value, session_id: frame.session_id }
-          }
+          if (echoed === "separate") yield { ...first.value, session_id: frame.session_id }
+          if (echoed !== "none")
+            yield {
+              ...second.value,
+              session_id: frame.session_id,
+              ...(echoed === "last"
+                ? {
+                    message: {
+                      role: "user",
+                      content: `${first.value.message.content}\n${second.value.message.content}`,
+                    },
+                  }
+                : {}),
+            }
+
           yield {
             type: "assistant",
             ...frame,
@@ -335,13 +420,17 @@ for (const echoed of [true, false])
           }
         }, ClaudeEngineFixture.replies("branch"))
         if (b.info.role !== "user") throw new Error("missing second user")
-        yield* host.turn({ sessionID: f.chat.id, user: b.info })
+        yield* awaitWithTimeout(
+          host.turn({ sessionID: f.chat.id, user: b.info }),
+          "queued SDK drain did not complete",
+          "5 seconds",
+        )
         expect(ClaudeEngineFixture.state.inputs).toEqual(["answered", "queued A", "queued B"])
         const inputs = ClaudeHostAdmission.read((yield* f.sessions.get(f.chat.id)).metadata?.claudeCode?.inputs)
         expect(inputs[a.info.id].uuid).not.toBe(inputs[b.info.id].uuid)
         expect(inputs[b.info.id].status).toBe("consumed")
         const forked = yield* f.sessions.fork({ sessionID: f.chat.id, messageID: b.info.id }).pipe(Effect.exit)
-        if (!echoed) {
+        if (echoed !== "separate") {
           expect(inputs[b.info.id].inseparable).toEqual([a.info.id, b.info.id])
           expect(Exit.isFailure(forked)).toBe(true)
           yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: b.info.id }, summary: undefined })
@@ -375,6 +464,64 @@ for (const echoed of [true, false])
       }),
     30_000,
   )
+
+ClaudeEngineFixture.it.instance(
+  "native initialization records ownership while startup still waits for account control",
+  () =>
+    Effect.gen(function* () {
+      ClaudeEngineFixture.reset()
+      const f = yield* ClaudeEngineFixture.setup()
+      const host = yield* ClaudeHost.Service
+      const acquired = Promise.withResolvers<void>()
+      const account = Promise.withResolvers<unknown>()
+      ClaudeEngineFixture.state.construct = (params) =>
+        transport(
+          params,
+          async function* (input) {
+            yield {
+              type: "system",
+              subtype: "init",
+              model: "claude-haiku-4-5-20251001",
+              ...frame,
+              session_id: "startup-native",
+            }
+            for await (const _ of input) {
+            }
+          },
+          {
+            accountInfo: () => {
+              acquired.resolve()
+              return account.promise
+            },
+          },
+        )
+      const user = yield* f.prompt.prompt({
+        sessionID: f.chat.id,
+        ...ClaudeEngineFixture.say("startup"),
+        noReply: true,
+      })
+      if (user.info.role !== "user") throw new Error("missing user")
+      const starting = yield* host.turn({ sessionID: f.chat.id, user: user.info }).pipe(Effect.forkChild)
+      yield* Effect.addFinalizer(() => Effect.sync(() => account.resolve({ subscriptionType: "fixture-cleanup" })))
+      yield* Effect.promise(() => acquired.promise)
+      yield* pollWithTimeout(
+        f.sessions
+          .get(f.chat.id)
+          .pipe(
+            Effect.map((session) => (session.metadata?.claudeCode?.sessionId === "startup-native" ? true : undefined)),
+          ),
+        "startup native identity was dropped",
+      )
+      expect(ClaudeEngineFixture.state.inputs).toEqual([])
+      expect(
+        ClaudeHostAdmission.read((yield* f.sessions.get(f.chat.id)).metadata?.claudeCode?.inputs)[user.info.id].status,
+      ).toBe("pending")
+      yield* host.release(f.chat.id)
+      yield* Fiber.await(starting)
+      expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
+    }),
+  30_000,
+)
 
 for (const operation of ["delete", "interrupt"] as const)
   ClaudeEngineFixture.it.instance(
@@ -421,6 +568,13 @@ for (const operation of ["delete", "interrupt"] as const)
         const stopping = yield* (
           operation === "delete" ? f.sessions.remove(f.chat.id) : Fiber.interrupt(starting).pipe(Effect.asVoid)
         ).pipe(Effect.forkChild)
+        // Open transport barriers before joining child fibers, including a failing mutation's teardown.
+        yield* Effect.addFinalizer(() =>
+          Effect.sync(() => {
+            drain.resolve()
+            account.resolve({ subscriptionType: "fixture-cleanup" })
+          }),
+        )
         yield* awaitWithTimeout(
           Effect.promise(() => closed.promise),
           "startup owner was not closed before account response",
@@ -481,7 +635,11 @@ ClaudeEngineFixture.it.instance(
         ),
       )
       const sessions = yield* Session.Service
-      const f = { sessions, prompt: yield* SessionPrompt.Service, chat: yield* sessions.create({ title: "seat boundary", permission: [] }) }
+      const f = {
+        sessions,
+        prompt: yield* SessionPrompt.Service,
+        chat: yield* sessions.create({ title: "seat boundary", permission: [] }),
+      }
       const permission = yield* Permission.Service
       const host = yield* ClaudeHost.Service
       yield* f.sessions.setPermission({ sessionID: f.chat.id, permission: [] })

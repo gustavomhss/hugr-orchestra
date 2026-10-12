@@ -54,14 +54,15 @@ export function acknowledge(
 ) {
   const batch = receipts.flatMap((uuid) => {
     const user = sends.get(uuid)
-    return user && inputs[user.id]?.status === "submitted" ? [user.id] : []
+    return user && inputs[user.id]?.status !== "consumed" ? [user.id] : []
   })
+  const inseparable = batch.length > 1 && batch.some((id) => inputs[id].status !== "received")
   return [...receipts, ...(echo ? [echo] : [])].flatMap((uuid) => {
     const user = sends.get(uuid)
     if (!user) return []
     const input = inputs[user.id]
-    input.status = receipts.includes(uuid) ? "consumed" : "received"
-    if (batch.length > 1 && batch.includes(user.id)) input.inseparable = batch
+    input.status = receipts.includes(uuid) || input.status === "consumed" ? "consumed" : "received"
+    if (inseparable && batch.includes(user.id)) input.inseparable = batch
     return [user.id]
   })
 }
@@ -100,7 +101,10 @@ export function inbox(
       while (true) {
         const next = queue.shift()
         if (next) {
-          await submit(next).catch(async (error: unknown) => { await cancel(next); throw error })
+          await submit(next).catch(async (error: unknown) => {
+            await cancel(next)
+            throw error
+          })
           if (state.closed) {
             await cancel(next)
             return

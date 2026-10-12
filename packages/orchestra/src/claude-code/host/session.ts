@@ -117,6 +117,7 @@ type Live = {
   inbox: ReturnType<typeof inbox>
   abort: AbortController
   agent: Agent.Info
+  seat: string
   model?: string
   turn?: Turn
   discard: boolean
@@ -320,6 +321,7 @@ const layer = Layer.effect(
         // Stop closes the query; discarded frames never relinquish its ownership.
         return
       }
+      if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { sessionId: message.session_id })
       // Claude Code may start a turn on its own, for a background subagent's completion: it answers the latest message.
       if (!live.turn && (message.type === "assistant" || message.type === "stream_event")) {
         const latest = (yield* sessions.messages({ sessionID: live.sessionID }).pipe(Effect.orDie)).findLast((item) => item.info.role === "user")?.info
@@ -374,7 +376,7 @@ const layer = Layer.effect(
         live.chain = message.uuid
         live.ends[submitted?.id ?? parent] = message.uuid
       }
-      if (acknowledged.length) yield* write(live.sessionID, { inputs: live.inputs, delivered: [...live.delivered], starts: live.starts, ends: live.ends, chain: live.chain })
+      if (acknowledged.length || submitted) yield* write(live.sessionID, { ...("session_id" in message && typeof message.session_id === "string" ? { sessionId: message.session_id } : {}), inputs: live.inputs, delivered: [...live.delivered], starts: live.starts, ends: live.ends, chain: live.chain })
       if (message.type !== "result") return
       idle(live, release)
       yield* write(live.sessionID, { uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined })
@@ -439,7 +441,7 @@ const layer = Layer.effect(
           if (!user) return
           live.inputs[user.id].status = "pending"
           await live.run(write(live.sessionID, { inputs: live.inputs }), true)
-        }), abort, agent: input.agent, model: input.model, discard: false, background: 0,
+        }), abort, agent: input.agent, seat: input.agent.id ?? input.user.agent, model: input.model, discard: false, background: 0,
         inputs: ClaudeHostAdmission.read(input.state.inputs), queued: new Set(),
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
@@ -461,7 +463,7 @@ const layer = Layer.effect(
           record: (value) => Effect.sync(() => { if (value.uuid) live.uuids[value.messageID] = value.uuid }) }),
       }
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
-        agent: input.agent.id ?? input.agent.name, abort }
+        agent: live.seat, abort }
       const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, withSession: bindings.withSession })
       live.bridge = bridge
       const adapters: ClaudeHostOptions.Adapters = {
@@ -521,7 +523,7 @@ const layer = Layer.effect(
       const owner = lives.get(input.sessionID)
       if (owner?.closing || owner?.stopping) yield* Effect.promise(() => owner.stopping ?? owner.closing!)
       const existing = lives.get(input.sessionID)
-      if (existing && (existing.agent.id ?? existing.agent.name) === (input.agent.id ?? input.agent.name)) return existing
+      if (existing && existing.seat === (input.agent.id ?? input.user.agent)) return existing
       if (existing) yield* stop(existing)
       return yield* launch({ ...input, state: yield* read(input.sessionID) })
     }))
@@ -569,7 +571,7 @@ const layer = Layer.effect(
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)
       const seatOwner = lives.get(sessionID)
-      if (seatOwner && (seatOwner.agent.id ?? seatOwner.agent.name) !== (agent.id ?? agent.name)) yield* stop(seatOwner)
+      if (seatOwner && seatOwner.seat !== (agent.id ?? input.user.agent)) yield* stop(seatOwner)
       const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
       yield* reconcileRevert(session)
       const revision = session.revert ? revisions.get(sessionID) ?? 0 : requestedRevision
@@ -631,7 +633,7 @@ const layer = Layer.effect(
       const prompt = ClaudeCodeTranscript.hostPrompt([input.user])
       if (!live || live.stopping || live.closing || !prompt || input.user.info.role !== "user") return false
       const agent = yield* agents.get(input.user.info.agent)
-      if ((agent?.id ?? agent?.name) !== (live.agent.id ?? live.agent.name)) {
+      if ((agent?.id ?? input.user.info.agent) !== live.seat) {
         yield* stop(live)
         return false
       }
@@ -677,13 +679,7 @@ const layer = Layer.effect(
     const forkState = (source: Session.Info, messageID?: MessageID) => Effect.gen(function* () {
       const state = yield* read(source.id)
       const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
-      const at = messageID ? ClaudeHostBoundary.resolve(history, state, messageID) : undefined
-      const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
-      const nativeID = typeof state.sessionId === "string" ? state.sessionId
-        : typeof inherited?.sessionId === "string" ? inherited.sessionId : claudeSessionID(source.id)
-      return { ...state, inputs: state.inputs, uuids: state.uuids, starts: state.starts, ends: state.ends, delivered: state.delivered, forkFrom: !messageID || at ? {
-        sessionId: nativeID, ...(at ? { at } : {}),
-      } : undefined, sessionId: undefined, freshSessionId: undefined, resumeAt: undefined, chain: messageID ? at : state.chain, cost: 0 }
+      return ClaudeHostBoundary.forkState(history, state, messageID)
     })
     const fork: Interface["fork"] = (input) => Effect.gen(function* () {
       const source = yield* sessions.get(input.from).pipe(Effect.orDie)

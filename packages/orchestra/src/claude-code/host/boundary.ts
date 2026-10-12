@@ -33,6 +33,38 @@ export function resolve(history: readonly SessionV1.WithParts[], state: Record<s
   return at
 }
 
+/** A pending revert cut belongs to the native ownership even before any query has reopened that history. */
+export function forkState(history: readonly SessionV1.WithParts[], state: Record<string, unknown>, messageID?: string) {
+  const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
+  const at = messageID
+    ? resolve(history, state, messageID)
+    : typeof state.resumeAt === "string"
+      ? state.resumeAt
+      : typeof state.sessionId !== "string" && typeof inherited?.at === "string"
+        ? inherited.at
+        : undefined
+  const nativeID =
+    typeof state.sessionId === "string"
+      ? state.sessionId
+      : typeof inherited?.sessionId === "string"
+        ? inherited.sessionId
+        : undefined
+  return {
+    ...state,
+    inputs: state.inputs,
+    uuids: state.uuids,
+    starts: state.starts,
+    ends: state.ends,
+    delivered: state.delivered,
+    forkFrom: nativeID && (!messageID || at) ? { sessionId: nativeID, ...(at ? { at } : {}) } : undefined,
+    sessionId: undefined,
+    freshSessionId: undefined,
+    resumeAt: undefined,
+    chain: messageID ? at : (state.chain ?? at),
+    cost: 0,
+  }
+}
+
 export function strings(value: unknown): Record<string, string> {
   return ClaudeCodeTranscript.record(value)
     ? Object.fromEntries(
