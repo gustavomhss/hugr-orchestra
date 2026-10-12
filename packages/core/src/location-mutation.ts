@@ -87,7 +87,21 @@ const layer = Layer.effect(
       return effect.pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)))
     }
 
-    const resolvePath = Effect.fnUntraced(function* (absolute: string) {
+    // A dangling symlink is not missing: a write through it creates the file where it points.
+    const followDangling = Effect.fnUntraced(function* (start: string) {
+      let current = start
+      for (let hops = 0; hops < 40; hops++) {
+        if ((yield* notFound(fs.realPath(current))) !== undefined) return current
+        const link = yield* fs.readLink(current).pipe(Effect.orElseSucceed(() => undefined))
+        if (link === undefined) return current
+        const parent = (yield* notFound(fs.realPath(path.dirname(current)))) ?? path.dirname(current)
+        current = path.resolve(parent, link)
+      }
+      return current
+    })
+
+    const resolvePath = Effect.fnUntraced(function* (requested: string) {
+      const absolute = yield* followDangling(requested)
       const existing = yield* notFound(fs.realPath(absolute))
       if (existing !== undefined) {
         const info = yield* fs.stat(existing)

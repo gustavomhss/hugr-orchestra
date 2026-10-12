@@ -1,7 +1,7 @@
 export * as BackendToolkitManifest from "./manifest"
 
 import type { PinnedArtifact } from "../pinned-artifact"
-import type { TargetId } from "./target"
+import type { Floor, TargetId } from "./target"
 import { ENGINES } from "./packs"
 import go from "./runtimes/go"
 import java from "./runtimes/java"
@@ -40,6 +40,8 @@ export type Runtime = {
   readonly version: string
   readonly license: string
   readonly upstream: string
+  /** Measured host floor per target (F5.4): what the interpreter or toolchain itself needs. */
+  readonly floor?: Readonly<Partial<Record<TargetId, Floor>>>
   /** Per target: the pinned archive and the install-relative interpreter, e.g. `bin/node` or `python.exe`. */
   readonly targets: Readonly<
     Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>
@@ -52,6 +54,11 @@ export type HostedEngine<Id extends string = EngineId> = {
   readonly version: string
   readonly license: string
   readonly upstream: string
+  /**
+   * Measured host floor per target (F5.4): what this pack's own binaries need, beyond its runtime and dependencies.
+   * Absent for a target means the pack adds none (pure script, jar, or a binary the host builds itself).
+   */
+  readonly floor?: Readonly<Partial<Record<TargetId, Floor>>>
   /** Owned engines made ready before this engine; ids and cycles are checked before acquisition. */
   readonly dependencies?: ReadonlyArray<string>
   /** Launcher environment; values may use `{install}` and `{runtime}`. */
@@ -99,6 +106,8 @@ export type NativeEngine<Id extends string = EngineId> = {
   readonly license: string
   /** Upstream `owner/repo`. */
   readonly upstream: string
+  /** Measured host floor per target (F5.4) of the downloaded binary; native engines record every target. */
+  readonly floor?: Readonly<Partial<Record<TargetId, Floor>>>
   /** Owned engines made ready before this engine; ids and cycles are checked before acquisition. */
   readonly dependencies?: ReadonlyArray<string>
   /** Child-scoped environment for every invocation of the engine. */

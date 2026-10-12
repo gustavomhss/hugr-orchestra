@@ -86,7 +86,7 @@ export const seccomp = (directory: string) => Effect.promise(() =>
   access(path.join(directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "vendor", "seccomp", process.arch, "apply-seccomp"), constants.X_OK)
     .then(() => true, () => false))
 
-const attempts = new Map<string, { readonly failed?: string; readonly at: number }>()
+const attempts = new Map<string, { readonly failed?: string; readonly at: number; readonly done?: Promise<void> }>()
 
 /**
  * The installed runtime directory, or the reason no jail is available. With `start`, a missing runtime begins
@@ -105,12 +105,22 @@ export const resolve = Effect.fn("ToolSafetySandboxRuntime.resolve")(function* (
   if (attempt?.failed && (!start || Date.now() - attempt.at < RETRY_MS))
     return { reason: `sandbox-runtime-acquisition-failed: ${attempt.failed}` }
   if (!start) return { reason: "sandbox-runtime-not-acquired" }
-  attempts.set(source.directory, { at: Date.now() })
-  Effect.runFork(acquire(source).pipe(Effect.match({
-    onSuccess: () => attempts.delete(source.directory),
-    onFailure: (error) => attempts.set(source.directory, { failed: error.reason, at: Date.now() }),
-  })))
+  // Acquisition is asynchronous from its first step, so its outcome always lands after this entry.
+  attempts.set(source.directory, {
+    at: Date.now(),
+    done: Effect.runPromise(acquire(source).pipe(Effect.match({
+      onSuccess: () => void attempts.delete(source.directory),
+      onFailure: (error) => void attempts.set(source.directory, { failed: error.reason, at: Date.now() }),
+    }))),
+  })
   return { reason: "sandbox-runtime-acquiring" }
+})
+
+/** Waits for this host's in-flight runtime acquisition, if one is running; it never fails. */
+export const settled = Effect.fn("ToolSafetySandboxRuntime.settled")(function* () {
+  const source = yield* Source
+  const done = source && attempts.get(source.directory)?.done
+  if (done) yield* Effect.promise(() => done)
 })
 
 /** Like `resolve(true)`, but waits for an acquisition it starts or finds running: the installed directory, or why not. */

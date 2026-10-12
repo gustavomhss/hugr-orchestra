@@ -67,12 +67,12 @@ it.live("host service grants keep generic TCP and bind denied; Darwin supplies a
     const profile = { requireSandbox: true, writeRoots: ["must/not/out"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
       allowedLoopbackEndpoints: grants } } satisfies ToolSafety.Profile
     if (process.platform !== "darwin") {
-      // Linux without a ready srt must refuse even though the profile allows an unconfined fallback.
+      // Linux without a ready srt, and Windows for a program its AppContainer launcher cannot run (here node), must
+      // refuse even though the profile allows an unconfined fallback.
       const held = yield* Effect.flip(f.wrap(script, profile).pipe(Effect.provideService(ToolSafetySandboxRuntime.Source, {
         directory: path.join(f.directory, "absent-runtime"), dependencies: ["orchestra-missing-sandbox-dependency"], artifacts: [],
       })))
-      expect(held.reason).toBe(process.platform === "linux"
-        ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-loopback-endpoint-exact-policy-unsupported")
+      expect(held.reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
       console.info(`${process.platform}: working TCP controls and exact loopback HOLD without a ready sandbox measured`)
       return
@@ -105,16 +105,16 @@ it.live("host service grants keep generic TCP and bind denied; Darwin supplies a
   }), 30_000,
 )
 
-// The adapter owner supplies cassandra3; this branch must not substitute upstream or invent its parser.
-const adapted = String(pack.version).includes("+orchestra.cassandra3") && process.platform !== "win32" ? it.live : it.live.skip
-adapted("owned cassandra3 parser consumes real broker routes and rejects malformed map, undeclared port and foreign addresses", () => Effect.gen(function* () {
+// The adapter owner supplies cassandra4; this branch must not substitute upstream or invent its parser.
+const adapted = String(pack.version).includes("+orchestra.cassandra4") && process.platform !== "win32" ? it.live : it.live.skip
+adapted("owned cassandra4 parser consumes real broker routes and rejects malformed map, undeclared port and foreign addresses", () => Effect.gen(function* () {
   const f = yield* fixture
   const root = yield* Effect.acquireRelease(f.fs.makeTempDirectory({ prefix: "loopback-owned-adapter-" }), (root) => Effect.gen(function* () {
     yield* AppProcess.requireSuccess(yield* f.processes.run(ChildProcess.make("chmod", ["-R", "u+w", root])))
     yield* f.fs.remove(root, { recursive: true, force: true })
   }).pipe(Effect.orDie))
   const owned = yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
-  expect(path.dirname(owned.executable)).toContain("+orchestra.cassandra3-")
+  expect(path.dirname(owned.executable)).toContain("+orchestra.cassandra4-")
   const counters = [0, 0]
   const targets = yield* Effect.forEach([0, 1], (index) => Effect.gen(function* () {
     const clients = new Set<Socket>()
@@ -171,7 +171,7 @@ it.live("invalid loopback IP, port, directory and grant shapes HOLD before outpu
         enabled: true, scratch: true, unconfinedFallback: true, allowedLoopbackEndpoints: [grant],
       } }))
       // Unsupported hosts cannot canonicalize placement, but still HOLD before filesystem effects.
-      expect(held.reason).toBe(process.platform !== "darwin" && process.platform !== "linux" && entry.reason === "directory-acquisition"
+      expect(held.reason).toBe(!["darwin", "linux", "win32"].includes(process.platform) && entry.reason === "directory-acquisition"
         ? "sandbox-loopback-endpoint-exact-policy-unsupported" : `sandbox-loopback-endpoint-${entry.reason}`)
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
     }), { discard: true })

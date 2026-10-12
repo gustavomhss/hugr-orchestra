@@ -15,9 +15,10 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Format } from "../format"
 import { InstanceState } from "@/effect/instance-state"
 import { Snapshot } from "@/snapshot"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import { FSUtil } from "@orchestra/core/fs-util"
 import * as Bom from "@/util/bom"
+import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
 
 function normalizeLineEndings(text: string): string {
   return text.replaceAll("\r\n", "\n")
@@ -80,7 +81,9 @@ export const EditTool = Tool.define(
           const filePath = path.isAbsolute(params.filePath)
             ? params.filePath
             : path.join(instance.directory, params.filePath)
-          yield* assertExternalDirectoryEffect(ctx, filePath)
+          // Resolved once, before any permission is asked: everything below judges and writes this real location.
+          const physical = yield* Effect.promise(() => physicalPath(filePath))
+          yield* assertExternalDirectoryEffect(ctx, filePath, { real: physical })
 
           let diff = ""
           let contentOld = ""
@@ -88,7 +91,7 @@ export const EditTool = Tool.define(
           yield* lock(filePath).withPermits(1)(
             Effect.gen(function* () {
               if (params.oldString === "") {
-                const existed = yield* afs.existsSafe(filePath)
+                const existed = yield* afs.existsSafe(physical)
                 if (existed) {
                   throw new Error(
                     "oldString cannot be empty when editing an existing file. Provide the exact text to replace, or use write for an intentional full-file replacement.",
@@ -101,16 +104,16 @@ export const EditTool = Tool.define(
                 diff = trimDiff(createTwoFilesPatch(filePath, filePath, contentOld, contentNew))
                 yield* ctx.ask({
                   permission: "edit",
-                  patterns: [path.relative(instance.worktree, filePath)],
+                  patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filePath, physical)),
                   always: ["*"],
                   metadata: {
                     filepath: filePath,
                     diff,
                   },
                 })
-                yield* afs.writeWithDirs(filePath, Bom.join(contentNew, desiredBom))
+                yield* Effect.promise(() => writePhysical(physical, Bom.join(contentNew, desiredBom)))
                 if (yield* format.file(filePath)) {
-                  contentNew = yield* Bom.syncFile(afs, filePath, desiredBom)
+                  contentNew = yield* Bom.syncFile(afs, physical, desiredBom)
                 }
                 yield* events.publish(FileSystem.Event.Edited, { file: filePath })
                 yield* events.publish(Watcher.Event.Updated, {
@@ -120,10 +123,10 @@ export const EditTool = Tool.define(
                 return
               }
 
-              const info = yield* afs.stat(filePath).pipe(Effect.catch(() => Effect.succeed(undefined)))
+              const info = yield* afs.stat(physical).pipe(Effect.catch(() => Effect.succeed(undefined)))
               if (!info) throw new Error(`File ${filePath} not found`)
               if (info.type === "Directory") throw new Error(`Path is a directory, not a file: ${filePath}`)
-              const source = yield* Bom.readFile(afs, filePath)
+              const source = yield* Bom.readFile(afs, physical)
               contentOld = source.text
 
               const ending = detectLineEnding(contentOld)
@@ -144,7 +147,7 @@ export const EditTool = Tool.define(
               )
               yield* ctx.ask({
                 permission: "edit",
-                patterns: [path.relative(instance.worktree, filePath)],
+                patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filePath, physical)),
                 always: ["*"],
                 metadata: {
                   filepath: filePath,
@@ -152,9 +155,9 @@ export const EditTool = Tool.define(
                 },
               })
 
-              yield* afs.writeWithDirs(filePath, Bom.join(contentNew, desiredBom))
+              yield* Effect.promise(() => writePhysical(physical, Bom.join(contentNew, desiredBom)))
               if (yield* format.file(filePath)) {
-                contentNew = yield* Bom.syncFile(afs, filePath, desiredBom)
+                contentNew = yield* Bom.syncFile(afs, physical, desiredBom)
               }
               yield* events.publish(FileSystem.Event.Edited, { file: filePath })
               yield* events.publish(Watcher.Event.Updated, {
