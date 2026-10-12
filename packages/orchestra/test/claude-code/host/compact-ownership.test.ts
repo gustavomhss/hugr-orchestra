@@ -29,10 +29,10 @@ const joined = Effect.fnUntraced(function* (f: Effect.Success<ReturnType<typeof 
   const child = f.ctx.join.child(id)
   if (!child) throw new Error(`Dispatch ${id} did not create its child`)
   f.ctx.join.taskStarted({ toolUseID: id, taskID: `agent-${id}` })
-  const native = `child-native-${id}`
+  const native = f.base.session_id
   yield* f.fire({ ...f.base, session_id: native, hook_event_name: "PreToolUse", tool_name: "Read", tool_use_id: `read-${id}`,
     tool_input: { file_path: "bounded.txt" }, agent_id: `agent-${id}`, agent_type: "orchestra:patty" })
-  return { child, native }
+  return { child, native, agentID: `agent-${id}` }
 })
 
 CompactionFixture.it.instance("one actual hooks context scopes parent and two same-seat native children by joined identity", () =>
@@ -45,8 +45,8 @@ CompactionFixture.it.instance("one actual hooks context scopes parent and two sa
     yield* f.todos.update({ sessionID: first.child, todos: [{ content: "FIRST-ONLY", status: "pending", priority: "high" }] })
     yield* f.todos.update({ sessionID: second.child, todos: [{ content: "SECOND-ONLY", status: "pending", priority: "high" }] })
     const root = memory(yield* f.compact())
-    const child = memory(yield* f.compact(first.native))
-    const sibling = memory(yield* f.compact(second.native))
+    const child = memory(yield* f.compact(first.native, f.ctx.abort.signal, first.agentID))
+    const sibling = memory(yield* f.compact(second.native, f.ctx.abort.signal, second.agentID))
     expect(root).toContain("ROOT-ONLY")
     expect(root).not.toContain("FIRST-ONLY")
     expect(child).toContain("FIRST-ONLY")
@@ -54,7 +54,7 @@ CompactionFixture.it.instance("one actual hooks context scopes parent and two sa
     expect(child).not.toContain("SECOND-ONLY")
     expect(sibling).toContain("SECOND-ONLY")
     expect(sibling).not.toContain("FIRST-ONLY")
-    yield* f.summary("CHILD-SUMMARY-EXACT", "manual", first.native)
+    yield* f.summary("CHILD-SUMMARY-EXACT", "manual", first.native, f.ctx.abort.signal, first.agentID)
     expect(yield* f.archive.list(f.chat.id)).toEqual([])
     expect(yield* f.archive.list(second.child)).toEqual([])
     const refs = yield* f.archive.list(first.child)
@@ -96,25 +96,23 @@ CompactionFixture.it.instance("missing persisted root init identity is a named r
     expect(JSON.stringify(output)).not.toContain("ROOT-UNBOUND-CONTROL")
   }))
 
-CompactionFixture.it.instance("query restart refuses a child identity without an observed join; display name supplies no recovery", () =>
+CompactionFixture.it.instance("query restart refuses a child agent identity without an observed join", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     const child = yield* joined(f, "restart")
-    expect(JSON.stringify(yield* f.compact(child.native))).not.toContain("failed closed")
+    expect(JSON.stringify(yield* f.compact(child.native, f.ctx.abort.signal, child.agentID))).not.toContain("failed closed")
     const reopened = yield* CompactionFixture.make({ sessionID: f.chat.id })
-    expect(yield* reopened.compact(child.native)).toMatchObject({ continue: false,
+    expect(yield* reopened.compact(child.native, reopened.ctx.abort.signal, child.agentID)).toMatchObject({ continue: false,
       stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNAVAILABLE") })
   }))
 
-CompactionFixture.it.instance("conflicting observed native session pairs poison the identity instead of selecting a same-seat child", () =>
+CompactionFixture.it.instance("conflicting joined agent ids fail closed even with the root native session id", () =>
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     const first = yield* joined(f, "one")
     const second = yield* joined(f, "two")
-    const conflict = yield* f.fire({ ...f.base, session_id: first.native, hook_event_name: "PreToolUse", tool_name: "Read",
-      tool_use_id: "conflict", tool_input: { file_path: "bounded.txt" }, agent_id: "agent-two", agent_type: "orchestra:patty" })
-    expect(ClaudeHostGate.denied(conflict)).toBe(true)
-    expect(yield* f.compact(first.native)).toMatchObject({ continue: false,
+    f.ctx.join.taskStarted({ toolUseID: "one", taskID: second.agentID })
+    expect(yield* f.compact(first.native, f.ctx.abort.signal, first.agentID)).toMatchObject({ continue: false,
       stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_CONFLICT") })
     expect(yield* f.archive.list(second.child)).toEqual([])
   }))
@@ -173,9 +171,9 @@ CompactionFixture.it.instance("a joined child's compact hook is refused when its
     const f = yield* CompactionFixture.make()
     if (!f.user) throw new Error("Missing cut fixture")
     const child = yield* joined(f, "cut-child")
-    expect(JSON.stringify(yield* f.compact(child.native))).not.toContain("failed closed")
+    expect(JSON.stringify(yield* f.compact(child.native, f.ctx.abort.signal, child.agentID))).not.toContain("failed closed")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: f.user.id }, summary: undefined })
-    expect(yield* f.compact(child.native)).toMatchObject({ continue: false,
+    expect(yield* f.compact(child.native, f.ctx.abort.signal, child.agentID)).toMatchObject({ continue: false,
       stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNRETAINED") })
     expect(yield* f.archive.list(child.child)).toEqual([])
   }))

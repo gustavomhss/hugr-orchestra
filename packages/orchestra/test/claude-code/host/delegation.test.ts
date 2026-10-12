@@ -72,6 +72,9 @@ const host = Effect.fn("ClaudeHostDelegationTest.host")(function* () {
     agent: "maestro", mode: "maestro", modelID: ref.modelID, providerID: ref.providerID, path: { cwd: parent.directory, root: parent.directory },
     cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() } } satisfies SessionV1.Assistant)
   const mirrored = new Map<string, SessionV1.ToolPart>()
+  yield* sessions.setMetadata({ sessionID: parent.id, metadata: {
+    ...parent.metadata, claudeCode: { ...parent.metadata?.claudeCode, sessionId: base.session_id },
+  } })
   const actors: ClaudeHostGate.Actor[] = []
   const join = ClaudeHostJoin.make()
   const abort = new AbortController()

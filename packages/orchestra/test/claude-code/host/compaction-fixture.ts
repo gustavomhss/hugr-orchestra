@@ -71,10 +71,11 @@ export const make = Effect.fnUntraced(function* (input: {
     return Effect.promise(() => callback(event, undefined, { signal }))
   }
   const base = { session_id: `native-${chat.id}`, transcript_path: path.join(chat.directory, "native.jsonl"), cwd: chat.directory }
-  const compact = (sessionID = base.session_id, signal = abort.signal) =>
-    fire({ ...base, session_id: sessionID, hook_event_name: "SessionStart", source: "compact" }, signal)
-  const summary = (text: string, trigger: "manual" | "auto" = "auto", sessionID = base.session_id, signal = abort.signal) =>
-    fire({ ...base, session_id: sessionID, hook_event_name: "PostCompact", compact_summary: text, trigger }, signal)
+  const compact = (sessionID = base.session_id, signal = abort.signal, agentID?: string) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "SessionStart", source: "compact", ...(agentID ? { agent_id: agentID } : {}) }, signal)
+  const summary = (text: string, trigger: "manual" | "auto" = "auto", sessionID = base.session_id, signal = abort.signal, agentID?: string) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "PostCompact", compact_summary: text, trigger,
+      ...(agentID ? { agent_id: agentID } : {}) }, signal)
   const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
   const user = input.user === false || input.sessionID ? undefined : yield* sessions.updateMessage({
     id: MessageID.ascending(), role: "user", sessionID: chat.id, agent: ctx.agent, model: ref, time: { created: Date.now() },
