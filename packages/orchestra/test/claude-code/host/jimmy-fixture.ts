@@ -99,11 +99,19 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
     const run = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
       const tool = tools.find((tool) => tool.id === name)
       if (!tool) throw new Error(`Missing registry tool ${name}`)
-      return yield* research.execute(child, tool.execute(args, {
+      // Native invocation authority includes the retained child tool part, not only its assistant message.
+      const input = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(args)
+      const start = Date.now()
+      const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child, messageID: message.id, callID: toolUseID,
+        type: "tool", tool: name, state: { status: "running", input, time: { start } } })
+      const result = yield* research.execute(child, tool.execute(args, {
         sessionID: child, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
         permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
         ask: () => Effect.void, metadata: () => Effect.void,
       } satisfies Tool.Context))
+      yield* sessions.updatePart({ ...part, state: { status: "completed", input, output: result.output, title: result.title,
+        metadata: result.metadata, time: { start, end: Date.now() } } })
+      return result
     })
     return { ...admitted, child, message, taskID, pre, post, settle, run }
   })
