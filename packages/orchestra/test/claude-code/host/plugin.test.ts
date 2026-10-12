@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { Effect, Option, Stream } from "effect"
+import { expect, spyOn, test } from "bun:test"
+import { Effect, Exit, Option, Scope, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -112,8 +112,33 @@ function publisher(input: ClaudeHostPlugin.Input & { root: string }, prefix: str
     });
     await ClaudeHostPlugin.build(${JSON.stringify(input)});
     throw new Error("publisher accepted the sabotaged staging directory");
-  `], { cwd: path.resolve(import.meta.dir, "../../.."), stderr: pause ? "inherit" : "pipe" })
+  `], { cwd: path.resolve(import.meta.dir, "../../.."), killSignal: "SIGKILL", stderr: pause ? "ignore" : "pipe" })
 }
+
+function boundedOutput<E, R>(stream: Stream.Stream<Uint8Array, E, R>, limit: number) {
+  return stream.pipe(Stream.mapAccum(() => 0, (size, bytes) => {
+    if (size + bytes.byteLength > limit) throw new Error(`Publisher output exceeded ${limit} bytes`)
+    return [size + bytes.byteLength, [bytes]] as const
+  }), Stream.decodeText())
+}
+
+const spawnPublisher = Effect.fnUntraced(function* (command: ChildProcess.Command) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
+  const scope = yield* Scope.make()
+  // Keep this child scope's cleanup interruptible so a stuck exit signal cannot hold the test open.
+  yield* Effect.addFinalizer(() => awaitWithTimeout(
+    Scope.close(scope, Exit.void).pipe(Effect.interruptible),
+    "publisher scope cleanup did not finish", "5 seconds",
+  ).pipe(Effect.orDie))
+  const child = yield* spawner.spawn(command).pipe(Effect.provideService(Scope.Scope, scope))
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    if (yield* child.isRunning) yield* awaitWithTimeout(
+      child.kill({ killSignal: "SIGKILL" }).pipe(Effect.interruptible),
+      "publisher termination did not finish", "5 seconds",
+    )
+  }).pipe(Effect.orDie))
+  return child
+})
 
 it.instance(
   "the plugin covers every native seat, with one orchestra:<seat> name each, and every seat and playbook skill",
@@ -272,13 +297,9 @@ for (const killed of [false, true]) {
         await fs.mkdir(lock)
         await fs.writeFile(path.join(lock, "sentinel"), "old-version owner")
       })
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
-      const child = yield* spawner.spawn(publisher(input, prefix, true))
-      yield* Effect.addFinalizer(() => Effect.gen(function* () {
-        if (yield* child.isRunning) yield* child.kill({ killSignal: "SIGKILL" })
-      }).pipe(Effect.orDie))
+      const child = yield* spawnPublisher(publisher(input, prefix, true))
       const ready = yield* awaitWithTimeout(
-        child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+        boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),
         "publisher never reached staging", "20 seconds",
       )
       const staging = path.join(root, Option.getOrThrow(ready))
@@ -290,7 +311,7 @@ for (const killed of [false, true]) {
       })
       expect(yield* child.isRunning).toBe(true)
       if (killed) {
-        yield* child.kill({ killSignal: "SIGKILL" })
+        yield* awaitWithTimeout(child.kill({ killSignal: "SIGKILL" }), "publisher did not terminate", "5 seconds")
         expect(yield* child.isRunning).toBe(false)
       }
       yield* Effect.promise(async () => {
@@ -315,18 +336,17 @@ it.instance(
     const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
     const root = yield* tmpdirScoped()
     const prefix = path.basename(reference.path)
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
-    const child = yield* spawner.spawn(publisher({ seats: f.seats, tools, root }, prefix, false))
+    const child = yield* spawnPublisher(publisher({ seats: f.seats, tools, root }, prefix, false))
     const ready = yield* awaitWithTimeout(
-      child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+      boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),
       "publisher never reached staging", "20 seconds",
     )
     expect(Option.getOrThrow(ready)).toStartWith(`${prefix}.stage-`)
     const stderr = yield* awaitWithTimeout(
-      child.stderr.pipe(Stream.decodeText(), Stream.runCollect),
+      boundedOutput(child.stderr, 64 * 1024).pipe(Stream.runCollect),
       "publisher did not reject staging", "20 seconds",
     )
-    expect((yield* child.exitCode)).not.toBe(0)
+    expect(yield* awaitWithTimeout(child.exitCode, "publisher did not exit", "5 seconds")).not.toBe(0)
     expect(stderr.join("")).toContain("Incomplete Orchestra plugin staging directory")
     expect(yield* Effect.promise(() => fs.readdir(root))).toEqual([])
   }),
@@ -362,6 +382,95 @@ it.instance(
   }),
   60_000,
 )
+
+for (const code of ["EPERM", "EACCES", "EEXIST", "ENOTEMPTY", "ENOTDIR"]) {
+  for (const destination of ["complete", "tampered", "missing-file", "extra-file", "empty", "absent", "file"]) {
+    it.instance(
+      `rename ${code} with a ${destination} destination permits only verified reuse or an ordinary collision repair`,
+      () => Effect.gen(function* () {
+        const f = yield* fixture
+        const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
+        const root = yield* tmpdirScoped()
+        yield* Effect.promise(async () => {
+          const target = path.join(root, path.basename(reference.path))
+          const repair = `${target}.repair-${randomUUID()}`
+          const expected = await snapshot(reference.path)
+          const failure = Object.assign(new Error(`controlled rename ${code}`), { code })
+          const rename = fs.rename
+          const boundary = spyOn(fs, "rename").mockImplementation(async (from, to) => {
+            if (to !== target) return rename(from, to)
+            expect(await snapshot(String(from))).toEqual(expected)
+            // Only rename's result is controlled. Destination inspection and all tree reads/writes are real.
+            if (destination === "file") await fs.writeFile(target, "foreign file")
+            if (destination === "empty") await fs.mkdir(target)
+            if (["complete", "tampered", "missing-file", "extra-file"].includes(destination))
+              await fs.cp(reference.path, target, { recursive: true })
+            if (destination === "tampered") await fs.writeFile(path.join(target, "agents/backend.md"), "tampered")
+            if (destination === "missing-file") await fs.rm(path.join(target, "agents/backend.md"))
+            if (destination === "extra-file") await fs.writeFile(path.join(target, "unexpected"), "extra")
+            // A repair becoming available at the boundary must not turn a permission failure into success.
+            await fs.cp(reference.path, repair, { recursive: true })
+            throw failure
+          })
+          try {
+            const result = await ClaudeHostPlugin.build({ seats: f.seats, tools, root }).then(
+              (built) => built, (error: unknown) => error,
+            )
+            expect(boundary).toHaveBeenCalledTimes(1)
+            const permission = code === "EPERM" || code === "EACCES"
+            if (destination === "complete" || (!permission && destination !== "absent")) {
+              expect(result).toMatchObject({ path: destination === "complete" ? target : repair })
+              expect(await snapshot(destination === "complete" ? target : repair)).toEqual(expected)
+            }
+            if (destination === "absent" || (permission && destination !== "complete")) expect(result).toBe(failure)
+            expect((await fs.readdir(root)).toSorted()).toEqual([
+              ...(destination === "absent" ? [] : [path.basename(target)]), path.basename(repair),
+            ].toSorted())
+            expect(await snapshot(repair)).toEqual(expected)
+            if (destination === "file") expect(await Bun.file(target).text()).toBe("foreign file")
+            if (destination === "empty") expect(await fs.readdir(target)).toEqual([])
+            if (destination === "tampered") expect(await Bun.file(path.join(target, "agents/backend.md")).text()).toBe("tampered")
+            if (destination === "missing-file") expect(await Bun.file(path.join(target, "agents/backend.md")).exists()).toBe(false)
+            if (destination === "extra-file") expect(await Bun.file(path.join(target, "unexpected")).text()).toBe("extra")
+          } finally {
+            boundary.mockRestore()
+          }
+        })
+      }),
+      60_000,
+    )
+  }
+}
+
+for (const code of ["EPERM", "EACCES"]) {
+  it.instance(
+    `rename ${code} preserves the original failure when destination inspection is denied`,
+    () => Effect.gen(function* () {
+      const f = yield* fixture
+      const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
+      const root = yield* tmpdirScoped()
+      yield* Effect.promise(async () => {
+        const target = path.join(root, path.basename(reference.path))
+        const failure = Object.assign(new Error(`controlled rename ${code}`), { code })
+        const inspection = spyOn(fs, "lstat")
+        const boundary = spyOn(fs, "rename").mockImplementation(async () => {
+          inspection.mockRejectedValueOnce(Object.assign(new Error("inspection denied"), { code: "EACCES" }))
+          throw failure
+        })
+        try {
+          await expect(ClaudeHostPlugin.build({ seats: f.seats, tools, root })).rejects.toBe(failure)
+          expect(boundary).toHaveBeenCalledTimes(1)
+          expect(inspection).toHaveBeenLastCalledWith(target)
+          expect(await fs.readdir(root)).toEqual([])
+        } finally {
+          boundary.mockRestore()
+          inspection.mockRestore()
+        }
+      })
+    }),
+    60_000,
+  )
+}
 
 it.instance(
   "tools map to Claude Code built-ins or additive orchestra MCP tools, never to a disabled built-in",

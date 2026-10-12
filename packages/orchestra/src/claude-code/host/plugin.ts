@@ -167,8 +167,9 @@ async function tree(dir: string): Promise<(readonly [string, Uint8Array])[]> {
   return visit(dir)
 }
 
-// Published trees are immutable: rename arbitrates clean-root contention, and corrupt targets stay intact for
-// readers that may still hold them. Only this build's staging directory is ever removed.
+// Cooperating publishers own the isolated plugin-v2 namespace and publish only complete immutable trees.
+// Rename arbitrates their clean-root contention; it cannot protect against external empty-target writers.
+// Corrupt targets stay intact for readers that may still hold them. Only this build's staging directory is removed.
 async function publish(root: string, files: ReadonlyMap<string, Uint8Array>) {
   const expected = digest([...files])
   const dir = path.join(root, expected.slice(0, 16))
@@ -190,6 +191,12 @@ async function publish(root: string, files: ReadonlyMap<string, Uint8Array>) {
     if (current === undefined) {
       const error = await fs.rename(temp, dir).then(() => undefined, (error: NodeJS.ErrnoException) => error)
       if (!error) return dir
+      // Windows may report a completed competing publication as a permission failure. Only verified reuse
+      // justifies success; every other destination state must preserve the original permission failure.
+      if (error.code === "EPERM" || error.code === "EACCES") {
+        if (await existing(dir).catch(() => { throw error }) === expected) return dir
+        throw error
+      }
       if (!["EEXIST", "ENOTEMPTY", "ENOTDIR"].includes(error.code ?? "")) throw error
       const winner = await existing(dir)
       if (winner === expected) return dir
