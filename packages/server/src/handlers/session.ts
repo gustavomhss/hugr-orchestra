@@ -73,7 +73,11 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               agent: ctx.payload.agent,
               model: ctx.payload.model,
               location: ctx.payload.location ?? { directory: AbsolutePath.make(process.cwd()) },
-            }),
+            }).pipe(
+              Effect.catchTag("Session.NotFoundError", (error) =>
+                new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
+              ),
+            ),
           }
         }),
       )
