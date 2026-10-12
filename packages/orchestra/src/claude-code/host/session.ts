@@ -343,7 +343,8 @@ const layer = Layer.effect(
         // A background subagent's progress and notification after its dispatching turn ended: its card is in `known`.
         if (message.type === "system" && (message.subtype === "task_progress" || message.subtype === "task_updated" ||
           message.subtype === "task_notification")) {
-          const callID = "tool_use_id" in message && message.tool_use_id ? message.tool_use_id : live.known.tasks.get(message.task_id)
+          const callID = message.subtype === "task_notification" ? live.join.notification(message)
+            : "tool_use_id" in message && message.tool_use_id ? message.tool_use_id : live.known.tasks.get(message.task_id)
           const owner = callID ? live.known.calls.get(callID) : undefined
           if (owner) yield* owner.on(message)
         }
@@ -466,7 +467,7 @@ const layer = Layer.effect(
         },
         make: (user) => ClaudeHostMirror.create({ sessionID: input.sessionID, user, agent: input.agent,
           path: { cwd: instance.directory, root: instance.worktree }, sessions, snapshot, todo, status, provider, catalog,
-          child: child(live), known: live.known,
+          child: child(live), known: live.known, notification: live.join.notification,
           state: (patch) => write(input.sessionID, patch),
           record: (value) => Effect.sync(() => { if (value.uuid) live.uuids[value.messageID] = value.uuid }) }),
       }
@@ -484,6 +485,7 @@ const layer = Layer.effect(
         hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge, research,
           run: live.run as ClaudeHostHooks.Context["run"],
           parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
+            author: (callID) => live.turn?.view.author(callID) ?? live.known.calls.get(callID)?.author(callID),
             complete: bridge.complete } })),
       }
       const options = yield* Effect.tryPromise(() => ClaudeHostOptions.build({
