@@ -6,12 +6,15 @@ import path from "path"
 import type { Readable } from "node:stream"
 import { Readable as NodeReadable, Writable as NodeWritable } from "node:stream"
 import { Flag } from "@orchestra/core/flag/flag"
+import { Omni } from "@orchestra/core/omni"
 import { Process } from "@/util/process"
 import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
 import { tmpdir } from "../fixture/fixture"
 
 const mode = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
 const omni = mode !== "off"
+// Process.spawn runs these children through omni when the flag is on: a focused run of this file must show it.
+Omni.expectSpawn(import.meta.path)
 
 function ready(stream: Readable | null, line: string) {
   return new Promise<void>((resolve, reject) => {

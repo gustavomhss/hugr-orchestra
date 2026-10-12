@@ -16,6 +16,8 @@ import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
 const live = process.platform === "win32" ? it.live.skip : it.live
+// Both platforms spawn through the real AppProcess here, so a focused run of this file keeps the omni control on.
+Omni.expectSpawn(import.meta.path)
 
 // Unix broker cases are skipped on Windows; still exercise the real spawner required by the suite-wide control.
 if (process.platform === "win32") it.live("Windows real AppProcess control runs while Unix broker cases stay skipped", () => Effect.gen(function* () {

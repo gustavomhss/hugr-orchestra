@@ -153,6 +153,7 @@ const table = sqliteTable("session", {
   - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
   - A run takes a few minutes: give the shell call a long timeout or run it in the background.
   - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `packages/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.
+  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run. Full lanes expect every run to spawn through omni. A `test:ci` run expects it only when a loaded test file calls `Omni.expectSpawn(import.meta.path)` at its top level; add that call to a test file whose purpose is spawning through omni. Do not pass `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=0` to quiet the control; that runs the tests on legacy.
   - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
 
 ## Spawning Processes

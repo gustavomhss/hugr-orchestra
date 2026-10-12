@@ -27,7 +27,7 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
-import { parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
+import { controlLines, parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
   "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
@@ -290,6 +290,7 @@ async function report(view: RunView) {
     // Keep setup diagnostics for failed jobs; only summaries for successful jobs.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
+    for (const line of controlLines(lines)) console.log(`test-ci: ${job.name} ${line}`)
   }
   console.log(`\ntest-ci: ${view.conclusion}`)
   return view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")

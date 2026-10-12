@@ -178,3 +178,13 @@ export function reportLines(job: { name: string; conclusion: string; steps?: { n
   if (output.length === 0) throw new Error(`${job.name}: empty Run tests output`)
   return output
 }
+
+// The omni positive control's verdict (script/test-omni-control.ts), so test-ci.ts can print it apart from the test
+// results: a failing control otherwise shows up only as Bun's "(fail) (unnamed)". Bun prints a thrown verdict as
+// "error: ..."; its source frame quotes the throw and is not a verdict.
+export function controlLines(lines: string[]) {
+  return lines.flatMap((line) => {
+    const match = /^(?:error: )?(omni positive control: .*)$/.exec(line.trim())
+    return match ? [match[1]!] : []
+  })
+}

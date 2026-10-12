@@ -153,9 +153,13 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
+      # A focused selection is expected to spawn through omni only when a test file it loads declares so
+      # (Omni.expectSpawn); script/test-omni-control.ts prints its verdict as one "omni positive control:" line.
+      # test.yml leaves this unset, so every full lane still expects a spawn. Not an --env key: the selection decides.
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          ORCHESTRA_OMNI_CONTROL: declared
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |

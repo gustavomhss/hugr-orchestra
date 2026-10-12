@@ -3,12 +3,15 @@ import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { promisify } from "node:util"
 import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
+import { Omni } from "@orchestra/core/omni"
 import { DesktopOmni } from "./omni-process"
 
 // The desktop's omni adapters against real processes. They need the omni addon and supervisor, so they run with
 // ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER on (test:ci --env); the preload's positive control then also requires them to
 // have spawned through omni. Trees are identified by a nonce in argv (process-tree.ts), never by a bare pid.
 const on = DesktopOmni.enabled()
+// Declared so that a focused run of this file, not only the whole suite, fails when it made no omni spawn.
+Omni.expectSpawn(import.meta.path)
 const legacy = promisify(execFile)
 const nonces: string[] = []
 

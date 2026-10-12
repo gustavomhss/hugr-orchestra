@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { benchmarkEnvironment, parseOptions, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
+import { benchmarkEnvironment, controlLines, parseOptions, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
 
 const config = "e2e/playwright.production.config.ts"
 const spec = "e2e/regression/session-research-result.spec.ts"
@@ -135,4 +135,18 @@ test("successful report requires step metadata, step log, endgroup and nonempty 
 test("failed setup report retains setup diagnostics without requiring Run tests", () => {
   expect(reportLines({ name: "test (macos-14)", conclusion: "failure", steps: [{ name: "Setup Bun", conclusion: "failure" }] },
     "test (macos-14)\tSetup Bun\tinstallation failed")).toEqual(["installation failed"])
+})
+
+test("controlLines keeps the omni positive control's verdicts, never the source frame that quotes the throw", () => {
+  expect(controlLines([
+    " 22 |   if (problem) throw new Error(`omni positive control: FAIL (${reason}). ${problem}`)",
+    "error: omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.",
+    "omni positive control: not applicable (focused: no loaded test file declares an omni spawn); nothing.",
+    "(fail) (unnamed) [1.30ms]",
+    " 1 pass",
+  ])).toEqual([
+    "omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.",
+    "omni positive control: not applicable (focused: no loaded test file declares an omni spawn); nothing.",
+  ])
+  expect(controlLines(["1 pass", "Ran 1 test across 1 file."])).toEqual([])
 })
