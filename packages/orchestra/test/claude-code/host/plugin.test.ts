@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Npm } from "@orchestra/core/npm"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Omni } from "@orchestra/core/omni"
+import { Flag } from "@orchestra/core/flag/flag"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -122,7 +123,7 @@ const publisher = Effect.fnUntraced(function* (input: ClaudeHostPlugin.Input & {
   `))
   return ChildProcess.make(process.execPath, ["--tsconfig-override", path.resolve(import.meta.dir, "../../../tsconfig.json"),
     path.join(directory, "publisher.ts"), path.join(directory, "input.json")],
-    { cwd: path.resolve(import.meta.dir, "../../.."), killSignal: "SIGKILL", stderr: pause ? "ignore" : "pipe" })
+    { cwd: path.resolve(import.meta.dir, "../../.."), stderr: pause ? "ignore" : "pipe" })
 })
 
 function boundedOutput<E, R>(stream: Stream.Stream<Uint8Array, E, R>, limit: number) {
@@ -142,7 +143,8 @@ const spawnPublisher = Effect.fnUntraced(function* (command: ChildProcess.Comman
   ).pipe(Effect.orDie))
   const before = Omni.snapshot().spawns
   const child = yield* spawner.spawn(command).pipe(Effect.provideService(Scope.Scope, scope))
-  expect(Omni.snapshot().spawns).toBeGreaterThan(before)
+  if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off") expect(Omni.snapshot().spawns).toBeGreaterThan(before)
+  if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off") expect(Omni.snapshot().spawns).toBe(before)
   yield* Effect.addFinalizer(() => Effect.gen(function* () {
     if (yield* child.isRunning) yield* awaitWithTimeout(
       child.kill({ killSignal: "SIGKILL" }).pipe(Effect.interruptible),
@@ -312,7 +314,7 @@ for (const killed of [false, true]) {
         await fs.mkdir(lock)
         await fs.writeFile(path.join(lock, "sentinel"), "old-version owner")
       })
-      expectSpawn(import.meta.path)
+      if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off") expectSpawn(import.meta.path)
       const child = yield* spawnPublisher(yield* publisher(input, prefix, true))
       const ready = yield* awaitWithTimeout(
         boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),
@@ -352,7 +354,7 @@ it.instance(
     const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
     const root = yield* tmpdirScoped()
     const prefix = path.basename(reference.path)
-    expectSpawn(import.meta.path)
+    if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off") expectSpawn(import.meta.path)
     const child = yield* spawnPublisher(yield* publisher({ seats: f.seats, tools, root }, prefix, false))
     const ready = yield* awaitWithTimeout(
       boundedOutput(child.stdout, 1024).pipe(Stream.splitLines, Stream.runHead),

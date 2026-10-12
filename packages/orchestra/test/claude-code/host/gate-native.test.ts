@@ -259,18 +259,16 @@ describe("native gate real policy", () => {
       { permission: "external_directory", pattern: "*", action: "ask" },
     ] })
     const permission = yield* Permission.Service
+    const physical = process.platform === "win32" ? realpathSync.native(outside) : outside
     for (const call of [
-      { name: "Read", file: "local-alias", physical: outside, parent: outside },
-      { name: "Read", file: "local-alias/sentinel.txt", physical: path.join(outside, "sentinel.txt"), parent: outside },
-      { name: "Write", file: "local-alias/new/deep/file.txt", physical: path.join(outside, "new/deep/file.txt"), parent: path.join(outside, "new/deep") },
+      { name: "Read", file: "local-alias", physical, parent: physical },
+      { name: "Read", file: "local-alias/sentinel.txt", physical: path.join(physical, "sentinel.txt"), parent: physical },
+      { name: "Write", file: "local-alias/new/deep/file.txt", physical: path.join(physical, "new/deep/file.txt"), parent: path.join(physical, "new/deep") },
     ]) {
       const pending = yield* Effect.forkScoped(f.decide(call.name, { file_path: call.file, content: "harmless" }))
       const request = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.sessionID === f.session.id))), "external permission never asked")
       expect(request.permission).toBe("external_directory")
-      expect(request.patterns).toEqual([...new Set([
-        path.join(call.parent, "*").replaceAll("\\", "/"),
-        ...(process.platform === "win32" ? [path.join(realpathSync.native(outside), path.relative(outside, call.parent), "*").replaceAll("\\", "/")] : []),
-      ])])
+      expect(request.patterns).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
       expect(request.always).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
       expect(request.metadata).toEqual({ filepath: call.physical, parentDir: call.parent })
       yield* permission.reply({ requestID: request.id, reply: "reject" })
@@ -288,27 +286,23 @@ describe("native gate real policy", () => {
     yield* f.filesystem.ensureDir(path.join(outside, "private directory"))
     const long = realpathSync.native(path.join(outside, "private directory"))
     yield* f.filesystem.writeFileString(path.join(long, "sentinel.txt"), "outside sentinel")
-    const source = yield* tmpdirScoped()
-    yield* f.filesystem.writeFileString(path.join(source, "short-path.ps1"), `
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-Add-Type -TypeDefinition 'using System; using System.Text; using System.Runtime.InteropServices; public static class NativePaths { [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern uint GetShortPathName(string path, StringBuilder buffer, uint size); }'
-$buffer = [System.Text.StringBuilder]::new(32768)
-$size = [NativePaths]::GetShortPathName($args[0], $buffer, 32768)
-if ($size -eq 0 -or $size -ge 32768) { throw "GetShortPathName failed" }
-[Console]::Write($buffer.ToString())
-`)
-    const processes = yield* AppProcess.Service
-    expectSpawn(import.meta.path)
-    const result = yield* processes.run(ChildProcess.make("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive",
-      "-File", path.join(source, "short-path.ps1"), long]))
-    expect(result.exitCode).toBe(0)
-    const short = result.stdout.toString().trim()
-    expect(realpathSync.native(short)).toBe(long)
-    expect(yield* f.filesystem.readFileString(path.join(short, "sentinel.txt"))).toBe("outside sentinel")
-    if (short.toLowerCase() === long.toLowerCase()) {
-      console.info("Windows 8.3 opposite-spelling controls not exercised: GetShortPathName returned no distinct alias")
+    // Probe the first uncontended 8.3 spelling, then prove its identity through the real filesystem.
+    // A volume with short-name creation disabled does not prove this additional control.
+    const short = path.join(path.dirname(long), "PRIVAT~1")
+    const identity = yield* Effect.promise(() => fs.lstat(short, { bigint: true }).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return undefined
+      throw error
+    }))
+    if (!identity) {
+      console.info("Windows 8.3 opposite-spelling controls not exercised: volume did not create PRIVAT~1")
       return
     }
+    const original = yield* Effect.promise(() => fs.lstat(long, { bigint: true }))
+    expect(identity.ino).not.toBe(0n)
+    expect(identity.ino).toBe(original.ino)
+    expect(identity.dev).toBe(original.dev)
+    expect(realpathSync.native(short)).toBe(long)
+    expect(yield* f.filesystem.readFileString(path.join(short, "sentinel.txt"))).toBe("outside sentinel")
     console.info("Windows 8.3 permission control:", { short, long, effect: yield* f.filesystem.realPath(short), native: realpathSync.native(short) })
     yield* Effect.promise(() => fs.symlink(short, path.join(f.directory, "local-alias"), "junction"))
     yield* f.filesystem.ensureDir(`${long}-peer`)
@@ -327,16 +321,50 @@ if ($size -eq 0 -or $size -ge 32768) { throw "GetShortPathName failed" }
       expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
       expect((yield* f.sessions.get(f.session.id)).permission).toEqual(rules)
     }
-    const alias = path.join(outside, "blocked-alias")
-    yield* Effect.promise(() => fs.symlink(`${long}-peer`, alias, "junction"))
-    yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [
-      { permission: "*", pattern: "*", action: "allow" },
-      { permission: "external_directory", pattern: path.join(outside, "blocked-*", "*").replaceAll("\\", "/"), action: "deny" },
-    ] })
-    refused(yield* f.decide("Read", { file_path: path.join(alias, "sentinel.txt") }), "rule which prevents")
-    expect(yield* f.decide("Read", { file_path: path.join(`${long}-peer`, "sentinel.txt") })).toEqual({ allow: true })
     expect(yield* f.filesystem.exists(path.join(long, "new"))).toBe(false)
     expect(yield* f.filesystem.readFileString(path.join(long, "sentinel.txt"))).toBe("outside sentinel")
+  }), { git: true }, 60_000)
+
+  windows("lexical junction denies keep direct peers permitted, including real short-junction requests", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const outside = yield* f.filesystem.makeTempDirectoryScoped({ prefix: "native gate junction aliases-" })
+    yield* f.filesystem.ensureDir(path.join(outside, "permitted-peer"))
+    const peer = realpathSync.native(path.join(outside, "permitted-peer"))
+    yield* f.filesystem.writeFileString(path.join(peer, "sentinel.txt"), "permitted peer")
+    const alias = path.join(outside, "blocked-alias")
+    yield* Effect.promise(() => fs.symlink(peer, alias, "junction"))
+    const shortAlias = path.join(realpathSync.native(outside), "BLOCKE~1")
+    const junction = yield* Effect.promise(() => fs.lstat(alias, { bigint: true }))
+    const alternate = yield* Effect.promise(() => fs.lstat(shortAlias, { bigint: true }).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return undefined
+      throw error
+    }))
+    expect(junction.isSymbolicLink()).toBe(true)
+    if (alternate) {
+      expect(alternate.isSymbolicLink()).toBe(true)
+      expect(alternate.ino).not.toBe(0n)
+      expect(alternate.ino).toBe(junction.ino)
+      expect(alternate.dev).toBe(junction.dev)
+      expect(realpathSync.native(shortAlias)).toBe(peer)
+    }
+    if (!alternate) console.info("Windows short-junction wildcard control not exercised: volume did not create BLOCKE~1")
+    for (const pattern of [path.join(outside, "blocked-*", "*"), path.join(alias, "*"),
+      ...(alternate ? [path.join(shortAlias, "*")] : [])]) {
+      yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [
+        { permission: "*", pattern: "*", action: "allow" },
+        { permission: "external_directory", pattern: pattern.replaceAll("\\", "/"), action: "deny" },
+      ] })
+      for (const requested of [alias, ...(alternate ? [shortAlias] : [])]) {
+        refused(yield* f.decide("Read", { file_path: requested }), "rule which prevents")
+        refused(yield* f.decide("Read", { file_path: path.join(requested, "sentinel.txt") }), "rule which prevents")
+        refused(yield* f.decide("Write", { file_path: path.join(requested, "new/deep/file.txt"), content: "harmless" }), "rule which prevents")
+      }
+      expect(yield* f.decide("Read", { file_path: peer })).toEqual({ allow: true })
+      expect(yield* f.decide("Read", { file_path: path.join(peer, "sentinel.txt") })).toEqual({ allow: true })
+      expect(yield* f.decide("Write", { file_path: path.join(peer, "new/deep/file.txt"), content: "harmless" })).toEqual({ allow: true })
+    }
+    expect(yield* f.filesystem.exists(path.join(peer, "new"))).toBe(false)
+    expect(yield* f.filesystem.readFileString(path.join(peer, "sentinel.txt"))).toBe("permitted peer")
   }), { git: true }, 60_000)
 
   it.instance("new Write targets resolve existing directory aliases for edit patterns", () => Effect.gen(function* () {

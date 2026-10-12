@@ -10,6 +10,7 @@ export * as ClaudeHostGate from "./gate"
 // Parsing a command for its writes is not a control.
 import { Effect, Exit, Scope } from "effect"
 import path from "node:path"
+import fs from "node:fs/promises"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import type { HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
@@ -194,16 +195,23 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
     return {
       sessionID: actor.sessionID, messageID, callID: toolUseID, agent: actor.seat, agentID: actor.seat, abort: input.abort,
       messages: [], extra: { claudeCode: true }, metadata: () => Effect.void,
-      ask: (request) => {
+      ask: (request) => Effect.gen(function* () {
         const windows = process.platform === "win32" && request.permission === "external_directory"
-        // Keep the original request and rules: canonical-only lookup loses short-name denies and lexical alias
-        // policy. Add native equivalents on both sides, but never mint an equivalent allow or an always grant.
-        return permission.ask({ ...request, sessionID: actor.sessionID,
-          patterns: windows ? [...new Set(request.patterns.flatMap((pattern) => [pattern, windowsPattern(pattern)]))] : request.patterns,
-          ruleset: windows ? ruleset.flatMap((rule) => rule.action === "deny" && Wildcard.match(request.permission, rule.permission)
-            ? [rule, { ...rule, pattern: windowsPattern(rule.pattern) }] : [rule]) : ruleset,
-          ...(part ? { tool: { messageID, callID: toolUseID } } : {}) }).pipe(Effect.orDie)
-      },
+        // Expand lexical 8.3 names without following junctions. Original lexical and physical checks remain;
+        // an alias-only deny must never become a deny on the alias's otherwise permitted physical target.
+        const lookup = windows ? yield* Effect.tryPromise({
+          try: async () => {
+            const patterns = [...new Set((await Promise.all(request.patterns.map(async (pattern) =>
+              [pattern, await windowsPattern(pattern)]))).flat())]
+            return { patterns, ruleset: (await Promise.all(ruleset.map(async (rule) =>
+              rule.action === "deny" && Wildcard.match(request.permission, rule.permission)
+                ? [rule, { ...rule, pattern: await windowsPattern(rule.pattern, patterns) }] : [rule]))).flat() }
+          },
+          catch: (cause) => new Error("HOLD: WINDOWS_LEXICAL_PATH_ACQUISITION_FAILED", { cause }),
+        }) : { patterns: request.patterns, ruleset }
+        return yield* permission.ask({ ...request, ...lookup, sessionID: actor.sessionID,
+          ...(part ? { tool: { messageID, callID: toolUseID } } : {}) })
+      }).pipe(Effect.orDie),
     } satisfies Tool.Context
   })
 
@@ -289,13 +297,22 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         const target = text(args, "file_path") ?? text(args, "notebook_path")
         if (!target) return yield* Effect.fail(new Error(`HOLD: ${name} has no file path.`))
         const filepath = path.resolve(instance.directory, FSUtil.windowsPath(target))
-        const physical = yield* canonical(fs, filepath, name === "Write")
-        const worktree = yield* fs.realPath(projectDirectory)
-        const targets = [...new Set([filepath, physical])]
+        // Expand lexical names before resolving links, and use the same spellings for both containment roots.
+        const locations = process.platform === "win32" ? yield* Effect.tryPromise({
+          try: () => Promise.all([filepath, instance.directory, projectDirectory].map(async (target) => {
+            const expanded = await lexicalPath(target)
+            if (expanded === undefined) throw new Error(`Windows lexical path was not acquired: ${target}`)
+            return expanded
+          })),
+          catch: (cause) => new Error("HOLD: WINDOWS_LEXICAL_PATH_ACQUISITION_FAILED", { cause }),
+        }) : [filepath, instance.directory, projectDirectory]
+        const physical = yield* canonical(fs, locations[0], name === "Write")
+        const worktree = yield* fs.realPath(locations[2])
+        const targets = [...new Set([filepath, locations[0], physical])]
         const directory = name === "Read" && (yield* fs.stat(physical)).type === "Directory"
-        // Resolve containment with one API; context.ask also checks Windows native spellings against deny rules.
-        const roots = [instance.directory, projectDirectory]
-        const physicalRoots = [yield* fs.realPath(instance.directory), worktree]
+        // Resolve containment physically; context.ask separately expands Windows lexical short names.
+        const roots = [instance.directory, projectDirectory, locations[1], locations[2]]
+        const physicalRoots = [yield* fs.realPath(locations[1]), worktree]
         const external = [...new Set([
           ...(roots.some((root) => FSUtil.contains(root, filepath)) ? [] : [filepath]),
           ...(physicalRoots.some((root) => FSUtil.contains(root, physical)) ? [] : [physical]),
@@ -337,20 +354,58 @@ function text(input: Input, key: string) {
   return typeof value === "string" ? value : undefined
 }
 
-// Wildcard's only metacharacters are * and ?. Normalize the literal directory prefix, leaving its glob intact.
-// FSUtil is the shared native Windows permission canonicalizer; missing descendants need an existing ancestor.
-function windowsPattern(pattern: string) {
+// Wildcard's only metacharacters are * and ?. Expand the literal directory prefix, leaving its glob intact.
+// Neither realpath nor FSUtil.normalizePath is lexical: both can replace a junction's name with its target.
+async function windowsPattern(pattern: string, candidates?: readonly string[]) {
   const lexical = FSUtil.windowsPath(pattern).replaceAll("\\", "/")
+    .replace(/^\/\/\?\/UNC\//i, "//").replace(/^\/\/\?\/([A-Za-z]:\/)/, "$1")
   if (!path.win32.isAbsolute(lexical)) return pattern
   const token = lexical.search(/[*?]/)
   const boundary = token < 0 ? lexical.length : lexical.lastIndexOf("/", token) + 1
-  return path.join(nativePath(path.resolve(lexical.slice(0, boundary))), lexical.slice(boundary)).replaceAll("\\", "/")
+  const prefix = await lexicalPath(path.resolve(lexical.slice(0, boundary)), candidates)
+  return prefix === undefined ? pattern : path.join(prefix, lexical.slice(boundary)).replaceAll("\\", "/")
 }
 
-function nativePath(target: string): string {
-  const normalized = FSUtil.normalizePath(target)
-  if (normalized !== target || path.dirname(target) === target) return normalized
-  return path.join(nativePath(path.dirname(target)), path.basename(target))
+async function lexicalPath(target: string, candidates?: readonly string[]) {
+  // An unrelated deny prefix need not acquire inaccessible descendants or a different drive.
+  const relevant = (prefix: string) => !candidates || candidates.some((candidate) => FSUtil.contains(prefix, candidate))
+  const root = path.parse(target).root
+  if (!relevant(root)) return undefined
+  await fs.lstat(root)
+  const expanded = await target.slice(root.length).split(path.sep).filter(Boolean).reduce(async (previous, name) => {
+    const parent = await previous
+    if (!parent) return undefined
+    const requestedPath = path.join(parent.path, name)
+    if (parent.missing) return relevant(requestedPath) ? { path: requestedPath, missing: true } : undefined
+    const entries = await fs.readdir(parent.path)
+    // Enumeration proves the exact lexical name without acquiring unrelated entries' metadata.
+    if (entries.includes(name)) {
+      if (!relevant(requestedPath)) return undefined
+      await fs.lstat(requestedPath)
+      return { path: requestedPath, missing: false }
+    }
+    const requested = await fs.lstat(requestedPath, { bigint: true }).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return undefined
+      throw error
+    })
+    // A proven absent component is a new literal name, not an alias. Preserve all missing descendants.
+    if (!requested) return relevant(requestedPath) ? { path: requestedPath, missing: true } : undefined
+    // lstat identifies the junction itself. Missing or ambiguous identities cannot prove a lexical alias.
+    if (requested.ino === 0n) throw new Error(`Windows lexical file identity unavailable: ${requestedPath}`)
+    const folded = entries.filter((entry) => entry.toUpperCase() === name.toUpperCase())
+    const matches = (await Promise.all((folded.length ? folded : entries).map(async (entry) => {
+      const info = await fs.lstat(path.join(parent.path, entry), { bigint: true }).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return undefined
+        throw error
+      })
+      return info && info.dev === requested.dev && info.ino === requested.ino &&
+        info.isSymbolicLink() === requested.isSymbolicLink() ? entry : undefined
+    }))).filter((entry) => entry !== undefined)
+    if (matches.length !== 1) throw new Error(`Windows lexical alias identity is ambiguous: ${requestedPath}`)
+    const expanded = path.join(parent.path, matches[0])
+    return relevant(expanded) ? { path: expanded, missing: false } : undefined
+  }, Promise.resolve<{ path: string; missing: boolean } | undefined>({ path: root, missing: false }))
+  return expanded?.path
 }
 
 // Only new Write paths may be absent. Existing aliases and parents must resolve physically; other failures deny.
