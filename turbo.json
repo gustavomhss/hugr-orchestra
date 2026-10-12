@@ -2,7 +2,7 @@
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
   "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
-  "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
+  "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"],
   "tasks": {
     "typecheck": {},
     "build": {

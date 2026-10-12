@@ -1,0 +1,117 @@
+name: "ripgrep"
+description: >-
+  Puts the pinned ripgrep release on PATH. The release archive comes from the actions cache, or on a miss from GitHub
+  (https only, transient failures retried, each attempt with deadlines), and its sha256 is checked on every run before
+  it is extracted, so tests never download ripgrep. Also sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD, so a test process
+  that cannot find rg fails naming that variable instead of reaching GitHub. The version and digests must equal
+  packages/core/src/ripgrep/binary.ts (packages/core/test/ripgrep-binary.test.ts checks). cache-warm saves the cache
+  on dev; other runs only restore it.
+inputs:
+  save:
+    description: "Save the cache after a miss (only cache-warm on dev)"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - name: Select ripgrep release
+      id: release
+      shell: bash
+      run: |
+        version=15.1.0
+        case "$RUNNER_OS-$RUNNER_ARCH" in
+          Linux-X64) platform=x86_64-unknown-linux-musl; ext=tar.gz; sha=1c9297be4a084eea7ecaedf93eb03d058d6faae29bbc57ecdaf5063921491599 ;;
+          Linux-ARM64) platform=aarch64-unknown-linux-gnu; ext=tar.gz; sha=2b661c6ef508e902f388e9098d9c4c5aca72c87b55922d94abdba830b4dc885e ;;
+          macOS-ARM64) platform=aarch64-apple-darwin; ext=tar.gz; sha=378e973289176ca0c6054054ee7f631a065874a352bf43f0fa60ef079b6ba715 ;;
+          macOS-X64) platform=x86_64-apple-darwin; ext=tar.gz; sha=64811cb24e77cac3057d6c40b63ac9becf9082eedd54ca411b475b755d334882 ;;
+          Windows-X64) platform=x86_64-pc-windows-msvc; ext=zip; sha=124510b94b6baa3380d051fdf4650eaa80a302c876d611e9dba0b2e18d87493a ;;
+          Windows-ARM64) platform=aarch64-pc-windows-msvc; ext=zip; sha=00d931fb5237c9696ca49308818edb76d8eb6fc132761cb2a1bd616b2df02f8e ;;
+          *) echo "::error::no pinned ripgrep for $RUNNER_OS-$RUNNER_ARCH"; exit 1 ;;
+        esac
+        {
+          echo "version=$version"
+          echo "root=ripgrep-$version-$platform"
+          echo "ext=$ext"
+          echo "sha=$sha"
+          echo "archives=$RUNNER_TEMP/ripgrep-archives"
+          echo "bin=$RUNNER_TEMP/ripgrep-$version"
+        } >> "$GITHUB_OUTPUT"
+
+    # The archive is cached, not the executable, so the digest below is checked on every run, hit or miss.
+    - name: Restore ripgrep archive
+      id: restore
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.release.outputs.archives }}
+        key: ripgrep-archive-${{ steps.release.outputs.root }}-${{ steps.release.outputs.sha }}
+
+    - name: Download ripgrep archive (cache miss)
+      if: steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ steps.release.outputs.version }}
+        ROOT: ${{ steps.release.outputs.root }}
+        EXT: ${{ steps.release.outputs.ext }}
+        ARCHIVES: ${{ steps.release.outputs.archives }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$ARCHIVES"
+        # https only, redirects included. --retry covers timeouts and HTTP 408, 429, 500, 502, 503 and 504 (GitHub's
+        # release CDN has answered 504 for this file); a 404 or another client error fails at once.
+        curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+          --retry 6 --retry-connrefused --retry-delay 5 --connect-timeout 20 --max-time 120 \
+          -o "$ARCHIVES/$ROOT.$EXT" "https://github.com/BurntSushi/ripgrep/releases/download/$VERSION/$ROOT.$EXT"
+
+    - name: Verify and extract ripgrep
+      shell: bash
+      env:
+        ROOT: ${{ steps.release.outputs.root }}
+        EXT: ${{ steps.release.outputs.ext }}
+        SHA: ${{ steps.release.outputs.sha }}
+        ARCHIVES: ${{ steps.release.outputs.archives }}
+        BIN: ${{ steps.release.outputs.bin }}
+      run: |
+        set -euo pipefail
+        archive="$ARCHIVES/$ROOT.$EXT"
+        # Hashed from stdin: given a Windows path, sha256sum escapes its output with a leading backslash.
+        actual=$( (sha256sum 2>/dev/null || shasum -a 256) < "$archive" | cut -d' ' -f1)
+        if [ "$actual" != "$SHA" ]; then
+          echo "::error::ripgrep archive sha256 $actual does not match the pinned $SHA"
+          exit 1
+        fi
+        work=$(mktemp -d)
+        cp "$archive" "$work/"
+        if [ "$EXT" = zip ] && command -v unzip >/dev/null; then
+          (cd "$work" && unzip -q "$ROOT.$EXT")
+        elif [ "$EXT" = zip ]; then
+          (cd "$work" && 7z x -y "$ROOT.$EXT" >/dev/null)
+        else
+          (cd "$work" && tar -xzf "$ROOT.$EXT")
+        fi
+        rm -rf "$BIN"
+        mkdir -p "$BIN"
+        cp "$work/$ROOT/rg"* "$BIN/"
+        rm -rf "$work"
+
+    - name: Save ripgrep archive
+      if: inputs.save == 'true' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.release.outputs.archives }}
+        key: ${{ steps.restore.outputs.cache-primary-key }}
+
+    - name: Put ripgrep on PATH
+      shell: bash
+      env:
+        VERSION: ${{ steps.release.outputs.version }}
+        BIN: ${{ steps.release.outputs.bin }}
+      run: |
+        set -euo pipefail
+        [ "$RUNNER_OS" = Windows ] || chmod +x "$BIN/rg"
+        reported=$("$BIN/rg" --version | head -1)
+        case "$reported" in
+          "ripgrep $VERSION"*) echo "$reported" ;;
+          *) echo "::error::expected ripgrep $VERSION, got: $reported"; exit 1 ;;
+        esac
+        echo "$BIN" >> "$GITHUB_PATH"
+        echo "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD=1" >> "$GITHUB_ENV"
