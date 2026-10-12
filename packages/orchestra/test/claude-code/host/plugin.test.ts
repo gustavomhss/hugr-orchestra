@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { Effect } from "effect"
+import { Effect, Option, Stream } from "effect"
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Npm } from "@orchestra/core/npm"
@@ -8,9 +9,11 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { NpmTest } from "../../fake/npm"
-import { testEffect } from "../../lib/effect"
+import { awaitWithTimeout, testEffect } from "../../lib/effect"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { randomUUID } from "node:crypto"
+import { pathToFileURL } from "node:url"
 import { Agent } from "@/agent/agent"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
@@ -90,6 +93,28 @@ async function files(dir: string): Promise<string[]> {
     .toSorted()
 }
 
+async function snapshot(dir: string) {
+  return Promise.all((await files(dir)).map(async (file) => [file, await fs.readFile(path.join(dir, file))] as const))
+}
+
+function publisher(input: ClaudeHostPlugin.Input & { root: string }, prefix: string, pause: boolean) {
+  return ChildProcess.make(process.execPath, ["--eval", `
+    import { watch, writeFileSync, writeSync } from "node:fs";
+    import path from "node:path";
+    import { ClaudeHostPlugin } from ${JSON.stringify(pathToFileURL(path.resolve(import.meta.dir, "../../../src/claude-code/host/plugin.ts")).href)};
+    // Observe the real publisher's mkdir, without replacing any publisher or filesystem API.
+    const watcher = watch(${JSON.stringify(input.root)}, (event, name) => {
+      if (!name?.startsWith(${JSON.stringify(`${prefix}.stage-`)})) return;
+      watcher.close();
+      writeFileSync(path.join(${JSON.stringify(input.root)}, name, "sentinel"), "incomplete builder");
+      writeSync(1, name + "\\n");
+      if (${pause}) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);
+    });
+    await ClaudeHostPlugin.build(${JSON.stringify(input)});
+    throw new Error("publisher accepted the sabotaged staging directory");
+  `], { cwd: path.resolve(import.meta.dir, "../../.."), stderr: pause ? "inherit" : "pipe" })
+}
+
 it.instance(
   "the plugin covers every native seat, with one orchestra:<seat> name each, and every seat and playbook skill",
   () =>
@@ -146,10 +171,18 @@ it.instance(
         const first = await ClaudeHostPlugin.build({ seats, tools, root: dir })
         const agent = path.join(first.path, "agents/backend.md")
         const before = (await fs.stat(agent)).mtimeMs
+        const identities = await Promise.all((await files(first.path)).map(async (file) => {
+          const stat = await fs.stat(path.join(first.path, file))
+          return [file, stat.ino, stat.mtimeMs]
+        }))
         await Bun.sleep(20)
         const second = await ClaudeHostPlugin.build({ seats: seats.toReversed(), tools, root: dir })
         expect(second.path).toBe(first.path)
         expect((await fs.stat(agent)).mtimeMs).toBe(before)
+        expect(await Promise.all((await files(second.path)).map(async (file) => {
+          const stat = await fs.stat(path.join(second.path, file))
+          return [file, stat.ino, stat.mtimeMs]
+        }))).toEqual(identities)
         expect(await fs.readdir(dir)).toEqual([path.basename(first.path)])
 
         // Another root gets the same bytes under the same name.
@@ -177,14 +210,156 @@ it.instance(
         expect((await fs.readdir(dir)).toSorted()).toEqual(
           [path.basename(first.path), path.basename(changed.path)].toSorted(),
         )
-
-        // A tampered directory is replaced whole.
-        await fs.writeFile(agent, "tampered")
-        const repaired = await ClaudeHostPlugin.build({ seats, tools, root: dir })
-        expect(repaired.path).toBe(first.path)
-        expect(await Bun.file(agent).text()).toStartWith("---\nname: backend\n")
       })
     }),
+  60_000,
+)
+
+for (const corruption of ["tampered", "empty"]) {
+  it.instance(
+    `a ${corruption} canonical tree stays intact while a verified immutable repair is published and reused`,
+    () => Effect.gen(function* () {
+      const f = yield* fixture
+      yield* Effect.promise(async () => {
+        const input = { seats: f.seats, tools, root: f.root }
+        const first = await ClaudeHostPlugin.build(input)
+        const expected = await snapshot(first.path)
+        const inode = (await fs.stat(first.path)).ino
+        if (corruption === "tampered") await fs.writeFile(path.join(first.path, "agents/backend.md"), "tampered")
+        if (corruption === "empty") await Promise.all((await fs.readdir(first.path)).map((entry) =>
+          fs.rm(path.join(first.path, entry), { recursive: true })))
+        const damaged = await snapshot(first.path)
+        const foreign = path.join(f.root, `unrelated.repair-${randomUUID()}`)
+        const incomplete = `${first.path}.repair-${randomUUID()}`
+        const staging = `${first.path}.stage-leftover`
+        await fs.cp(first.path, incomplete, { recursive: true })
+        await fs.writeFile(path.join(incomplete, "partial"), "unfinished")
+        const reference = await ClaudeHostPlugin.build({ ...input, root: path.join(f.root, "reference") })
+        await fs.cp(reference.path, foreign, { recursive: true })
+        await fs.cp(reference.path, staging, { recursive: true })
+        const repaired = await ClaudeHostPlugin.build(input)
+        expect(repaired.path).toStartWith(`${first.path}.repair-`)
+        expect(repaired.path).not.toBe(incomplete)
+        expect(await snapshot(repaired.path)).toEqual(expected)
+        expect(await snapshot(first.path)).toEqual(damaged)
+        expect((await fs.stat(first.path)).ino).toBe(inode)
+        const stat = await fs.stat(repaired.path)
+        const reused = await ClaudeHostPlugin.build(input)
+        expect(reused.path).toBe(repaired.path)
+        expect((await fs.stat(reused.path)).ino).toBe(stat.ino)
+        expect((await fs.stat(reused.path)).mtimeMs).toBe(stat.mtimeMs)
+        expect(await snapshot(reused.path)).toEqual(expected)
+        expect(await snapshot(incomplete)).not.toEqual(expected)
+        expect(await snapshot(foreign)).toEqual(expected)
+        expect(await snapshot(staging)).toEqual(expected)
+      })
+    }),
+    60_000,
+  )
+}
+
+for (const killed of [false, true]) {
+  it.instance(
+    `a ${killed ? "killed" : "live"} incomplete publisher cannot block publication or lose its staging sentinel`,
+    () => Effect.gen(function* () {
+      const f = yield* fixture
+      const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
+      const root = yield* tmpdirScoped()
+      const input = { seats: f.seats, tools, root }
+      const prefix = path.basename(reference.path)
+      const lock = path.join(root, `${prefix}.lock`)
+      yield* Effect.promise(async () => {
+        await fs.mkdir(lock)
+        await fs.writeFile(path.join(lock, "sentinel"), "old-version owner")
+      })
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
+      const child = yield* spawner.spawn(publisher(input, prefix, true))
+      yield* Effect.addFinalizer(() => Effect.gen(function* () {
+        if (yield* child.isRunning) yield* child.kill({ killSignal: "SIGKILL" })
+      }).pipe(Effect.orDie))
+      const ready = yield* awaitWithTimeout(
+        child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+        "publisher never reached staging", "20 seconds",
+      )
+      const staging = path.join(root, Option.getOrThrow(ready))
+      const inode = yield* Effect.promise(async () => {
+        expect(path.basename(staging)).toStartWith(`${prefix}.stage-`)
+        const partial = await files(staging)
+        expect((await files(reference.path)).some((file) => !partial.includes(file))).toBe(true)
+        return (await fs.stat(staging)).ino
+      })
+      expect(yield* child.isRunning).toBe(true)
+      if (killed) {
+        yield* child.kill({ killSignal: "SIGKILL" })
+        expect(yield* child.isRunning).toBe(false)
+      }
+      yield* Effect.promise(async () => {
+        const built = await ClaudeHostPlugin.build(input)
+        expect(built.path).toBe(path.join(root, prefix))
+        expect(await snapshot(built.path)).toEqual(await snapshot(reference.path))
+        expect((await fs.stat(staging)).ino).toBe(inode)
+        expect(await Bun.file(path.join(staging, "sentinel")).text()).toBe("incomplete builder")
+        expect(await Bun.file(path.join(lock, "sentinel")).text()).toBe("old-version owner")
+        expect((await fs.readdir(root)).toSorted()).toEqual([prefix, path.basename(staging), path.basename(lock)].toSorted())
+      })
+      if (!killed) expect(yield* child.isRunning).toBe(true)
+    }),
+    60_000,
+  )
+}
+
+it.instance(
+  "an unexpected staging file fails full digest validation before any canonical directory is published",
+  () => Effect.gen(function* () {
+    const f = yield* fixture
+    const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
+    const root = yield* tmpdirScoped()
+    const prefix = path.basename(reference.path)
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
+    const child = yield* spawner.spawn(publisher({ seats: f.seats, tools, root }, prefix, false))
+    const ready = yield* awaitWithTimeout(
+      child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead),
+      "publisher never reached staging", "20 seconds",
+    )
+    expect(Option.getOrThrow(ready)).toStartWith(`${prefix}.stage-`)
+    const stderr = yield* awaitWithTimeout(
+      child.stderr.pipe(Stream.decodeText(), Stream.runCollect),
+      "publisher did not reject staging", "20 seconds",
+    )
+    expect((yield* child.exitCode)).not.toBe(0)
+    expect(stderr.join("")).toContain("Incomplete Orchestra plugin staging directory")
+    expect(yield* Effect.promise(() => fs.readdir(root))).toEqual([])
+  }),
+  60_000,
+)
+
+it.instance(
+  "filesystem errors reject publication instead of masquerading as a verified snapshot",
+  () => Effect.gen(function* () {
+    const f = yield* fixture
+    yield* Effect.promise(async () => {
+      await fs.writeFile(f.root, "not a cache directory")
+      await expect(ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root })).rejects.toThrow()
+      if (process.platform === "win32" || process.getuid?.() === 0) return
+      const input = { seats: f.seats, tools, root: `${f.root}-permissions` }
+      const built = await ClaudeHostPlugin.build(input)
+      await fs.chmod(built.path, 0)
+      try {
+        await expect(ClaudeHostPlugin.build(input)).rejects.toMatchObject({ code: "EACCES" })
+        expect(await fs.readdir(input.root)).toEqual([path.basename(built.path)])
+      } finally {
+        await fs.chmod(built.path, 0o755)
+      }
+      const playbooks = path.join(input.root, "playbooks")
+      await fs.mkdir(playbooks)
+      await fs.chmod(playbooks, 0)
+      try {
+        await expect(ClaudeHostPlugin.build({ ...input, playbooks })).rejects.toMatchObject({ code: "EACCES" })
+      } finally {
+        await fs.chmod(playbooks, 0o755)
+      }
+    })
+  }),
   60_000,
 )
 
@@ -315,56 +490,33 @@ it.instance(
 )
 
 it.instance(
-  "concurrent builders wait for publication and both return the same complete, stable directory",
+  "concurrent clean-root builders converge on one complete canonical inode without rewriting it",
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
       const reference = yield* Effect.promise(() => ClaudeHostPlugin.build({ seats: f.seats, tools, root: f.root }))
       const root = yield* tmpdirScoped()
       const target = path.join(root, path.basename(reference.path))
-      const lock = `${target}.lock`
-      yield* Effect.promise(() => fs.mkdir(lock))
-      yield* Effect.addFinalizer(() => Effect.promise(() => fs.rm(lock, { recursive: true, force: true })))
       yield* Effect.promise(async () => {
-        const published: { path: string; inode: number }[] = []
-        const referenceFiles = await files(reference.path)
-        const build = async () => {
+        const expected = await snapshot(reference.path)
+        const results = await Promise.allSettled(Array.from({ length: 8 }, async () => {
           const result = await ClaudeHostPlugin.build({ seats: f.seats, tools, root })
-          const inode = (await fs.stat(result.path)).ino
-          expect(await files(result.path)).toEqual(referenceFiles)
-          await Promise.all(
-            referenceFiles.map(async (file) => {
-              expect(await Bun.file(path.join(result.path, file)).bytes()).toEqual(
-                await Bun.file(path.join(reference.path, file)).bytes(),
-              )
-            }),
-          )
-          published.push({ path: result.path, inode })
-          return result
-        }
-        // Attach rejection handlers immediately and drain both builders even if a contention assertion fails.
-        const builds = Promise.allSettled([build(), build()])
-        try {
-          await Bun.sleep(150)
-          expect(published).toEqual([])
-          expect(await fs.readdir(root)).toEqual([path.basename(lock)])
-          // Publish identical content while holding the lock, recording identity BEFORE the waiters can acquire it.
-          // Both waiters must recheck and reuse this tree instead of replacing it.
-          await fs.cp(reference.path, target, { recursive: true })
-          const inode = (await fs.stat(target)).ino
-          await fs.rmdir(lock)
-          const results = await builds
-          results.forEach((result) => {
-            if (result.status === "rejected") throw result.reason
-            expect(result.value.path).toBe(target)
-          })
-          expect(published.map((item) => item.inode)).toEqual([inode, inode])
-          expect((await fs.stat(target)).ino).toBe(inode)
-          expect(await fs.readdir(root)).toEqual([path.basename(target)])
-        } finally {
-          await fs.rm(lock, { recursive: true, force: true })
-          await builds
-        }
+          const stat = await fs.stat(result.path)
+          expect(result.path).toBe(target)
+          expect(await snapshot(result.path)).toEqual(expected)
+          return stat
+        }))
+        const stats = results.map((result) => {
+          if (result.status === "rejected") throw result.reason
+          return result.value
+        })
+        expect(new Set(stats.map((stat) => stat.ino)).size).toBe(1)
+        expect(await fs.readdir(root)).toEqual([path.basename(target)])
+        const reused = await ClaudeHostPlugin.build({ seats: f.seats, tools, root })
+        expect(reused.path).toBe(target)
+        expect((await fs.stat(target)).ino).toBe(stats[0].ino)
+        expect((await fs.stat(target)).mtimeMs).toBe(stats[0].mtimeMs)
+        expect(await snapshot(target)).toEqual(expected)
       })
     }),
   60_000,
