@@ -277,6 +277,16 @@ describe("RipgrepBinary", () => {
     }),
   )
 
+  // The CI workflows put rg on PATH and set the flag (.github/actions/ripgrep); this fails if a lane, or Turbo's env
+  // filtering, loses it, which would let a test process download again.
+  it.live("in CI, the default service refuses to download", () =>
+    Effect.sync(() => {
+      if (!process.env.CI) return
+      expect(process.env[RipgrepBinary.DISABLE_DOWNLOAD]).toBe("1")
+      expect(RipgrepBinary.defaults().download).toBe(false)
+    }),
+  )
+
   it.live("prefers rg on PATH over any download", () =>
     Effect.gen(function* () {
       const dir = yield* withTmp
