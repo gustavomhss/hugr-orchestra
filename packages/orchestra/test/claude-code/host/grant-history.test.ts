@@ -22,7 +22,6 @@ import { Archive } from "@/continuity/archive"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
-import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Permission } from "@/permission"
 import { InstanceStore } from "@/project/instance-store"
@@ -46,7 +45,7 @@ afterEach(disposeAllInstances)
 const it = testEffect(TestAppNodeBuilder.build(
   LayerNode.group([filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
     SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
-    ArsenalBindings.node, Git.node, Skill.node, Snapshot.node, SessionStatus.node, Permission.node,
+    Git.node, Skill.node, Snapshot.node, SessionStatus.node, Permission.node,
     Global.node, AppProcess.node, LocationServiceMap.node, InstanceStore.node, ArsenalObservations.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
