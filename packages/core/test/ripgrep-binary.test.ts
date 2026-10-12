@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test"
 import { createHash } from "crypto"
 import fs from "fs/promises"
 import path from "path"
-import { Context, Effect, Exit, Layer } from "effect"
+import { Cause, Context, Effect, Exit, Layer, Option } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FileSystemSearch } from "@orchestra/core/filesystem/search"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -81,9 +81,9 @@ const binary = Effect.fnUntraced(function* (
 
 const failure = <A>(exit: Exit.Exit<A, RipgrepBinary.Unavailable>) => {
   if (Exit.isSuccess(exit)) throw new Error(`expected a failure, got ${String(exit.value)}`)
-  const error = exit.cause.reasons.find((reason) => reason._tag === "Fail")
-  if (!error || error._tag !== "Fail") throw new Error("expected a typed failure")
-  return error.error
+  const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause))
+  if (!error) throw new Error(`expected a typed failure, got ${String(exit.cause)}`)
+  return error
 }
 
 describe("RipgrepBinary", () => {
@@ -194,16 +194,25 @@ describe("RipgrepBinary", () => {
     }),
   )
 
-  it.live("refuses an archive that fails its integrity check, without retrying or installing", () =>
+  it.live("refuses an archive that fails its integrity check, once for all callers, installing nothing", () =>
     Effect.gen(function* () {
       const dir = yield* withTmp
       const built = yield* archive(dir)
-      const server = yield* serve(() => new Response(built.bytes))
+      const server = yield* serve(async () => {
+        await Bun.sleep(200)
+        return new Response(built.bytes)
+      })
       const service = yield* binary(path.join(dir, "bin"), { ...built, url: server.url, sha256: "f".repeat(64) })
 
-      const error = failure(yield* Effect.exit(service.filepath))
-      expect(error.message).toContain("integrity check")
-      expect(error.retry).toBe(false)
+      // Concurrent callers join the one download; without that, each would take the host lock in turn, find no
+      // install, and download again.
+      const errors = (yield* Effect.all(Array.from({ length: 4 }, () => Effect.exit(service.filepath)), {
+        concurrency: "unbounded",
+      })).map(failure)
+      for (const error of errors) {
+        expect(error.message).toContain("integrity check")
+        expect(error.retry).toBe(false)
+      }
       expect(server.counter.requests).toBe(1)
       const left = yield* Effect.promise(() => fs.readdir(path.join(dir, "bin")))
       expect(left.filter((name) => name.includes("rg") || name.startsWith("ripgrep-"))).toEqual([])
@@ -311,7 +320,9 @@ describe("RipgrepBinary", () => {
           Effect.provide(ripgrep),
         ),
       )
-      expect(Exit.isFailure(exit) && String(exit.cause)).toContain(RipgrepBinary.DISABLE_DOWNLOAD)
+      const error = Exit.isFailure(exit) ? Option.getOrUndefined(Cause.findErrorOption(exit.cause)) : undefined
+      expect(error?._tag).toBe("Ripgrep.Error")
+      expect(error?.message).toContain(RipgrepBinary.DISABLE_DOWNLOAD)
 
       const search = FileSystemSearch.ripgrepLayer.pipe(
         Layer.provide(
