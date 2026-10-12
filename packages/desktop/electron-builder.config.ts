@@ -80,8 +80,31 @@ async function verifyPackagedResources(context: AfterPackContext) {
     context.electronPlatformName === "darwin"
       ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
       : path.join(context.appOutDir, "resources/cli")
-  await verifyPackagedCli(directory, context.electronPlatformName, Arch[context.arch], context.packager.appInfo.version)
+  await verifyPackagedCli(
+    directory,
+    context.electronPlatformName,
+    Arch[context.arch],
+    context.packager.appInfo.version,
+    await ripgrepChecks(),
+  )
   await verifyClaudeAsset(path.join(directory, "../claude-code"), context.electronPlatformName, Arch[context.arch])
+}
+
+// The rg each CLI target ships in Resources/cli/ripgrep-<target>/ is signed by staging, not here (Resources/cli is
+// skipped below): every pack checks it is the pinned executable or, signed, carries a valid signature.
+async function ripgrepChecks() {
+  const { ripgrepSigning, signatureCheck } = await import("./src/main/cli-artifacts")
+  return {
+    signing: (target: string) => ripgrepSigning(target),
+    signature: async (file: string, target: string) => {
+      const check = signatureCheck(target, file)
+      if (!check) return false
+      return execFileAsync(check.command, check.args).then(
+        (result) => check.valid(result.stdout),
+        () => false,
+      )
+    },
+  }
 }
 
 const getBase = (appId: string): Configuration => ({
@@ -123,6 +146,7 @@ const getBase = (appId: string): Configuration => ({
       context.electronPlatformName,
       Arch[context.arch],
       context.packager.appInfo.version,
+      await ripgrepChecks(),
     )
     await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), context.electronPlatformName, Arch[context.arch])
   },
@@ -181,8 +205,9 @@ const getBase = (appId: string): Configuration => ({
       sign: signWindows,
     },
     target: ["nsis"],
-    // The supervisor (.exe) is signed by default; the omni addon is a .node.
-    signExts: [".node"],
+    // Named, not left to the default: the supervisor is an .exe and the omni addon a .node. Resources/cli (the CLIs and
+    // the rg they ship) is signed by staging, which signWindows skips.
+    signExts: [".exe", ".node"],
     verifyUpdateCodeSignature: false,
   },
   nsis: {

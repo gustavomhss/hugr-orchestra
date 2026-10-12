@@ -6,9 +6,11 @@ import type { Details } from "electron"
 import { getLogger } from "./logging"
 import { OmniHost } from "./omni-host"
 import { OmniSmoke } from "./omni-smoke"
+import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
+import { applyCandidateEnvironment, candidateEnvironment, type CandidateProfile } from "./candidate-profile"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -40,6 +42,7 @@ function validateSidecarPath(sidecarPath: string): string {
 
 type SpawnLocalServerOptions = {
   userDataPath: string
+  candidateProfile?: CandidateProfile
   sidecarPath?: string
   onStdout?: (message: string) => void
   onStderr?: (message: string) => void
@@ -61,7 +64,11 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
-export function preferAppEnv(userDataPath: string) {
+export function preferAppEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
+  if (candidateProfile) {
+    applyCandidateEnvironment(candidateProfile)
+    return null
+  }
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
@@ -93,10 +100,11 @@ export async function spawnLocalServer(
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
     env: {
-      ...createSidecarEnv(),
+      ...createSidecarEnv(options.candidateProfile),
       ...OmniHost.sidecarEnv(),
       // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
       ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
+      ...ripgrepEnv(app.isPackaged, process.resourcesPath),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
       // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
       // repository copy, since the bundled server cannot locate it from its own path.
@@ -268,10 +276,12 @@ export async function checkHealth(url: string, password?: string | null): Promis
   return false
 }
 
-function createSidecarEnv(): Record<string, string> {
+export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<string, string> {
+  if (candidateProfile) return candidateEnvironment(candidateProfile)
   const env = Object.fromEntries(
     Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
   )
+  delete env.ORCHESTRA_LEAN_CANDIDATE // Only a validated compile-time candidate may enable backend isolation mode.
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env

@@ -9,6 +9,7 @@ import { promisify } from "util"
 import which from "which"
 import { Context, Effect, Schedule } from "effect"
 import { Global } from "./global"
+import { RipgrepBinary } from "./ripgrep/binary"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySrtReadAlias } from "./tool-safety-srt-read-alias"
 
@@ -35,12 +36,12 @@ export type Source = {
   readonly artifacts: ReadonlyArray<Artifact>
   /** System executables the runtime needs on PATH; the host never installs them. */
   readonly dependencies: ReadonlyArray<string>
+  /** "path": srt runs the `rg` on PATH (a dependency then) instead of one installed with the runtime. */
+  readonly ripgrep?: "path"
 }
 
 const VERSION = "0.0.78"
-const RIPGREP = "15.1.0"
-// Integrity values are the npm registry's `dist.integrity` and the sha512 of ripgrep's release archives, whose
-// upstream .sha256 files were checked when pinning.
+// Integrity values are the npm registry's `dist.integrity`. Ripgrep's archive and pin come from RipgrepBinary.
 const PACKAGES = [
   ["@anthropic-ai/sandbox-runtime", VERSION, "sha512-YAIcybXTp7MZkBjasnkR1E3yxnf7u6kUkyW0vZrtsAZ9tyJGMaugWETmquPZs0YvW0sR0VnZeMfS0gsN/wQiVQ=="],
   ["@pondwader/socks5-server", "1.0.10", "sha512-bQY06wzzR8D2+vVCUoBsr5QS2U6UgPUQRmErNwtsuI6vLcyRKkafjkr3KxbtGFf9aBBIV2mcvlsKD1UYaIV+sg=="],
@@ -48,36 +49,59 @@ const PACKAGES = [
   ["node-forge", "1.4.0", "sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ=="],
   ["zod", "3.25.76", "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 ] as const
-const RIPGREP_LINUX = {
-  x64: ["x86_64-unknown-linux-musl", "sha512-xGkIH47/SSN5qRKnl4Q1opKavAXmYrDlPdK7Bm3yZsq4S+38Vy97MwQDoWta/NCVfr25jFdz6K/Awd8qRlqddQ=="],
-  arm64: ["aarch64-unknown-linux-gnu", "sha512-hMb4c/CgVFfKavEo+vsWkExHzql33IzzWz4X4fL5uex77U/59O27gKLAu8fSUdrxLYhzl53LjCNvIDfYV3Bosw=="],
-} as const
 // A failed acquisition is retried on a later need, not on every command.
 const RETRY_MS = 5 * 60_000
 
+/**
+ * This host's runtime source. Ripgrep is installed with the runtime from RipgrepBinary's pinned release; where
+ * ripgrep downloads are disabled (ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD) or no release fits (arm64 musl), srt runs the
+ * `rg` on PATH instead, and a missing one is reported like bwrap.
+ */
+export const source = (input: {
+  readonly arch: string
+  readonly platform: string
+  readonly download: boolean
+  readonly ripgrep: RipgrepBinary.Release | undefined
+}): Source | undefined => {
+  if (input.platform !== "linux" || !["x64", "arm64"].includes(input.arch)) return undefined
+  const release = input.download ? input.ripgrep : undefined
+  return {
+    directory: path.join(
+      Global.Path.cache,
+      "sandbox-runtime",
+      `${VERSION}-${ToolSafetySrtReadAlias.REVISION}-${input.arch}${release ? "" : "-path-rg"}`,
+    ),
+    dependencies: ["bwrap", "socat", ...(release ? [] : ["rg"])],
+    ...(release ? {} : { ripgrep: "path" as const }),
+    artifacts: [
+      ...PACKAGES.map(([name, version, integrity]) => ({
+        url: `https://registry.npmjs.org/${name}/-/${name.split("/").at(-1)}-${version}.tgz`,
+        integrity,
+        root: "package",
+        target: path.join("node_modules", name),
+      })),
+      ...(release
+        ? [
+            {
+              url: release.url,
+              integrity: `sha256-${Buffer.from(release.sha256, "hex").toString("base64")}`,
+              root: release.root,
+              target: "ripgrep",
+            },
+          ]
+        : []),
+    ],
+  }
+}
+
 export const Source = Context.Reference<Source | undefined>("@orchestra/ToolSafetySandbox/Source", {
-  defaultValue: () => {
-    const ripgrep = process.platform === "linux" ? RIPGREP_LINUX[process.arch as keyof typeof RIPGREP_LINUX] : undefined
-    if (!ripgrep) return undefined
-    return {
-      directory: path.join(Global.Path.cache, "sandbox-runtime", `${VERSION}-${ToolSafetySrtReadAlias.REVISION}-${process.arch}`),
-      dependencies: ["bwrap", "socat"],
-      artifacts: [
-        ...PACKAGES.map(([name, version, integrity]) => ({
-          url: `https://registry.npmjs.org/${name}/-/${name.split("/").at(-1)}-${version}.tgz`,
-          integrity,
-          root: "package",
-          target: path.join("node_modules", name),
-        })),
-        {
-          url: `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP}/ripgrep-${RIPGREP}-${ripgrep[0]}.tar.gz`,
-          integrity: ripgrep[1],
-          root: `ripgrep-${RIPGREP}-${ripgrep[0]}`,
-          target: "ripgrep",
-        },
-      ],
-    }
-  },
+  defaultValue: () =>
+    source({
+      arch: process.arch,
+      platform: process.platform,
+      download: RipgrepBinary.defaults().download,
+      ripgrep: RipgrepBinary.release(),
+    }),
 })
 
 export const cli = (directory: string) => path.join(directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "dist", "cli.js")
@@ -100,7 +124,14 @@ export const resolve = Effect.fn("ToolSafetySandboxRuntime.resolve")(function* (
     Promise.all(source.dependencies.map(async (name) => ((await which(name, { nothrow: true })) ? [] : [name]))),
   )
   if (missing.flat().length) return { reason: `sandbox-dependency-missing: ${missing.flat().join(", ")}` }
-  if (yield* installed(source.directory)) return { directory: source.directory }
+  if (yield* installed(source.directory))
+    return {
+      directory: source.directory,
+      // The dependency check above found it; srt gets its absolute path.
+      ...(source.ripgrep === "path"
+        ? { ripgrep: (yield* Effect.promise(() => which("rg", { nothrow: true }))) ?? undefined }
+        : {}),
+    }
   const attempt = attempts.get(source.directory)
   if (attempt && !attempt.failed) return { reason: "sandbox-runtime-acquiring" }
   if (attempt?.failed && (!start || Date.now() - attempt.at < RETRY_MS))

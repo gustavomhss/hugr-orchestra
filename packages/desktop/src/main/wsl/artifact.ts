@@ -2,7 +2,8 @@ import { createHash } from "node:crypto"
 import { lstat, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
-import { cliTreeSitterTarget, readCliManifest, verifyCliArtifact } from "../cli-artifacts"
+import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
+import { cliRipgrepKey, cliTreeSitterTarget, readCliManifest, verifyCliArtifact } from "../cli-artifacts"
 import { nativeT } from "../native-translations"
 import { runWslInDistro, type RunWslOptions } from "./runtime"
 
@@ -53,9 +54,10 @@ export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as cons
 // Verify bytes before the first execution, and version before the only replacement. The staged binary runs next to
 // its staged companions, so validation exercises the same omni pair that is installed. Its tree-sitter directory is
 // checked as one digest over "<sha256>  <path>" lines of its regular files, sorted by path, so a symlink never matches.
+// The packaged CLI never downloads rg, so the guest gets the bundle's in ripgrep/rg, where the CLI looks first.
 export const installGuestScript = `${guestEnvironment}
 source=$1; digest=$2; version=$3; addon=$4; addon_digest=$5; supervisor=$6; supervisor_digest=$7
-tree_sitter=$8; tree_sitter_digest=$9
+tree_sitter=$8; tree_sitter_digest=$9; ripgrep=\${10}; ripgrep_digest=\${11}
 for directory in "$HOME/.orchestra" "$HOME/.orchestra/bin"; do
   [[ ! -L "$directory" ]] || exit 85
 done
@@ -64,8 +66,9 @@ for file in orchestra ${omniCompanions.join(" ")}; do
   target="$HOME/.orchestra/bin/$file"
   [[ ! -L "$target" && ( ! -e "$target" || -f "$target" ) ]] || exit 85
 done
-target="$HOME/.orchestra/bin/tree-sitter"
-[[ ! -L "$target" && ( ! -e "$target" || -d "$target" ) ]] || exit 85
+for target in "$HOME/.orchestra/bin/tree-sitter" "$HOME/.orchestra/bin/ripgrep"; do
+  [[ ! -L "$target" && ( ! -e "$target" || -d "$target" ) ]] || exit 85
+done
 staging=$(mktemp -d "$HOME/.orchestra/bin/.orchestra.XXXXXXXX")
 trap 'rm -rf -- "$staging"' EXIT
 trap 'exit 130' INT TERM
@@ -81,12 +84,19 @@ actual=$(cd -- "$staging/tree-sitter" && find . -type f -printf '%P\\n' | LC_ALL
   sum=$(sha256sum -- "$file"); printf '%s  %s\\n' "\${sum%% *}" "$file"
 done | sha256sum)
 [[ "\${actual%% *}" == "$tree_sitter_digest" ]] || exit 84
+mkdir -- "$staging/ripgrep"
+cp -- "$ripgrep" "$staging/ripgrep/rg"
+chmod 0755 -- "$staging/ripgrep/rg"
+actual=$(sha256sum -- "$staging/ripgrep/rg")
+[[ "\${actual%% *}" == "$ripgrep_digest" ]] || exit 84
 cp -- "$source" "$staging/orchestra"
 chmod 0755 -- "$staging/orchestra"
 binary="$staging/orchestra"
 ${validateGuestScript}
 rm -rf -- "$HOME/.orchestra/bin/tree-sitter"
 mv -T -- "$staging/tree-sitter" "$HOME/.orchestra/bin/tree-sitter"
+rm -rf -- "$HOME/.orchestra/bin/ripgrep"
+mv -T -- "$staging/ripgrep" "$HOME/.orchestra/bin/ripgrep"
 for file in ${omniCompanions.join(" ")} orchestra; do
   mv -fT -- "$staging/$file" "$HOME/.orchestra/bin/$file"
 done
@@ -101,6 +111,8 @@ export async function installWslArtifact(
     readManifest?: typeof readCliManifest
     verifyArtifact?: typeof verifyCliArtifact
     installedPath?: string
+    /** The sha256 a target's rg must have; the pin in packages/core/src/ripgrep/release.ts unless a test stands in. */
+    ripgrepPin?: (target: string) => string | undefined
   } = {},
 ) {
   const run = opts.run ?? runWslInDistro
@@ -134,6 +146,9 @@ export async function installWslArtifact(
   }
   const companions = await Promise.all(omniCompanions.map((name) => companion(join(directory, `omni-${target}`, name))))
   const treeSitter = await treeSitterCompanion(join(directory, `tree-sitter-${target}`), target)
+  const ripgrep = await companion(join(directory, `ripgrep-${target}`, "rg"))
+  // The guest's rg must be the pinned executable itself (Linux rg is never signed), not merely what the bundle holds.
+  if (ripgrep.sha256 !== (opts.ripgrepPin ?? pinnedRipgrep)(target)) throw new WslArtifactError("bytes")
   const guestPath = async (path: string) => {
     const converted = await command(["wslpath", "-u", "--", path])
     if (!converted.startsWith("/") || /[\r\n\0]/.test(converted)) throw new WslArtifactError("path")
@@ -143,10 +158,17 @@ export async function installWslArtifact(
   const addon = await guestPath(companions[0].path)
   const supervisor = await guestPath(companions[1].path)
   const treeSitterPath = await guestPath(treeSitter.path)
+  const ripgrepPath = await guestPath(ripgrep.path)
   await command([
     "timeout", "--kill-after=1s", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version,
     addon, companions[0].sha256, supervisor, companions[1].sha256, treeSitterPath, treeSitter.sha256,
+    ripgrepPath, ripgrep.sha256,
   ])
+}
+
+function pinnedRipgrep(target: string) {
+  const key = cliRipgrepKey(target)
+  return key ? RipgrepRelease.archive(key)?.executable : undefined
 }
 
 // The bundle ships each Linux CLI's tree-sitter under tree-sitter-<target>/; without it maestro-arsenal in the guest
@@ -166,8 +188,8 @@ async function treeSitterCompanion(path: string, target: string) {
   return { path, sha256: createHash("sha256").update(lines.join("")).digest("hex") }
 }
 
-// The bundle ships omni companions per Linux target under omni-<target>/. Without them the CLI cannot start in the
-// guest, so the install refuses by name instead of placing a binary that fails its preflight.
+// The bundle ships omni companions per Linux target under omni-<target>/, and rg under ripgrep-<target>/. Without the
+// pair the CLI cannot start in the guest, and without rg its search fails, so the install refuses by name instead.
 async function companion(path: string) {
   const stat = await lstat(path).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined

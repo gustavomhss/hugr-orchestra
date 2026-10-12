@@ -531,7 +531,7 @@ const pick = Effect.fnUntraced(function* (start: boolean, pinned = false, comman
     args: [...RUNTIME_FLAGS, ToolSafetySandboxRuntime.cli(runtime.directory)],
     // A compiled Bun binary runs scripts only when told to; Electron runs as Node only when told to.
     env: process.versions.bun ? { BUN_BE_BUN: "1" } : process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {},
-    ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
+    ripgrep: runtime.ripgrep ?? ToolSafetySandboxRuntime.ripgrep(runtime.directory),
     // Confined reads keep the runtime readable: srt starts its seccomp helper from it inside the jail.
     directory: runtime.directory,
   }
