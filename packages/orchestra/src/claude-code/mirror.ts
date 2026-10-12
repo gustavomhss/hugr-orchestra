@@ -39,6 +39,8 @@ type Usage = { input_tokens?: number | null; output_tokens?: number | null;
 type Step = {
   info: SessionV1.Assistant
   apiID: string
+  /** A model from an actual SDK assistant frame, not the requested model fallback. */
+  model?: string
   start?: string
   /** Text and reasoning parts by stream block index, with the text received so far. */
   blocks: Map<number, { part: SessionV1.TextPart | SessionV1.ReasoningPart }>
@@ -63,6 +65,9 @@ export function create(input: {
   const uuids = new Map<string, MessageID>()
   let step: Step | undefined
   let last: SessionV1.Assistant | undefined
+  let lastFinish: SessionV1.StepFinishPart | undefined
+  let lastModel: string | undefined
+  let costModel: string | undefined
   let cost = 0
   let ended = false
   let parentID = input.user.id
@@ -116,6 +121,8 @@ export function create(input: {
     const part: SessionV1.StepFinishPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "step-finish",
       reason: finish, snapshot: end, cost: 0, tokens }
     yield* sessions.updatePart(part)
+    lastFinish = part
+    lastModel = current.model
     if (current.start) {
       const patch = yield* snapshot.patch(current.start)
       if (patch.files.length)
@@ -155,7 +162,18 @@ export function create(input: {
     on: (message: SDKMessage) => Effect.gen(function* () {
       if (ended) return
       if (message.type === "result") {
-        if ("total_cost_usd" in message && typeof message.total_cost_usd === "number") cost = message.total_cost_usd
+        costModel = undefined
+        if (Number.isFinite(message.total_cost_usd) && message.total_cost_usd >= 0) {
+          cost = message.total_cost_usd
+          const model = step?.model ?? lastModel
+          const expected = model ?? input.user.model.modelID
+          const reported = Object.entries(message.modelUsage ?? {}).find(([id, usage]) =>
+            id === expected || usage.canonicalModel === expected)?.[1]
+          // No-frame errors may use a matching reported model total, never the requested model alone.
+          // Host owns query replay/reset admission; this mirror only projects the admitted allocation.
+          costModel = message.modelUsage === undefined ? model
+            : reported && reported.costBasis !== "unknown" && Number.isFinite(reported.costUSD) && reported.costUSD >= 0 ? expected : undefined
+        }
         if (!step && message.subtype === "success") {
           const current = yield* open(`result:${message.uuid}`)
           if (message.result) {
@@ -172,6 +190,7 @@ export function create(input: {
         const event = message.event
         if (event.type === "message_start") {
           const current = yield* open(event.message.id)
+          current.model = event.message.model || current.model
           current.info = { ...current.info, modelID: ModelV2.ID.make(event.message.model || current.info.modelID) }
           yield* sessions.updateMessage(current.info)
           current.usage = { ...current.usage, ...event.message.usage }
@@ -197,6 +216,7 @@ export function create(input: {
       }
       if (message.type === "assistant") {
         const current = yield* open(message.message.id)
+        current.model = message.message.model || current.model
         current.info = { ...current.info, modelID: ModelV2.ID.make(message.message.model || current.info.modelID) }
         yield* sessions.updateMessage(current.info)
         uuids.set(message.uuid, current.info.id)
@@ -243,7 +263,11 @@ export function create(input: {
       const messages = new Set(ids.flatMap((id) => uuids.get(id) ? [uuids.get(id) as MessageID] : []))
       for (const messageID of messages) {
         if (step?.info.id === messageID) step = undefined
-        if (last?.id === messageID) last = undefined
+        if (last?.id === messageID) {
+          last = undefined
+          lastFinish = undefined
+          lastModel = undefined
+        }
         for (const [callID, part] of tools) if (part.messageID === messageID) tools.delete(callID)
         yield* sessions.removeMessage({ sessionID, messageID })
       }
@@ -266,12 +290,18 @@ export function create(input: {
       yield* sessions.updatePart(part)
     }),
 
-    /** The turn ended: close the last step and put the turn's cost on it. */
+    /** Close the last step and project the host-admitted cost delta on its existing receipt and message. */
     finish: (previousCost: number) => Effect.gen(function* () {
       yield* close()
-      if (last && cost > previousCost) {
-        last = { ...last, cost: cost - previousCost }
-        yield* sessions.updateMessage(last)
+      if (last && lastFinish?.messageID === last.id && costModel === last.modelID &&
+        Number.isFinite(previousCost) && previousCost >= 0 && cost > previousCost && last.cost !== cost - previousCost) {
+        // Core aggregates parts, not assistant.cost. Reuse this receipt so retries replace, never append usage.
+        const receipt = { ...lastFinish, cost: cost - previousCost }
+        yield* sessions.updatePart(receipt)
+        const info = { ...last, cost: cost - previousCost }
+        yield* sessions.updateMessage(info)
+        lastFinish = receipt
+        last = info
       }
       return { cost, last }
     }),
@@ -305,13 +335,15 @@ export function create(input: {
         cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
       for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
+      lastModel = current?.model
       step = undefined
       yield* sessions.updateMessage(last)
       // Healthy snapshots still retain actual undo evidence on Stop.
       const patch = current?.start ? yield* snapshot.patch(current.start).pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       const end = current?.start ? yield* snapshot.track().pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       if (patch?.files.length) yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "patch", hash: patch.hash, files: patch.files })
-      yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end })
+      lastFinish = { id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end }
+      yield* sessions.updatePart(lastFinish)
       return last
     }),
   }
