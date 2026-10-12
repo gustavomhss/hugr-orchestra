@@ -98,8 +98,8 @@ describe("RipgrepBundle", () => {
         "COPYING",
         "LICENSE-MIT",
         "UNLICENSE",
-        executable,
         "manifest.json",
+        executable,
       ])
       expect(await fs.readFile(path.join(directory, executable), "utf8")).toBe(`fake ${executable}`)
       if (process.platform !== "win32") {

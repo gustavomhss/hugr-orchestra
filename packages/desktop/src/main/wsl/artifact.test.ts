@@ -153,7 +153,7 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
-    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "tree-sitter"].sort())
+    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "ripgrep", "tree-sitter"].sort())
     const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
     await Bun.write(source, hung)
     expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
