@@ -402,6 +402,11 @@ jobs:
         if: matrix.part == 'packages'
         run: bun run check:spawn-imports
 
+      # Every pinned ripgrep digest, not only the runners' platforms, against upstream's .sha256 files.
+      - name: Run ripgrep pin gate
+        if: matrix.part == 'packages'
+        run: bun run check:ripgrep-pins
+
       - name: Run unit tests
         if: matrix.filters
         timeout-minutes: 30

@@ -88,7 +88,8 @@ if (args.mutate) {
 
 /**
  * One CLI service run in a fresh sandbox: does the project index (ripgrep) find the planted file? With `failClosed`,
- * the run waits (up to 20 s) for the service's batched file log to show the packaged fail-closed message.
+ * a failed search must carry the packaged fail-closed reason, and the run waits (up to 20 s) for the service's batched
+ * file log to show it too.
  */
 async function search(failClosed = false) {
   const sandbox = await realpath(await mkdtemp(join(tmpdir(), "orchestra-ripgrep-proof-")))
@@ -146,21 +147,23 @@ async function search(failClosed = false) {
         signal: AbortSignal.timeout(30_000),
       })
       const body = await response.text()
-      if (!response.ok) throw new Error(`FIND_REQUEST_FAILED: HTTP ${response.status}: ${body.slice(0, 2000)}`)
+      // Without rg a search fails with ripgrep's reason (FileSystemSearch.SearchError), checked below.
+      if (!response.ok && !failClosed)
+        throw new Error(`FIND_REQUEST_FAILED: HTTP ${response.status}: ${body.slice(0, 2000)}`)
       const deadline = Date.now() + 20_000
       while (failClosed && Date.now() < deadline && !(await text(sandbox)).includes(FAIL_CLOSED)) await Bun.sleep(500)
-      return body
+      return { ok: response.ok, body }
     })
     .finally(() => run(["service", "stop"]).catch(() => undefined))
-    .then(async (body) => {
+    .then(async (response) => {
       const logs = await text(sandbox)
       const cache = join(sandbox, "cache", "orchestra", "bin")
       const downloads = existsSync(cache) ? (await readdir(cache)).filter((name) => /^rg(\.exe)?$/.test(name)) : []
       if (downloads.length > 0) throw new Error(`RIPGREP_DOWNLOADED: ${downloads.join(", ")} in ${cache}`)
       return {
-        body,
-        matched: body.includes(`${token}.txt`),
-        failClosed: logs.includes(FAIL_CLOSED),
+        body: response.body,
+        matched: response.ok && response.body.includes(`${token}.txt`),
+        failClosed: response.body.includes(FAIL_CLOSED) || logs.includes(FAIL_CLOSED),
         // What the service logged about ripgrep, for a failure message.
         lines: logs
           .split("\n")

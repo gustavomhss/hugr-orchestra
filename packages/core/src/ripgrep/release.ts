@@ -1,15 +1,20 @@
+import { readdirSync } from "fs"
+
 /**
- * The pinned ripgrep release: one upstream archive per platform, keyed `${arch}-${platform}` as Node names them. The
- * runtime download (binary.ts) and every packaged build (bundle.ts) read these pins; nothing else may restate them.
- * No imports, so build scripts can load it without the runtime.
+ * The pinned ripgrep release: one upstream archive per platform key. The runtime download (binary.ts), the Linux
+ * sandbox runtime and every packaged build (bundle.ts) read these pins; nothing else may restate them. Only node
+ * built-ins are imported, so build scripts and the desktop's main process can load it without the runtime.
  */
 export namespace RipgrepRelease {
   export const VERSION = "15.1.0"
   export const LICENSE = "MIT OR Unlicense"
   export const REPOSITORY = "https://github.com/BurntSushi/ripgrep"
 
-  // sha256 of each upstream release archive. Pinned 2026-10-12: each matched upstream's .sha256 file, and the two
-  // Linux archives match the sha512 pins in tool-safety-sandbox-runtime.ts.
+  // sha256 of each upstream release archive, keyed by `key()`. Pinned 2026-10-12, each matching upstream's .sha256
+  // file; `bun run check:ripgrep-pins` re-checks them in CI. The CI action (.github/actions/ripgrep/action.yml) and the
+  // Linux sandbox runtime (tool-safety-sandbox-runtime.ts) use the same pins; ripgrep-binary.test.ts guards the action.
+  // Upstream ships no musl build for arm64 (the x64 Linux build is static musl, so it runs on glibc and musl alike),
+  // and Bun ships no 32-bit Windows build, so neither has an entry.
   const PLATFORM = {
     "arm64-darwin": {
       platform: "aarch64-apple-darwin",
@@ -36,11 +41,6 @@ export namespace RipgrepRelease {
       extension: "zip",
       sha256: "00d931fb5237c9696ca49308818edb76d8eb6fc132761cb2a1bd616b2df02f8e",
     },
-    "ia32-win32": {
-      platform: "i686-pc-windows-msvc",
-      extension: "zip",
-      sha256: "725be85a1e8f92878a548f40ee4f6df64bc93b809586462b3c6d884e1de1e83a",
-    },
     "x64-win32": {
       platform: "x86_64-pc-windows-msvc",
       extension: "zip",
@@ -56,8 +56,17 @@ export namespace RipgrepRelease {
     readonly root: string
   }
 
-  export const archive = (key = `${process.arch}-${process.platform}`): Archive | undefined => {
-    const config = PLATFORM[key as keyof typeof PLATFORM]
+  /** A platform's key, with `-musl` on a musl Linux other than x64, whose static build runs everywhere. */
+  export const key = (input = { arch: process.arch as string, platform: process.platform as string, musl: musl() }) =>
+    input.platform === "linux" && input.musl && input.arch !== "x64"
+      ? `${input.arch}-linux-musl`
+      : `${input.arch}-${input.platform}`
+
+  /** Every platform key with a pinned archive. */
+  export const keys = () => Object.keys(PLATFORM)
+
+  export const archive = (platform = key()): Archive | undefined => {
+    const config = PLATFORM[platform as keyof typeof PLATFORM]
     if (!config) return undefined
     const root = `ripgrep-${VERSION}-${config.platform}`
     return {
@@ -68,5 +77,16 @@ export namespace RipgrepRelease {
     }
   }
 
+  /** The executable's name inside an archive for a Node platform. */
   export const executable = (platform: string = process.platform) => (platform === "win32" ? "rg.exe" : "rg")
+
+  // musl's dynamic loader is /lib/ld-musl-<arch>.so.1; glibc systems have none.
+  function musl() {
+    if (process.platform !== "linux") return false
+    try {
+      return readdirSync("/lib").some((name) => name.startsWith("ld-musl-"))
+    } catch {
+      return false
+    }
+  }
 }

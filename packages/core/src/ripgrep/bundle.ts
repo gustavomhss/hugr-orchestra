@@ -35,13 +35,13 @@ export namespace RipgrepBundle {
   export const enabled = (env: Record<string, string | undefined> = process.env) => env[BUNDLED] !== "false"
 
   /**
-   * The pin key for a CLI build target. The x64 Linux pin is a static musl build, so it serves glibc and musl alike;
-   * the arm64 Linux pin needs glibc, and ripgrep publishes no arm64 musl build, so that target ships none.
+   * The pin key for a CLI build target, or undefined where none is pinned: ripgrep publishes no arm64 musl build (the
+   * x64 Linux pin is a static musl build, so it serves glibc and musl alike).
    */
-  export const key = (target: { os: string; arch: string; abi?: string }) =>
-    target.os === "linux" && target.arch === "arm64" && target.abi === "musl"
-      ? undefined
-      : `${target.arch}-${target.os}`
+  export const key = (target: { os: string; arch: string; abi?: string }) => {
+    const key = RipgrepRelease.key({ arch: target.arch, platform: target.os, musl: target.abi === "musl" })
+    return RipgrepRelease.archive(key) ? key : undefined
+  }
 
   /** Stages the pinned ripgrep for `key` into `directory`, replacing what was there only once every byte checked. */
   export async function stage(input: {

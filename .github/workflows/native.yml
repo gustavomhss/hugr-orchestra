@@ -121,6 +121,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # bun test lanes find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
+
       # Omni is the default process layer: the runtime's docker commands spawn through it, so the job needs its pair.
       - name: Omni binaries
         uses: ./.github/actions/omni-binaries

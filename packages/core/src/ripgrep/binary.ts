@@ -1,7 +1,7 @@
 import path from "path"
 import { createHash } from "crypto"
 import { existsSync, realpathSync } from "fs"
-import { Cause, Context, Deferred, Duration, Effect, Exit, Layer, Option, Schedule, Schema, Scope, Stream } from "effect"
+import { Cause, Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Schedule, Schema, Scope, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
@@ -21,10 +21,11 @@ declare const ORCHESTRA_RIPGREP_DOWNLOAD: boolean | undefined
  * Finds the ripgrep executable: the `rg` a packaged build ships (ripgrep/ beside the CLI binary or in the desktop's
  * Resources) first, then `rg` on PATH (Nix builds and CI put it there), then a copy this host downloaded before, and
  * only then a download of the pinned release (release.ts). Packaged builds never download: a compiled CLI is built
- * with ORCHESTRA_RIPGREP_DOWNLOAD false, and the packaged desktop sets DISABLE_DOWNLOAD for its server. A download is
- * checked against its pinned digest before extraction, runs in the background once per process (and once per host,
- * under a file lock), and each attempt has a deadline. A caller waits at most `wait` for it; past that it fails with a clear message while
- * the download carries on for the next caller. A failed download is not retried for `cooldown`.
+ * with ORCHESTRA_RIPGREP_DOWNLOAD false, and the packaged desktop sets DISABLE_DOWNLOAD for its server. A download is checked against its pinned
+ * digest before extraction and must run (`rg --version`) before it is installed. It runs in the background once per
+ * process (and once per host, under a file lock); it makes at most `attempts` requests in total, each with a deadline.
+ * A caller waits at most `wait` for it; past that it fails with a clear message while the download carries on for the
+ * next caller. A failed download is repeated to callers for `cooldown`, then tried again.
  */
 export namespace RipgrepBinary {
   export const VERSION = RipgrepRelease.VERSION
@@ -50,6 +51,7 @@ export namespace RipgrepBinary {
     readonly connectTimeout: Duration.Input
     /** Deadline for one whole attempt, body included. */
     readonly attemptTimeout: Duration.Input
+    /** Requests per download in total, the first included: 3 means up to 2 retries. */
     readonly attempts: number
     /** Delay before the first retry, doubled for each later one. */
     readonly retryDelay: Duration.Input
@@ -70,6 +72,12 @@ export namespace RipgrepBinary {
   }
 
   export class Service extends Context.Service<Service, Interface>()("@orchestra/RipgrepBinary") {}
+
+  /** This host's platform key, with `-musl` on a musl Linux other than x64, whose static build runs everywhere. */
+  export const key = RipgrepRelease.key
+
+  /** Every platform key with a pinned archive. */
+  export const keys = RipgrepRelease.keys
 
   export const release = RipgrepRelease.archive
 
@@ -118,16 +126,22 @@ export namespace RipgrepBinary {
     const scope = yield* Scope.Scope
     const executable = process.platform === "win32" ? "rg.exe" : "rg"
     const target = path.join(options.directory, executable)
+    const TEMP = "ripgrep-"
+    // Ends with the executable's own name: Windows runs a file only by its .exe name.
+    const STAGED = ".ripgrep-staged-"
     const state: {
       resolved?: string
       running?: Deferred.Deferred<string, Unavailable>
       failed?: { readonly error: Unavailable; readonly at: number }
     } = {}
+    const cooldown = Duration.toMillis(Duration.fromInputUnsafe(options.cooldown))
 
     const unavailable = (message: string, retry = false) => new Unavailable({ message, retry })
 
     const run = Effect.fnUntraced(function* (command: string, args: string[]) {
-      const handle = yield* spawner.spawn(ChildProcess.make(command, args, { extendEnv: true, stdin: "ignore" }))
+      const handle = yield* spawner
+        .spawn(ChildProcess.make(command, args, { extendEnv: true, stdin: "ignore" }))
+        .pipe(Effect.mapError((cause) => unavailable(`could not run ${path.basename(command)}: ${cause.message}`)))
       const [stdout, stderr, code] = yield* Effect.all(
         [
           Stream.mkString(Stream.decodeText(handle.stdout)),
@@ -137,7 +151,10 @@ export namespace RipgrepBinary {
         { concurrency: "unbounded" },
       )
       if (code !== 0)
-        return yield* unavailable(stderr.trim() || stdout.trim() || `ripgrep extraction failed with code ${code}`)
+        return yield* unavailable(
+          stderr.trim() || stdout.trim() || `${path.basename(command)} ${args[0]} failed with code ${code}`,
+        )
+      return stdout
     }, Effect.scoped)
 
     const fetchArchive = Effect.fnUntraced(function* (release: Release) {
@@ -169,7 +186,7 @@ export namespace RipgrepBinary {
         return yield* unavailable(
           `ripgrep archive failed its integrity check: expected sha256 ${release.sha256}, got ${digest} from ${release.url}`,
         )
-      const dir = yield* fs.makeTempDirectoryScoped({ directory: options.directory, prefix: "ripgrep-" })
+      const dir = yield* fs.makeTempDirectoryScoped({ directory: options.directory, prefix: TEMP })
       const archive = path.join(dir, `archive.${release.extension}`)
       yield* fs.writeFile(archive, bytes)
       const out = path.join(dir, "out")
@@ -192,12 +209,39 @@ export namespace RipgrepBinary {
       const extracted = path.join(out, release.root, executable)
       if (!(yield* fs.isFile(extracted)))
         return yield* unavailable(`ripgrep archive did not contain ${release.root}/${executable}`)
-      // Copied next to the target and renamed into place, so a crash never leaves a partial `rg` behind.
-      const staged = path.join(options.directory, `.${executable}-${path.basename(dir)}`)
-      yield* fs.copyFile(extracted, staged)
-      if (process.platform !== "win32") yield* fs.chmod(staged, 0o755)
-      yield* fs.rename(staged, target).pipe(Effect.onError(() => fs.remove(staged, { force: true }).pipe(Effect.ignore)))
+      // Copied next to the target and renamed into place, so a crash never leaves a partial `rg` behind. A binary that
+      // does not run here (another libc, a wrong architecture) is never installed, so it is never cached either.
+      const staged = path.join(options.directory, `${STAGED}${path.basename(dir)}-${executable}`)
+      yield* Effect.gen(function* () {
+        yield* fs.copyFile(extracted, staged)
+        if (process.platform !== "win32") yield* fs.chmod(staged, 0o755)
+        const reported = yield* run(staged, ["--version"]).pipe(
+          Effect.mapError((error) =>
+            unavailable(
+              `the downloaded ripgrep does not run on ${key()}: ${error.message}; install ripgrep (rg) on PATH`,
+            ),
+          ),
+        )
+        if (!reported.startsWith(`ripgrep ${VERSION}`))
+          return yield* unavailable(
+            `the downloaded ripgrep reported ${JSON.stringify(reported.split("\n")[0])}, not ripgrep ${VERSION}`,
+          )
+        // Windows runners briefly hold an image that just ran (GitHub's provjobd); a short bounded retry outlasts it.
+        yield* fs.rename(staged, target).pipe(Effect.retry({ times: 20, schedule: Schedule.spaced("100 millis") }))
+      }).pipe(Effect.onError(() => fs.remove(staged, { force: true }).pipe(Effect.ignore)))
     }, Effect.scoped)
+
+    // Left by a process that died mid-install: its temp directory and staged copy. Only called under the host lock.
+    const sweep = fs.readDirectory(options.directory).pipe(
+      Effect.flatMap((names) =>
+        Effect.forEach(
+          names.filter((name) => name.startsWith(TEMP) || name.startsWith(STAGED)),
+          (name) => fs.remove(path.join(options.directory, name), { recursive: true, force: true }).pipe(Effect.ignore),
+          { discard: true },
+        ),
+      ),
+      Effect.ignore,
+    )
 
     const download = (release: Release) =>
       flock.withLock(
@@ -205,6 +249,7 @@ export namespace RipgrepBinary {
           if (yield* fs.isFile(target)) return target
           yield* Effect.logInfo("downloading ripgrep", { url: release.url })
           yield* fs.ensureDir(options.directory)
+          yield* sweep
           const bytes = yield* fetchArchive(release).pipe(
             Effect.timeoutOrElse({
               duration: options.attemptTimeout,
@@ -225,7 +270,8 @@ export namespace RipgrepBinary {
           yield* install(release, bytes)
           return target
         }),
-        `ripgrep-bootstrap:${release.sha256}`,
+        // One installer per directory at a time, whatever the version: they share the target and sweep its leftovers.
+        "ripgrep-bootstrap",
         options.directory,
       ).pipe(
         Effect.mapError((error) =>
@@ -236,29 +282,35 @@ export namespace RipgrepBinary {
     // Starts the download, joins one in progress, or repeats a recent failure. The check and the registration happen
     // in one synchronous step, so concurrent callers can never start two downloads.
     const acquisition = (release: Release) =>
-      Effect.suspend(() => {
-        if (state.running) return Effect.succeed(state.running)
-        if (state.failed && Date.now() - state.failed.at < Duration.toMillis(Duration.fromInputUnsafe(options.cooldown)))
-          return Effect.fail(state.failed.error)
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis
+        if (state.running) return state.running
+        if (state.failed && now - state.failed.at < cooldown) return yield* state.failed.error
         const running = Deferred.makeUnsafe<string, Unavailable>()
         state.running = running
-        return download(release).pipe(
+        return yield* download(release).pipe(
           Effect.onExit((exit) =>
-            Effect.sync(() => {
-              // An interrupted download (the host shutting down) is reported to its waiters as a retryable failure.
-              const error = Exit.isFailure(exit)
-                ? (Option.getOrUndefined(Cause.findErrorOption(exit.cause)) ??
-                  unavailable("ripgrep download was interrupted", true))
-                : undefined
-              state.running = undefined
-              state.failed = error ? { error, at: Date.now() } : undefined
-              Deferred.doneUnsafe(running, error ? Effect.fail(error) : exit)
-            }),
+            Clock.currentTimeMillis.pipe(
+              Effect.map((at) => {
+                const error = Exit.isFailure(exit) ? failure(exit.cause) : undefined
+                state.running = undefined
+                state.failed = error ? { error, at } : undefined
+                Deferred.doneUnsafe(running, error ? Effect.fail(error) : exit)
+              }),
+            ),
           ),
           Effect.forkIn(scope),
           Effect.as(running),
         )
       })
+
+    // A typed failure as it is; "interrupted" only when nothing but interruption ended the download (the host shutting
+    // down); any defect (EACCES from a dependency, a bug) with its own message.
+    const failure = (cause: Cause.Cause<Unavailable>) =>
+      Option.getOrUndefined(Cause.findErrorOption(cause)) ??
+      (Cause.hasInterruptsOnly(cause)
+        ? unavailable("ripgrep download was interrupted", true)
+        : unavailable(`ripgrep download failed: ${defect(Cause.squash(cause))}`))
 
     const locate = Effect.gen(function* () {
       const bundled = options.bundled()
@@ -268,9 +320,7 @@ export namespace RipgrepBinary {
       if (yield* fs.isFile(target)) return target
       const release = options.release
       if (!release)
-        return yield* unavailable(
-          `ripgrep publishes no build for ${process.arch}-${process.platform}; install ripgrep (rg) on PATH`,
-        )
+        return yield* unavailable(`ripgrep publishes no build for ${key()}; install ripgrep (rg) on PATH`)
       if (options.packaged || !options.download) {
         const error = unavailable(
           options.packaged
@@ -302,6 +352,8 @@ export namespace RipgrepBinary {
       ),
     })
   })
+
+  const defect = (value: unknown) => (value instanceof globalThis.Error ? value.message : String(value))
 
   export const nodeWith = (overrides: Partial<Options> = {}) =>
     makeGlobalNode({

@@ -1,9 +1,11 @@
 name: "ripgrep"
 description: >-
-  Puts the pinned ripgrep release on PATH, checked against its sha256, from the actions cache; downloaded (with
-  retries and deadlines) only on a miss, so tests never download it. Also sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD,
-  so a test process that cannot find rg fails naming that variable instead of reaching GitHub. Keep the version and
-  digests equal to packages/core/src/ripgrep/binary.ts. cache-warm saves the cache on dev; other runs only restore it.
+  Puts the pinned ripgrep release on PATH. The release archive comes from the actions cache, or on a miss from GitHub
+  (https only, transient failures retried, each attempt with deadlines), and its sha256 is checked on every run before
+  it is extracted, so tests never download ripgrep. Also sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD, so a test process
+  that cannot find rg fails naming that variable instead of reaching GitHub. The version and digests must equal
+  packages/core/src/ripgrep/release.ts (packages/core/test/ripgrep-binary.test.ts checks). cache-warm saves the cache
+  on dev; other runs only restore it.
 inputs:
   save:
     description: "Save the cache after a miss (only cache-warm on dev)"
@@ -31,68 +33,85 @@ runs:
           echo "root=ripgrep-$version-$platform"
           echo "ext=$ext"
           echo "sha=$sha"
-          echo "dir=$RUNNER_TEMP/ripgrep-$version"
+          echo "archives=$RUNNER_TEMP/ripgrep-archives"
+          echo "bin=$RUNNER_TEMP/ripgrep-$version"
         } >> "$GITHUB_OUTPUT"
 
-    - name: Restore ripgrep
+    # The archive is cached, not the executable, so the digest below is checked on every run, hit or miss.
+    - name: Restore ripgrep archive
       id: restore
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
-        path: ${{ steps.release.outputs.dir }}
-        key: ripgrep-${{ steps.release.outputs.root }}-${{ steps.release.outputs.sha }}
+        path: ${{ steps.release.outputs.archives }}
+        key: ripgrep-archive-${{ steps.release.outputs.root }}-${{ steps.release.outputs.sha }}
 
-    - name: Download ripgrep (cache miss)
+    - name: Download ripgrep archive (cache miss)
       if: steps.restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         VERSION: ${{ steps.release.outputs.version }}
         ROOT: ${{ steps.release.outputs.root }}
         EXT: ${{ steps.release.outputs.ext }}
-        SHA: ${{ steps.release.outputs.sha }}
-        DIR: ${{ steps.release.outputs.dir }}
+        ARCHIVES: ${{ steps.release.outputs.archives }}
       run: |
         set -euo pipefail
-        work=$(mktemp -d)
-        archive="$work/$ROOT.$EXT"
-        # GitHub's release CDN has answered 504 for this file; retry every failure, each attempt with a deadline.
-        curl --fail --silent --show-error --location --retry 6 --retry-all-errors --retry-delay 5 \
-          --connect-timeout 20 --max-time 120 -o "$archive" \
-          "https://github.com/BurntSushi/ripgrep/releases/download/$VERSION/$ROOT.$EXT"
-        actual=$( (sha256sum "$archive" 2>/dev/null || shasum -a 256 "$archive") | cut -d' ' -f1)
+        mkdir -p "$ARCHIVES"
+        # https only, redirects included. --retry covers timeouts and HTTP 408, 429, 500, 502, 503 and 504 (GitHub's
+        # release CDN has answered 504 for this file); a 404 or another client error fails at once.
+        curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+          --retry 6 --retry-connrefused --retry-delay 5 --connect-timeout 20 --max-time 120 \
+          -o "$ARCHIVES/$ROOT.$EXT" "https://github.com/BurntSushi/ripgrep/releases/download/$VERSION/$ROOT.$EXT"
+
+    - name: Verify and extract ripgrep
+      shell: bash
+      env:
+        ROOT: ${{ steps.release.outputs.root }}
+        EXT: ${{ steps.release.outputs.ext }}
+        SHA: ${{ steps.release.outputs.sha }}
+        ARCHIVES: ${{ steps.release.outputs.archives }}
+        BIN: ${{ steps.release.outputs.bin }}
+      run: |
+        set -euo pipefail
+        archive="$ARCHIVES/$ROOT.$EXT"
+        # Hashed from stdin: given a Windows path, sha256sum escapes its output with a leading backslash.
+        actual=$( (sha256sum 2>/dev/null || shasum -a 256) < "$archive" | cut -d' ' -f1)
         if [ "$actual" != "$SHA" ]; then
           echo "::error::ripgrep archive sha256 $actual does not match the pinned $SHA"
           exit 1
         fi
+        work=$(mktemp -d)
+        cp "$archive" "$work/"
         if [ "$EXT" = zip ] && command -v unzip >/dev/null; then
           (cd "$work" && unzip -q "$ROOT.$EXT")
         elif [ "$EXT" = zip ]; then
           (cd "$work" && 7z x -y "$ROOT.$EXT" >/dev/null)
         else
-          tar -xzf "$archive" -C "$work"
+          (cd "$work" && tar -xzf "$ROOT.$EXT")
         fi
-        mkdir -p "$DIR"
-        cp "$work/$ROOT/rg"* "$DIR/"
+        rm -rf "$BIN"
+        mkdir -p "$BIN"
+        cp "$work/$ROOT/rg"* "$BIN/"
         rm -rf "$work"
 
-    - name: Save ripgrep
+    - name: Save ripgrep archive
       if: inputs.save == 'true' && steps.restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
-        path: ${{ steps.release.outputs.dir }}
+        path: ${{ steps.release.outputs.archives }}
         key: ${{ steps.restore.outputs.cache-primary-key }}
 
     - name: Put ripgrep on PATH
       shell: bash
       env:
         VERSION: ${{ steps.release.outputs.version }}
-        DIR: ${{ steps.release.outputs.dir }}
+        BIN: ${{ steps.release.outputs.bin }}
       run: |
         set -euo pipefail
-        [ "$RUNNER_OS" = Windows ] || chmod +x "$DIR/rg"
-        reported=$("$DIR/rg" --version | head -1)
+        [ "$RUNNER_OS" = Windows ] || chmod +x "$BIN/rg"
+        reported=$("$BIN/rg" --version | head -1)
         case "$reported" in
           "ripgrep $VERSION"*) echo "$reported" ;;
           *) echo "::error::expected ripgrep $VERSION, got: $reported"; exit 1 ;;
         esac
-        echo "$DIR" >> "$GITHUB_PATH"
+        echo "$BIN" >> "$GITHUB_PATH"
         echo "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD=1" >> "$GITHUB_ENV"
