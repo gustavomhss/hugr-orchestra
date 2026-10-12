@@ -29,10 +29,10 @@ export const make = Effect.gen(function* () {
   return {
     /** The discovery tools, initialized as builtins. */
     init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire)]),
-    /** One builtin call; `run` is the registry's own safety runtime around the tool's execution. */
+    /** One builtin call; Claude host tool-use IDs also key the PreToolUse debit, so execution reconciles it. */
     charge: <E, R>(definition: Tool.Def, args: unknown, context: Tool.Context,
       run: (effect: Effect.Effect<Tool.ExecuteResult>) => Effect.Effect<Tool.ExecuteResult, E, R>) =>
-      execution.tool(context.sessionID, context.callID ? `${context.messageID}:${context.callID}` : "", definition.id,
+      execution.tool(context.sessionID, context.callID ? context.extra?.claudeCode === true ? context.callID : `${context.messageID}:${context.callID}` : "", definition.id,
         capture.withCapture(context, definition.id, run(definition.execute(args as never, context).pipe(
           Effect.flatMap((result) => capture.retain(context, definition.id, result)))), args)),
   }

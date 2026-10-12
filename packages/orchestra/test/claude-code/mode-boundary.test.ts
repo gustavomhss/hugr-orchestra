@@ -33,6 +33,8 @@ const INTERFACE = [
   "tool/truncate",
   // Native teardown/fork ownership callbacks and diff summaries shared with the normal loop.
   "session/lifecycle", "session/summary",
+  // Native issued research frames and the qualification packet at Claude Agent settlement.
+  "research/allowance", "maestro/discovery-result",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */

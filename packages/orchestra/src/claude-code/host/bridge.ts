@@ -9,6 +9,7 @@ import type { Tool } from "@/tool/tool"
 import { ClaudeHostMcp } from "./mcp"
 import type { ClaudeHostMirror } from "./mirror"
 import type { ClaudeHostOptions } from "./options"
+import type { ClaudeHostResearch } from "./research"
 
 export type Live = {
   readonly sessionID: ClaudeHostOptions.Context["sessionID"]
@@ -30,6 +31,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
   readonly sessions: Session.Interface
   readonly permission: Permission.Interface
   readonly agents: Agent.Interface
+  readonly research?: ClaudeHostResearch.Runtime
   readonly withSession: <A>(sessionID: string, effect: Effect.Effect<A>) => Effect.Effect<A>
 }) {
   const admission = { stopped: false }
@@ -42,6 +44,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
     reserve: (reservation: ClaudeHostMcp.Reservation) => {
       if (admission.stopped || ctx.abort.signal.aborted) throw new Error("HOLD: this host turn was stopped, so no MCP call was admitted.")
       if (stoppedChildren.has(reservation.sessionID)) throw new Error("HOLD: this child was stopped, so no MCP call was admitted.")
+      if (services.research?.signal(reservation.sessionID)?.aborted) throw new Error("budget_exhausted: Research dispatch deadline exhausted.")
       if (calls.has(reservation.callID)) throw new Error(`HOLD: duplicate MCP reservation ${reservation.callID}.`)
       const receipt = crypto.randomUUID()
       calls.set(reservation.callID, { reservation: { ...reservation, input: structuredClone(reservation.input), args: structuredClone(reservation.args) },
@@ -72,7 +75,9 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
       if (call.reservation.tool !== name || !isDeepStrictEqual(call.reservation.args, ClaudeHostMcp.argumentsOf(args)))
         return yield* Effect.die(new Error(`HOLD: ${name} arguments do not match its accepted dispatch.`))
       call.claimed = true
-      call.signal = AbortSignal.any([ctx.abort.signal, signal, call.reservation.signal, call.abort.signal])
+      const research = services.research?.signal(call.reservation.sessionID)
+      call.signal = AbortSignal.any([ctx.abort.signal, signal, call.reservation.signal, call.abort.signal,
+        ...(research ? [research] : [])])
       for (let round = 0; round < 1500; round++) {
         if (call.signal.aborted) return yield* Effect.die(new Error(`MCP call ${call.reservation.callID} was cancelled.`))
         const part = tool(call.reservation.callID)
@@ -119,16 +124,20 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
         }),
       } satisfies Tool.Context
     }),
-    execute: (def, args, context) => services.withSession(context.sessionID, Effect.suspend(() => {
-      if (context.abort.aborted) return Effect.die(new Error(`MCP call ${context.callID} was cancelled.`))
-      return Effect.raceFirst(def.execute(args, context), Effect.callback<never>((resume) => {
-        const abort = () => resume(Effect.die(new Error(`MCP call ${context.callID} was cancelled.`)))
-        if (context.abort.aborted) abort()
-        context.abort.addEventListener("abort", abort, { once: true })
-        return Effect.sync(() => context.abort.removeEventListener("abort", abort))
-      })).pipe(Effect.flatMap((result) => context.abort.aborted
-        ? Effect.die(new Error(`MCP call ${context.callID} was cancelled.`)) : Effect.succeed(result)))
-    })),
+    execute: (def, args, context) => {
+      const execute = Effect.suspend(() => {
+        if (context.abort.aborted) return Effect.die(new Error(`MCP call ${context.callID} was cancelled.`))
+        return Effect.raceFirst(def.execute(args, context), Effect.callback<never>((resume) => {
+          const abort = () => resume(Effect.die(new Error(`MCP call ${context.callID} was cancelled.`)))
+          if (context.abort.aborted) abort()
+          context.abort.addEventListener("abort", abort, { once: true })
+          return Effect.sync(() => context.abort.removeEventListener("abort", abort))
+        })).pipe(Effect.flatMap((result) => context.abort.aborted
+          ? Effect.die(new Error(`MCP call ${context.callID} was cancelled.`)) : Effect.succeed(result)))
+      })
+      return services.withSession(context.sessionID, services.research
+        ? services.research.execute(context.sessionID, execute).pipe(Effect.orDie) : execute)
+    },
     settled: (callID) => {
       // Retain identity until PostToolUse so a delayed/repeated handler cannot be rebound to another call.
       calls.get(callID)?.abort.abort()

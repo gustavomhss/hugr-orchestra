@@ -46,6 +46,7 @@ const tools = Object.fromEntries(
       "grep",
       ...(seat.profile === "execution" ? ["bash", "edit", "write", "apply_patch", ClaudeHostProcess.ID] : []),
       ...(seat.skills.length ? ["skill"] : []),
+      ...(seat.workResult === "discovery-work-result-v1" ? ["research_capture", "research_view", "research_record", "atlas_context"] : []),
       ...(seat.atlasMemory ? ["atlas_memory_recall", "atlas_memory_emit"] : []),
       ...(seat.id === "lucy" ? ["maestro_record_review"] : []),
       ...(seat.id === "archie"
@@ -113,6 +114,8 @@ it.instance(
           ...Object.values(Seats.all).flatMap((seat) => seat.skills),
           ...(await fs.readdir(path.resolve(import.meta.dir, "../../../playbooks"))),
         ]
+        expect(skills).toContain("jimmy-research")
+        expect(skills).toContain("jimmy-discovery")
         expect(skills).toContain("backend-implement")
         expect(skills).toContain("maestro-governed")
         for (const skill of skills) expect(written).toContain(`skills/${skill}/SKILL.md`)
@@ -123,6 +126,7 @@ it.instance(
           const text = await Bun.file(path.join(built.path, `agents/${seat.id}.md`)).text()
           const head = frontmatter(text)
           expect(head.name).toBe(seat.id!)
+          expect(JSON.parse(head.skills)).toEqual(Seats.find(seat.id)?.skills)
           expect(JSON.parse(head.description)).toBe(seat.description!)
           expect(JSON.parse(head.model)).toBe("inherit")
           expect(head.disallowedTools).toBeUndefined()
@@ -244,9 +248,10 @@ test("jimmy reads sources only through the research capture tools", () => {
     "webfetch",
     "websearch",
     "context_recall",
+    "research_capture", "research_record", "research_view", "skill",
   ])
   expect(listed).toEqual([
-    "mcp__orchestra__context_recall",
+    "Skill",
     "mcp__orchestra__research_capture",
     "mcp__orchestra__research_record",
     "mcp__orchestra__research_view",
