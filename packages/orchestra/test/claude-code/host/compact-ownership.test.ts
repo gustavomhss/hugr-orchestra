@@ -309,3 +309,12 @@ CompactionFixture.it.instance("a joined child actor remains authoritative when i
     expect(yield* f.archive.list(f.chat.id)).toEqual([])
     expect((yield* f.archive.list(child.child)).length).toBeGreaterThan(0)
   }))
+
+CompactionFixture.it.instance("an explicitly empty agent_id cannot fall back to root memory", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "EMPTY-ID-ROOT", status: "pending", priority: "high" }] })
+    const output = yield* f.compact(f.base.session_id, f.ctx.abort.signal, "")
+    expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNAVAILABLE") })
+    expect(JSON.stringify(output)).not.toContain("EMPTY-ID-ROOT")
+  }))

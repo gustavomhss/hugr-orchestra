@@ -236,6 +236,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return Effect.gen(function* () {
       // BaseHookInput.agent_id identifies subagent events even when session_id is shared with the root.
       // The query's dispatch join owns that identity; a native session string cannot override it.
+      if (agentID === "")
+        return yield* Effect.fail(new Error("COMPACT_NATIVE_OWNER_UNAVAILABLE: an empty agent_id cannot identify the root"))
       const actor = yield* delegation.actor(agentID)
       if ("hold" in actor) {
         const call = agentID ? ctx.join.toolUse(agentID) : undefined
