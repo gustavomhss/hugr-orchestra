@@ -7,6 +7,7 @@ import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
 import { SessionMessage } from "../session/message"
 import { SessionSchema } from "../session/schema"
+import type { ModelV2 } from "../model"
 import { ToolOutputStore } from "../tool-output-store"
 import { Wildcard } from "../util/wildcard"
 import { ApplicationTools } from "./application-tools"
@@ -23,6 +24,7 @@ export type ExecuteInput = {
   readonly agent: AgentV2.ID
   readonly assistantMessageID: SessionMessage.ID
   readonly call: ToolCall
+  readonly model?: ModelV2.Ref
 }
 
 export interface Interface {
@@ -112,6 +114,7 @@ const registryLayer = Layer.effect(
             agent: input.agent,
             assistantMessageID: input.assistantMessageID,
             toolCallID: input.call.id,
+            model: input.model,
           }).pipe(
             Effect.map((output) => ({ output })),
             Effect.catchTag("LLM.ToolFailure", (failure) => failure.error instanceof ToolSafety.Denied

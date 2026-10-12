@@ -40,6 +40,7 @@ import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
 import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
+import { SessionSubagentModels } from "./session/subagent-models"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -538,6 +539,7 @@ export const node = makeGlobalNode({
     SessionStore.node,
     LocationServiceMap.node,
     SessionProjector.node,
+    SessionSubagentModels.node,
     Global.node,
   ],
 })

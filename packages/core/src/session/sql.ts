@@ -55,6 +55,8 @@ export const SessionTable = sqliteTable(
       providerID: string
       variant?: string
     }>(),
+    // Keep JSON text raw so invalid JSON (including JSON null) cannot masquerade as SQL NULL.
+    subagent_models: text(),
     ...Timestamps,
     time_compacting: integer(),
     time_archived: integer(),

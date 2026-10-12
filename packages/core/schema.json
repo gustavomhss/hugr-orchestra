@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "4fe5dce9-5006-47df-9665-2fe3d2f9a0c6",
+  "id": "09f477cf-9f1a-42cb-8b0a-5bd76d69df1b",
   "prevIds": [
-    "4e0f9b56-600e-45e5-b7bd-cf7b50f9f89d"
+    "4fe5dce9-5006-47df-9665-2fe3d2f9a0c6"
   ],
   "ddl": [
     {
@@ -1755,6 +1755,16 @@
       "default": null,
       "generated": null,
       "name": "model",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "subagent_models",
       "entityType": "columns",
       "table": "session"
     },

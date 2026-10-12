@@ -10,6 +10,7 @@ import { SessionSchema } from "./schema"
 import { SessionTable } from "./sql"
 import { SessionMessage } from "./message"
 import { Snapshot } from "../snapshot"
+import { SessionSubagentModels } from "./subagent-models"
 
 export function fromRow(row: typeof SessionTable.$inferSelect): SessionSchema.Info {
   return SessionSchema.Info.make({
@@ -18,6 +19,7 @@ export function fromRow(row: typeof SessionTable.$inferSelect): SessionSchema.In
     title: row.title,
     parentID: row.parent_id ? SessionSchema.ID.make(row.parent_id) : undefined,
     agent: row.agent ? AgentV2.ID.make(row.agent) : undefined,
+    subagentModels: SessionSubagentModels.fromStorage(row.id, row.subagent_models),
     model: row.model
       ? {
           id: ModelV2.ID.make(row.model.id),
