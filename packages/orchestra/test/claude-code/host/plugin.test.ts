@@ -229,7 +229,6 @@ for (const corruption of ["tampered", "empty"]) {
         if (corruption === "empty") await Promise.all((await fs.readdir(first.path)).map((entry) =>
           fs.rm(path.join(first.path, entry), { recursive: true })))
         const damaged = await snapshot(first.path)
-        // A complete tree with another digest prefix and an incomplete matching repair must both be ignored.
         const foreign = path.join(f.root, `unrelated.repair-${randomUUID()}`)
         const incomplete = `${first.path}.repair-${randomUUID()}`
         const staging = `${first.path}.stage-leftover`
