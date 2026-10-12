@@ -360,11 +360,23 @@ export function create(input: {
         // A batched result frame supplies no per-block join for its single structured native receipt.
         const nativeTodos = part.state.status === "completed" && block.is_error !== true
           ? yield* ClaudeHostTodos.update({ sessionID, sessions, name, args: part.state.input,
-            result: results(message).length === 1 ? message.tool_use_result : undefined, state: input.state })
+            part, pending: results(message).flatMap((item) => {
+              const pending = tool(item.tool_use_id)
+              return pending?.state.status === "completed" && ClaudeHostTodos.TOOLS.includes(raw.get(item.tool_use_id) ?? "") ? [pending.id] : []
+            }), result: results(message).length === 1 ? message.tool_use_result : undefined,
+            reason: results(message).length === 1 ? undefined : "NATIVE_TODO_RESULT_UNCORRELATED", state: input.state })
           : undefined
         const metadata = { ...toolMetadata(name, message.tool_use_result, output, block.is_error === true),
-          ...(nativeTodos ? { todos: nativeTodos.todos, claudeCodeTodo: nativeTodos.snapshot } : {}) }
-        yield* write({ ...part, state: { ...part.state,
+          ...(nativeTodos ? { todos: nativeTodos.todos, claudeCodeTodo: nativeTodos.receipt } : {}) }
+        const rejected = part.state.status === "completed" && name === "TaskUpdate" && results(message).length === 1 &&
+          ClaudeCodeTranscript.record(message.tool_use_result) && typeof part.state.input.taskId === "string" &&
+          message.tool_use_result.taskId === part.state.input.taskId &&
+          (message.tool_use_result.success === false || message.tool_use_result.error)
+        yield* write({ ...part, state: rejected && part.state.status === "completed" ? {
+          status: "error", input: part.state.input, time: part.state.time,
+          error: ClaudeCodeTranscript.record(message.tool_use_result) && typeof message.tool_use_result.error === "string"
+            ? message.tool_use_result.error : "Native task result failed", metadata: { ...part.state.metadata, ...metadata },
+        } : { ...part.state,
           ...(nativeTodos ? { input: { ...part.state.input, todos: nativeTodos.todos } } : {}),
           metadata: { ...part.state.metadata, ...metadata } } }, before[index])
         if ((name === "TodoWrite" || ClaudeHostTodos.TOOLS.includes(name)) && Array.isArray(metadata.todos))
