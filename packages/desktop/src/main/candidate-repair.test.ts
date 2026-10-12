@@ -133,7 +133,8 @@ test("effective UID protects root and nested ownership on POSIX, without a Windo
 
 test("owned Claude roots cannot query default credentials: synthetic lookup recorder only", () => {
   const f = fixture()
-  const env = candidateEnvironment(f.p, { ...process.env, CLAUDE_CONFIG_DIR: "/host/config", CLAUDE_SECURESTORAGE_CONFIG_DIR: "" })
+  const env = candidateEnvironment(f.p, { ...process.env, CLAUDE_CONFIG_DIR: "/host/config", CLAUDE_SECURESTORAGE_CONFIG_DIR: "",
+    ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" })
   run(resolve(import.meta.dir, "../../../orchestra"), `
     import assert from "node:assert/strict";
     const env = ${JSON.stringify(env)};
@@ -155,15 +156,20 @@ test("owned Claude roots cannot query default credentials: synthetic lookup reco
         lookups.push(args[args.indexOf("-s") + 1]); return { status: 44, stdout: "" } };
       syncBuiltinESMExports();
       const sdk = await import(pathToFileURL(${JSON.stringify(join(env.TMPDIR, "sdk-recorder.mjs"))}).href);
-      const lookup = async (env) => {
-        const life = sdk.processLifetime({ env, spawnClaudeCodeProcess: () => { spawns++; throw Error("forbidden Claude spawn") } });
+      // Every engine query keeps Claude Code's preset prompt; the engine reads no login until its plan is approved.
+      const lookup = async (env, refusal = /Claude Code machine login unavailable/) => {
+        const life = sdk.processLifetime({ env, systemPrompt: { type: "preset", preset: "claude_code" },
+          spawnClaudeCodeProcess: () => { spawns++; throw Error("forbidden Claude spawn") } });
         assert.throws(() => life.options.spawnClaudeCodeProcess({ command: "unused", args: [], env: life.options.env,
-          signal: new AbortController().signal }), /Claude Code machine login unavailable/);
+          signal: new AbortController().signal }), refusal);
         await life.join();
       };
       const env = ${JSON.stringify(env)};
-      await lookup({ HOME: env.HOME }); assert.deepEqual(lookups, ["Claude Code-credentials"]);
-      lookups.length = 0; await lookup(env); assert.equal(lookups.length, 1);
+      assert.equal(env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED, undefined);
+      await lookup(env, /Claude Code engine is paused/); assert.deepEqual(lookups, []);
+      const approved = { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" };
+      await lookup({ HOME: env.HOME, ...approved }); assert.deepEqual(lookups, ["Claude Code-credentials"]);
+      lookups.length = 0; await lookup({ ...env, ...approved }); assert.equal(lookups.length, 1);
       assert.match(lookups[0], /^Claude Code-credentials-[0-9a-f]{8}$/);
       assert.notEqual(lookups[0], "Claude Code-credentials");
       assert.equal(sdk.credentialStorage(env, env.HOME).file, join(env.CLAUDE_SECURESTORAGE_CONFIG_DIR, ".credentials.json"));
@@ -171,6 +177,8 @@ test("owned Claude roots cannot query default credentials: synthetic lookup reco
     `)}], { env, stdout: "pipe", stderr: "pipe" });
     assert.equal(node.exitCode, 0, node.stderr.toString());
   `, env)
+  // A host approval of the paused engine does not cross into the candidate environment.
+  expect(env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED).toBeUndefined()
   expect(env.CLAUDE_CONFIG_DIR).toBe(join(f.p.home, ".claude"))
   expect(env.CLAUDE_SECURESTORAGE_CONFIG_DIR).toBe(join(f.p.home, ".claude-secure-storage"))
   expect(existsSync(env.CLAUDE_CONFIG_DIR)).toBe(true)
