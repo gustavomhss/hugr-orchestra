@@ -484,8 +484,8 @@ test("staging rejects symlink output directories and keeps previous resources", 
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
 }, STAGING_TIMEOUT)
 
-// GitHub's Windows runners briefly hold a CLI that the sign hook just ran (provjobd.exe, up to about 1 s), and Windows
-// refuses to rename a directory while a file in it is open. A handle the test owns stands in for that holder.
+// GitHub's Windows runners briefly hold a CLI that the sign hook just ran (provjobd.exe, up to 2.2 s measured), and
+// Windows refuses to rename a directory while a file in it is open. A handle the test owns stands in for that holder.
 test("a staged CLI held briefly after signing delays the rename into place instead of failing it", async () => {
   const input = await fixture()
   const start = performance.now()
@@ -513,7 +513,8 @@ test("a staged CLI held past the bound fails the rename and keeps the previous r
     sign: async (path, _target, kind) => {
       if (kind !== "cli") return
       const held = await open(path, "r")
-      holds.push(new Promise((resolve) => setTimeout(() => void held.close().then(resolve), 8_000)))
+      // Longer than staging's 10 s bound on the rename.
+      holds.push(new Promise((resolve) => setTimeout(() => void held.close().then(resolve), 14_000)))
     },
   }).then(
     () => undefined,

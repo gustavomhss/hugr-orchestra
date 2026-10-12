@@ -184,9 +184,10 @@ export async function stageCliArtifacts(input: {
 }
 
 // The sign hook runs the staged CLI, and on GitHub's Windows runners the hosted agent's provjobd.exe opens a freshly
-// run image for a moment; while it does, Windows refuses to rename the directory holding it (EPERM). Retry exactly
-// that, for a bounded time. Any other error, any other platform, or a hold past the deadline still fails.
-const RENAME_HOLD_MS = 5_000
+// run image for a moment; while it does, Windows refuses to rename the directory holding it (EPERM). Measured there,
+// such a hold blocked the rename for 50 ms to 2.2 s. Retry exactly that, for up to 10 s. Any other error, any other
+// platform, or a longer hold still fails.
+const RENAME_HOLD_MS = 10_000
 
 async function renameDirectory(from: string, to: string) {
   const deadline = performance.now() + RENAME_HOLD_MS
