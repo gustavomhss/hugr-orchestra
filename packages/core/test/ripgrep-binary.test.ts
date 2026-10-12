@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test"
 import { createHash } from "crypto"
 import fs from "fs/promises"
 import path from "path"
-import { Cause, Context, Effect, Exit, Layer, Option } from "effect"
+import { Cause, Context, Effect, Exit, Fiber, Layer, Option } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 // filesystem.ts imports search.ts and search.ts imports it back; loading filesystem first keeps the app's order.
 import "@orchestra/core/filesystem"
@@ -172,6 +172,26 @@ describe("RipgrepBinary", () => {
         Effect.retry({ while: (error) => error.message.includes("still downloading"), times: 50 }),
       )
       expect(resolved).toBe(path.join(dir, "bin", executable))
+      expect(server.counter.requests).toBe(1)
+    }),
+  )
+
+  it.live("an interrupted caller does not cancel the download it started", () =>
+    Effect.gen(function* () {
+      const dir = yield* withTmp
+      const built = yield* archive(dir)
+      const server = yield* serve(async () => {
+        await Bun.sleep(400)
+        return new Response(built.bytes)
+      })
+      const service = yield* binary(path.join(dir, "bin"), { url: server.url, ...built })
+
+      // A request that starts the download and is then cancelled, as an aborted tool call is.
+      const caller = yield* Effect.forkChild(service.filepath)
+      yield* Effect.sleep("100 millis")
+      yield* Fiber.interrupt(caller)
+
+      expect(yield* service.filepath).toBe(path.join(dir, "bin", executable))
       expect(server.counter.requests).toBe(1)
     }),
   )
