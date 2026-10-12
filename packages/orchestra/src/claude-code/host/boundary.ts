@@ -51,7 +51,8 @@ export function origins(view: ReturnType<typeof retained>, messageID: string): r
   if (!view.history.some((message) => message.info.id === messageID))
     throw new UnprovableNativeLineage("NATIVE_PRODUCER_UNRETAINED")
   return [{ projectID: view.session.projectID, sessionID: view.session.id, messageID },
-    ...(view.lineage?.messages[messageID] ?? [])]
+    ...(view.lineage?.messages[messageID] ?? [])].filter((origin, index, all) => all.findIndex((other) =>
+      other.projectID === origin.projectID && other.sessionID === origin.sessionID && other.messageID === origin.messageID) === index)
 }
 
 /** Resolve both producing messages in the retained view; immutable source events keep their original owner. */
@@ -75,10 +76,8 @@ export function retain(source: Session.Info, history: readonly SessionV1.WithPar
   if (new Set(ids.values()).size !== ids.size || [...ids.keys()].some((id) => !view.history.some((message) => message.info.id === id)))
     throw new UnprovableNativeLineage("NATIVE_FORK_MESSAGES_UNPROVABLE")
   return { schema: "native-retained-view-v1", projectID: source.projectID, kind,
-    messages: Object.fromEntries(view.history.flatMap((message) => ids.has(message.info.id) ? [[ids.get(message.info.id)!, [
-      { projectID: source.projectID, sessionID: source.id, messageID: message.info.id },
-      ...(view.lineage?.messages[message.info.id] ?? []),
-    ]]] : [])) }
+    messages: Object.fromEntries(view.history.flatMap((message) => ids.has(message.info.id)
+      ? [[ids.get(message.info.id)!, origins(view, message.info.id)]] : [])) }
 }
 
 /** The UI's boundary is exclusive; the SDK's resumeSessionAt is inclusive. Never omit an unresolved cut. */

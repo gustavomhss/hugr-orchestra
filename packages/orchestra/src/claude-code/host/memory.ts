@@ -64,15 +64,17 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
   const saved = yield* archive.readMemory(input.sessionID)
   const memory = saved?.context && tailIndex(saved.context, view.history) !== undefined ? [saved.context.text] : []
   const member = AtlasMemory.owner(view.session.agent ? yield* agents.get(view.session.agent) : undefined)
-  // A restored copy cannot resurrect an older admission after a later admitted refusal/revocation.
+  // Atlas unit IDs are independent of logical task IDs. Only retained host admissions choose the
+  // latest full project/member/resume/unit key; restored copies cannot supersede a later refusal.
   const admission = member ? view.history.flatMap((message) => message.parts).flatMap((part) => [
-    "metadata" in part ? part.metadata?.[AtlasMemory.ADMISSION_KEY] : undefined,
+    part.type === "text" && part.synthetic ? part.metadata?.[AtlasMemory.ADMISSION_KEY] : undefined,
     part.type === "tool" && part.state.status !== "pending" ? part.state.metadata?.[AtlasMemory.ADMISSION_KEY] : undefined,
   ]).filter((value): value is AtlasMemory.Admission => value?.schema === "atlas-resume-admission-v1" &&
     value.residency === "admitted" && value.key?.memoryOwner === member && value.key.projectID === view.session.projectID &&
-    typeof value.key.logicalResumeID === "string" && (value.key.kind === "task" || value.key.kind === "pr") &&
-    typeof value.key.id === "string" && typeof value.text === "string" &&
-    (!binding || value.key.kind !== "task" || value.key.id === binding.taskId)).at(-1) : undefined
+    typeof value.key.logicalResumeID === "string" && value.key.logicalResumeID.length > 0 &&
+    (value.key.kind === "task" || value.key.kind === "pr") && typeof value.key.id === "string" && value.key.id.length > 0 &&
+    typeof value.text === "string" && (value.verdict?.ok === true && typeof value.verdict.ref?.eventId === "string" &&
+      typeof value.verdict.ref.contentHash === "string" || value.verdict?.ok === false && typeof value.verdict.refusal === "string")).at(-1) : undefined
   const sections = [
     ["Owning logical task (retained binding and permissions)", binding ? [JSON.stringify({ binding, permission: view.session.permission })] : []],
     ["Open logical tasks (retained records)", tasks.flat()],
@@ -84,7 +86,9 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     ["Plan revision (retained producing tool and admission)", plan],
     ["Todos", todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))],
     ["Applicable owned continuity memory (historical)", memory],
-    ["Atlas resume Admission (historical evidence; not new permission)", admission?.verdict.ok ? [admission.text, JSON.stringify({ key: admission.key, ref: admission.verdict.ref })] : []],
+    ["Atlas resume Admission (historical evidence; not new permission)", admission ? [admission.text, JSON.stringify({
+      key: admission.key, residency: admission.residency, verdict: admission.verdict,
+    })] : []],
   ] as const
   const body = sections.filter((section) => section[1].length).map((section) => [`## ${section[0]}`, ...section[1]].join("\n"))
   // The native SDK owns context budgeting. Every required record is rendered whole, without invented recall refs.
