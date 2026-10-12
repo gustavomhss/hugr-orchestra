@@ -61,6 +61,7 @@ export async function run(control?: "delete-blob") {
     ...(process.platform === "linux" ? { SHELL: "/bin/false" } : {}),
   }
   const lifecycle = { exited: true, closed: true }
+  const failure = { failed: false, cause: undefined as unknown }
   const shell = { lease: undefined as Awaited<ReturnType<typeof isolateWindowsShell>>, ready: false, restored: false }
   const phases: Record<string, unknown>[] = []
   const placement = { userData: "", draftDB: "" }
@@ -68,19 +69,22 @@ export async function run(control?: "delete-blob") {
   const child = async <T>(spec: Parameters<typeof DesktopProof.child>[0], body: (host: Host) => Promise<T>) => {
     lifecycle.exited = false
     lifecycle.closed = false
-    const result = await DesktopProof.child(spec, async (host) => {
+    return DesktopProof.child({ ...spec, onClosed: () => { lifecycle.exited = true; lifecycle.closed = true } }, async (host) => {
       void host.exited.then(() => { lifecycle.exited = true }, () => {})
       return body(host)
     })
-    lifecycle.closed = true
-    assert.ok(lifecycle.exited, "CHILD_EXIT_UNCONFIRMED")
-    return result
   }
   try {
     shell.lease = await isolateWindowsShell({ appdata: owned.appdata, local: owned.local })
     shell.ready = true
     Object.keys(process.env).forEach((key) => delete process.env[key])
     Object.assign(process.env, env)
+    await child({ command: "git", args: ["--version"], cwd: owned.home, env, timeoutMS: 20_000 }, async () => {
+      throw new Error("PROOF_BODY_FAILURE_CONTROL")
+    }).then(() => assert.fail("PROOF_BODY_FAILURE_NOT_PROPAGATED"), (error: unknown) => {
+      assert.ok(error instanceof Error && error.message === "PROOF_BODY_FAILURE_CONTROL", "PROOF_BODY_FAILURE_CHANGED")
+      assert.ok(lifecycle.exited && lifecycle.closed, "FAILED_CHILD_TEARDOWN_UNCONFIRMED")
+    })
     const git = (args: string[]) => child({ command: "git", args, cwd: owned.home, env, timeoutMS: 20_000 }, async (host) => {
       assert.equal(await deadline(host.exited, 20_000, "GIT_EXIT_TIMEOUT"), 0, "GIT_FAILED")
       return host.output().trim()
@@ -185,16 +189,25 @@ export async function run(control?: "delete-blob") {
     }, Promise.resolve())
     assert.equal(phases.length, control ? 2 : 3, "INCOMPLETE_PHASES")
     if (control) assert.ok(mutation.seeded && mutation.deleted && mutation.detected, "CONTROL_NOT_DETECTED")
+  } catch (error) {
+    failure.failed = true
+    failure.cause = error
+    throw error
   } finally {
-    if (lifecycle.exited && lifecycle.closed && shell.ready) {
-      shell.lease?.restore()
-      shell.restored = true
-      rmSync(root, { recursive: true })
+    try {
+      if (lifecycle.exited && lifecycle.closed && shell.ready) {
+        shell.lease?.restore()
+        shell.restored = true
+        rmSync(root, { recursive: true })
+      }
+    } catch (error) {
+      if (failure.failed) throw new AggregateError([failure.cause, error], "PROOF_AND_CLEANUP_FAILED", { cause: failure.cause })
+      throw error
     }
   }
   assert.ok(lifecycle.exited && lifecycle.closed && shell.restored && !existsSync(root), "CLEANUP_UNCONFIRMED")
   if (control) {
-    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, reason: "DRAFT_BLOB_LOST" }))
+    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, reason: "DRAFT_BLOB_LOST" }))
     throw new Error("DRAFT_BLOB_LOST")
   }
   const evidence = { sourceSHA: manifest.sourceSHA, run: runID, platform: process.platform, arch: process.arch,
@@ -202,7 +215,7 @@ export async function run(control?: "delete-blob") {
     addonSha256: manifest.addonSha256, supervisorSha256: manifest.supervisorSha256, bundleHashes: manifest.bundleHashes,
     scope: "unsigned actual current-source Desktop; Linux x64 / Windows x64 only", environment: env,
     root, placement, documents: documents.map((item) => ({ key: item.key, documentSha256: item.documentSha256, blobSha256: item.id })),
-    phases, cleanup: true }
+    phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true }
   mkdirSync(path.dirname(destination), { recursive: true })
   writeFileSync(`${destination}.tmp`, JSON.stringify(evidence, null, 2), { mode: 0o600 })
   renameSync(`${destination}.tmp`, destination)
@@ -293,7 +306,7 @@ if (import.meta.main) {
   const args = parseArgs({ options: { control: { type: "string" } }, allowPositionals: false }).values
   assert.ok(args.control === undefined || args.control === "delete-blob", "UNKNOWN_CONTROL")
   await run(args.control).catch((error: unknown) => {
-    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error.stack) : "DESKTOP_PERSISTENCE_FAILED")
+    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error) : "DESKTOP_PERSISTENCE_FAILED")
     process.exitCode = 1
   })
 }

@@ -8,7 +8,7 @@ import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner
 const boundary = { paths: undefined as Record<string, string> | undefined }
 
 export async function child<A>(
-  input: { command: string; args: string[]; cwd: string; env: Record<string, string>; timeoutMS?: number },
+  input: { command: string; args: string[]; cwd: string; env: Record<string, string>; timeoutMS?: number; onClosed?: () => void },
   use: (host: { pid: number; output: () => string; exited: Promise<number>; signal: AbortSignal }) => Promise<A>,
 ): Promise<A> {
   const controller = new AbortController()
@@ -94,6 +94,7 @@ export async function child<A>(
     process.off("SIGINT", interrupt)
     process.off("SIGTERM", interrupt)
     controller.abort(new Error("CHILD_SCOPE_FINISHED"))
+    if (lifecycle.exitConfirmed && lifecycle.scopeClosed) input.onClosed?.()
   }
 }
 
