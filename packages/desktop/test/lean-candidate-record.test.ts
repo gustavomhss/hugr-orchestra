@@ -106,7 +106,7 @@ test("actual native proof entry fails by name on unsupported hosts under the can
   const portable = await run({ ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" })
   expect(portable.code).toBe(0)
   expect(portable.output).toMatch(/\b0 pass\b/)
-  expect(portable.output).toMatch(/\b3 skip\b/)
+  expect(portable.output).toMatch(/\b4 skip\b/)
   expect(portable.output).not.toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM")
 }, 30000)
 
