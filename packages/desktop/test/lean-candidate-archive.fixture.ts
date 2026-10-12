@@ -19,7 +19,7 @@ type BuildIdentity = {
   tools: { bun: string; node: string; electron: string; "electron-builder": string }
   main: Material[]; preload: Material[]; renderer: Material[]; backend: Material[]; packaged: Material[]
   nativePty: { name: string; version: string; binaries: Material[] }
-  ripgrep: { key: string; manifest: RipgrepBundle.Manifest; files: Material[] }
+  ripgrep: { key: string; manifest: RipgrepBundle.Manifest; signed: boolean; files: Material[] }
 }
 
 async function git(...args: string[]) {
@@ -165,19 +165,27 @@ export async function verifyCandidateArchive() {
     assert.deepEqual(new Uint8Array(await Bun.file(path.join(notices, file)).arrayBuffer()), bytes, `Notice bytes changed: ${file}`)
     assert.equal(pin.materials.find((material) => material.path === file)!.sha256, digest(bytes))
   }
-  // Resources/ripgrep: the pinned x64 macOS rg the build recorded, byte for byte, and it runs.
-  const ripgrep = path.join(candidate.resources, "ripgrep")
+  // Resources/cli/ripgrep-darwin-x64-baseline: the pinned x64 macOS rg the build recorded, byte for byte, signed by
+  // staging (ad hoc) with a signature codesign accepts, and it runs.
+  const ripgrep = path.join(candidate.resources, "cli", "ripgrep-darwin-x64-baseline")
   assert.equal(candidate.manifest.ripgrep.key, "x64-darwin")
+  assert.equal(candidate.manifest.ripgrep.signed, true, "Build record says staging left rg unsigned")
   assert.equal(candidate.manifest.ripgrep.manifest.archive.sha256, RipgrepRelease.archive("x64-darwin")!.sha256,
     "Build record does not pin the x64 macOS ripgrep archive")
-  assert.deepEqual(await RipgrepBundle.verify(ripgrep, "x64-darwin"), candidate.manifest.ripgrep.manifest,
-    "Packaged ripgrep manifest differs from the build record")
+  assert.equal(candidate.manifest.ripgrep.manifest.executable.sha256, RipgrepRelease.archive("x64-darwin")!.executable,
+    "Build record does not pin the x64 macOS rg executable")
+  const codesign = async (file: string) => {
+    const child = Bun.spawn(["codesign", "--verify", "--strict", file], { stdout: "pipe", stderr: "pipe", timeout: 30000, killSignal: "SIGKILL" })
+    return (await child.exited) === 0
+  }
+  const checked = await RipgrepBundle.verify(ripgrep, "x64-darwin", { signed: "required", signature: codesign })
+  assert.deepEqual(checked.manifest, candidate.manifest.ripgrep.manifest, "Packaged ripgrep manifest differs from the build record")
   assert.deepEqual(await inventory(ripgrep), candidate.manifest.ripgrep.files, "Packaged ripgrep differs from the build record")
   const rg = Bun.spawn([path.join(ripgrep, "rg"), "--version"], { stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
   const [version, code] = await Promise.all([new Response(rg.stdout).text(), rg.exited])
   assert.equal(code, 0, "Packaged rg does not run")
   assert.ok(version.startsWith(`ripgrep ${RipgrepRelease.VERSION}`), `Packaged rg reports ${version.split("\n")[0]}`)
-  console.log(`packaged ripgrep archive=${candidate.manifest.ripgrep.manifest.archive.sha256} rg=${candidate.manifest.ripgrep.manifest.executable.sha256}`)
+  console.log(`packaged ripgrep archive=${candidate.manifest.ripgrep.manifest.archive.sha256} signed=${checked.signed}`)
   console.log(`packaged archive sha256=${digest(new Uint8Array(await Bun.file(archive).arrayBuffer()))} notices=${names.length} fonts=${fonts.length}`)
   return candidate
 }

@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 
 // Proves on a real runner that a packaged CLI searches with the rg it ships and never downloads one:
-//   1. --ripgrep holds the pinned rg for --key (RipgrepBundle.verify: pin, bytes unless --signed, executable bit,
-//      license texts), and it runs and reports the pinned version;
+//   1. --ripgrep holds the pinned rg for --target (RipgrepBundle.verify against release.ts: the pinned executable, or
+//      once signed a valid signature (codesign / Authenticode), executable bit, license texts), and it runs and
+//      reports the pinned version;
 //   2. the CLI at --binary serves its API with no rg on PATH, an empty cache and every HTTP(S) request routed to a
 //      local proxy that counts connections; its project index (ripgrep, fff off) finds a planted file, and the proxy
 //      sees no connection and nothing lands in the download cache;
@@ -20,16 +21,14 @@ import { delimiter, join, resolve } from "node:path"
 import { parseArgs } from "node:util"
 import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
+import { signatureCheck } from "../../desktop/src/main/cli-artifacts"
 import { namedTargets } from "./targets"
 
 const args = parseArgs({
   options: {
     binary: { type: "string" },
     ripgrep: { type: "string" },
-    // The pin key, or the CLI build target it follows from.
-    key: { type: "string" },
     target: { type: "string" },
-    signed: { type: "boolean" },
     mutate: { type: "boolean" },
     // Extra NAME=VALUE pairs for the CLI, e.g. HUGR_OMNI_* for a desktop's installed CLI copy.
     env: { type: "string", multiple: true },
@@ -39,11 +38,10 @@ const args = parseArgs({
 }).values
 
 const item = namedTargets.find((item) => item.target === args.target)
-const key = args.key ?? (item ? RipgrepBundle.key(item) : undefined)
-if (!args.binary || !args.ripgrep || !key)
-  throw new Error(
-    "Usage: ripgrep-proof.ts --binary <cli> --ripgrep <dir> (--key <arch-platform> | --target <cli target>) [--signed] [--mutate]",
-  )
+const key = item ? RipgrepBundle.key(item) : undefined
+if (!args.binary || !args.ripgrep || !item || !key)
+  throw new Error("Usage: ripgrep-proof.ts --binary <cli> --ripgrep <dir> --target <cli target> [--mutate]")
+const target = item.target
 // Absolute: each CLI run has its sandbox as working directory.
 const binary = resolve(args.binary)
 const ripgrep = resolve(args.ripgrep)
@@ -51,19 +49,26 @@ const executable = RipgrepRelease.executable(key.slice(key.indexOf("-") + 1))
 // What RipgrepBinary says when a packaged build finds no rg (packages/core/src/ripgrep/binary.ts).
 const FAIL_CLOSED = "packaged builds never download it"
 
-const manifest = await RipgrepBundle.verify(ripgrep, key, { signed: args.signed })
+const verified = await RipgrepBundle.verify(ripgrep, key, {
+  signature: async (file) => {
+    const check = signatureCheck(target, file)
+    if (!check) return false
+    const result = await command([check.command, ...check.args], process.env, tmpdir())
+    return result.code === 0 && check.valid(result.stdout)
+  },
+})
 const version = await command([join(ripgrep, executable), "--version"], process.env, tmpdir())
 if (version.code !== 0 || !version.stdout.startsWith(`ripgrep ${RipgrepRelease.VERSION}`))
   throw new Error(`RIPGREP_VERSION_MISMATCH: ${version.stdout.split("\n")[0]}`)
 console.log(
   `RIPGREP_BUNDLE ${JSON.stringify({
     key,
-    archive: manifest.archive,
+    archive: verified.manifest.archive,
     executable: createHash("sha256")
       .update(await readFile(join(ripgrep, executable)))
       .digest("hex"),
-    pinned: manifest.executable.sha256,
-    signed: Boolean(args.signed),
+    pinned: verified.manifest.executable.sha256,
+    signed: verified.signed,
     version: version.stdout.split("\n")[0],
   })}`,
 )
