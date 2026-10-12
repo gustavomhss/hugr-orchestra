@@ -256,6 +256,71 @@ live("credential names absent at policy allocation stay denied after creation un
   }), 30_000,
 )
 
+live("physical XDG home aliases cannot turn the account home into a config grant", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const home = path.join(f.directory, "home")
+    const alias = path.join(f.directory, "xdg-alias")
+    const files = ["config", "ignore", "attributes"].map((name) => path.join(home, "git", name))
+    yield* Effect.forEach(files, (file) => f.fs.writeWithDirs(file, "synthetic config"), { discard: true })
+    yield* f.fs.symlink(home, alias)
+    yield* Effect.acquireRelease(Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_TEST_HOME
+      process.env.ORCHESTRA_TEST_HOME = home
+      return previous
+    }), (previous) => Effect.sync(() => {
+      if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+      if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+    }))
+    const script = `const fs=require('fs');console.log(JSON.stringify(${JSON.stringify(files)}.map(file=>{try{return fs.readFileSync(file).length>0}catch{return false}})))`
+    const input = ChildProcess.make(f.node, ["-e", script], { cwd: f.root, env: { XDG_CONFIG_HOME: alias } })
+    const control = yield* f.processes.run(input)
+    expect(control.exitCode, control.stderr.toString()).toBe(0)
+    expect(JSON.parse(control.stdout.toString())).toEqual([true, true, true])
+    const wrapped = yield* ToolSafetySandbox.wrap(input).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, readRoots: [f.root] } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.root }),
+    )
+    const result = yield* f.processes.run(wrapped)
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(JSON.parse(result.stdout.toString())).toEqual([false, false, false])
+  }), 30_000,
+)
+
+live("physical install prefixes directly under home stay private while their precise bin stays readable", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const home = path.join(f.directory, "home")
+    const prefix = path.join(home, ".vault")
+    const alias = path.join(f.directory, "install")
+    const bin = path.join(prefix, "bin", "public")
+    const privateFile = path.join(prefix, "private")
+    yield* f.fs.writeWithDirs(bin, "synthetic public")
+    yield* f.fs.writeFileString(privateFile, "synthetic private")
+    yield* f.fs.symlink(prefix, alias)
+    yield* Effect.acquireRelease(Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_TEST_HOME
+      process.env.ORCHESTRA_TEST_HOME = home
+      return previous
+    }), (previous) => Effect.sync(() => {
+      if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+      if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+    }))
+    const script = `const fs=require('fs');console.log(JSON.stringify(${JSON.stringify([bin, privateFile])}.map(file=>{try{return fs.readFileSync(file).length>0}catch{return false}})))`
+    const input = ChildProcess.make(f.node, ["-e", script], { cwd: f.root, env: { PATH: [path.join(alias, "bin"), process.env.PATH].join(path.delimiter) } })
+    const control = yield* f.processes.run(input)
+    expect(control.exitCode, control.stderr.toString()).toBe(0)
+    expect(JSON.parse(control.stdout.toString())).toEqual([true, true])
+    const wrapped = yield* ToolSafetySandbox.wrap(input).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, readRoots: [f.root] } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.root }),
+    )
+    const result = yield* f.processes.run(wrapped)
+    expect(result.exitCode, result.stderr.toString()).toBe(0)
+    expect(JSON.parse(result.stdout.toString())).toEqual([true, false])
+  }), 30_000,
+)
+
 test("home grants name exactly git's config files and what a rustup-proxied cargo needs, never a credential store", () => {
   const base = path.join(path.parse(process.cwd()).root, "toolchain-probe")
   const [rustup, cargo, xdg] = ["rustup", "cargo", "xdg"].map((name) => path.join(base, name))
