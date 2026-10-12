@@ -18,10 +18,11 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
-import { applySessionManagementEvent, mergeSessionManagementInfo, normalizeSessionInfo, type AppSession } from "@/utils/session"
+import { mergeSessionManagementInfo, normalizeSessionInfo, type AppSession } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
+import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
@@ -843,28 +844,6 @@ export function createServerSession(
     await runInflight(inflight, sessionID, () => loadMessages(sessionID, limit))
   }
 
-  const eventSessionID = (event: { type: string; properties?: unknown }) => {
-    const properties = event.properties
-    if (!properties || typeof properties !== "object") return
-    if ("sessionID" in properties && typeof properties.sessionID === "string") return properties.sessionID
-    if (
-      "info" in properties &&
-      properties.info &&
-      typeof properties.info === "object" &&
-      "sessionID" in properties.info &&
-      typeof properties.info.sessionID === "string"
-    )
-      return properties.info.sessionID
-    if (
-      "part" in properties &&
-      properties.part &&
-      typeof properties.part === "object" &&
-      "sessionID" in properties.part &&
-      typeof properties.part.sessionID === "string"
-    )
-      return properties.part.sessionID
-  }
-
   const projectV2 = (reduction: V2SessionReduction) => {
     reduction.touched.forEach((messageID) => messageLoads.get(reduction.sessionID)?.touchedSource.add(messageID))
     setData("session_message", reduction.sessionID, reconcile(reduction.messages))
@@ -982,17 +961,8 @@ export function createServerSession(
     }
     switch (event.type) {
       case "session.next.subagent.models.changed":
-      case "session.next.archive.changed": {
-        if (!eventID) return
-        const update = (info: AppSession) => {
-          const next = applySessionManagementEvent(info, event)
-          if (next) remember(next)
-        }
-        const info = data.info[eventID]
-        if (info) update(info)
-        if (!info) void resolve(eventID).then(update).catch(() => {})
-        return
-      }
+      case "session.next.archive.changed":
+        return projectSessionManagementEvent(event, eventID, data.info, remember, resolve)
       case "session.created":
         remember((event.properties as { info: Session }).info)
         return
