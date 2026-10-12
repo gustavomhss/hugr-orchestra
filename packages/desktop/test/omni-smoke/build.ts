@@ -4,6 +4,10 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFi
 import { createRequire } from "node:module"
 import path from "node:path"
 import { ROOT, win } from "../../../omni/campaign/lib"
+import { desktopCliTargets } from "../../scripts/cli-staging"
+import { cliTreeSitterTarget, readCliManifest, verifyCliArtifact } from "../../src/main/cli-artifacts"
+import { requireTreeSitterBundle } from "../../../script/src/tree-sitter-prebuilds"
+import { importInputs, inventory, matchInventory, sourcePin } from "./wsl-inputs"
 
 export const logs = path.join(ROOT, "packages/desktop/.omni-desktop-evidence")
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
@@ -22,6 +26,7 @@ function git(...args: string[]) {
 
 export async function build() {
   if (!process.env.CI || !process.env.GITHUB_SHA) throw new Error("desktop matrix requires hosted CI; owner app execution forbidden")
+  const source = sourcePin()
   mkdirSync(logs, { recursive: true })
   const sourceSHA = git("rev-parse", "HEAD")
   const dirty = git("status", "--porcelain", "--untracked-files=no")
@@ -41,13 +46,44 @@ export async function build() {
   // CLI builds resolve <root>/<platform>; Desktop staging also accepts the pair directly under <root>.
   copyFileSync(addon, path.join(path.dirname(native), "hugr_omni.node"))
   copyFileSync(supervisor, path.join(path.dirname(native), path.basename(supervisor)))
+  const treeRoot = path.join(logs, "tree-sitter-inputs")
+  const linuxInputs = win ? ["linux-x64-gnu", "linux-arm64-gnu"].map((target) => {
+    if (!process.env.RUNNER_TEMP) throw new Error("WSL_INPUT_HOSTED: RUNNER_TEMP required")
+    return importInputs(path.join(process.env.RUNNER_TEMP, `desktop-wsl-${target}`), target, path.dirname(native), treeRoot)
+  }) : []
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
-    at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
+    at, sourceHashes, sourcePin: source, linuxInputs, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
   // Hosted ARM Mac's default 2 GiB V8 limit cannot transform this actual server bundle (measured OOM).
   // Builder only: none of these options reach the app fixture's isolated environment.
-  const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=4096", ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: path.dirname(native) }
+  if (process.env.ORCHESTRA_CLI_PREBUILT_DIR) throw new Error("desktop smoke must compile every actual CLI target")
+  const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=4096", ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: path.dirname(native),
+    ...(win ? { TREE_SITTER_ARTIFACTS: treeRoot } : {}) }
   await command([process.execPath, "scripts/prebuild.ts"], env)
+  const staged = path.join(ROOT, "packages/desktop/resources/cli")
+  const cliManifest = await readCliManifest(staged)
+  const cliTargets = desktopCliTargets(process.platform, process.arch)
+  if (cliManifest.artifacts.length !== cliTargets.length || !cliTargets.every((target) => cliManifest.artifacts.some((item) => item.target === target))) throw new Error("desktop CLI target inventory differs from original API target list")
+  await Promise.all(cliTargets.map((target) => verifyCliArtifact(staged, target)))
+  const cliHashes = inventory(staged)
+  const compiledCliHashes = Object.fromEntries(cliTargets.map((target) => {
+    const bin = path.join(ROOT, "packages/cli/dist", `cli-${target}`, "bin")
+    const entry = cliManifest.artifacts.find((item) => item.target === target)!
+    const compiled = digest(path.join(bin, target.startsWith("windows-") ? "orchestra.exe" : "orchestra"))
+    // macOS staging ad-hoc signs its executable; unsigned Windows/Linux staging must preserve compiled bytes.
+    if (process.platform !== "darwin" && compiled !== entry.sha256) throw new Error(`compiled/staged CLI byte mismatch: ${target}`)
+    matchInventory(inventory(path.join(staged, `tree-sitter-${target}`)), inventory(path.join(bin, "tree-sitter")))
+    requireTreeSitterBundle(path.join(staged, `tree-sitter-${target}`), cliTreeSitterTarget(target))
+    if (win && target.startsWith("linux-")) {
+      const descriptor = linuxInputs.find((item) => item.target === (target === "linux-arm64" ? "linux-arm64-gnu" : "linux-x64-gnu"))!
+      matchInventory(inventory(path.join(staged, `omni-${target}`)), Object.fromEntries(["hugr_omni.node", "hugr-omni-supervisor"].map((file) => {
+        if (digest(path.join(bin, file)) !== descriptor.files[`omni/${file}`]) throw new Error(`compiled CLI native input mismatch: ${target}/${file}`)
+        return [file, descriptor.files[`omni/${file}`]!]
+      })))
+      matchInventory(inventory(path.join(staged, `tree-sitter-${target}`)), Object.fromEntries(Object.entries(descriptor.files).filter(([file]) => file.startsWith("tree-sitter/")).map(([file, hash]) => [file.slice(12), hash])))
+    }
+    return [target, compiled]
+  }))
   await command([process.execPath, "x", "electron-vite", "build"], env)
   await command([process.execPath, "x", "electron-builder", "--dir", process.platform === "darwin" ? "--mac" : win ? "--win" : "--linux", "--config", "test/omni-smoke/unsigned.config.ts"], env)
   const desktop = path.join(ROOT, "packages/desktop")
@@ -56,6 +92,9 @@ export async function build() {
   const resources = path.join(bundle, process.platform === "darwin" ? "Resources" : "resources")
   const executable = path.join(bundle, process.platform === "darwin" ? "MacOS/HuGR Orchestra Beta" : win ? "HuGR Orchestra Beta.exe" : "ai.hugr.orchestra.beta")
   if (!existsSync(executable) || digest(path.join(resources, "omni/hugr_omni.node")) !== digest(addon) || digest(path.join(resources, "omni", path.basename(supervisor))) !== digest(supervisor)) throw new Error("packaged Resources/omni differs from release inputs")
+  matchInventory(inventory(path.join(resources, "cli")), cliHashes)
+  matchInventory(inventory(staged), cliHashes)
+  await Promise.all(cliTargets.map((target) => verifyCliArtifact(path.join(resources, "cli"), target)))
   const require = createRequire(createRequire(import.meta.url).resolve("electron-builder"))
   const asar = require("@electron/asar") as { extractFile(archive: string, file: string): Buffer }
   const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)])
@@ -69,10 +108,11 @@ export async function build() {
     return [relative, packaged]
   }))
   if (files.some((file) => digest(path.join(ROOT, file)) !== sourceHashes[file])) throw new Error("tracked source changed during actual app build")
+  sourcePin()
   const manifest = { base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
-    at, completedAt: new Date().toISOString(), run: process.env.GITHUB_RUN_ID, os: process.platform, arch: process.arch, platform,
+    at, completedAt: new Date().toISOString(), run: process.env.GITHUB_RUN_ID, attempt: process.env.GITHUB_RUN_ATTEMPT, locks: source.locks, os: process.platform, arch: process.arch, platform,
     executable, resources, executableSha256: digest(executable), archiveSha256: digest(path.join(resources, "app.asar")), bundleHashes,
-    sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor),
+    sourceHashes, cliManifest, cliHashes, compiledCliHashes, linuxInputs, addonSha256: digest(addon), supervisorSha256: digest(supervisor),
     scope: "unsigned actual electron-builder --dir app; signing/notarization unproved (no owner keys); not published", nativeProvenance: "omni-binaries exact-source cache key; release build on miss" }
   writeFileSync(path.join(logs, "build.json"), JSON.stringify(manifest, null, 2))
   console.log("DESKTOP_BUILD " + JSON.stringify({ ...manifest, sourceHashes: undefined, bundleHashes: undefined }))
@@ -82,6 +122,10 @@ export async function build() {
 export function provenance() {
   const manifest = JSON.parse(readFileSync(path.join(logs, "build.json"), "utf8")) as Awaited<ReturnType<typeof build>>
   if (manifest.sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || digest(manifest.executable) !== manifest.executableSha256 || digest(path.join(manifest.resources, "app.asar")) !== manifest.archiveSha256 || digest(path.join(manifest.resources, "omni/hugr_omni.node")) !== manifest.addonSha256 || digest(path.join(manifest.resources, "omni", win ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor")) !== manifest.supervisorSha256) throw new Error("actual app provenance mismatch")
+  const source = sourcePin()
+  if (manifest.sourceTree !== source.sourceTree || manifest.run !== source.run || manifest.attempt !== source.attempt) throw new Error("actual app source/run/attempt provenance mismatch")
+  matchInventory(manifest.locks, source.locks, "WSL_INPUT_LOCK")
+  matchInventory(inventory(path.join(manifest.resources, "cli")), manifest.cliHashes)
   return manifest
 }
 

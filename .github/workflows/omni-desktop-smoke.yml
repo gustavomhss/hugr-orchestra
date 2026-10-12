@@ -1,6 +1,8 @@
 name: omni-desktop-smoke
 
 # Extension: original allTrees3 plus actual Electron main/utility kill and app.quit cells.
+# Repair: Windows still compiles/stages all three CLI targets; native same-run GNU inputs close its missing inputs.
+# Extension: source/lock/run custody, real-payload mutation controls and complete packaged CLI byte inventories.
 # Only this closeout child PR triggers hosted unsigned --dir packaging. No publishing/signing claims.
 on:
   workflow_dispatch:
@@ -19,8 +21,81 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  DESKTOP_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
+  linux-inputs:
+    name: native Windows guest inputs (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: linux-x64-gnu, host: linux-x64, arch: x64, os: ubuntu-24.04 }
+          - { target: linux-arm64-gnu, host: linux-arm64, arch: arm64, os: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact source S
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Setup Node for native exporter
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Setup Bun before source pin (no install)
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      - name: Pin clean source tree and locks before provisioning
+        run: bun packages/desktop/test/omni-smoke/wsl-inputs.ts begin
+      - name: Frozen native dependencies without lifecycle scripts
+        run: |
+          ls .
+          bun install --frozen-lockfile --ignore-scripts
+      - name: Setup release Zig
+        uses: mlugg/setup-zig@v2
+      - name: Setup cargo-zigbuild
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+      - name: Build native release pair through canonical producer
+        env:
+          HUGR_PROOF_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          bun packages/desktop/test/omni-smoke/wsl-inputs.ts assert
+          node packages/omni/scripts/build-artifacts.mjs "${{ matrix.target }}" --out "$RUNNER_TEMP/desktop-native"
+      - name: Export tree-sitter on matching native host
+        run: bun packages/script/src/tree-sitter-prebuilds.ts linux "${{ matrix.arch }}" --out "$RUNNER_TEMP/desktop-tree-sitter"
+      - name: Seal immutable complete payload and recheck clean source
+        run: |
+          bun packages/desktop/test/omni-smoke/wsl-inputs.ts seal "${{ matrix.target }}" "$RUNNER_TEMP/desktop-native/${{ matrix.target }}" "$RUNNER_TEMP/desktop-tree-sitter/${{ matrix.host }}" "$RUNNER_TEMP/desktop-wsl-input"
+          bun packages/desktop/test/omni-smoke/wsl-inputs.ts assert
+      - name: Upload only this source and run/attempt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-wsl-${{ matrix.target }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/desktop-wsl-input/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve producer source pins
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-wsl-source-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/desktop/.omni-desktop-evidence/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   smoke:
+    needs: linux-inputs
     name: actual packaged desktop (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -40,19 +115,46 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Bun before source pin (no install)
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
 
       - name: Initialize exact source evidence
-        run: |
-          mkdir -p packages/desktop/.omni-desktop-evidence
-          git rev-parse HEAD > packages/desktop/.omni-desktop-evidence/source-sha.txt
+        run: bun packages/desktop/test/omni-smoke/wsl-inputs.ts begin
+
+      - name: Verify dependency install parent
+        run: ls .
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
         with:
-          install-flags: --frozen-lockfile
+          install-flags: ${{ runner.os == 'Windows' && '--frozen-lockfile --os="*" --cpu="*"' || '--frozen-lockfile' }}
 
       - name: Exact-source release omni binaries
         uses: ./.github/actions/omni-binaries
+
+      - name: Download same-run GNU x64 inputs
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-wsl-linux-x64-gnu-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/desktop-wsl-linux-x64-gnu
+
+      - name: Download same-run GNU ARM64 inputs
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: desktop-wsl-linux-arm64-gnu-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/desktop-wsl-linux-arm64-gnu
+
+      - name: Hosted fail-closed custody controls on both real input inventories
+        if: runner.os == 'Windows'
+        run: |
+          bun packages/desktop/test/omni-smoke/wsl-inputs.ts controls linux-x64-gnu "$RUNNER_TEMP/desktop-wsl-linux-x64-gnu"
+          bun packages/desktop/test/omni-smoke/wsl-inputs.ts controls linux-arm64-gnu "$RUNNER_TEMP/desktop-wsl-linux-arm64-gnu"
 
       - name: Linux GUI display capability
         if: runner.os == 'Linux'
@@ -79,7 +181,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: omni-desktop-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}
+          name: omni-desktop-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: packages/desktop/.omni-desktop-evidence/
           include-hidden-files: true
           if-no-files-found: error
