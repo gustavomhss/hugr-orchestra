@@ -17,6 +17,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Wildcard } from "@orchestra/core/util/wildcard"
 import { Database } from "@orchestra/core/database/database"
 import { Shell } from "@orchestra/core/shell"
 import { Agent } from "@/agent/agent"
@@ -193,8 +194,16 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
     return {
       sessionID: actor.sessionID, messageID, callID: toolUseID, agent: actor.seat, agentID: actor.seat, abort: input.abort,
       messages: [], extra: { claudeCode: true }, metadata: () => Effect.void,
-      ask: (request) => permission.ask({ ...request, sessionID: actor.sessionID, ruleset,
-        ...(part ? { tool: { messageID, callID: toolUseID } } : {}) }).pipe(Effect.orDie),
+      ask: (request) => {
+        const windows = process.platform === "win32" && request.permission === "external_directory"
+        // Keep the original request and rules: canonical-only lookup loses short-name denies and lexical alias
+        // policy. Add native equivalents on both sides, but never mint an equivalent allow or an always grant.
+        return permission.ask({ ...request, sessionID: actor.sessionID,
+          patterns: windows ? [...new Set(request.patterns.flatMap((pattern) => [pattern, windowsPattern(pattern)]))] : request.patterns,
+          ruleset: windows ? ruleset.flatMap((rule) => rule.action === "deny" && Wildcard.match(request.permission, rule.permission)
+            ? [rule, { ...rule, pattern: windowsPattern(rule.pattern) }] : [rule]) : ruleset,
+          ...(part ? { tool: { messageID, callID: toolUseID } } : {}) }).pipe(Effect.orDie)
+      },
     } satisfies Tool.Context
   })
 
@@ -284,8 +293,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         const worktree = yield* fs.realPath(projectDirectory)
         const targets = [...new Set([filepath, physical])]
         const directory = name === "Read" && (yield* fs.stat(physical)).type === "Directory"
-        // Use the same realPath API for targets and roots. Re-normalizing with realpathSync.native on Windows
-        // can expand an 8.3 spelling differently from the permission pattern and silently miss its deny.
+        // Resolve containment with one API; context.ask also checks Windows native spellings against deny rules.
         const roots = [instance.directory, projectDirectory]
         const physicalRoots = [yield* fs.realPath(instance.directory), worktree]
         const external = [...new Set([
@@ -327,6 +335,22 @@ function quote(word: string) {
 function text(input: Input, key: string) {
   const value = input[key]
   return typeof value === "string" ? value : undefined
+}
+
+// Wildcard's only metacharacters are * and ?. Normalize the literal directory prefix, leaving its glob intact.
+// FSUtil is the shared native Windows permission canonicalizer; missing descendants need an existing ancestor.
+function windowsPattern(pattern: string) {
+  const lexical = FSUtil.windowsPath(pattern).replaceAll("\\", "/")
+  if (!path.win32.isAbsolute(lexical)) return pattern
+  const token = lexical.search(/[*?]/)
+  const boundary = token < 0 ? lexical.length : lexical.lastIndexOf("/", token) + 1
+  return path.join(nativePath(path.resolve(lexical.slice(0, boundary))), lexical.slice(boundary)).replaceAll("\\", "/")
+}
+
+function nativePath(target: string): string {
+  const normalized = FSUtil.normalizePath(target)
+  if (normalized !== target || path.dirname(target) === target) return normalized
+  return path.join(nativePath(path.dirname(target)), path.basename(target))
 }
 
 // Only new Write paths may be absent. Existing aliases and parents must resolve physically; other failures deny.

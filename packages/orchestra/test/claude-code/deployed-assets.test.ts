@@ -6,6 +6,7 @@ import { Effect, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { Omni } from "@orchestra/core/omni"
 import { ClaudeCodeExecutable } from "@/claude-code/executable"
 import { PlaybookContent } from "@/maestro/playbook-content"
 import { seatSkillsFiles } from "../../script/seat-skills"
@@ -61,7 +62,9 @@ test.each(["bun", "node"] as const)(
       if (!built.success) throw new Error("Deployed proof fixture build failed: " + built.logs.join("\\n"));
     `)
     expectSpawn(import.meta.path)
+    const compilerSpawns = Omni.snapshot().spawns
     const built = await run(ChildProcess.make(process.execPath, [path.join(builder.path, "build.ts"), path.join(builder.path, "config.json")], { cwd: packageRoot }))
+    expect(Omni.snapshot().spawns).toBeGreaterThan(compilerSpawns)
     if (built.exit !== 0) throw new Error(`Deployed proof fixture build failed (${target}): ${built.stderr}`)
     expect(await Bun.file(outfile).exists()).toBe(true)
     if (target === "node") {
@@ -102,7 +105,9 @@ test.each(["bun", "node"] as const)(
       stdout: "pipe",
       stderr: "pipe",
     })
+    const deployedSpawns = Omni.snapshot().spawns
     const proof = await run(command(target === "bun" ? outfile : "node", target === "bun" ? [] : [outfile]))
+    expect(Omni.snapshot().spawns).toBeGreaterThan(deployedSpawns)
     if (proof.exit !== 0) throw new Error(`Deployed asset proof failed (${target}): ${proof.stderr}`)
     const evidence = JSON.parse(proof.stdout) as { executable: string; files: Record<string, string> }
     expect(evidence.executable).toBe(
@@ -110,7 +115,9 @@ test.each(["bun", "node"] as const)(
     )
     expect(evidence.files).toEqual(authored)
     expect(Object.keys(evidence.files).toSorted()).toEqual(PlaybookContent.files)
+    const versionSpawns = Omni.snapshot().spawns
     const version = await run(command(evidence.executable, ["--version"]))
+    expect(Omni.snapshot().spawns).toBeGreaterThan(versionSpawns)
     expect(version.exit).toBe(0)
     expect(version.stdout.trim()).toBe(`${ClaudeCodeExecutable.CODE_VERSION} (Claude Code)`)
   },

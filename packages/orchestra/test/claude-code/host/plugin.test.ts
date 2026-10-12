@@ -5,6 +5,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Npm } from "@orchestra/core/npm"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { Omni } from "@orchestra/core/omni"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -139,7 +140,9 @@ const spawnPublisher = Effect.fnUntraced(function* (command: ChildProcess.Comman
     Scope.close(scope, Exit.void).pipe(Effect.interruptible),
     "publisher scope cleanup did not finish", "5 seconds",
   ).pipe(Effect.orDie))
+  const before = Omni.snapshot().spawns
   const child = yield* spawner.spawn(command).pipe(Effect.provideService(Scope.Scope, scope))
+  expect(Omni.snapshot().spawns).toBeGreaterThan(before)
   yield* Effect.addFinalizer(() => Effect.gen(function* () {
     if (yield* child.isRunning) yield* awaitWithTimeout(
       child.kill({ killSignal: "SIGKILL" }).pipe(Effect.interruptible),

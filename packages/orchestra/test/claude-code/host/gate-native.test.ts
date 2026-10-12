@@ -1,5 +1,6 @@
 import { describe, expect } from "bun:test"
 import fs from "node:fs/promises"
+import { realpathSync } from "node:fs"
 import path from "node:path"
 import { Deferred, Effect, Exit, Fiber, FileSystem } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -266,8 +267,11 @@ describe("native gate real policy", () => {
       const pending = yield* Effect.forkScoped(f.decide(call.name, { file_path: call.file, content: "harmless" }))
       const request = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.sessionID === f.session.id))), "external permission never asked")
       expect(request.permission).toBe("external_directory")
-      expect(request.patterns).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
-      expect(request.always).toEqual(request.patterns)
+      expect(request.patterns).toEqual([...new Set([
+        path.join(call.parent, "*").replaceAll("\\", "/"),
+        ...(process.platform === "win32" ? [path.join(realpathSync.native(outside), path.relative(outside, call.parent), "*").replaceAll("\\", "/")] : []),
+      ])])
+      expect(request.always).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
       expect(request.metadata).toEqual({ filepath: call.physical, parentDir: call.parent })
       yield* permission.reply({ requestID: request.id, reply: "reject" })
       expect((yield* Fiber.join(pending)).allow).toBe(false)
@@ -276,6 +280,64 @@ describe("native gate real policy", () => {
     expect(yield* f.filesystem.exists(path.join(outside, "new"))).toBe(false)
     expect(yield* f.filesystem.readFileString(path.join(outside, "sentinel.txt"))).toBe("outside sentinel")
   }), { git: true })
+
+  const windows = process.platform === "win32" ? it.instance : it.instance.skip
+  windows("external denies check opposite real Windows short/long spellings without widening grants", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const outside = yield* f.filesystem.makeTempDirectoryScoped({ prefix: "native gate real aliases-" })
+    yield* f.filesystem.ensureDir(path.join(outside, "private directory"))
+    const long = realpathSync.native(path.join(outside, "private directory"))
+    yield* f.filesystem.writeFileString(path.join(long, "sentinel.txt"), "outside sentinel")
+    const source = yield* tmpdirScoped()
+    yield* f.filesystem.writeFileString(path.join(source, "short-path.ps1"), `
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+Add-Type -TypeDefinition 'using System; using System.Text; using System.Runtime.InteropServices; public static class NativePaths { [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern uint GetShortPathName(string path, StringBuilder buffer, uint size); }'
+$buffer = [System.Text.StringBuilder]::new(32768)
+$size = [NativePaths]::GetShortPathName($args[0], $buffer, 32768)
+if ($size -eq 0 -or $size -ge 32768) { throw "GetShortPathName failed" }
+[Console]::Write($buffer.ToString())
+`)
+    const processes = yield* AppProcess.Service
+    expectSpawn(import.meta.path)
+    const result = yield* processes.run(ChildProcess.make("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive",
+      "-File", path.join(source, "short-path.ps1"), long]))
+    expect(result.exitCode).toBe(0)
+    const short = result.stdout.toString().trim()
+    expect(realpathSync.native(short)).toBe(long)
+    expect(yield* f.filesystem.readFileString(path.join(short, "sentinel.txt"))).toBe("outside sentinel")
+    if (short.toLowerCase() === long.toLowerCase()) {
+      console.info("Windows 8.3 opposite-spelling controls not exercised: GetShortPathName returned no distinct alias")
+      return
+    }
+    console.info("Windows 8.3 permission control:", { short, long, effect: yield* f.filesystem.realPath(short), native: realpathSync.native(short) })
+    yield* Effect.promise(() => fs.symlink(short, path.join(f.directory, "local-alias"), "junction"))
+    yield* f.filesystem.ensureDir(`${long}-peer`)
+    yield* f.filesystem.writeFileString(path.join(`${long}-peer`, "sentinel.txt"), "permitted peer")
+    for (const pair of [{ denied: long, requested: short }, { denied: short, requested: long }]) {
+      const rules: PermissionV1.Ruleset = [
+        { permission: "*", pattern: "*", action: "allow" },
+        { permission: "external_directory", pattern: path.join(pair.denied, "*").replaceAll("\\", "/"), action: "deny" },
+      ]
+      yield* f.sessions.setPermission({ sessionID: f.session.id, permission: rules })
+      refused(yield* f.decide("Read", { file_path: pair.requested }), "rule which prevents")
+      refused(yield* f.decide("Read", { file_path: path.join(pair.requested, "sentinel.txt") }), "rule which prevents")
+      refused(yield* f.decide("Write", { file_path: path.join(pair.requested, "new/deep/file.txt"), content: "harmless" }), "rule which prevents")
+      refused(yield* f.decide("Read", { file_path: "local-alias/sentinel.txt" }), "rule which prevents")
+      expect(yield* f.decide("Read", { file_path: path.join(`${long}-peer`, "sentinel.txt") })).toEqual({ allow: true })
+      expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
+      expect((yield* f.sessions.get(f.session.id)).permission).toEqual(rules)
+    }
+    const alias = path.join(outside, "blocked-alias")
+    yield* Effect.promise(() => fs.symlink(`${long}-peer`, alias, "junction"))
+    yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [
+      { permission: "*", pattern: "*", action: "allow" },
+      { permission: "external_directory", pattern: path.join(outside, "blocked-*", "*").replaceAll("\\", "/"), action: "deny" },
+    ] })
+    refused(yield* f.decide("Read", { file_path: path.join(alias, "sentinel.txt") }), "rule which prevents")
+    expect(yield* f.decide("Read", { file_path: path.join(`${long}-peer`, "sentinel.txt") })).toEqual({ allow: true })
+    expect(yield* f.filesystem.exists(path.join(long, "new"))).toBe(false)
+    expect(yield* f.filesystem.readFileString(path.join(long, "sentinel.txt"))).toBe("outside sentinel")
+  }), { git: true }, 60_000)
 
   it.instance("new Write targets resolve existing directory aliases for edit patterns", () => Effect.gen(function* () {
     const f = yield* fixture([{ permission: "edit", pattern: "protected/*", action: "deny" }])
