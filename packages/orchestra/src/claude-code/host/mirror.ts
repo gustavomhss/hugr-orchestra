@@ -69,12 +69,16 @@ export function toolMetadata(name: string, structured: unknown, output: string, 
   if (!ClaudeCodeTranscript.record(structured)) return {}
   if (name === "Bash") {
     // BashOutput has no numeric exit code: a failed call reports it in its text (13-ui-inventory.md §5.1, spike S1).
-    const exit = failed ? Number(/exit code (\d+)/i.exec(output)?.[1] ?? 1) : 0
-    return { exit, truncated: structured.persistedOutputPath !== undefined, outputPath: structured.persistedOutputPath,
+    const terminal = failed ? /exit code (\d+)/i.exec(output) : null
+    const launched = structured.backgroundTaskId !== undefined || structured.timedOutAfterMs !== undefined || structured.backgroundedByUser === true
+    const exit = terminal ? Number(terminal[1]) : launched || structured.interrupted === true ? undefined : failed ? 1 : 0
+    return { exit, status: exit === undefined ? launched ? "launched" : "interrupted" : "completed", truncated: structured.persistedOutputPath !== undefined, outputPath: structured.persistedOutputPath,
       timeout: structured.timedOutAfterMs !== undefined, aborted: structured.interrupted === true,
-      timedOutAfterMs: structured.timedOutAfterMs, interrupted: structured.interrupted,
+      timedOutAfterMs: structured.timedOutAfterMs, interrupted: structured.interrupted, backgroundedByUser: structured.backgroundedByUser,
       ...(structured.backgroundTaskId ? { backgroundTaskId: structured.backgroundTaskId } : {}) }
   }
+  if (name === "Edit" && structured.staged === true)
+    return { filepath: structured.filePath, staged: true }
   if (name === "Edit" || name === "Write") {
     const before = text(structured.originalFile) ?? ""
     const after = name === "Write" ? text(structured.content) ?? "" : replace(before, structured)
@@ -82,7 +86,7 @@ export function toolMetadata(name: string, structured: unknown, output: string, 
     const additions = typeof diff?.additions === "number" ? diff.additions : count(structured.structuredPatch, "+")
     const deletions = typeof diff?.deletions === "number" ? diff.deletions : count(structured.structuredPatch, "-")
     const file = text(structured.filePath) ?? ""
-    return { filepath: file, exists: structured.originalFile !== null, diff: text(diff?.patch) ?? "", diagnostics: {},
+    return { ...(name === "Edit" ? { staged: structured.staged === true } : {}), filepath: file, exists: structured.originalFile !== null, diff: text(diff?.patch) ?? "", diagnostics: {},
       filediff: { file, before, after, additions, deletions } }
   }
   if (name === "Glob") return { count: structured.numFiles, truncated: structured.truncated === true }
@@ -94,7 +98,7 @@ export function toolMetadata(name: string, structured: unknown, output: string, 
   }
   if (name === "Agent" || name === "Task")
     return { claudeCodeAgent: Object.fromEntries(["agentId", "agentType", "status", "totalTokens", "totalDurationMs",
-      "totalToolUseCount", "resolvedModel", "worktreePath", "outputFile"].flatMap((key) => structured[key] === undefined ? [] : [[key, structured[key]]])) }
+      "totalToolUseCount", "resolvedModel", "usage", "worktreePath", "outputFile"].flatMap((key) => structured[key] === undefined ? [] : [[key, structured[key]]])) }
   return {}
 }
 
@@ -169,7 +173,7 @@ export function create(input: {
   const known: NonNullable<typeof input.known> = input.known ?? { calls: new Map<string, Mirror>(), tasks: new Map<string, string>() }
   const modelUsage = known.usage ??= new Map<string, ModelUsage>()
   const views = [view(input.user)]
-  const children = new Map<string, { mirror: Mirror } | undefined>()
+  const children = new Map<string, { mirror: Mirror; sessionID: SessionID } | undefined>()
   const raw = new Map<string, string>()
   const sends = new Map<string, SessionV1.User>()
   const pending = new Map<MessageID, { user: SessionV1.User; uuid?: string }>()
@@ -215,7 +219,7 @@ export function create(input: {
     const resolved = part && input.child ? yield* input.child(part) : undefined
     if (!resolved) return undefined
     const mirror = create({ ...input, known, sessionID: resolved.sessionID, user: resolved.user, agent: resolved.agent, state: undefined, record: undefined })
-    children.set(callID, { mirror })
+    children.set(callID, { mirror, sessionID: resolved.sessionID })
     return mirror
   })
   /** The mirror that owns `callID`: this one, a seat below it, or an earlier turn's. */
@@ -344,7 +348,19 @@ export function create(input: {
         if ((name === "TodoWrite" || ClaudeHostTodos.TOOLS.includes(name)) && Array.isArray(metadata.todos))
           yield* input.todo.update({ sessionID, todos: metadata.todos as Todos })
         if ((name === "Agent" || name === "Task") && ClaudeCodeTranscript.record(message.tool_use_result) &&
-          message.tool_use_result.status === "completed") yield* self.settle(block.tool_use_id)
+          message.tool_use_result.status === "completed") {
+          yield* childOf(block.tool_use_id)
+          const child = children.get(block.tool_use_id)
+          if (child && ClaudeCodeTranscript.record(message.tool_use_result.usage)) {
+            const latest = yield* sessions.get(child.sessionID).pipe(Effect.orDie)
+            // AgentOutput usage is a correlated child total, not an individual parent or child message.
+            yield* sessions.setMetadata({ sessionID: child.sessionID, metadata: { ...latest.metadata,
+              claudeCode: { ...(latest.metadata?.claudeCode ?? {}), agentOutput: { callID: block.tool_use_id,
+                agentId: message.tool_use_result.agentId, resolvedModel: message.tool_use_result.resolvedModel,
+                usage: message.tool_use_result.usage } } } })
+          }
+          yield* self.settle(block.tool_use_id)
+        }
       }
     }),
 
@@ -392,8 +408,7 @@ export function create(input: {
     const provider = providers?.[providerID] ?? (catalog?.[providerID] ? Provider.fromModelsDevProvider(catalog[providerID]) : undefined)
     for (const [id, usage] of Object.entries(models)) {
       // modelUsage is cumulative across the live query; preserve the baseline across mirrors and turns.
-      let remaining = Math.max(0, (usage.thinkingTokens ?? 0) - (modelUsage.get(id)?.thinkingTokens ?? 0))
-      for (const item of [...views].reverse()) remaining = yield* item.reasoning(id, remaining, usage.canonicalModel)
+      // Query totals include children and internal compaction; they cannot identify a parent message.
       modelUsage.set(id, usage)
       if (!provider || !providers) continue
       const catalogModel = provider.models[id] ?? Object.values(provider.models).find((item) =>
