@@ -11,6 +11,15 @@ import { installCliArtifact } from "../src/main/cli-install"
 import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
 import { verifyPackagedCli } from "./cli-packaging"
 
+// Every test here creates, copies and deletes tens to hundreds of small files, and windows-latest stalls file I/O. In
+// instrumented Windows runs (test-ci 38284863937, 38285164351, 38285411114, 38285164170) a test's slow time was spent
+// off-CPU: 0.9 s wall for 0.09 s CPU, with one synchronous copy or mkdir in staging blocking up to 0.8 s; inside the
+// whole desktop suite, 2.6 s wall for 0.4 s CPU. In 43 full test.yml lanes (2026-10-11/12) a test ran up to 17.8x its
+// own median, the slowest median is 0.7 s, and two lanes timed out at Bun's 5 s default. 30 s is twice that worst
+// slowdown of the slowest test. No test waits on a clock or another process except the build-helper child, which has
+// its own 15 s limit, so a hang still fails, after 30 s.
+const STAGING_TIMEOUT = 30_000
+
 const roots: string[] = []
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
@@ -53,7 +62,7 @@ test("staging hashes signed bytes, preserves target/version and replaces stale r
   expect(await readFile((await verifyCliArtifact(input.directory, input.targets[0]!)).path, "utf8")).toBe(
     `owned ${input.targets[0]}`,
   )
-})
+}, STAGING_TIMEOUT)
 
 test("staging rejects unexpected W2 output/version and preserves previous manifest", async () => {
   const input = await fixture()
@@ -69,7 +78,7 @@ test("staging rejects unexpected W2 output/version and preserves previous manife
   await rm(join(input.dist, `cli-${input.targets[0]}`, "bin", "orchestra"))
   await expect(stageCliArtifacts(input)).rejects.toThrow()
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
 
 test("Windows staging carries both Linux WSL architectures", async () => {
   const targets = desktopCliTargets("win32", "arm64")
@@ -78,7 +87,7 @@ test("Windows staging carries both Linux WSL architectures", async () => {
   await stageCliArtifacts(input)
   expect((await readCliManifest(input.directory)).artifacts.map((entry) => entry.target)).toEqual(targets)
   await Promise.all(targets.map((target) => verifyCliArtifact(input.directory, target)))
-})
+}, STAGING_TIMEOUT)
 
 test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and refuses a partial bundle", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -116,7 +125,7 @@ test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and re
     "orchestra-linux-x64-baseline",
     "tree-sitter-linux-x64-baseline",
   ])
-})
+}, STAGING_TIMEOUT)
 
 test("prebuilt handoff carries the omni pair and refuses a producer without it", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -131,7 +140,7 @@ test("prebuilt handoff carries the omni pair and refuses a producer without it",
   await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toBeInstanceOf(
     WslOmniPairMissingError,
   )
-})
+}, STAGING_TIMEOUT)
 
 test("WSL install accepts the staged Windows bundle end to end through the real artifact reader", async () => {
   // Like the real omni CLI preflight, the guest binary exits early unless the pair sits next to it.
@@ -183,7 +192,7 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   expect(await sha(join(home, ".orchestra/bin/tree-sitter", binding))).toBe(
     await sha(join(input.directory, "tree-sitter-linux-x64-baseline", binding)),
   )
-})
+}, STAGING_TIMEOUT)
 
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -214,7 +223,7 @@ test("prebuilt handoff verifies producer bytes before native signing and preserv
   await writeFile(guest.path, "changed in transit")
   await expect(stageCliArtifacts(received)).rejects.toThrow("digest")
   expect(await readFile(join(received.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
 
 test("build helper uses explicit or environment prebuilt input without compiler fallback", async () => {
   const input = await fixture()
@@ -235,7 +244,7 @@ test("build helper uses explicit or environment prebuilt input without compiler 
     if (code !== 0) throw new Error(`Prebuilt helper child failed: ${stderr}`)
     expect(stdout.trim()).toBe("Invalid CLI manifest schema/version/artifacts")
   }))
-})
+}, STAGING_TIMEOUT)
 
 test("prebuilt source/output overlap is rejected before signing or replacing producer", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -263,7 +272,7 @@ test("prebuilt source/output overlap is rejected before signing or replacing pro
   await expect(stageCliArtifacts({ ...input, prebuilt: input.directory, directory: `${input.directory}\\..\\consumer` })).rejects.toThrow("ambiguous traversal")
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
   expect(signed).toEqual([])
-})
+}, STAGING_TIMEOUT)
 
 test("installed cache checks bytes, repairs tampering, rejects tampered source", async () => {
   const input = await fixture()
@@ -278,7 +287,7 @@ test("installed cache checks bytes, repairs tampering, rejects tampered source",
   await writeFile(bundled.path, "foreign source")
   await expect(installCliArtifact(input.directory, input.targets[0]!, cache)).rejects.toThrow("digest")
   expect(await readFile(first.path, "utf8")).toBe(`owned ${input.targets[0]}`)
-})
+}, STAGING_TIMEOUT)
 
 test("every CLI target carries its tree-sitter through staging, handoff, packaging and install, or stops by name", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -316,7 +325,7 @@ test("every CLI target carries its tree-sitter through staging, handoff, packagi
   await rm(index)
   await installCliArtifact(received.directory, "windows-x64-baseline", cache)
   expect(await readFile(index, "utf8")).toBe("tree-sitter/index.js windows-x64-baseline")
-})
+}, STAGING_TIMEOUT)
 
 test("packaging verifies effective root version and all Windows guest bytes", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -329,14 +338,14 @@ test("packaging verifies effective root version and all Windows guest bytes", as
   const native = await fixture(["windows-x64-baseline"])
   await stageCliArtifacts(native)
   await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version)).rejects.toThrow("missing")
-})
+}, STAGING_TIMEOUT)
 
 test("staging rejects empty, duplicate and traversal targets before touching output", async () => {
   const input = await fixture()
   await expect(stageCliArtifacts({ ...input, targets: [] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: ["../foreign"] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: [...input.targets, ...input.targets] })).rejects.toThrow("target")
-})
+}, STAGING_TIMEOUT)
 
 test("staging rejects symlink output directories and keeps previous resources", async () => {
   const input = await fixture()
@@ -347,4 +356,4 @@ test("staging rejects symlink output directories and keeps previous resources", 
   await symlink(join(input.root, "foreign-bin"), binaryDirectory, process.platform === "win32" ? "junction" : "dir")
   await expect(stageCliArtifacts(input)).rejects.toThrow("regular")
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
