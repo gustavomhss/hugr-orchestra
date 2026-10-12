@@ -52,6 +52,22 @@ jobs:
           tool: cargo-zigbuild
       - name: Existing native producer and detecting controls
         run: node scripts/build-artifacts.mjs ${{ matrix.target }} && HUGR_PROOF_REAL=true node --test scripts/artifacts.node-smoke.mjs
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+      - name: Compile guest CLI on its own CPU
+        working-directory: .
+        run: |
+          bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+          target=$([ "${{ matrix.target }}" = linux-arm64-gnu ] && echo linux-arm64 || echo linux-x64-baseline)
+          export OMNI_ARTIFACTS="$PWD/packages/omni/dist/omni" ORCHESTRA_VERSION=1.18.27 ORCHESTRA_CHANNEL=beta
+          bun packages/cli/script/build.ts --target "$target" --skip-install
+          TARGET="$target" bun -e 'import{stageCliArtifacts}from"./packages/desktop/scripts/cli-staging";await stageCliArtifacts({dist:"packages/cli/dist",directory:`packages/desktop/.guest-cli-${process.env.TARGET}`,version:"1.18.27",targets:[process.env.TARGET]})'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-data-cli-${{ matrix.target }}
+          path: packages/desktop/${{ matrix.target == 'linux-arm64-gnu' && '.guest-cli-linux-arm64' || '.guest-cli-linux-x64-baseline' }}/
+          if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-data-omni-${{ matrix.target }}
@@ -94,6 +110,11 @@ jobs:
         with:
           pattern: tree-sitter-linux-*
           path: packages/desktop/.desktop-guest-inputs/tree-sitter
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: runner.os == 'Windows'
+        with:
+          pattern: desktop-data-cli-*
+          path: packages/desktop/.desktop-guest-inputs/cli
       - name: Supply exact-source CLI input layout without modifying producer
         run: |
           bun -e 'import { cp, mkdir } from "node:fs/promises"; import path from "node:path";
@@ -107,6 +128,19 @@ jobs:
       - name: Typecheck scoped qualification
         working-directory: packages/desktop
         run: bun typecheck test/desktop-persistence/tsconfig.json
+      - name: Assemble verified native and guest CLI resources
+        if: runner.os == 'Windows'
+        env:
+          OMNI_ARTIFACTS: ${{ github.workspace }}/packages/desktop/.omni-desktop-evidence/native/win32-x64-msvc
+          ORCHESTRA_VERSION: "1.18.27"
+          ORCHESTRA_CHANNEL: beta
+        run: |
+          bun packages/cli/script/build.ts --target windows-x64-baseline --skip-install
+          bun -e 'import{stageCliArtifacts}from"./packages/desktop/scripts/cli-staging";import{readCliManifest,verifyCliArtifact}from"./packages/desktop/src/main/cli-artifacts";import{cp}from"node:fs/promises";import path from"node:path";
+          const out=path.resolve("packages/desktop/.desktop-guest-inputs/combined");await stageCliArtifacts({dist:"packages/cli/dist",directory:out,version:"1.18.27",targets:["windows-x64-baseline"]});const native=await readCliManifest(out);const entries=[...native.artifacts];
+          for(const id of["linux-x64-gnu","linux-arm64-gnu"]){const from=path.resolve("packages/desktop/.desktop-guest-inputs/cli",`desktop-data-cli-${id}`);const m=await readCliManifest(from);if(m.version!=="1.18.27"||m.artifacts.length!==1)throw Error("GUEST_CLI_MANIFEST_INVALID");for(const a of m.artifacts){await verifyCliArtifact(from,a.target);await cp(path.join(from,a.file),path.join(out,a.file));await cp(path.join(from,`tree-sitter-${a.target}`),path.join(out,`tree-sitter-${a.target}`),{recursive:true});await cp(path.join("packages/desktop/.desktop-guest-inputs/omni",`desktop-data-omni-${id}`),path.join(out,`omni-${a.target}`),{recursive:true});entries.push(a)}}await Bun.write(path.join(out,"manifest.json"),JSON.stringify({schema:1,version:"1.18.27",artifacts:entries}))'
+          value=$(bun -p 'require("node:path").resolve("packages/desktop/.desktop-guest-inputs/combined")')
+          echo "ORCHESTRA_CLI_PREBUILT_DIR=$value" >> "$GITHUB_ENV"
       - name: Build actual unsigned app
         working-directory: packages/desktop
         env:
@@ -128,6 +162,7 @@ jobs:
           code=$?
           set -e
           [ "$code" -ne 0 ] || { echo 'CORRUPT_BLOB_CONTROL_DID_NOT_FAIL'; exit 1; }
+          [ -s .desktop-persistence-evidence/control.json ] || { cat .desktop-persistence-evidence/control-error.txt; echo 'CONTROL_EVIDENCE_EMPTY_BEFORE_MUTATION'; exit 1; }
           bun -e 'const r=await Bun.file(".desktop-persistence-evidence/control.json").json(); const error=await Bun.file(".desktop-persistence-evidence/control-error.txt").text(); if(r.control!=="delete-blob"||r.seeded!==true||r.deleted!==true||r.detected!==true||r.cleanup!==true||r.reason!=="DRAFT_BLOB_LOST"||r.phases?.map(p=>p.phase).join(",")!=="seed,reopen-mutant"||error.trim()!=="DRAFT_BLOB_LOST") throw Error("CORRUPT_BLOB_CONTROL_INVALID"); if(await Bun.file(".desktop-persistence-evidence/result.json").exists()) throw Error("CONTROL_PUBLISHED_SUCCESS")'
       - name: Real renderer positive reopenings
         working-directory: packages/desktop
@@ -147,6 +182,8 @@ jobs:
             packages/desktop/.omni-desktop-evidence/build.json
             packages/desktop/.desktop-persistence-evidence/result.json
             packages/desktop/.desktop-persistence-evidence/control.json
+            packages/desktop/.desktop-persistence-evidence/control-error.txt
+            packages/desktop/.desktop-persistence-evidence/startup-failure.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
@@ -104,8 +104,24 @@ export async function run(control?: "delete-blob") {
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
+        const exited = { done: false }
+        void host.exited.then(() => { exited.done = true }, () => { exited.done = true })
         const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
-          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report : undefined)
+          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
+            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
+            mkdirSync(path.dirname(destination), { recursive: true })
+            const logs = path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")
+            const output = [host.output(), ...(existsSync(logs) ? readdirSync(logs, { withFileTypes: true })
+              .filter((entry) => entry.isFile() && entry.name.endsWith(".log"))
+              .map((entry) => readFileSync(path.join(logs, entry.name), "utf8").slice(-100000)) : [])]
+              .join("\n").replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
+              .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
+              .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
+            writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
+              sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), output,
+            }))
+            throw error
+          })
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
         assert.equal(report.nonce, nonce, "REPORT_NONCE_MISMATCH")
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
