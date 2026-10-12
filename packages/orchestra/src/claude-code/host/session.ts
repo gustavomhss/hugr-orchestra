@@ -58,6 +58,7 @@ import { ClaudeHostJoin } from "./join"
 import { ClaudeHostResearch } from "./research"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
@@ -158,6 +159,7 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const researchExecution = yield* ResearchExecution.Service
     const researchAllowance = yield* ResearchAllowance.Service
+    const researchRecords = yield* ResearchRecords.Service
     const bindings = yield* ArsenalBindings.make
     const lifecycle = yield* SessionLifecycle.Service
     const summary = yield* SessionSummary.Service
@@ -437,7 +439,7 @@ const layer = Layer.effect(
       const release = yield* IdleRelease
       // Retain private layer services and the real filesystem; HTTP callers can supply a noop filesystem.
       // Instance placement and request references still come from the caller.
-      const context = Context.merge(preparation, Context.omit(FileSystem.FileSystem)(yield* Effect.context<never>()))
+      const context = Context.add(Context.merge(preparation, Context.omit(FileSystem.FileSystem)(yield* Effect.context<never>())), ResearchRecords.Service, researchRecords)
       const abort = new AbortController()
       const fork = ClaudeCodeTranscript.record(input.state.forkFrom) ? input.state.forkFrom : undefined
       const resume = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId,
@@ -766,7 +768,7 @@ function answered(history: readonly SessionV1.WithParts[]) {
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [ResearchExecution.node, ResearchAllowance.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
+  deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
 })
