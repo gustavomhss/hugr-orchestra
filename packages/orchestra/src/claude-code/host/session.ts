@@ -624,7 +624,7 @@ const layer = Layer.effect(
       if (host.ended !== undefined) settle(host, { ok: false, message: host.ended })
       if (prompt) yield* Effect.forEach(prompts, (item) => send(host, turn.view, item.user, item.text, running ? "next" : undefined), { discard: true })
       const result = yield* Effect.promise(() => outcome).pipe(Effect.onInterrupt(() => stop(host)))
-      if (!result.ok) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
+      if (!result.ok && revision === (revisions.get(sessionID) ?? 0)) yield* turn.view.fail({ aborted: result.aborted === true, message: result.message })
       return true
     })
 
