@@ -27,7 +27,8 @@ env:
 jobs:
   # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
   # cancels jobs it cannot place. One epic run (this file plus typecheck, nix-eval, storybook and
-  # native) stays at 19 jobs including two Omni producers and one legacy rollback cell.
+  # native) stays at 20 jobs including two Omni producers, which finish before the unit shards
+  # start, and one legacy rollback cell.
   #
   # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
   # GitHub default is 6 hours.
@@ -187,13 +188,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows runs these files about 2.7x slower, so it gets one more shard than Linux.
+        # Measured test time on 2026-10-12 was 2215 s on Linux and 3918 s on Windows, where the same
+        # files vary by up to 40% between runs. Three Windows shards (~1306 s each) left no room under
+        # the 27-minute watchdog below, so Windows gets four (~980 s each).
         include:
           - { name: linux, host: ubuntu-latest, shard: 1, shards: 2 }
           - { name: linux, host: ubuntu-latest, shard: 2, shards: 2 }
-          - { name: windows, host: windows-latest, shard: 1, shards: 3 }
-          - { name: windows, host: windows-latest, shard: 2, shards: 3 }
-          - { name: windows, host: windows-latest, shard: 3, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 1, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 2, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 3, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 4, shards: 4 }
     runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:
