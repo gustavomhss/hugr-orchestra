@@ -4,6 +4,8 @@ import fs from "fs/promises"
 import path from "path"
 import { Cause, Context, Effect, Exit, Layer, Option } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+// filesystem.ts imports search.ts and search.ts imports it back; loading filesystem first keeps the app's order.
+import "@orchestra/core/filesystem"
 import { FileSystemSearch } from "@orchestra/core/filesystem/search"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
