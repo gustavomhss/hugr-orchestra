@@ -4,6 +4,7 @@ import { basename, dirname, isAbsolute, join, relative, sep } from "node:path"
 import { realpath } from "node:fs/promises"
 import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import {
+  cliRipgrepKey,
   copyCliRipgrep,
   copyCliTreeSitter,
   nativeCliTarget,
@@ -18,8 +19,7 @@ export function desktopCliTargets(platform: string, arch: string) {
 
 // A Windows build's Linux CLIs run in WSL guests. They are omni builds whose preflight needs this pair next to the
 // binary, so src/main/wsl/artifact.ts installs the pair from omni-<target>/ in the bundle (hashing those bytes) and
-// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin. Their rg comes
-// the same way, from ripgrep-<target>/ (dist/cli-<target>/bin/ripgrep), since a packaged CLI never downloads one.
+// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin.
 export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as const
 
 export class WslOmniPairMissingError extends Error {
@@ -48,7 +48,12 @@ export async function stageCliArtifacts(input: {
   directory: string
   version: string
   targets: readonly string[]
-  sign?: (path: string, target: string) => Promise<void>
+  /** Signs a staged executable: the CLI itself, or the rg it ships. */
+  sign?: (path: string, target: string, kind: "cli" | "ripgrep") => Promise<void>
+  /** Checks a signed rg's code signature (cli-artifacts.ts signatureCheck); without one a signed rg is refused. */
+  signature?: (file: string, target: string) => Promise<boolean>
+  /** "required" for a target whose rg `sign` must have signed (cli-artifacts.ts ripgrepSigning). */
+  signing?: (target: string) => "required" | undefined
 }) {
   if (
     !input.targets.length ||
@@ -125,14 +130,24 @@ export async function stageCliArtifacts(input: {
         await mkdir(join(staging, `omni-${target}`))
         await Promise.all(pair.map((file) => copyFile(file, join(staging, `omni-${target}`, basename(file)))))
         await chmod(join(staging, `omni-${target}`, omniCompanions[1]), 0o755)
-        if (RipgrepBundle.enabled())
-          await copyCliRipgrep(
-            input.prebuilt === undefined ? join(source, "bin", "ripgrep") : join(input.prebuilt, `ripgrep-${target}`),
-            join(staging, `ripgrep-${target}`),
-            target,
-          )
       }
-      await input.sign?.(path, target)
+      // Every CLI ships the pinned rg it runs (its server never downloads one) in ripgrep-<target>/: the installed CLI
+      // and WSL guests copy it beside the binary, the desktop server is pointed at it. It is signed like the CLI.
+      if (RipgrepBundle.enabled() && cliRipgrepKey(target)) {
+        const ripgrep = join(staging, `ripgrep-${target}`)
+        await copyCliRipgrep(
+          input.prebuilt === undefined ? join(source, "bin", "ripgrep") : join(input.prebuilt, `ripgrep-${target}`),
+          ripgrep,
+          target,
+          { signature: input.signature && ((file) => input.signature!(file, target)) },
+        )
+        await input.sign?.(join(ripgrep, target.startsWith("windows-") ? "rg.exe" : "rg"), target, "ripgrep")
+        await RipgrepBundle.verify(ripgrep, cliRipgrepKey(target)!, {
+          signature: input.signature && ((file) => input.signature!(file, target)),
+          signed: input.signing?.(target),
+        })
+      }
+      await input.sign?.(path, target, "cli")
       return {
         target,
         file,

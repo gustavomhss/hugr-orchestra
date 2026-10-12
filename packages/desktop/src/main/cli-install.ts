@@ -11,14 +11,20 @@ import {
   verifyCliArtifact,
 } from "./cli-artifacts"
 
-// macOS and Windows packages sign rg, which changes its bytes; Linux ships the archive's.
-const signed = process.platform !== "linux"
-
 /**
- * Copies the bundled CLI for `target` into `cache` with what it loads from beside itself: its tree-sitter and, given
- * the desktop's Resources/ripgrep as `ripgrep`, the rg a packaged CLI uses instead of downloading one.
+ * Copies the bundled CLI for `target` into `cache` with what it loads from beside itself: its tree-sitter and the rg it
+ * runs instead of downloading one (ripgrep-<target>/, absent only where the packager puts rg on PATH, as Nix does).
+ * That rg must be the pinned executable or, signed, pass `signature` (cli-artifacts.ts signatureCheck).
  */
-export async function installCliArtifact(source: string, target: string, cache: string, ripgrep?: string) {
+export async function installCliArtifact(
+  source: string,
+  target: string,
+  cache: string,
+  options: { signature?: (file: string) => Promise<boolean> } = {},
+) {
+  const ripgrep = (await lstat(join(source, `ripgrep-${target}`)).catch(() => undefined))?.isDirectory()
+    ? join(source, `ripgrep-${target}`)
+    : undefined
   const manifest = await readCliManifest(source)
   const bundled = await verifyCliArtifact(source, target)
   if (manifest.version !== bundled.version) throw new Error("CLI source manifest changed during installation")
@@ -34,7 +40,8 @@ export async function installCliArtifact(source: string, target: string, cache: 
       )
         return
       requireTreeSitterBundle(join(directory, "tree-sitter"), cliTreeSitterTarget(target))
-      if (ripgrep !== undefined) await RipgrepBundle.verify(join(directory, "ripgrep"), cliRipgrepKey(target)!, { signed })
+      if (ripgrep !== undefined)
+        await RipgrepBundle.verify(join(directory, "ripgrep"), cliRipgrepKey(target)!, { signature: options.signature })
       return verifyCliArtifact(directory, target)
     })
     .catch(() => undefined)
@@ -47,7 +54,8 @@ export async function installCliArtifact(source: string, target: string, cache: 
       if (!target.startsWith("windows-")) await chmod(join(staging, artifact.file), 0o755)
       // The installed binary loads tree-sitter from beside itself, so the bundle's copy moves in before the manifest.
       copyCliTreeSitter(join(source, `tree-sitter-${target}`), join(staging, "tree-sitter"), target)
-      if (ripgrep !== undefined) await copyCliRipgrep(ripgrep, join(staging, "ripgrep"), target, { signed })
+      if (ripgrep !== undefined)
+        await copyCliRipgrep(ripgrep, join(staging, "ripgrep"), target, { signature: options.signature })
       await writeFile(join(staging, "manifest.json"), JSON.stringify({ ...manifest, artifacts: [artifact] }))
       await verifyCliArtifact(staging, target)
       await rm(join(directory, "tree-sitter"), { recursive: true, force: true })

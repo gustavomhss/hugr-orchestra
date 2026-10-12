@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "crypto"
-import { realpathSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { deflateRawSync } from "zlib"
@@ -71,13 +70,19 @@ function zip(files: Record<string, string>) {
   return new Uint8Array(Buffer.concat([...locals, directory, end]))
 }
 
-/** Writes `bytes` where RIPGREP_ARCHIVES would hold it, and returns the archive pinned to them. */
-async function archived(dir: string, extension: "tar.gz" | "zip", bytes: Uint8Array) {
+/** Writes `bytes` where RIPGREP_ARCHIVES would hold it, and returns the archive pinned to them and to `members`' rg. */
+async function archived(dir: string, extension: "tar.gz" | "zip", bytes: Uint8Array, executable = "rg") {
   await fs.mkdir(path.join(dir, "archives"), { recursive: true })
   await fs.writeFile(path.join(dir, "archives", `${ROOT}.${extension}`), bytes)
   return {
     archives: path.join(dir, "archives"),
-    archive: { url: `https://example.invalid/${ROOT}.${extension}`, sha256: sha256(bytes), extension, root: ROOT },
+    archive: {
+      url: `https://example.invalid/${ROOT}.${extension}`,
+      sha256: sha256(bytes),
+      executable: sha256(`fake ${executable}`),
+      extension,
+      root: ROOT,
+    },
   }
 }
 
@@ -89,7 +94,12 @@ describe("RipgrepBundle", () => {
     test(`stages ${executable} and the license texts from a ${extension} archive, and nothing else`, async () => {
       await using tmp = await tmpdir()
       const files = members(executable)
-      const source = await archived(tmp.path, extension, await (extension === "zip" ? zip(files) : tarball(files)))
+      const source = await archived(
+        tmp.path,
+        extension,
+        await (extension === "zip" ? zip(files) : tarball(files)),
+        executable,
+      )
       const directory = path.join(tmp.path, "ripgrep")
 
       const manifest = await RipgrepBundle.stage({ key, directory, ...source })
@@ -122,7 +132,10 @@ describe("RipgrepBundle", () => {
         modifications: expect.any(String),
       })
       expect(JSON.parse(await fs.readFile(path.join(directory, "manifest.json"), "utf8"))).toEqual(manifest)
-      expect(await RipgrepBundle.verify(directory, key, { archive: source.archive })).toEqual(manifest)
+      expect(await RipgrepBundle.verify(directory, key, { archive: source.archive })).toEqual({
+        manifest,
+        signed: false,
+      })
     })
 
   test("refuses an archive that is not the pinned bytes and keeps the bundle already staged", async () => {
@@ -172,6 +185,7 @@ describe("RipgrepBundle", () => {
     const archive = {
       url: new URL(`/${ROOT}.tar.gz`, server.url).href,
       sha256: sha256(bytes),
+      executable: sha256("fake rg"),
       extension: "tar.gz" as const,
       root: ROOT,
     }
@@ -181,14 +195,30 @@ describe("RipgrepBundle", () => {
     expect(await fs.readFile(path.join(tmp.path, "ripgrep", "rg"), "utf8")).toBe("fake rg")
   })
 
-  test("verify fails on every way a staged bundle can differ from its pin", async () => {
+  test("refuses an archive whose rg is not the pinned executable, even when the archive digest matches", async () => {
+    await using tmp = await tmpdir()
+    const source = await archived(tmp.path, "tar.gz", await tarball(members("rg")))
+    await expect(
+      RipgrepBundle.stage({
+        key: "x64-linux",
+        directory: path.join(tmp.path, "ripgrep"),
+        ...source,
+        archive: { ...source.archive, executable: "0".repeat(64) },
+      }),
+    ).rejects.toThrow("not the pinned")
+    expect(await fs.stat(path.join(tmp.path, "ripgrep")).catch(() => undefined)).toBeUndefined()
+  })
+
+  test("verify holds the bundle to the pins, never to the manifest beside it", async () => {
     await using tmp = await tmpdir()
     const source = await archived(tmp.path, "tar.gz", await tarball(members("rg")))
     const directory = path.join(tmp.path, "ripgrep")
     const stage = () => RipgrepBundle.stage({ key: "arm64-darwin", directory, ...source })
-    const verify = (options: { signed?: boolean } = {}) =>
+    const verify = (options: Parameters<typeof RipgrepBundle.verify>[2] = {}) =>
       RipgrepBundle.verify(directory, "arm64-darwin", { ...options, archive: source.archive })
+    const manifest = path.join(directory, "manifest.json")
     await stage()
+    expect((await verify()).signed).toBe(false)
 
     // Not the pin for this key: the real pinned archive differs from the fixture's.
     await expect(RipgrepBundle.verify(directory, "arm64-darwin")).rejects.toThrow("is not the pinned ripgrep")
@@ -196,19 +226,38 @@ describe("RipgrepBundle", () => {
       "is not the pinned ripgrep",
     )
 
+    // A planted rg with a manifest rewritten to match it is still refused: the pin decides, not the manifest.
+    await fs.writeFile(path.join(directory, "rg"), "planted")
+    const forged = JSON.parse(await fs.readFile(manifest, "utf8"))
+    await fs.writeFile(manifest, JSON.stringify({ ...forged, executable: { path: "rg", sha256: sha256("planted") } }))
+    await expect(verify()).rejects.toThrow("is not the pinned ripgrep")
+    await stage()
+
+    // Signed bytes differ from the pin: accepted only with a signature check that passes.
     await fs.writeFile(path.join(directory, "rg"), "re-signed")
     await expect(verify()).rejects.toThrow("differs from the pinned archive's")
-    expect((await verify({ signed: true })).key).toBe("arm64-darwin")
+    const checked: string[] = []
+    const valid = async (file: string) => (checked.push(file), true)
+    expect((await verify({ signature: valid })).signed).toBe(true)
+    expect(checked).toEqual([path.join(directory, "rg")])
+    await expect(verify({ signature: async () => false })).rejects.toThrow("has no valid signature")
+    // A build that signs refuses an rg left unsigned.
+    await stage()
+    await expect(verify({ signature: valid, signed: "required" })).rejects.toThrow("is unsigned where this build signs")
 
     await fs.rm(path.join(directory, "rg"))
-    await expect(verify({ signed: true })).rejects.toThrow("missing its executable")
+    await expect(verify({ signature: valid })).rejects.toThrow("missing its executable")
+    await stage()
+    await fs.rm(path.join(directory, "rg"))
+    await fs.symlink(path.join(tmp.path, "archives"), path.join(directory, "rg"))
+    await expect(verify({ signature: valid })).rejects.toThrow("missing its executable")
 
     await stage()
     await fs.writeFile(path.join(directory, "LICENSE-MIT"), "changed")
     await expect(verify()).rejects.toThrow("license text missing or changed")
 
     await stage()
-    await fs.rm(path.join(directory, "manifest.json"))
+    await fs.rm(manifest)
     await expect(verify()).rejects.toThrow("ripgrep bundle missing")
 
     if (process.platform === "win32") return
@@ -240,6 +289,10 @@ describe("RipgrepBundle", () => {
           )
           expect(RipgrepRelease.archive(key)?.sha256).toMatch(/^[0-9a-f]{64}$/)
         }
+    // Every pinned archive pins its rg executable too, each a different build.
+    const executables = RipgrepRelease.keys().map((key) => RipgrepRelease.archive(key)?.executable)
+    for (const pin of executables) expect(pin).toMatch(/^[0-9a-f]{64}$/)
+    expect(new Set(executables).size).toBe(RipgrepRelease.keys().length)
     // The runtime reads the same pins: one table, no second copy.
     expect(RipgrepBinary.release("x64-linux")).toEqual(RipgrepRelease.archive("x64-linux"))
     expect(RipgrepBinary.VERSION).toBe(RipgrepRelease.VERSION)
@@ -288,75 +341,80 @@ const failure = <A>(exit: Exit.Exit<A, RipgrepBinary.Unavailable>) => {
   return error
 }
 
-describe("RipgrepBinary with a bundled rg", () => {
-  it.live("uses the first bundled rg that exists, before rg on PATH and before any download", () =>
+const temporary = Effect.acquireRelease(
+  Effect.promise(() => tmpdir()),
+  (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+)
+
+describe("RipgrepBinary in a packaged build", () => {
+  it.live("runs the shipped rg before rg on PATH and never asks the release server", () =>
     Effect.gen(function* () {
-      const tmp = yield* Effect.acquireRelease(
-        Effect.promise(() => tmpdir()),
-        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-      )
+      const tmp = yield* temporary
       const executable = RipgrepRelease.executable()
-      const bundled = path.join(tmp.path, "Resources", "ripgrep", executable)
+      const shipped = path.join(tmp.path, "Resources", "ripgrep")
       const system = path.join(tmp.path, "path", executable)
-      yield* Effect.promise(() => fs.mkdir(path.dirname(bundled), { recursive: true }))
+      yield* Effect.promise(() => fs.mkdir(shipped, { recursive: true }))
       yield* Effect.promise(() => fs.mkdir(path.dirname(system), { recursive: true }))
-      yield* Effect.promise(() => fs.writeFile(bundled, "bundled"))
+      yield* Effect.promise(() => fs.writeFile(path.join(shipped, executable), "bundled"))
       yield* Effect.promise(() => fs.writeFile(system, "system"))
 
-      const found = yield* service(tmp.path, {
-        bundled: () => [path.join(tmp.path, "bin", "ripgrep", executable), bundled],
-        system: () => system,
-      })
-      expect(yield* found.binary.filepath).toBe(bundled)
+      const found = yield* service(tmp.path, { bundled: shipped, system: () => system })
+      expect(yield* found.binary.filepath).toBe(path.join(shipped, executable))
       expect(found.counter.requests).toBe(0)
 
-      // Control: without the bundled copy the same service falls back to PATH.
-      const fallback = yield* service(tmp.path, {
-        bundled: () => [path.join(tmp.path, "bin", "ripgrep", executable)],
-        system: () => system,
-      })
+      // Control: without the shipped copy the same packaged service falls back to PATH.
+      const fallback = yield* service(tmp.path, { bundled: path.join(tmp.path, "elsewhere"), system: () => system })
       expect(yield* fallback.binary.filepath).toBe(system)
     }),
   )
 
-  it.live("a packaged build never downloads, even with downloads allowed, and names where it looked", () =>
+  it.live("never downloads, even with downloads allowed, and names the rg it expected", () =>
     Effect.gen(function* () {
-      const tmp = yield* Effect.acquireRelease(
-        Effect.promise(() => tmpdir()),
-        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-      )
-      const missing = path.join(tmp.path, "Resources", "ripgrep", RipgrepRelease.executable())
-      const packaged = yield* service(tmp.path, { bundled: () => [missing], packaged: true, download: true })
+      const tmp = yield* temporary
+      const shipped = path.join(tmp.path, "Resources", "ripgrep")
+      const packaged = yield* service(tmp.path, { bundled: shipped, download: true })
 
       const error = failure(yield* Effect.exit(packaged.binary.filepath))
       expect(error.message).toContain("packaged builds never download it")
-      expect(error.message).toContain(missing)
+      expect(error.message).toContain(path.join(shipped, RipgrepRelease.executable()))
       expect(packaged.counter.requests).toBe(0)
       expect(yield* Effect.promise(() => fs.readdir(path.join(tmp.path, "cache")).catch(() => []))).toEqual([])
 
-      // Control: the same service unpackaged does reach the release server.
-      const source = yield* service(tmp.path, {
-        bundled: () => [missing],
-        packaged: false,
-        download: true,
-        attempts: 1,
-      })
+      // Control: the same service in a source run does reach the release server.
+      const source = yield* service(tmp.path, { bundled: undefined, download: true, attempts: 1 })
       yield* Effect.exit(source.binary.filepath)
       expect(source.counter.requests).toBe(1)
     }),
   )
 
-  it.live("the default bundled locations are beside the binary, in ../ripgrep, and in the desktop's Resources", () =>
-    Effect.sync(() => {
+  it.live("refuses a symlink in place of the shipped or the downloaded rg", () =>
+    Effect.gen(function* () {
+      if (process.platform === "win32") return
+      const tmp = yield* temporary
       const executable = RipgrepRelease.executable()
-      const binary = path.dirname(realpathSync(process.execPath))
-      const locations = RipgrepBinary.bundled()
-      expect(locations.slice(0, 2)).toEqual([
-        path.join(binary, "ripgrep", executable),
-        path.join(binary, "..", "ripgrep", executable),
-      ])
-      // A source run is not packaged: only builds compiled with ORCHESTRA_RIPGREP_DOWNLOAD=false are.
-      expect(RipgrepBinary.defaults().packaged).toBe(false)
+      const elsewhere = path.join(tmp.path, "elsewhere-rg")
+      yield* Effect.promise(() => fs.writeFile(elsewhere, "planted"))
+      const shipped = path.join(tmp.path, "Resources", "ripgrep")
+      yield* Effect.promise(() => fs.mkdir(shipped, { recursive: true }))
+      yield* Effect.promise(() => fs.symlink(elsewhere, path.join(shipped, executable)))
+      const packaged = yield* service(tmp.path, { bundled: shipped })
+      expect(failure(yield* Effect.exit(packaged.binary.filepath)).message).toContain("is not a regular file")
+
+      yield* Effect.promise(() => fs.mkdir(path.join(tmp.path, "cache"), { recursive: true }))
+      yield* Effect.promise(() => fs.symlink(elsewhere, path.join(tmp.path, "cache", executable)))
+      const source = yield* service(tmp.path, { bundled: undefined, download: false })
+      expect(failure(yield* Effect.exit(source.binary.filepath)).message).toContain(RipgrepBinary.DISABLE_DOWNLOAD)
+    }),
+  )
+
+  it.live("only a packaged build has a bundled directory: the desktop names it, a source run has none", () =>
+    Effect.sync(() => {
+      expect(RipgrepBinary.bundledDirectory({ [RipgrepBinary.DIRECTORY]: "/Resources/cli/ripgrep-x" })).toBe(
+        "/Resources/cli/ripgrep-x",
+      )
+      // A source run never consults a directory beside its runtime (no `..` guesses next to bun or node).
+      expect(RipgrepBinary.bundledDirectory({})).toBeUndefined()
+      expect(RipgrepBinary.defaults({}).bundled).toBeUndefined()
     }),
   )
 })

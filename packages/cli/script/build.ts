@@ -48,7 +48,7 @@ const builds = targets.map((item) => {
   return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
 })
 
-// Each build ships the pinned rg in bin/ripgrep and never downloads one (ORCHESTRA_RIPGREP_DOWNLOAD below), unless
+// Each build ships the pinned rg in bin/ripgrep and never downloads one (ORCHESTRA_RIPGREP_BESIDE_BINARY below), unless
 // RIPGREP_BUNDLED=false declares that the packager puts rg on PATH (Nix). ripgrep has no arm64 musl build.
 const ripgrep = RipgrepBundle.enabled()
 if (!ripgrep) console.warn(`${RipgrepBundle.BUNDLED}=false: no ripgrep bundled, the packager puts rg on PATH`)
@@ -97,7 +97,8 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
       OMNI_ENABLED: JSON.stringify(omni.enabled),
-      ORCHESTRA_RIPGREP_DOWNLOAD: "false",
+      // A packaged CLI runs the rg in ripgrep/ beside it (or on PATH) and never downloads one.
+      ORCHESTRA_RIPGREP_BESIDE_BINARY: "true",
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",

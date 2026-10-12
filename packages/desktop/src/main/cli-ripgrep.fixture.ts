@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto"
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 
 /**
- * Writes a ripgrep directory that RipgrepBundle.verify accepts for `key`: a manifest naming the pinned archive, a
- * stand-in executable holding `bytes`, and the license texts. Real archives are staged by RipgrepBundle.stage, whose
- * own tests cover them; these stand-ins keep packaging tests offline.
+ * Writes a ripgrep directory for `key` as staging leaves a signed one: a manifest naming the pinned archive and
+ * executable, the license texts, and a stand-in executable holding `bytes`, which differ from the pinned rg the way a
+ * signed copy does. RipgrepBundle.verify accepts it only with `fixtureSignature`. Real archives and the byte-for-byte
+ * pin are covered by packages/core/test/ripgrep-bundle.test.ts; these stand-ins keep packaging tests offline.
  */
 export async function writeRipgrepBundle(directory: string, key: string, bytes = `rg ${key}`) {
   const archive = RipgrepRelease.archive(key)
@@ -24,9 +25,14 @@ export async function writeRipgrepBundle(directory: string, key: string, bytes =
     repository: RipgrepRelease.REPOSITORY,
     key,
     archive: { url: archive.url, sha256: archive.sha256 },
-    executable: { path: executable, sha256: sha256(bytes) },
+    executable: { path: executable, sha256: archive.executable! },
     materials: RipgrepBundle.LICENSES.map((name) => ({ path: name, sha256: sha256(`${name} ${key}`) })),
     modifications: "test stand-in",
   }
   await writeFile(join(directory, RipgrepBundle.MANIFEST), JSON.stringify(manifest))
+}
+
+/** Stands in for a code signature check: a stand-in rg from writeRipgrepBundle is "validly signed" until it changes. */
+export async function fixtureSignature(file: string) {
+  return /^rg (?:arm64|x64)-(?:darwin|linux|win32)$/.test(await readFile(file, "utf8").catch(() => ""))
 }

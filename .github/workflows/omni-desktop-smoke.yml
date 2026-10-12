@@ -57,10 +57,12 @@ jobs:
           mkdir -p packages/desktop/.omni-desktop-evidence
           git rev-parse HEAD > packages/desktop/.omni-desktop-evidence/source-sha.txt
 
+      # Windows also builds its WSL guests' Linux CLIs, whose platform packages (fff, opentui) only an all-platform install
+      # provides.
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
         with:
-          install-flags: --frozen-lockfile
+          install-flags: ${{ runner.os == 'Windows' && '--frozen-lockfile --os="*" --cpu="*"' || '--frozen-lockfile' }}
 
       - name: Exact-source release omni binaries
         uses: ./.github/actions/omni-binaries
@@ -117,12 +119,18 @@ jobs:
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
           bun test/omni-smoke/packaged.ts --require main,shell,terminal --diagnose-main
 
-      # Resources/ripgrep: pinned bytes, refused when moved away, and the packaged CLI (Resources/cli and its installed
-      # copy) searches with it and never downloads one, each with its mutant (test/omni-smoke/ripgrep.ts).
+      # Resources/cli/ripgrep-<target>: pinned (or validly signed) rg, refused when moved away, and the packaged CLI
+      # (pointed at it as main points the server, and its installed copy) searches with it and never downloads one,
+      # each with its mutant (test/omni-smoke/ripgrep.ts).
       - name: Packaged ripgrep, used by the packaged CLI and never downloaded, mutants then restored
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         working-directory: packages/desktop
         run: bun test/omni-smoke/ripgrep.ts
+
+      - name: Distributables keep the executable bits of the CLI, its rg and omni
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
+        working-directory: packages/desktop
+        run: bun test/omni-smoke/distributables.ts
 
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()

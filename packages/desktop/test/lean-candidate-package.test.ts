@@ -49,15 +49,34 @@ native("actual packaged candidate: owned backend/PTY, native Go30, renderer prof
   }
 }, 1200000)
 
-native("packaged candidate CLI searches with Resources/ripgrep and never downloads rg, also once it is removed", async () => {
-  // packages/cli/script/ripgrep-proof.ts: no rg on PATH, every request through a counting proxy; the mutant moves
-  // Resources/ripgrep away (search fails closed, nothing fetched) and restores it before the archive step.
+native("packaged candidate CLI searches with the rg its bundle ships and never downloads one, also once it is removed", async () => {
+  // packages/cli/script/ripgrep-proof.ts: no rg on PATH, every request through a counting proxy, and each run's mutant
+  // moves the rg away (search fails closed, nothing fetched) and restores it. Twice: the bundle's CLI pointed at its rg
+  // the way main points the server (ORCHESTRA_RIPGREP_DIR), and the copy main installs for its background CLI.
   const candidate = await packagedCandidate()
-  const child = Bun.spawn([process.execPath, path.join(repository, "packages/cli/script/ripgrep-proof.ts"),
-    "--key", "x64-darwin", "--binary", path.join(candidate.resources, "cli", "orchestra-darwin-x64-baseline"),
-    "--ripgrep", path.join(candidate.resources, "ripgrep"), "--mutate"], {
-    cwd: repository, stdout: "inherit", stderr: "inherit", timeout: 600_000, killSignal: "SIGKILL" })
-  const code = await child.exited
-  if (code !== 0 || child.signalCode) throw new Error(`Packaged ripgrep proof failed: ${code}/${child.signalCode}`)
+  const { installCliArtifact } = await import("../src/main/cli-install")
+  const target = "darwin-x64-baseline"
+  const ripgrep = path.join(candidate.resources, "cli", `ripgrep-${target}`)
+  const codesign = async (file: string) => {
+    const child = Bun.spawn(["codesign", "--verify", "--strict", file], { stdout: "pipe", stderr: "pipe", timeout: 30000, killSignal: "SIGKILL" })
+    return (await child.exited) === 0
+  }
+  const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-candidate-ripgrep-"))
+  const omni = [`HUGR_OMNI_ADDON=${path.join(candidate.resources, "omni", "hugr_omni.node")}`,
+    `HUGR_OMNI_SUPERVISOR=${path.join(candidate.resources, "omni", "hugr-omni-supervisor")}`]
+  const proof = async (binary: string, directory: string, env: string[]) => {
+    const child = Bun.spawn([process.execPath, path.join(repository, "packages/cli/script/ripgrep-proof.ts"),
+      "--target", target, "--binary", binary, "--ripgrep", directory, "--mutate", ...env.flatMap((pair) => ["--env", pair])], {
+      cwd: repository, stdout: "inherit", stderr: "inherit", timeout: 600_000, killSignal: "SIGKILL" })
+    const code = await child.exited
+    if (code !== 0 || child.signalCode) throw new Error(`Packaged ripgrep proof failed for ${binary}: ${code}/${child.signalCode}`)
+  }
+  try {
+    await proof(path.join(candidate.resources, "cli", `orchestra-${target}`), ripgrep, [`ORCHESTRA_RIPGREP_DIR=${ripgrep}`, ...omni])
+    const installed = await installCliArtifact(path.join(candidate.resources, "cli"), target, scratch, { signature: codesign })
+    await proof(installed.path, path.join(path.dirname(installed.path), "ripgrep"), omni)
+  } finally {
+    await rm(scratch, { recursive: true, force: true })
+  }
   await verifyCandidateArchive()
-}, 660000)
+}, 1300000)

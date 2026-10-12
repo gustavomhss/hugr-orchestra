@@ -1,9 +1,7 @@
 import { $ } from "bun"
-import { rm } from "node:fs/promises"
 import { join, resolve } from "node:path"
-import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
-import { nativeCliTarget } from "../src/main/cli-artifacts"
+import { nativeCliTarget, ripgrepSigning, signatureCheck } from "../src/main/cli-artifacts"
 
 export type Channel = "dev" | "beta" | "prod"
 export const RUST_TARGET = Bun.env.RUST_TARGET
@@ -35,42 +33,31 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
     directory: join(desktop, "resources/cli"),
     version,
     targets,
-    sign: async (path, target) => {
+    // The CLI and the rg it ships are signed alike; rg needs none of the CLI's JIT entitlements, only the hardened
+    // runtime that notarization requires.
+    sign: async (path, target, kind) => {
       if (target.startsWith("windows-") && process.platform === "win32" && process.env.GITHUB_ACTIONS === "true")
         await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ${join(desktop, "../../script/sign-windows.ps1")} ${path}`
       if (target.startsWith("darwin-") && process.platform === "darwin") {
         const identity = process.env.CSC_NAME ?? "-"
-        const options =
-          identity === "-"
-            ? []
-            : ["--options", "runtime", "--timestamp", "--entitlements", join(desktop, "resources/entitlements.plist")]
+        const entitlements = kind === "cli" ? ["--entitlements", join(desktop, "resources/entitlements.plist")] : []
+        const options = identity === "-" ? [] : ["--options", "runtime", "--timestamp", ...entitlements]
         await $`codesign --force --sign ${identity} ${options} ${path}`
       }
-      if (target === nativeCliTarget(process.platform, process.arch)) {
+      if (kind === "cli" && target === nativeCliTarget(process.platform, process.arch)) {
         const reported = (await $`${path} --version`.text()).trim()
         if (reported !== version)
           throw new Error(`Owned CLI compiled version mismatch: ${target}`)
       }
     },
+    signature: async (file, target) => {
+      const check = signatureCheck(target, file)
+      if (!check) return false
+      const result = await $`${check.command} ${check.args}`.nothrow().quiet()
+      return result.exitCode === 0 && check.valid(result.stdout.toString())
+    },
+    signing: (target) => ripgrepSigning(target),
   })
-}
-
-/**
- * Stages the pinned rg for the desktop's own platform in resources/ripgrep, which electron-builder ships as
- * Resources/ripgrep: the server finds it at process.resourcesPath/ripgrep, the bundled CLI at ../ripgrep, and the
- * background CLI gets a copy (src/main/cli-install.ts). RIPGREP_BUNDLED=false (Nix) stages nothing.
- */
-export async function stageRipgrepToResources() {
-  const directory = resolve(import.meta.dir, "..", "resources", "ripgrep")
-  await rm(directory, { recursive: true, force: true })
-  if (!RipgrepBundle.enabled()) return console.warn(`stage-ripgrep: ${RipgrepBundle.BUNDLED}=false, nothing staged`)
-  const [platform, arch] = placement()
-  const manifest = await RipgrepBundle.stage({
-    key: `${arch}-${platform}`,
-    directory,
-    archives: process.env[RipgrepBundle.ARCHIVES],
-  })
-  console.log(`stage-ripgrep: ${manifest.archive.url} (sha256 ${manifest.archive.sha256}) -> ${directory}`)
 }
 
 // The desktop's own platform and architecture: RUST_TARGET's when set, else this host's.

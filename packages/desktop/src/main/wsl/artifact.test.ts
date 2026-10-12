@@ -182,6 +182,7 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   await Bun.write(join(directory, "ripgrep-linux-arm64", "rg"), "rg")
   const options = {
     directory,
+    ripgrepPin: () => createHash("sha256").update("rg").digest("hex"),
     signal: abort.signal,
     timeoutMs: 90_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-arm64", file: "owned", sha256: "a".repeat(64) }] }),
@@ -233,8 +234,10 @@ test("bundle without the Linux omni pair, tree-sitter or rg refuses the install 
   const ripgrep = join(directory, "ripgrep-linux-x64-baseline", "rg")
   await Bun.write(ripgrep, "rg")
   const commands: string[][] = []
+  const pin = { rg: createHash("sha256").update("rg").digest("hex") }
   const install = () => installWslArtifact("Ubuntu", "1.16.2", {
     directory,
+    ripgrepPin: () => pin.rg,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: "a".repeat(64) }] }),
     verifyArtifact: async () => ({ path: join(directory, "owned"), version: "1.16.2" }),
     run: async (args: string[]) => {
@@ -265,6 +268,12 @@ test("bundle without the Linux omni pair, tree-sitter or rg refuses the install 
     expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
     expect(commands.map((args) => args[0])).toEqual(["bash"])
     await rename(`${ripgrep}.away`, ripgrep)
+    // An rg that is not the pinned executable is refused before any transfer, whatever the bundle says.
+    pin.rg = "0".repeat(64)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("bytes")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    pin.rg = createHash("sha256").update("rg").digest("hex")
     // Control: with both companions, tree-sitter and rg present the same seam reaches the guest transfer.
     commands.length = 0
     expect(await install()).toBeUndefined()
@@ -322,6 +331,7 @@ linuxGuestTest("owned CLI source entry (bun, built version defined) passes guest
   const options = {
     directory: root,
     timeoutMs: 20_000,
+    ripgrepPin: (target: string) => createHash("sha256").update(`rg ${target}`).digest("hex"),
     readManifest: async () => ({
       schema: 1 as const,
       version,

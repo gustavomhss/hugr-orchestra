@@ -60,6 +60,10 @@ export namespace RipgrepBundle {
       )
     const executable = RipgrepRelease.executable(platform(input.key))
     const files = unpack(bytes, archive, [executable, ...LICENSES])
+    if (sha256(files.get(executable)!) !== archive.executable)
+      throw new Error(
+        `ripgrep archive ${archive.url} holds an executable with sha256 ${sha256(files.get(executable)!)}, not the pinned ${archive.executable}`,
+      )
     const manifest: Manifest = {
       name: "ripgrep",
       version: RipgrepRelease.VERSION,
@@ -70,7 +74,7 @@ export namespace RipgrepBundle {
       executable: { path: executable, sha256: sha256(files.get(executable)!) },
       materials: LICENSES.map((name) => ({ path: name, sha256: sha256(files.get(name)!) })),
       modifications:
-        "None: the executable and license texts are the archive's bytes. Signed macOS and Windows builds sign the executable, which changes its bytes but not its code.",
+        "None: the executable and license texts are the archive's bytes. Signed macOS and Windows builds sign the executable, which changes its bytes but not its code; verify then checks that signature instead.",
     }
     await mkdir(path.dirname(input.directory), { recursive: true })
     const staging = await mkdtemp(path.join(path.dirname(input.directory), ".ripgrep-stage-"))
@@ -92,14 +96,23 @@ export namespace RipgrepBundle {
   }
 
   /**
-   * Checks a staged ripgrep directory: its manifest names the pinned archive for `key`, the executable is a regular
-   * (and, off Windows, executable) file whose bytes are the archive's unless `signed`, and every license text is there
-   * unchanged. Returns the manifest.
+   * Checks a staged ripgrep directory against the pins in release.ts (never against the manifest beside it): the
+   * manifest names the pinned archive and executable for `key`, every license text is there unchanged, and the
+   * executable is a regular (off Windows, executable) file that either is the pinned executable byte for byte or, once
+   * a signature changed its bytes, carries a signature `signature` accepts. A signed copy without a `signature` check,
+   * or an unsigned one where `signed: "required"`, is refused. Returns the manifest and which of the two it was.
    */
   export async function verify(
     directory: string,
     key: string,
-    options: { signed?: boolean; archive?: RipgrepRelease.Archive } = {},
+    options: {
+      /** Checks the executable's code signature (codesign on macOS, Authenticode on Windows); the caller spawns it. */
+      signature?: (file: string) => Promise<boolean>
+      /** "required" when the build signs its executables, so an unsigned rg means signing was skipped. */
+      signed?: "required"
+      /** Tests only: an archive other than the pinned one. */
+      archive?: RipgrepRelease.Archive
+    } = {},
   ) {
     const archive = options.archive ?? RipgrepRelease.archive(key)
     const manifest = (await readFile(path.join(directory, MANIFEST), "utf8")
@@ -113,7 +126,8 @@ export namespace RipgrepBundle {
       manifest.license !== RipgrepRelease.LICENSE ||
       manifest.key !== key ||
       manifest.archive?.url !== archive.url ||
-      manifest.archive?.sha256 !== archive.sha256
+      manifest.archive?.sha256 !== archive.sha256 ||
+      manifest.executable?.sha256 !== archive.executable
     )
       throw new Error(`ripgrep bundle in ${directory} is not the pinned ripgrep ${RipgrepRelease.VERSION} for ${key}`)
     const executable = path.join(directory, RipgrepRelease.executable(platform(key)))
@@ -122,8 +136,15 @@ export namespace RipgrepBundle {
       throw new Error(`ripgrep bundle missing its executable: ${executable}`)
     if (platform(key) !== "win32" && process.platform !== "win32" && (stat.mode & 0o111) !== 0o111)
       throw new Error(`ripgrep bundle executable is not executable: ${executable}`)
-    if (!options.signed && sha256(await readFile(executable)) !== manifest.executable.sha256)
+    const pinned = sha256(await readFile(executable)) === archive.executable
+    if (pinned && options.signed === "required")
+      throw new Error(`ripgrep bundle executable is unsigned where this build signs: ${executable}`)
+    if (!pinned && !options.signature)
       throw new Error(`ripgrep bundle executable differs from the pinned archive's: ${executable}`)
+    if (!pinned && !(await options.signature!(executable)))
+      throw new Error(
+        `ripgrep bundle executable differs from the pinned archive's and has no valid signature: ${executable}`,
+      )
     await Promise.all(
       LICENSES.map(async (name) => {
         const material = manifest.materials?.find((entry) => entry.path === name)
@@ -132,7 +153,7 @@ export namespace RipgrepBundle {
           throw new Error(`ripgrep bundle license text missing or changed: ${path.join(directory, name)}`)
       }),
     )
-    return manifest
+    return { manifest, signed: !pinned }
   }
 
   async function acquire(archive: RipgrepRelease.Archive, archives: string | undefined) {
