@@ -9,6 +9,7 @@ import path from "node:path"
 import { parseArgs } from "node:util"
 import { provenance } from "../omni-smoke/build"
 import { DesktopProof } from "./transport"
+import { isolateWindowsShell } from "./windows-shell"
 
 type Host = Parameters<Parameters<typeof DesktopProof.child>[1]>[0]
 type Debugger = Awaited<ReturnType<typeof DesktopProof.connect>>
@@ -59,9 +60,8 @@ export async function run(control?: "delete-blob") {
     GIT_CONFIG_COUNT: "0", GIT_TEMPLATE_DIR: owned.empty, LANG: "C.UTF-8", LC_ALL: "C.UTF-8",
     ...(process.platform === "linux" ? { SHELL: "/bin/false" } : {}),
   }
-  Object.keys(process.env).forEach((key) => delete process.env[key])
-  Object.assign(process.env, env)
   const lifecycle = { exited: true, closed: true }
+  const shell = { lease: undefined as Awaited<ReturnType<typeof isolateWindowsShell>>, ready: false, restored: false }
   const phases: Record<string, unknown>[] = []
   const placement = { userData: "", draftDB: "" }
   const mutation = { seeded: false, deleted: false, detected: false }
@@ -77,6 +77,10 @@ export async function run(control?: "delete-blob") {
     return result
   }
   try {
+    shell.lease = await isolateWindowsShell({ appdata: owned.appdata, local: owned.local })
+    shell.ready = true
+    Object.keys(process.env).forEach((key) => delete process.env[key])
+    Object.assign(process.env, env)
     const git = (args: string[]) => child({ command: "git", args, cwd: owned.home, env, timeoutMS: 20_000 }, async (host) => {
       assert.equal(await deadline(host.exited, 20_000, "GIT_EXIT_TIMEOUT"), 0, "GIT_FAILED")
       return host.output().trim()
@@ -92,7 +96,8 @@ export async function run(control?: "delete-blob") {
       if (control && index === 1) {
         assert.ok(mutation.seeded && placement.draftDB, "CONTROL_SEED_INCOMPLETE")
         assertOwned(placement.draftDB, root)
-        const db = new Database(placement.draftDB, { create: false })
+        // SQLite requires an explicit read mode when creation is disabled.
+        const db = new Database(placement.draftDB, { readwrite: true, create: false })
         const remove = db.prepare("DELETE FROM blob WHERE id = ?")
         const find = db.prepare("SELECT id FROM blob WHERE id = ?")
         try {
@@ -109,15 +114,15 @@ export async function run(control?: "delete-blob") {
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
-        const exited = { done: false }
-        void host.exited.then(() => { exited.done = true }, () => { exited.done = true })
+        const exited = { done: false, code: undefined as number | undefined }
+        void host.exited.then((code) => { exited.code = code; exited.done = true }, () => { exited.done = true })
         const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
           existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
             : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
             try {
               mkdirSync(path.dirname(destination), { recursive: true })
               writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
-                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error),
+                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: exited.code ?? null,
                 output: startupDiagnostic(host.output(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")),
               }))
             } catch {
@@ -181,9 +186,13 @@ export async function run(control?: "delete-blob") {
     assert.equal(phases.length, control ? 2 : 3, "INCOMPLETE_PHASES")
     if (control) assert.ok(mutation.seeded && mutation.deleted && mutation.detected, "CONTROL_NOT_DETECTED")
   } finally {
-    if (lifecycle.exited && lifecycle.closed) rmSync(root, { recursive: true })
+    if (lifecycle.exited && lifecycle.closed && shell.ready) {
+      shell.lease?.restore()
+      shell.restored = true
+      rmSync(root, { recursive: true })
+    }
   }
-  assert.ok(lifecycle.exited && lifecycle.closed && !existsSync(root), "CLEANUP_UNCONFIRMED")
+  assert.ok(lifecycle.exited && lifecycle.closed && shell.restored && !existsSync(root), "CLEANUP_UNCONFIRMED")
   if (control) {
     console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, reason: "DRAFT_BLOB_LOST" }))
     throw new Error("DRAFT_BLOB_LOST")
