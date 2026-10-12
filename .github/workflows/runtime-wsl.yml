@@ -10,7 +10,15 @@ on:
 permissions:
   contents: read
 jobs:
+  # The Linux x64 producer builds the linux-arm64 CLI too; its omni pair and tree-sitter bundle come from Arm hosts.
+  omni:
+    uses: ./.github/workflows/omni-artifacts.yml
+  tree-sitter:
+    uses: ./.github/workflows/tree-sitter-artifacts.yml
+    with:
+      targets: '["linux-arm64"]'
   producer:
+    needs: [omni, tree-sitter]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults: {run: {shell: bash}}
@@ -43,11 +51,27 @@ jobs:
             return `${cpu}=${JSON.stringify(labels)}`;
           });
           await Bun.write(process.env.GITHUB_OUTPUT, outputs.join("\n") + "\n");'
-      - name: Require native Linux producer and exact Bun
-        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
       - name: Install dependencies once without lifecycle scripts
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Require native Linux producer and exact Bun
+        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+      # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads them.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-x64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-x64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-arm64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-arm64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-linux-arm64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/linux-arm64
       - name: Build and export both actual Linux guest products
+        env:
+          OMNI_ARTIFACTS: ${{ runner.temp }}/omni-artifacts
+          TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
         run: |
           set -euo pipefail
           ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
@@ -56,6 +80,13 @@ jobs:
             bun packages/cli/script/build.ts --skip-install --target "$target"
           done
           bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out wsl-resources --version "$ORCHESTRA_VERSION" --target linux-x64-baseline --target linux-arm64
+          # The guest install takes each CLI's omni pair from omni-<target>/ and its tree-sitter from tree-sitter-<target>/.
+          for target in linux-x64-baseline linux-arm64; do
+            bin="packages/cli/dist/cli-$target/bin"
+            mkdir -p "wsl-resources/omni-$target"
+            cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "wsl-resources/omni-$target/"
+            cp -R "$bin/tree-sitter" "wsl-resources/tree-sitter-$target"
+          done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: wsl-resources
@@ -85,10 +116,10 @@ jobs:
         with:
           bun-version: "1.3.14"
           bun-download-url: ${{ matrix.cpu == 'arm64' && 'https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-windows-aarch64.zip' || '' }}
-      - name: Require matching native Windows process and kernel CPU
-        run: bun packages/cli/script/runtime-proof.ts --target "${{ matrix.cpu == 'x64' && 'windows-x64-baseline' || 'windows-arm64' }}" --host
       - name: Install dependencies once for actual Desktop helpers
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Require matching native Windows process and kernel CPU
+        run: bun packages/cli/script/runtime-proof.ts --target "${{ matrix.cpu == 'x64' && 'windows-x64-baseline' || 'windows-arm64' }}" --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: wsl-resources

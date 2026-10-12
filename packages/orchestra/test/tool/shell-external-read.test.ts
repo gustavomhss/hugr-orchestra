@@ -36,6 +36,7 @@ import { Git } from "@/git"
 import { Shell } from "@orchestra/core/shell"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances, TestInstance, tmpdirScoped } from "../fixture/fixture"
+import { seatShellRuns } from "../fixture/seat-sandbox"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 
 // The real shell tool, resolved for a real agent the way a Session resolves it, with the real permission service:
@@ -194,23 +195,31 @@ it.instance("Maestro is asked before listing a directory outside the workspace",
   }),
 )
 
-it.instance("in-workspace reads and granted directories still run", () =>
+// A seat's shell runs only where its read sandbox can (test/fixture/seat-sandbox.ts).
+const seatRuns = seatShellRuns() ? it.instance : it.instance.skip
+
+seatRuns("a seat's in-workspace reads and granted directories still run", () =>
   Effect.gen(function* () {
     const directory = (yield* TestInstance).directory
     yield* Effect.promise(() => fs.writeFile(path.join(directory, "inside.txt"), "inside-text"))
     const seat = yield* shellFor("backend")
-    const local = kind === "posix" ? ["grep -r inside-text .", "cat ./inside.txt > /dev/null 2>&1"] : []
+    // On Linux, srt guards missing dotfiles such as .bashrc in a writable root with unopenable placeholders, which a
+    // recursive grep of . would report, so it searches the visible entries.
+    const local = kind === "posix" ? ["grep -r inside-text *", "cat ./inside.txt > /dev/null 2>&1"] : []
     for (const command of [list, `${read} inside.txt`, ...local]) {
       const exit = yield* run(seat, command)
       if (Exit.isFailure(exit)) throw new Error(`${command} failed for a seat: ${Cause.pretty(exit.cause)}`)
-      expect(exit.value.metadata.exit).toBe(0)
+      expect(exit.value.metadata.exit, `${command}: ${exit.value.output}`).toBe(0)
     }
     // The backend seat is granted its skill root, outside this workspace.
     const skills = yield* run(seat, `${list} "${slash(backendSkills.root)}"`)
     if (Exit.isFailure(skills)) throw new Error(`skill root refused: ${Cause.pretty(skills.cause)}`)
     expect(skills.value.output).toContain("backend-implement")
+  }),
+)
 
-    // Maestro reads saved tool output without being asked.
+it.instance("Maestro reads saved tool output without being asked", () =>
+  Effect.gen(function* () {
     const saved = path.join(TRUNCATION_DIR, `shell-external-read-${Math.random().toString(36).slice(2)}.txt`)
     yield* Effect.promise(() => fs.mkdir(TRUNCATION_DIR, { recursive: true }))
     yield* Effect.promise(() => fs.writeFile(saved, "saved-output"))

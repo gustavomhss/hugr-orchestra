@@ -42,7 +42,7 @@ it.live("SDK maintenance is isolated, role-preserving, and finishes only on a su
   expect(fixture.calls).toHaveLength(1)
   expect(fixture.calls[0].options).toMatchObject({ model: input.model.id, tools: [], mcpServers: {}, strictMcpConfig: true,
     disallowedTools: ["*"], maxTurns: 1, persistSession: false, settingSources: [],
-    systemPrompt: { type: "custom", prompt: "host system\n\nhost memory instruction" } })
+    systemPrompt: { type: "preset", preset: "claude_code", append: "host system\n\nhost memory instruction" } })
   expect(fixture.calls[0].options?.resume).toBeUndefined()
   expect(fixture.calls[0].options?.sessionStore).toBeUndefined()
   expect(fixture.calls[0].options).not.toHaveProperty("parentResume")
@@ -64,7 +64,7 @@ it.live("SDK producer self-check sends one deduplicated instruction and role-fra
   expect(fixture.calls).toHaveLength(1)
   expect(fixture.calls[0].options).toMatchObject({ model: input.model.id, tools: [], mcpServers: {}, strictMcpConfig: true,
     disallowedTools: ["*"], maxTurns: 1, persistSession: false, settingSources: [],
-    systemPrompt: { type: "custom", prompt: PROMPT } })
+    systemPrompt: { type: "preset", preset: "claude_code", append: PROMPT } })
   expect(PROMPT).toContain("Self-check this candidate BEFORE emitting it, within this same generation.")
   expect(PROMPT).toContain("There is no second reviewer model call.")
   expect(fixture.calls[0].options?.env).toEqual({ HOME: "/fixture", CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1" })
@@ -177,7 +177,7 @@ for (const abort of [false, true]) {
       }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
     } }
     const worker = yield* Stream.runCollect(ClaudeCodeLLM.create(sdk).stream(input)).pipe(
-      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path,
+      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path,
         ANTHROPIC_API_KEY: "paid", ANTHROPIC_AUTH_TOKEN: "paid", ANTHROPIC_BASE_URL: "https://wrong.invalid",
         CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "override" }),
       Effect.onExit(() => Deferred.succeed(stopped, undefined)), Effect.forkChild,

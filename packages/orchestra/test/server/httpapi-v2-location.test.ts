@@ -65,7 +65,8 @@ async function readEvent(reader: AsyncIterator<typeof Event.Type>) {
 }
 
 async function readEventType(reader: AsyncIterator<typeof Event.Type>, type: string) {
-  for (let index = 0; index < 20; index++) {
+  // Booting a Location registers the native archie seat, which emits one plugin.added per internal plugin first.
+  for (let index = 0; index < 100; index++) {
     const event = await readEvent(reader)
     if (event.type === type) return event
   }

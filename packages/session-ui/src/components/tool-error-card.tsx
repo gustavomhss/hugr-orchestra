@@ -6,6 +6,7 @@ import { Icon } from "@orchestra/ui/icon"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { useI18n } from "@orchestra/ui/context/i18n"
+import { isTaskTool } from "@orchestra/core/util/task-tool"
 
 export interface ToolErrorCardProps extends Omit<ComponentProps<typeof Card>, "children" | "variant"> {
   tool: string
@@ -58,7 +59,7 @@ export function ToolErrorCard(props: ToolErrorCardProps) {
       apply_patch: "ui.tool.patch",
       question: "ui.tool.questions",
     }
-    const key = map[split.tool]
+    const key = map[isTaskTool(split.tool) ? "task" : split.tool]
     if (!key) return split.tool
     if (!key.includes(".")) return key
     return i18n.t(key)

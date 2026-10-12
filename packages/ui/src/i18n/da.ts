@@ -153,6 +153,19 @@ export const dict = {
   "ui.tool.agent": "{{type}}-agent",
   "ui.tool.agent.default": "Agent",
 
+  "ui.research.terminal.ended": "Researchopgave afsluttet",
+  "ui.research.terminal.blocked": "Researchopgave blokeret",
+  "ui.research.terminal.failed": "Researchopgave mislykkedes",
+  "ui.research.terminal.interrupted": "Researchopgave afbrudt",
+  "ui.research.terminal.running": "Researchopgave kører",
+  "ui.research.sufficiency.answered": "Spørgsmål besvaret",
+  "ui.research.sufficiency.partial": "Delvist svar",
+  "ui.research.sufficiency.blocked": "Svar blokeret",
+  "ui.research.unverified":
+    "Det endelige researchkort eller referencerne kunne ikke verificeres. Prøv at genåbne de gemte dokumenter.",
+  "ui.research.documentUnavailable": "Researchdokument utilgængeligt",
+  "ui.research.documentLoading": "Indlæser researchdokument",
+
   "ui.common.file.one": "fil",
   "ui.common.file.other": "filer",
   "ui.common.question.one": "spørgsmål",

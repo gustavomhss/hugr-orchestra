@@ -15,6 +15,7 @@ const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
 import { copyOmni, resolveOmni } from "@orchestra/script/omni"
+import { copyTreeSitter, resolveTreeSitter } from "@orchestra/script/tree-sitter-prebuilds"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
 import { leanNotices } from "./lean-notices"
@@ -169,7 +170,17 @@ if (!skipInstall) {
   await $`bun install --os="*" --cpu="*" @parcel/watcher@${pkg.dependencies["@parcel/watcher"]}`
   await $`bun install --os="*" --cpu="*" @ff-labs/fff-bun@${pkg.dependencies["@ff-labs/fff-bun"]}`
 }
-for (const { item, name, omni, omniFiles } of builds) {
+// After the installs, which own node_modules, and before any build: a target whose bindings this host cannot provide
+// stops here with the named error.
+const prepared = builds.map((build) => ({
+  ...build,
+  treeSitter: resolveTreeSitter({
+    root: path.resolve(dir, "../.."),
+    artifacts: process.env.TREE_SITTER_ARTIFACTS,
+    ...build.item,
+  }),
+}))
+for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   await $`mkdir -p dist/${name}/bin`
 
@@ -223,6 +234,7 @@ for (const { item, name, omni, omniFiles } of builds) {
   })
 
   copyOmni(omniFiles, `dist/${name}/bin`)
+  copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
 
   // Smoke test: only run if binary is for current platform
   if (item.os === process.platform && item.arch === process.arch && !item.abi) {

@@ -1,5 +1,11 @@
 // Windows OS instrument only. A PowerShell 7 watchdog owns query handles and OS waits, including
 // executable startup. The caller's monotonic deadline independently rejects late observations.
+// Only the watchdog and the identity recorder are long-lived. Each query is a fresh pwsh process that
+// the watchdog starts, owns and kills at the deadline, so a hung query cannot stall the watchdog and
+// every snapshot is a new observation. On windows-latest a query's pwsh start measured ~0.3 s (max
+// 1.1 s) and its CIM work ~0.25 s, first query of a fresh runner 0.95-1.5 s including watchdog start.
+// Windows PowerShell 5.1 is not used: nothing else on a hosted runner starts it, and its first launch
+// spent over 9.5 s before running its first statement, inside the 10 s query budget.
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { closeSync, existsSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
@@ -85,7 +91,7 @@ function ensureBroker(deadline: number) {
   broker.proc = proc
   proc.on("error", () => { broker.closed = true }) // Close still must confirm process/stdio teardown.
   proc.on("close", () => { broker.closed = true; close.resolve() })
-  if (!proc.pid) throw new Error("Windows watchdog has no PID; close unconfirmed")
+  if (!proc.pid) throw new Error("Windows watchdog could not start pwsh (PowerShell 7 is required on PATH); close unconfirmed")
   while (!existsSync(path.join(broker.dir, "ready.json")) && performance.now() < deadline) Bun.sleepSync(5)
   if (!existsSync(path.join(broker.dir, "ready.json"))) { proc.kill("SIGKILL"); throw new Error("Windows watchdog startup deadline expired; close unconfirmed") }
   const ready = JSON.parse(readFileSync(path.join(broker.dir, "ready.json"), "utf8")) as Identity
@@ -174,7 +180,7 @@ export function publishRequest(file: string, text: string, written?: () => void)
 }
 
 export function query(command: string, timeoutMs = TIMEOUT_MS) {
-  return run("powershell", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(`[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${command}`, "utf16le").toString("base64")], timeoutMs)
+  return run("pwsh", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(`[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${command}`, "utf16le").toString("base64")], timeoutMs)
 }
 
 export function decode(input: unknown, queryPID: number): Row[] {
@@ -200,7 +206,7 @@ export function kill(pinned: Identity) {
 }
 
 /** Each recorder owns its exact child/close promise. Fault controls use real child executables through this boundary. */
-export function makeRecorder(input = { command: "powershell", args: ["-NoProfile", "-NonInteractive", "-Command", `
+export function makeRecorder(input = { command: "pwsh", args: ["-NoProfile", "-NonInteractive", "-Command", `
 $ErrorActionPreference='Stop'; Get-CimInstance Win32_Process -Filter 'ProcessId=${process.pid}' | Out-Null;
 Write-Output '{"ready":true}';
 while ($line=[Console]::ReadLine()) {

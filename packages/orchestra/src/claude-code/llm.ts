@@ -26,7 +26,8 @@ export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
       strictMcpConfig: true,
       disallowedTools: ["*"],
       canUseTool: async () => ({ behavior: "deny", message: "Context maintenance cannot execute tools" }),
-      systemPrompt: { type: "custom", prompt: compiled.system },
+      // The maintenance instruction rides on Claude Code's preset like every turn on the login (sdk.ts preset).
+      systemPrompt: ClaudeCodeSDK.preset(compiled.system),
       maxTurns: 1,
       persistSession: false,
       settingSources: [],
@@ -47,6 +48,7 @@ export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
       let finished = false
       for await (const message of query) {
         if (message.type === "assistant") {
+          if (message.error === "billing_error") throw new Error(ClaudeCodeSDK.billingRejection("billing_error") ?? "billing_error")
           if (finished || message.error) throw new Error("Claude Code maintenance invalid assistant")
           for (const block of message.message.content) {
             if (block.type === "tool_use" || block.type === "server_tool_use")
@@ -59,7 +61,8 @@ export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
         if (message.type !== "result") continue
         if (finished || message.subtype !== "success" || message.is_error ||
           !["end_turn", "stop_sequence"].includes(message.stop_reason ?? ""))
-          throw new Error("Claude Code maintenance did not finish successfully")
+          throw new Error(ClaudeCodeSDK.billingRejection("result" in message ? message.result : "errors" in message ? message.errors.join("; ") : "") ??
+            "Claude Code maintenance did not finish successfully")
         finished = true
       }
       if (!finished || !blocks.length) throw new Error("Claude Code maintenance missing successful result")

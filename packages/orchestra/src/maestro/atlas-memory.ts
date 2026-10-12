@@ -14,15 +14,19 @@ import { Git } from "@/git"
 import { LEGACY_BACKEND_ID } from "./roster"
 import { Seats } from "./seats"
 
-// The host side of the backend seat's bound Atlas Memory (F3): one binding per tool execution, the receipt every
+// The host side of native seats' bound Atlas Memory: one binding per tool execution, the receipt every
 // recall/emit persists in its tool part, and the once-only resume admission a logical resume leaves in the Session.
 
-export const MEMBER = "backend"
+export type Owner = "backend" | "jimmy"
 
-// The public Atlas boundary and durable receipts support one owner. Definitions reject other owners rather than
-// routing a new seat into backend memory. Capability controls exposure, not ownership or the public Atlas schema.
+// Stable executing identity and explicit seat capability are both required; labels never choose an owner.
+export function owner(agent: { id?: string; native?: boolean } | undefined): Owner | undefined {
+  if (agent?.native !== true || (agent.id !== "backend" && agent.id !== "jimmy")) return undefined
+  return Seats.find(agent.id)?.atlasMemory === true ? agent.id : undefined
+}
+
 export function supports(agent: { id?: string; native?: boolean }) {
-  return agent.native === true && agent.id === MEMBER && Seats.find(agent.id)?.atlasMemory === true
+  return owner(agent) !== undefined
 }
 
 export const UnitParam = Schema.optional(
@@ -40,7 +44,7 @@ export type Receipt = {
   schema: "atlas-memory-receipt-v1"
   op: "recall" | "emit"
   outcome: MemoryOutcome | "read"
-  binding: { projectID: string; root: string; memoryOwner: "backend" } & Execution
+  binding: { projectID: string; root: string; memoryOwner: Owner } & Execution
   ref?: RecordRef
   reconciled?: true
   refusal?: MemoryRejected
@@ -52,7 +56,7 @@ export type Receipt = {
 // task tool call that dispatched the resume.
 export type AdmissionKey = {
   projectID: string
-  memoryOwner: "backend"
+  memoryOwner: Owner
   logicalResumeID: string
   kind: "task" | "pr"
   id: string
@@ -72,7 +76,14 @@ export const ADMISSION_KEY = "atlasResume"
 // Binds the seat's Memory to the execution worktree (owner ruling F3-D5, as the running header does) and to this
 // tool call. Storage and owner come only from the host; a missing placement, an unreadable HEAD or a binding Atlas
 // rejects is returned as `unavailable`, never thrown into the turn.
-export const open = Effect.fn("AtlasMemory.open")(function* (execution: Execution) {
+export const open = Effect.fn("AtlasMemory.open")(function* (
+  execution: Execution,
+  agent: { id?: string; native?: boolean },
+) {
+  const member = owner(agent)
+  if (!member) return { unavailable: "no supported native Atlas owner is bound to this call" }
+  if (!execution.sessionID || !execution.callID || !execution.assistantMessageID)
+    return { unavailable: "the tool call carries incomplete execution identity" }
   const instance = yield* InstanceRef
   if (!instance) return { unavailable: "no project placement is bound to this call" }
   const root = instance.worktree === "/" ? instance.directory : instance.worktree
@@ -92,10 +103,10 @@ export const open = Effect.fn("AtlasMemory.open")(function* (execution: Executio
       createNativeMemory({
         storage: { projectID: instance.project.id, root },
         source: { worktree: root, revision },
-        memoryOwner: MEMBER,
-        legacyOwners: [LEGACY_BACKEND_ID],
+        memoryOwner: member,
+        legacyOwners: member === "backend" ? [LEGACY_BACKEND_ID] : [],
         execution: {
-          actor: { memberId: MEMBER, projectId: instance.project.id, sessionId: execution.sessionID },
+          actor: { memberId: member, projectId: instance.project.id, sessionId: execution.sessionID },
           executionSessionID: execution.sessionID,
           invocation: { callID: execution.callID, assistantMessageID: execution.assistantMessageID },
         },

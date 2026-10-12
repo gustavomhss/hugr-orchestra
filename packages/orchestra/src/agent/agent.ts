@@ -322,16 +322,16 @@ const layer = Layer.effect(
         }
 
         for (const [key, value] of Object.entries(agentConfig)) {
-          // Every session runs on Maestro, so configuration may neither disable it, take it out of primary mode, nor move
-          // it off Orchestra's loop: it coordinates the other engines. Every other agent, native seats included, may.
-          const engine = key === "maestro" ? undefined : value.engine
+          // Every session runs on Maestro, so configuration may neither disable it, take it out of primary mode, nor
+          // rename it. Its engine is the owner's opt-in: Orchestra's loop by default, Claude Code with
+          // `agent.maestro.engine: "claude-code"`, where it keeps its tools, delegation and prompt (claude-code/tools.ts).
           // Native seats accept only model, variant, temperature, engine and their display label (resolved below).
           if (roster.some((member) => member.memberId === key && member.nativeProfile)) {
             const item = agents[key]
             if (value.model) item.model = Provider.parseModel(value.model)
             item.variant = value.variant ?? item.variant
             item.temperature = value.temperature ?? item.temperature
-            item.engine = engine ?? item.engine
+            item.engine = value.engine ?? item.engine
             continue
           }
           if (value.disable && key !== "maestro") {
@@ -359,7 +359,7 @@ const layer = Layer.effect(
           item.hidden = value.hidden ?? item.hidden
           if (key !== "maestro") item.name = value.name ?? item.name
           item.steps = value.steps ?? item.steps
-          item.engine = engine ?? item.engine
+          item.engine = value.engine ?? item.engine
           item.options = mergeDeep(item.options, value.options ?? {})
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
         }

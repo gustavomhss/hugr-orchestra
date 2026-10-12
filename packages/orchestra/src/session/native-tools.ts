@@ -8,6 +8,7 @@ import { ToolRegistry } from "@/tool/registry"
 import { MCP } from "@/mcp"
 import { Truncate } from "@/tool/truncate"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { ResearchExecution } from "@/research/allowance"
 import { Config } from "@/config/config"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
@@ -23,6 +24,7 @@ export const resolve = Effect.fn("SessionNativeTools.resolve")(function* (
     mcp: Parameters<typeof MCP.Service.of>[0]
     truncate: Parameters<typeof Truncate.Service.of>[0]
     flags: Parameters<typeof RuntimeFlags.Service.of>[0]
+    research: ResearchExecution.Interface
     config: Parameters<typeof Config.Service.of>[0]
     fs: FSUtil.Interface
     global: Global.Interface
@@ -43,6 +45,7 @@ export const resolve = Effect.fn("SessionNativeTools.resolve")(function* (
     Effect.provideService(MCP.Service, services.mcp),
     Effect.provideService(Truncate.Service, services.truncate),
     Effect.provideService(RuntimeFlags.Service, services.flags),
+    Effect.provideService(ResearchExecution.Service, services.research),
     Effect.provideService(Config.Service, services.config),
     Effect.provideService(FSUtil.Service, services.fs),
     Effect.provideService(Global.Service, services.global),

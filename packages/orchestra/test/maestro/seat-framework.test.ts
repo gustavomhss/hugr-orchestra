@@ -17,7 +17,9 @@ describe("native seat framework", () => {
     expect(definitions.toSorted()).toEqual(Object.values(Seats.all).map((seat) => `${seat.id}.ts`).toSorted())
     for (const seat of Object.values(Seats.all)) {
       expect(seat.prompt).toContain(`Return card: ${seat.returnCard}`)
-      expect(seat.prompt).toContain("Forbidden:")
+      expect(seat.prompt.replaceAll("\r\n", "\n")).toBe(
+        (await Bun.file(path.join(dir, "../../agent/prompt", `${seat.id}.txt`)).text()).replaceAll("\r\n", "\n"),
+      )
       if (seat.skills.length === 0) continue
       const root = Seats.skillSource(seat.id)
       const dirs = (await fs.readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
@@ -25,18 +27,51 @@ describe("native seat framework", () => {
       for (const skill of seat.skills) expect(matter(await Bun.file(path.join(root, skill, "SKILL.md")).text()).data.name).toBe(skill)
     }
     expect(Seats.all.backend.skills.toSorted()).toEqual(BackendToolkitManifest.ENTRY_SKILLS.toSorted())
+    expect(Seats.all.jimmy).toMatchObject({
+      id: "jimmy",
+      profile: "discovery",
+      returnCard: "jimmy-result",
+      workResult: "discovery-work-result-v1",
+      skills: ["jimmy-discovery", "jimmy-research"],
+      writeRoots: false,
+      strictResume: true,
+      atlasMemory: true,
+      toolkit: false,
+    })
     expect(await seatSkillsModule()).toContain('"backend": {')
   })
 
   test("unsupported ownership and malformed definitions fail before registration", () => {
     const backend = Seats.all.backend
-    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only the backend owner: sample-seat")
+    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend and jimmy owners: sample-seat")
     expect(() => define({ ...backend, id: "sample-seat", atlasMemory: false })).toThrow("The backend toolkit supports only the backend seat: sample-seat")
     expect(() => define({ ...backend, id: "../escape" })).toThrow("Invalid native seat id")
     expect(() => define({ ...backend, skills: ["foreign-work"] })).toThrow("Entry skills must be unique and seat-scoped")
     expect(() => define({ ...backend, returnCard: "unsafe.*" })).toThrow("Work result requires a fenced return-card tag")
     expect(() => define({ ...backend, profileKey: "review" })).toThrow("Invalid native seat profile key")
     expect(() => define({ ...backend, profileKey: "../escape" })).toThrow("Invalid native seat profile key")
+  })
+
+  test("upstream identity preserves bounded authoring and backend-only capabilities", () => {
+    const upstream = Seats.all.archie
+    expect(Seats.find("archie")).toBe(upstream)
+    expect(upstream).toMatchObject({
+      id: "archie",
+      profile: "execution",
+      profileKey: "upstream",
+      labelEnv: "HUGR_UPSTREAM_NAME",
+      skills: ["archie-plan", "archie-work-package"],
+      returnCard: "upstream-result",
+      workResult: "upstream-work-result-v1",
+      writeRoots: true,
+      strictResume: true,
+      atlasMemory: false,
+      toolkit: false,
+    })
+    expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../archie-specialist/skills"))
+    expect(upstream.prompt).toContain("Load archie-plan for authoring and archie-work-package")
+    expect(() => define({ ...upstream, atlasMemory: true })).toThrow("Atlas Memory supports only backend and jimmy owners: archie")
+    expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")
   })
 
   test("scaffold refuses collisions and invalid ids without overwriting artifacts", async () => {

@@ -47,7 +47,7 @@ const SOURCE = [
 // Its dependencies are pinned by the module's own go.sum and verified against the checksum database at build time.
 export default {
   id: "gocqlx-schemagen",
-  version: `${VERSION}+orchestra.cassandra3`,
+  version: `${VERSION}+orchestra.cassandra4`,
   license: "Apache-2.0",
   // Owned build: gocqlx v3.0.4 command-only Dialer overlay (Darwin Unix routes, Linux srt CONNECT proxy) + Scylla gocql v1.15.3 catalog-availability backport.
   // Both upstream licenses and source notices remain in the install; provenance and byte pins live in the helper.

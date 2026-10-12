@@ -177,6 +177,18 @@ export const dict = {
   "ui.tool.agent": "{{type}} 智能体",
   "ui.tool.agent.default": "智能体",
 
+  "ui.research.terminal.ended": "研究任务已结束",
+  "ui.research.terminal.blocked": "研究任务受阻",
+  "ui.research.terminal.failed": "研究任务失败",
+  "ui.research.terminal.interrupted": "研究任务已中断",
+  "ui.research.terminal.running": "研究任务进行中",
+  "ui.research.sufficiency.answered": "问题已回答",
+  "ui.research.sufficiency.partial": "部分回答",
+  "ui.research.sufficiency.blocked": "回答受阻",
+  "ui.research.unverified": "无法验证最终研究卡片或参考资料。请尝试重新打开已保存的文档。",
+  "ui.research.documentUnavailable": "研究文档不可用",
+  "ui.research.documentLoading": "正在加载研究文档",
+
   "ui.common.file.one": "个文件",
   "ui.common.file.other": "个文件",
   "ui.common.question.one": "个问题",

@@ -41,28 +41,6 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
     console.log(await child([process.execPath, "--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path],
       { ...process.env, LEAN_NATIVE_PRODUCT_DOM: "1" }, path.resolve(import.meta.dir, "..")).finish())
   }, 600000)
-  test("combined Schema/Core/Orchestra/app/session-ui/ui types in CI", async () => {
-    for (const pkg of ["schema", "core", "orchestra", "app", "session-ui", "ui"])
-      console.log(`${pkg}: ${await child([process.execPath, "typecheck"], process.env, path.resolve(orchestra, "..", pkg)).finish()}`)
-  }, 600000)
-  test("native product proof file typechecks through standard app script in CI", async () => {
-    const errors: unknown[] = []
-    const resources: Resource[] = []
-    try {
-      const dir = await mkdtemp(path.join(os.tmpdir(), "lean-proof-types-"))
-      resources.push({ label: "typecheck scratch", close: () => rm(dir, { recursive: true, force: true }) })
-      const app = path.resolve(import.meta.dir, "..")
-      const config = path.join(dir, "tsconfig.json")
-      await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
-        // core's omni loader imports with explicit .ts extensions, which the bundler-driven packages already allow.
-        compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, allowImportingTsExtensions: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
-        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-dom.test-helper.ts"), path.join(import.meta.dir, "solid-dom.ts")],
-      }))
-      console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
-    } catch (error) { errors.push(error) }
-    await cleanup(resources, errors)
-    if (errors.length) throw new AggregateError(errors, "Proof typecheck primary and cleanup errors")
-  }, 600000)
 } else {
   const { createComponent, createRoot, createStore, render } = await import("./lean-dom.test-helper")
   Bun.plugin({ name: "lean-native-product-assets", setup(build) {

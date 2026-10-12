@@ -177,6 +177,19 @@ export const dict = {
   "ui.tool.agent": "Agente {{type}}",
   "ui.tool.agent.default": "Agente",
 
+  "ui.research.terminal.ended": "Tarea de investigación finalizada",
+  "ui.research.terminal.blocked": "Tarea de investigación bloqueada",
+  "ui.research.terminal.failed": "Tarea de investigación fallida",
+  "ui.research.terminal.interrupted": "Tarea de investigación interrumpida",
+  "ui.research.terminal.running": "Tarea de investigación en curso",
+  "ui.research.sufficiency.answered": "Pregunta respondida",
+  "ui.research.sufficiency.partial": "Respuesta parcial",
+  "ui.research.sufficiency.blocked": "Respuesta bloqueada",
+  "ui.research.unverified":
+    "No se pudo verificar la tarjeta final de investigación o las referencias. Intenta volver a abrir los documentos guardados.",
+  "ui.research.documentUnavailable": "Documento de investigación no disponible",
+  "ui.research.documentLoading": "Cargando documento de investigación",
+
   "ui.common.file.one": "archivo",
   "ui.common.file.other": "archivos",
   "ui.common.question.one": "pregunta",

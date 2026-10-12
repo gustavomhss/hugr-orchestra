@@ -54,7 +54,12 @@ test("Task binds completion before actual background dispatch and checks actual 
     ts.forEachChild(node, findReturns)
   }
   findReturns(run.initializer)
-  const result = returns.find((statement) => statement.expression?.getText(source).startsWith("result.parts.findLast"))
+  // The completed return may wrap the worker text in `work.report(...)` to append the qualification packet.
+  const returned = (expression: ts.Expression | undefined) =>
+    expression && ts.isCallExpression(expression) && expression.expression.getText(source) === "work.report"
+      ? expression.arguments[0]
+      : expression
+  const result = returns.find((statement) => returned(statement.expression)?.getText(source).startsWith("result.parts.findLast"))
   if (!result) throw new Error("TASK_RESULT_RETURN_MISSING")
   expect(check[0].end).toBeLessThan(result.pos)
 })

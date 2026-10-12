@@ -14,6 +14,7 @@ import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { useSessionLayout } from "./session-layout"
 import { agentKey } from "@/context/agent-identity"
+import { isTaskTool, taskAgentType } from "@orchestra/core/util/task-tool"
 
 type ToolPart = Extract<Part, { type: "tool" }>
 
@@ -195,7 +196,7 @@ export function deriveTasks(input: TasksInput) {
   // The latest task call per child wins: resuming a task reuses its child session.
   const taskCalls = new Map(
     calls.flatMap((part) => {
-      const childID = part.tool === "task" ? text(toolMetadata(part).sessionId) : undefined
+      const childID = isTaskTool(part.tool) ? text(toolMetadata(part).sessionId) : undefined
       return childID ? [[childID, part] as const] : []
     }),
   )
@@ -267,6 +268,7 @@ function agentItem(
   call: ToolPart | undefined,
 ): TasksItem {
   const callInput = call?.state.input ?? {}
+  const agentType = taskAgentType(callInput, toolMetadata(call))
   const outcome = agentOutcome(input, waiting, childID, call)
   return {
     key: ScopedKey.from(input.scope, input.sessionID, "agent", childID),
@@ -276,8 +278,8 @@ function agentItem(
       (call && toolTitle(call.state)) ||
       text(callInput.description) ||
       (child ? (child.title ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
-    agentID: text(callInput.subagent_type),
-    agent: label(input, text(callInput.subagent_type)),
+    agentID: agentType,
+    agent: label(input, agentType),
     state: outcome.state,
     startTime: child?.time.created ?? (call ? toolStart(call.state) : undefined),
     endTime: outcome.endTime,

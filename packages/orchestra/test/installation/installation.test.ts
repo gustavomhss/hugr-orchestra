@@ -5,6 +5,7 @@ import { Effect, Layer, Sink, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { Installation } from "../../src/installation"
 import { InstallationVersion } from "@orchestra/core/installation/version"
+import { Global } from "@orchestra/core/global"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { AppProcess } from "@orchestra/core/process"
 import { testEffect } from "../lib/effect"
@@ -14,8 +15,10 @@ const methods: Installation.Method[] = ["curl", "npm", "yarn", "pnpm", "bun", "b
 // Records every process the Installation service spawns. Each spawn exits 0 with empty output.
 function recordingLayer() {
   const spawns: string[] = []
+  const directories: (string | undefined)[] = []
   const spawner = ChildProcessSpawner.make((command) => {
     spawns.push(ChildProcess.isStandardCommand(command) ? [command.command, ...command.args].join(" ") : "piped")
+    directories.push(ChildProcess.isStandardCommand(command) ? command.options.cwd : undefined)
     return Effect.succeed(
       ChildProcessSpawner.makeHandle({
         pid: ChildProcessSpawner.ProcessId(0),
@@ -39,7 +42,7 @@ function recordingLayer() {
   })
   // Classification uses a recording spawner, not the native collection fast path or a real package manager.
   const processNode = makeGlobalNode({ service: AppProcess.Service, layer: AppProcess.layerWith("off"), deps: [spawnerNode] })
-  return { spawns, layer: LayerNode.compile(Installation.node, [[CrossSpawnSpawner.node, spawnerNode], [AppProcess.node, processNode]]) }
+  return { spawns, directories, layer: LayerNode.compile(Installation.node, [[CrossSpawnSpawner.node, spawnerNode], [AppProcess.node, processNode]]) }
 }
 
 describe("installation", () => {
@@ -81,6 +84,17 @@ describe("installation", () => {
       expect(methods).toContain(detected)
       if (detected === "curl") return
       expect(method.spawns).toContain("npm list -g --depth=0")
+    }),
+  )
+
+  // The probes run package managers, which execute project files from their cwd (yarn's .yarnrc yarn-path, pnpm's
+  // packageManager, bunfig.toml). The process cwd is the workspace, so every probe runs in Orchestra's own state directory.
+  const probes = recordingLayer()
+  testEffect(probes.layer).effect("method() probes package managers outside the workspace", () =>
+    Effect.gen(function* () {
+      if ((yield* Installation.use.method()) === "curl") return
+      expect(probes.spawns).toContain("yarn global list")
+      expect(probes.directories.every((directory) => directory === Global.Path.state)).toBe(true)
     }),
   )
 })

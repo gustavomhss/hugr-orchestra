@@ -14,6 +14,7 @@ import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 import { UpstreamResult } from "@/maestro/upstream-result"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
+import { DiscoveryResult } from "@/maestro/discovery-result"
 import type { TaskPromptOps } from "./task"
 import type { Tool } from "./tool"
 
@@ -105,7 +106,8 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
               summary: state === "completed"
                 ? `Background task completed: ${input.description}`
                 : `Background task failed: ${input.description}`,
-              text: captured.text,
+              // A discovery return leads with its bounded finding qualifications, as the foreground return does.
+              text: captured.workResult ? DiscoveryResult.report(captured.text, captured.workResult) : captured.text,
             }),
           },
         ],

@@ -26,6 +26,14 @@ export default {
   version: NODE_VERSION,
   license: "MIT",
   upstream: "nodejs/node",
+  // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "11.0" },
+    "linux-arm64": { glibc: "2.28" },
+    "linux-x64": { glibc: "2.28" },
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": unix("darwin-arm64", "sha256-YRMPOUwWMNIR3VCuzENT03lIDzbTrJE82F27oa7VhcY="),
     "darwin-x64": unix("darwin-x64", "sha256-WOmQIsL/iTlVdsx/1NmM6iS7aAgUddX4i4Ae6HKfsCY="),

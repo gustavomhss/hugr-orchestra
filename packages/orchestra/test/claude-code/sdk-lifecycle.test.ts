@@ -7,6 +7,9 @@ import { query } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { tmpdir } from "../fixture/fixture"
 
+// The real spawn path is paused until the owner approves the engine's plan (ClaudeCodeSDK.requirePlanApproval).
+const approved = { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }
+
 const login = { claudeAiOauth: {
   accessToken: "local-test-not-a-real-token", refreshToken: "local-test-not-a-real-refresh",
   expiresAt: 4102444800000, scopes: ["user:inference"],
@@ -42,12 +45,12 @@ for (const location of ["session", "secure", "empty", "default"]) {
     await mkdir(session, { recursive: true })
     await Bun.write(join(session, ".credentials.json"), JSON.stringify({ claudeAiOauth: { ...login.claudeAiOauth, accessToken: "synthetic-decoy" } }))
     await Bun.write(join(selected, ".credentials.json"), JSON.stringify(login))
-    const env = { HOME: home, PATH: dir.path,
+    const env = { ...approved, HOME: home, PATH: dir.path,
       ...(location !== "default" ? { CLAUDE_CONFIG_DIR: session } : {}),
       ...(location === "secure" ? { CLAUDE_SECURESTORAGE_CONFIG_DIR: secure } : {}),
       ...(location === "empty" ? { CLAUDE_SECURESTORAGE_CONFIG_DIR: "" } : {}),
     }
-    const lifetime = ClaudeCodeSDK.processLifetime({ env, spawnClaudeCodeProcess: (options) => {
+    const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env, spawnClaudeCodeProcess: (options) => {
       expect(options.env.CLAUDE_CODE_OAUTH_TOKEN).toBe(login.claudeAiOauth.accessToken)
       return spawn(process.execPath, ["-e", "process.exit(0)"], { env: options.env, stdio: ["pipe", "pipe", "pipe"] })
     } })
@@ -65,7 +68,7 @@ test.skipIf(process.platform !== "darwin")("native keychain stays authoritative 
   await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
   const keychain = { claudeAiOauth: { ...login.claudeAiOauth, accessToken: "synthetic-keychain-token" } }
   const tokens: string[] = []
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: { HOME: dir.path, PATH: dir.path, CLAUDE_CONFIG_DIR: dir.path },
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, HOME: dir.path, PATH: dir.path, CLAUDE_CONFIG_DIR: dir.path },
     spawnClaudeCodeProcess: (options) => {
       tokens.push(options.env.CLAUDE_CODE_OAUTH_TOKEN ?? "")
       return spawn(process.execPath, ["-e", "process.exit(0)"], { env: options.env, stdio: ["pipe", "pipe", "pipe"] })
@@ -102,7 +105,7 @@ async function syntheticKeychain(directory: string, contents: string, status = 0
 }
 
 test("API-only bare mode fails before credential lookup or spawn", async () => {
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: {}, extraArgs: { bare: null }, spawnClaudeCodeProcess: () => {
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: approved, extraArgs: { bare: null }, spawnClaudeCodeProcess: () => {
     throw new Error("spawn must not run")
   } })
   expect(() => lifetime.options.spawnClaudeCodeProcess({ command: "unused", args: ["--bare"], env: lifetime.options.env,
@@ -115,8 +118,8 @@ for (const abort of [false, true]) {
     await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
     const controller = new AbortController()
     const spawned: ReturnType<typeof spawn>[] = []
-    const lifetime = ClaudeCodeSDK.processLifetime({
-      env: { CLAUDE_CONFIG_DIR: dir.path }, abortController: controller,
+    const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(),
+      env: { ...approved, CLAUDE_CONFIG_DIR: dir.path }, abortController: controller,
       pathToClaudeCodeExecutable: process.execPath,
       spawnClaudeCodeProcess: (options) => {
         const child = spawn(process.execPath, ["-e", `
@@ -150,7 +153,7 @@ for (const abort of [false, true]) {
 
 test("explicit machine env removes ambient API/auth/backend overrides and preserves login essentials", async () => {
   await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
-  const env = {
+  const env = { ...approved,
     HOME: dir.path, PATH: process.env.PATH ?? "", CLAUDE_CONFIG_DIR: dir.path, USER: "test-user",
     ANTHROPIC_API_KEY: "paid-key", ANTHROPIC_AUTH_TOKEN: "paid-auth", ANTHROPIC_BASE_URL: "https://wrong.invalid",
     ANTHROPIC_CUSTOM_HEADERS: "Authorization: paid", CLAUDE_CODE_OAUTH_TOKEN: "override-login",
@@ -161,7 +164,7 @@ test("explicit machine env removes ambient API/auth/backend overrides and preser
     claude_code_use_vertex: "1", ANTHROPIC_NEW_BACKEND: "future-override",
   }
   const captured: NonNullable<Parameters<typeof query>[0]["options"]>["env"][] = []
-  const lifetime = ClaudeCodeSDK.processLifetime({ env, spawnClaudeCodeProcess: (options) => {
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env, spawnClaudeCodeProcess: (options) => {
     captured.push(options.env)
     return spawn(process.execPath, ["-e", "process.exit(0)"], { env: options.env, stdio: ["pipe", "pipe", "pipe"] })
   } })
@@ -179,7 +182,7 @@ test("explicit machine env removes ambient API/auth/backend overrides and preser
 test("missing, malformed, non-inference, and expired machine login fail before supplied spawn", async () => {
   await using dir = await tmpdir()
   let spawned = 0
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: { CLAUDE_CONFIG_DIR: dir.path }, spawnClaudeCodeProcess: () => {
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path }, spawnClaudeCodeProcess: () => {
     spawned++
     throw new Error("spawn must not run")
   } })
@@ -199,7 +202,7 @@ test("missing, malformed, non-inference, and expired machine login fail before s
 
 test("default spawner forwards command, args, cwd, env and joins fast exit", async () => {
   await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: { CLAUDE_CONFIG_DIR: dir.path } })
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
   const child = lifetime.options.spawnClaudeCodeProcess({ command: process.execPath,
     args: ["-e", "process.stdout.write(JSON.stringify({ cwd: process.cwd(), env: process.env }));"],
     cwd: dir.path, env: lifetime.options.env, signal: new AbortController().signal })
@@ -219,13 +222,13 @@ test("default spawner forwards command, args, cwd, env and joins fast exit", asy
 
 test("default spawner observes failed spawn and aborted process without mistaking error for exit", async () => {
   await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
-  const failed = ClaudeCodeSDK.processLifetime({ env: { CLAUDE_CONFIG_DIR: dir.path } })
+  const failed = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
   failed.options.spawnClaudeCodeProcess({ command: `${dir.path}/missing`, args: [], env: failed.options.env,
     signal: new AbortController().signal })
   await expect(failed.join()).rejects.toThrow()
 
   const controller = new AbortController()
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: { CLAUDE_CONFIG_DIR: dir.path } })
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, CLAUDE_CONFIG_DIR: dir.path } })
   const child = lifetime.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
     process.on("SIGTERM", () => setTimeout(() => process.exit(0), 100));
     setInterval(() => {}, 1000); process.stdout.write("ready");
@@ -254,7 +257,7 @@ test(`pinned CLI selects current local OAuth over conflicting settings (backend=
   const args = ["--settings", `${dir.path}/settings-conflict.json`, "--managed-settings", conflicts, "auth", "status", "--json"]
   const current = { claudeAiOauth: { ...login.claudeAiOauth, accessToken: "synthetic-current-local-token" } }
   const observed: string[] = []
-  const lifetime = ClaudeCodeSDK.processLifetime({ env: { HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path, USER: "",
+  const lifetime = ClaudeCodeSDK.processLifetime({ systemPrompt: ClaudeCodeSDK.preset(), env: { ...approved, HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path, USER: "",
     CLAUDE_CODE_OAUTH_TOKEN: "synthetic-ambient-oauth" }, spawnClaudeCodeProcess: (options) => {
     expect(options.env.CLAUDE_CODE_OAUTH_TOKEN).toBe(current.claudeAiOauth.accessToken)
     const child = spawn(binary, args, { env: { ...options.env,

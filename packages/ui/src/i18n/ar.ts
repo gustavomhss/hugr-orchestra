@@ -189,6 +189,19 @@ export const dict = {
   "ui.tool.agent": "وكيل {{type}}",
   "ui.tool.agent.default": "وكيل",
 
+  "ui.research.terminal.ended": "انتهت مهمة البحث",
+  "ui.research.terminal.blocked": "مهمة البحث محظورة",
+  "ui.research.terminal.failed": "فشلت مهمة البحث",
+  "ui.research.terminal.interrupted": "انقطعت مهمة البحث",
+  "ui.research.terminal.running": "مهمة البحث قيد التنفيذ",
+  "ui.research.sufficiency.answered": "تمت الإجابة عن السؤال",
+  "ui.research.sufficiency.partial": "إجابة جزئية",
+  "ui.research.sufficiency.blocked": "الإجابة محظورة",
+  "ui.research.unverified":
+    "تعذر التحقق من بطاقة البحث النهائية أو المراجع. حاول إعادة فتح المستندات المحفوظة.",
+  "ui.research.documentUnavailable": "مستند البحث غير متاح",
+  "ui.research.documentLoading": "جارٍ تحميل مستند البحث",
+
   "ui.common.file.one": "ملف",
   "ui.common.file.other": "ملفات",
   "ui.common.question.one": "سؤال",

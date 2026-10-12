@@ -5,12 +5,14 @@ import { Effect } from "effect"
 import { fileURLToPath } from "url"
 
 const contract = compile(ClientApi, { groupNames, endpointNames, omitEndpoints })
+const splitGroups = new Set(["research"])
 
 await Effect.runPromise(
   Effect.all(
     [
       write(
         emitPromise(contract, {
+          splitGroups,
           outputTypes: {
             "sessions.events": {
               name: "SessionEventEncoded",
@@ -25,7 +27,7 @@ await Effect.runPromise(
         fileURLToPath(new URL("../src/generated", import.meta.url)),
       ),
       write(
-        emitEffectImported(contract, { module: "../contract", api: "ClientApi" }),
+        emitEffectImported(contract, { module: "../contract", api: "ClientApi" }, { splitGroups }),
         fileURLToPath(new URL("../src/generated-effect", import.meta.url)),
       ),
     ],

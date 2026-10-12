@@ -172,6 +172,19 @@ export const dict = {
   "ui.tool.agent": "{{type}}エージェント",
   "ui.tool.agent.default": "エージェント",
 
+  "ui.research.terminal.ended": "調査タスク終了",
+  "ui.research.terminal.blocked": "調査タスクがブロックされました",
+  "ui.research.terminal.failed": "調査タスク失敗",
+  "ui.research.terminal.interrupted": "調査タスク中断",
+  "ui.research.terminal.running": "調査タスク実行中",
+  "ui.research.sufficiency.answered": "質問に回答済み",
+  "ui.research.sufficiency.partial": "部分的な回答",
+  "ui.research.sufficiency.blocked": "回答がブロックされました",
+  "ui.research.unverified":
+    "最終調査カードまたは参照資料を検証できませんでした。保存された文書を開き直してください。",
+  "ui.research.documentUnavailable": "調査文書を利用できません",
+  "ui.research.documentLoading": "調査文書を読み込み中",
+
   "ui.common.file.one": "ファイル",
   "ui.common.file.other": "ファイル",
   "ui.common.question.one": "質問",

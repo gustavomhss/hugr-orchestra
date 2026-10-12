@@ -181,7 +181,7 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
       }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
     }
     const worker = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("local child only") }).pipe(
-      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip",
+      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1", HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip",
         ANTHROPIC_BASE_URL: "https://must-strip.invalid", CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "must-strip-host-token" }),
       Effect.onExit(() => Deferred.succeed(done, undefined)), Effect.forkChild)
     const stop = mode === "cancel" ? yield* Effect.raceFirst(Deferred.await(entered), Deferred.await(done).pipe(

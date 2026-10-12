@@ -199,7 +199,7 @@ export interface AwarenessFacet {
  *   - `mission`      — the enduring thesis. Source: ratified DEFINE artifact (GEN-9).
  *   - `constitution` — the non-negotiable laws. Source: highest-tier invariant set (T0 manifest).
  *   - `terrain`      — the territory map + owners + which are T0. Source: territory-axis top rollup.
- *   - `ontology`     — the core vocabulary. Source: `slot='definition'` nodes curated by walt (DEFINE).
+ *   - `ontology`     — the core vocabulary. Source: `slot='definition'` nodes curated by archie (upstream).
  *   - `taste`        — what "good"/"rejected" looks like here. Source: `CONVENTIONS.md@sha` + gate config.
  */
 export interface Awareness {

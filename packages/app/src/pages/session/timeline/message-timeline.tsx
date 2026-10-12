@@ -80,6 +80,7 @@ import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
 import { withoutShellProjections } from "../orchestra-evidence-data"
+import { isTaskTool } from "@orchestra/core/util/task-tool"
 
 const emptyMessages: MessageType[] = []
 const emptyParts: PartType[] = []
@@ -96,16 +97,10 @@ let lastHeaderHeight = 64
 const timelineCache = new Map<string, { measurements: VirtualItem[]; toolOpen: Record<string, boolean | undefined> }>()
 
 const taskDescription = (part: PartType, sessionID: string) => {
-  if (part.type !== "tool" || part.tool !== "task") return
-  const metadata = "metadata" in part.state ? part.state.metadata : undefined
-  if (metadata?.sessionId !== sessionID) return
+  if (part.type !== "tool" || !isTaskTool(part.tool)) return
+  if (("metadata" in part.state ? part.state.metadata : undefined)?.sessionId !== sessionID) return
   const value = part.state.input?.description
   if (typeof value === "string" && value) return value
-}
-
-const boundaryTarget = (root: HTMLElement, target: EventTarget | null) => {
-  const nested = target instanceof Element ? target.closest("[data-scrollable]") : undefined
-  return nested instanceof HTMLElement ? nested : root
 }
 
 const markBoundaryGesture = (input: {
@@ -114,7 +109,8 @@ const markBoundaryGesture = (input: {
   delta: number
   onMarkScrollGesture: (target?: EventTarget | null) => void
 }) => {
-  const target = boundaryTarget(input.root, input.target)
+  const nested = input.target instanceof Element ? input.target.closest("[data-scrollable]") : undefined
+  const target = nested instanceof HTMLElement ? nested : input.root
   const mark =
     target === input.root ||
     shouldMarkBoundaryGesture({
@@ -357,10 +353,7 @@ export function MessageTimeline(props: {
   })
   const activeMessageID = projection.activeMessageID
   const assistantMessagesByParent = projection.assistantMessagesByParent
-  const lastAssistantGroupKey = projection.lastAssistantGroupKey
   const messageByID = projection.messageByID
-  const messageLastRowIndex = projection.messageLastRowIndex
-  const messageRowIndex = projection.messageRowIndex
   const timelineRowByKey = projection.rowByKey
   const timelineRows = projection.rows
 
@@ -462,7 +455,7 @@ export function MessageTimeline(props: {
     paddingEnd: 64,
     rangeExtractor: (range) => {
       const id = activeMessageID()
-      const active = id ? (messageLastRowIndex().get(id) ?? -1) : -1
+      const active = id ? (projection.messageLastRowIndex().get(id) ?? -1) : -1
       const indexes = defaultRangeExtractor({ ...range, overscan: renderOverscan() })
       return filterVirtualIndexes(
         [...new Set([...resizePinnedIndexes, ...indexes, ...(active < 0 ? [] : [active])])].sort((a, b) => a - b),
@@ -515,7 +508,7 @@ export function MessageTimeline(props: {
   const virtualRowKeys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key as string))
   createEffect(() => {
     props.setRevealMessage?.((id) => {
-      const index = messageRowIndex().get(id)
+      const index = projection.messageRowIndex().get(id)
       if (index === undefined) return
       virtualizer.scrollToIndex(index, { align: "center" })
     })
@@ -540,7 +533,6 @@ export function MessageTimeline(props: {
     if (!props.shouldAnchorBottom() || props.hasScrollGesture()) return
     if (resizePinFrame !== undefined) cancelAnimationFrame(resizePinFrame)
     clearPrependAnchor()
-    if (prependAnchorFrame !== undefined) cancelAnimationFrame(prependAnchorFrame)
     virtualizer.scrollToEnd()
   }
 
@@ -928,9 +920,7 @@ export function MessageTimeline(props: {
           .filter((part): part is ToolPart => part?.type === "tool")
       })
       const contextOpenKey = () => `context:${row().group.key}`
-      const open = createMemo(() => {
-        return toolOpen[contextOpenKey()] === true
-      })
+      const open = createMemo(() => toolOpen[contextOpenKey()] === true)
 
       return (
         <ContextToolGroup
@@ -938,7 +928,8 @@ export function MessageTimeline(props: {
           open={open()}
           onOpenChange={(value) => setToolOpen(contextOpenKey(), value)}
           busy={
-            workingTurn(row().userMessageID) && lastAssistantGroupKey().get(row().userMessageID) === row().group.key
+            workingTurn(row().userMessageID) &&
+            projection.lastAssistantGroupKey().get(row().userMessageID) === row().group.key
           }
           onSizeChange={onSizeChange}
         />
@@ -1117,6 +1108,13 @@ export function MessageTimeline(props: {
       }
       case "AssistantPart": {
         const assistantPartRow = row as Accessor<TimelineRowByTag<"AssistantPart">>
+        // Running Tasks expose child navigation and admitted research documents.
+        const interactiveTask = createMemo(() => {
+          const group = assistantPartRow().group
+          if (group.type !== "part") return false
+          const part = getMsgPart(group.ref.messageID, group.ref.partID)
+          return part?.type === "tool" && part.tool === "task"
+        })
         const head = createMemo(() => {
           const group = assistantPartRow().group
           const message = messageByID().get(
@@ -1136,7 +1134,7 @@ export function MessageTimeline(props: {
               >
                 <div
                   data-slot="session-turn-assistant-content"
-                  aria-hidden={workingTurn(assistantPartRow().userMessageID)}
+                  aria-hidden={workingTurn(assistantPartRow().userMessageID) && !interactiveTask()}
                 >
                   {renderAssistantPartGroup(assistantPartRow, onSizeChange)}
                 </div>

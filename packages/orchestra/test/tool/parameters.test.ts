@@ -235,6 +235,18 @@ describe("tool parameters", () => {
       const parsed = parse(Task, { description: "d", prompt: "p", subagent_type: "general", background: true })
       expect(parsed.background).toBe(true)
     })
+    test("native Atlas resume accepts only task or PR units", () => {
+      const brief = { description: "d", prompt: "p", subagent_type: "jimmy" }
+      for (const kind of ["task", "pr"] as const) {
+        expect(parse(Task, { ...brief, memoryUnit: { kind, id: "unit-1" } }).memoryUnit).toEqual({ kind, id: "unit-1" })
+      }
+      for (const memoryUnit of [{ kind: "session", id: "unit-1" }, { kind: "task", id: "" }, { kind: "pr" }])
+        expect(accepts(Task, { ...brief, memoryUnit })).toBe(false)
+      expect(toJsonSchema(Task).properties?.memoryUnit).toHaveProperty(
+        "description",
+        "Native Atlas specialist resume only: the task or PR unit whose latest admitted own Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for unsupported agents.",
+      )
+    })
     test("rejects missing prompt", () => {
       expect(accepts(Task, { description: "d", subagent_type: "general" })).toBe(false)
     })

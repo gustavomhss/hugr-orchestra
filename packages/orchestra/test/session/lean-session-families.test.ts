@@ -6,6 +6,7 @@ import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 import { fixture } from "./lean-session.fixture"
 import { testEffect } from "../lib/effect"
 import { makeHttp } from "./prompt.fixture"
+import { seatShellRuns } from "../fixture/seat-sandbox"
 
 const it = testEffect(makeHttp())
 
@@ -64,6 +65,9 @@ async function setup(args: string[], cwd: string) {
 
 it.instance("SessionTools restores Cargo pytest Go and Vitest defaults through captured native FS and Global", () => Effect.gen(function* () {
   const f = yield* fixture(true, undefined, true)
+  // The backend seat's shell runs only where its read sandbox can (test/fixture/seat-sandbox.ts); elsewhere the native
+  // call is refused before anything runs.
+  if (!seatShellRuns()) return yield* f.refused(cargo)
   const directory = f.owner.directory
   const python = process.platform === "win32" ? "python" : "python3"
   const bin = path.join(directory, ".venv", process.platform === "win32" ? "Scripts" : "bin")

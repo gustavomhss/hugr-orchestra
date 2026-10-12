@@ -177,6 +177,18 @@ export const dict = {
   "ui.tool.agent": "{{type}} 代理程式",
   "ui.tool.agent.default": "代理程式",
 
+  "ui.research.terminal.ended": "研究任務已結束",
+  "ui.research.terminal.blocked": "研究任務受阻",
+  "ui.research.terminal.failed": "研究任務失敗",
+  "ui.research.terminal.interrupted": "研究任務已中斷",
+  "ui.research.terminal.running": "研究任務進行中",
+  "ui.research.sufficiency.answered": "問題已回答",
+  "ui.research.sufficiency.partial": "部分回答",
+  "ui.research.sufficiency.blocked": "回答受阻",
+  "ui.research.unverified": "無法驗證最終研究卡片或參考資料。請嘗試重新開啟已儲存的文件。",
+  "ui.research.documentUnavailable": "研究文件無法使用",
+  "ui.research.documentLoading": "正在載入研究文件",
+
   "ui.common.file.one": "個檔案",
   "ui.common.file.other": "個檔案",
   "ui.common.question.one": "個問題",

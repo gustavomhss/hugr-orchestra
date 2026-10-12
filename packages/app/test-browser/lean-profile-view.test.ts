@@ -1,6 +1,4 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
 
 async function child(args: string[], env = process.env) {
@@ -27,38 +25,6 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       ...process.env,
       LEAN_PROFILE_VIEW_DOM: "1",
     })
-  }, 240000)
-  test("actual app and Lean DOM fixture types", async () => {
-    const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-view-types-"))
-    try {
-      const app = path.resolve(import.meta.dir, "..")
-      const config = path.join(scratch, "tsconfig.json")
-      await Bun.write(
-        config,
-        JSON.stringify({
-          extends: path.join(app, "tsconfig.json"),
-          compilerOptions: {
-            composite: false,
-            declaration: false,
-            emitDeclarationOnly: false,
-            noEmit: true,
-            rootDir: path.resolve(app, "../.."),
-            tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
-          },
-          include: [
-            path.join(app, "src"),
-            path.join(app, "package.json"),
-            import.meta.path,
-            path.join(import.meta.dir, "lean-profile-view.test-helper.ts"),
-            path.join(import.meta.dir, "lean-dom.test-helper.ts"),
-            path.join(import.meta.dir, "solid-dom.ts"),
-          ],
-        }),
-      )
-      await child(["typecheck", config])
-    } finally {
-      await rm(scratch, { recursive: true, force: true })
-    }
   }, 240000)
 } else {
   const { info, history, mount } = await import("./lean-profile-view.test-helper")

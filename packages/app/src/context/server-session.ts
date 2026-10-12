@@ -1,6 +1,7 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
-import type { OpenCodeEvent, SessionApi, SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { SessionApi, SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { ServerCurrentEvent } from "./server-sdk"
 import type {
   Message,
   OrchestraClient,
@@ -262,23 +263,7 @@ export function createServerSession(
     infoSeen.delete(session.id)
     infoSeen.add(session.id)
     if (infoSeen.size > sessionInfoLimit) {
-      const preserve = new Set([
-        ...pinned.keys(),
-        ...requests.keys(),
-        ...inflight.keys(),
-        ...inflightTodo.keys(),
-        ...messageLoads.keys(),
-        ...optimistic.keys(),
-        ...Object.entries(data.permission)
-          .filter(([, items]) => items.length > 0)
-          .map(([sessionID]) => sessionID),
-        ...Object.entries(data.question)
-          .filter(([, items]) => items.length > 0)
-          .map(([sessionID]) => sessionID),
-        ...Object.entries(data.session_status)
-          .filter(([, status]) => status.type !== "idle")
-          .map(([sessionID]) => sessionID),
-      ])
+      const preserve = protectedSessions()
       for (const sessionID of preserve) {
         let current = data.info[sessionID]
         while (current) {
@@ -933,7 +918,7 @@ export function createServerSession(
       .catch(() => {})
   }
 
-  const applyV2 = (event: OpenCodeEvent) => {
+  const applyV2 = (event: ServerCurrentEvent) => {
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)

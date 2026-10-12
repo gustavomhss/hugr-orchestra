@@ -1,6 +1,37 @@
 # Claude Code as Orchestra's harness
 
-Status: 2026-10-09. Owner-approved implementation and cold-review repairs complete; publication and final bundle CI pending. Historical prototype and verification records below retain their original scope.
+Status: 2026-10-11. **Paused** (see "Paused" below): no real engine run starts until the owner approves a new
+meta-harness plan. Historical prototype and verification records below retain their original scope.
+
+## Paused
+
+All real Claude Code engine runs are on hold until the owner approves a new meta-harness plan.
+
+**Why.**
+
+- **Token intermediation.** Orchestra drives Claude Code through its own loop, and the engine does extract and inject
+  the machine's login today: `ClaudeCodeSDK.processLifetime` reads the Claude Code OAuth token from the Keychain (or
+  `.credentials.json`) and injects it into the CLI as `CLAUDE_CODE_OAUTH_TOKEN`. That may count as intermediating
+  session tokens under Anthropic's terms. Earlier text in this spec said Orchestra "never reads or extracts tokens";
+  that was false (corrected in 4.3).
+- **Billing finding.** Anthropic billed a query whose system prompt replaced Claude Code's preset as a third-party app
+  drawing on extra usage (`400 Third-party apps now draw from your extra usage`, 4.3). The preset guard fixes that one
+  case; it does not settle whether Orchestra's loop around Claude Code is first-party use of the plan.
+- **Known gap.** In-process tools run `def.execute` directly (`claude-code/tools.ts`), so they skip ToolSafety and the
+  plugin `tool.execute.before`/`after` hooks that Orchestra's loop applies (`session/tools.ts`).
+
+The meta-harness plan resolves all three.
+
+**Enforcement.** `ClaudeCodeSDK.requirePlanApproval` runs inside `processLifetime`'s `spawnClaudeCodeProcess`, the
+point every real SDK `query()` passes before a Claude Code process exists, and ahead of the login read. Unless the
+environment sets `ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1`, it throws "The Claude Code engine is paused until its
+meta-harness plan is approved by the owner." The agent, seat or Maestro configured with `engine: "claude-code"`
+gets that as its turn error; it is never retried and never falls back to another transport, and the Keychain is never
+read. Recorded test transports never spawn, so they run without the flag. `script/claude-code-engine/proto.ts`, which
+calls `query()` directly, holds the same flag.
+
+**What lifts it.** The owner approves the new meta-harness plan; only then does an operator set
+`ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1` in the server environment.
 
 ## 1. Goal
 
@@ -15,7 +46,7 @@ the API with the subscription. It only changes, locally and between turns, what 
 | Concern | Owner | How |
 | --- | --- | --- |
 | Loop, model calls, Bash, Grep, Glob | Claude Code | Claude Agent SDK `query()` |
-| System prompt | Orchestra | `systemPrompt: { type: "preset", preset: "claude_code", append }`, or `{ type: "custom" }` to replace it |
+| System prompt | Orchestra | `systemPrompt: { type: "preset", preset: "claude_code", append }` only; never `custom` (4.3, terms posture) |
 | `read`, `edit`, `write` | Orchestra | In-process SDK tools (`createSdkMcpServer` + `tool()`), executed by Orchestra's own implementations |
 | Built-in file tools | removed | `disallowedTools: ["Read", "Edit", "Write", "NotebookEdit"]` removes them from the model's context; `toolAliases` routes a stray `Read`/`Edit`/`Write` call to Orchestra's |
 | Compaction | Orchestra | `settings: { autoCompactEnabled: false }`; Orchestra's continuity swaps the loaded context between turns |
@@ -77,8 +108,53 @@ part, and `ask` = Orchestra's permission service (5). The tool result returns as
 `image` content blocks.
 
 Built-in `Read`, `Edit`, `Write`, `NotebookEdit` are removed with `disallowedTools`; `toolAliases` routes a stray call.
-`Bash`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `TodoWrite` stay Claude Code's. Subagents (`Task`): Claude Code's own,
-off by default (`disallowedTools: ["Task"]`) until Orchestra decides how they relate to Maestro delegations.
+`Bash`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `TodoWrite` stay Claude Code's. Claude Code's own subagents (`Task`)
+are always off (`disallowedTools: ["Task"]`): delegation is Orchestra's `task` (4.3).
+
+### 4.3 Maestro on Claude Code (opt-in)
+
+Maestro runs on Orchestra's loop unless the owner sets `"agent": { "maestro": { "engine": "claude-code" } }`.
+Configuration still cannot disable, re-mode or rename Maestro; only its engine (and model) follow the owner's choice.
+On Claude Code, Maestro stays Maestro:
+
+- **Terms posture, unchanged from seats.** Every Maestro turn, and every nested teammate turn, is one Claude Agent SDK
+  `query()` on the machine's Claude Code login, exactly as for seats. Orchestra never calls the Anthropic API with
+  subscription credentials, but it does extract and inject the login: `processLifetime` reads the OAuth token from
+  the Keychain and hands it to the CLI as `CLAUDE_CODE_OAUTH_TOKEN` (an earlier "never reads or extracts tokens" here
+  was false). That is one reason the engine is paused ("Paused" above). Delegation only adds in-process tools to that
+  `query()`. Each Session gets its own `query()`, in-process server, abort controller and native
+  transcript store, so a teammate's nested turn shares no SDK state with Maestro's.
+  Every query on the login, turns and continuity maintenance alike, keeps Claude Code's `claude_code` system prompt
+  preset and only appends to it (`ClaudeCodeSDK.preset`). Anthropic bills a query whose system prompt replaces the
+  preset (custom, string or none) as a third-party app drawing on extra usage, not as Claude Code on the owner's plan:
+  Archie's acceptance run of the first Maestro build, which used `{ type: "custom" }`, was refused with
+  `400 Third-party apps now draw from your extra usage`. `ClaudeCodeSDK.processLifetime`, the one seam every engine
+  query passes, refuses any other system prompt, and such a refusal is reported as a billing refusal, never retried.
+
+- **One mapping, wider for Maestro** (`claude-code/tools.ts`). The engine takes the agent's toolset exactly as
+  Orchestra's loop resolves it (`ToolRegistry.tools` with the agent, the session's permissions and the message's tool
+  switches). `ClaudeCodeTools.NATIVE` names the tools Claude Code runs natively under Orchestra's gate (5):
+  `bash`→`Bash`, `grep`→`Grep`, `glob`→`Glob`, `webfetch`→`WebFetch`, `websearch`→`WebSearch`. Seats serve
+  `read`/`edit`/`write`/continuity in-process as before. Maestro serves every other tool it has in-process (`task`,
+  `question`, `todowrite`, `skill`, `maestro_*`, Arsenal, `context_*`, plugin tools such as the dock), with the
+  registry's own descriptions and schemas, and its Claude Code built-ins are limited (`tools`) to the native
+  counterparts it has, so no `TodoWrite`, `Skill`, `AskUserQuestion` or SDK subagent shadows an Orchestra tool.
+- **Delegation is the real `TaskTool`.** `mcp__orchestra__task` runs the registry's `task` definition, already wrapped by
+  the Arsenal bindings (`withSession` + `run`: tool-safety hooks, HOLDs, native-host observations). The loop hands the
+  engine its Task callbacks (`turn({ promptOps })`), so teammates, `writePaths`, logical task IDs, `beforeDispatch`,
+  background jobs and settlement are those of Orchestra's loop. A teammate runs in its own child session on its own
+  engine. Mirrored in-process calls carry no `providerExecuted` (Orchestra ran them), so work results, settlement and
+  provenance accept Maestro's `task` calls; the loop never treats a mirrored call (`metadata.claudeCodeTool`) as pending.
+- **Teammate returns.** A background teammate's result arrives as a synthetic `task-return` user message; the engine
+  admits it as input, like the owner's own messages, and delivers it on Maestro's next turn.
+- **Prompt.** Maestro, like every seat, keeps the `claude_code` preset (terms posture above). Its `append` opens with a
+  line saying Maestro's instructions govern where they differ from the Claude Code guidance, then Maestro's prompt, a
+  short engine note (tool prefix; Claude Code's Task/Agent, TodoWrite, Skill and AskUserQuestion guidance names tools
+  it does not have, so it uses `mcp__orchestra__task`, `todowrite`, `skill` and `question`; steering arrives at the
+  next turn, not the next step), the environment, Orchestra's instructions and the skill list.
+- **Unchanged:** `PromptGuard.check` before spawn, continuity through `sessionStore`, permissions through Orchestra
+  (asks reach the owner; a rule denial is shown and the turn continues, a rejection says to stop), and the delivery
+  cursor (prompts queued during a turn are sent on the next one).
 
 ## 5. Permissions
 
@@ -114,7 +190,7 @@ memory pass and how the result reaches the model.
   Orchestra.
 - **Memory pass transport.** The replay transport reuses the parent's request, which only Claude Code holds, so the pass
   uses the isolated transport. Its model call goes through Claude Code too: an `LLM.Interface` adapter backed by a
-  one-shot `query()` (`tools: []`, `systemPrompt: { type: "custom", prompt }`, `maxTurns: 1`, `persistSession: false`,
+  one-shot `query()` (`tools: []`, the `claude_code` preset with the instruction appended, `maxTurns: 1`, `persistSession: false`,
   same model). No API key is needed, and the pass counts toward the plan like any Claude Code request.
 - **Swap.** An applied complete-prefix pass leaves a v5 artifact (memory text, `boundary`, equal `coveredThrough`,
   source fingerprints and required `now`), without `tailStart`. At the next turn
@@ -159,7 +235,7 @@ its last tool result arrives. Revert from Orchestra's UI then works on Claude Co
 
 Code: `src/claude-code/` (`engine.ts`, `mirror.ts`, `tools.ts`, `permissions.ts`, `sdk.ts`), `src/tool/shell/scan.ts`,
 one line in `prompt.ts`. Selection: `"agent": { "<name>": { "engine": "claude-code", "model": "anthropic/<model>" } }`
-(Maestro always stays on Orchestra's loop).
+(Maestro stayed on Orchestra's loop in step 1; it may now opt in, see 4.3).
 
 Where it differs from sections 4-5, and why:
 - **One `query()` per turn with `resume`**, not one long-lived streaming-input process. It fits the loop's
@@ -194,8 +270,8 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   An engine handoff calls `release` to restore the ordinary provider/LLM while preserving durable memory. Forget keeps
   ordinary Orchestra's existing completion/discard behavior; transport cancellation on forget applies to configured
   external backends only.
-- `claude-code/llm.ts` supplies the isolated SDK producer: the actual SDK query entry point, the same model, custom
-  host system prompt, JSON-labelled historical roles/content, no tools/MCP/settings sources, one model turn, no session
+- `claude-code/llm.ts` supplies the isolated SDK producer: the actual SDK query entry point, the same model, the
+  host system prompt appended to the `claude_code` preset, JSON-labelled historical roles/content, no tools/MCP/settings sources, one model turn, no session
   persistence. It publishes text and stop only after a successful non-truncated result. Stream-scope cleanup aborts and
   closes the query, then joins the real child exit through `ClaudeCodeSDK.processLifetime`; SDK `query.return()` alone races exit against two seconds. The existing host memory decoder, archive, delta checks, persistence and explicit retry remain in
   charge; there is no second compactor or direct provider API transport.

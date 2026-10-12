@@ -73,6 +73,7 @@ import { eq } from "drizzle-orm"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
+import { ResearchExecution } from "@/research/allowance"
 import { LLMEvent } from "@orchestra/llm"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
@@ -158,6 +159,7 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const nativeHost = yield* ArsenalBindings.make
+    const research = yield* ResearchExecution.Service
     const taskPrompts = TaskPromptOperations.make({
       fs: fsys,
       agents,
@@ -1063,10 +1065,12 @@ const layer = Layer.effect(
           )
           // Some providers return "stop" even when the assistant message contains
           // tool calls. Keep the loop running so tool results can be sent back to
-          // the model, but ignore cleanup-marked interrupted orphans.
+          // the model, but ignore cleanup-marked interrupted orphans. Calls mirrored from Claude Code are never
+          // pending here: Claude Code's turn already returned their results.
           const hasToolCalls =
             lastAssistantMsg?.parts.some(
-              (part) => part.type === "tool" && !part.metadata?.providerExecuted && !isOrphanedInterruptedTool(part),
+              (part) => part.type === "tool" && !part.metadata?.providerExecuted && !part.metadata?.claudeCodeTool &&
+                !isOrphanedInterruptedTool(part),
             ) ?? false
 
           if (
@@ -1095,7 +1099,7 @@ const layer = Layer.effect(
 
           if (workflow && (yield* agents.get(lastUser.agent))?.engine === "claude-code")
             return yield* Effect.die(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED" }))
-          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser }))) continue
+          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser, promptOps: taskPrompts.ops }))) continue
           step++
           if (step === 1)
             yield* title({
@@ -1154,7 +1158,7 @@ const layer = Layer.effect(
               model,
               processor: proxy.processor,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: taskPrompts.ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, research, nativeHost, config, fs: fsys, global, promptOps: taskPrompts.ops })
 
             const recall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
@@ -1591,6 +1595,7 @@ export const node = LayerNode.make({
     MCP.node,
     LSP.node,
     ToolRegistry.node,
+    ResearchExecution.node,
     Truncate.node,
     Image.node,
     CrossSpawnSpawner.node,

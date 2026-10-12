@@ -24,9 +24,10 @@ import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
 import { toolIdentity, settleTool } from "./lib/tool"
 import { testEffect } from "./lib/effect"
+import { jail } from "./lib/sandbox-host"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([FSUtil.node, AppProcess.node, ToolSafety.node])))
-const liveSandbox = ["darwin", "linux"].includes(process.platform) && (await Effect.runPromise(ToolSafetySandbox.available())) ? it.live : it.live.skip
+const liveSandbox = jail ? it.live : it.live.skip
 const fixture = Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
 const secret = "gh" + "p_" + "Q".repeat(40)
 // Base64 keeps fixture JS quoting identical under both cmd.exe and POSIX shells.

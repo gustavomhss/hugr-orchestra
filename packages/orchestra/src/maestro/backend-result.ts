@@ -7,6 +7,8 @@ import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import { Seats, type Seat } from "./seats"
+import type { Research } from "@orchestra/schema/research"
+import type { ResearchQualifications } from "@/research/qualifications"
 import { UpstreamResult } from "./upstream-result"
 import { OUTCOME_KEY, readOutcome, type Outcome } from "../plugin/hugr-composer/outcome"
 
@@ -68,6 +70,11 @@ export type WorkerEvidence = {
 
 export type WorkResult = {
   schema: string
+  discovery?: Research.Card
+  referencesChecked?: boolean
+  documents?: readonly Research.DocumentReceipt[]
+  corpus?: Research.Corpus
+  qualifications?: ResearchQualifications.Summary
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
   taskId?: string
   memberId?: string
@@ -249,7 +256,7 @@ function requireSchema(seat: Seat) {
 }
 
 // The Task finish predicate (task.ts): errors fail the Task; a missing or tool-call finish never reached a terminal.
-function terminal(message: SessionV1.WithParts) {
+export function terminal(message: SessionV1.WithParts) {
   if (message.info.role !== "assistant") return "interrupted" as const
   if (message.info.error) return "failed" as const
   const tools = message.parts.flatMap((part) => (part.type === "tool" ? [part.state.status] : []))

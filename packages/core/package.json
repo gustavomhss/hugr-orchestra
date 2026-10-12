@@ -120,6 +120,7 @@
     "google-auth-library": "10.5.0",
     "gray-matter": "4.0.3",
     "htmlparser2": "8.0.2",
+    "marked": "catalog:",
     "immer": "11.1.4",
     "ignore": "7.0.5",
     "jsonc-parser": "3.3.1",

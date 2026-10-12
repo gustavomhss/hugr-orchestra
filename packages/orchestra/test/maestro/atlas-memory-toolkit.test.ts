@@ -71,7 +71,7 @@ posix(
       const detected = BackendToolkitTarget.detect()
       if (!("target" in detected)) throw new Error(`BLOCKED: test host has no toolkit target: ${detected.unsupported}`)
       const fixture = yield* toolkit
-      const memory = yield* AtlasMemory.open(execution).pipe(
+      const memory = yield* AtlasMemory.open(execution, { id: "backend", native: true }).pipe(
         Effect.provideService(BackendToolkit.Root, fixture.root),
         Effect.provideService(BackendToolkit.Manifest, fixture.manifest),
       )
@@ -87,7 +87,7 @@ posix(
       expect(memory.write(TASK)).toMatchObject({ ok: true })
       expect(yield* Effect.promise(() => access(`${command}.scanned`).then(() => true, () => false))).toBe(true)
 
-      const fallback = yield* AtlasMemory.open(execution).pipe(
+      const fallback = yield* AtlasMemory.open(execution, { id: "backend", native: true }).pipe(
         Effect.provideService(BackendToolkit.Target, { unsupported: "test-host-unsupported" }),
       )
       if ("unavailable" in fallback) throw new Error(fallback.unavailable)

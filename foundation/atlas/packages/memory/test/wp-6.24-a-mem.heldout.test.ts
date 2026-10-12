@@ -24,7 +24,7 @@ const seeded = (): RootFacets => ({
   terrain: { grounding: [anchor("territory.md#top", "tt1")], tiers: ["kernel · memory", "tail t"] },
   ontology: {
     grounding: [anchor("definitions.md#core", "oo1")],
-    definitions: [{ slot: "definition", curatedBy: "walt", text: "Node: an OR-Set of claims" }],
+    definitions: [{ slot: "definition", curatedBy: "archie", text: "Node: an OR-Set of claims" }],
   },
   taste: { grounding: [anchor("CONVENTIONS.md", "kk1")], tiers: ["≤400 LOC per file", "tail k"] },
 })

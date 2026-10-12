@@ -180,6 +180,19 @@ export const dict = {
   "ui.tool.agent": "Агент {{type}}",
   "ui.tool.agent.default": "Агент",
 
+  "ui.research.terminal.ended": "Исследовательская задача завершена",
+  "ui.research.terminal.blocked": "Исследовательская задача заблокирована",
+  "ui.research.terminal.failed": "Исследовательская задача завершилась с ошибкой",
+  "ui.research.terminal.interrupted": "Исследовательская задача прервана",
+  "ui.research.terminal.running": "Исследовательская задача выполняется",
+  "ui.research.sufficiency.answered": "На вопрос дан ответ",
+  "ui.research.sufficiency.partial": "Частичный ответ",
+  "ui.research.sufficiency.blocked": "Ответ заблокирован",
+  "ui.research.unverified":
+    "Не удалось проверить итоговую карточку исследования или источники. Попробуйте вновь открыть сохранённые документы.",
+  "ui.research.documentUnavailable": "Документ исследования недоступен",
+  "ui.research.documentLoading": "Загрузка документа исследования",
+
   "ui.common.file.one": "файл",
   "ui.common.file.other": "файлов",
   "ui.common.question.one": "вопрос",

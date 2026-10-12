@@ -149,6 +149,19 @@ export const dict = {
   "ui.tool.agent": "{{type}} 에이전트",
   "ui.tool.agent.default": "에이전트",
 
+  "ui.research.terminal.ended": "조사 작업 종료",
+  "ui.research.terminal.blocked": "조사 작업 차단됨",
+  "ui.research.terminal.failed": "조사 작업 실패",
+  "ui.research.terminal.interrupted": "조사 작업 중단됨",
+  "ui.research.terminal.running": "조사 작업 실행 중",
+  "ui.research.sufficiency.answered": "질문에 답변됨",
+  "ui.research.sufficiency.partial": "부분 답변",
+  "ui.research.sufficiency.blocked": "답변 차단됨",
+  "ui.research.unverified":
+    "최종 조사 카드 또는 참고 자료를 검증할 수 없습니다. 보관된 문서를 다시 열어 보세요.",
+  "ui.research.documentUnavailable": "조사 문서를 사용할 수 없음",
+  "ui.research.documentLoading": "조사 문서 불러오는 중",
+
   "ui.common.file.one": "파일",
   "ui.common.file.other": "파일",
   "ui.common.question.one": "질문",

@@ -13,12 +13,14 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Session } from "../../src/session/session"
 import { Server } from "../../src/server/server"
 import { tmpdirScoped } from "../fixture/fixture"
+import { jail, sandboxHost } from "../fixture/sandbox-host"
 import { TestLLMServer } from "../lib/llm-server"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 
 const it = testEffect(Layer.mergeAll(TestLLMServer.layer, NodeServices.layer, LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node]))))
-const sandbox = await Effect.runPromise(ToolSafetySandbox.status())
-const prepared = sandbox.shellWrites === "enforced" ? it.live : it.live.skip
+const sandbox = sandboxHost
+// Windows' AppContainer grants need existing roots, so a missing output leaf never reaches parent preparation there.
+const prepared = sandbox.shellWrites === "enforced" && sandbox.shellSandbox.kind !== "appcontainer" ? it.live : it.live.skip
 if (sandbox.shellWrites === "unenforced") console.info(`Native preparation conformance skipped: ${sandbox.shellSandbox.reason}`)
 
 const fixture = (shell: "allow" | "ask" = "allow") => Effect.gen(function* () {
@@ -107,7 +109,7 @@ it.live("listener socket snapshot reaches actual V1 child shell; unsupported hos
     const node = yield* ToolSafetySandbox.available("node")
     if (!node) throw new Error("BLOCKED: Node unavailable")
     const probe = path.join(f.directory, "probe.cjs")
-    yield* f.fs.writeFileString(probe, `let denied=false;try{require('fs').writeFileSync('sibling','bad')}catch(e){denied=['EPERM','EACCES'].includes(e.code)};console.log('siblingDenied:'+denied);const c=require('net').connect(${JSON.stringify(socket)});c.on('data',d=>console.log(d.toString()));c.on('error',e=>{console.log(e.code);process.exitCode=3});c.setTimeout(1000,()=>{c.destroy();process.exitCode=4})`)
+    yield* f.fs.writeFileString(probe, `let denied=false;try{require('fs').writeFileSync('sibling','bad')}catch(e){denied=['EPERM','EACCES','EROFS'].includes(e.code)};console.log('siblingDenied:'+denied);const c=require('net').connect(${JSON.stringify(socket)});c.on('data',d=>console.log(d.toString()));c.on('error',e=>{console.log(e.code);process.exitCode=3});c.setTimeout(1000,()=>{c.destroy();process.exitCode=4})`)
     const grants = [{ directory: f.directory, path: socket }]
     const roots = ["nested/out.ts"]
     const profile = { requireSandbox: true, writeRoots: roots, sandbox: { enabled: true, scratch: true, unconfinedFallback: true, allowedUnixSockets: grants } }
@@ -208,16 +210,25 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
     expect(connections.accepted).toBe(1)
     yield* f.fs.writeFileString(path.join(f.directory, "probe.cjs"), `
       let siblingDenied=false;
-      try{require('fs').writeFileSync('sibling','bad')}catch(e){siblingDenied=['EPERM','EACCES'].includes(e.code)};
+      try{require('fs').writeFileSync('sibling','bad')}catch(e){siblingDenied=['EPERM','EACCES','EROFS'].includes(e.code)};
       const read=options=>new Promise(resolve=>{const c=require('net').connect(options);let data='';
         c.on('data',chunk=>data+=chunk);c.on('end',()=>{c.destroy();resolve(data)});
         c.on('error',e=>{c.destroy();resolve(e.code)});c.setTimeout(1000,()=>{c.destroy();resolve('TIMEOUT')})});
+      // Linux srt grants the port through its CONNECT proxy; the body follows the proxy's response header.
+      const tunnel=port=>new Promise(resolve=>{const u=new URL(process.env.HTTP_PROXY);
+        const auth=u.username?'Proxy-Authorization: Basic '+Buffer.from(decodeURIComponent(u.username)+':'+decodeURIComponent(u.password)).toString('base64')+'\\r\\n':'';
+        const c=require('net').connect(Number(u.port),u.hostname,()=>c.write('CONNECT 127.0.0.1:'+port+' HTTP/1.1\\r\\nHost: 127.0.0.1:'+port+'\\r\\n'+auth+'\\r\\n'));
+        let data='';c.on('data',chunk=>data+=chunk);c.on('end',()=>{c.destroy();resolve(data.split('\\r\\n\\r\\n').slice(1).join('\\r\\n\\r\\n'))});
+        c.on('error',e=>{c.destroy();resolve(e.code)});c.setTimeout(1000,()=>{c.destroy();resolve('TIMEOUT')})});
       (async()=>{const raw=await read({host:'127.0.0.1',port:${address.port}});
+        // Nothing is granted on port 1: raw TCP there is refused by the jail on every host.
+        const rawOther=await read({host:'127.0.0.1',port:1});
         const prefix='${address.port}:';
         const route=process.env.ORCHESTRA_TCP_PROXY_ROUTES?.split(';').find(value=>value.startsWith(prefix));
-        const broker=route?await read({path:Buffer.from(route.slice(prefix.length),'hex').toString('utf8')}):'NO_ROUTES';
-        console.log(JSON.stringify({siblingDenied,raw,broker}));
-        if(!siblingDenied||raw!=='EPERM'||broker!=='listener-loopback-response')process.exitCode=3;
+        const connect=process.env.ORCHESTRA_TCP_PROXY_CONNECT?.split(';').includes('${address.port}');
+        const broker=route?await read({path:Buffer.from(route.slice(prefix.length),'hex').toString('utf8')}):connect?await tunnel(${address.port}):'NO_ROUTES';
+        console.log(JSON.stringify({siblingDenied,raw,rawOther,broker}));
+        if(!siblingDenied||!['EPERM','ECONNREFUSED'].includes(rawOther)||broker!=='listener-loopback-response')process.exitCode=3;
       })().catch(error=>{console.error(error);process.exitCode=4});
     `)
     const grants = [{ directory: f.directory, host: "127.0.0.1" as const, port: address.port }]
@@ -230,17 +241,23 @@ it.live("listener loopback snapshots preserve broker grants while raw TCP stays 
     })))
     const child = yield* f.child(listener)
     const tools = yield* f.invoke(listener, child, "bash", { command: "node probe.cjs", description: "listener loopback endpoint probe", timeout: 5000 })
-    if (process.platform === "darwin") {
-      expect(tools.some((part) => part.state.status === "completed" && part.state.metadata.exit === 0 &&
-        part.state.output === `${JSON.stringify({ siblingDenied: true, raw: "EPERM", broker: "listener-loopback-response" })}\n`)).toBe(true)
-      expect(connections.accepted).toBe(2)
+    if (jail) {
+      // Seatbelt denies raw TCP outright. srt's network namespace has no route out: raw TCP to the granted port reaches
+      // only the in-jail endpoint forwarder, which tunnels through srt's allowlisting proxy; any other port is refused.
+      const raw = jail === "seatbelt" ? "EPERM" : "listener-loopback-response"
+      const rawOther = jail === "seatbelt" ? "EPERM" : "ECONNREFUSED"
+      const output = `${JSON.stringify({ siblingDenied: true, raw, rawOther, broker: "listener-loopback-response" })}\n`
+      expect(tools.map((part) => part.state.status === "completed" ? { exit: part.state.metadata.exit, output: part.state.output } : part.state.status))
+        .toContainEqual({ exit: 0, output })
+      expect(connections.accepted).toBe(jail === "seatbelt" ? 2 : 3)
       expect(yield* f.fs.isDir(path.join(f.directory, "nested"))).toBe(true)
       expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
       return
     }
-    // Linux CI has no ready srt here; an exact endpoint grant refuses rather than running unconfined.
+    // Without a jail (Linux without bubblewrap), or where Windows' AppContainer cannot grant the missing output leaf, an
+    // exact endpoint grant refuses rather than running unconfined.
     const reason = process.platform === "linux"
-      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-loopback-endpoint-exact-policy-unsupported"
+      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-appcontainer-write-root-missing"
     expect(tools.some((part) => part.state.status === "error" && part.state.error.includes(`Tool safety HOLD: ${reason}`))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
     expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)

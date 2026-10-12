@@ -194,6 +194,19 @@ export const dict: Record<string, string> = {
   "ui.toolErrorCard.failed": "Помилка",
   "ui.toolErrorCard.copyError": "Копіювати помилку",
 
+  "ui.research.terminal.ended": "Дослідницьке завдання завершено",
+  "ui.research.terminal.blocked": "Дослідницьке завдання заблоковано",
+  "ui.research.terminal.failed": "Дослідницьке завдання завершилося з помилкою",
+  "ui.research.terminal.interrupted": "Дослідницьке завдання перервано",
+  "ui.research.terminal.running": "Дослідницьке завдання виконується",
+  "ui.research.sufficiency.answered": "На запитання надано відповідь",
+  "ui.research.sufficiency.partial": "Часткова відповідь",
+  "ui.research.sufficiency.blocked": "Відповідь заблоковано",
+  "ui.research.unverified":
+    "Не вдалося перевірити підсумкову картку дослідження або джерела. Спробуйте знову відкрити збережені документи.",
+  "ui.research.documentUnavailable": "Документ дослідження недоступний",
+  "ui.research.documentLoading": "Завантаження документа дослідження",
+
   "ui.common.file.one": "файл",
   "ui.common.file.other": "файлів",
   "ui.common.question.one": "запитання",

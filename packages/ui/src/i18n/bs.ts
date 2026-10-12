@@ -181,6 +181,19 @@ export const dict = {
   "ui.tool.agent": "{{type}} agent",
   "ui.tool.agent.default": "agent",
 
+  "ui.research.terminal.ended": "Istraživački zadatak završen",
+  "ui.research.terminal.blocked": "Istraživački zadatak blokiran",
+  "ui.research.terminal.failed": "Istraživački zadatak nije uspio",
+  "ui.research.terminal.interrupted": "Istraživački zadatak prekinut",
+  "ui.research.terminal.running": "Istraživački zadatak u toku",
+  "ui.research.sufficiency.answered": "Na pitanje je odgovoreno",
+  "ui.research.sufficiency.partial": "Djelimičan odgovor",
+  "ui.research.sufficiency.blocked": "Odgovor blokiran",
+  "ui.research.unverified":
+    "Završna kartica istraživanja ili reference nisu mogle biti provjerene. Pokušajte ponovo otvoriti sačuvane dokumente.",
+  "ui.research.documentUnavailable": "Istraživački dokument nije dostupan",
+  "ui.research.documentLoading": "Učitavanje istraživačkog dokumenta",
+
   "ui.common.file.one": "datoteka",
   "ui.common.file.other": "datoteke",
   "ui.common.question.one": "pitanje",

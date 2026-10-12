@@ -186,6 +186,19 @@ export const dict: Record<string, string> = {
   "ui.toolErrorCard.failed": "Failed",
   "ui.toolErrorCard.copyError": "Copy error",
 
+  "ui.research.terminal.ended": "Research task ended",
+  "ui.research.terminal.blocked": "Research task blocked",
+  "ui.research.terminal.failed": "Research task failed",
+  "ui.research.terminal.interrupted": "Research task interrupted",
+  "ui.research.terminal.running": "Research task running",
+  "ui.research.sufficiency.answered": "Question answered",
+  "ui.research.sufficiency.partial": "Partial answer",
+  "ui.research.sufficiency.blocked": "Answer blocked",
+  "ui.research.unverified":
+    "Final research card or references could not be verified. Try reopening retained documents.",
+  "ui.research.documentUnavailable": "Research document unavailable",
+  "ui.research.documentLoading": "Loading research document",
+
   "ui.common.file.one": "file",
   "ui.common.file.other": "files",
   "ui.common.question.one": "question",

@@ -2,6 +2,7 @@ import type { Message, Session, Part, SnapshotFileDiff, SessionStatus, Provider 
 import type { FileDiffInfo } from "@opencode-ai/client/promise"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
+import type { Capability } from "@orchestra/schema/capability"
 
 export type NormalizedProviderListResponse = {
   all: Map<string, Provider>
@@ -55,6 +56,12 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
     sessionID?: string
     onNavigateToSession?: NavigateToSessionFn
     onSessionHref?: SessionHrefFn
+    onReadResearchArtifact?: (
+      sessionID: string,
+      artifact: Capability.ArtifactRef,
+      cursor?: string,
+      signal?: AbortSignal,
+    ) => Promise<unknown>
   }) => {
     return {
       get store() {
@@ -68,6 +75,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
       },
       navigateToSession: props.onNavigateToSession,
       sessionHref: props.onSessionHref,
+      readResearchArtifact: props.onReadResearchArtifact,
     }
   },
 })

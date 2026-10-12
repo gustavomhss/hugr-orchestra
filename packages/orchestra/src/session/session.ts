@@ -11,6 +11,7 @@ import { Decimal } from "decimal.js"
 import type { ProviderMetadata, Usage } from "@orchestra/llm"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Database } from "@orchestra/core/database/database"
+import { ResearchSessionCleanup } from "@/research/session-cleanup"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Plugin } from "../plugin"
 import { SessionV2 } from "@orchestra/core/session"
@@ -486,12 +487,13 @@ export type Patch = Omit<Partial<Info>, "time" | "summary" | "revert" | "permiss
 const layer: Layer.Layer<
   Service,
   never,
-  BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service
+  BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service | ResearchSessionCleanup.Requirements
 > = Layer.effect(
   Service,
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const database = yield* Database.Service
+    const removeResearch = yield* ResearchSessionCleanup.make
     const background = yield* BackgroundJob.Service
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
@@ -637,22 +639,15 @@ const layer: Layer.Layer<
         if (hasInstance) {
           const sessionEndOutput = { cleanup: true }
           yield* plugin
-            .trigger(
-              "session.end",
-              {
-                sessionID,
-                duration_ms: Date.now() - session.time.created,
-                turn_count: 0,
-                reason: "user_exit",
-              },
-              sessionEndOutput,
-            )
+            .trigger("session.end", { sessionID, duration_ms: Date.now() - session.time.created, turn_count: 0, reason: "user_exit" },
+              sessionEndOutput)
             .pipe(
               Effect.timeout(5000),
               Effect.catch((err) => Effect.logError("session.end hook failed or timed out", { sessionID, err })),
             )
         }
 
+        yield* removeResearch(session)
         yield* events.publish(SessionV1.Event.Deleted, { sessionID, info: session })
         yield* events.remove(sessionID)
       } catch (error) {
@@ -1084,7 +1079,7 @@ const _pluginNode: LayerNode.Node<unknown, unknown, any> = new Proxy({} as Layer
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, _pluginNode] as never,
+  deps: [BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, ResearchSessionCleanup.dependency, _pluginNode] as never,
 })
 
 export * as Session from "./session"

@@ -1,3 +1,4 @@
+import type { RequestDescriptor } from "./request"
 import type {
   HealthGetOutput,
   LocationGetInput,
@@ -190,6 +191,7 @@ import type {
   SchedulesRunOutput,
 } from "./types"
 import { ClientError } from "./client-error"
+import { makeResearch } from "./research"
 
 export interface ClientOptions {
   readonly baseUrl: string
@@ -200,17 +202,6 @@ export interface ClientOptions {
 export interface RequestOptions {
   readonly signal?: AbortSignal
   readonly headers?: HeadersInit
-}
-
-interface RequestDescriptor {
-  readonly method: string
-  readonly path: string
-  readonly query?: Record<string, unknown>
-  readonly headers?: Record<string, unknown>
-  readonly body?: unknown
-  readonly successStatus: number
-  readonly declaredStatuses: ReadonlyArray<number>
-  readonly empty: boolean
 }
 
 export function make(options: ClientOptions) {
@@ -603,6 +594,7 @@ export function make(options: ClientOptions) {
           requestOptions,
         ).then((value) => value.data),
     },
+    research: makeResearch(request, sse),
     messages: {
       list: (input: MessagesListInput, requestOptions?: RequestOptions) =>
         request<MessagesListOutput>(

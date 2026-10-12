@@ -1,33 +1,59 @@
 import { expect, test } from "bun:test"
 import { createRequire } from "node:module"
+import path from "node:path"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
 import { flowFromDocument, issues } from "@/orchestra/relay/graph"
 import type { RelaySource } from "@/orchestra/relay/source"
 
-// Drive production JSX with the app's Solid compiler, not Bun's React transform.
+// Bun compiles JSX for React, and test files share one module registry: earlier files (prompt-*, command-palette and
+// others) already loaded @orchestra/ui's helper.tsx that way, and a loaded module never reaches a plugin registered
+// later. Load this test's whole first-party graph under its own ?relay-policy specifier, compiling .tsx with Solid's
+// Babel preset. The .ts modules join the graph because barrels such as @orchestra/ui/context import .tsx contexts, and
+// the suffix differs from the ?solid that other files' plugins match.
 const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "solid-relay-policy",
   setup(build) {
-    build.onLoad({ filter: /\.tsx$/ }, async (args) => {
-      const result = await solid("@babel/core").transformAsync(await Bun.file(args.path).text(), {
-        filename: args.path,
-        presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] }, configFile: false, babelrc: false,
-      })
-      return { contents: result.code, loader: "ts" }
+    build.onLoad({ filter: /\.tsx?\?relay-policy$/ }, async (args) => {
+      const file = args.path.replace(/\?relay-policy$/, "")
+      const source = await Bun.file(file).text()
+      const code = file.endsWith(".tsx")
+        ? (
+            await solid("@babel/core").transformAsync(source, {
+              filename: file,
+              presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
+              parserOpts: { plugins: ["jsx", "typescript"] },
+              configFile: false,
+              babelrc: false,
+            })
+          ).code
+        : source
+      const contents = code.replace(
+        /(from\s+)(["'])([^"']+)\2/g,
+        (match: string, lead: string, _quote: string, spec: string) => {
+          const resolved = Bun.resolveSync(spec, path.dirname(file))
+          // JSON-quote the path: Windows paths carry backslashes that a raw string literal would read as escapes.
+          return /\.tsx?$/.test(resolved) && !resolved.includes("node_modules")
+            ? `${lead}${JSON.stringify(`${resolved}?relay-policy`)}`
+            : match
+        },
+      )
+      return { contents, loader: "ts" }
     })
   },
 })
-const { PlatformProvider } = await import("@/context/platform")
-const { createSdkForServer } = await import("@/utils/server")
-const { createRelayClient, decodeDocument } = await import("@/orchestra/relay/client")
-const { createRunClient, decodeRun } = await import("@/orchestra/relay/runs")
-const { LanguageProvider } = await import("@/context/language")
-const { EditorHead } = await import("@/orchestra/relay/editor-head")
-const { Receipt } = await import("@/orchestra/relay/receipt")
+const load = (specifier: string) => import(`${Bun.resolveSync(specifier, import.meta.dir)}?relay-policy`)
+const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
+const { createSdkForServer }: typeof import("@/utils/server") = await load("@/utils/server")
+const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await load(
+  "@/orchestra/relay/client",
+)
+const { createRunClient, decodeRun }: typeof import("@/orchestra/relay/runs") = await load("@/orchestra/relay/runs")
+const { LanguageProvider }: typeof import("@/context/language") = await load("@/context/language")
+const { EditorHead }: typeof import("@/orchestra/relay/editor-head") = await load("@/orchestra/relay/editor-head")
+const { Receipt }: typeof import("@/orchestra/relay/receipt") = await load("@/orchestra/relay/receipt")
 
 test("Relay UI cannot POST start, release or check; authoring and recorded GETs survive", async () => {
   const requests: Request[] = []

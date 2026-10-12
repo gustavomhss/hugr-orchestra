@@ -51,8 +51,8 @@ const seededFacets = (terrainSha = "t1"): RootFacets => ({
   ontology: {
     grounding: [anchor("definitions.md#core", "o1")],
     definitions: [
-      { slot: "definition", curatedBy: "walt", text: "Atlas: the shared grounded index" },
-      { slot: "definition", curatedBy: "walt", text: "tail definition" },
+      { slot: "definition", curatedBy: "archie", text: "Atlas: the shared grounded index" },
+      { slot: "definition", curatedBy: "archie", text: "tail definition" },
     ],
   },
   taste: { grounding: [anchor("CONVENTIONS.md", "k1")], tiers: ["≤400 LOC per file", "tail taste"] },
@@ -110,23 +110,26 @@ describe("SCN-MEM-11c-1 — only the top tier is carried, under the ~400 cap", (
   })
 })
 
-// ── SCN-MEM-11d-1 — ontology sources only walt-curated definition nodes ──────────────────────────────────────
+// ── SCN-MEM-11d-1 — ontology sources only archie-curated definition nodes ────────────────────────────────────
 
-describe("SCN-MEM-11d-1 — ontology sources only walt-curated definition nodes", () => {
-  it("pulls only slot=definition walt nodes; a member non-definition fact does not leak in", () => {
+describe("SCN-MEM-11d-1 — ontology sources only archie-curated definition nodes", () => {
+  it("pulls only slot=definition archie nodes without aliasing or rewriting historical curators", () => {
     const facets: RootFacets = {
       ...seededFacets(),
       ontology: {
         grounding: [anchor("definitions.md#core", "o1")],
         definitions: [
           { slot: "fact", curatedBy: "alice", text: "a member non-definition fact" },
-          { slot: "definition", curatedBy: "walt", text: "Atlas: the shared grounded index" },
+          { slot: "definition", curatedBy: "walt", text: "historical curator definition" },
+          { slot: "definition", curatedBy: "archie", text: "Atlas: the shared grounded index" },
         ],
       },
     }
     const a = rollup(atlasRoot(facets))
     expect(a.ontology.content).toBe("Atlas: the shared grounded index")
     expect(a.ontology.content).not.toContain("member non-definition")
+    expect(a.ontology.content).not.toContain("historical curator")
+    expect(facets.ontology?.definitions?.[1]?.curatedBy).toBe("walt")
   })
 })
 

@@ -2,6 +2,7 @@
 
 import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
+import type { V2ResearchArtifactErrors, V2ResearchArtifactResponses } from "./research.gen.js"
 import type {
   AgentFileInput,
   AgentPartInput,
@@ -21,6 +22,7 @@ import type {
   AuthSetErrors,
   AuthSetResponses,
   BehaviorSetInput,
+  CapabilityArtifactId,
   CommandListErrors,
   CommandListResponses,
   Config as Config4,
@@ -6481,6 +6483,42 @@ export class Session3 extends HeyApiClient {
   }
 }
 
+export class Research extends HeyApiClient {
+  /**
+   * Read an admitted research artifact revision
+   *
+   * Return exact retained source/document text in bounded immutable pages. Session and admitted scope determine access; arbitrary filesystem paths are not accepted.
+   */
+  public artifact<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      cursor?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "cursor" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2ResearchArtifactResponses, V2ResearchArtifactErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/research/{artifactID}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Model extends HeyApiClient {
   /**
    * List models
@@ -8928,6 +8966,11 @@ export class V2 extends HeyApiClient {
   private _session?: Session3
   get session(): Session3 {
     return (this._session ??= new Session3({ client: this.client }))
+  }
+
+  private _research?: Research
+  get research(): Research {
+    return (this._research ??= new Research({ client: this.client }))
   }
 
   private _model?: Model

@@ -18,6 +18,7 @@ import { Plugin } from "../../src/plugin"
 import { SessionID, MessageID } from "../../src/session/schema"
 import { provideInstance, testInstanceStoreLayer, tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { seatShellRuns } from "../fixture/seat-sandbox"
 import { ShellScan } from "../../src/tool/shell/scan"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 
@@ -29,6 +30,8 @@ const it = testEffect(
     testInstanceStoreLayer,
   ),
 )
+// The backend seat's shell runs only where its read sandbox can (test/fixture/seat-sandbox.ts).
+const seatLive = seatShellRuns() ? it.live : it.live.skip
 
 const context = (agent: string) => ({
   sessionID: SessionID.make("ses_test"),
@@ -113,7 +116,7 @@ describe("tool.shell backend toolkit preparation", () => {
     }), 60_000,
   )
 
-  it.live("the backend seat's shell sees BACKEND_TOOLKIT_BIN as the toolkit's bin directory", () =>
+  seatLive("the backend seat's shell sees BACKEND_TOOLKIT_BIN as the toolkit's bin directory", () =>
     Effect.gen(function* () {
       const f = yield* fixture
       const info = yield* ShellTool
@@ -233,10 +236,11 @@ const generationFixture = Effect.gen(function* () {
   yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator/VERSION"), "7.12.0\n")
   yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator/FILES"), "client.py\n")
   yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator-ignore"), "handwritten.py\n")
-  const launched = path.join(tools, "launches")
-  const argv = path.join(tools, "argv.json")
-  const script = path.join(tools, "fixture.ts")
-  yield* fs.writeFileString(script, `
+  // The stub engine lives in the toolkit root and records into the project: a seat reads the one and writes the other.
+  const launched = path.join(project, ".stub-launches")
+  const argv = path.join(project, ".stub-argv.json")
+  const script = path.join(root, "fixture.ts")
+  yield* fs.writeWithDirs(script, `
     await Bun.write(${JSON.stringify(launched)}, "STUB_SPAWN_REACHED");
     await Bun.write(${JSON.stringify(argv)}, JSON.stringify(Bun.argv.slice(2)));
     console.log("STUB_SPAWN_REACHED", JSON.stringify(Bun.argv.slice(2)));
@@ -311,7 +315,7 @@ describe("scenario13 project pin enforcement at native shell boundary", () => {
 
   for (const placement of ["variable", "literal"] as const) {
     for (const warm of [false, true]) {
-      it.live(`matching pin acquires/launches exact bench13 argv once (${placement}, ${warm ? "warm" : "cold"})`, () => Effect.gen(function* () {
+      seatLive(`matching pin acquires/launches exact bench13 argv once (${placement}, ${warm ? "warm" : "cold"})`, () => Effect.gen(function* () {
         const f = yield* generationFixture
         yield* Effect.promise(() => writeFile(path.join(f.project, "generated/.openapi-generator/VERSION"), "7.25.0\n"))
         if (warm) yield* BackendToolkit.ensure("openapi-generator").pipe(f.within)
@@ -349,7 +353,7 @@ describe("scenario13 project pin enforcement at native shell boundary", () => {
     }
   }
 
-  it.live("literal echo data does not acquire or execute the generator", () => Effect.gen(function* () {
+  seatLive("literal echo data does not acquire or execute the generator", () => Effect.gen(function* () {
     const f = yield* generationFixture
     const before = yield* Effect.promise(() => projectBytes(f.project))
     const executable = f.literal.slice(0, f.literal.lastIndexOf(" generate"))
@@ -375,7 +379,7 @@ describe("scenario13 project pin enforcement at native shell boundary", () => {
     expect(yield* Effect.promise(() => Bun.file(f.launched).exists())).toBe(false)
   }))
 
-  it.live("multiple PowerShell equals flags match actual native fixture argv, cold and warm", () => Effect.gen(function* () {
+  seatLive("multiple PowerShell equals flags match actual native fixture argv, cold and warm", () => Effect.gen(function* () {
     const f = yield* generationFixture
     const fs = yield* FSUtil.Service
     const pwsh = Bun.which("pwsh")
@@ -403,7 +407,7 @@ describe("scenario13 project pin enforcement at native shell boundary", () => {
     expect(yield* Effect.promise(() => projectBytes(f.project))).toEqual(before)
   }))
 
-  it.live("gate-omission mutation reaches stub/spawn and fails unchanged-output assertion", () => Effect.gen(function* () {
+  seatLive("gate-omission mutation reaches stub/spawn and fails unchanged-output assertion", () => Effect.gen(function* () {
     const directory = yield* tmpdirScoped()
     const preload = path.join(directory, "omit-project-gate.ts")
     yield* Effect.promise(() => writeFile(preload, `

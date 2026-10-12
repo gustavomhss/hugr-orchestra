@@ -16,19 +16,55 @@ export const Environment = Context.Reference<NonNullable<QueryOptions["env"]>>("
   defaultValue: () => process.env,
 })
 
+type Preset = Extract<NonNullable<QueryOptions["systemPrompt"]>, { type: "preset" }>
+
+/**
+ * The only system prompt a turn on the machine login may carry: Claude Code's own `claude_code` preset, with the
+ * agent's text appended. Anthropic bills a query whose system prompt replaces the preset (custom, string or none) as a
+ * third-party app drawing on extra usage, not as Claude Code on the owner's plan.
+ */
+export function preset(append?: string): Preset {
+  return { type: "preset", preset: "claude_code", append, snapshot: true }
+}
+
+/** Anthropic refused the call as third-party usage: say so, since it is never a context or transient failure. */
+export function billingRejection(detail: string) {
+  if (!/third-party app|extra usage|plan limits|billing_error/i.test(detail)) return
+  return "Claude Code call refused: Anthropic billed it as a third-party app (extra usage), not as Claude Code on the " +
+    `owner's plan, so the plan was not used. It is not retried. (${detail})`
+}
+
+/**
+ * Paused (specs/claude-code-engine.md, "Paused"): no real engine process starts until the owner approves the engine's
+ * meta-harness plan. The check precedes every login read, so a refused start never touches the machine's credentials.
+ */
+export function requirePlanApproval(env: NonNullable<QueryOptions["env"]>) {
+  if (env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED === "1") return
+  throw new Error("The Claude Code engine is paused until its meta-harness plan is approved by the owner. " +
+    "Set ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1 only after approval.")
+}
+
 /** SDK 0.3.289 Query.return races waitForExit against 2000ms, so it is not an exit receipt. */
-export function processLifetime(options: QueryOptions) {
-  const env = machineEnvironment(options.env ?? process.env)
+export function processLifetime(options: QueryOptions & { systemPrompt: Preset }) {
+  // Structural guard over every engine query, casts included: no path may replace Claude Code's prompt (see preset).
+  const system: unknown = options.systemPrompt
+  if (typeof system !== "object" || system === null || Array.isArray(system) ||
+    !("type" in system) || system.type !== "preset" || !("preset" in system) || system.preset !== "claude_code")
+    throw new Error("Claude Code turns must keep the claude_code system prompt preset; a replaced prompt is billed as a third-party app")
+  const source = options.env ?? process.env
+  const env = machineEnvironment(source)
   const exits: Promise<void>[] = []
   return {
     options: {
       ...options,
       env,
       spawnClaudeCodeProcess: (input) => {
+        // Only a real SDK query spawns, so recorded transports run without the flag. Refuse before any login read.
+        requirePlanApproval(source)
         // CLI oW/Hh give --bare an API-only path ahead of the host-managed OAuth path.
         if (input.args.includes("--bare")) throw new Error("Claude Code bare mode cannot enforce machine OAuth login")
         const environment = machineEnvironment(input.env)
-        const login = requireMachineLogin(environment)
+        const login = MachineLogin.read(environment)
         // Pinned CLI yK selects this token first; nc/Hh and settings-env u exclude all settings-sourced auth/routing.
         environment.CLAUDE_CODE_OAUTH_TOKEN = login.accessToken
         environment.CLAUDE_CODE_OAUTH_SCOPES = login.scopes.join(" ")
@@ -110,6 +146,9 @@ export function credentialStorage(env: NonNullable<QueryOptions["env"]>, home: s
     service: "Claude Code-credentials" + suffix,
   }
 }
+
+/** The machine login reader, held on an object so a test can prove a refused start never calls it. */
+export const MachineLogin = { read: requireMachineLogin }
 
 function requireMachineLogin(env: NonNullable<QueryOptions["env"]>) {
   const storage = credentialStorage(env, env.HOME ?? env.USERPROFILE ?? homedir())

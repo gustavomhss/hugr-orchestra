@@ -1,7 +1,9 @@
 // Mirrors one Claude Code turn into Orchestra's session: the same message and part writes the processor makes, so the
 // UI, the database, revert and the archive need no change.
 // - One Orchestra assistant message per Claude API message (`message.id`); Claude Code streams it block by block.
-// - Tool parts carry `metadata.providerExecuted`: Claude Code runs them, so Orchestra's loop never waits on them.
+// - Claude Code's own tool parts carry `metadata.providerExecuted`: Claude Code runs them, so Orchestra's loop never
+//   waits on them. Orchestra's in-process tools (tools.ts) do not: Orchestra ran them, and the governance that reads a
+//   `task` call (work results, settlement, provenance) accepts only calls Orchestra executed.
 // - Each assistant message is a step: `step-start`/`step-finish` with snapshots and a `patch` part, as the processor
 //   writes them, so revert restores files whichever tool changed them.
 import { Effect } from "effect"
@@ -14,20 +16,10 @@ import type { Session } from "@/session/session"
 import type { Snapshot } from "@/snapshot"
 import type { Agent } from "@/agent/agent"
 import { ClaudeCodeTranscript } from "./transcript"
+import { ClaudeCodeTools } from "./tools"
 
 /** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. */
-export const NAMES: Record<string, string> = {
-  Bash: "bash",
-  Grep: "grep",
-  Glob: "glob",
-  WebFetch: "webfetch",
-  WebSearch: "websearch",
-  mcp__orchestra__read: "read",
-  mcp__orchestra__edit: "edit",
-  mcp__orchestra__write: "write",
-  mcp__orchestra__context_recall: "context_recall",
-  mcp__orchestra__context_compact: "context_compact",
-}
+export const NAMES: Record<string, string> = Object.fromEntries(Object.entries(ClaudeCodeTools.NATIVE).map(([id, name]) => [name, id]))
 
 const FINISH: Record<string, string> = {
   end_turn: "stop",
@@ -171,7 +163,7 @@ export function create(input: {
         if (step && message.stop_reason) step.stop = message.stop_reason
         return
       }
-      // Subagent frames (Task) are not mirrored in step 1: Task is disallowed.
+      // Claude Code's own subagent frames are not mirrored: its Task is disallowed; Orchestra's task runs a child session.
       if ("parent_tool_use_id" in message && message.parent_tool_use_id) return
       if (message.type === "stream_event") {
         const event = message.event
@@ -214,10 +206,11 @@ export function create(input: {
           }
           if (block.type === "tool_use") {
             if (tools.has(block.id)) continue
+            const own = ClaudeCodeTools.orchestra(block.name)
             const part: SessionV1.ToolPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "tool",
-              callID: block.id, tool: NAMES[block.name] ?? block.name,
+              callID: block.id, tool: NAMES[block.name] ?? own ?? block.name,
               state: { status: "running", input: block.input as Record<string, unknown>, time: { start: Date.now() } },
-              metadata: { providerExecuted: true, claudeCodeTool: block.name } }
+              metadata: own ? { claudeCodeTool: block.name } : { providerExecuted: true, claudeCodeTool: block.name } }
             tools.set(block.id, part)
             yield* sessions.updatePart(part)
           }

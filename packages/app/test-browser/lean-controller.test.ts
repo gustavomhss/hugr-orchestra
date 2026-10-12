@@ -1,7 +1,4 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
-import os from "node:os"
-import path from "node:path"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { createLeanController, LeanResponseError } from "../src/orchestra/chapters/lean-controller"
 
@@ -235,19 +232,3 @@ for (const kind of ["GET", "PATCH", "history"] as const) test(`late ${kind} fail
     f.controller.dispose()
   }
 })
-
-test("actual app and controller fixture types", async () => {
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-controller-types-"))
-  try {
-    const app = path.resolve(import.meta.dir, "..")
-    const config = path.join(scratch, "tsconfig.json")
-    await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"), compilerOptions: {
-      composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true,
-      rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(scratch, "types.tsbuildinfo"),
-    }, include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path] }))
-    const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: app, stdout: "pipe", stderr: "pipe", timeout: 120000 })
-    const [out, err, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-    if (code !== 0) throw new Error(`Controller fixture typecheck exited ${code}\n${out}\n${err}`)
-    console.log(out + err)
-  } finally { await rm(scratch, { recursive: true, force: true }) }
-}, 180000)

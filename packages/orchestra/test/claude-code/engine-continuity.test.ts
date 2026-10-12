@@ -9,6 +9,7 @@ import { CheckpointContext } from "@/continuity/checkpoint-context"
 import { validChecklist } from "@/continuity/checklist-seal"
 import PROMPT from "@/continuity/prompt.txt"
 import { ClaudeCodeStore } from "@/claude-code/store"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { pollWithTimeout } from "../lib/effect"
 import { ClaudeEngineFixture } from "./engine-fixture"
@@ -36,7 +37,7 @@ ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and
     const producers = ClaudeEngineFixture.state.queries.filter((query) => query.options?.persistSession === false)
     expect(producers).toHaveLength(1)
     expect(producers[0].options?.model).toBe("claude-haiku-4-5-20251001")
-    expect(producers[0].options?.systemPrompt).toEqual({ type: "custom", prompt: PROMPT })
+    expect(producers[0].options?.systemPrompt).toEqual(ClaudeCodeSDK.preset(PROMPT))
     expect(JSON.stringify(ClaudeEngineFixture.historicalMessages(producers[0]))).toContain("prompt-0")
     const checkpoints = yield* ProjectCheckpoint.Service.pipe(Effect.provide(ProjectCheckpoint.layer))
     const saved = (yield* checkpoints.list({ projectID: chat.projectID, directory: chat.directory })).items

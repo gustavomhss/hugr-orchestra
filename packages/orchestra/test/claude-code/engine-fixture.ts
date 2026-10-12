@@ -47,6 +47,9 @@ export function reset() {
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   query: (params) => {
     state.queries.push(params)
+    // Every query the engine makes on the login, turns and maintenance alike, keeps Claude Code's preset: a replaced
+    // system prompt is billed as a third-party app (ClaudeCodeSDK.preset).
+    expect(params.options?.systemPrompt).toMatchObject({ type: "preset", preset: "claude_code" })
     // Detect by instruction before routing: a reviewer must never consume an ordinary script.
     if (isReview(params)) {
       state.reviews++
@@ -139,7 +142,7 @@ export function nativeReply(index: number, options: { usage?: number; version?: 
 export const memoryProducer = async function* (params: Params) {
   expect(params.options).toMatchObject({ tools: [], mcpServers: {}, strictMcpConfig: true,
     disallowedTools: ["*"], persistSession: false, maxTurns: 1, settingSources: [],
-    systemPrompt: { type: "custom", prompt: PROMPT } })
+    systemPrompt: { type: "preset", preset: "claude_code", append: PROMPT } })
   expect(params.options?.resume).toBeUndefined()
   expect(params.options?.sessionStore).toBeUndefined()
   expect(params.options).not.toHaveProperty("parentResume")

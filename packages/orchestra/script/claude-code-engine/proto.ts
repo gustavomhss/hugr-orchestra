@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto"
 import { Effect } from "effect"
 import { z } from "zod"
 import { createSdkMcpServer, query, tool, type SessionStore } from "@anthropic-ai/claude-agent-sdk"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceStore } from "@/project/instance-store"
 import { MessageID, SessionID } from "@/session/schema"
@@ -20,6 +21,8 @@ import { WriteTool } from "@/tool/write"
 
 const WORKSPACE = path.resolve(process.argv[2] ?? "")
 if (!process.argv[2]) throw new Error("usage: bun script/claude-code-engine/proto.ts <workspace-dir>")
+// This prototype calls the SDK's query() directly, outside processLifetime, so it holds the engine's pause itself.
+ClaudeCodeSDK.requirePlanApproval(process.env)
 mkdirSync(WORKSPACE, { recursive: true })
 writeFileSync(path.join(WORKSPACE, "notes.txt"), "status: draft\nowner: nobody\n")
 
