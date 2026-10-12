@@ -105,21 +105,66 @@ for (const mode of ["fork", "revert"] as const)
       yield* host.release(target.id)
     }), 30_000)
 
-ClaudeEngineFixture.it.instance("forking an uncleared revert refuses the unretained clone map by name", () =>
+ClaudeEngineFixture.it.instance("forking an uncleared revert copies only the visible prefix with its exact native cursor", () =>
   Effect.gen(function* () {
     ClaudeEngineFixture.reset()
     const f = yield* ClaudeEngineFixture.setup()
-    yield* ClaudeHost.Service
+    const host = yield* ClaudeHost.Service
     ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.replies("kept", "future"))
     yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("keep") })
+    const retained = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const first = retained[0]
+    const kept = retained[1]
+    if (first?.info.role !== "user" || kept?.info.role !== "assistant") throw new Error("Missing retained messages")
+    const original = yield* produce(f, first.info, kept.info, "KEPT-PLAN")
     yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("cut") })
     const later = (yield* f.sessions.messages({ sessionID: f.chat.id })).findLast((message) => message.info.role === "user")
-    if (!later) throw new Error("Missing revert boundary")
+    const future = (yield* f.sessions.messages({ sessionID: f.chat.id })).findLast((message) => message.info.role === "assistant")
+    if (later?.info.role !== "user" || future?.info.role !== "assistant") throw new Error("Missing future messages")
+    const excluded = yield* produce(f, later.info, future.info, "FUTURE-PLAN")
+    const history = yield* f.sessions.messages({ sessionID: f.chat.id })
     const revert = yield* SessionRevert.Service
     yield* revert.revert({ sessionID: f.chat.id, messageID: later.info.id })
-    const result = yield* f.sessions.fork({ sessionID: f.chat.id }).pipe(Effect.exit)
-    expect(Exit.isFailure(result)).toBe(true)
-    expect(String(result)).toContain("NATIVE_FORK_MESSAGES_UNPROVABLE")
+    const before = yield* f.sessions.get(f.chat.id)
+    expect(before.revert?.messageID).toBe(later.info.id)
+    const fork = yield* f.sessions.fork({ sessionID: f.chat.id })
+    const copied = yield* f.sessions.messages({ sessionID: fork.id })
+    expect(fork.id).not.toBe(f.chat.id)
+    expect(fork.revert).toBeUndefined()
+    expect(fork.metadata?.claudeCode?.forkFrom).toEqual({ sessionId: "sdk-1", at: "msg_0" })
+    expect(fork.metadata?.claudeCode?.chain).toBe("msg_0")
+    expect(copied.map((message) => message.info.role)).toEqual(["user", "assistant"])
+    if (history[1].info.role !== "assistant") throw new Error("Missing source assistant")
+    expect(copied[0].info.id).not.toBe(first.info.id)
+    expect(copied[1].info.id).not.toBe(kept.info.id)
+    expect(copied[0].info).toEqual({ ...history[0].info, id: copied[0].info.id, sessionID: fork.id })
+    expect(copied[1].info).toEqual({ ...history[1].info, id: copied[1].info.id, sessionID: fork.id, parentID: copied[0].info.id })
+    copied.forEach((message, index) => {
+      expect(message.parts).toHaveLength(history[index].parts.length)
+      message.parts.forEach((part, partIndex) => {
+        expect(part.id).not.toBe(history[index].parts[partIndex].id)
+        expect(part).toEqual({ ...history[index].parts[partIndex], id: part.id, messageID: message.info.id, sessionID: fork.id })
+      })
+    })
+    const view = ClaudeHostBoundary.retained(fork, copied)
+    expect(view.lineage?.kind).toBe("fork")
+    const reference = ClaudeHostBoundary.reference(view, { projectID: f.chat.projectID, sessionID: f.chat.id,
+      admissionMessageID: first.info.id, producerMessageID: kept.info.id })
+    expect(reference.historical).toBe(true)
+    expect(reference.admission).toEqual(copied[0])
+    expect(reference.producer).toEqual(copied[1])
+    expect(JSON.stringify(view.history)).toContain(original.id)
+    expect(JSON.stringify(view.history)).not.toContain(excluded.id)
+    expect(JSON.stringify(view.history)).not.toContain("FUTURE-PLAN")
+    expect(JSON.stringify(view.history)).not.toContain("future")
+    expect(() => ClaudeHostBoundary.reference(view, { ...reference.source, producerMessageID: future.info.id }))
+      .toThrow("NATIVE_SOURCE_MESSAGES_UNPROVABLE")
+    expect(yield* readPlanRevision(original.id)).toEqual(original)
+    expect(yield* readAdmission({ sessionID: f.chat.id, messageID: first.info.id,
+      methodVersion: "admit-request-v1" })).toMatchObject({ outcome: "READY_TO_DRAFT" })
+    expect(yield* f.sessions.get(f.chat.id)).toEqual(before)
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(history)
+    yield* host.release(f.chat.id)
   }), 30_000)
 
 for (const engine of ["claude-code", "orchestra"] as const)
