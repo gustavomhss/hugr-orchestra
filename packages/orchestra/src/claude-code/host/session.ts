@@ -128,6 +128,7 @@ type Live = {
   background: number
   uuids: Record<string, string>
   delivered: Set<string>
+  settledResults: Set<string>
   inputs: Record<string, ClaudeHostAdmission.Input>
   queued: Set<string>
   starts: Record<string, string>
@@ -369,7 +370,10 @@ const layer = Layer.effect(
         ? message.user_message_uuids : root && "user_message_uuid" in message && message.user_message_uuid ? [message.user_message_uuid] : []
       const previous = turn.view.current()?.parentID ?? turn.user.id
       const chain = live.chain
-      yield* turn.view.on(message)
+      // A replayed result cannot reset a producer epoch or charge the same cumulative total again.
+      const receipt = message.type === "result" ? `${message.session_id}:${message.uuid}:${message.total_cost_usd}` : undefined
+      const replay = !!receipt && live.settledResults.has(receipt)
+      yield* turn.view.on(message.type === "result" && replay ? { ...message, total_cost_usd: turn.cost } : message)
       if (live.discard) return
       if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { resumeAt: undefined, freshSessionId: undefined })
       const acknowledged = ClaudeHostAdmission.acknowledge(live.inputs, live.sends, receipts, submitted ? message.uuid : undefined)
@@ -387,19 +391,24 @@ const layer = Layer.effect(
       }
       if (acknowledged.length || submitted) yield* write(live.sessionID, { ...("session_id" in message && typeof message.session_id === "string" ? { sessionId: message.session_id } : {}), inputs: live.inputs, delivered: [...live.delivered], starts: live.starts, ends: live.ends, chain: live.chain })
       if (message.type !== "result") return
+      live.settledResults.add(receipt!)
       idle(live, release)
-      yield* write(live.sessionID, { uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined })
+      yield* write(live.sessionID, { uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined, settledResults: [...live.settledResults] })
       if (turn.error || message.subtype !== "success" || message.is_error) {
         const detail = message.subtype === "success" && message.is_error ? message.result
           : "errors" in message && message.errors?.length ? message.errors.join("; ") : turn.error ?? message.subtype
-        yield* turn.view.fail({ aborted: false, message: detail })
+        const failed = yield* turn.view.fail({ aborted: false, message: detail })
+        if (failed) live.uuids[failed.id] ??= message.uuid
+        // fail preserves the real error/abort/tool status; finish allocates SDK cost to that failed reply.
+        const { cost } = yield* turn.view.finish(replay ? turn.cost : message.total_cost_usd < turn.cost ? 0 : turn.cost)
+        yield* write(live.sessionID, { cost, uuids: live.uuids })
         yield* summarize(live, turn)
         if (live.discard) return
         return settle(live, { ok: false, message: detail })
       }
       const pending = turn.view.pendingInputs()
       // A restarted native producer can reset its cumulative counters. Charge the new epoch from zero.
-      const { cost } = yield* turn.view.finish(message.total_cost_usd < turn.cost ? 0 : turn.cost)
+      const { cost } = yield* turn.view.finish(replay ? turn.cost : message.total_cost_usd < turn.cost ? 0 : turn.cost)
       yield* summarize(live, turn)
       const context = yield* Effect.tryPromise(() => live.query.getContextUsage()).pipe(Effect.option)
       yield* write(live.sessionID, { cost, uuids: live.uuids, starts: live.starts, ends: live.ends, chain: live.chain, resumeAt: undefined, ...(context._tag === "Some"
@@ -453,6 +462,7 @@ const layer = Layer.effect(
         }), abort, agent: input.agent, seat: input.agent.id ?? input.user.agent, model: input.model, discard: false, background: 0,
         inputs: ClaudeHostAdmission.read(input.state.inputs), queued: new Set(),
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
+        settledResults: new Set(Array.isArray(input.state.settledResults) ? input.state.settledResults.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
         chain: typeof input.state.chain === "string" ? input.state.chain : undefined, pump: Promise.resolve(), processJoin: async () => {}, callbacks: new Set(),
         known: { calls: new Map(), tasks: new Map(), usage: new Map(Object.entries(usage) as [string, ModelUsage][]) },
@@ -580,6 +590,7 @@ const layer = Layer.effect(
       if (releasing.has(sessionID)) return yield* Effect.die(new Error("Claude Code session is being released"))
       const agent = yield* agents.get(input.user.agent).pipe(Effect.orElseSucceed(() => undefined))
       if (agent?.engine !== "claude-code") return false
+      ClaudeHostAdmission.supported(agent.id ?? input.user.agent)
       const instance = yield* InstanceState.context
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)
@@ -690,21 +701,12 @@ const layer = Layer.effect(
       live.model = input.model
     })
 
-    const forkState = (source: Session.Info, messageID?: MessageID) => Effect.gen(function* () {
-      const state = yield* read(source.id)
-      const history = yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie)
-      return ClaudeHostBoundary.forkState(history, state, messageID)
-    })
     const fork: Interface["fork"] = (input) => Effect.gen(function* () {
       const source = yield* sessions.get(input.from).pipe(Effect.orDie)
       if (!source.metadata?.claudeCode) return undefined
-      const state = yield* forkState(source, input.messageID)
-      const native = { ...state,
-        inputs: input.ids ? ClaudeHostAdmission.remap(state.inputs, input.ids) : state.inputs,
-        uuids: input.ids ? ClaudeHostBoundary.remap(state.uuids, input.ids) : state.uuids,
-        starts: input.ids ? ClaudeHostBoundary.remap(state.starts, input.ids) : state.starts,
-        ends: input.ids ? ClaudeHostBoundary.remap(state.ends, input.ids) : state.ends,
-        delivered: input.ids && Array.isArray(state.delivered) ? state.delivered.flatMap((id) => input.ids!.get(String(id)) ?? []) : state.delivered }
+      if (!input.ids) return yield* Effect.die(new ClaudeHostBoundary.UnprovableNativeLineage("NATIVE_FORK_MAP_UNAVAILABLE"))
+      const native = ClaudeHostBoundary.fork(source,
+        yield* sessions.messages({ sessionID: source.id }).pipe(Effect.orDie), yield* read(source.id), input.ids, input.messageID)
       if (input.sessionID) yield* write(input.sessionID, native)
       return { ...source.metadata, claudeCode: native }
     })
@@ -725,20 +727,9 @@ const layer = Layer.effect(
       if (!session.revert || !session.metadata?.claudeCode) return
       const state = yield* read(session.id)
       const history = yield* sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
-      // Part-level cuts cannot be expressed without an exact native entry. Refuse rather than replay removed tools.
-      if (session.revert.partID) return yield* Effect.die(new Error("Claude Code requires a user-message revert boundary"))
-      const at = ClaudeHostBoundary.resolve(history, state, session.revert.messageID)
+      const patch = ClaudeHostBoundary.revert(session, history, state)
       yield* release(session.id)
-      const kept = history.slice(0, history.findIndex((message) => message.info.id === session.revert!.messageID))
-      const ids = new Map<string, string>(kept.map((message) => [message.info.id, message.info.id]))
-      const inherited = ClaudeCodeTranscript.record(state.forkFrom) ? state.forkFrom : undefined
-      yield* write(session.id, { resumeAt: at, sessionId: at ? state.sessionId : undefined,
-        freshSessionId: at ? undefined : crypto.randomUUID(),
-        forkFrom: at && typeof state.sessionId !== "string" && typeof inherited?.sessionId === "string"
-          ? { sessionId: inherited.sessionId, at } : undefined, chain: at,
-        inputs: ClaudeHostAdmission.remap(state.inputs, ids),
-        uuids: ClaudeHostBoundary.remap(state.uuids, ids), starts: ClaudeHostBoundary.remap(state.starts, ids), ends: ClaudeHostBoundary.remap(state.ends, ids),
-        delivered: Array.isArray(state.delivered) ? state.delivered.filter((id) => ids.has(String(id))) : undefined })
+      yield* write(session.id, patch)
     })
 
     yield* lifecycle.register({ remove: release,

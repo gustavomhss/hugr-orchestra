@@ -16,6 +16,7 @@ import { ClaudeCodeTools } from "../tools"
 import type { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostGate } from "./gate"
 import { ClaudeHostGrantHistory } from "./grant-history"
+import { ClaudeHostBoundary } from "./boundary"
 import type { ClaudeHostMcp } from "./mcp"
 
 /** The exclusive user cut is applied before every domain reader, including Archive coverage validation. */
@@ -23,12 +24,10 @@ export const retained = Effect.fn("ClaudeHostMemory.retained")(function* (sessio
   const sessions = yield* Session.Service
   const session = yield* sessions.get(sessionID)
   const all = yield* sessions.messages({ sessionID })
-  const cut = session.revert ? all.findIndex((message) => message.info.id === session.revert?.messageID) : all.length
-  if (cut < 0 || session.revert && (session.revert.partID || all[cut]?.info.role !== "user"))
-    return yield* Effect.fail(new Error("COMPACT_RETAINED_BOUNDARY_UNAVAILABLE: expected an exclusive user boundary"))
-  const history = all.slice(0, cut)
+  const view = ClaudeHostBoundary.retained(session, all)
+  const history = view.history
   if (!ownedHistory(sessionID, history)) return yield* Effect.fail(new Error("COMPACT_HISTORY_OWNER_MISMATCH"))
-  return { session, history }
+  return { ...view, history }
 })
 
 export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
@@ -54,12 +53,11 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     if (call.state.status === "completed" && receipt === "ended") return []
     return [JSON.stringify({ binding, title: child.title, call })]
   }))
-  const plan = yield* planState(input.sessionID, view.history, calls)
+  const plan = yield* planState(view, calls)
   const snapshot = calls.findLast((part) => part.state.status === "completed" &&
     (["todowrite", "TodoWrite", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"].includes(part.tool) || ClaudeCodeTools.orchestra(part.tool) === "todowrite"))
-  const host = view.session.metadata?.claudeCode
   // A known cut with no visible snapshot cannot safely use the latest aggregate todo table.
-  const cut = !!view.session.revert || !!host?.forkFrom || !!host?.resumeAt
+  const cut = view.cut
   const todo = snapshot?.state.status === "completed"
     ? Schema.decodeUnknownSync(TodoSnapshot, { onExcessProperty: "preserve" })(snapshot.state.metadata?.todos ?? snapshot.state.input.todos)
     : cut ? [] : yield* todos.get(input.sessionID)
@@ -115,7 +113,7 @@ export const observe = Effect.fn("ClaudeHostMemory.observe")(function* (input: {
 const TodoSnapshot = Schema.Array(Schema.Struct({ content: Schema.String, status: Schema.String, priority: Schema.String,
   activeForm: Schema.optional(Schema.String) }))
 
-function planState(sessionID: SessionID, history: SessionV1.WithParts[], calls: SessionV1.ToolPart[]) {
+function planState(view: ClaudeHostBoundary.Retained, calls: SessionV1.ToolPart[]) {
   return Effect.gen(function* () {
     const revisions = yield* Effect.forEach(calls.filter((part) => part.state.status === "completed" &&
       (part.tool === "maestro_record_plan_revision" || ClaudeCodeTools.orchestra(part.tool) === "maestro_record_plan_revision")),
@@ -126,8 +124,10 @@ function planState(sessionID: SessionID, history: SessionV1.WithParts[], calls: 
       if (typeof id !== "string") return yield* Effect.fail(new Error("COMPACT_PLAN_PRODUCER_ID_UNAVAILABLE"))
       const revision = yield* readPlanRevision(id)
       if (!revision) return yield* Effect.fail(new Error("COMPACT_PLAN_REVISION_UNAVAILABLE"))
-      if (revision.sessionID !== sessionID) return yield* Effect.fail(new Error("COMPACT_PLAN_OWNER_MISMATCH"))
-      if (!history.some((message) => message.info.id === revision.admissionMessageID)) return []
+      const origins = ClaudeHostBoundary.origins(view, part.messageID).filter((origin) => origin.sessionID === revision.sessionID)
+      if (origins.length !== 1) return yield* Effect.fail(new Error("COMPACT_PLAN_OWNER_MISMATCH"))
+      ClaudeHostBoundary.reference(view, { ...origins[0], admissionMessageID: revision.admissionMessageID,
+        producerMessageID: origins[0].messageID })
       if (part.state.input.admissionMessageID !== revision.admissionMessageID ||
         (part.state.metadata?.revisionHash ?? (Option.isSome(output) ? record(output.value).revisionHash : undefined)) !== revision.revisionHash)
         return yield* Effect.fail(new Error("COMPACT_PLAN_ADMISSION_MISMATCH"))
