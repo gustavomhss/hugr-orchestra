@@ -27,6 +27,14 @@ export default {
   version: TEMURIN,
   license: "GPL-2.0-only WITH Classpath-exception-2.0",
   upstream: "adoptium/temurin17-binaries",
+  // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "11.0" },
+    "linux-arm64": { glibc: "2.17" },
+    "linux-x64": { glibc: "2.9" },
+    "win32-x64": { windows: "10.0" },
+  },
   targets: {
     "darwin-arm64": temurin("aarch64_mac", "sha256-GQSAh0zM6zWMvIQDkyB/d6w+Y6TF+BKdDiPpUYuWrQU="),
     "darwin-x64": temurin("x64_mac", "sha256-Mzy4ESPDZWhYZkbHPI+iMm2ri63EP16jiKkP/1nJ3yc="),

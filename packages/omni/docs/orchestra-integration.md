@@ -157,6 +157,8 @@ verified: `415038b`).
 | `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `.github/scripts/maestro-authoring-run.ts`, `.github/scripts/archie-authoring-pair.ts` (`spawn`, `execFileSync`) | Lead-declared, 2026-10-11: owner-run Archie authoring harnesses. They launch the real candidate runtime in one detached, owned process group and must signal and reap that group; not a shipped process path. |
 | `orchestra/src/claude-code/sdk.ts` (`spawn`, `spawnSync`) | Lead-declared integration exception, 2026-10-09: the current bridge implements the SDK's synchronous `SpawnedProcess` contract and tracks actual child exit; macOS machine-login lookup is synchronous and capped at 2 s. The former default SDK subprocess is now wrapped explicitly by `dev`. This bridge stays SDK-managed, outside Omni-tree guarantees; ordinary shell/LSP/MCP callers remain inside Omni. |
+| `core/src/tool-safety-sandbox.ts` (`require("child_process")` inside the `FORWARDER` source string) | Lead-declared, 2026-10-11: not a host spawn. It is the text of the endpoint forwarder that the pinned Bun runs inside the Linux srt sandbox, where it launches the confined command as its child (#292). |
+| `core/src/tool-safety-appcontainer.ts` (`execFile` of `hugr-omni-supervisor --appcontainer orchestra-toolchain`) | Lead-declared, 2026-10-11: launches the omni supervisor itself in its one-shot mode that grants the container profile read access to the host toolchain; omni cannot supervise its own launcher, and the call is fire-and-forget and bounded. |
 | `Bun.$` and `Bun.spawn` in plugins | Plugin API surface. |
 | `@orchestra/sdk` server spawn | D-L10. |
 
