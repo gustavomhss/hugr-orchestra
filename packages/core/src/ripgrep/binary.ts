@@ -1,6 +1,7 @@
 import path from "path"
 import { createHash } from "crypto"
-import { existsSync, realpathSync } from "fs"
+import { realpathSync } from "fs"
+import { lstat } from "fs/promises"
 import { Cause, Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Schedule, Schema, Scope, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
@@ -14,18 +15,22 @@ import { which } from "../util/which"
 import { EffectFlock } from "../util/effect-flock"
 import { RipgrepRelease } from "./release"
 
-// false in builds that ship their own rg (packages/cli/script/build.ts); unset in source runs.
-declare const ORCHESTRA_RIPGREP_DOWNLOAD: boolean | undefined
+// true in the compiled CLI (packages/cli/script/build.ts): its packaged rg sits in ripgrep/ beside the binary.
+declare const ORCHESTRA_RIPGREP_BESIDE_BINARY: boolean | undefined
 
 /**
- * Finds the ripgrep executable: the `rg` a packaged build ships (ripgrep/ beside the CLI binary or in the desktop's
- * Resources) first, then `rg` on PATH (Nix builds and CI put it there), then a copy this host downloaded before, and
- * only then a download of the pinned release (release.ts). Packaged builds never download: a compiled CLI is built
- * with ORCHESTRA_RIPGREP_DOWNLOAD false, and the packaged desktop sets DISABLE_DOWNLOAD for its server. A download is checked against its pinned
- * digest before extraction and must run (`rg --version`) before it is installed. It runs in the background once per
- * process (and once per host, under a file lock); it makes at most `attempts` requests in total, each with a deadline.
- * A caller waits at most `wait` for it; past that it fails with a clear message while the download carries on for the
- * next caller. A failed download is repeated to callers for `cooldown`, then tried again.
+ * Finds the ripgrep executable. A packaged build names the directory holding the rg it ships (DIRECTORY, which the
+ * desktop sets for its server and the compiled CLI defaults to ripgrep/ beside its binary): it runs that rg, else `rg`
+ * on PATH, and never downloads. Anything else (a source run) takes `rg` on PATH first (Nix builds and CI put it there),
+ * then a copy this host downloaded before, and only then a download of the pinned release (release.ts). A download is
+ * checked against its pinned digest before extraction and must run (`rg --version`) before it is installed. It runs in
+ * the background once per process (and once per host, under a file lock); it makes at most `attempts` requests in total,
+ * each with a deadline. A caller waits at most `wait` for it; past that it fails with a clear message while the download
+ * carries on for the next caller. A failed download is repeated to callers for `cooldown`, then tried again.
+ *
+ * The shipped and the downloaded rg must be regular files, never symlinks. Neither is hashed again before it runs: their
+ * bytes were checked when they were packaged or installed, and whoever can rewrite them later runs as this user already
+ * and could as well replace Orchestra itself.
  */
 export namespace RipgrepBinary {
   export const VERSION = RipgrepRelease.VERSION
@@ -36,10 +41,8 @@ export namespace RipgrepBinary {
   export type Release = RipgrepRelease.Archive
 
   export type Options = {
-    /** Where a packaged build keeps its own `rg`, in the order they are tried. */
-    readonly bundled: () => readonly string[]
-    /** Whether this is a packaged build, which never downloads, whatever `download` says. */
-    readonly packaged: boolean
+    /** The directory holding a packaged build's own `rg`; set only in a packaged build, which never downloads. */
+    readonly bundled: string | undefined
     /** The `rg` on PATH, if any. */
     readonly system: () => string | undefined
     /** Where a downloaded `rg` is kept. */
@@ -81,27 +84,21 @@ export namespace RipgrepBinary {
 
   export const release = RipgrepRelease.archive
 
-  const packaged = typeof ORCHESTRA_RIPGREP_DOWNLOAD !== "undefined" && !ORCHESTRA_RIPGREP_DOWNLOAD
+  /** Set by every packaged build to the directory holding the rg it ships; see `bundledDirectory`. */
+  export const DIRECTORY = "ORCHESTRA_RIPGREP_DIR"
 
   /**
-   * ripgrep/ beside the running binary (a CLI build, the desktop's installed CLI, a WSL guest), in ../ripgrep from
-   * there (the desktop's CLI run from Resources/cli), and in process.resourcesPath (the desktop's server).
+   * A packaged build's rg directory: DIRECTORY when set (the desktop passes Resources/cli/ripgrep-<target> to its
+   * server), else, in the compiled CLI, ripgrep/ beside its own binary. Undefined in a source run.
    */
-  export const bundled = () => {
-    const executable = RipgrepRelease.executable()
-    const binary = path.dirname(existsSync(process.execPath) ? realpathSync(process.execPath) : process.execPath)
-    const resources =
-      "resourcesPath" in process && typeof process.resourcesPath === "string" ? process.resourcesPath : ""
-    return [
-      path.join(binary, "ripgrep", executable),
-      path.join(binary, "..", "ripgrep", executable),
-      ...(resources ? [path.join(resources, "ripgrep", executable)] : []),
-    ]
-  }
+  export const bundledDirectory = (env: Record<string, string | undefined> = process.env) =>
+    env[DIRECTORY] ||
+    (typeof ORCHESTRA_RIPGREP_BESIDE_BINARY !== "undefined" && ORCHESTRA_RIPGREP_BESIDE_BINARY
+      ? path.join(path.dirname(realpathSync(process.execPath)), "ripgrep")
+      : undefined)
 
   export const defaults = (env: Record<string, string | undefined> = process.env): Options => ({
-    bundled,
-    packaged,
+    bundled: bundledDirectory(env),
     system: () => which(process.platform === "win32" ? "rg.exe" : "rg") ?? undefined,
     directory: Global.Path.bin,
     release: release(),
@@ -312,24 +309,39 @@ export namespace RipgrepBinary {
         ? unavailable("ripgrep download was interrupted", true)
         : unavailable(`ripgrep download failed: ${defect(Cause.squash(cause))}`))
 
+    // Regular files only: a symlink in place of the shipped or downloaded rg is refused.
+    const regular = (file: string) =>
+      Effect.promise(() =>
+        lstat(file).then(
+          (stat) => stat.isFile(),
+          () => false,
+        ),
+      )
+    const refuse = Effect.fnUntraced(function* (message: string) {
+      const error = unavailable(message)
+      yield* Effect.logWarning(error.message)
+      return yield* error
+    })
+
     const locate = Effect.gen(function* () {
-      const bundled = options.bundled()
-      for (const file of bundled) if (yield* fs.isFile(file)) return file
       const system = options.system()
+      if (options.bundled !== undefined) {
+        const shipped = path.join(options.bundled, executable)
+        if (yield* regular(shipped)) return shipped
+        if (system && (yield* fs.isFile(system))) return system
+        return yield* refuse(
+          `ripgrep (rg) is missing from this packaged build (${shipped} is not a regular file) and is not on PATH; packaged builds never download it, so reinstall Orchestra or install ripgrep (rg) on PATH`,
+        )
+      }
       if (system && (yield* fs.isFile(system))) return system
-      if (yield* fs.isFile(target)) return target
+      if (yield* regular(target)) return target
       const release = options.release
       if (!release)
         return yield* unavailable(`ripgrep publishes no build for ${key()}; install ripgrep (rg) on PATH`)
-      if (options.packaged || !options.download) {
-        const error = unavailable(
-          options.packaged
-            ? `ripgrep (rg) is missing from this packaged build (looked at ${bundled.join(", ")}) and is not on PATH; packaged builds never download it, so reinstall Orchestra or install ripgrep (rg) on PATH`
-            : `ripgrep (rg) is not on PATH and ${DISABLE_DOWNLOAD} forbids downloading it; install ripgrep (rg) on PATH`,
+      if (!options.download)
+        return yield* refuse(
+          `ripgrep (rg) is not on PATH and ${DISABLE_DOWNLOAD} forbids downloading it; install ripgrep (rg) on PATH`,
         )
-        yield* Effect.logWarning(error.message)
-        return yield* error
-      }
       return yield* Deferred.await(yield* acquisition(release)).pipe(
         Effect.timeoutOrElse({
           duration: options.wait,
