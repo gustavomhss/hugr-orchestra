@@ -1,6 +1,6 @@
 # Backend acceptance record
 
-Current at baseline `966c1af1ee` (2026-10-11). Source: `dev` after close-out #289 (`524f8ec626`), #319 (`52441dd37c`) and #320 (`966c1af1ee`); public GitHub PR state confirms both #319 and #320 merged. This is a status record, not a spec. It replaces the unmerged draft `acceptance-2026-10-09.md` (commit `c071f601eb`) and keeps its conservative reading. The lead owns acceptance and landing.
+Current at baseline `966c1af1ee` (2026-10-12 UTC). Source: `dev` after close-out #289 (`524f8ec626`), #319 (`52441dd37c`) and #320 (`966c1af1ee`); public GitHub PR state confirms both #319 and #320 merged. Merge dates use GitHub's UTC timestamps; owner-decision dates retain the dates recorded in the campaign and contract rulings. This is a status record, not a spec. It replaces the unmerged draft `acceptance-2026-10-09.md` (commit `c071f601eb`) and keeps its conservative reading. The lead owns acceptance and landing.
 
 Read order: [Landing update](session-resume-2026-10-08.md#landing-update--2026-10-09), [contract rulings](contracts/README.md), F1-F6 as amended, then source. Older resume sections and [delivery-plan.md](delivery-plan.md) are historical.
 
