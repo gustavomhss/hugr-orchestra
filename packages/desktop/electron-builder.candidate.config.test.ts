@@ -37,6 +37,13 @@ test("candidate preserves production package filters and app resources, appends 
     { from: "../orchestra/dist/node/licenses", to: "licenses" },
   ])
   expect(builder.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
+  expect(builder.extraResources).toContainEqual({ from: "resources/cli", to: "cli" })
+  // The base hooks prepare tree-sitter and refuse a package whose owned CLI is missing or unverified.
+  expect(builder.beforePack).toBe(baseBuilder.beforePack)
+  expect(builder.afterPack).toBe(baseBuilder.afterPack)
+  expect(builder.afterSign).toBe(baseBuilder.afterSign)
+  expect(typeof builder.beforePack).toBe("function")
+  expect(builder.mac.signIgnore).toEqual(baseBuilder.mac?.signIgnore)
   expect(builder.asarUnpack).toContain("node_modules/@lydell/node-pty-darwin-x64/**/*")
   expect(builder.mac.icon).toBe(baseBuilder.mac?.icon)
 })
@@ -61,6 +68,8 @@ for (const channel of ["dev", "beta", "prod"]) {
       import vite from "./electron.vite.candidate.config.ts"
       console.log(JSON.stringify({
         baseResources: base.extraResources, resources: builder.extraResources,
+        baseRpm: base.rpm.packageName, rpm: builder.rpm.packageName,
+        hooks: ["beforePack", "afterPack", "afterSign"].every((hook) => typeof base[hook] === "function" && builder[hook] === base[hook]),
         appId: builder.appId, channel: vite.main.define["import.meta.env.ORCHESTRA_CHANNEL"],
         candidate: vite.main.define["import.meta.env.ORCHESTRA_LEAN_CANDIDATE"],
         normal: normal.main.define["import.meta.env.ORCHESTRA_LEAN_CANDIDATE"] ?? null,
@@ -77,7 +86,11 @@ for (const channel of ["dev", "beta", "prod"]) {
     expect(graph.candidate).toBe('"1"')
     expect(graph.normal).toBeNull()
     expect(graph.resources).toEqual([...graph.baseResources, { from: "../orchestra/dist/node/licenses", to: "licenses" }])
-    expect(graph.baseResources.some((item: { filter?: string[] }) => item.filter?.includes("orchestra-cli*"))).toBe(channel === "dev")
+    // Every channel ships the owned CLI from resources/cli; the base graph is the one evaluated for this channel.
+    expect(graph.resources).toContainEqual({ from: "resources/cli", to: "cli" })
+    expect(graph.baseRpm).toBe({ dev: "orchestra-dev", beta: "orchestra-beta", prod: "orchestra" }[channel])
+    expect(graph.rpm).toBe(graph.baseRpm)
+    expect(graph.hooks).toBe(true)
   })
 }
 
