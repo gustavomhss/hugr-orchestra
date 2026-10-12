@@ -2,7 +2,9 @@ export * as SessionSubagentModels from "./subagent-models"
 
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { eq } from "drizzle-orm"
-import { Context, DateTime, Effect, Layer, Schema } from "effect"
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
+import { Cause, Context, DateTime, Effect, Layer, Schema } from "effect"
+import { isSqlError } from "effect/unstable/sql/SqlError"
 import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
 import { EventV2 } from "../event"
@@ -97,10 +99,37 @@ export function fromStorage(sessionID: SessionSchema.ID, value: string | null) {
   return normalize(decoded.value)
 }
 
-const storageError = (sessionID: SessionSchema.ID, cause: unknown) =>
-  cause instanceof NotFoundError || cause instanceof InvalidChainError || cause instanceof StorageError
-    ? cause
-    : new StorageError({ sessionID, message: cause instanceof Error ? cause.message : String(cause) })
+function failStorage(sessionID: SessionSchema.ID, cause: unknown): Effect.Effect<never, Error> {
+  const error =
+    cause instanceof EffectDrizzleQueryError &&
+    Cause.isCause(cause.cause) &&
+    cause.cause.reasons.length === 1 &&
+    !Cause.hasInterrupts(cause.cause)
+      ? Cause.squash(cause.cause)
+      : cause
+  if (
+    error instanceof NotFoundError ||
+    error instanceof InvalidChainError ||
+    error instanceof StorageError ||
+    error instanceof ModelDeniedError
+  )
+    return Effect.fail(error)
+  // Bun and Node SQLite prepare failures escape the adapter's SqlError wrapper.
+  if (
+    isSqlError(error) ||
+    (error instanceof Error &&
+      !(error instanceof TypeError) &&
+      ((error.name === "SQLiteError" &&
+        "errno" in error &&
+        typeof error.errno === "number" &&
+        Number.isInteger(error.errno)) ||
+        ("code" in error &&
+          typeof error.code === "string" &&
+          (error.code.startsWith("SQLITE_") || error.code === "ERR_SQLITE_ERROR"))))
+  )
+    return Effect.fail(new StorageError({ sessionID, message: cause instanceof Error ? cause.message : String(cause) }))
+  return Effect.die(error)
+}
 
 const layer = Layer.effect(
   Service,
@@ -136,11 +165,11 @@ const layer = Layer.effect(
           .from(SessionTable)
           .where(eq(SessionTable.id, sessionID))
           .get()
-          .pipe(Effect.mapError((cause) => storageError(sessionID, cause)))
+          .pipe(Effect.catch((cause) => failStorage(sessionID, cause)))
         if (!row) return yield* new NotFoundError({ sessionID })
         return fromStorage(sessionID, row.policy) ?? inherit
       },
-      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => Effect.fail(storageError(sessionID, cause)))),
+      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => failStorage(sessionID, cause))),
     )
 
     const ceilings = Effect.fn("SessionSubagentModels.ceilings")(
@@ -176,40 +205,27 @@ const layer = Layer.effect(
               return result
             }),
           )
-          .pipe(Effect.mapError((cause) => storageError(sessionID, cause)))
+          .pipe(Effect.catch((cause) => failStorage(sessionID, cause)))
       },
-      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => Effect.fail(storageError(sessionID, cause)))),
+      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => failStorage(sessionID, cause))),
     )
 
     const set = Effect.fn("SessionSubagentModels.set")(
       function* (sessionID: SessionSchema.ID, policy: Policy) {
         const normalized = normalize(
           yield* Schema.decodeUnknownEffect(Policy)(policy).pipe(
-            Effect.mapError((cause) => storageError(sessionID, cause)),
+            Effect.mapError((cause) => new StorageError({ sessionID, message: cause.message })),
           ),
         )
-        return yield* db
-          .transaction(
-            () =>
-              Effect.gen(function* () {
-                const row = yield* db
-                  .select({ id: SessionTable.id })
-                  .from(SessionTable)
-                  .where(eq(SessionTable.id, sessionID))
-                  .get()
-                if (!row) return yield* new NotFoundError({ sessionID })
-                yield* events.publish(SessionEvent.SubagentModelsChanged, {
-                  sessionID,
-                  timestamp: yield* DateTime.now,
-                  policy: normalized,
-                })
-                return normalized
-              }),
-            { behavior: "immediate" },
-          )
-          .pipe(Effect.mapError((cause) => storageError(sessionID, cause)))
+        // EventV2 owns the commit and post-commit notification; the projector verifies Session existence atomically.
+        yield* events.publish(SessionEvent.SubagentModelsChanged, {
+          sessionID,
+          timestamp: yield* DateTime.now,
+          policy: normalized,
+        })
+        return normalized
       },
-      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => Effect.fail(storageError(sessionID, cause)))),
+      (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => failStorage(sessionID, cause))),
     )
 
     const assert = Effect.fn("SessionSubagentModels.assert")(function* (
