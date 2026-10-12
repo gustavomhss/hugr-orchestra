@@ -177,6 +177,26 @@ export function tmpdirScoped<E = never, R = never>(options?: {
   })
 }
 
+/**
+ * A scoped tmpdir whose instance is disposed before the directory is removed. The store usually outlives the caller's
+ * scope: TestAppNodeBuilder installs testInstanceStoreLayer itself, so `Effect.provide(testInstanceStoreLayer)` hits the
+ * test layer's memo map and reuses a store that is only closed after the test's scope. Without this finalizer the
+ * directory's instance, and every process it owns, outlived the removal; on Windows a language server whose cwd is the
+ * directory kept it busy (EBUSY) until the store closed. Finalizers run in reverse order, so this runs before `clean`.
+ */
+function tmpdirInstanceScoped<E = never, R = never>(options?: {
+  git?: boolean
+  config?: Partial<ConfigV1.Info> | (() => Partial<ConfigV1.Info>)
+  init?: (directory: string) => Effect.Effect<void, E, R>
+}) {
+  return Effect.gen(function* () {
+    const directory = yield* tmpdirScoped(options)
+    const store = yield* InstanceStore.Service
+    yield* Effect.addFinalizer(() => store.disposeDirectory(directory))
+    return directory
+  })
+}
+
 export const provideInstance =
   (directory: string) =>
   <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | InstanceStore.Service> =>
@@ -197,7 +217,7 @@ export function provideTmpdirInstance<A, E, R>(
   options?: { git?: boolean; config?: Partial<ConfigV1.Info> | (() => Partial<ConfigV1.Info>) },
 ) {
   return Effect.gen(function* () {
-    const path = yield* tmpdirScoped(options)
+    const path = yield* tmpdirInstanceScoped(options)
     return yield* self(path).pipe(provideInstance(path))
   }).pipe(Effect.provide(testInstanceStoreLayer))
 }
@@ -218,7 +238,7 @@ export const withTmpdirInstance =
   }) =>
   <A, E, R>(self: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
-      const directory = yield* tmpdirScoped(options)
+      const directory = yield* tmpdirInstanceScoped(options)
       return yield* self.pipe(Effect.provideService(TestInstance, { directory }), provideInstanceEffect(directory))
     }).pipe(Effect.provide(testInstanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
 
