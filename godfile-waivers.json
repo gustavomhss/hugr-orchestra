@@ -439,7 +439,7 @@
       "authorizedAt": "2026-10-11"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 17162,
+      "maximumLines": 17163,
       "reason": "Generated @hey-api/OpenAPI V2 SDK schema output (packages/sdk/js/script/build.ts); splitting requires generator redesign. Regenerated for the Maestro landing combined with dev's Session process routes; 16782 LOC plus a small margin. Extended for the Lean dashboard, metrics and preference schemas (8838/17074 LOC plus a small margin). Extended for the native research schemas merged with dev (17101 LOC plus a small margin). Includes generated default-model and health-process contracts (17162 LOC).",
       "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
       "authorizedAt": "2026-10-11"
