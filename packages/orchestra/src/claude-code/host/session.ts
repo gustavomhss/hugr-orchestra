@@ -473,7 +473,7 @@ const layer = Layer.effect(
       const ctx: ClaudeHostOptions.Context = { sessionID: input.sessionID, directory: instance.directory, worktree: instance.worktree,
         agent: live.seat, abort }
       const research = yield* ClaudeHostResearch.make.pipe(Effect.provideService(ResearchExecution.Service, researchExecution),
-        Effect.provideService(ResearchAllowance.Service, researchAllowance))
+        Effect.provideService(ResearchAllowance.Service, researchAllowance), Effect.provideService(ClaudeHostResearch.NativeStop, ClaudeHostResearch.nativeStop(live)))
       live.research = research
       const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, research, withSession: bindings.withSession })
       live.bridge = bridge
