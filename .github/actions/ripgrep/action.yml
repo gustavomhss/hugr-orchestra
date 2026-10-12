@@ -4,7 +4,7 @@ description: >-
   (https only, transient failures retried, each attempt with deadlines), and its sha256 is checked on every run before
   it is extracted, so tests never download ripgrep. Also sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD, so a test process
   that cannot find rg fails naming that variable instead of reaching GitHub. The version and digests must equal
-  packages/core/src/ripgrep/binary.ts (packages/core/test/ripgrep-binary.test.ts checks). cache-warm saves the cache
+  packages/core/src/ripgrep/release.ts (packages/core/test/ripgrep-binary.test.ts checks). cache-warm saves the cache
   on dev; other runs only restore it.
 inputs:
   save:

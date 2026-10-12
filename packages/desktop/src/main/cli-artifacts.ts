@@ -1,8 +1,9 @@
 import { constants } from "node:fs"
-import { lstat, open, realpath } from "node:fs/promises"
+import { cp, lstat, open, realpath } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { join, resolve } from "node:path"
 import { copyTreeSitter, requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 
 export type CliArtifactManifest = {
   schema: 1
@@ -28,6 +29,23 @@ export function copyCliTreeSitter(from: string, to: string, target: string) {
   const bundle = cliTreeSitterTarget(target)
   requireTreeSitterBundle(from, bundle)
   copyTreeSitter(treeSitterBundle(bundle).map((file) => ({ from: join(from, file), to: file })), to, bundle)
+}
+
+/** The ripgrep pin key for a CLI target; undefined where ripgrep publishes no build for it. */
+export function cliRipgrepKey(target: string) {
+  return RipgrepBundle.key(cliTreeSitterTarget(target))
+}
+
+/**
+ * Copies a ripgrep directory staged by RipgrepBundle (rg, its license texts and manifest) from `from` to `to`, checking
+ * both against the pin for `target`. `signed` accepts an executable whose bytes a code signature changed.
+ */
+export async function copyCliRipgrep(from: string, to: string, target: string, options: { signed?: boolean } = {}) {
+  const key = cliRipgrepKey(target)
+  if (!key) throw new Error(`ripgrep publishes no build for ${target}`)
+  await RipgrepBundle.verify(from, key, options)
+  await cp(from, to, { recursive: true, errorOnExist: true, force: false })
+  return RipgrepBundle.verify(to, key, options)
 }
 
 export async function readCliManifest(directory: string): Promise<CliArtifactManifest> {

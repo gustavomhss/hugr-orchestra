@@ -2,7 +2,14 @@ import { createHash } from "node:crypto"
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, isAbsolute, join, relative, sep } from "node:path"
 import { realpath } from "node:fs/promises"
-import { copyCliTreeSitter, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
+import {
+  copyCliRipgrep,
+  copyCliTreeSitter,
+  nativeCliTarget,
+  readCliManifest,
+  verifyCliArtifact,
+} from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
 export function desktopCliTargets(platform: string, arch: string) {
@@ -11,7 +18,8 @@ export function desktopCliTargets(platform: string, arch: string) {
 
 // A Windows build's Linux CLIs run in WSL guests. They are omni builds whose preflight needs this pair next to the
 // binary, so src/main/wsl/artifact.ts installs the pair from omni-<target>/ in the bundle (hashing those bytes) and
-// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin.
+// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin. Their rg comes
+// the same way, from ripgrep-<target>/ (dist/cli-<target>/bin/ripgrep), since a packaged CLI never downloads one.
 export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as const
 
 export class WslOmniPairMissingError extends Error {
@@ -117,6 +125,12 @@ export async function stageCliArtifacts(input: {
         await mkdir(join(staging, `omni-${target}`))
         await Promise.all(pair.map((file) => copyFile(file, join(staging, `omni-${target}`, basename(file)))))
         await chmod(join(staging, `omni-${target}`, omniCompanions[1]), 0o755)
+        if (RipgrepBundle.enabled())
+          await copyCliRipgrep(
+            input.prebuilt === undefined ? join(source, "bin", "ripgrep") : join(input.prebuilt, `ripgrep-${target}`),
+            join(staging, `ripgrep-${target}`),
+            target,
+          )
       }
       await input.sign?.(path, target)
       return {

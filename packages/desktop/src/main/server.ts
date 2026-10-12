@@ -6,6 +6,7 @@ import type { Details } from "electron"
 import { getLogger } from "./logging"
 import { OmniHost } from "./omni-host"
 import { OmniSmoke } from "./omni-smoke"
+import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
@@ -95,6 +96,7 @@ export async function spawnLocalServer(
     env: {
       ...createSidecarEnv(options.candidateProfile),
       ...OmniHost.sidecarEnv(),
+      ...ripgrepEnv(app.isPackaged),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
       // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
       // repository copy, since the bundled server cannot locate it from its own path.

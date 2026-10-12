@@ -4,6 +4,8 @@ import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import { lstat, readlink, readdir, realpath } from "node:fs/promises"
 
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
+import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { appID, desktop, productName } from "./lean-candidate-identity.fixture"
 
 export { appID, desktop, productName }
@@ -17,6 +19,7 @@ type BuildIdentity = {
   tools: { bun: string; node: string; electron: string; "electron-builder": string }
   main: Material[]; preload: Material[]; renderer: Material[]; backend: Material[]; packaged: Material[]
   nativePty: { name: string; version: string; binaries: Material[] }
+  ripgrep: { key: string; manifest: RipgrepBundle.Manifest; files: Material[] }
 }
 
 async function git(...args: string[]) {
@@ -162,6 +165,19 @@ export async function verifyCandidateArchive() {
     assert.deepEqual(new Uint8Array(await Bun.file(path.join(notices, file)).arrayBuffer()), bytes, `Notice bytes changed: ${file}`)
     assert.equal(pin.materials.find((material) => material.path === file)!.sha256, digest(bytes))
   }
+  // Resources/ripgrep: the pinned x64 macOS rg the build recorded, byte for byte, and it runs.
+  const ripgrep = path.join(candidate.resources, "ripgrep")
+  assert.equal(candidate.manifest.ripgrep.key, "x64-darwin")
+  assert.equal(candidate.manifest.ripgrep.manifest.archive.sha256, RipgrepRelease.archive("x64-darwin")!.sha256,
+    "Build record does not pin the x64 macOS ripgrep archive")
+  assert.deepEqual(await RipgrepBundle.verify(ripgrep, "x64-darwin"), candidate.manifest.ripgrep.manifest,
+    "Packaged ripgrep manifest differs from the build record")
+  assert.deepEqual(await inventory(ripgrep), candidate.manifest.ripgrep.files, "Packaged ripgrep differs from the build record")
+  const rg = Bun.spawn([path.join(ripgrep, "rg"), "--version"], { stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
+  const [version, code] = await Promise.all([new Response(rg.stdout).text(), rg.exited])
+  assert.equal(code, 0, "Packaged rg does not run")
+  assert.ok(version.startsWith(`ripgrep ${RipgrepRelease.VERSION}`), `Packaged rg reports ${version.split("\n")[0]}`)
+  console.log(`packaged ripgrep archive=${candidate.manifest.ripgrep.manifest.archive.sha256} rg=${candidate.manifest.ripgrep.manifest.executable.sha256}`)
   console.log(`packaged archive sha256=${digest(new Uint8Array(await Bun.file(archive).arrayBuffer()))} notices=${names.length} fonts=${fonts.length}`)
   return candidate
 }

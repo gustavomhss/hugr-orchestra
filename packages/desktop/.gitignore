@@ -33,3 +33,6 @@ artifacts/
 
 # hugr-omni addon and supervisor, staged by scripts/stage-omni.ts
 resources/omni/
+
+# the pinned ripgrep, staged by scripts/utils.ts (stageRipgrepToResources)
+resources/ripgrep/

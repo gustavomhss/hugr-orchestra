@@ -48,3 +48,16 @@ native("actual packaged candidate: owned backend/PTY, native Go30, renderer prof
     await rm(scratch, { recursive: true, force: true })
   }
 }, 1200000)
+
+native("packaged candidate CLI searches with Resources/ripgrep and never downloads rg, also once it is removed", async () => {
+  // packages/cli/script/ripgrep-proof.ts: no rg on PATH, every request through a counting proxy; the mutant moves
+  // Resources/ripgrep away (search fails closed, nothing fetched) and restores it before the archive step.
+  const candidate = await packagedCandidate()
+  const child = Bun.spawn([process.execPath, path.join(repository, "packages/cli/script/ripgrep-proof.ts"),
+    "--key", "x64-darwin", "--binary", path.join(candidate.resources, "cli", "orchestra-darwin-x64-baseline"),
+    "--ripgrep", path.join(candidate.resources, "ripgrep"), "--mutate"], {
+    cwd: repository, stdout: "inherit", stderr: "inherit", timeout: 600_000, killSignal: "SIGKILL" })
+  const code = await child.exited
+  if (code !== 0 || child.signalCode) throw new Error(`Packaged ripgrep proof failed: ${code}/${child.signalCode}`)
+  await verifyCandidateArchive()
+}, 660000)

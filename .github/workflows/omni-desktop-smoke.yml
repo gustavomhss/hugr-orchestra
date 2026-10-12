@@ -20,8 +20,19 @@ permissions:
   contents: read
 
 jobs:
+  # A Windows desktop bundles the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Each is an omni build with
+  # its own Linux omni pair and tree-sitter bundle, which only Linux hosts can produce, so they come from these builds.
+  guest-omni:
+    uses: ./.github/workflows/omni-artifacts.yml
+
+  guest-tree-sitter:
+    uses: ./.github/workflows/tree-sitter-artifacts.yml
+    with:
+      targets: '["linux-x64","linux-arm64"]'
+
   smoke:
     name: actual packaged desktop (${{ matrix.os }})
+    needs: [guest-omni, guest-tree-sitter]
     strategy:
       fail-fast: false
       matrix:
@@ -54,6 +65,37 @@ jobs:
       - name: Exact-source release omni binaries
         uses: ./.github/actions/omni-binaries
 
+      # GUEST_OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as the CLI build reads them.
+      - name: WSL guest omni pair (linux-x64-gnu)
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-x64-gnu
+          path: ${{ runner.temp }}/guest-omni/linux-x64-gnu
+      - name: WSL guest omni pair (linux-arm64-gnu)
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-arm64-gnu
+          path: ${{ runner.temp }}/guest-omni/linux-arm64-gnu
+      - name: WSL guest tree-sitter (linux-x64)
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-linux-x64
+          path: ${{ runner.temp }}/guest-tree-sitter/linux-x64
+      - name: WSL guest tree-sitter (linux-arm64)
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-linux-arm64
+          path: ${{ runner.temp }}/guest-tree-sitter/linux-arm64
+      - name: Point the build at the WSL guest artifacts
+        if: runner.os == 'Windows'
+        run: |
+          echo "GUEST_OMNI_ARTIFACTS=$RUNNER_TEMP/guest-omni" >> "$GITHUB_ENV"
+          echo "TREE_SITTER_ARTIFACTS=$RUNNER_TEMP/guest-tree-sitter" >> "$GITHUB_ENV"
+
       - name: Linux GUI display capability
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
@@ -74,6 +116,13 @@ jobs:
           # App must discover its own Resources/omni. Environment cannot rescue packaging.
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
           bun test/omni-smoke/packaged.ts --require main,shell,terminal --diagnose-main
+
+      # Resources/ripgrep: pinned bytes, refused when moved away, and the packaged CLI (Resources/cli and its installed
+      # copy) searches with it and never downloads one, each with its mutant (test/omni-smoke/ripgrep.ts).
+      - name: Packaged ripgrep, used by the packaged CLI and never downloaded, mutants then restored
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: packages/desktop
+        run: bun test/omni-smoke/ripgrep.ts
 
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()
