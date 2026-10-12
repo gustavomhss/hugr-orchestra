@@ -285,3 +285,27 @@ CompactionFixture.it.instance("SDK cancellation between actual Effect completion
     expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_HOOK_CANCELLED") })
     expect(JSON.stringify(output)).not.toContain("LATE-CONTEXT-CONTROL")
   }))
+
+for (const event of ["SessionStart", "PostCompact"] as const) {
+  CompactionFixture.it.instance(`${event} with an unknown agent_id and shared root session_id fails closed`, () =>
+    Effect.gen(function* () {
+      const f = yield* CompactionFixture.make()
+      yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "ROOT-NOT-FALLBACK", status: "pending", priority: "high" }] })
+      const output = yield* (event === "SessionStart" ? f.compact(f.base.session_id, f.ctx.abort.signal, "unjoined-agent")
+        : f.summary("UNJOINED-SUMMARY", "auto", f.base.session_id, f.ctx.abort.signal, "unjoined-agent"))
+      expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_NATIVE_OWNER_UNAVAILABLE") })
+      expect(JSON.stringify(output)).not.toContain("ROOT-NOT-FALLBACK")
+      expect(yield* f.archive.list(f.chat.id)).toEqual([])
+    }))
+}
+
+CompactionFixture.it.instance("a joined child actor remains authoritative when its callback session_id differs from the root", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    const child = yield* joined(f, "actor-first")
+    yield* f.todos.update({ sessionID: child.child, todos: [{ content: "JOINED-CHILD-EXACT", status: "pending", priority: "high" }] })
+    expect(memory(yield* f.compact("sdk-child-session", f.ctx.abort.signal, child.agentID))).toContain("JOINED-CHILD-EXACT")
+    yield* f.summary("ACTOR-SUMMARY", "manual", "sdk-child-session", f.ctx.abort.signal, child.agentID)
+    expect(yield* f.archive.list(f.chat.id)).toEqual([])
+    expect((yield* f.archive.list(child.child)).length).toBeGreaterThan(0)
+  }))

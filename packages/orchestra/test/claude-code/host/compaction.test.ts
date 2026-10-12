@@ -1,14 +1,20 @@
 import { afterEach, expect } from "bun:test"
 import path from "node:path"
+import { createHash } from "node:crypto"
+import { eq } from "drizzle-orm"
+import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
+import { EventTable } from "@orchestra/core/event/sql"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Effect, Layer, Schema } from "effect"
 import type { HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { Archive } from "@/continuity/archive"
 import { ContinuityChecklist } from "@/continuity/checklist"
 import { completeSnapshot } from "@/continuity/fork"
 import { decode } from "@/continuity/memory"
+import { LogicalTask } from "@/maestro/logical-task"
+import { readPlanRevision } from "@/maestro/plan-revision"
 import { AtlasMemory } from "@/maestro/atlas-memory"
-import { recordAdmission } from "@/maestro/admission-record"
-import { recordPlanRevision } from "@/maestro/plan-revision"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { ContextRecallTool } from "@/tool/context-recall"
 import { Tool } from "@/tool/tool"
@@ -233,8 +239,12 @@ CompactionFixture.it.instance("owned v5 memory is read cold and withheld after c
     if ("check" in checked) throw new Error(JSON.stringify(checked))
     yield* f.archive.writeMemory(f.chat.id, () => ({ context: { sessionID: f.chat.id, boundary: checked.artifact.boundary,
       text: checked.artifact.text, artifact: checked.artifact }, masks: [] }))
+    const bytes = yield* f.fs.readFileString(path.join(f.archiveDirectory, "memory.json"))
+    const before = yield* f.sessions.messages({ sessionID: f.chat.id })
     const reopened = yield* CompactionFixture.make({ sessionID: f.chat.id })
-    expect(memory(yield* reopened.compact())).toContain("OWNED-V5-NEXT")
+    expect(memory(yield* reopened.compact())).toContain(checked.artifact.text)
+    expect(yield* f.fs.readFileString(path.join(f.archiveDirectory, "memory.json"))).toBe(bytes)
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
     yield* f.sessions.updatePart({ ...part, text: "Changed source invalidates fingerprint." })
     expect(memory(yield* f.compact())).not.toContain("OWNED-V5-NEXT")
     yield* f.sessions.updatePart(part)
@@ -276,6 +286,8 @@ CompactionFixture.it.instance("latest own-project/member Atlas Admission survive
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: later.id }, summary: undefined })
     const text = memory(yield* f.compact())
     expect(text).toContain(admission.text)
+    expect(text).toContain("ATLAS-REF-EXACT")
+    expect(text).toContain("atlas-content-hash")
     expect(text).toContain("historical evidence; not new permission")
     expect(text).not.toContain("FUTURE-ATLAS")
     expect(text).not.toContain("FOREIGN-ATLAS")
@@ -310,28 +322,102 @@ CompactionFixture.it.instance("plan is anchored to a visible producer/admission 
   Effect.gen(function* () {
     const f = yield* CompactionFixture.make()
     if (!f.user || !f.assistant) throw new Error("Missing plan history")
-    const produce = Effect.fnUntraced(function* (user: typeof f.user, assistant: typeof f.assistant, goal: string) {
-      if (!user || !assistant) throw new Error("Missing plan anchor")
-      yield* recordAdmission({ sessionID: f.chat.id, messageID: user.id, methodVersion: "admit-request-v1", assessment: {
-        kind: "work", goal, known: [], proposals: [], unknowns: [], uncertainty: "none", activeWorkEffect: "none", reason: "Explicit work request." } })
-      const record = yield* recordPlanRevision({ sessionID: f.chat.id, admissionMessageID: user.id, methodVersion: "plan-v1",
-        goal: { value: goal, source: "stakeholder" }, acceptance: Array.from({ length: 10 }, (_, index) => ({
-          value: `${goal}-ACCEPT-${index}`, source: "stakeholder" as const })), scope: [], constraints: [{ value: "DO-NOT-DEPLOY", source: "stakeholder" }],
-        reviewRequirement: { value: "Cold review", source: "maestro" }, contextRequirement: "PENDING", assumptions: [], risks: [] })
-      yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: assistant.id, type: "tool",
-        tool: "mcp__orchestra__maestro_record_plan_revision", callID: `plan-${goal}`, state: { status: "completed",
-          input: { admissionMessageID: user.id }, output: `${record.status}: ${record.id}\n\nBindings: ${JSON.stringify({ planRevisionID: record.id })}`,
-          title: "Plan", metadata: { planRevisionID: record.id, revisionHash: record.revisionHash }, time: { start: 1, end: 2 } } })
-    })
-    yield* produce(f.user, f.assistant, "KEPT-PLAN")
+    yield* f.plan("KEPT-PLAN")
     expect(memory(yield* f.compact())).toContain("KEPT-PLAN-ACCEPT-9")
     const later = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
     const after = yield* f.sessions.updateMessage({ ...f.assistant, id: MessageID.ascending(), parentID: later.id })
-    yield* produce(later, after, "FUTURE-PLAN")
+    yield* f.plan("FUTURE-PLAN", later, after)
     expect(memory(yield* f.compact())).toContain("FUTURE-PLAN")
     yield* f.sessions.setRevert({ sessionID: f.chat.id, revert: { messageID: later.id }, summary: undefined })
     const text = memory(yield* f.compact())
     expect(text).toContain("KEPT-PLAN-ACCEPT-9")
     expect(text).toContain("DO-NOT-DEPLOY")
     expect(text).not.toContain("FUTURE-PLAN")
+  }))
+
+CompactionFixture.it.instance("a later Atlas refusal revokes an admitted fold even when its old restored copy is last", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make({ agent: "backend" })
+    if (!f.user) throw new Error("Missing Atlas anchor")
+    yield* LogicalTask.ensure({ executionSessionID: f.chat.id, authoritySessionID: f.chat.id,
+      projectID: f.chat.projectID, memberID: "backend", source: "user", taskId: "T-current" })
+    const admission: AtlasMemory.Admission = { schema: "atlas-resume-admission-v1", residency: "admitted",
+      key: { projectID: f.chat.projectID, memoryOwner: "backend", logicalResumeID: "parent/current-call", kind: "task", id: "T-current" },
+      verdict: { ok: true, ref: { eventId: "EXACT-REVOKED-REF", contentHash: "exact-revoked-hash" } }, text: "EXACT-REVOKED-FOLD" }
+    const part = { sessionID: f.chat.id, messageID: f.user.id, type: "text" as const, synthetic: true }
+    yield* f.sessions.updatePart({ ...part, id: PartID.ascending(), text: admission.text, metadata: { [AtlasMemory.ADMISSION_KEY]: admission } })
+    expect(memory(yield* f.compact())).toContain(admission.text)
+    yield* f.sessions.updatePart({ ...part, id: PartID.ascending(), text: "WRONG-UNIT", metadata: { [AtlasMemory.ADMISSION_KEY]: {
+      ...admission, key: { ...admission.key, id: "T-foreign" }, text: "WRONG-UNIT" } } })
+    expect(memory(yield* f.compact())).toContain(admission.text)
+    expect(memory(yield* f.compact())).not.toContain("WRONG-UNIT")
+    yield* f.sessions.updatePart({ ...part, id: PartID.ascending(), text: "REVOKED", metadata: { [AtlasMemory.ADMISSION_KEY]: {
+      ...admission, verdict: { ok: false, refusal: "store-unavailable" }, text: "REVOKED" } } })
+    yield* f.sessions.updatePart({ ...part, id: PartID.ascending(), text: admission.text, metadata: { [AtlasMemory.ADMISSION_KEY]: {
+      ...admission, residency: "restored" } } })
+    const before = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const reopened = yield* CompactionFixture.make({ sessionID: f.chat.id })
+    const text = memory(yield* reopened.compact())
+    expect(text).not.toContain(admission.text)
+    expect(text).not.toContain("EXACT-REVOKED-REF")
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
+  }))
+
+CompactionFixture.it.instance("real typed logical binding conflict stops compact memory; genuine absence remains benign", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    expect(yield* f.compact()).toEqual({})
+    const child = yield* f.task("T-CONFLICT")
+    expect(memory(yield* f.compact())).toContain("T-CONFLICT")
+    const database = yield* Database.Service
+    const id = EventV2.ID.make(`evt_maestro_task_bound_${createHash("sha256").update(child.id).digest("hex")}`)
+    const row = yield* database.db.select().from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+    if (!row) throw new Error("Missing actual logical task event")
+    yield* database.db.update(EventTable).set({ data: { ...row.data, executionSessionID: f.chat.id } })
+      .where(eq(EventTable.id, id)).run().pipe(Effect.orDie)
+    const rejected = yield* LogicalTask.read(child.id).pipe(Effect.flip)
+    expect(rejected).toBeInstanceOf(LogicalTask.Denied)
+    expect(rejected.reason).toBe("task-binding-mismatch")
+    const output = yield* f.compact()
+    expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("task-binding-mismatch") })
+    expect(JSON.stringify(output)).not.toContain("T-CONFLICT")
+    expect(f.ctx.abort.signal.aborted).toBe(true)
+    expect((yield* database.db.select().from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie))?.data)
+      .toEqual({ ...row.data, executionSessionID: f.chat.id })
+  }))
+
+CompactionFixture.it.instance("the actual V3 plan reader's typed hash refusal is preserved at the compact boundary", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    const plan = yield* f.plan("PLAN-HASH-POSITIVE")
+    expect(memory(yield* f.compact())).toContain("PLAN-HASH-POSITIVE-ACCEPT-9")
+    const database = yield* Database.Service
+    // Mutate the persisted fixture into schema-valid V3 with an invalid canonical hash; use the actual reader.
+    yield* database.db.update(EventTable).set({ type: EventV2.versionedType(MaestroEvent.PlanRevision.RecordedV3.type, 3),
+      data: { ...plan.revision, revision: "v3", goal: { ...plan.revision.goal, value: "INVALID-HASH-BYTES" } } })
+      .where(eq(EventTable.id, EventV2.ID.make(plan.revision.id))).run().pipe(Effect.orDie)
+    const refused = yield* readPlanRevision(plan.revision.id).pipe(Effect.flip)
+    expect(refused.reason).toBe("WORKFLOW_PLAN_HASH_MISMATCH")
+    const output = yield* f.compact()
+    expect(output).toMatchObject({ continue: false, stopReason: expect.stringContaining("WORKFLOW_PLAN_HASH_MISMATCH") })
+    expect(JSON.stringify(output)).not.toContain("INVALID-HASH-BYTES")
+    expect(f.ctx.abort.signal.aborted).toBe(true)
+  }))
+
+CompactionFixture.it.instance("retained plan admission is revalidated durably without changing valid event or source bytes", () =>
+  Effect.gen(function* () {
+    const f = yield* CompactionFixture.make()
+    const plan = yield* f.plan("EXACT-PLAN")
+    const database = yield* Database.Service
+    const events = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.chat.id)).all().pipe(Effect.orDie)
+    const before = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const output = memory(yield* f.compact())
+    expect(output).toContain(JSON.stringify(plan.revision))
+    expect(yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.chat.id)).all().pipe(Effect.orDie)).toEqual(events)
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(before)
+    const admission = events.find((row) => row.type === EventV2.versionedType(MaestroEvent.Admission.Decided.type, 1))
+    if (!admission) throw new Error("Missing durable plan admission")
+    yield* database.db.update(EventTable).set({ data: { ...admission.data, outcome: "CLARIFY", reason: "revoked fixture" } })
+      .where(eq(EventTable.id, admission.id)).run().pipe(Effect.orDie)
+    expect(yield* f.compact()).toMatchObject({ continue: false, stopReason: expect.stringContaining("COMPACT_PLAN_ADMISSION_UNAVAILABLE") })
   }))
