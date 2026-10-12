@@ -18,19 +18,23 @@ import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { Config } from "@/config/config"
 import { Archive } from "@/continuity/archive"
+import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
 import { LogicalTask } from "@/maestro/logical-task"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { Todo } from "@/session/todo"
+import { Skill } from "@/skill"
 import { Truncate } from "@/tool/truncate"
 import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { testEffect } from "../../lib/effect"
 
 export const it = testEffect(TestAppNodeBuilder.build(
   LayerNode.group([filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
-    SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node]),
+    SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
+    ArsenalBindings.node, Git.node, Skill.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
 
@@ -45,6 +49,9 @@ export const make = Effect.fnUntraced(function* (input: {
   const context = yield* Effect.context<never>()
   const chat = input.sessionID ? yield* sessions.get(input.sessionID)
     : yield* sessions.create({ parentID: input.parentID, agent: input.agent ?? "maestro", title: "Compact-hook fixture" })
+  if (!input.sessionID) yield* sessions.setMetadata({ sessionID: chat.id, metadata: {
+    ...chat.metadata, claudeCode: { ...chat.metadata?.claudeCode, sessionId: `native-${chat.id}` },
+  } })
   const archiveDirectory = path.join(yield* fs.realPath(Global.Path.data), "continuity",
     createHash("sha256").update(chat.id).digest("hex"))
   const abort = new AbortController()
@@ -52,21 +59,22 @@ export const make = Effect.fnUntraced(function* (input: {
   yield* Effect.addFinalizer(() => fs.remove(archiveDirectory, { recursive: true, force: true }).pipe(Effect.orDie))
   const ctx = {
     sessionID: chat.id, directory: chat.directory, worktree: chat.directory, agent: chat.agent ?? "maestro", abort,
-    join: ClaudeHostJoin.make(), granted: {},
+    join: ClaudeHostJoin.make(), granted: { maestro: ["task"], backend: ["read"], archie: ["read"] },
     // HOST's service interpreter erases the effect's environment after capturing its actual built layer.
     run: <A, R>(effect: Effect.Effect<A, unknown, R>) =>
       Effect.runPromiseWith(context)(effect as unknown as Effect.Effect<A, unknown>),
   } satisfies ClaudeHostHooks.Context
   const hooks = ClaudeHostHooks.create(ctx)
-  const fire = (event: HookInput) => {
+  const fire = (event: HookInput, signal = abort.signal) => {
     const callback = hooks[event.hook_event_name]?.[0]?.hooks[0]
     if (!callback) throw new Error(`Missing ${event.hook_event_name} callback`)
-    return Effect.promise(() => callback(event, undefined, { signal: abort.signal }))
+    return Effect.promise(() => callback(event, undefined, { signal }))
   }
   const base = { session_id: `native-${chat.id}`, transcript_path: path.join(chat.directory, "native.jsonl"), cwd: chat.directory }
-  const compact = () => fire({ ...base, hook_event_name: "SessionStart", source: "compact" })
-  const summary = (text: string, trigger: "manual" | "auto" = "auto") =>
-    fire({ ...base, hook_event_name: "PostCompact", compact_summary: text, trigger })
+  const compact = (sessionID = base.session_id, signal = abort.signal) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "SessionStart", source: "compact" }, signal)
+  const summary = (text: string, trigger: "manual" | "auto" = "auto", sessionID = base.session_id, signal = abort.signal) =>
+    fire({ ...base, session_id: sessionID, hook_event_name: "PostCompact", compact_summary: text, trigger }, signal)
   const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
   const user = input.user === false || input.sessionID ? undefined : yield* sessions.updateMessage({
     id: MessageID.ascending(), role: "user", sessionID: chat.id, agent: ctx.agent, model: ref, time: { created: Date.now() },
@@ -92,7 +100,7 @@ export const make = Effect.fnUntraced(function* (input: {
     })
     return child
   })
-  return { chat, ctx, hooks, compact, summary, sessions, todos, archive, archiveDirectory, fs, user, assistant, task }
+  return { chat, ctx, hooks, compact, summary, fire, base, sessions, todos, archive, archiveDirectory, fs, user, assistant, task }
 })
 
 export * as CompactionFixture from "./compaction-fixture"
