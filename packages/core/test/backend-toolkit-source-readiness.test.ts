@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import path from "path"
 import { createHash } from "crypto"
-import { access, copyFile, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "fs/promises"
+import { access, copyFile, mkdir, mkdtemp, readFile, readdir, realpath, stat, writeFile } from "fs/promises"
 import { constants } from "fs"
 import { tmpdir } from "os"
 import { Effect } from "effect"
@@ -11,12 +11,13 @@ import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { Omni } from "../src/omni"
 import { PinnedArtifact } from "../src/pinned-artifact"
 import { expectSpawn } from "./fixture/omni-expect"
+import { removeExecuted } from "./fixture/tmpdir"
 import { it } from "./lib/effect"
 
 const fixture = Effect.gen(function* () {
   const root = yield* Effect.acquireRelease(
     Effect.promise(async () => realpath(await mkdtemp(path.join(tmpdir(), "toolkit-source-ready-")))),
-    (root) => Effect.promise(() => rm(root, { recursive: true, force: true })),
+    (root) => Effect.promise(() => removeExecuted(root)),
   )
   const host = BackendToolkitTarget.detect()
   if (!("target" in host)) throw new Error(`BLOCKED: unsupported toolkit host: ${host.unsupported}`)
