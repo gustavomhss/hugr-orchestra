@@ -191,7 +191,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
     ...(profile?.managedPaths ?? []), ...(profile?.sandbox?.denyPaths ?? []), ...(profile?.neverTouch ?? []),
     // Deny missing names too: credentials may be created after this policy is allocated.
-    ...(reads ? secrets(env) : []),
+    ...(reads ? yield* secrets(env, cwd) : []),
   ])]
   const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
   const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
@@ -260,14 +260,10 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Confined reads: the granted roots, the write roots and the host toolchain. A toolchain path inside a denied path
   // stays denied; a granted root inside one (saved tool output under data) is carved out of it.
   const granted = reads ? yield* existing(fs, reads) : []
-  const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* contained(fs, homeGrants(confined))), ...(yield* existing(fs, [
+  const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* contained(fs, homeGrants(confined))), ...(yield* programRoots(fs, [
     ...programs(confined),
     ...(sandbox.kind === "srt" && sandbox.directory ? [sandbox.directory] : []),
-  ])).flatMap((entry) => {
-    // xcode-select's developer directory lies inside an Xcode bundle, whose Info.plist and frameworks xcrun loads.
-    const bundle = /^(\/.+?\.app)\/Contents\/Developer$/.exec(entry)?.[1]
-    return bundle ? [entry, bundle] : [entry]
-  })].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
+  ]))].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
   const carved = granted.filter((entry) => deny.some((denied) => denied !== entry && FSUtil.contains(denied, entry)))
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
@@ -334,7 +330,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     // srt expands a "/" read deny into the root's children (never /proc, /dev or /sys) and re-mounts allowRead paths.
     // Under confined reads the endpoint forwarder still needs its own script and this process's runtime.
     filesystem: {
-      allowRead: readable ? [...readable, ...(forwarder ? [temp, path.dirname(process.execPath)] : [])] : [],
+      allowRead: readable ? [...readable, ...(forwarder ? [temp] : [])] : [],
       denyRead: readable ? ["/", ...deny, ...nested] : deny,
       allowWrite: roots,
       denyWrite: [...deny, ...guarded, ...(forwarder ? [temp] : []), ...absent.map((entry) => path.join(entry, "orchestra-guard"))],
@@ -542,13 +538,7 @@ const ETC = [
   "services", "shells", "ssl", "static", "terminfo", "timezone",
 ]
 
-/**
- * What a confined-read command may read besides its roots: the system's programs, libraries and essential /etc entries,
- * this process's runtime install, every PATH directory, and the home grants (homeGrants). A PATH directory named `bin`
- * also exposes its install prefix (node's lib beside its bin), unless that prefix is the home directory or one of its
- * direct children, such as ~/.local or ~/.cargo, which hold user data and credentials. Nothing that contains the home
- * directory is ever listed.
- */
+/** Candidate program/home grants; programRoots validates physical program roots separately from requested reads. */
 export function toolchain(env: NodeJS.ProcessEnv = process.env) {
   return [...programs(env), ...homeGrants(env).map((grant) => grant.entry)]
 }
@@ -568,15 +558,19 @@ const named = (value: string | undefined, fallback: string) =>
 const gitHomes = (env: NodeJS.ProcessEnv) =>
   [...homes().map((home) => path.join(home, ".config", "git")), ...absolute(env.XDG_CONFIG_HOME).map((xdg) => path.join(xdg, "git"))]
 
-/**
- * Credential stores a confined-read command never reads, even where a readable root holds them (a CARGO_HOME under /usr
- * whose bin is on PATH): cargo's credentials and config, its bare git databases, and git's XDG credential store.
- */
-const secrets = (env: NodeJS.ProcessEnv) => [
-  ...named(env.CARGO_HOME, ".cargo").flatMap((cargo) =>
-    ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db")].map((name) => path.join(cargo, name))),
-  ...gitHomes(env).map((root) => path.join(root, "credentials")),
-]
+/** Cargo credentials/config/git databases and git's XDG credentials stay denied even under readable roots. */
+const secrets = (env: NodeJS.ProcessEnv, cwd: string) => Effect.gen(function* () {
+  if ([env.CARGO_HOME, env.XDG_CONFIG_HOME].some((value) => value !== undefined &&
+    (typeof value !== "string" || /[*?\[\]\0]/.test(value))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-credential-root-invalid" })
+  // Deny discovery is not grant eligibility; relative roots belong to the child's cwd.
+  return [
+    ...(env.CARGO_HOME === undefined ? homes().map((home) => path.join(home, ".cargo")) : [path.resolve(cwd, env.CARGO_HOME)])
+      .flatMap((cargo) => ["credentials", "credentials.toml", "config", "config.toml", path.join("git", "db")].map((name) => path.join(cargo, name))),
+    ...homes().map((home) => path.join(home, ".config", "git", "credentials")),
+    ...(env.XDG_CONFIG_HOME === undefined ? [] : [path.join(path.resolve(cwd, env.XDG_CONFIG_HOME), "git", "credentials")]),
+  ]
+})
 
 /** The system roots: programs, libraries and the essential /etc entries. */
 const system = () => process.platform === "darwin"
@@ -594,21 +588,28 @@ function programs(env: NodeJS.ProcessEnv) {
   return [...system(), ...bins, ...prefixes].filter((entry) => !homes().some((home) => FSUtil.contains(entry, home)))
 }
 
+const programRoots = (fs: FSUtil.Interface, entries: ReadonlyArray<string>) => Effect.gen(function* () {
+  const places = [...homes().map((home) => path.resolve(home)), ...(yield* Effect.forEach(homes(), (home) => canonical(fs, path.resolve(home))))]
+  const found = yield* Effect.forEach(entries, (entry) => Effect.gen(function* () {
+    const real = yield* fs.realPath(entry).pipe(
+      Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-program-root-acquisition" })),
+    )
+    if (real === undefined) return []
+    const pair = [path.resolve(entry), real]
+    // xcrun also loads the enclosing Xcode bundle; validate that expansion before granting either spelling.
+    const bundles = pair.flatMap((root) => /^(\/.+?\.app)\/Contents\/Developer$/.exec(root)?.[1] ?? [])
+    const roots = [...pair, ...bundles, ...(yield* Effect.forEach(bundles, (bundle) => canonical(fs, bundle)))]
+    return roots.some((root) => places.some((home) => FSUtil.contains(root, home))) ? [] : roots
+  }))
+  return [...new Set(found.flat())]
+})
+
 /**
- * The single files and directories a confined-read command may read under the home directory or the homes its
- * environment names, each with the directory it must stay inside (`within`) once links are resolved:
- * - git's global config, excludes and attributes (git refuses to start when its config exists but cannot be read); never
- *   the XDG credential store beside them (git/credentials);
- * - exactly what a rustup-proxied cargo needs: the proxies in CARGO_HOME/bin (also when they are not on PATH), the
- *   default toolchain and overrides in RUSTUP_HOME/settings.toml, the toolchains it runs, and what an offline build of
- *   registry dependencies reads: the index (to resolve the lock file), the downloaded .crate archives (cargo counts a
- *   crate as present only when its archive is) and their unpacked sources. Never cargo's credentials or config (registry
- *   tokens, proxy credentials), nor its git databases and checkouts (cargo opens the database to resolve even a locked
- *   git dependency offline, so git dependencies do not build confined; vendored and path dependencies do), nor rustup's
- *   downloads, tmp and update hashes.
- * A home named by the environment must be absolute. No grant is a home, contains one, or (but ~/.gitconfig) sits directly
- * in one, so CARGO_HOME=$HOME cannot expose ~/bin or ~/registry. `names` lists the resolved spellings a dotfile manager's
- * link may take when it leaves `within` (a dotfiles checkout keeping git's own names).
+ * Precise git config and offline rustup/cargo registry grants, physically constrained by `within` or git's `names`.
+ * No cargo config/credentials, git databases/checkouts, or rustup downloads/tmp/update hashes. Cargo's offline git
+ * dependencies still need its denied database; vendored/path dependencies work. Environment homes must be absolute,
+ * never home or above it; only ~/.gitconfig may sit directly in home. Named regular dotfiles links remain supported.
  */
 export function homeGrants(env: NodeJS.ProcessEnv = process.env) {
   const grants = [

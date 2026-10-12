@@ -148,6 +148,61 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
     }), 300_000,
   )
 
+  it.live("PATH aliases of physical home and its ancestor never widen reads, but precise bins and home worktrees remain readable", () =>
+    Effect.gen(function* () {
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const directory = path.join(home, "workspace")
+      const testHome = path.join(root, "test-home")
+      const alias = path.join(root, "path-home")
+      const ancestor = path.join(root, "path-ancestor")
+      const marker = path.join(home, "private", "marker")
+      const publicFile = path.join(directory, "public")
+      const bin = path.join(home, "bin", "public")
+      yield* Effect.promise(() => Promise.all([plant(marker), plant(publicFile), plant(bin)]))
+      yield* Effect.promise(() => Promise.all([link(home, testHome), link(home, alias), link(root, ancestor)]))
+      const inherited = process.env.PATH ?? ""
+      yield* environment({ ORCHESTRA_TEST_HOME: testHome, PATH: [alias, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(alias, "private", "marker")])
+      yield* environment({ PATH: [ancestor, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(ancestor, "home", "private", "marker")])
+      yield* environment({ PATH: [path.dirname(bin), inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile, bin], [marker])
+      // A missing test home still has a canonical physical parent, so its ancestor cannot become a program grant.
+      yield* environment({ ORCHESTRA_TEST_HOME: path.join(testHome, "missing-home"),
+        PATH: [ancestor, inherited].join(path.delimiter) })
+      yield* exactly(directory, [publicFile], [marker, path.join(ancestor, "home", "private", "marker")])
+    }), 300_000,
+  )
+
+  it.live("effective home and relative credential roots stay denied beneath readable PATH children", () =>
+    Effect.gen(function* () {
+      const directory = yield* tmpdirScoped({ git: true })
+      const root = yield* tmpdirScoped()
+      const home = path.join(root, "home")
+      const alias = path.join(root, "home-alias")
+      const gitPublic = path.join(home, "git", "public")
+      const gitCredentials = path.join(home, "git", "credentials")
+      const cargoPublic = path.join(home, "cargo-store", "public")
+      const names = ["credentials", "credentials.toml", "config", "config.toml"]
+      const targets = names.map((name) => path.join(home, "cargo-store", name))
+      yield* Effect.promise(() => Promise.all([plant(gitPublic), plant(gitCredentials), plant(cargoPublic),
+        ...targets.map((target, index) => plant(target).then(() => link(target, path.join(home, names[index]))))]))
+      yield* Effect.promise(() => link(home, alias))
+      const inherited = process.env.PATH ?? ""
+      // XDG/CARGO equal Orchestra's lexical home, and resolve to its physical home: neither is grant-eligible.
+      yield* environment({ ORCHESTRA_TEST_HOME: alias, XDG_CONFIG_HOME: alias, CARGO_HOME: alias,
+        PATH: [path.dirname(gitPublic), path.dirname(cargoPublic), inherited].join(path.delimiter) })
+      const denied = [gitCredentials, path.join(alias, "git", "credentials"), ...targets,
+        ...names.flatMap((name) => [path.join(home, name), path.join(alias, name)])]
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+      yield* environment({ ORCHESTRA_TEST_HOME: home, XDG_CONFIG_HOME: home, CARGO_HOME: home })
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+      yield* environment({ XDG_CONFIG_HOME: path.relative(directory, alias), CARGO_HOME: path.relative(directory, alias) })
+      yield* exactly(directory, [gitPublic, cargoPublic], denied)
+    }), 300_000,
+  )
+
   it.live("a link planted at a grant cannot expose what it points to; a dotfiles link keeping git's names still works", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true })
@@ -215,17 +270,15 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
       yield* exactly(directory, [], names.flatMap((name) => [path.join(home, name), path.join(cargo, name), path.join(rust, name)]))
       yield* environment({ CARGO_HOME: above, RUSTUP_HOME: above })
       yield* exactly(directory, [], names.flatMap((name) => [path.join(root, name), path.join(above, name)]))
-      // A whole-root link to a genuinely independent physical toolchain still works.
+      // Genuine independent physical toolchain roots are supported; whole-root alias traversal is not promised.
       const independent = path.join(root, "independent")
-      const toolchain = path.join(root, "toolchain-alias")
       yield* Effect.promise(() => Promise.all(names.map((name) => plant(path.join(independent, name)))))
-      yield* Effect.promise(() => link(independent, toolchain))
-      yield* environment({ CARGO_HOME: toolchain, RUSTUP_HOME: toolchain })
-      yield* exactly(directory, names.map((name) => path.join(toolchain, name)), [])
+      yield* environment({ CARGO_HOME: independent, RUSTUP_HOME: independent })
+      yield* exactly(directory, names.map((name) => path.join(independent, name)), [])
     }), 300_000,
   )
 
-  it.live("file grants reject directories even with git's valid names, while named regular and system-managed links work", () =>
+  it.live("file grants reject directories and preserve named regular files; system-link compatibility is explicit", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true })
       const root = yield* tmpdirScoped()
@@ -250,7 +303,7 @@ describe.skipIf(process.platform === "win32" || !seatShellRuns())("tool.shell ho
       const system = path.join(root, "system-rustup", "settings.toml")
       yield* Effect.promise(() => Promise.all([plant(regular).then(() => link(regular, linked)),
         plant(gitconfig, "[probe]\n\tmarker = regular-config\n").then(() => link(gitconfig, path.join(linkedHome, ".gitconfig")))]))
-      // The same system-root exception supports Nix Home Manager's /nix/store links.
+      // Compatibility control, not Nix proof: pinned SRT refuses cross-root /usr-to-/tmp restoration.
       yield* Effect.promise(() => link("/usr/bin/env", system))
       yield* environment({ ORCHESTRA_TEST_HOME: linkedHome,
         XDG_CONFIG_HOME: path.dirname(path.dirname(linked)), RUSTUP_HOME: path.dirname(system) })
