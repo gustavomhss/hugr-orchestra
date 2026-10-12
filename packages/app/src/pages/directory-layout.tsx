@@ -12,6 +12,7 @@ import { Schema } from "effect"
 import type { ServerConnection } from "@/context/server"
 import { sessionHref } from "@/utils/session-route"
 import { useServerSync } from "@/context/server-sync"
+import { useServerSDK } from "@/context/server-sdk"
 
 export function DirectoryDataProvider(
   props: ParentProps<{
@@ -25,6 +26,7 @@ export function DirectoryDataProvider(
   const params = useParams()
   const sync = useSync()
   const serverSync = useServerSync()
+  const serverSDK = useServerSDK()
   const directory = () => (typeof props.directory === "function" ? props.directory() : props.directory)
   const slug = createMemo(() => base64Encode(directory()))
   const href = (sessionID: string) => {
@@ -66,6 +68,26 @@ export function DirectoryDataProvider(
           sessionID={params.id}
           onNavigateToSession={(sessionID: string) => navigate(href(sessionID))}
           onSessionHref={href}
+          onReadResearchArtifact={(
+            (sdk) => (sessionID: string, artifact: { id: string; revision: number }, cursor?: string, signal?: AbortSignal) => {
+              // A retained callback must never continue an old document on a newly selected server.
+              if (serverSDK() !== sdk) return Promise.reject(new Error("Research artifact server changed"))
+              return sdk.client.v2.research
+                .artifact(
+                  {
+                    sessionID,
+                    artifactID: artifact.id,
+                    revision: String(artifact.revision),
+                    ...(cursor ? { cursor } : {}),
+                  },
+                  { throwOnError: true, signal },
+                )
+                .then((response) => {
+                  if (serverSDK() !== sdk) throw new Error("Research artifact server changed")
+                  return response.data
+                })
+            }
+          )(serverSDK())}
         >
           <LocalProvider>{props.children}</LocalProvider>
         </DataProvider>

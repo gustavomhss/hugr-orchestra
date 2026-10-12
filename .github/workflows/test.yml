@@ -11,6 +11,10 @@ on:
         description: Also run the e2e suite on Windows (unit tests always run on Windows)
         type: boolean
         default: false
+      cold:
+        description: Run every test, replaying no Turbo cache and skipping no recorded pass (measures cold lane times)
+        type: boolean
+        default: false
 
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
@@ -27,7 +31,8 @@ env:
 jobs:
   # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
   # cancels jobs it cannot place. One epic run (this file plus typecheck, nix-eval, storybook and
-  # native) stays at 19 jobs including two Omni producers and one legacy rollback cell.
+  # native) has 21 jobs, but atlas scope and the two Omni producers finish before atlas and the
+  # unit jobs start, so at most 19 run at once.
   #
   # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
   # GitHub default is 6 hours.
@@ -187,13 +192,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows runs these files about 2.7x slower, so it gets one more shard than Linux.
+        # Measured test time on 2026-10-12 was 2215 s on Linux and 3918 s on Windows, where the same
+        # files vary by up to 40% between runs. Three Windows shards (~1306 s each) left no room under
+        # the 27-minute watchdog below, so Windows gets four (~980 s each).
         include:
           - { name: linux, host: ubuntu-latest, shard: 1, shards: 2 }
           - { name: linux, host: ubuntu-latest, shard: 2, shards: 2 }
-          - { name: windows, host: windows-latest, shard: 1, shards: 3 }
-          - { name: windows, host: windows-latest, shard: 2, shards: 3 }
-          - { name: windows, host: windows-latest, shard: 3, shards: 3 }
+          - { name: windows, host: windows-latest, shard: 1, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 2, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 3, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 4, shards: 4 }
     runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:
@@ -205,6 +213,7 @@ jobs:
 
       # Re-labeling an epic re-runs every job; a shard whose inputs already passed in this PR skips.
       - name: Check for a previous pass
+        if: ${{ !inputs.cold }}
         id: previous
         uses: ./.github/actions/previous-pass
         with:
@@ -214,6 +223,15 @@ jobs:
       - name: Setup Bun
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
@@ -290,16 +308,22 @@ jobs:
   unit-rest:
     needs: omni
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: unit (${{ matrix.settings.name }} other packages${{ matrix.settings.name == 'linux' && ', godfile, httpapi, relay' || '' }})
+    name: unit (${{ matrix.name }} ${{ matrix.label }})
     strategy:
       fail-fast: false
       matrix:
-        settings:
-          - name: linux
-            host: ubuntu-latest
-          - name: windows
-            host: windows-latest
-    runs-on: ${{ matrix.settings.host }}
+        # Split by measured time. On cold Turbo caches (run 38221067577, 2026-10-12) one Linux job of every package plus
+        # the HttpApi and Relay gates ran 1093 + 582 + over 370 s and hit its 35-minute limit, and Windows took 1514 s of
+        # its 30-minute test step with core alone at 1081 s. Core runs by itself on Windows; the legacy rollback checks,
+        # 85 s in a job of their own, run after the other Windows packages.
+        include:
+          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile", filters: "--filter=!orchestra" }
+          - { name: linux, host: ubuntu-latest, part: gates, label: "httpapi, relay" }
+          - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
+          # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
+          - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
+              filters: "--filter=!orchestra --filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
+    runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:
       run:
@@ -310,6 +334,15 @@ jobs:
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
@@ -324,73 +357,75 @@ jobs:
       # Turbo 2 keeps its local cache in .turbo/cache. A run restores its PR's newest entry, else the one cache-warm
       # saved on dev. Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
+        if: matrix.filters && !inputs.cold
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
-          key: turbo-test-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          key: turbo-test-${{ runner.os }}-${{ matrix.part }}-${{ github.sha }}-${{ github.run_attempt }}
           # PR entries carry their own prefix so typecheck.yml, which restores turbo-<os>-, keeps reading dev's.
           restore-keys: |
+            turbo-test-${{ runner.os }}-${{ matrix.part }}-
             turbo-test-${{ runner.os }}-
             turbo-${{ runner.os }}-
 
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
       - name: Check generated Atlas boundary
-        if: runner.os == 'Linux'
+        if: matrix.part == 'packages'
         working-directory: packages/atlas-boundary
         run: bun run check:generated
 
       - name: Fetch target branch for godfile
-        if: runner.os == 'Linux'
+        if: matrix.part == 'packages'
         run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
 
       - name: Test godfile gate
-        if: runner.os == 'Linux'
+        if: matrix.part == 'packages'
         run: bun --cwd packages/core test test/godfile.test.ts
         env:
           # Build-time scanner test starts no runtime child; ordinary suites below stay default-native.
           ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
 
       - name: Run godfile gate
-        if: runner.os == 'Linux'
+        if: matrix.part == 'packages'
         run: bun run check:godfile
 
       - name: Run spawn-import gate
-        if: runner.os == 'Linux'
+        if: matrix.part == 'packages'
         run: bun run check:spawn-imports
 
       - name: Run unit tests
+        if: matrix.filters
         timeout-minutes: 30
-        # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
         run: |
-          filters=(--filter='!orchestra')
-          if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@orchestra/httpapi-codegen'); fi
+          read -ra filters <<< "$FILTERS"
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
           concurrency=1
           GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" "${filters[@]}"
         env:
+          FILTERS: ${{ matrix.filters }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
       # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them
       # (about 1 MB per entry).
       - name: Save Turbo cache
-        if: always()
+        if: always() && matrix.filters
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
-          key: turbo-test-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          key: turbo-test-${{ runner.os }}-${{ matrix.part }}-${{ github.sha }}-${{ github.run_attempt }}
 
       - name: Check generated client
-        if: runner.os == 'Linux'
+        if: matrix.part == 'gates'
         working-directory: packages/client
         run: bun run check:generated
 
       - name: Build HttpApi exerciser dependencies
-        if: runner.os == 'Linux'
+        if: matrix.part == 'gates'
         run: bun turbo build --filter=orchestra^...
 
       - name: Run HttpApi exerciser gates
-        if: runner.os == 'Linux'
+        if: matrix.part == 'gates'
         # The gates finish in a few minutes; fail fast instead of holding the runner if a scenario wedges.
         timeout-minutes: 15
         working-directory: packages/orchestra
@@ -400,7 +435,7 @@ jobs:
       # hide the other. Benchmark runtime tests nest real pytest campaigns and stay manual:
       # `python -m pytest tests/test_benchmark_runtime.py` from packages/relay.
       - name: Setup Python for Relay
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.part == 'gates' }}
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
@@ -408,11 +443,11 @@ jobs:
           cache-dependency-path: packages/relay/requirements-dev.txt
 
       - name: Install Relay test dependencies
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.part == 'gates' }}
         run: python -m pip install -r packages/relay/requirements-dev.txt
 
       - name: Test Relay
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && matrix.part == 'gates' }}
         timeout-minutes: 10
         working-directory: packages/relay
         # tests/test_docs.py already runs the doc structure guard on the real tree; only the index check is extra.
@@ -420,33 +455,23 @@ jobs:
           python -m pytest tests -q -p no:cacheprovider --ignore=tests/test_benchmark_runtime.py
           python bin/gen-doc-index.py --check
 
-  legacy:
-    needs: omni
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: legacy rollback (windows)
-    runs-on: windows-latest
-    timeout-minutes: 20
-    defaults:
-      run:
-        shell: bash
-    env:
-      ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
-      ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun
-      - name: Native binaries for fresh default-on comparison
-        uses: ./.github/actions/omni-binaries
-        with:
-          artifact: omni-test-${{ runner.os }}-${{ runner.arch }}
+      # Legacy rollback: the same native binaries, with omni turned off for these two suites only. They run even when
+      # a package failed above, as they did in a job of their own.
       - name: Real AppProcess default and legacy backend selection
+        if: ${{ !cancelled() && matrix.part == 'rest' }}
         working-directory: packages/core
         run: bun test test/omni-default-mode.test.ts test/effect/cross-spawn-spawner.test.ts --timeout 30000
+        env:
+          ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
+          ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
+
       - name: Legacy shell process behavior
+        if: ${{ !cancelled() && matrix.part == 'rest' }}
         working-directory: packages/orchestra
         run: bun test test/util/process-omni.test.ts --timeout 30000
+        env:
+          ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
+          ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
 
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
@@ -474,6 +499,7 @@ jobs:
 
       # e2e drives the app package; its Turbo hash covers the app plus every workspace dependency.
       - name: Check for a previous pass
+        if: ${{ !inputs.cold }}
         id: previous
         uses: ./.github/actions/previous-pass
         with:
@@ -490,6 +516,15 @@ jobs:
       - name: Setup Bun
         if: steps.previous.outputs.hit != 'true'
         uses: ./.github/actions/setup-bun
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
       - name: Read Playwright version
         if: steps.previous.outputs.hit != 'true'

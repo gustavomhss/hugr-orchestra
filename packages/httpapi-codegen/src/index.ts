@@ -4,6 +4,8 @@ import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
 import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
+import { assertSplitGroups, renderPromiseGroup, splitPromiseRequest, splitPromiseTypes } from "./layout"
+import { renderImportedEffectFiles } from "./imported-effect"
 
 export type InputField = {
   readonly name: string
@@ -172,7 +174,7 @@ export function compile<Id extends string, Groups extends HttpApiGroup.Any>(
     },
   })
 
-  const modules = new Set(["client", "client-error", "index"])
+  const modules = new Set(["client", "client-error", "index", "request", "errors", "types"])
   const groups = Array.from(
     Map.groupBy(endpoints, (endpoint) => endpoint.group),
     ([identifier, endpoints], index) => {
@@ -182,6 +184,7 @@ export function compile<Id extends string, Groups extends HttpApiGroup.Any>(
       const base = /^[A-Za-z0-9_-]+$/.test(identifier) ? identifier : `group-${index}`
       const module = uniqueModule(base, index, modules)
       modules.add(module.toLowerCase())
+      modules.add(`${module}-types`.toLowerCase())
       return { identifier, sourceIdentifier: endpoints[0].sourceGroup, module, endpoints }
     },
   )
@@ -223,10 +226,12 @@ export function emitEffectImported(
     | { readonly module: string; readonly api: string }
     | { readonly module: string; readonly group: string }
     | { readonly module: string; readonly endpoints: Readonly<Record<string, string>> },
+  layout?: { readonly splitGroups: ReadonlySet<string> },
 ): Output {
+  assertSplitGroups(contract.groups, layout?.splitGroups)
   return {
     operations: operations(contract.groups),
-    files: renderImportedEffectFiles(contract.groups, options),
+    files: renderImportedEffectFiles(contract.groups, options, layout?.splitGroups),
   }
 }
 
@@ -234,23 +239,69 @@ export function emitPromise(
   contract: Contract,
   options?: {
     readonly outputTypes?: Readonly<Record<string, { readonly name: string; readonly import: string }>>
+    readonly splitGroups?: ReadonlySet<string>
   },
 ): Output {
   const groups = contract.groups
+  assertSplitGroups(groups, options?.splitGroups)
   for (const group of groups) {
     for (const endpoint of group.endpoints) assertPromiseEndpoint(endpoint)
   }
+  const splitFiles: Array<{ path: string; content: string }> = []
+  const source = renderPromiseClient(groups, options?.splitGroups, splitFiles)
+  const request = options?.splitGroups?.size ? splitPromiseRequest(source) : undefined
+  if (request) splitFiles.push({ path: "request.ts", content: request.split })
+  const client = request?.main ?? source
+  const declarations = renderPromiseTypes(groups, options?.outputTypes)
+  const errors = options?.splitGroups?.size
+    ? Array.from(
+        errorSymbols(
+          groups.flatMap((group) =>
+            group.endpoints.flatMap((endpoint) =>
+              endpoint.errors.flatMap((error) => {
+                const fields = declaredErrorFields(error.schema)
+                return fields === undefined ? [] : [fields]
+              }),
+            ),
+          ),
+        ).keys(),
+      ).flatMap((name) => [name, `is${name}`])
+    : []
+  const errorTypes = errors.length ? splitPromiseTypes(declarations, errors, "errors") : undefined
+  if (errorTypes) splitFiles.push({ path: "errors.ts", content: errorTypes.split })
+  const types = groups
+    .filter((group) => options?.splitGroups?.has(group.identifier))
+    .reduce((content, group) => {
+      const names = group.endpoints.flatMap((endpoint) => {
+        const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
+        return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
+      })
+      const split = splitPromiseTypes(content, names, `${group.module}-types`)
+      splitFiles.push({ path: `${group.module}-types.ts`, content: split.split })
+      return split.main
+    }, errorTypes?.main ?? declarations)
   return {
     operations: operations(groups),
     files: [
-      { path: "types.ts", content: renderPromiseTypes(groups, options?.outputTypes) },
+      ...splitFiles,
+      { path: "types.ts", content: types },
       {
         path: "client-error.ts",
         content: `export type ClientErrorReason = "Transport" | "UnexpectedStatus" | "UnsupportedContentType" | "MalformedResponse"\n\nexport class ClientError extends Error {\n  override readonly name = "ClientError"\n  constructor(readonly reason: ClientErrorReason, options?: ErrorOptions) {\n    super(reason, options)\n  }\n}\n`,
       },
       {
         path: "client.ts",
-        content: renderPromiseClient(groups).replace("let next: ReadableStreamReadResult<Uint8Array>", "let next"),
+        content: client
+          .replace(
+            'import { ClientError } from "./client-error"',
+            [
+              'import { ClientError } from "./client-error"',
+              ...groups
+                .filter((group) => options?.splitGroups?.has(group.identifier))
+                .map((group) => `import { make${identifierPart(group.identifier)} } from "./${group.module}"`),
+            ].join("\n"),
+          )
+          .replace("let next: ReadableStreamReadResult<Uint8Array>", "let next"),
       },
       {
         path: "index.ts",
@@ -314,103 +365,6 @@ function renderEffectFiles(groups: ReadonlyArray<Group>): Output["files"] {
       content: 'export { ClientError } from "./client-error"\nexport * as Orchestra from "./client"\n',
     },
   ]
-}
-
-function renderImportedEffectFiles(
-  groups: ReadonlyArray<Group>,
-  options:
-    | { readonly module: string; readonly api: string }
-    | { readonly module: string; readonly group: string }
-    | { readonly module: string; readonly endpoints: Readonly<Record<string, string>> },
-): Output["files"] {
-  const adapters = groups.map((group, groupIndex) => {
-    const rawGroup = group.endpoints[0]?.topLevel ? "RawClient" : `RawClient[${JSON.stringify(group.sourceIdentifier)}]`
-    const methods = group.endpoints.map((item, endpointIndex) => {
-      const prefix = `Endpoint${groupIndex}_${endpointIndex}`
-      const request = (["params", "query", "headers", "payload"] as const)
-        .flatMap((source) => {
-          const fields = item.input.filter((field) => field.source === source)
-          if (fields.length === 0) return []
-          return [
-            `${source}: { ${fields.map((field) => `${JSON.stringify(field.name)}: input${item.operation.inputMode === "optional" ? "?." : ""}[${JSON.stringify(field.name)}]`).join(", ")} }`,
-          ]
-        })
-        .join(", ")
-      const input = item.input
-        .map(
-          (field) =>
-            `readonly ${JSON.stringify(field.name)}${field.optional ? "?" : ""}: ${prefix}Request[${JSON.stringify(field.source)}][${JSON.stringify(field.name)}]`,
-        )
-        .join("; ")
-      const argument =
-        item.operation.inputMode === "none"
-          ? ""
-          : `input${item.operation.inputMode === "optional" ? "?" : ""}: ${prefix}Input`
-      const rawCall = `raw[${JSON.stringify(item.endpoint.name)}]({ ${request} })`
-      const mapped = `${rawCall}.pipe(Effect.mapError(mapClientError)${item.unwrapData ? ", Effect.map((value) => value.data)" : ""})`
-      return `${item.operation.inputMode === "none" ? "" : `type ${prefix}Request = Parameters<${rawGroup}[${JSON.stringify(item.endpoint.name)}]>[0]\ntype ${prefix}Input = { ${input} }\n`}const ${prefix} = (raw: ${rawGroup}) => (${argument}) => ${item.operation.success === "stream" ? `Stream.unwrap(${rawCall}.pipe(Effect.mapError(mapClientError), Effect.map((stream) => stream.pipe(Stream.mapError(mapClientError)))))` : mapped}`
-    })
-    return `${methods.join("\n\n")}\n\nconst adaptGroup${groupIndex} = (raw: ${rawGroup}) => ({ ${group.endpoints.map((item, endpointIndex) => `${JSON.stringify(item.operation.name)}: Endpoint${groupIndex}_${endpointIndex}(raw)`).join(", ")} })`
-  })
-  const fields = groups.flatMap((group, index) =>
-    group.endpoints[0]?.topLevel
-      ? [`...adaptGroup${index}(raw)`]
-      : [`${JSON.stringify(group.identifier)}: adaptGroup${index}(raw[${JSON.stringify(group.sourceIdentifier)}])`],
-  )
-  const usesStream = groups.some((group) => group.endpoints.some((item) => item.operation.success === "stream"))
-  const imported = "api" in options
-  const projection = imported
-    ? undefined
-    : "group" in options
-      ? renderImportedGroup(options.group)
-      : renderImportedProjection(groups, options.endpoints)
-  const api = imported ? options.api : "Api"
-  const imports =
-    projection === undefined
-      ? `import { ${api} } from ${JSON.stringify(options.module)}`
-      : `import { HttpApi, HttpApiClient${"endpoints" in options ? ", HttpApiGroup" : ""} } from "effect/unstable/httpapi"\nimport { ${projection.imports.join(", ")} } from ${JSON.stringify(options.module)}`
-  const httpApiImport = projection === undefined ? 'import { HttpApiClient } from "effect/unstable/httpapi"\n' : ""
-  const client = `// Generated by @orchestra/httpapi-codegen. Do not edit.\nimport { Effect${usesStream ? ", Stream" : ""}, Schema } from "effect"\nimport { Sse } from "effect/unstable/encoding"\nimport { HttpClientError } from "effect/unstable/http"\n${httpApiImport}${imports}\nimport { ClientError } from "./client-error"\n\n${projection?.source ?? ""}type RawClient = HttpApiClient.ForApi<typeof ${api}>\n\nconst mapClientError = <E>(error: E) => HttpClientError.isHttpClientError(error) || Schema.isSchemaError(error) || Sse.Retry.is(error) ? new ClientError({ cause: error }) : error\n\n${adapters.join("\n\n")}\n\nconst adaptClient = (raw: RawClient) => ({ ${fields.join(", ")} })\n\nexport const make = (options?: { readonly baseUrl?: URL | string }) => HttpApiClient.make(${api}, options).pipe(Effect.map(adaptClient))\n`
-  return [
-    {
-      path: "client-error.ts",
-      content:
-        'import { Schema } from "effect"\n\nexport class ClientError extends Schema.TaggedErrorClass<ClientError>()("ClientError", {\n  cause: Schema.Defect(),\n}) {}\n',
-    },
-    { path: "client.ts", content: client },
-    {
-      path: "index.ts",
-      content: 'export { ClientError } from "./client-error"\nexport * as Orchestra from "./client"\n',
-    },
-  ]
-}
-
-function renderImportedGroup(group: string) {
-  return {
-    imports: [group],
-    source: `const Api = HttpApi.make("generated").add(${group})\n\n`,
-  }
-}
-
-function renderImportedProjection(groups: ReadonlyArray<Group>, endpoints: Readonly<Record<string, string>>) {
-  const imports = groups.flatMap((group) =>
-    group.endpoints.map((endpoint) => {
-      const name = endpoints[`${group.identifier}.${endpoint.endpoint.name}`]
-      if (name === undefined) {
-        throw new GenerationError({
-          reason: `Missing imported endpoint: ${group.identifier}.${endpoint.endpoint.name}`,
-        })
-      }
-      return name
-    }),
-  )
-  const source = `const Api = HttpApi.make("generated").${groups
-    .map((group) => {
-      const options = group.endpoints[0]?.topLevel ? ", { topLevel: true }" : ""
-      return `add(HttpApiGroup.make(${JSON.stringify(group.identifier)}${options})${group.endpoints.map((endpoint) => `.add(${endpoints[`${group.identifier}.${endpoint.endpoint.name}`]})`).join("")})`
-    })
-    .join(".")}\n\n`
-  return { imports: [...new Set(imports)], source }
 }
 
 function renderPromiseTypes(
@@ -489,13 +443,19 @@ function renderPromiseTypes(
   return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
 }
 
-function renderPromiseClient(groups: ReadonlyArray<Group>) {
-  const imports = groups.flatMap((group) =>
-    group.endpoints.flatMap((endpoint) => {
-      const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
-      return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
-    }),
-  )
+function renderPromiseClient(
+  groups: ReadonlyArray<Group>,
+  splitGroups?: ReadonlySet<string>,
+  splitFiles: Array<{ path: string; content: string }> = [],
+) {
+  const imports = groups
+    .filter((group) => !splitGroups?.has(group.identifier))
+    .flatMap((group) =>
+      group.endpoints.flatMap((endpoint) => {
+        const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
+        return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
+      }),
+    )
   const fields = groups.map((group) => {
     const methods = group.endpoints.map((endpoint) => {
       const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
@@ -531,6 +491,20 @@ function renderPromiseClient(groups: ReadonlyArray<Group>) {
       const unwrap = endpoint.unwrapData ? ".then((value) => value.data)" : ""
       return `${JSON.stringify(endpoint.operation.name)}: (${argument}) => request<${endpoint.unwrapData ? `{ readonly data: ${prefix}Output }` : `${prefix}Output`}>(${descriptor}, requestOptions)${unwrap}`
     })
+    if (splitGroups?.has(group.identifier)) {
+      splitFiles.push({
+        path: `${group.module}.ts`,
+        content: renderPromiseGroup(
+          group,
+          methods,
+          group.endpoints.flatMap((endpoint) => {
+            const prefix = promiseTypePrefix(group.identifier, endpoint.operation.name)
+            return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
+          }),
+        ),
+      })
+      return `${JSON.stringify(group.identifier)}: make${identifierPart(group.identifier)}(request, sse)`
+    }
     if (group.endpoints[0]?.topLevel) return methods.join(", ")
     return `${JSON.stringify(group.identifier)}: { ${methods.join(", ")} }`
   })
@@ -591,10 +565,12 @@ function promisePath(path: string, input: ReadonlyArray<InputField>) {
 }
 
 function uniqueModule(base: string, index: number, modules: ReadonlySet<string>) {
-  if (!modules.has(base.toLowerCase())) return base
+  // Every group owns both paths, even when an emitter leaves its types inline.
+  const occupied = (module: string) => modules.has(module.toLowerCase()) || modules.has(`${module}-types`.toLowerCase())
+  if (!occupied(base)) return base
   const seed = `${base}-${index}`
   let suffix = 0
-  while (modules.has(`${seed}${suffix === 0 ? "" : `-${suffix}`}`.toLowerCase())) suffix++
+  while (occupied(`${seed}${suffix === 0 ? "" : `-${suffix}`}`)) suffix++
   return `${seed}${suffix === 0 ? "" : `-${suffix}`}`
 }
 

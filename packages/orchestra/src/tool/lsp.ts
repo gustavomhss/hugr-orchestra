@@ -1,5 +1,5 @@
 import { Effect, Schema } from "effect"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import path from "path"
 import { LSP } from "@/lsp/lsp"
 import DESCRIPTION from "./lsp.txt"
@@ -7,6 +7,9 @@ import { InstanceState } from "@/effect/instance-state"
 import { pathToFileURL } from "url"
 import { assertExternalDirectoryEffect } from "./external-directory"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { ResearchSourceCapture } from "@/research/source-capture"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { Research } from "@orchestra/schema/research"
 
 const operations = [
   "goToDefinition",
@@ -19,6 +22,8 @@ const operations = [
   "incomingCalls",
   "outgoingCalls",
 ] as const
+
+type Metadata = { result: unknown[]; semanticCoverage?: LSP.DiscoveryResult["coverage"]; researchSource?: Research.SourceReceipt }
 
 export const Parameters = Schema.Struct({
   operation: Schema.Literals(operations).annotate({ description: "The LSP operation to perform" }),
@@ -42,11 +47,17 @@ export const LspTool = Tool.define(
     return {
       description: DESCRIPTION,
       parameters: Parameters,
-      execute: (args: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
+      execute: (args: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context): Effect.Effect<Tool.ExecuteResult<Metadata>> =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
-          const file = path.isAbsolute(args.filePath) ? args.filePath : path.join(instance.directory, args.filePath)
+          const requested = path.resolve(instance.directory, args.filePath)
+          const file = ctx.agentID === "jimmy" ? yield* fs.realPath(requested) : requested
           yield* assertExternalDirectoryEffect(ctx, file)
+          if (ctx.agentID === "jimmy") {
+            yield* ctx.ask({ permission: "read", patterns: [path.relative(instance.worktree, file)], always: [], metadata: { semantic: true } })
+            yield* ToolSafety.beforeInvocation({ tool: "read", args: { filePath: file }, sessionID: ctx.sessionID,
+              callID: ctx.callID ?? "", directory: instance.directory, projectID: instance.project.id, projectDirectory: instance.worktree })
+          }
           const meta =
             args.operation === "workspaceSymbol"
               ? { operation: args.operation }
@@ -73,6 +84,24 @@ export const LspTool = Tool.define(
 
           const exists = yield* fs.existsSafe(file)
           if (!exists) throw new Error(`File not found: ${file}`)
+
+          if (ctx.agentID === "jimmy") {
+            const semantic = yield* lsp.discoveryQuery({ ...position, operation: args.operation, query: args.query })
+            yield* ctx.metadata({ title, metadata: { semanticCoverage: semantic.coverage } })
+            if (semantic.coverage.state === "unavailable")
+              return yield* new Research.Error({ code: "source_unavailable", message: "No native LSP server completed this query; failed acquisition is not an empty semantic result" })
+            const capture = yield* ResearchSourceCapture.Current
+            if (!capture) return yield* new Research.Error({ code: "binding_missing", message: "Native semantic source observer is unavailable" })
+            const receipt = yield* capture({
+              origin: { kind: "tool-output", uri: `native:${ctx.sessionID}/${ctx.messageID}/${ctx.callID}/lsp` },
+              representation: "structured-json", mediaType: "application/json", content: JSON.stringify({
+                operation: args.operation, file, position: { line: position.line, character: position.character },
+                coordinates: "lsp-zero-based-utf16", ...semantic,
+              }), complete: semantic.coverage.state === "complete",
+            })
+            return { title, metadata: { result: semantic.result, semanticCoverage: semantic.coverage, researchSource: receipt },
+              output: JSON.stringify(semantic) }
+          }
 
           const available = yield* lsp.hasClients(file)
           if (!available) throw new Error("No LSP server available for this file type.")
@@ -102,9 +131,18 @@ export const LspTool = Tool.define(
             }
           })()
 
+          const capture = yield* ResearchSourceCapture.Current
+          const received = capture ? yield* capture({
+            origin: { kind: "tool-output", uri: `native:${ctx.sessionID}/${ctx.messageID}/${ctx.callID}/lsp` },
+            representation: "structured-json", mediaType: "application/json", content: JSON.stringify({
+              operation: args.operation, file, position: { line: args.line - 1, character: args.character - 1 },
+              coordinates: "lsp-zero-based-utf16", result,
+            }), complete: true,
+          }) : undefined
+
           return {
             title,
-            metadata: { result },
+            metadata: { result, ...(received ? { researchSource: received } : {}) },
             output: result.length === 0 ? `No results found for ${args.operation}` : JSON.stringify(result, null, 2),
           }
         }).pipe(Effect.orDie),

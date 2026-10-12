@@ -7,7 +7,11 @@ import { nativeT } from "../native-translations"
 import { runWslInDistro, type RunWslOptions } from "./runtime"
 
 export class WslArtifactError extends Error {
-  constructor(readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command" | "unavailable") {
+  // guestExit is the exit code when a guest command refused; checks of this desktop's own bundle leave it unset.
+  constructor(
+    readonly reason: "architecture" | "abi" | "bytes" | "version" | "path" | "command" | "unavailable",
+    readonly guestExit?: number,
+  ) {
     super(nativeT(reason === "unavailable" ? "desktop.wsl.error.installUnavailable" : "desktop.wsl.error.serverCannotRun"))
     this.name = "WslArtifactError"
   }
@@ -27,10 +31,11 @@ export function linuxGuestTarget(architecture: string, abi: string) {
   throw new WslArtifactError("architecture")
 }
 
+// The owned CLI prints exactly its version for --version (packages/cli/src/index.ts); anything else is refused.
 const validateGuestScript = `actual=$(sha256sum -- "$binary")
 [[ "\${actual%% *}" == "$digest" ]] || exit 84
 actual=$("$binary" --version) || exit 83
-[[ "$actual" == "orchestra v"* && "\${actual#orchestra v}" == "$version" ]] || exit 82`
+[[ "$actual" == "$version" ]] || exit 82`
 
 export const admitGuestScript = `${guestEnvironment}
 binary=$1; digest=$2; version=$3
@@ -106,6 +111,7 @@ export async function installWslArtifact(
       throw new WslArtifactError(
         result.code === 82 ? "version" : result.code === 83 ? "abi" :
         result.code === 84 ? "bytes" : result.code === 85 ? "path" : "command",
+        result.code ?? undefined,
       )
     }
     return result.stdout.trim()

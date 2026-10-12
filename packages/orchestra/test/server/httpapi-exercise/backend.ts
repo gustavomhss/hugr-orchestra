@@ -20,13 +20,19 @@ export function call(scenario: ActiveScenario, ctx: SeededContext<unknown>, opti
 
 export function callAuthProbe(scenario: ActiveScenario, credentials: "missing" | "valid" = "missing") {
   return Effect.promise(async () => {
+    const backend = app(await runtime(), { auth: { password: "secret" } })
+    // The deadline below bounds a public route that never finishes, not startup. The first request builds every
+    // route layer, which on a cold Windows runner outlasted the deadline and turned a protected route's 401 into a
+    // timeout, so the clock starts only after one untimed request that the auth layer answers without a handler.
+    backend.ready ??= Promise.resolve(
+      backend.request(new Request("http://localhost/", { headers: { "x-orchestra-directory": exerciseProbeDirectory } })),
+    ).then((response) => response.body?.cancel())
+    await backend.ready
     const controller = new AbortController()
     return Promise.race([
-      Promise.resolve(
-        app(await runtime(), { auth: { password: "secret" } }).request(
-          toAuthProbeRequest(scenario, credentials, controller.signal),
-        ),
-      ).then((response) => capture(response, scenario.capture)),
+      Promise.resolve(backend.request(toAuthProbeRequest(scenario, credentials, controller.signal))).then((response) =>
+        capture(response, scenario.capture),
+      ),
       Bun.sleep(1_000).then(() => {
         controller.abort("auth probe timed out")
         return {
@@ -41,7 +47,7 @@ export function callAuthProbe(scenario: ActiveScenario, credentials: "missing" |
   })
 }
 
-type CachedApp = BackendApp & { readonly dispose: () => Promise<void> }
+type CachedApp = BackendApp & { readonly dispose: () => Promise<void>; ready?: Promise<void> }
 
 const appCache: Partial<Record<string, CachedApp>> = {}
 

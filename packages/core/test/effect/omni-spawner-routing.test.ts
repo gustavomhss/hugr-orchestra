@@ -5,6 +5,7 @@ import { Cause, Effect, Exit } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Omni } from "@orchestra/core/omni"
 import { AppProcess } from "@orchestra/core/process"
+import { expectSpawn } from "../fixture/omni-expect"
 import { fx, LONG, mode, on, Spawner } from "./omni-spawner-fixture"
 
 // The omni binaries exist only in runs that turn omni on (test-ci provides them with the flag), so a flag-off run
@@ -73,6 +74,7 @@ describe.skipIf(mode === "off")("omni spawner", () => {
             ],
             opts,
           )
+        expectSpawn(import.meta.path)
         const before = Omni.snapshot()
         const streamed = JSON.parse(yield* svc.string(probe({ extendEnv: true, env: { EXTRA: "x" } })))
         const inherited = JSON.parse(yield* svc.string(probe()))

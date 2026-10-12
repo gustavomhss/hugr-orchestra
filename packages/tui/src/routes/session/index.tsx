@@ -79,6 +79,7 @@ import { getRevertDiffFiles } from "../../util/revert-diff"
 import { ORCHESTRA_BASE_MODE, useBindings, useCommandShortcut, useOrchestraKeymap } from "../../keymap"
 import { usePathFormatter } from "../../context/path-format"
 import { LocationProvider } from "../../context/location"
+import { isTaskTool, taskAgentType } from "@orchestra/core/util/task-tool"
 
 addDefaultParsers(parsers.parsers)
 
@@ -191,7 +192,7 @@ export function Session() {
           (sync.data.part[message.id] ?? []).filter(
             (part): part is ToolPart =>
               part.type === "tool" &&
-              part.tool === "task" &&
+              isTaskTool(part.tool) &&
               part.state.status === "running" &&
               part.state.metadata?.background !== true,
           ),
@@ -1375,7 +1376,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
           )
         }}
       </For>
-      <Show when={props.parts.some((x) => x.type === "tool" && x.tool === "task")}>
+      <Show when={props.parts.some((x) => x.type === "tool" && isTaskTool(x.tool))}>
         <box paddingTop={1} paddingLeft={3}>
           <text fg={theme.text}>
             {childShortcut()}
@@ -1386,7 +1387,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
                 props.parts.some(
                   (x) =>
                     x.type === "tool" &&
-                    x.tool === "task" &&
+                    isTaskTool(x.tool) &&
                     x.state.status === "running" &&
                     x.state.metadata?.background !== true,
                 )
@@ -2131,7 +2132,7 @@ function Task(props: ToolProps) {
   const content = createMemo(() => {
     const description = stringValue(props.input.description)
     if (!description) return ""
-    const subagent = stringValue(props.input.subagent_type)
+    const subagent = taskAgentType(props.input, props.metadata)
     const label = subagent === undefined ? "General" : agentTitle(sync.data.agent, subagent)
     let content = [formatSubagentTitle(label, description, props.metadata.background === true)]
 
@@ -2497,7 +2498,6 @@ const toolDisplays = new Set([
   "websearch",
   "write",
   "edit",
-  "task",
   "apply_patch",
   "todowrite",
   "question",
@@ -2506,7 +2506,7 @@ const toolDisplays = new Set([
 ])
 
 export function toolDisplay(tool: string) {
-  return toolDisplays.has(tool) ? tool : "generic"
+  return isTaskTool(tool) ? "task" : toolDisplays.has(tool) ? tool : "generic"
 }
 
 function recordValue(value: unknown): Record<string, unknown> | undefined {

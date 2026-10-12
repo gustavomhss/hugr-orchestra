@@ -10,6 +10,9 @@ import { Instruction } from "../session/instruction"
 import { isPdfAttachment, sniffAttachmentMime } from "@/util/media"
 import { OutputInspector } from "@orchestra/core/output-inspector"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { Research } from "@orchestra/schema/research"
+import { ResearchSourceCapture } from "@/research/source-capture"
+import { TRUNCATION_DIR } from "./truncation-dir"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -49,7 +52,7 @@ type Display =
       truncated: boolean
     }
 
-type Metadata = { preview: string; truncated: boolean; loaded: string[]; display?: Display }
+type Metadata = { preview: string; truncated: boolean; loaded: string[]; display?: Display; researchSource?: Research.SourceReceipt; researchReceived?: Research.SourceReceipt }
 /** `next` is how many lines after the page fit in one more page; 0 when the page ends the file. */
 type Page = { lines: string[]; start: number; more: boolean; total?: number; capped: boolean; next: number }
 
@@ -159,11 +162,14 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
       limit: number,
       reserve: (first: number, lineCount: number) => number,
       byteStart = 0,
+      savedDisplay = false,
     ) {
       const lines: string[] = []
       const decoder = new TextDecoder("utf-8")
       const inspector = OutputInspector.make()
       const page = { first: start, count: 0, bytes: 0 }
+      const capture = yield* ResearchSourceCapture.Current
+      const observed = { chunks: Array<Uint8Array>(), bytes: 0, capped: false, eof: false }
       // Lines after the page are measured as one more page, so the footer can name a limit that fits.
       let next: typeof page | undefined
       let pending = ""
@@ -203,7 +209,17 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           if (byteStart) yield* file.seek(byteStart, "start")
           while (!done) {
             const bytes = yield* file.readAlloc(CHUNK_BYTES)
-            if (Option.isNone(bytes)) break
+            if (Option.isNone(bytes)) {
+              observed.eof = true
+              break
+            }
+            if (capture) {
+              const remaining = Research.Limits.sourceBytes - observed.bytes
+              const kept = bytes.value.subarray(0, remaining)
+              if (kept.byteLength) observed.chunks.push(kept)
+              observed.bytes += kept.byteLength
+              if (kept.byteLength < bytes.value.byteLength) observed.capped = true
+            }
             // Measured lines are never returned, so inspection ends with the chunk that ends the page.
             const reason = next ? undefined : inspector.push(bytes.value)
             if (reason) return yield* new ToolSafety.Denied({ reason })
@@ -217,6 +233,19 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           if (reason) return yield* new ToolSafety.Denied({ reason })
         }),
       )
+      const received = capture ? yield* capture({
+        origin: { kind: savedDisplay ? "tool-output" : "file", uri: filepath }, representation: "received", mediaType: "text/plain",
+        content: Buffer.concat(observed.chunks), complete: observed.eof && byteStart === 0 && !observed.capped,
+        observed: { byteStart },
+      }) : undefined
+      // A retained prefix cannot authenticate a projection read beyond it.
+      if (capture && observed.capped)
+        return yield* new Research.Error({ code: "over_cap", message: "Observed file bytes exceed retained source limit; only the explicit partial prefix was retained" })
+      if (capture) yield* Effect.try({
+        // A valid scalar may finish in the next unobserved chunk, but malformed bytes must never become replacement text.
+        try: () => new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(observed.chunks), { stream: !observed.eof }),
+        catch: () => new Research.Error({ code: "unsupported", message: "Observed file bytes are not supported UTF-8 text" }),
+      })
       return {
         lines,
         start,
@@ -224,6 +253,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         capped: next !== undefined && lines.length < limit,
         // Only the reserved reminder, which the continuation does not repeat, can leave none; one line fits without it.
         next: next ? Math.max(1, next.count) : 0,
+        ...(received ? { received } : {}),
         ...(lines.length ? {} : { total: line - 1 }),
       } satisfies Page
     })
@@ -261,10 +291,13 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
       ctx: Tool.Context<Metadata>,
     ) {
       const instance = yield* InstanceState.context
-      const filepath =
+      const requested =
         process.platform === "win32"
           ? FSUtil.normalizePath(path.resolve(instance.directory, params.filePath))
           : path.resolve(instance.directory, params.filePath)
+      const filepath = ctx.agentID === "jimmy" ? yield* fs.realPath(requested).pipe(
+        Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(requested)),
+      ) : requested
       const title = path.relative(instance.worktree, filepath)
       const stat = yield* fs.stat(filepath).pipe(
         Effect.catchIf(
@@ -272,8 +305,15 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           () => Effect.succeed(undefined),
         ),
       )
-      yield* assertExternalDirectoryEffect(ctx, filepath, {
-        bypass: Boolean(ctx.extra?.["bypassCwdCheck"]),
+      // Grants name the configured saved-output root. Parent aliases (/var on macOS) may resolve elsewhere,
+      // but neither a symlink replacing tool-output itself nor a child escaping it inherits that grant.
+      const savedRoot = ctx.agentID === "jimmy" && stat?.type === "File"
+        ? path.join(yield* fs.realPath(path.dirname(TRUNCATION_DIR)), path.basename(TRUNCATION_DIR))
+        : undefined
+      const savedDisplay = savedRoot !== undefined && path.dirname(filepath) === savedRoot &&
+        (yield* fs.realPath(TRUNCATION_DIR)) === savedRoot
+      yield* assertExternalDirectoryEffect(ctx, savedDisplay ? path.join(TRUNCATION_DIR, path.basename(filepath)) : filepath, {
+        bypass: ctx.agentID !== "jimmy" && Boolean(ctx.extra?.["bypassCwdCheck"]),
         kind: stat?.type === "Directory" ? "directory" : "file",
       })
       yield* ctx.ask({
@@ -384,6 +424,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
             "utf-8",
           ),
         byteStart,
+        savedDisplay,
       )
       if (!page.lines.length && start !== 1)
         return yield* Effect.fail(
@@ -402,6 +443,13 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
 
       const last = start + page.lines.length - 1
       const output = finish(page.lines, page.next)
+      const capture = yield* ResearchSourceCapture.Current
+      const researchSource = capture && page.received ? yield* capture({
+        origin: page.received.origin, representation: "text", mediaType: "text/plain", content: page.lines.join("\n"),
+        complete: page.received.complete && start === 1 && !page.more && !page.lines.some((line) => line.endsWith(MAX_LINE_SUFFIX)),
+        derivedFrom: page.received.ref, transformation: "read-line-projection-v1",
+        observed: { byteStart, lineStart: start, ...(page.lines.length ? { lineEnd: last } : {}) },
+      }) : undefined
       return {
         title,
         output,
@@ -409,6 +457,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           preview: page.lines.slice(0, 20).join("\n"),
           truncated: page.more,
           loaded: loaded.map((item) => item.filepath),
+          ...(researchSource ? { researchSource, researchReceived: page.received } : {}),
           display: {
             type: "file" as const,
             path: filepath,

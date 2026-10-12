@@ -9,6 +9,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "orval-labs/orval",
+  // Measured with script/toolkit-floors.ts (F5.4): esbuild's per-target binary, the only native file in the install.
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   runtime: "node",
   install: {
     kind: "npm",

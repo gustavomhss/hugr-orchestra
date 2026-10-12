@@ -19,6 +19,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "sqlc-dev/sqlc",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": target("darwin_arm64", "sha256-IWAhWMmesfK64Zemar+xlB0enlCyMSW7GTNJxrGsxx4="),
     "darwin-x64": target("darwin_amd64", "sha256-xa92dy43hdIWY6YmlwVrOD8HYpl5sb0luThy5z29UZs="),

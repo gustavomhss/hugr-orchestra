@@ -116,10 +116,13 @@ electronVersion=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])
 modules=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["modules"])' "$dir/outputs.stdout")
 export HOME="$dir/home" XDG_CONFIG_HOME="$dir/home/config" XDG_DATA_HOME="$dir/home/data" XDG_CACHE_HOME="$dir/home/cache"
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
-run native-outputs "$bun/bin/bun" --bun nix/scripts/verify-distribution.ts \
+# The clean checkout has no node_modules, so the shipped admission's workspace imports
+# (@orchestra/script) resolve through these paths; registry auto-install stays off.
+oracle=(--bun --no-install --tsconfig-override=nix/scripts/workspace-paths.json)
+run native-outputs "$bun/bin/bun" "${oracle[@]}" nix/scripts/verify-distribution.ts \
   --source "$PWD" --cli "$cli" --desktop "$desktop" --system "$DISTRIBUTION_SYSTEM" \
   --version "$version" --electron-version "$electronVersion"
-run output-negative-controls "$bun/bin/bun" --bun nix/scripts/probe-distribution.ts \
+run output-negative-controls "$bun/bin/bun" "${oracle[@]}" nix/scripts/probe-distribution.ts \
   --source "$PWD" --cli "$cli" --desktop "$desktop" --system "$DISTRIBUTION_SYSTEM" \
   --version "$version" --electron-version "$electronVersion" --directory "$dir/probes" --modules "$modules"
 run references-cli nix-store --query --references "$cli"

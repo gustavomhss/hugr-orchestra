@@ -48,6 +48,7 @@ import { getDirectory as _getDirectory, getFilename } from "@orchestra/core/util
 import { AttachmentCardV2 } from "../v2/components/attachment-card-v2"
 import { CommentCardV2 } from "../v2/components/comment-card-v2"
 import { checksum } from "@orchestra/core/util/encode"
+import { isTaskTool, taskAgentType } from "@orchestra/core/util/task-tool"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
@@ -68,6 +69,7 @@ import { readPartText } from "./message-part-text"
 import { createEditTool } from "./message-part/edit"
 import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
+import { ResearchResult } from "./research-result"
 
 async function writeClipboard(text: string): Promise<boolean> {
   const body = typeof document === "undefined" ? undefined : document.body
@@ -294,11 +296,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
       sync(text)
       return
     }
-    if (!text.startsWith(shown) || text.length <= shown.length) {
-      sync(text)
-      return
-    }
-    if (text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
+    if (!text.startsWith(shown) || text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
       sync(text)
       return
     }
@@ -314,12 +312,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
       sync(text)
       return
     }
-    if (!text.startsWith(shown) || text.length < shown.length) {
-      clear()
-      sync(text)
-      return
-    }
-    if (text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
+    if (!text.startsWith(shown) || text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
       clear()
       sync(text)
       return
@@ -471,7 +464,7 @@ export function getToolInfo(
   metadata: Record<string, unknown> | undefined = {},
 ): ToolInfo {
   const i18n = useI18n()
-  switch (tool) {
+  switch (isTaskTool(tool) ? "task" : tool) {
     case "read":
       return {
         icon: "glasses",
@@ -509,10 +502,7 @@ export function getToolInfo(
         subtitle: input.query,
       }
     case "task": {
-      const type =
-        typeof input.subagent_type === "string" && input.subagent_type
-          ? input.subagent_type[0]!.toUpperCase() + input.subagent_type.slice(1)
-          : undefined
+      const type = taskAgentType(input, metadata)?.replace(/^./, (first) => first.toUpperCase())
       return {
         icon: "task",
         title: agentTitle(i18n, type),
@@ -589,13 +579,14 @@ function sessionLink(id: string | undefined, href?: (id: string) => string | und
 
 function taskSession(
   input: Record<string, any>,
+  metadata: Record<string, any>,
   parentID: string | undefined,
   sessions: Session[] | undefined,
   agents?: readonly AgentEntry[],
 ) {
   if (!parentID) return undefined
   const description = typeof input.description === "string" ? input.description : ""
-  const agent = taskAgent(input.subagent_type, agents).name
+  const agent = taskAgent(taskAgentType(input, metadata), agents).name
   return (sessions ?? [])
     .filter((session) => session.parentID === parentID && !session.time?.archived)
     .filter((session) => (description ? session.title.startsWith(description) : true))
@@ -1485,7 +1476,8 @@ export function registerTool(input: { name: string; render?: ToolComponent }) {
 }
 
 export function getTool(name: string) {
-  return state[name === "apply_patch" ? "patch" : name === "bash" ? "shell" : name]?.render
+  const key = name === "apply_patch" ? "patch" : name === "bash" ? "shell" : isTaskTool(name) ? "task" : name
+  return state[key]?.render
 }
 
 export const ToolRegistry = {
@@ -1546,16 +1538,16 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   // @ts-expect-error
   const partMetadata = () => part().state?.metadata ?? emptyMetadata
   const taskId = createMemo(() => {
-    if (part().tool !== "task") return
+    if (!isTaskTool(part().tool)) return
     const value = partMetadata().sessionId
     if (typeof value === "string" && value) return value
   })
   const taskHref = createMemo(() => {
-    if (part().tool !== "task") return
+    if (!isTaskTool(part().tool)) return
     return sessionLink(taskId(), data.sessionHref)
   })
   const taskSubtitle = createMemo(() => {
-    if (part().tool !== "task") return undefined
+    if (!isTaskTool(part().tool)) return undefined
     const value = input().description
     if (typeof value === "string" && value) return value
     return taskId()
@@ -1625,6 +1617,10 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             />
           </Match>
         </Switch>
+        {/* Terminal evidence survives tool errors; only native child IDs authorize artifact reads. */}
+        <Show when={part().tool === "task"}>
+          <ResearchResult value={partMetadata().workResult} sessionID={taskId()} />
+        </Show>
       </div>
     </Show>
   )
@@ -1981,9 +1977,9 @@ ToolRegistry.register({
     const childSessionId = createMemo(() => {
       const value = props.metadata.sessionId
       if (typeof value === "string" && value) return value
-      return taskSession(props.input, data.sessionID, data.store.session, data.store.agent)
+      return taskSession(props.input, props.metadata, data.sessionID, data.store.session, data.store.agent)
     })
-    const agent = createMemo(() => taskAgent(props.input.subagent_type, data.store.agent))
+    const agent = createMemo(() => taskAgent(taskAgentType(props.input, props.metadata), data.store.agent))
     const title = createMemo(() => agent().name ?? i18n.t("ui.tool.agent.default"))
     const tone = createMemo(() => agent().color)
     const v2Tone = createMemo(() => agent().v2Color)

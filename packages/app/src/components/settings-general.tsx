@@ -28,7 +28,10 @@ import {
 import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { SettingsList } from "./settings-list"
-import { createShellOptions, createShellSettingsController } from "./settings-v2/general-controllers"
+import {
+  createShellOptions,
+  createShellSettingsController,
+} from "./settings-v2/general-controllers"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,

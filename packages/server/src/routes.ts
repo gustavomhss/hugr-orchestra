@@ -13,6 +13,7 @@ import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Layer, Option } from "effect"
@@ -30,6 +31,7 @@ const applicationServices = LayerNode.group([
   EventV2.node,
   httpClient,
   ToolOutputStore.cleanupNode,
+  ResearchArtifacts.node,
   SessionV2.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,

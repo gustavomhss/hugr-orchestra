@@ -11,7 +11,7 @@ import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
+import { Effect, Exit, FileSystem, Option, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
@@ -29,6 +29,8 @@ import { AtlasResume } from "@/maestro/atlas-resume"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
 import { SessionAuthority } from "@/maestro/session-authority"
+import { ResearchExecution } from "@/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -127,6 +129,8 @@ export const TaskTool = Tool.define(
     const background = yield* BackgroundJob.Service
     const config = yield* Config.Service
     const sessions = yield* Session.Service
+    const research = yield* Effect.serviceOption(ResearchExecution.Service)
+    const researchRecords = yield* Effect.serviceOption(ResearchRecords.Service)
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
@@ -141,6 +145,7 @@ export const TaskTool = Tool.define(
       params: Schema.Schema.Type<typeof Parameters>,
       ctx: Tool.Context,
     ) {
+      if (ctx.abort.aborted) return yield* Effect.fail(new Error("Task cancelled"))
       const cfg = yield* config.get()
       // The caller resolves by stable id only (F1.10): a display label never identifies an agent, and an unresolved
       // caller fails closed (F1.13) rather than skipping the native-seat deny below.
@@ -471,6 +476,7 @@ export const TaskTool = Tool.define(
         memberId: nextID,
         authoritySessionId: authority.rootID,
         armed: completionReceipt !== undefined,
+        ...(Option.isSome(researchRecords) ? { research: researchRecords.value } : {}),
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
@@ -515,7 +521,7 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
-          output: renderOutput({ id: shownID, state: "completed", text: output }),
+          output: renderOutput({ id: shownID, state: "completed", text: work.report(output) }),
         }
       }
 
@@ -584,7 +590,7 @@ export const TaskTool = Tool.define(
             )
           : undefined
         const promptID = MessageID.ascending()
-        const result = yield* completion.withWorkflow(completionReceipt, ops.prompt(
+        const prompted = ops.prompt(
           {
             messageID: promptID,
             sessionID: nextSession.id,
@@ -601,7 +607,13 @@ export const TaskTool = Tool.define(
           { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }).pipe(
             Effect.provideService(FileSystem.FileSystem, fs),
           ) },
-        ))
+        )
+        // A native research dispatch runs under its allowance; the discovery seat never runs without one.
+        const result = yield* completion.withWorkflow(completionReceipt, Option.isSome(research)
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted)
+          : nextID === "jimmy"
+            ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
+            : prompted)
         const returned = result.info.role === "assistant" ? {
           assistantMessageID: result.info.id,
           text: result.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n"),
@@ -635,7 +647,8 @@ export const TaskTool = Tool.define(
         }
         // The background return carries the host verification observed above. Read the returned result, not the latest
         // streamed one: a concurrent "running" start snapshot must not replace the returned terminal.
-        if (returned) backgroundDispatch.capture({ ...returned, workResult: yield* work.notice(returned.state, returned.text) })
+        if (returned) backgroundDispatch.capture({ ...returned,
+          workResult: yield* work.notice(returned.state, returned.text).pipe(Effect.provideService(Database.Service, database)) })
         type Part = (typeof result.parts)[number]
         const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
           item.type === "text" && item.text.trim() !== ""
@@ -643,10 +656,16 @@ export const TaskTool = Tool.define(
         const history = result.parts.some(reported)
           ? []
           : yield* sessions.messages({ sessionID: nextSession.id }).pipe(Effect.orElseSucceed(() => [result]))
-        return result.parts.findLast(reported)?.text ??
-          TaskReport.fallback(history.filter((message) => message.info.id > promptID))
+        return work.report(result.parts.findLast(reported)?.text ??
+          TaskReport.fallback(history.filter((message) => message.info.id > promptID)))
       })
 
+      const cancel = Effect.all([ops.cancel(nextSession.id), background.cancel(nextSession.id)], { discard: true })
+      if (ctx.abort.aborted) {
+        yield* work.hostEnded("interrupted", "Task cancelled during startup")
+        yield* cancel
+        return yield* Effect.fail(new Error("Task cancelled"))
+      }
       const scheduled = yield* backgroundDispatch.schedule(runTask())
       if (scheduled.extended) return yield* backgroundDispatch.result(nextSession.id, true)
 
@@ -655,7 +674,6 @@ export const TaskTool = Tool.define(
       if (runInBackground) return yield* backgroundDispatch.result(info.id)
 
       const runCancel = yield* EffectBridge.make()
-      const cancel = ops.cancel(nextSession.id)
       function onAbort() {
         runCancel.fork(cancel)
       }
@@ -663,6 +681,8 @@ export const TaskTool = Tool.define(
       return yield* Effect.acquireUseRelease(
         Effect.sync(() => {
           ctx.abort.addEventListener("abort", onAbort)
+          // Startup can yield before the listener exists; an already-fired signal must cancel the owned job too.
+          if (ctx.abort.aborted) onAbort()
         }),
         () =>
           Effect.gen(function* () {
@@ -693,7 +713,7 @@ export const TaskTool = Tool.define(
           Effect.gen(function* () {
             if (!Exit.hasInterrupts(exit)) return
             yield* work.hostEnded("interrupted", "Task cancelled").pipe(Effect.catchCause(() => Effect.void))
-            yield* Effect.all([cancel, background.cancel(nextSession.id)], { discard: true })
+            yield* cancel
           }).pipe(
             Effect.ensuring(
               Effect.sync(() => {

@@ -45,6 +45,8 @@ export type Context<M extends Metadata = Metadata> = {
   agent: string
   /** Stable runtime agent identity. `agent` is configurable display text. */
   agentID?: string
+  /** Effective native Session rules captured by the invocation host. Never tool parameters. */
+  permission?: PermissionV1.Ruleset
   abort: AbortSignal
   callID?: string
   extra?: { [key: string]: unknown }
@@ -162,7 +164,7 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
           if (result.metadata.truncated !== undefined) {
             return result
           }
-          const agent = yield* agents.get(ctx.agent)
+          const agent = yield* agents.get(ctx.agentID ?? ctx.agent)
           const truncated = yield* truncate.output(result.output, {}, agent)
           return {
             ...result,

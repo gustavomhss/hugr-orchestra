@@ -53,6 +53,22 @@ export const baseProfiles = Object.freeze({
     maestro_record_review: "allow",
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),
+  discovery: Object.freeze({
+    "*": "deny",
+    read: envRead("deny"),
+    glob: "allow",
+    grep: "allow",
+    lsp: "allow",
+    webfetch: "allow",
+    websearch: "allow",
+    context_recall: "allow",
+    context_compact: "allow",
+    research_record: "allow",
+    research_view: "allow",
+    research_capture: "allow",
+    atlas_context: "allow",
+    external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
+  } as const),
 } as const)
 
 type NativeProfile = Readonly<Record<string, "allow" | "deny" | Readonly<Record<string, "allow" | "deny">>>>
@@ -95,7 +111,8 @@ function seatProfile(seat: Seat): NativeProfile {
     ...(seat.skills.length > 0 ? {
       skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
       external_directory: Object.freeze({
-        ...(seat.profile === "review" ? baseProfiles.review.external_directory : { "*": "deny" as const }),
+        ...(seat.profile === "review" ? baseProfiles.review.external_directory
+          : seat.profile === "discovery" ? baseProfiles.discovery.external_directory : { "*": "deny" as const }),
         [path.join(root, "*")]: "allow" as const,
       }),
     } : {}),
@@ -164,7 +181,8 @@ function seatMember(seat: Seat): RosterMember {
     abilityClass: seat.abilityClass,
     returnCard: seat.returnCard,
     forbiddenActions: seat.forbiddenActions,
-    nativeProfile: seat.profileKey ?? historicalProfiles[seat.id] ?? seat.id,
+    // A discovery seat projects its own id; seats that historically hashed their shared profile name keep it.
+    nativeProfile: seat.profileKey ?? (seat.profile === "discovery" ? seat.id : (historicalProfiles[seat.id] ?? seat.id)),
     prompt: seat.prompt,
   }
 }

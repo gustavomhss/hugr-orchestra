@@ -30,12 +30,15 @@ function normalizeToolInput(name: string, input: Record<string, unknown>) {
   return { ...input, filePath: input.path }
 }
 
-function normalizeToolMetadata(name: string, metadata: Record<string, unknown>) {
-  if (name !== "edit" || !Array.isArray(metadata.files)) return metadata
-  const file = metadata.files.find(record)
-  if (!file || typeof file.file !== "string") return metadata
+function normalizeToolMetadata(name: string, metadata: Record<string, unknown>, structured?: unknown) {
+  // Native confirmed output is separate from display text, including retained Task result handles.
+  const confirmed =
+    (name === "todowrite" || name === "task") && record(structured) ? { ...metadata, ...structured } : metadata
+  if (name !== "edit" || !Array.isArray(confirmed.files)) return confirmed
+  const file = confirmed.files.find(record)
+  if (!file || typeof file.file !== "string") return confirmed
   return {
-    ...metadata,
+    ...confirmed,
     filediff: {
       file: file.file,
       patch: typeof file.patch === "string" ? file.patch : undefined,
@@ -319,8 +322,11 @@ function toolPart(sessionID: string, messageID: string, tool: SessionMessageAssi
       return {
         status: "running" as const,
         input: normalizeToolInput(tool.name, tool.state.input),
-        // metadata: normalizeToolMetadata(tool.name, tool.state.structured),
-        metadata: normalizeToolMetadata(tool.name, tool.state.metadata ?? {}),
+        metadata: normalizeToolMetadata(
+          tool.name,
+          tool.state.metadata ?? {},
+          "structured" in tool.state ? tool.state.structured : undefined,
+        ),
         time: { start },
       }
     }
@@ -329,8 +335,11 @@ function toolPart(sessionID: string, messageID: string, tool: SessionMessageAssi
         status: "error" as const,
         input: normalizeToolInput(tool.name, tool.state.input),
         error: tool.state.error.message,
-        // metadata: normalizeToolMetadata(tool.name, tool.state.structured),
-        metadata: normalizeToolMetadata(tool.name, tool.state.metadata ?? {}),
+        metadata: normalizeToolMetadata(
+          tool.name,
+          tool.state.metadata ?? {},
+          "structured" in tool.state ? tool.state.structured : undefined,
+        ),
         time: { start, end: tool.time.completed ?? start },
       }
     }
@@ -354,12 +363,11 @@ function toolPart(sessionID: string, messageID: string, tool: SessionMessageAssi
       input: normalizeToolInput(tool.name, tool.state.input),
       output: tool.state.content.flatMap((item) => (item.type === "text" ? [item.text] : [])).join("\n"),
       title: tool.name,
-      // Keep confirmed todo snapshots even when their display text was truncated.
+      // Preserve confirmed native output even when its display text was truncated.
       metadata: normalizeToolMetadata(
         tool.name,
-        tool.name === "todowrite" && "structured" in tool.state && record(tool.state.structured)
-          ? { ...tool.state.metadata, ...tool.state.structured }
-          : (tool.state.metadata ?? {}),
+        tool.state.metadata ?? {},
+        "structured" in tool.state ? tool.state.structured : undefined,
       ),
       time: { start, end: tool.time.completed ?? start },
       attachments: attachments.length ? attachments : undefined,

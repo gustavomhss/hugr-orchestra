@@ -52,6 +52,7 @@ import { Worktree } from "@/worktree"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
 import { Database } from "@orchestra/core/database/database"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient } from "@orchestra/core/effect/app-node-platform"
@@ -218,6 +219,7 @@ const app = LayerNode.group([
   Npm.node,
   FSUtil.node,
   Database.node,
+  ResearchArtifacts.node,
   Auth.node,
   Credential.node,
   Account.node,

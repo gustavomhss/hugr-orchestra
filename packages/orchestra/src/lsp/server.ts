@@ -9,7 +9,7 @@ import { Archive } from "@/util/archive"
 import { Process } from "@/util/process"
 import { which } from "@orchestra/core/util/which"
 import { Module } from "@orchestra/core/util/module"
-import { spawn, type Child } from "./launch"
+import { confined, type Child } from "./launch"
 import { Npm } from "@orchestra/core/npm"
 import type { RuntimeFlags } from "@/effect/runtime-flags"
 
@@ -104,7 +104,7 @@ export const Deno: Info = {
       return
     }
     return {
-      process: spawn(deno, ["lsp"], {
+      process: await confined(deno, ["lsp"], {
         cwd: root,
       }),
     }
@@ -123,7 +123,7 @@ export const Typescript: Info = {
     if (!tsserver) return
     const bin = await Npm.which("typescript-language-server")
     if (!bin) return
-    const proc = spawn(bin, ["--stdio"], {
+    const proc = await confined(bin, ["--stdio"], {
       cwd: root,
       env: {
         ...process.env,
@@ -154,7 +154,7 @@ export const Vue: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -207,7 +207,7 @@ export const ESLint: Info = {
       await Process.run([npmCmd, "run", "compile"], { cwd: finalPath })
     }
 
-    const proc = spawn("node", [serverPath, "--stdio"], {
+    const proc = await confined("node", [serverPath, "--stdio"], {
       cwd: root,
       env: {
         ...process.env,
@@ -261,13 +261,13 @@ export const Oxlint: Info = {
     }
 
     if (lintBin) {
-      const proc = spawn(lintBin, ["--help"])
+      const proc = await confined(lintBin, ["--help"])
       await proc.exited
       if (proc.stdout) {
         const help = await text(proc.stdout)
         if (help.includes("--lsp")) {
           return {
-            process: spawn(lintBin, ["--lsp"], {
+            process: await confined(lintBin, ["--lsp"], {
               cwd: root,
             }),
           }
@@ -282,7 +282,7 @@ export const Oxlint: Info = {
     }
     if (serverBin) {
       return {
-        process: spawn(serverBin, [], {
+        process: await confined(serverBin, [], {
           cwd: root,
         }),
       }
@@ -341,7 +341,7 @@ export const Biome: Info = {
       args = ["lsp-proxy", "--stdio"]
     }
 
-    const proc = spawn(bin, args, {
+    const proc = await confined(bin, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -381,7 +381,7 @@ export const Gopls: Info = {
       bin = path.join(Global.Path.bin, "gopls" + (process.platform === "win32" ? ".exe" : ""))
     }
     return {
-      process: spawn(bin!, {
+      process: await confined(bin!, {
         cwd: root,
       }),
     }
@@ -413,7 +413,7 @@ export const Rubocop: Info = {
       bin = path.join(Global.Path.bin, "rubocop" + (process.platform === "win32" ? ".exe" : ""))
     }
     return {
-      process: spawn(bin!, ["--lsp"], {
+      process: await confined(bin!, ["--lsp"], {
         cwd: root,
       }),
     }
@@ -470,7 +470,7 @@ export const Ty: Info = {
       return
     }
 
-    const proc = spawn(binary, ["server"], {
+    const proc = await confined(binary, ["server"], {
       cwd: root,
     })
 
@@ -512,7 +512,7 @@ export const Pyright: Info = {
       }
     }
 
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -574,7 +574,7 @@ export const ElixirLS: Info = {
     }
 
     return {
-      process: spawn(binary, {
+      process: await confined(binary, {
         cwd: root,
       }),
     }
@@ -676,7 +676,7 @@ export const Zls: Info = {
     }
 
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -692,7 +692,7 @@ export const CSharp: Info = {
     if (!bin) return
 
     return {
-      process: spawn(bin, ["--stdio", "--autoLoadProjects"], {
+      process: await confined(bin, ["--stdio", "--autoLoadProjects"], {
         cwd: root,
       }),
     }
@@ -713,7 +713,7 @@ export const Razor: Info = {
     }
 
     return {
-      process: spawn(
+      process: await confined(
         bin,
         [
           "--stdio",
@@ -845,7 +845,7 @@ export const FSharp: Info = {
     }
 
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -862,7 +862,7 @@ export const SourceKit: Info = {
     const sourcekit = which("sourcekit-lsp")
     if (sourcekit) {
       return {
-        process: spawn(sourcekit, {
+        process: await confined(sourcekit, {
           cwd: root,
         }),
       }
@@ -879,7 +879,7 @@ export const SourceKit: Info = {
     const bin = lspLoc.text.trim()
 
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -924,7 +924,7 @@ export const RustAnalyzer: Info = {
       return
     }
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -940,7 +940,7 @@ export const Clangd: Info = {
     const fromPath = which("clangd")
     if (fromPath) {
       return {
-        process: spawn(fromPath, args, {
+        process: await confined(fromPath, args, {
           cwd: root,
         }),
       }
@@ -950,7 +950,7 @@ export const Clangd: Info = {
     const direct = path.join(Global.Path.bin, "clangd" + ext)
     if (await Filesystem.exists(direct)) {
       return {
-        process: spawn(direct, args, {
+        process: await confined(direct, args, {
           cwd: root,
         }),
       }
@@ -963,7 +963,7 @@ export const Clangd: Info = {
       const candidate = path.join(Global.Path.bin, entry.name, "bin", "clangd" + ext)
       if (await Filesystem.exists(candidate)) {
         return {
-          process: spawn(candidate, args, {
+          process: await confined(candidate, args, {
             cwd: root,
           }),
         }
@@ -1058,7 +1058,7 @@ export const Clangd: Info = {
     await fs.symlink(bin, path.join(Global.Path.bin, "clangd")).catch(() => {})
 
     return {
-      process: spawn(bin, args, {
+      process: await confined(bin, args, {
         cwd: root,
       }),
     }
@@ -1079,7 +1079,7 @@ export const Svelte: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1112,7 +1112,7 @@ export const Astro: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1244,7 +1244,7 @@ export const JDTLS: Info = {
     )
     const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), "orchestra-jdtls-data"))
     return {
-      process: spawn(
+      process: await confined(
         java,
         [
           "-jar",
@@ -1350,7 +1350,7 @@ export const KotlinLS: Info = {
       return
     }
     return {
-      process: spawn(launcherScript, ["--stdio"], {
+      process: await confined(launcherScript, ["--stdio"], {
         cwd: root,
       }),
     }
@@ -1371,7 +1371,7 @@ export const YamlLS: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1504,7 +1504,7 @@ export const LuaLS: Info = {
     }
 
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -1525,7 +1525,7 @@ export const PHPIntelephense: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1552,7 +1552,7 @@ export const Prisma: Info = {
       return
     }
     return {
-      process: spawn(prisma, ["language-server"], {
+      process: await confined(prisma, ["language-server"], {
         cwd: root,
       }),
     }
@@ -1569,7 +1569,7 @@ export const Dart: Info = {
       return
     }
     return {
-      process: spawn(dart, ["language-server", "--lsp"], {
+      process: await confined(dart, ["language-server", "--lsp"], {
         cwd: root,
       }),
     }
@@ -1586,7 +1586,7 @@ export const Ocaml: Info = {
       return
     }
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -1606,7 +1606,7 @@ export const BashLS: Info = {
       binary = resolved
     }
     args.push("start")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1678,7 +1678,7 @@ export const TerraformLS: Info = {
     }
 
     return {
-      process: spawn(bin, ["serve"], {
+      process: await confined(bin, ["serve"], {
         cwd: root,
       }),
       initialization: {
@@ -1763,7 +1763,7 @@ export const TexLab: Info = {
     }
 
     return {
-      process: spawn(bin, {
+      process: await confined(bin, {
         cwd: root,
       }),
     }
@@ -1784,7 +1784,7 @@ export const DockerfileLS: Info = {
       binary = resolved
     }
     args.push("--stdio")
-    const proc = spawn(binary, args, {
+    const proc = await confined(binary, args, {
       cwd: root,
       env: {
         ...process.env,
@@ -1806,7 +1806,7 @@ export const Gleam: Info = {
       return
     }
     return {
-      process: spawn(gleam, ["lsp"], {
+      process: await confined(gleam, ["lsp"], {
         cwd: root,
       }),
     }
@@ -1826,7 +1826,7 @@ export const Clojure: Info = {
       return
     }
     return {
-      process: spawn(bin, ["listen"], {
+      process: await confined(bin, ["listen"], {
         cwd: root,
       }),
     }
@@ -1853,7 +1853,7 @@ export const Nixd: Info = {
       return
     }
     return {
-      process: spawn(nixd, [], {
+      process: await confined(nixd, [], {
         cwd: root,
         env: {
           ...process.env,
@@ -1942,7 +1942,7 @@ export const Tinymist: Info = {
     }
 
     return {
-      process: spawn(bin, { cwd: root }),
+      process: await confined(bin, { cwd: root }),
     }
   },
 }
@@ -1957,7 +1957,7 @@ export const HLS: Info = {
       return
     }
     return {
-      process: spawn(bin, ["--lsp"], {
+      process: await confined(bin, ["--lsp"], {
         cwd: root,
       }),
     }
@@ -1974,7 +1974,7 @@ export const JuliaLS: Info = {
       return
     }
     return {
-      process: spawn(julia, ["--startup-file=no", "--history-file=no", "-e", "using LanguageServer; runserver()"], {
+      process: await confined(julia, ["--startup-file=no", "--history-file=no", "-e", "using LanguageServer; runserver()"], {
         cwd: root,
       }),
     }

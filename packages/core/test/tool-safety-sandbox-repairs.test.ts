@@ -11,12 +11,13 @@ import { SandboxParents } from "../src/sandbox-parents"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
+import { jail, sandboxHost } from "./lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
-const fact = await Effect.runPromise(ToolSafetySandbox.status())
 // Unsupported/unavailable hosts measure HOLD separately, never count it as confinement conformance.
-const confined = fact.shellWrites === "enforced" ? it.live : it.live.skip
-if (fact.shellWrites === "unenforced") console.info(`Confinement tests skipped: ${fact.shellSandbox.reason}`)
+// These probes run node, which Windows' AppContainer jail does not take (pwsh and cmd only, tool-safety-appcontainer.test.ts).
+const confined = sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer" ? it.live : it.live.skip
+if (sandboxHost.shellWrites === "unenforced") console.info(`Confinement tests skipped: ${sandboxHost.shellSandbox.reason}`)
 const fixture = Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const processes = yield* AppProcess.Service
@@ -175,7 +176,7 @@ it.live("disabled scratch sandbox returns ordinary commands with caller Go cache
 )
 
 // This is an ordinary-fallback proof, not confinement. Supported hosts have separate confined assertions above.
-const unavailable = fact.shellWrites === "unenforced" ? it.live : it.live.skip
+const unavailable = sandboxHost.shellWrites === "unenforced" || sandboxHost.shellSandbox.kind === "appcontainer" ? it.live : it.live.skip
 unavailable("unavailable sandbox names its required HOLD, then fallback keeps caller Go flags ordinary", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -394,7 +395,7 @@ it.live("other native location does not acquire an absent foreign socket", () =>
 it.live("unavailable process sandbox HOLDs without preparing parents", () =>
   Effect.gen(function* () {
     const f = yield* fixture
-    if (fact.shellWrites === "enforced") return
+    if (sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer") return
     const held = yield* Effect.flip(f.wrap("", { requireSandbox: true, writeRoots: ["unavailable/deep/out"] }))
     expect(held.reason).toMatch(/^(?:required-process-sandbox-unavailable|sandbox-platform-unavailable)$/)
     expect(yield* f.fs.exists(path.join(f.directory, "unavailable"))).toBe(false)
@@ -408,14 +409,16 @@ confined("confined generator prepares nested file parents; sibling denied and ca
     const env = { GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") }
     yield* Effect.forEach(Object.values(env), (directory) => f.fs.makeDirectory(directory), { discard: true })
     yield* Effect.forEach(Object.values(env), (directory) => f.fs.writeFileString(path.join(directory, "sentinel"), "owner"), { discard: true })
-    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", "const f=require('fs'),p=require('path');f.mkdirSync('gen/nested',{recursive:true});f.writeFileSync('gen/nested/out.ts','generated');let denied=false;try{f.writeFileSync('gen/nested/sibling','bad')}catch(e){denied=['EACCES','EPERM'].includes(e.code)};f.writeFileSync(p.join(process.env.GOMODCACHE,'probe'),'module');f.writeFileSync(p.join(process.env.GOCACHE,'probe'),'build');const ownerDenied=[process.env.OWNER_BUILD,process.env.OWNER_MOD].every(dir=>{try{f.writeFileSync(p.join(dir,'sentinel'),'changed');return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});console.log(JSON.stringify({denied,ownerDenied,go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))"], {
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", "const f=require('fs'),p=require('path');f.mkdirSync('gen/nested',{recursive:true});f.writeFileSync('gen/nested/out.ts','generated');let denied=false;try{f.writeFileSync('gen/nested/sibling','bad')}catch(e){denied=['EACCES','EPERM','EROFS'].includes(e.code)};f.writeFileSync(p.join(process.env.GOMODCACHE,'probe'),'module');f.writeFileSync(p.join(process.env.GOCACHE,'probe'),'build');const ownerDenied=[process.env.OWNER_BUILD,process.env.OWNER_MOD].every(dir=>{try{f.writeFileSync(p.join(dir,'sentinel'),'changed');return false}catch(e){if(!['EPERM','EACCES','EROFS'].includes(e.code))throw e;return true}});console.log(JSON.stringify({denied,ownerDenied,go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))"], {
       cwd: f.directory, env: { ...env, OWNER_BUILD: env.GOCACHE, OWNER_MOD: env.GOMODCACHE },
     }), { prepareParents: true }).pipe(
       Effect.provideService(ToolSafety.RuntimeProfile, profile),
       Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
     )
     expect(yield* f.fs.isDir(path.join(f.directory, "gen", "nested"))).toBe(true)
-    expect(yield* f.fs.exists(path.join(f.directory, "gen", "nested", "out.ts"))).toBe(false)
+    // srt binds only existing write roots, so the missing file root waits as an empty placeholder; seatbelt needs none.
+    if (jail === "srt") expect(yield* f.fs.readFileString(path.join(f.directory, "gen", "nested", "out.ts"))).toBe("")
+    if (jail !== "srt") expect(yield* f.fs.exists(path.join(f.directory, "gen", "nested", "out.ts"))).toBe(false)
     const result = yield* f.processes.run(command, { timeout: "5 seconds" })
     expect(result.exitCode).toBe(0)
     const out = JSON.parse(result.stdout.toString())
@@ -431,6 +434,21 @@ confined("confined generator prepares nested file parents; sibling denied and ca
     expect(env).toEqual({ GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") })
     expect(yield* f.fs.readFileString(path.join(f.directory, "gen", "nested", "out.ts"))).toBe("generated")
     expect(yield* f.fs.exists(path.join(f.directory, "gen", "nested", "sibling"))).toBe(false)
+  }), 30_000,
+)
+
+confined("a missing file root the command never writes leaves nothing behind", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const result = yield* Effect.scoped(Effect.gen(function* () {
+      const command = yield* f.wrap("process.stdout.write('idle')", { requireSandbox: true, writeRoots: ["unused.txt"] })
+      const written = yield* f.wrap("require('fs').writeFileSync('written.txt','')", { requireSandbox: true, writeRoots: ["written.txt"] })
+      return [yield* f.processes.run(command, { timeout: "5 seconds" }), yield* f.processes.run(written, { timeout: "5 seconds" })]
+    }))
+    expect(result.map((item) => item.exitCode)).toEqual([0, 0])
+    expect(yield* f.fs.exists(path.join(f.directory, "unused.txt"))).toBe(false)
+    // An empty write still counts as the command's own file.
+    expect(yield* f.fs.readFileString(path.join(f.directory, "written.txt"))).toBe("")
   }), 30_000,
 )
 

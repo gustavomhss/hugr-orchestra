@@ -44,6 +44,14 @@ export default {
   version: GO_VERSION,
   license: "BSD-3-Clause",
   upstream: "golang/go",
+  // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": {},
+    "linux-x64": {},
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": go("darwin-arm64", "sha256-WybAtvMIJA/KJhT7AvYiz8yMDMO2nHi7pIRUiaRZAlk="),
     "darwin-x64": go("darwin-amd64", "sha256-sJCHpn1Xkqiw/L90IS1iVgyUrIqP11D/kg2MtfHiARg="),

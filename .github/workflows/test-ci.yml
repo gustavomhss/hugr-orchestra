@@ -1,9 +1,9 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, args, runner, env }). This workflow runs exactly those tests, then deletes the
-# branch.
-# The request names its runner (`bun`, `node` or `pytest`). A request without one falls back to the files: a package.json means
+# with a .ci-run.json request ({ package, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
+# tests, then deletes the branch.
+# The request names its runner (`bun`, `node`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
-        # ci-run-both-* (Linux and Windows) or ci-run-all-*.
+        # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
         # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
         host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
@@ -32,37 +32,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      - name: Assert macOS arm64
+        if: runner.os == 'macOS' && matrix.host != 'macos-15-intel'
+        run: |
+          if [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != arm64 ]; then
+            echo "::error::${{ matrix.host }} must provide native arm64"
+            exit 2
+          fi
+
+      - name: Setup request validator Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24.15"
+
       - name: Read request
         id: request
         run: |
-          package=$(jq -r '.package' .ci-run.json | tr -d '\r')
-          case "$package" in
-            "" | /* | *..*)
-              echo "::error::.ci-run.json names no valid package"
-              exit 2
-              ;;
-          esac
-          runner=$(jq -r '.runner // ""' .ci-run.json | tr -d '\r')
-          if [ -z "$runner" ] && [ -f "packages/$package/package.json" ]; then
-            runner=bun
-          elif [ -z "$runner" ] && [ -f "packages/$package/requirements-dev.txt" ]; then
-            runner=pytest
-          fi
-          case "$runner" in
-            bun | node) required=package.json ;;
-            pytest) required=requirements-dev.txt ;;
-            *) required="" ;;
-          esac
-          if [ -z "$required" ] || [ ! -f "packages/$package/$required" ]; then
-            echo "::error::packages/$package cannot run ${runner:-any} tests"
-            exit 2
-          fi
-          echo "package=$package" >> "$GITHUB_OUTPUT"
-          echo "runner=$runner" >> "$GITHUB_OUTPUT"
+          node --input-type=module <<'NODE'
+          import { appendFileSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+          import path from 'node:path'
+          import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
+          const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
+            (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
+              realpathSync(file).startsWith(realpathSync('.') + path.sep))
+          writeFileSync('.ci-run.json', JSON.stringify(request))
+          mkdirSync('test-ci-evidence', { recursive: true })
+          writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
+            platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
+          appendFileSync(process.env.GITHUB_OUTPUT,
+            `package=${request.package}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
+          NODE
 
       - name: Setup Bun
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun
+
+      # setup-bun selects Node 24; match the existing e2e lane's extraction workaround afterwards.
+      - name: Setup Playwright Node
+        if: steps.request.outputs.runner == 'playwright'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24.15"
+
+      - name: Install Chromium
+        if: steps.request.outputs.runner == 'playwright'
+        working-directory: packages/app
+        run: bunx playwright install --with-deps chromium
+
+      - name: Linux sandbox dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: Setup Python
         if: steps.request.outputs.runner == 'pytest'
@@ -82,6 +105,35 @@ jobs:
         run: |
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "orchestra"
+
+      - name: Resolve Jimmy desktop test selection
+        id: desktop-selection
+        if: steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
+        run: |
+          bun --eval "$(cat <<'BUN'
+          import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+          import { desktopProof, desktopSelection } from './script/test-ci-desktop.ts'
+          // A snapshot or rerun cannot supply completion records for this execution.
+          for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
+          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
+          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, 'packages/desktop')))
+          const proof = desktopProof(request, 'packages/desktop', { platform: process.platform, arch: process.arch })
+          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${proof}\n`)
+          BUN
+          )"
+
+      # Repair: exact files, directory/filter matches and whole-package runs share one selector. Off the proof's
+      # platforms (Windows, Intel macOS) only a request naming the proof alone opts in, and then fails by name.
+      - name: Setup Jimmy desktop Electron runtime
+        if: steps.desktop-selection.outputs.proof == 'true'
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
+          fi
+          node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))"
+          echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"
 
       # Only allow-listed keys with plain values reach the environment; test-ci.ts validates before upload too.
       - name: Export requested environment
@@ -104,12 +156,52 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
+      # A per-run secret for the omni positive control's verdict line: script/test-omni-control.ts prints it in its one
+      # verdict line and removes it from the environment before any test loads; test-ci.ts accepts only that line.
+      - name: Omni control nonce
+        run: |
+          nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
+          echo "ORCHESTRA_OMNI_CONTROL_NONCE=$nonce" >> "$GITHUB_ENV"
+          echo "omni control nonce: $nonce"
+
+      # The control's scope comes from the request (script/test-ci-request.ts omniControlScope): a whole-package request
+      # is "suite" like every test.yml lane, a narrower one is "declared". Not an --env key; an empty value fails the run.
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          ORCHESTRA_OMNI_CONTROL: ${{ steps.request.outputs.omni_control }}
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |
+          if [ "$RUNNER" = playwright ]; then
+            node --input-type=module <<'NODE'
+          import { readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+          import path from 'node:path'
+          import { spawnSync } from 'node:child_process'
+          import { benchmarkEnvironment, playwrightArgs, validateRequest, validateSelection } from './script/test-ci-request.ts'
+          const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
+            (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
+              realpathSync(file).startsWith(realpathSync('.') + path.sep))
+          const cwd = path.resolve('packages/app')
+          const benchmark = benchmarkEnvironment(request.benchmarkRenderer, process.env.GITHUB_SHA)
+          writeFileSync('test-ci-evidence/benchmark-runtime.json', JSON.stringify(benchmark))
+          const env = { ...process.env, ...benchmark }
+          const args = ['run', 'test:e2e:local', ...playwrightArgs(request), '--trace', 'retain-on-failure']
+          const listed = spawnSync('bun', [...args, '--list', '--reporter=json'], { cwd, env, encoding: 'utf8' })
+          if (listed.error || listed.status !== 0) throw new Error(`playwright selection failed: ${listed.error ?? listed.stderr}`)
+          writeFileSync('test-ci-evidence/playwright-selection.json', listed.stdout)
+          const report = JSON.parse(listed.stdout)
+          const hasTests = (suite) => suite.specs?.some((spec) => spec.tests?.length > 0) || (suite.suites ?? []).some(hasTests)
+          validateSelection(request.args.map((file) => path.resolve(cwd, file)),
+            report.suites.filter(hasTests).map((suite) => path.resolve(report.config.rootDir, suite.file)))
+          const run = spawnSync('bun', [...args, '--reporter=html,line,json'], { cwd, stdio: 'inherit',
+            env: { ...env, PLAYWRIGHT_HTML_OUTPUT_DIR: path.resolve(cwd, 'e2e/playwright-report'),
+              PLAYWRIGHT_JSON_OUTPUT_NAME: path.resolve('test-ci-evidence/playwright-runtime.json') } })
+          if (run.error || run.status === null) throw new Error(`playwright execution failed: ${run.error ?? run.signal}`)
+          process.exit(run.status)
+          NODE
+            exit $?
+          fi
           args=()
           while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
           cd "packages/$PACKAGE"
@@ -126,6 +218,54 @@ jobs:
               node --experimental-strip-types --test "${args[@]}"
               ;;
           esac
+
+      - name: Upload Lean dashboard previews (extension)
+        if: always() && hashFiles('packages/app/e2e/test-results/lean-visual/*.png') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lean-visual-${{ runner.os }}
+          path: |
+            packages/app/e2e/test-results/lean-visual/*.png
+            packages/app/e2e/test-results/lean-visual/*.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
+      - name: Assert Jimmy desktop detecting evidence
+        id: jimmy-evidence
+        if: always() && steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
+        run: |
+          bun --eval "$(cat <<'BUN'
+          import { appendFileSync, readFileSync } from 'node:fs'
+          import { desktopProof, requireDesktopEvidence } from './script/test-ci-desktop.ts'
+          const proof = desktopProof(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop',
+            { platform: process.platform, arch: process.arch })
+          if (requireDesktopEvidence(proof, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
+              runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
+            appendFileSync(process.env.GITHUB_OUTPUT, 'proof=true\n')
+          BUN
+          )"
+
+      - name: Upload Jimmy desktop evidence
+        if: always() && steps.jimmy-evidence.outputs.proof == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: jimmy-desktop-${{ matrix.host }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: test-ci-evidence/jimmy-desktop-*.json
+
+      - name: Upload Playwright evidence
+        if: always() && steps.request.outputs.runner == 'playwright'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-${{ matrix.host }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            test-ci-evidence
+            packages/app/e2e/test-results
+            packages/app/e2e/playwright-report
 
   cleanup:
     needs: test

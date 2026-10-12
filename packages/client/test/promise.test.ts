@@ -1,5 +1,14 @@
 import { expect, test } from "bun:test"
-import { isSessionNotFoundError, isUnauthorizedError, Orchestra } from "../src"
+import {
+  isConflictError,
+  isInvalidRequestError,
+  isResearchArtifactNotFoundError,
+  isServiceUnavailableError,
+  isSessionNotFoundError,
+  isUnauthorizedError,
+  Orchestra,
+  type ResearchArtifactOutput,
+} from "../src"
 
 test("exposes every standard HTTP API group", () => {
   const client = Orchestra.make({ baseUrl: "http://localhost:3000" })
@@ -9,6 +18,7 @@ test("exposes every standard HTTP API group", () => {
     "location",
     "agents",
     "sessions",
+    "research",
     "messages",
     "models",
     "providers",
@@ -30,6 +40,8 @@ test("exposes every standard HTTP API group", () => {
     "pullRequests",
     "schedules",
   ])
+  expect(Object.keys(client.research)).toEqual(["artifact"])
+  expect(client.sessions).not.toHaveProperty("research")
   expect(Object.keys(client.messages)).toEqual(["list"])
   expect(Object.keys(client.integrations)).toEqual([
     "list",
@@ -61,6 +73,106 @@ test("sessions.get returns the wire projection", async () => {
   const result = await client.sessions.get({ sessionID: "ses_test" })
 
   expect(result.time.created).toBe(1_717_171_717_000)
+})
+
+test("research.artifact uses the public revision and cursor contract", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = []
+  const page = {
+    ref: { id: "cart_01ARZ3NDEKTSV4RRFFQ69G5FAV", revision: 2 },
+    representation: "text",
+    text: "First retained line.\n",
+    receipt: {
+      binding: {
+        projectID: "project",
+        memberID: "jimmy",
+        taskId: "task_research",
+        executionSessionID: "ses_execution",
+        authoritySessionID: "ses_authority",
+        directory: "/tmp/project",
+        worktree: "/tmp/project",
+      },
+      ref: {
+        artifact: { id: "cart_01ARZ3NDEKTSV4RRFFQ69G5FAV", revision: 2 },
+        representation: "text",
+        digest: "a".repeat(64),
+      },
+      origin: { kind: "file", uri: "file:///tmp/project/source.txt" },
+      capturedAt: 1_717_171_717_000,
+      mediaType: "text/plain",
+      bytes: 41,
+      complete: true,
+    },
+    complete: false,
+    cursor: "next/page+offset=20&revision=2",
+  } satisfies ResearchArtifactOutput
+  const lastPage = {
+    ref: page.ref,
+    representation: page.representation,
+    text: "Last retained line.\n",
+    receipt: page.receipt,
+    complete: true,
+  } satisfies ResearchArtifactOutput
+  const client = Orchestra.make({
+    baseUrl: "http://localhost:3000",
+    fetch: async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
+      requests.push({ url, init })
+      return Response.json(new URL(url).searchParams.has("cursor") ? lastPage : page)
+    },
+  })
+
+  const first = await client.research.artifact({
+    sessionID: "ses_authority",
+    artifactID: page.ref.id,
+    revision: page.ref.revision,
+  })
+  const last = await client.research.artifact({
+    sessionID: "ses_authority",
+    artifactID: first.ref.id,
+    revision: first.ref.revision,
+    cursor: first.cursor,
+  })
+
+  expect(first).toEqual(page)
+  expect(last).toEqual(lastPage)
+  expect(last).not.toHaveProperty("cursor")
+  expect(requests.map((request) => [request.init?.method, request.url])).toEqual([
+    ["GET", "http://localhost:3000/api/session/ses_authority/research/cart_01ARZ3NDEKTSV4RRFFQ69G5FAV?revision=2"],
+    [
+      "GET",
+      "http://localhost:3000/api/session/ses_authority/research/cart_01ARZ3NDEKTSV4RRFFQ69G5FAV?revision=2&cursor=next%2Fpage%2Boffset%3D20%26revision%3D2",
+    ],
+  ])
+  expect(requests.map((request) => request.init?.body)).toEqual([undefined, undefined])
+})
+
+test.each([
+  [404, { _tag: "ResearchArtifactNotFoundError", message: "Research artifact not found" }, isResearchArtifactNotFoundError],
+  [409, { _tag: "ConflictError", message: "Revision conflict", resource: "research artifact" }, isConflictError],
+  [400, { _tag: "InvalidRequestError", message: "Invalid cursor", field: "cursor" }, isInvalidRequestError],
+  [503, { _tag: "ServiceUnavailableError", message: "Research unavailable", service: "research" }, isServiceUnavailableError],
+  [401, { _tag: "UnauthorizedError", message: "Authentication required" }, isUnauthorizedError],
+] as const)("research.artifact preserves declared HTTP %i errors", async (status, declared, guard) => {
+  const client = Orchestra.make({
+    baseUrl: "http://localhost:3000",
+    fetch: async () => Response.json(declared, { status }),
+  })
+
+  await client.research
+    .artifact({
+      sessionID: "ses_authority",
+      artifactID: "cart_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+      revision: 2,
+    })
+    .then(
+      () => {
+        throw new Error("Expected request to fail")
+      },
+      (error: unknown) => {
+        expect(guard(error)).toBe(true)
+        expect(error).toEqual(declared)
+      },
+    )
 })
 
 test("events.subscribe exposes the Promise event stream wire projection", async () => {

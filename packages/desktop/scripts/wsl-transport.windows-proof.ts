@@ -3,7 +3,8 @@ import { createHash } from "node:crypto"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { installWslArtifact } from "../src/main/wsl/artifact"
+import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
+import { installWslArtifact, omniCompanions } from "../src/main/wsl/artifact"
 import { runWsl, runWslInDistro, shellEscape } from "../src/main/wsl/runtime"
 
 // Required Windows-only lane: missing WSL is a failure, never a skipped proof.
@@ -19,9 +20,12 @@ test("real Windows/WSL transport copies verified host bytes to isolated guest HO
   expect(home.startsWith("/tmp/")).toBe(true)
   const host = await mkdtemp(join(tmpdir(), "w4-transport-"))
   const source = join(host, "owned ' $() executable")
-  const bytes = "#!/bin/bash\nprintf 'orchestra v1.16.2\\n'\n"
+  const bytes = "#!/bin/bash\nprintf '1.16.2\\n'\n"
   try {
     await Bun.write(source, bytes)
+    // The install carries the guest CLI's omni pair and tree-sitter from omni-<target>/ and tree-sitter-<target>/.
+    await Promise.all(["linux-x64-baseline", "linux-arm64"].flatMap((target) => omniCompanions.map((name) => Bun.write(join(host, `omni-${target}`, name), name))))
+    await Promise.all(["linux-x64-baseline", "linux-arm64"].map((target) => writeTreeSitterBundle(join(host, `tree-sitter-${target}`), target)))
     await installWslArtifact(distro!, "1.16.2", {
       directory: host,
       readManifest: async () => ({ schema: 1, version: "1.16.2", artifacts: ["linux-x64-baseline", "linux-arm64"].map((target) => ({ target, file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") })) }),
@@ -33,7 +37,7 @@ test("real Windows/WSL transport copies verified host bytes to isolated guest HO
     })
     const installed = await runWslInDistro(["bash", "-c", `${shellEscape(`${home}/.orchestra/bin/orchestra`)} --version`], distro)
     expect(installed.code).toBe(0)
-    expect(installed.stdout.trim()).toBe("orchestra v1.16.2")
+    expect(installed.stdout.trim()).toBe("1.16.2")
   } finally {
     await runWslInDistro(["rm", "-rf", "--", home], distro)
     await rm(host, { recursive: true, force: true })

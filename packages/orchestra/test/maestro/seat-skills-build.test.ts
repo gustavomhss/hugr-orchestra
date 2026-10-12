@@ -84,14 +84,16 @@ describe("seat skill packaging", () => {
     expect(() => SeatSkillContent.validate("cold", { [entry]: "\ud800" })).toThrow("Nonlossless UTF-8 seat skill content")
   })
 
-  test.each(["bun", "node"] as const)("%s compiled bundle extracts the real production files map", async (target) => {
+  test.each((["bun", "node"] as const).flatMap((target) => (["backend", "jimmy"] as const).map((seat) => ({ target, seat }))))(
+    "$target compiled bundle extracts the $seat production files map without authored source", async ({ target, seat }) => {
     await using tmp = await tmpdir()
-    const result = await bundle(tmp.path, target, await seatSkillsFiles())
+    const result = await bundle(tmp.path, target, await seatSkillsFiles(), seat)
     if (result.exit !== 0) throw new Error(`Compiled seat root acquisition failed (${target}, ${result.exit}):\n${result.stderr}`)
-    const evidence = JSON.parse(result.stdout) as { root: string; files: Record<string, string> }
-    expect(evidence.root).not.toBe(Seats.skillSource("backend"))
+    const evidence = JSON.parse(result.stdout) as { root: string; files: Record<string, string>; sourceAvailable: boolean }
+    expect(evidence.sourceAvailable).toBe(false)
+    expect(evidence.root).not.toBe(Seats.skillSource(seat))
     expect(path.basename(evidence.root)).toMatch(/^local-[0-9a-f]{12}$/)
-    expect(evidence.files).toEqual(await SeatSkillContent.read("backend", Seats.skillSource("backend"), Seats.all.backend.skills))
+    expect(evidence.files).toEqual(await SeatSkillContent.read(seat, Seats.skillSource(seat), Seats.all[seat].skills))
   }, 60000)
 
   test("compiled generated-module import failure is named, never source fallback", async () => {
@@ -147,8 +149,9 @@ describe("seat skill packaging", () => {
   })
 })
 
-async function bundle(dir: string, target: "bun" | "node", files: Record<string, string>) {
+async function bundle(dir: string, target: "bun" | "node", files: Record<string, string>, seat = "backend") {
   const rootModule = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts").replaceAll("\\", "/")
+  const seatsModule = path.resolve(import.meta.dir, "../../src/maestro/seats/index.ts").replaceAll("\\", "/")
   const config = {
     target,
     format: "esm",
@@ -159,14 +162,19 @@ async function bundle(dir: string, target: "bun" | "node", files: Record<string,
         import fs from "node:fs/promises";
         import path from "node:path";
         import { SeatSkillRoot } from ${JSON.stringify(rootModule)};
-        const root = SeatSkillRoot.roots.backend;
+        import { Seats } from ${JSON.stringify(seatsModule)};
+        const sourceAvailable = await fs.stat(Seats.skillSource(${JSON.stringify(seat)})).then(() => true, (error) => {
+          if (error.code === "ENOENT") return false;
+          throw error;
+        });
+        const root = SeatSkillRoot.roots[${JSON.stringify(seat)}];
         const entries = await fs.readdir(root, { recursive: true, withFileTypes: true });
         const files = Object.fromEntries(await Promise.all(entries.filter(e => e.isFile()).map(async e => {
           const target = path.join(e.parentPath, e.name);
           return [path.relative(root, target).split(path.sep).join("/"), await fs.readFile(target, "utf8")];
         })));
         // Await the complete pipe write before natural exit; the production map can exceed one buffered chunk.
-        await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ root, files }), error => error ? reject(error) : resolve(undefined)));
+        await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ root, files, sourceAvailable }), error => error ? reject(error) : resolve(undefined)));
       `,
     },
     external: Object.hasOwn(files, moduleName) ? [] : [moduleName],

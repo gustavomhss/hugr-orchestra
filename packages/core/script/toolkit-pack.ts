@@ -10,7 +10,8 @@
 // license, bin and dist.integrity from the registry and writes the lock with `npm install --package-lock-only`.
 // `bump` moves the version in the pack and its recipe and refills those pins the same way. Every pin it cannot fill
 // becomes TODO-PIN, which test/backend-toolkit-packs.test.ts rejects. Both commands regenerate the recipe index.
-// Then: check the entry layout against a downloaded sample, finish the recipe, run bun typecheck and the toolkit tests.
+// Then: check the entry layout against a downloaded sample, record the host `floor` that
+// `bun script/toolkit-floors.ts --engine <id>` prints, finish the recipe, run bun typecheck and the toolkit tests.
 
 import { $ } from "bun"
 import { mkdtemp, readFile, readdir, rm, writeFile } from "fs/promises"
@@ -139,6 +140,11 @@ async function bump(id: string, version: string) {
   if (pack.fit.skills.length)
     await writeFile(card, (await readFile(card, "utf8")).replaceAll(`\`${old}\``, `\`${version}\``))
   console.log(`bumped ${id} ${old} -> ${version}; review the diff and fill any TODO-PIN`)
+  // The recorded host floor (F5.4) belongs to the bytes just pinned, so it is measured again unless a pin is still open.
+  if (!next.includes("TODO-PIN")) {
+    const floors = await $`bun ${path.join(import.meta.dir, "toolkit-floors.ts")} --engine ${id} --check`.nothrow()
+    if (floors.exitCode) console.error(`update ${id}'s \`floor\` to the measurement above (bun script/toolkit-floors.ts --engine ${id})`)
+  }
 }
 
 async function template(id: string, kind: string, upstream: string, version: string) {

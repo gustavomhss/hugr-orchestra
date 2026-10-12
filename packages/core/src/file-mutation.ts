@@ -2,7 +2,6 @@ export * as FileMutation from "./file-mutation"
 
 import { makeLocationNode } from "./effect/app-node"
 import { Context, Effect, Layer, Schema } from "effect"
-import { dirname } from "path"
 import { KeyedMutex } from "./effect/keyed-mutex"
 import { FSUtil } from "./fs-util"
 
@@ -67,6 +66,9 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileMutation") {}
 
 /**
+ * Writes go to the resolved canonical target and refuse a symlink swapped in after resolution instead of following
+ * it, so a check made at resolve time still holds at write time.
+ *
  * Serialize file changes by canonical target. Conditional writes compare and
  * write under the same process-local lock so cooperating Orchestra mutations do
  * not overwrite changes made from the same stale content.
@@ -99,7 +101,7 @@ const layer = Layer.effect(
       withTargetLock(input.target)(
         Effect.gen(function* () {
           const existed = yield* fs.exists(input.target.canonical)
-          yield* fs.writeWithDirs(input.target.canonical, input.content)
+          yield* fs.writePhysical(input.target.canonical, input.content)
           return writeResult(input.target, existed)
         }),
       ),
@@ -112,7 +114,7 @@ const layer = Layer.effect(
           const current = yield* fs
             .readFile(input.target.canonical)
             .pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)))
-          yield* fs.writeWithDirs(
+          yield* fs.writePhysical(
             input.target.canonical,
             joinBom(next.text, Boolean(current && hasUtf8Bom(current)) || next.bom),
           )
@@ -124,18 +126,13 @@ const layer = Layer.effect(
     const create = Effect.fn("FileMutation.create")((input: WriteInput) =>
       withTargetLock(input.target)(
         Effect.gen(function* () {
-          const write =
-            typeof input.content === "string"
-              ? fs.writeFileString(input.target.canonical, input.content, { flag: "wx" })
-              : fs.writeFile(input.target.canonical, input.content, { flag: "wx" })
-          yield* write.pipe(
-            Effect.catchReason("PlatformError", "NotFound", () =>
-              fs.ensureDir(dirname(input.target.canonical)).pipe(Effect.andThen(write)),
-            ),
-            Effect.catchReason("PlatformError", "AlreadyExists", () =>
-              Effect.fail(new TargetExistsError({ path: input.target.canonical })),
-            ),
-          )
+          yield* fs
+            .writePhysical(input.target.canonical, input.content, { exclusive: true })
+            .pipe(
+              Effect.catchReason("PlatformError", "AlreadyExists", () =>
+                Effect.fail(new TargetExistsError({ path: input.target.canonical })),
+              ),
+            )
           return writeResult(input.target, false)
         }),
       ),
@@ -148,9 +145,7 @@ const layer = Layer.effect(
           if (!sameBytes(current, input.expected)) {
             return yield* new StaleContentError({ path: input.target.canonical })
           }
-          yield* typeof input.content === "string"
-            ? fs.writeFileString(input.target.canonical, input.content)
-            : fs.writeFile(input.target.canonical, input.content)
+          yield* fs.writePhysical(input.target.canonical, input.content)
           return writeResult(input.target, true)
         }),
       ),

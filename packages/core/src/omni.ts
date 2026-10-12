@@ -137,12 +137,16 @@ export function snapshot() {
 
 /**
  * The positive control for a test run (D-L1): a run with the flag on that made no omni spawn proved nothing about
- * omni, and a strict run must not have delegated. Undefined means the run passes.
+ * omni, and a strict run must not have delegated. `expected` false (a focused run in which no test declared an omni
+ * spawn, script/test-omni-control.ts) still fails a run that delegated without any omni spawn: it did spawn, just never
+ * through omni. Undefined means the run passes.
  */
-export function verdict(mode: "off" | "on" | "strict", counts: { spawns: number; delegations: number }) {
+export function verdict(mode: "off" | "on" | "strict", counts: { spawns: number; delegations: number }, expected = true) {
   if (mode === "off") return
-  if (counts.spawns === 0)
-    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${mode === "on" ? "1" : mode}, but this run made no omni spawn.`
+  if (counts.spawns === 0 && (expected || counts.delegations > 0))
+    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${mode === "on" ? "1" : mode}, but this run made no omni spawn${
+      counts.delegations > 0 ? ` and delegated ${counts.delegations} spawn(s) to legacy` : ""
+    }.`
   if (mode === "strict" && counts.delegations > 0)
     return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict, but this run delegated ${counts.delegations} spawn(s) to legacy.`
 }

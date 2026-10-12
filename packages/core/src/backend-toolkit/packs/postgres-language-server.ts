@@ -24,6 +24,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "supabase-community/postgres-language-server",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "10.12" },
+    "linux-arm64": { glibc: "2.34" },
+    "linux-x64": { glibc: "2.34" },
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": target("aarch64-apple-darwin", "sha256-z1NeF6iyqJOm2wwtoAK00u8GQZePc7+Sx22zK8oQpKo="),
     "darwin-x64": target("x86_64-apple-darwin", "sha256-fKYXB2USLUKe0J3UTDw3t6u9Rk4mJZrVxRt9p0HbXds="),

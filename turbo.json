@@ -1,12 +1,17 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
   "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
-  "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"],
+  "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
     "typecheck": {},
     "build": {
       "dependsOn": [],
+      "outputs": ["dist/**"]
+    },
+    // SDK generation cleans source exports that the plugin compiler reads.
+    "@orchestra/plugin#build": {
+      "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
     // A test task hashes only its own package unless it depends on its workspace dependencies. Most of them
@@ -33,8 +38,14 @@
     },
     "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],
-      // Core's inventory tests execute these out-of-package observation helpers.
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/omni/campaign/**/*.ts"],
+      // Core's tests read these out-of-package CI sources and execute the campaign observation helpers.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/omni/campaign/**/*.ts",
+        "$TURBO_ROOT$/script/test-ci-request.ts",
+        "$TURBO_ROOT$/script/test-ci-desktop.ts",
+        "$TURBO_ROOT$/.github/workflows/test-ci.yml"
+      ],
       "outputs": [],
       // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
       // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.

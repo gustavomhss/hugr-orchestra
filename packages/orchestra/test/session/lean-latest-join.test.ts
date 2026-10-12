@@ -19,6 +19,7 @@ import { TestLLMServer } from "../lib/llm-server"
 import { testEffect } from "../lib/effect"
 import { fixture, model, pluginOptions } from "../tool/plugin-binding.fixture"
 import { makeHttp } from "./prompt.fixture"
+import { seatShellRuns } from "../fixture/seat-sandbox"
 
 // Typed against the current plugin API, then loaded through the actual plugin adapter in CI.
 async function compileBody(args: { filePath: string; nested: { marker: string } }, context: ToolContext) {
@@ -173,6 +174,13 @@ native.instance("latest host join keeps native capture and declines changed afte
       })),
     ) }),
   )
+  // The backend seat's shell runs only where its read sandbox can (test/fixture/seat-sandbox.ts); elsewhere the native
+  // call is refused before the after-hook or the capture tap sees anything.
+  if (!seatShellRuns()) {
+    yield* f.refused("go test -v .", "join-positive")
+    expect(captures).toEqual([])
+    return expect(approved).toEqual([])
+  }
   const positive = yield* f.invoke("go test -v .", "join-positive")
   expect(positive.metric.status).toBe("applied")
   policy.changed = true

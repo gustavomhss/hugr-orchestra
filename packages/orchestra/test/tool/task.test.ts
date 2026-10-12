@@ -24,18 +24,12 @@ import { ToolRegistry } from "@/tool/registry"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
-import { ProviderV2 } from "@orchestra/core/provider"
-import { ModelV2 } from "@orchestra/core/model"
 import { Git } from "@/git"
+import { ref, seed } from "./task.fixture"
 
 afterEach(async () => {
   await disposeAllInstances()
 })
-
-const ref = {
-  providerID: ProviderV2.ID.make("test"),
-  modelID: ModelV2.ID.make("test-model"),
-}
 
 const layer = (flags: Partial<RuntimeFlags.Info> = {}) =>
   TestAppNodeBuilder.build(
@@ -70,36 +64,6 @@ function defer<T>() {
   })
   return { promise, resolve }
 }
-
-const seed = Effect.fn("TaskToolTest.seed")(function* (title = "Pinned") {
-  const session = yield* Session.Service
-  const chat = yield* session.create({ title })
-  const user = yield* session.updateMessage({
-    id: MessageID.ascending(),
-    role: "user",
-    sessionID: chat.id,
-    agent: "maestro",
-    model: ref,
-    time: { created: Date.now() },
-  })
-  const assistant: SessionV1.Assistant = {
-    id: MessageID.ascending(),
-    role: "assistant",
-    parentID: user.id,
-    sessionID: chat.id,
-    mode: "maestro",
-    agent: "maestro",
-    cost: 0,
-    path: { cwd: "/tmp", root: "/tmp" },
-    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    modelID: ref.modelID,
-    providerID: ref.providerID,
-    variant: "xhigh",
-    time: { created: Date.now() },
-  }
-  yield* session.updateMessage(assistant)
-  return { chat, assistant }
-})
 
 function stubOps(opts?: {
   onPrompt?: (input: SessionPrompt.PromptInput) => void
@@ -657,7 +621,36 @@ describe("tool.task", () => {
       expect(yield* Effect.promise(() => cancelled.promise)).toBe(input.sessionID)
 
       const exit = yield* Fiber.await(fiber)
-      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain("Task cancelled")
+    }),
+  )
+
+  it.instance("execute cancels the real owned job when abort fires after start but before listener registration", () =>
+    Effect.gen(function* () {
+      const seeded = yield* seed()
+      const jobs = yield* BackgroundJob.Service
+      const abort = new AbortController()
+      const cancelled: SessionID[] = []
+      // Observe the actual registry start, then fire the signal at the precise missed-listener boundary.
+      const tool = yield* TaskTool.pipe(Effect.provideService(BackgroundJob.Service, {
+        ...jobs,
+        start: (input) => jobs.start(input).pipe(Effect.tap(() => Effect.sync(() => abort.abort()))),
+      }))
+      const def = yield* tool.init()
+      const promptOps: TaskPromptOps = {
+        cancel: (sessionID) => Effect.sync(() => { cancelled.push(sessionID) }),
+        resolvePromptParts: (template) => Effect.succeed([{ type: "text" as const, text: template }]),
+        prompt: () => Effect.never,
+      }
+      const exit = yield* def.execute({ description: "Missed signal boundary", prompt: "Wait until cancelled", subagent_type: "general" }, {
+        sessionID: seeded.chat.id, messageID: seeded.assistant.id, agent: "maestro", abort: abort.signal,
+        extra: { promptOps }, messages: [], metadata: () => Effect.void, ask: () => Effect.void,
+      }).pipe(Effect.exit, Effect.timeout("15 seconds"))
+      expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain("Task cancelled")
+      const owned = (yield* jobs.list()).filter((job) => job.type === "task")
+      expect(owned).toHaveLength(1)
+      expect(owned[0].status).toBe("cancelled")
+      expect(cancelled).toContain(SessionID.make(owned[0].id))
     }),
   )
 

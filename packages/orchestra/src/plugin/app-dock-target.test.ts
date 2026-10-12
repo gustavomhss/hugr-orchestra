@@ -3,7 +3,7 @@ import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
 import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
 import { Permission } from "@/permission"
-import { context, input, fakePort, host, page, control, field, nativeError, type Reply } from "./app-dock.fixture"
+import { context, input, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
 
 type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]
 
@@ -224,15 +224,37 @@ test("dock_action target refuses without dispatch when a homonym surfaces on ano
 })
 
 test("time waiting for a permission answer does not count against the tool-call deadline", async () => {
+  // Permission alone exceeds the budget; real scans and the stale-ref retry have CI scheduling headroom.
   const asking = { ...context, ask: async (request: { patterns: string[] }) => {
-    if (request.patterns[0] === "action") await Bun.sleep(80)
+    if (request.patterns[0] === "action") await Bun.sleep(1200)
   } } as unknown as ToolContext
   const { hooks, calls } = host((op, _args, index) => op === "action"
     ? (index === 2 ? nativeError("stale-ref") : { ok: true, value: { dispatch: "acknowledged" } })
-    : page([control("n:a", "Continue")]), { findDeadlineMs: 40 })
+    : page([control("n:a", "Continue")]), { findDeadlineMs: 400 })
   expect(JSON.parse(String(await hooks.tool.dock_action.execute({ target: { name: "continue" } }, asking))))
     .toEqual({ dispatch: "acknowledged" })
   expect(calls.map((call) => call.op)).toEqual(["read", "read", "action", "read", "read", "action"])
+})
+
+test("active RPC time still counts after excluding a permission answer", async () => {
+  const asking = { ...context, ask: async (request: { patterns: string[] }) => {
+    if (request.patterns[0] === "read") await Bun.sleep(1200)
+  } } as unknown as ToolContext
+  const f = fakePort()
+  const calls: string[] = []
+  f.port.postMessage = (message: unknown) => {
+    const envelope = message as Envelope
+    if (envelope.type !== "dock.rpc") return
+    calls.push(envelope.op)
+    // Delay the response, outside ask(): excluding RPC work as well would wrongly permit an action.
+    setTimeout(() => f.deliver({ type: "dock.rpc.result", id: envelope.id,
+      ...page([control("n:a", "Continue")], "c1") }), 800)
+  }
+  const hooks = createAppDockHooks(f.port, { findDeadlineMs: 400 }).tool!
+  expect(JSON.parse(String(await hooks.dock_action!.execute({ target: { name: "continue" } }, asking))))
+    .toMatchObject({ code: "target-search-incomplete", outcome: "not-dispatched", pagesScanned: 1,
+      searchComplete: false, reasons: ["page-limit", "tool-deadline"] })
+  expect(calls).toEqual(["read"])
 })
 
 test("dock_find reports a partial traversal even when it found matches", async () => {

@@ -62,6 +62,7 @@ const mcp = Layer.succeed(
 const lsp = Layer.succeed(
   LSP.Service,
   LSP.Service.of({
+    discoveryQuery: () => Effect.die(new Error("Native semantic queries require a real LSP fixture")),
     init: () => Effect.void,
     status: () => Effect.succeed([]),
     hasClients: () => Effect.succeed(false),

@@ -13,19 +13,54 @@ import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
 import { detectServerProtocol, type ServerProtocol } from "@/utils/server-protocol"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
+import { SessionEvent } from "@orchestra/schema/session-event"
+import { Schema } from "effect"
 
 const isAbortError = (error: unknown) =>
   error !== null && typeof error === "object" && "name" in error && error.name === "AbortError"
 
 const isStreamClosed = (error: unknown, signal?: AbortSignal) => isAbortError(error) || signal?.aborted === true
-export type ServerEvent = Event & { current?: OpenCodeEvent }
+type NativeToolSuccess = Omit<Extract<OpenCodeEvent, { type: "session.tool.success" }>, "durable"> & {
+  durable?: Schema.Codec.Encoded<typeof SessionEvent.Tool.Success>["durable"]
+}
+export type ServerCurrentEvent = OpenCodeEvent | NativeToolSuccess
+export type ServerEvent = Event & { current?: ServerCurrentEvent }
 type QueuedServerEvent = { directory: string; payload: ServerEvent }
 type CurrentDelta = Extract<
   OpenCodeEvent,
   { type: "session.text.delta" | "session.reasoning.delta" | "session.tool.input.delta" | "session.compaction.delta" }
 >
 
-export function adaptServerEvent(event: OpenCodeEvent): ServerEvent {
+export function adaptServerEvent(
+  event: ServerCurrentEvent | Schema.Codec.Encoded<typeof SessionEvent.Tool.Success>,
+): ServerEvent {
+  // The bundled compatibility client predates the native tool event name and structured output.
+  if (event.type === SessionEvent.Tool.Success.type) {
+    const native = Schema.encodeSync(SessionEvent.Tool.Success)(
+      Schema.decodeUnknownSync(SessionEvent.Tool.Success)(event),
+    )
+    return adaptServerEvent({
+      id: native.id,
+      type: "session.tool.success",
+      created: native.data.timestamp,
+      location: native.location,
+      durable: native.durable,
+      metadata: native.metadata,
+      data: {
+        sessionID: native.data.sessionID,
+        assistantMessageID: native.data.assistantMessageID,
+        callID: native.data.callID,
+        executed: native.data.provider.executed,
+        resultState: native.data.provider.metadata && Object.fromEntries(
+          Object.entries(native.data.provider.metadata).map(([name, metadata]) => [name, compatibilityMetadata(metadata)]),
+        ),
+        metadata: compatibilityMetadata(native.data.structured),
+        ...{ structured: native.data.structured },
+        // The compatibility client requires a nonempty mutable tuple; empty native output stays empty text.
+        content: [native.data.content[0] ?? { type: "text", text: "" }, ...native.data.content.slice(1)],
+      },
+    })
+  }
   if (event.type === "permission.v2.asked") {
     return {
       id: event.id,
@@ -54,6 +89,19 @@ export function adaptServerEvent(event: OpenCodeEvent): ServerEvent {
   if (event.type === "question.v2.rejected")
     return { id: event.id, type: "question.rejected", properties: event.data, current: event } as ServerEvent
   return { id: event.id, type: event.type, properties: event.data, current: event } as ServerEvent
+}
+
+function compatibilityMetadata(value: Readonly<Record<string, unknown>>): NonNullable<NativeToolSuccess["data"]["metadata"]> {
+  return Object.fromEntries(Object.entries(Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(value))
+    .map(([key, value]) => [key, compatibilityJson(value)]))
+}
+
+function compatibilityJson(value: Schema.Json): NonNullable<NativeToolSuccess["data"]["metadata"]>[string] {
+  // Canonical JSON arrays are readonly; the bundled rendering client still requires mutable JSON values.
+  if (Array.isArray(value)) return value.map(compatibilityJson)
+  if (value !== null && typeof value === "object")
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, compatibilityJson(value)]))
+  return value
 }
 
 const coalescedKey = (event: QueuedServerEvent) => {
@@ -138,7 +186,7 @@ export function coalesceServerEvents(events: QueuedServerEvent[]) {
   return output
 }
 
-function currentDelta(event: OpenCodeEvent | undefined): CurrentDelta | undefined {
+function currentDelta(event: ServerCurrentEvent | undefined): CurrentDelta | undefined {
   if (
     event?.type === "session.text.delta" ||
     event?.type === "session.reasoning.delta" ||

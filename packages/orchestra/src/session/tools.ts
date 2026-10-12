@@ -35,6 +35,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
+import { ResearchExecution } from "@/research/allowance"
 import { Config } from "@/config/config"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { LegacyLeanOutput } from "./lean-output"
@@ -73,6 +74,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const research = yield* Effect.serviceOption(ResearchExecution.Service)
   const config = yield* Effect.serviceOption(Config.Service)
   const fs = Option.getOrUndefined(yield* Effect.serviceOption(FSUtil.Service))
   const global = Option.getOrUndefined(yield* Effect.serviceOption(Global.Service))
@@ -111,6 +113,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps, canRecall: input.canRecall?.() === true },
     agent: input.agent.name,
     agentID: input.agent.id,
+    permission: Permission.merge(input.agent.permission, input.session.permission ?? []),
     messages: input.messages,
     metadata: (val) => safety.inspect(val).pipe(Effect.orDie, Effect.andThen(
       input.processor.updateToolCall(options.toolCallId, (match) => {
@@ -167,7 +170,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           directory: binding?.directory,
           projectID: binding?.project.id,
           projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-        }, effect, (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
+        }, Option.isSome(research) ? research.value.tool(input.session.id,
+          options.toolCallId ? `${input.processor.message.id}:${options.toolCallId}` : "", name, effect).pipe(Effect.orDie)
+          : input.agent.id === "jimmy" ? Effect.die(new Error("Native discovery allowance service is unavailable")) : effect,
+        (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
           input.processor.updateToolCall(options.toolCallId, (match) => ({
             ...match,
             state: match.state.status === "pending"
@@ -270,6 +276,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       },
     })
   }
+
+  // Discovery has no MCP/plugin authority, including resource APIs disguised as generic read.
+  if (input.agent.native === true && input.agent.id === "jimmy") return tools
 
   const hasMcpResourceServer = Object.values(yield* mcp.clients()).some(
     (client) => !!client.getServerCapabilities()?.resources,
