@@ -17,12 +17,12 @@ import { verifyPackagedCli } from "./cli-packaging"
 // instrumented Windows runs (test-ci 38284863937, 38285164351, 38285411114, 38285164170) a test's slow time was spent
 // off-CPU: 0.9 s wall for 0.09 s CPU, with one synchronous copy or mkdir in staging blocking up to 0.8 s; inside the
 // whole desktop suite, 2.6 s wall for 0.4 s CPU. In 43 full test.yml lanes (2026-10-11/12) a test ran up to 17.8x its
-// own median, the slowest median is 0.7 s, and two lanes timed out at Bun's 5 s default. 30 s is twice that worst
-// slowdown of the slowest test. No test waits on a clock or another process except the build-helper child, which has
-// its own 15 s limit. A hang that still does I/O fails after 30 s. One that idles on a promise fails then on Linux and
-// macOS, but Bun 1.3.14 on Windows enforces a test timeout only while a timer is pending (test-ci 38294402595,
-// 38297239678), so there the step limit stops it, as it would have at the 5 s default.
-const STAGING_TIMEOUT = 30_000
+// own median and two lanes timed out at Bun's 5 s default. With rg in the bundle (#357) the slowest median on
+// windows-latest is 1.3 s (22 runs, max 5.2 s). 45 s is about twice 17.8x that median. No test waits on a clock or
+// another process except the build-helper child, which has its own 15 s limit. A hang that still does I/O fails after
+// 45 s. One that idles on a promise fails then on Linux and macOS, but Bun 1.3.14 on Windows enforces a test timeout
+// only while a timer is pending (test-ci 38294402595, 38297239678), so there the step limit stops it, as at 5 s.
+const STAGING_TIMEOUT = 45_000
 
 const roots: string[] = []
 // The packaging checks with the stand-in signature for the fixture's "signed" rg.
