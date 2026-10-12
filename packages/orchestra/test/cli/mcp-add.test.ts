@@ -7,7 +7,8 @@ import { cliIt } from "../lib/cli-process"
 // Writing MCP config must not depend on ripgrep. Before the file index moved to the background, opening the CLI's
 // Location ran ripgrep, downloading it from GitHub into the isolated home when rg was not on PATH, and a failed
 // download failed `mcp add` with "ripgrep execution failed". These runs hide every rg on PATH and forbid the download,
-// so that coupling fails here on every run instead of only when the network or the runner misbehaves.
+// so that coupling fails here on every run instead of only when the network or the runner misbehaves. Windows indexes
+// with ripgrep by default and other hosts with fff; ORCHESTRA_DISABLE_FFF puts every host on the ripgrep index.
 const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH"
 const withoutRipgrep = {
   [pathKey]: (process.env[pathKey] ?? "")
@@ -15,6 +16,7 @@ const withoutRipgrep = {
     .filter((dir) => !existsSync(path.join(dir, process.platform === "win32" ? "rg.exe" : "rg")))
     .join(path.delimiter),
   ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD: "1",
+  ORCHESTRA_DISABLE_FFF: "1",
 }
 
 describe("orchestra mcp add (non-interactive subprocess)", () => {
