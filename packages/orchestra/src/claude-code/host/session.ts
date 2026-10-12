@@ -58,6 +58,7 @@ import { ClaudeHostJoin } from "./join"
 import { ClaudeHostResearch } from "./research"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
@@ -172,7 +173,7 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const catalog = yield* ModelsDev.Service
     // What resolving the served registry tools needs (ClaudeHostMcp.prepare: registry, config, the process tool).
-    const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>>>()
+    const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>> | ResearchRecords.Service>()
     const serviceState = { disposed: false }
     const lives = new Map<SessionID, Live>()
     const startups = new Map<SessionID, Semaphore.Semaphore>()
@@ -766,7 +767,7 @@ function answered(history: readonly SessionV1.WithParts[]) {
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [ResearchExecution.node, ResearchAllowance.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
+  deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
 })
