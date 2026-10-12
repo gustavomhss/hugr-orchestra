@@ -6,8 +6,8 @@ export * as ClaudeHostGate from "./gate"
 // permission rules. Any failure is a deny, and nothing later can turn a deny back into an allow. Claude Code's own
 // native tools never reached ToolSafety before; this gate is where they do. A PreToolUse deny wins in every permission
 // mode, bypass included, while `canUseTool` is skipped whenever an allow rule matches (spike S7), so all policy is here.
-// A write-roots seat's Bash runs inside Orchestra's OS write jail with its grant's roots (spike S11): parsing a command
-// for its writes is not a control.
+// Shell calls obey the actor's effective project sandbox; write-roots seats also require their per-call grant's roots.
+// Parsing a command for its writes is not a control.
 import { Effect, Exit, Scope } from "effect"
 import path from "node:path"
 import { ChildProcess } from "effect/unstable/process"
@@ -68,8 +68,8 @@ export type Ports = {
   /** Orchestra's permission rules, asking the owner where a rule says ask. */
   readonly ask: (actor: Actor, name: string, input: Input, toolUseID: string) => Effect.Effect<void, unknown>
   /**
-   * A write-roots seat's Bash command, rewritten to run inside the OS write jail with its grant's roots; undefined for
-   * any other actor. Fails when this host has no jail: that seat's Bash is then denied.
+   * A shell command rewritten under the actor's effective sandbox policy; undefined when no confinement is required.
+   * Write-roots seats also require bound roots. Required confinement fails closed when this host has no jail.
    */
   readonly confine: (actor: Actor, command: string, toolUseID: string, process?: { workdir?: string }) => Effect.Effect<string | undefined, unknown>
   /** Releases what a confined call holds (the jail's policy and scratch files) once the call has ended. */
@@ -94,7 +94,7 @@ export const decide = Effect.fn("ClaudeHostGate.decide")(function* (ports: Ports
     const exit = yield* Effect.exit(check)
     if (Exit.isFailure(exit)) return { allow: false, reason: ClaudeCodeTools.failure(exit.cause) }
   }
-  // Bash and the `process` tool both run a shell command; a write-roots seat runs either only inside its write jail.
+  // Bash and process starts share the effective sandbox policy and per-call resource lifetime.
   if (name !== "Bash" && !(own === PROCESS && input.action === "start")) return { allow: true }
   const confined = yield* Effect.exit(ports.confine(actor, typeof input.command === "string" ? input.command : "", toolUseID,
     own === PROCESS ? { workdir: text(input, "workdir") } : undefined))
@@ -216,11 +216,18 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         projectID: session.projectID, projectDirectory }))
     }),
     arsenal: (actor, tool, args) => arsenal.beforeExecute(actor.sessionID, tool, args),
-    confine: (actor, command, toolUseID, background) => Effect.gen(function* () {
-      if (!Seats.find(actor.seat)?.writeRoots) return undefined
+    confine: (actor, command, toolUseID, background) => arsenal.withSession(actor.sessionID, Effect.gen(function* () {
       const session = yield* sessions.get(actor.sessionID)
-      const roots = WriteRoots.read(session.permission)
-      if (!roots) return yield* Effect.fail(new Error(`HOLD: ${actor.seat} has no bound write roots, so its Bash did not run.`))
+      const loader = yield* ToolSafety.RuntimeProfileLoader
+      const profile = loader ? yield* loader() : yield* ToolSafety.RuntimeProfile
+      if (Seats.find(actor.seat)?.writeRoots && !WriteRoots.read(session.permission))
+        return yield* Effect.fail(new Error(`HOLD: ${actor.seat} has no bound write roots, so its Bash did not run.`))
+      // Restrictions also require enforcement when a host profile did not explicitly set requireSandbox.
+      const required = profile?.requireSandbox || profile?.sandbox?.enabled || profile?.writeRoots !== undefined ||
+        profile?.sandbox?.readRoots !== undefined || profile?.neverTouch?.length || profile?.managedPaths?.length ||
+        profile?.protectedWrites?.length || profile?.sandbox?.denyPaths?.length ||
+        profile?.sandbox?.allowedUnixSockets?.length || profile?.sandbox?.allowedLoopbackEndpoints?.length
+      if (!required) return undefined
       const ctx = yield* context(actor, toolUseID)
       const cwd = background?.workdir ? yield* resolvePath(background.workdir, instance.directory, shell).pipe(
         Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner),
@@ -229,45 +236,54 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
         Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner),
       ) : false
       const scope = yield* Scope.make()
+      if (scopes.has(toolUseID)) {
+        yield* Scope.close(scope, Exit.void)
+        return yield* Effect.fail(new Error("HOLD: duplicate shell confinement call."))
+      }
       scopes.set(toolUseID, scope)
-      // The seat's own profile narrowed to its bound roots, sandbox required, with no unconfined fallback: no jail, no Bash.
-      const jailed = yield* arsenal.withSession(actor.sessionID, Effect.gen(function* () {
-        const loader = yield* ToolSafety.RuntimeProfileLoader
-        const profile = WriteRoots.profile(loader ? yield* loader() : yield* ToolSafety.RuntimeProfile, roots, session.directory)
-        // Process starts use the shell's seat profile here and transfer this jail at execution, without a second wrap.
-        return yield* (background
+      // Process starts transfer this jail at execution, without a second wrap. Required policy never falls back.
+      const jailed = yield* (background
           ? ShellExecution.wrap(fs, { command, shell, cwd, env: process.env, prepareParents }, ctx)
           : ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: session.directory }))).pipe(
-          Effect.provideService(ToolSafety.RuntimeProfile, { ...profile, sandbox: { ...profile.sandbox, unconfinedFallback: false } }),
-          Effect.provideService(FSUtil.Service, fs), Scope.provide(scope))
-      })).pipe(Effect.tapCause(() => release(toolUseID)), Effect.mapError((error) => new Error(
-        `HOLD: ${actor.seat}'s Bash runs only inside Orchestra's write jail, and it could not be set up here (${error instanceof ToolSafety.Denied ? error.reason : String(error)}), so the command did not run. Read with Read, Grep and Glob, and write with Write or Edit inside your grant.`)))
-      if (jailed._tag !== "StandardCommand") return yield* Effect.fail(new Error("HOLD: the write jail returned a pipeline, so the command did not run."))
+          Effect.provideService(ToolSafety.RuntimeProfile, { ...profile, requireSandbox: true,
+            sandbox: { ...profile?.sandbox, enabled: true, unconfinedFallback: false } }),
+          Effect.provideService(FSUtil.Service, fs), Scope.provide(scope),
+          Effect.tapCause(() => release(toolUseID)), Effect.mapError((error) => new Error(
+            `HOLD: NATIVE_SHELL_SANDBOX_REQUIRED: ${actor.seat}'s shell confinement could not be set up (${error instanceof ToolSafety.Denied ? error.reason : String(error)}), so the command did not run.`)))
+      if (jailed._tag !== "StandardCommand") {
+        yield* release(toolUseID)
+        return yield* Effect.fail(new Error("HOLD: the write jail returned a pipeline, so the command did not run."))
+      }
       const updated = line(jailed)
       if (background) yield* ShellExecution.handoff(ctx, {
         command: updated, originalCommand: command, prepareParents, cwd, agentID: ctx.agentID, wrapped: jailed, resources: scope,
         onTake: () => { scopes.delete(toolUseID) },
       })
       return updated
-    }),
+    })),
     release,
     ask: (actor, name, args, toolUseID) => Effect.gen(function* () {
       const ctx = yield* context(actor, toolUseID)
       // Delegation is Orchestra's `task` permission on the seat, as Task asks it.
       if (agentCall(name)) {
-        const seat = text(args, "subagent_type") ?? "*"
+        const route = text(args, "subagent_type") ?? "*"
+        const seat = route.startsWith("orchestra:") ? Seats.find(route.slice("orchestra:".length))?.id ?? route : route
         return yield* ctx.ask({ permission: "task", patterns: [seat], always: ["*"],
-          metadata: { description: text(args, "description"), subagent_type: seat } })
+          metadata: { description: text(args, "description"), subagent_type: route } })
       }
       // Native file tools use Orchestra's read/edit permissions and worktree-relative path patterns.
       // Asking for the SDK name (e.g. Write) falls through a native seat's deny-all rule, even inside its grant.
       if (["Read", "Write", "Edit", "MultiEdit", "NotebookEdit"].includes(name)) {
         const target = text(args, "file_path") ?? text(args, "notebook_path")
         if (!target) return yield* Effect.fail(new Error(`HOLD: ${name} has no file path.`))
-        const filepath = path.resolve(instance.directory, target)
-        yield* assertExternalDirectoryEffect(ctx, filepath)
-        return yield* ctx.ask({ permission: name === "Read" ? "read" : "edit", patterns: [path.relative(instance.worktree, filepath)],
-          always: ["*"], metadata: { filepath } })
+        const filepath = path.resolve(instance.directory, FSUtil.windowsPath(target))
+        const physical = yield* canonical(fs, filepath, name === "Write")
+        const worktree = yield* fs.realPath(projectDirectory)
+        const targets = [...new Set([filepath, physical])]
+        yield* Effect.forEach(targets, (target) => assertExternalDirectoryEffect(ctx, target))
+        return yield* ctx.ask({ permission: name === "Read" ? "read" : "edit",
+          patterns: targets.map((target) => path.relative(worktree, target).replaceAll("\\", "/")),
+          always: ["*"], metadata: { filepath, physical } })
       }
       if (name === "Skill") return yield* ctx.ask({ permission: "skill", patterns: [text(args, "skill") ?? "*"], always: ["*"], metadata: { input: args } })
       return yield* asks(name, args, ctx, (command) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
@@ -294,4 +310,20 @@ function quote(word: string) {
 function text(input: Input, key: string) {
   const value = input[key]
   return typeof value === "string" ? value : undefined
+}
+
+// Only new Write paths may be absent. Existing aliases and parents must resolve physically; other failures deny.
+function canonical(fs: FSUtil.Interface, target: string, create: boolean): Effect.Effect<string, FSUtil.Error | Error> {
+  return fs.realPath(target).pipe(
+    Effect.catchReason("PlatformError", "NotFound", (error) => {
+      if (!create || path.dirname(target) === target) return Effect.fail(error)
+      // A dangling symlink is an existing alias, not a new leaf: never authorize it as its own spelling.
+      return fs.readLink(target).pipe(
+        Effect.flatMap(() => Effect.fail(new Error("HOLD: native file target is a dangling symlink."))),
+        Effect.catchReason("PlatformError", "NotFound", () =>
+          canonical(fs, path.dirname(target), true).pipe(Effect.map((parent) => path.join(parent, path.basename(target)))),
+        ),
+      )
+    }),
+  )
 }
