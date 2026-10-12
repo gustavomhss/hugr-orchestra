@@ -130,7 +130,7 @@ it.live("a cross-root alias never bypasses a planned source deny shared with its
   const wrapped = yield* Effect.acquireRelease(Effect.promise(() => wrapCommandWithSandboxLinux({
     command: `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`,
     needsNetworkRestriction: true,
-    readConfig: { denyOnly: [base, destination], allowWithinDeny: [destination, alias, original] },
+    readConfig: { denyOnly: [base, destination], allowWithinDeny: [original, destination, alias] },
     writeConfig: { allowOnly: [worktree], denyWithinAllow: [] },
     allowAllUnixSockets: false,
     seccompConfig: { applyPath: path.join(source.directory, "node_modules", "@anthropic-ai", "sandbox-runtime", "vendor", "seccomp", process.arch, "apply-seccomp") },
