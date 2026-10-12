@@ -58,7 +58,7 @@ describe("createServerProtocolPromise", () => {
       })
       await expect(api.project.list()).rejects.toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(state.detected).toBeUndefined()
-      expect(state.probes).toBe(2)
+      expect(state.probes).toBe(6)
       state.ready = true
       expect(await api.project.list()).toEqual([])
       expect(await chain).toEqual({ kind })
