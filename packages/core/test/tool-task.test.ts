@@ -49,11 +49,12 @@ const expensive = ModelV2.Ref.make({ providerID, id: ModelV2.ID.make("expensive"
 class Harness extends Context.Service<Harness, {
   readonly runner: Deferred.Deferred<SessionRunner.Interface>
   readonly requests: LLMRequest[]
+  readonly resumes: SessionV2.ID[]
   readonly gates: Map<string, { started: Deferred.Deferred<void>; release: Deferred.Deferred<void> }>
 }>()("test/TaskHarness") {}
 
 const harnessLayer = Layer.effect(Harness, Effect.gen(function* () {
-  return { runner: yield* Deferred.make<SessionRunner.Interface>(), requests: [], gates: new Map() }
+  return { runner: yield* Deferred.make<SessionRunner.Interface>(), requests: [], resumes: [], gates: new Map() }
 }))
 
 const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
@@ -94,7 +95,12 @@ const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* ()
     ),
   })
   return SessionExecution.Service.of({
-    active: coordinator.active, resume: coordinator.run, wake: coordinator.wake, interrupt: coordinator.interrupt,
+    active: coordinator.active,
+    resume: (sessionID, options) => Effect.sync(() => harness.resumes.push(sessionID)).pipe(
+      Effect.andThen(coordinator.run(sessionID, options)),
+    ),
+    wake: coordinator.wake,
+    interrupt: coordinator.interrupt,
   })
 })).pipe(Layer.provide(harnessLayer))
 
@@ -157,9 +163,9 @@ const record = Effect.fn("TaskTest.record")(function* (
   sessionID: SessionV2.ID,
   id: string,
   params: Partial<typeof TaskTool.Input.Type> = {},
+  assistantMessageID = SessionMessage.ID.create(),
 ) {
   const events = yield* EventV2.Service
-  const assistantMessageID = SessionMessage.ID.create()
   const timestamp = yield* DateTime.now
   const input = { description: "Focused task", prompt: id, subagent_type: worker, ...params }
   yield* events.publish(SessionEvent.Step.Started, { sessionID, assistantMessageID, timestamp, agent: caller, model: cheap })
@@ -181,6 +187,12 @@ const result = (settlement: ToolRegistry.Settlement) => {
 
 const gate = Effect.gen(function* () {
   return { started: yield* Deferred.make<void>(), release: yield* Deferred.make<void>() }
+})
+
+const inputRows = Effect.fn("TaskTest.inputRows")(function* (sessionID: SessionV2.ID) {
+  const database = yield* Database.Service
+  return yield* database.db.select().from(SessionInputTable)
+    .where(eq(SessionInputTable.session_id, sessionID)).all().pipe(Effect.orDie)
 })
 
 describe("TaskTool canonical delegation", () => {
@@ -324,7 +336,10 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* f.sessions.get(foreign.id)).parentID).toBeUndefined()
     const call = yield* record(f.parent.id, "adopted")
     const child = result(yield* settleTool(f.registry, call))
-    expect((yield* settleTool(f.registry, { ...call, call: { ...call.call, input: { ...call.call.input, model: `${providerID}/expensive` } } })).result).toMatchObject({ type: "error", value: expect.stringContaining("cannot change") })
+    expect((yield* settleTool(f.registry, { ...call, call: { ...call.call, input: { ...call.call.input, model: `${providerID}/expensive` } } })).result).toMatchObject({ type: "error", value: expect.stringContaining("recorded called input") })
+    expect((yield* settleTool(f.registry, yield* record(f.parent.id, "model-conflict", {
+      task_id: child.sessionID, model: `${providerID}/expensive`,
+    }))).result).toMatchObject({ type: "error", value: expect.stringContaining("cannot change") })
     yield* f.sessions.switchAgent({ sessionID: child.sessionID, agent: "other" })
     expect((yield* settleTool(f.registry, call)).result).toMatchObject({ type: "error", value: expect.stringContaining("mismatch") })
     const placed = yield* f.sessions.create({ parentID: f.parent.id, location: { directory: AbsolutePath.make("/other-placement") }, agent: worker, model: cheap })
@@ -427,6 +442,147 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* settleTool(f.registry, call)).result).toMatchObject({ type: "error", value: expect.stringContaining("cycle") })
     yield* database.db.update(SessionTable).set({ parent_id: SessionV2.ID.make("ses_missing_ancestor") }).where(eq(SessionTable.id, f.parent.id)).run().pipe(Effect.orDie)
     expect((yield* settleTool(f.registry, call)).result).toMatchObject({ type: "error", value: expect.stringContaining("ancestor not found") })
+    expect(f.harness.requests).toHaveLength(1)
+  }))
+})
+
+describe("TaskTool durable ownership regressions", () => {
+  it.effect("durable ownership: legacy admitted steer delivery survives exact retry without replay", () => Effect.gen(function* () {
+    const f = yield* setup
+    const parent = yield* f.sessions.create({
+      id: SessionV2.ID.make("ses_legacy_task"), location: { directory }, agent: caller, model: cheap,
+    })
+    const child = yield* f.sessions.create({
+      id: SessionV2.ID.make("ses_legacy_child"), parentID: parent.id, location: { directory }, agent: worker, model: cheap,
+    })
+    const call = yield* record(parent.id, "legacy-steer", {
+      task_id: child.id, prompt: "legacy input",
+    }, SessionMessage.ID.make("msg_legacy_task"))
+    // This is the pre-queue Task wire identity, not a test reimplementation of the resolver.
+    const promptID = SessionMessage.ID.make("msg_619a765348f69b5b5eec26a785b0836c15c7ad644245e6e19c2cba713dfe2707")
+    yield* f.sessions.prompt({
+      id: promptID, sessionID: child.id, prompt: { text: "legacy input" }, delivery: "steer", resume: false,
+    })
+    const first = result(yield* settleTool(f.registry, call))
+    expect(first.text).toBe("answer:legacy input")
+    expect(result(yield* settleTool(f.registry, call))).toEqual(first)
+    expect(f.harness.requests).toHaveLength(1)
+    const rows = yield* inputRows(child.id)
+    expect(rows.map((row) => ({ id: row.id, delivery: row.delivery }))).toEqual([{ id: promptID, delivery: "steer" }])
+  }))
+
+  it.effect("durable ownership: malformed called input cannot authorize an executor payload", () => Effect.gen(function* () {
+    const f = yield* setup
+    const call = yield* record(f.parent.id, "malformed-called")
+    const events = yield* EventV2.Service
+    yield* events.publish(SessionEvent.Tool.Called, {
+      sessionID: f.parent.id, assistantMessageID: call.assistantMessageID,
+      timestamp: yield* DateTime.now, callID: call.call.id, tool: "task", input: {}, provider: { executed: false },
+    })
+    expect((yield* settleTool(f.registry, call)).result).toMatchObject({
+      type: "error", value: expect.stringContaining("valid recorded called input"),
+    })
+    expect(f.harness.requests).toHaveLength(0)
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+  }))
+
+  it.effect("durable ownership: one recorded call cannot redirect task_id to another valid sibling", () => Effect.gen(function* () {
+    const f = yield* setup
+    const left = yield* f.sessions.create({ parentID: f.parent.id, location: { directory }, agent: worker, model: cheap })
+    const right = yield* f.sessions.create({ parentID: f.parent.id, location: { directory }, agent: worker, model: cheap })
+    const call = yield* record(f.parent.id, "redirect", { task_id: left.id })
+    expect(result(yield* settleTool(f.registry, call)).sessionID).toBe(left.id)
+    const redirected = yield* settleTool(f.registry, {
+      ...call, call: { ...call.call, input: { ...call.call.input, task_id: right.id } },
+    })
+    expect({
+      result: redirected.result.type,
+      requests: f.harness.requests.length,
+      leftInputs: (yield* inputRows(left.id)).length,
+      rightInputs: (yield* inputRows(right.id)).length,
+    }).toEqual({ result: "error", requests: 1, leftInputs: 1, rightInputs: 0 })
+  }))
+
+  it.effect("durable ownership: concurrent same-child followups each retain their own reply boundary", () => Effect.gen(function* () {
+    const f = yield* setup
+    const held = yield* gate
+    f.harness.gates.set("seed", held)
+    const seed = yield* settleTool(f.registry, yield* record(f.parent.id, "seed")).pipe(Effect.forkChild)
+    yield* Deferred.await(held.started)
+    const child = (yield* f.sessions.list()).find((session) => session.parentID === f.parent.id)
+    if (!child) throw new Error("Missing shared child")
+    const left = yield* settleTool(f.registry, yield* record(f.parent.id, "follow-left", {
+      task_id: child.id, prompt: "same followup",
+    })).pipe(Effect.forkChild)
+    const right = yield* settleTool(f.registry, yield* record(f.parent.id, "follow-right", {
+      task_id: child.id, prompt: "same followup",
+    })).pipe(Effect.forkChild)
+    const admitted = yield* Effect.repeat(inputRows(child.id), { until: (rows) => rows.length === 3 })
+    expect(new Set(admitted.map((row) => row.id)).size).toBe(3)
+    yield* Deferred.succeed(held.release, undefined)
+    expect(result(yield* Fiber.join(seed)).text).toBe("answer:seed")
+    const first = yield* Fiber.join(left)
+    const second = yield* Fiber.join(right)
+    expect({
+      left: first.result.type, right: second.result.type,
+      requests: f.harness.requests.length, delivery: admitted.map((row) => row.delivery),
+    }).toEqual({ left: "text", right: "text", requests: 3, delivery: ["queue", "queue", "queue"] })
+    expect(result(first).text).toBe("answer:same followup")
+    expect(result(second).text).toBe("answer:same followup")
+  }))
+
+  it.effect("durable ownership: approval wait rechecks target visibility, mode, engine, and configured model", () => Effect.gen(function* () {
+    const f = yield* setup
+    yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
+      agent.permissions = [{ action: "task", resource: "*", effect: "ask" }]
+    }))
+    yield* Effect.forEach(["primary", "hidden", "missing", "cc", "forbidden-pin"] as const, (change) => Effect.gen(function* () {
+      yield* f.agents.transform((draft) => draft.update(worker, (agent) => {
+        agent.hidden = false
+        agent.mode = "subagent"
+        delete agent.engine
+        delete agent.model
+      }))
+      const task = yield* settleTool(f.registry, yield* record(f.parent.id, `approval-${change}`)).pipe(Effect.forkChild)
+      const asked = yield* Effect.repeat(f.permission.forSession(f.parent.id), { until: (requests) => requests.length === 1 })
+      yield* f.agents.transform((draft) => {
+        if (change === "missing") return draft.remove(worker)
+        draft.update(worker, (agent) => {
+          if (change === "primary") agent.mode = "primary"
+          if (change === "hidden") agent.hidden = true
+          if (change === "cc") agent.engine = "claude-code"
+          if (change === "forbidden-pin") agent.model = expensive
+        })
+      })
+      yield* f.permission.reply({ requestID: asked[0].id, reply: "once" })
+      const settled = yield* Fiber.join(task)
+      expect({
+        change, result: settled.result.type, requests: f.harness.requests.length,
+        children: (yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id).length,
+      }).toEqual({ change, result: "error", requests: 0, children: 0 })
+    }))
+  }))
+
+  it.effect("durable ownership: cancelling joined Task retry preserves original child owner", () => Effect.gen(function* () {
+    const f = yield* setup
+    const held = yield* gate
+    f.harness.gates.set("joined-cancel", held)
+    const call = yield* record(f.parent.id, "joined-cancel")
+    const owner = yield* settleTool(f.registry, call).pipe(Effect.forkChild)
+    yield* Deferred.await(held.started)
+    const child = (yield* f.sessions.list()).find((session) => session.parentID === f.parent.id)
+    if (!child) throw new Error("Missing active child")
+    const execution = yield* SessionExecution.Service
+    expect((yield* execution.active).has(child.id)).toBe(true)
+    const retry = yield* settleTool(f.registry, call).pipe(Effect.forkChild)
+    yield* Effect.repeat(Effect.sync(() => f.harness.resumes.length), { until: (count) => count === 2 })
+    yield* Effect.yieldNow
+    yield* Fiber.interrupt(retry)
+    const stillActive = (yield* execution.active).has(child.id)
+    yield* Deferred.succeed(held.release, undefined)
+    expect(stillActive).toBe(true)
+    expect(result(yield* Fiber.join(owner)).text).toBe("answer:joined-cancel")
     expect(f.harness.requests).toHaveLength(1)
   }))
 })

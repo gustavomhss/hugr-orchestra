@@ -1,10 +1,12 @@
 export * as TaskTool from "./task"
 
 import { createHash } from "node:crypto"
+import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
 import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
+import { Database } from "../database/database"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
 import { EventV2 } from "../event"
@@ -14,6 +16,7 @@ import { PermissionV2 } from "../permission"
 import { SessionV2 } from "../session"
 import { SessionEvent } from "../session/event"
 import { SessionExecution } from "../session/execution"
+import { SessionInput } from "../session/input"
 import { SessionMessage } from "../session/message"
 import { SessionRunnerModel } from "../session/runner/model"
 import { SessionSchema } from "../session/schema"
@@ -54,6 +57,7 @@ const layer = Layer.effectDiscard(
     const location = yield* Location.Service
     const agents = yield* AgentV2.Service
     const catalog = yield* Catalog.Service
+    const database = yield* Database.Service
     const permission = yield* PermissionV2.Service
     const sessions = yield* SessionV2.Service
     const store = yield* SessionStore.Service
@@ -69,17 +73,19 @@ const layer = Layer.effectDiscard(
           { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
         ],
         execute: (input, context) => Effect.gen(function* () {
-          yield* requireParent(store, location, context)
-          const target = yield* agents.get(AgentV2.ID.make(input.subagent_type))
-          if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
-            return yield* new ToolFailure({ message: `Task target is not a visible subagent: ${input.subagent_type}` })
-          if (target.engine === "claude-code")
-            return yield* new ToolFailure({ message: `Task target requires an unsupported engine: ${target.id}` })
+          yield* requireParent(store, location, context, input)
+          const target = yield* requireTarget(agents, input.subagent_type)
           const childID = input.task_id ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${childID}` })
           const model = yield* resolveModel(catalog, policy, context, target, input.model, existing)
+          const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
+            const current = yield* requireTarget(agents, input.subagent_type)
+            const selected = yield* resolveModel(catalog, policy, context, current, input.model, child)
+            if (!sameModel(selected, model))
+              return yield* new ToolFailure({ message: `Task target model changed after authorization: ${target.id}` })
+          })
           if (existing) {
             const failure = requireChild(existing, location, context, target.id, model)
             if (failure) return yield* failure
@@ -93,7 +99,8 @@ const layer = Layer.effectDiscard(
             source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
           })
           // Approval may wait while placement, ancestry, or the hard ceiling changes.
-          yield* requireParent(store, location, context)
+          yield* requireParent(store, location, context, input)
+          yield* revalidateTarget(existing)
           yield* policy.assertChild(context.sessionID, model)
           const child = yield* sessions.create({
             id: childID,
@@ -120,10 +127,13 @@ const layer = Layer.effectDiscard(
               content: [],
             })
             const promptID = SessionMessage.ID.make(`msg_${identity("task-prompt", context, child.id)}`)
+            // Exact retries retain the delivery admitted by an earlier Task version.
+            const recordedInput = yield* SessionInput.find(database.db, promptID)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
               prompt: { text: input.prompt },
+              delivery: recordedInput?.delivery ?? "queue",
               resume: false,
             })
             const previous =
@@ -131,15 +141,16 @@ const layer = Layer.effectDiscard(
                 ? undefined
                 : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             yield* policy.assert(child.id, model)
+            yield* revalidateTarget(child)
             yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-              // Keep the ownership snapshot adjacent to resume: no asynchronous policy/history reads between them.
+              if (previous !== undefined) return
+              // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
               const active = (yield* execution.active).has(child.id)
-              if (!active && previous !== undefined) return
               if (!active && admitted.promotedSeq !== undefined && !input.task_id)
                 return yield* new ToolFailure({
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
-              yield* restore(execution.resume(child.id))
+              yield* restore(execution.resume(child.id, { interruptOnCancel: true }))
             }))
             const reply =
               previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
@@ -158,7 +169,6 @@ const layer = Layer.effectDiscard(
               agentId: target.id,
             }
           }).pipe(
-            Effect.onInterrupt(() => execution.interrupt(child.id)),
             Effect.mapError((error) =>
               new ToolFailure({ message: `Task ${child.id} failed: ${error.message}`, error }),
             ),
@@ -183,6 +193,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     Location.node,
     AgentV2.node,
     Catalog.node,
+    Database.node,
     PermissionV2.node,
     captureGlobal(SessionV2.Service),
     SessionStore.node,
@@ -276,6 +287,7 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   store: SessionStore.Interface,
   location: Location.Interface,
   context: Tool.Context,
+  input: typeof Input.Type,
 ) {
   const parent = yield* store.get(context.sessionID)
   if (!parent) return yield* new ToolFailure({ message: `Task parent not found: ${context.sessionID}` })
@@ -289,8 +301,28 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
     !recorded.message.content.some((part) => part.type === "tool" && part.id === context.toolCallID && part.name === name)
   )
     return yield* new ToolFailure({ message: "Task invocation does not match its recorded assistant and turn owner" })
+  const call = recorded.message.content.find(
+    (part): part is SessionMessage.AssistantTool => part.type === "tool" && part.id === context.toolCallID && part.name === name,
+  )
+  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(Input)(call.state.input) : Option.none()
+  if (Option.isNone(called))
+    return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
+  const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+  if (!isDeepStrictEqual(
+    { ...called.value, task_id: called.value.task_id ?? childID },
+    { ...input, task_id: input.task_id ?? childID },
+  )) return yield* new ToolFailure({ message: "Task executor input conflicts with its recorded called input" })
   yield* requireDepth(store, parent)
   return parent
+})
+
+const requireTarget = Effect.fn("TaskTool.requireTarget")(function* (agents: AgentV2.Interface, id: string) {
+  const target = yield* agents.get(AgentV2.ID.make(id))
+  if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
+    return yield* new ToolFailure({ message: `Task target is not a visible subagent: ${id}` })
+  if (target.engine === "claude-code")
+    return yield* new ToolFailure({ message: `Task target requires an unsupported engine: ${target.id}` })
+  return target
 })
 
 const requireDepth = Effect.fn("TaskTool.requireDepth")(function* (
