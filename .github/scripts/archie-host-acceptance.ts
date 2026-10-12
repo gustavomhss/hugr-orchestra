@@ -6,10 +6,12 @@ import { appendFile, cp, lstat, mkdir, mkdtemp, readdir, readlink, realpath } fr
 import { createRequire } from "node:module"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
-import { basename, dirname, join, relative, resolve } from "node:path"
+import { dirname, join, relative, resolve } from "node:path"
 import { isDeepStrictEqual, parseArgs } from "node:util"
 import type { HookCallbackMatcher, HookEvent, Query, SpawnedProcess, query } from "../../packages/orchestra/node_modules/@anthropic-ai/claude-agent-sdk"
 import type { Plan } from "./archie-host-plan"
+import { billingDiagnostic, claimOutput, requireOrdinaryLoginEnvironment, stopOwned } from "./archie-host-process"
+import { assignmentMatches, demandFence, nativeEvidence, requestedModelsMatch } from "./archie-host-evidence"
 
 // Owner-run only. Preparation is the default; only --run sends one prompt. Claude env values/auth files are not read.
 // bun .github/scripts/archie-host-acceptance.ts --run --out /tmp/archie-host-evidence
@@ -43,11 +45,11 @@ async function freePort() {
 async function main() {
   requireFact(!(args.run && args["prepare-only"]), "Choose --run or --prepare-only")
   requireFact(args.model && /^anthropic\/[A-Za-z0-9._-]+$/.test(args.model), "Invalid model")
+  requireOrdinaryLoginEnvironment(Object.keys(process.env))
   process.umask(0o077)
   const packet = await realpath(args.packet ?? defaultPacket)
   const out = args.out ? resolve(args.out) : await mkdtemp(join(tmpdir(), "archie-host-evidence-"))
-  await mkdir(out, { recursive: true, mode: 0o700 })
-  requireFact(!(await Bun.file(join(out, "plan.json")).exists()), "Use a fresh --out directory")
+  await claimOutput(out)
   const scratch = await realpath(await mkdtemp(join(tmpdir(), "archie-host-project-")))
   requireFact(relative(repo, scratch).startsWith(".."), "Scratch must be outside this worktree")
   const project = join(scratch, "project")
@@ -66,6 +68,7 @@ async function main() {
   await mkdir(dirname(env.ORCHESTRA_DB), { recursive: true })
   await save(scratch, "instance.json", { model: args.model, default_agent: "maestro", agent: { maestro: { engine: "claude-code", model: args.model }, archie: { engine: "claude-code", model: args.model } } })
   const demand = await Bun.file(join(packet, "pilot/demand.txt")).text()
+  requireFact(demand.endsWith("\n"), "Demand must retain a terminal LF for the byte-preserving fenced protocol")
   await Bun.write(join(out, "demand.txt"), demand)
   const prompt = [
     "Perform exactly one proposal-only delegation; do not write any files yourself. No retries or substitute dispatches.",
@@ -73,7 +76,7 @@ async function main() {
     "If it fails or HOLDs, report the exact failure and stop. Do not invent a grant.",
     'Then call Agent exactly once with subagent_type "orchestra:archie", run_in_background false, no isolation.',
     "Put the returned grant id on its own line as `grantID: <id>` in the Agent prompt, and pass this FULL demand verbatim.",
-    "Place FULL DEMAND inside a fenced owner-demand block. Preserve every byte, including Unicode punctuation and the final newline; do not normalize or trim it.",
+    `Place FULL DEMAND inside a line-anchored owner-demand block using exactly ${demandFence(demand).length} backticks for each fence. Preserve every byte, including Unicode punctuation and final newline; do not normalize or trim it.`,
     "Tell Archie the current project is the scratch project, write only proposal.md, and return the existing native upstream-result card.",
     'Give Archie this closed return contract: exactly one final upstream-result JSON block with only outcome, artifacts, blockers, risks, nextActions. No extra keys, even null-valued keys. Each artifact has kind and optional path. done requires blockers [].',
     "No implementation, tests, builds, child delegation, workflow execution, commits, credential reads or approval. Report the actual result and stop.",
@@ -147,22 +150,23 @@ export function launch(plan: Plan, mode: "backend" | "verify" | "s14-observe") {
     stdout.write(bytes)
     stdout.flush()
   })
-  const diagnostic = { pending: "" }
+  const diagnostic = { pending: "", halted: false }
+  const inspect = (line: string) => {
+    if (mode !== "backend" || diagnostic.halted || !billingDiagnostic(line)) return
+    diagnostic.halted = true
+    child.kill("SIGTERM")
+    void save(plan.out, "HALT.json", { reason: "backend billing/overage/400", stderr: line }).catch((error: unknown) => console.error(`HALT_EVIDENCE_WRITE_FAILED: ${String(error)}`))
+  }
   child.stderr.on("data", (bytes: Buffer) => {
     stderr.write(bytes)
     stderr.flush()
     diagnostic.pending += bytes.toString()
     const messages = diagnostic.pending.split("\n")
     diagnostic.pending = messages.pop() ?? ""
-    messages
-      .filter((line) =>
-        /billing_error|billing error|third-party apps now draw from your extra usage|(?:error|disabled|exhausted|insufficient).*extra[ -]usage|extra[ -]usage.*(?:error|disabled|exhausted|insufficient)|(?:HTTP|status|error)[: =]*400\b|isUsingOverage[^\n]*true/i.test(line),
-      )
-      .forEach((line) => {
-        if (mode !== "backend") return
-        void save(plan.out, "HALT.json", { reason: "backend billing/overage/400", stderr: line }).then(() => child.kill("SIGTERM"))
-      })
+    messages.forEach(inspect)
+    inspect(diagnostic.pending)
   })
+  child.stderr.once("end", () => inspect(diagnostic.pending))
   const finished = exited.finally(async () => {
     await stdout.end()
     await stderr.end()
@@ -178,8 +182,8 @@ async function run(plan: Plan) {
   const cancel = (signal: string) => {
     state.cancelled = signal
   }
-  process.once("SIGINT", cancel)
-  process.once("SIGTERM", cancel)
+  process.on("SIGINT", cancel)
+  process.on("SIGTERM", cancel)
   const stop = async () => {
     await save(
       plan.out,
@@ -188,8 +192,7 @@ async function run(plan: Plan) {
     )
     const stopped = await Promise.all(
       owned.map(async (item) => {
-        if (item.child.exitCode === null && item.child.signalCode === null) item.child.kill("SIGTERM")
-        const exit = await Promise.race([item.finished.then((code) => ({ code })), Bun.sleep(10_000).then(() => ({ timeout: true }))])
+        const exit = await stopOwned(item.child, item.finished)
         return { pid: item.child.pid, mode: item.mode, ...exit }
       }),
     )
@@ -245,9 +248,7 @@ async function run(plan: Plan) {
     state.failure = String(error)
   } finally {
     // Stop the backend before offline service reads; stop only a child handle this invocation owns.
-    if (backend.child.exitCode === null && backend.child.signalCode === null) backend.child.kill("SIGTERM")
-    const settled = await Promise.race([backend.finished.then(() => true), Bun.sleep(10_000).then(() => false)])
-    if (!settled) state.failure = `${state.failure ?? ""} Backend did not exit after SIGTERM`
+    const settled = await stopOwned(backend.child, backend.finished).then(() => true, (error: unknown) => { state.failure = `${state.failure ?? ""} ${String(error)}`; return false })
     await save(plan.out, "run.json", state)
     try {
       requireFact(settled, "Offline verification requires backend exit")
@@ -267,7 +268,7 @@ async function run(plan: Plan) {
       requireFact(code === 0, `Verification failed/exited ${code}; see verifier evidence`)
     } catch (error) {
       await save(plan.out, "verification-error.json", { error: String(error) })
-      if (!(await Bun.file(join(plan.out, "report.json")).exists())) await save(plan.out, "report.json", { verdict: "FAIL", run: state, error: String(error) })
+      await save(plan.out, "report.json", { verdict: "FAIL", run: state, error: String(error) })
     } finally {
       await stop()
     }
@@ -325,17 +326,18 @@ async function observe(plan: Plan) {
   const realQuery = sdk.query
   const write = (name: string, value: unknown) => appendFileSync(join(plan.out, name), JSON.stringify(value) + "\n")
   const halt = (reason: string, evidence: unknown, abort?: AbortController): never => {
-    writeFileSync(join(plan.out, "HALT.json"), JSON.stringify({ reason, evidence }, null, 2))
     abort?.abort()
+    writeFileSync(join(plan.out, "HALT.json"), JSON.stringify({ reason, evidence }, null, 2))
     throw new Error(`Acceptance guard stopped: ${reason}`)
   }
-  const processes = new Set<SpawnedProcess>()
-  process.once("SIGTERM", () => {
-    processes.forEach((child) => {
-      if (child.exitCode === null && child.signalCode == null) child.kill("SIGTERM")
-    })
-    write("sdk-processes.jsonl", { phase: "cleanup", signal: "SIGTERM", remaining: processes.size })
-    setTimeout(() => process.exit(143), 2000)
+  const processes = new Map<SpawnedProcess, Promise<void>>()
+  const cancelling: { value?: Promise<void> } = {}
+  process.on("SIGTERM", () => {
+    if (cancelling.value) return
+    cancelling.value = Promise.all([...processes].map(([child, finished]) => stopOwned(child, finished, { term: 1000, kill: 2000 }))).then(() => {
+      write("sdk-processes.jsonl", { phase: "cleanup", signal: "SIGTERM", remaining: processes.size })
+      process.exit(143)
+    }, (error: unknown) => { console.error(String(error)); process.exit(1) })
   })
   const capturedQuery: typeof query = (input) => {
     if (existsSync(join(plan.out, "HALT.json"))) throw new Error("Acceptance already halted; no further query")
@@ -392,12 +394,12 @@ async function observe(plan: Plan) {
           ? {
               spawnClaudeCodeProcess: (options) => {
                 const child = spawnProcess(options)
-                processes.add(child)
-                write("sdk-processes.jsonl", { phase: "spawn", pid: record(child).pid })
-                child.once("exit", (code, signal) => {
-                  processes.delete(child)
-                  write("sdk-processes.jsonl", { phase: "exit", pid: record(child).pid, code, signal })
-                })
+                 write("sdk-processes.jsonl", { phase: "spawn", pid: record(child).pid })
+                 processes.set(child, new Promise<void>((done) => child.once("exit", (code, signal) => {
+                   processes.delete(child)
+                   write("sdk-processes.jsonl", { phase: "exit", pid: record(child).pid, code, signal })
+                   done()
+                 })))
                 return child
               },
             }
@@ -433,7 +435,7 @@ function stopReason(value: unknown) {
   if (rate.status === "rejected" || rate.isUsingOverage === true || rate.rateLimitType === "overage") return "rate-limit/overage"
   const line = JSON.stringify(frame)
   // Init advertises /extra-usage as a slash command; that benign listing is not a billing error.
-  if (frame.type === "system" && frame.subtype === "init") return undefined
+  if (frame.type === "system" && frame.subtype === "init") return frame.apiKeySource !== undefined && frame.apiKeySource !== "none" ? "alternate authentication source" : undefined
   const error = frame.error || frame.is_error || frame.type === "error" || frame.subtype === "api_retry" || frame.name === "PostToolUseFailure" || /"(?:is_error|isError)":true/.test(line)
   if (
     (error && /billing|extra[ -]usage|overage|\b400\b/i.test(line)) ||
@@ -469,7 +471,7 @@ async function verify(plan: Plan) {
       after,
     },
   }
-  const { Effect, Option, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("effect")
+  const { Effect, Option, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
   const { AppRuntime } = (await import(join(plan.repo, "packages/orchestra/src/effect/app-runtime.ts"))) as typeof import("../../packages/orchestra/src/effect/app-runtime")
   const { InstanceStore } = (await import(join(plan.repo, "packages/orchestra/src/project/instance-store.ts"))) as typeof import("../../packages/orchestra/src/project/instance-store")
   const { InstanceRef } = (await import(join(plan.repo, "packages/orchestra/src/effect/instance-ref.ts"))) as typeof import("../../packages/orchestra/src/effect/instance-ref")
@@ -640,7 +642,7 @@ async function verify(plan: Plan) {
         isDeepStrictEqual(dispatch?.writeRoots, evidence.childWriteRoots) &&
         typeof input?.prompt === "string" &&
         input.prompt.split("\n").includes(`grantID: ${dispatch?.grantID}`) &&
-        input.prompt.includes(plan.demand ?? plan.prompt.split("FULL DEMAND:\n\n")[1]),
+        assignmentMatches({ stored: input, tool: selected?.part.tool ?? "", pre, post, briefs: evidence.history.filter((message) => message.info.role === "user").map((message) => message.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n")), demand: plan.demand ?? plan.prompt.split("FULL DEMAND:\n\n")[1] }),
       childWriteRoots: evidence.childWriteRoots,
       grantWriteRoots: grantMetadata?.writeRoots,
       dispatchWriteRoots: dispatch?.writeRoots,
@@ -648,34 +650,15 @@ async function verify(plan: Plan) {
     }
     // SDK init does not expose entrypoint. Native transcript frames do; read only paths delivered by this run's hooks.
     const init = frames.filter((frame) => frame.type === "system" && frame.subtype === "init" && frame.cwd === plan.project)
-    const sessionID = init[0]?.session_id
-    // SessionStart may not fire on an SDK resume; an owned SubagentStop also supplies this query's root transcript path.
-    const root = hooks.map((hook) => record(hook.input)).find((hook) => hook.session_id === sessionID && hook.cwd === plan.project && typeof hook.transcript_path === "string")
-    const native: { source: string; frame: Record<string, unknown> }[] = []
-    if (root && typeof root.transcript_path === "string" && basename(root.transcript_path) === `${sessionID}.jsonl`) {
-      const parentPath = await realpath(root.transcript_path)
-      const paths = [
-        parentPath,
-        ...hooks.flatMap((hook) => {
-          const value = record(hook.input)
-          return value.hook_event_name === "SubagentStop" && value.session_id === sessionID && value.agent_id === dispatch?.agentID && typeof value.agent_transcript_path === "string" && basename(value.agent_transcript_path) === `agent-${dispatch?.agentID}.jsonl`
-            ? [value.agent_transcript_path]
-            : []
-        }),
-      ]
-      for (const file of [...new Set(paths)]) {
-        const path = await realpath(file)
-        requireFact(path === parentPath || path.startsWith(join(dirname(parentPath), String(sessionID), "subagents") + "/"), "Native transcript path escaped this query")
-        native.push(...(await lines(path)).map((frame) => ({ source: path, frame })))
-      }
-    }
-    await save(plan.out, "native-transcript-frames.json", native)
-    const entrypoints = [...new Set([...frames, ...native.map((item) => item.frame)].flatMap((frame) => (typeof frame.entrypoint === "string" ? [frame.entrypoint] : [])))]
-    const parentModels = frames.flatMap((frame) => (frame.type === "assistant" && !frame.parent_tool_use_id && typeof record(frame.message).model === "string" ? [record(frame.message).model] : []))
-    const childModels = frames.flatMap((frame) => (frame.type === "assistant" && frame.parent_tool_use_id === selected?.part.callID && typeof record(frame.message).model === "string" ? [record(frame.message).model] : []))
+    const provenance = await nativeEvidence(plan, hooks, frames, dispatch?.agentID)
+    await save(plan.out, "native-transcript-frames.json", provenance.native)
+    const entrypoints = provenance.entrypoints
+    const parentModels = frames.flatMap((frame) => (frame.type === "assistant" && !frame.parent_tool_use_id ? [record(frame.message).model] : []))
+    const childModels = frames.flatMap((frame) => (frame.type === "assistant" && frame.parent_tool_use_id === selected?.part.callID ? [record(frame.message).model] : []))
     checks.f = {
       pass:
         init.length === 1 &&
+        init[0].apiKeySource === "none" &&
         queries.length === 1 &&
         queries[0].model === plan.model.split("/")[1] &&
         entrypoints.length === 1 &&
@@ -686,9 +669,7 @@ async function verify(plan: Plan) {
         evidence.archie?.engine === "claude-code" &&
         `${evidence.maestro.model?.providerID}/${evidence.maestro.model?.modelID}` === plan.model &&
         `${evidence.archie.model?.providerID}/${evidence.archie.model?.modelID}` === plan.model &&
-        parentModels.every((model) => model === init[0].model) &&
-        childModels.every((model) => model === init[0].model) &&
-        (response.resolvedModel === undefined || childModels.includes(response.resolvedModel)),
+        requestedModelsMatch(plan.model.split("/")[1], init[0].model, parentModels, childModels, response.resolvedModel),
       entrypoints,
       entrypointSource: "native transcript frames, or SDK frames when available; never inferred from config/env",
       requestedModel: plan.model,
@@ -741,8 +722,9 @@ async function dispatch() {
     // Service disposal may leave idle platform handles; exit only after the evidence or failure settles.
     await verify(plan).then(
       () => process.exit(process.exitCode ?? 0),
-      (error: unknown) => {
+      async (error: unknown) => {
         console.error(String(error))
+        await save(plan.out, "report.json", { verdict: "FAIL", error: String(error) })
         process.exit(1)
       },
     )

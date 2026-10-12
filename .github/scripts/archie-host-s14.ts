@@ -6,13 +6,14 @@ import { isDeepStrictEqual } from "node:util"
 import type { UpstreamAttribution } from "../../packages/schema/src/upstream-attribution"
 import type { Denied } from "../../packages/orchestra/src/maestro/upstream-provenance"
 import type { Plan } from "./archie-host-plan"
+import { stopOwned, within } from "./archie-host-process"
 
 // Offline adversarial copies only. Original DB, captured frames and provider execution remain immutable.
 export async function runS14(plan: Plan, launch: typeof import("./archie-host-acceptance").launch) {
   const report = object(await Bun.file(join(plan.out, "report.json")).json())
   const positive = object(object(report.checks).d)
   requireFact(positive.pass === true, "S14_SOURCE_OBSERVER_NOT_ACCEPTED")
-  const { Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("effect")
+  const { Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
   const { UpstreamAttribution } = (await import(join(plan.repo, "packages/schema/src/upstream-attribution.ts"))) as typeof import("../../packages/schema/src/upstream-attribution")
   const input = Schema.decodeUnknownSync(UpstreamAttribution.V2)(positive.attribution)
   requireFact(input.dispatch.kind === "claude-code-agent", "S14_SOURCE_DISPATCH_KIND_INVALID")
@@ -65,7 +66,13 @@ export async function runS14(plan: Plan, launch: typeof import("./archie-host-ac
     } },
   ]
   const results: Record<string, unknown>[] = []
+  const active: { value?: ReturnType<typeof launch> } = {}
+  const cancelling: { value?: Promise<void> } = {}
+  const cancel = () => { if (cancelling.value) return; cancelling.value = (active.value ? stopOwned(active.value.child, active.value.finished) : Promise.resolve()).then(() => process.exit(143), (error: unknown) => { console.error(String(error)); process.exit(1) }) }
+  process.on("SIGTERM", cancel)
+  process.on("SIGINT", cancel)
   // One AppRuntime process at a time: concurrent cases contend for RAM and obscure timeout attribution.
+  try {
   for (const control of controls) {
     const dir = join(out, control.name)
     await mkdir(dir)
@@ -79,17 +86,22 @@ export async function runS14(plan: Plan, launch: typeof import("./archie-host-ac
     await Bun.write(join(dir, "plan.json"), JSON.stringify(casePlan, null, 2))
     await Bun.write(join(dir, "s14-input.json"), JSON.stringify(input, null, 2))
     const child = launch(casePlan, "s14-observe")
-    const timed = { out: false }
-    const timer = setTimeout(() => { timed.out = true; child.child.kill("SIGTERM") }, 180_000)
-    const code = await child.finished
-    clearTimeout(timer)
-    requireFact(!timed.out, `S14_OBSERVER_TIMEOUT: ${control.name}`)
+    active.value = child
+    const receipt = await within(child.finished, 180_000)
+    if (!receipt.completed) { await stopOwned(child.child, child.finished); throw new Error(`S14_OBSERVER_TIMEOUT: ${control.name}`) }
+    const code = receipt.value
+    active.value = undefined
     requireFact(code === 0, `S14_OBSERVER_PROCESS_FAILED: ${control.name}, exit ${code}`)
     const observed = object(await Bun.file(join(dir, "s14-observation.json")).json())
     const denied = observed.denied === undefined ? undefined : object(observed.denied)
     const pass = control.code ? denied?.code === control.code && (!control.message || denied.message === control.message) : isDeepStrictEqual(observed.attribution, input)
     results.push({ name: control.name, expectedCode: control.code, expectedMessage: control.message, pass, observed, evidence: casePlan.out })
     await Bun.write(join(out, "report.json"), JSON.stringify({ verdict: "INCOMPLETE", source: plan.env.ORCHESTRA_DB, results }, null, 2))
+  }
+  } finally {
+    if (active.value) await stopOwned(active.value.child, active.value.finished)
+    process.removeListener("SIGTERM", cancel)
+    process.removeListener("SIGINT", cancel)
   }
   const passed = results.length === controls.length && results.length > 1 && results.every((result) => result.pass === true)
   const final = { verdict: passed ? "PASS" : "FAIL", scope: "S14 stored-evidence mutation matrix on copies of retained legacy S13 records; not a new provider execution or dual-projection proof", sourceDB: plan.env.ORCHESTRA_DB, sourceInput: input, controls: results, total: results.length, evidence: await realpath(out) }
@@ -100,7 +112,7 @@ export async function runS14(plan: Plan, launch: typeof import("./archie-host-ac
 
 export async function observeS14(plan: Plan) {
   console.error("S14_OBSERVER_START")
-  const { Effect, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("effect")
+  const { Effect, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
   console.error("S14_EFFECT_READY")
   const { UpstreamAttribution } = (await import(join(plan.repo, "packages/schema/src/upstream-attribution.ts"))) as typeof import("../../packages/schema/src/upstream-attribution")
   console.error("S14_SCHEMA_READY")
