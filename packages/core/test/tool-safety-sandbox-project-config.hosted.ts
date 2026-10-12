@@ -85,7 +85,7 @@ live("creating a project config that does not exist yet is refused: write, mkdir
     expect(normal.exitCode).toBe(0)
     expect(yield* p.fs.readFileString(path.join(p.root, "sub/deep/f"))).toBe("ok\n")
     // Recursive grep from '.' visits hidden paths; srt's absent-name guards must not break ordinary reads.
-    const reads = yield* p.run("grep -r ok .")
+    const reads = yield* p.run("grep -r ok . && ls -la && find . -type f")
     expect(reads.exitCode).toBe(0)
     expect(reads.stdout.toString()).toContain("./sub/deep/f:ok")
     expect(reads.stdout.toString()).toContain("./.hidden/deep/sample.txt:ok")
