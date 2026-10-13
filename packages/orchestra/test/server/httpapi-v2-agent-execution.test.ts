@@ -65,6 +65,10 @@ describe("V2 agent execution annotation", () => {
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true, config: { agent: { maestro: { engine: "claude-code" } } } })
       const locations = yield* LocationServiceMap.Service
+      const context = yield* locations.contextEffect(Location.Ref.make({
+        directory: AbsolutePath.make(directory),
+        workspaceID: undefined,
+      }))
       yield* Effect.gen(function* () {
         const plugins = yield* PluginV2.Service
         yield* plugins.wait(PluginV2.ID.make("config-agent"))
@@ -74,7 +78,7 @@ describe("V2 agent execution annotation", () => {
         expect(yield* annotate(input)).toBe(input)
         expect(Schema.encodeSync(AgentV2.Info)(AgentV2.Info.empty(AgentV2.defaultID))).not.toHaveProperty("engine")
         expect(() => Schema.decodeUnknownSync(AgentV2.Info)({ ...input[0], engine: "other" })).toThrow()
-      }).pipe(Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(directory) }))))
+      }).pipe(Effect.provide(context))
       yield* serve(false)
       const result = yield* list(directory)
       expect(result.data.find((agent) => agent.id === "maestro")).toBeDefined()
@@ -102,6 +106,12 @@ describe("V2 agent execution annotation", () => {
       expect(native.find((agent) => agent.id === "backend")?.name).toBe("Review worker")
       expect(native.find((agent) => agent.id === "reviewer")?.name).toBe("Review owner")
       const locations = yield* LocationServiceMap.Service
+      // Match HTTP/bootstrap's explicit undefined workspace key and retain the lease in the outer test scope.
+      // Providing the context keeps synthetic transforms alive through the HTTP request and selection recheck.
+      const context = yield* locations.contextEffect(Location.Ref.make({
+        directory: AbsolutePath.make(directory),
+        workspaceID: undefined,
+      }))
       const before = yield* Effect.gen(function* () {
         const plugins = yield* PluginV2.Service
         yield* plugins.wait(PluginV2.ID.make("config-agent"))
@@ -129,7 +139,7 @@ describe("V2 agent execution annotation", () => {
           })
         })
         return { agents: yield* agents.all(), selection: yield* agents.select() }
-      }).pipe(Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(directory) }))))
+      }).pipe(Effect.provide(context))
       yield* serve(true)
       const result = yield* list(directory)
       expect(result.location.directory).toBe(AbsolutePath.make(directory))
@@ -146,7 +156,7 @@ describe("V2 agent execution annotation", () => {
         expect(result.data[index].request).toEqual(agent.request)
       })
       const after = yield* AgentV2.Service.use((agents) => agents.select()).pipe(
-        Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(directory) }))),
+        Effect.provide(context),
       )
       expect(after).toEqual(before.selection)
       expect(after.id).toBe(AgentV2.ID.make("reviewer"))
