@@ -103,6 +103,45 @@ describe("tmpdir", () => {
     expect(exists).toBe(false)
   })
 
+  test("git fixtures start no auto-maintenance that outlives the command", async () => {
+    // A detached `git maintenance run --auto` deletes .git/objects/maintenance.lock after `git commit` returns; when it
+    // landed inside the fixture's removal, the directory survived dispose (Linux CI, 2026-10-12).
+    await using tmp = await tmpdir({ git: true })
+    const trace = path.join(tmp.path, "..", path.basename(tmp.path) + ".trace2")
+    try {
+      await $`git commit --allow-empty -m second`
+        .cwd(tmp.path)
+        .env({ ...process.env, GIT_TRACE2: trace })
+        .quiet()
+      const children = (await fs.readFile(trace, "utf8")).split("\n").filter((line) => line.includes("child_start"))
+      expect(children.filter((line) => line.includes("maintenance"))).toEqual([])
+    } finally {
+      await fs.rm(trace, { force: true })
+    }
+  })
+
+  test.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+    "dispose rejects when the directory cannot be removed",
+    async () => {
+      const tmp = await tmpdir()
+      const locked = path.join(tmp.path, "locked")
+      await fs.mkdir(locked)
+      await fs.writeFile(path.join(locked, "file"), "")
+      await fs.chmod(locked, 0o500)
+      try {
+        expect(
+          await tmp[Symbol.asyncDispose]().then(
+            () => "resolved",
+            (error) => error.code,
+          ),
+        ).toBe("EACCES")
+      } finally {
+        await fs.chmod(locked, 0o700)
+        await fs.rm(tmp.path, { recursive: true, force: true })
+      }
+    },
+  )
+
   test("does not stop fsmonitor while disposing git fixtures", async () => {
     await withGitProxy(async (calls) => {
       await disposeGitFixtures()
