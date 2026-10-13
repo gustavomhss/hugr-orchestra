@@ -72,7 +72,8 @@ export function nodeExecutable(): string {
 /** Own the helper until OS exit AND stdio close; a failed join retains its files for diagnosis. */
 export async function invoke(source: string, decoder: string, request: readonly number[] | { nonce: string }, deadlineMs = 15000): Promise<string> {
   if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) throw new Error("Windows process query requires a positive deadline")
-  const deadline = performance.now() + deadlineMs
+  const started = performance.now()
+  const deadline = started + deadlineMs
   const node = nodeExecutable()
   const dir = mkdtempSync(path.join(os.tmpdir(), "omni-windows-query-"))
   const file = path.join(dir, "query.mjs")
@@ -94,21 +95,44 @@ export async function invoke(source: string, decoder: string, request: readonly 
       const output = { chunks: [] as Buffer[], bytes: 0, stderr: Buffer.alloc(0), controlBytes: 0,
         attested: false, complete: false, brokerClosed: false, controlClosed: false, code: null as number | null, signal: null as string | null,
         source: undefined as { pid: number; file: string; nonce: string } | undefined, error: undefined as Error | undefined }
+      const phaseMs = { spawned: null as number | null, attested: null as number | null, admitted: null as number | null,
+        completed: null as number | null, brokerClosed: null as number | null, controlClosed: null as number | null,
+        deadline: null as number | null }
+      const diagnostics = () => ({
+        budgetMs: deadlineMs, elapsedMs: performance.now() - started, phaseMs: { ...phaseMs },
+        attested: output.attested, admitted: output.source !== undefined, complete: output.complete,
+        sourceComplete: output.source !== undefined && output.complete,
+        brokerClosed: output.brokerClosed, controlClosed: output.controlClosed,
+        helperPID: child.pid, source: output.source ? { ...output.source } : undefined,
+        code: output.code, signal: output.signal, bytes: output.bytes, controlBytes: output.controlBytes,
+        stderrBytes: output.stderr.length, stderr: output.stderr.toString("utf8"),
+      })
+      const deadlineError = () => {
+        phaseMs.deadline ??= performance.now() - started
+        const captured = diagnostics()
+        // Snapshot before shutdown: later close receipts must not rewrite the state observed at expiry.
+        return Object.assign(new Error(`Windows process query deadline expired; diagnostics: ${JSON.stringify(captured)}`),
+          { diagnostics: captured })
+      }
       const timers = { operation: undefined as ReturnType<typeof setTimeout> | undefined, cleanup: undefined as ReturnType<typeof setTimeout> | undefined }
       const fail = (error: Error) => {
         if (output.error) return
         output.error = error
         clearTimeout(timers.operation)
-        timers.cleanup = setTimeout(() => reject(Object.assign(new AggregateError([output.error],
-          `Windows process query OS/stdio close unconfirmed; files retained: ${dir}; PID ${child.pid}`),
-          { directory: dir, helperPID: child.pid, source: output.source, brokerClosed: output.brokerClosed, closed: closed.promise,
-            diagnostics: { complete: output.complete, controlClosed: output.controlClosed, bytes: output.bytes, stderr: output.stderr.toString("utf8") } })), 2000)
+        timers.cleanup = setTimeout(() => {
+          const captured = diagnostics()
+          reject(Object.assign(new AggregateError([output.error],
+            `Windows process query OS/stdio close unconfirmed; files retained: ${dir}; PID ${child.pid}; diagnostics: ${JSON.stringify(captured)}`),
+            { directory: dir, helperPID: child.pid, source: output.source, brokerClosed: output.brokerClosed, closed: closed.promise,
+              diagnostics: captured }))
+        }, 2000)
         try {
           if (output.attested) child.stdin!.end()
           if (!output.attested && child.pid) child.kill("SIGKILL")
         }
         catch (killError) { output.error = new AggregateError([error, killError], "Windows process query kill failed") }
       }
+      child.once("spawn", () => { phaseMs.spawned = performance.now() - started })
       child.on("error", (error) => fail(new Error(`Windows process query spawn failed: ${error.message}`, { cause: error })))
       child.stdout!.on("error", fail)
       child.stderr!.on("error", fail)
@@ -129,19 +153,23 @@ export async function invoke(source: string, decoder: string, request: readonly 
           if (reply.nonce !== nonce) throw new Error("control nonce mismatch")
           if (!output.attested && reply.type === "attested" && reply.bun === false && reply.release === "node" && typeof reply.version === "string" && /^\d+\.\d+\.\d+/.test(reply.version)) {
             output.attested = true
+            phaseMs.attested = performance.now() - started
             if (!output.error && performance.now() < deadline) child.stdin!.write("RUN\n")
             if (output.error || performance.now() >= deadline) child.stdin!.end()
             return
           }
-          if (output.attested && !output.source && !output.complete && reply.type === "not-admitted") { output.complete = true; return }
+          if (output.attested && !output.source && !output.complete && reply.type === "not-admitted") {
+            output.complete = true; phaseMs.completed = performance.now() - started; return
+          }
           if (output.attested && !output.source && !output.complete && reply.type === "admitted" && source && Number.isSafeInteger(source.pid) && source.pid > 0 && source.file === file && source.nonce === nonce) {
             output.source = source
+            phaseMs.admitted = performance.now() - started
             if (!output.error && performance.now() < deadline) child.stdin!.write("SOURCE\n")
             if (output.error || performance.now() >= deadline) child.stdin!.end()
             return
           }
           if (output.source && !output.complete && reply.type === "completed" && reply.pid === output.source.pid && reply.osClosed === true && reply.stdioClosed === true && (reply.code === null || Number.isInteger(reply.code)) && (reply.signal === null || typeof reply.signal === "string")) {
-            output.complete = true; return
+            output.complete = true; phaseMs.completed = performance.now() - started; return
           }
           throw new Error("invalid control order or runtime identity")
         } catch (error) { fail(new Error("Windows process query native Node attestation/control invalid", { cause: error })) }
@@ -157,17 +185,22 @@ export async function invoke(source: string, decoder: string, request: readonly 
         clearTimeout(timers.operation)
         clearTimeout(timers.cleanup)
         if (output.error) return reject(output.error)
-        if (performance.now() >= deadline) return reject(new Error("Windows process query deadline expired"))
+        if (performance.now() >= deadline) return reject(deadlineError())
         if (output.signal || output.code !== 0) return reject(new Error(`Windows process query failed: code ${output.code}, signal ${output.signal}: ${output.stderr.toString("utf8")}`))
         if (!output.attested) return reject(new Error("Windows process query native Node attestation missing"))
         const stdout = Buffer.concat(output.chunks).toString("utf8")
         if (!stdout.trim()) return reject(new Error("Windows process query empty output"))
-        if (performance.now() >= deadline) return reject(new Error("Windows process query deadline expired"))
+        if (performance.now() >= deadline) return reject(deadlineError())
         resolve(stdout)
       }
-      child.once("disconnect", () => { output.controlClosed = true; finish() })
-      child.once("close", (code, signal) => { output.brokerClosed = true; output.code = code; output.signal = signal; finish() })
-      timers.operation = setTimeout(() => fail(new Error("Windows process query deadline expired")), Math.max(0, deadline - performance.now()))
+      child.once("disconnect", () => {
+        output.controlClosed = true; phaseMs.controlClosed = performance.now() - started; finish()
+      })
+      child.once("close", (code, signal) => {
+        output.brokerClosed = true; output.code = code; output.signal = signal
+        phaseMs.brokerClosed = performance.now() - started; finish()
+      })
+      timers.operation = setTimeout(() => fail(deadlineError()), Math.max(0, deadline - performance.now()))
     })
   } catch (error) { state.failure = error; throw error }
   finally {
