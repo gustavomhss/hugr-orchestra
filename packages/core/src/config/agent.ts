@@ -16,6 +16,7 @@ export class Info extends Schema.Class<Info>("ConfigV2.Agent")({
   request: ConfigProvider.Request.pipe(Schema.optional),
   system: Schema.String.pipe(Schema.optional),
   description: Schema.String.pipe(Schema.optional),
+  engine: Schema.Literals(["orchestra", "claude-code"]).pipe(Schema.optional),
   mode: Schema.Literals(["subagent", "primary", "all"]).pipe(Schema.optional),
   hidden: Schema.Boolean.pipe(Schema.optional),
   color: Color.pipe(Schema.optional),

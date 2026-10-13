@@ -239,17 +239,26 @@ test("scoped guard and teeth typecheck with the package compiler in CI", async (
     compilerOptions: { typeRoots: [path.join(root, "node_modules/@types")] },
     include: [path.join(root, "script/test-ci-desktop.ts"), import.meta.path, control],
   }))
+  // Asynchronous: Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock
+  // (oven-sh/bun#33932), so after an idle stretch of this suite the compiler would be killed within milliseconds.
+  const typecheck = async () => {
+    const child = Bun.spawn([process.execPath, "typecheck", "--project", config], {
+      cwd: path.join(root, "packages/core"), timeout: 60000, stdout: "pipe", stderr: "pipe",
+    })
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ])
+    return { output: stdout + stderr, exitCode }
+  }
   await Bun.write(control, "const control: never = 1\n")
-  const broken = Bun.spawnSync([process.execPath, "typecheck", "--project", config], {
-    cwd: path.join(root, "packages/core"), timeout: 60000,
-  })
+  const broken = await typecheck()
   expect(broken.exitCode).not.toBe(0)
-  expect(broken.stdout.toString() + broken.stderr.toString()).toContain("compiler-control.ts")
+  expect(broken.output).toContain("compiler-control.ts")
   await Bun.write(control, "const control = 1\n")
-  const result = Bun.spawnSync([process.execPath, "typecheck", "--project", config], {
-    cwd: path.join(root, "packages/core"), timeout: 60000,
-  })
-  expect(result.stdout.toString() + result.stderr.toString()).toContain("$ tsgo --noEmit")
-  if (result.exitCode !== 0) throw new Error(result.stdout.toString() + result.stderr.toString())
+  const result = await typecheck()
+  expect(result.output).toContain("$ tsgo --noEmit")
+  if (result.exitCode !== 0) throw new Error(result.output)
   expect(result.exitCode).toBe(0)
 }, 90000)

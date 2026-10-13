@@ -83,31 +83,36 @@ function makeDraft(source: Source, initial: RelayDocument, kind: RelayKind, remo
     clearTimeout(timer)
     if (discarded || reloading || !state.save.dirty || state.save.state === "saving" || state.save.state === "conflict") return
     setState("save", { state: "saving", dirty: false, error: "" })
-    const result = await source.client.save(state.base, { name: state.name, ...documentFields(state.flow) }).then(
-      (document) => ({ document }),
-      (error: unknown) => ({ error }),
-    )
-    if (discarded) return
-    if ("error" in result) {
-      setState("save", {
-        state: result.error instanceof RelayError && result.error.status === 409 ? "conflict" : "error",
-        dirty: true,
-        error: result.error instanceof Error ? result.error.message : String(result.error),
-      })
-      return
+    try {
+      const result = await source.client.save(state.base, { name: state.name, ...documentFields(state.flow) }).then(
+        (document) => ({ document }),
+        (error: unknown) => ({ error }),
+      )
+      if (discarded) return
+      if ("error" in result) {
+        setState("save", {
+          state: result.error instanceof RelayError && result.error.status === 409 ? "conflict" : "error",
+          dirty: true,
+          error: result.error instanceof Error ? result.error.message : String(result.error),
+        })
+        return
+      }
+      const latest = await rememberDocument(source.queryClient(), source.key("documents"), result.document, () => !discarded)
+      if (discarded || !latest) return
+      if (!state.save.dirty) return replace(latest)
+      setState("base", result.document)
+      if (latest.versionId !== result.document.versionId) {
+        // Edits made during this request were based on its version, not the newer remote graph.
+        setState("save", { state: "conflict", dirty: true, error: "" })
+        return
+      }
+      setState("save", "state", "saved")
+      if (state.save.dirty) return drain()
+      clean()
+    } finally {
+      // Transport completion is earlier than accepting/rejecting the ACK and updating shared state.
+      window.dispatchEvent(new CustomEvent("relay-draft-save-settled", { detail: { documentID: initial.id } }))
     }
-    const latest = await rememberDocument(source.queryClient(), source.key("documents"), result.document, () => !discarded)
-    if (discarded || !latest) return
-    if (!state.save.dirty) return replace(latest)
-    setState("base", result.document)
-    if (latest.versionId !== result.document.versionId) {
-      // Edits made during this request were based on its version, not the newer remote graph.
-      setState("save", { state: "conflict", dirty: true, error: "" })
-      return
-    }
-    setState("save", "state", "saved")
-    if (state.save.dirty) return drain()
-    clean()
   }
   const flush = (): Promise<void> => {
     if (writing) return writing

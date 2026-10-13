@@ -1,4 +1,5 @@
 import { createMemo, createSignal, For, type JSX, onCleanup, onMount, Show } from "solid-js"
+import { modalActive } from "@/utils/modal-active"
 import { BOLT, nodeGlyph, nodeTone } from "./catalog"
 import {
   bounds,
@@ -283,7 +284,7 @@ export function Canvas(props: {
   }
 
   const wheel = (event: WheelEvent) => {
-    if (event.defaultPrevented || document.querySelector("dialog[open]")) return
+    if (event.defaultPrevented || modalActive()) return
     if (event.target instanceof Element && event.target.closest(".wf-drawer,[role=dialog],dialog,input,textarea,select")) return
     event.preventDefault()
     setAnimate(false)

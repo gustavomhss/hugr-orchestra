@@ -1,4 +1,5 @@
-import { createSignal, For, type JSX, Show } from "solid-js"
+import { createEffect, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js"
+import type { Location } from "@solidjs/router"
 import type { RelayDocument } from "./client"
 import { deleteDocument } from "./drafts"
 import { rememberDocument } from "./cache"
@@ -9,20 +10,38 @@ import { RelayDialog, useRelayCopy } from "./ui"
 
 export const failure = (error: unknown) => (error instanceof Error && error.message ? error.message : String(error))
 
-// Runs one async action at a time and keeps its error on screen.
-export function createAction() {
+// Runs one local action per navigation generation; backend results can outlive navigation.
+export function createAction(location?: Pick<Location, "pathname" | "search" | "hash">) {
+  let active = true
+  let generation = 0
+  onCleanup(() => { active = false })
   const [busy, setBusy] = createSignal(false)
   const [error, setError] = createSignal<string>()
-  const run = async (action: () => Promise<unknown>) => {
-    if (busy()) return
+  if (location) createEffect(on(
+    [() => location.pathname, () => location.search, () => location.hash],
+    () => {
+      generation++
+      setBusy(false)
+      setError(undefined)
+    },
+    { defer: true },
+  ))
+  const run = async (action: (current: () => boolean) => Promise<unknown>) => {
+    if (!active || busy()) return
+    const started = generation
+    const origin = location && { pathname: location.pathname }
+    const current = () => active && generation === started
     setBusy(true)
     setError(undefined)
-    const result = await action().then(
+    const result = await action(current).then(
       () => undefined,
       (cause: unknown) => failure(cause),
     )
-    setBusy(false)
-    setError(result)
+    if (current()) {
+      setBusy(false)
+      setError(result)
+    }
+    if (origin) window.dispatchEvent(new CustomEvent("relay-navigation-action-settled", { detail: origin }))
   }
   return { busy, error, run, setError }
 }

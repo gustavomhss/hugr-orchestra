@@ -157,6 +157,17 @@ export const uninstall = Effect.fn("RelayHookInstall.uninstall")(function* (
   })
 })
 
+/** Retire every snapshot of one document in a single authoritative profile write before deleting its authoring row. */
+export const uninstallDocument = Effect.fn("RelayHookInstall.uninstallDocument")(function* (
+  input: Binding & { readonly document: string; readonly principal: string },
+) {
+  return yield* mutate(input, (installs) => Effect.succeed({
+    installs: installs.filter((install) => install.document !== input.document),
+    changed: installs.filter((install) => install.document === input.document)
+      .map((install) => changed(install, "hook-uninstalled", input)),
+  }))
+})
+
 /** Sets the evaluation order to the given sequence, which must name every install exactly once. */
 export const reorder = Effect.fn("RelayHookInstall.reorder")(function* (
   input: Binding & { readonly installIDs: ReadonlyArray<string> },
