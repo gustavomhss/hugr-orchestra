@@ -1,5 +1,5 @@
 import { readlink, realpath } from "node:fs/promises"
-import { basename, resolve, join } from "node:path"
+import { basename, dirname, resolve, join } from "node:path"
 import { Cause, Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
@@ -8,6 +8,13 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 type Box = { cwd: string; env: Record<string, string | undefined> }
 
 export async function corroborateProcess(pid: number, executable: string, box: Box) {
+  if (process.platform === "win32") {
+    const { windowsIdentity } = await import("./distribution-windows-process")
+    const identity = await windowsIdentity(pid)
+    if (!identity || identity.executable.toLowerCase() !== (await realpath(executable)).toLowerCase())
+      throw new Error("NATIVE_DAEMON_EXECUTABLE_MISMATCH")
+    return identity
+  }
   process.kill(pid, 0)
   const expected = await realpath(executable)
   if (process.platform === "linux") {
@@ -25,10 +32,12 @@ export async function corroborateProcess(pid: number, executable: string, box: B
 // Caps select AppProcess's streamed/scoped path, including tree stop and pipe drain.
 export async function command(args: string[], box: Box, timeout = 90_000) {
   if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
+  const invocation = await commandInvocation(args)
   const result = await Effect.runPromise(Effect.gen(function* () {
     const service = yield* AppProcess.Service
-    return yield* service.run(ChildProcess.make(args[0], args.slice(1), {
+    return yield* service.run(ChildProcess.make(invocation.args[0], invocation.args.slice(1), {
       cwd: box.cwd, env: box.env, extendEnv: false,
+      shell: invocation.shell,
       stdin: "ignore", stdout: "pipe", stderr: "pipe", forceKillAfter: "2 seconds",
     }), { timeout, maxOutputBytes: 16 * 1024 * 1024, maxErrorBytes: 256 * 1024 })
   }).pipe(
@@ -45,6 +54,24 @@ export async function command(args: string[], box: Box, timeout = 90_000) {
   return { code: result.exitCode, stdout: result.stdout.toString("utf8"), stderr: result.stderr.toString("utf8") }
 }
 
+// npm.cmd is not a PE executable. npm uses its real Node CLI; public npm CMD
+// shims use omni's supported verbatim cmd.exe shell boundary, never legacy spawn.
+async function commandInvocation(args: string[]) {
+  if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
+  if (process.platform !== "win32") return { args: [args[0], ...args.slice(1)] as const, shell: false }
+  if (/\.cmd$/i.test(args[0])) {
+    if (args.some((arg) => /["%\r\n\0]/.test(arg))) throw new Error("NATIVE_CMD_UNSAFE_ARGUMENT")
+    return { args: [`"${args[0]}"`, ...args.slice(1).map((arg) => `"${arg}"`)] as const, shell: true }
+  }
+  if (args[0] === "npm" || /\.cjs$/i.test(args[0])) {
+    const { WindowsProcessQuery } = await import("../../../core/test/fixture/windows-process-query")
+    const node = WindowsProcessQuery.nodeExecutable()
+    const script = args[0] === "npm" ? await realpath(join(dirname(node), "node_modules/npm/bin/npm-cli.js")) : args[0]
+    return { args: [node, script, ...args.slice(1)] as const, shell: false }
+  }
+  return { args: [args[0], ...args.slice(1)] as const, shell: false }
+}
+
 // Fresh process for EVERY case: Core and native binding singletons cannot hide a
 // replaced supervisor. Canonical Core imports, exact installed companions, no
 // HUGR_* overrides or companion fallback. This is an independent companion oracle,
@@ -58,7 +85,7 @@ export async function installedCompanionProbe(payload: string, box: Box) {
   const layerNode = await realpath(join(core, "src/effect/layer-node.ts"))
   // Canonicalize parent, not the mutated supervisor (missing is a negative case).
   const bin = await realpath(join(payload, "bin"))
-  const paths = { addon: join(bin, "hugr_omni.node"), supervisor: join(bin, "hugr-omni-supervisor") }
+  const paths = { addon: join(bin, "hugr_omni.node"), supervisor: join(bin, `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`) }
   const script = `
 import { Effect } from ${JSON.stringify(effect)}
 import { ChildProcess } from ${JSON.stringify(childProcess)}
@@ -76,7 +103,8 @@ try {
     const service = yield* AppProcess.Service
     return yield* service.run(ChildProcess.make(process.execPath,
       ["--eval", "process.stdout.write('installed-companion-child\\\\n'); process.exitCode = 7"], {
-        cwd: process.cwd(), env: {}, extendEnv: false,
+        cwd: process.cwd(), env: ${JSON.stringify(process.platform === "win32" ? Object.fromEntries(Object.entries(box.env)
+          .filter(([key]) => ["SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TMP", "TEMP"].includes(key.toUpperCase()))) : {})}, extendEnv: false,
         stdin: "ignore", stdout: "pipe", stderr: "pipe", forceKillAfter: "2 seconds",
       }), { timeout: "10 seconds", maxOutputBytes: 4096, maxErrorBytes: 4096 })
   }).pipe(Effect.provide(LayerNode.compile(AppProcess.node)), Effect.timeout("20 seconds"), Effect.scoped))
