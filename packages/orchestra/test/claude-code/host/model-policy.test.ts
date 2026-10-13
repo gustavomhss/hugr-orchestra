@@ -15,6 +15,7 @@ import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { WriteRoots } from "@/maestro/write-roots"
+import { Identifier } from "@/id/id"
 import { ClaudeResearchFixture } from "./jimmy-fixture"
 import { ClaudeEngineFixture } from "../engine-fixture"
 
@@ -116,7 +117,7 @@ ClaudeEngineFixture.it.instance("registered final denial retains spent grant and
   }).pipe(Effect.provide(locations.get({ directory: AbsolutePath.make(f.chat.directory), workspaceID: undefined })))
   yield* policies.set(f.chat.id, fastPolicy)
   const rules = yield* WriteRoots.bind("archie", ["proposal.md"], [])
-  const grantID = "grt_model_cleanup"
+  const grantID = Identifier.create("grt", "ascending")
   ClaudeHostMcp.grants(f.chat.id).set(grantID, { grantID, sessionID: f.chat.id, seat: "archie", writePaths: ["proposal.md"],
     writeRoots: WriteRoots.read(rules) ?? [], purpose: "proposal", time: Date.now() })
   const entered = yield* Deferred.make<void>()
