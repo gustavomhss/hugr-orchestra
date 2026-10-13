@@ -4,7 +4,17 @@
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"],
   "tasks": {
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["transit"]
+    },
+    "orchestra#typecheck": {
+      "dependsOn": ["transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.github/scripts/archie-host-*.ts",
+        "$TURBO_ROOT$/.github/scripts/tsconfig.archie.json"
+      ]
+    },
     "build": {
       "dependsOn": [],
       "outputs": ["dist/**"]
@@ -110,6 +120,14 @@
       "outputs": []
     },
     "@orchestra/client#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/schema#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/protocol#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
