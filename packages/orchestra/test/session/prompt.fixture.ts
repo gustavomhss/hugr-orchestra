@@ -9,6 +9,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { Effect, Layer } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "../../src/background/job"
@@ -127,6 +128,7 @@ const promptRoot = LayerNode.group([
   SessionPrompt.node,
   Session.node,
   SessionProjector.node,
+  SessionSubagentModels.node,
   MessageV2.node,
   Snapshot.node,
   LLM.node,
