@@ -1,3 +1,7 @@
+import { ModelsDev } from "@orchestra/core/models-dev"
+import { ClaudeCode } from "@/claude-code/engine"
+import { ClaudeHost } from "@/claude-code/host/session"
+import { InstanceStore } from "@/project/instance-store"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
@@ -43,6 +47,10 @@ import { TestLLMServer } from "../lib/llm-server"
 import { SessionContinuity } from "@/continuity/service"
 import { Archive } from "@/continuity/archive"
 import { EffectFlock } from "@orchestra/core/util/effect-flock"
+import { AppProcess } from "@orchestra/core/process"
+import { LocationServiceMap } from "@orchestra/core/location-services"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
+import { ArsenalObservations } from "@/maestro/arsenal-observations"
 
 const summary = Layer.succeed(
   SessionSummary.Service,
@@ -112,6 +120,10 @@ const blockingProcessor = Layer.succeed(
 )
 
 const promptRoot = LayerNode.group([
+  ClaudeCode.node,
+  ClaudeHost.node,
+  InstanceStore.node,
+  ModelsDev.node,
   SessionPrompt.node,
   Session.node,
   SessionProjector.node,
@@ -152,11 +164,16 @@ const promptRoot = LayerNode.group([
   Archive.node,
   EffectFlock.node,
   RuntimeFlags.node,
+  // Real per-Session MCP runtime bindings, exposed alongside the host for integration tests.
+  AppProcess.node,
+  LocationServiceMap.node,
+  filesystem,
+  ArsenalObservations.node,
 ])
 
-function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[] }) {
+function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[]; realSummary?: boolean }) {
   return [
-    [SessionSummary.node, summary],
+    ...(input?.realSummary ? [] : [[SessionSummary.node, summary] as const]),
     [LSP.node, lsp],
     [MCP.node, makeMcp(input?.mcpInstructions)],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
@@ -172,6 +189,7 @@ function makePrompt(input?: { mcpInstructions?: MCP.ServerInstructions[]; proces
 }
 
 export function makeHttp(input?: {
+  realSummary?: boolean
   mcpInstructions?: MCP.ServerInstructions[]
   processor?: "blocking"
   replacements?: LayerNode.Replacements
