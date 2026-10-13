@@ -62,6 +62,7 @@ export function CreateWorkflowDialog(props: {
         source ? copyDocument(source, value) : blankWorkflow(value, copy.t("orchestra.workflows.type.start")),
       )
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!action.active()) return
       props.onCreated(created.id)
     })
   }

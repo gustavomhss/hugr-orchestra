@@ -452,6 +452,30 @@ test("final fixes: reload preserves edits made after its GET started while cachi
   draft.release()
 })
 
+for (const entry of ["create", "clone"]) {
+  test(`lifetime owner: disposed ${entry} caches success without navigating`, async () => {
+    const response = Promise.withResolvers<Response>()
+    const api = setup(async () => response.promise)
+    const [state, setState] = createStore({ open: true })
+    const opened: string[] = []
+    const host = mount(() => createComponent(Show, { get when() { return state.open }, get children() {
+      return entry === "create"
+        ? createComponent(CreateWorkflowDialog, { ...api, initial: "blank", onClose() {}, onCreated: (id) => opened.push(id) })
+        : createComponent(WorkflowLibrary, { ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", close() {}, go: (path) => opened.push(path) })
+    } }))
+    if (entry === "create") submit(host)
+    if (entry === "clone") {
+      host.querySelector<HTMLButtonElement>('[data-document="template"] button[aria-haspopup="menu"]')!.click()
+      ;[...host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')].find((button) => button.textContent?.includes("Duplicate"))!.click()
+    }
+    await until(() => api.requests.length === 1)
+    setState("open", false)
+    response.resolve(Response.json({ location: { directory: "/repo" }, data: doc("saved") }))
+    await until(() => api.source.list().some((document) => document.id === "saved"))
+    expect(opened).toEqual([])
+  })
+}
+
 test("final fixes: pending publish locks dismissal and late ACK preserves newer cache and deleted lifetime", async () => {
   const response = Promise.withResolvers<Response>()
   const api = setup(async () => response.promise)

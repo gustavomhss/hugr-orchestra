@@ -10,7 +10,7 @@ const located = (data: unknown) => ({ contentType: "application/json", body: JSO
 test("final fixes: reload leaves newer typing intact and conflicted", async ({ page }) => {
   const state = await setupRelay(page)
   const doc = state.documents.find((document) => document.id === "relay-wp-execute")!
-  const fresh = { ...structuredClone(doc), versionCounter: 5, versionId: "remote-v5", nodes: structuredClone(doc.nodes) }
+  const fresh = { ...structuredClone(doc), name: "Fetched v5 workflow", versionCounter: 5, versionId: "remote-v5", nodes: structuredClone(doc.nodes) }
   const pending = Promise.withResolvers<void>()
   const arrived = Promise.withResolvers<void>()
   await page.route("**/api/relay/document/relay-wp-execute*", async (route) => {
@@ -29,7 +29,12 @@ test("final fixes: reload leaves newer typing intact and conflicted", async ({ p
   await instructions.fill("Typed while reload was pending")
   pending.resolve()
   await (await response).finished()
-  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())))
+  await page.keyboard.press("Escape")
+  await page.getByRole("link", { name: "Back to Workflows", exact: true }).click()
+  const row = page.locator('[data-document="relay-wp-execute"]')
+  await expect(row).toContainText("Fetched v5 workflow")
+  await row.click()
+  await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
   await expect(instructions).toHaveValue("Typed while reload was pending")
   await expect(details(page).locator('[data-save="conflict"]')).toBeVisible()
 })

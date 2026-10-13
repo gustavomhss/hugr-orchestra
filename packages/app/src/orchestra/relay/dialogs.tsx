@@ -1,4 +1,4 @@
-import { createSignal, For, type JSX, Show } from "solid-js"
+import { createSignal, For, type JSX, onCleanup, Show } from "solid-js"
 import type { RelayDocument } from "./client"
 import { deleteDocument } from "./drafts"
 import { rememberDocument } from "./cache"
@@ -11,20 +11,23 @@ export const failure = (error: unknown) => (error instanceof Error && error.mess
 
 // Runs one async action at a time and keeps its error on screen.
 export function createAction() {
+  let active = true
+  onCleanup(() => { active = false })
   const [busy, setBusy] = createSignal(false)
   const [error, setError] = createSignal<string>()
   const run = async (action: () => Promise<unknown>) => {
-    if (busy()) return
+    if (!active || busy()) return
     setBusy(true)
     setError(undefined)
     const result = await action().then(
       () => undefined,
       (cause: unknown) => failure(cause),
     )
+    if (!active) return
     setBusy(false)
     setError(result)
   }
-  return { busy, error, run, setError }
+  return { active: () => active, busy, error, run, setError }
 }
 
 function Foot(props: {
