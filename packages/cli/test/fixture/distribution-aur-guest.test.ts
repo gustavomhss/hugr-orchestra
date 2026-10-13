@@ -8,7 +8,7 @@ import { distributionRecipes } from "../../script/distribution-recipes"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { captureOracle, command, sandbox, sha256, skillIdentity, snapshot, successful, target, versions } from "./distribution-native"
 import { emergencyStop, qualify, stopServices } from "./distribution-native-proof"
-import { aurFinalPackage, aurInventory, aurInventoryTeeth, aurPayload } from "./distribution-aur-inventory"
+import { aurExpectedPayload, aurFinalPackage, aurInventory, aurInventoryTeeth, aurPayload } from "./distribution-aur-inventory"
 import type { AurPayload } from "./distribution-aur-inventory"
 import { aurArchives } from "./distribution-aur-https"
 
@@ -210,7 +210,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
     const first = payloads[0]
     const originalPackage = [...retained.keys()][0]
     if (!originalPackage) throw new Error("AUR_RETAINED_ORIGINAL_V1_PACKAGE_MISSING")
-    expect(sha256(await readFile(originalPackage))).toBe(retained.get(originalPackage))
+    expect(retained.get(originalPackage)).toBe(sha256(await readFile(originalPackage)))
     // Real pacman downgrade of the original built package, never a rebuild/link swap.
     await successful(["pacman", "-U", "--noconfirm", originalPackage], box, 120_000)
     expect(await successful(["pacman", "-Q", "orchestra-bin"], box)).toBe(`orchestra-bin ${first.version}-1`)
@@ -279,8 +279,8 @@ async function pacmanInventory(payload: AurPayload, box: Awaited<ReturnType<type
   expect(await aurInventory(launcher), "AUR_INSTALLED_PUBLIC_SYMLINK_TEXT_AND_MODE")
     .toEqual(new Map([["", { kind: "symlink", mode: 0o777, link: "/usr/lib/orchestra/bin/orchestra" }]]))
   const listed = (await successful(["pacman", "-Qlq", "orchestra-bin"], box)).split("\n")
-  const tree = await aurInventory(payload.payload)
-  if (!tree || tree.size === 0 || listed.length === 0) throw new Error("AUR_PACMAN_INVENTORY_EMPTY")
+  const tree = await aurExpectedPayload(payload)
+  if (tree.size === 0 || listed.length === 0) throw new Error("AUR_PACMAN_INVENTORY_EMPTY")
   const expected = ["/usr/", "/usr/bin/", launcher, "/usr/lib/", ...[...tree].map(([path, entry]) =>
     `${payloadRoot}${path ? `/${path}` : ""}${entry.kind === "directory" ? "/" : ""}`)]
   expect(listed.toSorted(), "AUR_PACMAN_FULL_OWNED_INVENTORY").toEqual(expected.toSorted())

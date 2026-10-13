@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { chmod, copyFile, cp, mkdir, mkdtemp, readFile, realpath, rm } from "node:fs/promises"
+import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises"
 import { machine } from "node:os"
 import { join, resolve } from "node:path"
 import { Schema } from "effect"
@@ -31,6 +31,7 @@ const name = `orchestra-aur-${nonce}`
 const state: {
   directory?: string; host?: Awaited<ReturnType<typeof sandbox>>; docker?: string;
   attempted: boolean; id?: string; preserve: boolean; artifact?: string;
+  owner?: { uid: number; gid: number }; identity?: { dev: number; ino: number }; cleanup?: Promise<void>;
 } = { attempted: false, preserve: false }
 const interrupt = () => {
   void cleanup().then(() => process.exit(1), () => {
@@ -42,19 +43,10 @@ const interrupt = () => {
 
 afterAll(async () => {
   if (!state.directory) return
-  const failure = await cleanup().then(() => undefined, (cause: unknown) => {
+  await cleanup().catch((cause: unknown) => {
     state.preserve = true
-    return new Error(`AUR_OWNED_CONTAINER_CLEANUP_FAILED: name=${name} fixture=${state.directory}`, { cause })
+    throw new Error(`AUR_OWNED_CONTAINER_CLEANUP_FAILED: name=${name} fixture=${state.directory}`, { cause })
   })
-  if (state.artifact) {
-    await cp(join(state.directory, "evidence"), state.artifact, { recursive: true })
-    await Bun.write(join(state.artifact, "host-cleanup.json"), JSON.stringify({ name, id: state.id,
-      container: failure ? "cleanup-failed; fixture-preserved" : state.attempted
-        ? "owned-label-enumerated-and-removed; post-removal-list-empty" : "not-created",
-    }, null, 2))
-  }
-  if (failure) throw failure
-  if (!state.preserve) await rm(state.directory, { recursive: true, force: true })
   process.off("SIGINT", interrupt)
   process.off("SIGTERM", interrupt)
   process.off("SIGHUP", interrupt)
@@ -73,10 +65,18 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   if (!process.env.RUNNER_TEMP || !process.env.GITHUB_WORKSPACE) throw new Error("AUR_HOSTED_WORKSPACE_REQUIRED")
   const repo = await realpath(resolve(cli, "../.."))
   if (repo !== await realpath(process.env.GITHUB_WORKSPACE)) throw new Error("AUR_OWNED_CI_CHECKOUT_REQUIRED")
+  const uid = process.getuid?.()
+  const gid = process.getgid?.()
+  if (uid === undefined || gid === undefined || !Number.isSafeInteger(uid) || !Number.isSafeInteger(gid) || uid < 0 || gid < 0)
+    throw new Error("AUR_HOST_FIXTURE_OWNER_INVALID")
+  state.owner = { uid, gid }
   state.directory = await mkdtemp(join(await realpath(process.env.RUNNER_TEMP), "orchestra-aur-native-"))
+  const root = await lstat(state.directory)
+  state.identity = { dev: root.dev, ino: root.ino }
   // Only the owned fixture needs builder traversal; never chmod host user state.
   await chmod(state.directory, 0o755)
   await mkdir(join(state.directory, "evidence"))
+  await Bun.write(join(state.directory, ".aur-ownership"), `${nonce}\n`)
   state.artifact = join(repo, "distribution-logs", `aur-${target}-${nonce}`)
   state.host = await sandbox(join(state.directory, "host-tools"))
   state.docker = Bun.which("docker") ?? undefined
@@ -129,6 +129,7 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   await docker(["start", id])
   const result = await command([state.docker, "exec", id, "/usr/bin/bash",
     "/repo/packages/cli/test/fixture/distribution-aur/bootstrap.sh", guest.cpu, guest.image], state.host, 2_100_000)
+  if (state.cleanup) throw new Error("AUR_GUEST_COMPLETED_AFTER_TEARDOWN_STARTED")
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
   if (result.code !== 0) throw new Error(`AUR_NATIVE_GUEST_FAILED: ${guest.image}\n${result.stderr}`)
@@ -160,15 +161,81 @@ async function ownedContainers() {
   return ids
 }
 
-async function cleanup() {
-  if (!state.attempted) return
-  const ids = await ownedContainers()
+function cleanup() {
+  return state.cleanup ??= cleanupOwned()
+}
+
+async function cleanupOwned() {
+  if (!state.directory) return
+  const ids = state.attempted ? await ownedContainers() : []
   if (ids.length > 1 || (state.id && ids.some((id) => id !== state.id)))
     throw new Error("AUR_CONTAINER_OWNERSHIP_CHANGED")
   for (const id of ids) {
     const identity = await docker(["inspect", "--format", `{{.Name}}|{{index .Config.Labels "${label}"}}`, id])
     if (identity !== `/${name}|${nonce}`) throw new Error("AUR_CONTAINER_CLEANUP_IDENTITY_MISMATCH")
-    await docker(["rm", "--force", "--volumes", id], 60_000)
+    expect(await docker(["inspect", "--format",
+      '{{range .Mounts}}{{if eq .Destination "/proof"}}{{.Type}}|{{.Source}}|{{.RW}}{{end}}{{end}}', id]))
+      .toBe(`bind|${state.directory}|true`)
+    await fixtureRoot()
+    if (!state.owner) throw new Error("AUR_HOST_FIXTURE_OWNER_MISSING")
+    const running = await docker(["inspect", "--format", "{{.State.Running}}", id])
+    if (running !== "true" && running !== "false") throw new Error("AUR_CONTAINER_STATE_INVALID")
+    if (running === "false") await docker(["start", id])
+    expect(await docker(["exec", id, "/usr/bin/bash", "/repo/packages/cli/test/fixture/distribution-aur/repair-owner.sh",
+      nonce, String(state.owner.uid), String(state.owner.gid)], 60_000)).toBe("AUR_OWNED_FIXTURE_OWNER_REPAIRED")
+    await verifyFixtureOwner(state.directory)
   }
-  expect(await ownedContainers(), "AUR_OWNED_CONTAINER_SURVIVED_REMOVAL").toEqual([])
+  // Guest writers are stopped and ownership repaired before evidence is copied.
+  // Copy failures still remove the owned container, while preserving its fixture.
+  const copyFailure = await preserveEvidence().then(() => undefined, (cause: unknown) =>
+    new Error("AUR_EVIDENCE_PRESERVATION_FAILED", { cause }))
+  for (const id of ids) await docker(["rm", "--force", "--volumes", id], 60_000)
+  if (state.attempted) expect(await ownedContainers(), "AUR_OWNED_CONTAINER_SURVIVED_REMOVAL").toEqual([])
+  if (copyFailure) throw copyFailure
+  await fixtureRoot()
+  await rm(state.directory, { recursive: true, force: true })
+  const survived = await lstat(state.directory).catch((error: unknown) => {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return undefined
+    throw error
+  })
+  if (survived) throw new Error("AUR_HOST_FIXTURE_SURVIVED_REMOVAL")
+  if (state.artifact) await Bun.write(join(state.artifact, "host-cleanup.json"), JSON.stringify({ name, id: state.id,
+    container: state.attempted ? "owned-label-enumerated-and-removed; post-removal-list-empty" : "not-created",
+    fixture: "host-deletion-proved", owner: state.owner,
+    repair: ids.length ? "owned-/proof-bind; guest-writers-stopped; no-symlink-traversal; full-owner-verified" : "not-needed",
+  }, null, 2))
+}
+
+async function fixtureRoot() {
+  if (!state.directory || !state.identity) throw new Error("AUR_FIXTURE_IDENTITY_MISSING")
+  const root = await lstat(state.directory)
+  if (!root.isDirectory() || root.isSymbolicLink() || root.dev !== state.identity.dev || root.ino !== state.identity.ino)
+    throw new Error("AUR_FIXTURE_ROOT_REDIRECTED")
+}
+
+async function verifyFixtureOwner(directory: string) {
+  const deadline = Date.now() + 30_000
+  const visit = async (path: string): Promise<void> => {
+    if (Date.now() > deadline) throw new Error("AUR_FIXTURE_OWNER_VERIFICATION_TIMEOUT")
+    const stat = await lstat(path)
+    if (stat.uid !== state.owner?.uid || stat.gid !== state.owner?.gid)
+      throw new Error(`AUR_FIXTURE_OWNER_REPAIR_INCOMPLETE: ${path}`)
+    // lstat never follows symlinks, including links to source archives and /repo.
+    if (stat.isDirectory() && !stat.isSymbolicLink())
+      for (const name of await readdir(path)) await visit(join(path, name))
+  }
+  await visit(directory)
+}
+
+async function preserveEvidence() {
+  if (!state.directory || !state.artifact) return
+  const source = join(state.directory, "evidence")
+  const visit = async (path: string): Promise<void> => {
+    const stat = await lstat(path)
+    if (stat.isSymbolicLink() || (!stat.isDirectory() && !stat.isFile()))
+      throw new Error(`AUR_EVIDENCE_REDIRECTED_OR_SPECIAL: ${path}`)
+    if (stat.isDirectory()) for (const name of await readdir(path)) await visit(join(path, name))
+  }
+  await visit(source)
+  await cp(source, state.artifact, { recursive: true, dereference: false })
 }
