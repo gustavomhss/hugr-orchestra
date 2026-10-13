@@ -18,6 +18,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./module-resolver": "./src/module-resolver.ts",
+    "./module-catalog": "./src/module-catalog.ts",
     "./omni": "./src/omni.ts",
     "./tree-sitter-prebuilds": "./src/tree-sitter-prebuilds.ts"
   }

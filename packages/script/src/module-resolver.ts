@@ -1,4 +1,4 @@
-export * as ModuleResolver from "./module-resolver"
+export * as ModuleResolver from "./module-resolver.ts"
 
 export type Kind = "bun" | "npm" | "cargo"
 

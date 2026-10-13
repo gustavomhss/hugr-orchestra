@@ -71,7 +71,7 @@ export function validateRequest(
     throw new Error(".ci-run.json names no valid package")
   const resolved = resolvePackage?.(request.package)
   const name = resolved?.package ?? request.package
-  if (!/^[\w-]+(?:\/[\w-]+)*$/.test(name)) throw new Error(".ci-run.json names no valid resolved package")
+  if (typeof name !== "string" || !/^[\w-]+(?:\/[\w-]+)*$/.test(name)) throw new Error(".ci-run.json names no valid resolved package")
   const directory = resolved?.directory ?? `packages/${name}`
   if (typeof directory !== "string" || /[\x00-\x1f\x7f:\\]/.test(directory) ||
     directory.split("/").some((part) => !part || part === "." || part === ".."))

@@ -85,7 +85,9 @@ describe("request package locations", () => {
   test("performance renderer and exact selection rules survive relocation", () => {
     const request = { package: "app", runner: "playwright", config: performance, benchmarkRenderer: "current",
       args: ["e2e/performance/a.spec.ts"] }
-    expect(validateRequest(request, () => true, resolve).benchmarkRenderer).toBe("current")
+    const validated = validateRequest(request, () => true, resolve)
+    if (!("benchmarkRenderer" in validated)) throw new Error("FIXTURE_PLAYWRIGHT_BRANCH_MISSING")
+    expect(validated.benchmarkRenderer).toBe("current")
     expect(() => validateRequest({ ...request, benchmarkRenderer: undefined }, () => true, resolve)).toThrow("current or legacy")
     expect(() => validateRequest({ ...request, args: [] }, () => true, resolve)).toThrow("nonempty")
     expect(() => validateRequest({ ...request, args: ["e2e/a.spec.ts"] }, () => true, resolve)).toThrow("invalid spec path")
