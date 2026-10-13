@@ -3,6 +3,7 @@ import path from "node:path"
 import { Cause, Deferred, Effect, Exit, Fiber, FileSystem } from "effect"
 import fs from "node:fs/promises"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyAppContainer } from "@orchestra/core/tool-safety-appcontainer"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-runtime"
 import { Database } from "@orchestra/core/database/database"
@@ -353,6 +354,7 @@ describe("process MCP tool", () => {
             },
           )
           .pipe(
+            Effect.provideService(ToolSafetyAppContainer.Launcher, undefined),
             Effect.provideService(ToolSafetySandbox.Seatbelt, path.join(f.directory, "missing-sandbox-exec")),
             Effect.provideService(ToolSafetySandboxRuntime.Source, {
               directory: path.join(f.directory, "runtime"),
