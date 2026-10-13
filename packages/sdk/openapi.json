@@ -4171,6 +4171,247 @@
         ]
       }
     },
+    "/project/lean": {
+      "get": {
+        "tags": ["project"],
+        "operationId": "project.lean",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "LeanProfileDashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeanProfileDashboard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Saved instrumented history for the native project and selected canonical directory.",
+        "summary": "Get selected-profile Lean dashboard",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.project.lean({\n  ...\n})"
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["project"],
+        "operationId": "project.leanUpdate",
+        "parameters": [
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "LeanProfileDashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeanProfileDashboard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Persist independent profile master or item preferences without deleting earned savings.",
+        "summary": "Update selected-profile Lean preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeanProfileUpdate"
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.project.leanUpdate({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/project/lean/history/{itemID}": {
+      "get": {
+        "tags": ["project"],
+        "operationId": "project.leanHistory",
+        "parameters": [
+          {
+            "name": "itemID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cargo",
+                "go",
+                "pytest",
+                "jest",
+                "vitest",
+                "git",
+                "rg",
+                "tsc",
+                "node",
+                "pnpm",
+                "eslint",
+                "biome",
+                "ruff",
+                "pyright",
+                "pylint",
+                "bun",
+                "esbuild",
+                "golangci",
+                "markdownlint",
+                "mypy",
+                "next",
+                "npm",
+                "pip",
+                "playwright",
+                "prettier",
+                "rollup",
+                "shellcheck",
+                "stylelint",
+                "uv",
+                "vite",
+                "webpack",
+                "yarn"
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "LeanProfileHistory",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeanProfileHistory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Latest 50 durable instrumented executions; complete is false when bounded.",
+        "summary": "Get selected-profile Lean item history",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.project.leanHistory({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/project": {
       "get": {
         "tags": ["project"],
@@ -4789,6 +5030,14 @@
                     "additionalProperties": {
                       "type": "string"
                     }
+                  },
+                  "cols": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
                   }
                 },
                 "additionalProperties": false
@@ -8532,6 +8781,163 @@
         ]
       }
     },
+    "/session/{sessionID}/processes": {
+      "get": {
+        "tags": ["session"],
+        "operationId": "session.processes",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          },
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Running background processes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionProcess"
+                  },
+                  "description": "Running background processes"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          }
+        },
+        "description": "List the process trees a session's shell tool left running, each with its live processes and the tail of its output.",
+        "summary": "List background processes",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.session.processes({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/session/{sessionID}/processes/{processID}/stop": {
+      "post": {
+        "tags": ["session"],
+        "operationId": "session.processStop",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          },
+          {
+            "name": "processID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "directory",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Process tree stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "description": "Process tree stopped"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Stop one background process tree of a session, with every process it started.",
+        "summary": "Stop background process",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.session.processStop({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/sync/start": {
       "post": {
         "tags": ["sync"],
@@ -10272,6 +10678,9 @@
                     "healthy": {
                       "type": "boolean",
                       "enum": [true]
+                    },
+                    "pid": {
+                      "type": "integer"
                     }
                   },
                   "required": ["healthy"],
@@ -12242,6 +12651,132 @@
         ]
       }
     },
+    "/api/session/{sessionID}/research/{artifactID}": {
+      "get": {
+        "tags": ["orchestra HttpApi"],
+        "operationId": "v2.research.artifact",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          },
+          {
+            "name": "artifactID",
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/CapabilityArtifactID"
+            },
+            "required": true
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Research.ArtifactPage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchArtifactPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ResearchArtifactNotFoundError | SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ResearchArtifactNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Return exact retained source/document text in bounded immutable pages. Session and admitted scope determine access; arbitrary filesystem paths are not accepted.",
+        "summary": "Read an admitted research artifact revision",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.research.artifact({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/api/session/{sessionID}/message": {
       "get": {
         "tags": ["messages"],
@@ -12447,6 +12982,101 @@
           {
             "lang": "js",
             "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.model.list({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/model/default": {
+      "get": {
+        "tags": ["models"],
+        "operationId": "v2.model.default",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/ModelV2Info"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Retrieve the default model available in this location, or null when none is available.",
+        "summary": "Get default model",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.model.default({\n  ...\n})"
           }
         ]
       }
@@ -14999,6 +15629,14 @@
                     "additionalProperties": {
                       "type": "string"
                     }
+                  },
+                  "cols": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
                   }
                 },
                 "additionalProperties": false
@@ -17366,6 +18004,16 @@
               }
             }
           },
+          "403": {
+            "description": "RelayForbiddenError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelayForbiddenError"
+                }
+              }
+            }
+          },
           "404": {
             "description": "RelayNotFoundError",
             "content": {
@@ -17397,7 +18045,7 @@
             }
           }
         },
-        "description": "Grade one step of a workflow in the project directory without recording anything or charging retries.",
+        "description": "Public authoring cannot execute workflow checks. This endpoint returns 403 maestro-execution-required; executable workflow checks are owned by Maestro through its approved native binding.",
         "summary": "Check workflow step",
         "requestBody": {
           "content": {
@@ -20115,6 +20763,9 @@
             "$ref": "#/components/schemas/EventSessionDeleted"
           },
           {
+            "$ref": "#/components/schemas/EventSessionV1PromptAdmitted"
+          },
+          {
             "$ref": "#/components/schemas/EventMessageUpdated"
           },
           {
@@ -20266,6 +20917,12 @@
           },
           {
             "$ref": "#/components/schemas/EventMaestroTaskBound"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroTaskWorkflow_bound"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroWork_resultDecided"
           },
           {
             "$ref": "#/components/schemas/EventMessagePartDelta"
@@ -20900,366 +21557,13 @@
             "additionalProperties": {
               "type": "boolean"
             }
+          },
+          "promptContext": {
+            "$ref": "#/components/schemas/PromptContextInfo"
           }
         },
         "required": ["id", "sessionID", "role", "time", "agent", "model"],
         "additionalProperties": false
-      },
-      "ProviderAuthError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["ProviderAuthError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "providerID": {
-                "type": "string"
-              },
-              "message": {
-                "type": "string"
-              }
-            },
-            "required": ["providerID", "message"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "UnknownError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["UnknownError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              },
-              "ref": {
-                "type": "string"
-              }
-            },
-            "required": ["message"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "MessageOutputLengthError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["MessageOutputLengthError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {}
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "MessageAbortedError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["MessageAbortedError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              }
-            },
-            "required": ["message"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "StructuredOutputError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["StructuredOutputError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              },
-              "retries": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": ["message", "retries"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "ContextOverflowError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["ContextOverflowError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              },
-              "responseBody": {
-                "type": "string"
-              }
-            },
-            "required": ["message"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "ContentFilterError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["ContentFilterError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              }
-            },
-            "required": ["message"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "APIError": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "enum": ["APIError"]
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string"
-              },
-              "statusCode": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "isRetryable": {
-                "type": "boolean"
-              },
-              "responseHeaders": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                }
-              },
-              "responseBody": {
-                "type": "string"
-              },
-              "metadata": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                }
-              }
-            },
-            "required": ["message", "isRetryable"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "data"],
-        "additionalProperties": false
-      },
-      "AssistantMessage": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^msg"
-          },
-          "sessionID": {
-            "type": "string",
-            "pattern": "^ses"
-          },
-          "role": {
-            "type": "string",
-            "enum": ["assistant"]
-          },
-          "time": {
-            "type": "object",
-            "properties": {
-              "created": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "completed": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": ["created"],
-            "additionalProperties": false
-          },
-          "error": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ProviderAuthError"
-              },
-              {
-                "$ref": "#/components/schemas/UnknownError"
-              },
-              {
-                "$ref": "#/components/schemas/MessageOutputLengthError"
-              },
-              {
-                "$ref": "#/components/schemas/MessageAbortedError"
-              },
-              {
-                "$ref": "#/components/schemas/StructuredOutputError"
-              },
-              {
-                "$ref": "#/components/schemas/ContextOverflowError"
-              },
-              {
-                "$ref": "#/components/schemas/ContentFilterError"
-              },
-              {
-                "$ref": "#/components/schemas/APIError"
-              }
-            ]
-          },
-          "parentID": {
-            "type": "string",
-            "pattern": "^msg"
-          },
-          "modelID": {
-            "type": "string"
-          },
-          "providerID": {
-            "type": "string"
-          },
-          "mode": {
-            "type": "string"
-          },
-          "agent": {
-            "type": "string"
-          },
-          "path": {
-            "type": "object",
-            "properties": {
-              "cwd": {
-                "type": "string"
-              },
-              "root": {
-                "type": "string"
-              }
-            },
-            "required": ["cwd", "root"],
-            "additionalProperties": false
-          },
-          "summary": {
-            "type": "boolean"
-          },
-          "cost": {
-            "type": "number"
-          },
-          "tokens": {
-            "type": "object",
-            "properties": {
-              "total": {
-                "type": "number"
-              },
-              "input": {
-                "type": "number"
-              },
-              "output": {
-                "type": "number"
-              },
-              "reasoning": {
-                "type": "number"
-              },
-              "cache": {
-                "type": "object",
-                "properties": {
-                  "read": {
-                    "type": "number"
-                  },
-                  "write": {
-                    "type": "number"
-                  }
-                },
-                "required": ["read", "write"],
-                "additionalProperties": false
-              }
-            },
-            "required": ["input", "output", "reasoning", "cache"],
-            "additionalProperties": false
-          },
-          "structured": {},
-          "variant": {
-            "type": "string"
-          },
-          "finish": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "sessionID",
-          "role",
-          "time",
-          "parentID",
-          "modelID",
-          "providerID",
-          "mode",
-          "agent",
-          "path",
-          "cost",
-          "tokens"
-        ],
-        "additionalProperties": false
-      },
-      "Message": {
-        "anyOf": [
-          {
-            "$ref": "#/components/schemas/UserMessage"
-          },
-          {
-            "$ref": "#/components/schemas/AssistantMessage"
-          }
-        ]
       },
       "TextPart": {
         "type": "object",
@@ -21942,6 +22246,49 @@
         "required": ["id", "sessionID", "messageID", "type", "name"],
         "additionalProperties": false
       },
+      "APIError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["APIError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "statusCode": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "isRetryable": {
+                "type": "boolean"
+              },
+              "responseHeaders": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "responseBody": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["message", "isRetryable"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
       "RetryPart": {
         "type": "object",
         "properties": {
@@ -22053,6 +22400,419 @@
           },
           {
             "$ref": "#/components/schemas/CompactionPart"
+          }
+        ]
+      },
+      "SessionV1PromptTransition": {
+        "type": "object",
+        "properties": {
+          "expectedRevert": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "messageID": {
+                    "type": "string",
+                    "pattern": "^msg"
+                  },
+                  "partID": {
+                    "type": "string",
+                    "pattern": "^prt"
+                  },
+                  "snapshot": {
+                    "type": "string"
+                  },
+                  "diff": {
+                    "type": "string"
+                  }
+                },
+                "required": ["messageID"],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "removeMessageIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^msg"
+            }
+          },
+          "removePartIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^prt"
+            }
+          },
+          "permission": {
+            "$ref": "#/components/schemas/PermissionRuleset"
+          },
+          "expectedPermission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PermissionRuleset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeUpdated": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedRevert", "removeMessageIDs", "removePartIDs", "timeUpdated"],
+        "additionalProperties": false
+      },
+      "SessionV1PromptAdmission": {
+        "type": "object",
+        "properties": {
+          "sessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "messageID": {
+            "type": "string",
+            "pattern": "^msg"
+          },
+          "identityVersion": {
+            "type": "number",
+            "enum": [1]
+          },
+          "identity": {
+            "type": "string"
+          },
+          "info": {
+            "$ref": "#/components/schemas/UserMessage"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Part"
+            }
+          },
+          "transition": {
+            "$ref": "#/components/schemas/SessionV1PromptTransition"
+          }
+        },
+        "required": ["sessionID", "messageID", "identityVersion", "identity", "info", "parts"],
+        "additionalProperties": false
+      },
+      "ProviderAuthError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["ProviderAuthError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "providerID": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["providerID", "message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "UnknownError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["UnknownError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "MessageOutputLengthError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["MessageOutputLengthError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "MessageAbortedError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["MessageAbortedError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "StructuredOutputError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["StructuredOutputError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "retries": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": ["message", "retries"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "ContextOverflowError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["ContextOverflowError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "responseBody": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "ContentFilterError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["ContentFilterError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "AssistantMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^msg"
+          },
+          "sessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["assistant"]
+          },
+          "time": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "completed": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": ["created"],
+            "additionalProperties": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderAuthError"
+              },
+              {
+                "$ref": "#/components/schemas/UnknownError"
+              },
+              {
+                "$ref": "#/components/schemas/MessageOutputLengthError"
+              },
+              {
+                "$ref": "#/components/schemas/MessageAbortedError"
+              },
+              {
+                "$ref": "#/components/schemas/StructuredOutputError"
+              },
+              {
+                "$ref": "#/components/schemas/ContextOverflowError"
+              },
+              {
+                "$ref": "#/components/schemas/ContentFilterError"
+              },
+              {
+                "$ref": "#/components/schemas/APIError"
+              }
+            ]
+          },
+          "parentID": {
+            "type": "string",
+            "pattern": "^msg"
+          },
+          "modelID": {
+            "type": "string"
+          },
+          "providerID": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string"
+          },
+          "path": {
+            "type": "object",
+            "properties": {
+              "cwd": {
+                "type": "string"
+              },
+              "root": {
+                "type": "string"
+              }
+            },
+            "required": ["cwd", "root"],
+            "additionalProperties": false
+          },
+          "summary": {
+            "type": "boolean"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "tokens": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "number"
+              },
+              "input": {
+                "type": "number"
+              },
+              "output": {
+                "type": "number"
+              },
+              "reasoning": {
+                "type": "number"
+              },
+              "cache": {
+                "type": "object",
+                "properties": {
+                  "read": {
+                    "type": "number"
+                  },
+                  "write": {
+                    "type": "number"
+                  }
+                },
+                "required": ["read", "write"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["input", "output", "reasoning", "cache"],
+            "additionalProperties": false
+          },
+          "structured": {},
+          "variant": {
+            "type": "string"
+          },
+          "finish": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sessionID",
+          "role",
+          "time",
+          "parentID",
+          "modelID",
+          "providerID",
+          "mode",
+          "agent",
+          "path",
+          "cost",
+          "tokens"
+        ],
+        "additionalProperties": false
+      },
+      "Message": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/UserMessage"
+          },
+          {
+            "$ref": "#/components/schemas/AssistantMessage"
           }
         ]
       },
@@ -22492,6 +23252,24 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["session.v1.prompt.admitted"]
+                  },
+                  "properties": {
+                    "$ref": "#/components/schemas/SessionV1PromptAdmission"
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["message.updated"]
                   },
                   "properties": {
@@ -22743,6 +23521,9 @@
                       "prompt": {
                         "$ref": "#/components/schemas/Prompt"
                       },
+                      "promptContext": {
+                        "$ref": "#/components/schemas/PromptContextInfo"
+                      },
                       "delivery": {
                         "type": "string",
                         "enum": ["steer", "queue"]
@@ -22782,6 +23563,9 @@
                       },
                       "prompt": {
                         "$ref": "#/components/schemas/Prompt"
+                      },
+                      "promptContext": {
+                        "$ref": "#/components/schemas/PromptContextInfo"
                       },
                       "delivery": {
                         "type": "string",
@@ -24406,7 +25190,7 @@
                       },
                       "revision": {
                         "type": "string",
-                        "enum": ["v2"]
+                        "enum": ["v3"]
                       },
                       "goal": {
                         "type": "object",
@@ -24416,7 +25200,7 @@
                           },
                           "source": {
                             "type": "string",
-                            "enum": ["stakeholder", "maestro", "orientation"]
+                            "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                           }
                         },
                         "required": ["value", "source"],
@@ -24432,7 +25216,7 @@
                             },
                             "source": {
                               "type": "string",
-                              "enum": ["stakeholder", "maestro", "orientation"]
+                              "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                             }
                           },
                           "required": ["value", "source"],
@@ -24449,7 +25233,7 @@
                             },
                             "source": {
                               "type": "string",
-                              "enum": ["stakeholder", "maestro", "orientation"]
+                              "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                             }
                           },
                           "required": ["value", "source"],
@@ -24466,7 +25250,7 @@
                             },
                             "source": {
                               "type": "string",
-                              "enum": ["stakeholder", "maestro", "orientation"]
+                              "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                             }
                           },
                           "required": ["value", "source"],
@@ -24481,7 +25265,7 @@
                           },
                           "source": {
                             "type": "string",
-                            "enum": ["stakeholder", "maestro", "orientation"]
+                            "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                           }
                         },
                         "required": ["value", "source"],
@@ -24501,7 +25285,7 @@
                             },
                             "source": {
                               "type": "string",
-                              "enum": ["stakeholder", "maestro", "orientation"]
+                              "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                             }
                           },
                           "required": ["value", "source"],
@@ -24518,7 +25302,7 @@
                             },
                             "source": {
                               "type": "string",
-                              "enum": ["stakeholder", "maestro", "orientation"]
+                              "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                             }
                           },
                           "required": ["value", "source"],
@@ -24535,6 +25319,19 @@
                       "createdAt": {
                         "type": "integer",
                         "minimum": 0
+                      },
+                      "workflowBinding": {
+                        "$ref": "#/components/schemas/RelayArmWorkflowDefinition"
+                      },
+                      "upstreamAttribution": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/MaestroUpstreamAttributionV1"
+                          },
+                          {
+                            "$ref": "#/components/schemas/MaestroUpstreamAttributionV2"
+                          }
+                        ]
                       },
                       "grounding": {
                         "$ref": "#/components/schemas/MaestroGrounding"
@@ -24556,8 +25353,7 @@
                       "risks",
                       "status",
                       "revisionHash",
-                      "createdAt",
-                      "grounding"
+                      "createdAt"
                     ],
                     "additionalProperties": false
                   }
@@ -25341,6 +26137,142 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["maestro.task.workflow_bound"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "executionSessionID": {
+                        "type": "string",
+                        "pattern": "^ses"
+                      },
+                      "authorityMessageID": {
+                        "type": "string",
+                        "pattern": "^msg_"
+                      },
+                      "authorityCallID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "token": {
+                        "type": "string",
+                        "pattern": "^(?!\\.$)(?!.*\\.\\.)[A-Za-z0-9_.-]+$"
+                      },
+                      "binding": {
+                        "$ref": "#/components/schemas/RelayArmWorkflowBinding"
+                      }
+                    },
+                    "required": ["executionSessionID", "authorityMessageID", "authorityCallID", "token", "binding"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["maestro.work_result.decided"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "memberID": {
+                        "type": "string",
+                        "enum": ["backend"]
+                      },
+                      "taskId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "authoritySessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "executionSessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "resultRef": {
+                        "type": "object",
+                        "properties": {
+                          "parentSessionID": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "messageID": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "partID": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "callID": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": ["parentSessionID", "messageID", "partID", "callID"],
+                        "additionalProperties": false
+                      },
+                      "workResultHash": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "decision": {
+                        "type": "string",
+                        "enum": ["accepted", "rejected"]
+                      },
+                      "verificationState": {
+                        "type": "string",
+                        "enum": ["not-host-verified", "host-verified", "host-failed", "host-incomplete"]
+                      },
+                      "terminalReason": {
+                        "type": "string",
+                        "enum": ["ended", "blocked", "failed", "interrupted"]
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "projectID",
+                      "memberID",
+                      "taskId",
+                      "authoritySessionID",
+                      "executionSessionID",
+                      "resultRef",
+                      "workResultHash",
+                      "decision",
+                      "verificationState",
+                      "terminalReason"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["message.part.delta"]
                   },
                   "properties": {
@@ -25974,6 +26906,10 @@
                         "type": "string"
                       },
                       "assistantMessageID": {
+                        "type": "string",
+                        "pattern": "^msg_"
+                      },
+                      "messageID": {
                         "type": "string",
                         "pattern": "^msg_"
                       },
@@ -26842,6 +27778,9 @@
                 "$ref": "#/components/schemas/SyncEventSessionDeleted"
               },
               {
+                "$ref": "#/components/schemas/SyncEventSessionV1PromptAdmitted"
+              },
+              {
                 "$ref": "#/components/schemas/SyncEventMessageUpdated"
               },
               {
@@ -26981,6 +27920,12 @@
               },
               {
                 "$ref": "#/components/schemas/SyncEventMaestroTaskBound"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroTaskWorkflow_bound"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroWork_resultDecided"
               },
               {
                 "$ref": "#/components/schemas/SyncEventRelayHookDecided"
@@ -27941,6 +28886,15 @@
               "max_bytes": {
                 "type": "integer",
                 "exclusiveMinimum": 0
+              },
+              "lean": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false
@@ -29420,6 +30374,372 @@
         "required": ["error"],
         "additionalProperties": false
       },
+      "LeanProfileScope": {
+        "type": "object",
+        "properties": {
+          "profileID": {
+            "type": "string"
+          },
+          "projectID": {
+            "type": "string"
+          },
+          "directory": {
+            "type": "string"
+          }
+        },
+        "required": ["profileID", "projectID", "directory"],
+        "additionalProperties": false
+      },
+      "LeanProfileSavings": {
+        "type": "object",
+        "properties": {
+          "bytesSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tokensSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calls": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tokenCalls": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["bytesSaved", "tokensSaved", "calls", "tokenCalls"],
+        "additionalProperties": false
+      },
+      "LeanProfileItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "cargo",
+              "go",
+              "pytest",
+              "jest",
+              "vitest",
+              "git",
+              "rg",
+              "tsc",
+              "node",
+              "pnpm",
+              "eslint",
+              "biome",
+              "ruff",
+              "pyright",
+              "pylint",
+              "bun",
+              "esbuild",
+              "golangci",
+              "markdownlint",
+              "mypy",
+              "next",
+              "npm",
+              "pip",
+              "playwright",
+              "prettier",
+              "rollup",
+              "shellcheck",
+              "stylelint",
+              "uv",
+              "vite",
+              "webpack",
+              "yarn"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "savings": {
+            "$ref": "#/components/schemas/LeanProfileSavings"
+          }
+        },
+        "required": ["id", "enabled", "savings"],
+        "additionalProperties": false
+      },
+      "LeanProfileDashboard": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/LeanProfileScope"
+          },
+          "engine": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "coverage": {
+            "type": "string",
+            "enum": ["saved-profile-history"]
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "savings": {
+            "$ref": "#/components/schemas/LeanProfileSavings"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeanProfileItem"
+            }
+          }
+        },
+        "required": ["scope", "engine", "enabled", "coverage", "complete", "savings", "items"],
+        "additionalProperties": false
+      },
+      "ServiceUnavailableError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ServiceUnavailableError"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
+      "LeanProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "itemID": {
+            "type": "string",
+            "enum": [
+              "cargo",
+              "go",
+              "pytest",
+              "jest",
+              "vitest",
+              "git",
+              "rg",
+              "tsc",
+              "node",
+              "pnpm",
+              "eslint",
+              "biome",
+              "ruff",
+              "pyright",
+              "pylint",
+              "bun",
+              "esbuild",
+              "golangci",
+              "markdownlint",
+              "mypy",
+              "next",
+              "npm",
+              "pip",
+              "playwright",
+              "prettier",
+              "rollup",
+              "shellcheck",
+              "stylelint",
+              "uv",
+              "vite",
+              "webpack",
+              "yarn"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["enabled"],
+        "additionalProperties": false
+      },
+      "LeanProfileExecution": {
+        "type": "object",
+        "properties": {
+          "sessionID": {
+            "type": "string"
+          },
+          "messageID": {
+            "type": "string"
+          },
+          "partID": {
+            "type": "string"
+          },
+          "callID": {
+            "type": "string"
+          },
+          "itemID": {
+            "type": "string",
+            "enum": [
+              "cargo",
+              "go",
+              "pytest",
+              "jest",
+              "vitest",
+              "git",
+              "rg",
+              "tsc",
+              "node",
+              "pnpm",
+              "eslint",
+              "biome",
+              "ruff",
+              "pyright",
+              "pylint",
+              "bun",
+              "esbuild",
+              "golangci",
+              "markdownlint",
+              "mypy",
+              "next",
+              "npm",
+              "pip",
+              "playwright",
+              "prettier",
+              "rollup",
+              "shellcheck",
+              "stylelint",
+              "uv",
+              "vite",
+              "webpack",
+              "yarn"
+            ]
+          },
+          "command": {
+            "type": "string"
+          },
+          "commandTruncated": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["completed", "error"]
+          },
+          "exit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "time": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tokensSaved": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sessionID",
+          "messageID",
+          "partID",
+          "callID",
+          "itemID",
+          "command",
+          "commandTruncated",
+          "status",
+          "exit",
+          "time",
+          "bytesSaved",
+          "tokensSaved"
+        ],
+        "additionalProperties": false
+      },
+      "LeanProfileHistory": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/LeanProfileScope"
+          },
+          "itemID": {
+            "type": "string",
+            "enum": [
+              "cargo",
+              "go",
+              "pytest",
+              "jest",
+              "vitest",
+              "git",
+              "rg",
+              "tsc",
+              "node",
+              "pnpm",
+              "eslint",
+              "biome",
+              "ruff",
+              "pyright",
+              "pylint",
+              "bun",
+              "esbuild",
+              "golangci",
+              "markdownlint",
+              "mypy",
+              "next",
+              "npm",
+              "pip",
+              "playwright",
+              "prettier",
+              "rollup",
+              "shellcheck",
+              "stylelint",
+              "uv",
+              "vite",
+              "webpack",
+              "yarn"
+            ]
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "executions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeanProfileExecution"
+            }
+          }
+        },
+        "required": ["scope", "itemID", "complete", "executions"],
+        "additionalProperties": false
+      },
       "Project": {
         "type": "object",
         "properties": {
@@ -30065,6 +31385,53 @@
         "required": ["_tag", "sessionID", "message"],
         "additionalProperties": false
       },
+      "SessionProcessNode": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "integer"
+          },
+          "parentPid": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["pid"],
+        "additionalProperties": false
+      },
+      "SessionProcess": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "pid": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "started": {
+            "type": "number"
+          },
+          "processes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionProcessNode"
+            }
+          },
+          "output": {
+            "type": "string"
+          },
+          "written": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "pid", "title", "started", "processes", "output", "written"],
+        "additionalProperties": false
+      },
       "EventTuiPromptAppend": {
         "type": "object",
         "properties": {
@@ -30436,23 +31803,6 @@
         "required": ["text"],
         "additionalProperties": false
       },
-      "ServiceUnavailableError": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": ["ServiceUnavailableError"]
-          },
-          "message": {
-            "type": "string"
-          },
-          "service": {
-            "type": "string"
-          }
-        },
-        "required": ["_tag", "message"],
-        "additionalProperties": false
-      },
       "MessageNotFoundError": {
         "type": "object",
         "properties": {
@@ -30583,6 +31933,20 @@
           "$ref": "#/components/schemas/SessionDurableEvent"
         },
         "contentMediaType": "application/json"
+      },
+      "ResearchArtifactNotFoundError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ResearchArtifactNotFoundError"]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
       },
       "SessionMessagesResponse": {
         "type": "object",
@@ -30844,6 +32208,9 @@
             "$ref": "#/components/schemas/SessionDeleted"
           },
           {
+            "$ref": "#/components/schemas/SessionV1PromptAdmitted"
+          },
+          {
             "$ref": "#/components/schemas/MessageUpdated"
           },
           {
@@ -30995,6 +32362,12 @@
           },
           {
             "$ref": "#/components/schemas/MaestroTaskBound"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroTaskWorkflow_bound"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroWork_resultDecided"
           },
           {
             "$ref": "#/components/schemas/MessagePartDelta"
@@ -31547,6 +32920,23 @@
         },
         "additionalProperties": false
       },
+      "RelayForbiddenError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["RelayForbiddenError"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "code", "message"],
+        "additionalProperties": false
+      },
       "RelayNodeTypes": {
         "type": "object",
         "properties": {
@@ -32038,6 +33428,19 @@
         "required": ["directory"],
         "additionalProperties": false
       },
+      "PromptContextInfo": {
+        "type": "object",
+        "properties": {
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["reminders"],
+        "additionalProperties": false
+      },
       "ModelRef": {
         "type": "object",
         "properties": {
@@ -32263,6 +33666,276 @@
           }
         },
         "required": ["messageID"],
+        "additionalProperties": false
+      },
+      "RelayArmPublication": {
+        "type": "object",
+        "properties": {
+          "projectID": {
+            "type": "string"
+          },
+          "documentID": {
+            "type": "string"
+          },
+          "activeVersionID": {
+            "type": "string"
+          },
+          "immutableVersionBodyChecksum": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "livePublicationChecksum": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "projectID",
+          "documentID",
+          "activeVersionID",
+          "immutableVersionBodyChecksum",
+          "livePublicationChecksum"
+        ],
+        "additionalProperties": false
+      },
+      "RelayArmMaterialization": {
+        "type": "object",
+        "properties": {
+          "schemaIdentifier": {
+            "type": "string",
+            "enum": ["RelaySprint.Sprint"]
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "byteLength": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["schemaIdentifier", "digest", "byteLength"],
+        "additionalProperties": false
+      },
+      "RelayAuthoringSkillBinding": {
+        "type": "object",
+        "properties": {
+          "wp": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["combine", "replace"]
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": ["wp", "skill", "sha256", "mode", "content"],
+        "additionalProperties": false
+      },
+      "RelayArmWorkflowDefinition": {
+        "type": "object",
+        "properties": {
+          "publication": {
+            "$ref": "#/components/schemas/RelayArmPublication"
+          },
+          "materialization": {
+            "$ref": "#/components/schemas/RelayArmMaterialization"
+          },
+          "resolvedSkills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelayAuthoringSkillBinding"
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "writePaths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": ["publication", "materialization", "resolvedSkills", "parameters", "writePaths"],
+        "additionalProperties": false
+      },
+      "MaestroUpstreamAttributionV1": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "enum": ["maestro-upstream-attribution-v1"]
+          },
+          "projectID": {
+            "type": "string"
+          },
+          "memberID": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string",
+            "enum": ["upstream"]
+          },
+          "authorSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "authorMessageID": {
+            "type": "string",
+            "pattern": "^msg_"
+          },
+          "parentSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "parentMessageID": {
+            "type": "string",
+            "pattern": "^msg_"
+          },
+          "parentCallID": {
+            "type": "string",
+            "minLength": 1
+          },
+          "logicalTaskID": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "schema",
+          "projectID",
+          "memberID",
+          "profile",
+          "authorSessionID",
+          "authorMessageID",
+          "parentSessionID",
+          "parentMessageID",
+          "parentCallID",
+          "logicalTaskID"
+        ],
+        "additionalProperties": false
+      },
+      "MaestroUpstreamAttributionOrchestraTaskDispatch": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["orchestra-task"]
+          }
+        },
+        "required": ["kind"],
+        "additionalProperties": false
+      },
+      "MaestroUpstreamAttributionClaudeCodeAgentDispatch": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["claude-code-agent"]
+          },
+          "tool": {
+            "type": "string",
+            "enum": ["Agent", "Task"]
+          },
+          "subagentType": {
+            "type": "string",
+            "enum": ["orchestra:archie"]
+          },
+          "executor": {
+            "type": "string",
+            "enum": ["claude-code-host"]
+          },
+          "agentID": {
+            "type": "string",
+            "minLength": 1
+          },
+          "grantID": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["kind", "tool", "subagentType", "executor", "agentID", "grantID"],
+        "additionalProperties": false
+      },
+      "MaestroUpstreamAttributionV2": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "enum": ["maestro-upstream-attribution-v2"]
+          },
+          "projectID": {
+            "type": "string"
+          },
+          "memberID": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string",
+            "enum": ["upstream"]
+          },
+          "authorSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "authorMessageID": {
+            "type": "string",
+            "pattern": "^msg_"
+          },
+          "parentSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "parentMessageID": {
+            "type": "string",
+            "pattern": "^msg_"
+          },
+          "parentCallID": {
+            "type": "string",
+            "minLength": 1
+          },
+          "logicalTaskID": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dispatch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaestroUpstreamAttributionOrchestraTaskDispatch"
+              },
+              {
+                "$ref": "#/components/schemas/MaestroUpstreamAttributionClaudeCodeAgentDispatch"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema",
+          "projectID",
+          "memberID",
+          "profile",
+          "authorSessionID",
+          "authorMessageID",
+          "parentSessionID",
+          "parentMessageID",
+          "parentCallID",
+          "logicalTaskID",
+          "dispatch"
+        ],
         "additionalProperties": false
       },
       "MaestroGrounding": {
@@ -32499,6 +34172,32 @@
           }
         },
         "required": ["unit", "name", "content", "contentHash", "receiptHash"],
+        "additionalProperties": false
+      },
+      "RelayArmWorkflowBinding": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/RelayArmWorkflowDefinition"
+          },
+          "planRevisionID": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "executionSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "authoritySessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "logicalTaskID": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["definition", "planRevisionID", "executionSessionID", "authoritySessionID", "logicalTaskID"],
         "additionalProperties": false
       },
       "PermissionV2Source": {
@@ -32797,6 +34496,45 @@
                 },
                 "required": ["sessionID", "info"],
                 "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventSessionV1PromptAdmitted": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["session.v1.prompt.admitted.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "$ref": "#/components/schemas/SessionV1PromptAdmission"
               }
             },
             "required": ["type", "id", "seq", "aggregateID", "data"],
@@ -33230,6 +34968,9 @@
                   "prompt": {
                     "$ref": "#/components/schemas/Prompt"
                   },
+                  "promptContext": {
+                    "$ref": "#/components/schemas/PromptContextInfo"
+                  },
                   "delivery": {
                     "type": "string",
                     "enum": ["steer", "queue"]
@@ -33290,6 +35031,9 @@
                   },
                   "prompt": {
                     "$ref": "#/components/schemas/Prompt"
+                  },
+                  "promptContext": {
+                    "$ref": "#/components/schemas/PromptContextInfo"
                   },
                   "delivery": {
                     "type": "string",
@@ -35328,7 +37072,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["maestro.plan_revision.recorded.2"]
+                "enum": ["maestro.plan_revision.recorded.3"]
               },
               "id": {
                 "type": "string",
@@ -35357,7 +37101,7 @@
                   },
                   "revision": {
                     "type": "string",
-                    "enum": ["v2"]
+                    "enum": ["v3"]
                   },
                   "goal": {
                     "type": "object",
@@ -35367,7 +37111,7 @@
                       },
                       "source": {
                         "type": "string",
-                        "enum": ["stakeholder", "maestro", "orientation"]
+                        "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                       }
                     },
                     "required": ["value", "source"],
@@ -35383,7 +37127,7 @@
                         },
                         "source": {
                           "type": "string",
-                          "enum": ["stakeholder", "maestro", "orientation"]
+                          "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                         }
                       },
                       "required": ["value", "source"],
@@ -35400,7 +37144,7 @@
                         },
                         "source": {
                           "type": "string",
-                          "enum": ["stakeholder", "maestro", "orientation"]
+                          "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                         }
                       },
                       "required": ["value", "source"],
@@ -35417,7 +37161,7 @@
                         },
                         "source": {
                           "type": "string",
-                          "enum": ["stakeholder", "maestro", "orientation"]
+                          "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                         }
                       },
                       "required": ["value", "source"],
@@ -35432,7 +37176,7 @@
                       },
                       "source": {
                         "type": "string",
-                        "enum": ["stakeholder", "maestro", "orientation"]
+                        "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                       }
                     },
                     "required": ["value", "source"],
@@ -35452,7 +37196,7 @@
                         },
                         "source": {
                           "type": "string",
-                          "enum": ["stakeholder", "maestro", "orientation"]
+                          "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                         }
                       },
                       "required": ["value", "source"],
@@ -35469,7 +37213,7 @@
                         },
                         "source": {
                           "type": "string",
-                          "enum": ["stakeholder", "maestro", "orientation"]
+                          "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                         }
                       },
                       "required": ["value", "source"],
@@ -35486,6 +37230,19 @@
                   "createdAt": {
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "workflowBinding": {
+                    "$ref": "#/components/schemas/RelayArmWorkflowDefinition"
+                  },
+                  "upstreamAttribution": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/MaestroUpstreamAttributionV1"
+                      },
+                      {
+                        "$ref": "#/components/schemas/MaestroUpstreamAttributionV2"
+                      }
+                    ]
                   },
                   "grounding": {
                     "$ref": "#/components/schemas/MaestroGrounding"
@@ -35507,8 +37264,7 @@
                   "risks",
                   "status",
                   "revisionHash",
-                  "createdAt",
-                  "grounding"
+                  "createdAt"
                 ],
                 "additionalProperties": false
               }
@@ -36469,6 +38225,184 @@
         "required": ["type", "id", "syncEvent"],
         "additionalProperties": false
       },
+      "SyncEventMaestroTaskWorkflow_bound": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.task.workflow_bound.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "executionSessionID": {
+                    "type": "string",
+                    "pattern": "^ses"
+                  },
+                  "authorityMessageID": {
+                    "type": "string",
+                    "pattern": "^msg_"
+                  },
+                  "authorityCallID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "token": {
+                    "type": "string",
+                    "pattern": "^(?!\\.$)(?!.*\\.\\.)[A-Za-z0-9_.-]+$"
+                  },
+                  "binding": {
+                    "$ref": "#/components/schemas/RelayArmWorkflowBinding"
+                  }
+                },
+                "required": ["executionSessionID", "authorityMessageID", "authorityCallID", "token", "binding"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroWork_resultDecided": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.work_result.decided.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "memberID": {
+                    "type": "string",
+                    "enum": ["backend"]
+                  },
+                  "taskId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "authoritySessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "executionSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "resultRef": {
+                    "type": "object",
+                    "properties": {
+                      "parentSessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "messageID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "partID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "callID": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": ["parentSessionID", "messageID", "partID", "callID"],
+                    "additionalProperties": false
+                  },
+                  "workResultHash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "enum": ["accepted", "rejected"]
+                  },
+                  "verificationState": {
+                    "type": "string",
+                    "enum": ["not-host-verified", "host-verified", "host-failed", "host-incomplete"]
+                  },
+                  "terminalReason": {
+                    "type": "string",
+                    "enum": ["ended", "blocked", "failed", "interrupted"]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "projectID",
+                  "memberID",
+                  "taskId",
+                  "authoritySessionID",
+                  "executionSessionID",
+                  "resultRef",
+                  "workResultHash",
+                  "decision",
+                  "verificationState",
+                  "terminalReason"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
       "SyncEventRelayHookDecided": {
         "type": "object",
         "properties": {
@@ -36534,6 +38468,10 @@
                     "type": "string"
                   },
                   "assistantMessageID": {
+                    "type": "string",
+                    "pattern": "^msg_"
+                  },
+                  "messageID": {
                     "type": "string",
                     "pattern": "^msg_"
                   },
@@ -36843,6 +38781,10 @@
           "id": {
             "type": "string"
           },
+          "engine": {
+            "type": "string",
+            "enum": ["orchestra", "claude-code"]
+          },
           "model": {
             "$ref": "#/components/schemas/ModelRef"
           },
@@ -37094,6 +39036,9 @@
           "prompt": {
             "$ref": "#/components/schemas/Prompt"
           },
+          "promptContext": {
+            "$ref": "#/components/schemas/PromptContextInfo"
+          },
           "delivery": {
             "type": "string",
             "enum": ["steer", "queue"]
@@ -37205,6 +39150,9 @@
             "items": {
               "$ref": "#/components/schemas/PromptAgentAttachment"
             }
+          },
+          "promptContext": {
+            "$ref": "#/components/schemas/PromptContextInfo"
           },
           "type": {
             "type": "string",
@@ -37936,6 +39884,9 @@
               "prompt": {
                 "$ref": "#/components/schemas/Prompt"
               },
+              "promptContext": {
+                "$ref": "#/components/schemas/PromptContextInfo"
+              },
               "delivery": {
                 "type": "string",
                 "enum": ["steer", "queue"]
@@ -37997,6 +39948,9 @@
               },
               "prompt": {
                 "$ref": "#/components/schemas/Prompt"
+              },
+              "promptContext": {
+                "$ref": "#/components/schemas/PromptContextInfo"
               },
               "delivery": {
                 "type": "string",
@@ -39455,6 +41409,415 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "CapabilityArtifactID": {
+        "type": "string",
+        "pattern": "^cart_[0-9A-Za-z]{26}(?![\\s\\S])"
+      },
+      "CapabilityArtifactRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/CapabilityArtifactID"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["id", "revision"],
+        "additionalProperties": false
+      },
+      "ResearchBinding": {
+        "type": "object",
+        "properties": {
+          "projectID": {
+            "type": "string"
+          },
+          "memberID": {
+            "type": "string",
+            "enum": ["jimmy"]
+          },
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "executionSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "authoritySessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "directory": {
+            "type": "string"
+          },
+          "worktree": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectID",
+          "memberID",
+          "taskId",
+          "executionSessionID",
+          "authoritySessionID",
+          "directory",
+          "worktree"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchSourceRef": {
+        "type": "object",
+        "properties": {
+          "artifact": {
+            "$ref": "#/components/schemas/CapabilityArtifactRef"
+          },
+          "representation": {
+            "type": "string",
+            "enum": ["received", "text", "markdown", "html", "structured-json"]
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          }
+        },
+        "required": ["artifact", "representation", "digest"],
+        "additionalProperties": false
+      },
+      "ResearchSourceOrigin": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["file", "url", "tool-output", "atlas-own"]
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": ["kind", "uri"],
+        "additionalProperties": false
+      },
+      "ResearchSourceExtent": {
+        "type": "object",
+        "properties": {
+          "byteStart": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lineStart": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "lineEnd": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["byteStart"],
+        "additionalProperties": false
+      },
+      "ResearchAtlasSource": {
+        "type": "object",
+        "properties": {
+          "sourceIdentity": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "contentHash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "receiptHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          }
+        },
+        "required": ["sourceIdentity", "unit", "contentHash", "receiptHash"],
+        "additionalProperties": false
+      },
+      "ResearchSourceReceipt": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/ResearchBinding"
+          },
+          "ref": {
+            "$ref": "#/components/schemas/ResearchSourceRef"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/ResearchSourceOrigin"
+          },
+          "capturedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mediaType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "derivedFrom": {
+            "$ref": "#/components/schemas/ResearchSourceRef"
+          },
+          "transformation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "observed": {
+            "$ref": "#/components/schemas/ResearchSourceExtent"
+          },
+          "atlas": {
+            "$ref": "#/components/schemas/ResearchAtlasSource"
+          }
+        },
+        "required": ["binding", "ref", "origin", "capturedAt", "mediaType", "bytes", "complete"],
+        "additionalProperties": false
+      },
+      "ResearchDocumentRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^rdoc_[0-9A-Za-z]{26}(?![\\s\\S])"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["id", "revision"],
+        "additionalProperties": false
+      },
+      "ResearchRecordRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^rque_[0-9A-Za-z]{26}(?![\\s\\S])"
+              },
+              {
+                "type": "string",
+                "pattern": "^rfnd_[0-9A-Za-z]{26}(?![\\s\\S])"
+              },
+              {
+                "type": "string",
+                "pattern": "^rrel_[0-9A-Za-z]{26}(?![\\s\\S])"
+              }
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["id", "revision"],
+        "additionalProperties": false
+      },
+      "ResearchLineLocator": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["lines"]
+          },
+          "start": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["kind", "start", "end"],
+        "additionalProperties": false
+      },
+      "ResearchQuoteLocator": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["quote"]
+          },
+          "exact": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "prefix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "suffix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": ["kind", "exact"],
+        "additionalProperties": false
+      },
+      "ResearchJsonLocator": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["json"]
+          },
+          "pointer": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": ["kind", "pointer"],
+        "additionalProperties": false
+      },
+      "ResearchEvidenceRef": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/ResearchSourceRef"
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchLineLocator"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchQuoteLocator"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchJsonLocator"
+              }
+            ]
+          }
+        },
+        "required": ["source", "locator"],
+        "additionalProperties": false
+      },
+      "ResearchDocumentReceipt": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/ResearchBinding"
+          },
+          "ref": {
+            "$ref": "#/components/schemas/ResearchDocumentRef"
+          },
+          "artifact": {
+            "$ref": "#/components/schemas/CapabilityArtifactRef"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "genre": {
+            "type": "string",
+            "enum": ["answer", "map", "explanation", "comparison", "evidence-review", "opportunity"]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "publishedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "findingRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchRecordRef"
+            },
+            "maxItems": 32
+          },
+          "citations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ResearchEvidenceRef"
+            }
+          }
+        },
+        "required": [
+          "binding",
+          "ref",
+          "artifact",
+          "digest",
+          "title",
+          "genre",
+          "bytes",
+          "publishedAt",
+          "findingRefs",
+          "citations"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchArtifactPage": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/CapabilityArtifactRef"
+          },
+          "representation": {
+            "type": "string",
+            "enum": ["received", "text", "markdown", "html", "structured-json"]
+          },
+          "text": {
+            "type": "string"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchSourceReceipt"
+              },
+              {
+                "$ref": "#/components/schemas/ResearchDocumentReceipt"
+              }
+            ]
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          }
+        },
+        "required": ["ref", "representation", "text", "receipt", "complete"],
+        "additionalProperties": false
+      },
       "ModelApi": {
         "anyOf": [
           {
@@ -40793,6 +43156,46 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "SessionV1PromptAdmitted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.v1.prompt.admitted"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SessionV1PromptAdmission"
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
       "MessageUpdated": {
         "type": "object",
         "properties": {
@@ -41870,7 +44273,7 @@
               },
               "revision": {
                 "type": "string",
-                "enum": ["v2"]
+                "enum": ["v3"]
               },
               "goal": {
                 "type": "object",
@@ -41880,7 +44283,7 @@
                   },
                   "source": {
                     "type": "string",
-                    "enum": ["stakeholder", "maestro", "orientation"]
+                    "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                   }
                 },
                 "required": ["value", "source"],
@@ -41896,7 +44299,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -41913,7 +44316,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -41930,7 +44333,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -41945,7 +44348,7 @@
                   },
                   "source": {
                     "type": "string",
-                    "enum": ["stakeholder", "maestro", "orientation"]
+                    "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                   }
                 },
                 "required": ["value", "source"],
@@ -41965,7 +44368,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -41982,7 +44385,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -41999,6 +44402,19 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "workflowBinding": {
+                "$ref": "#/components/schemas/RelayArmWorkflowDefinition"
+              },
+              "upstreamAttribution": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/MaestroUpstreamAttributionV1"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MaestroUpstreamAttributionV2"
+                  }
+                ]
               },
               "grounding": {
                 "$ref": "#/components/schemas/MaestroGrounding"
@@ -42020,8 +44436,7 @@
               "risks",
               "status",
               "revisionHash",
-              "createdAt",
-              "grounding"
+              "createdAt"
             ],
             "additionalProperties": false
           }
@@ -42973,6 +45388,186 @@
               }
             },
             "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroTaskWorkflow_bound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.workflow_bound"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "executionSessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "authorityMessageID": {
+                "type": "string",
+                "pattern": "^msg_"
+              },
+              "authorityCallID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "token": {
+                "type": "string",
+                "pattern": "^(?!\\.$)(?!.*\\.\\.)[A-Za-z0-9_.-]+$"
+              },
+              "binding": {
+                "$ref": "#/components/schemas/RelayArmWorkflowBinding"
+              }
+            },
+            "required": ["executionSessionID", "authorityMessageID", "authorityCallID", "token", "binding"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "MaestroWork_resultDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.work_result.decided"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "enum": ["backend"]
+              },
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resultRef": {
+                "type": "object",
+                "properties": {
+                  "parentSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "messageID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "partID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "callID": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["parentSessionID", "messageID", "partID", "callID"],
+                "additionalProperties": false
+              },
+              "workResultHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "decision": {
+                "type": "string",
+                "enum": ["accepted", "rejected"]
+              },
+              "verificationState": {
+                "type": "string",
+                "enum": ["not-host-verified", "host-verified", "host-failed", "host-incomplete"]
+              },
+              "terminalReason": {
+                "type": "string",
+                "enum": ["ended", "blocked", "failed", "interrupted"]
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectID",
+              "memberID",
+              "taskId",
+              "authoritySessionID",
+              "executionSessionID",
+              "resultRef",
+              "workResultHash",
+              "decision",
+              "verificationState",
+              "terminalReason"
+            ],
             "additionalProperties": false
           }
         },
@@ -44061,6 +46656,10 @@
                 "type": "string"
               },
               "assistantMessageID": {
+                "type": "string",
+                "pattern": "^msg_"
+              },
+              "messageID": {
                 "type": "string",
                 "pattern": "^msg_"
               },
@@ -47288,6 +49887,24 @@
         "required": ["id", "type", "properties"],
         "additionalProperties": false
       },
+      "EventSessionV1PromptAdmitted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.v1.prompt.admitted"]
+          },
+          "properties": {
+            "$ref": "#/components/schemas/SessionV1PromptAdmission"
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
       "EventMessageUpdated": {
         "type": "object",
         "properties": {
@@ -47548,6 +50165,9 @@
               "prompt": {
                 "$ref": "#/components/schemas/Prompt"
               },
+              "promptContext": {
+                "$ref": "#/components/schemas/PromptContextInfo"
+              },
               "delivery": {
                 "type": "string",
                 "enum": ["steer", "queue"]
@@ -47587,6 +50207,9 @@
               },
               "prompt": {
                 "$ref": "#/components/schemas/Prompt"
+              },
+              "promptContext": {
+                "$ref": "#/components/schemas/PromptContextInfo"
               },
               "delivery": {
                 "type": "string",
@@ -49183,7 +51806,7 @@
               },
               "revision": {
                 "type": "string",
-                "enum": ["v2"]
+                "enum": ["v3"]
               },
               "goal": {
                 "type": "object",
@@ -49193,7 +51816,7 @@
                   },
                   "source": {
                     "type": "string",
-                    "enum": ["stakeholder", "maestro", "orientation"]
+                    "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                   }
                 },
                 "required": ["value", "source"],
@@ -49209,7 +51832,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -49226,7 +51849,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -49243,7 +51866,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -49258,7 +51881,7 @@
                   },
                   "source": {
                     "type": "string",
-                    "enum": ["stakeholder", "maestro", "orientation"]
+                    "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                   }
                 },
                 "required": ["value", "source"],
@@ -49278,7 +51901,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -49295,7 +51918,7 @@
                     },
                     "source": {
                       "type": "string",
-                      "enum": ["stakeholder", "maestro", "orientation"]
+                      "enum": ["stakeholder", "maestro", "orientation", "upstream"]
                     }
                   },
                   "required": ["value", "source"],
@@ -49312,6 +51935,19 @@
               "createdAt": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "workflowBinding": {
+                "$ref": "#/components/schemas/RelayArmWorkflowDefinition"
+              },
+              "upstreamAttribution": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/MaestroUpstreamAttributionV1"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MaestroUpstreamAttributionV2"
+                  }
+                ]
               },
               "grounding": {
                 "$ref": "#/components/schemas/MaestroGrounding"
@@ -49333,8 +51969,7 @@
               "risks",
               "status",
               "revisionHash",
-              "createdAt",
-              "grounding"
+              "createdAt"
             ],
             "additionalProperties": false
           }
@@ -50094,6 +52729,142 @@
         "required": ["id", "type", "properties"],
         "additionalProperties": false
       },
+      "EventMaestroTaskWorkflow_bound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.workflow_bound"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "executionSessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "authorityMessageID": {
+                "type": "string",
+                "pattern": "^msg_"
+              },
+              "authorityCallID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "token": {
+                "type": "string",
+                "pattern": "^(?!\\.$)(?!.*\\.\\.)[A-Za-z0-9_.-]+$"
+              },
+              "binding": {
+                "$ref": "#/components/schemas/RelayArmWorkflowBinding"
+              }
+            },
+            "required": ["executionSessionID", "authorityMessageID", "authorityCallID", "token", "binding"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroWork_resultDecided": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.work_result.decided"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "enum": ["backend"]
+              },
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resultRef": {
+                "type": "object",
+                "properties": {
+                  "parentSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "messageID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "partID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "callID": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["parentSessionID", "messageID", "partID", "callID"],
+                "additionalProperties": false
+              },
+              "workResultHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "decision": {
+                "type": "string",
+                "enum": ["accepted", "rejected"]
+              },
+              "verificationState": {
+                "type": "string",
+                "enum": ["not-host-verified", "host-verified", "host-failed", "host-incomplete"]
+              },
+              "terminalReason": {
+                "type": "string",
+                "enum": ["ended", "blocked", "failed", "interrupted"]
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectID",
+              "memberID",
+              "taskId",
+              "authoritySessionID",
+              "executionSessionID",
+              "resultRef",
+              "workResultHash",
+              "decision",
+              "verificationState",
+              "terminalReason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
       "EventMessagePartDelta": {
         "type": "object",
         "properties": {
@@ -50736,6 +53507,10 @@
                 "type": "string"
               },
               "assistantMessageID": {
+                "type": "string",
+                "pattern": "^msg_"
+              },
+              "messageID": {
                 "type": "string",
                 "pattern": "^msg_"
               },
@@ -51632,6 +54407,10 @@
       "description": "Experimental HttpApi session routes."
     },
     {
+      "name": "session",
+      "description": "Session background process routes."
+    },
+    {
       "name": "sync",
       "description": "Experimental HttpApi sync routes."
     },
@@ -51658,6 +54437,10 @@
     {
       "name": "sessions",
       "description": "Experimental session routes."
+    },
+    {
+      "name": "orchestra HttpApi",
+      "description": "Experimental HttpApi surface for selected instance routes."
     },
     {
       "name": "messages",
