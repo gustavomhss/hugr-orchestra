@@ -11,7 +11,7 @@ import { byteFixture, byteStats, exactRaw } from "./pty-byte-probe.ts"
 type Terminal = { id: string; pid: number }
 
 export async function run(options: { mutation?: "missing-replay" | "truncated-replay" | "gap-count" } = {}) {
-  const scratch = fixture("v6-terminal", { lsp: false })
+  const scratch = await fixture("v6-terminal", { lsp: false })
   const nonce = `omni-terminal-${randomUUID()}`
   adoptTree(scratch.home, nonce)
   markerArgument(nonce, path.join(scratch.home, `${nonce}.edited`))
