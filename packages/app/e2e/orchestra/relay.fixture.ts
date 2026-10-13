@@ -265,6 +265,26 @@ export function relayState(now = Date.now()) {
 }
 
 export type RelayState = ReturnType<typeof relayState>
+// Observe the actual client continuation, including a discarded write, rather than transport completion.
+export async function authoringSettlement(page: Page, kind: "save" | "navigation", owner: string) {
+  const settled = Promise.withResolvers<void>()
+  const state = { completed: false }
+  await page.exposeFunction("relayAuthoringSettled", () => {
+    state.completed = true
+    settled.resolve()
+  })
+  await page.addInitScript(({ kind, owner }) => {
+    const name = kind === "save" ? "relay-draft-save-settled" : "relay-navigation-action-settled"
+    const observe = (event: Event) => {
+      if (!(event instanceof CustomEvent) || event.detail[kind === "save" ? "documentID" : "pathname"] !== owner) return
+      window.removeEventListener(name, observe)
+      void (window as unknown as { relayAuthoringSettled(): Promise<void> }).relayAuthoringSettled()
+    }
+    window.addEventListener(name, observe)
+  }, { kind, owner })
+  return { completed: () => state.completed, promise: settled.promise }
+}
+
 type Answer = (body: unknown, status?: number) => Promise<void>
 type Call = { method: string; id?: string; action?: string; extra?: string; body?: Json }
 

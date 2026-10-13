@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { setupRelay } from "./relay.fixture"
+import { authoringSettlement, setupRelay } from "./relay.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(120_000)
@@ -48,6 +48,7 @@ for (const entry of ["workflow library pending", "hook library failed", "workflo
     const state = await setupRelay(page)
     const hook = entry.startsWith("hook")
     const id = hook ? "protect-generated" : workflow
+    const settled = await authoringSettlement(page, "save", id)
     const pending = Promise.withResolvers<void>()
     const arrived = Promise.withResolvers<void>()
     const answered = Promise.withResolvers<void>()
@@ -62,7 +63,10 @@ for (const entry of ["workflow library pending", "hook library failed", "workflo
     await openNode(page, hook ? "hooks" : "workflows", id, hook ? "b" : "green.implement")
     await details(page).getByRole("textbox", { name: hook ? "Name" : "Instructions", exact: true }).fill("Retained local edit")
     await arrived.promise
-    if (hook) await expect(details(page).locator('[data-save="error"]')).toBeVisible()
+    if (hook) {
+      await settled.promise
+      await expect(details(page).locator('[data-save="error"]')).toBeVisible()
+    }
     expect(await page.evaluate(() => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })))).toBe(true)
     if (entry.includes("library")) {
       await library(page, hook ? "Hooks" : "Workflows")
@@ -80,11 +84,14 @@ for (const entry of ["workflow library pending", "hook library failed", "workflo
     await expect(page.locator(`[data-document="${id}"]`)).toHaveCount(0)
     expect(state.documents.some((document) => document.id === id)).toBe(false)
     expect(await page.evaluate(() => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })))).toBe(false)
+    expect(settled.completed()).toBe(hook)
     const response = hook ? undefined : page.waitForResponse((reply) => reply.request().method() === "PATCH" && new URL(reply.url()).pathname === `/api/relay/document/${id}`)
     pending.resolve()
     await answered.promise
     if (response) await (await response).finished()
-    await expect.poll(() => page.evaluate(() => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })))).toBe(false)
+    await settled.promise
+    expect(settled.completed()).toBe(true)
+    expect(await page.evaluate(() => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })))).toBe(false)
     await expect(page.getByText(/^Unsaved changes:/)).toHaveCount(0)
     await expect(page.locator(`[data-document="${id}"]`)).toHaveCount(0)
     // Switching chapters reads the actual server list again; deletion must survive either path.
@@ -105,6 +112,57 @@ async function delayCreate(page: Page) {
     return route.fallback()
   })
   return { pending, arrived }
+}
+
+for (const entry of ["retained library new", "retained editor history", "retained library roundtrip", "normal clone"]) {
+  test(`lifetime: clone completion respects ${entry}`, async ({ page }) => {
+    const state = await setupRelay(page)
+    const delayed = await delayCreate(page)
+    const inEditor = entry.includes("editor")
+    const origin = `/orchestra/workflows${inEditor ? `/${workflow}` : ""}`
+    const settled = await authoringSettlement(page, "navigation", origin)
+    await page.goto(origin, { waitUntil: "domcontentloaded" })
+    const surface = page.locator(inEditor ? '[data-component="relay-editor"]' : '[data-mx-page="orchestra-workflows"]')
+    await expect(surface).toBeVisible()
+    const owner = await surface.elementHandle()
+    if (inEditor) await editor(page).getByRole("button", { name: "More actions", exact: true }).click()
+    if (!inEditor) await page.locator(`[data-document="${workflow}"]`).locator('button[aria-haspopup="menu"]').click()
+    const response = page.waitForResponse((reply) => reply.request().method() === "POST" && new URL(reply.url()).pathname === "/api/relay/document")
+    await page.getByRole("menuitem", { name: "Duplicate", exact: true }).click()
+    await delayed.arrived.promise
+    if (inEditor) await editor(page).getByRole("tab", { name: /^Executions/ }).click()
+    if (entry.includes("library")) {
+      await page.getByRole("button", { name: "New workflow", exact: true }).click()
+      await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true }).fill("Selected route draft")
+    }
+    if (entry.includes("roundtrip")) {
+      await page.goBack()
+      await expect(page.getByRole("dialog", { name: "New workflow", exact: true })).toHaveCount(0)
+    }
+    const chosen = entry === "retained library new" ? `${origin}/new` : inEditor ? `${origin}/executions` : origin
+    await expect(page).toHaveURL(new RegExp(`${chosen}$`))
+    expect(await owner!.evaluate((element) => element.isConnected)).toBe(true)
+    expect(settled.completed()).toBe(false)
+    delayed.pending.resolve()
+    const reply = await response
+    await reply.finished()
+    const created = (await reply.json()).data
+    await settled.promise
+    if (entry === "normal clone") {
+      await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${created.id}$`))
+      await expect(editor(page).locator(".wf-name")).toHaveValue(String(created.name))
+      return
+    }
+    await expect(page).toHaveURL(new RegExp(`${chosen}$`))
+    expect(await owner!.evaluate((element) => element.isConnected)).toBe(true)
+    if (entry === "retained library new") {
+      await expect(page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Selected route draft")
+      await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("button", { name: "Cancel", exact: true }).click()
+    }
+    if (inEditor) await editor(page).getByRole("link", { name: "Back to Workflows", exact: true }).click()
+    await expect(page.locator(`[data-document="${created.id}"]`)).toContainText(String(created.name))
+    expect(state.writes.filter((write) => write.method === "POST")).toHaveLength(1)
+  })
 }
 
 for (const kind of ["workflow", "hook"]) {
@@ -185,7 +243,7 @@ for (const entry of ["workflow library", "workflow editor", "hook editor"]) {
 test("lifetime: shortcut popup blocks editor and command keys from button focus and restores them on close", async ({ page }) => {
   await setupRelay(page)
   await page.goto(`/orchestra/workflows/${workflow}`, { waitUntil: "domcontentloaded" })
-  await canvas(page).getByRole("button", { name: "Keyboard shortcuts", exact: true }).click()
+  await canvas(page).getByRole("button", { name: "Keyboard shortcuts (?)", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts", exact: true })
   const close = dialog.locator("header").getByRole("button", { name: "Close", exact: true })
   await expect(close).toBeFocused()
@@ -197,7 +255,7 @@ test("lifetime: shortcut popup blocks editor and command keys from button focus 
   await expect(page.locator(".command-palette-v2")).toHaveCount(0)
   await close.click()
   await expect(dialog).toHaveCount(0)
-  await expect(canvas(page).getByRole("button", { name: "Keyboard shortcuts", exact: true })).toBeFocused()
+  await expect(canvas(page).getByRole("button", { name: "Keyboard shortcuts (?)", exact: true })).toBeFocused()
   await page.keyboard.press("n")
   await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${workflow}/add$`))
   await expect(page.locator(".wf-drawer").getByRole("textbox")).toBeEditable()

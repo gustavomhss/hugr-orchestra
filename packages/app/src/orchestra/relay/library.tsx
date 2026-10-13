@@ -1,4 +1,5 @@
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { useLocation } from "@solidjs/router"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import type { RelayDocument } from "./client"
@@ -25,7 +26,7 @@ type Props = {
 
 export function WorkflowLibrary(props: Props) {
   const copy = useRelayCopy()
-  const duplication = createAction()
+  const duplication = createAction(useLocation())
   const [query, setQuery] = createSignal("")
   const [filter, setFilter] = createSignal<"all" | "published" | "draft">("all")
   const [template, setTemplate] = createSignal<string>()
@@ -49,7 +50,7 @@ export function WorkflowLibrary(props: Props) {
   const waiting = () => live().filter((run) => run.status === "parked").length
   const running = () => live().filter((run) => run.status === "running").length
   const duplicate = (document: RelayDocument) =>
-    duplication.run(async () => {
+    duplication.run(async (current) => {
       const created = await props.source.client
         .create(copyDocument(document, copy.t("orchestra.workflows.create.copyName", { name: document.name })))
         .catch(
@@ -58,7 +59,7 @@ export function WorkflowLibrary(props: Props) {
         )
       if (!created) return
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
-      if (!duplication.active()) return
+      if (!current()) return
       props.go(relayPath.editor("workflow", created.id))
     })
   const openTemplate = (id: string) => {
