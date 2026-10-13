@@ -1,7 +1,7 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, directory?, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
+# with a .ci-run.json request ({ package, directory?, packageSelector?, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
 # tests, then deletes the branch.
 # The request names its runner (`bun`, `node`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.

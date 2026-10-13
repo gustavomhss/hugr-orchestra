@@ -69,16 +69,24 @@ export function validateRequest(
   if (typeof request.package !== "string" || !request.package || /[\x00-\x1f\x7f]/.test(request.package) ||
     (!resolvePackage && !/^[\w-]+(?:\/[\w-]+)*$/.test(request.package)))
     throw new Error(".ci-run.json names no valid package")
-  const resolved = resolvePackage?.(request.package)
+  if (request.packageSelector !== undefined && (typeof request.packageSelector !== "string" || !request.packageSelector || /[\x00-\x1f\x7f]/.test(request.packageSelector)))
+    throw new Error(".ci-run.json has an invalid package selector")
+  if (request.packageSelector !== undefined && !resolvePackage)
+    throw new Error(".ci-run.json package selector requires a resolver")
+  const resolved = resolvePackage?.(typeof request.packageSelector === "string" ? request.packageSelector : request.package)
   const name = resolved?.package ?? request.package
   if (typeof name !== "string" || !/^[\w-]+(?:\/[\w-]+)*$/.test(name)) throw new Error(".ci-run.json names no valid resolved package")
+  if (request.packageSelector !== undefined && name !== request.package)
+    throw new Error(".ci-run.json package selector does not match normalized package")
   const directory = resolved?.directory ?? `packages/${name}`
   if (typeof directory !== "string" || /[\x00-\x1f\x7f:\\]/.test(directory) ||
     directory.split("/").some((part) => !part || part === "." || part === ".."))
     throw new Error(".ci-run.json has an invalid package directory")
   if (request.directory !== undefined && request.directory !== directory)
     throw new Error(".ci-run.json directory does not match resolved package location")
-  const location = resolved ? { directory } : {}
+  const location: { directory?: string; packageSelector?: string } = resolved
+    ? { directory, ...(typeof request.packageSelector === "string" ? { packageSelector: request.packageSelector } : {}) }
+    : {}
   if (!Array.isArray(request.args) || !request.args.every((arg): arg is string => typeof arg === "string" && !/[\r\n\0]/.test(arg)))
     throw new Error(".ci-run.json args must be a string array without control characters")
   const env = requireEnv(request.env ?? {}, ".ci-run.json env")

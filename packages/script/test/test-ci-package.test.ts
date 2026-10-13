@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync
 import os from "node:os"
 import path from "node:path"
 import { resolveTestPackage } from "../../../script/test-ci-package.ts"
+import { validateRequest } from "../../../script/test-ci-request.ts"
 
 const registry = {
   format: 1,
@@ -123,4 +124,20 @@ test("canonical names colliding with another legacy alias keep their registered 
   expect(() => resolveTestPackage(collision, "app", read)).toThrow("TEST_PACKAGE_SELECTOR_AMBIGUOUS")
   expect(resolveTestPackage(collision, "packages/app", read)).toEqual({ package: "app", directory: "apps/ui" })
   expect(resolveTestPackage(collision, "@fixture/app", read)).toEqual({ package: "app", directory: "apps/ui" })
+})
+
+test("normalized collision requests retain explicit alias selection through snapshot replay", () => {
+  const collision = { format: 1, modules: [
+    { alias: "app", kind: "bun", scope: ".", name: "@fixture/app", path: "apps/ui" },
+    { alias: "sdk/js", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
+  ] }
+  const resolve = (selector: string) => resolveTestPackage(collision, selector,
+    (directory) => ({ name: directory === "apps/ui" ? "@fixture/app" : "app" }))
+  const location = resolve("packages/app")
+  const request = { ...location, packageSelector: "packages/app", runner: "bun", args: ["./test/one.test.ts"] }
+  const normalized = validateRequest(request, () => true, resolve)
+  expect(normalized).toMatchObject({ package: "app", packageSelector: "packages/app", directory: "apps/ui" })
+  expect(validateRequest(JSON.parse(JSON.stringify(normalized)), () => true, resolve)).toEqual(normalized)
+  expect(() => validateRequest({ ...request, package: "sdk/js" }, () => true, resolve)).toThrow("selector does not match normalized package")
+  expect(() => validateRequest({ ...request, directory: "libraries/sdk" }, () => true, resolve)).toThrow("directory does not match")
 })

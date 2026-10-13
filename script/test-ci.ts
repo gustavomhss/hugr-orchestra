@@ -97,14 +97,15 @@ function parse(argv: string[]) {
   if (!selector) fail(USAGE, 2)
   const location = resolvePackage(selector)
   const name = location.package
+  const normalized = { ...location, packageSelector: `packages/${name}` }
   if (options.runner === "playwright")
     return {
       ...validateRequest(
-        { ...location, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
+        { ...normalized, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
         isFile,
         resolvePackage,
       ),
-      ...location,
+      ...normalized,
       os: options.os,
     }
   // Test paths may be given from the repository root or from the package directory.
@@ -116,7 +117,7 @@ function parse(argv: string[]) {
   })
   if (options.runner !== "node" && pytest(location.directory, named))
     return {
-      ...location,
+      ...normalized,
       os: options.os,
       runner: "pytest",
       env,
@@ -134,7 +135,7 @@ function parse(argv: string[]) {
       fail(`--runner node runs named *.node-smoke.mjs scripts only, never bun:test files\n${USAGE}`, 2)
   }
   return {
-    ...location,
+    ...normalized,
     os: options.os,
     runner: options.runner,
     env,
@@ -207,7 +208,7 @@ async function snapshot() {
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
   const body = JSON.stringify({
-    package: request.package, directory: request.directory, runner: request.runner, args: request.args, env: request.env,
+    package: request.package, packageSelector: request.packageSelector, directory: request.directory, runner: request.runner, args: request.args, env: request.env,
     ...("config" in request && request.config ? { config: request.config } : {}),
     ...("benchmarkRenderer" in request && request.benchmarkRenderer ? { benchmarkRenderer: request.benchmarkRenderer } : {}),
   })
