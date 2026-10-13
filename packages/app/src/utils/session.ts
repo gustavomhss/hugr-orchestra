@@ -4,7 +4,7 @@ import { withTimestampedFallback } from "./session-title"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Result, Schema } from "effect"
-import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { SubagentModelPolicy } from "../components/subagent-model-rules"
 import type { SessionsGetOutput } from "@orchestra/client"
 
 export type AppSession = Session & {
@@ -41,7 +41,11 @@ export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | Sessio
             Schema.decodeUnknownSync(SessionSubagentModels.Policy)(input.subagentModels),
           )
         : undefined,
-    ...("metadata" in input && input.metadata !== undefined ? { metadata: input.metadata } : {}),
+    ...("metadata" in input && input.metadata !== null && typeof input.metadata === "object" &&
+      !Array.isArray(input.metadata) &&
+      (Object.getPrototypeOf(input.metadata) === Object.prototype || Object.getPrototypeOf(input.metadata) === null)
+      ? { metadata: Object.fromEntries(Object.entries(input.metadata)) }
+      : {}),
     version: "",
     time: input.time,
     revert: input.revert && {
