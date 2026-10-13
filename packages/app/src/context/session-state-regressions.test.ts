@@ -44,7 +44,13 @@ test.each(["read receipt", "known revision"] as const)("canonical predecessor re
   // A timestamp alone cannot distinguish the delayed ancestor from an external reset.
   expect(editor.policy()).toEqual(deny)
   if (proof === "read receipt") live.readVersion = 2
-  if (proof === "known revision") live.revision = 2
+  if (proof === "known revision") {
+    live.policy = deny
+    live.revision = 10
+    expect(editor.policy()).toEqual(deny)
+    live.policy = { mode: "inherit" }
+    live.revision = 12
+  }
   expect(editor.policy()).toEqual({ mode: "inherit" })
 })
 
@@ -54,6 +60,61 @@ test("canonical read at equal timestamp replaces predecessor after plain ACK", a
   await editor.replace(deny)
   live.readVersion = 2
   expect(editor.policy()).toEqual(allow)
+})
+
+test("delayed sequenced ACK A stays behind plain ACK B until a later canonical read", async () => {
+  const live: ModelPolicySnapshot = { policy: { mode: "inherit" }, timestamp: 1, revision: 1, readVersion: 1 }
+  const editor = createModelPolicyEditor({ read: () => live, write: async (value) => value })
+  await editor.replace(allow)
+  await editor.replace(deny)
+  live.policy = allow
+  live.timestamp = 2
+  live.revision = 2
+  expect(editor.policy()).toEqual(deny)
+  // Unrelated events can create any gap; no base-plus-write-count inference is valid.
+  live.revision = 100
+  expect(editor.policy()).toEqual(deny)
+  live.readVersion = 2
+  live.policy = { mode: "inherit" }
+  expect(editor.policy()).toEqual({ mode: "inherit" })
+})
+
+test.each(["sequenced ACK", "observed catch-up"] as const)("latest %s revision permits a newer canonical reset", async (proof) => {
+  const live: ModelPolicySnapshot = { policy: { mode: "inherit" }, timestamp: 1, revision: 1 }
+  const editor = createModelPolicyEditor({
+    read: () => live,
+    write: async (value) => proof === "sequenced ACK" ? { policy: value, timestamp: 2, revision: value === allow ? 10 : 50 } : value,
+  })
+  await editor.replace(allow)
+  await editor.replace(deny)
+  live.policy = allow
+  live.timestamp = 2
+  live.revision = 10
+  expect(editor.policy()).toEqual(deny)
+  if (proof === "observed catch-up") {
+    live.policy = deny
+    live.revision = 50
+    expect(editor.policy()).toEqual(deny)
+  }
+  live.policy = { mode: "inherit" }
+  live.revision = 51
+  expect(editor.policy()).toEqual({ mode: "inherit" })
+})
+
+test("latest sequenced ACK revision survives an older matching policy observation", async () => {
+  const live: ModelPolicySnapshot = { policy: { mode: "inherit" }, timestamp: 1, revision: 1 }
+  const editor = createModelPolicyEditor({ read: () => live, write: async (value) => ({ policy: value, timestamp: 2, revision: 50 }) })
+  await editor.replace(deny)
+  live.policy = deny
+  live.timestamp = 2
+  live.revision = 20
+  expect(editor.policy()).toEqual(deny)
+  live.policy = allow
+  live.revision = 30
+  expect(editor.policy()).toEqual(deny)
+  live.policy = { mode: "inherit" }
+  live.revision = 51
+  expect(editor.policy()).toEqual({ mode: "inherit" })
 })
 
 test.each(["unknown ACK revision", "older timestamp"] as const)("ancestor remains fenced with %s", async (proof) => {
@@ -125,10 +186,10 @@ test("cold concurrent management recovery preserves both fields from shared GET"
   expect(ctx.store.get(info().id)?.time.archived).toBe(30)
 })
 
-function directory() {
+function directory(empty = false) {
   const [store, setStore] = createStore({
-    session: [info()],
-    sessionTotal: 1,
+    session: empty ? [] : [info()],
+    sessionTotal: empty ? 0 : 1,
     limit: 10,
     message: {},
     session_message: {},
@@ -183,6 +244,23 @@ test("archive tombstones stay scoped to server store and directory; deletion cle
   ctx.apply({ type: "session.deleted", properties: { sessionID: info().id } })
   ctx.apply({ type: "session.created", properties: { info: info(10) } })
   expect(ctx.store.session[0]?.time.archived).toBeUndefined()
+})
+
+test.each(["session.created", "session.updated"])("initially absent archive fences stale %s and admits a fresh restore", (type) => {
+  const ctx = directory(true)
+  ctx.apply(archive(20, 20, 2))
+  const metadata = sessionManagementFences(ctx.store, "/repo").get(info().id)
+  expect(metadata?.time).toEqual({ updated: 20, archived: 20 })
+  expect(metadata).not.toHaveProperty("title")
+  ctx.apply({ type, properties: { info: info(10) } })
+  expect(ctx.store.session).toEqual([])
+  ctx.apply(archive(null, 20, 1))
+  ctx.apply({ type, properties: { info: info(20) } })
+  expect(ctx.store.session).toEqual([])
+  ctx.apply(archive(null, 20, 3))
+  ctx.apply({ type, properties: { info: { ...info(20), time: { created: 1, updated: 20, archived: 20 } } } })
+  expect(ctx.store.session[0]?.time.archived).toBeUndefined()
+  expect(ctx.store.session[0]?.archiveRevision).toBe(3)
 })
 
 test("archive fence cache bounds retention and preserves newest tombstone under pressure", () => {
