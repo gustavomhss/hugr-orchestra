@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test"
 import { Context } from "effect"
-import { OpenCode } from "../../../app/node_modules/@opencode-ai/client/dist/promise/index.js"
+import { OpenCode } from "@opencode-ai/client/promise"
 import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
 import { tmpdir } from "../fixture/fixture"
 

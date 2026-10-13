@@ -37,6 +37,7 @@
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@octokit/webhooks-types": "7.6.1",
+    "@opencode-ai/client": "file:../app/vendor/opencode-ai-client-1.17.13-v2.tgz",
     "@orchestra/core": "workspace:*",
     "@orchestra/http-recorder": "workspace:*",
     "@orchestra/script": "workspace:*",
