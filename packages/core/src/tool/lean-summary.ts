@@ -2,11 +2,11 @@ export * as LeanSummary from "./lean-summary"
 
 import { createHash } from "node:crypto"
 import path from "node:path"
-import { recoveryLine, summarize } from "hugr-lean/core"
+import { defaultSummarizeOptions, recoveryLine, summarize } from "hugr-lean/core"
 import { RawStore, recallLines } from "hugr-lean/raw"
 import { Global } from "../global"
 
-export { recallLines, recoveryLine, summarize }
+export { defaultSummarizeOptions, recallLines, recoveryLine, summarize }
 
 /** Native tools whose model-visible text Lean 2.0 summarizes or compacts. */
 export const tools = ["bash", "read", "webfetch", "glob", "grep"] as const

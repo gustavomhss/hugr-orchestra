@@ -22,7 +22,10 @@ const failures = ["error[E0308]: mismatched types 😀", "FAILED tests/test_core
   "panic: runtime error: index out of range [3] with length 3"]
 const body = Array.from({ length: 600 }, (_, i) => i === 150 ? failures[0] : i === 300 ? failures[1] : i === 450 ? failures[2]
   : `   Compiling crate${i} v0.1.${i} (C:\\repo\\crates\\crate${i})${i % 97 === 0 ? "\r" : ""}`).join("\n")
-const failing = `<shell_metadata>\nexit code: 101\n</shell_metadata>\n\n${body}`
+// A failure block larger than the 4 KiB warning budget: only a failed command keeps it whole.
+const traceback = ["Traceback (most recent call last):", ...Array.from({ length: 39 }, (_, i) =>
+  `  File "C:\\repo\\pkg\\module_${i}.py", line ${i + 10}, in handler_${i} -> ${"frame detail ".repeat(6)}`)]
+const failing = `<shell_metadata>\nexit code: 101\n</shell_metadata>\n\n${body}\n${traceback.join("\n")}\n${body}`
 
 function shell(output: string, command = "bun emit.js", code = 101) {
   const result = { title: command, output, metadata: { output: "", exit: code, timeout: false, aborted: false, truncated: false } }
@@ -31,8 +34,8 @@ function shell(output: string, command = "bun emit.js", code = 101) {
   return { output: result, binding: LegacyLeanCapture.bind(result, result, owner), owner, limits, enabled: true, command, tool: "bash", store }
 }
 
-function native(tool: string, output: string, args: Record<string, unknown>) {
-  const result = { title: tool, output, metadata: { truncated: false } }
+function native(tool: string, output: string, args: Record<string, unknown>, metadata: Record<string, unknown> = {}) {
+  const result = { title: tool, output, metadata: { ...metadata, truncated: false } }
   LegacyLeanCapture.record(result, { source: "other", command: tool, output, termination: { kind: "exited", code: 0 },
     completeness: "complete", presentation: "unknown" }, owner)
   return { output: result, binding: LegacyLeanCapture.bind(result, result, owner), owner, limits, enabled: true, tool, args, store }
@@ -41,7 +44,8 @@ function native(tool: string, output: string, args: Record<string, unknown>) {
 test("failed shell summary keeps every failure line whole, ends with recall and stores the exact original", async () => {
   const f = shell(failing)
   const selected = await LegacyLeanOutput.project({ ...f, telemetry })
-  for (const line of [...failures, "exit code: 101"]) expect(selected.output).toContain(line)
+  for (const line of [...failures, ...traceback, "exit code: 101"]) expect(selected.output).toContain(line)
+  expect(Buffer.byteLength(traceback.join("\n"))).toBeGreaterThan(LeanSummary.defaultSummarizeOptions.errorBytes)
   expect(selected.output).toContain("lines omitted]")
   const id = recall.exec(selected.output)?.[1]
   if (!id) throw new Error(`summary lacks recall line:\n${selected.output.slice(-300)}`)
@@ -116,12 +120,12 @@ test("read and webfetch caps carry continuation hints and recall; Windows and PO
 })
 
 test("profile KPIs reconcile with the recorded per-call decisions", async () => {
-  const listing = Array.from({ length: 80 }, (_, i) => `${project.directory}/src/file${i}.ts`).join("\n")
+  const listing = Array.from({ length: 80 }, (_, i) => path.join(project.directory, "src", ["a", "b", "c"][i % 3]!, `file${i}.ts`)).join("\n")
   const source = `<path>/r/a.ts</path>\n<type>file</type>\n<content>\n${Array.from({ length: 900 }, (_, i) => `${i + 1}: const a${i} = ${"1".repeat(30)}`).join("\n")}\n(End of file - total 900 lines)\n</content>`
   const calls = [
     { input: shell(failing), command: "bun emit.js", tool: "bash" },
     { input: native("read", source, { filePath: "/r/a.ts" }), command: "/r/a.ts", tool: "read" },
-    { input: native("glob", listing, { pattern: "**/*.ts" }), command: "**/*.ts", tool: "glob" },
+    { input: native("glob", listing, { pattern: "**/*.ts" }, { count: 80 }), command: "**/*.ts", tool: "glob" },
   ]
   const decided = await Promise.all(calls.map(async (call, index) => {
     const selected = await LegacyLeanOutput.project({ ...call.input, telemetry })

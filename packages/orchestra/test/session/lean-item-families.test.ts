@@ -68,7 +68,8 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
     { itemID: "cargo", command: "cargo test --lib -- --test-threads=1", reduce: true },
     { itemID: "pytest", command: "pytest", reduce: true },
     { itemID: "go", command: "go test -v .", reduce: true },
-    { itemID: "vitest", command: "vitest run", reduce: false },
+    // No Vitest profile reduces its plaintext; Lean 2.0's lossless cleanup still strips its terminal escapes.
+    { itemID: "vitest", command: "vitest run", reduce: true },
   ] as const
   for (const family of families) {
     const owner = { sessionID: session.id, callID: `native-${family.itemID}` }

@@ -68,7 +68,8 @@ it.instance("model reads a summarized failure, recalls the exact original and th
 
     yield* prompt.prompt({ sessionID: session.id, agent: "maestro", noReply: true, parts: [{ type: "text", text: "Show it all." }] })
     yield* llm.tool("lean_recall", { id })
-    yield* llm.tool("lean_recall", { id: `lean recall ${id}`, lines: "300-302" })
+    // The emitted failure is line 300 of the command output, line 305 of the original after the 4-line exit header.
+    yield* llm.tool("lean_recall", { id: `lean recall ${id}`, lines: "304-306" })
     yield* llm.text("done")
     yield* prompt.loop({ sessionID: session.id })
     const recalls = (yield* MessageV2.filterCompactedEffect(session.id)).flatMap((message) => message.parts)
@@ -76,7 +77,7 @@ it.instance("model reads a summarized failure, recalls the exact original and th
     const outputs = recalls.map((part) => part.type === "tool" && part.state.status === "completed" ? part.state.output : undefined)
     expect(outputs).toHaveLength(2)
     expect(Buffer.from(outputs[0] ?? "")).toEqual(Buffer.from(original))
-    expect(outputs[1]).toBe(original.split("\n").slice(299, 302).join("\n"))
+    expect(outputs[1]).toBe(original.split("\n").slice(303, 306).join("\n"))
     expect(outputs[1]).toContain("FAILURE MUST_KEEP")
 
     const profileID = createHash("sha256").update(JSON.stringify([project.id, directory])).digest("hex")
