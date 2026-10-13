@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import { Effect } from "effect"
-import type { SDKResultSuccess } from "@anthropic-ai/claude-agent-sdk"
+import type { SDKAssistantMessage, SDKResultSuccess } from "@anthropic-ai/claude-agent-sdk"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ClaudeCodeMirror } from "@/claude-code/mirror"
@@ -15,6 +15,24 @@ const model = "claude-haiku-4-5-20251001"
 const tokens = { input_tokens: 10, output_tokens: 8, cache_read_input_tokens: 2, cache_creation_input_tokens: 1,
   cache_creation: null, server_tool_use: null, service_tier: null, output_tokens_details: { thinking_tokens: 3 } }
 
+const persisted = Effect.fn("MirrorCostFixture")(function* () {
+  const f = yield* ClaudeEngineFixture.setup()
+  const agents = yield* Agent.Service
+  const snapshot = yield* Snapshot.Service
+  const instance = yield* TestInstance
+  const user = yield* f.sessions.updateMessage({ id: MessageID.ascending(), sessionID: f.chat.id,
+    role: "user", agent: "maestro", time: { created: Date.now() },
+    model: { modelID: ModelV2.ID.make(model), providerID: ProviderV2.ID.make("anthropic") } })
+  return { ...f, view: ClaudeCodeMirror.create({ sessionID: f.chat.id, user,
+    agent: yield* agents.get("maestro"), sessions: f.sessions, snapshot,
+    path: { cwd: instance.directory, root: instance.directory } }) }
+})
+
+const observed = (id: string, actualModel = model, stop: SDKAssistantMessage["message"]["stop_reason"] = "end_turn"): SDKAssistantMessage => ({ type: "assistant", ...ClaudeEngineFixture.frame,
+  uuid: crypto.randomUUID(), message: { id, model: actualModel, role: "assistant", type: "message",
+    container: null, context_management: null, stop_sequence: null,
+    content: [{ type: "text", text: "observed", citations: null }], stop_reason: stop, usage: tokens } })
+
 function completion(cost: number, reported: string | undefined = model): SDKResultSuccess {
   return { type: "result", ...ClaudeEngineFixture.frame, uuid: crypto.randomUUID(), subtype: "success", is_error: false,
     total_cost_usd: cost, stop_reason: "end_turn", duration_ms: 1, duration_api_ms: 1, num_turns: 1,
@@ -25,6 +43,83 @@ function completion(cost: number, reported: string | undefined = model): SDKResu
       cache_creation_input_tokens: 1, cache_creation: { ephemeral_5m_input_tokens: 1, ephemeral_1h_input_tokens: 0 },
       server_tool_use: { web_fetch_requests: 0, web_search_requests: 0 }, service_tier: "standard" } }
 }
+
+for (const failed of [false, true]) ClaudeEngineFixture.it.instance(
+  `closed observed step keeps its actual model and receipt across ${failed ? "failure" : "success"}`,
+  () => Effect.gen(function* () {
+    const f = yield* persisted()
+    yield* f.view.on(observed("closed", "actual-sdk-model", null))
+    yield* f.view.finish(0)
+    const before = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const owner = before.find((message) => message.info.role === "assistant")
+    const receipt = owner?.parts.find((part) => part.type === "step-finish")
+    if (!owner || !receipt) throw new Error("Missing closed observed owner")
+    yield* f.view.on(failed ? { ...completion(0.2, "actual-sdk-model"), subtype: "error_during_execution" as const,
+      is_error: true, errors: ["Observed failure"] } : completion(0.2, "actual-sdk-model"))
+    if (failed) yield* f.view.fail({ aborted: false, message: "Observed failure" })
+    yield* f.view.finish(0)
+    const after = yield* f.sessions.messages({ sessionID: f.chat.id })
+    const replies = after.filter((message) => message.info.role === "assistant")
+    expect(replies).toHaveLength(1)
+    expect(replies[0].info).toMatchObject({ id: owner.info.id, modelID: "actual-sdk-model", cost: 0.2,
+      finish: failed ? "error" : "stop",
+      tokens: { input: 10, output: 5, reasoning: 3, cache: { read: 2, write: 1 } } })
+    const finishes = replies[0].parts.filter((part) => part.type === "step-finish")
+    expect(finishes).toHaveLength(1)
+    expect(finishes[0]).toMatchObject({ id: receipt.id, messageID: owner.info.id, cost: 0.2,
+      reason: failed ? "error" : "stop", tokens: { input: 10, output: 5, reasoning: 3, cache: { read: 2, write: 1 } } })
+    expect(yield* f.sessions.get(f.chat.id)).toMatchObject({ cost: 0.2,
+      tokens: { input: 10, output: 5, reasoning: 3, cache: { read: 2, write: 1 } } })
+    yield* f.view.finish(0)
+    if (failed) yield* f.view.fail({ aborted: false, message: "Repeated failure" })
+    expect(yield* f.sessions.messages({ sessionID: f.chat.id })).toEqual(after)
+  }), 30_000)
+
+for (const changed of ["retracted", "replaced"] as const) ClaudeEngineFixture.it.instance(
+  `priced result cannot transfer to a ${changed} same-model receipt`, () => Effect.gen(function* () {
+    const f = yield* persisted()
+    yield* f.view.on(observed("first"))
+    const owner = observed("owner")
+    if (changed === "retracted") yield* f.view.on(owner)
+    yield* f.view.on(completion(0.2))
+    if (changed === "retracted") yield* f.view.retract([owner.uuid])
+    if (changed === "replaced") yield* f.view.on(observed("later"))
+    expect((yield* f.view.finish(0)).cost).toBe(0)
+    const replies = (yield* f.sessions.messages({ sessionID: f.chat.id })).filter((message) => message.info.role === "assistant")
+    expect(replies).toHaveLength(changed === "retracted" ? 1 : 2)
+    expect(replies.flatMap((message) => message.parts.filter((part) => part.type === "step-finish").map((part) => part.cost)))
+      .toEqual(changed === "retracted" ? [0] : [0, 0])
+    expect((yield* f.sessions.get(f.chat.id)).cost).toBe(0)
+  }), 30_000)
+
+ClaudeEngineFixture.it.instance("pending no-frame result cannot bind to an intervening actual assistant", () => Effect.gen(function* () {
+  const f = yield* persisted()
+  yield* f.view.on({ ...completion(0.2), subtype: "error_during_execution" as const, is_error: true, errors: ["No frame"] })
+  yield* f.view.on(observed("intervening"))
+  yield* f.view.fail({ aborted: false, message: "Later failure" })
+  expect((yield* f.view.finish(0)).cost).toBe(0)
+  const replies = (yield* f.sessions.messages({ sessionID: f.chat.id })).filter((message) => message.info.role === "assistant")
+  expect(replies).toHaveLength(1)
+  expect(replies[0].info).toMatchObject({ cost: 0, tokens: { input: 10, output: 5, reasoning: 3, cache: { read: 2, write: 1 } } })
+  expect(replies[0].parts.filter((part) => part.type === "step-finish")).toMatchObject([{ cost: 0 }])
+  expect((yield* f.sessions.get(f.chat.id)).cost).toBe(0)
+}), 30_000)
+
+for (const basis of ["known", "unknown", "negative", "nonfinite"] as const) ClaudeEngineFixture.it.instance(
+  `whole-query allocation requires priced contributing model totals (${basis})`, () => Effect.gen(function* () {
+    const f = yield* persisted()
+    yield* f.view.on(observed("mixed"))
+    const result = completion(1)
+    yield* f.view.on({ ...result, modelUsage: { [model]: { ...result.modelUsage[model], costUSD: 0.1 },
+      other: { ...result.modelUsage[model], costUSD: basis === "negative" ? -0.9 : basis === "nonfinite" ? Number.NaN : 0.9,
+        ...(basis === "unknown" ? { costBasis: "unknown" as const } : {}) } } })
+    expect((yield* f.view.finish(0)).cost).toBe(basis === "known" ? 1 : 0)
+    expect((yield* f.sessions.get(f.chat.id)).cost).toBe(basis === "known" ? 1 : 0)
+    const receipt = (yield* f.sessions.messages({ sessionID: f.chat.id })).flatMap((message) => message.parts)
+      .filter((part) => part.type === "step-finish")
+    expect(receipt).toHaveLength(1)
+    expect(receipt[0].cost).toBe(basis === "known" ? 1 : 0)
+  }), 30_000)
 
 ;[false, true].forEach((failed) => ClaudeEngineFixture.it.instance(
   `${failed ? "failed" : "successful"} cost settlement rewrites one persisted step receipt without repeating tokens`,

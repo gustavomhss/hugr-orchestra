@@ -68,6 +68,9 @@ export function create(input: {
   let lastFinish: SessionV1.StepFinishPart | undefined
   let lastModel: string | undefined
   let costModel: string | undefined
+  let costOwner: MessageID | undefined
+  let costReceipt: PartID | undefined
+  let pendingCostOwner = false
   let cost: number | undefined
   let rejectedBaseline: number | undefined
   let ended = false
@@ -124,6 +127,7 @@ export function create(input: {
     yield* sessions.updatePart(part)
     lastFinish = part
     lastModel = current.model
+    if (costOwner === current.info.id) costReceipt = part.id
     if (current.start) {
       const patch = yield* snapshot.patch(current.start)
       if (patch.files.length)
@@ -165,33 +169,48 @@ export function create(input: {
       if (message.type === "result") {
         cost = undefined
         costModel = undefined
-        rejectedBaseline = undefined
+        costOwner = step?.info.id ?? last?.id
+        costReceipt = costOwner === last?.id ? lastFinish?.id : undefined
+        pendingCostOwner = costOwner === undefined
+        // The result observer may overwrite this scalar before finish; retain it for rejected ownership too.
+        const stored = yield* sessions.get(sessionID).pipe(Effect.orDie)
+        const previous = stored.metadata?.claudeCode?.cost
+        rejectedBaseline = typeof previous === "number" && Number.isFinite(previous) && previous >= 0 ? previous : undefined
         if (Number.isFinite(message.total_cost_usd) && message.total_cost_usd >= 0) {
           const model = step?.model ?? lastModel
           const expected = model ?? input.user.model.modelID
           const reported = Object.entries(message.modelUsage ?? {}).find(([id, usage]) =>
             id === expected || usage.canonicalModel === expected)?.[1]
+          const priced = Object.values(message.modelUsage ?? {}).every((usage) =>
+            usage.costBasis !== "unknown" && Number.isFinite(usage.costUSD) && usage.costUSD >= 0)
           // No-frame errors may use a matching reported model total, never the requested model alone.
           // Host owns query replay/reset admission; this mirror only projects the admitted allocation.
           costModel = message.modelUsage === undefined ? model
-            : reported && reported.costBasis !== "unknown" && Number.isFinite(reported.costUSD) && reported.costUSD >= 0 ? expected : undefined
+            : reported && priced ? expected : undefined
           if (costModel) cost = message.total_cost_usd
         }
-        if (cost === undefined && message.total_cost_usd !== undefined) {
-          // Host passes zero for lower totals, including rejected negatives. Capture its prior admitted scalar
-          // before host/mirror's usage observer writes the incoming total; this is not a valid counter reset.
-          const stored = yield* sessions.get(sessionID).pipe(Effect.orDie)
-          const previous = stored.metadata?.claudeCode?.cost
-          rejectedBaseline = typeof previous === "number" && Number.isFinite(previous) && previous >= 0 ? previous : undefined
-        }
-        if (!step && message.subtype === "success") {
+        if (!step && !last && message.subtype === "success") {
           const current = yield* open(`result:${message.uuid}`)
+          if (pendingCostOwner) {
+            costOwner = current.info.id
+            pendingCostOwner = false
+          }
           if (message.result) {
             const part = yield* text(current, "text", false)
             yield* sessions.updatePart({ ...part, text: message.result, time: { start: Date.now(), end: Date.now() } })
           }
         }
         if (step && message.stop_reason) step.stop = message.stop_reason
+        if (!step && last && lastFinish && costOwner === last.id && costReceipt === lastFinish.id &&
+          message.stop_reason && last.finish !== "error") {
+          const finish = FINISH[message.stop_reason] ?? last.finish ?? "other"
+          const receipt = { ...lastFinish, reason: finish }
+          const info = { ...last, finish }
+          yield* sessions.updatePart(receipt)
+          yield* sessions.updateMessage(info)
+          lastFinish = receipt
+          last = info
+        }
         return
       }
       // A subagent's frames belong to its seat's child session: host/mirror.ts hands them to that session's mirror.
@@ -199,6 +218,7 @@ export function create(input: {
       if (message.type === "stream_event") {
         const event = message.event
         if (event.type === "message_start") {
+          pendingCostOwner = false
           const current = yield* open(event.message.id)
           current.model = event.message.model || current.model
           current.info = { ...current.info, modelID: ModelV2.ID.make(event.message.model || current.info.modelID) }
@@ -225,6 +245,7 @@ export function create(input: {
         return
       }
       if (message.type === "assistant") {
+        pendingCostOwner = false
         const current = yield* open(message.message.id)
         current.model = message.message.model || current.model
         current.info = { ...current.info, modelID: ModelV2.ID.make(message.message.model || current.info.modelID) }
@@ -272,6 +293,11 @@ export function create(input: {
     retract: (ids: readonly string[]) => Effect.gen(function* () {
       const messages = new Set(ids.flatMap((id) => uuids.get(id) ? [uuids.get(id) as MessageID] : []))
       for (const messageID of messages) {
+        if (costOwner === messageID) {
+          costOwner = undefined
+          costReceipt = undefined
+          pendingCostOwner = false
+        }
         if (step?.info.id === messageID) step = undefined
         if (last?.id === messageID) {
           last = undefined
@@ -303,7 +329,9 @@ export function create(input: {
     /** Host serializes on/finish/retract; receipt replacement does not synchronize concurrent callers. */
     finish: (previousCost: number) => Effect.gen(function* () {
       yield* close()
-      if (cost !== undefined && last && lastFinish?.messageID === last.id && costModel === last.modelID &&
+      const owned = last !== undefined && lastFinish !== undefined && costOwner === last.id &&
+        costReceipt === lastFinish.id && lastFinish.messageID === last.id && costModel === last.modelID
+      if (cost !== undefined && last && lastFinish && owned &&
         Number.isFinite(previousCost) && previousCost >= 0 && cost > previousCost && last.cost !== cost - previousCost) {
         // Core aggregates parts, not assistant.cost. Reuse this receipt so retries replace, never append usage.
         const receipt = { ...lastFinish, cost: cost - previousCost }
@@ -314,7 +342,7 @@ export function create(input: {
         last = info
       }
       // Undefined means no accepted total, whereas an accepted zero is a genuine producer reset.
-      return { cost: cost ?? rejectedBaseline ?? previousCost, last }
+      return { cost: cost !== undefined && (owned || cost === 0) ? cost : rejectedBaseline ?? previousCost, last }
     }),
 
     /** The turn failed or was cancelled: running tools are aborted and the open step carries the error. */
@@ -323,6 +351,8 @@ export function create(input: {
       ended = true
       const now = Date.now()
       const current = step
+      const retained = !current && last?.id === costOwner && lastFinish?.messageID === last?.id ? last : undefined
+      const retainedFinish = retained ? lastFinish : undefined
       for (const part of tools.values()) {
         if (part.state.status !== "running" && part.state.status !== "pending") continue
         const aborted: SessionV1.ToolPart = { ...part, metadata: { ...part.metadata, interrupted: true },
@@ -336,25 +366,31 @@ export function create(input: {
         ? new AbortedError({ message: cause.message }).toObject()
         : new NamedError.Unknown({ message: cause.message }).toObject()
       // Persist the failure before best-effort snapshots.
-      const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID, role: "assistant",
+      const info: SessionV1.Assistant = current?.info ?? retained ?? { id: MessageID.ascending(), sessionID, parentID, role: "assistant",
         mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, path: input.path,
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: now } }
       const usage = current?.usage
       const reasoning = exactReasoning(usage)
-      const tokens = { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - reasoning), reasoning,
+      const tokens = retained?.tokens ?? { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - reasoning), reasoning,
         cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
       for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
-      lastModel = current?.model
+      lastModel = current?.model ?? (retained ? lastModel : undefined)
       step = undefined
       yield* sessions.updateMessage(last)
       // Healthy snapshots still retain actual undo evidence on Stop.
       const patch = current?.start ? yield* snapshot.patch(current.start).pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       const end = current?.start ? yield* snapshot.track().pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       if (patch?.files.length) yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "patch", hash: patch.hash, files: patch.files })
-      lastFinish = { id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end }
+      lastFinish = retainedFinish ? { ...retainedFinish, reason: "error", tokens: last.tokens }
+        : { id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end }
       yield* sessions.updatePart(lastFinish)
+      if (pendingCostOwner) {
+        costOwner = last.id
+        pendingCostOwner = false
+      }
+      if (costOwner === last.id) costReceipt = lastFinish.id
       return last
     }),
   }
