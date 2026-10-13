@@ -106,7 +106,18 @@ export async function npmChannel(directory: string, built: Built) {
       expect(await snapshot(join(modules, "@orchestra/cli"))).toEqual(expected.wrapper)
       expect(await verifyDistribution(platform, { version: payload.version, target })).toEqual(expected.manifest)
       expect(await snapshot(platform)).toEqual(expected.snapshot)
-      const root = await qualify({ launcher: join(modules, ".bin/orchestra"), payload: platform, version: payload.version,
+      if (process.platform === "win32") {
+        const { assertWindowsPE } = await import("./distribution-windows-process")
+        const images = expected.manifest.files.filter((file) => /\.(exe|node)$/.test(file.path))
+        expect(images.length).toBeGreaterThan(2)
+        for (const file of images) await assertWindowsPE(join(platform, file.path), file.path.endsWith(".node"))
+        const shims = await snapshot(join(modules, ".bin"))
+        if (!shims) throw new Error("WINDOWS_NPM_PUBLIC_SHIMS_MISSING")
+        expect([...shims.files.keys()].sort()).toEqual(["orchestra", "orchestra.cmd", "orchestra.ps1"])
+        expect(shims.directories).toEqual([])
+        for (const shim of shims.files.values()) expect(shim.bytes.length).toBeGreaterThan(0)
+      }
+      const root = await qualify({ launcher: join(modules, `.bin/orchestra${process.platform === "win32" ? ".cmd" : ""}`), payload: platform, version: payload.version,
         box, oracle: built.oracle, negative: payload === built.payloads[1] })
       skills.set(root, await snapshot(root))
       for (const [old, expected] of skills) expect(await snapshot(old)).toEqual(expected)
@@ -114,6 +125,8 @@ export async function npmChannel(directory: string, built: Built) {
         expect(await snapshot(old.payload)).toEqual(old.snapshot)
         expect(await snapshot(join(old.modules, "@orchestra/cli"))).toEqual(old.wrapper)
       }
+      if (process.platform === "win32")
+        for (const source of built.payloads) expect(await snapshot(source.payload)).toEqual(source.snapshot)
     }
     // Retained old npm-extracted closures must still run through their public wrapper.
     for (const old of extracted) {

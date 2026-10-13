@@ -10,13 +10,14 @@ import { PackagedSkills } from "@orchestra/core/packaged-skills"
 import { assertVersion, command, successful, snapshot, skillIdentity } from "./distribution-native"
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
+import type { WindowsIdentity } from "./distribution-windows-process"
 
 const Registration = Schema.Struct({
   id: Schema.String.check(Schema.isPattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)),
   pid: Schema.Int.check(Schema.isGreaterThan(0)), version: Schema.String, url: Schema.String,
 })
 type Receipt = typeof Registration.Type
-type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; failure?: Error }
+type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; identity?: WindowsIdentity; failure?: Error }
 const leases = new Set<Lease>()
 
 export async function stopServices() {
@@ -49,7 +50,9 @@ export function emergencyStop() {
     // launcher was canonicalized and confined to this host-owned isolated box.
     // Best effort only: success does not prove exit and cannot release the lease.
     Effect.runSync(Effect.try({
-      try: () => Bun.spawnSync([lease.launcher, "service", "stop"], {
+      // Windows sync fallback uses the owned installed PE, since CMD shims need
+      // async AppProcess shell handling. This cannot qualify cleanup or exit.
+      try: () => Bun.spawnSync([process.platform === "win32" ? lease.executable : lease.launcher, "service", "stop"], {
         cwd: lease.box.cwd, env: lease.box.env, stdout: "ignore", stderr: "ignore", timeout: 20_000,
       }),
       catch: () => new Error("NATIVE_DAEMON_EMERGENCY_STOP_FAILED"),
@@ -76,11 +79,16 @@ async function stopOwned(lease: Lease) {
   const receipt = lease.receipt
   const current = await registration(lease.box)
   if (current && !sameReceipt(current, receipt)) throw new Error("NATIVE_DAEMON_REGISTRATION_CHANGED_BEFORE_STOP")
+  if (process.platform === "win32") {
+    const identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
+    if (!identity || !lease.identity || identity.startTime !== lease.identity.startTime)
+      throw new Error("NATIVE_DAEMON_IDENTITY_CHANGED_BEFORE_STOP")
+  }
   const result = await command([lease.launcher, "service", "stop"], lease.box, 20_000)
     .then((value) => ({ value }), () => ({ value: undefined }))
   // Even a failed/no-op stop must prove the captured PID exited. Never signal a
   // raw PID here: only the authenticated public service command may stop it.
-  await exited(receipt.pid)
+  await exited(receipt.pid, lease.identity)
   if (!result.value || result.value.code !== 0) throw new Error("NATIVE_DAEMON_STOP_COMMAND_FAILED")
   expect(await successful([lease.launcher, "service", "status"], lease.box, 15_000)).toBe("stopped")
   leases.delete(lease)
@@ -124,7 +132,7 @@ async function captureReceipt(lease: Lease) {
       if (receipt.version !== lease.version) throw new Error("NATIVE_DAEMON_REGISTRATION_VERSION_MISMATCH")
       if (lease.receipt && !sameReceipt(receipt, lease.receipt))
         throw new Error("NATIVE_DAEMON_REGISTRATION_CHANGED")
-      if (!lease.receipt) await corroborateProcess(receipt.pid, lease.executable, lease.box)
+      if (!lease.receipt) lease.identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
       lease.receipt = receipt
       return
     }
@@ -133,9 +141,20 @@ async function captureReceipt(lease: Lease) {
   } while (Date.now() <= deadline)
 }
 
-async function exited(pid: number) {
+async function exited(pid: number, identity?: WindowsIdentity) {
   const deadline = Date.now() + 15_000
   do {
+    if (process.platform === "win32") {
+      if (!identity) throw new Error("NATIVE_DAEMON_WINDOWS_IDENTITY_MISSING")
+      const { windowsIdentity } = await import("./distribution-windows-process")
+      const current = await windowsIdentity(pid)
+      if (!current || current.startTime !== identity.startTime) return
+      if (current.executable.toLowerCase() !== identity.executable.toLowerCase())
+        throw new Error("NATIVE_DAEMON_WINDOWS_EXECUTABLE_CHANGED")
+      if (Date.now() >= deadline) throw new Error(`NATIVE_DAEMON_PID_SURVIVED_STOP: pid=${pid}`)
+      await Bun.sleep(100)
+      continue
+    }
     const running = await Promise.resolve().then(() => { process.kill(pid, 0); return true })
       .catch((error: unknown) => {
         if (error && typeof error === "object" && "code" in error && error.code === "ESRCH") return false
@@ -176,11 +195,12 @@ async function companionFailures(launcher: string, payload: string, box: Sandbox
     } finally { await writeFile(addon, original); await chmod(addon, addonMode) }
     await assertVersion(launcher, version, box)
   }
-  const supervisor = join(payload, "bin/hugr-omni-supervisor")
+  const supervisor = join(payload, `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`)
   const supervisorBytes = await readFile(supervisor)
   const supervisorMode = (await lstat(supervisor)).mode & 0o777
   await companionSuccess(payload, box)
-  for (const kind of ["missing", "corrupt", "non-executable"] as const) {
+  // NTFS executable permission is PE/loader-based, not Unix chmod bits.
+  for (const kind of (process.platform === "win32" ? ["missing", "corrupt"] as const : ["missing", "corrupt", "non-executable"] as const)) {
     try {
       if (kind === "missing") await rm(supervisor)
       if (kind === "corrupt") await writeFile(supervisor, "not an executable supervisor")
@@ -218,7 +238,7 @@ async function companionSuccess(payload: string, box: Sandbox) {
   expect(receipt).toMatchObject({ oracle: "installed-companion", exitCode: 7, stdout: "installed-companion-child\n" })
   expect(receipt.paths).toEqual({
     addon: join(await realpath(payload), "bin/hugr_omni.node"),
-    supervisor: join(await realpath(payload), "bin/hugr-omni-supervisor"),
+    supervisor: join(await realpath(payload), `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`),
   })
   expect(receipt.counters.spawns).toBeGreaterThan(0)
   expect(receipt.counters.delegations).toBe(0)
@@ -230,7 +250,12 @@ export async function qualify(input: {
   const launcher = await realpath(input.launcher)
   if (!launcher.startsWith((await realpath(input.box.directory)) + sep))
     throw new Error("NATIVE_DAEMON_LAUNCHER_OUTSIDE_OWNED_BOX")
-  const lease: Lease = { launcher, executable: join(input.payload, "bin/orchestra"), box: input.box, version: input.version, attempted: false }
+  const lease: Lease = { launcher, executable: join(input.payload, `bin/orchestra${process.platform === "win32" ? ".exe" : ""}`), box: input.box, version: input.version, attempted: false }
+  if (process.platform === "win32") {
+    lease.executable = await realpath(lease.executable)
+    if (!lease.executable.toLowerCase().startsWith((await realpath(input.box.directory)).toLowerCase() + sep))
+      throw new Error("NATIVE_DAEMON_EXECUTABLE_OUTSIDE_OWNED_BOX")
+  }
   leases.add(lease) // Register before start: failures/timeouts must still stop.
   try {
     const before = await snapshot(input.box.namespace)
