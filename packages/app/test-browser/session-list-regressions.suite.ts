@@ -4,18 +4,15 @@ import { render } from "solid-js/web"
 import { produce } from "solid-js/store"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
-import type { ServerEvent, ServerSDK } from "./server-sdk"
+import type { ServerEvent, ServerSDK } from "@/context/server-sdk"
 import { createApiForServer, createSdkForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
-// This browser loader lives outside the composite src project; keep it out of the static typecheck graph.
-const { solidDom }: { solidDom: (specifier: string, directory: string) => string } = await import(
-  Bun.resolveSync("../../test-browser/solid-dom", import.meta.dir)
-)
+import { solidDom } from "./solid-dom"
 
-const { createServerSyncContextInner }: typeof import("./server-sync") = await import(solidDom("./server-sync", import.meta.dir))
-const { createDirSyncContext }: typeof import("./directory-sync") = await import(solidDom("./directory-sync", import.meta.dir))
-const { PlatformProvider }: typeof import("./platform") = await import(solidDom("./platform", import.meta.dir))
-const { LanguageProvider }: typeof import("./language") = await import(solidDom("./language", import.meta.dir))
+const { createServerSyncContextInner }: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
+const { createDirSyncContext }: typeof import("@/context/directory-sync") = await import(solidDom("@/context/directory-sync", import.meta.dir))
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
 const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
 
 const id = "ses_pending_list"

@@ -135,10 +135,12 @@ test("actual server session store projects durable policy replacements and resto
 })
 
 test("current home session summaries retain backend policy instead of showing inherited counts", () => {
+  const models = first.models.map((model) => ({ ...model }))
   const sessions = parseHomeSessionIndex([{
     id: "ses_home", projectID: "project", title: "Home", location: { directory: "/repo" },
     cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    time: { created: 1, updated: 1 }, ...{ subagentModels: first },
+    time: { created: 1, updated: 1 }, ...{ subagentModels: { ...first, models } },
   }])
+  models[0].id = "changed-after-projection"
   expect(sessions[0]?.subagentModels).toEqual(first)
 })

@@ -7,10 +7,10 @@ import {
 } from "@/components/subagent-model-rules"
 import { createSdkForServer } from "@/utils/server"
 import type { AppSession } from "@/utils/session"
-import { createServerSession } from "./server-session"
-import { applyDirectoryEvent } from "./global-sync/event-reducer"
-import type { State } from "./global-sync/types"
-import { SESSION_MANAGEMENT_FENCE_LIMIT, sessionManagementFences } from "./session-management-state"
+import { createServerSession } from "@/context/server-session"
+import { applyDirectoryEvent } from "@/context/global-sync/event-reducer"
+import type { State } from "@/context/global-sync/types"
+import { SESSION_MANAGEMENT_FENCE_LIMIT, sessionManagementFences } from "@/context/session-management-state"
 
 const allow: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "team/model" }] }
 const deny: SubagentModelPolicy = { mode: "allowlist", models: [] }
