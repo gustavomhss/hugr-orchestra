@@ -463,7 +463,9 @@ export const { use: useServerSDK, provider: ServerSDKProvider } = createSimpleCo
   name: "ServerSDK",
   // Returns an accessor so the resolved server can change reactively (e.g. a
   // /new-session draft retargeting its server) without re-instantiating the subtree.
-  init: (props: { server?: Accessor<ServerConnection.Any | undefined> }) => {
+  init: (props: { server?: Accessor<ServerConnection.Any | undefined>; value?: ServerSDK }) => {
+    const captured = props.value
+    if (captured) return () => captured
     const global = useGlobal()
     const language = useLanguage()
     const server = useServer()
