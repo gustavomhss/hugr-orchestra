@@ -82,6 +82,18 @@
       // build and install the runner's own environment.
       "passThroughEnv": ["*"]
     },
+    "@orchestra/script#test": {
+      "dependsOn": ["transit", "^build"],
+      // Extension: resolver integration cases consume the root producer and shared fixture sources.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/script/monolith-inventory.ts",
+        "$TURBO_ROOT$/script/test-guard.ts",
+        "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
+        "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
+      ],
+      "outputs": []
+    },
     "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []
