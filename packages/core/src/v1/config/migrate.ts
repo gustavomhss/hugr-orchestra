@@ -139,6 +139,7 @@ export function migrateAgent(info: ConfigAgentV1.Info) {
     request: Object.keys(body).length ? { body } : undefined,
     system: info.prompt,
     description: info.description,
+    engine: info.engine,
     mode: info.mode,
     hidden: info.hidden,
     color: info.color,
