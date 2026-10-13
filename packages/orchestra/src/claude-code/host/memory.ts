@@ -92,7 +92,8 @@ export const read = Effect.fn("ClaudeHostMemory.read")(function* (input: {
     })],
     ["Plan revision (retained producing tool and admission)", plan],
     ["Todos", native?.status === "unavailable" ? [JSON.stringify({ status: "unavailable", reason: native.unavailable.reason,
-      order: native.order, locator: native.locator, recallExtent: "Owning tool input/output and unavailable marker only; current native task state is withheld." })]
+      order: native.order, locator: native.locator, recall: { message_id: native.locator.messageID, part_id: native.locator.partID },
+      recallExtent: "Owning tool input/output only; unavailable marker is supplied inline and excluded from context_recall metadata. Current native task state is withheld." })]
       : [...(native?.status === "known" && native.coverage === "observed-tasks"
         ? ["Known native state covers observed task IDs only; remaining task inventory is unproven."] : []),
         ...todo.filter((item) => item.status !== "completed" && item.status !== "cancelled").map((item) => JSON.stringify(item))]],

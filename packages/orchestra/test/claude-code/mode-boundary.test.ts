@@ -2,12 +2,14 @@ import { expect, test } from "bun:test"
 import path from "node:path"
 import { createRequire } from "node:module"
 import ts from "typescript"
+import { readBoundarySource } from "./mode-boundary-source"
 
 // The two modes stay separate (specs/claude-code-engine.md, "Two modes"). Normal mode reaches Claude mode only through
 // its entry point or the exact adapters in ADAPTER_EDGES, and Claude mode reaches normal mode only through INTERFACE, never
 // through the loop itself. A fresh SourceFile per file supplies static/type-only imports, re-exports, import-equals,
-// type import queries and direct import()/require() calls with string-literal specifiers. Comments/prose are inert; template literals,
-// computed specifiers and aliased/wrapped loaders are outside this syntactic guard's declared reach.
+// type import queries and direct import()/require() calls with strings or no-substitution templates. Comments/prose are inert;
+// interpolated templates, computed specifiers and aliased/wrapped loaders are outside this syntactic guard's declared reach.
+// Decoded separators and alias wildcard paths are normalized before checking final source-root containment.
 
 const ORCHESTRA = path.resolve(import.meta.dir, "../..")
 const SRC = path.join(ORCHESTRA, "src")
@@ -172,14 +174,101 @@ test("the AST keeps side-effect, export-all, type re-export, import-equals and t
   ])
 })
 
-test("the AST ignores prose and unsupported computed/template loader spellings", () => {
+test("the AST keeps constant-template import and require edges across both mode boundaries", () => {
+  for (const loader of ["import", "require"]) {
+    expect(violations([{ file: "session/probe.ts", text: `const sdk = ${loader}(\`@/claude-code/sdk\`)` }])).toEqual([
+      "session/probe.ts imports claude-code/sdk; normal mode may import only claude-code/engine",
+    ])
+    for (const target of LOOP) {
+      expect(violations([{ file: "claude-code/host/probe.ts", text: `const loop = ${loader}(\`@/${target}\`)` }])).toEqual([
+        `claude-code/host/probe.ts imports ${target}, part of Orchestra's loop`,
+      ])
+    }
+  }
+})
+
+test("source-root re-entry aliases keep the same SDK, loop and private-module violations", () => {
+  const cases = [
+    { file: "session/probe.ts", target: "claude-code/sdk", problem: "session/probe.ts imports claude-code/sdk; normal mode may import only claude-code/engine" },
+    ...LOOP.map((target) => ({ file: "claude-code/host/probe.ts", target, problem: `claude-code/host/probe.ts imports ${target}, part of Orchestra's loop` })),
+    { file: "claude-code/host/probe.ts", target: "maestro/admission-record-private", problem: "claude-code/host/probe.ts imports maestro/admission-record-private, which is not in Claude mode's INTERFACE" },
+  ]
+  for (const item of cases) {
+    for (const specifier of [`@/${item.target}`, `@/../src/${item.target}`]) {
+      const source = { file: item.file, text: `import "${specifier}"` }
+      expect(imports(source)).toEqual([item.target])
+      expect(violations([source])).toEqual([item.problem])
+    }
+  }
+  for (const specifier of ["@/../outside/private", "../../outside/private"]) {
+    expect(imports({ file: "session/probe.ts", text: `import "${specifier}"` })).toEqual([])
+  }
+})
+
+test("syntactic extraction failures name the importer and diagnostic while valid importless files stay valid", () => {
+  for (const item of [
+    { file: "session/broken.ts", text: "import { SDK } from ;", diagnostic: "TS1109: Expression expected." },
+    { file: "session/broken.ts", text: 'const broken = `unterminated\nimport "@/claude-code/sdk"', diagnostic: "TS1160: Unterminated template literal." },
+    { file: "session/broken.tsx", text: "const view = <div>", diagnostic: "TS17008: JSX element 'div' has no corresponding closing tag." },
+    { file: "session/broken.d.ts", text: "export declare const value:", diagnostic: "TS1110: Type expected." },
+  ]) {
+    expect(() => imports(item)).toThrow(`Cannot extract imports from ${item.file}:\n${item.diagnostic}`)
+  }
+  for (const item of [
+    { file: "session/empty.ts", text: "" },
+    { file: "session/probe.ts", text: "export const value = 1" },
+    { file: "session/probe.tsx", text: "export const view = <div />" },
+    { file: "session/probe.d.ts", text: "export declare const value: number" },
+    { file: "session/probe.d.ts", text: 'declare module "external" { export type Value = string }' },
+  ]) {
+    expect(imports(item)).toEqual([])
+  }
+})
+
+test("literal separator variants agree with the compiler's alias mapping on POSIX and Windows models", () => {
+  for (const platform of [path.posix, path.win32]) {
+    const root = platform === path.posix ? "/review/orchestra" : "C:/review/orchestra"
+    const src = platform.join(root, "src")
+    const targets = ["claude-code/sdk", ...LOOP, "maestro/admission-record-private"]
+    const files = new Set([...targets.map((target) => platform.join(src, `${target}.ts`)), platform.join(root, "outside/private.ts")].map((file) => file.replaceAll("\\", "/")))
+    const host: ts.ModuleResolutionHost = {
+      fileExists: (file) => files.has(file.replaceAll("\\", "/")),
+      readFile: () => undefined,
+      directoryExists: () => true,
+      getCurrentDirectory: () => root,
+    }
+    const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext, paths: { "@/*": ["./src/*"] } }
+    for (const target of targets) {
+      const file = target === "claude-code/sdk" ? "session/probe.ts" : "claude-code/host/probe.ts"
+      for (const specifier of [`@//${target}`, `@/${target.replaceAll("/", "\\")}`]) {
+        const source = { file, text: `import ${JSON.stringify(specifier)}` }
+        const resolved = ts.resolveModuleName(specifier, platform.join(src, file), options, host).resolvedModule
+        expect(resolved).toBeDefined()
+        const module = platform.relative(src, resolved!.resolvedFileName).replaceAll("\\", "/").replace(/\.ts$/, "")
+        expect(module).toBe(target)
+        expect(imports(source)).toEqual([module])
+        expect(violations([source])).toEqual([target === "claude-code/sdk"
+          ? `${file} imports ${target}; normal mode may import only ${ENTRY}`
+          : LOOP.includes(target) ? `${file} imports ${target}, part of Orchestra's loop`
+          : `${file} imports ${target}, which is not in Claude mode's INTERFACE`])
+      }
+    }
+    for (const specifier of ["@//../outside/private", "@/..\\outside\\private"]) {
+      const resolved = ts.resolveModuleName(specifier, platform.join(src, "session/probe.ts"), options, host).resolvedModule
+      expect(resolved).toBeDefined()
+      expect(platform.relative(src, resolved!.resolvedFileName).replaceAll("\\", "/")).toBe("../outside/private.ts")
+      expect(imports({ file: "session/probe.ts", text: `import ${JSON.stringify(specifier)}` })).toEqual([])
+    }
+  }
+})
+
+test("the AST ignores prose and unsupported interpolated/computed loader spellings", () => {
   expect(imports({
     file: "session/probe.tsx",
     text: [
       '// import { SDK } from "@/claude-code/sdk"',
       'const prose = \'require("@/claude-code/host/provider")\'',
       'const view = <div>import("@/claude-code/host/options")</div>',
-      'const template = import(`@/claude-code/sdk`)',
       'const computed = import(`@/claude-code/${name}`)',
       'const variable = require(specifier)',
       'const joined = require("@/claude-code/" + name)',
@@ -243,30 +332,19 @@ function violations(files: File[]) {
 
 /** The src-relative modules a file imports, without extension; package and node imports are dropped. */
 function imports(item: File) {
-  // Repair: preProcessFile uses TypeScript's shared services scanner; extraction must come from this file's AST.
-  const source = ts.createSourceFile(item.file, item.text, ts.ScriptTarget.Latest, true,
-    item.file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
-  const specifiers: string[] = []
-  function visit(node: ts.Node) {
-    const specifier = ts.isImportDeclaration(node) || ts.isExportDeclaration(node) ? node.moduleSpecifier
-      : ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) ? node.moduleReference.expression
-      : ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) ? node.argument.literal
-      : ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        ts.isIdentifier(node.expression) && node.expression.text === "require") ? node.arguments[0] : undefined
-    if (specifier && ts.isStringLiteral(specifier)) specifiers.push(specifier.text)
-    ts.forEachChild(node, visit)
-  }
-  visit(source)
-  const rows: { literal: string; branch: string; argument: string; resolved?: string; target?: string }[] = []
-  const targets = specifiers.flatMap((specifier) => {
+  const parsed = readBoundarySource(item, SRC)
+  const rows: { literal: string; normalized: string; branch: string; argument: string; absolute?: string; resolved?: string; target?: string }[] = []
+  const targets = parsed.specifiers.flatMap((literal) => {
+    const specifier = literal.replaceAll("\\", "/")
     const alias = specifier.startsWith("@/")
     const relative = !alias && specifier.startsWith(".")
     const argument = alias ? specifier.slice(2) : specifier
-    const resolved = alias ? path.posix.normalize(argument)
-      : relative ? path.posix.join(path.posix.dirname(item.file), argument) : undefined
-    const target = resolved === undefined || resolved.startsWith("..") ? undefined
+    const absolute = alias ? path.resolve(path.join(SRC, argument))
+      : relative ? path.resolve(SRC, path.dirname(item.file), argument) : undefined
+    const resolved = absolute === undefined ? undefined : path.relative(SRC, absolute).split(path.sep).join("/")
+    const target = resolved === undefined || resolved === ".." || resolved.startsWith("../") || path.isAbsolute(resolved) ? undefined
       : resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")
-    if (item.control) rows.push({ literal: specifier, branch: alias ? "alias" : relative ? "relative" : "package", argument, resolved, target })
+    if (item.control) rows.push({ literal, normalized: specifier, branch: alias ? "alias" : relative ? "relative" : "package", argument, absolute, resolved, target })
     return target === undefined ? [] : [target]
   })
   if (item.control) {
@@ -278,7 +356,7 @@ function imports(item: File) {
         compiler: createRequire(import.meta.url).resolve("typescript"), scriptTarget: ts.ScriptTarget.Latest,
         scriptKind: item.file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
         defaultIsPosix: path === path.posix, normalizeIsDefault: path.posix.normalize === path.normalize },
-      inputMatches: source.text === item.text, statementKinds: source.statements.map((node) => node.kind), raw: specifiers, rows,
+      inputMatches: parsed.source.text === item.text, statementKinds: parsed.source.statements.map((node) => node.kind), raw: parsed.specifiers, rows,
     })}`)
   }
   return targets
