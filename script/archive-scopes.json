@@ -1,0 +1,26 @@
+[
+  {
+    "path": "specs/orchestra-visual/handoff/archives",
+    "disposition": "retain-recovery",
+    "owner": "visual-handoff",
+    "readers": ["specs/orchestra-visual/handoff/restore-evidence.ts", "specs/orchestra-visual/handoff/evidence-snapshot.json"]
+  },
+  {
+    "path": "packages/orchestra/specs/benchmark-evidence",
+    "disposition": "review-history",
+    "owner": "continuity",
+    "readers": ["packages/orchestra/specs/context-continuity-benchmark-v3-v4.md", "packages/orchestra/script/continuity-bench"]
+  },
+  {
+    "path": "specs/backend-specialist/research",
+    "disposition": "review-history",
+    "owner": "backend",
+    "readers": ["specs/backend-specialist/session-handoff.md", "specs/backend-specialist/delivery-plan.md"]
+  },
+  {
+    "path": "packages/jimmy-specialist",
+    "disposition": "retain-runtime",
+    "owner": "backend",
+    "readers": ["packages/desktop/src/main/jimmy-desktop-proof.test.ts", "packages/orchestra/script/research-pilot.ts"]
+  }
+]
