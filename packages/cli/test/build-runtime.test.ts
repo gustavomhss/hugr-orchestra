@@ -131,7 +131,7 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
     const password = await run([binary, "service", "password"])
     expect(password.code).toBe(0)
     expect(password.stdout.length > 0).toBe(true)
-    await authenticatedHealth(started.stdout, password.stdout)
+    await authenticatedHealth(started.stdout, password.stdout, registration.pid)
     const stopped = await run([binary, "service", "stop"])
     expect(stopped.code).toBe(0)
     expect((await run([binary, "service", "status"])).stdout).toBe("stopped")
@@ -152,7 +152,7 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
       await reader.cancel()
       const address = /server listening on (http:\/\/\S+)/.exec(output)
       if (!address) throw new Error("Missing foreground address")
-      await authenticatedHealth(address[1], password.stdout)
+      await authenticatedHealth(address[1], password.stdout, child.pid)
     } finally {
       child.kill()
       await child.exited
@@ -164,13 +164,15 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
   }
 }, 900_000)
 
-async function authenticatedHealth(url: string, password: string) {
+async function authenticatedHealth(url: string, password: string, pid: number) {
+  expect(Number.isSafeInteger(pid)).toBe(true)
+  expect(pid).toBeGreaterThan(0)
   const good = await fetch(new URL("/api/health", url), {
     headers: { authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}` },
     signal: AbortSignal.timeout(10_000),
   })
   expect(good.status).toBe(200)
-  expect(await good.json()).toEqual({ healthy: true })
+  expect(await good.json()).toEqual({ healthy: true, pid })
   const bad = await fetch(new URL("/api/health", url), {
     headers: { authorization: `Basic ${Buffer.from("orchestra:wrong-credential").toString("base64")}` },
     signal: AbortSignal.timeout(10_000),

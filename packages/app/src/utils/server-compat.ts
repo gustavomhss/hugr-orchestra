@@ -60,7 +60,7 @@ function mime(uri: string) {
   return match?.[1] ?? "application/octet-stream"
 }
 
-function sessionInfo(session: Session): SessionInfo & { costAvailable: boolean } {
+function sessionInfo(session: Session): SessionInfo & Pick<Session, "metadata"> & { costAvailable: boolean } {
   return {
     id: session.id,
     parentID: session.parentID,
@@ -73,6 +73,7 @@ function sessionInfo(session: Session): SessionInfo & { costAvailable: boolean }
     },
     cost: session.cost ?? 0,
     costAvailable: session.cost !== undefined,
+    ...(session.metadata === undefined ? {} : { metadata: session.metadata }),
     tokens: session.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
     time: session.time,
     title: session.title,

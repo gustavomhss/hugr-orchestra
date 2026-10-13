@@ -1,0 +1,165 @@
+diff --git a/package.json b/package.json
+index b386856a5acb3ec176c34d1f34df90d290f5189b..aa6582b74daf45ba2adc1a196395714b52898cbf 100644
+--- a/package.json
++++ b/package.json
+@@ -69,7 +69,8 @@
+     "diff": "9.0.0",
+     "marked": "17.0.1",
+     "string-width": "7.2.0",
+-    "strip-ansi": "7.1.2"
++    "strip-ansi": "7.1.2",
++    "typescript": "5.8.2"
+   },
+   "peerDependencies": {
+     "web-tree-sitter": "0.25.10"
+diff --git a/runtime-plugin.js b/runtime-plugin.js
+index c50cf3bd9ca39fbeb1b2b684dcba033ca27a70da..324d4a382e2c5bebc219ddf198b736edb0c6d4f5 100644
+--- a/runtime-plugin.js
++++ b/runtime-plugin.js
+@@ -28,7 +28,7 @@
+  *   packages already marked for runtime rewriting.
+  *
+  * Notes:
+- * - import scanning is regex-based, not a full parser.
++ * - import scanning and rewriting share TypeScript syntax nodes; prose is inert.
+  * - CJS helper libraries that themselves import runtime modules are still not
+  *   supported.
+  * - `package.json#type` caching is per plugin setup, not module-global, so a
+@@ -183,12 +183,26 @@ const runtimeLoaderForPath = (path) => {
+     }
+     return null;
+ };
+-const resolveImportSpecifierPatterns = [
+-    /(from\s+["'])([^"']+)(["'])/g,
+-    /(import\s+["'])([^"']+)(["'])/g,
+-    /(import\s*\(\s*["'])([^"']+)(["']\s*\))/g,
+-    /(require\s*\(\s*["'])([^"']+)(["']\s*\))/g,
+-];
++const importSpecifierNodes = (code, path) => {
++    // Prescan runs in synchronous onResolve. Keep the parser lazy and the literal
++    // require bundleable by Bun, including compiled binaries without node_modules.
++    const ts = require("typescript");
++    const source = ts.createSourceFile(sourcePath(path), code, ts.ScriptTarget.Latest, false);
++    const specifiers = [];
++    const visit = (node) => {
++        const specifier = ts.isImportDeclaration(node) || ts.isExportDeclaration(node) ? node.moduleSpecifier
++            : ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) ? node.moduleReference.expression
++            : ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) ? node.argument.literal
++            : ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
++                ts.isIdentifier(node.expression) && node.expression.text === "require") ? node.arguments[0] : undefined;
++        if (specifier && ts.isStringLiteral(specifier)) {
++            specifiers.push({ text: specifier.text, start: specifier.getStart(source), end: specifier.end });
++        }
++        ts.forEachChild(node, visit);
++    };
++    visit(source);
++    return specifiers;
++};
+ const isBareSpecifier = (specifier) => {
+     if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("\\")) {
+         return false;
+@@ -216,28 +230,17 @@ const registerResolveParent = (resolveParentsByRecency, resolveParent) => {
+         resolveParentsByRecency.shift();
+     }
+ };
+-const rewriteImportSpecifiers = (code, resolveReplacement) => {
+-    let transformedCode = code;
+-    for (const pattern of resolveImportSpecifierPatterns) {
+-        transformedCode = transformedCode.replace(pattern, (fullMatch, prefix, specifier, suffix) => {
+-            const replacement = resolveReplacement(specifier);
+-            if (!replacement || replacement === specifier) {
+-                return fullMatch;
+-            }
+-            return `${prefix}${replacement}${suffix}`;
+-        });
+-    }
+-    return transformedCode;
++const rewriteImportSpecifiers = (code, resolveReplacement, path) => {
++    // Replace only literal token ranges, back to front so original offsets remain
++    // valid. Identical paths in comments, strings, template text or JSX stay intact.
++    return importSpecifierNodes(code, path).sort((a, b) => b.start - a.start).reduce((transformedCode, specifier) => {
++        const replacement = resolveReplacement(specifier.text);
++        if (!replacement || replacement === specifier.text) return transformedCode;
++        return transformedCode.slice(0, specifier.start) + JSON.stringify(replacement) + transformedCode.slice(specifier.end);
++    }, code);
+ };
+-const collectImportSpecifiers = (code) => {
+-    const specifiers = new Set();
+-    for (const pattern of resolveImportSpecifierPatterns) {
+-        code.replace(pattern, (_fullMatch, _prefix, specifier) => {
+-            specifiers.add(specifier);
+-            return _fullMatch;
+-        });
+-    }
+-    return [...specifiers];
++const collectImportSpecifiers = (code, path) => {
++    return [...new Set(importSpecifierNodes(code, path).map((specifier) => specifier.text))];
+ };
+ const resolveFromParent = (specifier, parent) => {
+     try {
+@@ -280,7 +283,7 @@ const resolveSourcePathFromSpecifier = (specifier, importer) => {
+     }
+     return null;
+ };
+-const rewriteImportsFromResolveParents = (code, resolveParentsByRecency) => {
++const rewriteImportsFromResolveParents = (code, resolveParentsByRecency, path) => {
+     if (resolveParentsByRecency.length === 0) {
+         return code;
+     }
+@@ -297,13 +300,13 @@ const rewriteImportsFromResolveParents = (code, resolveParentsByRecency) => {
+         }
+         return null;
+     };
+-    return rewriteImportSpecifiers(code, resolveFromParents);
++    return rewriteImportSpecifiers(code, resolveFromParents, path);
+ };
+-const rewriteRuntimeSpecifiers = (code, runtimeModuleIdsBySpecifier) => {
++const rewriteRuntimeSpecifiers = (code, runtimeModuleIdsBySpecifier, path) => {
+     return rewriteImportSpecifiers(code, (specifier) => {
+         const runtimeModuleId = runtimeModuleIdsBySpecifier.get(specifier);
+         return runtimeModuleId ?? null;
+-    });
++    }, path);
+ };
+ export function createRuntimePlugin(input = {}) {
+     const runtimeModules = new Map();
+@@ -349,13 +352,13 @@ export function createRuntimePlugin(input = {}) {
+                     }
+                     const contents = await Bun.file(loadedPath).text();
+                     const runtimeRewrittenContents = shouldRewriteRuntimeSpecifiers
+-                        ? rewriteRuntimeSpecifiers(contents, runtimeModuleIdsBySpecifier)
++                        ? rewriteRuntimeSpecifiers(contents, runtimeModuleIdsBySpecifier, loadedPath)
+                         : contents;
+                     if (runtimeRewrittenContents !== contents && shouldRewriteBareSpecifiers) {
+                         registerResolveParent(resolveParentsByRecency, loadedPath);
+                     }
+                     const transformedContents = shouldRewriteBareSpecifiers
+-                        ? rewriteImportsFromResolveParents(runtimeRewrittenContents, resolveParentsByRecency)
++                        ? rewriteImportsFromResolveParents(runtimeRewrittenContents, resolveParentsByRecency, loadedPath)
+                         : runtimeRewrittenContents;
+                     return {
+                         contents: transformedContents,
+@@ -381,7 +384,7 @@ export function createRuntimePlugin(input = {}) {
+                     }
+                     throw error;
+                 }
+-                const importSpecifiers = collectImportSpecifiers(contents);
++                const importSpecifiers = collectImportSpecifiers(contents, normalizedPath);
+                 const analysis = {
+                     importSpecifiers,
+                     needsRuntimeSpecifierRewrite: importSpecifiers.some((specifier) => runtimeModuleIdsBySpecifier.has(specifier)),
+@@ -442,6 +445,14 @@ export function createRuntimePlugin(input = {}) {
+                 }
+                 const nodeModulesPath = isNodeModulesPath(path);
+                 if (!nodeModulesPath) {
++                    // Workspace links may resolve outside node_modules. Keep unrelated
++                    // CommonJS helpers native-loaded too; onLoad breaks their exports.
++                    const commonjs = path.endsWith(".cjs") || path.endsWith(".cts") ||
++                        path.endsWith(".js") && packageTypeForPath(path, packageTypeByPackageJsonPath) === "commonjs";
++                    if (commonjs && !analyzeSourcePath(path).needsRuntimeSpecifierRewrite) {
++                        return undefined;
++                    }
++
+                     installRewriteLoader(path);
+                     return undefined;
+                 }
