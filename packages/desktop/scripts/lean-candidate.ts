@@ -192,7 +192,7 @@ export async function verifyMaterials(directory: string) {
     file === "package/LICENSE" || file === "package/NOTICE" ||
     file.startsWith("package/licenses/") || file.endsWith("/SOURCES.md"),
   ).sort()
-  if (names.length !== 49) throw new Error(`Lean material inventory expected 49; got ${names.length}`)
+  if (names.length !== 52) throw new Error(`Lean material inventory expected 52; got ${names.length}`)
   const manifest = await Bun.file(path.join(directory, "hugr-lean/manifest.json")).json()
   for (const [key, value] of Object.entries(leanPin)) {
     if (manifest[key] !== value) throw new Error(`Lean notice pin mismatch: ${key}`)

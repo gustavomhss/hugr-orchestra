@@ -10,7 +10,7 @@ import { fileTree, kill9, LOGS, markerArgument, matches, members, provider, supe
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
-  const scratch = fixture("v4-lsp")
+  const scratch = await fixture("v4-lsp")
   const tree = fileTree(scratch.home, 1)
   const cycles: { cycle: number; live: number; tsservers: number; recorded: number; supervised: boolean;
     restartMs: number; oldLeft: number; after: number; freshPID: number; supervisorPID: number }[] = []
