@@ -119,6 +119,7 @@ const fixtures = {
 }
 const connect = `${Bun.resolveSync("../src/components/dialog-connect-provider.tsx", import.meta.dir)}?provider-settings`
 const controller = `${Bun.resolveSync("../src/components/settings-v2/provider-controller.tsx", import.meta.dir)}?provider-settings`
+const scope = `${Bun.resolveSync("../src/components/settings-v2/provider-dialog-scope.tsx", import.meta.dir)}?provider-settings`
 Bun.plugin({
   name: "provider-settings-fixtures",
   setup(build) {
@@ -133,7 +134,7 @@ Bun.plugin({
     build.onLoad(
       {
         filter:
-          /(?:settings-providers|settings-server-picker|provider-controller|dialog-connect-provider)\.tsx\?provider-settings$/,
+          /(?:settings-providers|settings-server-picker|provider-controller|provider-dialog-scope|dialog-connect-provider)\.tsx\?provider-settings$/,
       },
       async (args) => {
         const source = (await Bun.file(args.path.replace(/\?provider-settings$/, "")).text())
@@ -154,9 +155,11 @@ Bun.plugin({
           .replaceAll('"./dialog-connect-provider"', JSON.stringify(connect))
           .replaceAll('"../dialog-connect-provider"', JSON.stringify(connect))
           .replaceAll('"./settings-v2/provider-controller"', JSON.stringify(controller))
+          .replaceAll('"./provider-dialog-scope"', JSON.stringify(scope))
           .replaceAll('"./settings-list"', '"provider-settings:list"')
           .replaceAll('"./settings-server-picker"', '"provider-settings:server"')
           .replaceAll('"./dialog-custom-provider"', '"provider-settings:custom"')
+          .replaceAll('"../dialog-custom-provider"', '"provider-settings:custom"')
         const result = await solid("@babel/core").transformAsync(source, {
           filename: args.path,
           presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
