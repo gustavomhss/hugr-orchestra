@@ -7,7 +7,7 @@ import { adoptTree, supervised, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" | "missing-marker" } = {}) {
-  const scratch = fixture("v5-mcp")
+  const scratch = await fixture("v5-mcp")
   const nonce = `omni-mcp-${randomUUID()}`
   const failureNonce = `${nonce}-failure`
   adoptTree(scratch.home, nonce)

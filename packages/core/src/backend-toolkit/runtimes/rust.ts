@@ -33,6 +33,15 @@ export default {
   version: RUST_VERSION,
   license: "MIT OR Apache-2.0",
   upstream: "rust-lang/rust",
+  // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts). The darwin-x64 archive's
+  // executables need 10.12; 11.0 comes from the arm64 slice of its `rtsan` sanitizer dylib, which is installed too.
+  floor: {
+    "darwin-arm64": { macos: "11.0" },
+    "darwin-x64": { macos: "11.0" },
+    "linux-arm64": { glibc: "2.17" },
+    "linux-x64": { glibc: "2.17" },
+    "win32-x64": {},
+  },
   targets: {
     "darwin-arm64": rust("aarch64-apple-darwin", "sha256-8158Wyz2PmfAddMj5Na4dQEhkxHwl0SrJMrst2HJZkM="),
     "darwin-x64": rust("x86_64-apple-darwin", "sha256-WWdWEBv0PNM1+yR/XMnt4MFXJFUjuv8lpmaUaCSVz8s="),

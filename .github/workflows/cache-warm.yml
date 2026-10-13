@@ -48,6 +48,12 @@ jobs:
         with:
           artifact: omni-warm-${{ runner.os }}-${{ runner.arch }}
 
+      # The only writer of the ripgrep cache that test.yml and test-ci.yml restore.
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
+        with:
+          save: "true"
+
       - name: Read Playwright version
         id: playwright-version
         run: |

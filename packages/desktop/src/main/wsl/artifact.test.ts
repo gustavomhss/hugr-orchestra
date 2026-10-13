@@ -9,11 +9,17 @@ import { checkWslAuthentication } from "./startup"
 import { spawnWslSidecar, wslServeScript } from "./sidecar"
 import { normalizeWslCommandVersion, readWslCommandVersion, shellEscape } from "./runtime"
 
-test("startup admits only descriptor-bound guest bytes before credentials/serve", async () => {
+// These tests run the guest scripts in the host's bash as a stand-in for the WSL guest, which is always Linux: glibc
+// (`getconf GNU_LIBC_VERSION`), GNU coreutils, POSIX paths, modes and signals. No other host shell is that guest (Git
+// Bash on Windows has no glibc, decides -x by file content and cannot kill the CLI behind an exec'd script), so they
+// run on Linux hosts, like the guest-script run in scripts/cli-staging.test.ts.
+const linuxGuestTest = test.skipIf(process.platform !== "linux")
+
+linuxGuestTest("startup admits only descriptor-bound guest bytes before credentials/serve", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-admission-"))
   const binary = join(root, ".orchestra/bin/orchestra")
   const marker = join(root, "executed")
-  const trusted = "#!/bin/bash\nprintf '%s\\n' \"$1\" >> \"$HOME/executed\"\nprintf 'orchestra v1.16.2\\n'\n"
+  const trusted = "#!/bin/bash\nprintf '%s\\n' \"$1\" >> \"$HOME/executed\"\nprintf '1.16.2\\n'\n"
   const options = (bytes: string) => ({
     directory: root, timeoutMs: 20_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") }] }),
@@ -29,7 +35,7 @@ test("startup admits only descriptor-bound guest bytes before credentials/serve"
     for (const scenario of ["tampered", "stale", "symlink", "outside"]) {
       await rm(marker, { force: true })
       await rm(binary, { force: true })
-      const bytes = scenario === "stale" ? trusted.replace("v1.16.2", "v1.16.3") : trusted + "# changed\n"
+      const bytes = scenario === "stale" ? trusted.replace("'1.16.2", "'1.16.3") : trusted + "# changed\n"
       await Bun.write(binary, bytes)
       await chmod(binary, 0o755)
       const outside = join(root, "outside")
@@ -43,11 +49,26 @@ test("startup admits only descriptor-bound guest bytes before credentials/serve"
       expect(await Bun.file(marker).exists()).toBe(scenario === "stale")
       if (scenario === "stale") expect(await readFile(marker, "utf8")).toBe("--version\n")
     }
-    for (const output of ["1.16.2", "orchestra v", " orchestra v1.16.2", "orchestra v1.16.2 extra", "orchestra v1.16.2\nextra"]) {
-      expect(normalizeWslCommandVersion(output)).toBeNull()
-    }
   } finally {
     await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("guest version output is admitted only as the bare SemVer version owned builds print", () => {
+  for (const [output, version] of [
+    ["1.16.2\n", "1.16.2"],
+    ["1.16.2\r\n", "1.16.2"],
+    ["1.18.27-w3-integration", "1.18.27-w3-integration"],
+    ["1.18.27-dev-202610111200", "1.18.27-dev-202610111200"],
+    ["1.18.27+build.5", "1.18.27+build.5"],
+  ]) {
+    expect(normalizeWslCommandVersion(output!)).toBe(version!)
+  }
+  for (const output of [
+    "", "orchestra", "--help", "local", "orchestra v1.16.2", "v1.16.2", "1.16", "01.16.2", " 1.16.2",
+    "1.16.2 extra", "1.16.2\nextra", "1.16.2\n\n",
+  ]) {
+    expect(normalizeWslCommandVersion(output)).toBeNull()
   }
 })
 
@@ -58,22 +79,23 @@ test("guest architecture/ABI selects Linux baseline only", () => {
   expect(() => linuxGuestTarget("x86_64", "musl")).toThrow(WslArtifactError)
 })
 
-test("Linux transfer verifies bytes/version, replaces foreign executable, preserves old on failure", async () => {
+linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executable, preserves old on failure", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-transfer-"))
   const source = join(root, "owned ' $(touch planted); artifact")
   const addon = join(root, "addon ' $(touch planted)")
   const supervisor = join(root, "supervisor ' $(touch planted)")
   const destination = join(root, ".orchestra/bin/orchestra")
   // Exits early unless the staged omni pair sits next to the binary, like the real CLI preflight.
-  const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf 'orchestra v1.16.2\\n'\n"
+  const bytes = "#!/bin/bash\n[[ -f \"${0%/*}/hugr_omni.node\" && -x \"${0%/*}/hugr-omni-supervisor\" ]] || exit 9\nprintf '1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
   const sha = (text: string) => createHash("sha256").update(text).digest("hex")
   // The digest over `sha256sum` lines of the tree's files, sorted by path.
   const treeSitter = join(root, "tree-sitter ' $(touch planted)")
   const treeDigest = sha(`${sha("index")}  tree-sitter/index.js\n${sha("binding")}  tree-sitter/prebuilds/linux-x64/tree-sitter.node\n`)
-  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon"), treeHash = treeDigest) => shell(
+  const ripgrep = join(root, "rg ' $(touch planted)")
+  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon"), treeHash = treeDigest, ripgrepHash = sha("rg")) => shell(
     ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version,
-      addon, addonHash, supervisor, sha("supervisor"), treeSitter, treeHash], root,
+      addon, addonHash, supervisor, sha("supervisor"), treeSitter, treeHash, ripgrep, ripgrepHash], root,
   )
   try {
     await Bun.write(source, bytes)
@@ -81,8 +103,11 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     await Bun.write(supervisor, "supervisor")
     await Bun.write(join(treeSitter, "tree-sitter/index.js"), "index")
     await Bun.write(join(treeSitter, "tree-sitter/prebuilds/linux-x64/tree-sitter.node"), "binding")
+    await Bun.write(ripgrep, "rg")
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
+    expect(await readFile(join(root, ".orchestra/bin/ripgrep/rg"), "utf8")).toBe("rg")
+    expect((await stat(join(root, ".orchestra/bin/ripgrep/rg"))).mode & 0o777).toBe(0o755)
     expect((await stat(destination)).mode & 0o777).toBe(0o755)
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[0]), "utf8")).toBe("addon")
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[1]), "utf8")).toBe("supervisor")
@@ -93,6 +118,11 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
     expect((await execute(source, digest, "1.16.2", "5s", sha("addon"), "0".repeat(64))).code).toBe(84)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    // An rg that is not the bundle's bytes stops the install before anything is replaced.
+    await Bun.write(join(root, ".orchestra/bin/ripgrep/rg"), "previous rg")
+    expect((await execute(source, digest, "1.16.2", "5s", sha("addon"), treeDigest, "0".repeat(64))).code).toBe(84)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect(await readFile(join(root, ".orchestra/bin/ripgrep/rg"), "utf8")).toBe("previous rg")
     // A symlink in the tree is not one of its regular files, so the digest no longer matches.
     await rm(join(treeSitter, "tree-sitter/index.js"))
     await symlink(source, join(treeSitter, "tree-sitter/index.js"))
@@ -110,7 +140,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     await Bun.write(destination, "foreign-old")
-    for (const output of ["1.16.2", "orchestra v", "orchestra v1.16.2 extra", "orchestra v1.16.3"]) {
+    for (const output of ["orchestra v1.16.2", "v1.16.2", "1.16.2 extra", "1.16.3", ""]) {
       const malformed = `#!/bin/bash\nprintf '%s\\n' '${output}'\n`
       await Bun.write(source, malformed)
       expect((await execute(source, createHash("sha256").update(malformed).digest("hex"))).code).toBe(82)
@@ -123,7 +153,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
-    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "tree-sitter"].sort())
+    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "ripgrep", "tree-sitter"].sort())
     const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
     await Bun.write(source, hung)
     expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
@@ -149,8 +179,10 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   const directory = await mkdtemp(join(tmpdir(), "w4-seam-"))
   await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-arm64", name), name)))
   await writeTreeSitterBundle(join(directory, "tree-sitter-linux-arm64"), "linux-arm64")
+  await Bun.write(join(directory, "ripgrep-linux-arm64", "rg"), "rg")
   const options = {
     directory,
+    ripgrepPin: () => createHash("sha256").update("rg").digest("hex"),
     signal: abort.signal,
     timeoutMs: 90_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-arm64", file: "owned", sha256: "a".repeat(64) }] }),
@@ -170,17 +202,19 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   expect(commands[2]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[0])])
   expect(commands[3]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[1])])
   expect(commands[4]).toEqual(["wslpath", "-u", "--", join(directory, "tree-sitter-linux-arm64")])
-  expect(commands[5]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
-  expect(commands[5]?.slice(-9, -1)).toEqual([
+  expect(commands[5]).toEqual(["wslpath", "-u", "--", join(directory, "ripgrep-linux-arm64", "rg")])
+  expect(commands[6]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
+  expect(commands[6]?.slice(-11, -3)).toEqual([
     "/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2",
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[0]).digest("hex"),
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[1]).digest("hex"),
     "/mnt/c/CLI ' $()/owned",
   ])
-  expect(commands[5]?.at(-1)).toMatch(/^[a-f0-9]{64}$/)
+  expect(commands[6]?.at(-3)).toMatch(/^[a-f0-9]{64}$/)
+  expect(commands[6]?.slice(-2)).toEqual(["/mnt/c/CLI ' $()/owned", createHash("sha256").update("rg").digest("hex")])
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
-  expect(commands.length).toBe(6)
+  expect(commands.length).toBe(7)
   const duringVerification = new AbortController()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", {
     ...options, signal: duringVerification.signal,
@@ -189,17 +223,21 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
       return { path: "unused", version: "1.16.2" }
     },
   })).rejects.toThrow()
-  expect(commands.length).toBe(7)
+  expect(commands.length).toBe(8)
   await rm(directory, { recursive: true, force: true })
 })
 
-test("bundle without the Linux omni pair or tree-sitter refuses the install by name before any transfer", async () => {
+test("bundle without the Linux omni pair, tree-sitter or rg refuses the install by name before any transfer", async () => {
   const directory = await mkdtemp(join(tmpdir(), "w4-unavailable-"))
   const treeSitter = join(directory, "tree-sitter-linux-x64-baseline")
   await writeTreeSitterBundle(treeSitter, "linux-x64-baseline")
+  const ripgrep = join(directory, "ripgrep-linux-x64-baseline", "rg")
+  await Bun.write(ripgrep, "rg")
   const commands: string[][] = []
+  const pin = { rg: createHash("sha256").update("rg").digest("hex") }
   const install = () => installWslArtifact("Ubuntu", "1.16.2", {
     directory,
+    ripgrepPin: () => pin.rg,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: "a".repeat(64) }] }),
     verifyArtifact: async () => ({ path: join(directory, "owned"), version: "1.16.2" }),
     run: async (args: string[]) => {
@@ -225,10 +263,21 @@ test("bundle without the Linux omni pair or tree-sitter refuses the install by n
     expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
     expect(commands.map((args) => args[0])).toEqual(["bash"])
     await rename(`${binding}.away`, binding)
-    // Control: with both companions and tree-sitter present the same seam reaches the guest transfer.
+    await rename(ripgrep, `${ripgrep}.away`)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    await rename(`${ripgrep}.away`, ripgrep)
+    // An rg that is not the pinned executable is refused before any transfer, whatever the bundle says.
+    pin.rg = "0".repeat(64)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("bytes")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    pin.rg = createHash("sha256").update("rg").digest("hex")
+    // Control: with both companions, tree-sitter and rg present the same seam reaches the guest transfer.
     commands.length = 0
     expect(await install()).toBeUndefined()
-    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "wslpath", "timeout"])
+    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "wslpath", "wslpath", "timeout"])
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
@@ -243,7 +292,7 @@ test.each([false, true])("protected health rejects open/unhealthy servers (prote
   }
 })
 
-test("real owned V2 CLI guest credential authenticates foreground server in isolated data", async () => {
+linuxGuestTest("real owned V2 CLI guest credential authenticates foreground server in isolated data", async () => {
   const root = await mkdtemp(join(tmpdir(), "w4-service-"))
   const env = isolatedEnv(root)
   const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
@@ -268,6 +317,43 @@ test("real owned V2 CLI guest credential authenticates foreground server in isol
     await rm(root, { recursive: true, force: true })
   }
 }, 30_000)
+
+linuxGuestTest("owned CLI source entry (bun, built version defined) passes guest install and admission", async () => {
+  // The guest checks run against what the owned CLI entry really prints, not a hand-written imitation of it. It runs
+  // from source through bun, not as a compiled binary, with ORCHESTRA_VERSION defined as a build defines it.
+  const root = await mkdtemp(join(tmpdir(), "w4-real-version-"))
+  const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
+  const executable = join(root, "owned ' $()")
+  const version = "1.18.27-wsl-source"
+  const define = `ORCHESTRA_VERSION:${JSON.stringify(version)}`
+  const bytes = `#!/bin/bash\nexec ${shellEscape(process.execPath)} --define ${shellEscape(define)} ${shellEscape(cli)} "$@"\n`
+  const targets = ["linux-x64-baseline", "linux-arm64"]
+  const options = {
+    directory: root,
+    timeoutMs: 20_000,
+    ripgrepPin: (target: string) => createHash("sha256").update(`rg ${target}`).digest("hex"),
+    readManifest: async () => ({
+      schema: 1 as const,
+      version,
+      artifacts: targets.map((target) => ({ target, file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") })),
+    }),
+    verifyArtifact: async () => ({ path: executable, version }),
+    // On a Linux host the host path already is the guest path.
+    run: async (args: string[]) =>
+      args[0] === "wslpath" ? { code: 0, signal: null, stdout: args[3]!, stderr: "" } : { ...(await shell(args, root)), signal: null },
+  }
+  try {
+    await Bun.write(executable, bytes)
+    await chmod(executable, 0o755)
+    await Promise.all(targets.flatMap((target) => omniCompanions.map((name) => Bun.write(join(root, `omni-${target}`, name), name))))
+    await Promise.all(targets.map((target) => writeTreeSitterBundle(join(root, `tree-sitter-${target}`), target)))
+    await Promise.all(targets.map((target) => Bun.write(join(root, `ripgrep-${target}`, "rg"), `rg ${target}`)))
+    await installWslArtifact("Ubuntu", version, options)
+    expect(await readWslCommandVersion(join(root, ".orchestra/bin/orchestra"), "Ubuntu", options)).toBe(version)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+}, 60_000)
 
 function isolatedEnv(root: string) {
   return { ...process.env, HOME: root, TMPDIR: root, ORCHESTRA_TEST_HOME: root,

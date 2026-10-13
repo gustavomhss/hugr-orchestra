@@ -145,6 +145,39 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
   const spinner = prompts.spinner()
   const errors: string[] = []
 
+  if (method !== "curl" && method !== "unknown") {
+    const cmds: Record<string, string[]> = {
+      npm: ["npm", "uninstall", "-g", "orchestra-ai"],
+      pnpm: ["pnpm", "uninstall", "-g", "orchestra-ai"],
+      bun: ["bun", "remove", "-g", "orchestra-ai"],
+      yarn: ["yarn", "global", "remove", "orchestra-ai"],
+      brew: ["brew", "uninstall", "orchestra"],
+      choco: ["choco", "uninstall", "orchestra"],
+      scoop: ["scoop", "uninstall", "orchestra"],
+    }
+
+    const cmd = cmds[method]
+    if (cmd) {
+      spinner.start(`Running ${cmd.join(" ")}...`)
+      const result = await Process.run(method === "choco" ? ["choco", "uninstall", "orchestra", "-y", "-r"] : cmd, {
+        nothrow: true,
+        // Not the workspace (and it must exist, so this runs before the state directory is removed): package managers run project files (yarn-path, packageManager, bunfig.toml) from their cwd.
+        cwd: Global.Path.state,
+      })
+      if (result.code !== 0) {
+        spinner.stop(`Package manager uninstall failed: exit code ${result.code}`, 1)
+        const text = `${result.stdout.toString("utf8")}\n${result.stderr.toString("utf8")}`
+        if (method === "choco" && text.includes("not running from an elevated command shell")) {
+          prompts.log.warn(`You may need to run '${cmd.join(" ")}' from an elevated command shell`)
+        } else {
+          prompts.log.warn(`You may need to run manually: ${cmd.join(" ")}`)
+        }
+      } else {
+        spinner.stop("Package removed")
+      }
+    }
+  }
+
   for (const dir of targets.directories) {
     if (dir.keep) {
       prompts.log.step(`Skipping ${dir.label} (--keep-${dir.label.toLowerCase()})`)
@@ -175,37 +208,6 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
       errors.push(`Shell config: ${err.message}`)
     } else {
       spinner.stop("Cleaned shell config")
-    }
-  }
-
-  if (method !== "curl" && method !== "unknown") {
-    const cmds: Record<string, string[]> = {
-      npm: ["npm", "uninstall", "-g", "orchestra-ai"],
-      pnpm: ["pnpm", "uninstall", "-g", "orchestra-ai"],
-      bun: ["bun", "remove", "-g", "orchestra-ai"],
-      yarn: ["yarn", "global", "remove", "orchestra-ai"],
-      brew: ["brew", "uninstall", "orchestra"],
-      choco: ["choco", "uninstall", "orchestra"],
-      scoop: ["scoop", "uninstall", "orchestra"],
-    }
-
-    const cmd = cmds[method]
-    if (cmd) {
-      spinner.start(`Running ${cmd.join(" ")}...`)
-      const result = await Process.run(method === "choco" ? ["choco", "uninstall", "orchestra", "-y", "-r"] : cmd, {
-        nothrow: true,
-      })
-      if (result.code !== 0) {
-        spinner.stop(`Package manager uninstall failed: exit code ${result.code}`, 1)
-        const text = `${result.stdout.toString("utf8")}\n${result.stderr.toString("utf8")}`
-        if (method === "choco" && text.includes("not running from an elevated command shell")) {
-          prompts.log.warn(`You may need to run '${cmd.join(" ")}' from an elevated command shell`)
-        } else {
-          prompts.log.warn(`You may need to run manually: ${cmd.join(" ")}`)
-        }
-      } else {
-        spinner.stop("Package removed")
-      }
     }
   }
 

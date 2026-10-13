@@ -229,13 +229,15 @@ test("all explicit targets produce correct executable format/architecture and pr
   // from the handed bundles, so no install script needs to run. A host that builds only its own target needs no foreign
   // package and must not reinstall: Windows runners install the hoisted layout (setup-bun) and this install's default
   // isolated linker moves every package, while this test process keeps resolving through the hoisted paths it already
-  // cached, so each later suite in it failed with "Cannot find package 'effect'" (actions run 38157021480).
+  // cached, so each later suite in it failed with "Cannot find package 'effect'" (actions run 38157021480). Asynchronous:
+  // Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock (oven-sh/bun#33932).
   if (built.some((target) => target !== native)) {
-    const install = Bun.spawnSync(
+    const install = Bun.spawn(
       [process.execPath, "install", "--frozen-lockfile", "--ignore-scripts", "--os=*", "--cpu=*"],
-      { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 600_000 },
+      { cwd: root, stdout: "ignore", stderr: "pipe", timeout: 600_000 },
     )
-    if (install.exitCode !== 0) throw new Error(`All-platform install failed (${install.exitCode}):\n${install.stderr}`)
+    const [installError, installCode] = await Promise.all([new Response(install.stderr).text(), install.exited])
+    if (installCode !== 0) throw new Error(`All-platform install failed (${installCode}):\n${installError}`)
   }
   // A cross target with no exported bundle still stops on its named error before anything is built.
   const foreign = namedTargets.find((item) => item.os !== process.platform && item.abi === undefined)!

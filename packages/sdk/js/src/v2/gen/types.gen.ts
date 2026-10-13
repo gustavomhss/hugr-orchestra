@@ -3049,6 +3049,11 @@ export type LeanProfileItem = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   enabled: boolean
   savings: LeanProfileSavings
 }
@@ -3103,6 +3108,11 @@ export type LeanProfileUpdate = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   enabled: boolean
 }
 
@@ -3144,6 +3154,11 @@ export type LeanProfileExecution = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   command: string
   commandTruncated: boolean
   status: "completed" | "error"
@@ -3188,6 +3203,11 @@ export type LeanProfileHistory = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   complete: boolean
   executions: Array<LeanProfileExecution>
 }
@@ -6491,6 +6511,13 @@ export type SessionNextRevertCommitted = {
     sessionID: string
     messageID: string
   }
+}
+
+export type CapabilityArtifactId = string
+
+export type CapabilityArtifactRef = {
+  id: CapabilityArtifactId
+  revision: number
 }
 
 export type ModelApi =
@@ -12127,6 +12154,11 @@ export type ProjectLeanHistoryData = {
       | "vite"
       | "webpack"
       | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
   }
   query?: {
     directory?: string
@@ -18887,3 +18919,26 @@ export type PtyConnectResponses = {
 }
 
 export type PtyConnectResponse = PtyConnectResponses[keyof PtyConnectResponses]
+
+export type {
+  ResearchArtifactNotFoundError,
+  ResearchArtifactPage,
+  ResearchAtlasSource,
+  ResearchBinding,
+  ResearchDocumentReceipt,
+  ResearchDocumentRef,
+  ResearchEvidenceRef,
+  ResearchJsonLocator,
+  ResearchLineLocator,
+  ResearchQuoteLocator,
+  ResearchRecordRef,
+  ResearchSourceExtent,
+  ResearchSourceOrigin,
+  ResearchSourceReceipt,
+  ResearchSourceRef,
+  V2ResearchArtifactData,
+  V2ResearchArtifactError,
+  V2ResearchArtifactErrors,
+  V2ResearchArtifactResponse,
+  V2ResearchArtifactResponses,
+} from "./research.gen.js"

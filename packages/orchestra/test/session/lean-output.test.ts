@@ -15,12 +15,12 @@ function fixture() {
   return { output, approved, binding }
 }
 
-test("standard native projection uses actual approved engine and preserves appended policy text", () => {
+test("standard native projection uses actual approved engine and preserves appended policy text", async () => {
   const f = fixture()
   expect(f.binding).toBeDefined()
   expect(LegacyLeanOutput.unchanged(f.binding!, f.approved)).toBe(true)
   const approved = { ...f.approved, output: `${raw}\n\nPOLICY WARNING 😀` }
-  const result = LegacyLeanOutput.project({ output: approved, binding: f.binding, owner, enabled: true,
+  const result = await LegacyLeanOutput.project({ output: approved, binding: f.binding, owner, enabled: true,
     limits: { maxLines: 100, maxBytes: 1000 } })
   expect(result.output).toBe(`${reduced}\n\nPOLICY WARNING 😀`)
   expect(result.metadata).toBe(approved.metadata)
@@ -29,35 +29,35 @@ test("standard native projection uses actual approved engine and preserves appen
   expect(f.output.output).toBe(raw)
 })
 
-test("standard native disabled, wrong owner, budget or policy mutation keeps exact approved object", () => {
+test("standard native disabled, wrong owner, budget or policy mutation keeps exact approved object", async () => {
   const f = fixture()
   for (const input of [
     { enabled: false, owner, limits: { maxLines: 100, maxBytes: 1000 } },
     { enabled: true, owner: { ...owner, callID: "another" }, limits: { maxLines: 100, maxBytes: 1000 } },
     { enabled: true, owner, limits: { maxLines: 1, maxBytes: 1 } },
-  ]) expect(LegacyLeanOutput.project({ output: f.approved, binding: f.binding, ...input })).toBe(f.approved)
+  ]) expect(await LegacyLeanOutput.project({ output: f.approved, binding: f.binding, ...input })).toBe(f.approved)
   const changed = { ...f.approved, output: `plugin mutation\n${raw}` }
   expect(LegacyLeanOutput.unchanged(f.binding!, changed)).toBe(false)
-  expect(LegacyLeanOutput.project({ output: changed, binding: f.binding, owner, enabled: true,
+  expect(await LegacyLeanOutput.project({ output: changed, binding: f.binding, owner, enabled: true,
     limits: { maxLines: 100, maxBytes: 1000 } })).toBe(changed)
   const metadata = { ...f.approved, metadata: { ...f.approved.metadata, exit: 7 } }
-  expect(LegacyLeanOutput.project({ output: metadata, binding: f.binding, owner, enabled: true,
+  expect(await LegacyLeanOutput.project({ output: metadata, binding: f.binding, owner, enabled: true,
     limits: { maxLines: 100, maxBytes: 1000 } })).toBe(metadata)
 })
 
-test("same-name or serialized metadata cannot issue a native standard carrier", () => {
+test("same-name or serialized metadata cannot issue a native standard carrier", async () => {
   const f = fixture()
   const fake = structuredClone(f.output)
   expect(LegacyLeanCapture.bind(fake, fake, owner)).toBeUndefined()
-  expect(LegacyLeanOutput.project({ output: fake, owner, enabled: true, limits: { maxLines: 100, maxBytes: 1000 } })).toBe(fake)
+  expect(await LegacyLeanOutput.project({ output: fake, owner, enabled: true, limits: { maxLines: 100, maxBytes: 1000 } })).toBe(fake)
 })
 
-test("plugin root outcomes and unknown extensions invalidate the complete native mapping", () => {
+test("plugin root outcomes and unknown extensions invalidate the complete native mapping", async () => {
   const f = fixture()
   for (const patch of [{ isError: true }, { type: "error" }, { state: "cancelled" }, { unknownExtension: "changed" }]) {
     const changed = { ...f.approved, ...patch }
     expect(LegacyLeanOutput.unchanged(f.binding!, changed)).toBe(false)
-    expect(LegacyLeanOutput.project({ output: changed, binding: f.binding, owner, enabled: true,
+    expect(await LegacyLeanOutput.project({ output: changed, binding: f.binding, owner, enabled: true,
       limits: { maxLines: 100, maxBytes: 1000 } })).toBe(changed)
   }
 })

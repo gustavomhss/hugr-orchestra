@@ -48,6 +48,7 @@ CONTROL_LEDGER_JSON = """CONTROL_LEDGER_BEGIN
     "negative-setup-failure": "OUTPUT_CONTROL_VERDICT",
     "missing-pty-capture": "NATIVE_OUTPUT_CAPTURE",
     "missing-omni-capture": "NATIVE_OUTPUT_CAPTURE",
+    "missing-tree-sitter-capture": "NATIVE_OUTPUT_CAPTURE",
     "unqualified-provenance-capture": "VERIFICATION_PROVENANCE_CAPTURE"
   },
   "provenance": {
@@ -149,8 +150,8 @@ def main():
             file, content = edits[name]
             private_directory(original / "workers" / names[0], workers / names[0], file)
             (workers / names[0] / file).write_text(content)
-        if name in ("candidate-relabelled", "capture-dependency-mismatch", "positive-only-output-controls", "unknown-output-control", "duplicate-output-control", "missing-pty-capture", "missing-omni-capture", "negative-setup-failure", "unqualified-provenance-capture"):
-            file = "candidate.json" if name == "candidate-relabelled" else "dependency-inputs.json" if name == "capture-dependency-mismatch" else "native-outputs.stdout" if name in ("missing-pty-capture", "missing-omni-capture") else "probes" if name == "negative-setup-failure" else "measurement-provenance.stdout" if name == "unqualified-provenance-capture" else "output-negative-controls.stdout"
+        if name in ("candidate-relabelled", "capture-dependency-mismatch", "positive-only-output-controls", "unknown-output-control", "duplicate-output-control", "missing-pty-capture", "missing-omni-capture", "missing-tree-sitter-capture", "negative-setup-failure", "unqualified-provenance-capture"):
+            file = "candidate.json" if name == "candidate-relabelled" else "dependency-inputs.json" if name == "capture-dependency-mismatch" else "native-outputs.stdout" if name in ("missing-pty-capture", "missing-omni-capture", "missing-tree-sitter-capture") else "probes" if name == "negative-setup-failure" else "measurement-provenance.stdout" if name == "unqualified-provenance-capture" else "output-negative-controls.stdout"
             private_directory(original / "workers" / names[0], workers / names[0], file)
             if name == "negative-setup-failure":
                 output_cases = gate.ledger(Path("nix/scripts/probe-distribution.ts"))
@@ -170,6 +171,7 @@ def main():
                 if name == "capture-dependency-mismatch": value.clear()
                 if name == "missing-pty-capture": value["pty"]["bindings"] = []
                 if name == "missing-omni-capture": del value["omni"]
+                if name == "missing-tree-sitter-capture": del value["treeSitter"]
                 if name == "unqualified-provenance-capture": value["status"] = "UNQUALIFIED"
                 if name == "positive-only-output-controls":
                     output_cases = gate.ledger(Path("nix/scripts/probe-distribution.ts"))

@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
     "check:spawn-imports": "bun run script/check-spawn-imports.ts",
+    "check:ripgrep-pins": "bun run script/check-ripgrep-pins.ts",
     "typecheck": "bun turbo typecheck",
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
     "postinstall": "bun run --cwd packages/core fix-node-pty",

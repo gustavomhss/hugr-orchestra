@@ -35,9 +35,11 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
+import { ResearchExecution } from "@/research/allowance"
 import { Config } from "@/config/config"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { LegacyLeanOutput } from "./lean-output"
+import { LeanSummary } from "@orchestra/core/tool/lean-summary"
 import { LeanProfilePreferences } from "./lean-profile-preferences"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 
@@ -73,6 +75,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const research = yield* Effect.serviceOption(ResearchExecution.Service)
   const config = yield* Effect.serviceOption(Config.Service)
   const fs = Option.getOrUndefined(yield* Effect.serviceOption(FSUtil.Service))
   const global = Option.getOrUndefined(yield* Effect.serviceOption(Global.Service))
@@ -111,6 +114,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps, canRecall: input.canRecall?.() === true },
     agent: input.agent.name,
     agentID: input.agent.id,
+    permission: Permission.merge(input.agent.permission, input.session.permission ?? []),
     messages: input.messages,
     metadata: (val) => safety.inspect(val).pipe(Effect.orDie, Effect.andThen(
       input.processor.updateToolCall(options.toolCallId, (match) => {
@@ -167,7 +171,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           directory: binding?.directory,
           projectID: binding?.project.id,
           projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-        }, effect, (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
+        }, Option.isSome(research) ? research.value.tool(input.session.id,
+          options.toolCallId ? `${input.processor.message.id}:${options.toolCallId}` : "", name, effect).pipe(Effect.orDie)
+          : input.agent.id === "jimmy" ? Effect.die(new Error("Native discovery allowance service is unavailable")) : effect,
+        (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
           input.processor.updateToolCall(options.toolCallId, (match) => ({
             ...match,
             state: match.state.status === "pending"
@@ -258,18 +265,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           const limits = enabled && selected.binding && !selected.policyMappingChanged
             ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
           if (options.abortSignal?.aborted) return output
-          return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
-            enabled, limits, items: prefs?.items, command: selected.command, unavailable,
+          return yield* Effect.promise(() => LegacyLeanOutput.project({ output, binding: selected.binding, owner,
+            enabled, limits, items: prefs?.items, command: selected.command, unavailable, tool: item.id, args: toRecord(args),
+            // Originals go to this profile's bounded store; discovery keeps exact research sources (no lossy summaries).
+            store: binding && input.agent.id !== "jimmy" ? LeanSummary.store({ projectID: binding.project.id, directory: binding.directory }) : undefined,
             policyMappingChanged: selected.policyMappingChanged,
             telemetry: binding ? {
               owner: { projectID: binding.project.id, location: binding.directory, ...owner },
               model: { provider: input.model.providerID, id: input.model.api.id },
               ...(prefs ? { orchestraProfile: prefs.profileID } : {}),
-            } : undefined })
+            } : undefined }))
         }))
       },
     })
   }
+
+  // Discovery has no MCP/plugin authority, including resource APIs disguised as generic read.
+  if (input.agent.native === true && input.agent.id === "jimmy") return tools
 
   const hasMcpResourceServer = Object.values(yield* mcp.clients()).some(
     (client) => !!client.getServerCapabilities()?.resources,

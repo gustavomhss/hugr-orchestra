@@ -126,7 +126,10 @@ acceptance. Changed package inputs require a new four-native capture.
 - Linux installs and launches the packaged Electron copy, preserving native
   `process.resourcesPath` for **all** extraResources. Darwin preserves
   `Applications/HuGR Orchestra.app/Contents/Resources`. Desktop wrapper supplies
-  ripgrep and native sysctl where needed. Linux addon repair targets only
+  ripgrep and native sysctl where needed: `RIPGREP_BUNDLED=false` keeps the CLI build
+  and Desktop staging from fetching the pinned rg other packages ship in `bin/ripgrep`
+  and `Resources/cli/ripgrep-<target>`, and packaged CLIs never download one, so nixpkgs'
+  rg on the wrapper PATH is the one they run. Linux addon repair targets only
   `app.asar.unpacked`; post-fixup install check re-admits packaged CLI digests.
 
 | System | Target | Native runner label |
@@ -242,6 +245,15 @@ completion roles, and the full immutable output ledger declared in
 generic setup errors and positive-only subsets do not qualify. PTY controls repack
 one real archive in a private fixture, separately removing the required binding
 and breaking its actual package entrypoint, with unchanged/restored positives.
+
+The CLI output ships `tree-sitter/` beside its real binary (maestro-arsenal loads it
+there) and the same bundle as `tree-sitter-<target>/`, which Desktop staging copies
+into `Resources/cli`. All three bundles need each host binding (core, TypeScript,
+Python) as a native image that loads: Bun parses through the shipped entries, packaged
+Electron dlopens Desktop's copy (`TREE_SITTER_BUNDLE_*`). Holding the core binding in
+the CLI and Desktop copies must fail `TREE_SITTER_BUNDLE_MISSING`. The oracles run
+from a checkout without `node_modules`, so `nix/scripts/workspace-paths.json` maps the
+shipped admission's `@orchestra/script` import and Bun auto-install stays off.
 
 Completion/provenance teeth are declared in `probe-distribution-completion.py`:
 empty/extra/duplicate/unknown lanes and artifacts, wrong workflow/head/attempt,

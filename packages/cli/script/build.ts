@@ -38,6 +38,7 @@ const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
 const { modelsData } = await import("./generate")
 const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
 const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
+const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
 const plugin = createSolidTransformPlugin()
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
@@ -46,6 +47,13 @@ const builds = targets.map((item) => {
   const name = `cli-${item.target}`
   return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
 })
+
+// Each build ships the pinned rg in bin/ripgrep and never downloads one (ORCHESTRA_RIPGREP_BESIDE_BINARY below), unless
+// RIPGREP_BUNDLED=false declares that the packager puts rg on PATH (Nix). ripgrep has no arm64 musl build.
+const ripgrep = RipgrepBundle.enabled()
+if (!ripgrep) console.warn(`${RipgrepBundle.BUNDLED}=false: no ripgrep bundled, the packager puts rg on PATH`)
+for (const build of builds.filter((build) => ripgrep && !RipgrepBundle.key(build.item)))
+  console.warn(`${build.name}: ripgrep publishes no build for this target, none bundled`)
 
 if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
@@ -89,6 +97,8 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
       OMNI_ENABLED: JSON.stringify(omni.enabled),
+      // A packaged CLI runs the rg in ripgrep/ beside it (or on PATH) and never downloads one.
+      ORCHESTRA_RIPGREP_BESIDE_BINARY: "true",
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
@@ -103,6 +113,13 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
 
   copyOmni(omniFiles, `dist/${name}/bin`)
   copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
+  const key = RipgrepBundle.key(item)
+  if (ripgrep && key)
+    await RipgrepBundle.stage({
+      key,
+      directory: `dist/${name}/bin/ripgrep`,
+      archives: process.env[RipgrepBundle.ARCHIVES],
+    })
 
   await Bun.write(
     `./dist/${name}/package.json`,

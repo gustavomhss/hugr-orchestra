@@ -59,6 +59,16 @@ describe("Omni counters and the positive control", () => {
     expect(Omni.verdict("strict", { spawns: 3, delegations: 1 })).toContain("delegated 1")
     expect(Omni.verdict("strict", { spawns: 3, delegations: 0 })).toBeUndefined()
   })
+
+  test("verdict without an expected spawn: nothing spawned passes, a delegation without an omni spawn still fails", () => {
+    expect(Omni.verdict("on", { spawns: 0, delegations: 0 }, false)).toBeUndefined()
+    expect(Omni.verdict("strict", { spawns: 0, delegations: 0 }, false)).toBeUndefined()
+    expect(Omni.verdict("on", { spawns: 0, delegations: 2 }, false)).toContain("no omni spawn and delegated 2")
+    expect(Omni.verdict("strict", { spawns: 0, delegations: 1 }, false)).toContain("no omni spawn and delegated 1")
+    expect(Omni.verdict("strict", { spawns: 2, delegations: 1 }, false)).toContain("delegated 1")
+    expect(Omni.verdict("on", { spawns: 1, delegations: 0 }, false)).toBeUndefined()
+    expect(Omni.verdict("off", { spawns: 0, delegations: 3 }, false)).toBeUndefined()
+  })
 })
 
 describe("Omni.childEnv", () => {

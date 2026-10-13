@@ -7,7 +7,7 @@
 // named stage RAN and its verdict was honoured, per the WP brief.
 
 import { describe, it, expect, afterEach } from "vitest"
-import { mkdtempSync, writeFileSync, chmodSync, rmSync, existsSync, readFileSync } from "node:fs"
+import { mkdtempSync, writeFileSync, chmodSync, rmSync, existsSync, readFileSync, realpathSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MemoryRecord } from "@atlas/memory"
@@ -103,6 +103,20 @@ describe("runScanner -- three-value verdict", () => {
     expect(existsSync(marker)).toBe(false)
     const captured = readFileSync(capture, "utf8")
     expect(captured).toContain(dangerous)
+  })
+})
+
+describe("runScanner -- working directory", () => {
+  it("runs in an empty private directory, never the process cwd where the scanner would read a planted .gitleaks.toml", () => {
+    const dir = mkdtempSync(join(tmpdir(), "atlas-scanner-fake-"))
+    tmpDirs.push(dir)
+    const capture = join(dir, "cwd-capture")
+    const bin = fakeBinary("gitleaks", "pwd -P > " + JSON.stringify(capture) + "\nls -A >> " + JSON.stringify(capture) + "\nexit 0")
+    expect(runScanner(spec(bin), record("r"))).toBe("clean")
+    const [scanned, ...entries] = readFileSync(capture, "utf8").trim().split("\n")
+    expect(realpathSync(process.cwd())).not.toBe(scanned)
+    expect(entries).toEqual([])
+    expect(existsSync(scanned!)).toBe(false)
   })
 })
 

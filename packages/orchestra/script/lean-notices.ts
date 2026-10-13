@@ -3,15 +3,15 @@ import { createHash } from "node:crypto"
 
 export const leanPin = {
   name: "hugr-lean",
-  version: "0.2.0",
+  version: "0.4.0",
   repository: "https://github.com/gustavomhss/HuGR-Lean",
-  commit: "465fb4c04773f1a40733c9f4c334b980e3195646",
-  tree: "c3a77068a1b72d57ba39ca1b1aa145e0b6e506d7",
-  artifact: "hugr-lean-0.2.0-native-465fb4c04773.tgz",
-  producer: "https://github.com/gustavomhss/HuGR-Lean/actions/runs/38015375615",
-  sha256: "369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1",
-  integrity: "sha512-2xkYbdM94nJWORMHF5s8og/fwPOV4e/wpHUR4O72KU7KTriU0TdZ7kbiPddBI5vZ10d5u1LCWCrccYs8GuglGQ==",
-  modifications: "Archive bytes unchanged; immutable filename. All shipped license/provenance materials copied byte-for-byte.",
+  commit: "0660c2b5dc9249816330603160aadfaeb33e5fc7",
+  tree: "af1e9f1bd9781588fde339737e6c006886c64a4f",
+  artifact: "hugr-lean-0.4.0-0660c2b5dc92.tgz",
+  producer: "https://github.com/gustavomhss/HuGR-Lean/actions/runs/38402476737",
+  sha256: "5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3",
+  integrity: "sha512-mN7VGI6MBXiswd5ye0zJZML5loxhdrL3/HJbzvvXT8Cv6kMTyYsR7YorNYk6REdwEE4E4BfiwnuzZljOCDlkew==",
+  modifications: "npm registry tarball bytes unchanged; immutable filename. All shipped license/provenance materials copied byte-for-byte.",
 }
 export const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 
