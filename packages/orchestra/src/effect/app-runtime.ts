@@ -64,6 +64,7 @@ export const AppLayer = AppNodeBuilderV1.build(
   LayerNode.group([
     Npm.node,
     FSUtil.node,
+    Ripgrep.node,
     Database.node,
     Auth.node,
     Account.node,
@@ -116,7 +117,7 @@ export const AppLayer = AppNodeBuilderV1.build(
     SessionStore.node,
     ArsenalObservations.node,
   ]),
-).pipe(Layer.provideMerge(AppNodeBuilderV1.build(Ripgrep.node)), Layer.provideMerge(Observability.layer))
+).pipe(Layer.provideMerge(Observability.layer))
 
 const rt = ManagedRuntime.make(AppLayer, { memoMap })
 type Runtime = Pick<typeof rt, "runSync" | "runPromise" | "runPromiseExit" | "runFork" | "runCallback" | "dispose">
