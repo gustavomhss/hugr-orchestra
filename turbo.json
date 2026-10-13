@@ -63,6 +63,15 @@
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
+    "@orchestra/cli#test": {
+      "dependsOn": ["transit"],
+      // The artifact suites import Desktop's CLI artifact verifier, which is not a CLI dependency.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts"],
+      "outputs": [],
+      // The compiled-CLI suites run only on an Actions runner (GITHUB_ACTIONS=false plus RUNNER_OS) and hand each
+      // build and install the runner's own environment.
+      "passThroughEnv": ["*"]
+    },
     "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []

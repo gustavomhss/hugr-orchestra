@@ -39,7 +39,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       expect(!!screen.host.querySelector('[data-mx-page="orchestra-lean"]')).toBe(true)
       expect(screen.host.querySelector("h1")?.textContent).toBe("Lean")
       expect(screen.host.textContent).toContain("Profile one")
-      expect(screen.host.querySelectorAll("[data-lean-item]")).toHaveLength(32)
+      expect(screen.host.querySelectorAll("[data-lean-item]")).toHaveLength(37)
       expect([...screen.host.querySelectorAll("tbody bdi")].slice(0, 5).map((node) => node.textContent)).toEqual([
         "Cargo",
         "Go",

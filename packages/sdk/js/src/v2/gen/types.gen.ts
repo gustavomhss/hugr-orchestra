@@ -3049,6 +3049,11 @@ export type LeanProfileItem = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   enabled: boolean
   savings: LeanProfileSavings
 }
@@ -3103,6 +3108,11 @@ export type LeanProfileUpdate = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   enabled: boolean
 }
 
@@ -3144,6 +3154,11 @@ export type LeanProfileExecution = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   command: string
   commandTruncated: boolean
   status: "completed" | "error"
@@ -3188,6 +3203,11 @@ export type LeanProfileHistory = {
     | "vite"
     | "webpack"
     | "yarn"
+    | "shell"
+    | "read"
+    | "webfetch"
+    | "glob"
+    | "grep"
   complete: boolean
   executions: Array<LeanProfileExecution>
 }
@@ -12134,6 +12154,11 @@ export type ProjectLeanHistoryData = {
       | "vite"
       | "webpack"
       | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
   }
   query?: {
     directory?: string
