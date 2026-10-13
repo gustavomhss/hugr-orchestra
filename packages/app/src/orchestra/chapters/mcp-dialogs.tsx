@@ -3,6 +3,7 @@ import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { MxBadge } from "./kit"
 import { mcpErrorDetail } from "./mcp-actions"
+import { createMcpEditState, type McpEditSnapshot } from "./mcp-edit-state"
 import {
   type McpCard,
   mcpConfig,
@@ -104,7 +105,7 @@ function McpDialog(props: {
   )
 }
 
-export function McpEditDialog(props: {
+type McpEditProps = {
   card?: McpCard
   names: readonly string[]
   // False when the server cannot report an existing server's config (V2): saving would guess.
@@ -112,25 +113,87 @@ export function McpEditDialog(props: {
   onSave: (name: string, config: McpServerConfig) => Promise<unknown>
   onRemove: () => void
   onClose: () => void
-}) {
+}
+
+export function McpEditDialog(
+  props: McpEditProps & {
+    read: "loading" | "error" | "ready"
+    retrying: boolean
+    onRetry: () => void
+    load: () => Promise<McpEditSnapshot>
+  },
+) {
   const language = useLanguage()
-  const initial = mcpDraft(props.card?.entry)
-  const locked = !!props.card && !props.writable
+  // Initialize once after successful reads. Background refreshes must not replace an edited draft.
+  const fresh = createMcpEditState(() => props.read, props.load)
+  return (
+    <Show
+      when={fresh.ready()}
+      fallback={
+        <McpDialog
+          title={
+            props.card
+              ? language.t("orchestra.mcp.configureTitle", { name: props.card.name })
+              : language.t("orchestra.mcp.add")
+          }
+          subtitle={language.t("orchestra.mcp.editSubtitle")}
+          onClose={props.onClose}
+        >
+          <p
+            class={fresh.status() === "error" ? "mx-error" : "mx-note"}
+            role={fresh.status() === "error" ? "alert" : "status"}
+          >
+            {language.t(fresh.status() === "error" ? "orchestra.mcp.configLoadFailed" : "orchestra.mcp.configLoading")}
+          </p>
+          <Show when={fresh.status() === "error"}>
+            <button
+              type="button"
+              class="mx-btn"
+              disabled={props.retrying}
+              onClick={() => {
+                props.onRetry()
+                void fresh.retry()
+              }}
+            >
+              {language.t("orchestra.mcp.retry")}
+            </button>
+          </Show>
+        </McpDialog>
+      }
+    >
+      <McpEditor
+        {...props}
+        card={
+          props.card && {
+            ...props.card,
+            entry:
+              fresh.state.snapshot?.entries && Object.hasOwn(fresh.state.snapshot.entries, props.card.name)
+                ? fresh.state.snapshot.entries[props.card.name]
+                : undefined,
+          }
+        }
+      />
+    </Show>
+  )
+}
+
+function McpEditor(props: McpEditProps) {
+  const language = useLanguage()
+  const card = props.card
+  const initial = mcpDraft(card?.entry)
+  const locked = !!card && !props.writable
   const [draft, setDraft] = createStore({
-    name: props.card?.name ?? "",
+    name: card?.name ?? "",
     transport: initial?.transport ?? ("stdio" as McpTransport),
     endpoint: initial?.endpoint ?? "",
-    error:
-      props.card && "error" in props.card.status
-        ? language.t("orchestra.mcp.lastError", { detail: props.card.status.error })
-        : "",
+    error: card && "error" in card.status ? language.t("orchestra.mcp.lastError", { detail: card.status.error }) : "",
     busy: false,
   })
 
   async function submit(close: () => void) {
     const name = draft.name.trim()
     if (!mcpNameValid(name)) return setDraft("error", language.t("orchestra.mcp.invalidName"))
-    if (!props.card && props.names.includes(name)) return setDraft("error", language.t("orchestra.mcp.duplicate"))
+    if (!card && props.names.includes(name)) return setDraft("error", language.t("orchestra.mcp.duplicate"))
     const result = mcpConfig(draft.transport, draft.endpoint)
     if ("error" in result)
       return setDraft(
@@ -138,7 +201,7 @@ export function McpEditDialog(props: {
         language.t(result.error === "url" ? "orchestra.mcp.invalidUrl" : "orchestra.mcp.invalidCommand"),
       )
     // Saving restarts every MCP server in the profile, so an unedited dialog writes nothing.
-    if (props.card && mcpUnchanged(props.card.entry, result.config)) return close()
+    if (card && mcpUnchanged(card.entry, result.config)) return close()
     setDraft({ busy: true, error: "" })
     await props
       .onSave(name, result.config)
@@ -155,11 +218,7 @@ export function McpEditDialog(props: {
 
   return (
     <McpDialog
-      title={
-        props.card
-          ? language.t("orchestra.mcp.configureTitle", { name: props.card.name })
-          : language.t("orchestra.mcp.add")
-      }
+      title={card ? language.t("orchestra.mcp.configureTitle", { name: card.name }) : language.t("orchestra.mcp.add")}
       subtitle={language.t("orchestra.mcp.editSubtitle")}
       error={draft.error}
       busy={draft.busy}
@@ -173,7 +232,7 @@ export function McpEditDialog(props: {
           name="name"
           type="text"
           required
-          readOnly={!!props.card}
+          readOnly={!!card}
           value={draft.name}
           onInput={(event) => setDraft("name", event.currentTarget.value)}
         />
@@ -201,12 +260,12 @@ export function McpEditDialog(props: {
           onInput={(event) => setDraft("endpoint", event.currentTarget.value)}
         />
       </label>
-      <Show when={props.card && !initial}>
+      <Show when={card && !initial}>
         <p class="mx-note orchestra-mcp-dialog-note" role="note">
           {language.t(locked ? "orchestra.mcp.configUnavailable" : "orchestra.mcp.configOutside")}
         </p>
       </Show>
-      <Show when={props.card}>
+      <Show when={card}>
         <button type="button" class="mx-btn" onClick={() => props.onRemove()}>
           {language.t("orchestra.mcp.remove")}
         </button>
@@ -215,7 +274,15 @@ export function McpEditDialog(props: {
   )
 }
 
-export function McpToolsDialog(props: { card: McpCard; status: string; supported: boolean; onClose: () => void }) {
+export function McpToolsDialog(props: {
+  card: McpCard
+  status: string
+  supported: boolean
+  read: "loading" | "error" | "ready"
+  retrying: boolean
+  onRetry: () => void
+  onClose: () => void
+}) {
   const language = useLanguage()
   return (
     <McpDialog
@@ -224,16 +291,25 @@ export function McpToolsDialog(props: { card: McpCard; status: string; supported
       onClose={() => props.onClose()}
     >
       <Show
-        when={props.card.tools?.length}
+        when={props.read === "ready" && props.card.tools?.length}
         fallback={
-          <div class="mx-empty" role="status">
+          <div class="mx-empty" role={props.read === "error" ? "alert" : "status"}>
             {language.t(
-              !props.supported
-                ? "orchestra.mcp.toolsUnsupported"
-                : props.card.tools
-                  ? "orchestra.mcp.toolsNone"
-                  : "orchestra.mcp.toolsUnknown",
+              props.read === "loading"
+                ? "orchestra.mcp.toolsLoading"
+                : props.read === "error"
+                  ? "orchestra.mcp.toolsLoadFailed"
+                  : !props.supported
+                    ? "orchestra.mcp.toolsUnsupported"
+                    : props.card.tools
+                      ? "orchestra.mcp.toolsNone"
+                      : "orchestra.mcp.toolsUnknown",
             )}
+            <Show when={props.read === "error"}>
+              <button type="button" class="mx-btn" disabled={props.retrying} onClick={props.onRetry}>
+                {language.t("orchestra.mcp.retry")}
+              </button>
+            </Show>
           </div>
         }
       >
