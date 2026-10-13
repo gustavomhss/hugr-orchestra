@@ -31,7 +31,8 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
         response(
           Effect.gen(function* () {
             const fs = yield* FileSystem.Service
-            return yield* fs.find(ctx.query)
+            // The API declares no search error; ripgrep's reason (missing, still downloading) reaches the server log.
+            return yield* fs.find(ctx.query).pipe(Effect.orDie)
           }),
         ),
       )

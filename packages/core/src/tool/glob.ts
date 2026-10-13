@@ -93,7 +93,16 @@ const layer = Layer.effectDiscard(
                   ),
                 )
             }).pipe(
-              Effect.mapError(() => new ToolFailure({ message: `Unable to find files matching ${input.pattern}` })),
+              // Ripgrep's reason (missing, still downloading) is the actionable part.
+              Effect.mapError(
+                (error) =>
+                  new ToolFailure({
+                    message:
+                      error instanceof Ripgrep.Error
+                        ? `Unable to find files matching ${input.pattern}: ${error.message}`
+                        : `Unable to find files matching ${input.pattern}`,
+                  }),
+              ),
             ),
         }),
       })

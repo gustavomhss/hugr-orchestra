@@ -47,7 +47,10 @@ export const fileHandlers = HttpApiBuilder.group(InstanceHttpApi, "file", (handl
       const limit = ctx.query.limit ?? 10
       const type = ctx.query.type ?? (ctx.query.dirs === "false" ? "file" : undefined)
       const started = performance.now()
-      const found = yield* filesystem(FileSystem.Service.use((fs) => fs.find({ query: ctx.query.query, limit, type })))
+      // The API declares no search error; ripgrep's reason (missing, still downloading) reaches the server log.
+      const found = yield* filesystem(
+        FileSystem.Service.use((fs) => fs.find({ query: ctx.query.query, limit, type })),
+      ).pipe(Effect.orDie)
       yield* Effect.logInfo("find file", {
         query: ctx.query.query,
         type,

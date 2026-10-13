@@ -47,7 +47,7 @@ describe("detectServerProtocol", () => {
     })
     try {
       expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe(kind)
-      expect(counts.legacy).toBe(3)
+      expect(counts.legacy).toBe(kind === "v1" ? 3 : 1)
       expect(counts.current).toBe(kind === "v1" ? 0 : 3)
     } finally {
       listener.stop(true)
