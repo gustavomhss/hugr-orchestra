@@ -144,8 +144,10 @@ import fs from 'node:fs';
 const request = JSON.parse(process.argv[2]);
 fs.writeFileSync(request.nonce + '.tmp', JSON.stringify({pid:process.pid, nonce:request.nonce, file:import.meta.filename}));
 fs.renameSync(request.nonce + '.tmp', request.nonce);
+console.error('deadline-stderr-marker' + 'x'.repeat(20000));
 setTimeout(() => console.log('LATE SUCCESS'), 20000);
-`, decoder, { nonce }, 10000).then((stdout) => ({ stdout, error: "" }), (error: Error) => ({ stdout: "", error: error.message }))
+`, decoder, { nonce }, 10000).then((stdout) => ({ stdout, error: "", diagnostics: undefined }),
+    (error: Error & { diagnostics?: unknown }) => ({ stdout: "", error: error.message, diagnostics: error.diagnostics }))
   const observer = WindowsProcessQuery.invoke(OBSERVER, decoder, { nonce }, 35000)
     .then((stdout) => ({ stdout, error: "" }), (error: Error) => ({ stdout: "", error: error.message }))
   try {
@@ -160,6 +162,23 @@ setTimeout(() => console.log('LATE SUCCESS'), 20000);
     const proof = await observer
     console.log("WINDOWS_QUERY_DEADLINE_PROOF " + JSON.stringify({ os: process.platform, pinned, elapsedMs, result, proof }))
     expect(result.error).toContain("deadline expired")
+    // Inspect the real expiry snapshot rendered in the error; no fake timers, census or process APIs.
+    const diagnostic = JSON.parse(result.error.split("; diagnostics: ")[1])
+    expect(result.diagnostics).toEqual(diagnostic)
+    expect(diagnostic).toMatchObject({
+      budgetMs: 10000, attested: true, admitted: true, sourceComplete: expect.any(Boolean),
+      complete: expect.any(Boolean), brokerClosed: expect.any(Boolean), controlClosed: expect.any(Boolean),
+      helperPID: expect.any(Number), source: { pid: recorded.pid, file: recorded.file, nonce: expect.any(String) },
+      bytes: 0, controlBytes: expect.any(Number), stderrBytes: 16384,
+      stderr: expect.stringContaining("deadline-stderr-marker"),
+    })
+    expect(diagnostic.elapsedMs).toBeGreaterThanOrEqual(10000)
+    expect(diagnostic.sourceComplete).toBe(diagnostic.complete)
+    expect(diagnostic.phaseMs.attested).toBeGreaterThanOrEqual(diagnostic.phaseMs.spawned)
+    expect(diagnostic.phaseMs.admitted).toBeGreaterThanOrEqual(diagnostic.phaseMs.attested)
+    expect(diagnostic.phaseMs.deadline).toBeGreaterThanOrEqual(10000)
+    expect(diagnostic.phaseMs.deadline).toBeLessThanOrEqual(diagnostic.elapsedMs)
+    expect(Buffer.byteLength(diagnostic.stderr)).toBe(16384)
     expect(result.stdout).toBe("")
     expect(elapsedMs).toBeLessThan(15000)
     expect(proof.error).toBe("")
