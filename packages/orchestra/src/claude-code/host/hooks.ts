@@ -14,6 +14,7 @@ import { Effect, Exit, Option } from "effect"
 import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { Archive } from "@/continuity/archive"
 import type { SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { ClaudeCodeTools } from "../tools"
@@ -213,7 +214,10 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       if (fault.reason && input.hook_event_name === "PreToolUse") return ClaudeHostGate.deny(fault.reason)
       return callback(input, toolUseID, options)
     }).catch(async (error: unknown): Promise<HookJSONOutput> => {
-      const reason = `Orchestra ${input.hook_event_name} failed closed: ${String(error)}`
+      // Archive exposes an owned reason code, not its source bytes or filesystem error text.
+      const detail = error instanceof Archive.ArchiveError
+        ? `${error._tag}: ${/^archive-[a-z-]+$/.test(error.reason) ? error.reason : "archive-unavailable"}` : String(error)
+      const reason = `Orchestra ${input.hook_event_name} failed closed: ${detail}`
       fault.reason ??= reason
       if (input.hook_event_name === "PreToolUse") {
         await Promise.resolve().then(() => {
@@ -302,12 +306,17 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     const cancelled = () => Effect.fail(new Error("COMPACT_HOOK_CANCELLED: native callback or owning host aborted"))
     return Effect.suspend(() => {
       if (signals.some((signal) => signal.aborted)) return cancelled()
+      const cleanup: { run?: () => void } = {}
       return Effect.raceFirst(work, Effect.callback<never, Error>((resume) => {
         const abort = () => resume(cancelled())
+        cleanup.run = () => signals.forEach((signal) => signal.removeEventListener("abort", abort))
         signals.forEach((signal) => signal.addEventListener("abort", abort, { once: true }))
         if (signals.some((signal) => signal.aborted)) abort()
-        return Effect.sync(() => signals.forEach((signal) => signal.removeEventListener("abort", abort)))
-      })).pipe(Effect.flatMap((value) => signals.some((signal) => signal.aborted) ? cancelled() : Effect.succeed(value)))
+      })).pipe(
+        // callback's returned cleanup runs only on interruption, not when abort resumes it with a failure.
+        Effect.ensuring(Effect.sync(() => cleanup.run?.())),
+        Effect.flatMap((value) => signals.some((signal) => signal.aborted) ? cancelled() : Effect.succeed(value)),
+      )
     })
   }
 }

@@ -234,7 +234,8 @@ const layer = Layer.effect(
         const owner = live.known.calls.get(call.callID)
         const current = owner?.tool(call.callID)
         const placement = { parentSessionId: call.sessionID, sessionId: created.id }
-        if (owner && current?.state.status === "running")
+        // Background Agent returns can precede the child's first frame; link their completed cards too.
+        if (owner && current && current.state.status !== "pending")
           yield* owner.complete({ ...current, metadata: { ...current.metadata, ...placement },
             state: { ...current.state, metadata: { ...current.state.metadata, ...placement } } })
         return created
@@ -595,6 +596,7 @@ const layer = Layer.effect(
       const instance = yield* InstanceState.context
       const owned = lives.get(sessionID)
       if (owned?.stopping || owned?.closing) yield* Effect.promise(() => owned.stopping ?? owned.closing!)
+      if (owned?.closed) yield* Effect.promise(() => close(owned))
       const seatOwner = lives.get(sessionID)
       if (seatOwner && seatOwner.seat !== (agent.id ?? input.user.agent)) yield* stop(seatOwner)
       const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
@@ -624,7 +626,9 @@ const layer = Layer.effect(
         yield* view.fail({ aborted: false, message: "Claude Code receives text only; this message has no text." })
         return true
       }
-      const unresolved = prompts.find((item) => inputs[item.user.id] && inputs[item.user.id].status !== "pending" && !existing?.queued.has(item.user.id))
+      // A settled/ended query's queued set is not a native receipt and cannot authorize retrying a submitted input.
+      const unresolved = prompts.find((item) => inputs[item.user.id] && inputs[item.user.id].status !== "pending" &&
+        (!existing?.turn || existing.closed || !existing.queued.has(item.user.id)))
       if (unresolved) {
         yield* view.fail({ aborted: false, message: `Claude Code input submission is unresolved for ${unresolved.user.id}` })
         return true

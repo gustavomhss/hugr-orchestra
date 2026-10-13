@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, Exit, Fiber, Scope } from "effect"
+import { Cause, Effect, Exit, Fiber, Scope } from "effect"
 import type { SpawnedProcess } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHost } from "@/claude-code/host/session"
@@ -11,6 +11,8 @@ import { MessageID } from "@/session/schema"
 import { pollWithTimeout } from "../../lib/effect"
 import { TestInstance } from "../../fixture/fixture"
 import { ClaudeEngineFixture } from "../engine-fixture"
+import { ClaudeLifecycleFixture } from "./lifecycle-fixture"
+import { Provider } from "@/provider/provider"
 import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 
 const frame = ClaudeEngineFixture.frame
@@ -33,10 +35,14 @@ ClaudeEngineFixture.it.instance("a completed projection without a native receipt
   const before = yield* setup.sessions.messages({ sessionID: setup.chat.id })
   expect(before.findLast((item) => item.info.role === "assistant")?.info).toMatchObject({ time: { completed: expect.any(Number) } })
   expect((yield* setup.sessions.get(setup.chat.id)).metadata?.claudeCode?.delivered ?? []).not.toContain(admitted.info.id)
+  const registered = (yield* setup.sessions.get(setup.chat.id)).metadata?.claudeCode?.inputs?.[admitted.info.id]
+  expect(registered).toMatchObject({ uuid: expect.any(String), status: "submitted" })
   yield* host.turn({ sessionID: setup.chat.id, user: admitted.info })
   const last = (yield* setup.sessions.messages({ sessionID: setup.chat.id })).findLast((item) => item.info.role === "assistant")
   expect(last?.info).toMatchObject({ error: { data: { message: expect.stringContaining("input submission is unresolved") } } })
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
+  expect(ClaudeEngineFixture.state.inputs).toEqual(["unacknowledged"])
+  expect((yield* setup.sessions.get(setup.chat.id)).metadata?.claudeCode?.inputs?.[admitted.info.id]).toEqual(registered)
 }), 30_000)
 
 ClaudeEngineFixture.it.instance("UI forks exclude the selected user and use the preceding native chain entry", () => Effect.gen(function* () {
@@ -197,7 +203,7 @@ ClaudeEngineFixture.it.instance("Stop after a delivered steer ends its revisit a
   yield* host.turn({ sessionID: setup.chat.id, user: steer.info })
   const history = yield* setup.sessions.messages({ sessionID: setup.chat.id })
   expect(history.findLast((message) => message.info.role === "assistant" && message.info.parentID === steer.info.id)?.info)
-    .toMatchObject({ error: { name: "AbortedError" } })
+    .toMatchObject({ error: { name: "MessageAbortedError" } })
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
 }), 30_000)
 
@@ -394,10 +400,15 @@ ClaudeEngineFixture.it.instance("a visible boundary with no native mapping and a
 
 ClaudeEngineFixture.it.instance("switching to a normal agent releases the old Claude process before the normal transport runs", () => Effect.gen(function* () {
   ClaudeEngineFixture.reset()
-  const setup = yield* ClaudeEngineFixture.setup()
+  const setup = yield* ClaudeLifecycleFixture.setup(yield* ClaudeLifecycleFixture.normalConfig)
+  const provider = yield* Provider.Service
+  expect((yield* provider.getModel(ClaudeLifecycleFixture.model.providerID, ClaudeLifecycleFixture.model.modelID)).id)
+    .toBe(ClaudeLifecycleFixture.model.modelID)
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.replies("answer"))
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("Claude request") })
-  yield* setup.prompt.prompt({ sessionID: setup.chat.id, agent: "maestro", parts: [{ type: "text", text: "normal request" }] }).pipe(Effect.exit)
+  const outcome = yield* setup.prompt.prompt({ sessionID: setup.chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
+    parts: [{ type: "text", text: "normal request" }] }).pipe(Effect.exit)
+  if (ClaudeEngineFixture.state.apiCalls === 0 && Exit.isFailure(outcome)) throw new Error(Cause.pretty(outcome.cause))
   expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
   expect(ClaudeEngineFixture.state.apiCalls).toBeGreaterThan(0)
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)

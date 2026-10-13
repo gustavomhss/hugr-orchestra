@@ -13,7 +13,7 @@ CompactionFixture.it.instance("repeated same-Session revert keeps one full plan 
     const f = yield* CompactionFixture.make()
     if (!f.user || !f.assistant) throw new Error("Missing revert fixture")
     const plan = yield* f.plan("RETAINED-EXACT")
-    const cut = yield* f.sessions.updateMessage({ ...f.user, id: MessageID.ascending() })
+    const cut = yield* f.nextUser()
     yield* f.sessions.setMetadata({ sessionID: f.chat.id, metadata: { claudeCode: {
       sessionId: f.base.session_id, starts: { [cut.id]: "retained-native-boundary" },
     } } })
@@ -22,10 +22,17 @@ CompactionFixture.it.instance("repeated same-Session revert keeps one full plan 
     const history = yield* f.sessions.messages({ sessionID: f.chat.id })
     const reverted = ClaudeHostBoundary.revert(source, history, source.metadata?.claudeCode ?? {})
     const view = ClaudeHostBoundary.retained({ ...source, metadata: { claudeCode: reverted } }, history)
+    expect(view.history.map((message) => message.info.id)).toEqual([f.user.id, f.assistant.id])
+    expect(ClaudeHostBoundary.reference(view, { projectID: source.projectID, sessionID: source.id,
+      admissionMessageID: plan.revision.admissionMessageID, producerMessageID: plan.part.messageID }))
+      .toMatchObject({ admission: { info: { id: f.user.id } }, producer: { info: { id: f.assistant.id } } })
     const ids = new Map(view.history.map((message) => [message.info.id, message.info.id]))
     const repeated = ClaudeHostBoundary.retain(view.session, history, ids, "revert")
     expect(repeated.messages[plan.part.messageID]).toEqual([
       { projectID: source.projectID, sessionID: source.id, messageID: plan.part.messageID },
+    ])
+    expect(repeated.messages[plan.revision.admissionMessageID]).toEqual([
+      { projectID: source.projectID, sessionID: source.id, messageID: f.user.id },
     ])
     yield* f.sessions.setMetadata({ sessionID: f.chat.id, metadata: { claudeCode: {
       ...reverted, retainedView: repeated, resumeAt: undefined,
@@ -55,14 +62,17 @@ CompactionFixture.it.instance("origin dedup compares complete triples and retain
     if (!f.user) throw new Error("Missing origin fixture")
     const history = yield* f.sessions.messages({ sessionID: f.chat.id })
     const own = { projectID: f.chat.projectID, sessionID: f.chat.id, messageID: f.user.id }
-    const other = { ...own, sessionID: "ses_distinct_source" }
+    const foreign = yield* CompactionFixture.make()
+    if (!foreign.user) throw new Error("Missing distinct source message")
+    const other = { projectID: foreign.chat.projectID, sessionID: foreign.chat.id, messageID: foreign.user.id }
     const view = ClaudeHostBoundary.retained({ ...f.chat, metadata: { claudeCode: { retainedView: {
       schema: "native-retained-view-v1", projectID: f.chat.projectID, kind: "revert",
       messages: { [f.user.id]: [own, own, other, other] },
     } } } }, history)
     expect(ClaudeHostBoundary.origins(view, f.user.id)).toEqual([own, other])
-    const retained = ClaudeHostBoundary.retain(view.session, history, new Map([[f.user.id, "msg_clone"]]), "fork")
-    expect(retained.messages.msg_clone).toEqual([own, other])
+    const clone = MessageID.ascending()
+    const retained = ClaudeHostBoundary.retain(view.session, history, new Map([[f.user.id, clone]]), "fork")
+    expect(retained.messages[clone]).toEqual([own, other])
   }))
 
 CompactionFixture.it.instance("Atlas selection follows retained host admission keys across units, kinds and logical resumes", () =>
