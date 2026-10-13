@@ -95,6 +95,14 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@orchestra/schema#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/protocol#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/atlas-boundary#test": {
       "dependsOn": ["transit"],
       "outputs": []
