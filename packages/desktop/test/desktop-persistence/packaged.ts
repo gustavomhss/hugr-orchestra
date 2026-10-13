@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
@@ -79,6 +79,12 @@ export async function run(control?: "delete-blob") {
     shell.ready = true
     Object.keys(process.env).forEach((key) => delete process.env[key])
     Object.assign(process.env, env)
+    assertOwned(owned.home, root)
+    assert.throws(() => assertOwned(path.dirname(root), root), /REPORTED_PATH_NOT_OWNED/)
+    const escape = path.join(owned.empty, "outside-link")
+    symlinkSync(path.dirname(root), escape, process.platform === "win32" ? "junction" : "dir")
+    try { assert.throws(() => assertOwned(escape, root), /REPORTED_PATH_NOT_OWNED/) }
+    finally { rmSync(escape) }
     await child({ command: "git", args: ["--version"], cwd: owned.home, env, timeoutMS: 20_000 }, async () => {
       throw new Error("PROOF_BODY_FAILURE_CONTROL")
     }).then(() => assert.fail("PROOF_BODY_FAILURE_NOT_PROPAGATED"), (error: unknown) => {
@@ -143,7 +149,10 @@ export async function run(control?: "delete-blob") {
         assertOwned(report.db, root)
         assertOwned(report.userData, root)
         const expected = path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta")
-        assert.equal(realpathSync(report.userData), realpathSync(expected), "USERDATA_ISOLATION_LOST")
+        const userData = statSync(report.userData, { bigint: true })
+        const expectedUserData = statSync(expected, { bigint: true })
+        assert.ok(userData.isDirectory() && expectedUserData.isDirectory() && userData.ino !== 0n &&
+          userData.dev === expectedUserData.dev && userData.ino === expectedUserData.ino, "USERDATA_ISOLATION_LOST")
         assert.equal(report.quit, `${reportFile}.quit`, "QUIT_PATH_NOT_OWNED")
         assert.ok(typeof report.token === "string" && report.token.length > 0, "QUIT_TOKEN_MISSING")
         if (placement.userData) assert.equal(report.userData, placement.userData, "REOPEN_CHANGED_USERDATA")
@@ -207,7 +216,7 @@ export async function run(control?: "delete-blob") {
   }
   assert.ok(lifecycle.exited && lifecycle.closed && shell.restored && !existsSync(root), "CLEANUP_UNCONFIRMED")
   if (control) {
-    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, reason: "DRAFT_BLOB_LOST" }))
+    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, pathControl: true, reason: "DRAFT_BLOB_LOST" }))
     throw new Error("DRAFT_BLOB_LOST")
   }
   const evidence = { sourceSHA: manifest.sourceSHA, run: runID, platform: process.platform, arch: process.arch,
@@ -215,7 +224,7 @@ export async function run(control?: "delete-blob") {
     addonSha256: manifest.addonSha256, supervisorSha256: manifest.supervisorSha256, bundleHashes: manifest.bundleHashes,
     scope: "unsigned actual current-source Desktop; Linux x64 / Windows x64 only", environment: env,
     root, placement, documents: documents.map((item) => ({ key: item.key, documentSha256: item.documentSha256, blobSha256: item.id })),
-    phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true }
+    phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, pathControl: true }
   mkdirSync(path.dirname(destination), { recursive: true })
   writeFileSync(`${destination}.tmp`, JSON.stringify(evidence, null, 2), { mode: 0o600 })
   renameSync(`${destination}.tmp`, destination)
@@ -263,8 +272,19 @@ function inspect(filename: string, expected: typeof documents) {
 }
 
 function assertOwned(filename: string, root: string) {
-  const relative = path.relative(root, realpathSync(filename))
-  assert.ok(relative && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative), "REPORTED_PATH_NOT_OWNED")
+  // NTFS short names and case aliases need physical ancestor identity, after resolving links.
+  const canonical = realpathSync.native(filename)
+  const identity = statSync(root, { bigint: true })
+  assert.ok(identity.isDirectory() && identity.ino !== 0n, "OWNED_ROOT_IDENTITY_UNAVAILABLE")
+  const ancestor = { current: path.dirname(canonical) }
+  while (true) {
+    const observed = statSync(ancestor.current, { bigint: true })
+    if (observed.isDirectory() && observed.ino !== 0n && observed.dev === identity.dev && observed.ino === identity.ino) return
+    const parent = path.dirname(ancestor.current)
+    if (parent === ancestor.current) break
+    ancestor.current = parent
+  }
+  assert.fail(`REPORTED_PATH_NOT_OWNED:${JSON.stringify({ filename, canonical, root })}`)
 }
 
 function events(filename: string) {
