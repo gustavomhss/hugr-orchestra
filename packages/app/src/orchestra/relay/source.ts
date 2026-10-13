@@ -90,9 +90,15 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     ctx.sdk.event.on(input.directory, (event) => {
       const type: string = event.type
       if (!type.startsWith("relay.")) return
-      if (type.startsWith("relay.hook")) return invalidate("installs")
+      if (type.startsWith("relay.hook")) {
+        invalidate("documents")
+        return invalidate("installs")
+      }
       invalidate("runs")
-      if (type === "relay.document.saved") invalidate("documents")
+      if (type.startsWith("relay.document.")) {
+        invalidate("documents")
+        invalidate("installs")
+      }
     }),
   )
 

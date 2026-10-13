@@ -82,6 +82,8 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
       decodeDocument(await body<RelayDocumentView>(relay.document.get({ documentID, location }, off))),
     version: (documentID: string, versionID: string) =>
       body<RelayAuthoring.Version>(relay.document.version({ documentID, versionID, location }, off)),
+    versions: (documentID: string) =>
+      body<RelayAuthoring.Version[]>(relay.document.versions({ documentID, location }, off)),
     create: async (fields: RelayDocumentFields) =>
       decodeDocument(
         await body<RelayDocumentView>(relay.document.create({ location, relayDocumentCreate: contract(fields) }, off)),
