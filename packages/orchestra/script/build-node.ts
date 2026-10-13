@@ -5,6 +5,8 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { seatSkillsFiles } from "./seat-skills"
 import { leanNotices } from "./lean-notices"
+import { resolveClaudeCodeResource, stageClaudeCodeResource } from "./claude-code-resources"
+import { ClaudeCodeExecutable } from "../src/claude-code/executable"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -13,6 +15,16 @@ const dir = path.resolve(__dirname, "..")
 process.chdir(dir)
 
 const generated = await import("./generate.ts")
+const targetFlag = process.argv.indexOf("--claude-target")
+const claudeTarget = targetFlag === -1 ? undefined : process.argv[targetFlag + 1]
+if (targetFlag !== -1 && (!claudeTarget || !/^(darwin|win32|linux)-(x64|arm64)(-musl)?$/.test(claudeTarget) ||
+  (claudeTarget.endsWith("-musl") && !claudeTarget.startsWith("linux-"))))
+  throw new ClaudeCodeExecutable.UnavailableError(`Invalid Node build Claude Code target: ${claudeTarget ?? "missing"}`)
+const claudeCode = resolveClaudeCodeResource({
+  root: dir, os: claudeTarget?.split("-")[0] ?? process.platform, arch: claudeTarget?.split("-")[1] ?? process.arch,
+  abi: claudeTarget ? (claudeTarget.endsWith("-musl") ? "musl" : "glibc") :
+    process.platform === "linux" ? ClaudeCodeExecutable.nativeLibc() : undefined,
+})
 
 // hugr-omni is bundled, never external (integration plan WP4): the desktop ships its addon and supervisor in
 // Resources/omni, not in node_modules. Bun bakes this checkout's __dirname into the bundle (plan section 7, P5), so
@@ -27,6 +39,7 @@ const result = await Bun.build({
   external: ["jsonc-parser", "@lydell/node-pty"],
   define: {
     ORCHESTRA_COMPILED: "true",
+    ORCHESTRA_CLAUDE_NODE: "true",
     ORCHESTRA_CANDIDATE_BUILD: String(process.argv.slice(2).includes("--lean-candidate")),
     ORCHESTRA_MODELS_DEV: generated.modelsData,
     ORCHESTRA_VERSION: `'${Script.version}'`,
@@ -77,5 +90,6 @@ if (external.some(Boolean))
   throw new Error(`hugr-omni must be bundled, not imported: ${external.filter(Boolean).join(", ")}`)
 
 await leanNotices("./dist/node")
+stageClaudeCodeResource(claudeCode, "./dist/node/claude-code")
 
 console.log("Build complete")
