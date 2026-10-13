@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { createRequire } from "node:module"
 import ts from "typescript"
 
 // The two modes stay separate (specs/claude-code-engine.md, "Two modes"). Normal mode reaches Claude mode only through
@@ -73,11 +74,12 @@ const INTERFACE = [
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
 const LOOP = ["session/prompt", "session/llm", "session/processor"]
 
-type File = { file: string; text: string }
+type File = { file: string; text: string; control?: { literal: string; target: string } }
 
 test("the boundary rules catch a normal-mode import of a Claude-mode internal and a Claude-mode import of the loop", () => {
   const found = violations([
-    { file: "session/other.ts", text: 'import { ClaudeCodeSDK } from "@/claude-code/sdk"' },
+    { file: "session/other.ts", text: 'import { ClaudeCodeSDK } from "@/claude-code/sdk"',
+      control: { literal: "@/claude-code/sdk", target: "claude-code/sdk" } },
     { file: "tool/other.ts", text: 'const lazy = () => import("../claude-code/tools")' },
     { file: "session/fine.ts", text: 'import type { ClaudeCode } from "@/claude-code/engine"' },
     { file: "claude-code/host/x.ts", text: 'export { LLM } from "@/session/llm"' },
@@ -202,7 +204,8 @@ test("normal mode imports only Claude mode's entry point, and Claude mode import
   const used = new Set(claude.flatMap(imports))
   const memory = files.find((item) => item.file === "claude-code/host/memory.ts")!
   expect(imports(memory)).toContain("maestro/admission-record")
-  expect(violations([{ ...memory, text: `${memory.text}\nimport { Loop } from "@/session/prompt"` }])).toContain(
+  expect(violations([{ ...memory, text: `${memory.text}\nimport { Loop } from "@/session/prompt"`,
+    control: { literal: "@/session/prompt", target: "session/prompt" } }])).toContain(
     "claude-code/host/memory.ts imports session/prompt, part of Orchestra's loop",
   )
   expect(INTERFACE.filter((module) => !used.has(module))).toEqual([])
@@ -254,12 +257,31 @@ function imports(item: File) {
     ts.forEachChild(node, visit)
   }
   visit(source)
-  return specifiers.flatMap((specifier) => {
-    const resolved = specifier.startsWith("@/") ? path.posix.normalize(specifier.slice(2))
-      : specifier.startsWith(".") ? path.posix.join(path.posix.dirname(item.file), specifier) : undefined
-    if (resolved === undefined || resolved.startsWith("..")) return []
-    return [resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")]
+  const rows: { literal: string; branch: string; argument: string; resolved?: string; target?: string }[] = []
+  const targets = specifiers.flatMap((specifier) => {
+    const alias = specifier.startsWith("@/")
+    const relative = !alias && specifier.startsWith(".")
+    const argument = alias ? specifier.slice(2) : specifier
+    const resolved = alias ? path.posix.normalize(argument)
+      : relative ? path.posix.join(path.posix.dirname(item.file), argument) : undefined
+    const target = resolved === undefined || resolved.startsWith("..") ? undefined
+      : resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")
+    if (item.control) rows.push({ literal: specifier, branch: alias ? "alias" : relative ? "relative" : "package", argument, resolved, target })
+    return target === undefined ? [] : [target]
   })
+  if (item.control) {
+    const row = rows.find((row) => row.literal === item.control?.literal)
+    const defect = !row ? "MODE_BOUNDARY_RAW_LITERAL_FAILED" : row.branch !== "alias"
+      ? "MODE_BOUNDARY_PREFIX_BRANCH_FAILED" : row.target !== item.control.target ? "MODE_BOUNDARY_NORMALIZED_TARGET_FAILED" : undefined
+    if (defect) throw new Error(`${defect}: ${JSON.stringify({ file: item.file, control: item.control,
+      runtime: { bun: Bun.version, platform: process.platform, typescript: ts.version,
+        compiler: createRequire(import.meta.url).resolve("typescript"), scriptTarget: ts.ScriptTarget.Latest,
+        scriptKind: item.file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+        defaultIsPosix: path === path.posix, normalizeIsDefault: path.posix.normalize === path.normalize },
+      inputMatches: source.text === item.text, statementKinds: source.statements.map((node) => node.kind), raw: specifiers, rows,
+    })}`)
+  }
+  return targets
 }
 
 function inClaudeMode(module: string) {
