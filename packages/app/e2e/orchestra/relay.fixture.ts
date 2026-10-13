@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
-import type { Page, Route } from "@playwright/test"
+import { expect, type Page, type Route } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
 
 // The Relay routes as the server answers them after WP14 (server.relay.{document,publish,hook}), for the Workflows and
@@ -269,7 +269,8 @@ export type RelayState = ReturnType<typeof relayState>
 export async function authoringSettlement(page: Page, kind: "save" | "navigation", owner: string) {
   const settled = Promise.withResolvers<void>()
   const state = { completed: false }
-  await page.exposeFunction("relayAuthoringSettled", () => {
+  await page.exposeFunction("relayAuthoringSettled", (detail: Record<string, unknown>) => {
+    if (kind === "navigation") expect(Object.keys(detail)).toEqual(["pathname"])
     state.completed = true
     settled.resolve()
   })
@@ -278,7 +279,7 @@ export async function authoringSettlement(page: Page, kind: "save" | "navigation
     const observe = (event: Event) => {
       if (!(event instanceof CustomEvent) || event.detail[kind === "save" ? "documentID" : "pathname"] !== owner) return
       window.removeEventListener(name, observe)
-      void (window as unknown as { relayAuthoringSettled(): Promise<void> }).relayAuthoringSettled()
+      void (window as unknown as { relayAuthoringSettled(detail: unknown): Promise<void> }).relayAuthoringSettled(event.detail)
     }
     window.addEventListener(name, observe)
   }, { kind, owner })
