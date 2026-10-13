@@ -11,7 +11,7 @@ import { appID, desktop, productName } from "./lean-candidate-identity.fixture"
 export { appID, desktop, productName }
 export const repository = path.resolve(desktop, "../..")
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
-const archivePin = "369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1"
+const archivePin = "5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3"
 type Material = { path: string; bytes: number; sha256: string; link?: string }
 type BuildIdentity = {
   schemaVersion: number; status: string; accepted: boolean; sourceCommit: string; sourceTree: string; treeDigest: string
@@ -147,17 +147,17 @@ export async function verifyCandidateArchive() {
     assert.equal(bytes.readUInt32LE(4), 0x01000007)
     if (path.basename(file.path) === "spawn-helper") assert.ok((await lstat(target)).mode & 0o111, "PTY spawn-helper is not executable")
   }
-  const originalArchive = new Uint8Array(await Bun.file(path.join(repository, "packages/core/vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz")).arrayBuffer())
+  const originalArchive = new Uint8Array(await Bun.file(path.join(repository, "packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz")).arrayBuffer())
   assert.equal(digest(originalArchive), archivePin, "Unapproved native Lean archive")
   const files = await new Bun.Archive(originalArchive).files()
   const names = [...files.keys()].filter((file) => file === "package/LICENSE" || file === "package/NOTICE" || file.startsWith("package/licenses/") || file.endsWith("/SOURCES.md"))
     .map((file) => file.slice("package/".length)).sort()
-  assert.equal(names.length, 49, "Pinned native archive notice inventory changed")
+  assert.equal(names.length, 52, "Pinned native archive notice inventory changed")
   const notices = path.join(candidate.resources, "licenses/hugr-lean")
   const pin = await Bun.file(path.join(notices, "manifest.json")).json() as {
     commit: string; sha256: string; materials: { path: string; sha256: string }[]
   }
-  assert.equal(pin.commit, "465fb4c04773f1a40733c9f4c334b980e3195646")
+  assert.equal(pin.commit, "0660c2b5dc9249816330603160aadfaeb33e5fc7")
   assert.equal(pin.sha256, archivePin)
   assert.deepEqual(pin.materials.map((material) => material.path).sort(), names)
   for (const file of names) {
