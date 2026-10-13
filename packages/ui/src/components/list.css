@@ -17,6 +17,18 @@
 }
 
 [data-component="list"] {
+  [data-slot="list-row"],
+  [data-slot="list-item-add"] > [role="gridcell"],
+  [data-slot="list-cell"] {
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  [data-virtual="true"] [data-slot="list-row"],
+  [data-virtual="true"] [data-slot="list-cell"] {
+    block-size: 100%;
+    display: flex;
+    align-items: center;
+  }
   display: flex;
   flex-direction: column;
   gap: 12px;
