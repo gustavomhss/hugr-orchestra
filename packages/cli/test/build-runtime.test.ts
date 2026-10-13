@@ -219,14 +219,26 @@ test("all explicit targets produce correct executable format/architecture and pr
   const artifacts = new Map<string, string>()
   const handed = await handedArtifacts()
   await Bun.write(sentinel, "preserve these bytes")
+  // On the Windows runner Bun 1.3.14 fails to extract the compile targets it downloads ("Failed to extract executable
+  // for 'bun-linux-aarch64-v1.3.14'" and 'bun-windows-aarch64-v1.3.14', actions runs 38150190807 and 38150514459), so
+  // a Windows host proves only its own target, which needs no download. The Linux host, where the release producers
+  // run, proves all of them.
+  const built = process.platform === "win32" ? [native] : targets
   // test-ci installs for its own host; the other targets need the all-platform install the release lanes run, with the
   // runner's own package cache (the isolated HOME would download everything again). Every target's tree-sitter comes
-  // from the handed bundles, so no install script needs to run.
-  const install = Bun.spawnSync(
-    [process.execPath, "install", "--frozen-lockfile", "--ignore-scripts", "--os=*", "--cpu=*"],
-    { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 600_000 },
-  )
-  if (install.exitCode !== 0) throw new Error(`All-platform install failed (${install.exitCode}):\n${install.stderr}`)
+  // from the handed bundles, so no install script needs to run. A host that builds only its own target needs no foreign
+  // package and must not reinstall: Windows runners install the hoisted layout (setup-bun) and this install's default
+  // isolated linker moves every package, while this test process keeps resolving through the hoisted paths it already
+  // cached, so each later suite in it failed with "Cannot find package 'effect'" (actions run 38157021480). Asynchronous:
+  // Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock (oven-sh/bun#33932).
+  if (built.some((target) => target !== native)) {
+    const install = Bun.spawn(
+      [process.execPath, "install", "--frozen-lockfile", "--ignore-scripts", "--os=*", "--cpu=*"],
+      { cwd: root, stdout: "ignore", stderr: "pipe", timeout: 600_000 },
+    )
+    const [installError, installCode] = await Promise.all([new Response(install.stderr).text(), install.exited])
+    if (installCode !== 0) throw new Error(`All-platform install failed (${installCode}):\n${installError}`)
+  }
   // A cross target with no exported bundle still stops on its named error before anything is built.
   const foreign = namedTargets.find((item) => item.os !== process.platform && item.abi === undefined)!
   const refused = await run(
@@ -237,11 +249,7 @@ test("all explicit targets produce correct executable format/architecture and pr
   expect(refused.code).not.toBe(0)
   expect(refused.stderr).toMatch(/TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /)
   expect(await Bun.file(path.join(root, `dist/cli-${foreign.target}/bin`)).exists()).toBe(false)
-  // On the Windows runner Bun 1.3.14 fails to extract the compile targets it downloads ("Failed to extract executable
-  // for 'bun-linux-aarch64-v1.3.14'" and 'bun-windows-aarch64-v1.3.14', actions runs 38150190807 and 38150514459), so
-  // a Windows host proves only its own target, which needs no download. The Linux host, where the release producers
-  // run, proves all of them.
-  for (const target of process.platform === "win32" ? [native] : targets) {
+  for (const target of built) {
     const stale = path.join(root, `dist/cli-${target}/stale-output`)
     await Bun.write(stale, "selected target must replace this")
     await build(["--target", target], handed)

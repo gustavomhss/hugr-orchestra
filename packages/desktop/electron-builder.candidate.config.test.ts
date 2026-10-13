@@ -133,7 +133,7 @@ test("real pinned notice archive passes; missing, changed, extra and stale mater
     const licenses = path.join(directory, "licenses")
     const verified = await verifyMaterials(licenses)
     expect(verified.commit).toBe(leanPin.commit)
-    expect(verified.materials).toHaveLength(49)
+    expect(verified.materials).toHaveLength(52)
     const target = path.join(licenses, "hugr-lean/LICENSE")
     const original = new Uint8Array(await Bun.file(target).arrayBuffer())
     await Bun.write(target, "mutated license")
@@ -151,7 +151,7 @@ test("real pinned notice archive passes; missing, changed, extra and stale mater
     await expect(verifyMaterials(licenses)).rejects.toThrow("Lean notice pin mismatch: commit")
     await Bun.write(manifest, JSON.stringify(metadata))
     expect(await verifyMaterials(licenses)).toEqual(verified)
-    expect(await inventory(path.join(licenses, "hugr-lean"))).toHaveLength(50)
+    expect(await inventory(path.join(licenses, "hugr-lean"))).toHaveLength(53)
   } finally {
     await rm(directory, { recursive: true, force: true })
   }

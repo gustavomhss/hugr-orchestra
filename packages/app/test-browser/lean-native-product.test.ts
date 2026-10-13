@@ -86,10 +86,10 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       const pty = createRequire(path.join(orchestra, "../core/package.json")).resolve("@lydell/node-pty/package.json")
       await symlink(path.dirname(pty), path.join(orchestra, "dist/node/node_modules/@lydell/node-pty"), "junction")
       const manifest = await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean/manifest.json")).json()
-      const archive = new Uint8Array(await Bun.file(path.join(orchestra, "../core/vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz")).arrayBuffer())
+      const archive = new Uint8Array(await Bun.file(path.join(orchestra, "../core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz")).arrayBuffer())
       const digest = createHash("sha256").update(archive).digest("hex")
-      expect(digest).toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
-      expect(manifest).toMatchObject({ version: "0.2.0", commit: "465fb4c04773f1a40733c9f4c334b980e3195646", sha256: digest })
+      expect(digest).toBe("5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3")
+      expect(manifest).toMatchObject({ version: "0.4.0", commit: "0660c2b5dc9249816330603160aadfaeb33e5fc7", sha256: digest })
       const files = await new Bun.Archive(archive).files()
       expect(manifest.materials.map((material: { path: string }) => material.path)).toContain("LICENSE")
       expect(manifest.materials.map((material: { path: string }) => material.path)).toContain("NOTICE")
@@ -286,7 +286,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       expect(body()).toBe(`$ go test -v .\n\n${enabled.tool.state.output}`)
       expect(toolPanel()).toBeNull()
       const pairs = () => {
-        expect(host.querySelectorAll("[data-lean-item]")).toHaveLength(32)
+        expect(host.querySelectorAll("[data-lean-item]")).toHaveLength(37)
         for (const item of controller.state.data!.items) {
           expect(row(item.id).querySelector('[data-lean-value="bytes"]')?.getAttribute("title")).toBe(`Exact UTF-8 bytes: ${item.savings.bytesSaved ? "+" : ""}${fmt(item.savings.bytesSaved!)}`)
           expect(row(item.id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe(`${item.savings.tokensSaved ? "+" : ""}${fmt(item.savings.tokensSaved!)}`)
@@ -365,7 +365,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       pairs()
       expect(body()).toBe(`$ go test -v .\n\n${disabled.tool.state.output}`)
       expect(toolPanel()).toBeNull()
-      console.log(`native calls=2 Go cases=30/call profile A/B/A rows=32 privacy controls=10 foreign owners=4 replay=1 unavailable=2 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
+      console.log(`native calls=2 Go cases=30/call profile A/B/A rows=37 privacy controls=10 foreign owners=4 replay=1 unavailable=2 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
     } catch (error) { errors.push(error) }
     for (const dispose of disposers.reverse()) { try { dispose() } catch (error) { errors.push(error) } }
     await cleanup(resources, errors)

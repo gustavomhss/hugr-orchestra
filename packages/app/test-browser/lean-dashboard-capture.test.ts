@@ -39,7 +39,7 @@ test("capture native production Lean page in CI Chromium; exact PNG/manifest art
       expect(capture.locale).toBe("pt-BR")
       expect(capture.viewport).toEqual({ width: 1672, height: 941 })
       expect(capture.rows.length).toBeGreaterThan(0)
-      expect(capture.rows.length).toBe(capture.file === "detail-dark.png" ? 1 : capture.file === "frameworks-dark.png" ? 3 : 32)
+      expect(capture.rows.length).toBe(capture.file === "detail-dark.png" ? 1 : capture.file === "frameworks-dark.png" ? 3 : 37)
       expect(capture.scheme).toBe(capture.file === "dashboard-light.png" ? "light" : "dark")
       expect(capture.fontsLoaded).toBe(true)
       expect(capture.bundle).toContain(source)

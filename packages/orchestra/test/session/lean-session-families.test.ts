@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { Effect } from "effect"
 import path from "node:path"
 import { LeanProcessor } from "@orchestra/core/tool/lean-processor"
+import { LeanSummary } from "@orchestra/core/tool/lean-summary"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 import { fixture } from "./lean-session.fixture"
 import { testEffect } from "../lib/effect"
@@ -16,8 +17,12 @@ const cargo = "cargo test --lib -- --test-threads=1"
 
 function followsDefault(result: Effect.Success<ReturnType<Effect.Success<ReturnType<typeof fixture>>["invoke"]>>, family: string, phase: string) {
   if (!result.capture || !result.raw) throw new Error(`${family} ${phase}: same-call native observation missing`)
-  const decision = LeanProcessor.process(result.capture.candidate.observation)
-  const status = decision.status === "reduced" ? "applied" : decision.status === "normalized" ? "normalized" : "passthrough"
+  const lossless = LeanProcessor.process(result.capture.candidate.observation)
+  // Lean 2.0 then cleans the lossless text (CR overwrites, ANSI, repeats); these fixtures stay below the summary threshold.
+  const text = "replacement" in lossless ? lossless.replacement : result.raw.output
+  const cleaned = LeanSummary.summarize({ tool: "bash", output: text, metadata: { exit: 0 } })
+  const decision = cleaned.status === "rewritten" ? { ...cleaned, inputBytes: lossless.inputBytes } : lossless
+  const status = decision.status === "reduced" || decision.status === "rewritten" ? "applied" : decision.status === "normalized" ? "normalized" : "passthrough"
   if (result.metric.status !== status || result.metric.reason !== decision.reason)
     throw new Error(`${family} ${phase}: selected/default mismatch: ${JSON.stringify({ selected: result.metric, decision })}\n${result.raw.output}`)
   expect(result.metric.status).toBe(status)

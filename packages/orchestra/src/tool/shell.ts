@@ -349,10 +349,13 @@ export const ShellTool = Tool.define(
             },
             output,
           }
-          if (ctx.callID && code === 0 && !cut && !expired && !aborted && raw === output && raw.length > 0) {
+          // Every real native result is attested; the lossless engine still accepts only exit-0 complete text,
+          // while Lean 2.0 summaries keep failure lines whole and store this exact model-visible text for recall.
+          if (ctx.callID && raw.length > 0) {
             LegacyLeanCapture.record(result, {
-              source: "shell", command: input.command, output: raw,
-              termination: { kind: "exited", code }, completeness: "complete", presentation: "unknown",
+              source: "shell", command: input.command, output,
+              termination: code !== null ? { kind: "exited", code } : { kind: expired ? "timed_out" : "unknown" },
+              completeness: cut ? "truncated" : "complete", presentation: "unknown",
             }, { sessionID: ctx.sessionID, callID: ctx.callID })
           }
           return result
