@@ -13,6 +13,8 @@ const elsewhere = [
   "test/artifact-case-alias.test.ts",
   // POSIX rename races refuse on Windows; this lane runs them on Linux, and artifact-native.yml on its POSIX hosts.
   ...(process.platform === "win32" ? ["test/artifact-posix-race.test.ts"] : []),
+  // distribution-bundle.yml: CLI ubuntu-latest executes Ruby/bash recipes with real jq; Windows lacks this executor.
+  ...(process.platform === "win32" ? ["test/distribution-recipes.test.ts"] : []),
 ]
 // An entry that names no file would exclude nothing while claiming another lane covers it.
 const missing = (

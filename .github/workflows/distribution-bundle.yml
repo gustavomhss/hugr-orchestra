@@ -40,38 +40,38 @@ jobs:
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/packaged-skills.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
           - package: core
             host: windows-latest
             cpu: X64
             platform: win32
-            files: [./test/packaged-skills.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
           - package: cli
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: windows-latest
             cpu: X64
             platform: win32
             # Payload/launcher/process wiring only; Windows native runtime remains unqualified.
-            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: ubuntu-24.04-arm
             cpu: ARM64
             platform: linux
-            files: [./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: macos-14
             cpu: ARM64
             platform: darwin
-            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: macos-15-intel
             cpu: X64
             platform: darwin
-            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
     env:
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
@@ -121,7 +121,12 @@ jobs:
           nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
           # Append nonce declaration after Bun exits; no pre-test nonce declaration in readable log.
           status=0
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout 30000 "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || status=$?
+          # Preserve Bun's failure when both commands fail; tee alone must also fail the step.
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout 30000 "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || {
+            codes=("${PIPESTATUS[@]}")
+            status=${codes[0]}
+            if [ "$status" -eq 0 ]; then status=${codes[1]}; fi
+          }
           printf 'omni control nonce: %s\n' "$nonce" >> ../../distribution-logs/run.log
           exit "$status"
       - name: Require nonce-bound positive control

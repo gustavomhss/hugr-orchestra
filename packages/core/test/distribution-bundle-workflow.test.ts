@@ -1,10 +1,10 @@
 import { YAML } from "bun"
 import { expect, test } from "bun:test"
-import { realpathSync, statSync } from "node:fs"
+import { statSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { Schema } from "effect"
-import { controlVerdict, preloadsControl, validateRequest } from "../../../script/test-ci-request"
+import { preloadsControl } from "../../../script/test-ci-request"
 
 const root = fileURLToPath(new URL("../../../", import.meta.url))
 const Step = Schema.Struct({
@@ -30,21 +30,25 @@ const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ 
 const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
 const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
 
-test("real bundle source passes structural, executable wiring and generic CLI discovery checks", async () => {
+test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
   inspect(source)
   check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/core/bunfig.toml")).text()))), "BUNDLE_CORE_PRELOAD")
   for (const platform of ["linux", "win32", "darwin"]) {
-    const calls: string[][] = []
-    await new Function("Bun", "process", `return (async () => {${new Bun.Transpiler({ loader: "ts" }).transformSync(selector.startsWith("#!") ? selector.slice(selector.indexOf("\n") + 1) : selector)}})()`)(
-      { file: (file: string) => Bun.file(path.join(root, "packages/cli", file)), spawn: (args: string[]) => { calls.push(args); return { exited: Promise.resolve(0) } } },
-      { platform, execPath: "bun", argv: ["bun", "script/test.ts", "sentinel"], exit: (code: number) => check(code === 0, "CLI_SELECTOR_EXIT") },
-    )
-    check(calls.length === 1, "CLI_SELECTOR_SPAWN")
-    const args = calls[0] ?? []
-    const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
-    expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts"] : [])])
-    expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
-    exclusions.forEach((file) => check(statSync(path.join(root, "packages/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
+    for (const exitCode of [0, 17]) {
+      const calls: string[][] = []
+      const exits: number[] = []
+      await new Function("Bun", "process", `return (async () => {${new Bun.Transpiler({ loader: "ts" }).transformSync(selector.startsWith("#!") ? selector.slice(selector.indexOf("\n") + 1) : selector)}})()`)(
+        { file: (file: string) => Bun.file(path.join(root, "packages/cli", file)), spawn: (args: string[]) => { calls.push(args); return { exited: Promise.resolve(exitCode) } } },
+        { platform, execPath: "bun", argv: ["bun", "script/test.ts", "sentinel"], exit: (code: number) => exits.push(code) },
+      )
+      check(calls.length === 1, "CLI_SELECTOR_SPAWN")
+      expect(exits, "CLI_SELECTOR_EXIT").toEqual([exitCode])
+      const args = calls[0] ?? []
+      const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
+      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
+      expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
+      exclusions.forEach((file) => check(statSync(path.join(root, "packages/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
+    }
   }
 })
 
@@ -55,9 +59,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: [] }))],
     ["BUNDLE_NATIVE_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-native.test.ts")) }))],
     ["BUNDLE_HOMEBREW_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-homebrew.test.ts")) }))],
-    ["BUNDLE_CPU_BLIND", (value) => patchStep(value, "Assert native CPU and exact files", (step) => ({ ...step, run: step.run?.replace("process.arch !== arch", "false") }))],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
-    ["BUNDLE_CONTROL_BLIND", (value) => patchStep(value, "Require nonce-bound positive control", (step) => ({ ...step, run: "// bundle-program:begin\n// bundle-program:end" }))],
   ]
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
 })
@@ -93,34 +95,14 @@ function inspect(input: unknown) {
       check(files.includes("./test/distribution-native.test.ts") === (row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.host}`)
       check(files.includes("./test/distribution-homebrew.test.ts") === (row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.host}`)
     }
-    const expected = row.package === "core" ? ["packaged-skills", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "effect/cross-spawn-spawner"].map((name) => `./test/${name}.test.ts`)
+    const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "effect/cross-spawn-spawner"].map((name) => `./test/${name}.test.ts`)
       : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !file.endsWith("distribution-homebrew.test.ts"))
-        : (row.platform === "darwin" ? ["payload", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "launcher"] : ["native"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
+        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     expect(files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
-    admit(admission, row)
-    requireRejection(() => admit(admission, row, { arch: row.cpu === "X64" ? "arm64" : "x64" }), "BUNDLE_CPU_BLIND", "BUNDLE_NATIVE_HOST_MISMATCH")
-    requireRejection(() => admit(admission, row, { platform: "unsupported" }), "BUNDLE_PLATFORM_BLIND", "BUNDLE_NATIVE_HOST_MISMATCH")
-    expect(() => admit(admission, { ...row, files: [] })).toThrow("BUNDLE_FILES_EMPTY")
-    expect(() => admit(admission, { ...row, files: undefined })).toThrow("args must be a string array")
-    expect(() => admit(admission, { ...row, files: [files[0], files[0]] })).toThrow("BUNDLE_FILES_REPEATED")
-    expect(() => admit(admission, { ...row, files: ["./test/missing.test.ts"] })).toThrow("BUNDLE_FILE_INVALID_OR_MISSING")
-    expect(() => admit(admission, { ...row, files: ["./test/../../package.json.test.ts"] })).toThrow("BUNDLE_FILE_INVALID_OR_MISSING")
+    files.forEach((file) => check(statSync(path.join(root, "packages", row.package, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`))
   })
   distribution.forEach((file) => check(rows.some((row) => row.package === "cli" && row.files?.includes(file)), `BUNDLE_UNREACHED: ${file}`))
-  const nonce = "0123456789abcdef0123456789abcdef"
-  const verdict = new Function("process", "readFileSync", "controlVerdict", program(control))
-  const log = (text: string) => `omni control nonce: ${nonce}\nomni positive control [${nonce}]: ${text}\n`
-  verdict({ env: { ROW: "calibration" } }, () => log("pass (suite)"), controlVerdict)
-  ;["", `omni control nonce: ${nonce}\n`, log("off (legacy rollback)"), log("not applicable (focused)"), log("FAIL (suite)"), log("pass (suite)") + log("pass (suite)"), log("pass (suite)") + `omni positive control [${nonce}]: pass (suite)\n`, log("pass (suite)").replace(`[${nonce}]`, "[wrong]")].forEach((text) =>
-    requireRejection(() => verdict({ env: { ROW: "calibration" } }, () => text, controlVerdict), "BUNDLE_CONTROL_BLIND"))
-  const lines = run.run?.trim().split("\n") ?? []
-  ;["set -euo pipefail", 'while IFS= read -r file; do args+=("$file"); done < ../../.distribution-files',
-    'if [ "$PACKAGE" = cli ]; then preload=(--preload ../../script/test-omni-control.ts); fi',
-    'nonce=$(node -e "process.stdout.write(require(\'node:crypto\').randomBytes(16).toString(\'hex\'))")',
-    'status=0',
-    'GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout 30000 "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || status=$?',
-    'printf \'omni control nonce: %s\\n\' "$nonce" >> ../../distribution-logs/run.log', 'exit "$status"',
-  ].forEach((line) => check(lines.includes(line), `BUNDLE_TEST_CONTROL_WIRING: ${line}`))
+  // Runtime conformance lives in distribution-bundle-execution.test.ts; unordered source lines cannot prove exit or IO behavior.
   expect(job.steps.filter((step) => step.uses).map((step) => step.uses)).toEqual([checkout, "./.github/actions/setup-bun", "./.github/actions/ripgrep", "./.github/actions/omni-binaries", upload])
   check(job.steps.find((step) => step.uses === upload)?.if === "always()" && job.steps.find((step) => step.uses === upload)?.with?.["if-no-files-found"] === "error" && job.steps.find((step) => step.uses === upload)?.with?.path === "distribution-logs", "BUNDLE_LOG_RETENTION")
   const staticJob = value.jobs.static
@@ -132,28 +114,10 @@ function inspect(input: unknown) {
 }
 
 function check(value: unknown, name: string): asserts value { if (!value) throw new Error(name) }
-function requireRejection(run: () => unknown, name: string, diagnostic = "") {
-  try { run() } catch (error) { check(error instanceof Error && error.message.includes(diagnostic), name); return }
-  throw new Error(name)
-}
 function requireStep(steps: readonly typeof Step.Type[], name: string, failure: string) {
   const matches = steps.filter((step) => step.name === name)
   check(matches.length === 1 && matches[0], failure)
   return matches[0]
-}
-function program(step: typeof Step.Type) {
-  const parts = step.run?.split("// bundle-program:begin\n")
-  check(parts?.length === 2 && parts[1]?.split("// bundle-program:end").length === 2, "BUNDLE_PROGRAM_DELIMITERS")
-  return parts[1].split("// bundle-program:end")[0] ?? ""
-}
-function admit(step: typeof Step.Type, row: typeof Row.Type, override = {}) {
-  const writes: string[] = []
-  new Function("process", "realpathSync", "statSync", "writeFileSync", "path", "validateRequest", program(step))(
-    { arch: row.cpu === "X64" ? "x64" : "arm64", platform: row.platform, ...override,
-      env: { ROW: JSON.stringify(row), GITHUB_WORKSPACE: root, RUNNER_ARCH: row.cpu, RUNNER_OS: row.platform === "linux" ? "Linux" : row.platform === "darwin" ? "macOS" : "Windows" } },
-    realpathSync, statSync, (_file: string, data: string) => writes.push(data), path, validateRequest,
-  )
-  expect(writes).toEqual([row.files?.join("\n") + "\n"])
 }
 function patchRows(value: typeof Workflow.Type, patch: (row: typeof Row.Type) => typeof Row.Type) {
   return { ...value, jobs: { ...value.jobs, qualification: { ...value.jobs.qualification, strategy: { ...value.jobs.qualification?.strategy, matrix: { include: value.jobs.qualification?.strategy?.matrix.include?.map(patch) } } } } }
