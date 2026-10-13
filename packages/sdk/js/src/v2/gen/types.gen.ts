@@ -1418,7 +1418,7 @@ export type GlobalEvent = {
           revisionHash: string
           createdAt: number
           workflowBinding?: RelayArmWorkflowDefinition
-          upstreamAttribution?: MaestroUpstreamAttributionV1
+          upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
           grounding?: MaestroGrounding
         }
       }
@@ -4247,6 +4247,33 @@ export type MaestroUpstreamAttributionV1 = {
   logicalTaskID: string
 }
 
+export type MaestroUpstreamAttributionOrchestraTaskDispatch = {
+  kind: "orchestra-task"
+}
+
+export type MaestroUpstreamAttributionClaudeCodeAgentDispatch = {
+  kind: "claude-code-agent"
+  tool: "Agent" | "Task"
+  subagentType: "orchestra:archie"
+  executor: "claude-code-host"
+  agentID: string
+  grantID: string
+}
+
+export type MaestroUpstreamAttributionV2 = {
+  schema: "maestro-upstream-attribution-v2"
+  projectID: string
+  memberID: string
+  profile: "upstream"
+  authorSessionID: string
+  authorMessageID: string
+  parentSessionID: string
+  parentMessageID: string
+  parentCallID: string
+  logicalTaskID: string
+  dispatch: MaestroUpstreamAttributionOrchestraTaskDispatch | MaestroUpstreamAttributionClaudeCodeAgentDispatch
+}
+
 export type MaestroGrounding = {
   catalogVersion: string
   snapshot: string
@@ -5222,7 +5249,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       revisionHash: string
       createdAt: number
       workflowBinding?: RelayArmWorkflowDefinition
-      upstreamAttribution?: MaestroUpstreamAttributionV1
+      upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
       grounding?: MaestroGrounding
     }
   }
@@ -5599,6 +5626,7 @@ export type PermissionV2Ruleset = Array<PermissionV2Rule>
 
 export type AgentV2Info = {
   id: string
+  engine?: "orchestra" | "claude-code"
   model?: ModelRef
   request: ProviderRequest
   system?: string
@@ -7306,7 +7334,7 @@ export type MaestroPlanRevisionRecorded = {
     revisionHash: string
     createdAt: number
     workflowBinding?: RelayArmWorkflowDefinition
-    upstreamAttribution?: MaestroUpstreamAttributionV1
+    upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
     grounding?: MaestroGrounding
   }
 }
@@ -9546,7 +9574,7 @@ export type EventMaestroPlanRevisionRecorded = {
     revisionHash: string
     createdAt: number
     workflowBinding?: RelayArmWorkflowDefinition
-    upstreamAttribution?: MaestroUpstreamAttributionV1
+    upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
     grounding?: MaestroGrounding
   }
 }
@@ -14761,6 +14789,7 @@ export type V2HealthGetResponses = {
    */
   200: {
     healthy: true
+    pid?: number
   }
 }
 
@@ -15669,6 +15698,47 @@ export type V2ModelListResponses = {
 }
 
 export type V2ModelListResponse = V2ModelListResponses[keyof V2ModelListResponses]
+
+export type V2ModelDefaultData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/model/default"
+}
+
+export type V2ModelDefaultErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2ModelDefaultError = V2ModelDefaultErrors[keyof V2ModelDefaultErrors]
+
+export type V2ModelDefaultResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ModelV2Info | null
+  }
+}
+
+export type V2ModelDefaultResponse = V2ModelDefaultResponses[keyof V2ModelDefaultResponses]
 
 export type V2ProviderListData = {
   body?: never
