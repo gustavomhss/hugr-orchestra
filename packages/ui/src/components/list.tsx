@@ -1,5 +1,5 @@
 import { type FilteredListProps, useFilteredList } from "@orchestra/ui/hooks"
-import { createEffect, For, type JSX, on, Show } from "solid-js"
+import { createEffect, createMemo, createUniqueId, For, type JSX, mergeProps, on, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { useI18n } from "../context/i18n"
@@ -57,11 +57,17 @@ export interface ListRef {
 
 export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) {
   const i18n = useI18n()
+  const id = createUniqueId()
+  const cellID = (key: string) => `${id}-${encodeURIComponent(key)}`
   let inputRef: HTMLInputElement | HTMLTextAreaElement | undefined
   const [store, setStore] = createStore({
     mouseActive: false,
     scrollRef: undefined as HTMLDivElement | undefined,
     internalFilter: "",
+    focused: undefined as string | undefined,
+    focusedElement: undefined as HTMLElement | undefined,
+    preferred: undefined as string | undefined,
+    pressed: undefined as string | undefined,
   })
   const scrollRef = () => store.scrollRef
   const setScrollRef = (el: HTMLDivElement | undefined) => setStore("scrollRef", el)
@@ -88,6 +94,48 @@ export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) 
   }
 
   const { filter, grouped, flat, active, setActive, onKeyDown, onInput, refetch } = useFilteredList<T>(props)
+
+  type Entry = {
+    key: string
+    offset: number
+    size: number
+    index: number
+  } & ({ kind: "header"; group: { category: string; items: T[] } } | { kind: "item"; item: T; itemIndex: number })
+  const entries = createMemo(() => {
+    let offset = 0
+    let index = 0
+    let itemIndex = 0
+    return grouped.latest.flatMap((group): Entry[] => {
+      const header: Entry[] = group.category
+        ? [{ kind: "header", group, key: `header:${group.category}`, offset, size: 36, index: index++ }]
+        : []
+      if (header.length) offset += 36
+      return [
+        ...header,
+        ...group.items.map((item): Entry => {
+          const entry: Entry = {
+            kind: "item",
+            item,
+            key: props.key(item),
+            offset,
+            size: 40,
+            index: index++,
+            itemIndex: itemIndex++,
+          }
+          offset += entry.size
+          return entry
+        }),
+      ]
+    })
+  })
+  const itemEntries = createMemo(
+    () => new Map(entries().flatMap((entry) => (entry.kind === "item" ? [[entry.key, entry] as const] : []))),
+  )
+  const reveal = (key: string) => {
+    const scroll = scrollRef()
+    const node = scroll && findByKey(scroll, key)
+    if (scroll && node) scrollIntoView(scroll, node, "nearest")
+  }
 
   const searchProps = () => (typeof props.search === "object" ? props.search : {})
   const searchAction = () => searchProps().action
@@ -170,30 +218,60 @@ export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) 
   }
 
   const handleKey = (e: KeyboardEvent) => {
+    if (e.defaultPrevented) return
+    if (e.target instanceof Element && !e.target.isConnected) return
     setStore("mouseActive", false)
     if (e.key === "Escape") return
 
     const all = flat()
-    const selected = all.find((x) => props.key(x) === active())
-    const index = selected ? all.indexOf(selected) : -1
+    const rowKey =
+      (e.key === "Enter" || e.key === " ") && e.target instanceof HTMLElement
+        ? e.target.closest<HTMLElement>('[data-slot="list-row"]')?.dataset.key
+        : undefined
+    if (rowKey) setActive(rowKey)
+    const entry = itemEntries().get(rowKey ?? active() ?? "")
+    const selected = entry?.item
+    const index = entry?.itemIndex ?? -1
     props.onKeyEvent?.(e, selected)
 
     if (e.defaultPrevented) return
 
-    if (e.key === "Enter" && !e.isComposing) {
+    const target = e.target
+    const text =
+      target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && target.type !== "checkbox")
+    const toggle = target instanceof HTMLInputElement && target.type === "checkbox"
+    if (!toggle && (e.key === "Enter" || (e.key === " " && !text)) && !e.isComposing) {
       e.preventDefault()
       if (selected) handleSelect(selected, index)
-    } else if (props.search) {
-      if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (e.key === "n" || e.key === "p")) {
-        onKeyDown(e)
-        return
-      }
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        onKeyDown(e)
-      }
-    } else {
-      onKeyDown(e)
+      return
     }
+    const navigation =
+      e.key === "ArrowDown" ||
+      e.key === "ArrowUp" ||
+      (!text && (e.key === "Home" || e.key === "End")) ||
+      (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (e.key === "n" || e.key === "p"))
+    if (!navigation) {
+      if (!props.search) onKeyDown(e)
+      return
+    }
+    if (all.length === 0 || e.altKey || e.metaKey || e.isComposing) return
+    e.preventDefault()
+    if (e.key === "Home" || e.key === "End") setActive(props.key(e.key === "Home" ? all[0] : all[all.length - 1]))
+    else onKeyDown(e)
+    const key = active()
+    if (!key) return
+    setStore("preferred", key)
+    reveal(key)
+    if (text) return
+    const origin = document.activeElement
+    queueMicrotask(() => {
+      if (document.activeElement !== origin && (origin?.isConnected || document.activeElement !== document.body)) return
+      const button = scrollRef() && findByKey(scrollRef()!, key)
+      const control = toggle
+        ? button?.closest('[data-slot="list-row"]')?.querySelector<HTMLElement>('[data-slot="switch-input"]')
+        : button
+      control?.focus({ preventScroll: true })
+    })
   }
 
   props.ref?.({
@@ -259,6 +337,80 @@ export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) 
     )
   }
 
+  const renderItem = (item: T, index: number) => {
+    const key = props.key(item)
+    // Lazy props preserve the keyed row's controls across catalog refreshes without mutating caller-owned models.
+    const live =
+      typeof item === "object" && item !== null
+        ? (mergeProps(() => (itemEntries().get(key)?.item ?? item) as object) as T)
+        : item
+    const node = (
+      <button
+        data-slot="list-item"
+        data-key={key}
+        data-active={key === active()}
+        data-selected={!!props.current && key === props.key(props.current)}
+        type="button"
+        onPointerDown={() => setStore("pressed", key)}
+        onClick={(event) => {
+          const pressed = store.pressed
+          setStore("pressed", undefined)
+          if (!event.currentTarget.isConnected || (event.detail > 0 && pressed && pressed !== key)) return
+          handleSelect(item, index)
+        }}
+        onMouseMove={(event) => {
+          if (moved(event)) {
+            setStore({ mouseActive: true, preferred: key })
+            setActive(key)
+          }
+        }}
+      >
+        {props.children(live)}
+        <Show when={props.current && key === props.key(props.current)}>
+          <span data-slot="list-item-selected-icon">
+            <Icon name="check-small" />
+          </span>
+        </Show>
+        <Show when={props.activeIcon}>
+          {(icon) => (
+            <span data-slot="list-item-active-icon">
+              <Icon name={icon()} />
+            </span>
+          )}
+        </Show>
+        <Show when={props.divider}>
+          <span data-slot="list-item-divider" />
+        </Show>
+      </button>
+    )
+    return (
+      <div
+        data-slot="list-row"
+        data-key={key}
+        role="row"
+        aria-rowindex={(itemEntries().get(key)?.index ?? index) + 1}
+        onFocusIn={(event) => {
+          setStore({
+            focused: key,
+            preferred: key,
+            focusedElement: event.target instanceof HTMLElement ? event.target : undefined,
+            mouseActive: false,
+          })
+          setActive(key)
+        }}
+        onFocusOut={(event) => {
+          if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node))
+            setStore({ focused: undefined, focusedElement: undefined })
+        }}
+        onKeyDown={handleKey}
+      >
+        <div role="gridcell" id={cellID(key)} data-slot="list-cell">
+          {props.itemWrapper ? props.itemWrapper(live, node) : node}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div data-component="list" classList={{ [props.class ?? ""]: !!props.class }}>
       <Show when={!!props.search}>
@@ -305,7 +457,7 @@ export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) 
                 icon="circle-x"
                 variant="ghost"
                 onClick={() => {
-                  setInternalFilter("")
+                  applyFilter("")
                   queueMicrotask(() => inputRef?.focus())
                 }}
                 aria-label={i18n.t("ui.list.clearFilter")}
@@ -333,49 +485,7 @@ export function List<T>(props: ListProps<T> & { ref?: (ref: ListRef) => void }) 
                     <GroupHeader group={group} />
                   </Show>
                   <div data-slot="list-items">
-                    <For each={group.items}>
-                      {(item, i) => {
-                        const node = (
-                          <button
-                            data-slot="list-item"
-                            data-key={props.key(item)}
-                            data-active={props.key(item) === active()}
-                            data-selected={item === props.current}
-                            onClick={() => handleSelect(item, i())}
-                            onKeyDown={handleKey}
-                            type="button"
-                            onMouseMove={(event) => {
-                              if (!moved(event)) return
-                              setStore("mouseActive", true)
-                              setActive(props.key(item))
-                            }}
-                            onMouseLeave={() => {
-                              if (!store.mouseActive) return
-                              setActive(null)
-                            }}
-                          >
-                            {props.children(item)}
-                            <Show when={item === props.current}>
-                              <span data-slot="list-item-selected-icon">
-                                <Icon name="check-small" />
-                              </span>
-                            </Show>
-                            <Show when={props.activeIcon}>
-                              {(icon) => (
-                                <span data-slot="list-item-active-icon">
-                                  <Icon name={icon()} />
-                                </span>
-                              )}
-                            </Show>
-                            {props.divider && (i() !== group.items.length - 1 || (showAdd() && isLastGroup())) && (
-                              <span data-slot="list-item-divider" />
-                            )}
-                          </button>
-                        )
-                        if (props.itemWrapper) return props.itemWrapper(item, node)
-                        return node
-                      }}
-                    </For>
+                    <For each={group.items}>{(item, i) => renderItem(item, i())}</For>
                     <Show when={showAdd() && isLastGroup()}>{renderAdd()}</Show>
                   </div>
                 </div>
