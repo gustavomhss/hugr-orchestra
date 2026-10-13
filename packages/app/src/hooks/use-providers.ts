@@ -1,10 +1,11 @@
 import { useServerSync } from "@/context/server-sync"
+import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
 import { decode64 } from "@/utils/base64"
 import { useParams } from "@solidjs/router"
 import { Iterable, pipe } from "effect"
 import { type Accessor } from "solid-js"
-import { selectProviderCatalog } from "./provider-catalog"
+import { createProviderResource, selectProviderCatalog } from "./provider-catalog"
 
 export const popularProviders = ["anthropic", "github-copilot", "openai", "google", "openrouter", "vercel"]
 const popularProviderSet = new Set(popularProviders)
@@ -62,5 +63,29 @@ export function useProviders(directory?: Accessor<string | null | undefined>) {
       const connected = new Set(providers().connected)
       return [...Iterable.filter(providers().all, ([id]) => connected.has(id))]
     },
+  }
+}
+
+export function useProviderDiscovery(directory?: Accessor<string | null | undefined>) {
+  const providers = useProviders(directory)
+  const sdk = useServerSDK()
+  const protocol = useServerProtocol()
+  const integrations = createProviderResource(
+    () => {
+      const value = providers.directory()
+      const client = sdk()
+      if (protocol() !== "v2" || value === undefined) return
+      return { directory: value, client, server: client.scope }
+    },
+    (input) =>
+      input.client.api.integration
+        .list({ location: input.directory ? { directory: input.directory } : undefined })
+        .then((result) => result.data.map((item) => ({ id: item.id, name: item.name }))),
+  )
+  return {
+    all: () => (protocol() === "v1" ? [...providers.all().values()] : (integrations.data() ?? [])),
+    loading: () => !protocol() || providers.directory() === undefined || integrations.loading(),
+    error: integrations.error,
+    retry: integrations.retry,
   }
 }

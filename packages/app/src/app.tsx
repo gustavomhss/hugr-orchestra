@@ -47,7 +47,7 @@ import { ServerSyncProvider, useServerSync } from "@/context/server-sync"
 import { GlobalProvider, useGlobal } from "@/context/global"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
 import { LayoutProvider } from "@/context/layout"
-import { ModelsProvider } from "@/context/models"
+import { ModelPreferencesProvider, ModelsProvider } from "@/context/models"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
 import { usePlatform } from "@/context/platform"
@@ -496,9 +496,11 @@ export function AppBaseProviders(
               >
                 <QueryProvider>
                   <WslServersProvider>
-                    <DialogProvider>
-                      <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
-                    </DialogProvider>
+                    <ModelPreferencesProvider>
+                      <DialogProvider>
+                        <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
+                      </DialogProvider>
+                    </ModelPreferencesProvider>
                   </WslServersProvider>
                 </QueryProvider>
               </ErrorBoundary>

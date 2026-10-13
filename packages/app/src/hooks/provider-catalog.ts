@@ -2,6 +2,8 @@ import type { NormalizedProviderListResponse } from "@orchestra/session-ui/conte
 import type { Provider } from "@orchestra/sdk/v2/client"
 import { createMemo, createResource, type Accessor, type Resource, type ResourceActions } from "solid-js"
 import type { ModelKey } from "@/context/models"
+import type { LayoutRoute } from "@/context/layout-route"
+import type { ServerConnection } from "@/context/server"
 
 const emptyProviderCatalog: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
 
@@ -24,9 +26,44 @@ type ProviderCatalogInput =
     }
 
 export function selectProviderCatalog(input: ProviderCatalogInput) {
-  if (input.directory && input.catalog?.ready) return input.catalog.providers
+  if (input.directory) return input.catalog?.ready ? input.catalog.providers : emptyProviderCatalog
   if (input.explicit) return emptyProviderCatalog
   return input.global
+}
+
+export function settingsProviderDirectory(
+  route: LayoutRoute,
+  input: { draft: (id: string) => string | undefined; session: (id: string) => string | undefined; home?: string },
+) {
+  if (route.type === "dir-new-sesssion") return route.dir
+  if (route.type === "draft") return input.draft(route.draftID)
+  if (route.type === "session") return input.session(route.sessionId)
+  if (route.type === "chapter") return input.home
+  return input.home ?? null
+}
+
+export function settingsProviderOwner(
+  route: LayoutRoute,
+  input: {
+    current: ServerConnection.Key
+    home: { server: ServerConnection.Key; directory?: string }
+    draft: (id: string) => { server: ServerConnection.Key; directory: string } | undefined
+    session: (server: ServerConnection.Key, id: string) => string | undefined
+  },
+) {
+  const draft = route.type === "draft" ? input.draft(route.draftID) : undefined
+  const server =
+    route.type === "home" || route.type === "chapter"
+      ? input.home.server
+      : (draft?.server ?? route.server ?? input.current)
+  return {
+    server,
+    directory: settingsProviderDirectory(route, {
+      home: input.home.directory,
+      draft: () => draft?.directory,
+      session: (id) => input.session(server, id),
+    }),
+  }
 }
 
 export async function refetchProviderResource<T>(
@@ -104,6 +141,7 @@ export function resolveDefaultModel(
 ) {
   if (current !== undefined) return current ?? undefined
   if (!legacy) return undefined
-  const [providerID, modelID] = legacy.split("/")
-  return { providerID, modelID }
+  const separator = legacy.indexOf("/")
+  if (separator <= 0 || separator === legacy.length - 1) return undefined
+  return { providerID: legacy.slice(0, separator), modelID: legacy.slice(separator + 1) }
 }
