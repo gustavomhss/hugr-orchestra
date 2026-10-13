@@ -79,7 +79,7 @@ if (process.platform !== "linux") test("failed real ps/CIM executable lookup fai
 }, 45_000)
 
 async function launch(runtime: "bun" | "node", depth: number, fault?: "missing" | "query-failure") {
-  const scratch = fixture("fixture-identity", { lsp: false })
+  const scratch = await fixture("fixture-identity", { lsp: false })
   const sample = fileTree(scratch.home, depth)
   if (fault === "missing") {
     const rows = table()
