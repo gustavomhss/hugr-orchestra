@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
+import { fileURLToPath } from "node:url"
 import { Agent } from "../src/agent"
 import { FileSystem } from "../src/filesystem"
 import { Model } from "../src/model"
@@ -54,9 +55,11 @@ describe("contract hygiene", () => {
   })
 
   test("current source avoids Any and mutable contract wrappers", async () => {
-    const files = [...new Bun.Glob("*.ts").scanSync(new URL("../src", import.meta.url).pathname)].filter(
+    const sourceDirectory = fileURLToPath(new URL("../src", import.meta.url))
+    const files = [...new Bun.Glob("*.ts").scanSync(sourceDirectory)].filter(
       (file) => !file.endsWith("-v1.ts"),
     )
+    expect(files.length).toBeGreaterThan(0)
     const source = await Promise.all(
       files.map((file) => Bun.file(new URL(`../src/${file}`, import.meta.url)).text()),
     ).then((values) => values.join("\n"))
