@@ -55,13 +55,26 @@ function sanitizePath(p: string): string {
   return p.replace(/\0/g, "")
 }
 
-function clean(dir: string) {
-  return fs.rm(dir, {
-    recursive: true,
-    force: true,
-    maxRetries: 5,
-    retryDelay: 100,
-  })
+/**
+ * Removes a fixture root and resolves only once it is gone. When another process unlinks an entry Bun 1.3.14's recursive
+ * fs.rm has already listed, its unlinkat fails with ENOENT and fs.rm resolves without an error, leaving the rest of the
+ * tree on disk (strace on Linux CI: git's detached auto-maintenance deleting .git/objects/maintenance.lock). So absence
+ * is checked rather than assumed. Only EBUSY, ENOTEMPTY, EPERM and a tree that is still present are retried, for at
+ * most 5 s; anything else, or a holder that outlasts the bound, rejects so the leak is reported instead of hidden.
+ */
+async function clean(dir: string) {
+  const deadline = performance.now() + 5_000
+  for (;;) {
+    const error = await fs.rm(dir, { recursive: true, force: true }).then(
+      () => undefined,
+      (error: unknown) => error,
+    )
+    const code = error && typeof error === "object" && "code" in error ? error.code : undefined
+    if (error !== undefined && code !== "EBUSY" && code !== "ENOTEMPTY" && code !== "EPERM") throw error
+    if (error === undefined && (await fs.lstat(dir).catch(() => undefined)) === undefined) return
+    if (performance.now() >= deadline) throw error ?? new Error(`tmpdir: ${dir} still exists after removal`)
+    await Bun.sleep(25)
+  }
 }
 
 // Every git fixture used to spawn `git init` plus four `git config` processes, and process spawns dominate fixture
@@ -79,6 +92,9 @@ async function createGitTemplate() {
   process.once("exit", () => rmSync(dir, { recursive: true, force: true }))
   await $`git init`.cwd(dir).quiet()
   await $`git config core.fsmonitor false`.cwd(dir).quiet()
+  // Otherwise every commit leaves a detached `git maintenance run --auto` behind that deletes
+  // .git/objects/maintenance.lock after the command returns, racing the fixture's removal.
+  await $`git config maintenance.auto false`.cwd(dir).quiet()
   await $`git config commit.gpgsign false`.cwd(dir).quiet()
   await $`git config user.email "test@orchestra.test"`.cwd(dir).quiet()
   await $`git config user.name "Test"`.cwd(dir).quiet()
@@ -114,7 +130,7 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
       try {
         await options?.dispose?.(realpath)
       } finally {
-        await clean(realpath).catch(() => undefined)
+        await clean(realpath)
       }
     },
     path: realpath,
@@ -135,11 +151,7 @@ export function tmpdirScoped<E = never, R = never>(options?: {
     yield* Effect.promise(() => fs.mkdir(dirpath, { recursive: true }))
     const dir = sanitizePath(yield* Effect.promise(() => fs.realpath(dirpath)))
 
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(async () => {
-        await clean(dir).catch(() => undefined)
-      }),
-    )
+    yield* Effect.addFinalizer(() => Effect.promise(() => clean(dir)))
 
     const git = (...args: string[]) =>
       spawner.spawn(ChildProcess.make("git", args, { cwd: dir })).pipe(Effect.flatMap((handle) => handle.exitCode))
@@ -165,6 +177,26 @@ export function tmpdirScoped<E = never, R = never>(options?: {
   })
 }
 
+/**
+ * A scoped tmpdir whose instance is disposed before the directory is removed. The store usually outlives the caller's
+ * scope: TestAppNodeBuilder installs testInstanceStoreLayer itself, so `Effect.provide(testInstanceStoreLayer)` hits the
+ * test layer's memo map and reuses a store that is only closed after the test's scope. Without this finalizer the
+ * directory's instance, and every process it owns, outlived the removal; on Windows a language server whose cwd is the
+ * directory kept it busy (EBUSY) until the store closed. Finalizers run in reverse order, so this runs before `clean`.
+ */
+function tmpdirInstanceScoped<E = never, R = never>(options?: {
+  git?: boolean
+  config?: Partial<ConfigV1.Info> | (() => Partial<ConfigV1.Info>)
+  init?: (directory: string) => Effect.Effect<void, E, R>
+}) {
+  return Effect.gen(function* () {
+    const directory = yield* tmpdirScoped(options)
+    const store = yield* InstanceStore.Service
+    yield* Effect.addFinalizer(() => store.disposeDirectory(directory))
+    return directory
+  })
+}
+
 export const provideInstance =
   (directory: string) =>
   <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | InstanceStore.Service> =>
@@ -185,7 +217,7 @@ export function provideTmpdirInstance<A, E, R>(
   options?: { git?: boolean; config?: Partial<ConfigV1.Info> | (() => Partial<ConfigV1.Info>) },
 ) {
   return Effect.gen(function* () {
-    const path = yield* tmpdirScoped(options)
+    const path = yield* tmpdirInstanceScoped(options)
     return yield* self(path).pipe(provideInstance(path))
   }).pipe(Effect.provide(testInstanceStoreLayer))
 }
@@ -206,7 +238,7 @@ export const withTmpdirInstance =
   }) =>
   <A, E, R>(self: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
-      const directory = yield* tmpdirScoped(options)
+      const directory = yield* tmpdirInstanceScoped(options)
       return yield* self.pipe(Effect.provideService(TestInstance, { directory }), provideInstanceEffect(directory))
     }).pipe(Effect.provide(testInstanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
 
