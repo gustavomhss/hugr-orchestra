@@ -153,7 +153,9 @@ ClaudeEngineFixture.it.instance("registered final denial retains spent grant and
   if (admitted.info.role !== "user") throw new Error("Missing admitted user")
   const host = yield* ClaudeHost.Service
   const running = yield* host.turn({ sessionID: f.chat.id, user: admitted.info }).pipe(Effect.forkChild)
-  yield* Deferred.await(entered)
+  yield* Deferred.await(entered).pipe(Effect.raceFirst(Fiber.join(running).pipe(Effect.flatMap(() => Effect.fail(
+    new Error(`Registered admission ended before final checkpoint: ${JSON.stringify({ metadata, decisions })}`),
+  )))))
   const kids = yield* f.sessions.children(f.chat.id)
   expect(kids).toHaveLength(1)
   expect(ClaudeHostMcp.grants(f.chat.id).has(grantID)).toBe(false)
