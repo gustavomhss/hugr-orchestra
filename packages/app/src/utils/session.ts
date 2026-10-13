@@ -3,7 +3,7 @@ import type { Session, SessionV2Info } from "@orchestra/sdk/v2/client"
 import { withTimestampedFallback } from "./session-title"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { SessionEvent } from "@orchestra/schema/session-event"
-import { Schema } from "effect"
+import { Result, Schema } from "effect"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 import type { SessionsGetOutput } from "@orchestra/client"
 
@@ -15,6 +15,10 @@ export type AppSession = Session & {
   subagentModelsRevision?: number
   archiveRevision?: number
 }
+
+export type SessionManagementInfo = Pick<AppSession,
+  "id" | "subagentModels" | "subagentModelsChangedAt" | "subagentModelsRevision" | "archiveChangedAt" | "archiveRevision"
+> & { time: Pick<AppSession["time"], "updated" | "archived"> }
 
 export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | SessionsGetOutput | AppSession): AppSession {
   if (!("location" in input)) return input
@@ -47,10 +51,39 @@ export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | Sessio
   }
 }
 
-export function applySessionManagementEvent(
-  info: AppSession,
-  event: { type: string; properties?: unknown; current?: unknown },
-): AppSession | undefined {
+export function decodeSessionManagementEvent(event: { type: string; properties?: unknown; current?: unknown }) {
+  if (event.type === SessionEvent.SubagentModelsChanged.type) {
+    const decoded = Schema.decodeUnknownResult(SessionEvent.SubagentModelsChanged.data)(event.properties)
+    if (Result.isFailure(decoded)) {
+      console.warn("Invalid session management event", event.type, decoded.failure.message)
+      return
+    }
+    return {
+      ...event,
+      type: SessionEvent.SubagentModelsChanged.type,
+      properties: Schema.encodeSync(SessionEvent.SubagentModelsChanged.data)(decoded.success),
+    }
+  }
+  if (event.type === SessionEvent.ArchiveChanged.type) {
+    const decoded = Schema.decodeUnknownResult(SessionEvent.ArchiveChanged.data)(event.properties)
+    if (Result.isFailure(decoded)) {
+      console.warn("Invalid session management event", event.type, decoded.failure.message)
+      return
+    }
+    return {
+      ...event,
+      type: SessionEvent.ArchiveChanged.type,
+      properties: Schema.encodeSync(SessionEvent.ArchiveChanged.data)(decoded.success),
+    }
+  }
+}
+
+export function applySessionManagementEvent<T extends SessionManagementInfo>(
+  info: T,
+  input: { type: string; properties?: unknown; current?: unknown },
+): T | undefined {
+  const event = decodeSessionManagementEvent(input)
+  if (!event) return
   const current = event.current
   const durable = current && typeof current === "object" && "durable" in current ? current.durable : undefined
   const revision =
@@ -58,9 +91,7 @@ export function applySessionManagementEvent(
       ? durable.seq
       : undefined
   if (event.type === SessionEvent.SubagentModelsChanged.type) {
-    const data = Schema.encodeSync(SessionEvent.SubagentModelsChanged.data)(
-      Schema.decodeUnknownSync(SessionEvent.SubagentModelsChanged.data)(event.properties),
-    )
+    const data = event.properties
     if (
       data.sessionID !== info.id ||
       data.timestamp < (info.subagentModelsChangedAt ?? 0) ||
@@ -75,9 +106,7 @@ export function applySessionManagementEvent(
     }
   }
   if (event.type === SessionEvent.ArchiveChanged.type) {
-    const data = Schema.encodeSync(SessionEvent.ArchiveChanged.data)(
-      Schema.decodeUnknownSync(SessionEvent.ArchiveChanged.data)(event.properties),
-    )
+    const data = event.properties
     if (
       data.sessionID !== info.id ||
       data.timestamp < (info.archiveChangedAt ?? 0) ||
@@ -92,7 +121,7 @@ export function applySessionManagementEvent(
   }
 }
 
-export function mergeSessionManagementInfo(current: AppSession | undefined, next: AppSession): AppSession {
+export function mergeSessionManagementInfo(current: SessionManagementInfo | undefined, next: AppSession): AppSession {
   if (!current) return next
   const keepPolicy = current.subagentModelsChangedAt !== undefined &&
     (next.time.updated < current.subagentModelsChangedAt ||
@@ -114,9 +143,13 @@ export function mergeSessionManagementInfo(current: AppSession | undefined, next
           subagentModelsChangedAt: next.subagentModelsChangedAt ?? next.time.updated,
           subagentModelsRevision: next.subagentModelsRevision,
         }),
+    time: {
+      ...next.time,
+      archived: keepArchive ? current.time.archived : next.time.archived,
+      updated: keepPolicy || keepArchive ? Math.max(current.time.updated, next.time.updated) : next.time.updated,
+    },
     ...(keepArchive
       ? {
-          time: { ...next.time, archived: current.time.archived, updated: current.time.updated },
           archiveChangedAt: current.archiveChangedAt,
           archiveRevision: current.archiveRevision,
         }

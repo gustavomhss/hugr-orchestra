@@ -32,8 +32,8 @@ import { OmniSpawner } from "./omni-spawner"
 
 type ExitSignal = Deferred.Deferred<readonly [code: number | null, signal: NodeJS.Signals | null]>
 
-/** The legacy spawn function (cross-spawn). Unchanged; omni wraps it to delegate what it does not support. */
-const legacy = Effect.gen(function* () {
+/** The legacy spawn function (cross-spawn). GUI launchers can opt out of Windows window hiding. */
+const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
 
@@ -268,7 +268,7 @@ const legacy = Effect.gen(function* () {
               stdio: stdios(sin, sout, serr, extra),
               detached: command.options.detached ?? process.platform !== "win32",
               shell: command.options.shell,
-              windowsHide: process.platform === "win32",
+              windowsHide: options?.windowsHide ?? process.platform === "win32",
             }),
             Effect.fnUntraced(function* ([proc, signal]) {
               const done = yield* Deferred.isDone(signal)
@@ -351,11 +351,12 @@ const legacy = Effect.gen(function* () {
 })
 
 /**
- * The spawner for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` is the legacy spawner exactly; `on` and
+ * The spawner for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` uses the legacy spawner; `on` and
  * `strict` spawn through omni, which delegates (on) or refuses (strict) what it does not support.
+ * windowsHide overrides legacy launches only; omitted options retain existing platform defaults.
  */
-export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) {
-  const base = yield* legacy
+export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER, options?: { windowsHide?: boolean }) {
+  const base = yield* legacy(options)
   if (mode === "off") return makeSpawner(base.spawnCommand)
   return makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
 })
