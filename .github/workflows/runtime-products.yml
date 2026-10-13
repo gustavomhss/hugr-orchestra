@@ -119,6 +119,15 @@ jobs:
           bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json
       - name: Require the actual proof report
         run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json --check-report
+      # bin/ripgrep holds the pinned rg; the CLI searches with it, with no rg on PATH, and never downloads one, also
+      # once bin/ripgrep is moved away (mutant), after which it is restored and the search passes again.
+      - name: Bundled ripgrep is pinned and used, and the packaged CLI never downloads one
+        run: |
+          set -euo pipefail
+          bin="packages/cli/dist/cli-$TARGET/bin"
+          exe=orchestra
+          [[ "$TARGET" != windows-* ]] || exe=orchestra.exe
+          bun packages/cli/script/ripgrep-proof.ts --target "$TARGET" --binary "$bin/$exe" --ripgrep "$bin/ripgrep" --mutate
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: runtime-proof-${{ matrix.target }}
@@ -168,6 +177,11 @@ jobs:
           name: windows-arm64-resources
           path: windows-arm64-resources/
           if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-arm64-ripgrep
+          path: packages/cli/dist/cli-windows-arm64/bin/ripgrep/
+          if-no-files-found: error
 
   windows-arm64:
     needs: windows-arm64-producer
@@ -197,6 +211,16 @@ jobs:
         run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json
       - name: Require the actual proof report and producer digest
         run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json --check-report
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-arm64-ripgrep
+          path: windows-arm64-cli/ripgrep
+      # The handed-off CLI next to the producer's bin/ripgrep, as a CLI build lays them out.
+      - name: Bundled ripgrep is pinned and used, and the packaged CLI never downloads one
+        run: |
+          Copy-Item windows-arm64-resources/orchestra-windows-arm64.exe windows-arm64-cli/orchestra.exe
+          bun packages/cli/script/ripgrep-proof.ts --target windows-arm64 --binary windows-arm64-cli/orchestra.exe --ripgrep windows-arm64-cli/ripgrep --mutate
+          if ($LASTEXITCODE -ne 0) { throw "ripgrep proof failed" }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: runtime-proof-windows-arm64
