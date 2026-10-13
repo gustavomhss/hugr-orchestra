@@ -10,6 +10,8 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { Effect, Layer } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "../../src/background/job"
@@ -129,6 +131,8 @@ const promptRoot = LayerNode.group([
   Session.node,
   SessionProjector.node,
   SessionSubagentModels.node,
+  SessionV2.node,
+  SessionExecution.node,
   MessageV2.node,
   Snapshot.node,
   LLM.node,
