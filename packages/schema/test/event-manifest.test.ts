@@ -10,8 +10,8 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(86)
-    expect(EventManifest.Definitions.length).toBe(116)
+    expect(EventManifest.ServerDefinitions.length).toBe(88)
+    expect(EventManifest.Definitions.length).toBe(118)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -25,8 +25,23 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(107)
-    expect(EventManifest.Durable.size).toBe(63)
+    expect(EventManifest.Latest.size).toBe(109)
+    // Research's seven durable-only definitions are already canonical; the two Session settings events add two more.
+    expect(EventManifest.Durable.size).toBe(72)
+  })
+
+  test.each([
+    ["session.next.subagent.models.changed", SessionEvent.SubagentModelsChanged],
+    ["session.next.archive.changed", SessionEvent.ArchiveChanged],
+  ] as const)("includes canonical current and durable definition %s", (type, definition) => {
+    expect(definition.type).toBe(type)
+    expect(definition.durable).toEqual({ aggregate: "sessionID", version: 1 })
+    expect(EventManifest.ServerDefinitions.filter((event) => event.type === type)).toEqual([definition])
+    expect(EventManifest.Definitions.filter((event) => event.type === type)).toEqual([definition])
+    expect(EventManifest.ServerDefinitions).toContain(definition)
+    expect(EventManifest.Definitions).toContain(definition)
+    expect(EventManifest.Latest.get(type)).toBe(definition)
+    expect(EventManifest.Durable.get(`${type}.1`)).toBe(definition)
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -61,7 +76,7 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(70, 73)).toEqual([
+    expect(EventManifest.Definitions.slice(72, 75)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
