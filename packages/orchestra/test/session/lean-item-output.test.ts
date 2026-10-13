@@ -16,12 +16,12 @@ function fixture(command = "go test -v .", output = raw) {
   return { output: result, binding: LegacyLeanCapture.bind(result, result, owner), owner, limits, enabled: true, command }
 }
 
-test("disabled item preserves whole approved view, policy appendix and flags", () => {
+test("disabled item preserves whole approved view, policy appendix and flags", async () => {
   const f = fixture()
   const output = { ...f.output, output: `${raw}\n\nPOLICY KEEP 😀` }
   const input = { ...f, output, items: { go: false } }
-  expect(LegacyLeanOutput.project(input)).toBe(output)
-  const selected = LegacyLeanOutput.project({ ...input, telemetry })
+  expect(await LegacyLeanOutput.project(input)).toBe(output)
+  const selected = await LegacyLeanOutput.project({ ...input, telemetry })
   expect(selected.output).toBe(output.output)
   const lean = Reflect.get(selected.metadata, "lean")
   const metadata = { ...selected.metadata }
@@ -33,32 +33,32 @@ test("disabled item preserves whole approved view, policy appendix and flags", (
   expect(LeanMetrics.decode(lean)?.filterProfile).toBeUndefined()
 })
 
-test("Cargo toggle leaves Go default enabled; next projection sees changed item controls", () => {
+test("Cargo toggle leaves Go default enabled; next projection sees changed item controls", async () => {
   const f = fixture()
-  expect(LegacyLeanOutput.project({ ...f, items: { cargo: false } }).output).toBe(reduced)
-  expect(LegacyLeanOutput.project({ ...f, items: { go: false } })).toBe(f.output)
-  expect(LegacyLeanOutput.project({ ...f, items: { go: true } }).output).toBe(reduced)
+  expect((await LegacyLeanOutput.project({ ...f, items: { cargo: false } })).output).toBe(reduced)
+  expect(await LegacyLeanOutput.project({ ...f, items: { go: false } })).toBe(f.output)
+  expect((await LegacyLeanOutput.project({ ...f, items: { go: true } })).output).toBe(reduced)
 })
 
-test("unavailable config or uncertain preferences preserve settled output and expose honest reason", () => {
+test("unavailable config or uncertain preferences preserve settled output and expose honest reason", async () => {
   const f = fixture()
   for (const unavailable of ["config_unavailable", "preferences_unavailable", "preferences_scope_mismatch"] as const) {
-    const selected = LegacyLeanOutput.project({ ...f, unavailable, telemetry })
+    const selected = await LegacyLeanOutput.project({ ...f, unavailable, telemetry })
     expect(selected.output).toBe(raw)
     expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))).toMatchObject({ itemID: "go", status: "passthrough", reason: unavailable })
   }
 })
 
-test("failed native invocation keeps known literal item without claiming native eligibility", () => {
+test("failed native invocation keeps known literal item without claiming native eligibility", async () => {
   const f = fixture()
   const output = { ...f.output, metadata: { ...f.output.metadata, exit: 1 }, output: "exit code: 1\nFAILED KEEP" }
-  const selected = LegacyLeanOutput.project({ ...f, output, binding: undefined, telemetry })
+  const selected = await LegacyLeanOutput.project({ ...f, output, binding: undefined, telemetry })
   expect(selected.output).toBe(output.output)
   expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))).toMatchObject({ itemID: "go", producer: "unverified",
     eligible: false, status: "passthrough", reason: "not_eligible" })
 })
 
-test("plugin mutation, capture loss and refusal preserve bytes and all settled flags", () => {
+test("plugin mutation, capture loss and refusal preserve bytes and all settled flags", async () => {
   const f = fixture()
   for (const patch of [
     { output: `plugin changed\n${raw}` },
@@ -67,21 +67,22 @@ test("plugin mutation, capture loss and refusal preserve bytes and all settled f
     { isError: true },
   ]) {
     const output = { ...f.output, ...patch }
-    expect(LegacyLeanOutput.project({ ...f, output })).toBe(output)
+    expect(await LegacyLeanOutput.project({ ...f, output })).toBe(output)
   }
-  expect(LegacyLeanOutput.project({ ...f, limits: { maxLines: 1, maxBytes: 1 } })).toBe(f.output)
-  expect(LegacyLeanOutput.project({ ...f, owner: { ...owner, callID: "foreign" } })).toBe(f.output)
+  expect(await LegacyLeanOutput.project({ ...f, limits: { maxLines: 1, maxBytes: 1 } })).toBe(f.output)
+  expect(await LegacyLeanOutput.project({ ...f, owner: { ...owner, callID: "foreign" } })).toBe(f.output)
 })
 
-test("default Jest/Vitest plaintext and ambiguous command remain exact with selective options", () => {
+test("default Jest/Vitest plaintext and ambiguous command remain exact with selective options", async () => {
   for (const command of ["jest", "vitest run"]) {
     const f = fixture(command, "PASS test/example.test.ts\nTests: 1 passed, 1 total\n")
-    expect(LegacyLeanOutput.project({ ...f, items: { cargo: false } })).toBe(f.output)
-    const selected = LegacyLeanOutput.project({ ...f, telemetry })
+    expect(await LegacyLeanOutput.project({ ...f, items: { cargo: false } })).toBe(f.output)
+    const selected = await LegacyLeanOutput.project({ ...f, telemetry })
     expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))?.itemID).toBe(command.startsWith("vitest") ? "vitest" : "jest")
     expect(selected.output).toBe(f.output.output)
   }
   const f = fixture("go test -v . && cargo test")
-  expect(LegacyLeanOutput.project({ ...f, items: { cargo: false } })).toBe(f.output)
-  expect(LeanMetrics.decode(Reflect.get(LegacyLeanOutput.project({ ...f, telemetry }).metadata, "lean"))?.itemID).toBeUndefined()
+  expect(await LegacyLeanOutput.project({ ...f, items: { cargo: false } })).toBe(f.output)
+  // Compound commands have no single item: an attested shell result counts under the shell row (Lean 2.0).
+  expect(LeanMetrics.decode(Reflect.get((await LegacyLeanOutput.project({ ...f, telemetry })).metadata, "lean"))?.itemID).toBe("shell")
 })

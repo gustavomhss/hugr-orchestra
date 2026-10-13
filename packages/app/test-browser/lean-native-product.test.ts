@@ -286,7 +286,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       expect(body()).toBe(`$ go test -v .\n\n${enabled.tool.state.output}`)
       expect(toolPanel()).toBeNull()
       const pairs = () => {
-        expect(host.querySelectorAll("[data-lean-item]")).toHaveLength(32)
+        expect(host.querySelectorAll("[data-lean-item]")).toHaveLength(37)
         for (const item of controller.state.data!.items) {
           expect(row(item.id).querySelector('[data-lean-value="bytes"]')?.getAttribute("title")).toBe(`Exact UTF-8 bytes: ${item.savings.bytesSaved ? "+" : ""}${fmt(item.savings.bytesSaved!)}`)
           expect(row(item.id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe(`${item.savings.tokensSaved ? "+" : ""}${fmt(item.savings.tokensSaved!)}`)
@@ -365,7 +365,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       pairs()
       expect(body()).toBe(`$ go test -v .\n\n${disabled.tool.state.output}`)
       expect(toolPanel()).toBeNull()
-      console.log(`native calls=2 Go cases=30/call profile A/B/A rows=32 privacy controls=10 foreign owners=4 replay=1 unavailable=2 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
+      console.log(`native calls=2 Go cases=30/call profile A/B/A rows=37 privacy controls=10 foreign owners=4 replay=1 unavailable=2 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
     } catch (error) { errors.push(error) }
     for (const dispose of disposers.reverse()) { try { dispose() } catch (error) { errors.push(error) } }
     await cleanup(resources, errors)
