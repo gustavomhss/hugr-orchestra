@@ -54,13 +54,15 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
   if (process.env.ORCHESTRA_AUR_GUEST !== "owned" || process.platform !== "linux" || process.getuid?.() !== 0 ||
       !(await Bun.file("/.dockerenv").exists())) throw new Error("AUR_OWNED_NATIVE_GUEST_REQUIRED")
   if (process.versions.bun !== "1.3.14") throw new Error("AUR_GUEST_BUN_VERSION_MISMATCH")
-  if (machine() !== (process.arch === "x64" ? "x86_64" : "aarch64") || !["x64", "arm64"].includes(process.arch))
+  if (![process.arch, process.arch === "x64" ? "x86_64" : "aarch64"].includes(machine()) || !["x64", "arm64"].includes(process.arch))
     throw new Error("AUR_GUEST_NATIVE_ARCHITECTURE_REQUIRED")
   const input = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Input)))(
     await readFile("/proof/input.json", "utf8"))
   expect(input.target).toBe(target)
   expect(input.payloads.map((payload) => payload.version)).toEqual([...versions])
   const box = await sandbox("/proof/runtime")
+  const architecture = await successful(["uname", "-m"], box)
+  expect(architecture, "AUR_ACTUAL_GUEST_KERNEL_CPU").toBe(process.arch === "x64" ? "x86_64" : "aarch64")
   state.box = box
   expect(await aurInventory(payloadRoot)).toBeUndefined()
   expect(await aurInventory(launcher)).toBeUndefined()
@@ -239,7 +241,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       .toEqual([])
     state.qualified = true
     await Bun.write("/proof/evidence/qualified.json", JSON.stringify({ target, versions,
-      architecture: machine(), distro: await readFile("/etc/os-release", "utf8"), launcher,
+      architecture, distro: await readFile("/etc/os-release", "utf8"), launcher,
       finalPackages: [...retained].map(([file, sha256]) => ({ file, sha256 })),
       retainedDownloadedArchives: [...downloads].map(([file, sha256]) => ({ file, sha256 })),
       checksum: "real-makepkg-HTTPS-sha256-rejection-before-extraction",

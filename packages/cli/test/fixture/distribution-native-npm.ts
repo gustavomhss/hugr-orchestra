@@ -12,6 +12,10 @@ type RegistryVersion = Record<string, unknown> & { dist: { tarball: string; inte
 
 export async function npmChannel(directory: string, built: Built) {
   const box = await sandbox(join(directory, "npm"))
+  const systemRoot = process.env.SystemRoot ?? process.env.SYSTEMROOT
+  const tar = process.platform === "win32" ? join(systemRoot ?? "", "System32/tar.exe") : "tar"
+  if (process.platform === "win32" && (!systemRoot || !(await Bun.file(tar).exists())))
+    throw new Error("WINDOWS_NATIVE_SYSTEM_TAR_REQUIRED")
   const tarballs = join(box.directory, "tarballs")
   const prefix = join(box.directory, "prefix")
   await mkdir(tarballs)
@@ -64,7 +68,7 @@ export async function npmChannel(directory: string, built: Built) {
         const destination = join(modules, "@orchestra", name)
         await mkdir(destination, { recursive: true })
         // Actual npm tarball extraction preserves archive modes; no fabricated bin.
-        await successful(["tar", "-xzf", tarball, "--strip-components=1", "-C", destination], box)
+        await successful([tar, "-xzf", tarball, "--strip-components=1", "-C", destination], box)
         if (name === "cli") {
           expect(metadata.optionalDependencies).toEqual({ [`@orchestra/cli-${target}`]: payload.version })
           continue

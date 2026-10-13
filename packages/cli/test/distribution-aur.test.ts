@@ -58,8 +58,9 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
     throw new Error("AUR_NATIVE_LINUX_X64_OR_ARM64_HOST_REQUIRED")
   const guest = guests[process.arch]
   if (process.env.RUNNER_OS !== "Linux" || process.env.RUNNER_ARCH !== guest.runner ||
-      process.env.RUNNER_ENVIRONMENT !== "github-hosted" || machine() !== guest.cpu)
-    throw new Error("AUR_MATCHING_UBUNTU_HOSTED_RUNNER_REQUIRED")
+       process.env.RUNNER_ENVIRONMENT !== "github-hosted" || ![guest.cpu, process.arch].includes(machine()))
+    throw new Error(`AUR_MATCHING_UBUNTU_HOSTED_RUNNER_REQUIRED: ${JSON.stringify({ os: process.env.RUNNER_OS,
+      runner: process.env.RUNNER_ARCH, environment: process.env.RUNNER_ENVIRONMENT, arch: process.arch, machine: machine() })}`)
   if (!/^ID=ubuntu$/m.test(await readFile("/etc/os-release", "utf8"))) throw new Error("AUR_UBUNTU_HOST_REQUIRED")
   if (process.versions.bun !== "1.3.14") throw new Error("AUR_HOST_BUN_VERSION_MISMATCH")
   if (!process.env.RUNNER_TEMP || !process.env.GITHUB_WORKSPACE) throw new Error("AUR_HOSTED_WORKSPACE_REQUIRED")
@@ -79,6 +80,7 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   await Bun.write(join(state.directory, ".aur-ownership"), `${nonce}\n`)
   state.artifact = join(repo, "distribution-logs", `aur-${target}-${nonce}`)
   state.host = await sandbox(join(state.directory, "host-tools"))
+  expect(await successful(["uname", "-m"], state.host), "AUR_ACTUAL_HOST_KERNEL_CPU").toBe(guest.cpu)
   state.docker = Bun.which("docker") ?? undefined
   if (!state.docker) throw new Error("AUR_DOCKER_UNAVAILABLE")
   const daemon = await docker(["info", "--format", "{{.OSType}}|{{.Architecture}}"], 30_000)
@@ -87,12 +89,13 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   console.info(`AUR guest selection: ${JSON.stringify({ target, ...guest })}`)
   await docker(["pull", "--platform", `linux/${guest.dockerArch}`, guest.image], 300_000)
     .catch((cause: unknown) => { throw new Error(`AUR_PINNED_GUEST_IMAGE_UNAVAILABLE: ${guest.image}`, { cause }) })
-  const image = await docker(["image", "inspect", "--format",
-    '{{.Architecture}}|{{.Os}}|{{.Id}}|{{join .RepoDigests ","}}', guest.image])
-  const inspected = image.split("|")
-  if (inspected.length !== 4 || inspected[0] !== guest.dockerArch || inspected[1] !== "linux" ||
-      !/^sha256:[a-f0-9]{64}$/.test(inspected[2]) ||
-      !inspected[3].split(",").some((digest) => digest.endsWith(`@${guest.image.split("@")[1]}`)))
+  const image = await docker(["image", "inspect", guest.image])
+  const inspected = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Array(Schema.Struct({
+    Architecture: Schema.String, Os: Schema.String, Id: Schema.String, RepoDigests: Schema.Array(Schema.String),
+  })))))(image)
+  if (inspected.length !== 1 || inspected[0].Architecture !== guest.dockerArch || inspected[0].Os !== "linux" ||
+      !/^sha256:[a-f0-9]{64}$/.test(inspected[0].Id) ||
+      !inspected[0].RepoDigests.some((digest) => digest.endsWith(`@${guest.image.split("@")[1]}`)))
     throw new Error(`AUR_IMMUTABLE_GUEST_PROVENANCE_MISMATCH: ${image}`)
   await Bun.write(join(state.directory, "evidence/provenance.json"), JSON.stringify({
     target, guest, inspectedImage: image, host: { cpu: machine(), arch: process.arch,
