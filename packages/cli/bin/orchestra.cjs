@@ -77,30 +77,49 @@ function supportsAvx2() {
 }
 
 const names = (() => {
+  if (envPath) return []
   const baseline = arch === "x64" && !supportsAvx2()
   if (platform === "linux") {
-    const musl = (() => {
+    const libc = (() => {
       try {
-        if (fs.existsSync("/etc/alpine-release")) return true
-        const result = childProcess.spawnSync("ldd", ["--version"], { encoding: "utf8" })
-        return ((result.stdout || "") + (result.stderr || "")).toLowerCase().includes("musl")
-      } catch {
-        return false
-      }
+        const version = process.report?.getReport?.().header?.glibcVersionRuntime
+        if (typeof version === "string" && /^\d+\.\d+(?:\.\d+)?$/.test(version)) return "glibc"
+      } catch {}
+      try {
+        if (fs.existsSync("/etc/alpine-release")) return "musl"
+        const result = childProcess.spawnSync("ldd", ["--version"], {
+          encoding: "utf8",
+          timeout: 1500,
+          maxBuffer: 64 * 1024,
+        })
+        if (result.error || result.signal) return "unknown"
+        const output = (result.stdout || "") + "\n" + (result.stderr || "")
+        // musl's ldd --version may exit with status 1 despite identifying itself.
+        if ((result.status === 0 || result.status === 1) && /\bmusl libc\b/i.test(output)) return "musl"
+        if (result.status === 0 && /\b(?:glibc|gnu libc|gnu c library)\b/i.test(output)) return "glibc"
+      } catch {}
+      return "unknown"
     })()
-    if (musl)
+    if (libc === "unknown") {
+      console.error(
+        "Cannot determine Linux libc (glibc or musl); refusing automatic orchestra CLI binary selection. " +
+          "Set ORCHESTRA_BIN_PATH to an explicitly selected compatible binary.",
+      )
+      process.exit(1)
+    }
+    if (libc === "musl")
       return arch === "x64"
         ? baseline
-          ? [`${base}-baseline-musl`, `${base}-musl`, `${base}-baseline`, base]
-          : [`${base}-musl`, `${base}-baseline-musl`, base, `${base}-baseline`]
-        : [`${base}-musl`, base]
+          ? [`${base}-baseline-musl`]
+          : [`${base}-musl`, `${base}-baseline-musl`]
+        : [`${base}-musl`]
     return arch === "x64"
       ? baseline
-        ? [`${base}-baseline`, base, `${base}-baseline-musl`, `${base}-musl`]
-        : [base, `${base}-baseline`, `${base}-musl`, `${base}-baseline-musl`]
-      : [base, `${base}-musl`]
+        ? [`${base}-baseline`]
+        : [base, `${base}-baseline`]
+      : [base]
   }
-  return arch === "x64" ? (baseline ? [`${base}-baseline`, base] : [base, `${base}-baseline`]) : [base]
+  return arch === "x64" ? (baseline ? [`${base}-baseline`] : [base, `${base}-baseline`]) : [base]
 })()
 
 function findBinary(startDir) {
