@@ -37,6 +37,12 @@ export const items = [
   { id: "vite", label: "Vite", category: "build", mode: "preserve", profiles: [], exact: ["vite"] },
   { id: "webpack", label: "webpack", category: "build", mode: "preserve", profiles: [], exact: ["webpack"] },
   { id: "yarn", label: "Yarn", category: "install", mode: "preserve", profiles: [], exact: ["yarn-install"] },
+  // Lean 2.0 summarize mode: unattributed shell commands and the native read/fetch/search tools.
+  { id: "shell", label: "Other shell commands", category: "build", mode: "reducer", profiles: [], exact: [] },
+  { id: "read", label: "Read", category: "search", mode: "reducer", profiles: [], exact: [] },
+  { id: "webfetch", label: "Web fetch", category: "search", mode: "reducer", profiles: [], exact: [] },
+  { id: "glob", label: "Glob", category: "search", mode: "reducer", profiles: [], exact: [] },
+  { id: "grep", label: "Grep", category: "search", mode: "reducer", profiles: [], exact: [] },
 ] as const
 
 export type ItemID = (typeof items)[number]["id"]
