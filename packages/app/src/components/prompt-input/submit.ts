@@ -16,7 +16,9 @@ import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
-import { clearPending, pendingRules } from "@/components/draft-subagent-models"
+import { clearPending, pendingPolicy, pendingRules } from "@/components/draft-subagent-models"
+import { sameModelPolicy } from "@/components/subagent-model-rules"
+import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
@@ -66,6 +68,7 @@ type FollowupSendInput = {
   optimisticBusy?: boolean
   // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
   pending?: boolean
+  signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
 }
 
@@ -79,15 +82,16 @@ const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? 
 const draftImages = (prompt: Prompt) => prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
 
 export async function sendFollowupDraft(input: FollowupSendInput) {
+  if (input.signal?.aborted) return false
   const text = draftText(input.draft.prompt)
   const images = draftImages(input.draft.prompt)
   const setBusy = () => {
-    if (!input.optimisticBusy) return
+    if (!input.optimisticBusy || input.signal?.aborted) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
   }
 
   const setIdle = () => {
-    if (!input.optimisticBusy) return
+    if (!input.optimisticBusy || input.signal?.aborted) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
   }
 
@@ -102,31 +106,34 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
     setBusy()
     try {
-      if (!(await wait())) {
+      if (!(await wait()) || input.signal?.aborted) {
         setIdle()
         return false
       }
 
       const messageID = Identifier.ascending("message")
-      await input.api.command({
-        sessionID: input.draft.sessionID,
-        id: messageID,
-        command: cmd,
-        arguments: tail.join(" "),
-        agent: input.draft.agent,
-        model: {
-          id: input.draft.model.modelID,
-          providerID: input.draft.model.providerID,
-          variant: input.draft.variant,
+      await input.api.command(
+        {
+          sessionID: input.draft.sessionID,
+          id: messageID,
+          command: cmd,
+          arguments: tail.join(" "),
+          agent: input.draft.agent,
+          model: {
+            id: input.draft.model.modelID,
+            providerID: input.draft.model.providerID,
+            variant: input.draft.variant,
+          },
+          delivery: input.draft.delivery,
+          files: await Promise.all(
+            images.map(async (attachment) => ({
+              uri: await blobDataUrl(attachment.blob, attachment.mime),
+              name: attachment.filename,
+            })),
+          ),
         },
-        delivery: input.draft.delivery,
-        files: await Promise.all(
-          images.map(async (attachment) => ({
-            uri: await blobDataUrl(attachment.blob, attachment.mime),
-            name: attachment.filename,
-          })),
-        ),
-      })
+        { signal: input.signal },
+      )
       return true
     } catch (err) {
       setIdle()
@@ -141,6 +148,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
     })),
   )
+  if (input.signal?.aborted) return false
   const { requestParts, optimisticParts } = buildRequestParts({
     prompt: input.draft.prompt,
     context: input.draft.context,
@@ -182,7 +190,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   })
 
   try {
-    if (!(await wait())) {
+    if (!(await wait()) || input.signal?.aborted) {
       batch(() => {
         setIdle()
         remove()
@@ -190,40 +198,43 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       return false
     }
 
-    await input.api.prompt({
-      sessionID: input.draft.sessionID,
-      id: messageID,
-      agent: input.draft.agent,
-      model: input.draft.model,
-      variant: input.draft.variant,
-      system: input.draft.system,
-      delivery: input.draft.delivery,
-      legacyParts: requestParts,
-      text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-      files: requestParts.flatMap((part) => {
-        if (part.type !== "file") return []
-        const text = part.source?.text
-        return [
-          {
-            uri: part.url,
-            name: part.filename,
-            mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
-          },
-        ]
-      }),
-      agents: requestParts.flatMap((part) =>
-        part.type === "agent"
-          ? [
-              {
-                name: part.name,
-                mention: part.source
-                  ? { start: part.source.start, end: part.source.end, text: part.source.value }
-                  : undefined,
-              },
-            ]
-          : [],
-      ),
-    })
+    await input.api.prompt(
+      {
+        sessionID: input.draft.sessionID,
+        id: messageID,
+        agent: input.draft.agent,
+        model: input.draft.model,
+        variant: input.draft.variant,
+        system: input.draft.system,
+        delivery: input.draft.delivery,
+        legacyParts: requestParts,
+        text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+        files: requestParts.flatMap((part) => {
+          if (part.type !== "file") return []
+          const text = part.source?.text
+          return [
+            {
+              uri: part.url,
+              name: part.filename,
+              mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
+            },
+          ]
+        }),
+        agents: requestParts.flatMap((part) =>
+          part.type === "agent"
+            ? [
+                {
+                  name: part.name,
+                  mention: part.source
+                    ? { start: part.source.start, end: part.source.end, text: part.source.value }
+                    : undefined,
+                },
+              ]
+            : [],
+        ),
+      },
+      { signal: input.signal },
+    )
     return true
   } catch (err) {
     batch(() => {
@@ -476,10 +487,24 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       if (!ownsDraft()) return
       // Keep the admitted session and worktree for retry until its rules are durable.
       const draftRules = pendingRules(rulesKey)
-      if (draftRules.length > 0 || admission.rules) {
+      if (draftRules.length > 0 || pendingPolicy(rulesKey).mode === "allowlist" || admission.rules) {
         const saved = await (async () => {
-          // Preserve the existing V1 rules contract until the V2 policy API cut.
-          if ((await server.protocol) !== "v1") return true
+          if ((await server.protocol) === "v2") {
+            let policy = pendingPolicy(rulesKey)
+            while (true) {
+              admission.rules = true
+              await server.sessionManagement.setSubagentModels(session.id, policy)
+              const next = pendingPolicy(rulesKey)
+              if (!sameModelPolicy(next, policy)) {
+                policy = next
+                continue
+              }
+              if (!ownsDraft()) return false
+              clearPending(rulesKey)
+              admission.rules = false
+              return true
+            }
+          }
           let rules = draftRules
           while (true) {
             admission.rules = true
@@ -502,7 +527,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         })().catch((err) => {
           showToast({
             title: language.t("common.requestFailed"),
-            description: errorMessage(err),
+            description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
           })
           return false
         })
@@ -723,6 +748,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       messageID,
       optimisticBusy: sessionDirectory === projectDirectory,
       pending: queued,
+      signal: controller.signal,
       before: waitForWorktree,
     })
       .then((sent) => {

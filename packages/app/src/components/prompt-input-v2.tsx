@@ -24,9 +24,11 @@ import { type ImageAttachmentPart, usePrompt } from "@/context/prompt"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
-import { useLocal } from "@/context/local"
+import { useProviders } from "@/hooks/use-providers"
+import { useDraftSessionKey } from "./prompt-input/draft-session"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
+import { draftVersion, pendingPolicy, pendingSelection } from "@/components/draft-subagent-models"
+import { useServerProtocol } from "@/context/server-sdk"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
@@ -49,6 +51,7 @@ export type PromptInputV2ComposerProps = {
 export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission">
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
+  readonly pendingKey: () => string
 }
 
 export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
@@ -87,7 +90,10 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
             <Show when={props.sessionID}>
               {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
             </Show>
-            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
+            <PromptInputV2SubagentModelsControl
+              sessionID={props.sessionID}
+              pendingKey={props.controller.pendingKey()}
+            />
           </>
         }
         modelControl={
@@ -120,6 +126,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const language = useLanguage()
   const platform = usePlatform()
   const prompt = props.state ?? usePrompt()
+  const pendingKey = useDraftSessionKey()
   let editor: HTMLDivElement | undefined
 
   const interaction = createPromptInputV2State()
@@ -228,6 +235,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const submission = createPromptSubmit({
     prompt,
     info,
+    pendingKey,
     imageAttachments: attachments,
     commentCount,
     autoAccept: accepting,
@@ -430,6 +438,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     },
   })
   Object.defineProperty(controller, "model", { get: () => props.controls.model })
+  Object.defineProperty(controller, "pendingKey", { value: pendingKey })
 
   command.register("prompt-input", () => [
     {
@@ -489,12 +498,18 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   return controller as PromptInputV2ComposerController
 }
 
-function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
+function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pendingKey: string }) {
   const dialog = useDialog()
   const language = useLanguage()
   const sdk = useSDK()
   const sync = useSync()
-  const local = useLocal()
+  const providers = useProviders(() => sdk().directory)
+  const protocol = useServerProtocol()
+  const policy = () =>
+    props.sessionID
+      ? sync().session.get(props.sessionID)?.subagentModels ?? { mode: "inherit" as const }
+      : pendingPolicy(props.pendingKey)
+  const scoped = () => protocol() === "v2" ? policy().mode === "allowlist" : hasModelScope(rules())
 
   const rules = () => {
     const id = props.sessionID
@@ -503,23 +518,34 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
     return Array.isArray(permission) ? permission : []
   }
   const label = () => {
+    draftVersion()
+    if (protocol() === "v2") {
+      const current = policy()
+      return current.mode === "allowlist" ? `${current.models.length}` : language.t("session.tasks.models.all")
+    }
     // Drafts have no session yet: show the pending selection.
     if (!props.sessionID) {
       draftVersion()
-      const n = pendingSelection(sdk().directory ?? "").size
+      const n = pendingSelection(props.pendingKey).size
       return n > 0 ? `${n}` : language.t("session.tasks.models.all")
     }
     const scoped = hasModelScope(rules())
     if (!scoped) return language.t("session.tasks.models.all")
-    const models = local.model.list().filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
-    const allowed = models.filter((m) => effectiveModelState(rules(), m.provider.id, m.id) === "allow").length
+    const allowed = providers
+      .connected()
+      .flatMap((provider) =>
+        Object.values(provider.models).filter(
+          (model) => effectiveModelState(rules(), provider.id, model.id) === "allow",
+        ),
+      ).length
     return `${allowed}`
   }
   const open = () => {
     const directory = sdk().directory
     if (!directory) return
+    const selection = { sessionID: props.sessionID, directory, pendingKey: props.pendingKey }
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />)
+      dialog.show(() => <x.DialogSubagentModels {...selection} />)
     })
   }
 
@@ -536,12 +562,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
       >
         <span class="truncate leading-4">
           {props.sessionID
-            ? hasModelScope(rules())
+            ? scoped()
               ? language.t("orchestra.chat.models.count", { count: label() })
               : language.t("orchestra.chat.models.all")
             : language.t("session.tasks.models.label", { count: label() })}
         </span>
-        <span class="-ml-0.5 -mr-1 flex shrink-0">
+        <span class="-ms-0.5 -me-1 flex shrink-0">
           <Icon name="chevron-down" />
         </span>
       </ButtonV2>
