@@ -13,6 +13,7 @@ import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
 import { detectServerProtocol, type ServerProtocol } from "@/utils/server-protocol"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
+import { createSessionManagementForServer } from "@/utils/session-management"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
 
@@ -222,6 +223,7 @@ type ServerSDKBase = {
   client: ReturnType<typeof createSdkForServer>
   api: CompatibleApi
   currentApi: ServerApi
+  sessionManagement: ReturnType<typeof createSessionManagementForServer>
   event: {
     on: ServerEventEmitter["on"]
     listen: ServerEventEmitter["listen"]
@@ -405,6 +407,7 @@ function createServerSdkContextBase(
     throwOnError: true,
   })
   const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
+  const sessionManagement = createSessionManagementForServer({ server: http, fetch: scopedFetch(), protocol, legacy: sdk })
   const legacy = (directory?: string) =>
     createSdkForServer({
       signal: abort.signal,
@@ -424,6 +427,7 @@ function createServerSdkContextBase(
     client: sdk,
     api,
     currentApi,
+    sessionManagement,
     event: {
       on: emitter.on.bind(emitter),
       listen: emitter.listen.bind(emitter),
