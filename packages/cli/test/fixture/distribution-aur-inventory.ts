@@ -67,7 +67,7 @@ export async function aurFinalPackage(extracted: string, payload: AurPayload, re
       .toMatchObject({ kind: "file", mode: 0o644 })
     actual.delete(metadata)
   }
-  const expected = new Map([
+  const expected = new Map<string, { kind: string; mode: number; sha256?: string; link?: string }>([
     ...["", "usr", "usr/bin", "usr/lib"].map((path) => [path, { kind: "directory", mode: 0o755 }] as const),
     ...[...original].map(([path, entry]) => [`usr/lib/orchestra${path ? `/${path}` : ""}`, entry] as const),
     ["usr/bin/orchestra", { kind: "symlink", mode: 0o777, link: "/usr/lib/orchestra/bin/orchestra" }] as const,

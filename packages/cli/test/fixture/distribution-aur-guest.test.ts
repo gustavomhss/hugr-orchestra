@@ -210,7 +210,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
     const first = payloads[0]
     const originalPackage = [...retained.keys()][0]
     if (!originalPackage) throw new Error("AUR_RETAINED_ORIGINAL_V1_PACKAGE_MISSING")
-    expect(sha256(await readFile(originalPackage))).toBe(retained.get(originalPackage))
+    expect(retained.get(originalPackage)).toBe(sha256(await readFile(originalPackage)))
     // Real pacman downgrade of the original built package, never a rebuild/link swap.
     await successful(["pacman", "-U", "--noconfirm", originalPackage], box, 120_000)
     expect(await successful(["pacman", "-Q", "orchestra-bin"], box)).toBe(`orchestra-bin ${first.version}-1`)

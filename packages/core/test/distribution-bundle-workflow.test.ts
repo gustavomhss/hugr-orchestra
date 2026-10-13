@@ -45,7 +45,7 @@ test("real bundle source passes structural coverage and generic CLI discovery ch
       expect(exits, "CLI_SELECTOR_EXIT").toEqual([exitCode])
       const args = calls[0] ?? []
       const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
-      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
+      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-aur.test.ts", "./test/fixture/distribution-aur-guest.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
       expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
       exclusions.forEach((file) => check(statSync(path.join(root, "packages/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
     }
@@ -59,6 +59,8 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: [] }))],
     ["BUNDLE_NATIVE_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-native.test.ts")) }))],
     ["BUNDLE_HOMEBREW_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-homebrew.test.ts")) }))],
+    ["BUNDLE_WINDOWS_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-windows.test.ts")) }))],
+    ["BUNDLE_AUR_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-aur.test.ts")) }))],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
   ]
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
@@ -95,10 +97,12 @@ function inspect(input: unknown) {
     if (row.package === "cli") {
       check(files.includes("./test/distribution-native.test.ts") === (row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.host}`)
       check(files.includes("./test/distribution-homebrew.test.ts") === (row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-windows.test.ts") === (row.platform === "win32"), `BUNDLE_WINDOWS_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-aur.test.ts") === (row.platform === "linux"), `BUNDLE_AUR_PROOF: ${row.host}`)
     }
     const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "effect/cross-spawn-spawner"].map((name) => `./test/${name}.test.ts`)
-      : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !file.endsWith("distribution-homebrew.test.ts"))
-        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
+      : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !["distribution-homebrew.test.ts", "distribution-windows.test.ts"].some((name) => file.endsWith(name)))
+        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation", "aur"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     expect(files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
     files.forEach((file) => check(statSync(path.join(root, "packages", row.package, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`))
   })
