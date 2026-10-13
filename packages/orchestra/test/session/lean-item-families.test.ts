@@ -108,7 +108,10 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
     expect(yield* project({ ...input, output: appended, items: { [family.itemID]: false } })).toBe(appended)
     const changed = { ...output, output: `PLUGIN KEEP\n${output.output}` }
     expect(yield* project({ ...input, output: changed })).toBe(changed)
-    expect(yield* project({ ...input, limits: { maxLines: 1, maxBytes: 1 } })).toBe(output)
+    // The whole-view budget refuses a profile reduction; Vitest has none, and its lossless cleanup only shrinks the view.
+    const limited = yield* project({ ...input, limits: { maxLines: 1, maxBytes: 1 } })
+    if (family.itemID === "vitest") expect(limited.output).toBe(selected.output)
+    else expect(limited).toBe(output)
   }
   yield* Effect.promise(() => Bun.write(path.join(directory, "failure_test.go"),
     'package example\nimport "testing"\nfunc TestFailure(t *testing.T) { t.Fatal("NATIVE FAILURE MUST KEEP 😀") }\n'))
