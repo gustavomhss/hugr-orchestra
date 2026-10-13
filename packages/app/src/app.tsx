@@ -48,6 +48,7 @@ import { GlobalProvider, useGlobal } from "@/context/global"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
 import { LayoutProvider, useLayout } from "@/context/layout"
 import { ModelPreferencesProvider, ModelsProvider } from "@/context/models"
+import { ConnectionRecovery } from "@/orchestra/shell/connection-recovery"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
 import { usePlatform } from "@/context/platform"
@@ -632,8 +633,8 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
   onCleanup(() => clearInterval(timer))
 
   return (
-    <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base gap-6 p-6">
-      <div class="flex flex-col items-center max-w-md text-center">
+    <div class="h-dvh w-screen overflow-y-auto flex flex-col items-center justify-center-safe bg-background-base gap-6 p-6">
+      <div class="shrink-0 flex flex-col items-center max-w-md text-center">
         <HugrSplash class="mb-4" />
         <p class="text-14-regular text-text-base">
           {unreachable()[0]}
@@ -643,7 +644,7 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
         <p class="mt-1 text-12-regular text-text-weak">{language.t("app.server.retrying")}</p>
       </div>
       <Show when={others().length > 0}>
-        <div class="flex flex-col gap-2 w-full max-w-sm">
+        <div class="shrink-0 flex flex-col gap-2 w-full max-w-sm">
           <span class="text-12-regular text-text-base text-center">{language.t("app.server.otherServers")}</span>
           <div class="flex flex-col gap-1 bg-surface-base rounded-lg p-2">
             <For each={others()}>
@@ -663,6 +664,7 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
           </div>
         </div>
       </Show>
+      <ConnectionRecovery onServerSelected={props.onServerSelected} />
     </div>
   )
 }
