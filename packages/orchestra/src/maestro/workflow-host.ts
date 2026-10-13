@@ -157,7 +157,8 @@ export function make(deps: Dependencies) {
       if (revision.workflowBinding.publication.projectID !== revision.upstreamAttribution.projectID)
         return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH" })
       const session = yield* deps.sessions.get(SessionID.make(revision.sessionID))
-      const observed = yield* deps.under(session.directory, UpstreamProvenance.observe(revision.upstreamAttribution))
+      const observed = yield* deps.under(session.directory, UpstreamProvenance.observe({ ...revision.upstreamAttribution,
+        dispatchKind: revision.upstreamAttribution.schema === "maestro-upstream-attribution-v2" ? revision.upstreamAttribution.dispatch.kind : undefined }))
       if (!isDeepStrictEqual(observed, revision.upstreamAttribution))
         return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_TASK_MISMATCH" })
     }).pipe(Effect.provide(deps.context), Effect.mapError((error) => error instanceof UpstreamProvenance.Denied

@@ -169,6 +169,8 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["92b759346ac3366f26bc2940408770ba33767bc56108c9f3b0b5d13a58b9f127", ROSTER_V2],
   // Upstream line: the upstream authoring roster, before it merged with the discovery seat.
   ["a3299fc84b55ea2db06883778675d0f7747c0a585f26f815efd7a9db06f1f98c", ROSTER_V2],
+  // Before Jimmy's charter documented retained-source reads and the native tool/result-card shapes.
+  ["6a1f034e0bb11b6ba2962716b087effe72b591f292a06c823595b97690dcebac", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
