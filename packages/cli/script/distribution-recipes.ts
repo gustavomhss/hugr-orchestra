@@ -99,13 +99,15 @@ url='https://github.com/gustavomhss/hugr-orchestra'
 license=('MIT')
 makedepends=('jq')
 depends=('glibc' 'gcc-libs')
-# Preserve executable/addon bytes covered by payload hashes and signatures.
-options=('!strip')
+# libtool/staticlibs/purge scan recursively; docs/zipman use configured directories.
+# Keep prebuilt companions instead of stripping, removing or recompressing them.
+options=('!strip' '!debug' '!lto' 'libtool' 'staticlibs' '!purge' 'docs' '!zipman' 'emptydirs')
 provides=('orchestra')
 conflicts=('orchestra')
-source_x86_64=(${shell(assets.get("linux-x64-baseline")!.url)})
+# A safe filename owns the first :: delimiter, including for IPv6 and :: URL paths.
+source_x86_64=(${shell(`orchestra-${input.version}-linux-x64-baseline.tar.gz::${assets.get("linux-x64-baseline")!.url}`)})
 sha256sums_x86_64=('${assets.get("linux-x64-baseline")!.sha256}')
-source_aarch64=(${shell(assets.get("linux-arm64")!.url)})
+source_aarch64=(${shell(`orchestra-${input.version}-linux-arm64.tar.gz::${assets.get("linux-arm64")!.url}`)})
 sha256sums_aarch64=('${assets.get("linux-arm64")!.sha256}')
 
 package() {

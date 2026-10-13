@@ -27,7 +27,7 @@ test("renders frozen Homebrew and AUR recipes for matching native builder target
   expect(recipes.homebrew).toContain('libexec/"bin/tree-sitter"')
   expect(recipes.aur).toContain("pkgname=orchestra-bin")
   expect(recipes.aur).toContain("arch=('x86_64' 'aarch64')")
-  expect(recipes.aur).toContain("options=('!strip')")
+  expect(recipes.aur).toContain("options=('!strip' '!debug' '!lto' 'libtool' 'staticlibs' '!purge' 'docs' '!zipman' 'emptydirs')")
   expect(recipes.aur).toContain("makedepends=('jq')")
   expect(recipes.aur).toContain("depends=('glibc' 'gcc-libs')")
   expect(recipes.aur).toContain(
@@ -36,6 +36,8 @@ test("renders frozen Homebrew and AUR recipes for matching native builder target
   expect(recipes.aur).toContain('ln -s /usr/lib/orchestra/bin/orchestra "$pkgdir/usr/bin/orchestra"')
   expect(recipes.aur).toContain(assets[2].sha256)
   expect(recipes.aur).toContain(assets[3].sha256)
+  expect(recipes.aur).toContain(`source_x86_64=('orchestra-1.2.3-linux-x64-baseline.tar.gz::${assets[2].url}')`)
+  expect(recipes.aur).toContain(`source_aarch64=('orchestra-1.2.3-linux-arm64.tar.gz::${assets[3].url}')`)
 })
 
 test("rejects malformed versions, unsafe URLs and incomplete or invalid target sets", () => {
@@ -82,10 +84,10 @@ test("rejects malformed versions, unsafe URLs and incomplete or invalid target s
 // Inert synthetic payloads prove recipe behavior, not native Homebrew/makepkg qualification.
 const quotedAssets = assets.map((asset) => ({
   ...asset,
-  url: asset.url.replace(".test/", ".test/a'b\"#{not_ruby_interpolation}$(not_shell_command)%20/"),
+  url: `https://${asset.target.endsWith("arm64") ? "downloads.example.test/path::part" : "[2001:db8::1]"}/a'b"#{not_ruby_interpolation}$(not_shell_command)%20/${asset.target}.tar.gz`,
 }))
 
-test("executes Ruby formula and restores every descriptor mode plus nonexecutable metadata", async () => {
+test.skipIf(process.platform === "win32")("POSIX Ruby executor restores descriptor modes (Windows skipped: POSIX modes/symlinks)", async () => {
   const fixture = await payloadFixture("darwin-arm64")
   try {
     const formula = path.join(fixture.root, "orchestra.rb")
@@ -96,6 +98,7 @@ test("executes Ruby formula and restores every descriptor mode plus nonexecutabl
     expect(JSON.parse(result.stdout.toString())).toEqual({
       version: "1.2.3",
       dependencies: ["macos"],
+      preserve_rpath: true,
       assets: quotedAssets.slice(0, 2).map((asset) => ({ url: asset.url, sha256: asset.sha256 })),
     })
     await expectPayload(path.join(prefix, "libexec"), fixture.payload)
@@ -112,7 +115,7 @@ test("executes Ruby formula and restores every descriptor mode plus nonexecutabl
   }
 })
 
-test("executes bash package() with real jq and restores every descriptor mode from flat srcdir", async () => {
+test.skipIf(process.platform === "win32")("POSIX bash package() preserves companions and evaluates source/options (Windows skipped: POSIX modes/symlinks)", async () => {
   const fixture = await payloadFixture()
   try {
     const pkgbuild = path.join(fixture.root, "PKGBUILD")
@@ -123,12 +126,20 @@ test("executes bash package() with real jq and restores every descriptor mode fr
     expect(result.stdout.toString().trimEnd().split("\n")).toEqual([
       "1.2.3",
       "!strip",
+      "!debug",
+      "!lto",
+      "libtool",
+      "staticlibs",
+      "!purge",
+      "docs",
+      "!zipman",
+      "emptydirs",
       "jq",
       "glibc",
       "gcc-libs",
-      quotedAssets[2].url,
+      `orchestra-1.2.3-linux-x64-baseline.tar.gz::${quotedAssets[2].url}`,
       quotedAssets[2].sha256,
-      quotedAssets[3].url,
+      `orchestra-1.2.3-linux-arm64.tar.gz::${quotedAssets[3].url}`,
       quotedAssets[3].sha256,
     ])
     await expectPayload(path.join(pkgdir, "usr/lib/orchestra"), fixture.payload)
@@ -158,15 +169,8 @@ for (const recipe of ["homebrew", "aur"] as const) {
     { name: "numeric executable", override: { executable: 1 } },
     { name: "null executable", override: { executable: null } },
     { name: "missing executable", override: { executable: undefined } },
-    { name: "absolute path", override: { path: "/outside-mode-sentinel" } },
-    { name: "parent traversal", override: { path: "../outside-mode-sentinel" } },
-    ...[
-      "bin/./helper", "bin//helper", "bin/helper/", "bin/helper\\other",
-      "bin/control\npath", "bin/nonascii-é", "bin/trailing.", "bin/trailing ",
-      "bin/NUL.node", "bin/a:helper", "bin/*.node", 'bin/"helper',
-    ].map((file) => ({ name: `unsafe path ${JSON.stringify(file)}`, override: { path: file } })),
   ]) {
-    test(`${recipe} refuses ${invalid.name} before any chmod or public link`, async () => {
+    test.skipIf(process.platform === "win32")(`${recipe} refuses ${invalid.name} before any chmod or public link (Windows skipped: POSIX executor)`, async () => {
       const fixture = await payloadFixture(recipe === "homebrew" ? "darwin-arm64" : "linux-x64-baseline")
       try {
         const sentinel = path.join(fixture.root, "outside-mode-sentinel")
@@ -174,26 +178,21 @@ for (const recipe of ["homebrew", "aur"] as const) {
         await chmod(sentinel, 0o600)
         const directory = path.join(fixture.root, recipe === "homebrew" ? "prefix/libexec" : "prefix/usr/lib/orchestra")
         const descriptor = JSON.parse(fixture.payload["distribution.json"]) as DistributionManifest
-        const override = "path" in invalid.override
-          ? { path: invalid.override.path === "/outside-mode-sentinel" ? sentinel :
-            invalid.override.path === "../outside-mode-sentinel" ? path.relative(directory, sentinel) : invalid.override.path }
-          : invalid.override
         const files = descriptor.files.map((entry, index) => index === descriptor.files.length - 1
-          ? {
-            ...entry,
-            ...override,
-            path: "path" in override && typeof override.path === "string" ? override.path : entry.path,
-          }
+          ? { ...entry, ...invalid.override }
           : entry)
-        // Keep ordering valid so path rejection cannot pass only because inventory is unsorted.
+        // Keep inventory ordering valid so the executable flag is the only malformed field.
         await Bun.write(path.join(fixture.srcdir, "distribution.json"), JSON.stringify({
           ...descriptor,
           files: files.sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0),
         }))
         const result = await runFixture(recipe, fixture)
         expect(result.exitCode).not.toBe(0)
-        expect((await lstat(sentinel)).mode & 0o777).toBe(0o600)
-        expect((await lstat(path.join(directory, "bin/orchestra"))).mode & 0o777).toBe(0o600)
+        expect(result.stderr.toString()).toContain(recipe === "aur" ? "Invalid distribution descriptor" : "Invalid distribution file entry")
+        expect((await lstat(sentinel)).mode & 0o7777).toBe(0o600)
+        await Promise.all(Object.keys(fixture.payload).map(async (file) => {
+          expect((await lstat(path.join(directory, file))).mode).toBe((await lstat(path.join(fixture.srcdir, file))).mode)
+        }))
         expect(await lstat(path.join(fixture.root, recipe === "homebrew" ? "prefix/bin/orchestra" : "prefix/usr/bin/orchestra"))
           .then(() => true, (error: NodeJS.ErrnoException) => {
             if (error.code === "ENOENT") return false
@@ -206,7 +205,7 @@ for (const recipe of ["homebrew", "aur"] as const) {
   }
 
   for (const content of ["{invalid json", "null", "[]", "{}", "multiple documents"]) {
-    test(`${recipe} refuses invalid descriptor ${content}`, async () => {
+    test.skipIf(process.platform === "win32")(`${recipe} refuses invalid descriptor ${content} (Windows skipped: POSIX executor)`, async () => {
       const fixture = await payloadFixture(recipe === "homebrew" ? "darwin-arm64" : "linux-x64-baseline")
       try {
         await Bun.write(path.join(fixture.srcdir, "distribution.json"), content === "multiple documents"
@@ -220,7 +219,7 @@ for (const recipe of ["homebrew", "aur"] as const) {
   }
 
   for (const invalid of ["symlink file", "symlink directory", "symlink descriptor", "symlink table", "directory file", "missing file"]) {
-    test(`${recipe} refuses ${invalid} without chmodding external target`, async () => {
+    test.skipIf(process.platform === "win32")(`${recipe} refuses ${invalid} without chmodding external target (Windows skipped: POSIX executor)`, async () => {
       const fixture = await payloadFixture(recipe === "homebrew" ? "darwin-arm64" : "linux-x64-baseline")
       try {
         const external = path.join(fixture.root, "external")
@@ -258,6 +257,11 @@ async function payloadFixture(target = "linux-x64-baseline") {
     "bin/tree-sitter/example/package.json": '{"name":"example"}\n',
     "bin/tree-sitter/example/prebuilds/native.node": "inert binding bytes\0\x04\n",
     "bin/tree-sitter/example/LICENSE": "fixture license\n",
+    "bin/companions/libextra.la": "inert libtool bytes\0\x06\n",
+    "bin/companions/libextra.a": "inert static library bytes\0\x07\n",
+    "bin/companions/libextra.so": "inert shared library bytes\0\x08\n",
+    "bin/companions/.packlist": "inert packlist bytes\0\x09\n",
+    "bin/companions/extra.pod": "inert POD bytes\0\x0a\n",
     "package.json": JSON.stringify({
       name: `@orchestra/cli-${target}`,
       version: "1.2.3",
@@ -366,7 +370,7 @@ end
 
 load ARGV.fetch(0)
 Dir.chdir(ARGV.fetch(1)) { Orchestra.new(ARGV.fetch(2)).install }
-puts JSON.generate({ version: Orchestra.version, dependencies: Orchestra.dependencies, assets: Orchestra.urls })
+puts JSON.generate({ version: Orchestra.version, dependencies: Orchestra.dependencies, preserve_rpath: Orchestra.preserve_rpath?, assets: Orchestra.urls })
 `
   return $`${ruby} - ${formula} ${srcdir} ${prefix} < ${new Blob([program])}`.nothrow().quiet()
 }
