@@ -19,9 +19,10 @@ export function build<A, E>(root: LayerNode.Node<A, E, any>, replacements: Layer
     return LayerNode.compile(root, allReplacements, {
       // Bind after replacement resolution so concrete maps and explicit replacements
       // captured by constructors share the same completed application exports.
-      transformLayer: (layer, node) => node.name === LocationServiceMap.node.name
-        ? LocationServiceMap.withGlobalContext(layer, Deferred.await(globalContext))
-        : layer,
+      transformLayer: (layer, node) =>
+        node.name === LocationServiceMap.node.name
+          ? LocationServiceMap.withGlobalContext(layer, Deferred.await(globalContext))
+          : layer,
     }).pipe(
       // Startup forks may acquire Locations while the root is still building.
       Layer.tap((context) => Deferred.succeed(globalContext, context)),
