@@ -67,6 +67,7 @@ import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import * as SessionExecutionLocal from "@orchestra/core/session/execution/local"
 import { lazy } from "@/util/lazy"
@@ -306,7 +307,7 @@ export function createRoutes(
     Layer.provide(PtyEnvironment.layer),
     Layer.provide(
       // Scheduled tasks share this build so their runs go through the same Session coordinator.
-      AppNodeBuilderV1.build(LayerNode.group([SessionV2.node, ScheduledTask.node, ScheduledTask.daemonNode]), [
+      AppNodeBuilderV1.build(LayerNode.group([SessionV2.node, SessionExecution.node, SessionSubagentModels.node, ScheduledTask.node, ScheduledTask.daemonNode]), [
         [LocationServiceMap.node, locationServiceMapV2],
         [SessionExecution.node, SessionExecutionLocal.node],
       ]),
