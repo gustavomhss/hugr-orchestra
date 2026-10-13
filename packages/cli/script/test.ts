@@ -3,6 +3,9 @@
 // belong to a dedicated native lane and refuse at load anywhere else. A new test file runs by default; leaving one out
 // takes an entry naming the lane that runs it.
 const elsewhere = [
+  // distribution-bundle.yml: native POSIX lifecycle and native macOS Homebrew qualification only.
+  "test/distribution-native.test.ts",
+  "test/distribution-homebrew.test.ts",
   // artifact-native.yml: needs ORCHESTRA_ARTIFACT_NATIVE_LANE on a Darwin, musl or glibc-with-musl host, and imports
   // the artifact suites below on that host.
   "test/artifact-native-lane.test.ts",
