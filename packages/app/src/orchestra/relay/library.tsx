@@ -2,8 +2,10 @@ import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import type { RelayDocument } from "./client"
+import { rememberDocument } from "./cache"
 import { CreateWorkflowDialog, templateID, templates } from "./create"
-import { DeleteDialog, failure } from "./dialogs"
+import { createAction, DeleteDialog, failure } from "./dialogs"
+import { profileDrafts } from "./drafts"
 import { badgeTone, liveRuns, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
 import { phaseNames, RunBadge, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
@@ -23,6 +25,7 @@ type Props = {
 
 export function WorkflowLibrary(props: Props) {
   const copy = useRelayCopy()
+  const duplication = createAction()
   const [query, setQuery] = createSignal("")
   const [filter, setFilter] = createSignal<"all" | "published" | "draft">("all")
   const [template, setTemplate] = createSignal<string>()
@@ -45,17 +48,18 @@ export function WorkflowLibrary(props: Props) {
   const live = createMemo(() => liveRuns(runs()).filter((run) => flows().has(run.documentID)))
   const waiting = () => live().filter((run) => run.status === "parked").length
   const running = () => live().filter((run) => run.status === "running").length
-  const duplicate = async (document: RelayDocument) => {
-    const created = await props.source.client
-      .create(copyDocument(document, copy.t("orchestra.workflows.create.copyName", { name: document.name })))
-      .catch(
-        (error: unknown) =>
-          void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
-      )
-    if (!created) return
-    props.source.invalidate("documents")
-    props.go(relayPath.editor("workflow", created.id))
-  }
+  const duplicate = (document: RelayDocument) =>
+    duplication.run(async () => {
+      const created = await props.source.client
+        .create(copyDocument(document, copy.t("orchestra.workflows.create.copyName", { name: document.name })))
+        .catch(
+          (error: unknown) =>
+            void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
+        )
+      if (!created) return
+      await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      props.go(relayPath.editor("workflow", created.id))
+    })
   const openTemplate = (id: string) => {
     setTemplate(id)
     props.go(relayPath.create("workflow"))
@@ -71,7 +75,12 @@ export function WorkflowLibrary(props: Props) {
       icon: "history",
       run: () => props.go(relayPath.history("workflow", document.id)),
     },
-    { label: copy.t("orchestra.workflows.menu.duplicate"), icon: "workflows", run: () => void duplicate(document) },
+    {
+      label: copy.t("orchestra.workflows.menu.duplicate"),
+      icon: "workflows",
+      disabled: duplication.busy(),
+      run: () => void duplicate(document),
+    },
     "-",
     {
       label: copy.t("orchestra.workflows.menu.delete"),
@@ -92,7 +101,7 @@ export function WorkflowLibrary(props: Props) {
           type="button"
           class="mx-btn primary"
           disabled={!props.source.documents.isSuccess}
-          onClick={() => props.go(relayPath.create("workflow"))}
+          onClick={() => openTemplate(templateID(props.source.list()))}
         >
           <Ic name="plus" />
           {copy.t("orchestra.workflows.new")}
@@ -123,6 +132,14 @@ export function WorkflowLibrary(props: Props) {
           </Show>
         </button>
       </div>
+      <For each={profileDrafts(props.source).filter((draft) => draft.state.flow.kind === "workflow" && (draft.state.save.dirty || draft.state.save.state === "saving"))}>
+        {(draft) => <p class="mx-note" role="status">
+          {copy.t("orchestra.workflows.drafts.retained", { name: draft.state.name })}
+          <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor("workflow", draft.state.base.id))}>
+            {copy.t("orchestra.workflows.menu.open")}
+          </button>
+        </p>}
+      </For>
       <Switch>
         <Match when={props.source.documents.isPending}>
           <p class="mx-empty" role="status">
@@ -169,7 +186,7 @@ export function WorkflowLibrary(props: Props) {
                 <strong>{copy.t("orchestra.workflows.empty.title")}</strong>
                 {copy.t("orchestra.workflows.empty.body")}
                 <br />
-                <button type="button" class="mx-btn primary" onClick={() => props.go(relayPath.create("workflow"))}>
+                <button type="button" class="mx-btn primary" onClick={() => openTemplate("blank")}>
                   <Ic name="plus" />
                   {copy.t("orchestra.workflows.new")}
                 </button>

@@ -1,5 +1,7 @@
 import { createSignal, For, type JSX, Show } from "solid-js"
 import type { RelayDocument } from "./client"
+import { deleteDocument } from "./drafts"
+import { rememberDocument } from "./cache"
 import { checkCount, type Flow, retryBudget, steps } from "./graph"
 import { phaseNames } from "./parts"
 import type { RelaySource } from "./source"
@@ -35,7 +37,7 @@ function Foot(props: {
 }) {
   return (
     <>
-      <button type="button" class="mx-btn" onClick={props.onCancel}>
+      <button type="button" class="mx-btn" disabled={props.busy} onClick={props.onCancel}>
         {props.cancel}
       </button>
       <button
@@ -53,24 +55,25 @@ export function PublishDialog(props: {
   document: RelayDocument
   flow: Flow
   source: RelaySource
+  active?: () => boolean
+  retain?: () => () => void
   onClose: () => void
 }) {
   const copy = useRelayCopy()
   const action = createAction()
   const workflow = props.flow.kind === "workflow"
   const publish = () =>
-    action.run(async () => {
-      const published = await props.source.client.publish(props.document)
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) =>
-          list?.map((item) => (item.id === published.id ? published : item)),
-        )
-      props.onClose()
+    action.run(() => {
+      const release = props.retain?.()
+      return props.source.client.publish(props.document).then(async (published) => {
+        await rememberDocument(props.source.queryClient(), props.source.key("documents"), published, props.active)
+        props.onClose()
+      }).finally(() => release?.())
     })
   return (
     <RelayDialog
       title={copy.t("orchestra.workflows.publish.title", { version: props.document.versionCounter })}
+      busy={action.busy()}
       description={copy.t(workflow ? "orchestra.workflows.publish.workflow" : "orchestra.hooks.publish.description")}
       onClose={props.onClose}
       onSubmit={publish}
@@ -138,19 +141,15 @@ export function DeleteDialog(props: {
   const action = createAction()
   const remove = () =>
     action.run(async () => {
-      await props.source.client.remove(props.document.id)
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) =>
-          list?.filter((item) => item.id !== props.document.id),
-        )
+      await deleteDocument(props.source, props.document.id)
       props.onDeleted()
     })
   return (
     <RelayDialog
       title={copy.t("orchestra.workflows.delete.title", { name: props.document.name })}
+      busy={action.busy()}
       description={copy.t(
-        props.kind === "workflow" ? "orchestra.workflows.delete.workflow" : "orchestra.hooks.delete.description",
+        props.kind === "workflow" ? "orchestra.workflows.delete.retained" : "orchestra.workflows.delete.hookRetained",
       )}
       onClose={props.onClose}
       onSubmit={remove}
