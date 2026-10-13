@@ -427,7 +427,7 @@ export const make = Effect.gen(function* () {
         { discard: true },
       )
     }
-    if (profile.requireSandbox && command !== undefined && !["bash", "shell", "task"].includes(input.tool))
+    if (profile.requireSandbox && command !== undefined && !["bash", "shell", "task", "process"].includes(input.tool))
       return yield* new Denied({ reason: "required-process-sandbox-unbound" })
 
     const writing = ["write", "edit", "multiedit", "apply_patch"].includes(input.tool)

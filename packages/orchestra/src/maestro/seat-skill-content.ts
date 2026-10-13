@@ -20,7 +20,8 @@ export function validate(id: string, files: Record<string, string>, skills?: rea
       throw new PackagingError(`Nonlossless UTF-8 seat skill content: ${id}/${file}`)
   })
   if (!skills) return
-  if (new Set(skills).size !== skills.length || skills.some((skill) => !skill.startsWith(`${id}-`) || !/^[a-z]+(?:-[a-z]+)*$/.test(skill)))
+  if (new Set(skills).size !== skills.length || skills.some((skill) =>
+    (!skill.startsWith(`${id}-`) && !(id === "maestro" && skill === "frame-request")) || !/^[a-z]+(?:-[a-z]+)*$/.test(skill)))
     throw new PackagingError(`Invalid declared seat entry skills: ${id}`)
   const authored = Object.keys(files).filter((file) => path.posix.basename(file) === "SKILL.md").toSorted()
   if (JSON.stringify(authored) !== JSON.stringify(skills.map((skill) => `${skill}/SKILL.md`).toSorted()))
