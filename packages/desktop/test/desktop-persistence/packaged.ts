@@ -42,6 +42,8 @@ export async function run(control?: "delete-blob") {
   const destination = path.resolve(import.meta.dirname, "../../.desktop-persistence-evidence/result.json")
   if (!control) assert.equal(existsSync(destination), false, "SUCCESS_RECEIPT_ALREADY_EXISTS")
   const root = realpathSync(mkdtempSync(path.join(realpathSync(tmpdir()), "desktop-persistence-")))
+  const rootIdentity = statSync(root, { bigint: true })
+  assert.ok(rootIdentity.isDirectory() && rootIdentity.ino !== 0n, "OWNED_ROOT_IDENTITY_UNAVAILABLE")
   const owned = Object.fromEntries(["home", "appdata", "local", "data", "state", "config", "cache", "tmp", "empty", "managed"]
     .map((name) => [name, path.join(root, name)]))
   Object.values(owned).forEach((directory) => mkdirSync(directory))
@@ -75,16 +77,28 @@ export async function run(control?: "delete-blob") {
     })
   }
   try {
+    assertOwned(owned.home, root, rootIdentity)
+    assert.throws(() => assertOwned(root, root, rootIdentity), /REPORTED_PATH_NOT_OWNED/)
+    assert.throws(() => assertOwned(path.dirname(root), root, rootIdentity), /REPORTED_PATH_NOT_OWNED/)
+    const escape = path.join(owned.empty, "outside-link")
+    symlinkSync(path.dirname(root), escape, process.platform === "win32" ? "junction" : "dir")
+    try { assert.throws(() => assertOwned(escape, root, rootIdentity), /REPORTED_PATH_NOT_OWNED/) }
+    finally { rmSync(escape) }
+    const displaced = `${root}.held`
+    assert.equal(existsSync(displaced), false, "ROOT_CONTROL_DESTINATION_EXISTS")
+    renameSync(root, displaced)
+    try {
+      symlinkSync(path.dirname(root), root, process.platform === "win32" ? "junction" : "dir")
+      assert.throws(() => assertOwned(path.join(root, path.basename(displaced), "home"), root, rootIdentity), /OWNED_ROOT_IDENTITY_CHANGED/)
+    } finally {
+      if (existsSync(root)) rmSync(root)
+      renameSync(displaced, root)
+    }
+    assertOwned(owned.home, root, rootIdentity)
     shell.lease = await isolateWindowsShell({ appdata: owned.appdata })
     shell.ready = true
     Object.keys(process.env).forEach((key) => delete process.env[key])
     Object.assign(process.env, env)
-    assertOwned(owned.home, root)
-    assert.throws(() => assertOwned(path.dirname(root), root), /REPORTED_PATH_NOT_OWNED/)
-    const escape = path.join(owned.empty, "outside-link")
-    symlinkSync(path.dirname(root), escape, process.platform === "win32" ? "junction" : "dir")
-    try { assert.throws(() => assertOwned(escape, root), /REPORTED_PATH_NOT_OWNED/) }
-    finally { rmSync(escape) }
     await child({ command: "git", args: ["--version"], cwd: owned.home, env, timeoutMS: 20_000 }, async () => {
       throw new Error("PROOF_BODY_FAILURE_CONTROL")
     }).then(() => assert.fail("PROOF_BODY_FAILURE_NOT_PROPAGATED"), (error: unknown) => {
@@ -105,7 +119,7 @@ export async function run(control?: "delete-blob") {
       if (control && index === 2) return
       if (control && index === 1) {
         assert.ok(mutation.seeded && placement.draftDB, "CONTROL_SEED_INCOMPLETE")
-        assertOwned(placement.draftDB, root)
+        assertOwned(placement.draftDB, root, rootIdentity)
         // SQLite requires an explicit read mode when creation is disabled.
         const db = new Database(placement.draftDB, { readwrite: true, create: false })
         const remove = db.prepare("DELETE FROM blob WHERE id = ?")
@@ -145,20 +159,22 @@ export async function run(control?: "delete-blob") {
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
         assert.equal(report.db, env.ORCHESTRA_DB, "PERSISTENT_DB_ISOLATION_LOST")
         assert.equal(realpathSync(report.resources), realpathSync(manifest.resources), "RESOURCES_MANIFEST_MISMATCH")
-        assertOwned(report.home, root)
-        assertOwned(report.db, root)
-        assertOwned(report.userData, root)
+        assertOwned(report.home, root, rootIdentity)
+        assertOwned(report.db, root, rootIdentity)
+        assertOwned(report.userData, root, rootIdentity)
         const expected = path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta")
+        assert.ok(existsSync(expected), `USERDATA_EXPECTED_MISSING:${JSON.stringify({ actual: report.userData, expected })}`)
         const userData = statSync(report.userData, { bigint: true })
         const expectedUserData = statSync(expected, { bigint: true })
         assert.ok(userData.isDirectory() && expectedUserData.isDirectory() && userData.ino !== 0n &&
-          userData.dev === expectedUserData.dev && userData.ino === expectedUserData.ino, "USERDATA_ISOLATION_LOST")
+          userData.dev === expectedUserData.dev && userData.ino === expectedUserData.ino,
+          `USERDATA_ISOLATION_LOST:${JSON.stringify({ actual: report.userData, expected })}`)
         assert.equal(report.quit, `${reportFile}.quit`, "QUIT_PATH_NOT_OWNED")
         assert.ok(typeof report.token === "string" && report.token.length > 0, "QUIT_TOKEN_MISSING")
         if (placement.userData) assert.equal(report.userData, placement.userData, "REOPEN_CHANGED_USERDATA")
         placement.userData = report.userData
         placement.draftDB = path.join(report.userData, "drafts.sqlite")
-        assertOwned(placement.draftDB, root)
+        assertOwned(placement.draftDB, root, rootIdentity)
         await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => events(reportFile).find((event) =>
           event.pid === report.pid && event.name === "gui-visible" && event.windows?.some((window) => window.visible) && event.displays?.length))
         const debuggerClient = await DesktopProof.connect(port, host.signal)
@@ -271,11 +287,11 @@ function inspect(filename: string, expected: typeof documents) {
   } finally { document.finalize(); blob.finalize(); db.close(true) }
 }
 
-function assertOwned(filename: string, root: string) {
+function assertOwned(filename: string, root: string, identity: { dev: bigint; ino: bigint }) {
   // NTFS short names and case aliases need physical ancestor identity, after resolving links.
+  const currentRoot = statSync(root, { bigint: true })
+  assert.ok(currentRoot.isDirectory() && currentRoot.dev === identity.dev && currentRoot.ino === identity.ino, "OWNED_ROOT_IDENTITY_CHANGED")
   const canonical = realpathSync.native(filename)
-  const identity = statSync(root, { bigint: true })
-  assert.ok(identity.isDirectory() && identity.ino !== 0n, "OWNED_ROOT_IDENTITY_UNAVAILABLE")
   const ancestor = { current: path.dirname(canonical) }
   while (true) {
     const observed = statSync(ancestor.current, { bigint: true })
