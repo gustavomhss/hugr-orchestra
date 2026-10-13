@@ -1,12 +1,9 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import fs from "node:fs/promises"
-import { isBuiltin } from "node:module"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { Cause, Effect, Layer, Schema } from "effect"
-import ts from "typescript"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { Config } from "../src/config"
 import { Global } from "../src/global"
@@ -16,82 +13,9 @@ import { AbsolutePath } from "../src/schema"
 import { SkillV2 } from "../src/skill"
 import { PackagedSkills } from "../src/packaged-skills"
 import { location } from "./fixture/location"
+import { bundle, isolated, snapshot, trees } from "./fixture/packaged-skills"
 import { testEffect } from "./lib/effect"
 import { host } from "./plugin/host"
-
-const trees = {
-  backend: {
-    "backend-implement/SKILL.md": "---\nname: backend-implement\n---\nRead references/deep/contract.md.\n",
-    "backend-implement/references/deep/contract.md": "Exact UTF-8: café, 日本語\n",
-    "backend-implement/references/empty.md": "",
-  },
-  archie: {
-    "archie-design/SKILL.md": "---\nname: archie-design\n---\nRead references/architecture.md.\n",
-    "archie-design/references/architecture.md": "Design contract\r\n",
-  },
-}
-
-async function isolated(run: (cache: string) => Promise<void>) {
-  const cache = await fs.mkdtemp(path.join(tmpdir(), "orchestra-packaged-skills-"))
-  try {
-    await run(cache)
-  } finally {
-    await fs.rm(cache, { recursive: true, force: true })
-  }
-}
-
-async function bundle(entry: string, payload: unknown, outfile: string) {
-  const packaged = path.resolve(import.meta.dirname, "../src/packaged-skills.ts")
-  const result = await Bun.build({
-    entrypoints: [entry],
-    target: "bun",
-    format: "esm",
-    minify: true,
-    define: { ORCHESTRA_PACKAGED_SKILLS: JSON.stringify(payload) },
-    plugins: [{
-      name: "preserve-real-service-identities",
-      setup(build) {
-        // Bun can retain the original external specifier despite onResolve returning an absolute path.
-        // Rewrite only AST module specifiers, sharing the host's real modules without copying implementations.
-        build.onLoad({ filter: /\.ts$/ }, async (args) => {
-          if (args.path !== entry && args.path !== packaged) return
-          const text = await Bun.file(args.path).text()
-          const source = ts.createSourceFile(args.path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
-          const edits = source.statements.flatMap((statement) => {
-            if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement)) return []
-            const specifier = statement.moduleSpecifier
-            if (!specifier || !ts.isStringLiteral(specifier) || isBuiltin(specifier.text)) return []
-            const resolved = Bun.resolveSync(specifier.text, path.dirname(args.path))
-            // Keep entry/self namespace exports and packaged-skills inside this build's define boundary.
-            if (resolved === entry || resolved === packaged) return []
-            return [{
-              start: specifier.getStart(source),
-              end: specifier.getEnd(),
-              value: JSON.stringify(pathToFileURL(resolved).href),
-            }]
-          })
-          return {
-            contents: edits.toReversed().reduce(
-              (contents, edit) => contents.slice(0, edit.start) + edit.value + contents.slice(edit.end),
-              text,
-            ),
-            loader: "ts",
-          }
-        })
-        build.onResolve({ filter: /.*/ }, (args) => {
-          if (args.path === entry) return
-          if (isBuiltin(args.path) || args.path.startsWith("file:")) return { path: args.path, external: true }
-          const resolved = Bun.resolveSync(args.path, args.resolveDir)
-          if (resolved === entry || resolved === packaged) return { path: resolved }
-          throw new Error(`External module specifier was not rewritten: ${args.path}`)
-        })
-      },
-    }],
-  })
-  expect(result.success, JSON.stringify(result.logs)).toBe(true)
-  expect(result.outputs).toHaveLength(1)
-  await Bun.write(outfile, result.outputs[0])
-}
 
 test("source execution has no embedded trees and does not create an extraction cache", () => isolated(async (cache) => {
   expect(PackagedSkills.embedded()).toBeUndefined()
@@ -178,37 +102,6 @@ test.each([
   expect(await PackagedSkills.materialize({ cache, version: other, trees })).toEqual(next)
 }))
 
-test.each(["tamper", "missing", "extra", "empty-directory", "hardlink", "symlink", "root-symlink"])(
-  "refuses existing %s tree and leaves evidence untouched",
-  (mode) => isolated(async (cache) => {
-    const roots = await PackagedSkills.materialize({ cache, version: "1", trees })
-    const target = path.dirname(roots[0])
-    const file = path.join(roots[1], "backend-implement/SKILL.md")
-    if (mode === "tamper") await fs.writeFile(file, "tampered")
-    if (mode === "missing") await fs.unlink(file)
-    if (mode === "extra") await fs.writeFile(path.join(target, "extra.md"), "unexpected")
-    if (mode === "empty-directory") await fs.mkdir(path.join(target, "unexpected"))
-    if (mode === "hardlink") {
-      await fs.rename(file, path.join(cache, "linked.md"))
-      await fs.link(path.join(cache, "linked.md"), file)
-    }
-    if (mode === "symlink") {
-      const directory = path.join(roots[1], "backend-implement/references")
-      await fs.rename(directory, path.join(cache, "references"))
-      await fs.symlink(path.join(cache, "references"), directory, process.platform === "win32" ? "junction" : "dir")
-    }
-    if (mode === "root-symlink") {
-      await fs.rename(target, path.join(cache, "redirected"))
-      await fs.symlink(path.join(cache, "redirected"), target, process.platform === "win32" ? "junction" : "dir")
-    }
-    const before = await fs.lstat(target)
-    await expect(PackagedSkills.materialize({ cache, version: "1", trees })).rejects.toBeInstanceOf(PackagedSkills.PackagingError)
-    expect((await fs.lstat(target)).ino).toBe(before.ino)
-    if (mode === "tamper") expect(await fs.readFile(file, "utf8")).toBe("tampered")
-    expect(await fs.readdir(path.join(cache, "packaged-skills"))).toEqual([path.basename(target)])
-  }),
-)
-
 test.each([
   {}, [], null, { backend: {} }, { "../backend": trees.backend },
   { backend: { "references/only.md": "missing entry" } },
@@ -275,15 +168,24 @@ configIt.live("required compiled Config initialization admits valid roots and re
     expect(path.basename(path.dirname(roots[0]))).toBe(
       `${InstallationVersion.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 60)}-${createHash("sha256").update(InstallationVersion, "utf8").digest("hex")}-${PackagedSkills.digest(trees)}`,
     )
-    const file = path.join(roots[1], "backend-implement/SKILL.md")
-    yield* Effect.promise(() => fs.writeFile(file, "tampered"))
-    // Accessors reuse admission; reopening the required Config layer revalidates publication.
-    expect(yield* admitted.packagedSkills()).toBe(roots)
-    const corrupt = yield* boot(compiled.node).pipe(Effect.exit)
-    expect(corrupt._tag).toBe("Failure")
-    if (corrupt._tag !== "Failure") throw new Error("Corrupt publication admitted required Config")
-    expect(Cause.pretty(corrupt.cause)).toContain("Packaged skill bytes differ: backend/backend-implement/SKILL.md")
-    expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toBe("tampered")
+    for (const [relative, text] of Object.entries(trees.backend)) {
+      const file = path.join(roots[1], relative)
+      yield* Effect.promise(() => fs.writeFile(file, "tampered"))
+      const before = yield* Effect.promise(() => snapshot(path.join(cache, "packaged-skills")))
+      // Accessors reuse admission; reopening the required Config layer revalidates every reference too.
+      expect(yield* admitted.packagedSkills()).toBe(roots)
+      const corrupt = yield* boot(compiled.node).pipe(Effect.exit)
+      expect(corrupt._tag).toBe("Failure")
+      if (corrupt._tag !== "Failure") throw new Error(`Corrupt publication admitted required Config: ${relative}`)
+      expect(Cause.pretty(corrupt.cause)).toContain(`Packaged skill bytes differ: backend/${relative}`)
+      expect(yield* Effect.promise(() => snapshot(path.join(cache, "packaged-skills")))).toEqual(before)
+      expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toBe("tampered")
+      // Restore only in the test, so the next iteration corrupts exactly one file.
+      yield* Effect.promise(() => fs.writeFile(file, text))
+      const restored = yield* boot(compiled.node)
+      if (!restored.packagedSkills) throw new Error("Restored required Config did not expose packaged roots")
+      expect(yield* restored.packagedSkills()).toEqual(roots)
+    }
     const absent = yield* boot(empty.node).pipe(Effect.exit)
     expect(absent._tag).toBe("Failure")
     if (absent._tag !== "Failure") throw new Error("Empty compiled payload admitted required Config")
