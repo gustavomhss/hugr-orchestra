@@ -37,11 +37,7 @@ export function make<T extends Declaration>(modules: readonly T[], aliases: Read
   if (!aliases || typeof aliases !== "object" || Array.isArray(aliases)) throw new Error("MODULE_ALIASES_INVALID")
   const registered = new Map<string, ReturnType<typeof requireSelector>>()
 
-  const resolve = (selector: Selector) => {
-    const name = typeof selector === "string" ? requireName(selector) : undefined
-    const identity = requireSelector(name === undefined
-      ? selector
-      : registered.get(name) ?? { name })
+  const select = (identity: Exclude<Selector, string>) => {
     const matches = declarations.filter((module) => module.name === identity.name &&
       (identity.kind === undefined || module.kind === identity.kind) &&
       (identity.scope === undefined || module.scope === identity.scope))
@@ -57,9 +53,18 @@ export function make<T extends Declaration>(modules: readonly T[], aliases: Read
     requireName(name)
     const target = requireSelector(identity)
     if (target.kind === undefined) throw new Error(`MODULE_ALIAS_IDENTITY_MISSING:${JSON.stringify(name)}`)
-    resolve(target)
-    registered.set(name, target)
+    const found = select(target)
+    registered.set(name, { kind: found.kind, name: found.name, scope: found.scope })
   })
+
+  const resolve = (selector: Selector) => {
+    const requested = requireSelector(typeof selector === "string" ? { name: requireName(selector) } : selector)
+    const alias = registered.get(requested.name)
+    if (alias && ((requested.kind !== undefined && requested.kind !== alias.kind) ||
+      (requested.scope !== undefined && requested.scope !== alias.scope)))
+      throw new Error(`MODULE_ALIAS_QUALIFIER_MISMATCH:${JSON.stringify(requested)}`)
+    return select(alias ?? requested)
+  }
   return { resolve }
 }
 

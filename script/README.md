@@ -48,7 +48,7 @@ const core = modules.resolve("core")
 const sdk = modules.resolve({ kind: "bun", name: "@orchestra/sdk" })
 ```
 
-Canonical names and caller-registered legacy aliases return the original declaration, including its captured `path`, `manifest`, exports, and scripts. A folder move changes those captured paths rather than the package name. Optional scope selects a particular workspace when names are shared; it is the captured workspace path, not a permanent semantic ID.
+Canonical names and caller-registered legacy aliases return the original declaration, including its captured `path`, `manifest`, exports, and scripts. Aliases support string and object selectors; explicit kind/scope must agree with the registered declaration. Alias targets are canonical identities, so registrations never chain through another alias. A folder move changes captured paths rather than the package name. Optional scope selects a particular workspace when names are shared; it is the captured workspace path, not a permanent semantic ID.
 
 An empty inventory, invalid selector, duplicate identity, missing target, ambiguous match, or stale alias fails explicitly. Every alias is checked at construction, including unused registrations. Source directory names are not guessed from selectors. Manifestless assets retain their separate inventory surface; this resolver consumes Bun/npm/Cargo manifest declarations.
 

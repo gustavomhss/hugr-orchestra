@@ -97,3 +97,25 @@ test("does not treat prototype properties as aliases and snapshots registered ta
   expect(() => resolver.resolve("toString")).toThrow("MODULE_NOT_FOUND")
   expect(() => resolver.resolve("constructor")).toThrow("MODULE_NOT_FOUND")
 })
+
+test("resolves object aliases and refuses qualifier conflicts", () => {
+  const declaration = { kind: "bun", scope: ".", name: "@fixture/client", path: "apps/frontend", manifest: "apps/frontend/package.json" } as const
+  const resolver = ModuleResolver.make([declaration], { client: { kind: "bun", name: "@fixture/client" } })
+  expect(resolver.resolve({ name: "client" })).toBe(declaration)
+  expect(resolver.resolve({ name: "client", kind: "bun", scope: "." })).toBe(declaration)
+  expect(() => resolver.resolve({ name: "client", kind: "npm" })).toThrow("MODULE_ALIAS_QUALIFIER_MISMATCH")
+  expect(() => resolver.resolve({ name: "client", scope: "another" })).toThrow("MODULE_ALIAS_QUALIFIER_MISMATCH")
+})
+
+test("alias registrations resolve canonical targets without chaining through aliases", () => {
+  const modules = [
+    { kind: "bun", scope: ".", name: "one", path: "packages/one", manifest: "packages/one/package.json" },
+    { kind: "bun", scope: ".", name: "two", path: "packages/two", manifest: "packages/two/package.json" },
+  ] as const
+  const resolver = ModuleResolver.make(modules, {
+    one: { kind: "bun", name: "two" },
+    legacy: { kind: "bun", name: "one" },
+  })
+  expect(resolver.resolve("one")).toBe(modules[1])
+  expect(resolver.resolve("legacy")).toBe(modules[0])
+})
