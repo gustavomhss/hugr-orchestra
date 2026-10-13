@@ -1,6 +1,6 @@
 import path from "node:path"
 
-export type Scope = { path: string; disposition: "retain-recovery" | "retain-runtime" | "review-history"; owner: string; readers: string[] }
+export type Scope = { path: string; disposition: "retain-recovery" | "retain-runtime" | "review-history"; owner: string; readers: string[]; uncertainty?: string }
 
 type Entry = { path: string; mode: string; blob: string; bytes: number }
 
@@ -36,7 +36,9 @@ function validateScopes(scopes: Scope[]) {
   if (!Array.isArray(scopes) || !scopes.length) throw new Error("ARCHIVE_SCOPES_EMPTY")
   scopes.forEach((scope) => {
     if (!scope || typeof scope.path !== "string" || !scope.path || path.posix.isAbsolute(scope.path) || path.win32.isAbsolute(scope.path) || scope.path.includes("\\") || path.posix.normalize(scope.path) !== scope.path || scope.path.split("/").some((part) => !part || part === "." || part === "..") || /[\0-\x1f\x7f]/.test(scope.path)) throw new Error(`ARCHIVE_SCOPE_PATH_INVALID:${scope?.path}`)
-    if (!["retain-recovery", "retain-runtime", "review-history"].includes(scope.disposition) || typeof scope.owner !== "string" || !scope.owner.trim() || !Array.isArray(scope.readers) || !scope.readers.length || scope.readers.some((reader) => typeof reader !== "string" || !reader.trim())) throw new Error(`ARCHIVE_SCOPE_INVALID:${scope.path}`)
+    if (!["retain-recovery", "retain-runtime", "review-history"].includes(scope.disposition) || typeof scope.owner !== "string" || !scope.owner.trim() || !Array.isArray(scope.readers) || !scope.readers.length || Array.from(scope.readers).some((reader) => typeof reader !== "string" || !reader.trim())) throw new Error(`ARCHIVE_SCOPE_INVALID:${scope.path}`)
+    if (scope.uncertainty !== undefined && (typeof scope.uncertainty !== "string" || !scope.uncertainty.trim()))
+      throw new Error(`ARCHIVE_SCOPE_INVALID:${scope.path}`)
   })
   const duplicate = scopes.find((scope, index) => scopes.some((other, otherIndex) => otherIndex !== index && (scope.path === other.path || scope.path.startsWith(`${other.path}/`) || other.path.startsWith(`${scope.path}/`))))
   if (duplicate) throw new Error(`ARCHIVE_SCOPE_OVERLAP:${duplicate.path}`)

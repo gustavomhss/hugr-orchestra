@@ -51,6 +51,13 @@ test("rejects unresolved revisions, empty scopes, unsafe paths and overlapping s
   }
 })
 
+test("rejects sparse reader declarations before reading Git", async () => {
+  const readers: string[] = []
+  readers.length = 1
+  await expect(archiveInventory(".", "HEAD", [{ path: "scope", disposition: "review-history", owner: "fixture", readers }]))
+    .rejects.toThrow("ARCHIVE_SCOPE_INVALID")
+})
+
 async function git(directory: string, args: string[], env: Record<string, string> = {}) {
   const process = Bun.spawn(["git", "-C", directory, ...args], { env: { ...processEnv(), ...env }, stdout: "pipe", stderr: "pipe" })
   const [output, error, exitCode] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited])

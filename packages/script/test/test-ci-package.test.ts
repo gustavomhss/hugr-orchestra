@@ -109,3 +109,18 @@ test("invalid registries fail before manifest reads or Python fallback", () => {
   })
   expect(reads).toEqual([])
 })
+
+test("canonical names colliding with another legacy alias keep their registered package", () => {
+  const collision = {
+    format: 1,
+    modules: [
+      { alias: "app", kind: "bun", scope: ".", name: "@fixture/app", path: "apps/ui" },
+      { alias: "sdk/js", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
+    ],
+  }
+  const read = (directory: string) => ({ name: directory === "apps/ui" ? "@fixture/app" : "app" })
+  expect(resolveTestPackage(collision, "sdk/js", read)).toEqual({ package: "sdk/js", directory: "libraries/sdk" })
+  expect(() => resolveTestPackage(collision, "app", read)).toThrow("TEST_PACKAGE_SELECTOR_AMBIGUOUS")
+  expect(resolveTestPackage(collision, "packages/app", read)).toEqual({ package: "app", directory: "apps/ui" })
+  expect(resolveTestPackage(collision, "@fixture/app", read)).toEqual({ package: "app", directory: "apps/ui" })
+})

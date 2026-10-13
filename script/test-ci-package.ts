@@ -19,9 +19,13 @@ export function resolveTestPackage(
   if (typeof selector !== "string" || !selector || selector.trim() !== selector || /[\x00-\x1f\x7f\\]/.test(selector))
     throw new Error(`TEST_PACKAGE_SELECTOR_INVALID:${selector}`)
   const legacy = selector.replace(/^\.\//, "").replace(/^packages\//, "").replace(/\/$/, "")
-  const entry = entries.find((entry) => entry.name === selector) ?? entries.find((entry) => entry.alias === legacy)
+  const canonical = entries.find((entry) => entry.name === selector)
+  const alias = entries.find((entry) => entry.alias === legacy)
+  if (canonical && alias && canonical !== alias && !/^(\.\/)?packages\//.test(selector))
+    throw new Error(`TEST_PACKAGE_SELECTOR_AMBIGUOUS:${selector}`)
+  const entry = /^(\.\/)?packages\//.test(selector) ? alias : canonical ?? alias
   if (entry) {
-    const module = catalog.resolve({ kind: entry.kind, scope: entry.scope, name: entry.name })
+    const module = catalog.resolve({ kind: entry.kind, scope: entry.scope, name: entry.alias })
     return { package: entry.alias, directory: module.path }
   }
   // Only the existing Python-only legacy layout may bypass the Bun registry.
