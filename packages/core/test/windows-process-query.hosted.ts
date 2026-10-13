@@ -165,13 +165,23 @@ setTimeout(() => console.log('LATE SUCCESS'), 20000);
     // Inspect the real expiry snapshot rendered in the error; no fake timers, census or process APIs.
     const diagnostic = JSON.parse(result.error.split("; diagnostics: ")[1])
     expect(result.diagnostics).toEqual(diagnostic)
-    expect(diagnostic).toMatchObject({
-      budgetMs: 10000, attested: true, admitted: true, sourceComplete: expect.any(Boolean),
-      complete: expect.any(Boolean), brokerClosed: expect.any(Boolean), controlClosed: expect.any(Boolean),
-      helperPID: expect.any(Number), source: { pid: recorded.pid, file: recorded.file, nonce: expect.any(String) },
-      bytes: 0, controlBytes: expect.any(Number), stderrBytes: 16384,
-      stderr: expect.stringContaining("deadline-stderr-marker"),
-    })
+    // Keep the snapshot intact: Bun's asymmetric object matcher can replace its
+    // fields with matcher objects before the phase/byte checks below.
+    expect(diagnostic.budgetMs).toBe(10000)
+    expect(diagnostic.attested).toBe(true)
+    expect(diagnostic.admitted).toBe(true)
+    expect(typeof diagnostic.sourceComplete).toBe("boolean")
+    expect(typeof diagnostic.complete).toBe("boolean")
+    expect(typeof diagnostic.brokerClosed).toBe("boolean")
+    expect(typeof diagnostic.controlClosed).toBe("boolean")
+    expect(typeof diagnostic.helperPID).toBe("number")
+    expect(diagnostic.source.pid).toBe(recorded.pid)
+    expect(diagnostic.source.file).toBe(recorded.file)
+    expect(typeof diagnostic.source.nonce).toBe("string")
+    expect(diagnostic.bytes).toBe(0)
+    expect(typeof diagnostic.controlBytes).toBe("number")
+    expect(diagnostic.stderrBytes).toBe(16384)
+    expect(diagnostic.stderr).toContain("deadline-stderr-marker")
     expect(diagnostic.elapsedMs).toBeGreaterThanOrEqual(10000)
     expect(diagnostic.sourceComplete).toBe(diagnostic.complete)
     expect(diagnostic.phaseMs.attested).toBeGreaterThanOrEqual(diagnostic.phaseMs.spawned)

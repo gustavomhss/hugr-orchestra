@@ -163,8 +163,11 @@ test("production TUI bootstrap then late import preserves fixed data and host ru
   ])
   expect(fixture.staticRGBA).toBe(RGBA)
   expect(fixture.reexportedRGBA).toBe(RGBA)
-  expect(fixture.requiredRGBA).toBe(RGBA)
-  expect(fixture.requireRGBA()).toBe(RGBA)
+  // Runtime modules are async virtual modules. Rewriting require's literal is
+  // covered above; synchronous execution retains Bun's existing rejection.
+  expect(() => fixture.requireRGBA()).toThrow(
+    `require() async module "${runtimeModuleIdForSpecifier("@opentui/core")}" is unsupported. use "await import()" instead.`,
+  )
   expect(await fixture.dynamicRGBA()).toBe(RGBA)
   expect(fixture.filesystem).toBe(Filesystem)
   expect(await fixture.dynamicFilesystem()).toBe(Filesystem)
