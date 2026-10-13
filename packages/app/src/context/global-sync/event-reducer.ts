@@ -16,7 +16,8 @@ import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
 import { diffs as list, message as clean } from "@/utils/diffs"
 import { messageKey } from "@/utils/session-message"
-import { applySessionManagementEvent, mergeSessionManagementInfo, type AppSession } from "@/utils/session"
+import { applySessionManagementEvent, decodeSessionManagementEvent, type AppSession } from "@/utils/session"
+import { sessionManagementFences } from "../session-management-state"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const SESSION_CONTENT_EVENTS = new Set([
@@ -130,10 +131,15 @@ export function applyDirectoryEvent(input: {
       return
     }
     case "session.created": {
-      const info = (event.properties as { info: AppSession }).info
-      const result = Binary.search(input.store.session, info.id, (s) => s.id)
+      const incoming = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
+      const info = sessionManagementFences(input.store, input.directory).merge(
+        incoming,
+        result.found ? input.store.session[result.index] : undefined,
+      )
+      if (info.time.archived !== undefined) break
       if (result.found) {
-        input.setStore("session", result.index, reconcile(mergeSessionManagementInfo(input.store.session[result.index], info)))
+        input.setStore("session", result.index, reconcile(info))
         break
       }
       const next = input.store.session.slice()
@@ -147,7 +153,10 @@ export function applyDirectoryEvent(input: {
     case "session.updated": {
       const incoming = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
-      const info = mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, incoming)
+      const info = sessionManagementFences(input.store, input.directory).merge(
+        incoming,
+        result.found ? input.store.session[result.index] : undefined,
+      )
       if (info.time.archived) {
         if (!result.found) break
         if (input.store.session[result.index]!.time.archived === info.time.archived) break
@@ -177,6 +186,7 @@ export function applyDirectoryEvent(input: {
       const properties = event.properties as { sessionID?: string; info?: Session }
       const sessionID = properties.info?.id ?? properties.sessionID
       if (!sessionID) break
+      sessionManagementFences(input.store, input.directory).delete(sessionID)
       const result = Binary.search(input.store.session, sessionID, (s) => s.id)
       const info = properties.info ?? (result.found ? input.store.session[result.index] : undefined)
       if (result.found) {
@@ -216,19 +226,31 @@ export function applyDirectoryEvent(input: {
     }
     case "session.next.subagent.models.changed":
     case "session.next.archive.changed": {
-      const properties = event.properties as { sessionID: string }
+      const decoded = decodeSessionManagementEvent(event)
+      if (!decoded) break
+      const properties = decoded.properties
+      const fences = sessionManagementFences(input.store, input.directory)
       const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-      if (!result.found) {
+      const current = result.found ? input.store.session[result.index] : fences.get(properties.sessionID)
+      if (!current) {
         // Restores can reintroduce an absent row. Reload that directory's authoritative list.
         if (event.type === "session.next.archive.changed") input.push(input.directory)
         break
       }
-      const info = applySessionManagementEvent(input.store.session[result.index]!, event)
-      if (!info) break
+      const changed = applySessionManagementEvent(current, decoded)
+      if (!changed) break
+      const info = fences.merge(changed, current)
       if (info.time.archived !== undefined) {
+        if (!result.found) break
         input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
         cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
         if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
+        break
+      }
+      if (!result.found) {
+        // A sequenced restore carries the fence into its reintroduced row before the list reload.
+        applyDirectoryEvent({ ...input, event: { type: "session.updated", properties: { info } } })
+        input.push(input.directory)
         break
       }
       input.setStore("session", result.index, reconcile(info))
