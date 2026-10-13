@@ -1,0 +1,146 @@
+name: distribution-bundle
+on:
+  push:
+    branches: [distribution-bundle]
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  CI: "true"
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: ./.github/actions/setup-bun
+      - run: git fetch --depth=1 origin dev:refs/remotes/origin/dev
+      - run: bun typecheck
+        working-directory: packages/cli
+      - run: bun typecheck
+        working-directory: packages/core
+      - run: bun run check:spawn-imports
+      - run: bun run check:godfile
+        env:
+          GODFILE_BASE_REF: origin/dev
+      - run: git diff --check origin/dev HEAD
+  qualification:
+    name: qualification (${{ matrix.package }}, ${{ matrix.host }})
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - package: core
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/packaged-skills.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+          - package: core
+            host: windows-latest
+            cpu: X64
+            platform: win32
+            files: [./test/packaged-skills.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+          - package: cli
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: cli
+            host: windows-latest
+            cpu: X64
+            platform: win32
+            # Payload/launcher/process wiring only; Windows native runtime remains unqualified.
+            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: cli
+            host: ubuntu-24.04-arm
+            cpu: ARM64
+            platform: linux
+            files: [./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: cli
+            host: macos-14
+            cpu: ARM64
+            platform: darwin
+            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: cli
+            host: macos-15-intel
+            cpu: X64
+            platform: darwin
+            files: [./test/distribution-payload.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+    env:
+      ROW: ${{ toJSON(matrix) }}
+      PACKAGE: ${{ matrix.package }}
+      ORCHESTRA_OMNI_CONTROL: suite
+      ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: ./.github/actions/setup-bun
+      - name: Assert native CPU and exact files
+        run: |
+          set -euo pipefail
+          bun --eval "$(cat <<'BUN'
+          import { realpathSync, statSync, writeFileSync } from 'node:fs'
+          import path from 'node:path'
+          import { validateRequest } from './script/test-ci-request.ts'
+          // bundle-program:begin
+          const row = JSON.parse(process.env.ROW)
+          const arch = { X64: 'x64', ARM64: 'arm64' }[row.cpu]
+          const os = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }[row.platform]
+          if (!arch || !os || process.arch !== arch || process.platform !== row.platform || process.env.RUNNER_ARCH !== row.cpu || process.env.RUNNER_OS !== os)
+            throw new Error(`BUNDLE_NATIVE_HOST_MISMATCH: ${row.host} ${process.platform}/${process.arch}`)
+          const root = realpathSync(process.env.GITHUB_WORKSPACE)
+          const dir = realpathSync(path.resolve(root, 'packages', row.package)) + path.sep
+          const isFile = (file) => (statSync(path.resolve(root, file), { throwIfNoEntry: false })?.isFile() ?? false) && realpathSync(path.resolve(root, file)).startsWith(dir)
+          const request = validateRequest({ package: row.package, runner: 'bun', args: row.files }, isFile)
+          if (!request.args.length) throw new Error('BUNDLE_FILES_EMPTY')
+          if (new Set(request.args).size !== request.args.length) throw new Error('BUNDLE_FILES_REPEATED')
+          request.args.forEach((file) => {
+            if (!file.startsWith('./test/') || !file.endsWith('.test.ts') || file.slice(2).split('/').some((part) => !part || part === '.' || part === '..') || !isFile(`packages/${row.package}/${file}`))
+              throw new Error(`BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
+          })
+          writeFileSync(path.resolve(root, '.distribution-files'), request.args.join('\n') + '\n')
+          // bundle-program:end
+          BUN
+          )"
+      - uses: ./.github/actions/ripgrep
+      - uses: ./.github/actions/omni-binaries
+      - name: Run tests
+        working-directory: packages/${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          args=()
+          while IFS= read -r file; do args+=("$file"); done < ../../.distribution-files
+          preload=()
+          if [ "$PACKAGE" = cli ]; then preload=(--preload ../../script/test-omni-control.ts); fi
+          nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
+          # Append nonce declaration after Bun exits; no pre-test nonce declaration in readable log.
+          status=0
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout 30000 "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || status=$?
+          printf 'omni control nonce: %s\n' "$nonce" >> ../../distribution-logs/run.log
+          exit "$status"
+      - name: Require nonce-bound positive control
+        if: always()
+        run: |
+          set -euo pipefail
+          bun --eval "$(cat <<'BUN'
+          import { readFileSync } from 'node:fs'
+          import { controlVerdict } from './script/test-ci-request.ts'
+          // bundle-program:begin
+          const verdict = controlVerdict({ name: process.env.ROW }, readFileSync('distribution-logs/run.log', 'utf8'))
+          if (!verdict.startsWith('omni positive control: pass (')) throw new Error(`BUNDLE_CONTROL_FAILED: ${verdict}`)
+          // bundle-program:end
+          BUN
+          )"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: distribution-${{ matrix.package }}-${{ matrix.host }}-${{ github.run_attempt }}
+          path: distribution-logs
+          if-no-files-found: error
+          retention-days: 7
