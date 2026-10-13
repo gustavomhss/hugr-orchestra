@@ -2,7 +2,15 @@ import { createHash } from "node:crypto"
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, isAbsolute, join, relative, sep } from "node:path"
 import { realpath } from "node:fs/promises"
-import { copyCliTreeSitter, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
+import {
+  cliRipgrepKey,
+  copyCliRipgrep,
+  copyCliTreeSitter,
+  nativeCliTarget,
+  readCliManifest,
+  verifyCliArtifact,
+} from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
 export function desktopCliTargets(platform: string, arch: string) {
@@ -40,7 +48,12 @@ export async function stageCliArtifacts(input: {
   directory: string
   version: string
   targets: readonly string[]
-  sign?: (path: string, target: string) => Promise<void>
+  /** Signs a staged executable: the CLI itself, or the rg it ships. */
+  sign?: (path: string, target: string, kind: "cli" | "ripgrep") => Promise<void>
+  /** Checks a signed rg's code signature (cli-artifacts.ts signatureCheck); without one a signed rg is refused. */
+  signature?: (file: string, target: string) => Promise<boolean>
+  /** "required" for a target whose rg `sign` must have signed (cli-artifacts.ts ripgrepSigning). */
+  signing?: (target: string) => "required" | undefined
 }) {
   if (
     !input.targets.length ||
@@ -118,7 +131,23 @@ export async function stageCliArtifacts(input: {
         await Promise.all(pair.map((file) => copyFile(file, join(staging, `omni-${target}`, basename(file)))))
         await chmod(join(staging, `omni-${target}`, omniCompanions[1]), 0o755)
       }
-      await input.sign?.(path, target)
+      // Every CLI ships the pinned rg it runs (its server never downloads one) in ripgrep-<target>/: the installed CLI
+      // and WSL guests copy it beside the binary, the desktop server is pointed at it. It is signed like the CLI.
+      if (RipgrepBundle.enabled() && cliRipgrepKey(target)) {
+        const ripgrep = join(staging, `ripgrep-${target}`)
+        await copyCliRipgrep(
+          input.prebuilt === undefined ? join(source, "bin", "ripgrep") : join(input.prebuilt, `ripgrep-${target}`),
+          ripgrep,
+          target,
+          { signature: input.signature && ((file) => input.signature!(file, target)) },
+        )
+        await input.sign?.(join(ripgrep, target.startsWith("windows-") ? "rg.exe" : "rg"), target, "ripgrep")
+        await RipgrepBundle.verify(ripgrep, cliRipgrepKey(target)!, {
+          signature: input.signature && ((file) => input.signature!(file, target)),
+          signed: input.signing?.(target),
+        })
+      }
+      await input.sign?.(path, target, "cli")
       return {
         target,
         file,
@@ -137,21 +166,41 @@ export async function stageCliArtifacts(input: {
       await Promise.all(artifacts.map((entry) => verifyCliArtifact(staging, entry.target)))
       // Validate all new bytes before replacing the previous resource tree.
       const previous = `${staging}-previous`
-      const moved = await rename(input.directory, previous).then(
+      const moved = await renameDirectory(input.directory, previous).then(
         () => true,
         (error: NodeJS.ErrnoException) => {
           if (error.code === "ENOENT") return false
           throw error
         },
       )
-      await rename(staging, input.directory).catch(async (error) => {
-        if (moved) await rename(previous, input.directory)
+      await renameDirectory(staging, input.directory).catch(async (error) => {
+        if (moved) await renameDirectory(previous, input.directory)
         throw error
       })
       if (moved) await rm(previous, { recursive: true, force: true })
       return readCliManifest(input.directory)
     })
     .finally(() => rm(staging, { recursive: true, force: true }))
+}
+
+// The sign hook runs the staged CLI, and on GitHub's Windows runners the hosted agent's provjobd.exe opens a freshly
+// run image for a moment; while it does, Windows refuses to rename the directory holding it (EPERM). Measured there,
+// such a hold blocked the rename for 50 ms to 2.2 s. Retry exactly that, for up to 10 s. Any other error, any other
+// platform, or a longer hold still fails.
+const RENAME_HOLD_MS = 10_000
+
+async function renameDirectory(from: string, to: string) {
+  const deadline = performance.now() + RENAME_HOLD_MS
+  for (;;) {
+    const error = await rename(from, to).then(
+      () => undefined,
+      (error: NodeJS.ErrnoException) => error,
+    )
+    if (!error) return
+    if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(error.code ?? "")) throw error
+    if (performance.now() >= deadline) throw error
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
 }
 
 // Resolve existing ancestors too: a new destination may be nested under a

@@ -155,3 +155,52 @@ for (const channel of ["dev", "beta", "prod"] as const) {
     expect(entitlements).toContain("<dict/>")
   })
 }
+
+for (const channel of ["dev", "beta", "prod"] as const) {
+  test(`ships rg inside the CLI bundle for ${channel}, signed by staging and checked on every pack`, async () => {
+    const previous = process.env.ORCHESTRA_CHANNEL
+    process.env.ORCHESTRA_CHANNEL = channel
+    const module = await import(`./electron-builder.config.ts?ripgrep=${channel}`)
+    const config = module.default as Configuration
+    if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
+    else process.env.ORCHESTRA_CHANNEL = previous
+
+    // rg lives in Resources/cli/ripgrep-<target>/ (scripts/cli-staging.ts), which staging signs like the CLI: the
+    // config names no ripgrep resource or binary of its own, so a package without one (Nix) needs no conditional.
+    expect(JSON.stringify(config.extraResources)).not.toContain("ripgrep")
+    expect(JSON.stringify(config.mac?.binaries)).not.toContain("ripgrep")
+    expect(config.mac?.signIgnore).toContain("/Resources/cli/")
+    // Windows signing is named, not left to a default: executables and the omni addon.
+    expect(config.win?.signExts).toContain(".exe")
+    expect(config.win?.signExts).toContain(".node")
+    // beforePack checks the staged bundle, afterPack and afterSign the packaged one (rg included).
+    expect(typeof config.beforePack).toBe("function")
+    expect(typeof config.afterPack).toBe("function")
+    expect(typeof config.afterSign).toBe("function")
+  })
+}
+
+test("the rg a build signs must carry a valid signature; an intentionally unsigned build is byte-checked", async () => {
+  const { ripgrepSigning, signatureCheck } = await import("./src/main/cli-artifacts")
+  // macOS code is always signed on a macOS host (ad hoc without an identity) and checked with codesign.
+  expect(ripgrepSigning("darwin-arm64", {}, "darwin")).toBe("required")
+  expect(signatureCheck("darwin-arm64", "/x/rg", "darwin")).toMatchObject({ command: "codesign", args: ["--verify", "--strict", "/x/rg"] })
+  // Windows code only where scripts/sign-windows.ps1 signs: Actions with Azure Artifact Signing configured.
+  const azure = {
+    GITHUB_ACTIONS: "true",
+    AZURE_TRUSTED_SIGNING_ENDPOINT: "e",
+    AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: "a",
+    AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: "p",
+  }
+  expect(ripgrepSigning("windows-x64-baseline", azure, "win32")).toBe("required")
+  expect(ripgrepSigning("windows-x64-baseline", { ...azure, AZURE_TRUSTED_SIGNING_ENDPOINT: "" }, "win32")).toBeUndefined()
+  expect(ripgrepSigning("windows-x64-baseline", { ...azure, GITHUB_ACTIONS: "false" }, "win32")).toBeUndefined()
+  const authenticode = signatureCheck("windows-arm64", "C:\\it's\\rg.exe", "win32")!
+  expect(authenticode.command).toBe("powershell.exe")
+  expect(authenticode.args.at(-1)).toBe("(Get-AuthenticodeSignature -LiteralPath 'C:\\it''s\\rg.exe').Status")
+  expect(authenticode.valid("Valid\r\n")).toBe(true)
+  expect(authenticode.valid("NotSigned")).toBe(false)
+  // Linux rg is never signed: it must be the pinned bytes.
+  expect(ripgrepSigning("linux-x64-baseline", azure, "linux")).toBeUndefined()
+  expect(signatureCheck("linux-x64-baseline", "/x/rg", "linux")).toBeUndefined()
+})

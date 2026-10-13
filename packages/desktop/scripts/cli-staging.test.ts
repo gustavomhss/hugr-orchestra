@@ -1,22 +1,37 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { cliRipgrepKey, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import { stageCliArtifacts, desktopCliTargets, WslOmniPairMissingError } from "./cli-staging"
 // The pair's names come from the installer, so staging is held to what the WSL install reads.
 import { installGuestScript, installWslArtifact, omniCompanions } from "../src/main/wsl/artifact"
 import { installCliArtifact } from "../src/main/cli-install"
 import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
+import { fixtureSignature, writeRipgrepBundle } from "../src/main/cli-ripgrep.fixture"
 import { verifyPackagedCli } from "./cli-packaging"
 
+// Every test here creates, copies and deletes tens to hundreds of small files, and windows-latest stalls file I/O. In
+// instrumented Windows runs (test-ci 38284863937, 38285164351, 38285411114, 38285164170) a test's slow time was spent
+// off-CPU: 0.9 s wall for 0.09 s CPU, with one synchronous copy or mkdir in staging blocking up to 0.8 s; inside the
+// whole desktop suite, 2.6 s wall for 0.4 s CPU. In 43 full test.yml lanes (2026-10-11/12) a test ran up to 17.8x its
+// own median and two lanes timed out at Bun's 5 s default. With rg in the bundle (#357) the slowest median on
+// windows-latest is 1.3 s (22 runs, max 5.2 s). 45 s is about twice 17.8x that median. No test waits on a clock or
+// another process except the build-helper child, which has its own 15 s limit. A hang that still does I/O fails after
+// 45 s. One that idles on a promise fails then on Linux and macOS, but Bun 1.3.14 on Windows enforces a test timeout
+// only while a timer is pending (test-ci 38294402595, 38297239678), so there the step limit stops it, as at 5 s.
+const STAGING_TIMEOUT = 45_000
+
 const roots: string[] = []
+// The packaging checks with the stand-in signature for the fixture's "signed" rg.
+const checks = { signature: (file: string) => fixtureSignature(file) }
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 // Linux CLIs ship the omni pair next to the binary, as the shared omni build step leaves them in dist, and every CLI
-// ships its tree-sitter in bin/tree-sitter.
+// ships its tree-sitter in bin/tree-sitter and its rg in bin/ripgrep.
 async function fixture(targets = ["linux-x64-baseline"], binary = (target: string) => `owned ${target}`) {
   const root = await mkdtemp(join(tmpdir(), "orchestra-stage-test-"))
   roots.push(root)
@@ -28,19 +43,21 @@ async function fixture(targets = ["linux-x64-baseline"], binary = (target: strin
       await writeFile(join(dir, "package.json"), JSON.stringify({ version: "1.18.27" }))
       await writeFile(join(dir, "bin", target.startsWith("windows-") ? "orchestra.exe" : "orchestra"), binary(target))
       await writeTreeSitterBundle(join(dir, "bin", "tree-sitter"), target)
+      await writeRipgrepBundle(join(dir, "bin", "ripgrep"), cliRipgrepKey(target)!)
       if (target.startsWith("linux-"))
         await Promise.all(omniCompanions.map((name) => writeFile(join(dir, "bin", name), `${name} ${target}`)))
     }),
   )
-  return { root, dist, directory: join(root, "cli"), version: "1.18.27", targets }
+  // Staged rg stand-ins are "signed" (cli-ripgrep.fixture.ts), so staging checks them with the stand-in signature.
+  return { root, dist, directory: join(root, "cli"), version: "1.18.27", targets, signature: fixtureSignature }
 }
 
 test("staging hashes signed bytes, preserves target/version and replaces stale resources", async () => {
   const input = await fixture()
   await stageCliArtifacts({
     ...input,
-    sign: async (path) => {
-      await writeFile(path, "signed owned bytes")
+    sign: async (path, _target, kind) => {
+      if (kind === "cli") await writeFile(path, "signed owned bytes")
     },
   })
   const manifest = await readCliManifest(input.directory)
@@ -53,7 +70,7 @@ test("staging hashes signed bytes, preserves target/version and replaces stale r
   expect(await readFile((await verifyCliArtifact(input.directory, input.targets[0]!)).path, "utf8")).toBe(
     `owned ${input.targets[0]}`,
   )
-})
+}, STAGING_TIMEOUT)
 
 test("staging rejects unexpected W2 output/version and preserves previous manifest", async () => {
   const input = await fixture()
@@ -69,7 +86,7 @@ test("staging rejects unexpected W2 output/version and preserves previous manife
   await rm(join(input.dist, `cli-${input.targets[0]}`, "bin", "orchestra"))
   await expect(stageCliArtifacts(input)).rejects.toThrow()
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
 
 test("Windows staging carries both Linux WSL architectures", async () => {
   const targets = desktopCliTargets("win32", "arm64")
@@ -78,7 +95,7 @@ test("Windows staging carries both Linux WSL architectures", async () => {
   await stageCliArtifacts(input)
   expect((await readCliManifest(input.directory)).artifacts.map((entry) => entry.target)).toEqual(targets)
   await Promise.all(targets.map((target) => verifyCliArtifact(input.directory, target)))
-})
+}, STAGING_TIMEOUT)
 
 test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and refuses a partial bundle", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -108,15 +125,16 @@ test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and re
   await rm(join(input.dist, "cli-linux-x64-baseline"), { recursive: true })
   await expect(stageCliArtifacts(input)).rejects.toThrow()
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
-  // Only WSL guests carry the pair: a native Linux bundle stages the binary and its tree-sitter alone.
+  // Only WSL guests carry the pair: a native Linux bundle stages the binary, its tree-sitter and its rg alone.
   const native = await fixture()
   await stageCliArtifacts(native)
   expect((await readdir(native.directory)).sort()).toEqual([
     "manifest.json",
     "orchestra-linux-x64-baseline",
+    "ripgrep-linux-x64-baseline",
     "tree-sitter-linux-x64-baseline",
   ])
-})
+}, STAGING_TIMEOUT)
 
 test("prebuilt handoff carries the omni pair and refuses a producer without it", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -128,10 +146,10 @@ test("prebuilt handoff carries the omni pair and refuses a producer without it",
   )
   await rm(join(input.directory, "omni-linux-x64-baseline", "hugr-omni-supervisor"))
   await expect(stageCliArtifacts(received)).rejects.toBeInstanceOf(WslOmniPairMissingError)
-  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toBeInstanceOf(
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toBeInstanceOf(
     WslOmniPairMissingError,
   )
-})
+}, STAGING_TIMEOUT)
 
 test("WSL install accepts the staged Windows bundle end to end through the real artifact reader", async () => {
   // Like the real omni CLI preflight, the guest binary exits early unless the pair sits next to it.
@@ -150,6 +168,8 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   const installs: string[][] = []
   await installWslArtifact("Ubuntu", input.version, {
     directory: input.directory,
+    // The staged stand-in rg is the guest's "pinned" executable here; the real pin is checked in core.
+    ripgrepPin: (target) => createHash("sha256").update(`rg ${cliRipgrepKey(target)}`).digest("hex"),
     run: async (args) => {
       if (args[0] === "bash") return { code: 0, signal: null, stdout: "x86_64\nglibc 2.39\n", stderr: "" }
       if (args[0] === "wslpath") return { code: 0, signal: null, stdout: guest(args[3]!), stderr: "" }
@@ -169,6 +189,8 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
     guest(join(omni, "hugr_omni.node")), await sha(join(omni, "hugr_omni.node")),
     guest(join(omni, "hugr-omni-supervisor")), await sha(join(omni, "hugr-omni-supervisor")),
     guest(join(input.directory, "tree-sitter-linux-x64-baseline")), expect.stringMatching(/^[a-f0-9]{64}$/),
+    guest(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
+    await sha(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
   ]])
   // On Linux the real guest script ran and accepted the host's tree-sitter digest.
   if (process.platform !== "linux") return
@@ -183,7 +205,119 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   expect(await sha(join(home, ".orchestra/bin/tree-sitter", binding))).toBe(
     await sha(join(input.directory, "tree-sitter-linux-x64-baseline", binding)),
   )
-})
+  // The guest CLI finds rg in ripgrep/ beside itself (packages/core/src/ripgrep/binary.ts), executable.
+  expect(await sha(join(home, ".orchestra/bin/ripgrep/rg"))).toBe(
+    await sha(join(input.directory, "ripgrep-linux-x64-baseline", "rg")),
+  )
+  expect((await stat(join(home, ".orchestra/bin/ripgrep/rg"))).mode & 0o777).toBe(0o755)
+}, STAGING_TIMEOUT)
+
+test("every staged CLI ships its pinned rg in ripgrep-<target>/, signed by the CLI hook, or the build stops", async () => {
+  const signed: string[] = []
+  const input = {
+    ...(await fixture(desktopCliTargets("win32", "x64"))),
+    // The CLI's own signing hook signs the rg it ships too: it rewrites the bytes a signature would.
+    sign: async (path: string, target: string, kind: "cli" | "ripgrep") => {
+      signed.push(`${kind} ${target}`)
+      if (kind === "ripgrep") await writeFile(path, `rg ${cliRipgrepKey(target)}`)
+    },
+    signing: (target: string) => (target.startsWith("windows-") ? ("required" as const) : undefined),
+  }
+  await stageCliArtifacts(input)
+  expect(signed.toSorted()).toEqual(
+    ["linux-arm64", "linux-x64-baseline", "windows-x64-baseline"]
+      .flatMap((target) => [`cli ${target}`, `ripgrep ${target}`])
+      .toSorted(),
+  )
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)
+  for (const [target, key, name] of [
+    ["windows-x64-baseline", "x64-win32", "rg.exe"],
+    ["linux-arm64", "arm64-linux", "rg"],
+    ["linux-x64-baseline", "x64-linux", "rg"],
+  ] as const) {
+    const manifest = JSON.parse(await readFile(join(input.directory, `ripgrep-${target}`, "manifest.json"), "utf8"))
+    expect(manifest.key).toBe(key)
+    expect(manifest.executable.sha256).toBe(RipgrepRelease.archive(key)!.executable)
+    expect(await readFile(join(input.directory, `ripgrep-${target}`, name), "utf8")).toBe(`rg ${key}`)
+    if (process.platform !== "win32" && name === "rg")
+      expect((await stat(join(input.directory, `ripgrep-${target}`, name))).mode & 0o777).toBe(0o755)
+  }
+  // A producer directory hands its staged copies on.
+  const received = { ...input, dist: join(input.root, "no-local-build"), prebuilt: input.directory, directory: join(input.root, "consumer") }
+  await stageCliArtifacts(received)
+  expect(await readFile(join(received.directory, "ripgrep-linux-arm64", "rg"), "utf8")).toBe("rg arm64-linux")
+  // A target whose build signs refuses an rg the hook left unsigned (here: the pinned bytes are impossible, so any
+  // unsigned rg fails the signature instead).
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  await expect(stageCliArtifacts({ ...input, sign: undefined, signature: async () => false })).rejects.toThrow(
+    "has no valid signature",
+  )
+  // The build stops when an rg is missing or is not the pinned build for its CPU, keeping what was staged.
+  const built = join(input.dist, "cli-linux-arm64", "bin", "ripgrep")
+  await rename(built, `${built}.away`)
+  await expect(stageCliArtifacts(input)).rejects.toThrow("ripgrep bundle missing")
+  await writeRipgrepBundle(built, "x64-linux")
+  await expect(stageCliArtifacts(input)).rejects.toThrow("is not the pinned ripgrep")
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  await rm(built, { recursive: true })
+  await rename(`${built}.away`, built)
+  // The packaging check (beforePack, afterPack, afterSign) refuses a bundle whose rg changed after signing or is gone,
+  // for the native target as for a guest.
+  for (const target of ["windows-x64-baseline", "linux-x64-baseline"]) {
+    const staged = join(input.directory, `ripgrep-${target}`, target.startsWith("windows-") ? "rg.exe" : "rg")
+    const original = await readFile(staged)
+    await writeFile(staged, "changed")
+    await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toThrow(
+      "has no valid signature",
+    )
+    await rm(staged)
+    await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toThrow(
+      "missing its executable",
+    )
+    await writeFile(staged, original, { mode: 0o755 })
+  }
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)
+  // RIPGREP_BUNDLED=false (Nix: rg on the wrapper PATH) stages none and the packaging check expects none.
+  const previous = process.env.RIPGREP_BUNDLED
+  process.env.RIPGREP_BUNDLED = "false"
+  try {
+    const nix = await fixture(["linux-x64-baseline"])
+    await stageCliArtifacts(nix)
+    expect(await readdir(nix.directory)).not.toContain("ripgrep-linux-x64-baseline")
+    await verifyPackagedCli(nix.directory, "linux", "x64", nix.version)
+  } finally {
+    if (previous === undefined) delete process.env.RIPGREP_BUNDLED
+    else process.env.RIPGREP_BUNDLED = previous
+  }
+}, STAGING_TIMEOUT)
+
+test("the installed CLI takes its bundle's rg along, checked against the pin, and an install missing it is repaired", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  // The compiled CLI runs ripgrep/rg beside itself (packages/core/src/ripgrep/binary.ts).
+  const rg = join(dirname(installed.path), "ripgrep", "rg")
+  expect(await readFile(rg, "utf8")).toBe("rg arm64-darwin")
+  await rm(join(dirname(installed.path), "ripgrep"), { recursive: true })
+  await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  expect(await readFile(rg, "utf8")).toBe("rg arm64-darwin")
+  // Without a signature check a signed rg is not the pinned executable, so the install refuses it.
+  await rm(join(dirname(installed.path), "ripgrep"), { recursive: true })
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache)).rejects.toThrow(
+    "differs from the pinned archive's",
+  )
+  // A bundle rg changed after signing, or gone, refuses the install by name.
+  const bundled = join(input.directory, "ripgrep-darwin-arm64", "rg")
+  await writeFile(bundled, "changed")
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })).rejects.toThrow(
+    "has no valid signature",
+  )
+  await rm(bundled)
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })).rejects.toThrow(
+    "missing its executable",
+  )
+}, STAGING_TIMEOUT)
 
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -194,7 +328,8 @@ test("prebuilt handoff verifies producer bytes before native signing and preserv
     dist: join(input.root, "no-local-build"),
     prebuilt: input.directory,
     directory: join(input.root, "consumer"),
-    sign: async (path: string, target: string) => {
+    sign: async (path: string, target: string, kind: "cli" | "ripgrep") => {
+      if (kind === "ripgrep") return
       expect(await readFile(path, "utf8")).toBe(`owned ${target}`)
       if (target.startsWith("windows-")) await writeFile(path, `signed ${target}`)
     },
@@ -214,7 +349,7 @@ test("prebuilt handoff verifies producer bytes before native signing and preserv
   await writeFile(guest.path, "changed in transit")
   await expect(stageCliArtifacts(received)).rejects.toThrow("digest")
   expect(await readFile(join(received.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
 
 test("build helper uses explicit or environment prebuilt input without compiler fallback", async () => {
   const input = await fixture()
@@ -235,7 +370,7 @@ test("build helper uses explicit or environment prebuilt input without compiler 
     if (code !== 0) throw new Error(`Prebuilt helper child failed: ${stderr}`)
     expect(stdout.trim()).toBe("Invalid CLI manifest schema/version/artifacts")
   }))
-})
+}, STAGING_TIMEOUT)
 
 test("prebuilt source/output overlap is rejected before signing or replacing producer", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
@@ -263,27 +398,27 @@ test("prebuilt source/output overlap is rejected before signing or replacing pro
   await expect(stageCliArtifacts({ ...input, prebuilt: input.directory, directory: `${input.directory}\\..\\consumer` })).rejects.toThrow("ambiguous traversal")
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
   expect(signed).toEqual([])
-})
+}, STAGING_TIMEOUT)
 
 test("installed cache checks bytes, repairs tampering, rejects tampered source", async () => {
   const input = await fixture()
   await stageCliArtifacts(input)
   const cache = join(input.root, "cache")
-  const first = await installCliArtifact(input.directory, input.targets[0]!, cache)
+  const first = await installCliArtifact(input.directory, input.targets[0]!, cache, { signature: fixtureSignature })
   await writeFile(first.path, "foreign cache")
-  const repaired = await installCliArtifact(input.directory, input.targets[0]!, cache)
+  const repaired = await installCliArtifact(input.directory, input.targets[0]!, cache, { signature: fixtureSignature })
   expect(await readFile(repaired.path, "utf8")).toBe(`owned ${input.targets[0]}`)
   expect(repaired.version).toBe(input.version)
   const bundled = await verifyCliArtifact(input.directory, input.targets[0]!)
   await writeFile(bundled.path, "foreign source")
-  await expect(installCliArtifact(input.directory, input.targets[0]!, cache)).rejects.toThrow("digest")
+  await expect(installCliArtifact(input.directory, input.targets[0]!, cache, { signature: fixtureSignature })).rejects.toThrow("digest")
   expect(await readFile(first.path, "utf8")).toBe(`owned ${input.targets[0]}`)
-})
+}, STAGING_TIMEOUT)
 
 test("every CLI target carries its tree-sitter through staging, handoff, packaging and install, or stops by name", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
   await stageCliArtifacts(input)
-  await verifyPackagedCli(input.directory, "win32", "x64", input.version)
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)
   const before = await readFile(join(input.directory, "manifest.json"), "utf8")
   const binding = join("tree-sitter", "prebuilds", "linux-arm64", "tree-sitter.node")
   const built = join(input.dist, "cli-linux-arm64", "bin", "tree-sitter", binding)
@@ -303,40 +438,40 @@ test("every CLI target carries its tree-sitter through staging, handoff, packagi
   for (const target of ["windows-x64-baseline", "linux-arm64"]) {
     const staged = join(received.directory, `tree-sitter-${target}`)
     await rename(staged, `${staged}.away`)
-    await expect(verifyPackagedCli(received.directory, "win32", "x64", input.version)).rejects.toThrow(
+    await expect(verifyPackagedCli(received.directory, "win32", "x64", input.version, checks)).rejects.toThrow(
       `TREE_SITTER_BUNDLE_INCOMPLETE: ${target.startsWith("windows-") ? "win32-x64" : "linux-arm64"}`,
     )
     await rename(`${staged}.away`, staged)
   }
   // The installed CLI finds its tree-sitter beside itself; an install missing it is repaired.
   const cache = join(input.root, "cache")
-  const installed = await installCliArtifact(received.directory, "windows-x64-baseline", cache)
+  const installed = await installCliArtifact(received.directory, "windows-x64-baseline", cache, { signature: fixtureSignature })
   const index = join(dirname(installed.path), "tree-sitter", "tree-sitter", "index.js")
   expect(await readFile(index, "utf8")).toBe("tree-sitter/index.js windows-x64-baseline")
   await rm(index)
-  await installCliArtifact(received.directory, "windows-x64-baseline", cache)
+  await installCliArtifact(received.directory, "windows-x64-baseline", cache, { signature: fixtureSignature })
   expect(await readFile(index, "utf8")).toBe("tree-sitter/index.js windows-x64-baseline")
-})
+}, STAGING_TIMEOUT)
 
 test("packaging verifies effective root version and all Windows guest bytes", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
   await stageCliArtifacts(input)
-  await verifyPackagedCli(input.directory, "win32", "x64", input.version)
-  await expect(verifyPackagedCli(input.directory, "win32", "x64", "local")).rejects.toThrow("version")
+  await verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", "local", checks)).rejects.toThrow("version")
   const guest = await verifyCliArtifact(input.directory, "linux-arm64")
   await writeFile(guest.path, "foreign guest bytes")
-  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version)).rejects.toThrow("digest")
+  await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toThrow("digest")
   const native = await fixture(["windows-x64-baseline"])
   await stageCliArtifacts(native)
-  await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version)).rejects.toThrow("missing")
-})
+  await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version, checks)).rejects.toThrow("missing")
+}, STAGING_TIMEOUT)
 
 test("staging rejects empty, duplicate and traversal targets before touching output", async () => {
   const input = await fixture()
   await expect(stageCliArtifacts({ ...input, targets: [] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: ["../foreign"] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: [...input.targets, ...input.targets] })).rejects.toThrow("target")
-})
+}, STAGING_TIMEOUT)
 
 test("staging rejects symlink output directories and keeps previous resources", async () => {
   const input = await fixture()
@@ -347,4 +482,46 @@ test("staging rejects symlink output directories and keeps previous resources", 
   await symlink(join(input.root, "foreign-bin"), binaryDirectory, process.platform === "win32" ? "junction" : "dir")
   await expect(stageCliArtifacts(input)).rejects.toThrow("regular")
   expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
-})
+}, STAGING_TIMEOUT)
+
+// GitHub's Windows runners briefly hold a CLI that the sign hook just ran (provjobd.exe, up to 2.2 s measured), and
+// Windows refuses to rename a directory while a file in it is open. A handle the test owns stands in for that holder.
+test("a staged CLI held briefly after signing delays the rename into place instead of failing it", async () => {
+  const input = await fixture()
+  const start = performance.now()
+  await stageCliArtifacts({
+    ...input,
+    sign: async (path, _target, kind) => {
+      if (kind !== "cli") return
+      const held = await open(path, "r")
+      setTimeout(() => void held.close(), 300)
+    },
+  })
+  expect((await readCliManifest(input.directory)).version).toBe(input.version)
+  // Elsewhere an open file never blocked the rename; on Windows it did, so the rename waited for the release.
+  if (process.platform === "win32") expect(performance.now() - start).toBeGreaterThanOrEqual(250)
+}, STAGING_TIMEOUT)
+
+test("a staged CLI held past the bound fails the rename and keeps the previous resources", async () => {
+  if (process.platform !== "win32") return
+  const input = await fixture()
+  await stageCliArtifacts(input)
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const holds: Promise<void>[] = []
+  const error = await stageCliArtifacts({
+    ...input,
+    sign: async (path, _target, kind) => {
+      if (kind !== "cli") return
+      const held = await open(path, "r")
+      // Longer than staging's 10 s bound on the rename.
+      holds.push(new Promise((resolve) => setTimeout(() => void held.close().then(resolve), 14_000)))
+    },
+  }).then(
+    () => undefined,
+    (error: NodeJS.ErrnoException) => error,
+  )
+  // The rename fails with EPERM after the bound; removing the stage it still holds may then report EBUSY instead.
+  expect(["EPERM", "EBUSY"]).toContain(error?.code)
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  await Promise.all(holds)
+}, STAGING_TIMEOUT)
