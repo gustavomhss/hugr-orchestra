@@ -31,6 +31,9 @@ The command families currently defined in `commands.ts` are:
   selection starts at 4096 when omitted. `--register` publishes it to the service
   registration file.
 
+Without a subcommand, the CLI obtains a Daemon transport, starts the background
+server when needed, and launches the TUI with that transport.
+
 ## Runtime ownership
 
 The CLI composes `@orchestra/core`, `@orchestra/server`, and `@orchestra/tui`,
@@ -40,10 +43,11 @@ registration, and the server password. Daemon state uses Core's XDG state path
 under the `orchestra` application directory, with `server.json` and `password`
 files. The password is retained across server restarts.
 
-Desktop consumes the compiled CLI artifact as its background server. Its main
-process verifies or installs that artifact, checks service status, then starts the
-service and obtains its password through CLI commands. The legacy executable's
-commands and compatibility remain owned by `packages/orchestra`.
+Desktop's opt-in V2 sidecar path (`ORCHESTRA_SIDECAR_V2=1`) consumes the compiled
+CLI artifact as its background server. In that mode, its main process verifies or
+installs the artifact, checks service status, starts the service, and obtains its
+password through CLI commands. Desktop defaults to the legacy sidecar; the
+legacy executable's commands and compatibility remain owned by `packages/orchestra`.
 
 ## Development and packaging
 

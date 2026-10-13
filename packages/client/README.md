@@ -9,7 +9,7 @@ Private network client package and generation target derived from Orchestra's au
 
 `script/build.ts` compiles `ClientApi` from `src/contract.ts`, which composes Protocol with client-local middleware tags, group/method names, and an explicit endpoint omission set. Generated Effect runtime code imports this projection, while generation-equivalence tests compare it with Server's concrete API. Raw file reads and PTY WebSocket connect/token operations are omitted from generic generation; their transports remain separate. Run `bun run generate` after changing the contract and `bun run check:generated` to detect committed-output drift.
 
-The Effect entrypoint uses canonical decoded values such as `Session.ID`, `Location.Ref`, and `Prompt`. These datatypes come from the lightweight `@orchestra/schema` package and are re-exported so callers depend only on the client surface. Protocol owns endpoint construction and middleware placement; Server supplies the concrete middleware keys used by the build-time API.
+The Effect entrypoint uses canonical decoded values such as `Session.ID`, `Location.Ref`, and `Prompt`. These datatypes come from the lightweight `@orchestra/schema` package and are re-exported so callers depend only on the client surface. Protocol owns endpoint construction and middleware placement. Client supplies local middleware keys for generation; Server supplies concrete keys for its API, with generation-equivalence tests comparing the resulting contracts.
 
 The Promise root remains structural and has no Core or Effect runtime dependency. `/effect` depends only on Effect, Schema, and Protocol and is browser-bundle safe. Bundle-boundary tests enforce both import graphs.
 
