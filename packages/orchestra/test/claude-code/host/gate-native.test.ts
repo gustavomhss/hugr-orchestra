@@ -319,7 +319,7 @@ describe("native gate real policy", () => {
       refused(yield* f.decide("Read", { file_path: "local-alias/sentinel.txt" }), "rule which prevents")
       expect(yield* f.decide("Read", { file_path: path.join(`${long}-peer`, "sentinel.txt") })).toEqual({ allow: true })
       expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
-      expect((yield* f.sessions.get(f.session.id)).permission).toEqual(rules)
+      expect((yield* f.sessions.get(f.session.id)).permission).toEqual([...rules])
     }
     expect(yield* f.filesystem.exists(path.join(long, "new"))).toBe(false)
     expect(yield* f.filesystem.readFileString(path.join(long, "sentinel.txt"))).toBe("outside sentinel")
