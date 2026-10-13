@@ -1,12 +1,12 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { chmod, link, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises"
+import { chmod, link, lstat, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
 import { prepareNpmDistribution } from "../script/distribution-npm"
 import { archiveDistribution, prepareDistribution, verifyDistribution } from "../script/distribution-payload"
 import { requireDistributionHost } from "./fixture/distribution-host"
+import { binding, payloadFixture, payloadSnapshot, tuple } from "./fixture/distribution-payload"
 
 requireDistributionHost()
 
@@ -15,53 +15,16 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-const tuple = process.platform === "win32"
-  ? { target: "windows-x64", os: "win32" as const, arch: "x64", machine: 0x8664, foreignMachine: 0xaa64, executable: "orchestra.exe", supervisor: "hugr-omni-supervisor.exe" }
-  : { target: "linux-x64", os: "linux" as const, arch: "x64", machine: 62, foreignMachine: 183, executable: "orchestra", supervisor: "hugr-omni-supervisor" }
-
-// Inert image headers qualify tuple/filesystem structure, not loadable addons or CLI runtime.
-function binding(machine = tuple.machine, endian: "little" | "big" = "little", os: "linux" | "win32" = tuple.os) {
-  if (os === "win32") {
-    const offset = 0x80
-    const bytes = Buffer.alloc(offset + 24 + 240)
-    bytes.writeUInt16LE(0x5a4d, 0)
-    bytes.writeUInt32LE(offset, 0x3c)
-    bytes.writeUInt32BE(0x50450000, offset)
-    bytes.writeUInt16LE(machine, offset + 4)
-    bytes.writeUInt16LE(240, offset + 20)
-    bytes.writeUInt16LE(0x2022, offset + 22)
-    bytes.writeUInt16LE(0x20b, offset + 24)
-    return bytes
-  }
-  const bytes = Buffer.alloc(64)
-  bytes.writeUInt32BE(0x7f454c46)
-  bytes[4] = 2
-  bytes[5] = endian === "little" ? 1 : 2
-  if (endian === "little") bytes.writeUInt16LE(machine, 18)
-  if (endian === "big") bytes.writeUInt16BE(machine, 18)
-  return bytes
-}
-
-async function fixture(parent = tmpdir()) {
-  const root = await mkdtemp(join(await realpath(parent), "distribution-payload-"))
-  roots.push(root)
-  const input = { dist: join(root, "dist"), out: join(root, "prepared"), version: "1.2.3", target: tuple.target }
-  const source = join(input.dist, `cli-${tuple.target}`)
-  await mkdir(join(source, "bin"), { recursive: true })
-  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@orchestra/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
-  const files = [tuple.executable, "hugr_omni.node", tuple.supervisor, "extra/note.txt", ...treeSitterBundle(tuple).map((file) => `tree-sitter/${file}`)]
-  await Promise.all(files.map(async (file) => {
-    const path = join(source, "bin", file)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, file.endsWith(".node") || file.endsWith(".exe") ? binding() : `inert fixture: ${file}\n`)
-    if (process.platform !== "win32") await chmod(path, [tuple.executable, tuple.supervisor].includes(file) ? 0o755 : 0o644)
-  }))
-  return { input, source, root }
-}
+const fixture = (parent?: string) => payloadFixture(roots, parent)
 
 test("complete payload retains the full bin tree, verifies and reuses exact publication", async () => {
   const value = await fixture()
+  const source = await payloadSnapshot(value.source)
   const manifest = await prepareDistribution(value.input)
+  expect(manifest.files).toEqual(source.filter((entry) => entry.kind === "file")
+    .map((entry) => ({ path: entry.path, sha256: entry.sha256, executable: Boolean(entry.mode & 0o111) }))
+    .sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+  expect(await payloadSnapshot(value.source)).toEqual(source)
   expect(manifest.schema).toBe("orchestra-distribution-v1")
   expect(manifest.files.map((file) => file.path)).toEqual(manifest.files.map((file) => file.path).sort())
   expect(manifest.files.find((file) => file.path === "bin/extra/note.txt")).toBeDefined()
@@ -249,11 +212,13 @@ test("conflicting payload preserves previously published files", async () => {
   expect(await readFile(join(value.input.out, "bin/extra/note.txt"), "utf8")).toContain("inert fixture")
 })
 
-for (const kind of ["companion", "extra", "mode", "table", "descriptor-path", "descriptor-backslash"] as const) {
+for (const kind of ["companion", "missing", "extra", "mode", "table", "descriptor-path", "descriptor-backslash"] as const) {
   test(`verification rejects ${kind} tampering`, async () => {
     const value = await fixture()
+    const source = await payloadSnapshot(value.source)
     await prepareDistribution(value.input)
     if (kind === "companion") await writeFile(join(value.input.out, "bin/hugr_omni.node"), "tampered")
+    if (kind === "missing") await rm(join(value.input.out, "bin/hugr_omni.node"))
     if (kind === "extra") await writeFile(join(value.input.out, "unowned"), "extra")
     if (kind === "mode") {
       const path = `bin/${tuple.executable}`
@@ -276,11 +241,17 @@ for (const kind of ["companion", "extra", "mode", "table", "descriptor-path", "d
     }
     const error = kind === "mode" ? `Distribution file mismatch: bin/${tuple.executable}`
       : kind === "companion" ? "Distribution file mismatch: bin/hugr_omni.node"
+      : kind === "missing" ? "Distribution file mismatch: bin/hugr_omni.node"
       : kind === "extra" ? "Distribution file set mismatch"
       : kind === "table" ? "Distribution checksum table mismatch"
       : "Unsafe distribution path"
+    const before = await payloadSnapshot(value.root)
+    await expect(prepareDistribution(value.input)).rejects.toThrow(error)
+    expect(await payloadSnapshot(value.root)).toEqual(before)
+    expect(await payloadSnapshot(value.source)).toEqual(source)
     await expect(verifyDistribution(value.input.out)).rejects.toThrow(error)
     await expect(archiveDistribution({ directory: value.input.out, file: join(value.root, "invalid.tar.gz") })).rejects.toThrow(error)
+    expect(await payloadSnapshot(value.root)).toEqual(before)
   })
 }
 

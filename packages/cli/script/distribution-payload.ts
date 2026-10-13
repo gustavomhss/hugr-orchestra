@@ -19,6 +19,11 @@ type Captured = Map<string, { bytes: Buffer; executable: boolean }>
 // specs/runtime-closure/PRODUCER-BOUNDARY.md, including owned-path cleanup.
 export async function prepareDistribution(input: { dist: string; out: string; version: string; target: string }): Promise<DistributionManifest> {
   requireTarget(input.target, input.version)
+  if (process.platform === "win32") {
+    const { requireOrdinaryWindowsPath } = await import("./artifact-windows-root")
+    requireOrdinaryWindowsPath(input.dist)
+    requireOrdinaryWindowsPath(input.out)
+  }
   if ([input.dist, input.out].some((path) => !path || path.includes("\0") || path.split(/[\\/]/).includes("..")))
     throw new Error("Unsafe distribution location")
   const source = resolve(input.dist, `cli-${input.target}`)
