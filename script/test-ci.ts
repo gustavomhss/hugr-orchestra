@@ -22,12 +22,14 @@
 // only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"
-import { existsSync, realpathSync, statSync } from "node:fs"
+import { readFileSync, realpathSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase, parseResponse, rateLimitDelay, testPaths, workflowRun } from "./test-ci-upload"
-import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
+import { closestBase, parseResponse, rateLimitDelay, workflowRun } from "./test-ci-upload.ts"
+import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request.ts"
+import { resolveTestPackage } from "./test-ci-package.ts"
+import { testPathsAt } from "./test-ci-paths.ts"
 
 const USAGE =
   "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
@@ -35,6 +37,7 @@ const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
 const root = (await $`git rev-parse --show-toplevel`.text()).trim()
+const registry: unknown = JSON.parse(readFileSync(containedFile("script/module-registry.json"), "utf8"))
 const request = parse(process.argv.slice(2))
 const remote = await findRemote()
 const tree = await snapshot()
@@ -90,35 +93,40 @@ function parse(argv: string[]) {
   const positional = parsed.positional
   const options = { ...parsed.options, runner: parsed.options.runner ?? "bun" }
   const env = parsed.env
-  const name = positional[0]?.replace(/^packages\//, "").replace(/\/$/, "")
-  if (!name) fail(USAGE, 2)
-  if (!/^[\w-]+(?:\/[\w-]+)*$/.test(name)) fail(`Invalid package: ${name}`, 2)
+  const selector = positional[0]
+  if (!selector) fail(USAGE, 2)
+  const location = resolvePackage(selector)
+  const name = location.package
   if (options.runner === "playwright")
     return {
       ...validateRequest(
-        { package: name, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
-        (file) => {
-          const full = path.join(root, file)
-          return (statSync(full, { throwIfNoEntry: false })?.isFile() ?? false) &&
-            realpathSync(full).startsWith(realpathSync(root) + path.sep)
-        },
+        { ...location, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, env, args: positional.slice(1) },
+        isFile,
+        resolvePackage,
       ),
+      ...location,
       os: options.os,
     }
   // Test paths may be given from the repository root or from the package directory.
-  const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
-  if (options.runner !== "node" && pytest(name, named))
+  const named = positional.slice(1).map((arg) => {
+    const file = arg.replaceAll("\\", "/")
+    const relative = file.replace(/^\.\//, "")
+    const prefix = [location.directory, `packages/${name}`].find((directory) => relative.startsWith(`${directory}/`))
+    return prefix ? relative.slice(prefix.length + 1) : file
+  })
+  if (options.runner !== "node" && pytest(location.directory, named))
     return {
-      package: name,
+      ...location,
       os: options.os,
       runner: "pytest",
       env,
       args: [...named, ...(options.pattern ? ["-k", options.pattern] : [])],
     }
-  const files = testPaths(
-    name,
+  const files = testPathsAt(
+    location.directory,
     positional.slice(1),
-    (file) => statSync(path.join(root, "packages", name, file), { throwIfNoEntry: false })?.isFile() ?? false,
+    (file) => isFile(`${location.directory}/${file}`),
+    name,
   )
   if (options.runner === "node") {
     if (options.pattern !== undefined) fail(`-t is a bun test option; the node runner takes smoke scripts only`, 2)
@@ -126,7 +134,7 @@ function parse(argv: string[]) {
       fail(`--runner node runs named *.node-smoke.mjs scripts only, never bun:test files\n${USAGE}`, 2)
   }
   return {
-    package: name,
+    ...location,
     os: options.os,
     runner: options.runner,
     env,
@@ -137,20 +145,40 @@ function parse(argv: string[]) {
   }
 }
 
+function resolvePackage(selector: string) {
+  return resolveTestPackage(registry, selector,
+    (directory) => JSON.parse(readFileSync(containedFile(`${directory}/package.json`), "utf8")), isFile)
+}
+
+// Validate physical ownership before reading manifests, including symlinked directories and files.
+function containedFile(file: string) {
+  const physical = realpathSync(path.resolve(root, file))
+  const relative = path.relative(realpathSync(root), physical)
+  if (!relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
+    throw new Error(`TEST_PACKAGE_FILE_OUTSIDE_ROOT:${file}`)
+  if (!statSync(physical).isFile()) throw new Error(`TEST_PACKAGE_FILE_INVALID:${file}`)
+  return physical
+}
+
+function isFile(file: string) {
+  if (!statSync(path.resolve(root, file), { throwIfNoEntry: false })?.isFile()) return false
+  containedFile(file)
+  return true
+}
+
 // The runner travels in .ci-run.json; test-ci.yml falls back to the same file rule when a request carries none.
-function pytest(name: string, files: string[]) {
-  const dir = path.join(root, "packages", name)
-  if (!existsSync(path.join(dir, "requirements-dev.txt"))) return false
-  if (!existsSync(path.join(dir, "package.json"))) return true
+function pytest(directory: string, files: string[]) {
+  if (!isFile(`${directory}/requirements-dev.txt`)) return false
+  if (!isFile(`${directory}/package.json`)) return true
   return files.length > 0 && files.every((file) => file.endsWith(".py"))
 }
 
 async function findRemote() {
   if (
-    !(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()) &&
-    !(await Bun.file(path.join(root, "packages", request.package, "requirements-dev.txt")).exists())
+    !isFile(`${request.directory}/package.json`) &&
+    !isFile(`${request.directory}/requirements-dev.txt`)
   )
-    fail(`packages/${request.package} is not a package in this checkout`, 2)
+    fail(`${request.directory} is not a package in this checkout`, 2)
   const pattern = new RegExp(`github\\.com[:/]${repo.replace(".", "\\.")}(\\.git)?$`)
   const line = (await $`git remote -v`.cwd(root).text())
     .split("\n")
@@ -179,7 +207,7 @@ async function snapshot() {
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
   const body = JSON.stringify({
-    package: request.package, runner: request.runner, args: request.args, env: request.env,
+    package: request.package, directory: request.directory, runner: request.runner, args: request.args, env: request.env,
     ...("config" in request && request.config ? { config: request.config } : {}),
     ...("benchmarkRenderer" in request && request.benchmarkRenderer ? { benchmarkRenderer: request.benchmarkRenderer } : {}),
   })
@@ -281,8 +309,8 @@ type RunView = {
 
 async function report(view: RunView) {
   const tests = requireTestJobs(request.os, view.jobs)
-  const bunfig = Bun.file(path.join(root, "packages", request.package, "bunfig.toml"))
-  const control = request.runner === "bun" && (await bunfig.exists()) && preloadsControl(Bun.TOML.parse(await bunfig.text()))
+  const bunfig = Bun.file(path.join(root, request.directory, "bunfig.toml"))
+  const control = request.runner === "bun" && isFile(`${request.directory}/bunfig.toml`) && preloadsControl(Bun.TOML.parse(await bunfig.text()))
   let missing = false
   for (const job of tests) {
     const log = await waitFor(`${job.name}: nonempty job log`, 120_000, async () => {
