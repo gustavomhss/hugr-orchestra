@@ -12,7 +12,7 @@ export interface Decision {
   readonly model: { readonly provider: string; readonly id: string }
   readonly engine: LeanEngine.ID
   readonly itemID?: LeanCoverage.ItemID
-  readonly producer: "native-shell" | "unverified"
+  readonly producer: "native-shell" | "native-tool" | "unverified"
   readonly eligible: boolean
   readonly status: "applied" | "normalized" | "passthrough"
   readonly reason: string
@@ -32,8 +32,8 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
     if (!root || root.version !== 1 || root.scope !== "standard-registry"
       || typeof root.engine !== "string" || !LeanEngine.accepted.includes(root.engine)
       || (root.itemID !== undefined && (typeof root.itemID !== "string" || !LeanCoverage.ids.some((id) => id === root.itemID)))
-      || (root.producer !== "native-shell" && root.producer !== "unverified") || typeof root.eligible !== "boolean"
-      || (root.eligible && root.producer !== "native-shell")
+      || (root.producer !== "native-shell" && root.producer !== "native-tool" && root.producer !== "unverified")
+      || typeof root.eligible !== "boolean" || (root.eligible && root.producer === "unverified")
       || (root.status !== "applied" && root.status !== "normalized" && root.status !== "passthrough")
       || !text(root.reason) || typeof root.durationMs !== "number" || !Number.isFinite(root.durationMs) || root.durationMs < 0
       || (root.orchestraProfile !== undefined && !text(root.orchestraProfile))
@@ -53,7 +53,7 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
     if (!tokens) return undefined
     if (root.status === "passthrough") {
       if (bytes.saved !== 0 || (tokens.kind === "estimated" && tokens.saved !== 0)) return undefined
-    } else if (!root.eligible || root.producer !== "native-shell" || bytes.saved <= 0) return undefined
+    } else if (!root.eligible || root.producer === "unverified" || bytes.saved <= 0) return undefined
     return Object.freeze({
       version: 1, scope: "standard-registry", engine: root.engine as LeanEngine.ID,
       owner: Object.freeze({ projectID: owner.projectID, location: owner.location, sessionID: owner.sessionID, callID: owner.callID }),
