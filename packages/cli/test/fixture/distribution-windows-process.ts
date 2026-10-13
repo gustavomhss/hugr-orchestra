@@ -1,6 +1,7 @@
 import { realpath } from "node:fs/promises"
 import { Schema } from "effect"
 import { WindowsProcessQuery } from "../../../core/test/fixture/windows-process-query"
+import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
 
 const Identity = Schema.Struct({
   pid: Schema.Int.check(Schema.isGreaterThan(0)),
@@ -13,8 +14,7 @@ export type WindowsIdentity = typeof Identity.Type
 // Existing CIM decoder decides inventory completeness and exact FileTime strings.
 // Add ExecutablePath to its closed projection; never duplicate identity decoding.
 const READER = `
-import { spawn } from 'node:child_process';
-import { readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const settings = JSON.parse(readFileSync(import.meta.filename + '.config', 'utf8'));
@@ -26,41 +26,31 @@ const inventory = await import('data:text/javascript;base64,' + Buffer.from(java
 const requested = JSON.parse(process.argv[2]);
 if (!Array.isArray(requested) || requested.length !== 2 || requested.some(pid => !Number.isSafeInteger(pid) || pid <= 0))
   throw Error('WINDOWS_IDENTITY_REQUEST_INVALID');
-const projectionColumn = 'Select-Object ProcessId,';
-if (!inventory.CIM.includes(projectionColumn)) throw Error('WINDOWS_CIM_PROJECTION_MISSING');
-const query = inventory.CIM.replace(projectionColumn, 'Select-Object ExecutablePath,ProcessId,');
-const child = spawn('pwsh', ['-NoProfile','-NonInteractive','-EncodedCommand',
-  Buffer.from('[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ' + query, 'utf16le').toString('base64')],
-  {windowsHide:true,stdio:['ignore','pipe','pipe']});
-const output = {stdout:'',stderr:'',error:''};
-const closed = new Promise(resolve => child.once('close',resolve));
-child.on('error', error => {output.error=String(error)});
-child.stdout.on('data', chunk => {output.stdout+=chunk; if (output.stdout.length>67108864) {output.error='WINDOWS_QUERY_OUTPUT_LIMIT';child.kill('SIGKILL')}});
-child.stderr.on('data', chunk => {output.stderr+=chunk; if (output.stderr.length>16384) {output.error='WINDOWS_QUERY_ERROR_LIMIT';child.kill('SIGKILL')}});
-const timer = setTimeout(() => {output.error='WINDOWS_QUERY_TIMEOUT';child.kill('SIGKILL')},10000);
-try {
-  await Promise.race([closed,new Promise((_,reject)=>setTimeout(()=>reject(Error('WINDOWS_QUERY_CLOSE_UNPROVEN')),12000).unref())]);
-  if (output.error || child.exitCode !== 0) throw Error(output.error || output.stderr || 'WINDOWS_QUERY_FAILED');
-  const raw = JSON.parse(output.stdout);
-  const rows = inventory.decode(raw,child.pid);
-  const identities = rows.filter(row => requested.includes(row.pid)).map(row => {
-    const record = raw.find(value => value.ProcessId === row.pid);
-    if (typeof record?.ExecutablePath !== 'string' || !record.ExecutablePath) throw Error('WINDOWS_EXECUTABLE_UNKNOWN: '+row.pid);
-    return {pid:row.pid,startTime:row.startTime,executable:realpathSync(record.ExecutablePath)};
-  });
-  console.log(JSON.stringify(identities));
-} finally {
-  clearTimeout(timer);
-  if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
-}
+while (!existsSync(import.meta.filename + '.result')) await new Promise(resolve=>setTimeout(resolve,10));
+const output = JSON.parse(readFileSync(import.meta.filename + '.result','utf8'));
+if (output.closed !== true || output.error || output.code !== 0 || output.signal) throw Error('WINDOWS_QUERY_FAILED');
+const raw = JSON.parse(output.stdout);
+const rows = inventory.decode(raw,output.pid);
+const identities = rows.filter(row => requested.includes(row.pid)).map(row => {
+  const record = raw.find(value => value.ProcessId === row.pid);
+  if (typeof record?.ExecutablePath !== 'string' || !record.ExecutablePath) throw Error('WINDOWS_EXECUTABLE_UNKNOWN: '+row.pid);
+  return {pid:row.pid,startTime:row.startTime,executable:realpathSync(record.ExecutablePath)};
+});
+console.log(JSON.stringify(identities));
 `
 
 export async function windowsIdentity(pid: number): Promise<WindowsIdentity | undefined> {
   if (process.platform !== "win32" || !Number.isSafeInteger(pid) || pid <= 0)
     throw new Error("WINDOWS_IDENTITY_NATIVE_HOST_AND_PID_REQUIRED")
+  const column = "Select-Object ProcessId,"
+  if (!WindowsInventory.CIM.includes(column)) throw new Error("WINDOWS_CIM_PROJECTION_MISSING")
+  // Wait for the reader's admission before census: authoritative decode also
+  // requires the native reader itself in the complete process table.
+  const query = WindowsInventory.CIM.replace(column, "Select-Object ExecutablePath,ProcessId,")
   const rows = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Array(Identity))))(
     await WindowsProcessQuery.invoke(READER,
-      new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href, [process.pid, pid], 15_000),
+      new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href, [process.pid, pid], 15_000,
+      `[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${query}`),
   )
   const host = rows.find((row) => row.pid === process.pid)
   if (!host || host.executable.toLowerCase() !== (await realpath(process.execPath)).toLowerCase())

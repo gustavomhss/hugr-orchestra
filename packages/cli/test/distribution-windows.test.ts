@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { mkdtemp, realpath, rm } from "node:fs/promises"
+import { lstat, mkdtemp, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve, sep } from "node:path"
 import { buildVersions, captureOracle, cli, snapshot, target } from "./fixture/distribution-native"
@@ -9,9 +9,11 @@ import { emergencyStop, stopServices } from "./fixture/distribution-native-proof
 import { assertWindowsPE, windowsIdentity } from "./fixture/distribution-windows-process"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { namedTargets } from "../script/targets"
+import { WindowsProcessQuery } from "../../core/test/fixture/windows-process-query"
+import { Schema } from "effect"
 
 // Native windows-latest x64 only, matching windows-x64-baseline builder row.
-// Requires Bun 1.3.14, native Node >=22 (stripTypeScriptTypes), PowerShell 7,
+// Requires Bun 1.3.14, native Node >=22.13 (stripTypeScriptTypes), PowerShell 7,
 // tar.exe, frozen workspace dependencies incl. native tree-sitter, and real
 // release omni DLL/supervisor from omni-binaries action. No unavailable skips.
 // Host HUGR_OMNI_* feeds harness only; sandbox removes all companion overrides.
@@ -61,3 +63,61 @@ test("native Windows npm install, update and exact downgrade qualify PE closure,
   for (const payload of state.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
   expect((await captureOracle()).trees).toEqual(state.built.oracle.trees)
 }, 900_000)
+
+test("native Windows broker closes owned pwsh after forced reader death and absolute timeout", async () => {
+  const identity = Schema.Struct({ pid: Schema.Int, startTime: Schema.String })
+  const cleanup = Schema.Struct({
+    complete: Schema.Boolean, sourceComplete: Schema.Boolean, brokerClosed: Schema.Boolean, controlClosed: Schema.Boolean,
+    query: Schema.Struct({ pid: Schema.Int, osClosed: Schema.Boolean, stdioClosed: Schema.Boolean }),
+  })
+  for (const mode of ["forced", "timeout"] as const) {
+    const directory = await mkdtemp(join(await realpath(tmpdir()), "nw-query-control-"))
+    const marker = join(directory, "query.json")
+    const terminate = join(directory, "terminate")
+    const reader = `
+import {existsSync} from 'node:fs';
+while(!existsSync(${JSON.stringify(marker)})) await new Promise(resolve=>setTimeout(resolve,10));
+while(!existsSync(${JSON.stringify(terminate)})) await new Promise(resolve=>setTimeout(resolve,10));
+process.kill(process.pid,'SIGKILL');
+`
+    const query = `$ErrorActionPreference='Stop'; $self=Get-CimInstance Win32_Process -Filter ('ProcessId='+$PID);
+      [IO.File]::WriteAllText('${marker.replaceAll("'", "''")}.tmp',(ConvertTo-Json -Compress -InputObject @{pid=$PID;startTime=$self.CreationDate.ToFileTimeUtc().ToString()}));
+      [IO.File]::Move('${marker.replaceAll("'", "''")}.tmp','${marker.replaceAll("'", "''")}');
+      while($true) {[Threading.Thread]::Sleep(100)}`
+    const held = WindowsProcessQuery.invoke(reader, "", { nonce: directory }, 15_000, query)
+      .then(() => { throw new Error("WINDOWS_QUERY_CONTROL_UNEXPECTED_SUCCESS") }, (error: unknown) => error)
+    try {
+      // Calibration observes real live pwsh identity before provoking reader loss.
+      const deadline = Date.now() + 10_000
+      while (!(await Bun.file(marker).exists())) {
+        if (Date.now() >= deadline) {
+          await held
+          throw new Error(`WINDOWS_QUERY_CONTROL_NOT_ADMITTED: ${directory}`)
+        }
+        await Bun.sleep(25)
+      }
+      const pinned = Schema.decodeUnknownSync(identity)(await Bun.file(marker).json())
+      const live = await windowsIdentity(pinned.pid)
+      expect(live?.pid).toBe(pinned.pid)
+      expect(live?.startTime).toBe(pinned.startTime)
+      expect(live?.executable.toLowerCase()).toEndWith("pwsh.exe")
+      if (mode === "forced") await Bun.write(terminate, "terminate owned reader")
+      const error = await held
+      if (!(error instanceof Error) || !("cleanup" in error) || !("directory" in error) || typeof error.directory !== "string")
+        throw new Error(`WINDOWS_QUERY_CONTROL_CLOSE_UNPROVEN: ${directory}`, { cause: error })
+      expect(error.message).toContain(mode === "forced" ? "Windows process query failed:" : "deadline expired")
+      const joined = Schema.decodeUnknownSync(cleanup)(error.cleanup)
+      expect(joined).toEqual({ complete: true, sourceComplete: true, brokerClosed: true, controlClosed: true,
+        query: { pid: pinned.pid, osClosed: true, stdioClosed: true } })
+      // Independent fresh census: disappearance accepted only alongside live host control.
+      expect(await windowsIdentity(pinned.pid)).toBeUndefined()
+      const removed = await lstat(error.directory).then(() => false, (failure: unknown) => {
+        if (failure && typeof failure === "object" && "code" in failure && failure.code === "ENOENT") return true
+        throw failure
+      })
+      expect(removed).toBe(true)
+      // Unproved joins keep boundary files; failed controls keep their markers.
+      await rm(directory, { recursive: true })
+    } finally { await held }
+  }
+}, 90_000)
