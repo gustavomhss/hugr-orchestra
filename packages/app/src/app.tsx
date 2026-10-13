@@ -46,7 +46,7 @@ import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider, useServerSync } from "@/context/server-sync"
 import { GlobalProvider, useGlobal } from "@/context/global"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
-import { LayoutProvider } from "@/context/layout"
+import { LayoutProvider, useLayout } from "@/context/layout"
 import { ModelPreferencesProvider, ModelsProvider } from "@/context/models"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
@@ -459,6 +459,37 @@ function NewAppLayout(props: ParentProps<{ serverScoped?: JSX.Element }>) {
   )
 }
 
+function HomeServerProviders() {
+  const layout = useLayout()
+  const global = useGlobal()
+  const server = useServer()
+  const owner = createMemo(
+    () => {
+      const selection = layout.home.selection()
+      const conn =
+        global.servers.list().find((item) => ServerConnection.key(item) === selection.server) ?? server.current
+      if (!conn) return
+      const directory = ServerConnection.key(conn) === selection.server ? selection.directory : undefined
+      return { key: `${ServerConnection.key(conn)}\0${directory ?? ""}`, conn, directory }
+    },
+    undefined,
+    { equals: (a, b) => a?.key === b?.key },
+  )
+  return (
+    <Show when={owner()} keyed>
+      {(owner) => (
+        <ServerSDKProvider server={() => owner.conn}>
+          <ServerSyncProvider server={() => owner.conn}>
+            <ModelsProvider directory={() => owner.directory}>
+              <NewHome />
+            </ModelsProvider>
+          </ServerSyncProvider>
+        </ServerSDKProvider>
+      )}
+    </Show>
+  )
+}
+
 // The draft page only renders the prompt composer, so it drops TerminalProvider.
 // FileProvider and CommentsProvider stay because PromptInput uses file search and comment context.
 function DraftProviders(props: ParentProps) {
@@ -725,7 +756,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         </Route>
       </Route>
       <Show when={settings.general.newLayoutDesigns()}>
-        <Route path="/" component={NewHome} />
+        <Route path="/" component={HomeServerProviders} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
         <Route path="/orchestra/:chapter/*rest" component={OrchestraChapterRoute} />
