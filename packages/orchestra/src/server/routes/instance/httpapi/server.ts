@@ -66,7 +66,9 @@ import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
+import { SessionV2 } from "@orchestra/core/session"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { lazy } from "@/util/lazy"
 import { CorsConfig, isAllowedCorsOrigin, type CorsOptions } from "@orchestra/server/cors"
 import { serveUIEffect } from "@/server/shared/ui"
@@ -281,14 +283,19 @@ export function createRoutes(
   const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
   // One root owns native Session execution, scheduled drains, legacy bootstrap,
   // and every Location map captured by either protocol's constructors.
-  const services = AppNodeBuilderV1.build(LayerNode.group([
-    app,
-    MoveSession.node,
-    LocationServiceMap.node,
-    SessionSubagentModels.node,
-    ScheduledTask.node,
-    ScheduledTask.daemonNode,
-  ]), [[LocationServiceMap.node, locationServiceMapV2]])
+  const services = AppNodeBuilderV1.build(
+    LayerNode.group([
+      app,
+      MoveSession.node,
+      LocationServiceMap.node,
+      SessionV2.node,
+      SessionExecution.node,
+      SessionSubagentModels.node,
+      ScheduledTask.node,
+      ScheduledTask.daemonNode,
+    ]),
+    [[LocationServiceMap.node, locationServiceMapV2]],
+  )
 
   return Layer.mergeAll(
     rootApiRoutes,
@@ -299,14 +306,7 @@ export function createRoutes(
     docRoute,
     uiRoute,
   ).pipe(
-    Layer.provide([
-      errorLayer,
-      compressionLayer,
-      corsVaryFix,
-      fenceLayer,
-      cors(corsOptions),
-      HttpServer.layerServices,
-    ]),
+    Layer.provide([errorLayer, compressionLayer, corsVaryFix, fenceLayer, cors(corsOptions), HttpServer.layerServices]),
     Layer.provide(Layer.succeed(CorsConfig)(corsOptions)),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
