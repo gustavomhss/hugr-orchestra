@@ -15,8 +15,12 @@ export const Plugin = define({
     const config = yield* Config.Service
     const global = yield* Global.Service
     const location = yield* Location.Service
+    const packaged = config.packagedSkills ? yield* config.packagedSkills() : []
     yield* ctx.skill.transform(
       Effect.fn(function* (draft) {
+        packaged.forEach((directory) =>
+          draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(directory) })),
+        )
         const entries = yield* config.entries()
         const directories = entries.flatMap((entry) => (entry.type === "directory" ? [entry.path] : []))
         const items = entries.flatMap((entry) => (entry.type === "document" ? (entry.info.skills ?? []) : []))

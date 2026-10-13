@@ -39,6 +39,8 @@ const { modelsData } = await import("./generate")
 const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
 const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
 const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
+const { packagedSkills } = await import("./packaged-skills")
+const skillTrees = await packagedSkills()
 const plugin = createSolidTransformPlugin()
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
@@ -95,6 +97,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       ORCHESTRA_VERSION: JSON.stringify(Script.version),
       ORCHESTRA_CLI_NAME: JSON.stringify(binary),
       ORCHESTRA_MODELS_DEV: modelsData,
+      ORCHESTRA_PACKAGED_SKILLS: JSON.stringify(skillTrees),
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
       OMNI_ENABLED: JSON.stringify(omni.enabled),
       // A packaged CLI runs the rg in ripgrep/ beside it (or on PATH) and never downloads one.
