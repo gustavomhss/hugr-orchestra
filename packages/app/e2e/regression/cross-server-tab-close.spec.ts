@@ -152,6 +152,8 @@ test("V2 archive sends the supported request and disables unsupported servers wi
   await expect(archive).toContainText(/unavailable/)
   await archive.press("Enter")
   await expect(archive).toHaveAttribute("aria-disabled", "true")
+  await page.keyboard.press("Escape")
+  await expect(archive).toHaveCount(0)
   await expect(page).toHaveURL(new RegExp(`${href}$`))
   await expect(page.getByRole("heading", { name: sessionB.title, exact: true })).toBeVisible()
   expect(await tabs()).toEqual([{ type: "session", server: reviewServerB, sessionId: sessionB.id }])
