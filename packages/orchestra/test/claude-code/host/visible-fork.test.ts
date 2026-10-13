@@ -37,11 +37,10 @@ const make = Effect.fnUntraced(function* (native = true) {
   const firstUser = f.user
   const firstAssistant = f.assistant
   const turns = yield* Effect.forEach(["kept", "reverted", "future"], (label, index) => Effect.gen(function* () {
-    const user = index === 0 ? firstUser : yield* f.sessions.updateMessage({ ...firstUser, id: MessageID.ascending() })
+    const user = index === 0 ? firstUser : yield* f.nextUser()
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: user.id,
       type: "text", text: `${label} request 🦴\r\nexact trailing blanks  ` })
-    const assistant = index === 0 ? firstAssistant : yield* f.sessions.updateMessage({ ...firstAssistant,
-      id: MessageID.ascending(), parentID: user.id })
+    const assistant = index === 0 ? firstAssistant : yield* f.nextAssistant(user)
     yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: assistant.id,
       type: "text", text: `${label} answer` })
     return { user, assistant }
@@ -53,7 +52,10 @@ const make = Effect.fnUntraced(function* (native = true) {
       [turns[1].user.id]: "native-kept", [turns[2].user.id]: "native-future",
     }, ends: { [turns[0].user.id]: "native-kept", [turns[1].user.id]: "native-future" },
   } } : {} })
-  return { ...f, turns, kept, future, history: yield* f.sessions.messages({ sessionID: f.chat.id }) }
+  const history = yield* f.sessions.messages({ sessionID: f.chat.id })
+  expect(history.map((message) => message.info.id)).toEqual(turns.flatMap((turn) => [turn.user.id, turn.assistant.id]))
+  expect(history.every((message, index) => index === 0 || message.info.time.created > history[index - 1].info.time.created)).toBe(true)
+  return { ...f, turns, kept, future, history }
 })
 
 for (const boundary of ["omitted", "at-cut", "future", "unknown", "earlier"] as const)
