@@ -103,7 +103,7 @@ for (const scheme of ["dark", "light"] as const) {
     await address.fill("https://example.com/materials")
     await address.press("Enter")
     const selected = dock.locator(".zen-tab.is-active")
-    await expect(selected).toHaveText("EPage /materials")
+    await expect(selected.locator(".zen-tab-title")).toHaveText("Page /materials")
     await expectMaterial(selected, "--orchestra-file-active")
     await expectMaterial(address, "--orchestra-evidence-background")
     await expectMaterial(dock.getByRole("tablist", { name: "Dock panes" }), "--orchestra-context-background")
