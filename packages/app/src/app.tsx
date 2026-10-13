@@ -650,15 +650,18 @@ export function AppInterface(props: {
   // The visual new layout lives in the router root so it remains mounted across
   // route changes. Draft and session routes override only their server-bound data
   // providers beneath it.
-  const ServerShell = (shellProps: ParentProps) => (
+  const ServerShell = (shellProps: ParentProps) => {
+    const settings = useSettings()
+    return (
       <SharedProviders>
-        <JanitorProvider>
+        <JanitorProvider enabled={settings.general.janitorEnabled}>
           {props.children}
           {shellProps.children}
           <JanitorWidget />
         </JanitorProvider>
       </SharedProviders>
-  )
+    )
+  }
 
   return (
     <ServerProvider

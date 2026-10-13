@@ -102,6 +102,7 @@ import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/sessio
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
 import { SessionLineageBoundary } from "./session/session-lineage-boundary"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 type FollowupItem = FollowupDraft & { id: string }
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
@@ -364,7 +365,7 @@ export default function Page() {
   const sync = useSync()
   const queryClient = useQueryClient()
   const dialog = useDialog()
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const settings = useSettings()

@@ -3,11 +3,9 @@ import { type Accessor, batch, createEffect, createMemo, createRoot, getOwner, o
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { createSimpleContext } from "@orchestra/ui/context"
 import type { ServerSDK } from "./server-sdk"
-import type { ServerSync } from "./server-sync"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
-import { base64Encode } from "@orchestra/core/util/encode"
 import { decode64 } from "@/utils/base64"
 import { EventSessionError } from "@orchestra/sdk/v2"
 import { Persist, persisted } from "@/utils/persist"
@@ -15,7 +13,7 @@ import { playSoundById } from "@/utils/sound"
 import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
 import { type DraftTab, useTabs } from "./tabs"
-import { requireServerKey } from "@/utils/session-route"
+import { requireServerKey, sessionHref } from "@/utils/session-route"
 import type { ServerScope } from "@/utils/server-scope"
 
 type NotificationBase = {
@@ -123,7 +121,7 @@ export const { use: useNotification, provider: NotificationProvider } = createSi
     const settings = useSettings()
     const language = useLanguage()
     const owner = getOwner()
-    const states = new Map<ServerScope, { dispose: () => void; state: NotificationState }>()
+    const states = new Map<ServerScope, { sdk: ServerSDK; dispose: () => void; state: NotificationState }>()
 
     const activeServer = createMemo(() => {
       if (params.serverKey) return requireServerKey(params.serverKey)
@@ -141,9 +139,11 @@ export const { use: useNotification, provider: NotificationProvider } = createSi
       if (!conn) throw new Error(`Notification server not found: ${key}`)
       const ctx = global.ensureServerCtx(conn)
       const existing = states.get(ctx.sdk.scope)
-      if (existing) return existing.state
+      if (existing?.sdk === ctx.sdk) return existing.state
+      existing?.dispose()
       const root = createRoot(
         (dispose) => ({
+          sdk: ctx.sdk,
           dispose,
           state: createServerNotificationState({
             sdk: ctx.sdk,
@@ -210,15 +210,25 @@ export const { use: useNotification, provider: NotificationProvider } = createSi
 
 type NotificationState = ReturnType<typeof createServerNotificationState>
 
-function createServerNotificationState(input: {
-  sdk: ServerSDK
-  sync: ServerSync
+export function createServerNotificationState(input: {
+  sdk: Pick<ServerSDK, "server" | "scope"> & { event: Pick<ServerSDK["event"], "listen"> }
+  sync: {
+    ensureDirSyncContext: (directory: string) => {
+      session: {
+        get: (sessionID: string) => { title?: string; parentID?: string } | undefined
+        sync: (sessionID: string) => Promise<unknown>
+      }
+    }
+  }
   active: Accessor<boolean>
   directory: Accessor<string | undefined>
   sessionID: Accessor<string | undefined>
   platform: ReturnType<typeof usePlatform>
-  settings: ReturnType<typeof useSettings>
-  language: ReturnType<typeof useLanguage>
+  settings: {
+    sounds: Pick<ReturnType<typeof useSettings>["sounds"], "agentEnabled" | "agent" | "errorsEnabled" | "errors">
+    notifications: Pick<ReturnType<typeof useSettings>["notifications"], "agent" | "errors">
+  }
+  language: Pick<ReturnType<typeof useLanguage>, "t">
   navigate: (href: string) => void
 }) {
   const serverSDK = () => input.sdk
@@ -226,6 +236,7 @@ function createServerNotificationState(input: {
   const platform = input.platform
   const settings = input.settings
   const language = input.language
+  const originServer = ServerConnection.key(input.sdk.server)
 
   const empty: Notification[] = []
 
@@ -237,6 +248,7 @@ function createServerNotificationState(input: {
     createStore({
       list: [] as Notification[],
     }),
+    platform,
   )
   const [index, setIndex] = createStore<NotificationIndex>(buildNotificationIndex(store.list))
 
@@ -337,6 +349,7 @@ function createServerNotificationState(input: {
 
   const handleSessionIdle = (directory: string, event: { properties: { sessionID?: string } }, time: number) => {
     const sessionID = event.properties.sessionID
+    if (!sessionID) return
     void lookup(directory, sessionID).then((session) => {
       if (meta.disposed) return
       if (!session) return
@@ -354,7 +367,7 @@ function createServerNotificationState(input: {
         session: sessionID,
       })
 
-      const href = `/${base64Encode(directory)}/session/${sessionID}`
+      const href = sessionHref(originServer, sessionID)
       if (settings.notifications.agent()) {
         void platform.notify(language.t("notification.session.responseReady.title"), session.title ?? sessionID, () =>
           input.navigate(href),
@@ -389,9 +402,13 @@ function createServerNotificationState(input: {
       const description =
         session?.title ??
         (typeof error === "string" ? error : language.t("notification.session.error.fallbackDescription"))
-      const href = sessionID ? `/${base64Encode(directory)}/session/${sessionID}` : `/${base64Encode(directory)}`
       if (settings.notifications.errors()) {
-        void platform.notify(language.t("notification.session.error.title"), description, () => input.navigate(href))
+        const href = sessionID && sessionHref(originServer, sessionID)
+        void platform.notify(
+          language.t("notification.session.error.title"),
+          description,
+          href ? () => input.navigate(href) : undefined,
+        )
       }
     })
   }
