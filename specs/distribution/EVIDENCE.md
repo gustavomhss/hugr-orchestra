@@ -2,6 +2,8 @@
 
 Baseline: `615b2602ea`. Qualification versions: `1.18.27` and `1.18.28`, built separately from the same source snapshot. These are test builds, not release/publication records.
 
+Stack composition subsequently adopted `dev` at `6dbb3546fc`, including its bundled ripgrep and generic CLI test selector. The complete refreshed tree is qualified once by `distribution-bundle.yml`; its exact SHA and hosted result are recorded in the final bundle PR. The table below remains historical evidence for the linked snapshots, not a claim that those runs tested the newer baseline. See `STACK.md` for the review and landing order.
+
 ## Measured hosted checks
 
 | Scope | Evidence | Reach |

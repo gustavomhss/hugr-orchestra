@@ -87,21 +87,22 @@ function inspect(input: unknown) {
   check(job.steps.indexOf(admission) < job.steps.indexOf(run) && job.steps.indexOf(run) < job.steps.indexOf(control), "BUNDLE_ORDER")
   check(distribution.length > 0, "BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
   rows.forEach((row) => {
-    check(row.files?.length, `BUNDLE_FILES: ${row.package}/${row.host}`)
+    const files = row.files
+    check(files?.length, `BUNDLE_FILES: ${row.package}/${row.host}`)
     if (row.package === "cli") {
-      check(row.files.includes("./test/distribution-native.test.ts") === (row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.host}`)
-      check(row.files.includes("./test/distribution-homebrew.test.ts") === (row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-native.test.ts") === (row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-homebrew.test.ts") === (row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.host}`)
     }
     const expected = row.package === "core" ? ["packaged-skills", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "effect/cross-spawn-spawner"].map((name) => `./test/${name}.test.ts`)
       : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !file.endsWith("distribution-homebrew.test.ts"))
         : (row.platform === "darwin" ? ["payload", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "launcher"] : ["native"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
-    expect(row.files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
+    expect(files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
     admit(admission, row)
     requireRejection(() => admit(admission, row, { arch: row.cpu === "X64" ? "arm64" : "x64" }), "BUNDLE_CPU_BLIND", "BUNDLE_NATIVE_HOST_MISMATCH")
     requireRejection(() => admit(admission, row, { platform: "unsupported" }), "BUNDLE_PLATFORM_BLIND", "BUNDLE_NATIVE_HOST_MISMATCH")
     expect(() => admit(admission, { ...row, files: [] })).toThrow("BUNDLE_FILES_EMPTY")
     expect(() => admit(admission, { ...row, files: undefined })).toThrow("args must be a string array")
-    expect(() => admit(admission, { ...row, files: [row.files[0], row.files[0]] })).toThrow("BUNDLE_FILES_REPEATED")
+    expect(() => admit(admission, { ...row, files: [files[0], files[0]] })).toThrow("BUNDLE_FILES_REPEATED")
     expect(() => admit(admission, { ...row, files: ["./test/missing.test.ts"] })).toThrow("BUNDLE_FILE_INVALID_OR_MISSING")
     expect(() => admit(admission, { ...row, files: ["./test/../../package.json.test.ts"] })).toThrow("BUNDLE_FILE_INVALID_OR_MISSING")
   })
@@ -113,7 +114,7 @@ function inspect(input: unknown) {
   ;["", `omni control nonce: ${nonce}\n`, log("off (legacy rollback)"), log("not applicable (focused)"), log("FAIL (suite)"), log("pass (suite)") + log("pass (suite)"), log("pass (suite)") + `omni positive control [${nonce}]: pass (suite)\n`, log("pass (suite)").replace(`[${nonce}]`, "[wrong]")].forEach((text) =>
     requireRejection(() => verdict({ env: { ROW: "calibration" } }, () => text, controlVerdict), "BUNDLE_CONTROL_BLIND"))
   const lines = run.run?.trim().split("\n") ?? []
-  ["set -euo pipefail", 'while IFS= read -r file; do args+=("$file"); done < ../../.distribution-files',
+  ;["set -euo pipefail", 'while IFS= read -r file; do args+=("$file"); done < ../../.distribution-files',
     'if [ "$PACKAGE" = cli ]; then preload=(--preload ../../script/test-omni-control.ts); fi',
     'nonce=$(node -e "process.stdout.write(require(\'node:crypto\').randomBytes(16).toString(\'hex\'))")',
     'status=0',
