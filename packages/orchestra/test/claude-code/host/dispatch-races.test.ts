@@ -1,5 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import type { PostToolUseHookInput, PreToolUseHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { AgentOutput } from "@anthropic-ai/claude-agent-sdk/sdk-tools"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Database } from "@orchestra/core/database/database"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
@@ -37,7 +38,8 @@ const args = (grantID: string) => ({ description: "write the proposal", subagent
 const background = { description: "review the plan", subagent_type: "orchestra:patty", run_in_background: true, prompt: "Review it." }
 const pre = (tool_use_id: string, tool_input: unknown): PreToolUseHookInput => ({ ...base, hook_event_name: "PreToolUse", tool_name: "Agent", tool_use_id, tool_input })
 const launch = (tool_use_id: string, agentId: string): PostToolUseHookInput => ({ ...base, hook_event_name: "PostToolUse", tool_name: "Agent", tool_use_id, tool_input: background,
-  tool_response: { status: "async_launched", agentId } })
+  tool_response: { status: "async_launched", agentId, description: background.description,
+    prompt: background.prompt, outputFile: "/tmp/output" } satisfies AgentOutput })
 const notice = (task_id: string, tool_use_id?: string): SDKTaskNotificationMessage => ({ type: "system", subtype: "task_notification", task_id, tool_use_id,
   status: "completed", summary: "Reviewed.", output_file: "/tmp/output", uuid: "00000000-0000-4000-8000-000000000001", session_id: "cc-session" })
 
@@ -54,9 +56,10 @@ const host = Effect.fn("DispatchRaceTest.host")(function* (beforeSave: (part: Se
     modelID: model.modelID, providerID: model.providerID, path: { cwd: parent.directory, root: parent.directory }, cost: 0,
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() } } satisfies SessionV1.Assistant)
   const mirrored = new Map<string, SessionV1.ToolPart>()
+  const authors = new Map<string, MessageID>()
   const join = ClaudeHostJoin.make()
   const delegation = ClaudeHostDelegation.make({ sessionID: parent.id, agent: "maestro", path: { cwd: parent.directory, root: parent.directory }, join,
-    parts: { tool: (id) => mirrored.get(id), complete: (part) => beforeSave(part).pipe(Effect.andThen(sessions.updatePart(part)),
+    parts: { tool: (id) => mirrored.get(id), author: (id) => authors.get(id), complete: (part) => beforeSave(part).pipe(Effect.andThen(sessions.updatePart(part)),
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) } })
   const call = (id: string, input: Record<string, unknown>) => Effect.gen(function* () {
     const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: parent.id, messageID: message.id, type: "tool", callID: id, tool: "Agent",
@@ -72,7 +75,7 @@ const host = Effect.fn("DispatchRaceTest.host")(function* (beforeSave: (part: Se
   yield* Effect.addFinalizer(() => Effect.sync(() => ClaudeHostMcp.release(parent.id)))
   const part = (id: string) => sessions.messages({ sessionID: parent.id }).pipe(Effect.map((history) => history.flatMap((message) => message.parts)
     .find((part): part is SessionV1.ToolPart => part.type === "tool" && part.callID === id)))
-  return { sessions, parent, join, delegation, grant, call, part, actor: { sessionID: parent.id, seat: "maestro" } }
+  return { sessions, parent, message, authors, join, delegation, grant, call, part, actor: { sessionID: parent.id, seat: "maestro" } }
 })
 
 const barrier = Effect.fn("DispatchRaceTest.barrier")(function* () {
@@ -211,6 +214,94 @@ describe("dispatch admission races", () => {
 })
 
 describe("background dispatch retention", () => {
+  for (const boundary of ["first-write", "second-write", "foreign-hold"] as const)
+    it.instance(`interrupted rejected-author cleanup at ${boundary} retains exact owned parts and refuses foreign joins`, () => Effect.gen(function* () {
+      const deliveryGate = yield* barrier()
+      const cleanupGate = yield* barrier()
+      const fixture = yield* host((part) => part.callID === "a" && part.state.status === "completed" && part.state.metadata.delivery
+        ? deliveryGate.pause : Effect.void)
+      for (const id of ["a", "b"]) {
+        yield* fixture.delegation.dispatch(yield* fixture.call(id, background), fixture.actor)
+        fixture.join.taskStarted({ toolUseID: id, taskID: `task-${id}` })
+        yield* fixture.delegation.settle(launch(id, `task-${id}`))
+      }
+      fixture.delegation.stop("task-b", "Sibling evidence stays exact.\r\n")
+      yield* fixture.delegation.notify(notice("task-b", "b"))
+      const sibling = yield* fixture.part("b")
+      const siblingHistory = yield* fixture.sessions.messages({ sessionID: fixture.join.child("b")! })
+      const child = fixture.join.child("a")!
+      const prompt = (yield* fixture.sessions.messages({ sessionID: child }))[0].info
+      const blocks = ["Repeated evidence café\r\n  exact", "Rejected final sentinel"]
+      const earlier = yield* fixture.sessions.updateMessage({ ...fixture.message, id: MessageID.ascending(), sessionID: child,
+        parentID: prompt.id, agent: "patty", mode: "patty", finish: "stop", time: { created: 1, completed: 2 } })
+      yield* Effect.forEach(blocks, (text) => fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child,
+        messageID: earlier.id, type: "text", text }))
+      const author = yield* fixture.sessions.updateMessage({ ...earlier, id: MessageID.ascending(), time: { created: 3, completed: 4 } })
+      const parts = yield* Effect.forEach(blocks, (text) => fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child,
+        messageID: author.id, type: "text", text }))
+      fixture.authors.set("a", author.id)
+      const before = yield* fixture.sessions.messages({ sessionID: child })
+      const hook = { ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+        content: blocks.map((text) => ({ type: "text", text })) } }
+      const hold = "HOLD: Agent output refused by ToolSafety inspection"
+      const writes = { seen: 0 }
+      const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+      yield* deliveryGate.wait
+      const refusal = yield* fixture.delegation.settle(hook, "refused").pipe(Effect.provideService(Session.Service, {
+        ...fixture.sessions, updatePart: <T extends SessionV1.Part>(part: T) => Effect.suspend(() => {
+          const pause = part.type === "text" && part.messageID === author.id && part.text === hold &&
+            writes.seen++ === (boundary === "second-write" ? 1 : 0)
+          return (pause ? cleanupGate.pause : Effect.void).pipe(Effect.andThen(fixture.sessions.updatePart(part)))
+        }),
+      }), Effect.forkChild({ startImmediately: true }))
+      yield* deliveryGate.open
+      yield* Fiber.join(delivery)
+      yield* cleanupGate.wait
+      expect(fixture.join.get("a")?.hold).toBe(hold)
+      yield* Fiber.interrupt(refusal)
+      const interrupted = yield* fixture.sessions.messages({ sessionID: child })
+      const pending = yield* fixture.part("a")
+      expect(pending?.state.status === "completed" && pending.state.metadata.delivery).toMatchObject({ taskID: "task-a" })
+      expect(pending?.state.status === "completed" && pending.state.metadata.hold).toBeUndefined()
+      expect(fixture.delegation.summaries().find((entry) => entry.toolUseID === "a")?.settled).toBe(false)
+      expect(interrupted.find((message) => message.info.id === earlier.id)).toEqual(before.find((message) => message.info.id === earlier.id))
+      expect(interrupted.find((message) => message.info.id === author.id)?.parts.filter((part) => part.type === "text").map((part) => part.text))
+        .toEqual(boundary === "second-write" ? [hold, blocks[1]] : blocks)
+      yield* fixture.delegation.fail({ ...base, hook_event_name: "PostToolUseFailure", tool_name: "Agent", tool_use_id: "a",
+        tool_input: background, error: "Native interruption after admitted refusal", is_interrupt: true })
+      expect(yield* fixture.part("a")).toEqual(pending)
+      expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(interrupted)
+      if (boundary === "foreign-hold") {
+        fixture.join.hold("a", "HOLD: conflicting native identity")
+        expect(Exit.isFailure(yield* Effect.exit(fixture.delegation.settle(hook, "refused")))).toBe(true)
+        expect(fixture.join.get("a")?.hold).toBe("HOLD: conflicting native identity")
+        expect(yield* fixture.part("a")).toEqual(pending)
+        expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(interrupted)
+        expect(fixture.delegation.summaries().find((entry) => entry.toolUseID === "a")?.settled).toBe(false)
+        expect(yield* fixture.part("b")).toEqual(sibling)
+        expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("b")! })).toEqual(siblingHistory)
+        return
+      }
+      expect(yield* fixture.delegation.settle(hook, "refused")).toContain("HOLD")
+      const held = yield* fixture.part("a")
+      if (held?.state.status !== "completed") throw new Error("Expected completed cleanup HOLD")
+      expect(held.state.output).toBe(hold)
+      expect(held.state.metadata.hold).toBe(hold)
+      expect(held.state.metadata.claudeCodeDispatch).toBeUndefined()
+      expect(held.state.metadata.delivery).toBeUndefined()
+      expect(held.state.metadata.workResult).toBeUndefined()
+      expect(fixture.delegation.summaries().find((entry) => entry.toolUseID === "a")?.settled).toBe(true)
+      const history = yield* fixture.sessions.messages({ sessionID: child })
+      expect(history.find((message) => message.info.id === earlier.id)).toEqual(before.find((message) => message.info.id === earlier.id))
+      expect(history.find((message) => message.info.id === author.id)?.parts).toEqual(parts.map((part) => ({ ...part, text: hold })))
+      expect(yield* fixture.part("b")).toEqual(sibling)
+      expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("b")! })).toEqual(siblingHistory)
+      yield* fixture.delegation.settle(hook, "refused")
+      yield* fixture.delegation.notify(notice("task-a", "a"))
+      expect(yield* fixture.part("a")).toEqual(held)
+      expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(history)
+    }))
+
   it.instance("refusal queued behind delivery sanitizes its recorded author and durably replaces the parent with HOLD", () => Effect.gen(function* () {
     const gate = yield* barrier()
     const fixture = yield* host((part) => part.state.status === "completed" && part.state.metadata.delivery ? gate.pause : Effect.void)
@@ -250,6 +341,101 @@ describe("background dispatch retention", () => {
     expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([part.state.output])
     yield* fixture.delegation.notify(notice("task-a", "a"))
     expect(yield* fixture.part("a")).toEqual(part)
+    yield* fixture.delegation.dispatch(pre("a", background), fixture.actor)
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    yield* fixture.delegation.settle({ ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "different late refusal" }] } }, "refused")
+    expect(yield* fixture.part("a")).toEqual(part)
+    expect(yield* fixture.sessions.messages({ sessionID: child })).toEqual(history)
+  }))
+
+  it.instance("a refused replay admitted after delivery never rewrites settled history", () => Effect.gen(function* () {
+    const fixture = yield* host()
+    const call = yield* fixture.call("a", background)
+    yield* fixture.delegation.dispatch(call, fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    fixture.delegation.stop("task-a", "Accepted review.")
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    yield* fixture.delegation.notify(notice("task-a", "a"))
+    const parent = yield* fixture.part("a")
+    const child = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    yield* fixture.delegation.dispatch(call, fixture.actor)
+    expect(yield* fixture.delegation.settle({ ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected replay." }] } }, "refused")).toBeUndefined()
+    expect(yield* fixture.part("a")).toEqual(parent)
+    expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })).toEqual(child)
+    expect(fixture.join.get("a")?.hold).toBeUndefined()
+  }))
+
+  it.instance("interrupted queued refusal keeps its admission through delivery and exact retry retains HOLD", () => Effect.gen(function* () {
+    const gate = yield* barrier()
+    const fixture = yield* host((part) => part.state.status === "completed" && part.state.metadata.delivery ? gate.pause : Effect.void)
+    yield* fixture.delegation.dispatch(yield* fixture.call("a", background), fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    fixture.delegation.stop("task-a", "Rejected final.")
+    const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+    yield* gate.wait
+    const hook = { ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected final." }] } }
+    // Immediate start admits the refusal and reaches the occupied semaphore before interruption.
+    const refusal = yield* fixture.delegation.settle(hook, "refused").pipe(Effect.forkChild({ startImmediately: true }))
+    yield* Fiber.interrupt(refusal)
+    yield* gate.open
+    yield* Fiber.join(delivery)
+    const delivered = yield* fixture.part("a")
+    expect(delivered?.state.status === "completed" && delivered.state.metadata.delivery).toMatchObject({ taskID: "task-a" })
+    expect(yield* fixture.delegation.settle(hook, "refused")).toContain("HOLD")
+    const held = yield* fixture.part("a")
+    if (held?.state.status !== "completed") throw new Error("Expected retried refusal HOLD")
+    expect(held.state.output).toBe("HOLD: Agent output refused by ToolSafety inspection")
+    expect(held.state.metadata.hold).toBe(held.state.output)
+    expect(held.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(held.state.metadata.delivery).toBeUndefined()
+    expect(held.state.metadata.workResult).toBeUndefined()
+    const history = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    expect(history.filter((message) => message.info.role === "assistant")).toHaveLength(1)
+    expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([held.state.output])
+    yield* fixture.delegation.settle(hook, "refused")
+    yield* fixture.delegation.notify(notice("task-a", "a"))
+    expect(yield* fixture.part("a")).toEqual(held)
+    expect(yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })).toEqual(history)
+  }))
+
+  it.instance("queued refusal retries a failed HOLD save after delivery without restoring attribution", () => Effect.gen(function* () {
+    const gate = yield* barrier()
+    const failures = { remaining: 1 }
+    const fixture = yield* host((part) => {
+      if (part.state.status !== "completed") return Effect.void
+      if (part.state.metadata.delivery) return gate.pause
+      return Effect.sync(() => {
+        if (part.state.status === "completed" && part.state.metadata.hold && failures.remaining-- > 0)
+          throw new Error("HOLD persistence boundary failed")
+      })
+    })
+    yield* fixture.delegation.dispatch(yield* fixture.call("a", background), fixture.actor)
+    fixture.join.taskStarted({ toolUseID: "a", taskID: "task-a" })
+    fixture.delegation.stop("task-a", "Rejected final.")
+    yield* fixture.delegation.settle(launch("a", "task-a"))
+    const delivery = yield* fixture.delegation.notify(notice("task-a", "a")).pipe(Effect.forkChild)
+    yield* gate.wait
+    const hook = { ...launch("a", "task-a"), tool_response: { status: "completed", agentId: "task-a",
+      content: [{ type: "text", text: "Rejected final." }] } }
+    const refusal = yield* fixture.delegation.settle(hook, "refused").pipe(Effect.exit, Effect.forkChild({ startImmediately: true }))
+    yield* gate.open
+    yield* Fiber.join(delivery)
+    expect(Exit.isFailure(yield* Fiber.join(refusal))).toBe(true)
+    expect(fixture.delegation.summaries()[0].settled).toBe(false)
+    expect(yield* fixture.delegation.settle(hook, "refused")).toContain("HOLD")
+    const part = yield* fixture.part("a")
+    if (part?.state.status !== "completed") throw new Error("Expected retained HOLD retry")
+    expect(part.state.metadata.hold).toBe(part.state.output)
+    expect(part.state.metadata.claudeCodeDispatch).toBeUndefined()
+    expect(part.state.metadata.delivery).toBeUndefined()
+    expect(fixture.delegation.summaries()[0].settled).toBe(true)
+    const history = yield* fixture.sessions.messages({ sessionID: fixture.join.child("a")! })
+    expect(history.filter((message) => message.info.role === "assistant")).toHaveLength(1)
+    expect(history.at(-1)?.parts.filter((part) => part.type === "text").map((part) => part.text)).toEqual([part.state.output])
   }))
 
   it.instance("a crossed pair cannot settle B or swallow A; task-only notices deliver once", () => Effect.gen(function* () {

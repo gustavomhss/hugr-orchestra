@@ -9,7 +9,7 @@ export * as ClaudeHostMirror from "./mirror"
 //   on the Agent card. The Agent part keeps its raw name: delegation records (hooks) own it (contract V2 §2);
 // - retry status, compaction dividers, rate limits, cost, model usage and context window.
 // A steer that Claude Code reads mid-turn starts the next step under the steering user message.
-import { Effect } from "effect"
+import { Effect, Semaphore } from "effect"
 import type { ModelUsage, SDKMessage, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Agent } from "@/agent/agent"
@@ -183,6 +183,8 @@ export function create(input: {
   const sends = new Map<string, SessionV1.User>()
   const pending = new Map<MessageID, { user: SessionV1.User; uuid?: string }>()
   const consumed = new Map<MessageID, SessionV1.User>()
+  const writes = Semaphore.makeUnsafe(1)
+  const resolving = new Map<number, string>()
   let answering = input.user
   let apiID: string | undefined
   let retrying = false
@@ -196,10 +198,13 @@ export function create(input: {
   const state = (patch: Input) => input.state?.(patch) ?? Effect.void
 
   /** Rewrites a mirrored part, keeping metadata another writer (the delegation hooks) stored on it meanwhile. */
-  const write = (next: SessionV1.ToolPart, stored?: SessionV1.Part) => Effect.gen(function* () {
+  const write = (next: SessionV1.ToolPart, saved?: SessionV1.Part, authoritative = false) => Effect.gen(function* () {
     const owner = views.findLast((item) => item.tool(next.callID)) ?? current()
-    const kept = stored?.type === "tool" ? stored : undefined
+    const retained = saved ?? (yield* stored(next))
+    const kept = retained?.type === "tool" ? retained : undefined
     const keptState = kept && kept.state.status !== "pending" ? kept.state.metadata : undefined
+    // Hooks own a refusal's state. Late native results/progress cannot restore output or accepted attribution.
+    if (!authoritative && keptState?.hold !== undefined && kept) return yield* owner.complete(kept)
     const merged = { ...next, metadata: { ...kept?.metadata, ...next.metadata },
       state: next.state.status === "pending" ? next.state : { ...next.state, metadata: { ...keptState, ...next.state.metadata } } }
     yield* owner.complete(merged as SessionV1.ToolPart)
@@ -221,7 +226,13 @@ export function create(input: {
     const cached = children.get(callID)
     if (cached) return cached.mirror
     const part = tool(callID)
-    const resolved = part && input.child ? yield* input.child(part) : undefined
+    const resolve = input.child
+    // The production child resolver publishes placement through owner.complete in this same fiber.
+    // Only that callback's call may reuse the already-held permit; forked/external writers still acquire it.
+    const resolved = part && resolve ? yield* Effect.withFiber((fiber) => Effect.suspend(() => {
+      resolving.set(fiber.id, callID)
+      return resolve(part)
+    }).pipe(Effect.ensuring(Effect.sync(() => { resolving.delete(fiber.id) })))) : undefined
     if (!resolved) return undefined
     const mirror = create({ ...input, known, sessionID: resolved.sessionID, user: resolved.user, agent: resolved.agent, state: undefined, record: undefined })
     children.set(callID, { mirror, sessionID: resolved.sessionID })
@@ -267,7 +278,7 @@ export function create(input: {
           : message.subtype === "task_updated"
             ? { taskID: message.task_id, ...message.patch }
             : { taskID: message.task_id, status: message.status, summary: message.summary, usage: message.usage }
-      yield* target.annotate(callID, patch)
+      yield* (target === self ? annotate(callID, patch) : target.annotate(callID, patch))
       // A background subagent ends with its notification, not with the Agent call's immediate result.
       if (message.subtype === "task_notification") {
         yield* target.settle(callID)
@@ -294,7 +305,7 @@ export function create(input: {
       : []
 
   const self: Mirror = {
-    on: (message) => Effect.gen(function* () {
+    on: (message) => writes.withPermits(1)(Effect.gen(function* () {
       const parent = "parent_tool_use_id" in message ? message.parent_tool_use_id : null
       if (parent) {
         if (!tool(parent)) {
@@ -353,6 +364,11 @@ export function create(input: {
       if (message.type === "result") return yield* usage(message)
       if (message.type !== "user") return
       for (const [index, block] of results(message).entries()) {
+        const retained = before[index]
+        if (retained?.type === "tool" && retained.state.status !== "pending" && retained.state.metadata?.hold !== undefined) {
+          yield* write(retained, retained)
+          continue
+        }
         const part = tool(block.tool_use_id)
         const name = raw.get(block.tool_use_id) ?? ""
         if (!part || (part.state.status !== "completed" && part.state.status !== "error")) continue
@@ -396,7 +412,7 @@ export function create(input: {
           yield* self.settle(block.tool_use_id)
         }
       }
-    }),
+    })),
 
     sent: (user, uuid) => Effect.sync(() => {
       if (sends.has(uuid) && sends.get(uuid)?.id !== user.id) throw new Error("SDK send UUID reused for another user message")
@@ -410,7 +426,7 @@ export function create(input: {
     pending: () => [...pending.values()].at(-1)?.user,
     pendingInputs: () => [...pending.values()],
     consumed: () => [...consumed.values()],
-    annotate,
+    annotate: (callID, patch) => writes.withPermits(1)(annotate(callID, patch)),
     settle: (callID) => Effect.gen(function* () {
       const child = children.get(callID)?.mirror
       if (child) yield* child.finish(0)
@@ -425,16 +441,17 @@ export function create(input: {
     // An Orchestra MCP call by Maestro or by a seat whose child session is mirrored.
     claim: (name) => current().claim(name) ??
       [...children.values()].map((item) => item?.mirror.claim(name)).find((part) => part !== undefined),
-    complete: (part) => tool(part.callID) ? write(part)
+    complete: (part) => tool(part.callID) ? Effect.withFiber((fiber) => resolving.get(fiber.id) === part.callID
+      ? write(part, undefined, true) : writes.withPermits(1)(write(part, undefined, true)))
       : known.calls.get(part.callID)?.complete(part) ?? Effect.void,
-    finish: (previousCost) => Effect.gen(function* () {
+    finish: (previousCost) => writes.withPermits(1)(Effect.gen(function* () {
       yield* Effect.forEach([...children.values()], (item) => item?.mirror.finish(0) ?? Effect.void, { discard: true })
       return yield* current().finish(previousCost)
-    }),
-    fail: (cause) => Effect.gen(function* () {
+    })),
+    fail: (cause) => writes.withPermits(1)(Effect.gen(function* () {
       yield* Effect.forEach([...children.values()], (item) => item?.mirror.fail(cause) ?? Effect.void, { discard: true })
       return yield* current().fail(cause)
-    }),
+    })),
   }
 
   const usage = (message: Extract<SDKMessage, { type: "result" }>) => Effect.gen(function* () {
