@@ -13,6 +13,7 @@ import { useSync } from "./sync"
 import { useServerSDK } from "./server-sdk"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { agentKey } from "./agent-identity"
+import { modelSupportsExecution } from "@/hooks/model-execution"
 
 export type ModelKey = { providerID: string; modelID: string; variant?: string }
 
@@ -68,6 +69,16 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const id = createMemo(() => params.id || undefined)
     const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
 
+    // The primary conversation uses Maestro's engine, never another seat's engine or host login.
+    const agent = {
+      current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
+      key: () => {
+        const item = agent.current()
+        return item ? agentKey(item) : undefined
+      },
+    }
+    const engine = () => agent.current()?.engine ?? sync().data.config.agent?.maestro?.engine
+
     const [saved, setSaved, , savedReady] = persisted(
       {
         ...Persist.serverWorkspace(serverSDK().scope, sdk().directory, "model-selection", ["model-selection.v1"]),
@@ -94,7 +105,11 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const validModel = (model: ModelKey) => {
       const provider = providers.all().get(model.providerID)
-      return !!provider?.models[model.modelID] && connected().has(model.providerID)
+      return (
+        !!provider?.models[model.modelID] &&
+        connected().has(model.providerID) &&
+        modelSupportsExecution(model.providerID, provider, provider.models[model.modelID], engine())
+      )
     }
 
     const firstModel = (...items: Array<() => ModelKey | undefined>) => {
@@ -150,7 +165,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           if (validModel(model)) return model
         }
 
-        const first = Object.values(provider.models)[0]
+        const first = Object.values(provider.models).find((model) =>
+          validModel({ providerID: provider.id, modelID: model.id }),
+        )
         if (!first) continue
         const model = { providerID: provider.id, modelID: first.id }
         if (validModel(model)) return model
@@ -158,16 +175,6 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     }
 
     const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
-
-    // The user talks only to Maestro: every draft, new session and follow-up runs on it.
-    // Maestro is found and sent by its stable id: its display name is configurable.
-    const agent = {
-      current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
-      key: () => {
-        const item = agent.current()
-        return item ? agentKey(item) : undefined
-      },
-    }
 
     const current = () => {
       const item = firstModel(
@@ -214,13 +221,13 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       setStore("draft", state)
     }
 
-    const recent = createMemo(() => models.recent.list().map(models.find).filter(Boolean))
+    const recent = createMemo(() => models.recent.list().filter(validModel).map(models.find).filter(Boolean))
 
     const model = {
       ready: models.ready,
       current,
       recent,
-      list: models.list,
+      list: () => models.list().filter((model) => validModel({ providerID: model.provider.id, modelID: model.id })),
       cycle(direction: 1 | -1) {
         const items = recent()
         const item = current()
@@ -238,6 +245,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         model.set({ providerID: entry.provider.id, modelID: entry.id })
       },
       set(item: ModelKey | undefined, options?: { recent?: boolean }) {
+        if (item && !validModel(item)) return
         startTransition(() =>
           batch(() => {
             setStore("last", {

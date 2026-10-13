@@ -30,4 +30,19 @@ describe("draft subagent models", () => {
   test("modelKey joins provider and model", () => {
     expect(modelKey("openrouter", "a/b")).toBe("openrouter/a/b")
   })
+
+  test("controlled changes are idempotent and preserve slash IDs until explicitly cleared", () => {
+    clearPending(DIR)
+    expect(togglePending(DIR, "openrouter", "team/model", true)).toBe(true)
+    expect(togglePending(DIR, "openrouter", "team/model", true)).toBe(true)
+    expect(pendingRules(DIR)).toEqual([
+      { permission: "task", pattern: "*/*", action: "deny" },
+      { permission: "task", pattern: "openrouter/team/model", action: "allow" },
+    ])
+    expect(pendingRules(DIR).at(-1)?.pattern).toBe("openrouter/team/model")
+    expect(togglePending(DIR, "openrouter", "team/model", false)).toBe(false)
+    expect(togglePending(DIR, "openrouter", "team/model", false)).toBe(false)
+    expect(pendingRules(DIR)).toEqual([])
+    clearPending(DIR)
+  })
 })
