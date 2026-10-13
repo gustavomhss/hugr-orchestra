@@ -13,12 +13,18 @@ import { makeHttp } from "../session/prompt.fixture"
 
 const it = testEffect(makeHttp())
 
-it.instance("MCP bridge advertises actual host schemas and executes real recall/compact with host permissions", () => Effect.gen(function* () {
+// A sample of registry tools to serve, with their real schemas.
+const SERVED = ["read", "edit", "write", "context_recall"]
+
+it.instance("MCP bridge advertises actual host schemas and executes real recall with host permissions; context_compact is never served", () => Effect.gen(function* () {
   const sessions = yield* Session.Service
   const registry = yield* ToolRegistry.Service
   const chat = yield* sessions.create({ title: "Actual SDK tools" })
   const messageID = MessageID.ascending()
-  const defs = (yield* registry.all()).filter((def) => ClaudeCodeTools.IDS.includes(def.id))
+  const all = yield* registry.all()
+  const defs = all.filter((def) => SERVED.includes(def.id))
+  // Claude Code compacts natively in Claude mode; Orchestra's context_compact exists but is never handed to it.
+  expect(all.some((def) => def.id === "context_compact")).toBe(true)
   const context = yield* Effect.context<never>()
   const asks: unknown[] = []
   const completed: SessionV1.ToolPart[] = []
@@ -35,7 +41,16 @@ it.instance("MCP bridge advertises actual host schemas and executes real recall/
   yield* Effect.addFinalizer(() => Effect.promise(() => client.close()))
   yield* Effect.promise(async () => { await server.instance.connect(transports[0]); await client.connect(transports[1]) })
   const listed = yield* Effect.promise(() => client.listTools())
-  expect(listed.tools.map((tool) => tool.name).toSorted()).toEqual(ClaudeCodeTools.IDS.toSorted())
+  expect(listed.tools.map((tool) => tool.name).toSorted()).toEqual(SERVED.toSorted())
+  const unserved = ClaudeCodeTools.server({ defs: all, run: (effect) => Effect.runPromiseWith(context)(effect),
+    claim: () => Effect.die("unused"), complete: () => Effect.void, context: () => { throw new Error("unused") } })
+  const probe = new Client({ name: "unserved", version: "1" })
+  const pair = InMemoryTransport.createLinkedPair()
+  yield* Effect.addFinalizer(() => Effect.promise(() => probe.close()))
+  yield* Effect.promise(async () => { await unserved.instance.connect(pair[0]); await probe.connect(pair[1]) })
+  const offered = (yield* Effect.promise(() => probe.listTools())).tools.map((tool) => tool.name)
+  expect(offered).toContain("context_recall")
+  expect(offered).not.toContain("context_compact")
   for (const def of defs) {
     expect<unknown>(listed.tools.find((tool) => tool.name === def.id)?.inputSchema).toEqual({ type: "object", ...ToolJsonSchema.fromTool(def) })
     expect(listed.tools.find((tool) => tool.name === def.id)?._meta).toEqual({ "anthropic/alwaysLoad": true })
@@ -44,10 +59,7 @@ it.instance("MCP bridge advertises actual host schemas and executes real recall/
   const text = Schema.decodeUnknownSync(Schema.Struct({ content: Schema.Array(Schema.Struct({ type: Schema.String, text: Schema.String })) }))(recall)
   expect(text.content[0].text).toContain('"references":[]')
   expect(asks).toEqual([{ permission: "context_recall", patterns: [chat.id], always: [chat.id], metadata: {} }])
-  const compact = yield* Effect.promise(() => client.callTool({ name: "context_compact", arguments: {} }))
-  expect(asks.at(-1)).toEqual({ permission: "context_compact", patterns: [chat.id], always: [chat.id], metadata: {} })
-  expect(JSON.stringify(compact)).toContain("next SDK resume")
-  expect(completed.map((part) => [part.tool, part.state.status])).toEqual([["context_recall", "completed"], ["context_compact", "completed"]])
+  expect(completed.map((part) => [part.tool, part.state.status])).toEqual([["context_recall", "completed"]])
   const invalid = yield* Effect.promise(() => client.callTool({ name: "context_recall", arguments: { archive_list: true, query: "mixed modes" } }))
   expect(invalid.isError).toBe(true)
 }), 60_000)
