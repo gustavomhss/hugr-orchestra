@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 
-// Bun's module mocks outlive their test file. Keep the original suite in a child
-// process so its SDK and context mocks cannot replace other tests' real imports.
+// Bun's module mocks outlive their test file. The suite entry imports dispatch,
+// admission and delivery domains plus one shared harness inside this child process.
+// Its SDK and context fixtures cannot replace other test files' real imports.
 test("prompt submit with isolated module mocks", async () => {
   const child = Bun.spawn(
     [
