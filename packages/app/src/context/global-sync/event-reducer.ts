@@ -16,6 +16,7 @@ import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
 import { diffs as list, message as clean } from "@/utils/diffs"
 import { messageKey } from "@/utils/session-message"
+import { applySessionManagementEvent, mergeSessionManagementInfo, type AppSession } from "@/utils/session"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const SESSION_CONTENT_EVENTS = new Set([
@@ -107,7 +108,7 @@ export function cleanupDroppedSessionCaches(
 }
 
 export function applyDirectoryEvent(input: {
-  event: { type: string; properties?: unknown }
+  event: { type: string; properties?: unknown; current?: unknown }
   store: Store<State>
   setStore: SetStoreFunction<State>
   push: (directory: string) => void
@@ -129,10 +130,10 @@ export function applyDirectoryEvent(input: {
       return
     }
     case "session.created": {
-      const info = (event.properties as { info: Session }).info
+      const info = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, info.id, (s) => s.id)
       if (result.found) {
-        input.setStore("session", result.index, reconcile(info))
+        input.setStore("session", result.index, reconcile(mergeSessionManagementInfo(input.store.session[result.index], info)))
         break
       }
       const next = input.store.session.slice()
@@ -144,8 +145,9 @@ export function applyDirectoryEvent(input: {
       break
     }
     case "session.updated": {
-      const info = (event.properties as { info: Session }).info
-      const result = Binary.search(input.store.session, info.id, (s) => s.id)
+      const incoming = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
+      const info = mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, incoming)
       if (info.time.archived) {
         if (!result.found) break
         if (input.store.session[result.index]!.time.archived === info.time.archived) break
@@ -212,19 +214,26 @@ export function applyDirectoryEvent(input: {
       }))
       break
     }
-    // case "session.archived": {
-    //   const properties = event.properties as { sessionID: string }
-    //   const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-    //   if (!result.found) break
-    //   const info = input.store.session[result.index]
-    //   input.setStore(
-    //     "session",
-    //     produce((draft) => void draft.splice(result.index, 1)),
-    //   )
-    //   cleanupSessionCaches(input.setStore, properties.sessionID)
-    //   if (!info?.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
-    //   break
-    // }
+    case "session.next.subagent.models.changed":
+    case "session.next.archive.changed": {
+      const properties = event.properties as { sessionID: string }
+      const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
+      if (!result.found) {
+        // Restores can reintroduce an absent row. Reload that directory's authoritative list.
+        if (event.type === "session.next.archive.changed") input.push(input.directory)
+        break
+      }
+      const info = applySessionManagementEvent(input.store.session[result.index]!, event)
+      if (!info) break
+      if (info.time.archived !== undefined) {
+        input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
+        cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
+        if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
+        break
+      }
+      input.setStore("session", result.index, reconcile(info))
+      break
+    }
     case "session.moved": {
       const properties = event.properties as {
         sessionID: string

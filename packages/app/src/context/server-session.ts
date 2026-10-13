@@ -18,10 +18,11 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
-import { normalizeSessionInfo } from "@/utils/session"
+import { mergeSessionManagementInfo, normalizeSessionInfo, type AppSession } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
+import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
@@ -195,7 +196,7 @@ export function createServerSession(
   const sessionApi = messageApi ? (sessionApiOrOptions as SessionApi) : undefined
   const options = messageApi ? currentOptions : (sessionApiOrOptions as ServerSessionOptions | undefined)
   const [data, setData] = createStore({
-    info: {} as Record<string, Session | undefined>,
+    info: {} as Record<string, AppSession | undefined>,
     session_status: {} as Record<string, SessionStatus>,
     session_diff: {} as Record<string, FileDiffInfo[]>,
     todo: {} as Record<string, Todo[]>,
@@ -209,7 +210,7 @@ export function createServerSession(
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
   })
-  const requests = new Map<string, Promise<Session>>()
+  const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
@@ -258,8 +259,8 @@ export function createServerSession(
     )
   }
 
-  const remember = (session: Session) => {
-    setData("info", session.id, reconcile(session))
+  const remember = (session: AppSession) => {
+    setData("info", session.id, reconcile(mergeSessionManagementInfo(data.info[session.id], session)))
     infoSeen.delete(session.id)
     infoSeen.add(session.id)
     if (infoSeen.size > sessionInfoLimit) {
@@ -283,7 +284,7 @@ export function createServerSession(
         produce((draft) => stale.forEach((sessionID) => delete draft[sessionID])),
       )
     }
-    return session
+    return data.info[session.id]!
   }
 
   const resolve = (sessionID: string, options?: { force?: boolean }) => {
@@ -843,28 +844,6 @@ export function createServerSession(
     await runInflight(inflight, sessionID, () => loadMessages(sessionID, limit))
   }
 
-  const eventSessionID = (event: { type: string; properties?: unknown }) => {
-    const properties = event.properties
-    if (!properties || typeof properties !== "object") return
-    if ("sessionID" in properties && typeof properties.sessionID === "string") return properties.sessionID
-    if (
-      "info" in properties &&
-      properties.info &&
-      typeof properties.info === "object" &&
-      "sessionID" in properties.info &&
-      typeof properties.info.sessionID === "string"
-    )
-      return properties.info.sessionID
-    if (
-      "part" in properties &&
-      properties.part &&
-      typeof properties.part === "object" &&
-      "sessionID" in properties.part &&
-      typeof properties.part.sessionID === "string"
-    )
-      return properties.part.sessionID
-  }
-
   const projectV2 = (reduction: V2SessionReduction) => {
     reduction.touched.forEach((messageID) => messageLoads.get(reduction.sessionID)?.touchedSource.add(messageID))
     setData("session_message", reduction.sessionID, reconcile(reduction.messages))
@@ -968,7 +947,7 @@ export function createServerSession(
       void resolve(sessionID, { force: true }).catch(() => {})
   }
 
-  const apply = (event: { type: string; properties?: unknown }) => {
+  const apply = (event: { type: string; properties?: unknown; current?: unknown }) => {
     const eventID = eventSessionID(event)
     if (eventID) {
       touch(eventID)
@@ -981,12 +960,14 @@ export function createServerSession(
         void resolve(eventID).catch(() => {})
     }
     switch (event.type) {
+      case "session.next.subagent.models.changed":
+      case "session.next.archive.changed":
+        return projectSessionManagementEvent(event, eventID, data.info, remember, resolve)
       case "session.created":
         remember((event.properties as { info: Session }).info)
         return
       case "session.updated": {
-        const info = (event.properties as { info: Session }).info
-        remember(info)
+        const info = remember((event.properties as { info: AppSession }).info)
         if (info.time.archived) evict([info.id])
         return
       }

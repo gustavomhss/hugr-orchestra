@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { dict as en } from "@/i18n/en"
 import { Persist, persisted } from "@/utils/persist"
+import { createCommandRegistration } from "./command-registration"
 
 const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform)
 
@@ -429,14 +430,11 @@ export const { use: useCommand, provider: CommandProvider } = createSimpleContex
       const id = typeof key === "string" ? key : undefined
       const next = typeof key === "function" ? key : cb
       if (!next) return
-      const options = createMemo(next)
-      const entry: CommandRegistration = {
-        key: id,
-        options,
-      }
-      setStore("registrations", (arr) => addCommandRegistration(arr, entry))
+      const registration = createCommandRegistration(id, next)
+      setStore("registrations", (arr) => addCommandRegistration(arr, registration.entry))
       onCleanup(() => {
-        setStore("registrations", (arr) => arr.filter((x) => x !== entry))
+        registration.dispose()
+        setStore("registrations", (arr) => arr.filter((x) => x.options !== registration.entry.options))
       })
     }
 

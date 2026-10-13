@@ -2,6 +2,7 @@ import type { Event, Session, SessionV2Info, V2SessionListResponse } from "@orch
 import type { QueryClient } from "@tanstack/solid-query"
 import { trimSessions } from "./session-trim"
 import { pathKey } from "@/utils/path-key"
+import { normalizeSessionInfo, type AppSession } from "@/utils/session"
 
 export const HOME_V2_SESSION_PAGE_LIMIT = 5_000
 
@@ -102,6 +103,8 @@ export function createHomeSessionIndexCache(queryClient: QueryClient, server: st
       return removed.size === 0 ? sessions : sessions.filter((session) => !removed.has(session.id))
     },
     apply(event: HomeSessionEvent) {
+      if (event.type !== "session.deleted" && event.properties.info.time.archived === undefined)
+        removed.delete(event.properties.sessionID)
       if (!queryClient.getQueryState(indexKey)) return
       const next = appendHomeSessionEvent(queryClient.getQueryData<HomeSessionEvents>(eventsKey), event)
       if (queryClient.isFetching({ queryKey: indexKey, exact: true }) > 0) {
@@ -142,7 +145,7 @@ export function createHomeSessionIndexCache(queryClient: QueryClient, server: st
 // multiple directories. A bounded page could omit an old session updated today.
 // Once released, use client.v2.project.list() and client.v2.session.list({
 // parentID: null, order: "desc" }), then remove this adapter and its V1 fields.
-export function parseHomeSessionIndex(sessions: SessionV2Info[]): Session[] {
+export function parseHomeSessionIndex(sessions: SessionV2Info[]): AppSession[] {
   return sessions.flatMap((item) => {
     if (item.parentID || typeof item.time.archived === "number") return []
     return [toLegacySummary(item)]
@@ -166,21 +169,6 @@ export function applyHomeSessionEvent(sessions: Session[], event: HomeSessionEve
   return sessions.with(index, info)
 }
 
-function toLegacySummary(session: SessionV2Info): Session {
-  return {
-    id: session.id,
-    slug: session.id,
-    projectID: session.projectID,
-    workspaceID: session.location.workspaceID,
-    directory: session.location.directory,
-    path: session.subpath,
-    parentID: session.parentID,
-    cost: session.cost,
-    tokens: session.tokens,
-    title: session.title,
-    agent: session.agent,
-    model: session.model,
-    version: "",
-    time: session.time,
-  }
+function toLegacySummary(session: SessionV2Info): AppSession {
+  return normalizeSessionInfo(session)
 }

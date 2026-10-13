@@ -101,6 +101,7 @@ import { formatServerError, isLocalSessionNotFoundError, isSessionNotFoundError 
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
+import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 
 type FollowupItem = FollowupDraft & { id: string }
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
@@ -180,7 +181,8 @@ export function SessionRouteErrorBoundary(
 ) {
   const settings = useSettings()
   return (
-    <ErrorBoundary
+    <SessionLineageBoundary
+      identity={() => JSON.stringify([props.serverKey, props.sessionID])}
       fallback={(error) =>
         settings.general.newLayoutDesigns() ? (
           <SessionRouteFrame padded={props.padded}>
@@ -194,7 +196,7 @@ export function SessionRouteErrorBoundary(
       }
     >
       {props.children}
-    </ErrorBoundary>
+    </SessionLineageBoundary>
   )
 }
 

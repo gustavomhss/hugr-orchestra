@@ -8,7 +8,6 @@ import type {
   PermissionRequest,
   QuestionRequest,
   ReferenceInfo,
-  Session,
   SessionStatus,
   Todo,
   VcsInfo,
@@ -18,6 +17,7 @@ import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "@opencode-ai/client/promise"
 import type { Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
+import type { AppSession } from "@/utils/session"
 
 export type ProjectMeta = {
   name?: string
@@ -50,7 +50,7 @@ export type State = {
   provider: NormalizedProviderListResponse
   config: Config
   path: Path
-  session: Session[]
+  session: AppSession[]
   sessionTotal: number
   session_status: {
     [sessionID: string]: SessionStatus
