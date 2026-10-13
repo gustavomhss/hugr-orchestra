@@ -76,7 +76,7 @@ jobs:
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
       ORCHESTRA_OMNI_CONTROL: suite
-      ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+      ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ matrix.platform == 'win32' && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
