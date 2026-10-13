@@ -32,20 +32,32 @@ const state: {
   directory?: string; host?: Awaited<ReturnType<typeof sandbox>>; docker?: string;
   attempted: boolean; id?: string; preserve: boolean; artifact?: string;
 } = { attempted: false, preserve: false }
+const interrupt = () => {
+  void cleanup().then(() => process.exit(1), () => {
+    state.preserve = true
+    console.error(`AUR_INTERRUPTED_CLEANUP_FAILED: name=${name} fixture=${state.directory}`)
+    process.exit(1)
+  })
+}
 
 afterAll(async () => {
   if (!state.directory) return
-  await cleanup().catch((cause: unknown) => {
+  const failure = await cleanup().then(() => undefined, (cause: unknown) => {
     state.preserve = true
-    throw new Error(`AUR_OWNED_CONTAINER_CLEANUP_FAILED: name=${name} fixture=${state.directory}`, { cause })
+    return new Error(`AUR_OWNED_CONTAINER_CLEANUP_FAILED: name=${name} fixture=${state.directory}`, { cause })
   })
   if (state.artifact) {
     await cp(join(state.directory, "evidence"), state.artifact, { recursive: true })
     await Bun.write(join(state.artifact, "host-cleanup.json"), JSON.stringify({ name, id: state.id,
-      container: state.attempted ? "owned-label-enumerated-and-removed; post-removal-list-empty" : "not-created",
+      container: failure ? "cleanup-failed; fixture-preserved" : state.attempted
+        ? "owned-label-enumerated-and-removed; post-removal-list-empty" : "not-created",
     }, null, 2))
   }
+  if (failure) throw failure
   if (!state.preserve) await rm(state.directory, { recursive: true, force: true })
+  process.off("SIGINT", interrupt)
+  process.off("SIGTERM", interrupt)
+  process.off("SIGHUP", interrupt)
 }, 180_000)
 
 test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-package downgrade qualify native closure", async () => {
@@ -99,6 +111,9 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
     payloads: built.payloads.map((payload) => ({ version: payload.version, archiveSha256: payload.archive.sha256 })),
   }, null, 2))
   expect(await ownedContainers()).toEqual([])
+  process.once("SIGINT", interrupt)
+  process.once("SIGTERM", interrupt)
+  process.once("SIGHUP", interrupt)
   state.attempted = true // A timed-out create may still have created the named container.
   const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
     "--platform", `linux/${guest.dockerArch}`, "--mount", `type=bind,source=${repo},target=/repo,readonly`,

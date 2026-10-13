@@ -1,14 +1,14 @@
 import { afterAll, expect, test } from "bun:test"
 import { mkdir, readFile, readdir, readlink, realpath, rm } from "node:fs/promises"
 import { machine } from "node:os"
-import { join } from "node:path"
+import { basename, join, resolve } from "node:path"
 import { Schema } from "effect"
 import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { distributionRecipes } from "../../script/distribution-recipes"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { captureOracle, command, sandbox, sha256, skillIdentity, snapshot, successful, target, versions } from "./distribution-native"
 import { emergencyStop, qualify, stopServices } from "./distribution-native-proof"
-import { aurFinalPackage, aurInventory, aurPayload } from "./distribution-aur-inventory"
+import { aurFinalPackage, aurInventory, aurInventoryTeeth, aurPayload } from "./distribution-aur-inventory"
 import type { AurPayload } from "./distribution-aur-inventory"
 import { aurArchives } from "./distribution-aur-https"
 
@@ -81,7 +81,8 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
   const originals = await Promise.all(payloads.map((payload) => aurInventory(payload.payload)))
   const https = await aurArchives(await sandbox("/proof/tls"), payloads)
   const retained = new Map<string, string>()
-  const caches = new Map<string, Awaited<ReturnType<typeof snapshot>>>()
+  const downloads = new Map<string, string>()
+  const caches = new Map<string, { bytes: Awaited<ReturnType<typeof snapshot>>; inventory: Awaited<ReturnType<typeof aurInventory>> }>()
   // Shared qualify() confines the resolved executable to box.directory. This
   // entire /usr prefix belongs to the private container, while XDG stays /proof.
   // Never use this prefix exception on the host or corroborate guest PIDs there.
@@ -106,8 +107,21 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       await stopServices()
       const before = await activation(box)
       const cached = await snapshot(box.namespace)
+      const cacheModes = await aurInventory(box.namespace)
       const recipe = distributionRecipes({ version: payload.version, assets: https.assets[index] }).aur
       expect(https.assets[index].find((asset) => asset.target === target)?.sha256).toBe(payload.archive.sha256)
+      if (index === 0) {
+        const untrustedDirectory = await recipeDirectory(`${payload.version}-untrusted-tls`, recipe, box)
+        const untrustedStart = https.requests.length
+        const untrusted = await makepkg(untrustedDirectory, ["--cleanbuild", "--force", "--noconfirm"], box)
+        await Bun.write("/proof/evidence/makepkg-untrusted-tls.json", JSON.stringify(untrusted, null, 2))
+        expect(untrusted.code, "AUR_MAKEPKG_MUST_REQUIRE_TRUSTED_CA").not.toBe(0)
+        expect(untrusted.stderr, "AUR_MAKEPKG_TLS_CERTIFICATE_DIAGNOSTIC_REQUIRED").toContain("SSL certificate problem")
+        expect(https.requests.slice(untrustedStart), "AUR_UNTRUSTED_MAKEPKG_MUST_NOT_REACH_HTTPS_HANDLER").toEqual([])
+        expect(await activation(box)).toEqual(before)
+        expect(await snapshot(box.namespace)).toEqual(cached)
+        expect(await aurInventory(box.namespace)).toEqual(cacheModes)
+      }
       const bad = await recipeDirectory(`${payload.version}-tampered`, recipe, box)
       const requestBefore = https.requests.length
       https.tamper.enabled = true
@@ -120,11 +134,14 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       expect(rejected.code, "AUR_TAMPERED_CHECKSUM_MUST_FAIL").not.toBe(0)
       expect(rejected.stdout + rejected.stderr).toContain("FAILED")
       expect(rejected.stdout + rejected.stderr).toContain("validity check")
+      expect(sha256(await readFile(join(bad, `orchestra-${payload.version}-${target}.tar.gz`))),
+        "AUR_CHECKSUM_CONTROL_MUST_CHECK_ACTUAL_DOWNLOADED_TAMPERED_BYTES").toBe(https.bytes[index].tamperedSha256)
       expect(https.requests.slice(requestBefore).some((request) => request.served && request.tampered &&
         request.version === payload.version && request.sha256 === https.bytes[index].tamperedSha256)).toBe(true)
       expect(await activation(box), "AUR_CHECKSUM_FAILURE_PRESERVES_FULL_INSTALL_AND_ACTIVATION").toEqual(before)
       expect(await snapshot(box.namespace), "AUR_CHECKSUM_FAILURE_PRESERVES_FULL_SKILL_CACHE").toEqual(cached)
-      expect((await readdir(bad)).filter((name) => name.endsWith(".pkg.tar.zst"))).toEqual([])
+      expect(await aurInventory(box.namespace), "AUR_CHECKSUM_FAILURE_PRESERVES_FULL_CACHE_MODES").toEqual(cacheModes)
+      expect((await readdir(bad)).filter((name) => name.includes(".pkg.tar"))).toEqual([])
       for (const path of [join(bad, "pkg"), join(bad, "src")]) {
         const tree = await aurInventory(path)
         expect(!tree || tree.size === 1, "AUR_CHECKSUM_FAILURE_MUST_PRECEDE_EXTRACTION_AND_PACKAGE").toBe(true)
@@ -134,6 +151,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
         await selected(payloads[index - 1])
         expect(await activation(box)).toEqual(before)
         expect(await snapshot(box.namespace)).toEqual(cached)
+        expect(await aurInventory(box.namespace)).toEqual(cacheModes)
       }
       https.tamper.enabled = false
       const good = await recipeDirectory(`${payload.version}-trusted`, recipe, box)
@@ -143,17 +161,30 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
         requests: https.requests.slice(acceptedStart), recipe, recipeSha256: sha256(recipe) }, null, 2))
       expect(accepted.code, accepted.stderr).toBe(0)
       expect(await readFile(join(good, "PKGBUILD"), "utf8")).toBe(recipe)
+      const download = join(good, `orchestra-${payload.version}-${target}.tar.gz`)
+      expect(sha256(await readFile(download))).toBe(payload.archive.sha256)
+      downloads.set(download, payload.archive.sha256)
       expect(https.requests.slice(acceptedStart).some((request) => request.served && !request.tampered &&
         request.version === payload.version && request.sha256 === payload.archive.sha256)).toBe(true)
-      const filename = `orchestra-bin-${payload.version}-1-${process.arch === "x64" ? "x86_64" : "aarch64"}.pkg.tar.zst`
-      expect((await readdir(good)).filter((name) => name.includes(".pkg.tar."))).toEqual([filename])
+      const packageList = await makepkg(good, ["--packagelist"], box, https.ca)
+      expect(packageList.code, packageList.stderr).toBe(0)
+      const paths = packageList.stdout.trim().split("\n")
+      expect(paths, "AUR_FINAL_PACKAGE_LIST_MUST_HAVE_ONE_PACKAGE").toHaveLength(1)
+      const filename = basename(paths[0])
+      const prefix = `orchestra-bin-${payload.version}-1-${process.arch === "x64" ? "x86_64" : "aarch64"}.pkg.tar`
+      expect(filename.startsWith(prefix), "AUR_FINAL_PACKAGE_TUPLE_MISMATCH").toBe(true)
+      expect(["", ".zst", ".xz", ".gz", ".bz2", ".lz4", ".lrz", ".lzo", ".Z"], "AUR_PACKAGE_COMPRESSION_UNSUPPORTED")
+        .toContain(filename.slice(prefix.length))
+      expect(resolve(good, paths[0]), "AUR_FINAL_PACKAGE_OUTSIDE_OWNED_BUILD").toBe(join(good, filename))
+      expect((await readdir(good)).filter((name) => name.includes(".pkg.tar"))).toEqual([filename])
       const file = join("/proof/packages", filename)
       await successful(["cp", "--", join(good, filename), file], box)
       retained.set(file, sha256(await readFile(file)))
       const extracted = join(good, "final-archive")
       await mkdir(extracted)
       await successful(["bsdtar", "--extract", "--file", file, "--directory", extracted, "--no-same-owner"], box)
-      await aurFinalPackage(extracted, payload)
+      await aurFinalPackage(extracted, payload, recipe)
+      if (index === 0) await aurInventoryTeeth(extracted, payload, recipe)
       state.attempted = true // An interrupted pacman operation still requires cleanup.
       await successful(["pacman", "-U", "--noconfirm", file], box, 120_000)
       expect(await successful(["pacman", "-Q", "orchestra-bin"], box)).toBe(`orchestra-bin ${payload.version}-1`)
@@ -162,14 +193,20 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       await aurPayload(payloadRoot, payload)
       await pacmanInventory(payload, box)
       expect(await snapshot(box.namespace), "AUR_PACMAN_INSTALL_MUST_NOT_EXTRACT_SKILLS").toEqual(cached)
+      expect(await aurInventory(box.namespace)).toEqual(cacheModes)
       const root = await selected(payload, index === 1)
-      caches.set(root, await snapshot(root))
+      caches.set(root, { bytes: await snapshot(root), inventory: await aurInventory(root) })
       await aurPayload(payloadRoot, payload)
-      for (const [root, tree] of caches) expect(await snapshot(root)).toEqual(tree)
+      for (const [root, tree] of caches) {
+        expect(await snapshot(root)).toEqual(tree.bytes)
+        expect(await aurInventory(root)).toEqual(tree.inventory)
+      }
       for (const [file, digest] of retained) expect(sha256(await readFile(file))).toBe(digest)
+      for (const [file, digest] of downloads) expect(sha256(await readFile(file))).toBe(digest)
     }
     await stopServices()
     const cached = await snapshot(box.namespace)
+    const cacheModes = await aurInventory(box.namespace)
     const first = payloads[0]
     const originalPackage = [...retained.keys()][0]
     if (!originalPackage) throw new Error("AUR_RETAINED_ORIGINAL_V1_PACKAGE_MISSING")
@@ -181,12 +218,19 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
     await pacmanInventory(first, box)
     expect(await readlink(launcher)).toBe("/usr/lib/orchestra/bin/orchestra")
     expect(await snapshot(box.namespace)).toEqual(cached)
+    expect(await aurInventory(box.namespace)).toEqual(cacheModes)
     const rollbackRoot = await selected(first)
+    await aurPayload(payloadRoot, first)
     expect(caches.has(rollbackRoot), "AUR_DOWNGRADE_REUSES_ORIGINAL_SKILL_CACHE").toBe(true)
     expect(await snapshot(box.namespace)).toEqual(cached)
+    expect(await aurInventory(box.namespace)).toEqual(cacheModes)
     expect((await readdir(box.namespace)).sort()).toEqual(payloads.map((p) => skillIdentity(p.version, oracle)).sort())
-    for (const [root, tree] of caches) expect(await snapshot(root)).toEqual(tree)
+    for (const [root, tree] of caches) {
+      expect(await snapshot(root)).toEqual(tree.bytes)
+      expect(await aurInventory(root)).toEqual(tree.inventory)
+    }
     for (const [file, digest] of retained) expect(sha256(await readFile(file))).toBe(digest)
+    for (const [file, digest] of downloads) expect(sha256(await readFile(file))).toBe(digest)
     for (const [index, payload] of payloads.entries()) {
       expect(await aurInventory(payload.payload), "AUR_RETAINED_PREPARED_SOURCE_CHANGED").toEqual(originals[index])
       expect(sha256(await readFile(payload.archive.file))).toBe(payload.archive.sha256)
@@ -197,6 +241,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
     await Bun.write("/proof/evidence/qualified.json", JSON.stringify({ target, versions,
       architecture: machine(), distro: await readFile("/etc/os-release", "utf8"), launcher,
       finalPackages: [...retained].map(([file, sha256]) => ({ file, sha256 })),
+      retainedDownloadedArchives: [...downloads].map(([file, sha256]) => ({ file, sha256 })),
       checksum: "real-makepkg-HTTPS-sha256-rejection-before-extraction",
       downgrade: "real-pacman-retained-original-v1-package", requests: https.requests.slice(requestStart),
       runtime: "public-compiled-CLI-version-TS-Python-independent-shipped-companions-authenticated-daemon-catalog-all-skill-reference-bytes",
@@ -212,9 +257,9 @@ async function recipeDirectory(name: string, recipe: string, box: Awaited<Return
   return directory
 }
 
-function makepkg(directory: string, args: string[], box: Awaited<ReturnType<typeof sandbox>>, ca: string) {
+function makepkg(directory: string, args: string[], box: Awaited<ReturnType<typeof sandbox>>, ca?: string) {
   return command(["runuser", "-u", "builder", "--", "env", "-i", "HOME=/home/builder", "PATH=/usr/bin", "LANG=C.UTF-8",
-    `CURL_CA_BUNDLE=${ca}`, "makepkg", ...args], { ...box, cwd: directory }, 300_000)
+    ...(ca ? [`CURL_CA_BUNDLE=${ca}`] : []), "makepkg", ...args], { ...box, cwd: directory }, 300_000)
 }
 
 async function activation(box: Awaited<ReturnType<typeof sandbox>>) {
@@ -231,6 +276,8 @@ function serializable(value: Awaited<ReturnType<typeof activation>>) {
 }
 
 async function pacmanInventory(payload: AurPayload, box: Awaited<ReturnType<typeof sandbox>>) {
+  expect(await aurInventory(launcher), "AUR_INSTALLED_PUBLIC_SYMLINK_TEXT_AND_MODE")
+    .toEqual(new Map([["", { kind: "symlink", mode: 0o777, link: "/usr/lib/orchestra/bin/orchestra" }]]))
   const listed = (await successful(["pacman", "-Qlq", "orchestra-bin"], box)).split("\n")
   const tree = await aurInventory(payload.payload)
   if (!tree || tree.size === 0 || listed.length === 0) throw new Error("AUR_PACMAN_INVENTORY_EMPTY")

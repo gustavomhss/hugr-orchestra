@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { lstat, readFile, readdir, readlink } from "node:fs/promises"
+import { chmod, lstat, mkdir, readFile, readdir, readlink, rename, rm, symlink } from "node:fs/promises"
 import { join } from "node:path"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { sha256, snapshot } from "./distribution-native"
@@ -57,7 +57,7 @@ export async function aurPayload(directory: string, expected: AurPayload) {
 }
 
 // This consumes the FINAL makepkg archive after its real tidy pipeline, not pkg/.
-export async function aurFinalPackage(extracted: string, payload: AurPayload) {
+export async function aurFinalPackage(extracted: string, payload: AurPayload, recipe: string) {
   await aurPayload(join(extracted, "usr/lib/orchestra"), payload)
   const original = await aurInventory(payload.payload)
   const actual = await aurInventory(extracted)
@@ -77,4 +77,57 @@ export async function aurFinalPackage(extracted: string, payload: AurPayload) {
   expect(info.split("\n")).toContain("pkgname = orchestra-bin")
   expect(info.split("\n")).toContain(`pkgver = ${payload.version}-1`)
   expect(info.split("\n")).toContain(`arch = ${process.arch === "x64" ? "x86_64" : "aarch64"}`)
+  const build = (await readFile(join(extracted, ".BUILDINFO"), "utf8")).split("\n")
+  expect(build, "AUR_MAKEPKG_MUST_IDENTIFY_EXACT_PRODUCTION_RECIPE")
+    .toContain(`pkgbuild_sha256sum = ${sha256(recipe)}`)
+  // Frozen advertised options; the final archive records makepkg's effective
+  // configuration as well as proving preservation of every shipped file.
+  for (const option of ["!strip", "!debug", "!lto", "libtool", "staticlibs", "!purge", "docs", "!zipman", "emptydirs"])
+    expect(build, `AUR_MAKEPKG_EFFECTIVE_OPTION_REQUIRED: ${option}`).toContain(`options = ${option}`)
+}
+
+// Calibrate the real final-package oracle on the first real archive. Every
+// planted class must fail, then the restored archive must pass again.
+export async function aurInventoryTeeth(extracted: string, payload: AurPayload, recipe: string) {
+  const file = join(extracted, "usr/lib/orchestra/package.json")
+  const bytes = await readFile(file)
+  const mode = (await lstat(file)).mode & 0o7777
+  const check = () => aurFinalPackage(extracted, payload, recipe)
+  try {
+    await Bun.write(file, "tampered package bytes\n")
+    await expect(check(), "AUR_INVENTORY_BYTE_MUTATION_MUST_FAIL").rejects.toThrow()
+  } finally { await Bun.write(file, bytes); await chmod(file, mode) }
+  try {
+    await chmod(file, 0o755)
+    await expect(check(), "AUR_INVENTORY_MODE_MUTATION_MUST_FAIL").rejects.toThrow()
+  } finally { await chmod(file, mode) }
+  const retained = join(extracted, "../oracle-retained-package.json")
+  try {
+    await rename(file, retained)
+    await expect(check(), "AUR_INVENTORY_MISSING_FILE_MUST_FAIL").rejects.toThrow()
+  } finally { await rename(retained, file) }
+  const extra = join(extracted, "usr/lib/orchestra/unexpected-file")
+  try {
+    await Bun.write(extra, "unshipped file\n")
+    await expect(check(), "AUR_INVENTORY_EXTRA_FILE_MUST_FAIL").rejects.toThrow()
+  } finally { await rm(extra) }
+  const empty = join(extracted, "usr/lib/orchestra/empty-extra")
+  try {
+    await mkdir(empty)
+    await expect(check(), "AUR_INVENTORY_EMPTY_DIRECTORY_MUST_FAIL").rejects.toThrow()
+  } finally { await rm(empty, { recursive: true }) }
+  const launcher = join(extracted, "usr/bin/orchestra")
+  try {
+    await rm(launcher)
+    await symlink("/usr/lib/orchestra/bin/wrong", launcher)
+    await expect(check(), "AUR_INVENTORY_WRONG_LINK_MUST_FAIL").rejects.toThrow()
+  } finally { await rm(launcher); await symlink("/usr/lib/orchestra/bin/orchestra", launcher) }
+  const metadata = join(extracted, ".PKGINFO")
+  const stored = join(extracted, "../oracle-retained-PKGINFO")
+  try {
+    await rename(metadata, stored)
+    await expect(check(), "AUR_INVENTORY_MISSING_PACKAGE_METADATA_MUST_FAIL").rejects.toThrow()
+  } finally { await rename(stored, metadata) }
+  await check()
+  console.info("AUR final-package oracle controls: bytes/mode/missing/extra/empty-directory/link/metadata rejected; restored archive accepted")
 }
