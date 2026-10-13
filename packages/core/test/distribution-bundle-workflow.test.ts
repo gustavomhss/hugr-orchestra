@@ -80,6 +80,7 @@ function inspect(input: unknown) {
     ["cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["cli", "macos-14", "ARM64", "darwin"], ["cli", "macos-15-intel", "X64", "darwin"],
   ])
   check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
+  check(job.env.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER === "${{ matrix.platform == 'win32' && 'true' || 'false' }}", "BUNDLE_JOB_ENV_CONTEXT")
   check(!JSON.stringify(value).includes("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"), "BUNDLE_SPAWNER_OVERRIDE")
   Object.values(value.jobs).forEach((lane) => { check(!lane.if && !lane["continue-on-error"] && lane["timeout-minutes"] > 0 && (!lane.defaults || lane.defaults.run.shell === "bash"), "BUNDLE_JOB_BYPASS"); lane.steps.forEach((step) => check(!step["continue-on-error"] && (!step.shell || step.shell === "bash"), "BUNDLE_STEP_BYPASS")) })
   const admission = requireStep(job.steps, "Assert native CPU and exact files", "BUNDLE_CPU")
