@@ -67,6 +67,7 @@ describe("createCompatibleApi", () => {
       title: "Session",
       version: "1",
       time: { created: 1, updated: 1 },
+      metadata: { claudeCode: { cost: 0.123, modelUsage: { "claude-haiku-5-5": { contextWindow: 200000 } } } },
     }
     const fetcher = Object.assign(async () => Response.json(session), { preconnect: fetch.preconnect })
     const server = { url: "http://localhost:4096" }
@@ -75,7 +76,9 @@ describe("createCompatibleApi", () => {
       current: createApiForServer({ server, fetch: fetcher }),
       legacy: () => createSdkForServer({ server, fetch: fetcher, throwOnError: true }),
     })
-    expect(normalizeSessionInfo(await api.session.get({ sessionID: session.id })).cost).toBeUndefined()
+    const info = normalizeSessionInfo(await api.session.get({ sessionID: session.id }))
+    expect(info.cost).toBeUndefined()
+    expect(info.metadata).toEqual(session.metadata)
   })
   /*
   test("routes V1 archive through the legacy session update", async () => {
