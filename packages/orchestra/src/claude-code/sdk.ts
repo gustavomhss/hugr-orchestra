@@ -7,7 +7,7 @@ import { spawn, spawnSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { homedir, userInfo } from "node:os"
-import { join } from "node:path"
+import { isAbsolute, join } from "node:path"
 
 type QueryOptions = NonNullable<Parameters<typeof query>[0]["options"]>
 
@@ -52,11 +52,15 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
     !("type" in system) || system.type !== "preset" || !("preset" in system) || system.preset !== "claude_code")
     throw new Error("Claude Code turns must keep the claude_code system prompt preset; a replaced prompt is billed as a third-party app")
   const source = options.env ?? process.env
+  const executable = options.pathToClaudeCodeExecutable ?? source.ORCHESTRA_CLAUDE_CODE_EXECUTABLE
+  if (executable !== undefined && !isAbsolute(executable))
+    throw new Error("Claude Code executable must be an absolute path")
   const env = machineEnvironment(source)
   const exits: Promise<void>[] = []
   return {
     options: {
       ...options,
+      ...(executable !== undefined ? { pathToClaudeCodeExecutable: executable } : {}),
       env,
       spawnClaudeCodeProcess: (input) => {
         // Only a real SDK query spawns, so recorded transports run without the flag. Refuse before any login read.

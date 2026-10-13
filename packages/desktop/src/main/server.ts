@@ -91,11 +91,19 @@ export async function spawnLocalServer(
   const defaultSidecar = join(outDir, "sidecar.js")
   const sidecar = options.sidecarPath ? validateSidecarPath(options.sidecarPath) : defaultSidecar
   await access(sidecar)
+  const claudeExecutable = join(
+    app.isPackaged ? process.resourcesPath : resolve(outDir, "../../resources"),
+    "claude-code",
+    process.platform === "win32" ? "claude.exe" : "claude",
+  )
+  await access(claudeExecutable)
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
     env: {
       ...createSidecarEnv(options.candidateProfile),
       ...OmniHost.sidecarEnv(),
+      // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
+      ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
       ...ripgrepEnv(app.isPackaged, process.resourcesPath),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
       // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the

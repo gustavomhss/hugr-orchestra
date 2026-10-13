@@ -128,6 +128,9 @@ for (const channel of ["dev", "beta", "prod"] as const) {
     expect(typeof config.afterPack).toBe("function")
     expect(typeof config.afterSign).toBe("function")
     expect(config.mac?.signIgnore).toContain("/Resources/cli/")
+    expect(config.mac?.signIgnore).toContain("/Resources/claude-code/")
+    expect(config.files).toContain("!resources/claude-code{,/**/*}")
+    expect(config.extraResources).toContainEqual({ from: "resources/claude-code", to: "claude-code" })
     expect(config.extraMetadata?.version).toBe(process.env.ORCHESTRA_VERSION ?? "1.18.27")
   })
 }
