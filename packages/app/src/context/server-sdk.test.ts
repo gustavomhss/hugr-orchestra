@@ -1,7 +1,109 @@
 import { describe, expect, test } from "bun:test"
-import { adaptServerEvent, coalesceServerEvents, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
+import { adaptServerEvent, coalesceServerEvents, createServerProtocolPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
 import type { OpenCodeEvent } from "@opencode-ai/client/promise"
 import type { Event } from "@orchestra/sdk/v2/client"
+import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
+import { createCompatibleApi } from "@/utils/server-compat"
+import { createApiForServer, createSdkForServer } from "@/utils/server"
+import { rejection } from "@/testing/rejection"
+
+describe("createServerProtocolPromise", () => {
+  test("shares in-flight detection and retains a successful connection result", async () => {
+    let probes = 0
+    const listener = Bun.serve({
+      port: 0, hostname: "127.0.0.1",
+      fetch: async () => {
+        probes++
+        await Bun.sleep(20)
+        return Response.json({ healthy: true })
+      },
+    })
+    try {
+      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch)
+      expect(await Promise.all([protocol, protocol, protocol.then((kind) => kind)])).toEqual(["v1", "v1", "v1"])
+      expect(await protocol).toBe("v1")
+      expect(probes).toBe(1)
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test.each(["v1", "v2"] as const)("existing consumers recover a failed connection as %s", async (kind) => {
+    const state = { ready: false, probes: 0, detected: undefined as ServerProtocol | undefined }
+    const paths: string[] = []
+    const listener = Bun.serve({
+      port: 0, hostname: "127.0.0.1",
+      fetch: (request) => {
+        const path = new URL(request.url).pathname
+        paths.push(path)
+        if (path === "/global/health" || path === "/api/health") {
+          state.probes++
+          if (!state.ready) return Response.json({}, { status: 503 })
+          if (path === "/global/health") return kind === "v1"
+            ? Response.json({ healthy: true }) : Response.json({}, { status: 404 })
+          return Response.json({ pid: 123 })
+        }
+        return Response.json([])
+      },
+    })
+    try {
+      const server = { url: listener.url.origin }
+      const protocol = createServerProtocolPromise(server, fetch, { attempts: 1 }, (value) => {
+        state.detected = value
+      })
+      const chain = protocol.then((value) => value).then((value) => ({ kind: value }))
+      const api = createCompatibleApi({
+        protocol,
+        current: createApiForServer({ server, fetch }),
+        legacy: (directory) => createSdkForServer({ server, fetch, directory, throwOnError: true }),
+      })
+      expect(await rejection(api.project.list())).toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(state.detected).toBeUndefined()
+      expect(state.probes).toBe(6)
+      state.ready = true
+      expect(await api.project.list()).toEqual([])
+      expect(await chain).toEqual({ kind })
+      expect(await protocol).toBe(kind)
+      expect(state.detected).toBe(kind)
+      const probes = state.probes
+      await api.project.list()
+      expect(state.probes).toBe(probes)
+      expect(paths.filter((path) => !path.endsWith("/health"))).toEqual(
+        [kind === "v1" ? "/project" : "/api/project", kind === "v1" ? "/project" : "/api/project"],
+      )
+    } finally {
+      listener.stop(true)
+    }
+  })
+
+  test("settles cancelled consumers and never probes again after connection disposal", async () => {
+    const reached = Promise.withResolvers<void>()
+    let probes = 0
+    const listener = Bun.serve({
+      port: 0, hostname: "127.0.0.1",
+      fetch: async () => {
+        probes++
+        reached.resolve()
+        await Bun.sleep(500)
+        return Response.json({ healthy: true })
+      },
+    })
+    const abort = new AbortController()
+    const reason = new DOMException("Connection disposed", "AbortError")
+    try {
+      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
+      const chain = protocol.then((kind) => kind)
+      const failed = rejection(chain)
+      await reached.promise
+      abort.abort(reason)
+      expect(await failed).toBe(reason)
+      expect(await rejection(protocol)).toBe(reason)
+      expect(probes).toBe(1)
+    } finally {
+      listener.stop(true)
+    }
+  })
+})
 
 describe("resumeStreamAfterPageShow", () => {
   test("restarts a stream only after a back-forward cache restore", () => {
