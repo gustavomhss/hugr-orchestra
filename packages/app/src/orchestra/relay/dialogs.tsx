@@ -29,7 +29,7 @@ export function createAction(location?: Pick<Location, "pathname" | "search" | "
   const run = async (action: (current: () => boolean) => Promise<unknown>) => {
     if (!active || busy()) return
     const started = generation
-    const origin = location && { pathname: location.pathname, search: location.search, hash: location.hash }
+    const origin = location && { pathname: location.pathname }
     const current = () => active && generation === started
     setBusy(true)
     setError(undefined)
