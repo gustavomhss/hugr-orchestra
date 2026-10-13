@@ -17,6 +17,12 @@
 }
 
 [data-component="list"] {
+  [data-slot="list-row"],
+  [data-slot="list-item-add"] > [role="gridcell"],
+  [data-slot="list-cell"] {
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
   display: flex;
   flex-direction: column;
   gap: 12px;
