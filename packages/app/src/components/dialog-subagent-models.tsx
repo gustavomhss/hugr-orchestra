@@ -1,94 +1,107 @@
-import { Dialog } from "@orchestra/ui/dialog"
-import { List } from "@orchestra/ui/list"
-import { Switch } from "@orchestra/ui/switch"
-import { Tooltip } from "@orchestra/ui/tooltip"
-import { Show, type Component } from "solid-js"
-import { useLocal } from "@/context/local"
-import { useLanguage } from "@/context/language"
+import { createMemo, createResource, type Component } from "solid-js"
+import { useQuery } from "@tanstack/solid-query"
 import { useServerSDK } from "@/context/server-sdk"
+import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
-import { ModelTooltip } from "./model-tooltip"
-import { effectiveModelState, toggleModelRules, type ModelRule } from "./subagent-model-rules"
-import { draftVersion, modelKey, pendingSelection, togglePending } from "./draft-subagent-models"
+import { directoryKey } from "@/context/global-sync/utils"
+import { SubagentModelPicker } from "./subagent-model-picker"
+import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import { createStore } from "solid-js/store"
+import { createSessionModelPolicy } from "./session-model-policy"
 
-type ModelItem = ReturnType<ReturnType<typeof useLocal>["model"]["list"]>[number]
-
-export const DialogSubagentModels: Component<{ sessionID?: string; directory: string }> = (props) => {
-  const local = useLocal()
-  const language = useLanguage()
+export const DialogSubagentModels: Component<{ sessionID?: string; directory: string; pendingKey?: string }> = (
+  props,
+) => {
   const serverSDK = useServerSDK()
+  const serverSync = useServerSync()
   const sync = useSync()
-
-  const sessionRules = (): ModelRule[] => {
-    if (!props.sessionID) return []
-    return (sync().session.get(props.sessionID)?.permission ?? []) as ModelRule[]
-  }
-
-  const isAllowed = (providerID: string, modelID: string) => {
-    // Drafts have no session yet: truth is the pending selection.
-    // draftVersion() subscribes so plain-Set mutations re-render.
-    if (!props.sessionID) {
-      draftVersion()
-      return pendingSelection(props.directory).has(modelKey(providerID, modelID))
-    }
-    return effectiveModelState(sessionRules(), providerID, modelID) === "allow"
-  }
-
-  const setAllowed = async (providerID: string, modelID: string, allow: boolean) => {
-    if (!props.sessionID) {
-      togglePending(props.directory, providerID, modelID)
-      return
-    }
-    if ((await serverSDK().protocol) !== "v1") return
-    await serverSDK().client.session.update({
-      sessionID: props.sessionID,
-      directory: props.directory,
-      permission: toggleModelRules(sessionRules(), providerID, modelID, allow),
-    })
-  }
-
+  const origin = serverSDK()
+  const directoryState = sync()
+  const serverState = serverSync()
+  const catalog = useQuery(() => serverState.queryOptions.providers(directoryKey(props.directory)))
+  const [state, setState] = createStore({ unsupported: false })
+  const sessionID = props.sessionID
+  const policy = sessionID
+    ? createSessionModelPolicy({
+        sessionID,
+        management: origin.sessionManagement,
+        readEvent: () => {
+          const current = directoryState.session.get(sessionID)
+          return current && {
+            policy: current.subagentModels ?? { mode: "inherit" },
+            timestamp: current.subagentModelsChangedAt ?? current.time.updated,
+            revision: current.subagentModelsRevision,
+          }
+        },
+      })
+    : undefined
+  const [snapshot, actions] = createResource(
+    () => ({ source: origin, sessionID: props.sessionID }),
+    ({ source, sessionID }) => {
+      setState("unsupported", false)
+      return source.protocol
+        .then(async (protocol) => {
+          if (protocol !== "v2" || !sessionID)
+            return {
+              protocol, source, error: undefined as unknown,
+            }
+          await policy!.load()
+          return { protocol, source, error: undefined as unknown }
+        })
+        .catch((error: unknown) => ({
+          source, protocol: source.protocolKind(), error,
+        }))
+    },
+  )
+  const protocol = () => snapshot()?.protocol ?? origin.protocolKind()
+  const failure = () => snapshot()?.error ?? policy?.state.error
+  const unsupported = () => state.unsupported || sessionManagementUnsupported(failure())
+  const providers = createMemo(() => {
+    if (!catalog.isSuccess) return []
+    const connected = new Set(catalog.data?.connected)
+    return [...(catalog.data?.all.values() ?? [])].filter((provider) => connected.has(provider.id))
+  })
   return (
-    <Dialog
-      title={language.t("dialog.subagentModels.title")}
-      description={language.t("dialog.subagentModels.description")}
-    >
-      <List
-        class="px-3"
-        search={{ placeholder: language.t("dialog.model.search.placeholder"), autofocus: true }}
-        emptyMessage={language.t("dialog.model.empty")}
-        key={(x) => `${x?.provider?.id}:${x?.id}`}
-        items={local.model.list().filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))}
-        filterKeys={["provider.name", "name", "id"]}
-        sortBy={(a, b) => a.name.localeCompare(b.name)}
-        groupBy={(x) => x.provider.name}
-        groupHeader={(group) => <span>{group.items[0]?.provider.name}</span>}
-        itemWrapper={(item, node) => (
-          <Tooltip
-            class="w-full"
-            placement="right-start"
-            gutter={12}
-            openDelay={0}
-            value={<ModelTooltip model={item} />}
-          >
-            {node}
-          </Tooltip>
-        )}
-      >
-        {(item: ModelItem) => (
-          <div class="w-full flex items-center gap-x-2 text-13-regular">
-            <span class="truncate">{item.name}</span>
-            <Switch
-              class="-mr-1 ml-auto"
-              checked={isAllowed(item.provider.id, item.id)}
-              onChange={(checked) => void setAllowed(item.provider.id, item.id, checked)}
-              hideLabel
-            >
-              {item.name}
-            </Switch>
-          </div>
-        )}
-      </List>
-      <div class="text-12-regular text-text-weak px-3 pb-1">{language.t("dialog.subagentModels.hint")}</div>
-    </Dialog>
+    <SubagentModelPicker
+      sessionID={props.sessionID}
+      directory={props.directory}
+      pendingKey={props.pendingKey ?? props.directory}
+      providers={providers()}
+      status={catalog.status}
+      protocol={protocol()}
+      supported={unsupported() ? false : failure() || snapshot.loading ? undefined : !!snapshot()}
+      loadFailed={!!failure() && !unsupported()}
+      rulesReady={
+        protocol() === "v2"
+          ? !!snapshot() && !failure() && !snapshot.loading
+          : !props.sessionID || !!directoryState.session.get(props.sessionID)
+      }
+      readRules={() => (props.sessionID ? (directoryState.session.get(props.sessionID)?.permission ?? []) : [])}
+      writeRules={async (permission) => {
+        const source = snapshot()!.source
+        const result = await source.client.session.update({
+          sessionID: props.sessionID!,
+          directory: props.directory,
+          permission,
+        })
+        if (!result.data) throw new Error("Session update returned no data")
+        return result.data.permission ?? []
+      }}
+      policy={{
+        read: () => policy?.read() ?? { policy: { mode: "inherit" } },
+        write: (next) => {
+          return policy!
+            .write(next)
+            .catch((error: unknown) => {
+              if (sessionManagementUnsupported(error)) setState("unsupported", true)
+              throw error
+            })
+        },
+      }}
+      onRetry={() => {
+        void catalog.refetch()
+        void actions.refetch()
+      }}
+    />
   )
 }

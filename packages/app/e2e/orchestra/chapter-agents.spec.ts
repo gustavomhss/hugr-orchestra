@@ -8,10 +8,13 @@ test.setTimeout(120_000)
 
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: roster cards show the returned fields`, async ({ page }) => {
-    await setup(page, { scheme, models: true })
+    const mock = await setup(page, { scheme, models: true })
     await openAgents(page)
     const roster = page.getByRole("list", { name: "Configured agents" })
     await expect(roster.getByRole("listitem")).toHaveCount(5)
+    expect(
+      mock.requests.filter((request) => new URL(request.url).pathname === "/agent" && request.directory === directory),
+    ).toHaveLength(1)
     await expect(roster).not.toContainText("secret")
     await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText(
       "Who is doingthe work.",
@@ -82,7 +85,11 @@ test("agent and agent file requests target the selected profile", async ({ page 
   await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
   await expect(dialog(page).getByRole("heading", { name: "Configure plan" })).toBeVisible()
   await expect(dialog(page).getByLabel("Description")).toHaveValue("Plans repository work")
-  await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps"])
+  await expect(card(page, "build").locator(".mx-badge")).toHaveText([
+    "Default model",
+    "Unlimited steps",
+    "Provider not connected",
+  ])
   const targets = mock.requests.filter((request) => new URL(request.url).pathname === "/agent")
   expect(targets.length).toBeGreaterThan(0)
   expect(
@@ -198,6 +205,32 @@ for (const state of ["empty", "error", "unavailable"] as const) {
   })
 }
 
+test("an agent request retains its response state while a later refresh changes the fixture", async ({ page }) => {
+  const pending = Promise.withResolvers<void>()
+  const response = { state: "empty" }
+  const mock = await setup(page, { response, wait: pending.promise })
+  try {
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expect
+      .poll(() =>
+        mock.requests.some((request) => new URL(request.url).pathname === "/agent" && request.directory === directory),
+      )
+      .toBe(true)
+    response.state = "ready"
+    pending.resolve()
+    await page
+      .locator('[data-component="orchestra-sidebar"]')
+      .getByRole("button", { name: "Agents", exact: true })
+      .click()
+    await expect(page).toHaveURL(/\/orchestra\/agents$/)
+    await expect(page.getByText("No visible agents are configured for this profile.", { exact: true })).toBeVisible()
+    await page.getByRole("button", { name: "Refresh", exact: true }).click()
+    await expect(page.getByRole("list", { name: "Configured agents" })).toContainText("Plans repository work")
+  } finally {
+    pending.resolve()
+  }
+})
+
 test("current protocol agents retain configured model, steps and permission rules", async ({ page }) => {
   await setup(page, { protocol: "v2" })
   await openAgents(page)
@@ -221,7 +254,7 @@ test("create agent writes the project agent file and reloads the legacy roster",
   // A new agent only gets profile rules this page cannot see, so no inherited value is claimed.
   await expect(form.getByLabel("Bash", { exact: true }).locator("option:checked")).toHaveText("Inherit")
   const model = form.getByLabel("Model", { exact: true })
-  await expect(model.locator("option")).toHaveText(["Default model", "Builder", "Reasoner"])
+  await expect(model.locator("option")).toHaveText(["Inherit", "Builder", "Reasoner"])
   await expect(model.locator("optgroup")).toHaveAttribute("label", "Example")
 
   await form.getByLabel("Name").fill("plan")
@@ -454,6 +487,7 @@ test("Escape closes the dialog while a navigation tooltip still shows behind it"
   const mock = await setup(page)
   await openAgents(page)
   // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
+  await page.locator(".agents-mast").hover()
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Agents", exact: true })
