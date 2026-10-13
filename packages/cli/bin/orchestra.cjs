@@ -82,7 +82,7 @@ const names = (() => {
     const musl = (() => {
       try {
         if (fs.existsSync("/etc/alpine-release")) return true
-        const result = childProcess.spawnSync("ldd", ["--version"], { encoding: "utf8" })
+        const result = childProcess.spawnSync("ldd", ["--version"], { encoding: "utf8", timeout: 1500 })
         return ((result.stdout || "") + (result.stderr || "")).toLowerCase().includes("musl")
       } catch {
         return false
@@ -91,16 +91,16 @@ const names = (() => {
     if (musl)
       return arch === "x64"
         ? baseline
-          ? [`${base}-baseline-musl`, `${base}-musl`, `${base}-baseline`, base]
-          : [`${base}-musl`, `${base}-baseline-musl`, base, `${base}-baseline`]
-        : [`${base}-musl`, base]
+          ? [`${base}-baseline-musl`]
+          : [`${base}-musl`, `${base}-baseline-musl`]
+        : [`${base}-musl`]
     return arch === "x64"
       ? baseline
-        ? [`${base}-baseline`, base, `${base}-baseline-musl`, `${base}-musl`]
-        : [base, `${base}-baseline`, `${base}-musl`, `${base}-baseline-musl`]
-      : [base, `${base}-musl`]
+        ? [`${base}-baseline`]
+        : [base, `${base}-baseline`]
+      : [base]
   }
-  return arch === "x64" ? (baseline ? [`${base}-baseline`, base] : [base, `${base}-baseline`]) : [base]
+  return arch === "x64" ? (baseline ? [`${base}-baseline`] : [base, `${base}-baseline`]) : [base]
 })()
 
 function findBinary(startDir) {
