@@ -36,7 +36,8 @@ import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
-import { popularProviders, useProviders } from "@/hooks/use-providers"
+import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
+import { formatServerError } from "@/utils/server-errors"
 import { CustomProviderForm } from "./dialog-custom-provider"
 import { decode64 } from "@/utils/base64"
 
@@ -55,7 +56,7 @@ export function useProviderConnectController(options: { onBack?: () => void } = 
 }
 
 export const DialogConnectProvider: Component<{
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   controller?: ReturnType<typeof useProviderConnectController>
 }> = (props) => {
   const fallback = useProviderConnectController()
@@ -152,7 +153,7 @@ export const DialogConnectProvider: Component<{
 }
 
 function ProviderPicker(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
@@ -217,7 +218,7 @@ function ProviderPicker(props: {
 }
 
 function ProviderPickerV2(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
@@ -357,7 +358,7 @@ function ProviderPickerV2(props: {
 
 function ProviderConnection(props: {
   provider: string
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onBack: () => void
   setBack: (handler: () => void) => void
 }) {
@@ -1151,6 +1152,43 @@ function ProviderConnection(props: {
           </Switch>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function ProviderDiscoveryStatus(props: {
+  source: Pick<ReturnType<typeof useProviderDiscovery>, "loading" | "error" | "retry">
+  v2?: boolean
+}) {
+  const language = useLanguage()
+  return (
+    <Show
+      when={!props.source.loading()}
+      fallback={
+        <p role="status" class="flex items-center gap-2 px-3 py-2">
+          <Spinner />
+          {language.t("orchestra.providers.loading")}
+        </p>
+      }
+    >
+      <Show when={props.source.error()}>
+        {(error) => <ProviderLoadError error={error().cause} retry={props.source.retry} v2={props.v2} />}
+      </Show>
+    </Show>
+  )
+}
+
+function ProviderLoadError(props: { error: unknown; retry: () => unknown; v2?: boolean }) {
+  const language = useLanguage()
+  return (
+    <div class="flex flex-col gap-3 px-3 py-2">
+      <p role="alert">{formatServerError(props.error, language.t, language.t("common.requestFailed"))}</p>
+      <Show
+        when={props.v2}
+        fallback={<Button onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</Button>}
+      >
+        <ButtonV2 onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</ButtonV2>
+      </Show>
     </div>
   )
 }

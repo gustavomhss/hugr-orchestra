@@ -5,7 +5,7 @@ import { createMemo, type Accessor } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
-import { popularProviders, useProviders } from "@/hooks/use-providers"
+import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { showToast } from "@/utils/toast"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
 import { disconnectPlan, type DisconnectPlan } from "./provider-credentials"
@@ -27,7 +27,7 @@ const PROVIDER_NOTES = [
 // Connected/popular provider state and the connect, disconnect and remove-key actions shared by
 // the Settings dialog and the routed Settings view.
 export function createProviderSettingsController(input: {
-  directory: Accessor<string | undefined>
+  directory: Accessor<string | null | undefined>
   onBack?: () => void
 }) {
   const dialog = useDialog()
@@ -36,14 +36,16 @@ export function createProviderSettingsController(input: {
   const protocol = useServerProtocol()
   const serverSync = useServerSync()
   const providers = useProviders(input.directory)
+  const discovery = useProviderDiscovery(input.directory)
   const providerConnect = useProviderConnectController({ onBack: input.onBack })
 
   const connected = createMemo(() => providers.connected())
 
   const popular = createMemo(() => {
     const connectedIDs = new Set(connected().map((p) => p.id))
-    const items = providers
-      .popular()
+    const items = discovery
+      .all()
+      .filter((p) => popularProviders.includes(p.id))
       .filter((p) => !connectedIDs.has(p.id))
       .slice()
     items.sort((a, b) => popularProviders.indexOf(a.id) - popularProviders.indexOf(b.id))
@@ -127,6 +129,7 @@ export function createProviderSettingsController(input: {
 
   return {
     providers,
+    discovery,
     connected,
     popular,
     type,
@@ -156,7 +159,7 @@ export function createProviderSettingsController(input: {
         const remove = () =>
           Promise.all(plan.ids.map((credentialID) => api.credential.remove({ credentialID, location })))
             .then(async () => {
-              await serverSync().refreshProviders()
+              await providers.refresh()
               disconnected(name)
             })
             .catch(failed)
@@ -200,10 +203,12 @@ export function createProviderSettingsController(input: {
       const remove =
         protocol() === "v2"
           ? serverSdk().api.credential.remove({ credentialID, location })
-          : serverSdk().createClient({ directory, throwOnError: true }).v2.credential.remove({ credentialID, location })
+          : serverSdk()
+              .createClient({ directory: directory ?? undefined, throwOnError: true })
+              .v2.credential.remove({ credentialID, location })
       await remove
         .then(async () => {
-          await serverSync().refreshProviders()
+          await providers.refresh()
           disconnected(providerName)
         })
         .catch(failed)
