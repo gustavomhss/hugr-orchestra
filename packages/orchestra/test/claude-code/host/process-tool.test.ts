@@ -301,6 +301,12 @@ describe("process MCP tool", () => {
     () =>
       Effect.gen(function* () {
         const f = yield* fixture
+        if (process.platform === "linux") {
+          const runtime = yield* ToolSafetySandboxRuntime.ready()
+          if (runtime.reason !== undefined) throw new Error(`Sandbox fixture not ready: ${runtime.reason}`)
+          expect(runtime.directory).toBeTruthy()
+        }
+        expect(yield* ToolSafetySandbox.status()).toMatchObject({ shellWrites: "enforced" })
         const root = path.join(f.directory, "allowed")
         yield* Effect.promise(() => fs.mkdir(root))
         const escaped = path.join(f.directory, "escaped")
@@ -354,7 +360,7 @@ describe("process MCP tool", () => {
             },
           )
           .pipe(
-            Effect.provideService(ToolSafetyAppContainer.Launcher, undefined),
+            Effect.provideService(ToolSafetyAppContainer.Launcher, ""),
             Effect.provideService(ToolSafetySandbox.Seatbelt, path.join(f.directory, "missing-sandbox-exec")),
             Effect.provideService(ToolSafetySandboxRuntime.Source, {
               directory: path.join(f.directory, "runtime"),
