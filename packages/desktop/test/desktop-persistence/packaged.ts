@@ -138,7 +138,7 @@ export async function run(control?: "delete-blob") {
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
       const captured = { read: () => "", code: undefined as number | undefined, gui: undefined as Record<string, unknown> | undefined }
-      await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
+      await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000, windowsHide: false }, async (host) => {
         captured.read = host.output
         const exited = { done: false, failed: false }
         void host.exited.then((code) => { captured.code = code; exited.done = true }, () => { exited.failed = true })
