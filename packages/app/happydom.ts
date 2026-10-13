@@ -1,6 +1,27 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator"
 
+// GlobalRegistrator 20.12 has no exclusion option. Keep Bun's HTTP/Abort family together:
+// Bun.serve rejects Happy DOM Responses, and Happy DOM fetch adds browser CORS preflights.
+const native = Object.fromEntries(
+  [
+    "fetch",
+    "Request",
+    "Response",
+    "Headers",
+    "FormData",
+    "Blob",
+    "File",
+    "AbortController",
+    "AbortSignal",
+    "DOMException",
+  ].map((key) => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, key)
+    if (!descriptor) throw new Error(`Missing native global property descriptor: ${key}`)
+    return [key, descriptor] as const
+  }),
+)
 GlobalRegistrator.register()
+Object.defineProperties(globalThis, native)
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext
 // @ts-expect-error - we're overriding with a simplified mock
