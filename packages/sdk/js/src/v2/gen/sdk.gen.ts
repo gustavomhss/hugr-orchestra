@@ -2994,6 +2994,11 @@ export class Project extends HeyApiClient {
         | "vite"
         | "webpack"
         | "yarn"
+        | "shell"
+        | "read"
+        | "webfetch"
+        | "glob"
+        | "grep"
       directory?: string
       workspace?: string
     },

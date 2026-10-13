@@ -97,3 +97,12 @@ test("whitelisted accessors read once; throwing and revoked proxies fail open", 
   expect(LeanMetrics.decode({ ...decision, model: revoked.proxy })).toBeUndefined()
   expect(LeanMetrics.decode(Object.defineProperty({ ...decision }, "raw", { value: "hidden" }))).toBeUndefined()
 })
+
+test("Lean 2.0 native read/fetch/search producer may claim savings; unverified still may not", () => {
+  const value: LeanMetrics.Decision = { ...decision, producer: "native-tool", itemID: "read", filterProfile: undefined, reason: "read_cap" }
+  const { filterProfile, ...tool } = value
+  expect(LeanMetrics.decode(tool)).toEqual(tool)
+  expect(LeanMetrics.decode({ ...tool, eligible: false })).toBeUndefined()
+  expect(LeanMetrics.decode({ ...tool, producer: "unverified" })).toBeUndefined()
+  for (const itemID of ["shell", "read", "webfetch", "glob", "grep"] as const) expect(LeanMetrics.decode({ ...tool, itemID })?.itemID).toBe(itemID)
+})

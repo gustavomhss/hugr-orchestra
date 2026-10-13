@@ -142,6 +142,7 @@ export function RelayModal(props: {
       aria-label={props.label}
       aria-labelledby={props.labelledby}
       data-component={props.component ?? "relay-modal"}
+      data-relay-modal=""
       aria-busy={props.busy}
       onOpenAutoFocus={(event) => {
         event.preventDefault()

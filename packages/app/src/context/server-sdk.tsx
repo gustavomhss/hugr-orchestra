@@ -6,7 +6,7 @@ import { makeEventListener } from "@solid-primitives/event-listener"
 import { type Accessor, batch, createMemo, createResource, onCleanup, onMount } from "solid-js"
 import { createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
 import { useLanguage } from "./language"
-import { usePlatform } from "./platform"
+import { type Platform, usePlatform } from "./platform"
 import { ServerConnection, useServer } from "./server"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
@@ -232,9 +232,23 @@ type ServerSDKBase = {
   ) => ReturnType<typeof createSdkForServer>
 }
 
-function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerScope): ServerSDKBase {
-  const platform = usePlatform()
+function createServerSdkContextBase(
+  server: ServerConnection.Any,
+  scope: ServerScope,
+  platform: Platform,
+): ServerSDKBase {
   const abort = new AbortController()
+  const http = { ...server.http }
+  const scopedFetch = (fetcher = platform.fetch ?? globalThis.fetch): typeof fetch =>
+    Object.assign(
+      (request: string | URL | Request, init?: RequestInit) => {
+        const caller = init?.signal ?? (request instanceof Request ? request.signal : undefined)
+        const signal = caller ? AbortSignal.any([abort.signal, caller]) : abort.signal
+        signal.throwIfAborted()
+        return fetcher(request, { ...init, signal })
+      },
+      { preconnect: fetcher.preconnect },
+    )
 
   const eventFetch = (() => {
     if (!platform.fetch || !server) return
@@ -247,11 +261,11 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
     }
   })()
 
-  const eventApi = createApiForServer({ server: server.http, fetch: eventFetch })
+  const eventApi = createApiForServer({ server: http, fetch: scopedFetch(eventFetch ?? globalThis.fetch) })
   const eventSdk = createSdkForServer({
     signal: abort.signal,
     fetch: eventFetch,
-    server: server.http,
+    server: http,
   })
   const protocol = detectServerProtocol(server.http, platform.fetch ?? globalThis.fetch)
   const [protocolKind] = createResource(
@@ -327,6 +341,7 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
               : eventApi.event.subscribe({ signal: attempt.signal })
           let yielded = Date.now()
           for await (const event of events) {
+            if (abort.signal.aborted || !started || generation !== active) return
             streamErrorLogged = false
             const legacy = "payload" in event
             if (legacy && event.payload.type === "sync") continue
@@ -378,18 +393,22 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
   onCleanup(() => {
     stop()
     abort.abort()
-    flush()
+    if (timer) clearTimeout(timer)
+    queue.length = 0
+    buffer.length = 0
   })
 
   const sdk = createSdkForServer({
-    server: server.http,
+    signal: abort.signal,
+    server: http,
     fetch: platform.fetch,
     throwOnError: true,
   })
-  const currentApi: ServerApi = createApiForServer({ server: server.http, fetch: platform.fetch })
+  const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
   const legacy = (directory?: string) =>
     createSdkForServer({
-      server: server.http,
+      signal: abort.signal,
+      server: http,
       fetch: platform.fetch,
       throwOnError: true,
       directory,
@@ -412,7 +431,8 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
     },
     createClient(opts: Omit<Parameters<typeof createSdkForServer>[0], "server" | "fetch">) {
       return createSdkForServer({
-        server: server.http,
+        signal: abort.signal,
+        server: http,
         fetch: platform.fetch,
         ...opts,
       })
@@ -424,8 +444,12 @@ export type ServerSDK = ServerSDKBase & {
   ensureDirSdkContext: (directory: string) => ReturnType<typeof createDirSdkContext>
 }
 
-export function createServerSdkContext(server: ServerConnection.Any, scope: ServerScope): ServerSDK {
-  const sdk = createServerSdkContextBase(server, scope)
+export function createServerSdkContext(
+  server: ServerConnection.Any,
+  scope: ServerScope,
+  platform = usePlatform(),
+): ServerSDK {
+  const sdk = createServerSdkContextBase(server, scope, platform)
   return Object.assign(sdk, {
     ensureDirSdkContext: createRefCountMap((dir) => createDirSdkContext(dir, sdk)),
   })
@@ -435,7 +459,9 @@ export const { use: useServerSDK, provider: ServerSDKProvider } = createSimpleCo
   name: "ServerSDK",
   // Returns an accessor so the resolved server can change reactively (e.g. a
   // /new-session draft retargeting its server) without re-instantiating the subtree.
-  init: (props: { server?: Accessor<ServerConnection.Any | undefined> }) => {
+  init: (props: { server?: Accessor<ServerConnection.Any | undefined>; value?: ServerSDK }) => {
+    const captured = props.value
+    if (captured) return () => captured
     const global = useGlobal()
     const language = useLanguage()
     const server = useServer()

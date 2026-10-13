@@ -1,4 +1,5 @@
 import { createUniqueId, For, Show } from "solid-js"
+import { useLocation } from "@solidjs/router"
 import { createStore } from "solid-js/store"
 import { rememberDocument } from "./cache"
 import { documentProfile, type RelayDocument } from "./client"
@@ -27,7 +28,7 @@ export function CreateWorkflowDialog(props: {
   onCreated: (id: string) => void
 }) {
   const copy = useRelayCopy()
-  const action = createAction()
+  const action = createAction(useLocation())
   const documents = () => templates(props.source.list())
   const nameOf = (id: string) => {
     const source = props.source.list().find((item) => item.id === id)
@@ -57,11 +58,12 @@ export function CreateWorkflowDialog(props: {
       action.setError(copy.t("orchestra.workflows.create.templateUnavailable"))
       return
     }
-    return action.run(async () => {
+    return action.run(async (current) => {
       const created = await props.source.client.create(
         source ? copyDocument(source, value) : blankWorkflow(value, copy.t("orchestra.workflows.type.start")),
       )
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!current()) return
       props.onCreated(created.id)
     })
   }

@@ -171,14 +171,23 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       await Bun.write(file, "#!/bin/bash\n" + body + "\n")
       await chmod(file, 0o755)
     }
-    const run = (env: Record<string, string>) => Bun.spawnSync(["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c", host.body], {
-      cwd: root, timeout: 10000,
-      env: { ...process.env, PATH: `${root}/bin:${process.env.PATH}`, RUNNER_TEMP: root,
-        GITHUB_REF: "refs/heads/lean-candidate-build", CANDIDATE_SHA: "synthetic-sha", WORKFLOW_SHA: "synthetic-sha",
-        RUNNER_OS: "macOS", RUNNER_ARCH: "X64", TEST_UNAME: "x86_64", TEST_VENDOR: "GenuineIntel", TEST_VENDOR_CODE: "0",
-        TEST_MACHINE_STDERR: "", TEST_VENDOR_STDERR: "",
-        TEST_CODE: "0", TEST_STDOUT: "0\n", TEST_STDERR: "", ...env },
-    })
+    // Async, not Bun.spawnSync: on Windows, Bun 1.3.14 starts spawnSync's timeout from the clock of the previous
+    // spawnSync, so after a pause longer than the timeout it kills the shell at once (exit null, SIGTERM; test-ci
+    // 38302109967, 38302668856). In the whole desktop suite that hit the first case, after an earlier test's spawnSync.
+    const run = async (env: Record<string, string>) => {
+      const child = Bun.spawn(["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c", host.body], {
+        cwd: root, timeout: 10000, stdout: "pipe", stderr: "pipe",
+        env: { ...process.env, PATH: `${root}/bin:${process.env.PATH}`, RUNNER_TEMP: root,
+          GITHUB_REF: "refs/heads/lean-candidate-build", CANDIDATE_SHA: "synthetic-sha", WORKFLOW_SHA: "synthetic-sha",
+          RUNNER_OS: "macOS", RUNNER_ARCH: "X64", TEST_UNAME: "x86_64", TEST_VENDOR: "GenuineIntel", TEST_VENDOR_CODE: "0",
+          TEST_MACHINE_STDERR: "", TEST_VENDOR_STDERR: "",
+          TEST_CODE: "0", TEST_STDOUT: "0\n", TEST_STDERR: "", ...env },
+      })
+      const [exitCode, stdout, stderr] = await Promise.all([
+        child.exited, new Response(child.stdout).text(), new Response(child.stderr).text(),
+      ])
+      return { exitCode, stdout, stderr }
+    }
     for (const file of ["scripts/lean-candidate.ts", "electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "test/lean-candidate-package.test.ts"]) {
       const target = path.join(root, "packages/desktop", file)
       await mkdir(path.dirname(target), { recursive: true })
@@ -198,11 +207,11 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       { code: "1", out: "\n", err: unknown, expected: 1 },
     ]
     for (const entry of cases) {
-      const result = run({ TEST_CODE: entry.code, TEST_STDOUT: entry.out, TEST_STDERR: entry.err })
+      const result = await run({ TEST_CODE: entry.code, TEST_STDOUT: entry.out, TEST_STDERR: entry.err })
       expect(result.exitCode).toBe(entry.expected)
-      expect(result.stdout.toString()).toContain(`sysctl.proc_translated exit=${entry.code} stdout=<${entry.out.trim()}>`)
-      if (entry.err) expect(result.stderr.toString()).toContain(entry.err)
-      if (entry.expected) expect(result.stderr.toString()).toContain("Rejected sysctl.proc_translated result")
+      expect(result.stdout).toContain(`sysctl.proc_translated exit=${entry.code} stdout=<${entry.out.trim()}>`)
+      if (entry.err) expect(result.stderr).toContain(entry.err)
+      if (entry.expected) expect(result.stderr).toContain("Rejected sysctl.proc_translated result")
     }
     for (const [env, failure] of [
       [{ TEST_VENDOR: "AuthenticAMD" }, "Native GenuineIntel CPU required"],
@@ -214,16 +223,16 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       [{ RUNNER_ARCH: "ARM64" }, "Native X64 runner required"],
       [{ RUNNER_OS: "Linux" }, "Native macOS runner required"],
     ] as [Record<string, string>, string][]) {
-      const result = run(env)
+      const result = await run(env)
       expect(result.exitCode).toBe(1)
-      expect(result.stderr.toString()).toContain(failure)
-      expect(result.stdout.toString()).toBe("") // Absent-OID exception cannot precede positive Intel identity.
+      expect(result.stderr).toContain(failure)
+      expect(result.stdout).toBe("") // Absent-OID exception cannot precede positive Intel identity.
     }
     const required = "packages/desktop/test/lean-candidate-package.test.ts"
     await rm(path.join(root, required))
-    const missing = run({})
+    const missing = await run({})
     expect(missing.exitCode).toBe(1)
-    expect(missing.stdout.toString()).toContain(`Missing dependency: ${required}`)
+    expect(missing.stdout).toContain(`Missing dependency: ${required}`)
   } finally {
     await rm(root, { recursive: true, force: true })
   }

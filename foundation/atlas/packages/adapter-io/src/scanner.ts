@@ -28,7 +28,7 @@
 //     is the intended shape until the owner installs a scanner; it is a loud, attributable refusal (the
 //     adapter own name says so -- see `NO_SCANNER_NAME` below) rather than a silent pass.
 
-import { execFileSync } from "node:child_process"
+import { execFileSync, type ExecFileSyncOptions } from "node:child_process"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -106,11 +106,31 @@ const DEFAULT_TIMEOUT_MS = 5_000
  *  reject `--version`) means the binary exists and is spawnable, which is all this predicate claims. */
 function isOnPath(command: string): boolean {
   try {
-    execFileSync(command, ["--version"], { stdio: "ignore", timeout: DEFAULT_TIMEOUT_MS })
+    execBounded(command, ["--version"], { stdio: "ignore", timeout: DEFAULT_TIMEOUT_MS })
     return true
   } catch (err) {
     const code = (err as { code?: unknown } | null)?.code
     return code !== "ENOENT"
+  }
+}
+
+/** `execFileSync` whose `timeout` is the real budget, also under Bun on Windows. Bun 1.3.14 there arms a synchronous
+ *  spawn's timeout against a clock that only the previous synchronous spawn advanced (oven-sh/bun#33932, fixed by
+ *  oven-sh/bun#33935, first released in Bun 1.4.0): after the process idles, the child is killed after
+ *  `timeout - idle` ms, as little as ~6 ms, and the kill would read as `could-not-run` (or, in `isOnPath`, as present
+ *  by accident). That early kill advances the clock, so ONE immediate rerun gets the whole budget. Only a signal kill
+ *  that came before the deadline reruns; a real timeout, any exit status, Node, and every other platform keep the
+ *  single call. Remove when the Bun that runs this bundle is 1.4.0 or newer. */
+function execBounded(command: string, args: readonly string[], options: ExecFileSyncOptions & { timeout: number }) {
+  const started = performance.now()
+  try {
+    return execFileSync(command, args as string[], options)
+  } catch (err) {
+    const signal = (err as { signal?: unknown } | null)?.signal
+    const early = process.platform === "win32" && "bun" in process.versions && typeof signal === "string" &&
+      performance.now() - started < options.timeout
+    if (!early) throw err
+    return execFileSync(command, args as string[], options)
   }
 }
 
@@ -152,7 +172,7 @@ export function runScanner(
   // scan clean (measured on 8.30.1). An empty private directory leaves it the built-in rules.
   const cwd = mkdtempSync(join(tmpdir(), "atlas-scan-"))
   try {
-    execFileSync(spec.command, spec.args as string[], {
+    execBounded(spec.command, spec.args, {
       cwd,
       input,
       timeout: timeoutMs,

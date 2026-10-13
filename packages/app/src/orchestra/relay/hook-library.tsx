@@ -1,4 +1,5 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
+import { useLocation } from "@solidjs/router"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
@@ -374,7 +375,7 @@ function CreateHookDialog(props: {
   onCreated: (id: string) => void
 }) {
   const copy = useRelayCopy()
-  const action = createAction()
+  const action = createAction(useLocation())
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
   const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
   const [pick, setPick] = createSignal<HookPresetID | "blank">(props.initial)
@@ -384,12 +385,13 @@ function CreateHookDialog(props: {
       : copy.t(`orchestra.hooks.preset.${props.initial}`),
   )
   const create = () =>
-    action.run(async () => {
+    action.run(async (current) => {
       const preset = presets().find((item) => item.id === pick())
       const created = await props.source.client.create(
         hookDocument(name().trim() || copy.t("orchestra.hooks.create.defaultName"), preset, text),
       )
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!current()) return
       props.onCreated(created.id)
     })
   return (
