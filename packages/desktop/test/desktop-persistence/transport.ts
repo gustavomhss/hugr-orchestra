@@ -8,7 +8,7 @@ import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner
 const boundary = { paths: undefined as Record<string, string> | undefined }
 
 export async function child<A>(
-  input: { command: string; args: string[]; cwd: string; env: Record<string, string>; timeoutMS?: number; onClosed?: () => void },
+  input: { command: string; args: string[]; cwd: string; env: Record<string, string>; timeoutMS?: number; onClosed?: () => void; windowsHide?: boolean },
   use: (host: { pid: number; output: () => string; exited: Promise<number>; signal: AbortSignal }) => Promise<A>,
 ): Promise<A> {
   const controller = new AbortController()
@@ -33,7 +33,7 @@ export async function child<A>(
       const { CrossSpawnSpawner } = await import("@orchestra/core/cross-spawn-spawner")
       const { LayerNode } = await import("@orchestra/core/effect/layer-node")
       const { LayerNodePlatform } = await import("@orchestra/core/effect/app-node-platform")
-      const spawner = Layer.effect(ChildProcessSpawner, CrossSpawnSpawner.makeWith("off")).pipe(
+      const spawner = Layer.effect(ChildProcessSpawner, CrossSpawnSpawner.makeWith("off", { windowsHide: input.windowsHide })).pipe(
         Layer.provide(LayerNode.compile(LayerNode.group([LayerNodePlatform.filesystem, LayerNodePlatform.path]))),
       )
       controller.signal.throwIfAborted()
