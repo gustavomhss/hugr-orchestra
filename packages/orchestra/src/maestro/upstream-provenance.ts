@@ -5,6 +5,7 @@ import { SessionMessage } from "@orchestra/schema/session-message"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { eq } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
+import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { Agent } from "@/agent/agent"
 import { MessageV2 } from "@/session/message-v2"
@@ -17,6 +18,7 @@ import { roster } from "./roster"
 import { Seats } from "./seats"
 import { SessionAuthority } from "./session-authority"
 import { UpstreamResult } from "./upstream-result"
+import { WriteRoots } from "./write-roots"
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("UpstreamAttributionDenied", {
   code: Schema.Literals([
@@ -31,6 +33,7 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("UpstreamAttributi
 const decodeRecord = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
 const decodeMessage = Schema.decodeUnknownSync(SessionMessage.Message)
 const decodeAttribution = Schema.decodeUnknownSync(UpstreamAttribution.V1)
+const decodeAttributionV2 = Schema.decodeUnknownSync(UpstreamAttribution.V2)
 // Private host port, not a worker DTO: Relay must write this on the exact native Task only after durable
 // delivery, capturing the returned assistant before async work, and preserve it against stale Task completion.
 // WorkResult is compared with BackendResult's actual stored-source assembly below, not redefined here.
@@ -42,6 +45,20 @@ const Settlement = Schema.Struct({
   deliveryPartID: Schema.optional(Schema.NonEmptyString),
 })
 const decodeSettlement = Schema.decodeUnknownOption(Settlement)
+// Private host port: the Claude Code host adapter writes this on the mirrored Agent part from in-process hooks only.
+// It binds the observed tool use to the Orchestra write-root grant; it never claims Orchestra executed the call.
+const ClaudeCodeDispatch = Schema.Struct({
+  executor: UpstreamAttribution.ClaudeCodeAgentDispatch.fields.executor,
+  toolName: UpstreamAttribution.ClaudeCodeAgentDispatch.fields.tool,
+  toolUseID: Schema.NonEmptyString,
+  agentID: UpstreamAttribution.ClaudeCodeAgentDispatch.fields.agentID,
+  grantID: UpstreamAttribution.ClaudeCodeAgentDispatch.fields.grantID,
+  subagentType: UpstreamAttribution.ClaudeCodeAgentDispatch.fields.subagentType,
+  seat: Schema.Literal("archie"),
+  writeRoots: Schema.Array(Schema.String),
+  background: Schema.Boolean,
+})
+const decodeClaudeCodeDispatch = Schema.decodeUnknownOption(ClaudeCodeDispatch)
 
 type Call = {
   id: string
@@ -65,9 +82,13 @@ type Evidence = {
   legacy?: SessionV1.WithParts
 }
 
-/** Observe stored proposals; background delivery requires Relay's private exact Task settlement port. */
+/**
+ * Observe stored proposals; background delivery requires Relay's private exact Task settlement port. The default
+ * orchestra-task dispatch returns V1; a foreground Claude Code Agent dispatch returns V2.
+ */
 export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
-  input: Pick<UpstreamAttribution.V1, "projectID" | "parentSessionID" | "parentMessageID" | "parentCallID" | "authorSessionID" | "authorMessageID" | "logicalTaskID">,
+  input: Pick<UpstreamAttribution.V1, "projectID" | "parentSessionID" | "parentMessageID" | "parentCallID" | "authorSessionID" | "authorMessageID" | "logicalTaskID"> &
+    { readonly dispatchKind?: UpstreamAttribution.V2["dispatch"]["kind"] },
 ) {
   if (!input.parentCallID || !input.logicalTaskID)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_MISSING", message: "Task call and logical Task references are required" })
@@ -92,15 +113,22 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   const dispatch = yield* readMessage(parent.id, input.parentMessageID, "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
   if (!dispatch.owned || dispatch.role !== "assistant" || dispatch.agent !== "maestro")
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Dispatch parent must be an actual owned Maestro assistant" })
+  const claudeCode = input.dispatchKind === "claude-code-agent"
   const calls = dispatch.tools.filter((call) => call.id === input.parentCallID)
   const call = calls[0]
-  if (calls.length !== 1 || !call || call.name !== "task" || call.input?.subagent_type !== agent.id || call.providerExecuted)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Dispatch parent must contain one exact native Task dispatch to archie" })
+  const claude = claudeCode && call ? claudeDispatch(call) : undefined
+  if (calls.length !== 1 || !call || (claudeCode ? !claude : call.name !== "task" || call.input?.subagent_type !== agent.id || call.providerExecuted))
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: claudeCode
+      ? "Dispatch parent must contain one exact provider-executed Claude Code Agent dispatch to orchestra:archie"
+      : "Dispatch parent must contain one exact native Task dispatch to archie" })
   const initial = record(call.metadata?.workResult)
   const background = call.metadata?.background === true || record(initial?.terminal)?.reason === "running"
   if (dispatch.error || dispatch.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true ||
     ["failed", "error", "interrupted"].includes(String(record(initial?.terminal)?.reason)))
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Parent or Task failed, was interrupted, or has not completed" })
+  // Claude Code has no host Task settlement or delivery port, so its proposal seats observe foreground dispatch only.
+  if (claude && (background || claude.background))
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "HOLD: claude-code-agent upstream dispatch must run in the foreground" })
   // Caller-settable synthetic notices, process-local job status, timestamps, and matching bytes cannot establish
   // the returned assistant identity or host delivery. Do not infer a settlement from any of those facts.
   const settlement = background
@@ -116,6 +144,8 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "HOLD: captured host Task did not end successfully" })
   if (!call.metadata || call.metadata.parentSessionId !== parent.id || call.metadata.sessionId !== child.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Host Task placement does not match the parent and author Sessions" })
+  if (claude && !granted(WriteRoots.read(child.permission), claude.writeRoots))
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Author Session write roots do not equal the Claude Code dispatch grant" })
 
   // Logical authority scopes the stored Session tree; dispatch and delivery anchors stay with the immediate parent.
   const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, input.projectID).pipe(
@@ -151,12 +181,31 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Host Task completion does not select this exact successful proposal" })
   if (settlement) yield* readDelivery(parent.id, child.id, settlement)
 
-  return decodeAttribution({
-    schema: "maestro-upstream-attribution-v1", projectID: parent.projectID, memberID: agent.id, profile: seat.profileKey,
+  const attribution = {
+    projectID: parent.projectID, memberID: agent.id, profile: seat.profileKey,
     authorSessionID: child.id, authorMessageID: author.id, parentSessionID: parent.id,
     parentMessageID: dispatch.id, parentCallID: call.id, logicalTaskID: logical.taskId,
-  })
+  }
+  if (claude) return decodeAttributionV2({ ...attribution, schema: "maestro-upstream-attribution-v2", dispatch: {
+    kind: "claude-code-agent", tool: claude.toolName, subagentType: claude.subagentType, executor: claude.executor,
+    agentID: claude.agentID, grantID: claude.grantID,
+  } })
+  return decodeAttribution({ ...attribution, schema: "maestro-upstream-attribution-v1" })
 })
+
+// The raw tool name and subagent type must match the closed host evidence bound to this exact tool use.
+function claudeDispatch(call: Call) {
+  const evidence = Option.getOrUndefined(decodeClaudeCodeDispatch(call.metadata?.claudeCodeDispatch, { onExcessProperty: "error" }))
+  if (!evidence || !call.providerExecuted || evidence.toolName !== call.name || evidence.toolUseID !== call.id ||
+    call.input?.subagent_type !== evidence.subagentType) return
+  return evidence
+}
+
+// The grant names canonical absolute roots; the child must persist exactly that allow set.
+function granted(roots: string[] | undefined, grant: readonly string[]) {
+  return roots !== undefined && grant.length > 0 && grant.every((root) => path.isAbsolute(root) && path.resolve(root) === root) &&
+    isDeepStrictEqual([...roots].sort(), [...grant].sort())
+}
 
 function missing(error: NotFoundError) {
   return new Denied({ code: "UPSTREAM_ATTRIBUTION_MISSING", message: error.message })

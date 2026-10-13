@@ -131,54 +131,62 @@ test("effective UID protects root and nested ownership on POSIX, without a Windo
   }
 })
 
-test("owned Claude roots cannot query default credentials: synthetic lookup recorder only", () => {
+test("owned Claude roots propagate through the native process boundary without retired approval metadata", () => {
   const f = fixture()
   const env = candidateEnvironment(f.p, { ...process.env, CLAUDE_CONFIG_DIR: "/host/config", CLAUDE_SECURESTORAGE_CONFIG_DIR: "",
     ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" })
   run(resolve(import.meta.dir, "../../../orchestra"), `
     import assert from "node:assert/strict";
     const env = ${JSON.stringify(env)};
-    const build = await Bun.build({ entrypoints: ["./src/claude-code/sdk.ts"], target: "node",
-      plugins: [{ name: "synthetic-model-boundary", setup(build) {
-        build.onResolve({ filter: /^@anthropic-ai\\/claude-agent-sdk$/ }, () => ({ path: "query", namespace: "synthetic" }));
-        build.onLoad({ filter: /.*/, namespace: "synthetic" }, () => ({ loader: "js",
-          contents: 'export const query = () => { throw Error("forbidden model query") }' }));
-      } }] });
+    const build = await Bun.build({ entrypoints: ["./src/claude-code/sdk.ts"], target: "node" });
     assert.equal(build.success, true, build.logs.join("\\n"));
-    await Bun.write(${JSON.stringify(join(env.TMPDIR, "sdk-recorder.mjs"))}, build.outputs[0]);
+    await Bun.write(${JSON.stringify(join(env.TMPDIR, "sdk-boundary.mjs"))}, build.outputs[0]);
     const node = Bun.spawnSync(["node", "--input-type=module", "--eval", ${JSON.stringify(`
       import assert from "node:assert/strict"; import cp from "node:child_process";
-      import { syncBuiltinESMExports } from "node:module"; import { pathToFileURL } from "node:url"; import { join } from "node:path";
-      const lookups = []; let spawns = 0;
-      Object.defineProperty(process, "platform", { value: "darwin" });
-      cp.spawn = () => { throw Error("forbidden process") };
-      cp.spawnSync = (command, args) => { assert.equal(command, "security");
-        lookups.push(args[args.indexOf("-s") + 1]); return { status: 44, stdout: "" } };
+      import { syncBuiltinESMExports } from "node:module"; import { pathToFileURL } from "node:url";
+      import { query } from "@anthropic-ai/claude-agent-sdk";
+      let spawns = 0;
+      cp.spawn = () => { throw Error("unexpected native process") };
+      cp.spawnSync = () => { throw Error("unexpected native process") };
       syncBuiltinESMExports();
-      const sdk = await import(pathToFileURL(${JSON.stringify(join(env.TMPDIR, "sdk-recorder.mjs"))}).href);
-      // Every engine query keeps Claude Code's preset prompt; the engine reads no login until its plan is approved.
-      const lookup = async (env, refusal = /Claude Code machine login unavailable/) => {
-        const life = sdk.processLifetime({ env, systemPrompt: { type: "preset", preset: "claude_code" },
-          spawnClaudeCodeProcess: () => { spawns++; throw Error("forbidden Claude spawn") } });
-        assert.throws(() => life.options.spawnClaudeCodeProcess({ command: "unused", args: [], env: life.options.env,
-          signal: new AbortController().signal }), refusal);
-        await life.join();
-      };
+      const sdk = await import(pathToFileURL(${JSON.stringify(join(env.TMPDIR, "sdk-boundary.mjs"))}).href);
       const env = ${JSON.stringify(env)};
       assert.equal(env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED, undefined);
-      await lookup(env, /Claude Code engine is paused/); assert.deepEqual(lookups, []);
-      const approved = { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" };
-      await lookup({ HOME: env.HOME, ...approved }); assert.deepEqual(lookups, ["Claude Code-credentials"]);
-      lookups.length = 0; await lookup({ ...env, ...approved }); assert.equal(lookups.length, 1);
-      assert.match(lookups[0], /^Claude Code-credentials-[0-9a-f]{8}$/);
-      assert.notEqual(lookups[0], "Claude Code-credentials");
-      assert.equal(sdk.credentialStorage(env, env.HOME).file, join(env.CLAUDE_SECURESTORAGE_CONFIG_DIR, ".credentials.json"));
-      assert.equal(spawns, 0);
+      // Exercise the real SDK, stopping before any binary or model work. This is environment propagation, not a credential audit.
+      for (const source of [env, { ...env, ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }]) {
+        const before = spawns;
+        const observed = [];
+        const sentinel = new Error("injected Claude spawn boundary");
+        const life = sdk.processLifetime({ env: source, cwd: env.HOME, pathToClaudeCodeExecutable: process.execPath,
+          systemPrompt: { type: "preset", preset: "claude_code" },
+          spawnClaudeCodeProcess: (input) => { spawns++; observed.push(input.env); throw sentinel } });
+        assert.equal(spawns, before);
+        assert.deepEqual(life.options.env, env);
+        assert.deepEqual(life.options.systemPrompt, { type: "preset", preset: "claude_code" });
+        await assert.rejects(async () => {
+          for await (const _ of query({ prompt: "No provider work: injected failing spawner only", options: life.options })) {}
+        }, (error) => error === sentinel);
+        assert.equal(spawns, before + 1);
+        assert.equal(observed.length, 1);
+        for (const key of ["HOME", "USERPROFILE", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME",
+          "CLAUDE_CONFIG_DIR", "CLAUDE_SECURESTORAGE_CONFIG_DIR", "ORCHESTRA_CANDIDATE_PROFILE_ROOT", "TMPDIR", "TMP", "TEMP"]) {
+          assert.equal(observed[0][key], env[key], key);
+        }
+        assert.equal(observed[0].ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED, undefined);
+        await life.join();
+      }
+      assert.equal(spawns, 2);
     `)}], { env, stdout: "pipe", stderr: "pipe" });
     assert.equal(node.exitCode, 0, node.stderr.toString());
   `, env)
-  // A host approval of the paused engine does not cross into the candidate environment.
+  // Retired host rollout metadata does not cross into the candidate environment.
   expect(env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED).toBeUndefined()
+  expect(env.HOME).toBe(f.p.home)
+  expect(env.USERPROFILE).toBe(f.p.home)
+  expect(env.XDG_DATA_HOME).toBe(f.p.data)
+  expect(env.XDG_CONFIG_HOME).toBe(f.p.config)
+  expect(env.XDG_CACHE_HOME).toBe(f.p.cache)
+  expect(env.XDG_STATE_HOME).toBe(f.p.state)
   expect(env.CLAUDE_CONFIG_DIR).toBe(join(f.p.home, ".claude"))
   expect(env.CLAUDE_SECURESTORAGE_CONFIG_DIR).toBe(join(f.p.home, ".claude-secure-storage"))
   expect(existsSync(env.CLAUDE_CONFIG_DIR)).toBe(true)
