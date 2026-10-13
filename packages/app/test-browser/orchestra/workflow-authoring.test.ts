@@ -5,6 +5,7 @@ import { createComponent, type JSX, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
+import { MemoryRouter } from "@solidjs/router"
 import type { RelayDocument, RelayDocumentFields } from "@/orchestra/relay/client"
 import type { RelaySource } from "@/orchestra/relay/source"
 import { documentFields, flowFromDocument } from "@/orchestra/relay/graph"
@@ -69,14 +70,13 @@ function mount(view: () => JSX.Element, direction = "ltr") {
   host.style.direction = direction
   document.body.append(host)
   document.documentElement.style.direction = direction
-  const dispose = render(() => createComponent(PlatformProvider, {
+  const dispose = render(() => createComponent(MemoryRouter, { root: () => createComponent(PlatformProvider, {
     value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
     get children() { return createComponent(LanguageProvider, { locale: "en", get children() { return view() } }) },
-  }), host)
+  }) }), host)
   cleanups.push(() => { dispose(); host.remove(); document.documentElement.style.removeProperty("direction") })
   return document.body
 }
-
 function doc(id = "template", fields: Partial<RelayDocument> = {}) {
   return decodeDocument({
     id, name: "Review workflow", nodes: [

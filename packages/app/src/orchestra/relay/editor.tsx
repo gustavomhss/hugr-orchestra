@@ -1,4 +1,5 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
+import { useLocation } from "@solidjs/router"
 import { useCommand } from "@/context/command"
 import { showToast } from "@/utils/toast"
 import { modalActive } from "@/utils/modal-active"
@@ -85,7 +86,7 @@ export function Editor(props: EditorProps) {
 function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const copy = useRelayCopy()
   const dialogs = useDialog()
-  const duplication = createAction()
+  const duplication = createAction(useLocation())
   const exporting = createAction()
   const kind = props.route.kind
   const server = () => props.source.list().find((item) => item.id === props.id)
@@ -210,7 +211,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   }
 
   const duplicate = () =>
-    duplication.run(async () => {
+    duplication.run(async (current) => {
       const created = await props.source.client
         .create(copyDocument(base(), copy.t("orchestra.workflows.create.copyName", { name: name() })))
         .catch(
@@ -219,7 +220,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         )
       if (!created) return
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
-      if (!duplication.active()) return
+      if (!current()) return
       props.go(relayPath.editor(kind, created.id))
     })
   const download = () => exporting.run(async () => {
