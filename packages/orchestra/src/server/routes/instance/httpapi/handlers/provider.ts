@@ -40,6 +40,14 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
     const svc = yield* ProviderAuth.Service
     const authStore = yield* Auth.Service
     const credentials = yield* Credential.Service
+    // Only Claude-mode configurations evaluate this lazy status check. It sends no model prompt.
+    const hostSignedIn = yield* Effect.cachedWithTTL(
+      Effect.gen(function* () {
+        const { ClaudeHostProvider } = yield* Effect.promise(() => import("@/claude-code/host/provider"))
+        return yield* ClaudeHostProvider.signedIn
+      }),
+      "30 seconds",
+    )
 
     const list = Effect.fn("ProviderHttpApi.list")(function* () {
       const config = yield* cfg.get()
@@ -51,6 +59,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         if ((enabled ? enabled.has(key) : true) && !disabled.has(key)) filtered[key] = value
       }
       const connected = yield* provider.list()
+      const host = filtered.anthropic && config.agent?.maestro?.engine === "claude-code" ? yield* hostSignedIn : false
       const legacy = yield* authStore.all().pipe(Effect.orDie)
       const baseProviders = Object.assign(
         mapValues(filtered, (item) => Provider.fromModelsDevProvider(item)),
@@ -72,13 +81,22 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         }
       }
       const providers = Object.assign(baseProviders, extras)
+      // Availability belongs to the host, not the API transport: never register a key or an API provider connection.
+      if (host && providers.anthropic && !("anthropic" in connected))
+        providers.anthropic = {
+          ...providers.anthropic,
+          source: "custom",
+          options: { ...providers.anthropic.options, executionHost: "claude-code" },
+        }
       return {
         all: Object.values(providers).map((item) => {
           const { key: _, ...rest } = item
           return Provider.toPublicInfo(rest)
         }),
         default: Provider.defaultModelIDs(providers),
-        connected: Object.keys(providers).filter((id) => id in connected || legacy[id] || id in extras),
+        connected: Object.keys(providers).filter(
+          (id) => id in connected || legacy[id] || id in extras || (host && id === "anthropic"),
+        ),
       }
     })
 
