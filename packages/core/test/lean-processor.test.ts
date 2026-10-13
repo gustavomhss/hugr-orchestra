@@ -10,10 +10,10 @@ const observation = { source: "shell" as const, command: "go test -v .", output,
   termination: { kind: "exited" as const, code: 0 }, completeness: "complete" as const, presentation: "unknown" as const }
 
 test("approved backend artifact identity and actual pure engine reduction", async () => {
-  const bytes = await Bun.file(path.join(import.meta.dir, "../vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz")).arrayBuffer()
-  expect(bytes.byteLength).toBe(387905)
+  const bytes = await Bun.file(path.join(import.meta.dir, "../vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz")).arrayBuffer()
+  expect(bytes.byteLength).toBe(205370)
   expect(createHash("sha256").update(new Uint8Array(bytes)).digest("hex"))
-    .toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
+    .toBe("5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3")
   const result = LeanProcessor.process({ source: "shell", command: "go test -v .", output,
     termination: { kind: "exited", code: 0 }, completeness: "complete", presentation: "unknown" })
   expect(result.status).toBe("reduced")
