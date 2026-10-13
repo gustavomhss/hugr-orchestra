@@ -4,7 +4,9 @@ import ts from "typescript"
 
 // The two modes stay separate (specs/claude-code-engine.md, "Two modes"). Normal mode reaches Claude mode only through
 // its entry point or the exact adapters in ADAPTER_EDGES, and Claude mode reaches normal mode only through INTERFACE, never
-// through the loop itself. Imports are parsed, not grepped: static, type-only, re-exports, dynamic import() and require.
+// through the loop itself. A fresh SourceFile per file supplies static/type-only imports, re-exports, import-equals,
+// type import queries and direct import()/require() calls with string-literal specifiers. Comments/prose are inert; template literals,
+// computed specifiers and aliased/wrapped loaders are outside this syntactic guard's declared reach.
 
 const ORCHESTRA = path.resolve(import.meta.dir, "../..")
 const SRC = path.join(ORCHESTRA, "src")
@@ -147,6 +149,45 @@ test("the parser keeps static, type-only, re-export, dynamic and require edges w
   ])
 })
 
+test("the AST keeps side-effect, export-all, type re-export, import-equals and type query edges with normalized paths", () => {
+  expect(imports({
+    file: "session/probe.ts",
+    text: [
+      'import "@/claude-code/sdk.ts"',
+      'export * from "../claude-code/tools/index.ts"',
+      'export type { Engine } from "@/claude-code/engine"',
+      'import Host = require("../claude-code/host/provider.ts")',
+      'const lazy = import /* comment */ ("@/claude-code/host/../host/options.ts")',
+      'type Gate = import("@/claude-code/host/gate").Gate',
+    ].join("\n"),
+  })).toEqual([
+    "claude-code/sdk",
+    "claude-code/tools",
+    "claude-code/engine",
+    "claude-code/host/provider",
+    "claude-code/host/options",
+    "claude-code/host/gate",
+  ])
+})
+
+test("the AST ignores prose and unsupported computed/template loader spellings", () => {
+  expect(imports({
+    file: "session/probe.tsx",
+    text: [
+      '// import { SDK } from "@/claude-code/sdk"',
+      'const prose = \'require("@/claude-code/host/provider")\'',
+      'const view = <div>import("@/claude-code/host/options")</div>',
+      'const template = import(`@/claude-code/sdk`)',
+      'const computed = import(`@/claude-code/${name}`)',
+      'const variable = require(specifier)',
+      'const joined = require("@/claude-code/" + name)',
+      'const wrapped = loader.require("@/claude-code/sdk")',
+      'import "node:path"',
+      'import "effect"',
+    ].join("\n"),
+  })).toEqual([])
+})
+
 test("normal mode imports only Claude mode's entry point, and Claude mode imports only its declared interface", async () => {
   const files = await sources()
   const claude = files.filter((item) => inClaudeMode(item.file))
@@ -199,9 +240,22 @@ function violations(files: File[]) {
 
 /** The src-relative modules a file imports, without extension; package and node imports are dropped. */
 function imports(item: File) {
-  return ts.preProcessFile(item.text, true, true).importedFiles.flatMap((ref) => {
-    const specifier = ref.fileName
-    const resolved = specifier.startsWith("@/") ? specifier.slice(2)
+  // Repair: preProcessFile uses TypeScript's shared services scanner; extraction must come from this file's AST.
+  const source = ts.createSourceFile(item.file, item.text, ts.ScriptTarget.Latest, true,
+    item.file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
+  const specifiers: string[] = []
+  function visit(node: ts.Node) {
+    const specifier = ts.isImportDeclaration(node) || ts.isExportDeclaration(node) ? node.moduleSpecifier
+      : ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) ? node.moduleReference.expression
+      : ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) ? node.argument.literal
+      : ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        ts.isIdentifier(node.expression) && node.expression.text === "require") ? node.arguments[0] : undefined
+    if (specifier && ts.isStringLiteral(specifier)) specifiers.push(specifier.text)
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+  return specifiers.flatMap((specifier) => {
+    const resolved = specifier.startsWith("@/") ? path.posix.normalize(specifier.slice(2))
       : specifier.startsWith(".") ? path.posix.join(path.posix.dirname(item.file), specifier) : undefined
     if (resolved === undefined || resolved.startsWith("..")) return []
     return [resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")]
