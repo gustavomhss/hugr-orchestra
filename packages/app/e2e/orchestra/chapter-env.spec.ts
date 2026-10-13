@@ -12,12 +12,16 @@ test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block", acti
 
 async function setup(page: Page, scheme = "dark") {
   const requests: string[] = []
+  const projects = [
+    { id: "env-project", name: "Env A", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } },
+    { id: "env-second", name: "Env A2", worktree: "/env-second", sandboxes: [], time: { created: 1, updated: 1 } },
+  ]
   page.on("request", (request) =>
     requests.push(JSON.stringify({ url: request.url(), headers: request.headers(), body: request.postData() })),
   )
   await mockOrchestraServer(page, {
     directory,
-    project: { id: "env-project", name: "Env A", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } },
+    project: projects[0],
     provider: { all: [], connected: [], default: {} },
     sessions: [],
     pageMessages: () => ({ items: [] }),
@@ -25,10 +29,7 @@ async function setup(page: Page, scheme = "dark") {
   await page.route(`${serverA}/project`, (route) =>
     route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify([
-        { id: "env-project", name: "Env A", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } },
-        { id: "env-second", name: "Env A2", worktree: "/env-second", sandboxes: [], time: { created: 1, updated: 1 } },
-      ]),
+      body: JSON.stringify(projects),
     }),
   )
   await page.route(`${serverB}/**`, async (route) => {
@@ -47,6 +48,28 @@ async function setup(page: Page, scheme = "dark") {
               : {}
     if (path.endsWith("/event")) return route.fulfill({ contentType: "text/event-stream", body: ": ok\n\n" })
     return route.fulfill({ contentType: "application/json", body: JSON.stringify(data) })
+  })
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url())
+    if (![serverA, serverB].includes(url.origin) || !["/path", "/project/current"].includes(url.pathname))
+      return route.fallback()
+    const project =
+      url.origin === serverB
+        ? { ...projects[0], id: "env-b", name: "Env B" }
+        : projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? directory))
+    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
+    return route.fulfill({
+      json:
+        url.pathname === "/project/current"
+          ? project
+          : {
+              state: project.worktree,
+              config: project.worktree,
+              worktree: project.worktree,
+              directory: project.worktree,
+              home: "/",
+            },
+    })
   })
   await page.addInitScript(
     ({ serverA, serverB, scheme }) => {

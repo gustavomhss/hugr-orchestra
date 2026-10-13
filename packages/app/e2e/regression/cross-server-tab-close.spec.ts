@@ -101,13 +101,64 @@ test("detail failures keep the parent list and retry scoped/root loading locally
   await expect(panel.locator('[data-slot="session-review-v2-file-name"]')).toHaveText("detail.ts")
 })
 
-test("V2 session menu exposes archive as unavailable, not an enabled no-op", async ({ page }) => {
+test("V2 archive sends the supported request and disables unsupported servers without removing their tabs", async ({
+  page,
+}) => {
+  const requests: Array<{ origin: string; path: string; body: unknown }> = []
+  const release = Promise.withResolvers<void>()
   await mockReviewServers(page, async () => ({ status: 200, data: [] }))
+  await page.route("**/api/session/*/archive", async (route) => {
+    const url = new URL(route.request().url())
+    expect(route.request().method()).toBe("POST")
+    requests.push({ origin: url.origin, path: url.pathname, body: route.request().postDataJSON() })
+    if (url.origin === serverA) {
+      await release.promise
+      return route.fulfill({ status: 204 })
+    }
+    // Older V2 deployments may omit this route; protocol version alone does not imply support.
+    return json(route, { name: "NotFound", message: "Archive route not installed" }, 404)
+  })
   await installReviewTabs(page)
   await page.goto(`/server/${base64Encode(serverA)}/session/${sessionA.id}`)
   await page.getByRole("button", { name: "More options", exact: true }).click()
-  await expect(page.locator('[data-action="session-archive"]')).toHaveAttribute("aria-disabled", "true")
-  await expect(page.locator('[data-action="session-archive"]')).toContainText(/unavailable/)
+  const archive = page.locator('[data-action="session-archive"]')
+  await expect(archive).not.toHaveAttribute("aria-disabled", "true")
+  await archive.click()
+  await expect
+    .poll(() => requests)
+    .toEqual([{ origin: serverA, path: `/api/session/${sessionA.id}/archive`, body: { archived: true } }])
+  // Move to the other server before the ACK; removal must keep its tab and active route.
+  await page.locator('[data-slot="orchestra-profile"]').click()
+  await page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("group", { name: "Review B", exact: true })
+    .getByRole("menuitemradio", { name: "repo", exact: true })
+    .click()
+  const href = `/server/${base64Encode(reviewServerB)}/session/${sessionB.id}`
+  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  release.resolve()
+  const tabs = () => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]"))
+  await expect.poll(tabs).toEqual([{ type: "session", server: reviewServerB, sessionId: sessionB.id }])
+
+  await page.getByRole("button", { name: "More options", exact: true }).click()
+  await expect(archive).not.toHaveAttribute("aria-disabled", "true")
+  const unsupported = page.waitForResponse(
+    (response) => response.url() === `${reviewServerB}/api/session/${sessionB.id}/archive`,
+  )
+  await archive.click()
+  expect((await unsupported).status()).toBe(404)
+  await page.getByRole("button", { name: "More options", exact: true }).click()
+  await expect(archive).toHaveAttribute("aria-disabled", "true")
+  await expect(archive).toContainText(/unavailable/)
+  await archive.press("Enter")
+  await expect(archive).toHaveAttribute("aria-disabled", "true")
+  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  await expect(page.getByRole("heading", { name: sessionB.title, exact: true })).toBeVisible()
+  expect(await tabs()).toEqual([{ type: "session", server: reviewServerB, sessionId: sessionB.id }])
+  expect(requests).toEqual([
+    { origin: serverA, path: `/api/session/${sessionA.id}/archive`, body: { archived: true } },
+    { origin: reviewServerB, path: `/api/session/${sessionB.id}/archive`, body: { archived: true } },
+  ])
 })
 
 test("late V1 archive removes only its originating server's same-ID tab", async ({ page }) => {

@@ -43,6 +43,7 @@ test("keeps Janitor chat session, sends prompt, and opens it in session view", a
   )
 
   await setupTimeline(page, {
+    settings: { janitorEnabled: true },
     onPrompt: (input) => prompts.push(input),
     sessions: [
       session({
@@ -114,7 +115,7 @@ for (const viewport of [
     )
     const timeline = await setupTimeline(page, {
       viewport,
-      settings: { newLayoutDesigns: true },
+      settings: { newLayoutDesigns: true, janitorEnabled: true },
       onPrompt: (input) => prompts.push(input),
       sessions: [session(), session({ id: janitorSessionID, title: "Janitor chat" })],
     })

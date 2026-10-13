@@ -1,3 +1,8 @@
+import { createProviderResource } from "@/hooks/provider-catalog"
+import { decode64 } from "@/utils/base64"
+import { useParams } from "@solidjs/router"
+import type { Accessor } from "solid-js"
+
 const model_id = "claude-3-7-sonnet"
 
 export const popularProviders = [
@@ -45,12 +50,37 @@ const catalog = [
   { id: "alibaba-coding-plan", name: "Alibaba Coding Plan", models: {} },
 ]
 
-export function useProviders() {
+export function useProviders(directory?: Accessor<string | null | undefined>) {
+  const params = useParams()
+  const dir = () => (directory ? directory() : params.dir === undefined ? null : decode64(params.dir))
   return {
+    directory: dir,
+    refresh: async () => {
+      if (dir() === undefined) throw new Error("Provider directory is unresolved")
+    },
     all: () => new Map(catalog.map((item) => [item.id, item])),
     default: () => ({ anthropic: model_id }),
+    defaultModel: () => ({ providerID: provider.id, modelID: model_id }),
     connected: () => [provider],
-    paid: () => [provider],
+    paid: () => [[provider.id, provider] as const],
     popular: () => popular,
+  }
+}
+
+export function useProviderDiscovery(directory?: Accessor<string | null | undefined>) {
+  const providers = useProviders(directory)
+  // Use the production resource boundary: unresolved scope loads, scoped failures stay local, retry refetches.
+  const discovery = createProviderResource(
+    () => {
+      const value = providers.directory()
+      return value === undefined ? undefined : { directory: value }
+    },
+    async () => [...providers.all().values()].map((item) => ({ id: item.id, name: item.name })),
+  )
+  return {
+    all: () => discovery.data() ?? [],
+    loading: () => providers.directory() === undefined || discovery.loading(),
+    error: discovery.error,
+    retry: discovery.retry,
   }
 }

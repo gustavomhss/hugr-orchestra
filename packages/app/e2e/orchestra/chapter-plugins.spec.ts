@@ -301,6 +301,24 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   await page.route(`http://127.0.0.1:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}/project`, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(projects) }),
   )
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url())
+    if (!["/path", "/project/current"].includes(url.pathname)) return route.fallback()
+    const project = projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? "/plugins-a"))
+    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
+    return route.fulfill({
+      json:
+        url.pathname === "/project/current"
+          ? project
+          : {
+              state: project.worktree,
+              config: project.worktree,
+              worktree: project.worktree,
+              directory: project.worktree,
+              home: "/",
+            },
+    })
+  })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
