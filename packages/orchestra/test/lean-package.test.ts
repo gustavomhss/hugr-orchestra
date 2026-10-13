@@ -80,7 +80,7 @@ test("orchestra package typecheck in CI", async () => {
 
 test("actual Node and Bun artifacts retain exact pinned notices", async () => {
   const archive = new Uint8Array(await Bun.file(path.join(dir, "../core/vendor", leanPin.artifact)).arrayBuffer())
-  expect(digest(archive)).toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
+  expect(digest(archive)).toBe("5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3")
   const core = path.resolve(dir, "../core")
   expect((await Bun.file(path.join(core, "package.json")).json()).dependencies["hugr-lean"]).toBe(`file:./vendor/${leanPin.artifact}`)
   const installed = path.resolve(path.dirname(Bun.resolveSync("hugr-lean/core", core)), "../..")
@@ -97,7 +97,7 @@ test("actual Node and Bun artifacts retain exact pinned notices", async () => {
   expect(names).toContain("fixtures/profiles/playwright/SOURCES.md")
   for (const root of [path.dirname(node), path.dirname(path.dirname(binary))]) {
     const manifest = await Bun.file(path.join(root, "licenses/hugr-lean/manifest.json")).json()
-    expect(manifest).toMatchObject({ name: "hugr-lean", version: "0.2.0", commit: "465fb4c04773f1a40733c9f4c334b980e3195646", tree: "c3a77068a1b72d57ba39ca1b1aa145e0b6e506d7", sha256: digest(archive), integrity: `sha512-${createHash("sha512").update(archive).digest("base64")}` })
+    expect(manifest).toMatchObject({ name: "hugr-lean", version: "0.4.0", commit: "0660c2b5dc9249816330603160aadfaeb33e5fc7", tree: "af1e9f1bd9781588fde339737e6c006886c64a4f", sha256: digest(archive), integrity: `sha512-${createHash("sha512").update(archive).digest("base64")}` })
     expect(manifest.materials.map((entry: { path: string }) => entry.path)).toEqual(names)
     for (const file of names) {
       const original = new Uint8Array(await Bun.file(path.join(scratch, "archive/package", file)).arrayBuffer())

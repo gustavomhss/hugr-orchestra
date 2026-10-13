@@ -19,7 +19,6 @@ import {
   type Component,
   createEffect,
   createMemo,
-  createResource,
   createUniqueId,
   For,
   Match,
@@ -29,7 +28,6 @@ import {
   Switch,
 } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import { useParams } from "@solidjs/router"
 import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -37,9 +35,10 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
+import { createProviderResource } from "@/hooks/provider-catalog"
 import { formatServerError } from "@/utils/server-errors"
+import { connectableIntegration } from "@/orchestra/chapters/providers-data"
 import { CustomProviderForm } from "./dialog-custom-provider"
-import { decode64 } from "@/utils/base64"
 
 const CUSTOM_ID = "_custom"
 type ConnectMethod = Extract<IntegrationMethod, { type: "key" | "oauth" }>
@@ -365,13 +364,12 @@ function ProviderConnection(props: {
   const dialog = useDialog()
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
-  const params = useParams()
   const language = useLanguage()
   const platform = usePlatform()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
-  const providers = useProviders(() => props.directory?.())
-  const directory = () => props.directory?.() ?? decode64(params.dir)
+  const providers = useProviders(props.directory)
+  const directory = providers.directory
   const location = () => {
     const value = directory()
     return value ? { directory: value } : undefined
@@ -387,30 +385,33 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
-  const provider = createMemo(
-    () => providers.all().get(props.provider) ?? serverSync().data.provider.all.get(props.provider)!,
-  )
+  const provider = () => providers.all().get(props.provider) ?? { name: integration.data()?.name ?? props.provider }
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
       type: "key" as const,
       label: language.t("provider.connect.method.apiKey"),
     },
   ])
-  const [integration] = createResource(
-    () => ({ provider: props.provider, directory: directory() }),
+  const integration = createProviderResource(
+    () => {
+      const client = serverSDK()
+      return directory() === undefined
+        ? undefined
+        : { provider: props.provider, directory: directory(), client, server: client.scope }
+    },
     (input) =>
-      serverSDK()
-        .api.integration.get({
+      input.client.api.integration
+        .get({
           integrationID: input.provider,
           location: input.directory ? { directory: input.directory } : undefined,
         })
-        .then((result) => result.data),
+        .then((result) => connectableIntegration(result.data)),
   )
-  const loading = createMemo(() => integration.loading)
+  const loading = createMemo(() => integration.loading() || directory() === undefined)
   const methods = createMemo<ConnectMethod[]>(() => {
-    const values = integration.latest?.methods.filter(
-      (method): method is ConnectMethod => method.type === "key" || method.type === "oauth",
-    )
+    const values = integration
+      .data()
+      ?.methods.filter((method): method is ConnectMethod => method.type === "key" || method.type === "oauth")
     return values?.length ? values : fallback()
   })
   const [store, setStore] = createStore({
@@ -688,7 +689,7 @@ function ProviderConnection(props: {
   let auto = false
   createEffect(() => {
     if (auto) return
-    if (loading()) return
+    if (loading() || integration.error()) return
     if (methods().length === 1) {
       auto = true
       void selectMethod(0)
