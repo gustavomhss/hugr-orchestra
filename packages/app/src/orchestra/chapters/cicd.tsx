@@ -211,11 +211,19 @@ export default function Cicd(props: ChapterPageProps) {
                       : language.t("orchestra.cicd.checksOnly")}
                   </MxBadge>
                 </div>
+                <Show when={pipelines.stopping(item.id)?.error}>
+                  {(error) => (
+                    <p class="mx-error" role="alert">
+                      {error()}
+                    </p>
+                  )}
+                </Show>
                 <footer class="mx-card-foot">
                   <div>
                     <button
                       type="button"
                       class="mx-btn"
+                      disabled={pipelines.stopping(item.id)?.pending}
                       onClick={(event) => {
                         // The second click of a double click must not stop the run the first one started.
                         if (event.detail > 1) return
@@ -223,7 +231,15 @@ export default function Cicd(props: ChapterPageProps) {
                         void pipelines.run(item.id, vcs())
                       }}
                     >
-                      {language.t(item.status === "running" ? "orchestra.cicd.stop" : "orchestra.cicd.run")}
+                      {language.t(
+                        pipelines.stopping(item.id)?.pending
+                          ? "orchestra.cicd.stopping"
+                          : pipelines.stopping(item.id)?.error
+                            ? "orchestra.cicd.retryStop"
+                            : item.status === "running"
+                              ? "orchestra.cicd.stop"
+                              : "orchestra.cicd.run",
+                      )}
                     </button>{" "}
                     <button type="button" class="mx-btn" onClick={() => setDialog({ type: "logs", id: item.id })}>
                       {language.t("orchestra.cicd.logs")}
@@ -326,6 +342,11 @@ export default function Cicd(props: ChapterPageProps) {
               title={language.t("orchestra.cicd.removeTitle")}
               detail={language.t("orchestra.cicd.removeDetail")}
               submit={language.t("orchestra.cicd.dialog.confirm")}
+              error={
+                pipelines.list().find((item) => item.id === current.id)?.status === "running"
+                  ? language.t("orchestra.cicd.removeRunning")
+                  : undefined
+              }
               onSubmit={() => pipelines.remove(current.id)}
               onClose={closeDialog(current)}
             >

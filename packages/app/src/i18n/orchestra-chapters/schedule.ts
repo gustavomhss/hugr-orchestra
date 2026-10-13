@@ -32,6 +32,7 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.enable": "Enable {{name}}",
   "orchestra.schedule.runError": "Could not run {{name}}: {{detail}}",
   "orchestra.schedule.updateError": "Could not update {{name}}: {{detail}}",
+  "orchestra.schedule.removeError": "Could not remove {{name}}: {{detail}}",
   "orchestra.schedule.dialog.new": "Schedule task",
   "orchestra.schedule.dialog.edit": "Edit {{name}}",
   "orchestra.schedule.dialog.subtitle": "Time is shown in your local timezone. Maestro runs the task in this profile.",

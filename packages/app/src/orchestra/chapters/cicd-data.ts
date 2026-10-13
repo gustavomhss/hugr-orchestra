@@ -21,7 +21,7 @@ export type Pipeline = {
   runs: number
   log: string
   // Present only while a server PTY owns the run. `ready` records that the start gate was released.
-  run?: { ptyID: string; ready: boolean }
+  run?: { ptyID: string; ready: boolean; stopRequested?: boolean }
 }
 
 // Persisted logs keep their tail so a noisy run cannot exhaust profile storage.
@@ -131,7 +131,13 @@ export const decodeStoredPipelines = Schema.decodeUnknownOption(
           status: Schema.Literals(STATUSES),
           runs: Schema.Number,
           log: Schema.String,
-          run: Schema.optionalKey(Schema.Struct({ ptyID: Schema.String, ready: Schema.Boolean })),
+          run: Schema.optionalKey(
+            Schema.Struct({
+              ptyID: Schema.String,
+              ready: Schema.Boolean,
+              stopRequested: Schema.optionalKey(Schema.Boolean),
+            }),
+          ),
         }),
       ),
     }),

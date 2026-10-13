@@ -35,7 +35,7 @@ export function SkillDialog(props: {
     if (busy()) return
     setBusy(true)
     setError(undefined)
-    const failure = await action()
+    const failure = await action().catch(() => language.t("orchestra.skills.writeFailed"))
     if (lifetime.disposed) return
     setBusy(false)
     setError(failure)
@@ -133,24 +133,30 @@ export function SkillDialog(props: {
           >
             <label class="mx-field">
               <span>{language.t("orchestra.skills.dialog.name")}</span>
-              <input name="name" type="text" value={skill?.name ?? ""} required readOnly={!editable} />
+              <input name="name" type="text" value={skill?.name ?? ""} required readOnly={!editable || busy()} />
             </label>
             <label class="mx-field">
               <span>{language.t("orchestra.skills.dialog.description")}</span>
-              <input name="description" type="text" value={skill?.description ?? ""} required readOnly={!editable} />
+              <input
+                name="description"
+                type="text"
+                value={skill?.description ?? ""}
+                required
+                readOnly={!editable || busy()}
+              />
             </label>
             <label class="mx-field">
               <span>{language.t("orchestra.skills.content")}</span>
               <textarea
                 name="instructions"
                 value={skill?.content ?? ""}
-                readOnly={!editable}
+                readOnly={!editable || busy()}
                 rows={Math.min(16, (skill?.content ?? "").split("\n").length)}
               />
             </label>
             <Show when={props.state.type === "edit" && editable && skill}>
               {(target) => (
-                <button type="button" class="mx-btn" onClick={() => props.onAskRemove(target())}>
+                <button type="button" class="mx-btn" disabled={busy()} onClick={() => props.onAskRemove(target())}>
                   {language.t("orchestra.skills.dialog.remove")}
                 </button>
               )}

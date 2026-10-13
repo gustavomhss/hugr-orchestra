@@ -18,16 +18,33 @@ export function createServerSchedule(props: {
 }): ScheduleSource {
   const language = useLanguage()
   const sdk = useSDK()
-  const api = () => sdk().client.v2.schedule
+  return createServerScheduleSource(props, {
+    language,
+    api: () => sdk().client.v2.schedule,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  })
+}
+
+export function createServerScheduleSource(
+  props: { directory: string; store: DeviceStore; onUnsupported: () => void },
+  input: {
+    language: Pick<ReturnType<typeof useLanguage>, "t">
+    api: () => ReturnType<ReturnType<typeof useSDK>>["client"]["v2"]["schedule"]
+    timezone: string
+    poll?: (refresh: () => void) => () => void
+  },
+): ScheduleSource {
+  const language = input.language
+  const api = input.api
   const location = { directory: props.directory }
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const timezone = input.timezone
   const [state, setState] = createStore({
     status: "loading" as "loading" | "ready" | "error",
     tasks: [] as ScheduledTaskInfo[],
     running: {} as Record<string, boolean>,
     error: "",
   })
-  const lifetime = { disposed: false, migrating: false }
+  const lifetime = { disposed: false, migrating: false, supported: false }
   const [moved, setMoved] = createSignal<"pending" | "failed">("pending")
   const failure = (error: unknown) =>
     error && typeof error === "object" && "message" in error && typeof error.message === "string"
@@ -42,7 +59,8 @@ export function createServerSchedule(props: {
       .catch(() => undefined)
     if (lifetime.disposed) return
     const body: unknown = result?.data
-    if (result?.response.ok && body && typeof body === "object" && "data" in body && Array.isArray(body.data)) {
+    if (result?.response?.ok && body && typeof body === "object" && "data" in body && Array.isArray(body.data)) {
+      lifetime.supported = true
       setState("tasks", reconcile(body.data as ScheduledTaskInfo[], { key: "id" }))
       setState("status", "ready")
       // A move that failed is retried on every refresh until the device list is empty.
@@ -50,8 +68,9 @@ export function createServerSchedule(props: {
       return
     }
     // An older server answers 404, or a page from its UI fallback instead of the list.
-    if (result && (result.response.ok || UNSUPPORTED.has(result.response.status))) return props.onUnsupported()
-    if (state.status !== "ready") setState("status", "error")
+    if (!lifetime.supported && result?.response && (result.response.ok || UNSUPPORTED.has(result.response.status)))
+      return props.onUnsupported()
+    setState("status", "error")
   }
 
   // Creating with the device task's ID adopts a task another window already moved, so a retry is safe.
@@ -109,10 +128,16 @@ export function createServerSchedule(props: {
   }
 
   void load()
-  const timer = setInterval(() => void load(), TICK)
+  const stopPolling = (
+    input.poll ??
+    ((refresh) => {
+      const timer = setInterval(refresh, TICK)
+      return () => clearInterval(timer)
+    })
+  )(() => void load())
   onCleanup(() => {
     lifetime.disposed = true
-    clearInterval(timer)
+    stopPolling()
   })
 
   const update = async (id: string, input: { enabled: boolean }) => {
@@ -133,14 +158,22 @@ export function createServerSchedule(props: {
     error: () => state.error,
     running: (id) => !!state.running[id],
     save: async (id, fields, resumed) => {
-      // Saving from the editor anchors the task to this browser's time zone, in which the time was entered.
+      const task = state.tasks.find((task) => task.id === id)
+      // Core re-anchors recurrence when any timing field is sent. Metadata-only edits omit all
+      // three; a changed time/cadence is entered in this browser's zone and explicitly re-anchors it.
+      const timed = !task || task.next !== fields.next || task.cadence !== fields.cadence
       const result = await (
         id
           ? api().update(
               {
                 scheduleID: id,
                 location,
-                scheduledTaskUpdateInput: { ...fields, timezone, ...(resumed ? { enabled: true } : {}) },
+                scheduledTaskUpdateInput: {
+                  name: fields.name,
+                  prompt: fields.prompt,
+                  ...(timed ? { next: fields.next, cadence: fields.cadence, timezone } : {}),
+                  ...(resumed ? { enabled: true } : {}),
+                },
               },
               { throwOnError: false },
             )
@@ -156,9 +189,10 @@ export function createServerSchedule(props: {
       const result = await api()
         .remove({ scheduleID: id, location }, { throwOnError: false })
         .catch(() => undefined)
-      if (!result?.response.ok && result?.response.status !== 404)
-        setState("error", language.t("orchestra.schedule.updateError", { name: task, detail: failure(result?.error) }))
+      if (!result?.response?.ok && result?.response?.status !== 404)
+        return language.t("orchestra.schedule.removeError", { name: task, detail: failure(result?.error) })
       await load()
+      return undefined
     },
     run: async (id) => {
       if (state.running[id]) return

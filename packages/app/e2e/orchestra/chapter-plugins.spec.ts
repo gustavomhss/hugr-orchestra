@@ -86,6 +86,19 @@ function systemOf(prompts: Array<{ body: unknown }>, index: number) {
   return body.system
 }
 
+test("audit: plugins unmatched search explains the empty result and clearing restores cards", async ({ page }) => {
+  await openSession(page, "dark", "v1")
+  await openPlugins(page)
+  await expect(card(page, "Caveman")).toBeVisible()
+  const search = chapter(page).getByRole("textbox", { name: "Search LLM Plugins" })
+  await search.fill("no-behavior-matches-this")
+  await expect(chapter(page).getByRole("status")).toHaveText("No matching results")
+  await expect(chapter(page).getByRole("article")).toHaveCount(0)
+  await search.clear()
+  await expect(card(page, "Caveman")).toBeVisible()
+  await expect(chapter(page).getByRole("status")).toHaveCount(0)
+})
+
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: configured behaviors persist per profile and reach new chat messages`, async ({ page }) => {
     const prompts = await openSession(page, scheme, "v1")

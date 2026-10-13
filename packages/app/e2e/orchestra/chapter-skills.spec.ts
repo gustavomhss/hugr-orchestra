@@ -378,6 +378,82 @@ async function openSkills(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/skills$/)
 }
 
+for (const protocol of ["v1", "v2"] as const) {
+  for (const method of ["PUT", "DELETE"] as const) {
+    test(`${protocol}: audit: late skill ${method} cannot close a replacement draft`, async ({ page }) => {
+      const response = { status: 200, skills: [...catalog] }
+      await setup(page, { protocol, response })
+      const gate = Promise.withResolvers<void>()
+      const started = Promise.withResolvers<void>()
+      await page.route(
+        (url) => url.pathname === (protocol === "v1" ? "/skill" : "/api/skill"),
+        async (route) => {
+          if (route.request().method() !== method) return route.fallback()
+          started.resolve()
+          await gate.promise
+          return route.fallback()
+        },
+      )
+      await openSkills(page)
+      await page.getByRole("button", { name: "Read & edit", exact: true }).click()
+      const dialog = page.getByRole("dialog")
+      if (method === "PUT") {
+        await dialog.getByLabel("Name", { exact: true }).fill("Saved A")
+        await dialog.getByRole("button", { name: "Save", exact: true }).click()
+      }
+      if (method === "DELETE") {
+        await dialog.getByRole("button", { name: "Remove skill", exact: true }).click()
+        await dialog.getByRole("button", { name: "Confirm", exact: true }).click()
+      }
+      await started.promise
+      await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+      await expect(dialog).toHaveCount(0)
+      await page.getByRole("button", { name: "Add skill", exact: true }).click()
+      await dialog.getByLabel("Name", { exact: true }).fill("Draft B")
+      await dialog.getByLabel("Instructions", { exact: true }).fill("Keep B's unsaved instructions")
+      gate.resolve()
+      // The refreshed catalog proves A's completion callback ran, not merely that HTTP completed.
+      await expect(page.locator(".skills-card h3")).toHaveText(
+        method === "PUT" ? ["Saved A", catalog[1].name] : [catalog[1].name],
+      )
+      await expect(dialog.getByLabel("Name", { exact: true })).toHaveValue("Draft B")
+      await expect(dialog.getByLabel("Instructions", { exact: true })).toHaveValue("Keep B's unsaved instructions")
+    })
+  }
+
+  test(`${protocol}: audit: submitting skill draft freezes, failure retains it for retry`, async ({ page }) => {
+    await setup(page, { protocol, response: { status: 200, skills: [...catalog] } })
+    const gate = Promise.withResolvers<void>()
+    const started = Promise.withResolvers<void>()
+    const fault = { fail: true }
+    await page.route(
+      (url) => url.pathname === (protocol === "v1" ? "/skill" : "/api/skill"),
+      async (route) => {
+        if (route.request().method() !== "PUT" || !fault.fail) return route.fallback()
+        started.resolve()
+        await gate.promise
+        return json(route, { message: "Write denied" }, 500)
+      },
+    )
+    await openSkills(page)
+    await page.getByRole("button", { name: "Read & edit", exact: true }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("Instructions", { exact: true }).fill("Retry this exact draft")
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await started.promise
+    for (const name of ["Name", "Description", "Instructions"])
+      await expect(dialog.getByLabel(name, { exact: true })).not.toBeEditable()
+    await expect(dialog.getByRole("button", { name: "Remove skill", exact: true })).toBeDisabled()
+    gate.resolve()
+    await expect(dialog.getByRole("alert")).toBeVisible()
+    await expect(dialog.getByLabel("Instructions", { exact: true })).toBeEditable()
+    await expect(dialog.getByLabel("Instructions", { exact: true })).toHaveValue("Retry this exact draft")
+    fault.fail = false
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+  })
+}
+
 async function chooseProfile(page: Page, name: string) {
   await page.getByRole("button", { name: "Choose repository profile" }).click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()

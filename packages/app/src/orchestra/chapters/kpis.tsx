@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import { useSettingsDialog } from "@/components/settings-dialog"
+import { useNavigate } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import { Persist, persisted } from "@/utils/persist"
@@ -60,7 +60,8 @@ export function KpiDashboard(props: {
   openProviders: () => void
 }) {
   const language = useLanguage()
-  const openModels = useSettingsDialog("models")
+  const navigate = useNavigate()
+  const openModels = () => navigate("/orchestra/settings?section=models")
   const client = props.sdk.createClient({ directory: props.directory })
   const [prefs, setPrefs, , ready] = persisted(
     Persist.serverWorkspace(props.sdk.scope, props.directory, "orchestra-home"),
