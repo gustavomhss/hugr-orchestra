@@ -41,6 +41,7 @@ export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | Sessio
             Schema.decodeUnknownSync(SessionSubagentModels.Policy)(input.subagentModels),
           )
         : undefined,
+    ...("metadata" in input && input.metadata !== undefined ? { metadata: input.metadata } : {}),
     version: "",
     time: input.time,
     revert: input.revert && {

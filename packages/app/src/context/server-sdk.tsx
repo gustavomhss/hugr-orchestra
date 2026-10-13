@@ -3,7 +3,8 @@ import type { Event } from "@orchestra/sdk/v2/client"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { type Accessor, batch, createMemo, createResource, onCleanup, onMount } from "solid-js"
+import { type Accessor, batch, createMemo, onCleanup, onMount } from "solid-js"
+import { createStore } from "solid-js/store"
 import { createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
 import { useLanguage } from "./language"
 import { type Platform, usePlatform } from "./platform"
@@ -11,7 +12,7 @@ import { ServerConnection, useServer } from "./server"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
-import { detectServerProtocol, type ServerProtocol } from "@/utils/server-protocol"
+import { detectServerProtocol, type ServerProtocol, type ServerProtocolOptions } from "@/utils/server-protocol"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
 import { SessionEvent } from "@orchestra/schema/session-event"
@@ -234,6 +235,48 @@ type ServerSDKBase = {
   ) => ReturnType<typeof createSdkForServer>
 }
 
+export function createServerProtocolPromise(
+  server: ServerConnection.HttpBase,
+  fetcher: typeof fetch,
+  options: ServerProtocolOptions = {},
+  onDetected?: (kind: ServerProtocol) => void,
+) {
+  return connectionPromise(() => detectServerProtocol(server, fetcher, options).then((kind) => {
+    onDetected?.(kind)
+    return kind
+  }))
+}
+
+// Consumers retain both this promise and derived .then chains (including the compatibility API).
+// Cache pending/successful results at each link, but let the next consumer retry a rejected link.
+function connectionPromise<T>(load: () => Promise<T>): Promise<T> {
+  let current: Promise<T> | undefined
+  const read = () => {
+    if (current) return current
+    const next = load().catch((error: unknown) => {
+      if (current === next) current = undefined
+      throw error
+    })
+    current = next
+    // Construction is eager; failures remain observable without an unhandled eager rejection.
+    void next.catch(() => undefined)
+    return next
+  }
+  read()
+  return {
+    then(onfulfilled, onrejected) {
+      return connectionPromise(() => read().then(onfulfilled, onrejected))
+    },
+    catch(onrejected) {
+      return connectionPromise(() => read().catch(onrejected))
+    },
+    finally(onfinally) {
+      return connectionPromise(() => read().finally(onfinally))
+    },
+    [Symbol.toStringTag]: "Promise",
+  }
+}
+
 function createServerSdkContextBase(
   server: ServerConnection.Any,
   scope: ServerScope,
@@ -269,11 +312,14 @@ function createServerSdkContextBase(
     fetch: eventFetch,
     server: http,
   })
-  const protocol = detectServerProtocol(server.http, platform.fetch ?? globalThis.fetch)
-  const [protocolKind] = createResource(
-    () => protocol,
-    (value) => value,
+  const [protocolState, setProtocolState] = createStore({ kind: undefined as ServerProtocol | undefined })
+  const protocol = createServerProtocolPromise(
+    http,
+    scopedFetch(),
+    { signal: abort.signal },
+    (kind) => setProtocolState("kind", kind),
   )
+  const protocolKind = () => protocolState.kind
   const emitter = createGlobalEmitter<{
     [key: string]: ServerEvent
   }>()

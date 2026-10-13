@@ -1,79 +1,56 @@
 export * as ClaudeCodeSDK from "./sdk"
 
-import { Context, Layer, Option, Schema } from "effect"
-import { query } from "@anthropic-ai/claude-agent-sdk"
+import { Context, Layer } from "effect"
+import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { spawn, spawnSync } from "node:child_process"
-import { existsSync, readFileSync } from "node:fs"
-import { createHash } from "node:crypto"
-import { homedir, userInfo } from "node:os"
-import { isAbsolute, join } from "node:path"
+import { spawn } from "node:child_process"
+import { ClaudeCodeExecutable } from "./executable"
 
 type QueryOptions = NonNullable<Parameters<typeof query>[0]["options"]>
 
-/** Explicit environment injection for producers; the SDK helper also accepts options.env. */
+/** The owner's environment the host hands Claude Code; tests inject their own. */
 export const Environment = Context.Reference<NonNullable<QueryOptions["env"]>>("@orchestra/ClaudeCodeSDK/Environment", {
   defaultValue: () => process.env,
 })
 
+/** Claude Code's own `claude_code` prompt preset. Claude mode only appends to it and never replaces it. */
 type Preset = Extract<NonNullable<QueryOptions["systemPrompt"]>, { type: "preset" }>
 
-/**
- * The only system prompt a turn on the machine login may carry: Claude Code's own `claude_code` preset, with the
- * agent's text appended. Anthropic bills a query whose system prompt replaces the preset (custom, string or none) as a
- * third-party app drawing on extra usage, not as Claude Code on the owner's plan.
- */
-export function preset(append?: string): Preset {
-  return { type: "preset", preset: "claude_code", append, snapshot: true }
-}
-
-/** Anthropic refused the call as third-party usage: say so, since it is never a context or transient failure. */
+/** A billing refusal from Anthropic, repeated verbatim so the owner sees exactly what was returned. Never retried. */
 export function billingRejection(detail: string) {
   if (!/third-party app|extra usage|plan limits|billing_error/i.test(detail)) return
-  return "Claude Code call refused: Anthropic billed it as a third-party app (extra usage), not as Claude Code on the " +
-    `owner's plan, so the plan was not used. It is not retried. (${detail})`
+  return `Anthropic returned: ${detail}`
+}
+
+/** What the owner sees when Claude Code reports it is not signed in. Orchestra never signs in on the owner's behalf. */
+export const SIGNED_OUT = "Claude Code is not signed in. Run `claude auth login` in a terminal, then send your message again."
+
+/** True when Claude Code's documented SDK output says the request failed authentication. */
+export function signedOut(message: SDKMessage) {
+  return message.type === "assistant" && message.error === "authentication_failed"
 }
 
 /**
- * Paused (specs/claude-code-engine.md, "Paused"): no real engine process starts until the owner approves the engine's
- * meta-harness plan. The check precedes every login read, so a refused start never touches the machine's credentials.
+ * Starts the unmodified Claude Code binary with the owner's own environment. Claude Code signs in from its own
+ * credential store (`claude auth login`) or the owner's `ANTHROPIC_API_KEY` / `apiKeyHelper`; Orchestra reads, adds and
+ * removes no credential. SDK 0.3.289 Query.return races waitForExit against 2000ms, so it is not an exit receipt.
  */
-export function requirePlanApproval(env: NonNullable<QueryOptions["env"]>) {
-  if (env.ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED === "1") return
-  throw new Error("The Claude Code engine is paused until its meta-harness plan is approved by the owner. " +
-    "Set ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED=1 only after approval.")
-}
-
-/** SDK 0.3.289 Query.return races waitForExit against 2000ms, so it is not an exit receipt. */
 export function processLifetime(options: QueryOptions & { systemPrompt: Preset }) {
-  // Structural guard over every engine query, casts included: no path may replace Claude Code's prompt (see preset).
+  // Structural guard over every engine query, casts included: Claude mode keeps Claude Code's prompt (see Preset).
   const system: unknown = options.systemPrompt
   if (typeof system !== "object" || system === null || Array.isArray(system) ||
     !("type" in system) || system.type !== "preset" || !("preset" in system) || system.preset !== "claude_code")
-    throw new Error("Claude Code turns must keep the claude_code system prompt preset; a replaced prompt is billed as a third-party app")
+    throw new Error("Claude Code turns must keep the claude_code system prompt preset")
   const source = options.env ?? process.env
-  const executable = options.pathToClaudeCodeExecutable ?? source.ORCHESTRA_CLAUDE_CODE_EXECUTABLE
-  if (executable !== undefined && !isAbsolute(executable))
-    throw new Error("Claude Code executable must be an absolute path")
-  const env = machineEnvironment(source)
+  // Strip the retired rollout flag as compatibility metadata, not a credential or an activation requirement.
+  const env = Object.fromEntries(Object.entries(source).filter(([key]) => key !== "ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED"))
   const exits: Promise<void>[] = []
   return {
     options: {
       ...options,
-      ...(executable !== undefined ? { pathToClaudeCodeExecutable: executable } : {}),
+      pathToClaudeCodeExecutable: ClaudeCodeExecutable.resolve({ executable: options.pathToClaudeCodeExecutable, env: source }),
       env,
       spawnClaudeCodeProcess: (input) => {
-        // Only a real SDK query spawns, so recorded transports run without the flag. Refuse before any login read.
-        requirePlanApproval(source)
-        // CLI oW/Hh give --bare an API-only path ahead of the host-managed OAuth path.
-        if (input.args.includes("--bare")) throw new Error("Claude Code bare mode cannot enforce machine OAuth login")
-        const environment = machineEnvironment(input.env)
-        const login = MachineLogin.read(environment)
-        // Pinned CLI yK selects this token first; nc/Hh and settings-env u exclude all settings-sourced auth/routing.
-        environment.CLAUDE_CODE_OAUTH_TOKEN = login.accessToken
-        environment.CLAUDE_CODE_OAUTH_SCOPES = login.scopes.join(" ")
-        if (login.subscriptionType) environment.CLAUDE_CODE_SUBSCRIPTION_TYPE = login.subscriptionType
-        if (login.rateLimitTier) environment.CLAUDE_CODE_RATE_LIMIT_TIER = login.rateLimitTier
         const spawner = options.spawnClaudeCodeProcess ?? ((input) => {
           const child = spawn(input.command, input.args, {
             cwd: input.cwd, env: input.env, signal: input.signal,
@@ -83,7 +60,7 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
           child.stderr.on("error", () => {})
           return child
         })
-        const child = spawner({ ...input, env: environment })
+        const child = spawner(input)
         // Install before returning to the SDK, including its abort handling. Abort errors do not prove exit.
         exits.push(new Promise<void>((resolve, reject) => {
           const exited = () => { child.off("error", failed); resolve() }
@@ -109,69 +86,6 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
       if (failed?.status === "rejected") throw failed.reason
     },
   }
-}
-
-function machineEnvironment(env: NonNullable<QueryOptions["env"]>): Record<string, string> {
-  // Allowlist rather than a finite denylist: new API/backend/host-auth overrides must not leak through.
-  const essentials = new Set([
-    "HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC",
-    "USER", "LOGNAME", "USERNAME", "TMPDIR", "TMP", "TEMP", "LANG", "LC_ALL", "LC_CTYPE", "TZ",
-    "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "CLAUDE_CONFIG_DIR", "CLAUDE_SECURESTORAGE_CONFIG_DIR",
-    "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE", "SSL_CERT_DIR",
-    "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_AGENT_SDK_VERSION", "CLAUDE_CODE_SDK_READS_SESSION_STATE",
-    "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING", "CLAUDE_CODE_PROJECT_DIR_NAME",
-  ])
-  return {
-    ...Object.fromEntries(Object.entries(env).filter(([key, value]) => value !== undefined && essentials.has(key.toUpperCase()))),
-    // Launch-only CLI capability. Settings cannot unset it or replace the selected credential/provider.
-    CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
-  }
-}
-
-const credentials = Schema.Struct({ claudeAiOauth: Schema.Struct({
-  accessToken: Schema.NonEmptyString,
-  refreshToken: Schema.optional(Schema.NonEmptyString),
-  expiresAt: Schema.Number,
-  scopes: Schema.Array(Schema.String),
-  subscriptionType: Schema.optional(Schema.NullOr(Schema.String)),
-  rateLimitTier: Schema.optional(Schema.NullOr(Schema.String)),
-}) })
-const decodeCredentials = Schema.decodeUnknownOption(credentials)
-const decodeJSON = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
-
-/** Native CLI 2.1.289 Nb/x$: secure storage may differ from the session config directory. */
-export function credentialStorage(env: NonNullable<QueryOptions["env"]>, home: string) {
-  const directory = (env.CLAUDE_CONFIG_DIR ?? join(home, ".claude")).normalize("NFC")
-  const secure = env.CLAUDE_SECURESTORAGE_CONFIG_DIR
-  const suffix = (secure !== undefined ? !secure : !env.CLAUDE_CONFIG_DIR)
-    ? "" : "-" + createHash("sha256").update(secure !== undefined ? secure.normalize("NFC") : directory).digest("hex").slice(0, 8)
-  return {
-    file: join(secure !== undefined ? (secure || join(home, ".claude")).normalize("NFC") : directory, ".credentials.json"),
-    service: "Claude Code-credentials" + suffix,
-  }
-}
-
-/** The machine login reader, held on an object so a test can prove a refused start never calls it. */
-export const MachineLogin = { read: requireMachineLogin }
-
-function requireMachineLogin(env: NonNullable<QueryOptions["env"]>) {
-  const storage = credentialStorage(env, env.HOME ?? env.USERPROFILE ?? homedir())
-  const account = (() => {
-    try { return env.USER || userInfo().username } catch { return "claude-code-user" }
-  })()
-  // Native Gn/x(P,T) always reads keychain first, even when an explicit plaintext credential file exists.
-  const keychain = process.platform === "darwin" ? spawnSync("security", [
-    "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(account) ? account : "claude-code-user",
-    "-w", "-s", storage.service,
-  ], { env, encoding: "utf8", timeout: 2000, windowsHide: true }) : undefined
-  const primary = decodeJSON(keychain?.status === 0 ? keychain.stdout : "")
-  // A present keychain object without usable OAuth is authoritative; only absent/unparseable primary data falls back.
-  const parsed = decodeCredentials(Option.isSome(primary) && primary.value != null
-    ? primary.value : existsSync(storage.file) ? Option.getOrUndefined(decodeJSON(readFileSync(storage.file, "utf8"))) : undefined)
-  // Explicit env OAuth has no refresh token in pinned CLI yK/EK: expired local access tokens must fail closed.
-  if (Option.isSome(parsed) && parsed.value.claudeAiOauth.scopes.includes("user:inference") &&
-    parsed.value.claudeAiOauth.expiresAt > Date.now()) return parsed.value.claudeAiOauth
-  throw new Error("Claude Code machine login unavailable; run claude auth login with a Claude subscription")
 }
 
 /** The Claude Agent SDK entry point, behind a service so tests can script a session. */
