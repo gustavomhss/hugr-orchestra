@@ -2,7 +2,7 @@
 
 HuGR Orchestra is a desktop app for software work. You talk to Maestro, the lead agent. Maestro scopes the work, delegates it to a team of specialist agents, and brings the plan and the results back to you for approval.
 
-The app is an Electron shell (`packages/desktop`) around a local server (`packages/orchestra`) that runs sessions, agents, tools and plugins.
+The app combines an Electron host (`packages/desktop`), a shared Solid UI (`packages/app`), and local server/session services. `packages/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
 
 ## Run from source
 
@@ -18,38 +18,42 @@ bun install
 bun run dev:desktop
 ```
 
-This runs `packages/desktop`'s `predev` step, which builds the server bundle the app loads, and then `electron-vite dev`. The `predev` step also calls an `install-electron` script that `packages/desktop` does not define yet. Until it does, run the steps yourself:
+This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](packages/desktop/README.md) for package-local commands and packaging inputs.
 
-```bash
-cd packages/desktop
-bun ./scripts/copy-icons.ts dev
-(cd ../orchestra && bun script/build-node.ts)
-./node_modules/.bin/electron-vite dev
-```
-
-A dev run uses your normal data directory. Set `ORCHESTRA_DB` to an absolute path, for example `ORCHESTRA_DB=/tmp/orchestra-dev.db`, to keep it away from your real database.
+A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; it does not isolate the entire Electron profile, settings, or draft store.
 
 ### Other entry points
 
 - `bun dev` runs the terminal UI and server from `packages/orchestra/src/index.ts`. `bun dev <directory>` runs it against another directory.
 - `bun run dev:web` runs the web UI from `packages/app`.
+- From `packages/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](packages/cli/README.md) for daemon/API commands and compiled resources.
 - `./packages/orchestra/script/build.ts --single` compiles a standalone binary for your platform into `packages/orchestra/dist/orchestra-<platform>/bin/orchestra`.
 
 ### Checks
 
 - Type check from a package directory: `bun typecheck`.
-- Tests run on GitHub Actions, not locally: `bun run test:ci <package> [test files...]` from the repository root. A local `bun test` stops with a pointer to it.
+- `bun run test:ci <package> [test files...]` is the hosted test entrypoint. A local `bun test` is guarded; follow [AGENTS.md](AGENTS.md) for execution rules.
 - `bun run check:godfile` flags source files that grow past the line limit.
+- For the restructuring campaign, each small PR uses only checks for its changed area and reuses recorded passing results. CI runs once on the final composed bundle after all deliveries; intermediate PRs do not request heavy suites or repeated CI.
 
 ## Where things live
 
 | Path                       | What it holds                                                                                   |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
-| `packages/desktop`         | The Electron app; `docs/` covers the Linux workspace and App Dock                               |
-| `packages/app`             | The web UI that the desktop app renders                                                         |
-| `packages/orchestra`       | Server, agents, tools and the plugin loader; `playbooks/` holds Maestro's playbooks             |
-| `packages/core`            | Session runtime, configuration, providers and the plugin host                                   |
-| `packages/plugin`          | The plugin SDK, `@orchestra/plugin`; Orchestra bundles it and never installs it from a registry |
+| [`packages/desktop`](packages/desktop/README.md) | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging |
+| [`packages/app`](packages/app/README.md) | Shared Solid UI and web bootstrap; Desktop consumes its public library exports |
+| [`packages/cli`](packages/cli/README.md) | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts |
+| `packages/orchestra`       | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration |
+| [`packages/core`](packages/core/README.md) | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting |
+| [`packages/schema`](packages/schema/README.md) | Portable contracts, canonical schema identity, and wire/storage datatypes |
+| [`packages/protocol`](packages/protocol/README.md) | Public HTTP contract, route schemas, errors, and middleware requirements |
+| [`packages/server`](packages/server/README.md) | HTTP handler/middleware implementation over Core and Protocol |
+| [`packages/client`](packages/client/README.md) | Generated Promise/Effect network clients; runtime depends on Schema/Protocol, not Core/Server |
+| [`packages/sdk-next`](packages/sdk-next/README.md) | Scoped embedded host composing Client, Core, and Server |
+| [`packages/plugin`](packages/plugin/README.md) | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority |
+| `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
+| `packages/omni`            | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
+| [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
 | `foundation/atlas`         | Atlas, the grounded knowledge layer for a codebase; see its `README.md` and `docs/`             |
 | `specs/hugr-maestro`       | Maestro's contracts, roadmap and work packages                                                  |
 | `specs/backend-specialist` | The backend specialist's architecture and tool contracts                                        |
@@ -57,3 +61,5 @@ A dev run uses your normal data directory. Set `ORCHESTRA_DB` to an absolute pat
 | `specs/v2`                 | V2 designs: API, sessions, configuration, providers, tools and the plugin lifecycle             |
 | `CONTEXT.md`               | Vocabulary of the session runtime                                                               |
 | `AGENTS.md`                | Rules for agents that work in this repository                                                   |
+
+Runtime direction is Schema → Core/Protocol → Server. Client runtime uses Schema/Protocol only; `sdk-next` is the permitted embedded composition. The table describes current paths. Planned `apps/`, `modules/`, `native/`, and `tooling/` moves are separate deliveries, not completed renames.
