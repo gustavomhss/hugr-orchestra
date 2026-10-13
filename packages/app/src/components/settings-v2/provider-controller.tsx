@@ -8,7 +8,9 @@ import { useServerSync } from "@/context/server-sync"
 import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { showToast } from "@/utils/toast"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
+import { DialogCustomProvider } from "../dialog-custom-provider"
 import { disconnectPlan, type DisconnectPlan } from "./provider-credentials"
+import { useProviderDialogScope } from "./provider-dialog-scope"
 
 export { providerIdentity } from "./provider-credentials"
 
@@ -38,6 +40,7 @@ export function createProviderSettingsController(input: {
   const providers = useProviders(input.directory)
   const discovery = useProviderDiscovery(input.directory)
   const providerConnect = useProviderConnectController({ onBack: input.onBack })
+  const captureScope = useProviderDialogScope(input.directory)
 
   const connected = createMemo(() => providers.connected())
 
@@ -137,8 +140,21 @@ export function createProviderSettingsController(input: {
     canDisconnect: (item: ProviderItem) => source(item) !== "env" && (protocol() === "v1" || !isConfigCustom(item.id)),
     note: (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key,
     connect: (provider?: string) => {
+      const scope = captureScope()
       providerConnect.select(provider)
-      void dialog.show(() => <DialogConnectProvider directory={input.directory} controller={providerConnect} />)
+      void dialog.show(() => (
+        <scope.Provider>
+          <DialogConnectProvider directory={scope.directory} controller={providerConnect} />
+        </scope.Provider>
+      ))
+    },
+    connectCustom: () => {
+      const scope = captureScope()
+      void dialog.show(() => (
+        <scope.Provider>
+          <DialogCustomProvider onBack={dialog.close} />
+        </scope.Provider>
+      ))
     },
     disconnect: async (providerID: string, name: string) => {
       // V2 keeps credentials in the server database; auth.remove only touches the v1 auth file.

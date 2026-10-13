@@ -39,6 +39,9 @@ import type { SessionActiveOutput } from "@opencode-ai/client/promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
+import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
+import { sessionManagementFences } from "./session-management-state"
+import { decodeSessionManagementEvent } from "@/utils/session"
 
 export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
 export type { QueryOptionsApi } from "./server-queries"
@@ -294,16 +297,15 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
     children.pin(key)
     const [store, setStore] = children.child(directory, { bootstrap: false })
+    const fences = sessionManagementFences(session, key)
     const meta = sessionMeta.get(key)
     const retainedLimit = Math.max(store.limit, options?.limit ?? 0, meta?.limit ?? 0)
     if (meta && meta.limit >= retainedLimit) {
-      const next = trimSessions(store.session, {
+      const next = trimSessions(fences.visible(store.session, session.get), {
         limit: retainedLimit,
         permission: session.data.permission,
       })
-      if (next.length !== store.session.length) {
-        setStore("session", reconcile(next, { key: "id" }))
-      }
+      setStore("session", reconcile(next, { key: "id" }))
       children.unpin(key)
       return
     }
@@ -320,12 +322,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                 : loadRootSessions({ api: serverSDK.api.session, directory, limit }),
             )
             .then((x) => {
-              const nonArchived = (x.data ?? [])
-                .filter((s) => !!s?.id)
-                .filter((s) => !s.time?.archived)
+              const nonArchived = fences.visible((x.data ?? []).filter((s) => !!s?.id), session.get)
                 .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
               const limit = Math.max(store.limit, options?.limit ?? 0, sessionMeta.get(key)?.limit ?? 0)
-              const childSessions = store.session.filter((s) => !!s.parentID)
+              const childSessions = fences.visible(store.session.filter((s) => !!s.parentID), session.get)
               const next = trimSessions([...nonArchived, ...childSessions], {
                 limit,
                 permission: session.data.permission,
@@ -417,6 +417,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       event: { type: "session.created", properties: { info } },
       directory: key,
       store: existing[0],
+      fenceOwner: session,
       setStore: existing[1],
       push: queue.push,
       retainedLimit: sessionMeta.get(key)?.limit,
@@ -438,6 +439,24 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     session.apply(event)
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
+    }
+    if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
+      const properties = event.properties
+      if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
+        const update = (info: Parameters<typeof session.remember>[0]) => {
+          homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
+          if (eventType !== "session.next.archive.changed") return
+          if (info.time.archived === undefined) {
+            indexSession(info)
+            return
+          }
+          homeSessions.remove(info.id)
+          notifySessionTabsRemoved({ server: ServerConnection.key(serverSDK.server), directory: info.directory, sessionIDs: [info.id] })
+        }
+        const info = session.get(properties.sessionID)
+        if (info) update(info)
+        if (!info) void session.resolve(properties.sessionID).then(update).catch(() => {})
+      }
     }
     homeSessions.refresh(event.type)
     if (eventType === "integration.connection.updated") void refreshProviders()
@@ -482,7 +501,16 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         .catch(() => {})
 
     const existing = children.children[key]
-    if (!existing) return
+    if (!existing) {
+      const decoded = decodeSessionManagementEvent(event)
+      if (decoded) sessionManagementFences(session, key).apply(decoded)
+      if (event.type === "session.deleted") {
+        const properties = event.properties as { sessionID?: string; info?: { id: string } }
+        const sessionID = properties.sessionID ?? properties.info?.id
+        if (sessionID) sessionManagementFences(session, key).delete(sessionID)
+      }
+      return
+    }
     children.mark(key)
     if (
       event.current?.type === "session.moved" ||
@@ -500,6 +528,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       event,
       directory,
       store,
+      fenceOwner: session,
       setStore,
       push: (directory) => {
         if (children.active(directory)) queue.push(directory)
@@ -640,7 +669,9 @@ export const { use: useServerSync, provider: ServerSyncProvider } = createSimple
   name: "ServerSync",
   // Returns an accessor so the resolved server can change reactively without
   // re-instantiating the subtree (mirrors useServerSDK).
-  init: (props: { server?: Accessor<ServerConnection.Any | undefined> }) => {
+  init: (props: { server?: Accessor<ServerConnection.Any | undefined>; value?: ServerSync }) => {
+    const captured = props.value
+    if (captured) return () => captured
     const global = useGlobal()
     const language = useLanguage()
     const server = useServer()
