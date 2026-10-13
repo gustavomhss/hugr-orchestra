@@ -1,5 +1,4 @@
 import { expect } from "bun:test"
-import path from "node:path"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect, Exit } from "effect"
 import { ClaudeHost } from "@/claude-code/host/session"
@@ -10,8 +9,9 @@ import { LogicalTask } from "@/maestro/logical-task"
 import { MessageID, PartID } from "@/session/schema"
 import { SessionRevert } from "@/session/revert"
 import { Todo } from "@/session/todo"
-import { TestInstance } from "../../fixture/fixture"
 import { ClaudeEngineFixture } from "../engine-fixture"
+import { ClaudeLifecycleFixture } from "./lifecycle-fixture"
+import { Agent } from "@/agent/agent"
 
 const produce = Effect.fnUntraced(function* (f: Effect.Success<ReturnType<typeof ClaudeEngineFixture.setup>>,
   user: SessionV1.User, assistant: SessionV1.Assistant, goal: string) {
@@ -170,11 +170,11 @@ for (const engine of ["claude-code", "orchestra"] as const)
   ClaudeEngineFixture.it.instance(`direct jimmy ${engine} textless turn preserves the actual input boundary before query`, () =>
     Effect.gen(function* () {
       ClaudeEngineFixture.reset()
-      const f = yield* ClaudeEngineFixture.setup()
-      const instance = yield* TestInstance
-      yield* Effect.promise(() => Bun.write(path.join(instance.directory, "orchestra.json"), JSON.stringify({
+      const f = yield* ClaudeLifecycleFixture.setup({
         agent: { jimmy: { engine, model: "anthropic/claude-haiku-4-5-20251001" } },
-      })))
+      })
+      const agents = yield* Agent.Service
+      expect((yield* agents.get("jimmy"))?.engine).toBe(engine)
       const user = yield* f.sessions.updateMessage({ id: MessageID.ascending(), sessionID: f.chat.id, role: "user",
         agent: "jimmy", model: { providerID: "anthropic", modelID: "claude-haiku-4-5-20251001" } as SessionV1.User["model"], time: { created: Date.now() } })
       const host = yield* ClaudeHost.Service
