@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
+import type {} from "../../../desktop/src/renderer/env"
 import {
   directory,
   sessionID as routeSessionID,
@@ -25,15 +26,17 @@ const report = JSON.stringify({
 test("keeps Janitor chat session, sends prompt, and opens it in session view", async ({ page }) => {
   const prompts: Array<{ sessionID: string; body: unknown }> = []
   await page.addInitScript((report) => {
-    window.api = {
-      janitor: {
-        getReport: async () => ({ report, source: null }),
-        publish: async () => true,
-        snooze: async () => {},
-        dismiss: async () => {},
-        onReport: () => () => {},
-      },
-    }
+    Object.assign(window, {
+      api: {
+        janitor: {
+          getReport: async () => ({ report, source: null }),
+          publish: async () => true,
+          snooze: async () => true,
+          dismiss: async () => true,
+          onReport: () => () => {},
+        },
+      } satisfies Pick<Window["api"], "janitor">,
+    })
   }, report)
   await page.addInitScript(
     ({ directory, sessionID }) => {
@@ -100,15 +103,17 @@ for (const viewport of [
     const prompts: Array<{ sessionID: string; body: unknown }> = []
     await page.addInitScript(
       ({ report, directory, sessionID }) => {
-        window.api = {
-          janitor: {
-            getReport: async () => ({ report, source: null }),
-            publish: async () => true,
-            snooze: async () => {},
-            dismiss: async () => {},
-            onReport: () => () => {},
-          },
-        }
+        Object.assign(window, {
+          api: {
+            janitor: {
+              getReport: async () => ({ report, source: null }),
+              publish: async () => true,
+              snooze: async () => true,
+              dismiss: async () => true,
+              onReport: () => () => {},
+            },
+          } satisfies Pick<Window["api"], "janitor">,
+        })
         localStorage.setItem(`orchestra.janitor.session.local.${directory}`, sessionID)
       },
       { report, directory: base64Encode(directory), sessionID: janitorSessionID },
