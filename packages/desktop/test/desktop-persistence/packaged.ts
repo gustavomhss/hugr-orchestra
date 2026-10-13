@@ -140,11 +140,13 @@ export async function run(control?: "delete-blob") {
       const captured = { read: () => "", code: undefined as number | undefined, gui: undefined as Record<string, unknown> | undefined }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
         captured.read = host.output
-        const exited = { done: false }
-        void host.exited.then((code) => { captured.code = code; exited.done = true }, () => { exited.done = true })
-        const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
-          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
-            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined)
+        const exited = { done: false, failed: false }
+        void host.exited.then((code) => { captured.code = code; exited.done = true }, () => { exited.failed = true })
+        const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () => {
+          if (exited.failed) throw new Error("APP_EXIT_OBSERVATION_FAILED")
+          if (existsSync(reportFile)) return JSON.parse(readFileSync(reportFile, "utf8")) as Report
+          if (exited.done) throw new Error("APP_EXITED_BEFORE_REPORT")
+        })
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
         assert.equal(report.nonce, nonce, "REPORT_NONCE_MISMATCH")
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
@@ -167,13 +169,12 @@ export async function run(control?: "delete-blob") {
         placement.draftDB = path.join(report.userData, "drafts.sqlite")
         assertOwned(placement.draftDB, root, rootIdentity)
         await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => {
+          if (exited.failed) throw new Error("APP_EXIT_OBSERVATION_FAILED")
           if (exited.done) throw new Error("APP_EXITED_BEFORE_GUI")
           return events(reportFile).find((event) => event.pid === report.pid && event.name === "gui-visible" &&
             event.windows?.some((window) => window.visible) && event.displays?.length)
         }).catch(async (error: unknown) => {
-          captured.gui = { exitObserved: exited.done, cdp: await fetch(`http://127.0.0.1:${port}/json/list`, {
-            signal: AbortSignal.any([host.signal, AbortSignal.timeout(2000)]), redirect: "error",
-          }).then(async (response) => ({ status: response.status, lines: startupDiagnostic((await response.text()).slice(0, 20000), "").split("\n") }))
+          captured.gui = { exitObserved: exited.done, exitObservationFailed: exited.failed, cdp: await debugTargets(port, host.signal)
             .catch((cause: unknown) => ({ error: String(cause) })) }
           throw error
         })
@@ -209,14 +210,17 @@ export async function run(control?: "delete-blob") {
             quit: { actionID, code: 0 }, preservation: mutation.detected ? "DRAFT_BLOB_LOST" : "exact" })
         }
       }).catch((error: unknown) => {
+        const releaseConfirmed = lifecycle.exited && lifecycle.closed
         try {
           mkdirSync(path.dirname(destination), { recursive: true })
           writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
-            sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: captured.code ?? null, gui: captured.gui,
-            output: startupDiagnostic(captured.read(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")).split("\n"),
-            events: events(reportFile).filter((event) => ["utility-started", "gui-visible", "quit-requested", "before-quit", "will-quit", "quit"].includes(event.name))
+            sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: captured.code ?? null,
+            releaseConfirmed, gui: captured.gui,
+            output: startupDiagnostic(captured.read(), releaseConfirmed
+              ? path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs") : "").split("\n"),
+            events: releaseConfirmed ? events(reportFile).filter((event) => ["utility-started", "gui-visible", "quit-requested", "before-quit", "will-quit", "quit"].includes(event.name))
               .slice(-30).map((event) => ({ name: event.name, pid: event.pid, code: event.code,
-                windows: event.windows?.map((window) => ({ visible: window.visible })), displays: event.displays })),
+                windows: event.windows?.map((window) => ({ visible: window.visible })), displays: event.displays })) : undefined,
           }, null, 2))
         } catch {
           console.error("PHASE_DIAGNOSTIC_UNAVAILABLE")
@@ -262,7 +266,7 @@ export async function run(control?: "delete-blob") {
 }
 
 function startupDiagnostic(captured: string, logs: string) {
-  const directories = existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
+  const directories = logs && existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
     .filter((entry) => entry.isDirectory()).slice(0, 8).map((entry) => path.join(logs, entry.name))] : []
   return [captured, ...directories.flatMap((directory) => readdirSync(directory, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".log")).slice(0, 8)
@@ -270,6 +274,30 @@ function startupDiagnostic(captured: string, logs: string) {
     .join("\n").slice(-200000).replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
     .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
     .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
+}
+
+async function debugTargets(port: number, signal: AbortSignal) {
+  const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+    signal: AbortSignal.any([signal, AbortSignal.timeout(2000)]), redirect: "error",
+  })
+  if (!response.body) return { status: response.status, lines: ["CDP_BODY_MISSING"] }
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  const size = { bytes: 0 }
+  try {
+    while (size.bytes < 20000) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      const value = chunk.value.subarray(0, 20000 - size.bytes)
+      chunks.push(value)
+      size.bytes += value.length
+    }
+    return { status: response.status, bytes: size.bytes, limitReached: size.bytes === 20000,
+      lines: startupDiagnostic(Buffer.concat(chunks).toString("utf8"), "").split("\n") }
+  } finally {
+    await reader.cancel().catch(() => undefined)
+    reader.releaseLock()
+  }
 }
 
 async function oracle(client: Debugger, expected: typeof documents) {
