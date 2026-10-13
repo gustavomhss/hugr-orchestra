@@ -2,13 +2,14 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
 import { parseArgs } from "node:util"
 import { provenance } from "../omni-smoke/build"
 import { DesktopProof } from "./transport"
+import { isolateWindowsShell } from "./windows-shell"
 
 type Host = Parameters<Parameters<typeof DesktopProof.child>[1]>[0]
 type Debugger = Awaited<ReturnType<typeof DesktopProof.connect>>
@@ -41,7 +42,9 @@ export async function run(control?: "delete-blob") {
   const destination = path.resolve(import.meta.dirname, "../../.desktop-persistence-evidence/result.json")
   if (!control) assert.equal(existsSync(destination), false, "SUCCESS_RECEIPT_ALREADY_EXISTS")
   const root = realpathSync(mkdtempSync(path.join(realpathSync(tmpdir()), "desktop-persistence-")))
-  const owned = Object.fromEntries(["home", "appdata", "local", "data", "state", "config", "cache", "tmp", "empty", "managed"]
+  const rootIdentity = statSync(root, { bigint: true })
+  assert.ok(rootIdentity.isDirectory() && rootIdentity.ino !== 0n, "OWNED_ROOT_IDENTITY_UNAVAILABLE")
+  const owned = Object.fromEntries(["home", "appdata", "documents", "local", "data", "state", "config", "cache", "tmp", "empty", "managed"]
     .map((name) => [name, path.join(root, name)]))
   Object.values(owned).forEach((directory) => mkdirSync(directory))
   writeFileSync(path.join(root, "gitconfig"), "", { mode: 0o600 })
@@ -59,24 +62,49 @@ export async function run(control?: "delete-blob") {
     GIT_CONFIG_COUNT: "0", GIT_TEMPLATE_DIR: owned.empty, LANG: "C.UTF-8", LC_ALL: "C.UTF-8",
     ...(process.platform === "linux" ? { SHELL: "/bin/false" } : {}),
   }
-  Object.keys(process.env).forEach((key) => delete process.env[key])
-  Object.assign(process.env, env)
   const lifecycle = { exited: true, closed: true }
+  const failure = { failed: false, cause: undefined as unknown }
+  const shell = { lease: undefined as Awaited<ReturnType<typeof isolateWindowsShell>>, ready: false, restored: false }
   const phases: Record<string, unknown>[] = []
   const placement = { userData: "", draftDB: "" }
   const mutation = { seeded: false, deleted: false, detected: false }
   const child = async <T>(spec: Parameters<typeof DesktopProof.child>[0], body: (host: Host) => Promise<T>) => {
     lifecycle.exited = false
     lifecycle.closed = false
-    const result = await DesktopProof.child(spec, async (host) => {
+    return DesktopProof.child({ ...spec, onClosed: () => { lifecycle.exited = true; lifecycle.closed = true } }, async (host) => {
       void host.exited.then(() => { lifecycle.exited = true }, () => {})
       return body(host)
     })
-    lifecycle.closed = true
-    assert.ok(lifecycle.exited, "CHILD_EXIT_UNCONFIRMED")
-    return result
   }
   try {
+    assertOwned(owned.home, root, rootIdentity)
+    assert.throws(() => assertOwned(root, root, rootIdentity), /REPORTED_PATH_NOT_OWNED/)
+    assert.throws(() => assertOwned(path.dirname(root), root, rootIdentity), /REPORTED_PATH_NOT_OWNED/)
+    const escape = path.join(owned.empty, "outside-link")
+    symlinkSync(path.dirname(root), escape, process.platform === "win32" ? "junction" : "dir")
+    try { assert.throws(() => assertOwned(escape, root, rootIdentity), /REPORTED_PATH_NOT_OWNED/) }
+    finally { removeLink(escape) }
+    const displaced = `${root}.held`
+    assert.equal(existsSync(displaced), false, "ROOT_CONTROL_DESTINATION_EXISTS")
+    renameSync(root, displaced)
+    try {
+      symlinkSync(path.dirname(root), root, process.platform === "win32" ? "junction" : "dir")
+      assert.throws(() => assertOwned(path.join(root, path.basename(displaced), "home"), root, rootIdentity), /OWNED_ROOT_IDENTITY_CHANGED/)
+    } finally {
+      if (existsSync(root)) removeLink(root)
+      renameSync(displaced, root)
+    }
+    assertOwned(owned.home, root, rootIdentity)
+    shell.lease = await isolateWindowsShell({ appdata: owned.appdata, documents: owned.documents })
+    shell.ready = true
+    Object.keys(process.env).forEach((key) => delete process.env[key])
+    Object.assign(process.env, env)
+    await child({ command: "git", args: ["--version"], cwd: owned.home, env, timeoutMS: 20_000 }, async () => {
+      throw new Error("PROOF_BODY_FAILURE_CONTROL")
+    }).then(() => assert.fail("PROOF_BODY_FAILURE_NOT_PROPAGATED"), (error: unknown) => {
+      assert.ok(error instanceof Error && error.message === "PROOF_BODY_FAILURE_CONTROL", "PROOF_BODY_FAILURE_CHANGED")
+      assert.ok(lifecycle.exited && lifecycle.closed, "FAILED_CHILD_TEARDOWN_UNCONFIRMED")
+    })
     const git = (args: string[]) => child({ command: "git", args, cwd: owned.home, env, timeoutMS: 20_000 }, async (host) => {
       assert.equal(await deadline(host.exited, 20_000, "GIT_EXIT_TIMEOUT"), 0, "GIT_FAILED")
       return host.output().trim()
@@ -91,8 +119,9 @@ export async function run(control?: "delete-blob") {
       if (control && index === 2) return
       if (control && index === 1) {
         assert.ok(mutation.seeded && placement.draftDB, "CONTROL_SEED_INCOMPLETE")
-        assertOwned(placement.draftDB, root)
-        const db = new Database(placement.draftDB, { create: false })
+        assertOwned(placement.draftDB, root, rootIdentity)
+        // SQLite requires an explicit read mode when creation is disabled.
+        const db = new Database(placement.draftDB, { readwrite: true, create: false })
         const remove = db.prepare("DELETE FROM blob WHERE id = ?")
         const find = db.prepare("SELECT id FROM blob WHERE id = ?")
         try {
@@ -108,41 +137,47 @@ export async function run(control?: "delete-blob") {
       const launch = process.platform === "linux"
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
+      const captured = { read: () => "", code: undefined as number | undefined, gui: undefined as Record<string, unknown> | undefined }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
-        const exited = { done: false }
-        void host.exited.then(() => { exited.done = true }, () => { exited.done = true })
-        const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
-          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
-            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
-            try {
-              mkdirSync(path.dirname(destination), { recursive: true })
-              writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
-                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error),
-                output: startupDiagnostic(host.output(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")),
-              }))
-            } catch {
-              console.error("STARTUP_DIAGNOSTIC_UNAVAILABLE")
-            }
-            throw error
-          })
+        captured.read = host.output
+        const exited = { done: false, failed: false }
+        void host.exited.then((code) => { captured.code = code; exited.done = true }, () => { exited.failed = true })
+        const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () => {
+          if (exited.failed) throw new Error("APP_EXIT_OBSERVATION_FAILED")
+          if (existsSync(reportFile)) return JSON.parse(readFileSync(reportFile, "utf8")) as Report
+          if (exited.done) throw new Error("APP_EXITED_BEFORE_REPORT")
+        })
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
         assert.equal(report.nonce, nonce, "REPORT_NONCE_MISMATCH")
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
         assert.equal(report.db, env.ORCHESTRA_DB, "PERSISTENT_DB_ISOLATION_LOST")
         assert.equal(realpathSync(report.resources), realpathSync(manifest.resources), "RESOURCES_MANIFEST_MISMATCH")
-        assertOwned(report.home, root)
-        assertOwned(report.db, root)
-        assertOwned(report.userData, root)
+        assertOwned(report.home, root, rootIdentity)
+        assertOwned(report.db, root, rootIdentity)
+        assertOwned(report.userData, root, rootIdentity)
         const expected = path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta")
-        assert.equal(realpathSync(report.userData), realpathSync(expected), "USERDATA_ISOLATION_LOST")
+        assert.ok(existsSync(expected), `USERDATA_EXPECTED_MISSING:${JSON.stringify({ actual: report.userData, expected })}`)
+        const userData = statSync(report.userData, { bigint: true })
+        const expectedUserData = statSync(expected, { bigint: true })
+        assert.ok(userData.isDirectory() && expectedUserData.isDirectory() && userData.ino !== 0n &&
+          userData.dev === expectedUserData.dev && userData.ino === expectedUserData.ino,
+          `USERDATA_ISOLATION_LOST:${JSON.stringify({ actual: report.userData, expected })}`)
         assert.equal(report.quit, `${reportFile}.quit`, "QUIT_PATH_NOT_OWNED")
         assert.ok(typeof report.token === "string" && report.token.length > 0, "QUIT_TOKEN_MISSING")
         if (placement.userData) assert.equal(report.userData, placement.userData, "REOPEN_CHANGED_USERDATA")
         placement.userData = report.userData
         placement.draftDB = path.join(report.userData, "drafts.sqlite")
-        assertOwned(placement.draftDB, root)
-        await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => events(reportFile).find((event) =>
-          event.pid === report.pid && event.name === "gui-visible" && event.windows?.some((window) => window.visible) && event.displays?.length))
+        assertOwned(placement.draftDB, root, rootIdentity)
+        await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => {
+          if (exited.failed) throw new Error("APP_EXIT_OBSERVATION_FAILED")
+          if (exited.done) throw new Error("APP_EXITED_BEFORE_GUI")
+          return events(reportFile).find((event) => event.pid === report.pid && event.name === "gui-visible" &&
+            event.windows?.some((window) => window.visible) && event.displays?.length)
+        }).catch(async (error: unknown) => {
+          captured.gui = { exitObserved: exited.done, exitObservationFailed: exited.failed, cdp: await debugTargets(port, host.signal)
+            .catch((cause: unknown) => ({ error: String(cause) })) }
+          throw error
+        })
         const debuggerClient = await DesktopProof.connect(port, host.signal)
         try {
           await until(20_000, host.signal, "REAL_DRAFT_API_REQUIRED", async () => await debuggerClient.evaluate(
@@ -174,18 +209,48 @@ export async function run(control?: "delete-blob") {
             paths: { home: report.home, db: report.db, userData: report.userData, resources: report.resources },
             quit: { actionID, code: 0 }, preservation: mutation.detected ? "DRAFT_BLOB_LOST" : "exact" })
         }
+      }).catch((error: unknown) => {
+        const releaseConfirmed = lifecycle.exited && lifecycle.closed
+        try {
+          mkdirSync(path.dirname(destination), { recursive: true })
+          writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
+            sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: captured.code ?? null,
+            releaseConfirmed, gui: captured.gui,
+            output: startupDiagnostic(captured.read(), releaseConfirmed
+              ? path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs") : "").split("\n"),
+            events: releaseConfirmed ? events(reportFile).filter((event) => ["utility-started", "gui-visible", "quit-requested", "before-quit", "will-quit", "quit"].includes(event.name))
+              .slice(-30).map((event) => ({ name: event.name, pid: event.pid, code: event.code,
+                windows: event.windows?.map((window) => ({ visible: window.visible })), displays: event.displays })) : undefined,
+          }, null, 2))
+        } catch {
+          console.error("PHASE_DIAGNOSTIC_UNAVAILABLE")
+        }
+        throw error
       })
       if (!mutation.detected) inspect(placement.draftDB, documents.slice(0, index === 0 ? 1 : 2))
       if (index === 0) mutation.seeded = true
     }, Promise.resolve())
     assert.equal(phases.length, control ? 2 : 3, "INCOMPLETE_PHASES")
     if (control) assert.ok(mutation.seeded && mutation.deleted && mutation.detected, "CONTROL_NOT_DETECTED")
+  } catch (error) {
+    failure.failed = true
+    failure.cause = error
+    throw error
   } finally {
-    if (lifecycle.exited && lifecycle.closed) rmSync(root, { recursive: true })
+    try {
+      if (lifecycle.exited && lifecycle.closed && shell.ready) {
+        shell.lease?.restore()
+        shell.restored = true
+        rmSync(root, { recursive: true })
+      }
+    } catch (error) {
+      if (failure.failed) throw new AggregateError([failure.cause, error], "PROOF_AND_CLEANUP_FAILED", { cause: failure.cause })
+      throw error
+    }
   }
-  assert.ok(lifecycle.exited && lifecycle.closed && !existsSync(root), "CLEANUP_UNCONFIRMED")
+  assert.ok(lifecycle.exited && lifecycle.closed && shell.restored && !existsSync(root), "CLEANUP_UNCONFIRMED")
   if (control) {
-    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, reason: "DRAFT_BLOB_LOST" }))
+    console.log(JSON.stringify({ control, ...mutation, phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, pathControl: true, reason: "DRAFT_BLOB_LOST" }))
     throw new Error("DRAFT_BLOB_LOST")
   }
   const evidence = { sourceSHA: manifest.sourceSHA, run: runID, platform: process.platform, arch: process.arch,
@@ -193,7 +258,7 @@ export async function run(control?: "delete-blob") {
     addonSha256: manifest.addonSha256, supervisorSha256: manifest.supervisorSha256, bundleHashes: manifest.bundleHashes,
     scope: "unsigned actual current-source Desktop; Linux x64 / Windows x64 only", environment: env,
     root, placement, documents: documents.map((item) => ({ key: item.key, documentSha256: item.documentSha256, blobSha256: item.id })),
-    phases, cleanup: true }
+    phases, cleanup: true, shellRestored: shell.restored, failedChildControl: true, pathControl: true }
   mkdirSync(path.dirname(destination), { recursive: true })
   writeFileSync(`${destination}.tmp`, JSON.stringify(evidence, null, 2), { mode: 0o600 })
   renameSync(`${destination}.tmp`, destination)
@@ -201,7 +266,7 @@ export async function run(control?: "delete-blob") {
 }
 
 function startupDiagnostic(captured: string, logs: string) {
-  const directories = existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
+  const directories = logs && existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
     .filter((entry) => entry.isDirectory()).slice(0, 8).map((entry) => path.join(logs, entry.name))] : []
   return [captured, ...directories.flatMap((directory) => readdirSync(directory, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".log")).slice(0, 8)
@@ -209,6 +274,30 @@ function startupDiagnostic(captured: string, logs: string) {
     .join("\n").slice(-200000).replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
     .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
     .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
+}
+
+async function debugTargets(port: number, signal: AbortSignal) {
+  const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+    signal: AbortSignal.any([signal, AbortSignal.timeout(2000)]), redirect: "error",
+  })
+  if (!response.body) return { status: response.status, lines: ["CDP_BODY_MISSING"] }
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  const size = { bytes: 0 }
+  try {
+    while (size.bytes < 20000) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      const value = chunk.value.subarray(0, 20000 - size.bytes)
+      chunks.push(value)
+      size.bytes += value.length
+    }
+    return { status: response.status, bytes: size.bytes, limitReached: size.bytes === 20000,
+      lines: startupDiagnostic(Buffer.concat(chunks).toString("utf8"), "").split("\n") }
+  } finally {
+    await reader.cancel().catch(() => undefined)
+    reader.releaseLock()
+  }
 }
 
 async function oracle(client: Debugger, expected: typeof documents) {
@@ -240,9 +329,26 @@ function inspect(filename: string, expected: typeof documents) {
   } finally { document.finalize(); blob.finalize(); db.close(true) }
 }
 
-function assertOwned(filename: string, root: string) {
-  const relative = path.relative(root, realpathSync(filename))
-  assert.ok(relative && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative), "REPORTED_PATH_NOT_OWNED")
+function removeLink(filename: string) {
+  assert.ok(lstatSync(filename).isSymbolicLink(), "PATH_CONTROL_LINK_CHANGED")
+  // Bun's nonrecursive rm fails on Windows junctions; unlink removes the entry, not its target.
+  unlinkSync(filename)
+}
+
+function assertOwned(filename: string, root: string, identity: { dev: bigint; ino: bigint }) {
+  // NTFS short names and case aliases need physical ancestor identity, after resolving links.
+  const currentRoot = statSync(root, { bigint: true })
+  assert.ok(currentRoot.isDirectory() && currentRoot.dev === identity.dev && currentRoot.ino === identity.ino, "OWNED_ROOT_IDENTITY_CHANGED")
+  const canonical = realpathSync.native(filename)
+  const ancestor = { current: path.dirname(canonical) }
+  while (true) {
+    const observed = statSync(ancestor.current, { bigint: true })
+    if (observed.isDirectory() && observed.ino !== 0n && observed.dev === identity.dev && observed.ino === identity.ino) return
+    const parent = path.dirname(ancestor.current)
+    if (parent === ancestor.current) break
+    ancestor.current = parent
+  }
+  assert.fail(`REPORTED_PATH_NOT_OWNED:${JSON.stringify({ filename, canonical, root })}`)
 }
 
 function events(filename: string) {
@@ -284,7 +390,7 @@ if (import.meta.main) {
   const args = parseArgs({ options: { control: { type: "string" } }, allowPositionals: false }).values
   assert.ok(args.control === undefined || args.control === "delete-blob", "UNKNOWN_CONTROL")
   await run(args.control).catch((error: unknown) => {
-    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error.stack) : "DESKTOP_PERSISTENCE_FAILED")
+    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error) : "DESKTOP_PERSISTENCE_FAILED")
     process.exitCode = 1
   })
 }
