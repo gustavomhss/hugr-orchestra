@@ -19,6 +19,7 @@ import { copyTreeSitter, resolveTreeSitter } from "@orchestra/script/tree-sitter
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
 import { leanNotices } from "./lean-notices"
+import { resolveClaudeCodeResource, stageClaudeCodeResource } from "./claude-code-resources"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -169,18 +170,20 @@ if (!skipInstall) {
   await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
   await $`bun install --os="*" --cpu="*" @parcel/watcher@${pkg.dependencies["@parcel/watcher"]}`
   await $`bun install --os="*" --cpu="*" @ff-labs/fff-bun@${pkg.dependencies["@ff-labs/fff-bun"]}`
+  await $`bun install --os="*" --cpu="*" @anthropic-ai/claude-agent-sdk@${pkg.dependencies["@anthropic-ai/claude-agent-sdk"]}`
 }
 // After the installs, which own node_modules, and before any build: a target whose bindings this host cannot provide
 // stops here with the named error.
 const prepared = builds.map((build) => ({
   ...build,
+  claudeCode: resolveClaudeCodeResource({ root: dir, ...build.item }),
   treeSitter: resolveTreeSitter({
     root: path.resolve(dir, "../.."),
     artifacts: process.env.TREE_SITTER_ARTIFACTS,
     ...build.item,
   }),
 }))
-for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
+for (const { item, name, omni, omniFiles, treeSitter, claudeCode } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   await $`mkdir -p dist/${name}/bin`
 
@@ -234,6 +237,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   })
 
   copyOmni(omniFiles, `dist/${name}/bin`)
+  stageClaudeCodeResource(claudeCode, `dist/${name}/bin/claude-code`)
   copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
 
   // Smoke test: only run if binary is for current platform
