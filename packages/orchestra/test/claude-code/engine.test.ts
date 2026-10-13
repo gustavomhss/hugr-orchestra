@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Effect } from "effect"
+import { Cause, Effect, Exit } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeEngineFixture } from "./engine-fixture"
@@ -50,8 +50,9 @@ ClaudeEngineFixture.it.instance("an agent on Orchestra's loop never reaches the 
     expect((yield* provider.getModel(ClaudeLifecycleFixture.model.providerID, ClaudeLifecycleFixture.model.modelID)).id)
       .toBe(ClaudeLifecycleFixture.model.modelID)
     // Orchestra's own transport is the one that runs (and fails, in this fixture); no Claude Code query is built.
-    yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
+    const outcome = yield* prompt.prompt({ sessionID: chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
       parts: [{ type: "text", text: "stay on the loop" }] }).pipe(Effect.exit)
+    if (ClaudeEngineFixture.state.apiCalls === 0 && Exit.isFailure(outcome)) throw new Error(Cause.pretty(outcome.cause))
     expect(ClaudeEngineFixture.state.apiCalls).toBeGreaterThan(0)
     expect(ClaudeEngineFixture.state.queries).toHaveLength(0)
   }), 30_000)

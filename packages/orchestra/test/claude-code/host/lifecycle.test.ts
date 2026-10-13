@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, Exit, Fiber, Scope } from "effect"
+import { Cause, Effect, Exit, Fiber, Scope } from "effect"
 import type { SpawnedProcess } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHost } from "@/claude-code/host/session"
@@ -406,8 +406,9 @@ ClaudeEngineFixture.it.instance("switching to a normal agent releases the old Cl
     .toBe(ClaudeLifecycleFixture.model.modelID)
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.replies("answer"))
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("Claude request") })
-  yield* setup.prompt.prompt({ sessionID: setup.chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
+  const outcome = yield* setup.prompt.prompt({ sessionID: setup.chat.id, agent: "maestro", model: ClaudeLifecycleFixture.model,
     parts: [{ type: "text", text: "normal request" }] }).pipe(Effect.exit)
+  if (ClaudeEngineFixture.state.apiCalls === 0 && Exit.isFailure(outcome)) throw new Error(Cause.pretty(outcome.cause))
   expect(ClaudeEngineFixture.state.closed).toHaveLength(1)
   expect(ClaudeEngineFixture.state.apiCalls).toBeGreaterThan(0)
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)

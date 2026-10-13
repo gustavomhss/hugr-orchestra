@@ -150,6 +150,12 @@ CompactionFixture.it.instance("real Session.fork reads its copied todo snapshot 
     if (!f.user || !f.assistant) throw new Error("Missing fork fixture")
     yield* f.taskList([{ id: "EXACT-TODO-ID", subject: "FORK-KEPT", status: "pending" }])
     const boundary = yield* f.nextUser()
+    // Only native boundary receipts are scripted; the actual registered lifecycle owner creates fork lineage.
+    const source = yield* f.sessions.get(f.chat.id)
+    yield* f.sessions.setMetadata({ sessionID: f.chat.id, metadata: { ...source.metadata, claudeCode: {
+      ...source.metadata?.claudeCode, starts: { [boundary.id]: "native-fork-kept" },
+      ends: { [f.user.id]: "native-fork-kept" }, chain: "native-fork-kept",
+    } } })
     yield* f.todos.update({ sessionID: f.chat.id, todos: [{ content: "SOURCE-FUTURE", status: "pending", priority: "high" }] })
     const fork = yield* f.sessions.fork({ sessionID: f.chat.id, messageID: boundary.id })
     yield* f.sessions.setMetadata({ sessionID: fork.id, metadata: { ...fork.metadata, claudeCode: {
@@ -159,7 +165,15 @@ CompactionFixture.it.instance("real Session.fork reads its copied todo snapshot 
       projectID: fork.projectID, memberID: "backend", source: "user", taskId: "FORK-ORPHAN" })
     yield* f.todos.update({ sessionID: fork.id, todos: [{ content: "FORK-SIDE-FUTURE", status: "pending", priority: "high" }] })
     const view = yield* ClaudeHostMemory.retained(fork.id)
+    expect(view.cut).toBe(true)
+    expect(view.lineage?.kind).toBe("fork")
     expect(view.history.map((message) => message.info.role)).toEqual(["user", "assistant"])
+    expect(view.lineage?.messages[view.history[0].info.id]).toEqual([
+      { projectID: f.chat.projectID, sessionID: f.chat.id, messageID: f.user.id },
+    ])
+    expect(view.lineage?.messages[view.history[1].info.id]).toEqual([
+      { projectID: f.chat.projectID, sessionID: f.chat.id, messageID: f.assistant.id },
+    ])
     expect(ClaudeHostTodos.latest(view)).toMatchObject({ status: "known", snapshot: {
       tasks: [{ id: "EXACT-TODO-ID", subject: "FORK-KEPT", status: "pending" }],
     } })
@@ -170,6 +184,12 @@ CompactionFixture.it.instance("real Session.fork reads its copied todo snapshot 
     expect(text).not.toContain("FORK-SIDE-FUTURE")
     expect(text).not.toContain("FORK-ORPHAN")
     expect(text).toContain("EXACT-TODO-ID")
+    const copied = view.history.flatMap((message) => message.parts).find((part) =>
+      part.type === "tool" && part.state.status === "completed" && part.state.metadata.claudeCodeTodo)
+    if (!copied) throw new Error("Missing copied native todo receipt")
+    yield* f.sessions.removePart({ sessionID: fork.id, messageID: copied.messageID, partID: copied.id })
+    expect(ClaudeHostTodos.latest(yield* ClaudeHostMemory.retained(fork.id))).toBeUndefined()
+    expect(yield* reopened.compact()).toEqual({})
   }))
 
 CompactionFixture.it.instance("a joined child's compact hook is refused when its producing Agent part is outside the parent view", () =>

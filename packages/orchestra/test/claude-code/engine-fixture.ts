@@ -83,9 +83,17 @@ function hosted(script: Script, params: Params) {
   }) as unknown as Query
 }
 
-export const it = testEffect(makeHttp({ realSummary: true, replacements: [[ClaudeCodeSDK.node, sdk], [LLM.node, Layer.mock(LLM.Service, {
-  stream: () => { state.apiCalls++; return Stream.fail(new Error("Default API transport must not run")) },
-})]] }).pipe(Layer.provideMerge(sdk)))
+// Preserve real preparation and its opaque receipts; replace only the transport boundary.
+const api = Layer.effect(LLM.Service, Effect.gen(function* () {
+  const llm = yield* LLM.Service
+  return LLM.Service.of({ ...llm,
+    stream: () => { state.apiCalls++; return Stream.fail(new Error("Default API transport must not run")) },
+  })
+})).pipe(Layer.provide(LLM.live))
+
+export const it = testEffect(makeHttp({ realSummary: true, replacements: [[ClaudeCodeSDK.node, sdk],
+  [LLM.node, { ...LLM.node, implementation: api }]] })
+  .pipe(Layer.provideMerge(sdk)))
 
 export const frame = { parent_tool_use_id: null, uuid: "u", session_id: "sdk-1" }
 

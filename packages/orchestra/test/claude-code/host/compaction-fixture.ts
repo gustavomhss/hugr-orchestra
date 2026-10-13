@@ -19,6 +19,7 @@ import { BackgroundJob } from "@/background/job"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { ClaudeHostMirror } from "@/claude-code/host/mirror"
+import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeHostTodos } from "@/claude-code/host/todos"
 import { Config } from "@/config/config"
 import { Archive } from "@/continuity/archive"
@@ -40,7 +41,7 @@ import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { testEffect } from "../../lib/effect"
 
 export const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
+  LayerNode.group([ClaudeHost.node, filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
     SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
     ArsenalBindings.node, Git.node, Skill.node, Permission.node, AppProcess.node, ArsenalObservations.node,
     LocationServiceMap.node]),
