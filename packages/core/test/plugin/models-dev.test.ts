@@ -130,7 +130,7 @@ describe("ModelsDevPlugin", () => {
     ),
   )
 
-  it.effect("imported missing pricing cannot grant anonymous OpenCode access", () =>
+  it.effect("imported missing pricing cannot grant anonymous Zen access", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service
       const catalog = yield* Catalog.Service
@@ -139,7 +139,7 @@ describe("ModelsDevPlugin", () => {
           Effect.succeed({
             opencode: {
               id: "opencode",
-              name: "OpenCode",
+              name: "Zen",
               env: ["MODEL_IMPORT_MISSING_KEY"],
               npm: "@ai-sdk/openai-compatible",
               models: Object.fromEntries(
