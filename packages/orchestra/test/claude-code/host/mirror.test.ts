@@ -612,7 +612,7 @@ it.instance("staged Edit preserves the real file and withholds applied diffs; an
   expect(applied.state.metadata?.filediff).toEqual({ file, before: "one one", after: "two one", additions: 1, deletions: 1 })
   expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("two one")
   const patch = (yield* ctx.read()).flatMap((item) => item.parts).find((part) => part.type === "patch")
-  expect(patch?.files).toContain(file)
+  expect(patch?.files).toContain(file.replaceAll("\\", "/"))
 }), { git: true })
 
 it.instance("query thinking totals cannot manufacture parent reasoning, and child usage stays correlated", () => Effect.gen(function* () {

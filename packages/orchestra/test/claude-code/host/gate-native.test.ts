@@ -259,16 +259,17 @@ describe("native gate real policy", () => {
       { permission: "external_directory", pattern: "*", action: "ask" },
     ] })
     const permission = yield* Permission.Service
-    const physical = process.platform === "win32" ? realpathSync.native(outside) : outside
+    const physical = yield* f.filesystem.realPath(path.join(f.directory, "local-alias"))
+    const expanded = process.platform === "win32" ? realpathSync.native(outside) : physical
     for (const call of [
-      { name: "Read", file: "local-alias", physical, parent: physical },
-      { name: "Read", file: "local-alias/sentinel.txt", physical: path.join(physical, "sentinel.txt"), parent: physical },
-      { name: "Write", file: "local-alias/new/deep/file.txt", physical: path.join(physical, "new/deep/file.txt"), parent: path.join(physical, "new/deep") },
+      { name: "Read", file: "local-alias", physical, parent: physical, expanded },
+      { name: "Read", file: "local-alias/sentinel.txt", physical: path.join(physical, "sentinel.txt"), parent: physical, expanded },
+      { name: "Write", file: "local-alias/new/deep/file.txt", physical: path.join(physical, "new/deep/file.txt"), parent: path.join(physical, "new/deep"), expanded: path.join(expanded, "new/deep") },
     ]) {
       const pending = yield* Effect.forkScoped(f.decide(call.name, { file_path: call.file, content: "harmless" }))
       const request = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.sessionID === f.session.id))), "external permission never asked")
       expect(request.permission).toBe("external_directory")
-      expect(request.patterns).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
+      expect(request.patterns).toEqual([...new Set([call.parent, call.expanded].map((parent) => path.join(parent, "*").replaceAll("\\", "/")))])
       expect(request.always).toEqual([path.join(call.parent, "*").replaceAll("\\", "/")])
       expect(request.metadata).toEqual({ filepath: call.physical, parentDir: call.parent })
       yield* permission.reply({ requestID: request.id, reply: "reject" })
