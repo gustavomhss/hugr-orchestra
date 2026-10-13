@@ -13,6 +13,7 @@ import { PluginV2 } from "@orchestra/core/plugin"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { AgentGroup } from "@orchestra/protocol/groups/agent"
+import { LocationQuery } from "@orchestra/protocol/groups/location"
 import { AgentExecution } from "@orchestra/server/agent-execution"
 import { ServerAuth } from "@orchestra/server/auth"
 import { AgentHandler } from "@orchestra/server/handlers/agent"
@@ -47,12 +48,15 @@ function serve(host: boolean) {
 
 function list(directory: string) {
   return Effect.gen(function* () {
+    const query = Schema.encodeSync(LocationQuery)({ location: { directory } })
+    if (!query.location?.directory) return yield* Effect.die(new Error("Agent list query requires an explicit directory"))
     const result = yield* HttpClientRequest.get("/api/agent").pipe(
-      HttpClientRequest.setHeader("x-orchestra-directory", directory),
+      HttpClientRequest.setUrlParam("location[directory]", query.location.directory),
       HttpClient.execute,
     )
     expect(result.status).toBe(200)
-    return yield* result.json.pipe(Schema.decodeUnknownEffect(Location.response(Schema.Array(AgentV2.Info))))
+    // The decoder consumes the JSON envelope, not the Effect that reads it.
+    return yield* result.json.pipe(Effect.flatMap(Schema.decodeUnknownEffect(Location.response(Schema.Array(AgentV2.Info)))))
   })
 }
 

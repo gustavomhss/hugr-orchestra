@@ -63,6 +63,9 @@ const INTERFACE = [
   // event projection, Git operations and shell execution; none owns the normal provider loop.
   "tool/shell/execution", "continuity/model", "maestro/atlas-memory", "provider/provider", "event-v2-bridge", "git",
   "project/instance-store",
+  // Native compaction restores a retained plan only after reading its durable owner-message admission record.
+  // This shared persistence port does not invoke either mode's LLM loop.
+  "maestro/admission-record",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
@@ -109,6 +112,18 @@ test("every normal-loop module remains forbidden from Claude mode", () => {
   }
 })
 
+test("native memory may read the shared admission port, not neighboring modules or the normal loop", () => {
+  expect(violations([{ file: "claude-code/host/memory.ts", text: 'import { readAdmission } from "@/maestro/admission-record"' }])).toEqual([])
+  expect(violations([{ file: "claude-code/host/memory.ts", text: 'import { Other } from "@/maestro/admission-record-private"' }])).toEqual([
+    "claude-code/host/memory.ts imports maestro/admission-record-private, which is not in Claude mode's INTERFACE",
+  ])
+  for (const target of LOOP) {
+    expect(violations([{ file: "claude-code/host/memory.ts", text: `import { Loop } from "@/${target}"` }])).toEqual([
+      `claude-code/host/memory.ts imports ${target}, part of Orchestra's loop`,
+    ])
+  }
+})
+
 test("the parser keeps static, type-only, re-export, dynamic and require edges while ignoring prose", () => {
   expect(
     imports({
@@ -144,6 +159,11 @@ test("normal mode imports only Claude mode's entry point, and Claude mode import
   expect(LOOP.filter((module) => INTERFACE.includes(module))).toEqual([])
   // Ledger honesty: every INTERFACE entry is still used, so the list never grows stale.
   const used = new Set(claude.flatMap(imports))
+  const memory = files.find((item) => item.file === "claude-code/host/memory.ts")!
+  expect(imports(memory)).toContain("maestro/admission-record")
+  expect(violations([{ ...memory, text: `${memory.text}\nimport { Loop } from "@/session/prompt"` }])).toContain(
+    "claude-code/host/memory.ts imports session/prompt, part of Orchestra's loop",
+  )
   expect(INTERFACE.filter((module) => !used.has(module))).toEqual([])
   expect(staleAdapterEdges(files)).toEqual([])
   for (const edge of ADAPTER_EDGES) {
