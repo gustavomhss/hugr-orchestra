@@ -16,10 +16,13 @@ export class Service extends Context.Service<
 export const node = LayerNode.unbound(Service, Node.tags.values.global)
 
 /** Lazy acquisitions must see the completed application's exports, not a constructor's partial context. */
-export function withGlobalContext(layer: Layer.Layer<Service>, globalContext: Effect.Effect<Context.Context<never>>) {
+export function withGlobalContext<A, E, R>(
+  layer: Layer.Layer<A, E, R>,
+  globalContext: Effect.Effect<Context.Context<never>>,
+) {
   return layer.pipe(
     Layer.flatMap((context) => {
-      const locations = Context.get(context, Service)
+      const locations = Context.getUnsafe(context, Service)
       const contextEffect = (ref: Location.Ref) =>
         // Wait before entering the cache: early constructor forks must not retain a partial acquisition.
         globalContext.pipe(
@@ -29,11 +32,11 @@ export function withGlobalContext(layer: Layer.Layer<Service>, globalContext: Ef
             ),
           ),
         )
-      return Layer.succeed(Service, {
+      return Layer.succeedContext(Context.add(context, Service, {
         ...locations,
         get: (ref) => Layer.effectContext(contextEffect(ref)),
         contextEffect,
-      })
+      }))
     }),
   )
 }

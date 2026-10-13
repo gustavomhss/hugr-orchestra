@@ -11,15 +11,18 @@ export function build<A, E>(root: LayerNode.Node<A, E, any>, replacements: Layer
 
     // Only build the location service map if it's actually needed
     if (LayerNode.hasUnbound(root, LocationServiceMap.node) && !hasReplacement(replacements, LocationServiceMap.node)) {
-      const locationMap = LocationServiceMap.withGlobalContext(
-        buildLocationServiceMap(replacements),
-        Deferred.await(globalContext),
-      )
+      const locationMap = buildLocationServiceMap(replacements)
       const locationMapNode = makeGlobalNode({ service: LocationServiceMap.Service, layer: locationMap, deps: [] })
       allReplacements = replacements.concat([[LocationServiceMap.node, locationMapNode]])
     }
 
-    return LayerNode.compile(root, allReplacements).pipe(
+    return LayerNode.compile(root, allReplacements, {
+      // Bind after replacement resolution so concrete maps and explicit replacements
+      // captured by constructors share the same completed application exports.
+      transformLayer: (layer, node) => node.name === LocationServiceMap.node.name
+        ? LocationServiceMap.withGlobalContext(layer, Deferred.await(globalContext))
+        : layer,
+    }).pipe(
       // Startup forks may acquire Locations while the root is still building.
       Layer.tap((context) => Deferred.succeed(globalContext, context)),
     )
