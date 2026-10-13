@@ -47,7 +47,41 @@ mkdir -p "$prefix"
 [ -d "$prefix" ] && [ ! -L "$prefix" ] || fail 'prefix must be a real directory'
 mkdir "$prefix/.install-lock" 2>/dev/null || fail 'prefix locked'
 stage=
-cleanup() { [ -z "$stage" ] || rm -rf "$stage"; rmdir "$prefix/.install-lock"; }
+# Extraction may restore mode 000 after writing descendants. Restore access before
+# descending; recursive chmod/find cannot first traverse an inaccessible parent.
+# Call only on this invocation's stage, never on retained versions or current.
+restore_stage_dirs() (
+  [ ! -L "$1" ] && [ -d "$1" ] || return 0
+  chmod u+rwx "$1" || return 1
+  restored=0
+  for child in "$1"/* "$1"/.[!.]* "$1"/..?*; do
+    [ ! -L "$child" ] && [ -d "$child" ] || continue
+    restore_stage_dirs "$child" || restored=1
+  done
+  return "$restored"
+)
+cleanup() {
+  status=$?
+  trap - 0
+  incomplete=0
+  if [ -n "$stage" ]; then
+    if ! restore_stage_dirs "$stage"; then
+      printf '%s\n' 'installer: stage permission cleanup failed' >&2
+      incomplete=1
+    fi
+    if ! rm -rf "$stage"; then
+      printf '%s\n' 'installer: stage removal failed' >&2
+      incomplete=1
+    fi
+  fi
+  # A stage failure must not strand our exclusively acquired lock under set -e.
+  if ! rmdir "$prefix/.install-lock"; then
+    printf '%s\n' 'installer: lock removal failed' >&2
+    incomplete=1
+  fi
+  [ "$status" -ne 0 ] || status=$incomplete
+  exit "$status"
+}
 trap cleanup 0
 trap 'exit 1' HUP INT TERM
 stage=$(mktemp -d "$prefix/.install-XXXXXXXX")
@@ -261,6 +295,7 @@ if [ -z "$rollback" ]; then
   [ "$(wc -l < "$stage/list")" = "$(wc -l < "$stage/types")" ] || fail 'ambiguous archive listing'
   mkdir "$stage/payload"
   tar -xf "$stage/archive" -C "$stage/payload"
+  restore_stage_dirs "$stage" || fail 'stage permission restoration failed'
   verify "$stage/payload"
   if [ -e "$destination" ] || [ -L "$destination" ]; then
     verify "$destination"

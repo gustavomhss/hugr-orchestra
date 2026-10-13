@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import { createHash } from "node:crypto"
-import { chmod, mkdir, mkdtemp, realpath, rm } from "node:fs/promises"
+import { chmod, lstat, mkdir, mkdtemp, readdir, readlink, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { NATIVE_MACHINES, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
@@ -21,7 +21,18 @@ export async function command(args: string[], env?: Record<string, string | unde
 
 export async function isolated(run: (root: string, prefix: string) => Promise<void>) {
   const root = await mkdtemp(path.join(await realpath(tmpdir()), "distribution-install-fixture-"))
-  await run(root, path.join(root, "prefix")).finally(() => rm(root, { recursive: true, force: true }))
+  await run(root, path.join(root, "prefix")).finally(async () => {
+    // Fixtures deliberately retain read-only and mode000 directories. Teardown
+    // owns this entire temporary root, but must not traverse symlink targets.
+    await restoreFixtureDirectories(root)
+    await rm(root, { recursive: true, force: true })
+  })
+}
+
+async function restoreFixtureDirectories(directory: string): Promise<void> {
+  if (!(await lstat(directory)).isDirectory()) return
+  await chmod(directory, 0o700)
+  await Promise.all((await readdir(directory)).map((name) => restoreFixtureDirectories(path.join(directory, name))))
 }
 
 // Complete inert ELF64/Mach-O headers. Never loaded; not runtime qualification.
@@ -84,6 +95,62 @@ export async function writeFiles(dir: string, files: Files) {
 export async function repack(payload: Omit<Payload, "digest">): Promise<Payload> {
   expect((await command(["tar", "-cf", payload.archive, "-C", payload.dir, "bin", "package.json", "distribution.json", "checksums.sha256"])).code).toBe(0)
   return { ...payload, digest: sha256(await Bun.file(payload.archive).bytes()) }
+}
+
+type TreeEntry = { path: string; kind: string; mode: number; bytes?: string; link?: string }
+
+// Filesystem census, independent of the installer's descriptor/checksum inventory.
+export async function snapshotTree(directory: string, relative = ""): Promise<TreeEntry[]> {
+  const full = path.join(directory, relative)
+  const info = await lstat(full)
+  const mode = info.mode & 0o7777
+  if (info.isSymbolicLink()) return [{ path: relative, kind: "link", mode, link: await readlink(full) }]
+  if (info.isFile()) return [{ path: relative, kind: "file", mode, bytes: Buffer.from(await Bun.file(full).bytes()).toString("base64") }]
+  expect(info.isDirectory()).toBe(true)
+  return [{ path: relative, kind: "directory", mode }, ...(await Promise.all((await readdir(full)).sort()
+    .map((name) => snapshotTree(directory, relative ? `${relative}/${name}` : name)))).flat()]
+}
+
+export async function installedTree(payload: Payload) {
+  return (await snapshotTree(payload.dir)).map((entry) => ({ ...entry,
+    mode: entry.kind === "directory" ? 0o700
+      : ["bin/orchestra", "bin/hugr-omni-supervisor", "bin/extra tool"].includes(entry.path) ? 0o755 : 0o644,
+  }))
+}
+
+export async function expectClean(prefix: string) {
+  expect((await readdir(prefix)).filter((name) => name.startsWith(".install-"))).toEqual([])
+}
+
+export async function expectLauncher(prefix: string, version: string) {
+  const result = await command([path.join(prefix, "bin/orchestra"), "--version"])
+  expect(result.code).toBe(0)
+  expect(result.stdout).toBe(`${version}\n`)
+}
+
+// Rewrite actual uncompressed tar directory records, not a chmod of the source
+// (which would prevent a non-root tar producer from reading its descendants).
+export async function modeZeroArchive(payload: Payload, directories: string[]) {
+  const bytes = Buffer.from(await Bun.file(payload.archive).bytes())
+  const found: string[] = []
+  for (let offset = 0; offset + 512 <= bytes.length; ) {
+    const header = bytes.subarray(offset, offset + 512)
+    if (header.every((byte) => byte === 0)) break
+    const name = header.subarray(0, 100).toString("ascii").split("\0")[0]!.replace(/\/$/, "")
+    const size = Number.parseInt(header.subarray(124, 136).toString("ascii").replace(/\0.*$/, "").trim(), 8)
+    expect(Number.isSafeInteger(size) && size >= 0).toBe(true)
+    if (directories.includes(name)) {
+      expect(header[156]).toBe(53) // ustar directory type '5'
+      header.write("0000000\0", 100, "ascii")
+      header.fill(32, 148, 156)
+      header.write(`${header.reduce((sum, byte) => sum + byte, 0).toString(8).padStart(6, "0")}\0 `, 148, "ascii")
+      found.push(name)
+    }
+    offset += 512 + Math.ceil(size / 512) * 512
+  }
+  expect(found.sort()).toEqual([...directories].sort())
+  await Bun.write(payload.archive, bytes)
+  return { ...payload, digest: sha256(bytes) }
 }
 
 // Negative admission cases bypass producer deliberately; integrity tables remain internally consistent.
