@@ -53,6 +53,7 @@ export function createModelPolicyEditor(input: {
   const freshness = {
     timestamp: undefined as number | undefined,
     revision: undefined as number | undefined,
+    ackRevision: undefined as number | undefined,
     readVersion: undefined as number | undefined,
     caughtUp: false,
     predecessors: [] as SubagentModelPolicy[],
@@ -65,15 +66,28 @@ export function createModelPolicyEditor(input: {
       freshness.caughtUp = true
       freshness.timestamp = current.timestamp
       freshness.revision = current.revision
+      freshness.ackRevision = current.revision === undefined
+        ? freshness.ackRevision
+        : Math.max(freshness.ackRevision ?? 0, current.revision)
       freshness.readVersion = current.readVersion ?? freshness.readVersion
       freshness.predecessors = []
       return current.policy
     }
+    if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
+      return current.policy
+    if (current.revision !== undefined && freshness.ackRevision !== undefined && current.revision <= freshness.ackRevision)
+      return acknowledged
+    if (
+      current.revision !== undefined &&
+      freshness.ackRevision !== undefined &&
+      current.revision > freshness.ackRevision &&
+      (current.timestamp ?? 0) >= (freshness.timestamp ?? 0)
+    )
+      return current.policy
+    // A timestamp-only event cannot prove that a known predecessor is newer than a policy-only ACK.
     if (!freshness.caughtUp && freshness.predecessors.some((item) => sameModelPolicy(item, current.policy)))
       return acknowledged
     if (current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp > freshness.timestamp)
-      return current.policy
-    if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
       return current.policy
     if (current.revision !== undefined && freshness.revision !== undefined && current.revision <= freshness.revision &&
       (current.timestamp ?? 0) <= (freshness.timestamp ?? 0))
@@ -89,6 +103,7 @@ export function createModelPolicyEditor(input: {
     freshness.predecessors.push(policy())
     freshness.timestamp = current.timestamp
     freshness.revision = current.revision
+    freshness.readVersion = current.readVersion ?? freshness.readVersion
     freshness.caughtUp = false
     setState({ saving: true, failed: false, retry: next })
     await input
@@ -97,12 +112,15 @@ export function createModelPolicyEditor(input: {
         if ("policy" in acknowledged) {
           freshness.timestamp = acknowledged.timestamp
           freshness.revision = acknowledged.revision
+          freshness.ackRevision = acknowledged.revision
           freshness.readVersion = acknowledged.readVersion
           freshness.caughtUp = true
           freshness.predecessors = []
           setState({ acknowledged: acknowledged.policy, retry: undefined })
           return
         }
+        // The pre-write snapshot cannot sequence a later policy-only ACK, even across durable gaps.
+        freshness.ackRevision = undefined
         setState({ acknowledged, retry: undefined })
       })
       .catch(() => setState("failed", true))
