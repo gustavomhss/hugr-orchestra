@@ -4,6 +4,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { ProviderNotFoundError } from "@orchestra/protocol/errors"
 import { response } from "../location"
+import { CatalogAvailability } from "../catalog-availability"
 
 export const ProviderHandler = HttpApiBuilder.group(Api, "server.provider", (handlers) =>
   Effect.gen(function* () {
@@ -12,7 +13,12 @@ export const ProviderHandler = HttpApiBuilder.group(Api, "server.provider", (han
         "provider.list",
         Effect.fn(function* () {
           const catalog = yield* Catalog.Service
-          return yield* response(catalog.provider.available())
+          const additional = yield* CatalogAvailability.AdditionalProviders
+          return yield* response(Effect.gen(function* () {
+            const available = yield* catalog.provider.available()
+            const extra = yield* additional(catalog)
+            return [...available, ...extra.filter((provider) => !available.some((item) => item.id === provider.id))]
+          }))
         }),
       )
       .handle(

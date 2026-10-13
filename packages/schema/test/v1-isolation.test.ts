@@ -18,8 +18,7 @@ test("compatibility entrypoints preserve isolated V1 schema identity", () => {
 
 test("current source does not import the V1 subtree directly", async () => {
   const allowed = new Set(["legacy-event.ts", "permission-v1.ts", "question-v1.ts", "session-v1.ts"])
-  const sourceDirectory = fileURLToPath(new URL("../src", import.meta.url))
-  const files = [...new Bun.Glob("*.ts").scanSync(sourceDirectory)].filter(
+  const files = [...new Bun.Glob("*.ts").scanSync(fileURLToPath(new URL("../src", import.meta.url)))].filter(
     (file) => !allowed.has(file),
   )
   expect(files.length).toBeGreaterThan(0)
