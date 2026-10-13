@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { WriteRoots } from "@/maestro/write-roots"
 import { InstanceState } from "@/effect/instance-state"
@@ -81,14 +81,32 @@ it.instance("execution binds the real runtime profile and native placement to th
 it.instance("a native lucy MCP review passes the review tool's identity and child-session checks", () => Effect.gen(function* () {
   const f = yield* BridgeFixture.make()
   const child = yield* f.child("lucy")
+  const reviewer = yield* f.agents.get("lucy")
+  expect(reviewer).toMatchObject({ id: "lucy", native: true })
+  expect(yield* f.sessions.get(child.id)).toMatchObject({ agent: reviewer.id, parentID: f.parent.id })
   const args = { validationRecordID: "missing-validation", workCard: "card", reviewMethodVersion: "1", verdict: "APPROVE",
     findings: [], artifact: { baseSHA: "base", headSHA: "head", worktree: f.ctx.directory, changedPaths: [], sha256: "hash" }, checks: [] }
-  yield* f.call({ id: "record_review", tool: "maestro_record_review", args, sessionID: child.id, seat: "lucy" })
-  const client = yield* f.client([yield* Effect.flatMap(MaestroRecordReviewTool, Tool.init)])
+  const part = yield* f.call({ id: "record_review", tool: "maestro_record_review", args, sessionID: child.id, seat: "lucy" })
+  const author = (yield* f.sessions.messages({ sessionID: child.id })).find((message) => message.info.id === part.messageID)
+  expect(author?.info).toMatchObject({ role: "assistant", agent: reviewer.id, sessionID: child.id })
+  const review = yield* Effect.flatMap(MaestroRecordReviewTool, Tool.init)
+  const observed = { called: false }
+  const checked: typeof review = { ...review, execute: (args, context) => Effect.gen(function* () {
+    expect(context).toMatchObject({ agentID: reviewer.id, agent: reviewer.name, sessionID: child.id, messageID: part.messageID, callID: part.callID })
+    observed.called = true
+    const exit = yield* Effect.exit(review.execute(args, context))
+    if (Exit.isFailure(exit)) {
+      expect(Cause.squash(exit.cause)).toMatchObject({ _tag: "MaestroReviewRejected", reason: "validation-not-found" })
+      return yield* Effect.failCause(exit.cause)
+    }
+    return exit.value
+  }) }
+  const client = yield* f.client([checked])
   const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "maestro_record_review", arguments: f.arguments("record_review") })))
-  // No validation fixture was admitted. Reaching this refusal proves the real reviewer and child checks passed.
+  expect(observed.called).toBe(true)
+  // No validation was admitted. MCP renders the typed review rejection through its public owner-rejection contract.
   expect(result.isError).toBe(true)
-  expect(result.content[0].text).toContain("validation-not-found")
+  expect(result.content[0].text).toBe("The owner rejected this call. Stop and wait for the owner's next message.")
   expect(result.content[0].text).not.toContain("Review recording requires")
 }), 60_000)
 
