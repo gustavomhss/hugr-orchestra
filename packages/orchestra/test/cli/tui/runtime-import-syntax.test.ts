@@ -142,6 +142,21 @@ test("production prescan sees escaped real runtime imports, ignores node_modules
   expect(await plugin.contents(actual)).toBe(`export { RGBA } from ${JSON.stringify(runtimeModuleIdForSpecifier("@opentui/core"))}`)
 })
 
+test("production loader leaves unrelated CommonJS workspace helpers native-loaded", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(path.join(tmp.path, "package.json"), JSON.stringify({ type: "commonjs" }))
+  const plugin = hooks()
+  for (const extension of ["js", "cjs", "cts"]) {
+    const file = path.join(tmp.path, `helper.${extension}`)
+    await Bun.write(file, 'const fs = require("node:fs"); module.exports = { run: fs.existsSync }')
+    plugin.resolve(file)
+  }
+  expect(plugin.load).toHaveLength(0)
+  const runtime = path.join(tmp.path, "runtime.js")
+  await Bun.write(runtime, 'export { RGBA } from "@opentui/core"')
+  expect(await plugin.contents(runtime)).toBe(`export { RGBA } from ${JSON.stringify(runtimeModuleIdForSpecifier("@opentui/core"))}`)
+})
+
 test("production TUI bootstrap then late import preserves fixed data and host runtime identities", async () => {
   // Same registration entry used by plugin-loader.test.ts. Do not isolate the
   // boundary guard: run predecessor + this test + mode-boundary in one process.

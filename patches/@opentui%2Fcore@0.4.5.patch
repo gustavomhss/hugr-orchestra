@@ -148,3 +148,18 @@ index c50cf3bd9ca39fbeb1b2b684dcba033ca27a70da..324d4a382e2c5bebc219ddf198b736ed
                  const analysis = {
                      importSpecifiers,
                      needsRuntimeSpecifierRewrite: importSpecifiers.some((specifier) => runtimeModuleIdsBySpecifier.has(specifier)),
+@@ -442,6 +445,14 @@ export function createRuntimePlugin(input = {}) {
+                 }
+                 const nodeModulesPath = isNodeModulesPath(path);
+                 if (!nodeModulesPath) {
++                    // Workspace links may resolve outside node_modules. Keep unrelated
++                    // CommonJS helpers native-loaded too; onLoad breaks their exports.
++                    const commonjs = path.endsWith(".cjs") || path.endsWith(".cts") ||
++                        path.endsWith(".js") && packageTypeForPath(path, packageTypeByPackageJsonPath) === "commonjs";
++                    if (commonjs && !analyzeSourcePath(path).needsRuntimeSpecifierRewrite) {
++                        return undefined;
++                    }
++
+                     installRewriteLoader(path);
+                     return undefined;
+                 }
