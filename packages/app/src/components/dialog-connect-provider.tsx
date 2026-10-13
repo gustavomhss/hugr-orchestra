@@ -19,7 +19,6 @@ import {
   type Component,
   createEffect,
   createMemo,
-  createResource,
   createUniqueId,
   For,
   Match,
@@ -29,16 +28,17 @@ import {
   Switch,
 } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import { useParams } from "@solidjs/router"
 import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
-import { popularProviders, useProviders } from "@/hooks/use-providers"
+import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
+import { createProviderResource } from "@/hooks/provider-catalog"
+import { formatServerError } from "@/utils/server-errors"
+import { connectableIntegration } from "@/orchestra/chapters/providers-data"
 import { CustomProviderForm } from "./dialog-custom-provider"
-import { decode64 } from "@/utils/base64"
 
 const CUSTOM_ID = "_custom"
 type ConnectMethod = Extract<IntegrationMethod, { type: "key" | "oauth" }>
@@ -55,7 +55,7 @@ export function useProviderConnectController(options: { onBack?: () => void } = 
 }
 
 export const DialogConnectProvider: Component<{
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   controller?: ReturnType<typeof useProviderConnectController>
 }> = (props) => {
   const fallback = useProviderConnectController()
@@ -152,7 +152,7 @@ export const DialogConnectProvider: Component<{
 }
 
 function ProviderPicker(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
@@ -217,7 +217,7 @@ function ProviderPicker(props: {
 }
 
 function ProviderPickerV2(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
@@ -357,20 +357,19 @@ function ProviderPickerV2(props: {
 
 function ProviderConnection(props: {
   provider: string
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onBack: () => void
   setBack: (handler: () => void) => void
 }) {
   const dialog = useDialog()
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
-  const params = useParams()
   const language = useLanguage()
   const platform = usePlatform()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
-  const providers = useProviders(() => props.directory?.())
-  const directory = () => props.directory?.() ?? decode64(params.dir)
+  const providers = useProviders(props.directory)
+  const directory = providers.directory
   const location = () => {
     const value = directory()
     return value ? { directory: value } : undefined
@@ -386,30 +385,33 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
-  const provider = createMemo(
-    () => providers.all().get(props.provider) ?? serverSync().data.provider.all.get(props.provider)!,
-  )
+  const provider = () => providers.all().get(props.provider) ?? { name: integration.data()?.name ?? props.provider }
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
       type: "key" as const,
       label: language.t("provider.connect.method.apiKey"),
     },
   ])
-  const [integration] = createResource(
-    () => ({ provider: props.provider, directory: directory() }),
+  const integration = createProviderResource(
+    () => {
+      const client = serverSDK()
+      return directory() === undefined
+        ? undefined
+        : { provider: props.provider, directory: directory(), client, server: client.scope }
+    },
     (input) =>
-      serverSDK()
-        .api.integration.get({
+      input.client.api.integration
+        .get({
           integrationID: input.provider,
           location: input.directory ? { directory: input.directory } : undefined,
         })
-        .then((result) => result.data),
+        .then((result) => connectableIntegration(result.data)),
   )
-  const loading = createMemo(() => integration.loading)
+  const loading = createMemo(() => integration.loading() || directory() === undefined)
   const methods = createMemo<ConnectMethod[]>(() => {
-    const values = integration.latest?.methods.filter(
-      (method): method is ConnectMethod => method.type === "key" || method.type === "oauth",
-    )
+    const values = integration
+      .data()
+      ?.methods.filter((method): method is ConnectMethod => method.type === "key" || method.type === "oauth")
     return values?.length ? values : fallback()
   })
   const [store, setStore] = createStore({
@@ -687,7 +689,7 @@ function ProviderConnection(props: {
   let auto = false
   createEffect(() => {
     if (auto) return
-    if (loading()) return
+    if (loading() || integration.error()) return
     if (methods().length === 1) {
       auto = true
       void selectMethod(0)
@@ -1151,6 +1153,43 @@ function ProviderConnection(props: {
           </Switch>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function ProviderDiscoveryStatus(props: {
+  source: Pick<ReturnType<typeof useProviderDiscovery>, "loading" | "error" | "retry">
+  v2?: boolean
+}) {
+  const language = useLanguage()
+  return (
+    <Show
+      when={!props.source.loading()}
+      fallback={
+        <p role="status" class="flex items-center gap-2 px-3 py-2">
+          <Spinner />
+          {language.t("orchestra.providers.loading")}
+        </p>
+      }
+    >
+      <Show when={props.source.error()}>
+        {(error) => <ProviderLoadError error={error().cause} retry={props.source.retry} v2={props.v2} />}
+      </Show>
+    </Show>
+  )
+}
+
+function ProviderLoadError(props: { error: unknown; retry: () => unknown; v2?: boolean }) {
+  const language = useLanguage()
+  return (
+    <div class="flex flex-col gap-3 px-3 py-2">
+      <p role="alert">{formatServerError(props.error, language.t, language.t("common.requestFailed"))}</p>
+      <Show
+        when={props.v2}
+        fallback={<Button onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</Button>}
+      >
+        <ButtonV2 onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</ButtonV2>
+      </Show>
     </div>
   )
 }
