@@ -1,6 +1,7 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useCommand } from "@/context/command"
 import { showToast } from "@/utils/toast"
+import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { MxPage } from "../chapters/kit"
@@ -218,6 +219,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         )
       if (!created) return
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!duplication.active()) return
       props.go(relayPath.editor(kind, created.id))
     })
   const download = () => exporting.run(async () => {
@@ -316,7 +318,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
 
   const closeLayer = () => props.close(layerBase(props.route))
   const keydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || window.document.querySelector('[role="dialog"][data-component="relay-modal"]') || dialogs.active) return
+    if (event.defaultPrevented || modalActive() || dialogs.active) return
     const target = event.target instanceof HTMLElement ? event.target : undefined
     const typing = !!target?.closest("input,textarea,select,[contenteditable]")
     const mod = event.metaKey || event.ctrlKey

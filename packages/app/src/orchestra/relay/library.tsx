@@ -58,6 +58,7 @@ export function WorkflowLibrary(props: Props) {
         )
       if (!created) return
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!duplication.active()) return
       props.go(relayPath.editor("workflow", created.id))
     })
   const openTemplate = (id: string) => {

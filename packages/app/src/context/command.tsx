@@ -1,5 +1,6 @@
 import { createSimpleContext } from "@orchestra/ui/context"
 import { useDialog } from "@orchestra/ui/context/dialog"
+import { modalActive } from "@/utils/modal-active"
 import { type Accessor, createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
@@ -396,7 +397,7 @@ export const { use: useCommand, provider: CommandProvider } = createSimpleContex
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (suspended() || dialog.open) return
+      if (suspended() || dialog.open || modalActive()) return
 
       const sig = signatureFromEvent(event)
       const isPalette = palette().has(sig)

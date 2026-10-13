@@ -84,7 +84,7 @@ for (const entry of ["workflow library pending", "hook library failed", "workflo
     pending.resolve()
     await answered.promise
     if (response) await (await response).finished()
-    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())))
+    await expect.poll(() => page.evaluate(() => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })))).toBe(false)
     await expect(page.getByText(/^Unsaved changes:/)).toHaveCount(0)
     await expect(page.locator(`[data-document="${id}"]`)).toHaveCount(0)
     // Switching chapters reads the actual server list again; deletion must survive either path.
@@ -93,6 +93,119 @@ for (const entry of ["workflow library pending", "hook library failed", "workflo
     await expect(page.locator(`[data-document="${id}"]`)).toHaveCount(0)
   })
 }
+
+async function delayCreate(page: Page) {
+  const pending = Promise.withResolvers<void>()
+  const arrived = Promise.withResolvers<void>()
+  await page.route("**/api/relay/document*", async (route) => {
+    if (route.request().method() === "POST" && new URL(route.request().url()).pathname === "/api/relay/document") {
+      arrived.resolve()
+      await pending.promise
+    }
+    return route.fallback()
+  })
+  return { pending, arrived }
+}
+
+for (const kind of ["workflow", "hook"]) {
+  test(`lifetime: Back during ${kind} create caches success without navigating a replacement dialog`, async ({ page }) => {
+    const state = await setupRelay(page)
+    const delayed = await delayCreate(page)
+    const chapter = kind === "workflow" ? "workflows" : "hooks"
+    const title = kind === "workflow" ? "Workflows" : "Hooks"
+    const heading = page.locator(`[data-mx-page="orchestra-${chapter}"] h1`)
+    await page.goto(`/orchestra/${chapter}`, { waitUntil: "domcontentloaded" })
+    await expect(heading).toHaveText(title)
+    await page.getByRole("button", { name: `New ${kind}`, exact: true }).click()
+    const dialog = page.getByRole("dialog", { name: `New ${kind}`, exact: true })
+    await dialog.locator('[role="radio"][data-template="blank"]').click()
+    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(`Late ${kind}`)
+    const response = page.waitForResponse((reply) => reply.request().method() === "POST" && new URL(reply.url()).pathname === "/api/relay/document")
+    await dialog.getByRole("button", { name: "Create and open", exact: true }).click()
+    await delayed.arrived.promise
+    await page.goBack()
+    await expect(dialog).toHaveCount(0)
+    await expect(heading).toHaveText(title)
+    await page.getByRole("button", { name: `New ${kind}`, exact: true }).click()
+    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill("Replacement owner draft")
+    delayed.pending.resolve()
+    const reply = await response
+    await reply.finished()
+    const created = (await reply.json()).data
+    // The positive cache outcome also gates the old action's continuation.
+    await expect(page.locator(`[data-document="${created.id}"]`)).toContainText(`Late ${kind}`)
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter}/new$`))
+    await expect(dialog.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Replacement owner draft")
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter}$`))
+    await expect(page.locator(`[data-document="${created.id}"]`)).toBeVisible()
+    expect(state.documents.filter((document) => document.name === `Late ${kind}`)).toHaveLength(1)
+    expect(state.writes.filter((write) => write.method === "POST")).toHaveLength(1)
+  })
+}
+
+for (const entry of ["workflow library", "workflow editor", "hook editor"]) {
+  test(`lifetime: late clone from ${entry} preserves the chosen route and caches its document`, async ({ page }) => {
+    const state = await setupRelay(page)
+    const delayed = await delayCreate(page)
+    const hook = entry.startsWith("hook")
+    const chapter = hook ? "hooks" : "workflows"
+    const title = hook ? "Hooks" : "Workflows"
+    const id = hook ? "protect-generated" : workflow
+    const chosen = hook ? "ask-shell" : "relay-tdd_feature"
+    await page.goto(`/orchestra/${chapter}`, { waitUntil: "domcontentloaded" })
+    const row = page.locator(`[data-document="${id}"]`)
+    await expect(row).toBeVisible()
+    if (entry.endsWith("editor")) {
+      await row.click()
+      await editor(page).getByRole("button", { name: "More actions", exact: true }).click()
+    } else {
+      await row.locator('button[aria-haspopup="menu"]').click()
+    }
+    const response = page.waitForResponse((reply) => reply.request().method() === "POST" && new URL(reply.url()).pathname === "/api/relay/document")
+    await page.getByRole("menuitem", { name: "Duplicate", exact: true }).click()
+    await delayed.arrived.promise
+    if (entry.endsWith("editor")) await editor(page).getByRole("link", { name: `Back to ${title}`, exact: true }).click()
+    await page.locator(`[data-document="${chosen}"]`).click()
+    await expect(editor(page).locator(".wf-name")).toHaveValue(String(state.documents.find((document) => document.id === chosen)!.name))
+    await editor(page).getByRole("link", { name: `Back to ${title}`, exact: true }).click()
+    await expect(page.locator(`[data-mx-page="orchestra-${chapter}"] h1`)).toHaveText(title)
+    delayed.pending.resolve()
+    const reply = await response
+    await reply.finished()
+    const created = (await reply.json()).data
+    await expect(page.locator(`[data-document="${created.id}"]`)).toContainText(String(created.name))
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter}$`))
+    await page.locator(`[data-document="${chosen}"]`).click()
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter}/${chosen}$`))
+    expect(state.writes.filter((write) => write.method === "POST")).toHaveLength(1)
+  })
+}
+
+test("lifetime: shortcut popup blocks editor and command keys from button focus and restores them on close", async ({ page }) => {
+  await setupRelay(page)
+  await page.goto(`/orchestra/workflows/${workflow}`, { waitUntil: "domcontentloaded" })
+  await canvas(page).getByRole("button", { name: "Keyboard shortcuts", exact: true }).click()
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts", exact: true })
+  const close = dialog.locator("header").getByRole("button", { name: "Close", exact: true })
+  await expect(close).toBeFocused()
+  await page.keyboard.press("n")
+  await page.keyboard.press("ControlOrMeta+k")
+  await expect(dialog).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${workflow}$`))
+  await expect(page.locator(".wf-drawer")).toHaveCount(0)
+  await expect(page.locator(".command-palette-v2")).toHaveCount(0)
+  await close.click()
+  await expect(dialog).toHaveCount(0)
+  await expect(canvas(page).getByRole("button", { name: "Keyboard shortcuts", exact: true })).toBeFocused()
+  await page.keyboard.press("n")
+  await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${workflow}/add$`))
+  await expect(page.locator(".wf-drawer").getByRole("textbox")).toBeEditable()
+  await page.keyboard.press("Escape")
+  await expect(page.locator(".wf-drawer")).toHaveCount(0)
+  await page.keyboard.press("ControlOrMeta+k")
+  await expect(page.locator(".command-palette-v2").getByRole("textbox")).toBeEditable()
+})
 
 test("lifetime: node Test dialog supports pointer, typing, submit and Escape restores parent", async ({ page }) => {
   const state = await setupRelay(page)

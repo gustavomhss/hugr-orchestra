@@ -390,6 +390,7 @@ function CreateHookDialog(props: {
         hookDocument(name().trim() || copy.t("orchestra.hooks.create.defaultName"), preset, text),
       )
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!action.active()) return
       props.onCreated(created.id)
     })
   return (
