@@ -39,6 +39,7 @@ import { ResearchExecution } from "@/research/allowance"
 import { Config } from "@/config/config"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { LegacyLeanOutput } from "./lean-output"
+import { LeanSummary } from "@orchestra/core/tool/lean-summary"
 import { LeanProfilePreferences } from "./lean-profile-preferences"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 
@@ -264,14 +265,16 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           const limits = enabled && selected.binding && !selected.policyMappingChanged
             ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
           if (options.abortSignal?.aborted) return output
-          return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
-            enabled, limits, items: prefs?.items, command: selected.command, unavailable,
+          return yield* Effect.promise(() => LegacyLeanOutput.project({ output, binding: selected.binding, owner,
+            enabled, limits, items: prefs?.items, command: selected.command, unavailable, tool: item.id, args: toRecord(args),
+            // Originals go to this profile's bounded store; discovery keeps exact research sources (no lossy summaries).
+            store: binding && input.agent.id !== "jimmy" ? LeanSummary.store({ projectID: binding.project.id, directory: binding.directory }) : undefined,
             policyMappingChanged: selected.policyMappingChanged,
             telemetry: binding ? {
               owner: { projectID: binding.project.id, location: binding.directory, ...owner },
               model: { provider: input.model.providerID, id: input.model.api.id },
               ...(prefs ? { orchestraProfile: prefs.profileID } : {}),
-            } : undefined })
+            } : undefined }))
         }))
       },
     })

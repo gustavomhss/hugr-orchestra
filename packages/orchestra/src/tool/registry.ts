@@ -14,6 +14,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
+import { LeanRecallTool } from "./lean-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
@@ -180,6 +181,7 @@ const layer = Layer.effect(
     const maestroRecordResultDecision = yield* MaestroRecordResultDecisionTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
+    const leanRecall = yield* LeanRecallTool
     const compact = yield* ContextCompactTool
     const atlasRecall = yield* AtlasMemoryRecallTool
     const atlasEmit = yield* AtlasMemoryEmitTool
@@ -356,7 +358,7 @@ const layer = Layer.effect(
           invalid: Tool.init(invalid),
           shell: Tool.init(shell),
           read: Tool.init(read),
-          recall: Tool.init(recall),
+          recall: Tool.init(recall), leanRecall: Tool.init(leanRecall),
           compact: Tool.init(compact),
           atlasRecall: Tool.init(atlasRecall),
           atlasEmit: Tool.init(atlasEmit),
@@ -397,7 +399,7 @@ const layer = Layer.effect(
             ...(questionEnabled ? [tool.question] : []),
             tool.shell,
             tool.read,
-            tool.recall,
+            tool.recall, tool.leanRecall,
             tool.compact,
             tool.atlasRecall,
             tool.atlasEmit,
@@ -530,10 +532,7 @@ const layer = Layer.effect(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool, index) => {
-        if (
-          tool.id === MaestroRecordResultDecisionTool.id &&
-          (input.agent.id !== "maestro" || input.agent.native !== true)
-        ) return false
+        if (tool.id === MaestroRecordResultDecisionTool.id && (input.agent.id !== "maestro" || input.agent.native !== true)) return false
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
           (input.agent.id !== "maestro" || input.agent.native !== true) &&
@@ -558,6 +557,9 @@ const layer = Layer.effect(
         ) {
           return false
         }
+        // Whoever can see a Lean summary (shell, read or fetch results) can fetch its original; discovery gets none.
+        if (tool.id === LeanRecallTool.id && index < s.builtin.length) return !ResearchRegistry.discovery(input.agent) && ["bash", "read",
+          "webfetch"].some((id) => !Permission.disabled([id], Permission.merge(input.agent.permission, input.permission ?? [])).has(id))
         if (
           // Builtins are listed first: a later index is a configured plugin tool.
           ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length) ||
@@ -566,9 +568,7 @@ const layer = Layer.effect(
         ) {
           return false
         }
-        if (tool.id === WebSearchTool.id) {
-          return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
-        }
+        if (tool.id === WebSearchTool.id) return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
         if (tool.id === LspTool.id) return flags.experimentalLspTool || ResearchRegistry.discovery(input.agent)
 
         const usePatch =

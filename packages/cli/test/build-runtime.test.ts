@@ -221,12 +221,14 @@ test("all explicit targets produce correct executable format/architecture and pr
   await Bun.write(sentinel, "preserve these bytes")
   // test-ci installs for its own host; the other targets need the all-platform install the release lanes run, with the
   // runner's own package cache (the isolated HOME would download everything again). Every target's tree-sitter comes
-  // from the handed bundles, so no install script needs to run.
-  const install = Bun.spawnSync(
+  // from the handed bundles, so no install script needs to run. Asynchronous: Bun 1.3.14's Windows spawnSync measures its
+  // timeout from the previous synchronous spawn's clock (oven-sh/bun#33932) and can kill the install within milliseconds.
+  const install = Bun.spawn(
     [process.execPath, "install", "--frozen-lockfile", "--ignore-scripts", "--os=*", "--cpu=*"],
-    { cwd: root, stdout: "pipe", stderr: "pipe", timeout: 600_000 },
+    { cwd: root, stdout: "ignore", stderr: "pipe", timeout: 600_000 },
   )
-  if (install.exitCode !== 0) throw new Error(`All-platform install failed (${install.exitCode}):\n${install.stderr}`)
+  const [installError, installCode] = await Promise.all([new Response(install.stderr).text(), install.exited])
+  if (installCode !== 0) throw new Error(`All-platform install failed (${installCode}):\n${installError}`)
   // A cross target with no exported bundle still stops on its named error before anything is built.
   const foreign = namedTargets.find((item) => item.os !== process.platform && item.abi === undefined)!
   const refused = await run(
