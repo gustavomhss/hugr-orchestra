@@ -651,7 +651,6 @@ export function AppInterface(props: {
   // route changes. Draft and session routes override only their server-bound data
   // providers beneath it.
   const ServerShell = (shellProps: ParentProps) => (
-    <QueryProvider>
       <SharedProviders>
         <JanitorProvider>
           {props.children}
@@ -659,7 +658,6 @@ export function AppInterface(props: {
           <JanitorWidget />
         </JanitorProvider>
       </SharedProviders>
-    </QueryProvider>
   )
 
   return (

@@ -13,18 +13,7 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
 import { ServerSDK } from "./server-sdk"
-import {
-  bootstrapDirectory,
-  bootstrapGlobal,
-  clearProviderRev,
-  loadAgentsQuery,
-  loadCommands,
-  loadGlobalConfigQuery,
-  loadPathQuery,
-  loadProjectsQuery,
-  loadProvidersQuery,
-  loadReferencesQuery,
-} from "./global-sync/bootstrap"
+import { bootstrapDirectory, bootstrapGlobal, clearProviderRev, loadCommands } from "./global-sync/bootstrap"
 import { createChildStoreManager } from "./global-sync/child-store"
 import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
 import { estimateRootSessionTotal, loadRootSessions, loadRootSessionsV1 } from "./global-sync/session-load"
@@ -36,7 +25,6 @@ import { queryOptions, useMutation, useQueries, useQuery, useQueryClient } from 
 import type { SolidQueryOptions } from "@tanstack/solid-query"
 import { createRefreshQueue } from "./global-sync/queue"
 import { directoryKey } from "./global-sync/utils"
-import { PathKey } from "@/utils/path-key"
 import { createDirSyncContext } from "./directory-sync"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
@@ -47,18 +35,13 @@ import { retry } from "@orchestra/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { ServerApi } from "@/utils/server"
-import type {
-  McpListInput,
-  McpListOutput,
-  McpResource,
-  McpResourceCatalogInput,
-  McpResourceCatalogOutput,
-  McpServer,
-  SessionActiveOutput,
-} from "@opencode-ai/client/promise"
+import type { SessionActiveOutput } from "@opencode-ai/client/promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
+import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
+
+export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
+export type { QueryOptionsApi } from "./server-queries"
 
 type GlobalStore = {
   ready: boolean
@@ -84,16 +67,6 @@ export function onJanitorReport(listener: (event: JanitorReportEvent) => void) {
   return () => janitorReportListeners.delete(listener)
 }
 
-type McpListApi = {
-  readonly list: (input?: McpListInput) => Promise<McpListOutput>
-}
-
-type McpResourceApi = {
-  readonly resource: {
-    readonly catalog: (input?: McpResourceCatalogInput) => Promise<McpResourceCatalogOutput>
-  }
-}
-
 type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Error, T, K> & {
   initialData?: undefined
   queryKey: K
@@ -102,66 +75,6 @@ type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Err
 type SessionActiveApi = {
   readonly active: () => Promise<SessionActiveOutput>
 }
-
-export const loadMcpQuery = (
-  scope: ServerScope,
-  directory: string,
-  api: McpListApi,
-  legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpServer["status"]>, readonly [ServerScope, string, "mcp"]> =>
-  queryOptions<
-    Record<string, McpServer["status"]>,
-    Error,
-    Record<string, McpServer["status"]>,
-    readonly [ServerScope, string, "mcp"]
-  >({
-    queryKey: [scope, directory, "mcp"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return (await legacy.mcp.status()).data ?? {}
-      return api
-        .list({ location: { directory } })
-        .then((result) => Object.fromEntries(result.data.map((server) => [server.name, server.status])))
-    },
-  })
-
-export const loadMcpResourcesQuery = (
-  scope: ServerScope,
-  directory: string,
-  api: McpResourceApi,
-  legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpResource>, readonly [ServerScope, string, "mcpResources"]> =>
-  queryOptions<
-    Record<string, McpResource>,
-    Error,
-    Record<string, McpResource>,
-    readonly [ServerScope, string, "mcpResources"]
-  >({
-    queryKey: [scope, directory, "mcpResources"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) {
-        return Object.fromEntries(
-          Object.entries((await legacy.experimental.resource.list()).data ?? {}).map(([key, resource]) => [
-            key,
-            { ...resource, server: resource.client },
-          ]),
-        )
-      }
-      return api.resource
-        .catalog({ location: { directory } })
-        .then((result) =>
-          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])),
-        )
-    },
-    placeholderData: {},
-  })
-
-export const loadLspQuery = (scope: ServerScope, directory: string, sdk: OrchestraClient) =>
-  queryOptions({
-    queryKey: [scope, directory, "lsp"] as const,
-    queryFn: () => sdk.lsp.status().then((r) => r.data ?? []),
-  })
 
 export const loadActiveSessionsQuery = (
   scope: ServerScope,
@@ -188,32 +101,6 @@ export function seedActiveSessionStatuses(
     session.set("session_status", sessionID, status?.type === "running" ? { type: "busy" } : status)
   }
 }
-
-function makeQueryOptionsApi(
-  scope: ServerScope,
-  serverSDK: () => OrchestraClient,
-  serverAPI: ServerApi,
-  sdkFor: (dir: PathKey) => OrchestraClient,
-  protocol: Promise<"v1" | "v2">,
-) {
-  return {
-    globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol),
-    projects: () => loadProjectsQuery(scope, serverAPI.project),
-    providers: (directory: PathKey | null) =>
-      loadProvidersQuery(scope, directory, serverAPI, directory ? sdkFor(directory) : serverSDK(), protocol),
-    path: (directory: PathKey | null) =>
-      loadPathQuery(scope, directory, directory ? sdkFor(directory) : serverSDK(), protocol),
-    agents: (directory: PathKey) => loadAgentsQuery(scope, directory, serverAPI.agent, sdkFor(directory), protocol),
-    references: (directory: PathKey) =>
-      loadReferencesQuery(scope, directory, serverAPI.reference, sdkFor(directory), protocol),
-    mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    mcpResources: (directory: PathKey) =>
-      loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory)),
-    sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
-  }
-}
-export type QueryOptionsApi = ReturnType<typeof makeQueryOptionsApi>
 
 export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const language = useLanguage()
@@ -303,10 +190,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
   const queryClient = useQueryClient()
   const homeSessions = createHomeSessionIndexCache(queryClient, ServerConnection.key(serverSDK.server))
-  const refreshProviders = () =>
-    queryClient.refetchQueries({
-      predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "providers",
-    })
+  const refreshProviders = createProviderRefresher(queryClient, serverSDK.scope, queryOptionsApi)
 
   let bootedAt = 0
   let bootingRoot = false
