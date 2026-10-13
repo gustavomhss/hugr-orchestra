@@ -1,6 +1,8 @@
-import { createSignal, type JSX, onMount, Show } from "solid-js"
+import { createEffect, createSignal, createUniqueId, For, type JSX, on, Show } from "solid-js"
+import { Dialog } from "@kobalte/core/dialog"
+import { createStore } from "solid-js/store"
 import { nodeGlyph, nodeTone } from "./catalog"
-import type { FlowNode } from "./graph"
+import { type Flow, type FlowNode, updateNode } from "./graph"
 import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 
 // Node details: a three-column layer over the canvas (input, parameters, output) with previous and next.
@@ -15,28 +17,38 @@ export function NodeDetails(props: {
   output: JSX.Element
   save: JSX.Element
   actions?: JSX.Element
+  readOnly?: boolean
   onNav: (id: string) => void
   onClose: () => void
 }) {
   const copy = useRelayCopy()
-  let section!: HTMLElement
-  onMount(() =>
-    queueMicrotask(() =>
-      (
-        section.querySelector<HTMLElement>("[data-autofocus]") ??
-        section.querySelector<HTMLElement>("textarea,input,select")
-      )?.focus({ preventScroll: true }),
-    ),
-  )
+  const title = createUniqueId()
+  const [view, setView] = createStore({ pane: "params" })
+  const previous = document.activeElement
   return (
-    <div class="wf-scrim" onPointerDown={(event) => event.target === event.currentTarget && props.onClose()}>
-      <section
-        ref={section}
+    <Dialog open onOpenChange={(open) => !open && props.onClose()}>
+    <Dialog.Portal>
+      <div class="wf-scope">
+      <div class="wf-modal-layer">
+      <Dialog.Overlay class="wf-modal-backdrop" />
+      <Dialog.Content
         class="mx-dialog wf-ndv"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wf-ndv-title"
+        aria-labelledby={title}
         data-component="relay-node-details"
+        onEscapeKeyDown={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          props.onClose()
+        }}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          const dialog = event.currentTarget as HTMLElement
+          ;(dialog.querySelector<HTMLElement>("[data-autofocus]:not(:disabled)") ?? dialog.querySelector<HTMLElement>("button:not(:disabled)"))?.focus({ preventScroll: true })
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true })
+        }}
       >
         <header class="mx-dialog-head">
           <div class="wf-ndv-title">
@@ -44,7 +56,7 @@ export function NodeDetails(props: {
               <NodeGlyph name={nodeGlyph(props.node)} />
             </span>
             <div>
-              <h2 id="wf-ndv-title">{props.node.name || copy.t("orchestra.workflows.details.untitled")}</h2>
+              <Dialog.Title as="h2" id={title}>{props.node.name || copy.t("orchestra.workflows.details.untitled")}</Dialog.Title>
               <p>{props.kind}</p>
             </div>
           </div>
@@ -89,25 +101,35 @@ export function NodeDetails(props: {
             </button>
           </div>
         </header>
+        <div class="wf-ndv-switcher wf-range" role="group" aria-label={copy.t("orchestra.workflows.details.view")}>
+          <For each={["params", "input", "output"] as const}>{(pane) => (
+            <button type="button" aria-pressed={view.pane === pane} onClick={() => setView("pane", pane)}>
+              {copy.t(`orchestra.workflows.details.${pane}`)}
+            </button>
+          )}</For>
+        </div>
         <div class="wf-ndv-body">
-          <div class="wf-ndv-col" role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
+          <div class="wf-ndv-col" data-active={view.pane === "input"} role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
             {props.input}
           </div>
-          <div class="wf-ndv-col mid" role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
-            {props.params}
+          <div class="wf-ndv-col mid" data-active={view.pane === "params"} role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
+            <fieldset class="wf-params" disabled={props.readOnly}>{props.params}</fieldset>
           </div>
-          <div class="wf-ndv-col" role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
+          <div class="wf-ndv-col" data-active={view.pane === "output"} role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
             {props.output}
           </div>
         </div>
         <footer class="mx-dialog-foot">
           {props.save}
-          <button type="button" class="mx-btn" onClick={props.onClose}>
+          <button type="button" class="mx-btn" data-relay-done onClick={props.onClose}>
             {copy.t("orchestra.workflows.details.done")}
           </button>
         </footer>
-      </section>
-    </div>
+      </Dialog.Content>
+      </div>
+      </div>
+    </Dialog.Portal>
+    </Dialog>
   )
 }
 
@@ -165,4 +187,47 @@ export function Switchable(props: { title: string; json: unknown; children: JSX.
 
 export function Empty(props: { children: JSX.Element }) {
   return <div class="wf-col-empty">{props.children}</div>
+}
+
+export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (flow: Flow) => void }) {
+  const copy = useRelayCopy()
+  const id = createUniqueId()
+  const [draft, setDraft] = createStore({ name: props.node.name, error: "" as "" | "required" | "taken" })
+  createEffect(on(() => [props.node.id, props.node.name], (next, previous) => {
+    if (next[0] === previous?.[0] && next[1] === draft.name.trim()) return
+    setDraft({ name: props.node.name, error: "" })
+  }, { defer: true }))
+  return (
+    <label class="mx-field" classList={{ invalid: !!draft.error }}>
+      <span id={`${id}-label`}>{copy.t("orchestra.workflows.details.name")}</span>
+      <input
+        value={draft.name}
+        data-autofocus=""
+        aria-labelledby={`${id}-label`}
+        aria-invalid={!!draft.error}
+        aria-describedby={draft.error ? id : undefined}
+        onInput={(event) => {
+          const value = event.currentTarget.value
+          const name = value.trim()
+          const taken = props.flow.nodes.some((node) => node.id !== props.node.id && node.name === name)
+          setDraft({ name: value, error: !name ? "required" : taken ? "taken" : "" })
+          if (!name || taken || name === props.node.name) return
+          props.onChange(updateNode(props.flow, props.node.id, { name }))
+        }}
+        onBlur={() => !draft.error && setDraft("name", props.node.name)}
+        on:keydown={(event) => {
+          if (event.key === "Enter" && !draft.error) event.currentTarget.blur()
+          if (event.key !== "Escape" || !draft.error) return
+          event.preventDefault()
+          event.stopPropagation()
+          setDraft({ name: props.node.name, error: "" })
+        }}
+      />
+      <Show when={draft.error}>
+        <span id={id} class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
+          {copy.t(draft.error === "required" ? "orchestra.workflows.details.nameRequired" : "orchestra.workflows.details.nameTaken")}
+        </span>
+      </Show>
+    </label>
+  )
 }

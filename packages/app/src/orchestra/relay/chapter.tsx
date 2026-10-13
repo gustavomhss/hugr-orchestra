@@ -14,7 +14,7 @@ import type { RelayKind } from "./client"
 import { Editor } from "./editor"
 import { HookLibrary } from "./hook-library"
 import { WorkflowLibrary } from "./library"
-import { chapterOf, parseRelayRoute } from "./route"
+import { chapterOf, parseRelayRoute, type RelayRoute } from "./route"
 import { createRelaySource } from "./source"
 import { useRelayCopy } from "./ui"
 import "./relay.css"
@@ -70,14 +70,16 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
   })
   onCleanup(() => setCrumbTrail([]))
   const unsupported = () => !source.supported()
-  const library = () => {
+  // Retain each view's last route through cleanup. Query observers can rerun while a route leaves;
+  // a Match accessor throws once its condition becomes false, before the editor finishes disposing.
+  const library = createMemo((previous: Extract<RelayRoute, { page: "library" }> | undefined) => {
     const current = route()
-    return current.page === "library" ? current : undefined
-  }
-  const editor = () => {
+    return current.page === "library" ? current : previous
+  })
+  const editor = createMemo((previous: Extract<RelayRoute, { page: "editor" }> | undefined) => {
     const current = route()
-    return current.page === "editor" ? current : undefined
-  }
+    return current.page === "editor" ? current : previous
+  })
 
   return (
     <div
@@ -100,28 +102,25 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
             </p>
           </MxPage>
         </Match>
-        <Match when={library()}>
-          {(current) =>
-            props.kind === "workflow" ? (
-              <WorkflowLibrary source={source} route={current()} profile={profile()} go={go} close={close} />
+        <Match when={route().page === "library"}>
+          {props.kind === "workflow" ? (
+              <WorkflowLibrary source={source} route={library()!} profile={profile()} go={go} close={close} />
             ) : (
-              <HookLibrary source={source} route={current()} profile={profile()} go={go} close={close} />
+              <HookLibrary source={source} route={library()!} profile={profile()} go={go} close={close} />
             )
           }
         </Match>
-        <Match when={editor()}>
-          {(current) => (
+        <Match when={route().page === "editor"}>
             <Editor
               source={source}
               directory={props.directory}
-              route={current()}
+              route={editor()!}
               profile={profile()}
               go={go}
               close={close}
               crumbs={setCrumbTrail}
               openSession={(sessionID) => navigate(sessionHref(ServerConnection.key(props.server), sessionID))}
             />
-          )}
         </Match>
       </Switch>
     </div>

@@ -1,8 +1,8 @@
-import { createEffect, createSignal, For, Index, type JSX, on, Show } from "solid-js"
+import { createSignal, For, Index, type JSX, Show } from "solid-js"
 import type { RelayRun } from "./runs"
 import { workflowKey } from "./catalog"
 import { CheckList } from "./checks"
-import { Empty, NodeDetails, Rows, Switchable } from "./details"
+import { Empty, NodeDetails, NodeNameField, Rows, Switchable } from "./details"
 import { badgeTone, runHandle, span, STEP_TONE } from "./format"
 import {
   chain,
@@ -32,6 +32,7 @@ type Props = {
   skills: string[]
   focusPhase?: string
   save: JSX.Element
+  readOnly?: boolean
   onChange: (flow: Flow) => void
   onNav: (id: string) => void
   onClose: () => void
@@ -68,6 +69,7 @@ export function WorkflowDetails(props: Props) {
       params={<Params {...props} />}
       output={<Output {...props} />}
       save={props.save}
+      readOnly={props.readOnly}
       onNav={props.onNav}
       onClose={props.onClose}
     />
@@ -362,39 +364,8 @@ function StartOutput(props: Props) {
 
 function Params(props: Props) {
   const copy = useRelayCopy()
-  const [nameError, setNameError] = createSignal(false)
-  // Walking to another node starts its name field clean.
-  createEffect(
-    on(
-      () => props.node.id,
-      () => setNameError(false),
-      { defer: true },
-    ),
-  )
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
-  const rename = (value: string) => {
-    const name = value.trim()
-    const taken = props.flow.nodes.some((node) => node.id !== props.node.id && node.name === name)
-    setNameError(!name || taken)
-    if (!name || taken) return
-    props.onChange(updateNode(props.flow, props.node.id, { name }))
-  }
-  const name = (autofocus: boolean) => (
-    <label class="mx-field" classList={{ invalid: nameError() }}>
-      <span>{copy.t("orchestra.workflows.details.name")}</span>
-      <input
-        value={props.node.name}
-        data-autofocus={autofocus ? "" : undefined}
-        onInput={(event) => rename(event.currentTarget.value)}
-      />
-      <Show when={nameError()}>
-        <span class="mx-hint" style={{ color: "var(--mx-bad)" }}>
-          {copy.t("orchestra.workflows.details.nameTaken")}
-        </span>
-      </Show>
-    </label>
-  )
   const checklist = () => readChecklist(props.node)
   return (
     <>
@@ -403,7 +374,7 @@ function Params(props: Props) {
       </div>
       <Show when={props.node.type !== START} fallback={<StartParams {...props} />}>
         <div class="mx-fields">
-          {name(true)}
+          <NodeNameField flow={props.flow} node={props.node} onChange={props.onChange} />
           <label class="mx-field">
             <span>{copy.t("orchestra.workflows.details.phaseField")}</span>
             <select

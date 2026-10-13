@@ -196,7 +196,7 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
         docs(
           "v2.relay.document.remove",
           "Delete Relay document",
-          "Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.",
+          "Remove a document from the authoring library. Installed hooks for this document in the current profile are retired before deletion; immutable versions and recorded results are retained.",
         ),
       ),
   )

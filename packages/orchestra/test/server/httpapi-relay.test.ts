@@ -363,6 +363,29 @@ describe("relay documents", () => {
 })
 
 describe("relay hooks", () => {
+  test("deleting an installed hook retires its authoritative snapshot and retains immutable versions and receipts", async () => {
+    await using tmp = await tmpdir({ git: true })
+    await using other = await tmpdir({ git: true })
+    const { root, data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Stop enforcing after deletion"))
+    await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, { versionId: hook.versionId })
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id })
+    const unrelated = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Keep enforcing"))
+    await ok(tmp.path, "POST", `/api/relay/document/${unrelated.id}/publish`, { versionId: unrelated.versionId })
+    const kept = await ok(tmp.path, "POST", "/api/relay/hook", { document: unrelated.id })
+    const otherHook = await ok(other.path, "POST", "/api/relay/document", hookDocument("Other location"))
+    await ok(other.path, "POST", `/api/relay/document/${otherHook.id}/publish`, { versionId: otherHook.versionId })
+    const otherInstall = await ok(other.path, "POST", "/api/relay/hook", { document: otherHook.id })
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toHaveLength(2)
+    expect((await call(tmp.path, "DELETE", `/api/relay/document/${hook.id}`)).status).toBe(204)
+    expect(JSON.parse(await fs.readFile(RelayHookInstall.file(data, projectID), "utf8")).installs).toEqual([kept])
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([kept])
+    expect((await ok(other.path, "GET", "/api/relay/hook")).installs).toEqual([otherInstall])
+    expect((await call(tmp.path, "GET", `/api/relay/document/${hook.id}`)).status).toBe(404)
+    expect(await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/version/${hook.versionId}`)).toMatchObject({ versionId: hook.versionId })
+    expect((await ledger(root, installed.installID)).map((entry) => entry.event)).toEqual(["hook-installed", "hook-uninstalled"])
+  })
+
   test("an install pins the published version and every change is receipted with its principal", async () => {
     await using tmp = await tmpdir({ git: true })
     const { root } = await relayRoot(tmp.path)
