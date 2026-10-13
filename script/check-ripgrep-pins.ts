@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Ripgrep pin gate. Every archive digest pinned in packages/core/src/ripgrep/binary.ts must equal the digest in
+// Ripgrep pin gate. Every archive digest pinned in packages/core/src/ripgrep/release.ts must equal the digest in
 // upstream's published .sha256 file for that archive. The CI action and the Linux sandbox runtime take their pins from
 // the same table (packages/core/test/ripgrep-binary.test.ts guards the action), so this checks all of them.
 //
