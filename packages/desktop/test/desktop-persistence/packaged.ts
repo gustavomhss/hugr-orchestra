@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
@@ -83,7 +83,7 @@ export async function run(control?: "delete-blob") {
     const escape = path.join(owned.empty, "outside-link")
     symlinkSync(path.dirname(root), escape, process.platform === "win32" ? "junction" : "dir")
     try { assert.throws(() => assertOwned(escape, root, rootIdentity), /REPORTED_PATH_NOT_OWNED/) }
-    finally { rmSync(escape) }
+    finally { removeLink(escape) }
     const displaced = `${root}.held`
     assert.equal(existsSync(displaced), false, "ROOT_CONTROL_DESTINATION_EXISTS")
     renameSync(root, displaced)
@@ -91,7 +91,7 @@ export async function run(control?: "delete-blob") {
       symlinkSync(path.dirname(root), root, process.platform === "win32" ? "junction" : "dir")
       assert.throws(() => assertOwned(path.join(root, path.basename(displaced), "home"), root, rootIdentity), /OWNED_ROOT_IDENTITY_CHANGED/)
     } finally {
-      if (existsSync(root)) rmSync(root)
+      if (existsSync(root)) removeLink(root)
       renameSync(displaced, root)
     }
     assertOwned(owned.home, root, rootIdentity)
@@ -285,6 +285,12 @@ function inspect(filename: string, expected: typeof documents) {
       assert.deepEqual(Array.from(row.data), item.bytes, "DISK_BLOB_CHANGED")
     })
   } finally { document.finalize(); blob.finalize(); db.close(true) }
+}
+
+function removeLink(filename: string) {
+  assert.ok(lstatSync(filename).isSymbolicLink(), "PATH_CONTROL_LINK_CHANGED")
+  // Bun's nonrecursive rm fails on Windows junctions; unlink removes the entry, not its target.
+  unlinkSync(filename)
 }
 
 function assertOwned(filename: string, root: string, identity: { dev: bigint; ino: bigint }) {
