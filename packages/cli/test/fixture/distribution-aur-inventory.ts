@@ -4,10 +4,12 @@ import { join } from "node:path"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { sha256, snapshot } from "./distribution-native"
 
+type AurEntry = { kind: string; mode: number; sha256?: string; link?: string }
+
 // Unlike the shared payload snapshot, this checks exact modes and symlink text,
 // and includes empty directories. Only ENOENT denotes an absent tree.
 export async function aurInventory(directory: string) {
-  const entries = new Map<string, { kind: string; mode: number; sha256?: string; link?: string }>()
+  const entries = new Map<string, AurEntry>()
   const root = await lstat(directory).catch((error: unknown) => {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return undefined
     throw error
@@ -48,28 +50,41 @@ export async function aurPayload(directory: string, expected: AurPayload) {
   expect(await snapshot(directory), "AUR_FULL_PAYLOAD_BYTES_OR_INVENTORY_CHANGED")
     .toEqual(await snapshot(expected.payload))
   const actual = await aurInventory(directory)
-  const original = await aurInventory(expected.payload)
-  if (!actual || !original || original.size === 0) throw new Error("AUR_PAYLOAD_INVENTORY_EMPTY")
-  expect(actual, "AUR_FULL_PAYLOAD_MODES_OR_INVENTORY_CHANGED").toEqual(original)
-  for (const file of expected.manifest.files)
-    expect(actual.get(file.path)?.mode, `AUR_PAYLOAD_MODE: ${file.path}`).toBe(file.executable ? 0o755 : 0o644)
-  for (const path of ["distribution.json", "checksums.sha256"]) expect(actual.get(path)?.mode).toBe(0o644)
+  if (!actual || actual.size === 0) throw new Error("AUR_PAYLOAD_INVENTORY_EMPTY")
+  expect(actual, "AUR_FULL_PAYLOAD_MODES_OR_INVENTORY_CHANGED").toEqual(await aurExpectedPayload(expected))
+}
+
+// Producer-owned private directories are 0700. Packaging creates 0755 directories
+// and restores descriptor file modes; producer permissions are not package modes.
+export async function aurExpectedPayload(payload: AurPayload) {
+  if (!payload.manifest.files.length) throw new Error("AUR_EXPECTED_PAYLOAD_EMPTY")
+  const entries = new Map<string, AurEntry>([["", { kind: "directory", mode: 0o755 }]])
+  for (const file of payload.manifest.files) {
+    entries.set(file.path, { kind: "file", mode: file.executable ? 0o755 : 0o644, sha256: file.sha256 })
+    const parts = file.path.split("/")
+    parts.slice(0, -1).forEach((_, index) => {
+      entries.set(parts.slice(0, index + 1).join("/"), { kind: "directory", mode: 0o755 })
+    })
+  }
+  for (const path of ["distribution.json", "checksums.sha256"])
+    entries.set(path, { kind: "file", mode: 0o644, sha256: sha256(await readFile(join(payload.payload, path))) })
+  return entries
 }
 
 // This consumes the FINAL makepkg archive after its real tidy pipeline, not pkg/.
 export async function aurFinalPackage(extracted: string, payload: AurPayload, recipe: string) {
   await aurPayload(join(extracted, "usr/lib/orchestra"), payload)
-  const original = await aurInventory(payload.payload)
+  const intended = await aurExpectedPayload(payload)
   const actual = await aurInventory(extracted)
-  if (!original || !actual || actual.size === 0) throw new Error("AUR_FINAL_PACKAGE_INVENTORY_EMPTY")
+  if (!actual || actual.size === 0) throw new Error("AUR_FINAL_PACKAGE_INVENTORY_EMPTY")
   for (const metadata of [".PKGINFO", ".BUILDINFO", ".MTREE"]) {
     expect(actual.get(metadata), `AUR_PACKAGE_METADATA_REQUIRED: ${metadata}`)
       .toMatchObject({ kind: "file", mode: 0o644 })
     actual.delete(metadata)
   }
-  const expected = new Map<string, { kind: string; mode: number; sha256?: string; link?: string }>([
+  const expected = new Map<string, AurEntry>([
     ...["", "usr", "usr/bin", "usr/lib"].map((path) => [path, { kind: "directory", mode: 0o755 }] as const),
-    ...[...original].map(([path, entry]) => [`usr/lib/orchestra${path ? `/${path}` : ""}`, entry] as const),
+    ...[...intended].map(([path, entry]) => [`usr/lib/orchestra${path ? `/${path}` : ""}`, entry] as const),
     ["usr/bin/orchestra", { kind: "symlink", mode: 0o777, link: "/usr/lib/orchestra/bin/orchestra" }] as const,
   ])
   expect(actual, "AUR_FINAL_PACKAGE_FULL_INVENTORY_BYTES_MODES_LINK").toEqual(expected)
@@ -101,6 +116,13 @@ export async function aurInventoryTeeth(extracted: string, payload: AurPayload, 
     await chmod(file, 0o755)
     await expect(check(), "AUR_INVENTORY_MODE_MUTATION_MUST_FAIL").rejects.toThrow()
   } finally { await chmod(file, mode) }
+  try {
+    await chmod(file, 0o640)
+    expect(await verifyDistribution(join(extracted, "usr/lib/orchestra"), {
+      version: payload.version, target: payload.manifest.target,
+    }), "AUR_NONEXECUTABLE_MODE_CONTROL_MUST_PASS_DESCRIPTOR_EXECUTE_GUARD").toEqual(payload.manifest)
+    await expect(check(), "AUR_INVENTORY_NONEXECUTABLE_MODE_MUTATION_MUST_FAIL").rejects.toThrow()
+  } finally { await chmod(file, mode) }
   const retained = join(extracted, "../oracle-retained-package.json")
   try {
     await rename(file, retained)
@@ -129,5 +151,5 @@ export async function aurInventoryTeeth(extracted: string, payload: AurPayload, 
     await expect(check(), "AUR_INVENTORY_MISSING_PACKAGE_METADATA_MUST_FAIL").rejects.toThrow()
   } finally { await rename(stored, metadata) }
   await check()
-  console.info("AUR final-package oracle controls: bytes/mode/missing/extra/empty-directory/link/metadata rejected; restored archive accepted")
+  console.info("AUR final-package oracle controls: bytes/executable-mode/nonexecutable-mode/missing/extra/empty-directory/link/metadata rejected; restored archive accepted")
 }
