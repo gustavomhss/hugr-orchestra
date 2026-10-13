@@ -14,7 +14,10 @@ async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "orchestra-claude-stage-"))
   roots.push(root)
   const sdk = join(root, "sdk")
-  const native = join(sdk, "node_modules/@anthropic-ai/claude-agent-sdk-darwin-x64")
+  const platform = process.platform
+  const arch = process.arch
+  const name = `@anthropic-ai/claude-agent-sdk-${platform}-${arch}`
+  const native = join(sdk, "node_modules", name)
   await mkdir(native, { recursive: true })
   await writeFile(
     join(sdk, "package.json"),
@@ -22,27 +25,53 @@ async function fixture() {
       name: "@anthropic-ai/claude-agent-sdk",
       version: "0.3.289",
       claudeCodeVersion: "2.1.289",
-      optionalDependencies: { "@anthropic-ai/claude-agent-sdk-darwin-x64": "0.3.289" },
+      optionalDependencies: { [name]: "0.3.289" },
     }),
   )
   await writeFile(
     join(native, "package.json"),
     JSON.stringify({
-      name: "@anthropic-ai/claude-agent-sdk-darwin-x64",
+      name,
       version: "0.3.289",
-      os: ["darwin"],
-      cpu: ["x64"],
+      os: [platform],
+      cpu: [arch],
     }),
   )
-  // A Mach-O executable header followed by opaque signed-payload bytes; never executed by these tests.
-  const bytes = Buffer.alloc(96, 0x61)
-  bytes.writeUInt32LE(0xfeedfacf, 0)
-  bytes.writeUInt32LE(0x01000007, 4)
-  bytes.writeUInt32LE(2, 12)
-  const binary = join(native, "claude")
-  await writeFile(binary, bytes)
-  await chmod(binary, 0o755)
-  return { sdk, binary, directory: join(root, "resources/claude-code"), platform: "darwin", arch: "x64" }
+  const binary = join(native, platform === "win32" ? "claude.exe" : "claude")
+  await writeFile(binary, nativeHeader(platform, arch), { mode: 0o755 })
+  return { sdk, binary, directory: join(root, "resources/claude-code"), platform, arch }
+}
+
+function nativeHeader(platform: string, arch: string) {
+  // Complete identity headers followed by opaque payload bytes; these fixtures are never executed.
+  const bytes = Buffer.alloc(512)
+  bytes.fill(0x61, 384)
+  if (platform === "win32") {
+    bytes.writeUInt16LE(0x5a4d, 0)
+    bytes.writeUInt32LE(0x80, 0x3c)
+    bytes.writeUInt32LE(0x4550, 0x80)
+    bytes.writeUInt16LE(arch === "x64" ? 0x8664 : 0xaa64, 0x84)
+    bytes.writeUInt16LE(240, 0x94)
+    bytes.writeUInt16LE(0x22, 0x96)
+    bytes.writeUInt16LE(0x20b, 0x98)
+    return bytes
+  }
+  if (platform === "darwin") {
+    bytes.writeUInt32LE(0xfeedfacf, 0)
+    bytes.writeUInt32LE(arch === "x64" ? 0x01000007 : 0x0100000c, 4)
+    bytes.writeUInt32LE(arch === "x64" ? 3 : 0, 8)
+    bytes.writeUInt32LE(2, 12)
+    return bytes
+  }
+  if (platform === "linux") {
+    bytes.set([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1])
+    bytes.writeUInt16LE(2, 16)
+    bytes.writeUInt16LE(arch === "x64" ? 62 : 183, 18)
+    bytes.writeUInt32LE(1, 20)
+    bytes.writeUInt16LE(64, 52)
+    return bytes
+  }
+  throw new Error(`Unsupported fixture host: ${platform}-${arch}`)
 }
 
 test("stages native SDK bytes unchanged with a target/version/hash receipt", async () => {
@@ -52,14 +81,14 @@ test("stages native SDK bytes unchanged with a target/version/hash receipt", asy
   expect(await readFile(staged.path)).toEqual(original)
   expect(staged).toMatchObject({
     schema: 1,
-    target: "darwin-x64",
-    package: "@anthropic-ai/claude-agent-sdk-darwin-x64",
+    target: `${input.platform}-${input.arch}`,
+    package: `@anthropic-ai/claude-agent-sdk-${input.platform}-${input.arch}`,
     sdkVersion: "0.3.289",
     claudeCodeVersion: "2.1.289",
-    file: "claude",
+    file: input.platform === "win32" ? "claude.exe" : "claude",
     sha256: createHash("sha256").update(original).digest("hex"),
   })
-  expect(await verifyClaudeAsset(input.directory, "darwin", "x64", input.sdk)).toEqual(staged)
+  expect(await verifyClaudeAsset(input.directory, input.platform, input.arch, input.sdk)).toEqual(staged)
 })
 
 test("missing or foreign source fails before replacing admitted bytes", async () => {
@@ -69,12 +98,20 @@ test("missing or foreign source fails before replacing admitted bytes", async ()
   await rm(input.binary)
   await expect(stageClaude(input)).rejects.toThrow("CLAUDE_ASSET_MISSING")
   expect(await readFile(staged.path)).toEqual(admitted)
-  const wrong = Buffer.from(admitted)
-  wrong.writeUInt32LE(0x0100000c, 4)
-  await writeFile(input.binary, wrong)
-  await chmod(input.binary, 0o755)
+  await writeFile(input.binary, nativeHeader(input.platform, input.arch === "x64" ? "arm64" : "x64"), { mode: 0o755 })
   await expect(stageClaude(input)).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
   expect(await readFile(staged.path)).toEqual(admitted)
+  await writeFile(input.binary, nativeHeader(input.platform === "win32" ? "darwin" : "win32", input.arch))
+  await expect(stageClaude(input)).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
+  expect(await readFile(staged.path)).toEqual(admitted)
+  await writeFile(input.binary, admitted)
+  if (process.platform !== "win32") {
+    await chmod(input.binary, 0o644)
+    await expect(stageClaude(input)).rejects.toThrow("CLAUDE_ASSET_NOT_EXECUTABLE")
+    expect(await readFile(staged.path)).toEqual(admitted)
+    await chmod(input.binary, 0o755)
+  }
+  expect(await stageClaude(input)).toEqual(staged)
 })
 
 test("packaging rejects missing, changed, symlinked and wrong-CPU assets, then accepts restoration", async () => {
@@ -82,24 +119,34 @@ test("packaging rejects missing, changed, symlinked and wrong-CPU assets, then a
   const staged = await stageClaude(input)
   const original = await readFile(staged.path)
   const manifest = await readFile(join(input.directory, "manifest.json"), "utf8")
-  const verify = () => verifyClaudeAsset(input.directory, "darwin", "x64", input.sdk)
+  const verify = () => verifyClaudeAsset(input.directory, input.platform, input.arch, input.sdk)
   await rm(staged.path)
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_MISSING")
   await symlink(input.binary, staged.path)
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_NOT_REGULAR")
   await rm(staged.path)
   const changed = Buffer.from(original)
-  changed[80] ^= 1
+  changed[changed.length - 1] ^= 1
   await writeFile(staged.path, changed, { mode: 0o755 })
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_DIGEST_MISMATCH")
-  changed.writeUInt32LE(0x0100000c, 4)
-  await writeFile(staged.path, changed)
+  const foreign = nativeHeader(input.platform, input.arch === "x64" ? "arm64" : "x64")
+  await writeFile(staged.path, foreign)
   // Re-hashing a foreign executable must not turn it into this target's asset.
   await writeFile(
     join(input.directory, "manifest.json"),
     JSON.stringify({
       ...JSON.parse(manifest),
-      sha256: createHash("sha256").update(changed).digest("hex"),
+      sha256: createHash("sha256").update(foreign).digest("hex"),
+    }),
+  )
+  await expect(verify()).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
+  const foreignABI = nativeHeader(input.platform === "win32" ? "darwin" : "win32", input.arch)
+  await writeFile(staged.path, foreignABI)
+  await writeFile(
+    join(input.directory, "manifest.json"),
+    JSON.stringify({
+      ...JSON.parse(manifest),
+      sha256: createHash("sha256").update(foreignABI).digest("hex"),
     }),
   )
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
@@ -112,12 +159,13 @@ test("receipt cannot name another SDK version, target, executable path or an emp
   const input = await fixture()
   const staged = await stageClaude(input)
   const manifest = await readFile(join(input.directory, "manifest.json"), "utf8")
-  const verify = () => verifyClaudeAsset(input.directory, "darwin", "x64", input.sdk)
+  const verify = () => verifyClaudeAsset(input.directory, input.platform, input.arch, input.sdk)
+  const foreignArch = input.arch === "x64" ? "arm64" : "x64"
   for (const mutation of [
     { sdkVersion: "0.3.288" },
     { claudeCodeVersion: "2.1.288" },
-    { target: "darwin-arm64" },
-    { package: "@anthropic-ai/claude-agent-sdk-darwin-arm64" },
+    { target: `${input.platform}-${foreignArch}` },
+    { package: `@anthropic-ai/claude-agent-sdk-${input.platform}-${foreignArch}` },
     { file: "../../host-executable" },
   ]) {
     await writeFile(join(input.directory, "manifest.json"), JSON.stringify({ ...JSON.parse(manifest), ...mutation }))

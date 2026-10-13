@@ -16,11 +16,16 @@ const exists = (path: string) =>
     .catch(() => false)
 
 export async function checkAppExists(appName: string) {
-  if (process.platform !== "darwin") return (await resolveAppPath(appName)) !== null
+  if (isAbsolute(appName) || process.platform !== "darwin") return (await resolveAppPath(appName)) !== null
   return checkMacosApp(appName)
 }
 
 export function resolveAppPath(appName: string) {
+  // `where` searches command names; absolute executable paths need direct filesystem validation.
+  if (isAbsolute(appName))
+    return process.platform !== "win32" || extname(appName).toLowerCase() === ".exe"
+      ? resolveExecutable(appName)
+      : Promise.resolve(null)
   if (process.platform === "linux") return resolveExecutable(appName)
   if (process.platform === "darwin") return Promise.resolve(appName)
   return resolveWindowsAppPath(appName)
@@ -93,6 +98,7 @@ async function checkMacosApp(appName: string) {
 }
 
 async function resolveWindowsAppPath(appName: string): Promise<string | null> {
+  if (!appName || /[\x00-\x1f]/.test(appName)) return null
   let output: string
   try {
     output = await execFilePromise("where", [appName]).then((r) => r.stdout.toString())
@@ -108,7 +114,7 @@ async function resolveWindowsAppPath(appName: string): Promise<string | null> {
   const hasExt = (path: string, ext: string) => extname(path).toLowerCase() === `.${ext}`
 
   const exe = paths.find((path) => hasExt(path, "exe"))
-  if (exe && (await exists(exe))) return exe
+  if (exe && (await resolveExecutable(exe))) return exe
 
   const resolveCmd = async (path: string) => {
     const content = await readFile(path, "utf8")
@@ -129,10 +135,10 @@ async function resolveWindowsAppPath(appName: string): Promise<string | null> {
             return join(current, part)
           }, base)
 
-        if (await exists(resolved)) return resolved
+        if (await resolveExecutable(resolved)) return resolved
       }
 
-      if (await exists(token)) return token
+      if (await resolveExecutable(token)) return token
     }
 
     return null
@@ -179,7 +185,7 @@ async function resolveWindowsAppPath(appName: string): Promise<string | null> {
               .filter((value: string) => /[a-z0-9]/i.test(value))
               .map((value: string) => value.toLowerCase())
               .join("")
-            if (name.includes(key) || key.includes(name)) return candidate
+            if ((name.includes(key) || key.includes(name)) && (await resolveExecutable(candidate))) return candidate
           }
         } catch {
           continue
