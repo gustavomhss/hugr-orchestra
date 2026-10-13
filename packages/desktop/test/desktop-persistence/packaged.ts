@@ -137,23 +137,14 @@ export async function run(control?: "delete-blob") {
       const launch = process.platform === "linux"
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
+      const captured = { read: () => "", code: undefined as number | undefined, gui: undefined as Record<string, unknown> | undefined }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
-        const exited = { done: false, code: undefined as number | undefined }
-        void host.exited.then((code) => { exited.code = code; exited.done = true }, () => { exited.done = true })
+        captured.read = host.output
+        const exited = { done: false }
+        void host.exited.then((code) => { captured.code = code; exited.done = true }, () => { exited.done = true })
         const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
           existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
-            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
-            try {
-              mkdirSync(path.dirname(destination), { recursive: true })
-              writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
-                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: exited.code ?? null,
-                output: startupDiagnostic(host.output(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")),
-              }))
-            } catch {
-              console.error("STARTUP_DIAGNOSTIC_UNAVAILABLE")
-            }
-            throw error
-          })
+            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined)
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
         assert.equal(report.nonce, nonce, "REPORT_NONCE_MISMATCH")
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
@@ -175,8 +166,17 @@ export async function run(control?: "delete-blob") {
         placement.userData = report.userData
         placement.draftDB = path.join(report.userData, "drafts.sqlite")
         assertOwned(placement.draftDB, root, rootIdentity)
-        await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => events(reportFile).find((event) =>
-          event.pid === report.pid && event.name === "gui-visible" && event.windows?.some((window) => window.visible) && event.displays?.length))
+        await until(30_000, host.signal, "VISIBLE_GUI_REQUIRED", () => {
+          if (exited.done) throw new Error("APP_EXITED_BEFORE_GUI")
+          return events(reportFile).find((event) => event.pid === report.pid && event.name === "gui-visible" &&
+            event.windows?.some((window) => window.visible) && event.displays?.length)
+        }).catch(async (error: unknown) => {
+          captured.gui = { exitObserved: exited.done, cdp: await fetch(`http://127.0.0.1:${port}/json/list`, {
+            signal: AbortSignal.any([host.signal, AbortSignal.timeout(2000)]), redirect: "error",
+          }).then(async (response) => ({ status: response.status, lines: startupDiagnostic((await response.text()).slice(0, 20000), "").split("\n") }))
+            .catch((cause: unknown) => ({ error: String(cause) })) }
+          throw error
+        })
         const debuggerClient = await DesktopProof.connect(port, host.signal)
         try {
           await until(20_000, host.signal, "REAL_DRAFT_API_REQUIRED", async () => await debuggerClient.evaluate(
@@ -208,6 +208,20 @@ export async function run(control?: "delete-blob") {
             paths: { home: report.home, db: report.db, userData: report.userData, resources: report.resources },
             quit: { actionID, code: 0 }, preservation: mutation.detected ? "DRAFT_BLOB_LOST" : "exact" })
         }
+      }).catch((error: unknown) => {
+        try {
+          mkdirSync(path.dirname(destination), { recursive: true })
+          writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
+            sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error), exitCode: captured.code ?? null, gui: captured.gui,
+            output: startupDiagnostic(captured.read(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")).split("\n"),
+            events: events(reportFile).filter((event) => ["utility-started", "gui-visible", "quit-requested", "before-quit", "will-quit", "quit"].includes(event.name))
+              .slice(-30).map((event) => ({ name: event.name, pid: event.pid, code: event.code,
+                windows: event.windows?.map((window) => ({ visible: window.visible })), displays: event.displays })),
+          }, null, 2))
+        } catch {
+          console.error("PHASE_DIAGNOSTIC_UNAVAILABLE")
+        }
+        throw error
       })
       if (!mutation.detected) inspect(placement.draftDB, documents.slice(0, index === 0 ? 1 : 2))
       if (index === 0) mutation.seeded = true
