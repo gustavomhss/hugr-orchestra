@@ -23,7 +23,6 @@ export const data = [
 // Data ends here.
 
 export const staticRGBA = RGBA
-export const requiredRGBA = require("@opentui/core").RGBA as typeof RGBA
 export const filesystem = Filesystem
 export const dynamicRGBA = async () => (await import /* trivia */ ("@opentui/core")).RGBA
 export const requireRGBA = () => require("@opentui/core").RGBA as typeof RGBA
