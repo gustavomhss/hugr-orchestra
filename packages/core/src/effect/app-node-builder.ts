@@ -2,30 +2,26 @@ import { buildLocationServiceMap } from "../location-services"
 import { LocationServiceMap } from "../location-service-map"
 import { LayerNode } from "./layer-node"
 import { makeGlobalNode } from "./app-node"
-import { Context, Effect, Layer } from "effect"
+import { Context, Deferred, Layer } from "effect"
 
 export function build<A, E>(root: LayerNode.Node<A, E, any>, replacements: LayerNode.Replacements = []) {
   return Layer.suspend(() => {
-    const globalContext = { current: Context.empty() }
+    const globalContext = Deferred.makeUnsafe<Context.Context<never>>()
     let allReplacements = replacements
 
     // Only build the location service map if it's actually needed
     if (LayerNode.hasUnbound(root, LocationServiceMap.node) && !hasReplacement(replacements, LocationServiceMap.node)) {
       const locationMap = LocationServiceMap.withGlobalContext(
         buildLocationServiceMap(replacements),
-        () => globalContext.current,
+        Deferred.await(globalContext),
       )
       const locationMapNode = makeGlobalNode({ service: LocationServiceMap.Service, layer: locationMap, deps: [] })
       allReplacements = replacements.concat([[LocationServiceMap.node, locationMapNode]])
     }
 
     return LayerNode.compile(root, allReplacements).pipe(
-      Layer.tap((context) =>
-        Effect.sync(() => {
-          // Bind once after every root export exists. Never capture a drain's Location or Scope here.
-          globalContext.current = context
-        }),
-      ),
+      // Startup forks may acquire Locations while the root is still building.
+      Layer.tap((context) => Deferred.succeed(globalContext, context)),
     )
   })
 }
