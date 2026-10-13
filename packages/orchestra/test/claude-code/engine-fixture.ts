@@ -27,6 +27,7 @@ export const state: {
   apiCalls: number
   sdkAgents: AgentInfo[]
   sdkModels: ModelInfo[]
+  initialize?: () => Promise<void>
   construct: ClaudeCodeSDK.Interface["query"] | undefined
 } = { queries: [], scripts: [], inputs: [], messages: [], closed: [], interrupts: 0, stoppedTasks: [], models: [], apiCalls: 0,
   sdkAgents: [], sdkModels: [], construct: undefined }
@@ -49,6 +50,7 @@ export function reset() {
   state.apiCalls = 0
   state.sdkAgents.length = 0
   state.sdkModels.length = 0
+  state.initialize = undefined
   state.construct = undefined
 }
 
@@ -84,8 +86,11 @@ function hosted(script: Script, params: Params) {
     stopTask: async (taskID: string) => { state.stoppedTasks.push(taskID) },
     setModel: async (model?: string) => { state.models.push(model) },
     accountInfo: async () => ({ subscriptionType: "Claude Max", apiProvider: "firstParty" }),
-    initializationResult: async () => ({ agents: state.sdkAgents, models: state.sdkModels, commands: [],
-      output_style: "default", available_output_styles: [], account: { subscriptionType: "Claude Max", apiProvider: "firstParty" } }),
+    initializationResult: async () => {
+      await state.initialize?.()
+      return { agents: state.sdkAgents, models: state.sdkModels, commands: [], output_style: "default",
+        available_output_styles: [], account: { subscriptionType: "Claude Max", apiProvider: "firstParty" } }
+    },
     getContextUsage: async () => ({ totalTokens: 10, maxTokens: 200_000, percentage: 0 }),
   }) as unknown as Query
 }

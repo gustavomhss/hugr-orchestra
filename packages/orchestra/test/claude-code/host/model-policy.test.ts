@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Context, Deferred, Effect, Fiber, Schema } from "effect"
 import type { HookInput } from "@anthropic-ai/claude-agent-sdk"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { Catalog } from "@orchestra/core/catalog"
 import { Database } from "@orchestra/core/database/database"
 import { LocationServiceMap } from "@orchestra/core/location-services"
@@ -13,6 +13,8 @@ import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { ClaudeHostDelegation } from "@/claude-code/host/delegation"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
+import { ClaudeHostMcp } from "@/claude-code/host/mcp"
+import { WriteRoots } from "@/maestro/write-roots"
 import { ClaudeResearchFixture } from "./jimmy-fixture"
 import { ClaudeEngineFixture } from "../engine-fixture"
 
@@ -89,13 +91,82 @@ ClaudeEngineFixture.it.instance("real host captures canonical policy and resolve
   const admitted = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("check ceiling"), noReply: true })
   if (admitted.info.role !== "user") throw new Error("Missing admitted user")
   const host = yield* ClaudeHost.Service
+  const policies = yield* SessionSubagentModels.Service
   yield* host.turn({ sessionID: f.chat.id, user: admitted.info }).pipe(
-    Effect.updateContext((context: Context.Context<never>) => Context.omit(SessionSubagentModels.Service)(context)))
+    Effect.provideService(SessionSubagentModels.Service, { ...policies, assertChild: () => Effect.void }),
+    Effect.provideService(ClaudeHost.Adapters, { hooks: () => ({ PreToolUse: [{ hooks: [async () => ({
+      hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow" },
+    })] }] }) }))
   expect(decisions[0]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("identity is unknown") } })
   expect(decisions[1]).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
   expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
+}), 30000)
+
+ClaudeEngineFixture.it.instance("registered final denial retains spent grant and cleanup obligation across swallowed removal failure", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const f = yield* ClaudeEngineFixture.setup({ models: { archie: "anthropic/wire-fast" } })
+  const locations = yield* LocationServiceMap.Service
+  const database = yield* Database.Service
+  const policies = yield* SessionSubagentModels.Service
+  yield* Effect.gen(function* () {
+    const catalog = yield* Catalog.Service
+    yield* catalog.transform((draft) => draft.model.update(fast.providerID, fast.id, (entry) => Object.assign(entry, fast)))
+  }).pipe(Effect.provide(locations.get({ directory: AbsolutePath.make(f.chat.directory), workspaceID: undefined })))
+  yield* policies.set(f.chat.id, fastPolicy)
+  const rules = yield* WriteRoots.bind("archie", ["proposal.md"], [])
+  const grantID = "grt_model_cleanup"
+  ClaudeHostMcp.grants(f.chat.id).set(grantID, { grantID, sessionID: f.chat.id, seat: "archie", writePaths: ["proposal.md"],
+    writeRoots: WriteRoots.read(rules) ?? [], purpose: "proposal", time: Date.now() })
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  const metadata = { calls: 0 }
+  const decisions: unknown[] = []
+  ClaudeEngineFixture.state.sdkAgents.push({ name: "orchestra:archie", model: "wire-fast", description: "SDK-owned proposal" })
+  ClaudeEngineFixture.state.sdkModels.push(...sdkModels)
+  const context = yield* Effect.context<never>()
+  ClaudeEngineFixture.state.initialize = () => Effect.runPromiseWith(context)(Effect.gen(function* () {
+    metadata.calls++
+    if (metadata.calls !== 3) return
+    yield* Deferred.succeed(entered, undefined)
+    yield* Deferred.await(release)
+  }))
+  const args = { subagent_type: "orchestra:archie", run_in_background: false, description: "proposal",
+    prompt: `grantID: ${grantID}\nWrite proposal.md.` }
+  ClaudeEngineFixture.state.scripts.push(async function* (input, params) {
+    await input[Symbol.asyncIterator]().next()
+    yield { type: "system", subtype: "init", model: "wire-fast", ...ClaudeEngineFixture.frame }
+    yield { type: "assistant", ...ClaudeEngineFixture.frame, uuid: crypto.randomUUID(), message: {
+      id: "registered-policy-call", model: "wire-fast", content: [{ type: "tool_use", id: "registered-policy", name: "Agent", input: args }], usage: {} } }
+    const hook = { ...ClaudeResearchFixture.base, hook_event_name: "PreToolUse" as const, tool_name: "Agent",
+      tool_use_id: "registered-policy", tool_input: args }
+    const options = { signal: new AbortController().signal }
+    decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0](hook, undefined, options))
+    await Effect.runPromiseWith(context)(database.db.run(sql`DROP TRIGGER keep_model_child`))
+    await Effect.runPromiseWith(context)(policies.set(f.chat.id, SessionSubagentModels.inherit))
+    decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0](hook, undefined, options))
+    yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...ClaudeEngineFixture.frame }
+    for await (const _ of input) {}
+  })
+  const admitted = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("bounded proposal"), noReply: true })
+  if (admitted.info.role !== "user") throw new Error("Missing admitted user")
+  const host = yield* ClaudeHost.Service
+  const running = yield* host.turn({ sessionID: f.chat.id, user: admitted.info }).pipe(Effect.forkChild)
+  yield* Deferred.await(entered)
+  const kids = yield* f.sessions.children(f.chat.id)
+  expect(kids).toHaveLength(1)
+  expect(ClaudeHostMcp.grants(f.chat.id).has(grantID)).toBe(false)
+  yield* database.db.run(sql.raw(`CREATE TRIGGER keep_model_child BEFORE DELETE ON session WHEN OLD.id = '${kids[0].id}' BEGIN SELECT RAISE(IGNORE); END`))
+  yield* policies.set(f.chat.id, { mode: "allowlist", models: [] })
+  yield* Deferred.succeed(release, undefined)
+  yield* Fiber.join(running)
+  expect(decisions[0]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
+    permissionDecisionReason: expect.stringContaining("cleanup is still pending") } })
+  expect(decisions[1]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
+    permissionDecisionReason: expect.stringContaining("model policy denied") } })
+  expect(yield* f.sessions.children(f.chat.id)).toHaveLength(0)
+  expect(ClaudeHostMcp.grants(f.chat.id).has(grantID)).toBe(false)
 }), 30000)
 
 ClaudeResearchFixture.it.instance("native Agent and Task enforce actual durable ancestor ceilings before generic or seat dispatch", () => Effect.gen(function* () {
