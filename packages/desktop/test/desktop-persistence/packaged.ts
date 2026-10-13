@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { Database } from "bun:sqlite"
 import { createHash, randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { createServer } from "node:net"
 import { machine, tmpdir } from "node:os"
 import path from "node:path"
@@ -82,7 +82,10 @@ export async function run(control?: "delete-blob") {
       return host.output().trim()
     })
     await git(["init", "--quiet", "--initial-branch=proof", `--template=${owned.empty}`, owned.home])
-    assert.equal(realpathSync(await git(["rev-parse", "--show-toplevel"])), owned.home, "GIT_ROOT_NOT_ISOLATED")
+    const gitRoot = statSync(await git(["rev-parse", "--show-toplevel"]), { bigint: true })
+    const home = statSync(owned.home, { bigint: true })
+    assert.ok(gitRoot.isDirectory() && home.isDirectory() && home.ino !== 0n &&
+      gitRoot.dev === home.dev && gitRoot.ino === home.ino, "GIT_ROOT_NOT_ISOLATED")
     await ["seed", "reopen-add", "third-reopen"].reduce(async (previous, phase, index) => {
       await previous
       if (control && index === 2) return
@@ -90,11 +93,13 @@ export async function run(control?: "delete-blob") {
         assert.ok(mutation.seeded && placement.draftDB, "CONTROL_SEED_INCOMPLETE")
         assertOwned(placement.draftDB, root)
         const db = new Database(placement.draftDB, { create: false })
+        const remove = db.prepare("DELETE FROM blob WHERE id = ?")
+        const find = db.prepare("SELECT id FROM blob WHERE id = ?")
         try {
-          assert.equal(db.query("DELETE FROM blob WHERE id = ?").run(documents[0].id).changes, 1, "CONTROL_MUTATION_NOT_APPLIED")
-          assert.equal(db.query("SELECT id FROM blob WHERE id = ?").get(documents[0].id), null, "CONTROL_BLOB_STILL_PRESENT")
+          assert.equal(remove.run(documents[0].id).changes, 1, "CONTROL_MUTATION_NOT_APPLIED")
+          assert.equal(find.get(documents[0].id), null, "CONTROL_BLOB_STILL_PRESENT")
           mutation.deleted = true
-        } finally { db.close(true) }
+        } finally { remove.finalize(); find.finalize(); db.close(true) }
       }
       const reportFile = env.ORCHESTRA_DESKTOP_OMNI_SMOKE
       ;[reportFile, `${reportFile}.events`, `${reportFile}.quit`].forEach((file) => rmSync(file, { force: true }))
@@ -104,8 +109,22 @@ export async function run(control?: "delete-blob") {
         ? { command: "xvfb-run", args: ["-a", manifest.executable, ...args] }
         : { command: manifest.executable, args }
       await child({ ...launch, cwd: owned.home, env, timeoutMS: 150_000 }, async (host) => {
+        const exited = { done: false }
+        void host.exited.then(() => { exited.done = true }, () => { exited.done = true })
         const report = await until(90_000, host.signal, "APP_REPORT_TIMEOUT", () =>
-          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report : undefined)
+          existsSync(reportFile) ? JSON.parse(readFileSync(reportFile, "utf8")) as Report
+            : exited.done ? (() => { throw new Error("APP_EXITED_BEFORE_REPORT") })() : undefined).catch((error: unknown) => {
+            try {
+              mkdirSync(path.dirname(destination), { recursive: true })
+              writeFileSync(path.join(path.dirname(destination), "startup-failure.json"), JSON.stringify({
+                sourceSHA: manifest.sourceSHA, platform: process.platform, phase, error: String(error),
+                output: startupDiagnostic(host.output(), path.join(process.platform === "win32" ? owned.appdata : owned.config, "ai.hugr.orchestra.beta", "logs")),
+              }))
+            } catch {
+              console.error("STARTUP_DIAGNOSTIC_UNAVAILABLE")
+            }
+            throw error
+          })
         assert.ok(report.packaged && report.versions?.electron && Number.isSafeInteger(report.pid), "ACTUAL_ELECTRON_REQUIRED")
         assert.equal(report.nonce, nonce, "REPORT_NONCE_MISMATCH")
         assert.equal(report.home, owned.home, "HOME_ISOLATION_LOST")
@@ -181,6 +200,17 @@ export async function run(control?: "delete-blob") {
   return evidence
 }
 
+function startupDiagnostic(captured: string, logs: string) {
+  const directories = existsSync(logs) ? [logs, ...readdirSync(logs, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory()).slice(0, 8).map((entry) => path.join(logs, entry.name))] : []
+  return [captured, ...directories.flatMap((directory) => readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".log")).slice(0, 8)
+    .map((entry) => readFileSync(path.join(directory, entry.name), "utf8").slice(-100000)))]
+    .join("\n").slice(-200000).replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "Basic [redacted]")
+    .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/gi, "[fixture-id]")
+    .replace(/[A-Za-z0-9_-]{43}/g, "[fixture-secret]")
+}
+
 async function oracle(client: Debugger, expected: typeof documents) {
   await expected.reduce(async (previous, item) => {
     await previous
@@ -197,15 +227,17 @@ async function oracle(client: Debugger, expected: typeof documents) {
 
 function inspect(filename: string, expected: typeof documents) {
   const db = new Database(filename, { readonly: true, create: false })
+  const document = db.prepare<{ value: string }, [string]>("SELECT value FROM document WHERE key = ?")
+  const blob = db.prepare<{ data: Uint8Array }, [string]>("SELECT data FROM blob WHERE id = ?")
   try {
     expected.forEach((item) => {
-      assert.equal(db.query<{ value: string }, [string]>("SELECT value FROM document WHERE key = ?").get(item.key)?.value,
+      assert.equal(document.get(item.key)?.value,
         item.value, "DISK_DOCUMENT_NOT_COMMITTED")
-      const row = db.query<{ data: Uint8Array }, [string]>("SELECT data FROM blob WHERE id = ?").get(item.id)
+      const row = blob.get(item.id)
       assert.ok(row, "DISK_BLOB_NOT_COMMITTED")
       assert.deepEqual(Array.from(row.data), item.bytes, "DISK_BLOB_CHANGED")
     })
-  } finally { db.close(true) }
+  } finally { document.finalize(); blob.finalize(); db.close(true) }
 }
 
 function assertOwned(filename: string, root: string) {
@@ -252,7 +284,7 @@ if (import.meta.main) {
   const args = parseArgs({ options: { control: { type: "string" } }, allowPositionals: false }).values
   assert.ok(args.control === undefined || args.control === "delete-blob", "UNKNOWN_CONTROL")
   await run(args.control).catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : "DESKTOP_PERSISTENCE_FAILED")
+    console.error(error instanceof Error ? (error.message === "DRAFT_BLOB_LOST" ? error.message : error.stack) : "DESKTOP_PERSISTENCE_FAILED")
     process.exitCode = 1
   })
 }
