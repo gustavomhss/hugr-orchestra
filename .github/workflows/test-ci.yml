@@ -1,7 +1,7 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
+# with a .ci-run.json request ({ package, directory?, packageSelector?, runner, args, env?, config?, benchmarkRenderer? }). This workflow runs those
 # tests, then deletes the branch.
 # The request names its runner (`bun`, `node`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.
@@ -52,15 +52,17 @@ jobs:
           import { appendFileSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
           import path from 'node:path'
           import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
+          import { locateTestPackage } from './script/test-ci-location.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
-              realpathSync(file).startsWith(realpathSync('.') + path.sep))
+              realpathSync(file).startsWith(realpathSync('.') + path.sep),
+            (selector) => locateTestPackage('.', selector))
           writeFileSync('.ci-run.json', JSON.stringify(request))
           mkdirSync('test-ci-evidence', { recursive: true })
           writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
             platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
           appendFileSync(process.env.GITHUB_OUTPUT,
-            `package=${request.package}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
+            `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
           NODE
 
       - name: Setup Bun
@@ -81,7 +83,7 @@ jobs:
 
       - name: Install Chromium
         if: steps.request.outputs.runner == 'playwright'
-        working-directory: packages/app
+        working-directory: ${{ steps.request.outputs.directory }}
         run: bunx playwright install --with-deps chromium
 
       - name: Linux sandbox dependencies
@@ -98,13 +100,13 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: packages/${{ steps.request.outputs.package }}/requirements-dev.txt
+          cache-dependency-path: ${{ steps.request.outputs.directory }}/requirements-dev.txt
 
       - name: Install Python test dependencies
         if: steps.request.outputs.runner == 'pytest'
         env:
-          PACKAGE: ${{ steps.request.outputs.package }}
-        run: python -m pip install -r "packages/$PACKAGE/requirements-dev.txt"
+          DIRECTORY: ${{ steps.request.outputs.directory }}
+        run: python -m pip install -r "$DIRECTORY/requirements-dev.txt"
 
       - name: Configure git identity
         run: |
@@ -121,8 +123,8 @@ jobs:
           // A snapshot or rerun cannot supply completion records for this execution.
           for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
           const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
-          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, 'packages/desktop')))
-          const proof = desktopProof(request, 'packages/desktop', { platform: process.platform, arch: process.arch })
+          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, request.directory)))
+          const proof = desktopProof(request, request.directory, { platform: process.platform, arch: process.arch })
           appendFileSync(process.env.GITHUB_OUTPUT, `proof=${proof}\n`)
           BUN
           )"
@@ -137,8 +139,10 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
           fi
-          node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))"
+          node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:[process.env.DIRECTORY]})), 'install.js'))"
           echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"
+        env:
+          DIRECTORY: ${{ steps.request.outputs.directory }}
 
       # Only allow-listed keys with plain values reach the environment; test-ci.ts validates before upload too.
       - name: Export requested environment
@@ -176,6 +180,7 @@ jobs:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
           ORCHESTRA_OMNI_CONTROL: ${{ steps.request.outputs.omni_control }}
           PACKAGE: ${{ steps.request.outputs.package }}
+          DIRECTORY: ${{ steps.request.outputs.directory }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |
           if [ "$RUNNER" = playwright ]; then
@@ -184,10 +189,12 @@ jobs:
           import path from 'node:path'
           import { spawnSync } from 'node:child_process'
           import { benchmarkEnvironment, playwrightArgs, validateRequest, validateSelection } from './script/test-ci-request.ts'
+          import { locateTestPackage } from './script/test-ci-location.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
-              realpathSync(file).startsWith(realpathSync('.') + path.sep))
-          const cwd = path.resolve('packages/app')
+              realpathSync(file).startsWith(realpathSync('.') + path.sep),
+            (selector) => locateTestPackage('.', selector))
+          const cwd = path.resolve(request.directory)
           const benchmark = benchmarkEnvironment(request.benchmarkRenderer, process.env.GITHUB_SHA)
           writeFileSync('test-ci-evidence/benchmark-runtime.json', JSON.stringify(benchmark))
           const env = { ...process.env, ...benchmark }
@@ -209,7 +216,7 @@ jobs:
           fi
           args=()
           while IFS= read -r arg; do args+=("$arg"); done < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
-          cd "packages/$PACKAGE"
+          cd "$DIRECTORY"
           case "$RUNNER" in
             pytest) python -m pytest -p no:cacheprovider "${args[@]}" ;;
             bun) GITHUB_ACTIONS=false bun test "${args[@]}" ;;
@@ -225,13 +232,13 @@ jobs:
           esac
 
       - name: Upload Lean dashboard previews (extension)
-        if: always() && hashFiles('packages/app/e2e/test-results/lean-visual/*.png') != ''
+        if: always() && hashFiles(format('{0}/e2e/test-results/lean-visual/*.png', steps.request.outputs.directory)) != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lean-visual-${{ runner.os }}
           path: |
-            packages/app/e2e/test-results/lean-visual/*.png
-            packages/app/e2e/test-results/lean-visual/*.json
+            ${{ steps.request.outputs.directory }}/e2e/test-results/lean-visual/*.png
+            ${{ steps.request.outputs.directory }}/e2e/test-results/lean-visual/*.json
           if-no-files-found: error
           retention-days: 7
 
@@ -243,7 +250,8 @@ jobs:
           bun --eval "$(cat <<'BUN'
           import { appendFileSync, readFileSync } from 'node:fs'
           import { desktopProof, requireDesktopEvidence } from './script/test-ci-desktop.ts'
-          const proof = desktopProof(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop',
+          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
+          const proof = desktopProof(request, request.directory,
             { platform: process.platform, arch: process.arch })
           if (requireDesktopEvidence(proof, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
               runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
@@ -269,8 +277,8 @@ jobs:
           retention-days: 7
           path: |
             test-ci-evidence
-            packages/app/e2e/test-results
-            packages/app/e2e/playwright-report
+            ${{ steps.request.outputs.directory }}/e2e/test-results
+            ${{ steps.request.outputs.directory }}/e2e/playwright-report
 
   cleanup:
     needs: test
