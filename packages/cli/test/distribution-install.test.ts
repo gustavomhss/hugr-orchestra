@@ -1,22 +1,25 @@
 import { expect, test } from "bun:test"
 import { chmod, lstat, mkdir, readlink, readdir, rm, symlink } from "node:fs/promises"
 import path from "node:path"
-import { command, cpu, fatHeader, fixture, hostileTar, install, isolated, nativeHeader, os, producerFixture, repack, rollback, sha256, target } from "../distribution/test/fixture"
+import { command, cpu, expectClean, expectLauncher, fatHeader, fixture, hostileTar, install, installedTree, isolated, nativeHeader, os, producerFixture, repack, rollback, sha256, snapshotTree, target } from "../distribution/test/fixture"
 import type { Files } from "../distribution/test/fixture"
 import { requireDistributionHost } from "./fixture/distribution-host"
 
 requireDistributionHost()
 
 if (!process.env.RUNNER_OS) throw new Error("Distribution installer fixture tests require an isolated CI runner")
-const posix = test.skipIf(process.platform === "win32")
+const posix = (name: string, run: () => Promise<void>, timeout: number) => test.skipIf(process.platform === "win32")(
+  process.platform === "win32" ? `${name} [platform-unavailable: Windows has no supported POSIX installer]` : name, run, timeout)
 
 posix("producer gzip install, update, exact reuse and rollback preserve complete old trees and modes", () => isolated(async (root, prefix) => {
   const v1 = await producerFixture(root, "1.0.0")
   const v2 = await producerFixture(root, "2.0.0")
+  const expected = await Promise.all([v1, v2].map(installedTree))
   expect(Buffer.from(await Bun.file(v1.archive).bytes()).subarray(0, 2).toString("hex")).toBe("1f8b")
   expect((await install(prefix, v1)).code).toBe(0)
+  expect(await snapshotTree(path.join(prefix, `versions/${v1.version}-${target}`))).toEqual(expected[0]!)
   expect(await readlink(path.join(prefix, "bin/orchestra"))).toBe("../current/bin/orchestra")
-  expect((await command([path.join(prefix, "bin/orchestra"), "--version"])).stdout).toBe("1.0.0\n")
+  await expectLauncher(prefix, "1.0.0")
   for (const payload of [v1, v2]) {
     expect((await install(prefix, payload)).code).toBe(0)
     const manifest = await Bun.file(path.join(payload.dir, "distribution.json")).json()
@@ -25,11 +28,20 @@ posix("producer gzip install, update, exact reuse and rollback preserve complete
     }
     expect((await lstat(path.join(prefix, `versions/${payload.version}-${target}/distribution.json`))).mode & 0o111).toBe(0)
     expect((await lstat(path.join(prefix, `versions/${payload.version}-${target}/checksums.sha256`))).mode & 0o111).toBe(0)
+    expect(await snapshotTree(path.join(prefix, `versions/${v1.version}-${target}`))).toEqual(expected[0]!)
+    expect(await snapshotTree(path.join(prefix, `versions/${payload.version}-${target}`))).toEqual(expected[payload === v1 ? 0 : 1]!)
+    await expectClean(prefix)
+    await expectLauncher(prefix, payload.version)
   }
+  const updated = await snapshotTree(prefix)
   expect((await install(prefix, v2)).code).toBe(0)
-  expect((await command([path.join(prefix, "bin/orchestra"), "--version"])).stdout).toBe("2.0.0\n")
+  expect(await snapshotTree(prefix)).toEqual(updated)
+  await expectLauncher(prefix, "2.0.0")
   expect((await rollback(prefix, v1.version)).code).toBe(0)
-  expect((await command([path.join(prefix, "bin/orchestra"), "--version"])).stdout).toBe("1.0.0\n")
+  for (const [index, payload] of [v1, v2].entries()) {
+    expect(await snapshotTree(path.join(prefix, `versions/${payload.version}-${target}`))).toEqual(expected[index]!)
+  }
+  await expectLauncher(prefix, "1.0.0")
   expect((await readdir(path.join(prefix, "versions"))).sort()).toEqual([`1.0.0-${target}`, `2.0.0-${target}`])
   expect((await readdir(prefix)).sort()).toEqual(["bin", "current", "versions"])
 }), 120_000)
@@ -52,11 +64,16 @@ posix("staging restores every executable boolean even when archive modes disagre
 posix("checksum, missing companions, reserved extras, package metadata and CLI version refuse", () => isolated(async (root, prefix) => {
   const v1 = await fixture(root, "1.0.0")
   expect((await install(prefix, v1)).code).toBe(0)
+  const before = await snapshotTree(prefix)
   const v2 = await fixture(root, "2.0.0")
   expect((await install(prefix, { ...v2, digest: "0".repeat(64) })).code).not.toBe(0)
+  await expectClean(prefix)
+  expect(await snapshotTree(prefix)).toEqual(before)
   await Bun.write(path.join(v2.dir, "bin/hugr_omni.node"), "tampered")
   const tampered = await install(prefix, await repack(v2))
   expect(tampered.code).not.toBe(0); expect(tampered.stderr).toContain("checksum mismatch")
+  await expectClean(prefix)
+  expect(await snapshotTree(prefix)).toEqual(before)
   const cases: ((files: Files) => void)[] = [
     (files) => { delete files["bin/hugr-omni-supervisor"] },
     (files) => { files["package.json"] = String(files["package.json"]).replace(target, "linux-wrong") },
@@ -74,6 +91,8 @@ posix("checksum, missing companions, reserved extras, package metadata and CLI v
   ]
   for (const [index, mutate] of cases.entries()) {
     expect((await install(prefix, await fixture(root, `3.0.${index}`, mutate))).code).not.toBe(0)
+    await expectClean(prefix)
+    expect(await snapshotTree(prefix)).toEqual(before)
   }
   expect(await readlink(path.join(prefix, "current"))).toBe(`versions/1.0.0-${target}`)
   expect(await readdir(path.join(prefix, "versions"))).toEqual([`1.0.0-${target}`])
@@ -82,6 +101,7 @@ posix("checksum, missing companions, reserved extras, package metadata and CLI v
 posix("descriptor types/schema and checksum separator reject without activation", () => isolated(async (root, prefix) => {
   const v1 = await fixture(root, "1.0.0")
   expect((await install(prefix, v1)).code).toBe(0)
+  const before = await snapshotTree(prefix)
   for (const [index, change] of [
     (value: { schema: string }) => { value.schema = "wrong" },
     (value: { version: string }) => { Object.assign(value, { version: 2 }) },
@@ -97,10 +117,14 @@ posix("descriptor types/schema and checksum separator reject without activation"
   ].entries()) {
     const result = await install(prefix, await fixture(root, `2.0.${index}`, undefined, change))
     expect(result.code).not.toBe(0)
+    await expectClean(prefix)
+    expect(await snapshotTree(prefix)).toEqual(before)
   }
   for (const separator of [" ", "\t", "   "]) {
     const payload = await fixture(root, "3.0.0", undefined, undefined, (text) => text.replace("  ", separator))
     expect((await install(prefix, payload)).code).not.toBe(0)
+    await expectClean(prefix)
+    expect(await snapshotTree(prefix)).toEqual(before)
   }
   const noNewline = await fixture(root, "4.0.0", undefined, undefined, (text) => text.trimEnd())
   await Bun.write(path.join(noNewline.dir, "package.json"), JSON.stringify({
@@ -108,6 +132,8 @@ posix("descriptor types/schema and checksum separator reject without activation"
   }))
   const lastChecksum = await install(prefix, await repack(noNewline))
   expect(lastChecksum.code).not.toBe(0); expect(lastChecksum.stderr).toContain("checksum mismatch: package.json")
+  await expectClean(prefix)
+  expect(await snapshotTree(prefix)).toEqual(before)
   expect(await readlink(path.join(prefix, "current"))).toBe(`versions/1.0.0-${target}`)
 }), 120_000)
 
@@ -137,6 +163,7 @@ posix("native headers validate every addon CPU/class/endianness before CLI execu
   expect((await install(prefix, control)).code).toBe(0)
   expect(await Bun.file(marker).exists()).toBe(true)
   await rm(marker)
+  const before = await snapshotTree(prefix)
   const manifest = await Bun.file(path.join(v1.dir, "distribution.json")).json() as { files: { path: string }[] }
   const bindings = manifest.files.filter((file) => file.path.endsWith(".node")).map((file) => file.path)
   expect(bindings).toContain("bin/hugr_omni.node")
@@ -160,6 +187,8 @@ posix("native headers validate every addon CPU/class/endianness before CLI execu
       })
       const result = await install(prefix, payload)
       expect(result.code).not.toBe(0); expect(result.stderr).toContain(`native binding target mismatch: ${file}`)
+      await expectClean(prefix)
+      expect(await snapshotTree(prefix)).toEqual(before)
       expect(await Bun.file(marker).exists()).toBe(false)
       expect(await readlink(path.join(prefix, "current"))).toBe(`versions/1.1.0-${target}`)
     }
@@ -185,6 +214,7 @@ posix("raw malicious tar never extracts; forwarding shim records valid extractio
   expect((await install(prefix, v1, [], env)).code).toBe(0)
   expect(await Bun.file(marker).text()).toBe("extracted\n")
   await rm(marker)
+  const before = await snapshotTree(prefix)
   const attacks = [
     [{ name: "/absolute" }], [{ name: "bin/../../escaped" }], [{ name: "bin/./orchestra" }],
     [{ name: "bin/back\\slash" }], [{ name: "bin/trailing " }], [{ name: "unexpected" }],
@@ -198,6 +228,8 @@ posix("raw malicious tar never extracts; forwarding shim records valid extractio
     const bytes = hostileTar(entries)
     await Bun.write(archive, bytes)
     expect((await install(prefix, { archive, dir: root, version: "2.0.0", digest: sha256(bytes) }, [], env)).code).not.toBe(0)
+    await expectClean(prefix)
+    expect(await snapshotTree(prefix)).toEqual(before)
     expect(await Bun.file(marker).exists()).toBe(false)
     expect(await readlink(path.join(prefix, "current"))).toBe(`versions/1.0.0-${target}`)
   }
@@ -215,8 +247,12 @@ posix("mode tampering refuses exact reuse/rollback and never repairs published t
     ["package.json", 0o755, 0o644], ["package.json", 0o645, 0o644], ["distribution.json", 0o755, 0o644], ["checksums.sha256", 0o755, 0o644]] as const) {
     const published = path.join(prefix, `versions/1.0.0-${target}`, file)
     await chmod(published, changed)
-    for (const result of [await install(prefix, v1), await rollback(prefix, v1.version)]) {
+    const before = await snapshotTree(prefix)
+    for (const operation of [() => install(prefix, v1), () => rollback(prefix, v1.version)]) {
+      const result = await operation()
       expect(result.code).not.toBe(0); expect(result.stderr).toContain(`executable mode mismatch: ${file}`)
+      await expectClean(prefix)
+      expect(await snapshotTree(prefix)).toEqual(before)
       expect((await lstat(published)).mode & 0o777).toBe(changed)
       expect(await readlink(path.join(prefix, "current"))).toBe(`versions/2.0.0-${target}`)
     }
@@ -239,16 +275,20 @@ posix("lock, symlink root, immutable conflict and tampered rollback refuse", () 
   await rm(path.join(prefix, ".install-lock"), { recursive: true })
   await symlink(prefix, path.join(root, "alias"))
   expect((await install(path.join(root, "alias"), v1)).code).not.toBe(0)
+  await expectClean(prefix)
   expect((await install(prefix, v1)).code).toBe(0)
   expect((await install(prefix, v2)).code).toBe(0)
   const conflict = await fixture(root, v1.version, (files) => { files["bin/extra data"] = "different valid fixture" })
   const result = await install(prefix, conflict)
   expect(result.code).not.toBe(0); expect(result.stderr).toContain("immutable version conflict")
+  await expectClean(prefix)
   const old = path.join(prefix, `versions/1.0.0-${target}/bin/hugr_omni.node`)
   expect(Buffer.from(await Bun.file(old).bytes())).toEqual(nativeHeader())
   await Bun.write(old, "tampered old companion")
   expect((await rollback(prefix, v1.version)).code).not.toBe(0)
+  await expectClean(prefix)
   expect((await install(prefix, conflict)).code).not.toBe(0)
+  await expectClean(prefix)
   expect(await readlink(path.join(prefix, "current"))).toBe(`versions/2.0.0-${target}`)
   expect(await Bun.file(old).text()).toBe("tampered old companion")
 }), 120_000)
