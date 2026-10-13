@@ -18,7 +18,12 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
-import { mergeSessionManagementInfo, normalizeSessionInfo, type AppSession } from "@/utils/session"
+import {
+  decodeSessionManagementEvent,
+  mergeSessionManagementInfo,
+  normalizeSessionInfo,
+  type AppSession,
+} from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
@@ -300,7 +305,7 @@ export function createServerSession(
           return result.data
         })
     const resolved = request.then((result) => {
-      if (generations.get(sessionID) !== active) return result
+      if (generations.get(sessionID) !== active) throw new DOMException("Session recovery superseded", "AbortError")
       return remember(result)
     })
     requests.set(sessionID, resolved)
@@ -822,10 +827,14 @@ export function createServerSession(
   const sync = (sessionID: string, options?: { force?: boolean; messageLimit?: number }) => {
     touch(sessionID)
     return runInflight(inflight, sessionID, async () => {
+      const active = generation(sessionID)
       const cached = data.message[sessionID] !== undefined && meta.limit[sessionID] !== undefined
       if (cached && data.info[sessionID] && !options?.force) return
       await Promise.all([
-        resolve(sessionID, options),
+        resolve(sessionID, options).catch((error: unknown) => {
+          if (generations.get(sessionID) !== active && error instanceof DOMException && error.name === "AbortError") return
+          throw error
+        }),
         cached && !options?.force
           ? Promise.resolve()
           : loadMessages(sessionID, options?.messageLimit ?? meta.limit[sessionID] ?? initialMessagePageSize),
@@ -955,14 +964,28 @@ export function createServerSession(
         !data.info[eventID] &&
         event.type !== "session.created" &&
         event.type !== "session.updated" &&
-        event.type !== "session.deleted"
+        event.type !== "session.deleted" &&
+        event.type !== "session.next.subagent.models.changed" &&
+        event.type !== "session.next.archive.changed"
       )
         void resolve(eventID).catch(() => {})
     }
     switch (event.type) {
       case "session.next.subagent.models.changed":
-      case "session.next.archive.changed":
-        return projectSessionManagementEvent(event, eventID, data.info, remember, resolve)
+      case "session.next.archive.changed": {
+        const decoded = decodeSessionManagementEvent(event)
+        if (!decoded) return
+        const sessionID = decoded.properties.sessionID
+        const active = generation(sessionID)
+        return projectSessionManagementEvent(
+          decoded,
+          sessionID,
+          data.info,
+          remember,
+          resolve,
+          () => generations.get(sessionID) === active,
+        )
+      }
       case "session.created":
         remember((event.properties as { info: Session }).info)
         return

@@ -69,11 +69,19 @@ export function createModelPolicyEditor(input: {
       freshness.predecessors = []
       return current.policy
     }
+    if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
+      return current.policy
+    if (
+      current.revision !== undefined &&
+      freshness.revision !== undefined &&
+      current.revision > freshness.revision &&
+      (current.timestamp ?? 0) >= (freshness.timestamp ?? 0)
+    )
+      return current.policy
+    // A timestamp-only event cannot prove that a known predecessor is newer than a policy-only ACK.
     if (!freshness.caughtUp && freshness.predecessors.some((item) => sameModelPolicy(item, current.policy)))
       return acknowledged
     if (current.timestamp !== undefined && freshness.timestamp !== undefined && current.timestamp > freshness.timestamp)
-      return current.policy
-    if (current.readVersion !== undefined && current.readVersion > (freshness.readVersion ?? 0))
       return current.policy
     if (current.revision !== undefined && freshness.revision !== undefined && current.revision <= freshness.revision &&
       (current.timestamp ?? 0) <= (freshness.timestamp ?? 0))
@@ -89,6 +97,7 @@ export function createModelPolicyEditor(input: {
     freshness.predecessors.push(policy())
     freshness.timestamp = current.timestamp
     freshness.revision = current.revision
+    freshness.readVersion = current.readVersion ?? freshness.readVersion
     freshness.caughtUp = false
     setState({ saving: true, failed: false, retry: next })
     await input
