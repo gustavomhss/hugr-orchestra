@@ -121,10 +121,12 @@ export function applyDirectoryEvent(input: {
   retainedLimit?: number
   sessionContent?: boolean
   permission?: State["permission"]
+  fenceOwner?: object
 }) {
   const event = input.event
   if (input.sessionContent === false && SESSION_CONTENT_EVENTS.has(event.type)) return
   const limit = Math.max(input.store.limit, input.retainedLimit ?? 0)
+  const fences = sessionManagementFences(input.fenceOwner ?? input.store, input.directory)
   switch (event.type) {
     case "server.instance.disposed": {
       input.push(input.directory)
@@ -133,18 +135,21 @@ export function applyDirectoryEvent(input: {
     case "session.created": {
       const incoming = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
-      const info = sessionManagementFences(input.store, input.directory).merge(
+      const info = fences.merge(
         incoming,
         result.found ? input.store.session[result.index] : undefined,
       )
-      if (info.time.archived !== undefined) break
+      if (info.time.archived !== undefined) {
+        if (result.found) applyDirectoryEvent({ ...input, event: { type: "session.updated", properties: { info } } })
+        break
+      }
       if (result.found) {
         input.setStore("session", result.index, reconcile(info))
         break
       }
       const next = input.store.session.slice()
       next.splice(result.index, 0, info)
-      const trimmed = trimSessions(next, { limit, permission: input.permission ?? input.store.permission })
+      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
       input.setStore("session", reconcile(trimmed, { key: "id" }))
       cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
       if (!info.parentID) input.setStore("sessionTotal", (value) => value + 1)
@@ -153,13 +158,12 @@ export function applyDirectoryEvent(input: {
     case "session.updated": {
       const incoming = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
-      const info = sessionManagementFences(input.store, input.directory).merge(
+      const info = fences.merge(
         incoming,
         result.found ? input.store.session[result.index] : undefined,
       )
-      if (info.time.archived) {
+      if (info.time.archived !== undefined) {
         if (!result.found) break
-        if (input.store.session[result.index]!.time.archived === info.time.archived) break
         input.setStore(
           "session",
           produce((draft) => {
@@ -177,7 +181,7 @@ export function applyDirectoryEvent(input: {
       }
       const next = input.store.session.slice()
       next.splice(result.index, 0, info)
-      const trimmed = trimSessions(next, { limit, permission: input.permission ?? input.store.permission })
+      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
       input.setStore("session", reconcile(trimmed, { key: "id" }))
       cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
       break
@@ -186,7 +190,7 @@ export function applyDirectoryEvent(input: {
       const properties = event.properties as { sessionID?: string; info?: Session }
       const sessionID = properties.info?.id ?? properties.sessionID
       if (!sessionID) break
-      sessionManagementFences(input.store, input.directory).delete(sessionID)
+      fences.delete(sessionID)
       const result = Binary.search(input.store.session, sessionID, (s) => s.id)
       const info = properties.info ?? (result.found ? input.store.session[result.index] : undefined)
       if (result.found) {
@@ -229,30 +233,23 @@ export function applyDirectoryEvent(input: {
       const decoded = decodeSessionManagementEvent(event)
       if (!decoded) break
       const properties = decoded.properties
-      const fences = sessionManagementFences(input.store, input.directory)
       const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-      const current = result.found ? input.store.session[result.index] : fences.get(properties.sessionID)
-      if (!current) {
-        // Restores can reintroduce an absent row. Reload that directory's authoritative list.
-        if (event.type === "session.next.archive.changed") input.push(input.directory)
+      if (!result.found) {
+        // Metadata must outlive an absent row while an authoritative list is pending.
+        if (fences.apply(decoded) && event.type === "session.next.archive.changed") input.push(input.directory)
         break
       }
+      const current = fences.merge(input.store.session[result.index]!)
       const changed = applySessionManagementEvent(current, decoded)
-      if (!changed) break
-      const info = fences.merge(changed, current)
+      // Server and directory stores can share a row that this event already updated.
+      const info = changed ? fences.merge(changed, current) : current
       if (info.time.archived !== undefined) {
-        if (!result.found) break
         input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
         cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
         if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
         break
       }
-      if (!result.found) {
-        // A sequenced restore carries the fence into its reintroduced row before the list reload.
-        applyDirectoryEvent({ ...input, event: { type: "session.updated", properties: { info } } })
-        input.push(input.directory)
-        break
-      }
+      if (!changed) break
       input.setStore("session", result.index, reconcile(info))
       break
     }

@@ -40,6 +40,8 @@ import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
+import { sessionManagementFences } from "./session-management-state"
+import { decodeSessionManagementEvent } from "@/utils/session"
 
 export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
 export type { QueryOptionsApi } from "./server-queries"
@@ -295,16 +297,15 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
     children.pin(key)
     const [store, setStore] = children.child(directory, { bootstrap: false })
+    const fences = sessionManagementFences(session, key)
     const meta = sessionMeta.get(key)
     const retainedLimit = Math.max(store.limit, options?.limit ?? 0, meta?.limit ?? 0)
     if (meta && meta.limit >= retainedLimit) {
-      const next = trimSessions(store.session, {
+      const next = trimSessions(fences.visible(store.session, session.get), {
         limit: retainedLimit,
         permission: session.data.permission,
       })
-      if (next.length !== store.session.length) {
-        setStore("session", reconcile(next, { key: "id" }))
-      }
+      setStore("session", reconcile(next, { key: "id" }))
       children.unpin(key)
       return
     }
@@ -321,12 +322,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                 : loadRootSessions({ api: serverSDK.api.session, directory, limit }),
             )
             .then((x) => {
-              const nonArchived = (x.data ?? [])
-                .filter((s) => !!s?.id)
-                .filter((s) => !s.time?.archived)
+              const nonArchived = fences.visible((x.data ?? []).filter((s) => !!s?.id), session.get)
                 .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
               const limit = Math.max(store.limit, options?.limit ?? 0, sessionMeta.get(key)?.limit ?? 0)
-              const childSessions = store.session.filter((s) => !!s.parentID)
+              const childSessions = fences.visible(store.session.filter((s) => !!s.parentID), session.get)
               const next = trimSessions([...nonArchived, ...childSessions], {
                 limit,
                 permission: session.data.permission,
@@ -418,6 +417,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       event: { type: "session.created", properties: { info } },
       directory: key,
       store: existing[0],
+      fenceOwner: session,
       setStore: existing[1],
       push: queue.push,
       retainedLimit: sessionMeta.get(key)?.limit,
@@ -501,7 +501,16 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         .catch(() => {})
 
     const existing = children.children[key]
-    if (!existing) return
+    if (!existing) {
+      const decoded = decodeSessionManagementEvent(event)
+      if (decoded) sessionManagementFences(session, key).apply(decoded)
+      if (event.type === "session.deleted") {
+        const properties = event.properties as { sessionID?: string; info?: { id: string } }
+        const sessionID = properties.sessionID ?? properties.info?.id
+        if (sessionID) sessionManagementFences(session, key).delete(sessionID)
+      }
+      return
+    }
     children.mark(key)
     if (
       event.current?.type === "session.moved" ||
@@ -519,6 +528,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       event,
       directory,
       store,
+      fenceOwner: session,
       setStore,
       push: (directory) => {
         if (children.active(directory)) queue.push(directory)

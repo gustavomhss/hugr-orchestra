@@ -3,29 +3,51 @@ import {
   decodeSessionManagementEvent,
   mergeSessionManagementInfo,
   type AppSession,
+  type SessionManagementInfo,
 } from "@/utils/session"
+import { pathKey } from "@/utils/path-key"
 
 export const SESSION_MANAGEMENT_FENCE_LIMIT = 2_048
-// A directory store belongs to one server. Weak ownership releases its fences on disposal.
-const managementFences = new WeakMap<object, Map<string, Map<string, AppSession>>>()
+// Server ownership keeps metadata across directory-store eviction without retaining the server itself.
+const managementFences = new WeakMap<object, Map<string, SessionManagementInfo>>()
 
 export function sessionManagementFences(owner: object, directory: string) {
-  const scopes = managementFences.get(owner) ?? new Map<string, Map<string, AppSession>>()
-  managementFences.set(owner, scopes)
-  const fences = scopes.get(directory) ?? new Map<string, AppSession>()
-  scopes.set(directory, fences)
+  const fences = managementFences.get(owner) ?? new Map<string, SessionManagementInfo>()
+  managementFences.set(owner, fences)
+  const key = (sessionID: string) => JSON.stringify([pathKey(directory), sessionID])
+  const retain = (info: SessionManagementInfo) => {
+    fences.delete(key(info.id))
+    fences.set(key(info.id), {
+      id: info.id,
+      subagentModels: info.subagentModels,
+      subagentModelsChangedAt: info.subagentModelsChangedAt,
+      subagentModelsRevision: info.subagentModelsRevision,
+      archiveChangedAt: info.archiveChangedAt,
+      archiveRevision: info.archiveRevision,
+      time: { updated: info.time.updated, archived: info.time.archived },
+    })
+    // Fresh restore/delete releases a row fence; cap pressure deliberately evicts the oldest metadata.
+    const oldest = fences.size > SESSION_MANAGEMENT_FENCE_LIMIT ? fences.keys().next().value : undefined
+    if (oldest !== undefined) fences.delete(oldest)
+  }
   return {
-    get: (sessionID: string) => fences.get(sessionID),
-    delete: (sessionID: string) => fences.delete(sessionID),
+    get: (sessionID: string) => fences.get(key(sessionID)),
+    delete: (sessionID: string) => fences.delete(key(sessionID)),
     merge(next: AppSession, current?: AppSession) {
-      const previous = current ? mergeSessionManagementInfo(fences.get(next.id), current) : fences.get(next.id)
+      const previous = current ? mergeSessionManagementInfo(fences.get(key(next.id)), current) : fences.get(key(next.id))
       const info = mergeSessionManagementInfo(previous, next)
-      fences.delete(info.id)
-      if (info.time.archived !== undefined) fences.set(info.id, info)
-      // Keep removed rows until a fresh restore/delete, with deliberate oldest-entry eviction at the cap.
-      const oldest = fences.size > SESSION_MANAGEMENT_FENCE_LIMIT ? fences.keys().next().value : undefined
-      if (oldest !== undefined) fences.delete(oldest)
+      fences.delete(key(info.id))
+      if (info.time.archived !== undefined) retain(info)
       return info
+    },
+    apply(event: NonNullable<ReturnType<typeof decodeSessionManagementEvent>>) {
+      const sessionID = event.properties.sessionID
+      const info = applySessionManagementEvent(fences.get(key(sessionID)) ?? { id: sessionID, time: { updated: 0 } }, event)
+      if (info) retain(info)
+      return info
+    },
+    visible(sessions: readonly AppSession[], read?: (sessionID: string) => AppSession | undefined): AppSession[] {
+      return sessions.map((info) => this.merge(info, read?.(info.id))).filter((info) => info.time.archived === undefined)
     },
   }
 }
