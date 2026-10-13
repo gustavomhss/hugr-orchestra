@@ -108,7 +108,7 @@ test("HTTP default is null when provider is explicitly disabled", async () => {
   }
 }, 30_000)
 
-test("HTTP provider policy keeps anonymous OpenCode out and returns a null default", async () => {
+test("HTTP provider policy keeps anonymous Zen out and returns a null default", async () => {
   await using tmp = await tmpdir({
     git: true,
     config: {
