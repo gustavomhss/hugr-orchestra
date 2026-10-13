@@ -166,21 +166,41 @@ export async function stageCliArtifacts(input: {
       await Promise.all(artifacts.map((entry) => verifyCliArtifact(staging, entry.target)))
       // Validate all new bytes before replacing the previous resource tree.
       const previous = `${staging}-previous`
-      const moved = await rename(input.directory, previous).then(
+      const moved = await renameDirectory(input.directory, previous).then(
         () => true,
         (error: NodeJS.ErrnoException) => {
           if (error.code === "ENOENT") return false
           throw error
         },
       )
-      await rename(staging, input.directory).catch(async (error) => {
-        if (moved) await rename(previous, input.directory)
+      await renameDirectory(staging, input.directory).catch(async (error) => {
+        if (moved) await renameDirectory(previous, input.directory)
         throw error
       })
       if (moved) await rm(previous, { recursive: true, force: true })
       return readCliManifest(input.directory)
     })
     .finally(() => rm(staging, { recursive: true, force: true }))
+}
+
+// The sign hook runs the staged CLI, and on GitHub's Windows runners the hosted agent's provjobd.exe opens a freshly
+// run image for a moment; while it does, Windows refuses to rename the directory holding it (EPERM). Measured there,
+// such a hold blocked the rename for 50 ms to 2.2 s. Retry exactly that, for up to 10 s. Any other error, any other
+// platform, or a longer hold still fails.
+const RENAME_HOLD_MS = 10_000
+
+async function renameDirectory(from: string, to: string) {
+  const deadline = performance.now() + RENAME_HOLD_MS
+  for (;;) {
+    const error = await rename(from, to).then(
+      () => undefined,
+      (error: NodeJS.ErrnoException) => error,
+    )
+    if (!error) return
+    if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(error.code ?? "")) throw error
+    if (performance.now() >= deadline) throw error
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
 }
 
 // Resolve existing ancestors too: a new destination may be nested under a
