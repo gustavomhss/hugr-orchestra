@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process"
-import { access, readFile, readdir } from "node:fs/promises"
-import { dirname, extname, join } from "node:path"
+import { constants } from "node:fs"
+import { access, readFile, readdir, stat } from "node:fs/promises"
+import { delimiter, dirname, extname, isAbsolute, join } from "node:path"
 import util from "node:util"
 import { DesktopOmni } from "./omni-process"
 
@@ -14,15 +15,66 @@ const exists = (path: string) =>
     .then(() => true)
     .catch(() => false)
 
-export function checkAppExists(appName: string) {
-  if (process.platform === "win32") return true
-  if (process.platform === "linux") return true
+export async function checkAppExists(appName: string) {
+  if (process.platform !== "darwin") return (await resolveAppPath(appName)) !== null
   return checkMacosApp(appName)
 }
 
 export function resolveAppPath(appName: string) {
-  if (process.platform !== "win32") return appName
+  if (process.platform === "linux") return resolveExecutable(appName)
+  if (process.platform === "darwin") return Promise.resolve(appName)
   return resolveWindowsAppPath(appName)
+}
+
+export async function resolveExecutable(name: string, searchPath = process.env.PATH ?? "") {
+  if (!name || /[\x00-\x1f]/.test(name)) return null
+  const candidates =
+    isAbsolute(name) || name.includes("/")
+      ? [name]
+      : searchPath
+          .split(delimiter)
+          .filter(Boolean)
+          .map((directory) => join(directory, name))
+  for (const candidate of candidates) {
+    const executable = await stat(candidate)
+      .then((file) => file.isFile())
+      .catch(() => false)
+    if (!executable) continue
+    if (
+      await access(candidate, constants.X_OK)
+        .then(() => true)
+        .catch(() => false)
+    )
+      return candidate
+  }
+  return null
+}
+
+export type OpenPathResult =
+  | { status: "opened" }
+  | { status: "failed"; code: "app-unavailable" | "open-failed"; detail?: string }
+
+export async function openDesktopPath(
+  path: string,
+  app: string | undefined,
+  openDefault: (path: string) => Promise<string>,
+): Promise<OpenPathResult> {
+  if (!app) {
+    return openDefault(path).then(
+      (detail) => (detail ? { status: "failed", code: "open-failed", detail } : { status: "opened" }),
+      (error: unknown) => ({ status: "failed", code: "open-failed", detail: String(error) }),
+    )
+  }
+  if (!(await checkAppExists(app))) return { status: "failed", code: "app-unavailable" }
+  const executable = await resolveAppPath(app)
+  if (!executable) return { status: "failed", code: "app-unavailable" }
+  return execFilePromise(
+    process.platform === "darwin" ? "open" : executable,
+    process.platform === "darwin" ? ["-a", app, path] : [path],
+  ).then(
+    () => ({ status: "opened" }),
+    (error: unknown) => ({ status: "failed", code: "open-failed", detail: String(error) }),
+  )
 }
 
 async function checkMacosApp(appName: string) {
@@ -56,7 +108,7 @@ async function resolveWindowsAppPath(appName: string): Promise<string | null> {
   const hasExt = (path: string, ext: string) => extname(path).toLowerCase() === `.${ext}`
 
   const exe = paths.find((path) => hasExt(path, "exe"))
-  if (exe) return exe
+  if (exe && (await exists(exe))) return exe
 
   const resolveCmd = async (path: string) => {
     const content = await readFile(path, "utf8")
@@ -136,5 +188,5 @@ async function resolveWindowsAppPath(appName: string): Promise<string | null> {
     }
   }
 
-  return paths[0] ?? null
+  return null
 }

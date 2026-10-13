@@ -55,7 +55,6 @@
     "packages/desktop/src/main/app-dock-runtime.ts": ["child_process"],
     "packages/desktop/src/main/apps.ts": ["child_process"],
     "packages/desktop/src/main/background-cli.ts": ["child_process"],
-    "packages/desktop/src/main/ipc.ts": ["child_process"],
     "packages/desktop/src/main/linux-workspace-access.ts": ["child_process"],
     "packages/desktop/src/main/linux-workspace-omni.ts": ["@lydell/node-pty", "child_process"],
     "packages/desktop/src/main/shell-env.ts": ["child_process"],
