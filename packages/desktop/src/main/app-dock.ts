@@ -17,6 +17,7 @@ import { createAppDockInput } from "./app-dock-input"
 import { createAppDockNavigation } from "./app-dock-navigation"
 import { createAppDockPage } from "./app-dock-page"
 import { createAppDockSessions } from "./app-dock-session"
+import { appDockShortcut } from "./app-dock-shortcuts"
 
 export type AppDockIdentity = Readonly<{ tabID: string; generation: number }>
 export type AppDockTab = AppDockIdentity & { url: string }
@@ -45,6 +46,7 @@ export type AppDockDownload = AppDockIdentity & {
   state: "progressing" | "paused" | "completed" | "cancelled" | "interrupted"
 }
 export type AppDockEvent =
+  | Readonly<{ type: "shortcut"; payload: { identity: AppDockIdentity; command: "address" | "new-tab" | "close-tab" } }>
   | Readonly<{ type: "state"; payload: AppDockState }>
   | Readonly<{ type: "tab-opened" | "tab-opened-background"; payload: AppDockTab }>
   | Readonly<{ type: "tab-selected"; payload: AppDockIdentity }>
@@ -309,6 +311,14 @@ export function createAppDock(options: {
     listen("crashed", (_event, killed) => reportCrash(killed ? "killed" : "crashed"))
     listen("before-input-event", (event, input) => {
       if (input.type !== "keyDown") return
+      const command = appDockShortcut(input)
+      if (command && state.url.startsWith("https:") && active.get(senderID) === id &&
+        isCurrent(senderID, id, tabGeneration) && !occluded.has(senderID) && win.isFocused()) {
+        event.preventDefault()
+        win.webContents.focus()
+        notify({ type: "shortcut", payload: { identity: identity(id, tabGeneration), command } })
+        return
+      }
       if (input.key === "F12" || ((input.control || input.meta) && input.shift && input.key.toLowerCase() === "i"))
         event.preventDefault()
     })

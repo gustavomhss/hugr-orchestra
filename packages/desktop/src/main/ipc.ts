@@ -26,6 +26,7 @@ import { createDesktopDraftStore } from "./draft-store"
 import { registerJanitorIpcHandlers } from "./janitor-ipc"
 import { nativeT } from "./native-translations"
 import { registerAppDockIpcHandlers } from "./ipc-app-dock"
+import { setWindowZoom } from "./window-zoom"
 import { openDesktopPath } from "./apps"
 
 const pickerFilters = (ext?: string[]) => {
@@ -282,10 +283,9 @@ export function registerIpcHandlers(deps: Deps) {
 
   ipcMain.handle("get-zoom-factor", (event: IpcMainInvokeEvent) => event.sender.getZoomFactor())
   ipcMain.handle("set-zoom-factor", (event: IpcMainInvokeEvent, factor: number) => {
-    event.sender.setZoomFactor(factor)
     const win = BrowserWindow.fromWebContents(event.sender)
-    if (!win) return
-    updateTitlebar(win)
+    if (!win || win.webContents !== event.sender) return
+    setWindowZoom(win, factor, () => updateTitlebar(win))
   })
   ipcMain.handle("get-pinch-zoom-enabled", () => getPinchZoomEnabled())
   ipcMain.handle("set-pinch-zoom-enabled", (_event: IpcMainInvokeEvent, enabled: boolean) => {

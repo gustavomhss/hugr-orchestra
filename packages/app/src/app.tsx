@@ -293,7 +293,7 @@ declare global {
         tab: { tabID: string; generation: number },
         bounds: { x: number; y: number; width: number; height: number },
       ) => Promise<void>
-      appDockNavigate?: (id: string, url: string) => Promise<void>
+      appDockNavigate?: (id: string, url: string) => Promise<{ ok: boolean; url?: string }>
       appDockCommand?: (id: string, command: "back" | "forward" | "reload") => Promise<void>
       appDockEvent?: (
         callback: (

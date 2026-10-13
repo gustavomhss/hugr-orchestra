@@ -132,6 +132,15 @@ export function AppsPanel(
     ),
   )
   onMount(() => {
+    const unsubscribeShortcut = dock.onShortcut((command) => {
+      if (!dock.owns(host) || activeLinux()) return
+      if (command === "address") {
+        addressInput?.focus()
+        addressInput?.select()
+      }
+      if (command === "new-tab") void dock.openNewTab()
+      if (command === "close-tab") void dock.close()
+    })
     // Linux windows open and close inside the workspace without a Dock event; keep the picker current.
     const windows = setInterval(() => {
       if (activeLinux() && !linuxMenu.store.busy) void dock.refreshWindows()
@@ -191,6 +200,7 @@ export function AppsPanel(
       window.removeEventListener("pointerdown", onPointerDown)
       window.removeEventListener("focusin", onFocusIn)
       unsubscribeFind?.()
+      unsubscribeShortcut()
     })
   })
   const activeTab = () => state.tabs.find((tab) => sameTab(tab, state.active))
