@@ -246,10 +246,10 @@ export const subagentModels = {
     "dialog.subagentModels.noneAllowed": "Այս աշխատաշրջանում ենթագործակալներին միացված մոդելներից ոչ մեկը թույլատրված չէ։",
   },
   is: {
-    "dialog.subagentModels.unsupported": "Ekki er hægt að breyta heimildum líkana fyrir undiraðila á þessum þjóni.",
+    "dialog.subagentModels.unsupported": "Ekki er hægt að breyta heimildum líkana fyrir undirumboðsmenn á þessum þjóni.",
     "dialog.subagentModels.saveFailed": "Ekki tókst að vista heimildir líkana. Fyrra val þitt er óbreytt. Reyndu aftur.",
-    "dialog.subagentModels.inherited": "Engin takmörkun á líkönum er skilgreind fyrir lotuna. Undiraðilar erfa líkanið sem er stillt fyrir þá eða líkan yfirlotunnar.",
-    "dialog.subagentModels.noneAllowed": "Engin tengd líkön eru leyfð fyrir undiraðila í þessari lotu.",
+    "dialog.subagentModels.inherited": "Engin takmörkun á líkönum er skilgreind fyrir lotuna. Undirumboðsmenn erfa líkanið sem er stillt fyrir þá eða líkan yfirlotunnar.",
+    "dialog.subagentModels.noneAllowed": "Engin tengd líkön eru leyfð fyrir undirumboðsmenn í þessari lotu.",
   },
   ka: {
     "dialog.subagentModels.unsupported": "ამ სერვერზე ქვეაგენტების მოდელების ნებართვების შეცვლა შეუძლებელია.",
