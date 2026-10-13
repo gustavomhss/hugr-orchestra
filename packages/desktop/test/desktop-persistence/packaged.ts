@@ -75,7 +75,7 @@ export async function run(control?: "delete-blob") {
     })
   }
   try {
-    shell.lease = await isolateWindowsShell({ appdata: owned.appdata, local: owned.local })
+    shell.lease = await isolateWindowsShell({ appdata: owned.appdata })
     shell.ready = true
     Object.keys(process.env).forEach((key) => delete process.env[key])
     Object.assign(process.env, env)
