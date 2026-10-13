@@ -1,8 +1,10 @@
 // Pure request/report rules shared by the uploader, snapshot runner and cache-scoped controls.
 // Each key is also a ci-run-<os>-* branch prefix that test-ci.yml maps to the same runners.
-const systems = {
+// Extension: linux-arm64 adds native distribution qualification on exactly ubuntu-24.04-arm; existing selectors keep their runners.
+export const systems = {
   linux: ["ubuntu-latest"], windows: ["windows-latest"], both: ["ubuntu-latest", "windows-latest"],
   macos: ["macos-14"], "macos-intel": ["macos-15-intel"], all: ["ubuntu-latest", "windows-latest", "macos-14"],
+  "linux-arm64": ["ubuntu-24.04-arm"],
 }
 // Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
 const envKeys = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]

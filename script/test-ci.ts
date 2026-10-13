@@ -13,7 +13,7 @@
 // --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
 // (*.node-smoke.mjs) with node instead of bun test.
 //
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms]
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|linux-arm64|windows|macos|macos-intel|both|all] [--timeout ms]
 //        [--env KEY=VALUE] [--runner bun|node]
 //        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
 // Performance config also requires --benchmark-renderer current|legacy.
@@ -30,7 +30,7 @@ import { closestBase, parseResponse, rateLimitDelay, testPaths, workflowRun } fr
 import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
-  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|linux-arm64|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]\nExtension: --os linux-arm64 selects only ubuntu-24.04-arm (native Linux ARM64 distribution qualification)."
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
