@@ -1,6 +1,7 @@
 import path from "path"
 import { createHash } from "crypto"
-import { readdirSync } from "fs"
+import { realpathSync } from "fs"
+import { lstat } from "fs/promises"
 import { Cause, Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Schedule, Schema, Scope, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
@@ -12,67 +13,36 @@ import { FSUtil } from "../fs-util"
 import { Global } from "../global"
 import { which } from "../util/which"
 import { EffectFlock } from "../util/effect-flock"
+import { RipgrepRelease } from "./release"
+
+// true in the compiled CLI (packages/cli/script/build.ts): its packaged rg sits in ripgrep/ beside the binary.
+declare const ORCHESTRA_RIPGREP_BESIDE_BINARY: boolean | undefined
 
 /**
- * Finds the ripgrep executable: `rg` on PATH first (Nix builds and CI put it there), then a copy this host
- * downloaded before, and only then a download of the pinned release. A download is checked against its pinned
- * digest before extraction and must run (`rg --version`) before it is installed. It runs in the background once per
- * process (and once per host, under a file lock); it makes at most `attempts` requests in total, each with a deadline.
- * A caller waits at most `wait` for it; past that it fails with a clear message while the download carries on for the
- * next caller. A failed download is repeated to callers for `cooldown`, then tried again.
+ * Finds the ripgrep executable. A packaged build names the directory holding the rg it ships (DIRECTORY, which the
+ * desktop sets for its server and the compiled CLI defaults to ripgrep/ beside its binary): it runs that rg, else `rg`
+ * on PATH, and never downloads. Anything else (a source run) takes `rg` on PATH first (Nix builds and CI put it there),
+ * then a copy this host downloaded before, and only then a download of the pinned release (release.ts). A download is
+ * checked against its pinned digest before extraction and must run (`rg --version`) before it is installed. It runs in
+ * the background once per process (and once per host, under a file lock); it makes at most `attempts` requests in total,
+ * each with a deadline. A caller waits at most `wait` for it; past that it fails with a clear message while the download
+ * carries on for the next caller. A failed download is repeated to callers for `cooldown`, then tried again.
+ *
+ * The shipped and the downloaded rg must be regular files, never symlinks. Neither is hashed again before it runs: their
+ * bytes were checked when they were packaged or installed, and whoever can rewrite them later runs as this user already
+ * and could as well replace Orchestra itself.
  */
 export namespace RipgrepBinary {
-  export const VERSION = "15.1.0"
+  export const VERSION = RipgrepRelease.VERSION
   /** `1` or `true` forbids the download: a missing `rg` then fails naming this variable. CI sets it. */
   export const DISABLE_DOWNLOAD = "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"
 
-  // sha256 of each upstream release archive, keyed by `key()`. Pinned 2026-10-12, each matching upstream's .sha256
-  // file; `bun run check:ripgrep-pins` re-checks them in CI. The CI action (.github/actions/ripgrep/action.yml) and the
-  // Linux sandbox runtime (tool-safety-sandbox-runtime.ts) use the same pins; ripgrep-binary.test.ts guards the action.
-  // Upstream ships no musl build for arm64 (the x64 Linux build is static musl, so it runs on glibc and musl alike),
-  // and Bun ships no 32-bit Windows build, so neither has an entry.
-  const PLATFORM = {
-    "arm64-darwin": {
-      platform: "aarch64-apple-darwin",
-      extension: "tar.gz",
-      sha256: "378e973289176ca0c6054054ee7f631a065874a352bf43f0fa60ef079b6ba715",
-    },
-    "arm64-linux": {
-      platform: "aarch64-unknown-linux-gnu",
-      extension: "tar.gz",
-      sha256: "2b661c6ef508e902f388e9098d9c4c5aca72c87b55922d94abdba830b4dc885e",
-    },
-    "x64-darwin": {
-      platform: "x86_64-apple-darwin",
-      extension: "tar.gz",
-      sha256: "64811cb24e77cac3057d6c40b63ac9becf9082eedd54ca411b475b755d334882",
-    },
-    "x64-linux": {
-      platform: "x86_64-unknown-linux-musl",
-      extension: "tar.gz",
-      sha256: "1c9297be4a084eea7ecaedf93eb03d058d6faae29bbc57ecdaf5063921491599",
-    },
-    "arm64-win32": {
-      platform: "aarch64-pc-windows-msvc",
-      extension: "zip",
-      sha256: "00d931fb5237c9696ca49308818edb76d8eb6fc132761cb2a1bd616b2df02f8e",
-    },
-    "x64-win32": {
-      platform: "x86_64-pc-windows-msvc",
-      extension: "zip",
-      sha256: "124510b94b6baa3380d051fdf4650eaa80a302c876d611e9dba0b2e18d87493a",
-    },
-  } as const
-
   /** One downloadable archive: where it is, its digest, and the directory inside it that holds the executable. */
-  export type Release = {
-    readonly url: string
-    readonly sha256: string
-    readonly extension: "tar.gz" | "zip"
-    readonly root: string
-  }
+  export type Release = RipgrepRelease.Archive
 
   export type Options = {
+    /** The directory holding a packaged build's own `rg`; set only in a packaged build, which never downloads. */
+    readonly bundled: string | undefined
     /** The `rg` on PATH, if any. */
     readonly system: () => string | undefined
     /** Where a downloaded `rg` is kept. */
@@ -107,27 +77,28 @@ export namespace RipgrepBinary {
   export class Service extends Context.Service<Service, Interface>()("@orchestra/RipgrepBinary") {}
 
   /** This host's platform key, with `-musl` on a musl Linux other than x64, whose static build runs everywhere. */
-  export const key = (input = { arch: process.arch as string, platform: process.platform as string, musl: musl() }) =>
-    input.platform === "linux" && input.musl && input.arch !== "x64"
-      ? `${input.arch}-linux-musl`
-      : `${input.arch}-${input.platform}`
+  export const key = RipgrepRelease.key
 
   /** Every platform key with a pinned archive. */
-  export const keys = () => Object.keys(PLATFORM)
+  export const keys = RipgrepRelease.keys
 
-  export const release = (platform = key()): Release | undefined => {
-    const config = PLATFORM[platform as keyof typeof PLATFORM]
-    if (!config) return undefined
-    const root = `ripgrep-${VERSION}-${config.platform}`
-    return {
-      url: `https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}/${root}.${config.extension}`,
-      sha256: config.sha256,
-      extension: config.extension,
-      root,
-    }
-  }
+  export const release = RipgrepRelease.archive
+
+  /** Set by every packaged build to the directory holding the rg it ships; see `bundledDirectory`. */
+  export const DIRECTORY = "ORCHESTRA_RIPGREP_DIR"
+
+  /**
+   * A packaged build's rg directory: DIRECTORY when set (the desktop passes Resources/cli/ripgrep-<target> to its
+   * server), else, in the compiled CLI, ripgrep/ beside its own binary. Undefined in a source run.
+   */
+  export const bundledDirectory = (env: Record<string, string | undefined> = process.env) =>
+    env[DIRECTORY] ||
+    (typeof ORCHESTRA_RIPGREP_BESIDE_BINARY !== "undefined" && ORCHESTRA_RIPGREP_BESIDE_BINARY
+      ? path.join(path.dirname(realpathSync(process.execPath)), "ripgrep")
+      : undefined)
 
   export const defaults = (env: Record<string, string | undefined> = process.env): Options => ({
+    bundled: bundledDirectory(env),
     system: () => which(process.platform === "win32" ? "rg.exe" : "rg") ?? undefined,
     directory: Global.Path.bin,
     release: release(),
@@ -141,16 +112,6 @@ export namespace RipgrepBinary {
   })
 
   const label = (input: Duration.Input) => Duration.format(Duration.fromInputUnsafe(input))
-
-  // musl's dynamic loader is /lib/ld-musl-<arch>.so.1; glibc systems have none.
-  function musl() {
-    if (process.platform !== "linux") return false
-    try {
-      return readdirSync("/lib").some((name) => name.startsWith("ld-musl-"))
-    } catch {
-      return false
-    }
-  }
 
   export const make = Effect.fnUntraced(function* (overrides: Partial<Options> = {}) {
     const options = { ...defaults(), ...overrides }
@@ -348,20 +309,39 @@ export namespace RipgrepBinary {
         ? unavailable("ripgrep download was interrupted", true)
         : unavailable(`ripgrep download failed: ${defect(Cause.squash(cause))}`))
 
+    // Regular files only: a symlink in place of the shipped or downloaded rg is refused.
+    const regular = (file: string) =>
+      Effect.promise(() =>
+        lstat(file).then(
+          (stat) => stat.isFile(),
+          () => false,
+        ),
+      )
+    const refuse = Effect.fnUntraced(function* (message: string) {
+      const error = unavailable(message)
+      yield* Effect.logWarning(error.message)
+      return yield* error
+    })
+
     const locate = Effect.gen(function* () {
       const system = options.system()
+      if (options.bundled !== undefined) {
+        const shipped = path.join(options.bundled, executable)
+        if (yield* regular(shipped)) return shipped
+        if (system && (yield* fs.isFile(system))) return system
+        return yield* refuse(
+          `ripgrep (rg) is missing from this packaged build (${shipped} is not a regular file) and is not on PATH; packaged builds never download it, so reinstall Orchestra or install ripgrep (rg) on PATH`,
+        )
+      }
       if (system && (yield* fs.isFile(system))) return system
-      if (yield* fs.isFile(target)) return target
+      if (yield* regular(target)) return target
       const release = options.release
       if (!release)
         return yield* unavailable(`ripgrep publishes no build for ${key()}; install ripgrep (rg) on PATH`)
-      if (!options.download) {
-        const error = unavailable(
+      if (!options.download)
+        return yield* refuse(
           `ripgrep (rg) is not on PATH and ${DISABLE_DOWNLOAD} forbids downloading it; install ripgrep (rg) on PATH`,
         )
-        yield* Effect.logWarning(error.message)
-        return yield* error
-      }
       return yield* Deferred.await(yield* acquisition(release)).pipe(
         Effect.timeoutOrElse({
           duration: options.wait,

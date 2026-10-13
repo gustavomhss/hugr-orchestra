@@ -38,6 +38,13 @@ export async function build() {
   mkdirSync(native, { recursive: true })
   copyFileSync(addon, path.join(native, "hugr_omni.node"))
   copyFileSync(supervisor, path.join(native, path.basename(supervisor)))
+  // stage-omni reads the pair from OMNI_ARTIFACTS itself; the CLI's --target build from OMNI_ARTIFACTS/<omni id>/,
+  // and this platform name is that id (packages/script/src/omni.ts).
+  mkdirSync(path.join(native, platform), { recursive: true })
+  copyFileSync(addon, path.join(native, platform, "hugr_omni.node"))
+  copyFileSync(supervisor, path.join(native, platform, path.basename(supervisor)))
+  // A Windows bundle's CLIs come prebuilt from a Linux producer (omni-desktop-smoke.yml windows-cli).
+  if (win && !process.env.ORCHESTRA_CLI_PREBUILT_DIR) throw new Error("a Windows desktop needs ORCHESTRA_CLI_PREBUILT_DIR with its produced CLIs")
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
     at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
