@@ -62,14 +62,14 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
   const shellInfo = yield* ShellTool
   const shell = yield* shellInfo.init()
   const families = [
-    // The pinned engine's Cargo grammar expects forward-slash artifact paths; Windows prints target\debug\deps\*.exe,
-    // so the engine declines (unsupported_output) and the output stays whole there. Known engine gap, safe direction.
+    // 0.4.0's Cargo grammar accepts Windows target\debug\deps\*.exe spellings, so Cargo reduces on every OS.
     // Serial lib tests, as in lean-session-families: a plain `cargo test` interleaves the doctest header on stderr with
     // the lib results on stdout, which the engine declines (unsupported_output) on some runs.
-    { itemID: "cargo", command: "cargo test --lib -- --test-threads=1", reduce: process.platform !== "win32" },
+    { itemID: "cargo", command: "cargo test --lib -- --test-threads=1", reduce: true },
     { itemID: "pytest", command: "pytest", reduce: true },
     { itemID: "go", command: "go test -v .", reduce: true },
-    { itemID: "vitest", command: "vitest run", reduce: false },
+    // No Vitest profile reduces its plaintext; Lean 2.0's lossless cleanup still strips its terminal escapes.
+    { itemID: "vitest", command: "vitest run", reduce: true },
   ] as const
   for (const family of families) {
     const owner = { sessionID: session.id, callID: `native-${family.itemID}` }
@@ -88,7 +88,8 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
       limits: { maxLines: 10000, maxBytes: 1000000 } }
     const telemetry = { owner: { projectID: instance.project.id, location: directory, ...owner },
       model: { provider: "public-fixture", id: "no-model-call" } }
-    const selected = LegacyLeanOutput.project({ ...input, telemetry })
+    const project = (value: Parameters<typeof LegacyLeanOutput.project>[0]) => Effect.promise(() => LegacyLeanOutput.project(value))
+    const selected = yield* project({ ...input, telemetry })
     const metrics = LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))
     if (family.reduce && metrics?.status !== "applied") throw new Error(`Native ${family.itemID} positive baseline declined: ${JSON.stringify(metrics)}\n${output.output}`)
     expect(metrics).toMatchObject({ itemID: family.itemID, engine: LeanEngine.current, eligible: true,
@@ -97,17 +98,20 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
     expect(metrics?.bytes.after).toBe(Buffer.byteLength(selected.output, "utf8"))
     if (family.reduce) expect(selected.output.length).toBeLessThan(output.output.length)
     else expect(selected.output).toBe(output.output)
-    expect(LegacyLeanOutput.project({ ...input, items: { [family.itemID]: false } })).toBe(output)
+    expect(yield* project({ ...input, items: { [family.itemID]: false } })).toBe(output)
     // Disabling either Cargo or Vitest cannot remove another family's default reducer.
     for (const items of [{ cargo: false }, { vitest: false }]) {
-      const current = LegacyLeanOutput.project({ ...input, items })
+      const current = yield* project({ ...input, items })
       expect(current.output).toBe(items[family.itemID as keyof typeof items] === false ? output.output : selected.output)
     }
     const appended = { ...output, output: `${output.output}\n\nPOLICY KEEP 😀` }
-    expect(LegacyLeanOutput.project({ ...input, output: appended, items: { [family.itemID]: false } })).toBe(appended)
+    expect(yield* project({ ...input, output: appended, items: { [family.itemID]: false } })).toBe(appended)
     const changed = { ...output, output: `PLUGIN KEEP\n${output.output}` }
-    expect(LegacyLeanOutput.project({ ...input, output: changed })).toBe(changed)
-    expect(LegacyLeanOutput.project({ ...input, limits: { maxLines: 1, maxBytes: 1 } })).toBe(output)
+    expect(yield* project({ ...input, output: changed })).toBe(changed)
+    // The whole-view budget refuses a profile reduction; Vitest has none, and its lossless cleanup only shrinks the view.
+    const limited = yield* project({ ...input, limits: { maxLines: 1, maxBytes: 1 } })
+    if (family.itemID === "vitest") expect(limited.output).toBe(selected.output)
+    else expect(limited).toBe(output)
   }
   yield* Effect.promise(() => Bun.write(path.join(directory, "failure_test.go"),
     'package example\nimport "testing"\nfunc TestFailure(t *testing.T) { t.Fatal("NATIVE FAILURE MUST KEEP 😀") }\n'))
@@ -118,13 +122,14 @@ it.instance("real Cargo pytest Go and Vitest preserve independent native item co
   })
   expect(output.metadata.exit).toBe(1)
   expect(output.output).toContain("NATIVE FAILURE MUST KEEP 😀")
+  // Failures are attested too (Lean 2.0 keeps failure lines whole); this small one stays below the summary threshold.
   const binding = LegacyLeanCapture.bind(output, output, owner)
-  expect(binding).toBeUndefined()
-  const selected = LegacyLeanOutput.project({ output, binding, owner, command: "go test -v .", enabled: true,
+  expect(binding).toBeDefined()
+  const selected = yield* Effect.promise(() => LegacyLeanOutput.project({ output, binding, owner, command: "go test -v .", enabled: true,
     limits: { maxLines: 10000, maxBytes: 1000000 }, telemetry: {
       owner: { projectID: instance.project.id, location: directory, ...owner }, model: { provider: "public-fixture", id: "no-model-call" },
-    } })
+    } }))
   expect(selected.output).toBe(output.output)
-  expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))).toMatchObject({ itemID: "go", producer: "unverified",
-    eligible: false, status: "passthrough", bytes: { saved: 0 } })
+  expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))).toMatchObject({ itemID: "go", producer: "native-shell",
+    eligible: true, status: "passthrough", reason: "below_threshold", bytes: { saved: 0 } })
 }), 240000)
