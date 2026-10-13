@@ -178,9 +178,15 @@ function SelectedServerProviders(props: ParentProps) {
 }
 
 function LegacyServerLayout(props: ParentProps<{ serverScoped?: JSX.Element }>) {
+  const settings = useSettings()
   return (
     <SelectedServerProviders>
-      <LegacyServerScopedShell serverScoped={props.serverScoped}>{props.children}</LegacyServerScopedShell>
+      <Show
+        when={settings.general.newLayoutDesigns()}
+        fallback={<LegacyServerScopedShell serverScoped={props.serverScoped}>{props.children}</LegacyServerScopedShell>}
+      >
+        {props.children}
+      </Show>
     </SelectedServerProviders>
   )
 }
