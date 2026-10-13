@@ -5,7 +5,7 @@ import { win32 } from "node:path"
 
 const KF_FLAG_DONT_UNEXPAND = 0x2000
 
-export async function isolateWindowsShell(input: { appdata: string }) {
+export async function isolateWindowsShell(input: { appdata: string; documents: string }) {
   if (process.platform !== "win32") return undefined
   assert.equal(process.env.GITHUB_ACTIONS, "true", "HOSTED_PROOF_REQUIRED")
   assert.ok(process.env.CI && process.env.GITHUB_RUN_ID, "HOSTED_RUN_REQUIRED")
@@ -13,6 +13,7 @@ export async function isolateWindowsShell(input: { appdata: string }) {
   const folders = [
     // GUID Data1/Data2/Data3 are little-endian; Data4 retains byte order.
     { name: "FOLDERID_RoamingAppData", csidl: 0x1a, guid: "db85b63ef965f64ca03ae3ef65729f3d", target: input.appdata },
+    { name: "FOLDERID_Documents", csidl: 0x05, guid: "d09ad3fd8f23af46adb46c85480369c7", target: input.documents },
   ].map((folder) => {
     assert.ok(win32.isAbsolute(folder.target) && win32.parse(folder.target).root.length > 1 &&
       !folder.target.includes("\0"), `WINDOWS_SHELL_TARGET_INVALID(${folder.name})`)
@@ -54,7 +55,7 @@ export async function isolateWindowsShell(input: { appdata: string }) {
   }
   const state = { restored: false }
   try {
-    // LocalAppData relocation is blocked since Windows 10 1803; Desktop userData uses RoamingAppData.
+    // LocalAppData relocation is blocked; Desktop uses RoamingAppData and onboarding needs Documents.
     // Capture legacy paths and physical identities before the first write.
     const originals = folders.map((folder) => {
       const original = read(folder)

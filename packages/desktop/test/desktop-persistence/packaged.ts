@@ -44,7 +44,7 @@ export async function run(control?: "delete-blob") {
   const root = realpathSync(mkdtempSync(path.join(realpathSync(tmpdir()), "desktop-persistence-")))
   const rootIdentity = statSync(root, { bigint: true })
   assert.ok(rootIdentity.isDirectory() && rootIdentity.ino !== 0n, "OWNED_ROOT_IDENTITY_UNAVAILABLE")
-  const owned = Object.fromEntries(["home", "appdata", "local", "data", "state", "config", "cache", "tmp", "empty", "managed"]
+  const owned = Object.fromEntries(["home", "appdata", "documents", "local", "data", "state", "config", "cache", "tmp", "empty", "managed"]
     .map((name) => [name, path.join(root, name)]))
   Object.values(owned).forEach((directory) => mkdirSync(directory))
   writeFileSync(path.join(root, "gitconfig"), "", { mode: 0o600 })
@@ -95,7 +95,7 @@ export async function run(control?: "delete-blob") {
       renameSync(displaced, root)
     }
     assertOwned(owned.home, root, rootIdentity)
-    shell.lease = await isolateWindowsShell({ appdata: owned.appdata })
+    shell.lease = await isolateWindowsShell({ appdata: owned.appdata, documents: owned.documents })
     shell.ready = true
     Object.keys(process.env).forEach((key) => delete process.env[key])
     Object.assign(process.env, env)
