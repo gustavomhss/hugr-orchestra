@@ -8,6 +8,7 @@ import { createRequire } from "node:module"
 import { dirname, join, relative } from "node:path"
 import { parseArgs } from "node:util"
 import { sourceModule } from "./workspace-config.ts"
+import { controlLedger } from "./control-ledger.ts"
 
 /* CONTROL_LEDGER_BEGIN
 {
@@ -35,10 +36,7 @@ import { sourceModule } from "./workspace-config.ts"
   "packaged-pty-fixture-restored": null
 }
 CONTROL_LEDGER_END */
-const ledgerRegion = (await Bun.file(import.meta.path).text()).split("/* CONTROL_LEDGER_BEGIN\n")[1]?.split("\nCONTROL_LEDGER_END */")[0]
-if (!ledgerRegion) throw new Error("NIX_DISTRIBUTION_FAILURE:CONTROL_LEDGER_MISSING")
-const ledger: Readonly<Record<string, string | null>> = Object.freeze(JSON.parse(ledgerRegion))
-if (!Object.keys(ledger).length) throw new Error("NIX_DISTRIBUTION_FAILURE:CONTROL_LEDGER_EMPTY")
+const ledger = controlLedger(await Bun.file(import.meta.path).text())
 
 const values = parseArgs({
   options: {

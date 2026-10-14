@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { WorkspacePaths } from "../src/workspace-paths.ts"
@@ -135,7 +135,8 @@ test("rejects lexical escapes, physical escapes and nonregular manifests", () =>
     writeFileSync(path.join(outside, "Cargo.toml"), "[workspace]\n")
     symlinkSync(outside, native, "junction")
     expect(() => WorkspacePaths.make(root)).toThrow("WORKSPACE_PATH_ESCAPED")
-    rmSync(native)
+    rmSync(native, { recursive: true })
+    expect(readFileSync(path.join(outside, "Cargo.toml"), "utf8")).toBe("[workspace]\n")
     mkdirSync(native)
     mkdirSync(path.join(native, "Cargo.toml"))
     expect(() => WorkspacePaths.make(root)).toThrow("WORKSPACE_MANIFEST_NOT_REGULAR")

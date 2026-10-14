@@ -14,7 +14,7 @@ test("captures immutable tracked blobs, modes and byte lengths at a pinned commi
     await chmod(path.join(directory, "scope", "run.sh"), 0o755)
     await git(directory, ["add", "."])
     const blob = await git(directory, ["hash-object", "-w", "scope/with space.txt"])
-    await git(directory, ["update-index", "--add", "--cacheinfo", `100644,${blob},scope/with space\tname.txt`])
+    await git(directory, ["-c", "core.protectNTFS=false", "update-index", "--add", "--cacheinfo", `100644,${blob},scope/with space\tname.txt`])
     await git(directory, ["update-index", "--chmod=+x", "scope/run.sh"])
     await git(directory, ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], {
       GIT_AUTHOR_NAME: "Fixture", GIT_AUTHOR_EMAIL: "fixture@example.invalid", GIT_COMMITTER_NAME: "Fixture", GIT_COMMITTER_EMAIL: "fixture@example.invalid",
