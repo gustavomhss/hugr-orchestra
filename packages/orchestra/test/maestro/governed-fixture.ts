@@ -41,13 +41,13 @@ import { AppProcess } from "@orchestra/core/process"
 import { TestInstance, tmpdirScoped } from "../fixture/fixture"
 
 
-import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
+import { NativeSessionFixture } from "../fixture/native-session"
 export const ref = {
   providerID: ProviderV2.ID.make("test"),
   modelID: ModelV2.ID.make("test-model"),
 }
 
-export const layer = AppNodeBuilderV1.build(
+export const layer = NativeSessionFixture.legacy(
   LayerNode.group([
     filesystem,
     Agent.node,

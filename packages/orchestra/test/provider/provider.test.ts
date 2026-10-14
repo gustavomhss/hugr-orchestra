@@ -2,11 +2,9 @@ import { afterEach, expect, test } from "bun:test"
 import { mkdir, unlink } from "fs/promises"
 import path from "path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Effect, Exit, Layer } from "effect"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Global } from "@orchestra/core/global"
 import { disposeAllInstances, provideInstanceEffect, tmpdirScoped, TestInstance } from "../fixture/fixture"
 import { Auth } from "@/auth"
@@ -17,8 +15,7 @@ import { Provider } from "@/provider/provider"
 
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Filesystem } from "@/util/filesystem"
-import { InstanceBootstrap } from "@/project/bootstrap"
-import { InstanceStore } from "@/project/instance-store"
+import { ProviderFixture } from "./fixture"
 import { testEffect } from "../lib/effect"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
@@ -1969,12 +1966,6 @@ it.instance(
 // Tests that need plugin file setup or multi-instance flows fall back to a
 // scoped tmpdir + provideInstance pattern via it.effect.
 
-const instanceStoreLayer = LayerNode.compile(InstanceStore.node, [
-  [InstanceStore.bootstrapNode, InstanceBootstrap.node],
-])
-const provideMultiInstance = <A, E, R>(eff: Effect.Effect<A, E, R>) =>
-  eff.pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
-
 it.effect("plugin config providers persist after instance dispose", () =>
   Effect.gen(function* () {
     const dir = yield* tmpdirScoped()
@@ -2026,7 +2017,7 @@ it.effect("plugin config providers persist after instance dispose", () =>
     const second = yield* loadAndList
     expect(second[ProviderV2.ID.make("demo")]).toBeDefined()
     expect(second[ProviderV2.ID.make("demo")].models[ModelV2.ID.make("chat")]).toBeDefined()
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )
 
 it.instance(
@@ -2070,17 +2061,14 @@ it.effect("Zen loads only when a config apiKey is present", () =>
     })
 
     const listIn = (directory: string) =>
-      Provider.use
-        .list()
-        .pipe(provideInstanceEffect(directory))
-        .pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
+      Provider.use.list().pipe(provideInstanceEffect(directory), ProviderFixture.provide)
 
     const none = yield* listIn(noneDir)
     const keyedCount = paid(yield* listIn(keyedDir))
 
     expect(none[ProviderV2.ID.make("opencode")]).toBeUndefined()
     expect(keyedCount).toBeGreaterThan(0)
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )
 
 it.effect("Zen loads only when auth exists", () =>
@@ -2089,10 +2077,7 @@ it.effect("Zen loads only when auth exists", () =>
     const keyedDir = yield* tmpdirScoped()
 
     const listIn = (directory: string) =>
-      Provider.use
-        .list()
-        .pipe(provideInstanceEffect(directory))
-        .pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
+      Provider.use.list().pipe(provideInstanceEffect(directory), ProviderFixture.provide)
 
     const none = yield* listIn(noneDir)
 
@@ -2112,5 +2097,5 @@ it.effect("Zen loads only when auth exists", () =>
 
     expect(none[ProviderV2.ID.make("opencode")]).toBeUndefined()
     expect(keyedCount).toBeGreaterThan(0)
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )
