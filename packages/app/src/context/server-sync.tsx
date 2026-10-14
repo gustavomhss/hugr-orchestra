@@ -60,8 +60,10 @@ import type {
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
-import { sessionManagementFences } from "./session-management-state"
+import { applySessionPolicyEvent, sessionManagementFences } from "./session-management-state"
 import { decodeSessionManagementEvent } from "@/utils/session"
+
+export { applySessionPolicyEvent } from "./session-management-state"
 
 type GlobalStore = {
   ready: boolean
@@ -227,6 +229,8 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
+  const lifetime = { disposed: false }
+  onCleanup(() => { lifetime.disposed = true })
 
   const sdkFor = (directory: string) => {
     const key = directoryKey(directory)
@@ -447,7 +451,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                 permission: session.data.permission,
               })
               batch(() => {
-                next.forEach(session.remember)
+                const remembered = fences.visible(next.map(session.remember), session.get)
                 setStore(
                   "sessionTotal",
                   estimateRootSessionTotal({
@@ -456,7 +460,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                     limited: x.limited,
                   }),
                 )
-                setStore("session", reconcile(next, { key: "id" }))
+                setStore("session", reconcile(remembered, { key: "id" }))
               })
               sessionMeta.set(key, { limit })
             })
@@ -534,6 +538,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       directory: key,
       store: existing[0],
       fenceOwner: session,
+      readSession: session.get,
       setStore: existing[1],
       push: queue.push,
       retainedLimit: sessionMeta.get(key)?.limit,
@@ -541,6 +546,14 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       permission: session.data.permission,
       loadLsp() {},
     })
+  }
+
+  const publishSession = (info: Parameters<typeof session.remember>[0]) => {
+    homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
+    indexSession(info)
+    if (info.time.archived === undefined) return
+    homeSessions.remove(info.id)
+    notifySessionTabsRemoved({ server: ServerConnection.key(serverSDK.server), directory: info.directory, sessionIDs: [info.id] })
   }
 
   const unsub = serverSDK.event.listen((e) => {
@@ -552,29 +565,24 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     const recent = bootingRoot || Date.now() - bootedAt < 1500
 
     if (event.current) session.applyV2(event.current)
-    session.apply(event)
+    const recovery = eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed"
+      ? applySessionPolicyEvent({
+          event, session, children: children.children, disposed: () => lifetime.disposed,
+          indexSession: publishSession,
+        })
+      : session.apply(event)
+    void recovery?.catch(() => {})
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
     }
     if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
       const properties = event.properties
       if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
-        const update = (info: Parameters<typeof session.remember>[0]) => {
-          homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
-          if (eventType !== "session.next.archive.changed") return
-          if (info.time.archived === undefined) {
-            indexSession(info)
-            return
-          }
-          homeSessions.remove(info.id)
-          notifySessionTabsRemoved({ server: ServerConnection.key(serverSDK.server), directory: info.directory, sessionIDs: [info.id] })
-        }
         const info = session.get(properties.sessionID)
-        if (info) update(info)
-        if (!info) void session.resolve(properties.sessionID).then(update).catch(() => {})
+        if (info) publishSession(info)
       }
     }
-    homeSessions.refresh(event.type)
+    if (eventType !== "session.next.subagent.models.changed") homeSessions.refresh(event.type)
     if (eventType === "integration.connection.updated") void refreshProviders()
 
     if (directory === "global") {
@@ -643,6 +651,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     applyDirectoryEvent({
       event,
       directory,
+      readSession: session.get,
       store,
       fenceOwner: session,
       setStore,
