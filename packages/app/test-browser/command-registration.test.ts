@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import "./real-ui-solid"
+import { solidDom } from "./real-ui-solid"
 import {
   createComponent,
   createMemo,
@@ -13,12 +13,12 @@ import {
 } from "solid-js"
 import { createStore } from "solid-js/store"
 
-const { CommandProvider, useCommand } = await import("@/context/command")
-const { PlatformProvider } = await import("@/context/platform")
-const { SettingsProvider } = await import("@/context/settings")
-const { LanguageProvider } = await import("@/context/language")
-const { DialogProvider } = await import("@orchestra/ui/context/dialog")
-const { createCommandRegistration } = await import("@/context/command-registration")
+const { CommandProvider, useCommand }: typeof import("@/context/command") = await import(solidDom("@/context/command", import.meta.dir))
+const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
+const { SettingsProvider }: typeof import("@/context/settings") = await import(solidDom("@/context/settings", import.meta.dir))
+const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
+const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await import(solidDom("@orchestra/ui/context/dialog", import.meta.dir))
+const { createCommandRegistration }: typeof import("@/context/command-registration") = await import(solidDom("@/context/command-registration", import.meta.dir))
 
 test("real CommandProvider keeps live accessors, removes disposed owners, and survives transition remounts", async () => {
   const shell = provider()
