@@ -16,7 +16,7 @@ import { RelayWorkflowCurrentStep } from "../src/relay-workflow-currentstep"
 import { RelayWorkflowTransition } from "../src/relay-workflow-transition"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
-import { run } from "../../relay/test/arm-harness"
+import { run } from "../../../modules/relay/test/arm-harness"
 
 // Prepared for the single integrated batch. Real store/compiler/arm files; no mocked evaluator or duplicate logic.
 const it = testEffect(Layer.empty)

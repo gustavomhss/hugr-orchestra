@@ -619,7 +619,7 @@
         "@typescript/native-preview": "catalog:",
       },
     },
-    "packages/relay": {
+    "modules/relay": {
       "name": "@orchestra/relay",
       "version": "0.0.0",
       "dependencies": {
@@ -1579,7 +1579,7 @@
 
     "@orchestra/protocol": ["@orchestra/protocol@workspace:packages/protocol"],
 
-    "@orchestra/relay": ["@orchestra/relay@workspace:packages/relay"],
+    "@orchestra/relay": ["@orchestra/relay@workspace:modules/relay"],
 
     "@orchestra/schema": ["@orchestra/schema@workspace:packages/schema"],
 

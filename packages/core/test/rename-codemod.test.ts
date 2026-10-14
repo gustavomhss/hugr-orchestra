@@ -160,7 +160,7 @@ describe("rename codemod CLI", () => {
   })
 
   test("frozen fixture text or path changes refuse before edits", async () => {
-    for (const file of ["packages/x/test/golden/input.json", "packages/relay/test/fixtures/opencode.bin"]) {
+    for (const file of ["packages/x/test/golden/input.json", "packages/relay/test/fixtures/opencode.bin", "modules/relay/test/fixtures/opencode.bin"]) {
       for (const dry of [true, false]) {
         const cwd = await repo({
           [file]: file.endsWith(".bin") ? "\0binary" : '"OpenCode"\n',

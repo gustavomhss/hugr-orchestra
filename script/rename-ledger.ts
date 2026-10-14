@@ -27,14 +27,14 @@ export const keptPaths: Kept[] = [
     reason: "raw live-model evidence: session exports name the third-party Zen provider and model ids verbatim",
   },
   {
-    path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,
+    path: /^(?:packages|modules)\/relay\/docs\/reviews\/[^/]+\.json$/,
     reason: "relay review records; their approvals bind artifact hashes taken before the rename",
-    requires: "packages/relay",
+    requires: "modules/relay",
   },
   {
-    path: /^packages\/relay\/test\/golden\/PARITY-EXCEPTIONS\.md$/,
+    path: /^(?:packages|modules)\/relay\/test\/golden\/PARITY-EXCEPTIONS\.md$/,
     reason: "frozen golden corpus exception register; historical test paths retain pre-rename provenance",
-    requires: "packages/relay",
+    requires: "modules/relay",
   },
   {
     path: /^packages\/desktop\/docs\/plans\/dock-accessibility\/(?:recovery-\d+|handoff(?:-claude)?)\.md$/,

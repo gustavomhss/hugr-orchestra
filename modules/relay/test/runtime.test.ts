@@ -9,7 +9,7 @@ import path from "node:path"
 // alias) is not caught here; node.test.ts runs the engine under Node and catches what its smoke paths reach.
 
 const root = path.join(import.meta.dir, "..")
-const core = path.join(root, "..", "core", "src")
+const core = path.join(root, "..", "..", "packages", "core", "src")
 // The Bun side of the `#sqlite` adapter: Node resolves `#sqlite` to sqlite.node.ts and never loads it.
 const EXCEPTION = path.join("src", "authoring", "sqlite.bun.ts")
 // `Bun.x`, `Bun?.x` and `Bun[x]`, but not a sentence that ends in "Bun.".
@@ -53,12 +53,12 @@ test("engine sources and core's relay modules use no Bun runtime API, except the
     .map((file) => path.join("src", file))
   const relay = readdirSync(core)
     .filter((file) => file.startsWith("relay") && file.endsWith(".ts"))
-    .map((file) => path.join("..", "core", "src", file))
+    .map((file) => path.relative(root, path.join(core, file)))
   // An empty or partial listing is a broken scan, not a clean tree.
   expect(engine).toEqual(
     expect.arrayContaining([path.join("src", "ledger", "chain.ts"), path.join("src", "hook", "glob.ts")]),
   )
-  expect(relay).toEqual(expect.arrayContaining([path.join("..", "core", "src", "relay.ts")]))
+  expect(relay).toEqual(expect.arrayContaining([path.relative(root, path.join(core, "relay.ts"))]))
 
   // The exception is exactly the `bun` target of `#sqlite`, and it is not stale.
   const imports = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")).imports["#sqlite"]

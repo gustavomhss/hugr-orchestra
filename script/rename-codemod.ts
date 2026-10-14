@@ -63,7 +63,7 @@ const RIGHT_ALIGNED =
   /^packages\/(?:opencode|orchestra)\/test\/cli\/help\/__snapshots__\/help-snapshots\.test\.ts\.snap$/
 // Golden and relay fixtures feed byte comparisons and hashes. The codemod refuses to run rather than change one; only
 // their .md docs may change. A refusal lists the lines, which then need a ledger entry or a deliberate re-record.
-const FROZEN = /(?:^|\/)test\/golden\/|^packages\/relay\/test\/fixtures\//
+const FROZEN = /(?:^|\/)test\/golden\/|^(?:packages|modules)\/relay\/test\/fixtures\//
 
 const args = process.argv.slice(2)
 const dryRun = args.includes("--dry-run")
