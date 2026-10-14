@@ -46,8 +46,8 @@ runs:
       id: keys
       shell: bash
       run: |
-        echo "bun=${{ runner.os }}-bun-v2-${{ hashFiles('bun.lock') }}" >> "$GITHUB_OUTPUT"
-        echo "modules=${{ runner.os }}-modules-v1-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
+        echo "bun=${{ runner.os }}-${{ runner.arch }}-bun-v3-${{ hashFiles('bun.lock') }}" >> "$GITHUB_OUTPUT"
+        echo "modules=${{ runner.os }}-${{ runner.arch }}-modules-v2-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
 
     # Every platform reuses the installed tree: on Linux a restore takes about 15 s where `bun install` from Bun's
     # package cache took about 50 s, and Windows cannot reuse Bun's package cache at all (see the install step).
@@ -71,10 +71,10 @@ runs:
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.cache.outputs.dir }}
-        # v2 invalidates caches containing Bun's Windows patched-package rename state.
+        # v3 isolates native architectures and invalidates the old OS-only entries.
         key: ${{ steps.keys.outputs.bun }}
         restore-keys: |
-          ${{ runner.os }}-bun-v2-
+          ${{ runner.os }}-${{ runner.arch }}-bun-v3-
 
     - name: Install setuptools for distutils compatibility
       run: python3 -m pip install setuptools || pip install setuptools || true

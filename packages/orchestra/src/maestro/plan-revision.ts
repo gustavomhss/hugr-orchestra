@@ -53,7 +53,8 @@ export type RecordPlanRevisionInput = Omit<
   Schema.Schema.Type<typeof MaestroEvent.PlanRevision.RecordedV3.data>,
   "id" | "revisionHash" | "createdAt" | "status" | "revision" | "upstreamAttribution" | "workflowBinding" | "grounding"
 > & { units?: readonly string[];
-  upstream?: Pick<UpstreamAttribution.V1, "parentMessageID" | "parentCallID" | "authorSessionID" | "authorMessageID" | "logicalTaskID">;
+  upstream?: Pick<UpstreamAttribution.V1, "parentMessageID" | "parentCallID" | "authorSessionID" | "authorMessageID" | "logicalTaskID"> &
+    { dispatchKind?: UpstreamAttribution.V2["dispatch"]["kind"] };
   workflow?: { port: RelayWorkflowBinding.PublicationPort; documentID: string; parameters: Readonly<Record<string, string>>; writePaths: readonly string[] }
 }
 
