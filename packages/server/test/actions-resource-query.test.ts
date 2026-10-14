@@ -48,7 +48,7 @@ it.live("HTTP artifact list omits absent optional keys before strict Core select
     ))
     expect(response.status).toBe(200)
     expect((yield* Effect.promise(() => page(response))).data).toEqual({
-      items: [{ id: "42", bindingID: f.binding.data.id, kind: "artifacts", name: "bounded fixture", data: {} }],
+      items: [{ id: "42", bindingID: Actions.BindingID.make(f.binding.data.id), kind: "artifacts", name: "bounded fixture", data: {} }],
       total: 1,
       capturedAt: 1,
     })
@@ -56,7 +56,7 @@ it.live("HTTP artifact list omits absent optional keys before strict Core select
     const capturedInput = f.capturedCalls[0][1]
     expect(Object.keys(capturedInput).sort()).toEqual(["kind", "runID"])
     expect(f.capturedCalls[0]).toEqual([
-      { id: f.binding.data.id, revision: 1 }, { kind: "artifacts", runID },
+      { id: Actions.BindingID.make(f.binding.data.id), revision: 1 }, { kind: "artifacts", runID },
     ])
   }),
 )
@@ -175,7 +175,7 @@ it.live("HTTP resource list keeps binding revision and Location outside Resource
     const capturedInput = f.capturedCalls[0][1]
     expect(Object.keys(capturedInput).sort()).toEqual(["kind", "runID"])
     expect(f.capturedCalls[0]).toEqual([
-      { id: binding.data.id, revision: 2 }, { kind: "artifacts", runID },
+      { id: Actions.BindingID.make(binding.data.id), revision: 2 }, { kind: "artifacts", runID },
     ])
   }),
 )
