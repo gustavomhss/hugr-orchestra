@@ -51,12 +51,14 @@ macro_rules! api {
     }
 }
 mod napi {
-    use super::*;
+    use super::{Callback, Env, GetModuleHandleW, GetProcAddress, Info, Value};
+    use std::{ffi::c_void, ptr};
     api! {
         napi_get_cb_info: unsafe extern "C" fn(Env, Info, *mut usize, *mut Value, *mut Value, *mut *mut c_void) -> u32,
         napi_typeof: unsafe extern "C" fn(Env, Value, *mut u32) -> u32,
         napi_get_value_double: unsafe extern "C" fn(Env, Value, *mut f64) -> u32,
         napi_get_value_bigint_uint64: unsafe extern "C" fn(Env, Value, *mut u64, *mut bool) -> u32,
+        napi_get_value_bigint_int64: unsafe extern "C" fn(Env, Value, *mut i64, *mut bool) -> u32,
         napi_get_buffer_info: unsafe extern "C" fn(Env, Value, *mut *mut c_void, *mut usize) -> u32,
         napi_create_double: unsafe extern "C" fn(Env, f64, *mut Value) -> u32,
         napi_create_int32: unsafe extern "C" fn(Env, i32, *mut Value) -> u32,
@@ -94,6 +96,29 @@ mod napi {
                     let mut lossless = false;
                     if (self.0.napi_get_value_bigint_uint64)(env, value, &mut number, &mut lossless) != 0 || !lossless { return None; }
                     Some(number as usize)
+                }
+                _ => None,
+            }
+        }
+        // Signed Windows INT/BOOL arguments are not pointer/HANDLE tokens.
+        // CompareStringOrdinal explicitly admits -1 for NUL-terminated strings.
+        pub(super) unsafe fn signed_i32(&self, env: Env, value: Value) -> Option<i32> {
+            let mut kind = 0;
+            if (self.0.napi_typeof)(env, value, &mut kind) != 0 { return None; }
+            match kind {
+                3 => {
+                    let mut number = 0.0;
+                    if (self.0.napi_get_value_double)(env, value, &mut number) != 0 || !number.is_finite() ||
+                        number < i32::MIN as f64 || number > i32::MAX as f64 || number.fract() != 0.0 { return None; }
+                    Some(number as i32)
+                }
+                9 => {
+                    let mut number = 0;
+                    let mut lossless = false;
+                    if (self.0.napi_get_value_bigint_int64)(env, value, &mut number, &mut lossless) != 0 || !lossless {
+                        return None;
+                    }
+                    i32::try_from(number).ok()
                 }
                 _ => None,
             }
@@ -138,7 +163,13 @@ unsafe extern "C" fn invoke(env: Env, info: Info) -> Value {
     if count == 0 || count > 12 { return api.fail(env); }
     let Some(id) = api.scalar(env, values[0]) else { return api.fail(env); };
     let mut a = [0usize; 11];
+    let mut signed = [0i32; 3];
     for index in 1..count {
+        if id == 9 && matches!(index, 2 | 4 | 5) {
+            let Some(value) = api.signed_i32(env, values[index]) else { return api.fail(env); };
+            signed[match index { 2 => 0, 4 => 1, _ => 2 }] = value;
+            continue;
+        }
         let Some(value) = api.scalar(env, values[index]) else { return api.fail(env); };
         a[index - 1] = value;
     }
@@ -152,9 +183,10 @@ unsafe extern "C" fn invoke(env: Env, info: Info) -> Value {
         (6, 1) => NtClose(a[0] as _),
         (7, 3) => QueryDosDeviceW(a[0] as _, a[1] as _, a[2] as _) as i32,
         (8, 4) => GetFinalPathNameByHandleW(a[0] as _, a[1] as _, a[2] as _, a[3] as _) as i32,
-        (9, 5) => CompareStringOrdinal(a[0] as _, a[1] as _, a[2] as _, a[3] as _, a[4] as _),
+        (9, 5) => CompareStringOrdinal(a[0] as _, signed[0], a[2] as _, signed[1], signed[2]),
         (10, 2) => IsWow64Process2(GetCurrentProcess(), a[0] as _, a[1] as _),
         (11, 0) => if cfg!(target_arch = "aarch64") { 0xaa64 } else if cfg!(target_arch = "x86_64") { 0x8664 } else { 0 },
+        (12, 3) => IsWow64Process2(a[0] as _, a[1] as _, a[2] as _),
         _ => return api.fail(env),
     };
     api.integer(env, result)
