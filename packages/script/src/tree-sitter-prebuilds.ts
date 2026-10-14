@@ -129,7 +129,7 @@ export function treeSitterBundle(input: Target) {
 
 /**
  * Where each bin/tree-sitter/ file of a build comes from. `artifacts` (TREE_SITTER_ARTIFACTS, as OMNI_ARTIFACTS for
- * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds.ts <os> <arch> --out <artifacts>`),
+ * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds-cli.ts <os> <arch> --out <artifacts>`),
  * one per <os>-<arch>/ directory; a target with one there ships it once every file and every binding's CPU checks out.
  * A target without one takes maestro-arsenal's own dependencies under `root`, once prepareTreeSitterPrebuilds has
  * repaired or built its bindings, or stops with that function's named error (another target's core binding cannot be
@@ -287,14 +287,4 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
       .filter((name) => !before.has(name))
       .forEach((name) => rmSync(path.join(dir, name), { recursive: true, force: true }))
   }
-}
-
-if (import.meta.main) {
-  const [os, arch, flag, out] = process.argv.slice(2)
-  if (!os || !arch || (flag !== undefined && (flag !== "--out" || !out)))
-    throw new Error("Usage: tree-sitter-prebuilds.ts <os> <arch> [--out <dir>]")
-  const root = path.resolve(import.meta.dirname, "../../..")
-  console.log(
-    JSON.stringify(out ? exportTreeSitter({ root, os, arch, out }) : prepareTreeSitterPrebuilds({ root, os, arch })),
-  )
 }

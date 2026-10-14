@@ -8,6 +8,7 @@ import path from "path"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { Flag } from "@orchestra/core/flag/flag"
 import { McpStdio, OmniStdioTransport } from "../../src/mcp/stdio"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { alive, gone, reap, tree } from "../../../core/test/fixture/process-tree"
 import { tmpdir } from "../fixture/fixture"
 
@@ -37,6 +38,7 @@ async function until(check: () => Promise<boolean>, what: string) {
 
 describe.skipIf(!omni)("mcp omni stdio transport", () => {
   test("close leaves no grandchild of the server", async () => {
+    expectSpawn(import.meta.path)
     const t = tree(1)
     try {
       const mcp = client()

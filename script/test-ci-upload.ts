@@ -3,6 +3,16 @@
 
 import { $ } from "bun"
 
+export function workflowRun<T extends { databaseId: number; url: string; workflowName: string; headBranch: string; headSha: string }>(
+  runs: T[],
+  branch: string,
+  sha: string,
+) {
+  return runs.find(
+    (entry) => entry.workflowName === "test-ci" && entry.headBranch === branch && entry.headSha === sha,
+  )
+}
+
 // Bun runs an argument that starts with ./ or / as exactly that file, in the order given, but treats any other argument
 // as a substring filter over every test path: it can match more files, and Bun runs the matches in its own sorted
 // order. So an argument naming an existing file of packages/<name> (`isFile` answers relative to that directory) becomes

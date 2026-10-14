@@ -23,6 +23,14 @@ export default {
   version: VERSION,
   license: "MIT",
   upstream: "microsoft/kiota",
+  // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
+  floor: {
+    "darwin-arm64": { macos: "12.0" },
+    "darwin-x64": { macos: "12.0" },
+    "linux-arm64": { glibc: "2.27" },
+    "linux-x64": { glibc: "2.27" },
+    "win32-x64": {},
+  },
   env: { KIOTA_OFFLINE_ENABLED: "true", KIOTA_CLI_TELEMETRY_OPTOUT: "true" },
   targets: {
     "darwin-arm64": target("osx-arm64", "sha256-vVClZtvNK9EPTvSpGSdt0ZMgLc7ZkPtdFtg7aAMOIGM="),

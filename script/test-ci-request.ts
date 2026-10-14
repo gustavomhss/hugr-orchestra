@@ -1,8 +1,10 @@
 // Pure request/report rules shared by the uploader, snapshot runner and cache-scoped controls.
 // Each key is also a ci-run-<os>-* branch prefix that test-ci.yml maps to the same runners.
-const systems = {
+// Extension: linux-arm64 adds native distribution qualification on exactly ubuntu-24.04-arm; existing selectors keep their runners.
+export const systems = {
   linux: ["ubuntu-latest"], windows: ["windows-latest"], both: ["ubuntu-latest", "windows-latest"],
   macos: ["macos-14"], "macos-intel": ["macos-15-intel"], all: ["ubuntu-latest", "windows-latest", "macos-14"],
+  "linux-arm64": ["ubuntu-24.04-arm"],
 }
 // Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
 const envKeys = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
@@ -177,4 +179,66 @@ export function reportLines(job: { name: string; conclusion: string; steps?: { n
   const output = lines.slice(end + 1).filter((line) => line.trim())
   if (output.length === 0) throw new Error(`${job.name}: empty Run tests output`)
   return output
+}
+
+// Bun switches test-ci.ts may pass through that change neither the file selection nor the test-name filter.
+const switches = new Set(["--bail", "--pass-with-no-tests", "--only", "--todo", "--concurrent", "--randomize",
+  "--only-failures", "--update-snapshots", "-u"])
+
+// The omni positive control's scope for a bun request (script/test-omni-control.ts). A request that names no file,
+// directory or filter and no -t pattern runs the whole package, exactly what a test.yml lane runs, so it is "suite":
+// the run must spawn through omni. Any narrower selection is "declared": only tests that declared an omni spawn are
+// held to one. An option this does not know might hide a selection, so it keeps the stronger "suite".
+export function omniControlScope(request: { runner: string; args: string[] }) {
+  if (request.runner !== "bun") return "suite"
+  let narrowed = false
+  for (let index = 0; index < request.args.length; index++) {
+    const arg = request.args[index]!
+    if (arg === "--timeout") {
+      index++
+      continue
+    }
+    if (arg === "-t" || arg === "--test-name-pattern") {
+      index++
+      narrowed = true
+      continue
+    }
+    if (switches.has(arg)) continue
+    if (arg.startsWith("-")) return "suite"
+    narrowed = true
+  }
+  return narrowed ? "declared" : "suite"
+}
+
+// Whether a package's bunfig.toml preloads the omni positive control, read from the file itself.
+export function preloadsControl(bunfig: { test?: { preload?: unknown } }) {
+  const preload = bunfig.test?.preload
+  return Array.isArray(preload) && preload.some((entry) => typeof entry === "string" && /(^|[\\/])script[\\/]test-omni-control\.ts$/.test(entry))
+}
+
+// The omni positive control's verdict for one job, apart from the test results: a failing control otherwise shows up
+// only as Bun's "(fail) (unnamed)". test-ci.yml's "Omni control nonce" step prints "omni control nonce: <32 hex>" and
+// hands the nonce to the run, whose preload removes it from the environment before any test loads and prints exactly
+// one "omni positive control [<nonce>]: ..." line. Only a line carrying this job's nonce counts, wherever it sits in a
+// line, so interleaved output and a test that prints a lookalike line can neither add nor fake a verdict. Throws when
+// the nonce is missing or repeated, or when the run printed no verdict or more than one.
+export function controlVerdict(job: { name: string }, log: string) {
+  const rows = log.split(/\r?\n/).map((line) => {
+    const fields = line.split("\t")
+    return { step: fields[1], text: (fields.length > 2 ? fields.slice(2).join("\t") : line)
+      .replace(/^\uFEFF?\S+Z /, "").replace(/\x1b\[[0-9;]*m/g, "") }
+  })
+  const nonces = rows.filter((row) => row.step !== "Run tests").flatMap((row) => {
+    const match = /^omni control nonce: ([0-9a-f]{32})$/.exec(row.text.trim())
+    return match ? [match[1]!] : []
+  })
+  if (nonces.length !== 1) throw new Error(`${job.name}: expected one omni control nonce, found ${nonces.length}`)
+  const tag = `omni positive control [${nonces[0]}]: `
+  const verdicts = rows.flatMap((row) => {
+    const at = row.text.indexOf(tag)
+    return at < 0 ? [] : [`omni positive control: ${row.text.slice(at + tag.length).trim()}`]
+  })
+  if (verdicts.length !== 1)
+    throw new Error(`${job.name}: expected one omni positive control verdict for this run's nonce, found ${verdicts.length}`)
+  return verdicts[0]!
 }

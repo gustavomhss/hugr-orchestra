@@ -313,14 +313,13 @@ c.setTimeout(1000, () => { c.destroy(); process.exitCode = 4 })
           expect(calls[0].state.status === "completed" && calls[0].state.metadata.exit).toBe(0)
           return
         }
-        // Without a jail an exact endpoint grant refuses rather than running unconfined; srt never supports exact sockets.
-        const suffix = kind === "loopback-endpoint" && process.platform === "linux"
-          ? "backend-unavailable"
-          : kind === "loopback-endpoint" || process.platform === "linux" ? "exact-policy-unsupported" : "platform-unsupported"
+        // Without a jail an exact endpoint grant refuses rather than running unconfined; srt never supports exact sockets,
+        // and Windows' AppContainer cannot grant the missing root.
+        const reason = kind === "loopback-endpoint"
+          ? process.platform === "linux" ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-appcontainer-write-root-missing"
+          : `sandbox-unix-socket-${process.platform === "linux" ? "exact-policy-unsupported" : "platform-unsupported"}`
         expect(calls[0].state.status).toBe("error")
-        expect(calls[0].state.status === "error" && calls[0].state.error).toContain(
-          `Tool safety HOLD: sandbox-${kind}-${suffix}`,
-        )
+        expect(calls[0].state.status === "error" && calls[0].state.error).toContain(`Tool safety HOLD: ${reason}`)
       }),
     60_000,
   )

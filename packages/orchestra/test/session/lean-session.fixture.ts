@@ -24,6 +24,7 @@ import { MessageID } from "../../src/session/schema"
 import { ToolRegistry } from "../../src/tool/registry"
 import { LegacyLeanCapture } from "../../src/tool/lean-capture"
 import { TestLLMServer } from "../lib/llm-server"
+import { SEAT_SHELL_REFUSED } from "../fixture/seat-sandbox"
 
 /** Actual native registry, backend actor, processor, provider and injected private preference store. */
 export const fixture = Effect.fnUntraced(function* (globalEnabled = true, store?: Global.Interface, observe = false) {
@@ -123,7 +124,7 @@ export const fixture = Effect.fnUntraced(function* (globalEnabled = true, store?
       return result as LegacyLeanCapture.Output
     })
     expect(reads.slice(start)).toEqual([file])
-    expect(output.metadata.exit).toBe(0)
+    expect(output.metadata.exit, `${command}: ${output.output.slice(-3000)}`).toBe(0)
     expect(output.metadata.truncated).toBe(false)
     expect(output.metadata.timeout).toBe(false)
     expect(output.metadata.aborted).toBe(false)
@@ -156,5 +157,22 @@ export const fixture = Effect.fnUntraced(function* (globalEnabled = true, store?
     }
     return { output, metric, capture, raw }
   })
-  return { owner, global, fs, preferences, file, profileID, invoke, reads }
+  // The backend seat's shell runs only inside the OS sandbox that confines its reads (test/fixture/seat-sandbox.ts). On a
+  // host where none can start, the native call must be refused before anything runs, settles, is captured or reads the
+  // profile; callers assert this and stop where seatShellRuns() is false.
+  const refused = Effect.fnUntraced(function* (command = "go test -v .", callID = "native-refused") {
+    const start = reads.length
+    const observed = captures.length
+    const after = approved.length
+    const failure = yield* Effect.promise(() => Promise.resolve(execute({ command, workdir: owner.directory, timeout: 120000 }, {
+      toolCallId: callID, abortSignal: AbortSignal.any([]), messages: [],
+    })).then((result) => ({ ran: result }), (error: unknown) => ({ error })))
+    if ("ran" in failure) throw new Error(`Native seat shell ran without its read sandbox: ${JSON.stringify(failure.ran)}`)
+    expect(failure.error instanceof Error ? failure.error.message : String(failure.error)).toContain(`Tool safety HOLD: ${SEAT_SHELL_REFUSED}: `)
+    expect(reads.slice(start)).toEqual([])
+    expect(captures.length - observed).toBe(0)
+    expect(approved.length - after).toBe(0)
+    expect(yield* llm.hits).toEqual([])
+  })
+  return { owner, global, fs, preferences, file, profileID, invoke, refused, reads }
 })

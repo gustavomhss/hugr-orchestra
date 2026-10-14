@@ -104,12 +104,12 @@ pub(super) fn create(
 }
 
 /// A `PROC_THREAD_ATTRIBUTE_LIST`, deleted on drop.
-struct Attributes {
+pub(super) struct Attributes {
     buf: Vec<usize>,
 }
 
 impl Attributes {
-    fn new(count: u32) -> io::Result<Attributes> {
+    pub(super) fn new(count: u32) -> io::Result<Attributes> {
         let mut size = 0;
         // SAFETY: a size query with a null list (it fails with ERROR_INSUFFICIENT_BUFFER and sets `size`).
         unsafe { InitializeProcThreadAttributeList(std::ptr::null_mut(), count, 0, &mut size) };
@@ -121,13 +121,18 @@ impl Attributes {
         Ok(Attributes { buf })
     }
 
-    fn list(&mut self) -> LPPROC_THREAD_ATTRIBUTE_LIST {
+    pub(super) fn list(&mut self) -> LPPROC_THREAD_ATTRIBUTE_LIST {
         self.buf.as_mut_ptr().cast()
     }
 
     /// # Safety
     /// `value` must stay valid, unmoved, until the list is dropped.
-    unsafe fn set(&mut self, attribute: usize, value: *const core::ffi::c_void, size: usize) -> io::Result<()> {
+    pub(super) unsafe fn set(
+        &mut self,
+        attribute: usize,
+        value: *const core::ffi::c_void,
+        size: usize,
+    ) -> io::Result<()> {
         // SAFETY: an initialized list; the caller keeps `value` alive.
         let ok = unsafe {
             UpdateProcThreadAttribute(

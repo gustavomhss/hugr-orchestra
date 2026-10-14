@@ -8,6 +8,10 @@ import { forwardInitializationFailure } from "./initialization"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT } from "./native-translations"
 import { verifyPackagedCli } from "../../scripts/cli-packaging"
+import { omniCompanions } from "../../scripts/cli-staging"
+import { writeTreeSitterBundle } from "./cli-tree-sitter.fixture"
+import { fixtureSignature, writeRipgrepBundle } from "./cli-ripgrep.fixture"
+import { cliRipgrepKey } from "./cli-artifacts"
 
 describe("desktop initialization", () => {
   const failure = new Error("sidecar startup failed")
@@ -48,6 +52,17 @@ test("Windows WSL version binds descriptor and agrees with effective package met
   const bytes = Buffer.from("owned staged artifact")
   const targets = ["windows-x64-baseline", "linux-arm64", "linux-x64-baseline"]
   await Promise.all(targets.map((target) => writeFile(join(directory, `orchestra-${target}`), bytes)))
+  // A Windows bundle carries each CLI's tree-sitter in tree-sitter-<target>/, its rg in ripgrep-<target>/ and each WSL
+  // guest CLI's omni pair in omni-<target>/, as stageCliArtifacts leaves them.
+  await Promise.all(targets.map((target) => writeTreeSitterBundle(join(directory, `tree-sitter-${target}`), target)))
+  await Promise.all(
+    targets.map((target) => writeRipgrepBundle(join(directory, `ripgrep-${target}`), cliRipgrepKey(target)!)),
+  )
+  await Promise.all(
+    targets
+      .filter((target) => target.startsWith("linux-"))
+      .flatMap((target) => omniCompanions.map((name) => Bun.write(join(directory, `omni-${target}`, name), name))),
+  )
   await writeFile(
     join(directory, "manifest.json"),
     JSON.stringify({
@@ -63,8 +78,9 @@ test("Windows WSL version binds descriptor and agrees with effective package met
   return readWslExpectedVersion("win32", directory, "42.3.3-electron-dev")
     .then(async (version) => {
       expect(version).toBe("1.18.27-owned-artifact")
-      await verifyPackagedCli(directory, "win32", "x64", version)
-      await expect(verifyPackagedCli(directory, "win32", "x64", "42.3.3-electron-dev")).rejects.toThrow("version")
+      const checks = { signature: (file: string) => fixtureSignature(file) }
+      await verifyPackagedCli(directory, "win32", "x64", version, checks)
+      await expect(verifyPackagedCli(directory, "win32", "x64", "42.3.3-electron-dev", checks)).rejects.toThrow("version")
     })
     .finally(() => rm(directory, { recursive: true, force: true }))
 })

@@ -26,6 +26,7 @@ import {
 } from "@/server/routes/instance/httpapi/middleware/workspace-routing"
 import { SessionRunState } from "@/session/run-state"
 import { Session } from "@/session/session"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { alive, gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
 import { AccountTest } from "../fake/account"
 import { AuthTest } from "../fake/auth"
@@ -165,6 +166,7 @@ describe("background processes", () => {
         const fixture = tree(2)
         yield* Effect.addFinalizer(() => Effect.promise(() => reap(fixture.nonce)))
 
+        expectSpawn(import.meta.path)
         const binding = yield* Effect.promise(() => Omni.load())
         const child = binding.spawn(fixture.command, fixture.args, { inheritEnv: false, env: Omni.childEnv() })
         // This test spawns through omni directly, not through the spawner; it counts for the positive control.

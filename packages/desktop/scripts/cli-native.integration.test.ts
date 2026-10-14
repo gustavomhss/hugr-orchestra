@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
 import { execFile } from "node:child_process"
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { promisify } from "node:util"
 import { pathToFileURL } from "node:url"
+import { omniTargets } from "@orchestra/script/omni"
 import { nativeCliTarget, verifyCliArtifact } from "../src/main/cli-artifacts"
 import { installElectron } from "./install-electron"
 
@@ -17,6 +18,19 @@ test("owned native CLI authenticates through Electron without changing workspace
     ["state", "config", "data", "cache", "desktop", "desktop-data", "tmp"].map((name) => mkdir(join(home, name))),
   )
   await writeFile(join(home, "models.json"), "{}")
+  const target = nativeCliTarget(process.platform, process.arch)
+  // The owned CLI is an omni build: a --target build takes its addon and supervisor from
+  // OMNI_ARTIFACTS=<dir>/<omni id>/ (packages/script/src/omni.ts). CI's omni-binaries step exports this checkout's
+  // release pair as HUGR_OMNI_*, which the built binary's preflight then loads.
+  const addon = process.env.HUGR_OMNI_ADDON
+  const supervisor = process.env.HUGR_OMNI_SUPERVISOR
+  if (!addon || !supervisor) throw new Error("Native artifact integration requires HUGR_OMNI_ADDON and HUGR_OMNI_SUPERVISOR")
+  const omni = join(home, "omni-artifacts", omniTargets[target]!.id)
+  await mkdir(omni, { recursive: true })
+  await Promise.all([
+    copyFile(addon, join(omni, "hugr_omni.node")),
+    copyFile(supervisor, join(omni, basename(supervisor))),
+  ])
   const version = "1.18.27-w3-integration"
   const env = {
     ...Object.fromEntries(
@@ -41,10 +55,10 @@ test("owned native CLI authenticates through Electron without changing workspace
     ORCHESTRA_PURE: "1",
     ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     MODELS_DEV_API_JSON: join(home, "models.json"),
+    OMNI_ARTIFACTS: join(home, "omni-artifacts"),
   }
   const run = promisify(execFile)
   const directory = join(desktop, "resources/cli")
-  const target = nativeCliTarget(process.platform, process.arch)
   const binary = join(directory, `orchestra-${target}${process.platform === "win32" ? ".exe" : ""}`)
   const require = createRequire(resolve(desktop, "../cli/package.json"))
   const dependencies = ["@effect/platform-node", "@orchestra/core/installation/version", "effect"]
@@ -75,7 +89,8 @@ test("owned native CLI authenticates through Electron without changing workspace
       )
       const artifact = await verifyCliArtifact(directory, target)
       expect(artifact.version).toBe(version)
-      expect((await run(artifact.path, ["--version"], { env })).stdout.trim()).toBe(`orchestra v${version}`)
+      // The owned CLI prints the exact version, without the formatter's name prefix (packages/cli/src/index.ts).
+      expect((await run(artifact.path, ["--version"], { env })).stdout.trim()).toBe(version)
       await installElectron()
       const built = await Bun.build({
         entrypoints: [join(desktop, "src/main/background-cli.ts")],
