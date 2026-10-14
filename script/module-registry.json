@@ -14,7 +14,7 @@
     { "alias": "http-recorder", "kind": "bun", "scope": ".", "name": "@orchestra/http-recorder", "path": "packages/http-recorder" },
     { "alias": "httpapi-codegen", "kind": "bun", "scope": ".", "name": "@orchestra/httpapi-codegen", "path": "packages/httpapi-codegen" },
     { "alias": "llm", "kind": "bun", "scope": ".", "name": "@orchestra/llm", "path": "packages/llm" },
-    { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "packages/maestro-arsenal" },
+    { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "modules/maestro/arsenal" },
     { "alias": "omni/bindings/node", "kind": "bun", "scope": ".", "name": "hugr-omni", "path": "packages/omni/bindings/node" },
     { "alias": "orchestra", "kind": "bun", "scope": ".", "name": "orchestra", "path": "packages/orchestra" },
     { "alias": "plugin", "kind": "bun", "scope": ".", "name": "@orchestra/plugin", "path": "packages/plugin" },

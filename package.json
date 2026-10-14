@@ -29,6 +29,7 @@
       "packages/*",
       "modules/relay",
       "modules/capability-assets",
+      "modules/maestro/arsenal",
       "packages/sdk/js",
       "packages/omni/bindings/node"
     ],
