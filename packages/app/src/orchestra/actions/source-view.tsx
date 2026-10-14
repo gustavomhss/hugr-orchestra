@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, Match, Show, Switch, untrack } from "solid-js"
+import { createEffect, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Empty, Icon } from "./components"
 import type { ViewProps } from "./contract"
@@ -6,10 +6,13 @@ import { selectedRoute, tabKeydown } from "./entry-routing"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequest } from "./request-policy"
 import { canEditSource, immutableSource } from "./requests"
+import { sourceDiscardBlocked, sourceDraftDirty, sourceUnloadGuard } from "./source-draft-ui"
 
 export function SourceView(props: ViewProps) {
   const state = props.model.state
-  const [view, setView] = createStore({ ref: "" })
+  const [view, setView] = createStore({ ref: "", discard: false })
+  const dirty = createMemo(() => sourceDraftDirty(state))
+  const discardBlocked = createMemo(() => sourceDiscardBlocked(state) || props.model.sourceDiscardBlocked)
   const historical = createMemo(() => Boolean(state.route.runID || state.route.view === "run" || state.route.view === "job"))
   const originalSource = createMemo(() => {
     const source = state.source.value
@@ -39,6 +42,14 @@ export function SourceView(props: ViewProps) {
     && item.id === (state.route.workflowID ?? state.run.value?.workflowID)))
   const path = createMemo(() => state.route.path ?? originalSource()?.path)
   const diagnostics = createMemo(() => state.diagnostics.slice(0, 32))
+
+  createEffect(() => {
+    if (!dirty() || typeof window === "undefined") return
+    onCleanup(sourceUnloadGuard(window, dirty))
+  })
+  createEffect(() => {
+    if (!dirty() || discardBlocked()) setView("discard", false)
+  })
 
   createEffect(() => {
     const ref = state.route.ref ?? originalSource()?.ref ?? ""
@@ -86,8 +97,19 @@ export function SourceView(props: ViewProps) {
           onClick={() => void props.model.validateSource()}><Icon name="check" />{props.t("orchestra.actions.validate")}</button>
         <button type="button" class="mx-btn primary" disabled={!canReview()}
           onClick={() => props.model.dialog({ kind: "review-source" })}>{props.t("orchestra.actions.reviewSource")}</button>
+        <Show when={dirty()}><button type="button" class="mx-btn" disabled={discardBlocked()}
+          onClick={() => setView("discard", true)}>{props.t("orchestra.actions.discardSource")}</button></Show>
       </div>
     </div>
+    <Show when={view.discard && dirty()}><div class="provider-note" role="group" aria-label={props.t("orchestra.actions.confirmDiscardSource")}>
+      <p>{props.t("orchestra.actions.confirmDiscardSource")}</p>
+      <button type="button" class="mx-btn" onClick={() => setView("discard", false)}>{props.t("orchestra.actions.cancel")}</button>
+      <button type="button" class="mx-btn danger" disabled={discardBlocked()} onClick={() => {
+        if (discardBlocked()) return
+        props.model.discardSource()
+        setView("discard", false)
+      }}>{props.t("orchestra.actions.confirm")}</button>
+    </div></Show>
     <Switch>
       <Match when={state.source.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
       <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")}
@@ -97,9 +119,11 @@ export function SourceView(props: ViewProps) {
           {props.t("orchestra.actions.access")}: {props.t(permission())}
         </div>
         <textarea class="source-editor" id="source-editor" aria-label={props.t("orchestra.actions.source")} spellcheck={false}
-          dir="ltr" readOnly={!editable()} value={immutableSource(state, originalSource() ?? state.draftBase) ? originalSource()?.text ?? "" : state.draft}
-          onInput={(event) => { if (editable()) props.model.editSource(event.currentTarget.value) }} />
+          dir="ltr" readOnly={!editable() || view.discard} value={immutableSource(state, originalSource() ?? state.draftBase) ? originalSource()?.text ?? "" : state.draft}
+          onInput={(event) => { if (editable() && !view.discard) props.model.editSource(event.currentTarget.value) }} />
         <div class="source-footer">
+          <Show when={dirty()}><p>{props.t("orchestra.actions.sourceProposed")}</p></Show>
+          <Show when={originalSource()}><p>{props.t("orchestra.actions.sourceSaved")}</p></Show>
           <Show when={originalSource()}>{(source) => <dl class="wf-kv">
             <dt>{props.t("orchestra.actions.path")}</dt><dd><bdi dir="ltr">{source().path}</bdi></dd>
             <dt>{props.t("orchestra.actions.ref")}</dt><dd><bdi dir="ltr">{source().ref}</bdi></dd>
@@ -108,14 +132,15 @@ export function SourceView(props: ViewProps) {
           </dl>}</Show>
           <Show when={draftOnly() && state.draftBase}>{(base) => <dl class="wf-kv">
             <dt>{props.t("orchestra.actions.path")}</dt><dd><bdi dir="ltr">{state.route.path}</bdi></dd>
-            <dt>{props.t("orchestra.actions.ref")}</dt><dd><bdi dir="ltr">{base().ref}</bdi></dd>
+            <dt>{props.t("orchestra.actions.sourceBase")}</dt><dd><bdi dir="ltr">{base().ref}</bdi></dd>
             <dt>{props.t("orchestra.actions.commit")}</dt><dd><code dir="ltr">{base().commit}</code></dd>
           </dl>}</Show>
-          <p>{props.t(historical() ? "orchestra.actions.nativeRetry" : "orchestra.actions.schedules.githubNoteTitle")}</p>
+          <p>{props.t(historical() ? "orchestra.actions.nativeRetry" : state.binding?.provider.kind === "gitlab"
+            ? "orchestra.actions.sourceIdentityNote.gitlab" : "orchestra.actions.sourceIdentityNote.github")}</p>
           <Show when={state.graph.status === "loading"}><p role="status">{props.t("orchestra.actions.loading")}</p></Show>
           <Show when={state.graph.status === "error"}><p role="alert">{props.t("orchestra.actions.unavailable")}</p></Show>
           <Show when={state.graph.status === "ready" && state.graph.value}><p role="status">{props.t("orchestra.actions.validate")}: {props.t(
-            state.graph.value?.state === "complete" ? "orchestra.actions.available" : "orchestra.actions.partialGraph")}</p></Show>
+            state.graph.value?.state === "complete" ? "orchestra.actions.sourceParsed" : "orchestra.actions.partialGraph")}</p></Show>
           <Show when={diagnostics().length}><ul role="status"><For each={diagnostics()}>{(message) => <li><bdi dir="auto">{message}</bdi></li>}</For></ul></Show>
           <Show when={originalSource()?.diagnostics?.length}><ul><For each={originalSource()?.diagnostics?.slice(0, 32)}>{(message) => <li><bdi dir="auto">{message}</bdi></li>}</For></ul></Show>
         </div>

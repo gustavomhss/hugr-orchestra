@@ -1,10 +1,12 @@
-import { createEffect, For, on, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, For, on, onCleanup, Show } from "solid-js"
 import { createStore, type SetStoreFunction } from "solid-js/store"
 import type { Actions } from "@orchestra/schema/actions"
 import { Icon } from "@orchestra/ui/icon"
 import type { Dialog, ViewProps } from "./contract"
 import { actionsError } from "./api"
-import { githubDefinitions, headerDefinitions, Input, isResourceDialog, isSourceDialog, parseInputs, sourceAction, sourceAllowed, sourcePayload, sourceTitle, SourceFields } from "./source-dialogs"
+import { canRequestAction } from "./action-eligibility"
+import { createDispatchData, dispatchDefaultRef, dispatchSelection, sameDispatchSelection, type DispatchData } from "./dispatch-data"
+import { Input, isResourceDialog, isSourceDialog, parseInputs, sourceAction, sourceAllowed, sourcePayload, sourceTitle, SourceFields } from "./source-dialogs"
 
 type FormState = {
   owner?: Dialog
@@ -20,6 +22,7 @@ type FormState = {
   projectPath: string
   ref: string
   raw: string
+  retryMode: "failed" | "all"
   hostnameEdited: boolean
   apiOriginEdited: boolean
   error: string
@@ -38,10 +41,14 @@ export function Dialogs(props: ViewProps) {
     projectPath: "",
     ref: "",
     raw: "",
+    retryMode: "failed",
     hostnameEdited: false,
     apiOriginEdited: false,
     error: "",
   })
+  const [dispatchData, setDispatchData] = createStore<DispatchData>({ status: "idle" })
+  const selection = createMemo(() => dispatchSelection(props.model.state, form.ref), undefined, { equals: sameDispatchSelection })
+  const inspection = createDispatchData({ model: props.model, current: selection, update: setDispatchData })
   let element: HTMLDialogElement | undefined
   const current = () => {
     const value = props.model.state.dialog
@@ -49,23 +56,9 @@ export function Dialogs(props: ViewProps) {
   }
   const binding = () => props.model.state.binding
   const provider = () => binding()?.provider.kind
-  const selectedDefinition = () => {
-    const value = current()
-    const graph = props.model.state.graph.value
-    const selected = value?.kind === "dispatch" ? props.model.state.workflows.value?.items.find((item) => item.id === value.workflowID) : undefined
-    const selectedBinding = binding()
-    if (!graph || !value || value.kind !== "dispatch" || !selectedBinding || !selected || selected.bindingID !== selectedBinding.id || graph.source.bindingID !== selectedBinding.id || graph.source.ref !== form.ref || props.model.state.route.workflowID !== value.workflowID) return undefined
-    if (selected.path !== graph.source.path) return undefined
-    if (props.model.state.route.path && props.model.state.route.path !== graph.source.path) return undefined
-    if (provider() === "gitlab") {
-      if (graph.diagnostics?.some((item) => item.startsWith("inputs_include_unresolved:"))) return undefined
-      return graph.inputs ?? headerDefinitions(graph.header)
-    }
-    return githubDefinitions(graph.triggers)
-  }
   const ownerIsCurrent = (owner: Dialog, id: Actions.BindingID | undefined, revision: number | undefined, generation: number) => !form.disposed && current() === owner && binding()?.id === id && binding()?.revision === revision && form.generation === generation
   const connectOwnerIsCurrent = (owner: Dialog) => !form.disposed && current() === owner
-  const close = () => { if (!form.pending && !props.model.state.submitting) props.model.dialog(undefined) }
+  const close = () => { if (!form.pending && !props.model.state.submitting) { inspection.cancel(); props.model.dialog(undefined) } }
 
   createEffect(on(() => [current(), binding()?.id, binding()?.revision], () => {
     const owner = current()
@@ -88,21 +81,27 @@ export function Dialogs(props: ViewProps) {
         apiOrigin: selected?.provider.apiOrigin ?? "https://api.github.com",
         remote: selected?.remote ?? "origin",
         projectPath: selected?.projectPath ?? "",
-        ref: defaultRef(selected?.id, props.model.state),
+        ref: owner.kind === "dispatch" ? dispatchDefaultRef(props.model.state, owner) : defaultRef(selected?.id, props.model.state),
         raw: "",
+        retryMode: owner.kind === "retry" && !retryModeAvailable(props.model.state, "failed") && retryModeAvailable(props.model.state, "all") ? "all" : "failed",
         hostnameEdited: false,
         apiOriginEdited: false,
         error: "",
       })
     if (element && !element.open) element.showModal()
   }))
-  onCleanup(() => { setForm({ disposed: true, pending: false, raw: "", projectPath: "", ref: "", error: "" }); if (element?.open) element.close() })
+  createEffect(on([selection, () => form.generation], () => {
+    setForm({ raw: "", error: "" })
+    void inspection.load()
+  }))
+  onCleanup(() => { inspection.dispose(); setForm({ disposed: true, pending: false, raw: "", projectPath: "", ref: "", error: "" }); if (element?.open) element.close() })
 
   const submit = (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
     event.preventDefault()
     const owner = current()
     if (!owner || form.pending || props.model.state.submitting || (owner.kind !== "connect" && !binding()) || (isSourceDialog(owner) && !sourceAllowed(owner, props)) || (owner.kind === "jobPlay" && provider() !== "gitlab")) return
     const data = new FormData(event.currentTarget)
+    if (owner.kind === "retry" && (data.get("mode") !== form.retryMode || !retryModeAvailable(props.model.state, form.retryMode))) return
     const id = binding()?.id
     const revision = binding()?.revision
     const generation = form.generation
@@ -110,8 +109,9 @@ export function Dialogs(props: ViewProps) {
     const selectedProvider = provider()
      if (!selectedProvider) return setForm("error", props.t("orchestra.actions.invalidInputs"))
     if (owner.kind === "dispatch") {
-       if (!form.ref.trim()) return setForm("error", props.t("orchestra.actions.required"))
-      const parsed = parseInputs(form.raw, selectedDefinition(), selectedProvider, data)
+      if (!form.ref.trim()) return setForm("error", props.t("orchestra.actions.required"))
+      if (dispatchData.status !== "ready" || !inspection.ready()) return
+      const parsed = parseInputs(form.raw, dispatchData.definitions, selectedProvider, data)
        if (parsed.error) return setForm("error", props.t(parsed.error === "required" ? "orchestra.actions.required" : "orchestra.actions.invalidInputs"))
       const variables = selectedProvider === "gitlab" ? variablesFromForm(data) : undefined
       if (variables && "error" in variables) return setForm("error", props.t("orchestra.actions.invalidInputs"))
@@ -151,24 +151,24 @@ export function Dialogs(props: ViewProps) {
           <button type="button" class="mx-btn icon" disabled={form.pending || props.model.state.submitting} aria-label={props.t("orchestra.actions.close")} onClick={close}><Icon name="close" aria-hidden="true" /></button>
         </header>
         <fieldset class="actions-dialog-fields" disabled={form.pending || props.model.state.submitting || (isSourceDialog(value) && !sourceAllowed(value, props))}>
-          <div class="mx-dialog-body dialog-body"><Show when={props.model.state.commandError || form.error}><p class="mx-error" role="alert">{props.model.state.commandError ? props.t(props.model.state.commandError.message) : form.error}</p></Show><DialogFields props={props} value={value} form={form} setForm={setForm} definition={selectedDefinition()} /></div>
+          <div class="mx-dialog-body dialog-body"><Show when={props.model.state.commandError || form.error}><p class="mx-error" role="alert">{props.model.state.commandError ? props.t(props.model.state.commandError.message) : form.error}</p></Show><DialogFields props={props} value={value} form={form} setForm={setForm} dispatchData={dispatchData} /></div>
         </fieldset>
         <footer class="mx-dialog-foot">
           <div class="ad-footer-actions"><button type="button" class="mx-btn" autofocus={value.kind === "cancel" || value.kind === "remove"} disabled={form.pending || props.model.state.submitting} onClick={close}>{props.t("orchestra.actions.cancel")}</button>
-          <Show when={value.kind !== "jobPlay" || form.provider === "gitlab"}><button type="submit" class="mx-btn primary" disabled={form.pending || props.model.state.submitting || (value.kind !== "connect" && !binding()) || (isSourceDialog(value) && !sourceAllowed(value, props))}>{form.pending || props.model.state.submitting ? props.t("orchestra.actions.submitting") : action(props.t, value, form.provider)}</button></Show></div>
+          <Show when={value.kind !== "jobPlay" || form.provider === "gitlab"}><button type="submit" class="mx-btn primary" disabled={form.pending || props.model.state.submitting || (value.kind !== "connect" && !binding()) || (value.kind === "dispatch" && (dispatchData.status !== "ready" || !inspection.ready())) || (value.kind === "retry" && !retryModeAvailable(props.model.state, form.retryMode)) || (isSourceDialog(value) && !sourceAllowed(value, props))}>{form.pending || props.model.state.submitting ? props.t("orchestra.actions.submitting") : action(props.t, value, form.provider)}</button></Show></div>
         </footer>
       </form>
     }}</Show>
    </dialog></div>
 }
 
-function DialogFields(props: { props: ViewProps; value: Dialog; form: FormState; setForm: SetStoreFunction<FormState>; definition?: readonly Actions.InputDefinition[] }) {
+function DialogFields(props: { props: ViewProps; value: Dialog; form: FormState; setForm: SetStoreFunction<FormState>; dispatchData: DispatchData }) {
   const t = props.props.t
   if (props.value.kind === "connect") return <ConnectFields form={props.form} setForm={props.setForm} t={t} />
-  if (props.value.kind === "dispatch") return <DispatchFields form={props.form} setForm={props.setForm} definition={props.definition} t={t} />
+  if (props.value.kind === "dispatch") return <DispatchFields form={props.form} setForm={props.setForm} data={props.dispatchData} t={t} />
   if (isSourceDialog(props.value)) return <SourceFields value={props.value} view={props.props} form={props.form} />
   if (props.value.kind === "cancel" || props.value.kind === "remove") return <p class="ad-note">{t(props.value.kind === "cancel" ? "orchestra.actions.confirmCancel" : "orchestra.actions.confirmRemove")}</p>
-  if (props.value.kind === "retry") return <RetryFields form={props.form} t={t} />
+  if (props.value.kind === "retry") return <RetryFields form={props.form} setForm={props.setForm} view={props.props} />
    if (props.value.kind === "jobRetry") return <Show when={props.form.provider === "github"}><label class="mx-field"><span>{t("orchestra.actions.debugLogging")}</span><input name="enableDebugLogging" type="checkbox" autofocus /></label></Show>
   if (props.value.kind === "jobPlay" && props.form.provider === "gitlab") return <JobPlayFields t={t} />
   return <p class="ad-note">{t("orchestra.actions.unavailable")}</p>
@@ -198,11 +198,16 @@ function ConnectFields(props: { form: FormState; setForm: SetStoreFunction<FormS
   </>
 }
 
-function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; definition?: readonly Actions.InputDefinition[]; t: ViewProps["t"] }) {
+function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; data: DispatchData; t: ViewProps["t"] }) {
   return <>
     <label class="mx-field"><span>{props.t("orchestra.actions.ref")}</span><input name="ref" autofocus dir="ltr" required value={props.form.ref} onInput={(event) => props.setForm("ref", event.currentTarget.value)} /></label>
-     <Show when={props.definition} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
-       {(definition) => <fieldset class="ad-group"><legend>{props.t("orchestra.actions.inputs")}</legend><div class="ad-group-body"><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></div></fieldset>}
+    <Show when={props.data.status === "loading"}><p class="ad-note" role="status">{props.t("orchestra.actions.loading")}</p></Show>
+    <Show when={props.data.error}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
+    <Show when={props.data.status === "idle"}><p class="ad-note">{props.t("orchestra.actions.noSource")}</p></Show>
+    <Show when={props.data.status === "ready"}>
+      <Show when={props.data.definitions} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
+        {(definition) => <fieldset class="ad-group"><legend>{props.t("orchestra.actions.inputs")}</legend><div class="ad-group-body"><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></div></fieldset>}
+      </Show>
     </Show>
      <Show when={props.form.provider === "gitlab"}>
        <fieldset class="ad-group">
@@ -217,12 +222,19 @@ function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<Form
   </>
 }
 
-function RetryFields(props: { form: FormState; t: ViewProps["t"] }) {
+function RetryFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; view: ViewProps }) {
+  const t = props.view.t
   return <>
-    <p class="ad-note">{props.t("orchestra.actions.nativeRetry")}</p>
-    <label class="mx-field"><span>{props.t("orchestra.actions.retry")}</span><select name="mode" autofocus><option value="failed">{props.t("orchestra.actions.retryFailed")}</option><Show when={props.form.provider === "github"}><option value="all">{props.t("orchestra.actions.retryAll")}</option></Show></select></label>
-      <Show when={props.form.provider === "github"}><label class="mx-field"><span>{props.t("orchestra.actions.debugLogging")}</span><input name="enableDebugLogging" type="checkbox" /></label></Show>
+    <p class="ad-note">{t("orchestra.actions.nativeRetry")}</p>
+    <label class="mx-field"><span>{t("orchestra.actions.retry")}</span><select name="mode" autofocus value={props.form.retryMode} onChange={(event) => props.setForm("retryMode", event.currentTarget.value === "all" ? "all" : "failed")}><option value="failed" disabled={!retryModeAvailable(props.view.model.state, "failed")}>{t("orchestra.actions.retryFailed")}</option><Show when={props.form.provider === "github"}><option value="all" disabled={!retryModeAvailable(props.view.model.state, "all")}>{t("orchestra.actions.retryAll")}</option></Show></select></label>
+       <Show when={props.form.provider === "github"}><label class="mx-field"><span>{t("orchestra.actions.debugLogging")}</span><input name="enableDebugLogging" type="checkbox" /></label></Show>
   </>
+}
+
+function retryModeAvailable(state: ViewProps["model"]["state"], mode: FormState["retryMode"]) {
+  if (state.dialog?.kind !== "retry" || state.binding?.provider.kind === "gitlab" && mode === "all") return false
+  return canRequestAction(state, { kind: state.binding?.provider.kind === "github" && mode === "failed" ? "run.retryFailed" : "run.retry",
+    target: { runID: state.dialog.runID } })
 }
 
 function JobPlayFields(props: { t: ViewProps["t"] }) {
