@@ -216,7 +216,8 @@ export function createActionsCommands(input: {
   }
   return {
     submit, refreshReceipt,
-    get sourceDiscardBlocked() { return !!lease?.uncertain || !!review },
+    get sourceDiscardBlocked() { return !!lease?.uncertain || !!review || lease?.restored === true
+      && (!!lease.phases?.length || lease.intent?.kind.startsWith("source.") === true) },
     dialog(dialog?: Dialog) {
       if (input.owner.disposed || input.state().submitting) return
       input.editor?.cancelCreate()
@@ -302,7 +303,7 @@ function selection(state: State, dialog: Exclude<Dialog, { kind: "connect" }>, o
 }
 function resolve(captured: Selection, payload: unknown): ActionsCommand {
   const raw = decodeAction(Schema.Record(Schema.String, Schema.Json), payload)
-  const value: Schema.JsonObject = { provider: captured.provider, ...raw, ...(captured.provider === "gitlab" && captured.family?.[0] === "variables" && raw.scope === "Repository" ? { scope: "*" } : {}) }
+   const value: Schema.JsonObject = { provider: captured.provider, ...raw }
   if (value.provider !== captured.provider) throw new ActionsRequestError("invalid_input")
   const dialog = captured.dialog
   if (captured.family) {

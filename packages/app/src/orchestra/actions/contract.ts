@@ -82,6 +82,7 @@ export type Model = {
   readonly editSource: (text: string) => void
   readonly validateSource: () => Promise<void>
   readonly discardSource: () => void
+  readonly sourceDiscardBlocked: boolean
   readonly inspectWorkflow: (workflowID: string, ref: string, signal: AbortSignal) => Promise<Actions.Graph>
   readonly resourceScopes: (signal: AbortSignal) => Promise<Actions.ResourcePage>
   readonly resourceAction: (action: "play" | "pause" | "keep", resource: Actions.Resource) => Promise<void>

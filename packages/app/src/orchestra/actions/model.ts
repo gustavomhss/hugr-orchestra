@@ -5,8 +5,8 @@ import { createStore, unwrap } from "solid-js/store"
 import { actionsError, ActionsRequestError, type ActionsScope, type createActionsAPI } from "./api"
 import { createActionsCommands, type ActionsPending } from "./commands"
 import { initial, type Data, type Filters, type Model, type Route, type State } from "./contract"
-import { createRequestOwner, createSourceDraft, previewResponse, saveResponse } from "./requests"
-import { selectedRoute, visibleWorkflows } from "./selection"
+import { createRequestOwner, createSourceDraft, previewResponse, saveResponse, sourceDiscardBlocked } from "./requests"
+import { selectedRoute } from "./selection"
 import { readPolicy } from "./policy"
 import { readDialog } from "./dialog-data"
 import { createActionsInspection } from "./inspection"
@@ -93,21 +93,21 @@ export function createActionsModel(input: {
     }, async (signal) => {
       const value = await input.api.workflows(target, { cursor, limit: 30 }, signal)
       value.items.forEach((item) => bound(item, target))
-      return { ...value, ...(!filters.query && !filters.status ? {} : { total: undefined }), items: visibleWorkflows(value.items, filters) }
+      return value
     })
     if (kind === "runs") return load(kind, key, state.runs, (data) => {
       if (data.status === "ready") pages.runs = cursor
       update({ runs: data })
     }, async (signal) => {
-      const value = await input.api.runs(target, { cursor, limit: route.view === "library" ? 10 : 30,
-        workflowID: route.workflowID, status: filters.status || undefined, ref: filters.ref || undefined,
-        event: filters.event || undefined }, signal)
+       const value = await input.api.runs(target, { cursor, limit: route.view === "library" ? 10 : 30,
+         workflowID: route.workflowID, ...(route.view === "library" ? {} : { status: filters.status || undefined,
+           ref: filters.ref || undefined, event: filters.event || undefined }) }, signal)
       value.items.forEach((item) => {
         bound(item, target)
         if (route.workflowID && item.workflowID !== route.workflowID) throw new ActionsRequestError("binding_stale")
       })
       // Native run list has no free-text query. Search only this bounded page, retaining its cursor.
-      if (!filters.query) return value
+      if (route.view === "library" || !filters.query) return value
       const query = filters.query.toLowerCase()
       return { ...value, total: undefined, items: value.items.filter((item) =>
         [item.id, item.name, item.commit, item.ref, item.actor, item.event].some((field) => field?.toLowerCase().includes(query))) }
@@ -165,7 +165,7 @@ export function createActionsModel(input: {
       if (data.status === "ready" && data.value) { editor.install({ ...data.value, editable: data.value.editable && !route.runID }); return }
       update({ source: { ...data, value: editor.base ?? data.value } })
     }, async (signal) =>
-      validate(await readProposalSource(input.api, target, state.binding?.provider.kind ?? "github", query, signal)))
+      validate(await readProposalSource(input.api, target, state.binding?.provider.kind ?? "github", query, signal, false)))
   }
   const view = (force: boolean) => owner.run("view", identity(), async (handle) => {
     if (state.route.view === "local") return
@@ -180,7 +180,7 @@ export function createActionsModel(input: {
         if (editor.dirty()) { update({ commandError: actionsError(new ActionsRequestError("source_conflict")) }); return }
         owner.reset("view")
         clear()
-        update({ binding })
+        update({ binding, ...(binding?.id !== state.binding?.id ? { filters: { ...unwrap(state.filters), scope: undefined } } : {}) })
       }
       wanted ??= binding?.id
       persist()
@@ -275,8 +275,9 @@ export function createActionsModel(input: {
   return {
     state, navigate, refresh, previewLog, dispose,
     ...createActionsInspection({ api: input.api, state: () => state, disposed: () => owner.disposed }),
+    get sourceDiscardBlocked() { return sourceDiscardBlocked(state) || commands.sourceDiscardBlocked },
     discardSource() {
-      if (owner.disposed || commands.sourceDiscardBlocked) return
+      if (owner.disposed || sourceDiscardBlocked(state) || commands.sourceDiscardBlocked) return
       const created = !!editor.created
       editor.abandon()
       if (created && !editor.dirty()) navigate({ view: "library" })
@@ -312,7 +313,7 @@ export function createActionsModel(input: {
       owner.reset()
       clear()
       wanted = id
-      update({ binding: state.bindings.value?.find((item) => item.id === id), commandError: undefined, route: { view: "library" } })
+      update({ binding: state.bindings.value?.find((item) => item.id === id), filters: { ...unwrap(state.filters), scope: undefined }, commandError: undefined, route: { view: "library" } })
       persist()
       void view(false)
     },
@@ -341,7 +342,7 @@ export function createActionsModel(input: {
         owner.reset()
         clear()
         wanted = binding.id
-        update({ binding, dialog: undefined, route: { view: "library" } })
+        update({ binding, filters: { ...unwrap(state.filters), scope: undefined }, dialog: undefined, route: { view: "library" } })
         persist()
         await view(true)
       })
@@ -364,7 +365,7 @@ export function createActionsModel(input: {
         owner.reset()
         clear()
         wanted = target.bindingID
-        update({ binding: undefined, bindings: { status: "idle" }, route })
+        update({ binding: undefined, filters: { ...unwrap(state.filters), scope: undefined }, bindings: { status: "idle" }, route })
         await view(true)
       })
     },

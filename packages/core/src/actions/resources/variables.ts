@@ -157,8 +157,7 @@ const githubWrite = Effect.fn("ActionsVariables.githubWrite")(function* (service
 
 const gitlabWrite = Effect.fn("ActionsVariables.gitlabWrite")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent,
   input: typeof Delete.Type | typeof Form.Type, root: string) {
-  // GitLab's project-wide scope is natively '*'; never replace a scope filter with display label 'Repository'.
-  if (input.scope === "Repository") return yield* C.fail(binding, "invalid_input", "GitLab project scope must use native environment_scope '*'")
+  // Environment scopes are exact native strings, including a literal 'Repository'.
   const scope = yield* C.guard(binding, () => C.decode(binding, C.Text, intent.target.scope))
   const collection = `${root}/variables`
   const query = { "filter[environment_scope]": scope }
