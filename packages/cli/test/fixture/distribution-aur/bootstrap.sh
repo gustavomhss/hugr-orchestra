@@ -22,13 +22,18 @@ bootstrap_evidence() {
     exit "$status"
   fi
 }
-pacman_policy_query() {
+checked_pacman_query() {
   local receipt=$1 status=0
   shift
-  LC_ALL=C pacman-conf "$@" > "$receipt.txt" 2> "$receipt.stderr" || status=$?
+  LC_ALL=C "$@" > "$receipt.txt" 2> "$receipt.stderr" || status=$?
   printf '%s\n' "$status" > "$receipt.status"
   (( status == 0 )) || fail AUR_PACMAN_POLICY_QUERY_FAILED
   [[ ! -s $receipt.stderr ]] || fail AUR_PACMAN_POLICY_QUERY_DIAGNOSTIC
+}
+pacman_policy_query() {
+  local receipt=$1
+  shift
+  checked_pacman_query "$receipt" pacman-conf --config "$pacman_config" "$@"
 }
 [[ -f /.dockerenv && $(id -u) == 0 ]] || fail AUR_OWNED_DOCKER_GUEST_REQUIRED
 [[ $# == 2 ]] || fail AUR_GUEST_BOOTSTRAP_ARGUMENTS_REQUIRED
@@ -56,9 +61,21 @@ case "$1" in
     ;;
   *) fail AUR_UNSUPPORTED_GUEST_CPU ;;
 esac
+# The pinned official image explicitly disables Landlock in its default config.
+# Preserve the source and let pacman-conf resolve all Includes before removing
+# only that filesystem opt-out. All policy queries and -Syu use this owned file.
+cp -- /etc/pacman.conf /proof/evidence/bootstrap-pacman-original.conf
+checked_pacman_query /proof/evidence/bootstrap-pacman-version pacman --version
+checked_pacman_query /proof/evidence/bootstrap-pacman-package pacman -Q pacman
+pacman_config=/etc/pacman.conf
+pacman_policy_query /proof/evidence/bootstrap-config-original
+bootstrap_evidence config
+pacman_config=/proof/evidence/bootstrap-pacman.conf
+pacman_policy_query /proof/evidence/bootstrap-config-enforced
+bootstrap_evidence config-verify
 # Keep effective signed-repository policy and sandbox-user receipts. No fallback.
 # pacman.conf(5), Pacman 7.1: DownloadUser selects the download/sandbox user.
-if ! LC_ALL=C pacman-conf DownloadUser > /proof/evidence/bootstrap-sandbox-user.txt 2> /proof/evidence/bootstrap-download-user.stderr; then
+if ! LC_ALL=C pacman-conf --config "$pacman_config" DownloadUser > /proof/evidence/bootstrap-sandbox-user.txt 2> /proof/evidence/bootstrap-download-user.stderr; then
   printf '%s\n' "$(< /proof/evidence/bootstrap-download-user.stderr)" >&2
   fail AUR_PACMAN_DOWNLOAD_USER_QUERY_FAILED
 fi
@@ -80,7 +97,7 @@ done < /proof/evidence/bootstrap-repositories.txt
 bootstrap_evidence policy
 bootstrap_packages=(base-devel jq openssl ca-certificates curl nodejs git)
 bootstrap_status=0
-LC_ALL=C pacman --debug -Syu --noconfirm --needed "${bootstrap_packages[@]}" > /proof/evidence/bootstrap-pacman.log 2>&1 || bootstrap_status=$?
+LC_ALL=C pacman --config "$pacman_config" --debug -Syu --noconfirm --needed "${bootstrap_packages[@]}" > /proof/evidence/bootstrap-pacman.log 2>&1 || bootstrap_status=$?
 # A failed log replay must not hide the package manager's actual exit status.
 printf '%s\n' "$bootstrap_status" > /proof/evidence/bootstrap-pacman.status
 record_stdio after-pacman

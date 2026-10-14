@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { copyFile, mkdtemp, readFile, rm } from "node:fs/promises"
 import { isDeepStrictEqual } from "node:util"
 import { Option, Schema, SchemaIssue } from "effect"
+import { prepareBootstrapConfig, verifyBootstrapConfig } from "./bootstrap-config"
 
 export const AurSandboxEvidence = Schema.Struct({
   mode: Schema.Literal("enforce"), seccomp: Schema.Literal(2), noNewPrivileges: Schema.Literal(1),
@@ -331,6 +332,15 @@ if (import.meta.main) await recordBootstrapEvidence()
 
 async function recordBootstrapEvidence() {
   const directory = "/proof/evidence"
+  if (process.argv[2] === "config") {
+    await prepareBootstrapConfig(directory)
+    return
+  }
+  if (process.argv[2] === "config-verify") {
+    await verifyBootstrapConfig(directory)
+    return
+  }
+  await verifyBootstrapConfig(directory)
   const policy = await aurRepositoryPolicy(directory)
   if (process.argv[2] === "policy") {
     await Bun.write(`${directory}/bootstrap-policy.json`, JSON.stringify(policy, null, 2))
