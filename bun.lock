@@ -411,7 +411,7 @@
         "@typescript/native-preview": "catalog:",
       },
     },
-    "packages/maestro-arsenal": {
+    "modules/maestro/arsenal": {
       "name": "@orchestra/maestro-arsenal",
       "version": "0.0.0",
       "dependencies": {
@@ -1573,7 +1573,7 @@
 
     "@orchestra/llm": ["@orchestra/llm@workspace:packages/llm"],
 
-    "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:packages/maestro-arsenal"],
+    "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:modules/maestro/arsenal"],
 
     "@orchestra/plugin": ["@orchestra/plugin@workspace:packages/plugin"],
 
