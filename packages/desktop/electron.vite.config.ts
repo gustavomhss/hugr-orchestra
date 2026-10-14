@@ -2,7 +2,8 @@ import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
 import appPlugin from "@orchestra/app/vite"
 import * as fs from "node:fs/promises"
-import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+// Config loading externalizes package imports; bundle this TypeScript bootstrap with the config.
+import { WorkspacePaths } from "../script/src/workspace-paths.ts"
 import path from "node:path"
 
 const workspace = WorkspacePaths.make(import.meta.dirname)
