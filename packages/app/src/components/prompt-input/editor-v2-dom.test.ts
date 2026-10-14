@@ -4,7 +4,7 @@ import type { PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
-  const prompt: PromptInputV2Prompt = [
+  const prompt = [
     { type: "text", content: "é\u200B\n", start: 0, end: 3 },
     {
       type: "file", path: "resource://doc", content: "@doc", start: 3, end: 7,
@@ -15,7 +15,7 @@ test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", (
     { type: "text", content: "\n", start: 7, end: 8 },
     { type: "agent", name: "backend", content: "@Backend", start: 8, end: 16 },
     { type: "text", content: "\r\n😀\n", start: 16, end: 21 },
-  ]
+  ] satisfies PromptInputV2Prompt
   const editor = document.createElement("div")
   editor.contentEditable = "true"
   document.body.appendChild(editor)
@@ -39,7 +39,7 @@ test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", (
 test.each(["\n\n", "\u200B", "\né — 😀\r\n\u200B\n", "```owner-demand\n\n```\n"])(
   "V2 literal serializer keeps exact text: %j", (content) => {
     const editor = document.createElement("div")
-    const prompt: PromptInputV2Prompt = [{ type: "text", content, start: 0, end: content.length }]
+    const prompt = [{ type: "text", content, start: 0, end: content.length }] satisfies PromptInputV2Prompt
     renderPromptInputV2Editor(editor, prompt)
     expect(parsePromptInputV2Editor(editor)).toEqual(prompt)
   },
