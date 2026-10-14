@@ -3,7 +3,7 @@
   "modules": [
     { "alias": "atlas-boundary", "kind": "bun", "scope": ".", "name": "@orchestra/atlas-boundary", "path": "packages/atlas-boundary" },
     { "alias": "app", "kind": "bun", "scope": ".", "name": "@orchestra/app", "path": "packages/app" },
-    { "alias": "capability-assets", "kind": "bun", "scope": ".", "name": "@orchestra/capability-assets", "path": "packages/capability-assets" },
+    { "alias": "capability-assets", "kind": "bun", "scope": ".", "name": "@orchestra/capability-assets", "path": "modules/capability-assets" },
     { "alias": "cli", "kind": "bun", "scope": ".", "name": "@orchestra/cli", "path": "packages/cli" },
     { "alias": "client", "kind": "bun", "scope": ".", "name": "@orchestra/client", "path": "packages/client" },
     { "alias": "codemode", "kind": "bun", "scope": ".", "name": "@orchestra/codemode", "path": "packages/codemode" },

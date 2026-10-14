@@ -52,6 +52,7 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | [`packages/sdk-next`](packages/sdk-next/README.md) | Scoped embedded host composing Client, Core, and Server |
 | [`packages/plugin`](packages/plugin/README.md) | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority |
 | [`modules/relay`](modules/relay/README.md) | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle |
+| [`modules/capability-assets`](modules/capability-assets/README.md) | Data-only capability catalog, pinned source provenance, and license notices |
 | `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
 | `packages/omni`            | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
 | [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
