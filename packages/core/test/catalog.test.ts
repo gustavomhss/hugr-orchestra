@@ -30,7 +30,7 @@ const catalogLayer = AppNodeBuilder.build(
 const it = testEffect(catalogLayer)
 
 describe("CatalogV2", () => {
-  it.effect("API settings credentials use runner precedence and public never authenticates paid OpenCode", () =>
+  it.effect("API settings credentials use runner precedence and public never authenticates paid Zen", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       const integrations = yield* Integration.Service
@@ -64,7 +64,7 @@ describe("CatalogV2", () => {
       expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
     }),
   )
-  it.effect("anonymous OpenCode exposes only explicitly free models and cannot select a paid configured default", () =>
+  it.effect("anonymous Zen exposes only explicitly free models and cannot select a paid configured default", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       const integrations = yield* Integration.Service
@@ -115,7 +115,7 @@ describe("CatalogV2", () => {
     }),
   )
 
-  it.effect("anonymous OpenCode preserves configured request auth, disabled providers and policy", () =>
+  it.effect("anonymous Zen preserves configured request auth, disabled providers and policy", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       const policy = yield* Policy.Service
