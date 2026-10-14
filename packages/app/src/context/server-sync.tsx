@@ -59,6 +59,7 @@ import type {
 } from "@opencode-ai/client/promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
+import type { AppSession, SessionManagementEvent } from "@/utils/session"
 
 type GlobalStore = {
   ready: boolean
@@ -178,6 +179,30 @@ export const loadActiveSessionsQuery = (
     refetchOnWindowFocus: false,
   })
 
+export function applySessionPolicyEvent(input: {
+  event: SessionManagementEvent
+  session: Pick<ServerSession, "apply" | "get">
+  children: Readonly<Record<string, object | undefined>>
+  disposed: () => boolean
+  indexSession: (row: AppSession) => void
+}) {
+  // One event can recover an evicted fence belonging to another directory.
+  const owners = { ...input.children }
+  const recovery = input.session.apply(input.event)
+  if (!recovery) return
+  return recovery.then((rows) => {
+    if (input.disposed()) return
+    rows.forEach((row) => {
+      const key = directoryKey(row.directory)
+      const owner = owners[key]
+      if (!owner || input.children[key] !== owner) return
+      // Read the current row so later events/deletion cannot be overwritten by this completion.
+      const current = input.session.get(row.id)
+      if (current && directoryKey(current.directory) === key) input.indexSession(current)
+    })
+  })
+}
+
 export function seedActiveSessionStatuses(
   session: Pick<ServerSession, "data" | "set">,
   active: SessionActiveOutput | Record<string, SessionStatus>,
@@ -224,6 +249,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
+  let disposed = false
+  onCleanup(() => {
+    disposed = true
+  })
 
   const sdkFor = (directory: string) => {
     const key = directoryKey(directory)
@@ -447,7 +476,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                 permission: session.data.permission,
               })
               batch(() => {
-                next.forEach(session.remember)
+                const remembered = next.map(session.remember)
                 setStore(
                   "sessionTotal",
                   estimateRootSessionTotal({
@@ -456,7 +485,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                     limited: x.limited,
                   }),
                 )
-                setStore("session", reconcile(next, { key: "id" }))
+                setStore("session", reconcile(remembered, { key: "id" }))
               })
               sessionMeta.set(key, { limit })
             })
@@ -551,11 +580,14 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     const recent = bootingRoot || Date.now() - bootedAt < 1500
 
     if (event.current) session.applyV2(event.current)
-    session.apply(event)
+    const policyRecovery = eventType === "session.next.subagent.models.changed"
+      ? applySessionPolicyEvent({ event, session, children: children.children, disposed: () => disposed, indexSession })
+      : session.apply(event)
+    void policyRecovery?.catch(() => {})
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
     }
-    homeSessions.refresh(event.type)
+    if (event.type !== "session.next.subagent.models.changed") homeSessions.refresh(event.type)
     if (eventType === "integration.connection.updated") void refreshProviders()
 
     if (directory === "global") {
@@ -615,6 +647,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     applyDirectoryEvent({
       event,
       directory,
+      readSession: session.get,
       store,
       setStore,
       push: (directory) => {
