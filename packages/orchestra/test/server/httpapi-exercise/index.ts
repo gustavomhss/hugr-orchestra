@@ -48,6 +48,16 @@ import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
 import { sessionInitScenarios } from "./session-init"
 import { researchArtifactScenarios } from "./research-artifact"
+import { actionsBindingScenarios } from "./actions-binding"
+import { actionsReadScenarios } from "./actions-read"
+import { actionsOperationScenarios } from "./actions-operation"
+import { actionsCommandScenarios } from "./actions-command"
+import { actionsProviderBoundaryScenarios } from "./actions-provider-boundary"
+import { actionsSourceScenarios } from "./actions-source"
+import { actionsResourceScenarios } from "./actions-resource"
+import { actionsTransferScenarios } from "./actions-transfer"
+import { actionsSubagentModelsScenarios } from "./actions-subagent-models"
+import { actionsFailureScenarios } from "./actions-failures"
 
 const scenarios: Scenario[] = [
   http.protected
@@ -119,6 +129,16 @@ const scenarios: Scenario[] = [
   ...relayScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
+  ...actionsBindingScenarios,
+  ...actionsReadScenarios,
+  ...actionsOperationScenarios,
+  ...actionsCommandScenarios,
+  ...actionsProviderBoundaryScenarios,
+  ...actionsSourceScenarios,
+  ...actionsResourceScenarios,
+  ...actionsTransferScenarios,
+  ...actionsSubagentModelsScenarios,
+  ...actionsFailureScenarios,
   ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
