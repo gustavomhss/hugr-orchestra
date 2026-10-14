@@ -16,7 +16,7 @@ const draftURL = `/new-session?draftId=${draftID}`
 const sessionURL = `/server/${base64Encode(server)}/session/${sessionID}`
 const otherURL = `/server/${base64Encode(otherServer)}/session/${otherID}`
 const draftTab = `[data-tab-key="draft:${draftID}"]`
-const composer = '[data-component="prompt-input-v2"]'
+const composer = '[data-prompt-admitting]'
 const editor = '[data-component="prompt-input-v2"] [data-component="prompt-input"]'
 const submit = '[data-component="prompt-input-v2"] [data-action="prompt-submit"]'
 const promptPath = `/session/${sessionID}/prompt_async`
