@@ -53,3 +53,40 @@ Canonical names and caller-registered legacy aliases return the original declara
 An empty inventory, invalid selector, duplicate identity, missing target, ambiguous match, or stale alias fails explicitly. Every alias is checked at construction, including unused registrations. Source directory names are not guessed from selectors. Manifestless assets retain their separate inventory surface; this resolver consumes Bun/npm/Cargo manifest declarations.
 
 During restructuring, verification is limited to the new focused cases and package-local typecheck. Passing cases are recorded and reused; CI runs once on the final composed bundle after all deliveries. The focused resolver cases live in `packages/script/test/module-resolver.test.ts`.
+
+## Source workspace paths
+
+`@orchestra/script/workspace-paths` discovers the physical source root from its root manifest and `script/module-registry.json`. `WorkspacePaths.make(start)` validates a snapshot of registered package manifests and returns absolute paths through `module(aliasOrName)`, `domain("omni" | "atlas")`, and `entries`. A relocated module changes its registered path, not its identity. Paths and manifests must remain physically inside the source root.
+
+`script/toolchain-registry.json` identifies Cargo Omni and npm Atlas separately from the Bun registry. In particular, `domain("omni")` is the native source root; `module("hugr-omni")` is its Node binding package. These checks validate paths and manifest identity, not Cargo dependency resolution.
+
+Importing the path helper or tree-sitter admission module does not discover a workspace. Source build operations perform discovery when called; packaged admission continues to use installed resource paths. Desktop staging, Electron packaging, CLI grammar preparation, and Script version/team readers use the registered source locations.
+
+From `packages/desktop`, `bun typecheck tsconfig.packaging.json` checks the packaging scripts and Electron configurations listed in that config. It does not check unrelated GUI proof scripts.
+
+Nix generates its bootstrap alias config outside the checkout:
+
+```sh
+bun --no-install nix/scripts/workspace-config.ts --source /absolute/checkout --out /absolute/evidence/workspace-paths.json
+```
+
+The config has an absolute source base and registered Script/Core mappings. `check-distribution.sh` passes the same config to both native output oracles and their children. The dependency fingerprint includes both registries, registered module paths, and toolchain/domain paths; missing registered manifests fail explicitly. Native Nix execution and output controls remain part of final qualification.
+
+## Portable recovery bundles
+
+`script/archive-inventory.ts` captures immutable Git metadata for the selected scopes. `script/recovery-bundle.ts` adds payload capture and restoration:
+
+```ts
+import { createRecoveryBundle, restoreRecoveryBundle } from "./script/recovery-bundle.ts"
+
+const manifest = await createRecoveryBundle("/absolute/checkout", "<commit>", "/absolute/retained/bundle")
+await restoreRecoveryBundle("/absolute/retained/bundle", "/absolute/restored-source")
+```
+
+The directory format is `manifest.json`, `manifest.sha256`, and deduplicated raw `blobs/<sha256>`. The manifest records commit/tree, scope ownership/readers/disposition, and each member's path, executable mode, Git blob ID, size, and content SHA-256. Git blob provenance and content SHA-256 are distinct and both are checked against payload bytes.
+
+Creation reads immutable Git blobs sequentially without replacement refs and publishes the manifest checksum after payload writes. Output must be a new or empty owned directory outside the source. Restoration validates the complete declared member list, checksums, payloads, modes, and physical input ownership before creating output. It refuses extra/missing/corrupt entries, unsafe or overlapping paths, nonempty destinations, and destinations inside any Git checkout. It restores source bytes and modes; it does not extract retained archives or restore live application stores.
+
+Creation and restoration claim existing empty slots before private staging, verify the claimed identity, and publish with the OS's atomic no-replace operation. A later-created slot, including an empty directory, aborts publication and remains untouched; concurrent disjoint restores cannot merge their trees. Restored members use exclusive placeholders and pinned file handles; directory identities and the destination filesystem detect aliases. Portable names exclude Windows-forbidden characters and NFC/case-equivalent member or scope names. Darwin uses `renameatx_np(RENAME_EXCL)`, Linux uses `renameat2(RENAME_NOREPLACE)`, and Windows uses `MoveFileW`; unsupported publication primitives fail without an overwrite fallback.
+
+Retention of the output is what makes this a recovery copy. Creation alone does not establish durable storage or authorize source removal. Scope dispositions and reader uncertainty remain in the manifest for subsequent review.

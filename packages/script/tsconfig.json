@@ -6,5 +6,12 @@
     "resolveJsonModule": true,
     "types": ["bun"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "../../script/test-ci.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "../../script/test-ci.ts",
+    "../../nix/scripts/workspace-config.ts",
+    "../../nix/scripts/verify-distribution.ts",
+    "../../nix/scripts/probe-distribution.ts"
+  ]
 }
