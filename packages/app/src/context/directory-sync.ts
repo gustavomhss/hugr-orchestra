@@ -45,8 +45,7 @@ export const createDirSyncContext = (
     return batch(() => {
       const result = (current()[1] as (...args: unknown[]) => unknown)(...input)
       if (input[0] === "session" || typeof input[0] === "function") {
-        const sessions = fences.visible(current()[0].session, serverSync.session.get)
-        sessions.forEach(serverSync.session.remember)
+        const sessions = fences.visible(current()[0].session.map(serverSync.session.remember), serverSync.session.get)
         current()[1]("session", reconcile(sessions, { key: "id" }))
       }
       return result
@@ -138,10 +137,9 @@ export const createDirSyncContext = (
         const [store, setStore] = current()
         setStore("limit", (value) => value + count)
         const response = await serverSDK.api.session.list({ directory, limit: store.limit, order: "desc" })
-        const sessions = fences.visible(response.data.map(normalizeSessionInfo), serverSync.session.get)
+        const sessions = fences.visible(response.data.map(normalizeSessionInfo).map(serverSync.session.remember), serverSync.session.get)
           .sort((a, b) => cmp(a.id, b.id))
           .slice(0, store.limit)
-        sessions.forEach(serverSync.session.remember)
         setStore("session", reconcile(sessions, { key: "id" }))
       },
       more: createMemo(() => current()[0].session.length >= current()[0].limit),
