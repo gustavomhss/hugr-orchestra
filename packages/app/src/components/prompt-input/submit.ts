@@ -3,7 +3,7 @@ import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
-import { batch, startTransition, type Accessor } from "solid-js"
+import { batch, createComputed, createMemo, onCleanup, startTransition, type Accessor } from "solid-js"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
@@ -16,7 +16,8 @@ import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
-import { clearPending, pendingRules } from "@/components/draft-subagent-models"
+import { clearPending, pendingRules, pendingSnapshot } from "@/components/draft-subagent-models"
+import { sameModelPolicy, type SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
@@ -28,6 +29,39 @@ import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
 import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
+import { draftSessionKey } from "./draft-session"
+import { createCompatibleApi } from "@/utils/server-compat"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
+import { SessionManagementUnsupported } from "@/utils/session-management-errors"
+
+type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
+type Admission = { busy: boolean; directory?: string; session?: Pick<Session, "id">; policyWritten?: boolean; legacyOverrideAcknowledged?: boolean }
+const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
+
+/** Each edit, including restoring inheritance, needs its own durable receipt. */
+export async function acknowledgeDraftPolicy(input: {
+  key: string
+  current: () => boolean
+  write: (policy: SubagentModelPolicy) => Promise<SubagentModelPolicy>
+  wait: () => Promise<void>
+  written: () => boolean
+  markWritten: () => void
+  failedMessage: string
+}) {
+  while (input.current()) {
+    const snapshot = pendingSnapshot(input.key)
+    if (snapshot.revision > 0 || input.written()) {
+      input.markWritten()
+      const acknowledged = await input.write(snapshot.policy)
+      if (!input.current()) return
+      if (!sameModelPolicy(acknowledged, snapshot.policy)) throw new Error(input.failedMessage)
+    }
+    await input.wait()
+    if (!input.current()) return
+    if (pendingSnapshot(input.key).revision !== snapshot.revision) continue
+    return snapshot
+  }
+}
 
 type PendingPrompt = {
   abort: AbortController
@@ -48,6 +82,14 @@ export type FollowupDraft = {
   system?: string
   // An explicit V2 delivery mode; omitted, the server steers.
   delivery?: "steer" | "queue"
+  // Queued handoff retains the admitting source and rechecks its latest writes at send time.
+  source?: {
+    api: DirectorySDK["api"]["session"]
+    serverSync: ServerSync
+    sync: DirectorySync
+    current: () => boolean
+    before: () => Promise<boolean>
+  }
 }
 
 type FollowupSendInput = {
@@ -72,36 +114,52 @@ const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? 
 const draftImages = (prompt: Prompt) => prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
 
 export async function sendFollowupDraft(input: FollowupSendInput) {
+  const api = input.draft.source?.api ?? input.api
+  const serverState = input.draft.source?.serverSync ?? input.serverSync
+  const syncState = input.draft.source?.sync ?? input.sync
+  const current = () => input.draft.source?.current() !== false
   const text = draftText(input.draft.prompt)
   const images = draftImages(input.draft.prompt)
   const setBusy = () => {
     if (!input.optimisticBusy) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
+    if (!current()) return
+    serverState.session.set("session_status", input.draft.sessionID, { type: "busy" })
   }
 
   const setIdle = () => {
     if (!input.optimisticBusy) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
+    if (!current()) return
+    serverState.session.set("session_status", input.draft.sessionID, { type: "idle" })
   }
 
   const wait = async () => {
+    if (!current()) return false
     const ok = await input.before?.()
-    if (ok === false) return false
-    return true
+    if (ok === false || !current()) return false
+    const ready = await input.draft.source?.before()
+    return ready !== false && current()
   }
+
+  if (!(await wait()) || !current()) return false
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
-    setBusy()
+  if (cmd && syncState.data.command.find((item) => item.name === cmd)) {
+    const files = await Promise.all(
+      images.map(async (attachment) => ({
+        uri: await blobDataUrl(attachment.blob, attachment.mime),
+        name: attachment.filename,
+      })),
+    )
+    if (!current()) return false
     try {
-      if (!(await wait())) {
+      if (!(await wait()) || !current()) {
         setIdle()
         return false
       }
-
+      setBusy()
       const messageID = Identifier.ascending("message")
-      await input.api.command({
+      await api.command({
         sessionID: input.draft.sessionID,
         id: messageID,
         command: cmd,
@@ -113,14 +171,9 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
           variant: input.draft.variant,
         },
         delivery: input.draft.delivery,
-        files: await Promise.all(
-          images.map(async (attachment) => ({
-            uri: await blobDataUrl(attachment.blob, attachment.mime),
-            name: attachment.filename,
-          })),
-        ),
+        files,
       })
-      return true
+      return current()
     } catch (err) {
       setIdle()
       throw err
@@ -134,6 +187,8 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
     })),
   )
+  if (!current()) return false
+  if (!(await wait()) || !current()) return false
   const { requestParts, optimisticParts } = buildRequestParts({
     prompt: input.draft.prompt,
     context: input.draft.context,
@@ -154,7 +209,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   }
 
   const add = () =>
-    input.sync.session.optimistic.add({
+    syncState.session.optimistic.add({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
       message,
@@ -162,7 +217,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     })
 
   const remove = () =>
-    input.sync.session.optimistic.remove({
+    syncState.session.optimistic.remove({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
       messageID,
@@ -175,7 +230,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   })
 
   try {
-    if (!(await wait())) {
+    if (!(await wait()) || !current()) {
       batch(() => {
         setIdle()
         remove()
@@ -183,7 +238,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       return false
     }
 
-    await input.api.prompt({
+    await api.prompt({
       sessionID: input.draft.sessionID,
       id: messageID,
       agent: input.draft.agent,
@@ -217,7 +272,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
           : [],
       ),
     })
-    return true
+    return current()
   } catch (err) {
     batch(() => {
       setIdle()
@@ -229,13 +284,17 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
 
 // Shared by the composer and evidence replay: every shell run gets a new event ID, and
 // the request carries no workdir, so callers must only replay in the session directory.
-export function submitShellCommand(input: {
+export async function submitShellCommand(input: {
   api: DirectorySDK["api"]["session"]
   sessionID: string
   command: string
   agent: string
   model: { providerID: string; modelID: string }
+  before?: () => Promise<boolean> | boolean
+  current?: () => boolean
 }) {
+  if (input.current?.() === false) return
+  if ((await input.before?.()) === false || input.current?.() === false) return
   return input.api.shell({
     sessionID: input.sessionID,
     id: Event.ID.create(),
@@ -261,6 +320,7 @@ type PromptSubmitInput = {
   setMode: (mode: "normal" | "shell") => void
   setPopover: (popover: "at" | "slash" | null) => void
   newSessionWorktree?: Accessor<string | undefined>
+  pendingKey?: Accessor<string>
   onNewSessionWorktreeReset?: () => void
   shouldQueue?: Accessor<boolean>
   onQueue?: (draft: FollowupDraft) => void
