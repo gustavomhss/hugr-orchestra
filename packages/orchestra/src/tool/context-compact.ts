@@ -32,9 +32,7 @@ export const ContextCompactTool = Tool.define(
           const decoded = ctx.extra?.model === undefined ? undefined : yield* Schema.decodeUnknownEffect(Provider.Model)(ctx.extra.model).pipe(Effect.orDie)
           const model = decoded && { ...decoded, cost: { ...decoded.cost, tiers: decoded.cost.tiers?.map((tier) => ({ ...tier })) } }
           const outcome = yield* continuity.compact({ sessionID: ctx.sessionID, force: true, model, canRecall: ctx.extra?.canRecall === true })
-          return { title: "Context compaction", output: OUTPUT[outcome] +
-            (ctx.extra?.claudeCode === true ? " The prepared context is loaded at the next SDK resume, not during this query." : ""),
-            metadata: { outcome, truncated: false } }
+          return { title: "Context compaction", output: OUTPUT[outcome], metadata: { outcome, truncated: false } }
         }),
     }
   }),
