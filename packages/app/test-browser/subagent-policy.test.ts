@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { afterEach, expect, test } from "bun:test"
 import { createComponent, createRoot, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
@@ -24,12 +24,17 @@ const model = {
   limit: { context: 1000, output: 100 }, status: "active", options: {}, headers: {}, release_date: "2020-01-01",
 } satisfies Provider["models"][string]
 const provider: Provider = { id: "router", name: "Router", source: "custom", env: [], options: {}, models: { [model.id]: model } }
+const fixtures = new Set<() => void>()
+afterEach(() => { for (const dispose of fixtures) dispose() })
 
 function renderPicker(children: () => JSX.Element, host: HTMLElement) {
-  return render(() => createComponent(platform.PlatformProvider, {
+  const dispose = render(() => createComponent(platform.PlatformProvider, {
     value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
     get children() { return children() },
   }), host)
+  const cleanup = () => { dispose(); host.remove(); fixtures.delete(cleanup) }
+  fixtures.add(cleanup)
+  return cleanup
 }
 
 async function settle() {
@@ -122,9 +127,13 @@ test.each([
   expect(rows[0].getAttribute("data-active")).toBe("true")
   rows[1].focus()
   expect(document.activeElement).toBe(rows[1])
-  rows[0].dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 20 }))
+  const move = new MouseEvent("mousemove", { bubbles: true, clientX: 20, clientY: 20 })
+  // Synthetic DOM events do not derive OS pointer deltas from client coordinates.
+  Object.defineProperty(move, "movementX", { value: 1 })
+  rows[0].dispatchEvent(move)
   await settle()
   expect(rows[0].getAttribute("data-active")).toBe("true")
+  expect(document.activeElement).toBe(rows[1])
   const enter = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })
   rows[1].dispatchEvent(enter)
   await settle()
@@ -311,6 +320,8 @@ test("failed pre-ACK reads never prevent mandatory fresh canonical read after su
   await started.promise
   const writing = root.policy.write(canonical)
   ack.resolve(canonical)
+  await settle()
+  expect(calls).toEqual(["read", "write"])
   const failure = new Error("pre-write read failed")
   before.reject(failure)
   expect(await loading).toBe(failure)
