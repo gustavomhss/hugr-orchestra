@@ -13,8 +13,8 @@ function largePaste(text: string) {
 }
 
 export function normalizePaste(text: string) {
-  if (!text.includes("\r")) return text
-  return text.replace(/\r\n?/g, "\n")
+  // Clipboard text is already the input boundary; do not fold known CR bytes.
+  return text
 }
 
 export function pasteMode(text: string) {
