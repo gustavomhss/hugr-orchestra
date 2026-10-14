@@ -32,21 +32,25 @@ import { readdirSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { REQ_FILE_RE, parseReqBlocks, coamendViolations } from "../lib/ears-coamend.mjs"
+import { atlasRevisionSource } from "../../scripts/git-source-root.mjs"
 
 const ROOT = process.env.EARS_COAMEND_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), "..", "..")
 const REQ_DIR = join(ROOT, "docs", "requirements")
 
-/** `git … <args>` at ROOT. Returns null on any non-zero exit (missing ref, absent file, no repo) so every
- *  caller decides what an absence MEANS rather than crashing on it. */
+/** Strict Git reads; only default base discovery retains the local missing-base policy. */
 function git(args) {
+  return execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] })
+}
+
+function defaultBase() {
   try {
-    return execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+    return git(["merge-base", "origin/master", "HEAD"]).trim() || null
   } catch {
     return null
   }
 }
 
-/** The REQ-owner corpus files that exist in the working tree, relative to ROOT (== git root here). */
+/** The REQ-owner corpus files that exist in the working tree, relative to the current Atlas root. */
 function corpusFiles() {
   let names
   try {
@@ -68,6 +72,35 @@ function corpusAt(read, files) {
   return byId
 }
 
+function revisionCorpus(base, files) {
+  try {
+    const source = atlasRevisionSource(base, git, { allowEmpty: true })
+    const corpus = corpusAt((rel) => {
+      const path = `${source.prefix ? `${source.prefix}/` : ""}${rel}`
+      const entry = git(["--literal-pathspecs", "ls-tree", "-z", "--full-tree", source.revision, "--", path])
+        .split("\0")
+        .find((entry) => entry.slice(entry.indexOf("\t") + 1) === path)
+      // An absent file is a new requirement domain; a failed Git read is never absence.
+      if (entry === undefined) return null
+      if (entry.slice(0, entry.indexOf("\t")).split(" ")[1] !== "blob") {
+        throw new Error(`ATLAS_SOURCE_CORPUS_NOT_BLOB: ${source.revision}:${path}`)
+      }
+      return git(["show", `${source.revision}:${path}`])
+    }, files)
+    if (corpus.size === 0) {
+      console.log(`ears-coamend-guard: FIRST-IMPORT / NEW-CORPUS — no prior REQ blocks at ${source.revision.slice(0, 8)}; new requirements have no amendments to compare.`)
+    }
+    return corpus
+  } catch (error) {
+    if (error?.code === "ATLAS_SOURCE_PREFIX_MISSING") {
+      console.log(`ears-coamend-guard: FIRST-IMPORT — Atlas absent at valid base ${base}; current requirements are new.`)
+      return new Map()
+    }
+    console.error(`ears-coamend-guard: FAIL — cannot read base corpus: ${error instanceof Error ? error.message : String(error)}`)
+    process.exit(1)
+  }
+}
+
 // ── (1) working-tree corpus — the empty-tree fail-closed lives here ──────────────────────────────────
 const files = corpusFiles()
 const head = corpusAt((rel) => {
@@ -86,7 +119,7 @@ if (head.size === 0) {
 }
 
 // ── (2) base resolution ──────────────────────────────────────────────────────────────────────────────
-const base = (process.env.EARS_COAMEND_BASE ?? git(["merge-base", "origin/master", "HEAD"])?.trim()) || null
+const base = (process.env.EARS_COAMEND_BASE ?? defaultBase()) || null
 if (base === null) {
   if (process.env.CI) {
     console.error(
@@ -103,7 +136,7 @@ if (base === null) {
 }
 
 // ── (3) diff the corpus at base against the working tree ─────────────────────────────────────────────
-const baseById = corpusAt((rel) => git(["show", `${base}:${rel}`]), files)
+const baseById = revisionCorpus(base, files)
 const violations = coamendViolations(baseById, head)
 
 if (violations.length > 0) {
