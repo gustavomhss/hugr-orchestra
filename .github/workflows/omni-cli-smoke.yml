@@ -16,6 +16,7 @@ on:
     paths:
       - "packages/orchestra/script/**"
       - "packages/omni/**"
+      - "native/omni/**"
       - ".github/workflows/omni-cli-smoke.yml"
 
 concurrency:
