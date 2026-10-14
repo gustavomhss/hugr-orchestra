@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import {
-  connectedSubagentModels, createModelPolicyEditor, createModelRuleEditor, modelUnavailable, sameModelPolicy,
+  connectedSubagentModels, createModelPolicyEditor, createModelRuleEditor, effectiveModelState, modelUnavailable, sameModelPolicy,
   type ModelPolicySnapshot, type ModelRule, type SubagentModelPolicy,
 } from "./subagent-model-rules"
 import type { Provider } from "@orchestra/sdk/v2/client"
@@ -307,4 +307,11 @@ test("V1 editor sends append batches and keeps latest ACK over a delayed strict-
   expect(editor.rules()).toEqual(source.acknowledged)
   source.live = [{ permission: "task", pattern: "other/*", action: "deny" }]
   expect(editor.rules()).toEqual(source.live)
+})
+
+test("V1 last matching ask replaces an earlier allow instead of inheriting permission", () => {
+  expect(effectiveModelState([
+    { permission: "task", pattern: "*/*", action: "allow" },
+    { permission: "task", pattern: "router/*", action: "ask" },
+  ], "router", "team/model/v1")).toBe("ask")
 })

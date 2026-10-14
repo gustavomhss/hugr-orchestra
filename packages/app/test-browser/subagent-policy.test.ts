@@ -4,7 +4,7 @@ import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
 import type { Provider } from "@orchestra/sdk/v2/client"
-import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { ModelPolicySnapshot, ModelRule, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { solidDom } from "./solid-dom"
 
 const picker: typeof import("@/components/subagent-model-picker") = await import(solidDom("@/components/subagent-model-picker", import.meta.dir))
@@ -236,6 +236,29 @@ test("real picker disables unresolved policy/catalog state and retries catalog f
   expect(retries.count).toBe(1)
   dispose()
   host.remove()
+})
+
+test("real V1 session picker leaves last-matching ask unchecked and other allowed models checked", async () => {
+  const permission: ModelRule[] = [
+    { permission: "task", pattern: "*/*", action: "allow" },
+    { permission: "task", pattern: `router/${model.id}`, action: "ask" },
+  ]
+  const other = { ...model, id: "other", name: "Other allowed model" }
+  const host = document.createElement("div")
+  document.body.append(host)
+  const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
+    return createComponent(Root, { open: true, get children() {
+      return createComponent(picker.SubagentModelPicker, {
+        sessionID: "ses_legacy_ask", directory: "/repo", status: "success", protocol: "v1", supported: true, rulesReady: true,
+        providers: [{ ...provider, models: { [model.id]: model, other } }],
+        readRules: () => permission, writeRules: async () => permission, onRetry() {},
+      })
+    } })
+  } }), host)
+  await settle()
+  expect(switchFor(host, model.name).checked).toBe(false)
+  expect(switchFor(host, other.name).checked).toBe(true)
+  dispose()
 })
 
 test("equal-time policy events retain ACK until a post-event canonical read without inventing ACK sequence", async () => {
