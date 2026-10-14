@@ -8,6 +8,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Deferred, Effect, Exit, Fiber, FileSystem } from "effect"
 import { Agent } from "@/agent/agent"
@@ -29,7 +30,7 @@ import { awaitWithTimeout, testEffect } from "../../lib/effect"
 // Decorators delay or fail at a boundary; successful work still invokes the real filesystem and durable save.
 afterEach(async () => { await disposeAllInstances() })
 const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, Session.node, SessionProjector.node, EventV2Bridge.node, Database.node, Config.node]),
+  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, Session.node, SessionProjector.node, SessionSubagentModels.node, EventV2Bridge.node, Database.node, Config.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
 const model = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
