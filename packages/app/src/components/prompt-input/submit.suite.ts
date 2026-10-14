@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { createStore } from "solid-js/store"
-import { createRoot } from "solid-js"
+import { createComputed, createRoot } from "solid-js"
 import { isServer } from "solid-js/web"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import type { ModelSelection } from "@/context/local"
@@ -12,6 +12,8 @@ import { clearPending, pendingPolicy, pendingSelection, pendingSnapshot, toggleP
 import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
 import type { ServerApi } from "@/utils/server"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
+import { Worktree } from "@/utils/worktree"
+import type { Part } from "@orchestra/sdk/v2/client"
 
 let createPromptSubmit: typeof import("./submit").createPromptSubmit
 let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
@@ -31,11 +33,16 @@ const optimistic: Array<{
   directory?: string
   sessionID?: string
   message: {
+    id: string
     agent: string
     model: { providerID: string; modelID: string }
     variant?: string
   }
+  parts: Part[]
 }> = []
+const optimisticRemovals: { messageID: string }[] = []
+const statusUpdates: unknown[][] = []
+let statusObserved = (_args: unknown[]) => {}
 const optimisticSeeded: boolean[] = []
 const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 const promoted: Array<{ directory: string; sessionID: string }> = []
@@ -59,6 +66,9 @@ let selected = "/repo/worktree-a"
 let variant: string | undefined
 let permissionServer = "server-a"
 let createSessionGate: Promise<void> | undefined
+let sendHook = async (_input: unknown) => {}
+let behaviorHook = async () => {}
+let promoteHook = () => {}
 const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
 let policyWrite = async () => {}
 let policyWait = async () => {}
@@ -149,13 +159,16 @@ const clientFor = (directory: string) => {
         prompt: async (input: unknown) => {
           sentPrompts.push(directory)
           promptInputs.push(input)
+          await sendHook(input)
           return { data: undefined }
         },
         command: async (input: unknown) => {
           sentCommands.push(input)
+          await sendHook(input)
         },
         shell: async (input: { sessionID: string; id?: string; command: string }) => {
           sentShell.push(input)
+          await sendHook(input)
         },
         interrupt: async (input: { sessionID: string }) => { interruptedSessions.push(input.sessionID) },
       },
@@ -264,6 +277,7 @@ beforeAll(async () => {
     resolveBehaviorSystem: async (input: { scope: string; directory: string; projects: unknown }) => {
       events.push("resolve behaviors")
       behaviorReads.push({ scope: input.scope, directory: input.directory, projects: input.projects })
+      await behaviorHook()
       if (behaviors.fail) throw new Error("storage unavailable")
       return behaviors.system
     },
@@ -306,6 +320,7 @@ beforeAll(async () => {
       promoteDraft: (draftID: string, session: { server: string; sessionId: string }) => {
         promotedDrafts.push({ draftID, ...session })
         promoteRoute(promoted.at(-1)?.directory ?? currentSDK.directory, session.sessionId)
+        promoteHook()
       },
     }),
   }))
@@ -335,11 +350,7 @@ beforeAll(async () => {
       data: { command: commands },
       session: {
         optimistic: {
-          add: (value: {
-            directory?: string
-            sessionID?: string
-            message: { agent: string; model: { providerID: string; modelID: string; variant?: string } }
-          }) => {
+          add: (value: (typeof optimistic)[number]) => {
             optimistic.push(value)
             optimisticSeeded.push(
               !!value.directory &&
@@ -347,10 +358,10 @@ beforeAll(async () => {
                 !!storedSessions[value.directory]?.find((item) => item.id === value.sessionID)?.title,
             )
           },
-          remove: () => undefined,
+          remove: (value: { messageID: string }) => { optimisticRemovals.push(value) },
         },
       },
-      set: () => undefined,
+      set: (...args: unknown[]) => { if (args[0] === "session_status") statusUpdates.push(args); statusObserved(args) },
     }),
   }))
 
@@ -359,7 +370,7 @@ beforeAll(async () => {
       data: { project: profileProjects },
       session: {
         remember: () => undefined,
-        set: () => undefined,
+        set: (...args: unknown[]) => { if (args[0] === "session_status") statusUpdates.push(args); statusObserved(args) },
         sync: async () => {
           serverSessionSyncs++
         },
@@ -406,6 +417,380 @@ beforeAll(async () => {
 })
 
 describe("durable subagent policy submission", () => {
+  test("qualified promotion exposes original source activity on the Session target until finally", async () => {
+    search.draftId = "draft-1"
+    const real = createPromptState({ prompt: "handoff activity" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+    const observed: boolean[] = []
+    promoteHook = () => { observed.push(submit.submitting()) }
+    await submit.handleSubmit(new Event("submit"))
+    expect(params.id).toBe("session-1")
+    expect(observed).toEqual([true])
+    expect(submit.submitting()).toBe(false)
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test.skipIf(isServer)("submitting observes the retained source's actual finally after composer disposal/remount", async () => {
+    const gate = deferred()
+    createSessionGate = gate.promise
+    const real = createPromptState({ prompt: "retained source counter" })
+    const root = createRoot((dispose) => ({
+      dispose, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined }),
+    }))
+    expect(root.submit.submitting()).toBe(false)
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    expect(root.submit.submitting()).toBe(true)
+    root.dispose()
+    const observed: boolean[] = []
+    const remount = createRoot((dispose) => {
+      const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+      createComputed(() => { observed.push(submit.submitting()) })
+      return { dispose, submit }
+    })
+    expect(observed).toEqual([true])
+    gate.resolve()
+    await sending
+    expect(remount.submit.submitting()).toBe(false)
+    expect(observed).toEqual([true, false])
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs).toEqual([])
+    remount.dispose()
+  })
+
+  test.each(["prompt", "command", "shell"])("fresh %s dispatch survives promotion unmount, but only after receipt", async (pathway) => {
+    search.draftId = "draft-1"
+    const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+    togglePending(key, "provider", "model", true)
+    commands.push({ name: "review" })
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "first turn" })
+      real.context.add({ type: "file", path: "/repo/main/file", comment: "retain until admission" })
+      return { dispose, real, submit: createPromptSubmit({
+        ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key,
+        autoAccept: () => true, mode: () => pathway === "shell" ? "shell" : "normal",
+        onNewSessionWorktreeReset: () => { worktreeResets++ },
+      }) }
+    })
+    const contents = root.real.current()
+    const context = root.real.context.items()
+    // The production draft route unmounts here; the old fixture only changed params.
+    promoteHook = root.dispose
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    expect(promotedDrafts).toEqual([])
+    expect(root.real.current()).toBe(contents)
+    expect(root.real.context.items()).toBe(context)
+    expect(worktreeResets).toBe(0)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(enabledAutoAccept).toHaveLength(1)
+    await root.submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    gate.resolve()
+    await sending
+    expect(promotedDrafts).toHaveLength(1)
+    expect(worktreeResets).toBe(1)
+    expect(pendingSnapshot(key).revision).toBe(0)
+    await root.submit.handleSubmit(new Event("submit"))
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+  })
+
+  test.each(["prompt", "command", "shell"])("failed fresh %s keeps admission, payload ID, context and selections for retry", async (pathway) => {
+    search.draftId = "draft-1"
+    const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+    commands.push({ name: "review" })
+    togglePending(key, "provider", "model", true)
+    const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "retry turn" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "retain context" })
+    const contents = real.current()
+    const context = real.context.items()
+    const failure = new Error("admission failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key,
+      newSessionWorktree: () => "/repo/worktree-a", mode: () => pathway === "shell" ? "shell" : "normal",
+      onNewSessionWorktreeReset: () => { worktreeResets++ },
+    })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(promotedDrafts).toEqual([])
+    expect(worktreeResets).toBe(0)
+    const first = [...promptInputs, ...sentCommands, ...sentShell][0] as { id: string }
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a"])
+    expect([...promptInputs, ...sentCommands, ...sentShell]).toEqual([
+      expect.objectContaining({ id: first.id }), expect.objectContaining({ id: first.id }),
+    ])
+    expect(promotedDrafts).toHaveLength(1)
+    expect(worktreeResets).toBe(1)
+  })
+
+  test("failed exact retry reuses the wire preparation and matching optimistic part IDs and system", async () => {
+    const real = createPromptState()
+    real.set([
+      { type: "text", content: "retry ", start: 0, end: 6 },
+      { type: "file", path: "file.ts", content: "@file.ts", start: 6, end: 14 },
+    ])
+    behaviors.system = "first prepared system"
+    const failure = new Error("prepared request failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    const first = promptInputs[0] as { id: string; legacyParts: { id: string }[]; system?: string }
+    expect(first.legacyParts.length).toBeGreaterThan(1)
+    expect(optimistic[0].parts.map((part) => part.id)).toEqual(first.legacyParts.map((part) => part.id))
+    expect(optimisticRemovals).toContainEqual(expect.objectContaining({ messageID: first.id }))
+    behaviors.system = "later profile system"
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).toEqual(first)
+    expect(first.system).toBe("first prepared system")
+    expect(optimistic).toHaveLength(2)
+    expect(optimistic[1].message.id).toBe(first.id)
+    expect(optimistic[1].parts).toEqual(optimistic[0].parts)
+    expect(optimistic[1].parts.every((part) => part.messageID === first.id)).toBe(true)
+    expect(createdSessions).toHaveLength(1)
+  })
+
+  test.each(["prompt", "command", "shell"])("admitted %s receipt reconciliation performs no new dispatch, optimistic insertion or busy mutation", async (pathway) => {
+    selected = "main"
+    commands.push({ name: "review" })
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "receipt-only turn" })
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected,
+      mode: () => pathway === "shell" ? "shell" : "normal",
+    })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    selected = "/repo/worktree-b"
+    gate.resolve()
+    await sending
+    expect(promoted).toEqual([])
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    if (pathway !== "shell") expect(statusUpdates.length).toBeGreaterThan(0)
+    const insertions = optimistic.length
+    const statuses = statusUpdates.slice()
+    selected = "main"
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    expect(optimistic).toHaveLength(insertions)
+    expect(statusUpdates).toEqual(statuses)
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+  })
+
+  test("policy changed at a retry's worktree boundary rebinds cached wire and optimistic IDs together", async () => {
+    const directory = "/repo/preparation-fence"
+    currentSDK = sdkFor(directory, currentServer)
+    const key = draftSessionKey(ServerScope.local, directory)
+    togglePending(key, "provider", "first-model", true)
+    const real = createPromptState({ prompt: "prepared turn at final fence" })
+    const failure = new Error("first prepared send failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+    Worktree.pending(ServerScope.local, directory)
+    expect(Worktree.get(ServerScope.local, directory)).toEqual({ status: "pending" })
+    const entered = deferred()
+    statusObserved = (args) => {
+      if (args[0] === "session_status" && Worktree.get(ServerScope.local, directory)?.status === "pending") entered.resolve()
+    }
+    const retry = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    togglePending(key, "provider", "second-model", true)
+    const latest = pendingSnapshot(key)
+    sendHook = async () => { expect(pendingSnapshot(key).revision).toBe(latest.revision) }
+    Worktree.ready(ServerScope.local, directory)
+    await retry
+    expect(promptInputs).toHaveLength(2)
+    const second = promptInputs[1] as { id: string; legacyParts: { id: string }[] }
+    expect(second.id).not.toBe(first.id)
+    expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+    expect(optimistic).toHaveLength(2)
+    expect(optimistic[1].message.id).toBe(second.id)
+    expect(optimistic[1].parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
+    expect(optimistic[1].parts.every((part) => part.messageID === second.id)).toBe(true)
+    expect(policyWrites.at(-1)?.policy).toEqual(latest.policy)
+    expect(createdSessions).toEqual([directory])
+    expect(pendingSnapshot(key).revision).toBe(0)
+  })
+
+  test("policy edit during request preparation gets latest ACK before actual dispatch", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    togglePending(key, "provider", "model", true)
+    const entered = deferred()
+    const gate = deferred()
+    behaviorHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "latest policy" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    clearPending(key)
+    sendHook = async () => { expect(policyWrites.at(-1)?.policy).toEqual({ mode: "inherit" }) }
+    gate.resolve()
+    await sending
+    expect(policyWrites.map((write) => write.policy.mode)).toEqual(["allowlist", "inherit"])
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test.each(["prompt", "policy"])("fresh receipt preserves newer %s edit instead of deleting draft", async (edit) => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    const revisions: number[] = []
+    sendHook = async () => { revisions.push(pendingSnapshot(key).revision); entered.resolve(); await gate.promise }
+    const initialRevision = pendingSnapshot(key).revision
+    const real = createPromptState({ prompt: "admitted turn" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    if (edit === "prompt") real.set([{ type: "text", content: "newer draft", start: 0, end: 11 }])
+    if (edit === "policy") togglePending(key, "provider", "new-model", true)
+    const contents = real.current()
+    const context = real.context.items()
+    const policy = pendingSnapshot(key)
+    gate.resolve()
+    await sending
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingSnapshot(key)).toEqual(policy)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+    if (edit === "prompt") return
+    const first = promptInputs[0] as { id: string }
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).not.toMatchObject({ id: first.id })
+    expect(revisions).toEqual([initialRevision, policy.revision])
+    expect(createdSessions).toHaveLength(1)
+    expect(pendingSnapshot(key).revision).toBe(0)
+    expect(promoted).toHaveLength(1)
+  })
+
+  test.each(["failed", "admitted"])("selection changed during %s request stays separate and shares source busy lock", async (outcome) => {
+    const entered = deferred()
+    const gate = deferred()
+    const failure = new Error("selection A send failed")
+    sendHook = async () => {
+      entered.resolve()
+      await gate.promise
+      if (outcome === "failed") throw failure
+    }
+    const real = createPromptState({ prompt: "placement-bound turn" })
+    const contents = real.current()
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected,
+      onNewSessionWorktreeReset: () => { worktreeResets++ },
+    })
+    const sending = submit.handleSubmit(new Event("submit"))
+    const settled = sending.then(() => undefined, (error: unknown) => error)
+    await entered.promise
+    selected = "/repo/worktree-b"
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a"])
+    expect(promptInputs).toHaveLength(1)
+    gate.resolve()
+    expect(await settled).toBe(outcome === "failed" ? failure : undefined)
+    expect(real.current()).toBe(contents)
+    expect(selected).toBe("/repo/worktree-b")
+    expect(promoted).toEqual([])
+    expect(worktreeResets).toBe(0)
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
+    expect(promptInputs).toEqual([
+      expect.objectContaining({ sessionID: "session-1" }), expect.objectContaining({ sessionID: "session-2" }),
+    ])
+    expect(promoted).toEqual([{ directory: "/repo/worktree-b", sessionID: "session-2" }])
+    expect(worktreeResets).toBe(1)
+  })
+
+  test("returning to failed selection A reuses only A's retained Session and action", async () => {
+    const real = createPromptState({ prompt: "retry chosen placement" })
+    const failure = new Error("placement send failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    selected = "/repo/worktree-b"
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    selected = "/repo/worktree-a"
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
+    const requests = promptInputs as { id: string; sessionID: string }[]
+    expect(requests.map((request) => request.sessionID)).toEqual(["session-1", "session-2", "session-1"])
+    expect(requests[2]?.id).toBe(requests[0]?.id)
+    expect(requests[1]?.id).not.toBe(requests[0]?.id)
+    expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: "session-1" }])
+  })
+
+  // Server Solid snapshots createMemo. Context edits require the browser child's real reactive accessor.
+  test.skipIf(isServer)("fresh receipt preserves newer context edit instead of deleting draft", async () => {
+    expect(isServer).toBe(false)
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "admitted turn" })
+    const contents = real.current()
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
+    // Positive control: the context edit must be visible to the accessor submit actually reads.
+    expect(real.context.items()).toEqual([
+      expect.objectContaining({ type: "file", path: "/repo/main/new", comment: "newer context" }),
+    ])
+    const context = real.context.items()
+    const policy = pendingSnapshot(key)
+    gate.resolve()
+    await sending
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingSnapshot(key)).toEqual(policy)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test.skipIf(isServer).each(["dispose", "server ABA"])("fresh admission receipt after %s cannot promote stale owner", async (change) => {
+    const source = { server: currentServer, sdk: currentSDK }
+    const otherServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    setReactiveOwner("read", () => () => source)
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "captured server" })
+      return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined }) }
+    })
+    const contents = root.real.current()
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    if (change === "dispose") root.dispose()
+    if (change === "server ABA") {
+      setReactiveOwner("read", () => () => ({ server: otherServer, sdk: sdkFor("/repo/main", otherServer) }))
+      await Promise.resolve()
+      setReactiveOwner("read", () => () => source)
+    }
+    gate.resolve()
+    await sending
+    expect(root.real.current()).toBe(contents)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+    root.dispose()
+  })
+
   test("inherited-policy ABA during ACK wait persists latest inherit tombstone", async () => {
     const key = draftSessionKey(ServerScope.local, "/repo/main")
     const initial = pendingSnapshot(key)
@@ -534,6 +919,7 @@ describe("durable subagent policy submission", () => {
     const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
     const first = submit.handleSubmit(new Event("submit"))
     await entered.promise
+    expect(submit.submitting()).toBe(true)
     real.set([{ type: "text", content: "second queue", start: 0, end: 12 }])
     delivery = "queue"
     const second = submit.handleSubmit(new Event("submit"))
@@ -542,11 +928,58 @@ describe("durable subagent policy submission", () => {
     expect(promptInputs).toEqual([])
     gate.resolve()
     await Promise.all([first, second])
+    expect(submit.submitting()).toBe(false)
     expect(promptInputs).toHaveLength(2)
     expect(promptInputs).toEqual(expect.arrayContaining([
       expect.objectContaining({ text: "first steer", delivery: "steer" }),
       expect.objectContaining({ text: "second queue", delivery: "queue" }),
     ]))
+  })
+
+  test.skipIf(isServer).each(["steer", "queue"] as const)("existing submitting remains reactive while %s fails and the other admission is still pending", async (failed) => {
+    params.id = "session-1"
+    const entered = { steer: deferred(), queue: deferred() }
+    const gates = { steer: deferred(), queue: deferred() }
+    const failure = new Error(`${failed} admission failed`)
+    sendHook = async (input) => {
+      const request = input as { delivery: string }
+      if (request.delivery !== "steer" && request.delivery !== "queue") throw new Error("Unexpected existing delivery")
+      entered[request.delivery].resolve()
+      await gates[request.delivery].promise
+      if (request.delivery === failed) throw failure
+    }
+    let delivery: "steer" | "queue" = "steer"
+    const observed: boolean[] = []
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "concurrent steer" })
+      const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
+      createComputed(() => { observed.push(submit.submitting()) })
+      return { dispose, real, submit }
+    })
+    expect(observed).toEqual([false])
+    const steer = root.submit.handleSubmit(new Event("submit")).then(() => undefined, (error: unknown) => error)
+    await entered.steer.promise
+    expect(root.submit.submitting()).toBe(true)
+    root.real.set([{ type: "text", content: "concurrent queue", start: 0, end: 16 }])
+    delivery = "queue"
+    const queue = root.submit.handleSubmit(new Event("submit")).then(() => undefined, (error: unknown) => error)
+    await entered.queue.promise
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ text: "concurrent steer", delivery: "steer" }),
+      expect.objectContaining({ text: "concurrent queue", delivery: "queue" }),
+    ]))
+    const outcomes = { steer, queue }
+    gates[failed].resolve()
+    expect(await outcomes[failed]).toBe(failure)
+    expect(root.submit.submitting()).toBe(true)
+    expect(observed.at(-1)).toBe(true)
+    const remaining = failed === "steer" ? "queue" : "steer"
+    gates[remaining].resolve()
+    expect(await outcomes[remaining]).toBeUndefined()
+    expect(root.submit.submitting()).toBe(false)
+    expect(observed.at(-1)).toBe(false)
+    root.dispose()
   })
 
   test("empty existing Session submit interrupts while another submission awaits policy", async () => {
@@ -611,6 +1044,7 @@ describe("durable subagent policy submission", () => {
     expect(worktreeResets).toBe(0)
 
     policyWrite = async () => {}
+    Worktree.ready(ServerScope.local, "/repo/main/new")
     await submit.handleSubmit(new Event("submit"))
     expect(createdSessions).toEqual(["/repo/main/new"])
     expect(sentShell).toHaveLength(1)
@@ -855,6 +1289,9 @@ beforeEach(() => {
   sessionCreateInputs.length = 0
   enabledAutoAccept.length = 0
   optimistic.length = 0
+  optimisticRemovals.length = 0
+  statusUpdates.length = 0
+  statusObserved = () => {}
   optimisticSeeded.length = 0
   promoted.length = 0
   promotedAgents.length = 0
@@ -876,6 +1313,9 @@ beforeEach(() => {
   variant = undefined
   permissionServer = "server-a"
   createSessionGate = undefined
+  sendHook = async () => {}
+  behaviorHook = async () => {}
+  promoteHook = () => {}
   serverSessionSyncs = 0
   policyWrites.length = 0
   policyWrite = async () => {}
