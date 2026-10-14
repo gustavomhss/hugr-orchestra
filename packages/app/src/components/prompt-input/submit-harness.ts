@@ -30,6 +30,7 @@ type FixtureServer = {
   sessionManagement: {
     setSubagentModels: (id: string, policy: SubagentModelPolicy) => Promise<SubagentModelPolicy>
     waitSubagentModels: (id: string) => Promise<void>
+    subagentModelsWriteVersion: (id: string) => number
     readSubagentModels: (id: string) => Promise<{ policy: SubagentModelPolicy }>
   }
 }
@@ -43,6 +44,7 @@ type FixtureSDK = {
 }
 type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
 export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
+const policyVersions = new Map<string, number>()
 const roots: VoidFunction[] = []
 afterEach(() => roots.splice(0).forEach((dispose) => dispose()))
 export const [reactiveOwner, setReactiveOwner]: [Store<ReactiveOwner>, SetStoreFunction<ReactiveOwner>] = createStore<ReactiveOwner>({})
@@ -113,6 +115,8 @@ export const state = {
   policyWait: async () => {},
   legacyUpdateHook: async () => {},
   worktreeResets: 0,
+  promoteStarted: Promise.withResolvers<void>(),
+  promoteProbe: undefined as VoidFunction | undefined,
 }
 
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -253,6 +257,7 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
     createClient: (options: { directory?: string }) => clientFor(options.directory ?? "/repo/main"),
     sessionManagement: {
       setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
+        policyVersions.set(sessionID, (policyVersions.get(sessionID) ?? 0) + 1)
         savedPolicies.push({ sessionID, policy })
         policyWrites.push({ id: sessionID, policy })
         state.rulesStarted.resolve()
@@ -263,6 +268,7 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
         return policy
       },
       waitSubagentModels: () => state.policyWait(),
+      subagentModelsWriteVersion: (id: string) => policyVersions.get(id) ?? 0,
       readSubagentModels: async (id: string) => ({ policy: canonicalPolicies.get(id) ?? { mode: "inherit" as const } }),
     },
   }
@@ -329,6 +335,8 @@ beforeAll(async () => {
       session: {
         promote(directory: string, sessionID: string, selection: { agent?: string }) {
           promoted.push({ directory, sessionID })
+          state.promoteProbe?.()
+          state.promoteStarted.resolve()
           promotedAgents.push(selection.agent)
         },
       },
@@ -540,11 +548,14 @@ beforeEach(() => {
   state.policyWait = async () => {}
   state.legacyUpdateHook = async () => {}
   state.worktreeResets = 0
+  state.promoteStarted = Promise.withResolvers<void>()
+  state.promoteProbe = undefined
   policyWrites.length = 0
   toasts.length = 0
   legacyBaseline.length = 0
   legacySessionPermissions.clear()
   canonicalPolicies.clear()
+  policyVersions.clear()
   policyFixture.server = serverFor()
   policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
   setReactiveOwner("read", undefined)

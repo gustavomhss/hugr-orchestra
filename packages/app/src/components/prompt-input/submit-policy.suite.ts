@@ -35,17 +35,19 @@ test("deliberate retry follows its own retained failed barrier and obtains a fre
   togglePending(key, "provider", "model", true)
   const failure = new Error("owned write failed")
   const barrier = { current: Promise.reject<void>(failure) }
+  const clock = { version: 1 }
   void barrier.current.catch(() => {})
   const writes: SubagentModelPolicy[] = []
   const policy = createSubmissionPolicy({
     key, sessionID: "same-session", protocol: Promise.resolve("v2"),
     current: () => true, initialPolicy: { mode: "inherit" }, failedMessage: "bad receipt",
-    admission: { policyWritten: true, failedWrite: { cause: failure } },
+    admission: { policyWritten: true, failedWrite: { cause: failure, version: 1 } },
     legacyWrite: async () => { throw new Error("unexpected V1 write") },
     management: {
       waitSubagentModels: () => barrier.current,
+      subagentModelsWriteVersion: () => clock.version,
       readSubagentModels: async () => ({ policy: writes.at(-1) ?? { mode: "inherit" } }),
-      setSubagentModels: async (_id, next) => { writes.push(next); barrier.current = Promise.resolve(); return next },
+      setSubagentModels: async (_id, next) => { clock.version++; writes.push(next); barrier.current = Promise.resolve(); return next },
     },
   })
   const receipt = await policy.acknowledge(new AbortController().signal)
