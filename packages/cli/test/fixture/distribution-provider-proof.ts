@@ -166,6 +166,7 @@ export async function qualifyProvider(input: {
         expect(records.length).toBeGreaterThanOrEqual(2)
         expect(records.length).toBeLessThanOrEqual(3)
         records.forEach((record) => {
+          Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({ temperature: Schema.Literal(0) }))))(record.requestJSON)
           expect(record.status).toBe(200)
           expect(record.request.model).toBe(model)
           expect((record.request.tools ?? []).map((item) => item.function.name).filter((name) => name !== "bash")).toEqual([])
