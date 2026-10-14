@@ -24,6 +24,7 @@ export function make(deps: {
   readonly fs: FSUtil.Interface
   readonly agents: Agent.Interface
   readonly state: SessionRunState.Interface
+  readonly interrupt?: (sessionID: SessionID) => Effect.Effect<void>
   readonly nativeHost: Pick<Effect.Success<typeof ArsenalBindings.make>, "withSession">
   readonly prompt: Prompt
 }) {
@@ -46,6 +47,7 @@ export function make(deps: {
 
   const cancel = Effect.fn("SessionPrompt.cancel")(function* (sessionID: SessionID) {
     yield* Effect.logInfo("cancel", { "session.id": sessionID })
+    yield* deps.interrupt?.(sessionID) ?? Effect.void
     yield* deps.state.cancel(sessionID)
   })
 
