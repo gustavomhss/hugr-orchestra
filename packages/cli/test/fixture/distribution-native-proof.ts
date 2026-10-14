@@ -306,7 +306,7 @@ export async function qualify(input: {
         register: (tree) => Effect.gen(function* () {
           if (lease.tree) {
             yield* Effect.promise(() => tree.stop({ graceMs: 2_000 }))
-            return yield* Effect.fail(new Error("NATIVE_DAEMON_START_TREE_ALREADY_ADOPTED"))
+            return yield* Effect.die(new Error("NATIVE_DAEMON_START_TREE_ALREADY_ADOPTED"))
           }
           lease.tree = tree
           console.error(`NATIVE_DAEMON_START_TREE_ADOPTED ${JSON.stringify({ rootPID: tree.pid, version: lease.version })}`)
