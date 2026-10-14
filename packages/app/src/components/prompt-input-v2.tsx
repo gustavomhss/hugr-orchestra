@@ -6,7 +6,7 @@ import { Icon } from "@orchestra/ui/v2/icon"
 import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
 import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
 import type { ReferenceInfo } from "@orchestra/sdk/v2/client"
-import { createEffect, createMemo, on, Show } from "solid-js"
+import { createEffect, createMemo, on, onCleanup, Show } from "solid-js"
 import { ModelSelectorPopoverV2 } from "@/components/dialog-select-model"
 import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpaid-v2"
 import type { PromptInputProps } from "@/components/prompt-input/contracts"
@@ -25,9 +25,8 @@ import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { useProviders } from "@/hooks/use-providers"
-import { useDraftSessionKey } from "./prompt-input/draft-session"
+import { createDraftSessionState, useDraftSessionKey } from "./prompt-input/draft-session"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingPolicy, pendingSelection } from "@/components/draft-subagent-models"
 import { useServerProtocol } from "@/context/server-sdk"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
@@ -437,8 +436,8 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       },
     },
   })
-  Object.defineProperty(controller, "model", { get: () => props.controls.model })
-  Object.defineProperty(controller, "pendingKey", { value: pendingKey })
+  const composer = Object.assign(controller, { model: props.controls.model, pendingKey })
+  Object.defineProperty(composer, "model", { get: () => props.controls.model })
 
   command.register("prompt-input", () => [
     {
@@ -495,7 +494,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     ),
   )
 
-  return controller as PromptInputV2ComposerController
+  return composer
 }
 
 function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pendingKey: string }) {
@@ -505,11 +504,17 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   const sync = useSync()
   const providers = useProviders(() => sdk().directory)
   const protocol = useServerProtocol()
-  const policy = () =>
-    props.sessionID
-      ? sync().session.get(props.sessionID)?.subagentModels ?? { mode: "inherit" as const }
-      : pendingPolicy(props.pendingKey)
-  const scoped = () => protocol() === "v2" ? policy().mode === "allowlist" : hasModelScope(rules())
+  const draftSession = createDraftSessionState({ sessionID: () => props.sessionID, pendingKey: () => props.pendingKey })
+  const unresolved = () => !!props.sessionID && (
+    protocol() === undefined || (protocol() === "v2" &&
+      (draftSession.loading() || !!draftSession.error() || !draftSession.policy()))
+  )
+  const life = { active: true }
+  onCleanup(() => { life.active = false })
+  const source = createMemo(() => {
+    const sdkValue = sdk()
+    return { sdk: sdkValue, directory: sdkValue.directory, sessionID: props.sessionID, pendingKey: draftSession.pendingKey() }
+  })
 
   const rules = () => {
     const id = props.sessionID
@@ -518,16 +523,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
     return Array.isArray(permission) ? permission : []
   }
   const label = () => {
-    draftVersion()
-    if (protocol() === "v2") {
-      const current = policy()
-      return current.mode === "allowlist" ? `${current.models.length}` : language.t("session.tasks.models.all")
-    }
-    // Drafts have no session yet: show the pending selection.
-    if (!props.sessionID) {
-      draftVersion()
-      const n = pendingSelection(props.pendingKey).size
-      return n > 0 ? `${n}` : language.t("session.tasks.models.all")
+    if (props.sessionID && protocol() === undefined) return language.t("common.loading")
+    if (!props.sessionID || protocol() === "v2") {
+      const current = draftSession.policy()
+      if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
+      if (draftSession.loading() || !current) return language.t("common.loading")
+      return current.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${current.models.length}`
     }
     const scoped = hasModelScope(rules())
     if (!scoped) return language.t("session.tasks.models.all")
@@ -540,13 +541,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
       ).length
     return `${allowed}`
   }
-  const open = () => {
-    const directory = sdk().directory
-    if (!directory) return
-    const selection = { sessionID: props.sessionID, directory, pendingKey: props.pendingKey }
-    void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => <x.DialogSubagentModels {...selection} />)
-    })
+  const open = async () => {
+    const selection = source()
+    if (!selection.directory || !life.active || unresolved()) return
+    const { DialogSubagentModels } = await import("@/components/dialog-subagent-models")
+    if (!life.active || source() !== selection || unresolved()) return
+    dialog.show(() => <DialogSubagentModels sessionID={selection.sessionID} directory={selection.directory} pendingKey={selection.pendingKey} />)
   }
 
   return (
@@ -558,11 +558,13 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
         class="min-w-0 max-w-[220px] justify-start ![font-weight:440] group"
         data-action="prompt-subagent-models"
         data-control-type="dialog"
+        disabled={unresolved()}
+        aria-busy={!!props.sessionID && (protocol() === undefined || draftSession.loading()) || undefined}
         onClick={open}
       >
         <span class="truncate leading-4">
-          {props.sessionID
-            ? scoped()
+          {props.sessionID && protocol() === "v1"
+            ? hasModelScope(rules())
               ? language.t("orchestra.chat.models.count", { count: label() })
               : language.t("orchestra.chat.models.all")
             : language.t("session.tasks.models.label", { count: label() })}
