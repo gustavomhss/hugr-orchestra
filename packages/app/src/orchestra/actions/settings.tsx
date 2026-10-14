@@ -117,7 +117,7 @@ export function Settings(props: ViewProps) {
       </Show>
       <div class="settings-grid">
       <Show when={selected()}>{(binding) => <article class="mx-card ar-setting-card">
-        <div class="mx-card-top"><div class="mx-grow"><h3>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</h3><p><bdi dir="auto">{binding().account ?? binding().projectID}</bdi></p></div><span class={`mx-badge ${connection().state === "connected" ? "good" : ""}`}>{props.t(connection().label)}</span></div>
+        <div class="mx-card-top"><div class="mx-grow"><h3>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</h3><p><bdi dir="auto">{binding().account ?? binding().projectID}</bdi></p></div><span class={`mx-badge ${connection().state === "available" ? "good" : ""}`}>{props.t(connection().label)}</span></div>
          <dl class="wf-kv ar-facts">
           <dt>{props.t("orchestra.actions.provider")}</dt><dd>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</dd>
           <dt>{props.t("orchestra.actions.hostname")}</dt><dd dir="ltr"><bdi>{binding().provider.hostname}</bdi></dd>

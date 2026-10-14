@@ -22,7 +22,7 @@ export function nativePolicyEvidence(resource?: Actions.Resource) {
     // Only these exact native values round-trip through the existing provider command.
     value: data.nativePolicy === "Project default" || data.nativePolicy === "Restricted to approved actions" ? data.nativePolicy : undefined,
     unavailable: record(data.nativePolicy).state === "unavailable",
-    settings: typeof data.nativeSettings === "object" && data.nativeSettings !== null && !Array.isArray(data.nativeSettings) ? data.nativeSettings : undefined,
+    settings: isRecord(data.nativeSettings) ? data.nativeSettings : undefined,
     version: typeof data.resourceVersion === "string" && data.resourceVersion.length > 0 ? data.resourceVersion : undefined,
   }
 }
@@ -42,8 +42,9 @@ export function canConfigureNativePolicy(state: State, resource = settingsPolicy
       expected: { resourceVersion: policy.version } })
 }
 
-/** Connection is an observation of reads, not a cached binding or a write-permission claim. */
+/** Read availability does not establish that current credentials match the bound account. */
 export function settingsConnection(state: State) {
+  if (state.commandError?.kind === "binding_stale") return { state: "unavailable" as const, label: state.commandError.message }
   const errors = [state.bindings, state.capabilities, state.resources, state.workflows, state.runs, state.run, state.jobs, state.source, state.graph, state.artifacts, state.log]
     .flatMap((data) => data.status === "error" && data.error ? [data.error] : [])
   const auth = [state.commandError, ...errors].find((error) => error?.kind === "not_authenticated" || error?.kind === "server_auth")
@@ -55,10 +56,14 @@ export function settingsConnection(state: State) {
   const observed = state.capabilities.status === "ready" && state.capabilities.value?.some((item) =>
     ["workflows.list", "workflows.read", "runs.list", "runs.read", "jobs.list", "jobs.read", "source.read", "logs.read"].includes(item.operation)
     && item.state === "available" && (!item.scope || scopes.includes(item.scope)))
-  if (observed || nativePolicyEvidence(settingsPolicy(state)).settings) return { state: "connected" as const, label: "orchestra.actions.connected" as const }
+  if (observed || nativePolicyEvidence(settingsPolicy(state)).settings) return { state: "available" as const, label: "orchestra.actions.available" as const }
   return { state: "unknown" as const, label: "orchestra.actions.unknown" as const }
 }
 
 function record(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value : {}
+  return isRecord(value) ? value : {}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }

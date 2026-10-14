@@ -7,11 +7,12 @@ import { canConfigureLocalPolicy, canConfigureNativePolicy, localPolicyEvidence,
 
 function fixture(kind: Actions.ProviderKind = "github") {
   const state = initial()
-  state.binding = { id: Actions.BindingID.make("ab_policy"), revision: 7, remote: "origin", projectID: "42", projectPath: "org/repo",
+  const binding: Actions.Binding = { id: Actions.BindingID.make("ab_policy"), revision: 7, remote: "origin", directory: "/repo/policy", projectID: "42", projectPath: "org/repo",
     provider: { kind, hostname: `${kind}.com`, apiOrigin: `https://${kind}.com` } }
+  state.binding = binding
   state.route = { view: "settings" }
   state.capabilities = { status: "ready", value: [] }
-  const resource: Actions.Resource = { id: "project-settings", name: "Project settings", kind: "policy", bindingID: state.binding.id,
+  const resource: Actions.Resource = { id: "project-settings", name: "Project settings", kind: "policy", bindingID: binding.id,
     scope: kind === "github" ? "Repository" : "Project", data: { policy: { retentionDays: 17, execution: "Restricted to approved actions" },
       nativePolicy: kind === "github" ? "Project default" : { state: "unavailable", reason: "No approved-actions equivalent" },
       nativeSettings: kind === "github" ? { enabled: false, allowed_actions: "all" } : { id: 42, keep_latest_artifact: false }, resourceVersion: "native:version" } }
@@ -52,7 +53,7 @@ test("native controls preserve Unknown evidence but enforce exact scope denial a
   expect(canConfigureNativePolicy(scope.state)).toBe(false)
   scope.state.capabilities.value = []
   scope.state.route = { view: "run", runID: "101", attempt: 1 }
-  scope.state.run = { status: "ready", value: { id: "101", bindingID: scope.resource.bindingID, name: "CI", ref: "dev", commit: "a".repeat(40),
+  scope.state.run = { status: "ready", value: { id: "101", bindingID: scope.resource.bindingID, workflowID: "11", name: "CI", ref: "dev", commit: "a".repeat(40),
     event: "push", status: "completed", attempt: 2 } }
   expect(canConfigureNativePolicy(scope.state)).toBe(false)
   scope.state.route.attempt = 2
@@ -110,17 +111,34 @@ test("connection badge requires observed reads and errors override cached succes
   expect(settingsConnection(scope.state).state).toBe("unknown")
   scope.state.capabilities.value = [{ operation: "workflows.list", state: "available", scope: "repository:42", observedAt: 1 },
     { operation: "resource.update", state: "unknown", observedAt: 1 }]
-  expect(settingsConnection(scope.state).state).toBe("connected")
+  expect(settingsConnection(scope.state)).toEqual({ state: "available", label: "orchestra.actions.available" })
   expect(scope.state.capabilities.value[1].state).toBe("unknown")
   scope.state.capabilities = { status: "error", error: { kind: "not_authenticated", message: "orchestra.actions.providerSignInRequired" } }
   scope.state.resources = { status: "ready", value: { capturedAt: 1, items: [scope.resource] } }
   expect(settingsConnection(scope.state)).toEqual({ state: "unavailable", label: "orchestra.actions.providerSignInRequired" })
   scope.state.capabilities = { status: "ready", value: [] }
-  expect(settingsConnection(scope.state).state).toBe("connected")
+  expect(settingsConnection(scope.state)).toEqual({ state: "available", label: "orchestra.actions.available" })
   scope.state.resources = { status: "error", value: scope.state.resources.value, error: { kind: "transport_failed", message: "orchestra.actions.unavailable" } }
   expect(settingsConnection(scope.state).state).toBe("unavailable")
   scope.state.commandError = { kind: "server_auth", message: "orchestra.actions.serverAuthFailed" }
   expect(settingsConnection(scope.state).label).toBe("orchestra.actions.serverAuthFailed")
+})
+
+test("native reads report availability without attesting the bound account; stale binding overrides positive evidence", () => {
+  const scope = fixture()
+  const binding = scope.state.binding
+  if (!binding) throw new Error("Missing fixture binding")
+  scope.state.capabilities.value = [{ operation: "workflows.list", state: "available", scope: "repository:42", observedAt: 1 }]
+  Array.of("alice", "bob").forEach((account) => {
+    scope.state.binding = { ...binding, account }
+    const before = structuredClone(scope.state.binding)
+    expect(settingsConnection(scope.state)).toEqual({ state: "available", label: "orchestra.actions.available" })
+    expect(scope.state.binding).toEqual(before)
+  })
+  scope.state.commandError = { kind: "binding_stale", message: "orchestra.actions.unavailable" }
+  expect(settingsConnection(scope.state)).toEqual({ state: "unavailable", label: "orchestra.actions.unavailable" })
+  scope.state.commandError = undefined
+  expect(settingsConnection(scope.state)).toEqual({ state: "available", label: "orchestra.actions.available" })
 })
 
 test("policy controls reject stale, foreign and missing snapshots", () => {

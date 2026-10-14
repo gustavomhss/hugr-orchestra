@@ -10,7 +10,7 @@ const { Settings }: typeof import("../src/orchestra/actions/settings") = await i
 const { ResourceDialogs }: typeof import("../src/orchestra/actions/resource-dialogs") = await import(solidDom("../src/orchestra/actions/resource-dialogs", import.meta.dir))
 
 function fixture(kind: Actions.ProviderKind = "github", data?: Actions.Resource["data"]) {
-  const binding: Actions.Binding = { id: Actions.BindingID.make("ab_policy"), revision: 7, remote: "origin", projectID: "42", projectPath: "org/repo",
+  const binding: Actions.Binding = { id: Actions.BindingID.make("ab_policy"), revision: 7, remote: "origin", directory: "/repo/policy", projectID: "42", projectPath: "org/repo", account: "alice",
     provider: { kind, hostname: `${kind}.com`, apiOrigin: `https://${kind}.com` } }
   const resource: Actions.Resource = { id: "project-settings", name: "Project settings", bindingID: binding.id, kind: "policy", scope: kind === "github" ? "Repository" : "Project",
     data: data ?? { policy: { retentionDays: 17, execution: "Restricted to approved actions" }, resourceVersion: "native:version",
@@ -75,7 +75,7 @@ test("settings separates local retention from native evidence and routes each ed
   expect(control<HTMLButtonElement>(local, "button").disabled).toBe(false)
 })
 
-test("connection badge uses observed read success and auth errors instead of binding existence", () => {
+test("connection badge shows read availability, not account verification; stale binding and auth errors override reads", () => {
   const scope = fixture()
   scope.setState("resources", { status: "idle", value: undefined })
   using view = mount(Settings, scope)
@@ -83,8 +83,14 @@ test("connection badge uses observed read success and auth errors instead of bin
   expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.unknown")
   scope.setState("capabilities", "value", [{ operation: "workflows.list", state: "available", scope: "repository:42", observedAt: 1 },
     { operation: "resource.update", state: "unknown", observedAt: 1 }])
-  expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.connected")
+  expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.available")
   expect(scope.state.capabilities.value?.[1].state).toBe("unknown")
+  expect(scope.state.binding?.account).toBe("alice")
+  scope.setState("commandError", { kind: "binding_stale", message: "orchestra.actions.unavailable" })
+  expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.unavailable")
+  expect(control<HTMLElement>(connection, ".mx-badge").classList.contains("good")).toBe(false)
+  scope.setState("commandError", undefined)
+  expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.available")
   scope.setState("capabilities", { status: "error", error: { kind: "not_authenticated", message: "orchestra.actions.providerSignInRequired" } })
   expect(control<HTMLElement>(connection, ".mx-badge").textContent).toBe("orchestra.actions.providerSignInRequired")
   expect(control<HTMLElement>(connection, ".mx-badge").classList.contains("good")).toBe(false)
