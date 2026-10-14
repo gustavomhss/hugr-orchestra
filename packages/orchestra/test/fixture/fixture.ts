@@ -61,20 +61,42 @@ function sanitizePath(p: string): string {
  * tree on disk (strace on Linux CI: git's detached auto-maintenance deleting .git/objects/maintenance.lock). So absence
  * is checked rather than assumed. Only EBUSY, ENOTEMPTY, EPERM and a tree that is still present are retried, for at
  * most 5 s; anything else, or a holder that outlasts the bound, rejects so the leak is reported instead of hidden.
+ * Unlink fixture-owned symlinks/junctions first: Windows Bun recursive rm has failed with EFAULT on Arsenal's
+ * workspace aliases. Walk only lstat-confirmed directories, never the shared directories those links target.
+ * Link traversal and recursive removal share the same deadline and transient-error retry path.
  */
 async function clean(dir: string) {
   const deadline = performance.now() + 5_000
   for (;;) {
-    const error = await fs.rm(dir, { recursive: true, force: true }).then(
-      () => undefined,
-      (error: unknown) => error,
-    )
+    const error = await unlinkFixtureLinks(dir)
+      .then(() => fs.rm(dir, { recursive: true, force: true }))
+      .then(
+        () => undefined,
+        (error: unknown) => error,
+      )
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined
     if (error !== undefined && code !== "EBUSY" && code !== "ENOTEMPTY" && code !== "EPERM") throw error
-    if (error === undefined && (await fs.lstat(dir).catch(() => undefined)) === undefined) return
+    if (error === undefined && (await fixtureStat(dir)) === undefined) return
     if (performance.now() >= deadline) throw error ?? new Error(`tmpdir: ${dir} still exists after removal`)
     await Bun.sleep(25)
   }
+}
+
+async function unlinkFixtureLinks(dir: string): Promise<void> {
+  const entry = await fixtureStat(dir)
+  if (entry?.isSymbolicLink()) {
+    await fs.unlink(dir)
+    return
+  }
+  if (!entry?.isDirectory()) return
+  await Promise.all((await fs.readdir(dir)).map((name) => unlinkFixtureLinks(path.join(dir, name))))
+}
+
+function fixtureStat(file: string) {
+  return fs.lstat(file).catch((error: unknown) => {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return undefined
+    throw error
+  })
 }
 
 // Every git fixture used to spawn `git init` plus four `git config` processes, and process spawns dominate fixture
