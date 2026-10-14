@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -36,6 +37,15 @@ func TestOrchestraRoutes(t *testing.T) {
 	} {
 		if d, err := newOrchestraGeneratorDialer(text, time.Second); d != nil || err == nil || !strings.Contains(err.Error(), "invalid-routes") {
 			t.Fatalf("malformed route %q admitted: %v", text, err)
+		}
+	}
+}
+
+func TestOrchestraDrivePaths(t *testing.T) {
+	for socket, windows := range map[string]bool{`C:\o\orchestra.sock`: true, `C:\o\..\orchestra.sock`: false, `C:/o/orchestra.sock`: false, `o\orchestra.sock`: false, `\o\orchestra.sock`: false} {
+		d, err := newOrchestraGeneratorDialer("9042:"+hex.EncodeToString([]byte(socket)), time.Second)
+		if want := windows && runtime.GOOS == "windows"; (err == nil) != want || (d != nil) != want {
+			t.Fatalf("drive path %q admitted=%v, want %v", socket, err == nil, want)
 		}
 	}
 }

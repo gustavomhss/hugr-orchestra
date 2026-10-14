@@ -272,6 +272,16 @@ it.instance(
 )
 
 it.instance(
+  "the scanner runs outside the workspace, where a planted .gitleaks.toml could allowlist every record",
+  () =>
+    Effect.gen(function* () {
+      const t = yield* tools("cwd")
+      expect(receiptOf(yield* t.emit(TASK))).toMatchObject({ op: "emit", outcome: "admitted" })
+    }).pipe(Effect.provide(layer)),
+  { git: true },
+)
+
+it.instance(
   "empty write roots hold a file write to the Memory log but never the harness-owned emit",
   () =>
     Effect.gen(function* () {

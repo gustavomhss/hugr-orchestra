@@ -17,6 +17,8 @@ export const MAX_PARTS = 200_000
 // plus bounded keys/numbers/literals (<4 KiB). Unexpected larger encodings mark incomplete.
 export const MAX_METRICS_BYTES = 64 * 1024
 const COMMAND_LIMIT = 4096
+const subject = sql`coalesce(json_extract(${PartTable.data}, '$.state.input.command'), json_extract(${PartTable.data}, '$.state.input.filePath'),
+  json_extract(${PartTable.data}, '$.state.input.url'), json_extract(${PartTable.data}, '$.state.input.pattern'))`
 
 /** Only native instrumented legacy parts currently contain this provenance. No V2/SDK telemetry inference. */
 export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
@@ -31,8 +33,10 @@ const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Da
     partID: PartTable.id,
     callID: sql<unknown>`json_extract(${PartTable.data}, '$.callID')`,
     status: sql<unknown>`json_extract(${PartTable.data}, '$.state.status')`,
-    command: sql<unknown>`substr(json_extract(${PartTable.data}, '$.state.input.command'), 1, ${COMMAND_LIMIT})`,
-    commandLength: sql<number | null>`length(json_extract(${PartTable.data}, '$.state.input.command'))`,
+    tool: sql<unknown>`json_extract(${PartTable.data}, '$.tool')`,
+    // Shell command, else the read path, fetched URL or search pattern of a Lean 2.0 native tool row.
+    command: sql<unknown>`substr(${subject}, 1, ${COMMAND_LIMIT})`,
+    commandLength: sql<number | null>`length(${subject})`,
     exit: sql<unknown>`json_extract(${PartTable.data}, '$.state.metadata.exit')`,
     time: sql<unknown>`json_extract(${PartTable.data}, '$.state.time.end')`,
     created: MessageTable.time_created,
@@ -65,6 +69,7 @@ const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Da
 })
 
 export interface Row {
+  readonly tool?: unknown
   readonly sessionID: string
   readonly messageID: string
   readonly partID: string
@@ -95,7 +100,7 @@ export function projectRows(scope: LeanDashboard.Scope, rows: readonly Row[], co
       || metrics.owner.sessionID !== row.sessionID || metrics.owner.callID !== row.callID) continue
     const truncated = row.commandLength !== null && row.commandLength > COMMAND_LIMIT
     const profileItem = metrics.filterProfile ? LeanCoverage.forProfile(metrics.filterProfile) : undefined
-    const commandItem = !truncated && typeof row.command === "string" ? LeanProcessor.identify(row.command) : undefined
+    const commandItem = !truncated && (row.tool ?? "bash") === "bash" && typeof row.command === "string" ? LeanProcessor.identify(row.command) : undefined
     const itemID = metrics.itemID ?? profileItem ?? commandItem
     if ((metrics.itemID && profileItem && metrics.itemID !== profileItem) || (commandItem && itemID && commandItem !== itemID)) continue
     if (!itemID || typeof row.command !== "string" || !integer(row.time) || row.time < 0) continue

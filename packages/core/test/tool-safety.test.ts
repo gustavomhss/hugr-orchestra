@@ -85,6 +85,24 @@ describe("native tool safety", () => {
     }),
   )
 
+  it.live("physical write roots follow a dangling symlink to where a write would create the file", () =>
+    Effect.gen(function* () {
+      if (process.platform === "win32") return
+      const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
+      const fs = yield* FSUtil.Service
+      const safety = yield* ToolSafety.Service
+      yield* fs.makeDirectory(path.join(tmp.path, "owned"))
+      yield* fs.makeDirectory(path.join(tmp.path, "outside"))
+      yield* fs.symlink(path.join(tmp.path, "outside", "created"), path.join(tmp.path, "owned", "dangling"))
+      yield* fs.symlink("dangling", path.join(tmp.path, "owned", "chained"))
+      const write = (filePath: string) => safety.before({ ...invocation, tool: "write", directory: tmp.path,
+        projectID: "project", args: { filePath } }).pipe(Effect.provideService(ToolSafety.RuntimeProfile, { writeRoots: ["owned"] }))
+      expect((yield* Effect.flip(write("owned/dangling"))).reason).toBe("write-outside-physical-roots")
+      expect((yield* Effect.flip(write("owned/chained"))).reason).toBe("write-outside-physical-roots")
+      yield* write("owned/fresh")
+    }),
+  )
+
   it.live("corpus slices, missing transcript stats and explicit config authorization keep distinct outcomes", () =>
     Effect.gen(function* () {
       const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))

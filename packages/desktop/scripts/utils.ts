@@ -1,7 +1,7 @@
 import { $ } from "bun"
 import { join, resolve } from "node:path"
 import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
-import { nativeCliTarget } from "../src/main/cli-artifacts"
+import { nativeCliTarget, ripgrepSigning, signatureCheck } from "../src/main/cli-artifacts"
 
 export type Channel = "dev" | "beta" | "prod"
 export const RUST_TARGET = Bun.env.RUST_TARGET
@@ -16,8 +16,7 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
   const cli = resolve(desktop, "../cli")
   const version =
     process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(desktop, "../orchestra/package.json")).json()).version
-  const targets =
-    input.targets ?? (RUST_TARGET ? targetsForRust(RUST_TARGET) : desktopCliTargets(process.platform, process.arch))
+  const targets = input.targets ?? desktopCliTargets(...placement())
   const prebuilt = input.prebuilt ?? process.env.ORCHESTRA_CLI_PREBUILT_DIR
   if (prebuilt === undefined) {
     await targets.reduce(async (previous, target) => {
@@ -34,27 +33,36 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
     directory: join(desktop, "resources/cli"),
     version,
     targets,
-    sign: async (path, target) => {
+    // The CLI and the rg it ships are signed alike; rg needs none of the CLI's JIT entitlements, only the hardened
+    // runtime that notarization requires.
+    sign: async (path, target, kind) => {
       if (target.startsWith("windows-") && process.platform === "win32" && process.env.GITHUB_ACTIONS === "true")
         await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ${join(desktop, "../../script/sign-windows.ps1")} ${path}`
       if (target.startsWith("darwin-") && process.platform === "darwin") {
         const identity = process.env.CSC_NAME ?? "-"
-        const options =
-          identity === "-"
-            ? []
-            : ["--options", "runtime", "--timestamp", "--entitlements", join(desktop, "resources/entitlements.plist")]
+        const entitlements = kind === "cli" ? ["--entitlements", join(desktop, "resources/entitlements.plist")] : []
+        const options = identity === "-" ? [] : ["--options", "runtime", "--timestamp", ...entitlements]
         await $`codesign --force --sign ${identity} ${options} ${path}`
       }
-      if (target === nativeCliTarget(process.platform, process.arch)) {
+      if (kind === "cli" && target === nativeCliTarget(process.platform, process.arch)) {
         const reported = (await $`${path} --version`.text()).trim()
-        if (![version, `orchestra v${version}`].includes(reported))
+        if (reported !== version)
           throw new Error(`Owned CLI compiled version mismatch: ${target}`)
       }
     },
+    signature: async (file, target) => {
+      const check = signatureCheck(target, file)
+      if (!check) return false
+      const result = await $`${check.command} ${check.args}`.nothrow().quiet()
+      return result.exitCode === 0 && check.valid(result.stdout.toString())
+    },
+    signing: (target) => ripgrepSigning(target),
   })
 }
 
-function targetsForRust(target: string) {
+// The desktop's own platform and architecture: RUST_TARGET's when set, else this host's.
+function placement(): [string, string] {
+  if (!RUST_TARGET) return [process.platform, process.arch]
   const placement = {
     "aarch64-apple-darwin": ["darwin", "arm64"],
     "x86_64-apple-darwin": ["darwin", "x64"],
@@ -62,7 +70,7 @@ function targetsForRust(target: string) {
     "x86_64-pc-windows-msvc": ["win32", "x64"],
     "aarch64-unknown-linux-gnu": ["linux", "arm64"],
     "x86_64-unknown-linux-gnu": ["linux", "x64"],
-  }[target]
-  if (!placement) throw new Error(`Unsupported desktop CLI build target: ${target}`)
-  return desktopCliTargets(placement[0]!, placement[1]!)
+  }[RUST_TARGET]
+  if (!placement) throw new Error(`Unsupported desktop CLI build target: ${RUST_TARGET}`)
+  return [placement[0]!, placement[1]!]
 }

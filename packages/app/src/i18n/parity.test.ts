@@ -81,6 +81,8 @@ const domains = [
     source: "./en.ts",
     target: (locale: string) => `./${locale}.ts`,
     locales: appLocales,
+    // en.ts spreads the Lean domain for its English base; the other locales carry those keys in ./lean/<locale>.ts.
+    omit: "./lean/en.ts",
   },
   {
     name: "ui",
@@ -94,12 +96,19 @@ const domains = [
     target: (locale: string) => `../../../desktop/src/renderer/i18n/${locale}.ts`,
     locales: desktopLocales,
   },
+  // Kept last: plural parity covers domains.slice(0, 2) (app, ui).
+  {
+    name: "lean",
+    source: "./lean/en.ts",
+    target: (locale: string) => `./lean/${locale}.ts`,
+    locales: appLocales,
+  },
 ] as const
 
 describe("i18n parity", () => {
   test("non-English locales have every English key and required plural variants", async () => {
     for (const domain of domains) {
-      const source = await dictionary(domain.source)
+      const source = await domainSource(domain)
       for (const locale of domain.locales) {
         const target = await dictionary(domain.target(locale))
         const missing = Object.keys(source).filter((key) => !Object.hasOwn(target, key))
@@ -121,7 +130,7 @@ describe("i18n parity", () => {
 
   test("non-English locales preserve English placeholders", async () => {
     for (const domain of domains) {
-      const source = await dictionary(domain.source)
+      const source = await domainSource(domain)
       for (const locale of domain.locales) {
         const target = await dictionary(domain.target(locale))
         const mismatched = Object.keys(source).filter(
@@ -200,6 +209,14 @@ describe("i18n plural parity", () => {
     }
   })
 })
+
+// A domain's English keys, minus keys another domain owns (the app domain does not own the Lean keys en.ts spreads).
+async function domainSource(domain: { source: string; omit?: string }) {
+  const source = await dictionary(domain.source)
+  if (!domain.omit) return source
+  const owned = await dictionary(domain.omit)
+  return Object.fromEntries(Object.entries(source).filter(([key]) => !Object.hasOwn(owned, key)))
+}
 
 async function dictionary(file: string) {
   const module: unknown = await import(file)

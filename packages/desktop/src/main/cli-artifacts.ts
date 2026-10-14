@@ -1,8 +1,9 @@
 import { constants } from "node:fs"
-import { lstat, open, realpath } from "node:fs/promises"
+import { cp, lstat, open, realpath } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { join, resolve } from "node:path"
 import { copyTreeSitter, requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
+import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 
 export type CliArtifactManifest = {
   schema: 1
@@ -28,6 +29,65 @@ export function copyCliTreeSitter(from: string, to: string, target: string) {
   const bundle = cliTreeSitterTarget(target)
   requireTreeSitterBundle(from, bundle)
   copyTreeSitter(treeSitterBundle(bundle).map((file) => ({ from: join(from, file), to: file })), to, bundle)
+}
+
+/** The ripgrep pin key for a CLI target; undefined where ripgrep publishes no build for it. */
+export function cliRipgrepKey(target: string) {
+  return RipgrepBundle.key(cliTreeSitterTarget(target))
+}
+
+/**
+ * How to check a CLI target's code signature on this host, for a caller that spawns it: `codesign --verify --strict` for
+ * macOS code, Authenticode status `Valid` for Windows code. Undefined where the target is never signed (Linux) or this
+ * host cannot check it.
+ */
+export function signatureCheck(target: string, file: string, platform: string = process.platform) {
+  if (target.startsWith("darwin-") && platform === "darwin")
+    return { command: "codesign", args: ["--verify", "--strict", file], valid: (_stdout: string) => true }
+  if (target.startsWith("windows-") && platform === "win32")
+    return {
+      command: "powershell.exe",
+      args: [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        `(Get-AuthenticodeSignature -LiteralPath '${file.replaceAll("'", "''")}').Status`,
+      ],
+      valid: (stdout: string) => stdout.trim() === "Valid",
+    }
+}
+
+/**
+ * Whether staging signs this target's executables, so an rg left unsigned means signing was skipped: macOS code is
+ * always signed on a macOS host (ad hoc without an identity); Windows code only where scripts/sign-windows.ps1 can
+ * sign (Actions with Azure Artifact Signing configured). An intentionally unsigned build is byte-checked against the pin.
+ */
+export function ripgrepSigning(target: string, env: Record<string, string | undefined> = process.env, platform: string = process.platform) {
+  if (target.startsWith("darwin-") && platform === "darwin") return "required" as const
+  if (
+    target.startsWith("windows-") &&
+    platform === "win32" &&
+    env.GITHUB_ACTIONS === "true" &&
+    ["AZURE_TRUSTED_SIGNING_ENDPOINT", "AZURE_TRUSTED_SIGNING_ACCOUNT_NAME", "AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE"].every((name) => env[name])
+  )
+    return "required" as const
+}
+
+/**
+ * Copies a ripgrep directory staged by RipgrepBundle (rg, its license texts and manifest) from `from` to `to`, checking
+ * both against the pins for `target`; a signed rg must pass `signature`. Returns the copy's check.
+ */
+export async function copyCliRipgrep(
+  from: string,
+  to: string,
+  target: string,
+  options: Parameters<typeof RipgrepBundle.verify>[2] = {},
+) {
+  const key = cliRipgrepKey(target)
+  if (!key) throw new Error(`ripgrep publishes no build for ${target}`)
+  await RipgrepBundle.verify(from, key, options)
+  await cp(from, to, { recursive: true, errorOnExist: true, force: false })
+  return RipgrepBundle.verify(to, key, options)
 }
 
 export async function readCliManifest(directory: string): Promise<CliArtifactManifest> {

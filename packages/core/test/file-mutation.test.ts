@@ -13,6 +13,9 @@ import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
 import { it } from "./lib/effect"
 
+// Symlinks to files need a privilege on Windows; directory junctions do not, so those cases run everywhere.
+const posix = process.platform === "win32" ? it.live.skip : it.live
+
 function provide(directory: string, filesystemLayer = LayerNode.compile(FSUtil.node)) {
   const activeLocation = Layer.succeed(
     Location.Service,
@@ -122,6 +125,50 @@ describe("FileMutation", () => {
         })
         expect(yield* Effect.promise(() => fs.readFile(targetPath, "utf8"))).toBe("after")
       }).pipe(provide(directory)),
+    ),
+  )
+
+  posix("refuses a target swapped for a symlink after resolution", () =>
+    withTmp((directory) =>
+      withTmp((outside) =>
+        Effect.gen(function* () {
+          const targetPath = path.join(directory, "swapped.txt")
+          const outsideFile = path.join(outside, "rc")
+          yield* Effect.promise(() =>
+            Promise.all([fs.writeFile(targetPath, "before"), fs.writeFile(outsideFile, "keep")]),
+          )
+          const mutation = yield* LocationMutation.Service
+          const files = yield* FileMutation.Service
+          const target = yield* mutation.resolve({ path: "swapped.txt" })
+          yield* Effect.promise(() => fs.rm(targetPath).then(() => fs.symlink(outsideFile, targetPath)))
+
+          expect((yield* files.write({ target, content: "pwned" }).pipe(Effect.exit))._tag).toBe("Failure")
+          expect(yield* Effect.promise(() => fs.readFile(outsideFile, "utf8"))).toBe("keep")
+        }).pipe(provide(directory)),
+      ),
+    ),
+  )
+
+  it.live("refuses a parent directory swapped for a link after resolution", () =>
+    withTmp((directory) =>
+      withTmp((outside) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() => fs.mkdir(path.join(directory, "sub")))
+          const mutation = yield* LocationMutation.Service
+          const files = yield* FileMutation.Service
+          const target = yield* mutation.resolve({ path: path.join("sub", "new.txt") })
+          yield* Effect.promise(() =>
+            fs
+              .rm(path.join(directory, "sub"), { recursive: true })
+              .then(() => fs.symlink(outside, path.join(directory, "sub"), "junction")),
+          )
+
+          expect((yield* files.write({ target, content: "pwned" }).pipe(Effect.exit))._tag).toBe("Failure")
+          // Without openat the open itself may leave an empty file there, but never the content.
+          const landed = yield* Effect.promise(() => fs.readFile(path.join(outside, "new.txt"), "utf8").catch(() => ""))
+          expect(landed).toBe("")
+        }).pipe(provide(directory)),
+      ),
     ),
   )
 
@@ -359,6 +406,7 @@ function instrumentWrites(run: <E>(write: Effect.Effect<void, E>, target: string
       return FSUtil.Service.of({
         ...filesystem,
         writeWithDirs: (target, content, mode) => run(filesystem.writeWithDirs(target, content, mode), target),
+        writePhysical: (target, content, options) => run(filesystem.writePhysical(target, content, options), target),
         writeFile: (target, content, options) => run(filesystem.writeFile(target, content, options), target),
         writeFileString: (target, content, options) =>
           run(filesystem.writeFileString(target, content, options), target),

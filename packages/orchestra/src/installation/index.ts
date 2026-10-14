@@ -4,6 +4,7 @@ import { Effect, Layer, Schema, Context } from "effect"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
+import { Global } from "@orchestra/core/global"
 import path from "path"
 import { makeRuntime } from "@orchestra/core/effect/runtime"
 import semver from "semver"
@@ -79,7 +80,9 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
 
     const text = Effect.fnUntraced(
       function* (cmd: string[]) {
-        const result = yield* appProcess.run(ChildProcess.make(cmd[0], cmd.slice(1), { extendEnv: true }))
+        // Package managers read project files from their cwd, and some run them (yarn's .yarnrc yarn-path, pnpm's packageManager,
+        // bunfig.toml). The process cwd is the workspace, which a sandboxed command can write; Orchestra's state directory it cannot.
+        const result = yield* appProcess.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: Global.Path.state, extendEnv: true }))
         return result.stdout.toString("utf8")
       },
       Effect.catch(() => Effect.succeed("")),

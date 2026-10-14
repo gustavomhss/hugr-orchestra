@@ -5,6 +5,11 @@ import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
 import { InstanceState } from "@/effect/instance-state"
 import path from "path"
+import fs from "fs/promises"
+import { constants, type Stats } from "fs"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { mergeDeep } from "remeda"
 import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -81,34 +86,71 @@ const layer = Layer.effect(
               yield* Effect.logInfo("running", { command: cmd })
               const replaced = cmd.map((x) => x.replace("$FILE", filepath))
               const dir = yield* InstanceState.directory
-              const result = yield* appProcess
-                .run(
-                  ChildProcess.make(replaced[0]!, replaced.slice(1), {
+              // A trusted formatter still runs workspace code when its program resolves into the workspace, is a runner
+              // (npx, uv run, ...) or is a version-manager shim.
+              const confine =
+                item.confine ??
+                ((yield* Effect.promise(() => ToolSafetySandbox.runsWorkspaceCode(dir, replaced[0]!, replaced.slice(1), dir)))
+                  ? "file"
+                  : undefined)
+              const source = confine === "stdin" ? yield* Effect.promise(() => readSource(filepath, dir)) : undefined
+              if (confine === "stdin" && !source) {
+                yield* Effect.logError("failed to format file", { error: "outside the workspace", command: cmd, file: filepath })
+                continue
+              }
+              const input = source?.content
+              const result = yield* Effect.scoped(
+                Effect.gen(function* () {
+                  if (!confine)
+                    return yield* appProcess.run(
+                      ChildProcess.make(replaced[0]!, replaced.slice(1), {
+                        cwd: dir,
+                        env: item.environment,
+                        extendEnv: true,
+                        stdin: "ignore",
+                        stdout: "ignore",
+                        stderr: "ignore",
+                      }),
+                    )
+                  const launch = yield* ToolSafetySandbox.confine({
+                    command: replaced[0]!,
+                    args: replaced.slice(1),
                     cwd: dir,
-                    env: item.environment,
-                    extendEnv: true,
-                    stdin: "ignore",
-                    stdout: "ignore",
-                    stderr: "ignore",
-                  }),
-                )
-                .pipe(
-                  Effect.catch((error) =>
-                    Effect.logError("failed to format file", {
-                      error: "spawn failed",
-                      command: cmd,
-                      ...item.environment,
-                      file: filepath,
-                      cause: errorMessage(error.cause ?? error),
-                    }).pipe(Effect.as(undefined)),
-                  ),
-                )
+                    env: { ...process.env, ...item.environment },
+                    write: input ? [] : [filepath],
+                  })
+                  return yield* appProcess.run(
+                    ChildProcess.make(launch.command, launch.args, {
+                      cwd: dir,
+                      env: launch.env,
+                      extendEnv: false,
+                      stdin: "ignore",
+                      stdout: input ? "pipe" : "ignore",
+                      stderr: "ignore",
+                    }),
+                    input ? { stdin: input } : undefined,
+                  )
+                }),
+              ).pipe(
+                Effect.catch((error) =>
+                  Effect.logError("failed to format file", {
+                    error: error instanceof ToolSafety.Denied ? "sandbox refused" : "spawn failed",
+                    command: cmd,
+                    ...item.environment,
+                    file: filepath,
+                    cause: error instanceof ToolSafety.Denied ? error.reason : errorMessage(error.cause ?? error),
+                  }).pipe(Effect.as(undefined)),
+                ),
+              )
               if (result && result.exitCode !== 0) {
                 yield* Effect.logError("failed", {
                   command: cmd,
                   ...item.environment,
                 })
               }
+              // Empty output for a non-empty file is a formatter that wrote nothing, never a formatted result.
+              if (result?.exitCode === 0 && source && result.stdout.length > 0 && !result.stdout.equals(source.content))
+                yield* Effect.promise(() => writeBack(source, result.stdout))
             }
 
             return true
@@ -153,6 +195,8 @@ const layer = Layer.effect(
               name,
               extensions: info.extensions ?? [],
               enabled: builtIn && !info.command ? builtIn.enabled : async (_context) => info.command ?? false,
+              // A command replacing a confined built-in still runs that formatter's workspace code.
+              confine: builtIn && !info.command ? builtIn.confine : builtIn?.confine && "file",
             }
           }
         }
@@ -193,6 +237,27 @@ const layer = Layer.effect(
     return Service.of({ init, status, file })
   }),
 )
+
+// A stdin formatter's input is one physical file inside the workspace; its output goes back into that same file and
+// never through a symlink or a different file swapped in while the formatter ran.
+async function readSource(filepath: string, directory: string) {
+  const file = await fs.realpath(filepath)
+  if (!FSUtil.contains(await fs.realpath(directory), file)) return undefined
+  return { file, stat: await fs.stat(file), content: await fs.readFile(file) }
+}
+
+async function writeBack(source: { file: string; stat: Stats }, output: Buffer) {
+  const handle = await fs.open(source.file, constants.O_WRONLY | constants.O_NOFOLLOW).catch(() => undefined)
+  if (!handle) return
+  await handle
+    .stat()
+    .then((now) =>
+      now.dev === source.stat.dev && now.ino === source.stat.ino
+        ? handle.truncate(0).then(() => handle.writeFile(output))
+        : undefined,
+    )
+    .finally(() => handle.close())
+}
 
 export const node = LayerNode.make({
   service: Service,

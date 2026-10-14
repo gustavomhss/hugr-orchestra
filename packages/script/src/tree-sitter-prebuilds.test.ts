@@ -286,6 +286,20 @@ test("exporting a target's bundle on another host stops with the named error and
   expect(readdirSync(out)).toEqual([])
 })
 
+// The packaged Desktop bundles this module into its main entry, where import.meta.main is true: evaluated as the entry,
+// the module itself must run nothing. Its command line lives in tree-sitter-prebuilds-cli.ts.
+test("the module evaluated as the process entry runs no command; the CLI file owns the command line", () => {
+  const library = Bun.spawnSync([process.execPath, path.join(import.meta.dir, "tree-sitter-prebuilds.ts")])
+  expect({ exit: library.exitCode, stdout: library.stdout.toString(), stderr: library.stderr.toString() }).toEqual({
+    exit: 0,
+    stdout: "",
+    stderr: "",
+  })
+  const cli = Bun.spawnSync([process.execPath, path.join(import.meta.dir, "tree-sitter-prebuilds-cli.ts")])
+  expect(cli.exitCode).toBe(1)
+  expect(cli.stderr.toString()).toContain("Usage: tree-sitter-prebuilds-cli.ts <os> <arch> [--out <dir>]")
+})
+
 // Python's published prebuild for a CPU other than `name`'s.
 function foreignTo(name: string) {
   const dir = readdirSync(path.join(python, "prebuilds")).find(

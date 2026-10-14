@@ -37,7 +37,7 @@ it.instance("Lean routes follow native profile, persist independent controls, ex
   const first = yield* Schema.decodeUnknownEffect(LeanDashboard.Info)(yield* firstResponse.json)
   expect(first.scope.directory).toBe(instance.directory)
   expect(first.enabled).toBe(true)
-  expect(first.items).toHaveLength(32)
+  expect(first.items).toHaveLength(37)
   expect(first.savings).toEqual({ bytesSaved: 0, tokensSaved: 0, calls: 0, tokenCalls: 0 })
   const sessionID = SessionID.make("ses_lean_http_saved")
   const messageID = MessageID.make("msg_lean_http_saved")

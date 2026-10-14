@@ -46,6 +46,7 @@ import { runtime } from "./runtime"
 import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
+import { sessionInitScenarios } from "./session-init"
 import { researchArtifactScenarios } from "./research-artifact"
 
 const scenarios: Scenario[] = [
@@ -519,7 +520,7 @@ const scenarios: Scenario[] = [
     ),
   http.protected.get("/api/health", "v2.health.get").json(200, (body) => {
     object(body)
-    check(body.healthy === true, "v2 server should report healthy")
+    check(body.healthy === true && typeof body.pid === "number" && body.pid > 0, "v2 health must identify the ready process")
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),
@@ -1223,30 +1224,7 @@ const scenarios: Scenario[] = [
     .json(200, (body) => {
       check(body === true, "missing session abort should remain a no-op success")
     }),
-  http.protected
-    .post("/session/{sessionID}/init", "session.init")
-    .preserveDatabase()
-    .withLlm()
-    .seeded((ctx) =>
-      Effect.gen(function* () {
-        const session = yield* ctx.session({ title: "Init session" })
-        const message = yield* ctx.message(session.id, { text: "initialize" })
-        yield* ctx.llmText("initialized")
-        yield* ctx.llmText("initialized")
-        return { session, message }
-      }),
-    )
-    .at((ctx) => ({
-      path: route("/session/{sessionID}/init", { sessionID: ctx.state.session.id }),
-      headers: ctx.headers(),
-      body: { providerID: "test", modelID: "test-model", messageID: ctx.state.message.info.id },
-    }))
-    .jsonEffect(200, (body, ctx) =>
-      Effect.gen(function* () {
-        check(body === true, "init should return true")
-        yield* ctx.llmWait(1)
-      }),
-    ),
+  ...sessionInitScenarios,
   http.protected
     .post("/session/{sessionID}/message", "session.prompt")
     .preserveDatabase()

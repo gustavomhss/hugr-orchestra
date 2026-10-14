@@ -153,7 +153,7 @@ export function cookedCertificate(cliHash: string) {
 }
 
 export async function run() {
-  const scratch = fixture("pty-byte-probe", { lsp: false })
+  const scratch = await fixture("pty-byte-probe", { lsp: false })
   const nonce = `omni-bytes-${randomUUID()}`
   const observations: Record<string, unknown> = {}
   const errors: string[] = []
