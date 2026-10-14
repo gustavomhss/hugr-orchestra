@@ -225,6 +225,7 @@ test("package sources and scripts contain no declared credential access construc
   expect(scanned).toContain("modules/relay/src/arm/evaluate.ts")
   expect(scanned).toContain("modules/maestro/arsenal/src/registry.ts")
   expect(scanned).toContain("tooling/httpapi-codegen/src/index.ts")
+  expect(scanned).toContain("tooling/http-recorder/src/cassette.ts")
   expect(scanned.length).toBeGreaterThan(500)
   const found = (await Promise.all(scanned.map(async (file) => hits(file, await Bun.file(path.join(ROOT, file)).text())))).flat()
   if (found.length) throw new Error(["Credential access constructs or raw non-JS indicators found:", ...found].join("\n"))

@@ -31,6 +31,7 @@
       "modules/capability-assets",
       "modules/maestro/arsenal",
       "tooling/httpapi-codegen",
+      "tooling/http-recorder",
       "packages/sdk/js",
       "packages/omni/bindings/node"
     ],
