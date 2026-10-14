@@ -56,7 +56,14 @@ import { useDraftSessionKey, useSubagentModelPolicy } from "./prompt-input/draft
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { usePlatform } from "@/context/platform"
 import { createSessionTabs } from "@/pages/session/helpers"
-import { createTextFragment, getCursorPosition, setCursorPosition, setRangeEdge } from "./prompt-input/editor-dom"
+import {
+  createCaretPlaceholder,
+  createTextFragment,
+  getCursorPosition,
+  setCursorPosition,
+  setRangeEdge,
+} from "./prompt-input/editor-dom"
+import { insertPromptEditorText, materializePromptEditor, readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { createPromptAttachments } from "./prompt-input/attachments"
 import { ACCEPTED_FILE_TYPES, pickAttachmentFiles } from "./prompt-input/files"
 import {
@@ -765,6 +772,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     onSelect: handleSlashSelect,
   })
 
+  const pillParts = new WeakMap<HTMLElement, FileAttachmentPart | AgentPart>()
   const createPill = (part: FileAttachmentPart | AgentPart) => {
     const pill = document.createElement("span")
     pill.textContent = part.content
@@ -784,25 +792,20 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     pill.setAttribute("contenteditable", "false")
     pill.style.userSelect = "text"
     pill.style.cursor = "default"
+    pillParts.set(pill, part)
     return pill
   }
 
   const isNormalizedEditor = () =>
     Array.from(editorRef.childNodes).every((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent ?? ""
-        if (!text.includes("\u200B")) return true
-        if (text !== "\u200B") return false
-
-        const prev = node.previousSibling
-        const next = node.nextSibling
-        const prevIsBr = prev?.nodeType === Node.ELEMENT_NODE && (prev as HTMLElement).tagName === "BR"
-        return !!prevIsBr && !next
+        return true
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return false
       const el = node as HTMLElement
       if (el.dataset.type === "file") return true
       if (el.dataset.type === "agent") return true
+      if (el.hasAttribute("data-prompt-caret")) return true
       return el.tagName === "BR"
     })
 
@@ -820,7 +823,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     const last = editorRef.lastChild
     if (last?.nodeType === Node.ELEMENT_NODE && (last as HTMLElement).tagName === "BR") {
-      editorRef.appendChild(document.createTextNode("\u200B"))
+      editorRef.appendChild(createCaretPlaceholder())
     }
   }
 
@@ -855,9 +858,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const reconcile = (input: Prompt) => {
     if (mirror.input) {
       mirror.input = false
-      if (isNormalizedEditor()) return
-
-      renderEditorWithCursor(input)
+      // Keep native editing nodes/undo entries; materialize structural breaks only at the next editing boundary.
       return
     }
 
@@ -883,9 +884,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     let buffer = ""
 
     const flushText = () => {
-      let content = buffer
-      if (content.includes("\r")) content = content.replace(/\r\n?/g, "\n")
-      if (content.includes("\u200B")) content = content.replace(/\u200B/g, "")
+      const content = buffer
       buffer = ""
       if (!content) return
       parts.push({ type: "text", content, start: position, end: position + content.length })
@@ -894,20 +893,24 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     const pushFile = (file: HTMLElement) => {
       const content = file.textContent ?? ""
+      const saved = pillParts.get(file)
       const source =
-        file.dataset.sourceType === "resource" && file.dataset.sourceClientName && file.dataset.sourceUri
-          ? {
-              type: "resource" as const,
-              text: {
-                value: content,
-                start: position,
-                end: position + content.length,
-              },
-              clientName: file.dataset.sourceClientName,
-              uri: file.dataset.sourceUri,
-            }
-          : undefined
+        saved?.type === "file" && saved.source
+          ? { ...saved.source, text: { value: content, start: position, end: position + content.length } }
+          : file.dataset.sourceType === "resource" && file.dataset.sourceClientName && file.dataset.sourceUri
+            ? {
+                type: "resource" as const,
+                text: {
+                  value: content,
+                  start: position,
+                  end: position + content.length,
+                },
+                clientName: file.dataset.sourceClientName,
+                uri: file.dataset.sourceUri,
+              }
+            : undefined
       parts.push({
+        ...(saved?.type === "file" ? saved : {}),
         type: "file",
         path: file.dataset.path!,
         content,
@@ -924,6 +927,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     const pushAgent = (agent: HTMLElement) => {
       const content = agent.textContent ?? ""
       parts.push({
+        ...pillParts.get(agent),
         type: "agent",
         name: agent.dataset.name!,
         content,
@@ -933,41 +937,18 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       position += content.length
     }
 
-    const visit = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        buffer += node.textContent ?? ""
-        return
-      }
-      if (node.nodeType !== Node.ELEMENT_NODE) return
-
-      const el = node as HTMLElement
-      if (el.dataset.type === "file") {
+    readPromptEditor(editorRef).segments.forEach(({ node, content }) => {
+      if (node instanceof HTMLElement && node.dataset.type === "file") {
         flushText()
-        pushFile(el)
+        pushFile(node)
         return
       }
-      if (el.dataset.type === "agent") {
+      if (node instanceof HTMLElement && node.dataset.type === "agent") {
         flushText()
-        pushAgent(el)
+        pushAgent(node)
         return
       }
-      if (el.tagName === "BR") {
-        buffer += "\n"
-        return
-      }
-
-      for (const child of Array.from(el.childNodes)) {
-        visit(child)
-      }
-    }
-
-    const children = Array.from(editorRef.childNodes)
-    children.forEach((child, index) => {
-      const isBlock = child.nodeType === Node.ELEMENT_NODE && ["DIV", "P"].includes((child as HTMLElement).tagName)
-      visit(child)
-      if (isBlock && index < children.length - 1) {
-        buffer += "\n"
-      }
+      buffer += content
     })
 
     flushText()
@@ -985,9 +966,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         ? rawParts[0].content
         : rawParts.map((p) => ("content" in p ? p.content : "")).join("")
     const hasNonText = rawParts.some((part) => part.type !== "text")
-    const textContent = (editorRef.textContent ?? "").replace(/\u200B/g, "")
-    const shouldReset =
-      textContent.length === 0 && rawText.replace(/\n/g, "").length === 0 && !hasNonText && images.length === 0
+    const shouldReset = rawText.length === 0 && !hasNonText && images.length === 0
 
     if (shouldReset) {
       closePopover()
@@ -1040,7 +1019,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     if (selection.rangeCount === 0) return false
     const range = selection.getRangeAt(0)
-    if (!editorRef.contains(range.startContainer)) return false
+    if (!editorRef.contains(range.startContainer) || !editorRef.contains(range.endContainer)) return false
+    if (part.type === "text") {
+      const inserted = insertPromptEditorText(editorRef, part.content, "insertText")
+      if (inserted) prompt.capture().store[1]("cursor", getCursorPosition(editorRef))
+      closePopover()
+      return inserted
+    }
+    materializePromptEditor(editorRef, range)
 
     if (part.type === "file" || part.type === "agent") {
       const cursorPosition = getCursorPosition(editorRef)
@@ -1063,40 +1049,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       range.insertNode(gap)
       range.insertNode(pill)
       range.setStartAfter(gap)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    }
-
-    if (part.type === "text") {
-      const fragment = createTextFragment(part.content)
-      const last = fragment.lastChild
-      range.deleteContents()
-      range.insertNode(fragment)
-      if (last) {
-        if (last.nodeType === Node.TEXT_NODE) {
-          const text = last.textContent ?? ""
-          if (text === "\u200B") {
-            range.setStart(last, 0)
-          }
-          if (text !== "\u200B") {
-            range.setStart(last, text.length)
-          }
-        }
-        if (last.nodeType !== Node.TEXT_NODE) {
-          const isBreak = last.nodeType === Node.ELEMENT_NODE && (last as HTMLElement).tagName === "BR"
-          const next = last.nextSibling
-          const emptyText = next?.nodeType === Node.TEXT_NODE && (next.textContent ?? "") === ""
-          if (isBreak && (!next || emptyText)) {
-            const placeholder = next && emptyText ? next : document.createTextNode("\u200B")
-            if (!next) last.parentNode?.insertBefore(placeholder, null)
-            placeholder.textContent = "\u200B"
-            range.setStart(placeholder, 0)
-          } else {
-            range.setStartAfter(last)
-          }
-        }
-      }
       range.collapse(true)
       selection.removeAllRanges()
       selection.addRange(range)
@@ -1240,7 +1192,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return permission.isAutoAccepting(id, sdk().directory)
   })
 
-  const { abort, handleSubmit } =
+  const { abort, handleSubmit, submitting } =
     props.submission ??
     createPromptSubmit({
       prompt,
@@ -1287,7 +1239,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         const offset = selection.anchorOffset
         if (node && node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent ?? ""
-          if (/^\u200B+$/.test(text) && offset > 0) {
+          if (node.parentElement?.hasAttribute("data-prompt-caret") && text.startsWith("\u200B") && offset === 1) {
             const range = document.createRange()
             range.setStart(node, 0)
             range.collapse(true)
@@ -1347,15 +1299,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       }
     }
 
-    // Handle Shift+Enter BEFORE IME check - Shift+Enter is never used for IME input
-    // and should always insert a newline regardless of composition state
-    if (event.key === "Enter" && event.shiftKey) {
+    if (event.key === "Enter" && isImeComposing(event)) return
+    if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
       addPart({ type: "text", content: "\n", start: 0, end: 0 })
       event.preventDefault()
-      return
-    }
-
-    if (event.key === "Enter" && isImeComposing(event)) {
       return
     }
 
@@ -1502,6 +1449,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       />
       <DockShellForm
         data-dock-border-underlay="legacy"
+        data-prompt-admitting={String(submitting?.() ?? false)}
         onSubmit={handleSubmit}
         classList={{
           "group/prompt-input": true,
