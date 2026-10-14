@@ -40,7 +40,7 @@ export const run = shell("Run tests")
 export const control = shell("Require nonce-bound positive control", true)
 
 export const boundaries = ["Install native Deno", "Extract native Deno", "Prove native Windows Job handle closure",
-  "Prove source ABI producers", "Prove Desktop ABI consumer"].map((name) => ({ name, run: shell(name),
+  "Prove source ABI producers", "Prove Desktop ABI consumer", "Prove Schema ELF ABI", "Prove packaged parser ABI"].map((name) => ({ name, run: shell(name),
     cwd: workflow.jobs.qualification.steps.find((step) => step.name === name)?.["working-directory"] ?? "." }))
 
 // Git Bash PATH entries use /c/...; ordinary command arguments retain native paths for Bun/Node.
@@ -116,7 +116,7 @@ export const boundaryFixture = () => Effect.gen(function* () {
   const trace = path.join(box.dir, "commands.jsonl")
   const deno = path.join(box.dir, "deno runtime", "deno")
   yield* Effect.promise(async () => {
-    await Promise.all(["script", "desktop", "omni"].map((pkg) => mkdir(path.join(box.dir, "packages", pkg))))
+    await Promise.all(["script", "desktop", "omni", "schema", "maestro-arsenal"].map((pkg) => mkdir(path.join(box.dir, "packages", pkg))))
     await mkdir(path.dirname(deno))
     await copyFile(path.join(root, "script/distribution-deno.ts"), path.join(box.dir, "script/distribution-deno.ts"))
     await mkdir(path.join(box.dir, "packages/core/test"), { recursive: true })

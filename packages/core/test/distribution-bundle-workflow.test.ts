@@ -68,6 +68,8 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_NATIVE_JOB", (value) => patchStep(value, "Prove native Windows Job handle closure", () => undefined)],
     ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", () => undefined)],
     ["BUNDLE_DESKTOP_ABI", (value) => patchStep(value, "Prove Desktop ABI consumer", () => undefined)],
+    ["BUNDLE_SCHEMA_ELF", (value) => patchStep(value, "Prove Schema ELF ABI", () => undefined)],
+    ["BUNDLE_PARSER_ABI", (value) => patchStep(value, "Prove packaged parser ABI", () => undefined)],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
   ]
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
@@ -101,6 +103,10 @@ function inspect(input: unknown) {
   const abi = requireStep(job.steps, "Prove source ABI producers", "BUNDLE_SOURCE_ABI")
   const denoExtract = requireStep(job.steps, "Extract native Deno", "BUNDLE_DENO")
   const desktop = requireStep(job.steps, "Prove Desktop ABI consumer", "BUNDLE_DESKTOP_ABI")
+  const elf = requireStep(job.steps, "Prove Schema ELF ABI", "BUNDLE_SCHEMA_ELF")
+  const parser = requireStep(job.steps, "Prove packaged parser ABI", "BUNDLE_PARSER_ABI")
+  check(elf.if === abi.if && elf["working-directory"] === "packages/schema" && job.steps.indexOf(elf) < job.steps.indexOf(run), "BUNDLE_SCHEMA_ELF")
+  check(parser.if === abi.if && parser["working-directory"] === "packages/maestro-arsenal" && job.steps.indexOf(parser) < job.steps.indexOf(run), "BUNDLE_PARSER_ABI")
   check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
   check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
   check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
@@ -133,7 +139,7 @@ function inspect(input: unknown) {
   check(staticJob?.["timeout-minutes"] === 20, "BUNDLE_STATIC_TIMEOUT")
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
-    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined],
+    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "packages/maestro-arsenal", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
 }

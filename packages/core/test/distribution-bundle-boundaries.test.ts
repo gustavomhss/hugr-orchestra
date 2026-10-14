@@ -34,6 +34,8 @@ function expected(box: Box, name: string) {
     ["bun", "script/distribution-deno.ts", "--verify-version", "distribution-logs/deno-version.log"]]
   if (name === "Prove native Windows Job handle closure") return [["cargo", "test", "--release", "-p", "omni-supervisor", "windows::tests", "--", "--nocapture", "--test-threads=1"],
     ["bun", "../core/test/distribution-bundle-gates.ts", "../../distribution-logs/windows-native-job.log"]]
+  if (name === "Prove Schema ELF ABI") return [["bun", "test", "--timeout", "120000", "./test/elf.test.ts"]]
+  if (name === "Prove packaged parser ABI") return [["bun", "test", "--timeout", "120000", "./test/parser-bindings.test.ts", "./test/onboard.test.ts"]]
   return [["bun", "test", "--timeout", "120000", name === "Prove source ABI producers" ? "./src/tree-sitter-prebuilds.test.ts" : "./src/main/cli-artifacts.test.ts"]]
 }
 
@@ -47,7 +49,7 @@ const observe = (box: Box, step: typeof boundaries[number], text = step.run, fai
   check(trace.every((entry) => entry.cwd === realpathSync(path.join(box.dir, step.cwd))), `BUNDLE_BOUNDARY_CWD: ${step.name}`)
   if (step.name.includes("ABI")) check(trace.every((entry) => entry.githubActions === "false" && entry.control === "declared"), `BUNDLE_BOUNDARY_ENV: ${step.name}`)
   const log = step.name === "Install native Deno" ? "deno-download" : step.name === "Extract native Deno" ? failed === "unzip" || failed === "chmod" ? "deno-extract" : "deno-version"
-    : step.name.includes("Windows") ? "windows-native-job" : step.name.includes("Desktop") ? "desktop-abi" : "source-abi"
+    : step.name.includes("Windows") ? "windows-native-job" : step.name.includes("Desktop") ? "desktop-abi" : step.name.includes("Schema") ? "schema-elf-abi" : step.name.includes("parser") ? "parser-abi" : "source-abi"
   if (failed === "--admit") {
     check(!(yield* Effect.promise(() => Bun.file(path.join(box.dir, "distribution-logs/deno-download.log")).exists())), "BUNDLE_DENO_DOWNLOAD_BEFORE_ADMISSION")
     return

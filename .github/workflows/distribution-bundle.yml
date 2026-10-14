@@ -24,6 +24,10 @@ jobs:
         working-directory: packages/core
       - run: bun typecheck
         working-directory: packages/script
+      - run: bun typecheck
+        working-directory: packages/schema
+      - run: bun typecheck
+        working-directory: packages/maestro-arsenal
       - run: bun run check:spawn-imports
       - run: bun run check:godfile
         env:
@@ -164,6 +168,20 @@ jobs:
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/main/cli-artifacts.test.ts 2>&1 | tee ../../distribution-logs/desktop-abi.log
+      - name: Prove Schema ELF ABI
+        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        working-directory: packages/schema
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/elf.test.ts 2>&1 | tee ../../distribution-logs/schema-elf-abi.log
+      - name: Prove packaged parser ABI
+        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        working-directory: packages/maestro-arsenal
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../distribution-logs/parser-abi.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |
