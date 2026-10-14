@@ -8,6 +8,119 @@ import { SessionTodo } from "../src/session-todo"
 import { SessionV1 } from "../src/session-v1"
 import { WorkspaceEvent } from "../src/workspace-event"
 
+// Deliberate public-name oracle for the joined contract, independent of the implementation's inventory assembly.
+const publicEventTypes = [
+  "models-dev.refreshed",
+  "integration.updated",
+  "integration.connection.updated",
+  "catalog.updated",
+  "session.created",
+  "session.updated",
+  "session.deleted",
+  "session.v1.prompt.admitted",
+  "message.updated",
+  "message.removed",
+  "message.part.updated",
+  "message.part.removed",
+  "session.next.agent.switched",
+  "session.next.model.switched",
+  "session.next.subagent.models.changed",
+  "session.next.archive.changed",
+  "session.next.moved",
+  "session.next.prompted",
+  "session.next.prompt.admitted",
+  "session.next.context.updated",
+  "session.next.synthetic",
+  "session.next.shell.started",
+  "session.next.shell.ended",
+  "session.next.step.started",
+  "session.next.step.ended",
+  "session.next.step.failed",
+  "session.next.text.started",
+  "session.next.text.delta",
+  "session.next.text.ended",
+  "session.next.reasoning.started",
+  "session.next.reasoning.delta",
+  "session.next.reasoning.ended",
+  "session.next.tool.input.started",
+  "session.next.tool.input.delta",
+  "session.next.tool.input.ended",
+  "session.next.tool.called",
+  "session.next.tool.progress",
+  "session.next.tool.success",
+  "session.next.tool.failed",
+  "session.next.retried",
+  "session.next.compaction.started",
+  "session.next.compaction.delta",
+  "session.next.compaction.ended",
+  "session.next.revert.staged",
+  "session.next.revert.cleared",
+  "session.next.revert.committed",
+  "maestro.approval.presented",
+  "maestro.approval.decided",
+  "maestro.approval.consumed",
+  "maestro.approval.reserved",
+  "maestro.admission.decided",
+  "maestro.plan_revision.recorded",
+  "maestro.context.recorded",
+  "maestro.clarification.decided",
+  "maestro.scope.decided",
+  "maestro.held.entered",
+  "maestro.validation.recorded",
+  "maestro.review.received",
+  "maestro.authorization.granted",
+  "maestro.dispatch.reserved",
+  "maestro.task.bound",
+  "maestro.task.workflow_bound",
+  "maestro.work_result.decided",
+  "message.part.delta",
+  "session.diff",
+  "session.error",
+  "installation.updated",
+  "installation.update-available",
+  "file.edited",
+  "reference.updated",
+  "permission.v2.asked",
+  "permission.v2.replied",
+  "plugin.added",
+  "project.directories.updated",
+  "file.watcher.updated",
+  "pty.created",
+  "pty.updated",
+  "pty.exited",
+  "pty.deleted",
+  "question.v2.asked",
+  "question.v2.replied",
+  "question.v2.rejected",
+  "relay.hook.decided",
+  "todo.updated",
+  "lsp.updated",
+  "permission.asked",
+  "permission.replied",
+  "tui.prompt.append",
+  "tui.command.execute",
+  "tui.toast.show",
+  "tui.session.select",
+  "mcp.tools.changed",
+  "mcp.browser.open.failed",
+  "command.executed",
+  "project.updated",
+  "session.status",
+  "session.idle",
+  "question.asked",
+  "question.replied",
+  "question.rejected",
+  "session.compacted",
+  "vcs.branch.updated",
+  "workspace.ready",
+  "workspace.failed",
+  "workspace.status",
+  "worktree.ready",
+  "worktree.failed",
+  "server.connected",
+  "global.disposed",
+]
+
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
     expect(EventManifest.ServerDefinitions.length).toBe(88)
@@ -25,9 +138,24 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(109)
+    expectPublicTypes([...EventManifest.Latest.keys()])
+    expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's seven durable-only definitions are already canonical; the two Session settings events add two more.
     expect(EventManifest.Durable.size).toBe(72)
+  })
+
+  test("public-name pin rejects missing, unknown and same-count replacement events", () => {
+    const actual = [...EventManifest.Latest.keys()]
+    expectPublicTypes(actual)
+    expect(() => expectPublicTypes(actual.filter((type) => type !== SessionEvent.ArchiveChanged.type))).toThrow(
+      SessionEvent.ArchiveChanged.type,
+    )
+    expect(() => expectPublicTypes([...actual, "unknown.event.join"])).toThrow("unknown.event.join")
+    expect(() =>
+      expectPublicTypes(
+        actual.map((type) => (type === SessionEvent.ArchiveChanged.type ? "unknown.event.join" : type)),
+      ),
+    ).toThrow("unknown.event.join")
   })
 
   test.each([
@@ -101,3 +229,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Durable.get("relay.hook.decided.1")).toBe(RelayHook.Decided)
   })
 })
+
+function expectPublicTypes(actual: readonly string[]) {
+  expect(actual.toSorted()).toEqual(publicEventTypes.toSorted())
+}
