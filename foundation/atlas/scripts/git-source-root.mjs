@@ -2,7 +2,7 @@
 export function atlasRevisionSource(revision, git, options = {}) {
   const run = (args) => {
     try {
-      const text = git(args)
+      const text = git(["--no-replace-objects", ...args])
       if (typeof text !== "string") throw new TypeError("git must return synchronous text")
       return text
     } catch (error) {
