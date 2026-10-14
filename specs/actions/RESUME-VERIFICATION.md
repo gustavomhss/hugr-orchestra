@@ -1,9 +1,11 @@
-# Actions evidence ledger — candidate 92af2d68bb
+# Actions evidence ledger — runtime candidate 914f478cee
 
 Snapshot date: 2026-10-14. Candidate C:
-`92af2d68bb492a28a9f905c20fea2c714d622fc7`. Real delivery root:
+`914f478ceed441892604aeaa7689d903f7c710ff`. Real delivery root:
 `/Users/gustavoschneiter/Documents/HuGR/_worktrees/actions-delivery`.
-Owned docs worktree/branch: `actions-evidence-ledger`, created from C.
+Owned docs worktree/branch: `actions-evidence-ledger`, originally created from
+`92af2d68bb492a28a9f905c20fea2c714d622fc7`. C is the observed manual-runtime source;
+later delivery integration is `6d88f1f978cccdf7f636a49aff1bd0e54c1b6b88`.
 No final bundle SHA/tree, account authority or user data is inferred from a path,
 browser screenshot, historical run, or another checkout's HEAD.
 
@@ -14,11 +16,12 @@ All TEMP names below resolve under this exact root:
 
 | Key | Exact TEMP filename | Source / verdict |
 | --- | --- | --- |
-| J | `actions-final-journey-2026-10-14T19-53-48-787Z.json` | App `a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`; BLOCKED, DIAGNOSTICS_PRESENT. |
-| L | `actions-final-lifetime-2026-10-14T20-03-54-395Z.json` | Same app revision; MEASUREMENT_COMPLETE_WITH_DIAGNOSTICS_NOT_OVERALL_GREEN. |
+| J | `actions-final-journey-2026-10-14T20-51-34-156Z.json` | App C; COVERED_REQUESTED_READ_ONLY_JOURNEY; JOURNEY_COMPLETE_WITH_DIAGNOSTICS_NOT_OVERALL_GREEN. |
+| Previous J | `actions-final-journey-2026-10-14T19-53-48-787Z.json` | App `a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`; old focus/Arabic prerequisite blocks retained as history. |
+| L | `actions-final-lifetime-2026-10-14T20-03-54-395Z.json` | App `a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`; MEASUREMENT_COMPLETE_WITH_DIAGNOSTICS_NOT_OVERALL_GREEN. |
 | B | `actions-ui-baseline.json` | `e6d9a35f1b2434262ae846f37d5725b1f062e085`; old native CI/CD surface. |
-| J harness | `actions-final-journey.ts` | Later mixed-input correction is source only; J is its earlier execution record. |
-| Stack | `actions-final-bundle-body-20261014.md` | TEMPLATE, 43 published draft children; closing PR not published in this record. |
+| J harness | `actions-final-journey.ts` | Corrected Arabic prerequisite/mixed local input executed in latest J; English Actions fallback retained. |
+| Stack | `actions-final-bundle-body-20261014.md` | TEMPLATE, now 44 draft children including focus #630; closing PR pending. |
 | Packaging | `actions-qualification-result-20261014.json` | Frozen source `a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`; mechanical packaging, not runtime proof. |
 
 Repository historical sources: `specs/actions/COMPACTION-HANDOFF.md`,
@@ -41,7 +44,7 @@ Credentials, CLI config contents, raw secret values and user-data dumps are omit
   actual artifact/source tabs, Back/Forward/reload identity retained.
 - `library-dispatch-hydration` and `workflow-dispatch-hydration`: typed
   `windows_e2e`/`cold`, native `dev` source resolved to
-  `e87fd95799cba0220abf5c86b203bc8d82b29732`; canceled, never dispatched.
+  `792ed6cc7c03f64bb2b75e1d1f4f751e32732ce5`; canceled, never dispatched.
 - `new-workflow-local-draft`, `new-workflow-validate`,
   `new-workflow-review-cancel-discard`: observed native base, local one-job parse,
   review form, cancel and explicit discard. `draft:sha256:` is a local identity,
@@ -49,19 +52,25 @@ Credentials, CLI config contents, raw secret values and user-data dumps are omit
   successful local `validate-draft` POST; binding was reused.
 - `library-native-scopes-dialog`: native environments GET succeeded with an empty
   catalog; Repository option observed, no variable save. Populated scopes unproven.
-- `native-policy-dialog`: Escape closed it but invoker focus failed. Real product
-  bug, corrected for native/local policy hydration by `0c386bae4a390bb2478ada8d3bb6f62f56c564c5`
-  in C (`settings.tsx`, `test-browser/actions-policy.test.ts`); final UI proof pending.
+- `native-policy-dialog`: Escape closed it and restored invoker focus. This passes
+  the previously blocked native facet after `0c386bae4a` and `914f478cee` corrections
+  in `settings.tsx`; no policy save. Local-policy/stale-ownership fixtures await CI.
 - `ltr-dark`/`rtl-dark`: English, 1440px, centered/in-bounds dialog, correct computed
   direction, Tab containment, Escape/focus return; margin mutation broke centering
   and restoration recovered it. Screenshots still need full approved-mock comparison.
-- `rtl-light-420`: BLOCKED with `REAL_ARABIC_UI_NOT_OBSERVED`; Arabic Actions copy
-  fell back to English. Corrected harness checks real Arabic locale plus local name
-  input `اختبار CI`, preserving native provider names. New result pending; this is
-  local input, not a provider mutation/demo or completed 420px geometry proof.
+- `rtl-light-420`: OBSERVED. Real `ar`/RTL/light/420px connection dialog was centered
+  and in bounds, with computed RTL, Tab containment, Escape and focus return. Local
+  workflow-name input `اختبار CI` passed mixed Arabic/Latin value/direction checks.
+  The corrected prerequisite accepts existing English Actions fallback: no new
+  translation feature and no native provider demo data. Full widget parity unproven.
 - Capture controls saw a deliberate exception, console error, 404, transport failure
   and denied POST. Actual shell `GET /api/relay/run` 404 remains a diagnostic;
-  controls do not erase application failures. J's blocked stages remain blocked.
+  controls do not erase it. J now covers the requested read-only journey, not an
+  overall-green run. The recorded relay source is shell-owned, outside Actions scope.
+
+Owner-reported source-review stage: **COMPLETED**; `Role_No_Output`, `Context_Value`,
+`Root_Metadata`, `Copy_Key`: **FIXED**. No actor/gate-wide `any` exemption is implied.
+These review statuses do not supply fixture-CI results or final-bundle qualification.
 
 ## L: descriptive performance/retention, NOISY
 
@@ -80,8 +89,10 @@ Actions navigation wall median 5,052.01ms versus B's 1,071.27ms includes idle fl
 and different native work. B and L use different surfaces, source revisions, backend
 ports and live workloads. Publishing dev `e87fd95799cba0220abf5c86b203bc8d82b29732`
 contains 225 commits not reachable from B's revision. This is not a matched-workload
-baseline or causal speed/regression comparison. Final source-bound CI performance,
-retention/cleanup evidence and relay diagnostic resolution remain pending.
+baseline or causal speed/regression comparison. Latest dev `792ed6cc7c` additionally
+contains four prompt changes (#625–#628); final bundle must preserve them. L is not
+a new measurement of C or the dev-reconciled tree. Retention/cleanup and matched
+performance evidence remain pending; shell relay 404 remains separately recorded.
 
 ## H: qualified historical CI, before current review corrections
 
@@ -117,21 +128,22 @@ batch. All precede C's review corrections; none establishes final-candidate clos
   facet list is in `UI-MOCK-PARITY.md`. The Unknown-request clarification does not
   authorize live provider mutations for validation. Native reads and local validation
   cannot close provider write facets.
-- **Actual fix remaining:** shell relay 404 must be repaired for an overall clean
-  diagnostic claim. It is outside Actions proof and was not repaired by these docs.
-  Other untested Actions facets remain unknown. Policy focus has a code correction,
-  not final proof. Mixed-input harness correction also exists; execution is pending.
-- **Final evidence remaining:** source-bound CI/review, policy focus and Arabic/420px
-  UI, full mock/state/dialog/native GitLab matrix, streaming save/cancel/finalization,
-  populated scopes, per-view cleanup and matched-workload performance/retention.
-- **Publication:** 43 child PRs packaging READY, draft/unmerged, ending at #620
-  (`actions-epic-coverage`, tip `9a63c6d35102cca72632b331c5b8bc2763b85dc5`). Older
-  reserved-overlay tree `4c4ba27a277607cf0727b9759ddae5cff52a95b7` matches frozen
-  `a1286c5ad3`, not later C. Closing PR, final tree/dependency reconciliation and
-  candidate-bound review/qualification remain PENDING.
+- **Recorded diagnostic:** shell relay 404 is outside Actions scope. It keeps the
+  overall diagnostic verdict non-green; this ledger does not recommend unrelated fixes.
+- **Final evidence remaining:** final-tree CI/review binding, full mock/state/dialog/
+  native GitLab matrix, streaming save/cancel/finalization, populated scopes, per-view
+  cleanup and matched-workload performance/retention. Native-policy Escape/focus and
+  scoped Arabic/420px connection/local-input facets now have manual J evidence.
+- **Publication:** original 43 children plus `actions-dialog-focus` #630 are packaging
+  READY (44 draft children in latest template). Focus tip
+  `0433b0af72d8fc37616b55d361d8241f80c9f5e4`, reserved-overlay tree
+  `fcaead16648fcf84074a2b3256f897188f5fa5ab`, matches frozen C. Root integration
+  `6d88f1f978` merged latest dev's four prompt changes; final bundle must retain that
+  ancestry. Closing PR, final tree/dependencies and CI remain PENDING. Owner-reported
+  source review is COMPLETED; this does not complete final-bundle evidence binding.
 
-Current owner instruction: tests and performance qualification are CI-only at the
-final bundled campaign. Earlier per-unit `test:ci` guidance does not authorize new
-focused runs now. No local test/browser/performance harness, mutation run, alternate
-test command, intermediate label or dispatch loophole. Existing local J/L artifacts
-are historical observations only. This docs task runs no tests/CI/typecheck/build.
+Current owner cadence: automated tests/heavy validation run only in final-bundle CI;
+no intermediate focused CI. Manual UI and performance measurement are distinct from
+tests and remain scoped observational evidence, not CI green. Heavy tests cannot be
+reclassified as manual measurement. This docs delta runs no CI/tests/typecheck/build
+or manual measurements.

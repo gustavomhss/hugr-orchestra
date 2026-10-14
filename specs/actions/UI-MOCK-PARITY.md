@@ -4,11 +4,11 @@ Authority: owner explicitly requested 100% approved mock parity after initial
 screen-only scope correction. Source: `actions-campaign/artifacts/actions-mock`.
 Luna inventory `ses_ec9604105ffeZAABp8NZunUiuX` verified gallery/handler/dialog
 positive controls before enumerating closed sets. Evidence snapshot: candidate
-`92af2d68bb492a28a9f905c20fea2c714d622fc7`, 2026-10-14. The former all-OPEN
+`914f478ceed441892604aeaa7689d903f7c710ff`, 2026-10-14. The former all-OPEN
 register omitted observed progress; PARTIAL records that progress without claiming
 closure. No row is CLOSED across all required facets.
 
-Evidence keys J (19:53 journey), L (20:03 lifetime), H (historical CI) and C
+Evidence keys J (20:51 journey), L (20:03 lifetime), H (historical CI) and C
 (candidate corrections) resolve in [RESUME-VERIFICATION.md](RESUME-VERIFICATION.md).
 R = native read/state; I = interaction; V = visual comparison; M = provider mutation;
 L = performance/lifetime. OBSERVED is limited to the recorded scenario and source.
@@ -35,16 +35,21 @@ PENDING; live provider mutations are NOT AUTHORIZED. See the facet list below.
 | P13 | Runners labels/tags/state/origin/inherited restrictions | R/I/M PENDING | H exact arrays/platform/group restrictions implemented; current native UI and enrollment fixture evidence pending. |
 | P14 | GitHub key/ref cache deletion; GitLab project-wide invalidation | R/I/M PENDING | H exact GH key/ref and GL request semantics; current fixture/UI qualification pending. |
 | P15 | GitHub YAML schedules; GitLab CRUD/play/pause/delete | R/I/M PENDING | H command/payload evidence; current action-specific policy and GitLab fixture/UI qualification pending. |
-| P16 | Settings provider/host/project/sign-in/access/retention/execution/inherited/capabilities | R/I PARTIAL; focus FIXED/PROOF PENDING | J native policy Escape focus failed; C `0c386bae4a` fixes native/local hydration focus; final UI/CI pending. |
+| P16 | Settings provider/host/project/sign-in/access/retention/execution/inherited/capabilities | R/I PARTIAL; native focus OBSERVED | J native policy Escape/focus return passed after `0c386bae4a`/`914f478cee`; local-policy and stale-ownership fixture CI pending. |
 | P17 | Global plus contextual navigation, reload, Back/Forward and selections | I PARTIAL | J exact run/commit survives Back/Forward/reload; L serial Home/Actions cycles; full selection/cleanup matrix pending. |
 | P18 | Ready/empty/signed-out/error/read-only/queued/running/waiting/terminal states | R/I PARTIAL | J terminal run, immutable source, Unknown dispatch, empty scope catalog; H signed-out copy; full state matrix pending. |
-| P19 | All dialogs/confirmation/forms/disabled states and provider-native differences | I PARTIAL; M PENDING | J typed dispatch from library/workflow, review cancellation, scopes, connection; policy focus corrected in C, full modal matrix pending. |
-| P20 | Light/dark, English forced RTL, real RTL/mixed text, narrow/keyboard/focus | I PARTIAL; ar/420 PENDING | J English 1440px LTR/forced-RTL geometry, Tab/Escape/focus observed with geometry control; Arabic 420px blocked; corrected mixed-input harness has no new result. |
+| P19 | All dialogs/confirmation/forms/disabled states and provider-native differences | I PARTIAL; M PENDING | J typed dispatch, review cancellation, scopes, connection and native-policy Escape/focus observed; full modal matrix pending. |
+| P20 | Light/dark, English forced RTL, real RTL/mixed text, narrow/keyboard/focus | I PARTIAL; scoped ar/420 OBSERVED | J English 1440px LTR/forced RTL plus Arabic RTL/light/420px connection geometry, Tab/Escape/focus and Arabic/Latin local name input passed; full widget/theme matrix pending. |
 
 J pins `.github/workflows/test.yml` to execution commit
 `e4045f16c04fefb8127ccdac5d653691b8211139`, blob
 `9aba44be238b610f4a37c3324f4fbb2f9c14f3e3`; never substitute current `dev`.
-J/L application revision is `a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`, not C.
+J application revision is C; L remains at
+`a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`. J verdict is
+`COVERED_REQUESTED_READ_ONLY_JOURNEY`, overall diagnostics NOT GREEN. The corrected
+Arabic prerequisite accepts existing English Actions fallback; no new translation
+feature or native provider demo data was introduced. Shell relay 404 is recorded
+outside Actions scope. Fixture-CI and live GitLab coverage remain pending.
 
 `providerMutationFacets`: workflow toggle/dispatch; run retry/rerun/cancel/delete;
 job retry/play/erase; deployment approval/review; artifact delete/keep; environment,
