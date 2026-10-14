@@ -16,6 +16,8 @@ import {
 import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
+import { WorkspacePaths } from "./workspace-paths"
+import { workspaceFixture } from "../test/fixture/workspace"
 import {
   NATIVE_MACHINES,
   copyTreeSitter,
@@ -66,8 +68,9 @@ test.each(["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64"
 )
 
 test("an install without the grammars or the core package is a named failure, not a pass", () => {
-  const empty = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-empty-"))
+  const empty = workspaceFixture("tree-sitter-empty")
   fixtures.push(empty)
+  expect(WorkspacePaths.make(empty).root).toBe(empty)
   expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow(
     "TREE_SITTER_PREBUILDS_MISSING: linux-x64: tree-sitter, tree-sitter-javascript, tree-sitter-python, tree-sitter-typescript",
   )
@@ -141,7 +144,7 @@ const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.jso
 // host-CPU binding, or the real package as an install without lifecycle scripts leaves it: sources, no binding.
 function grammarFixture(core: "stub" | "source") {
   // gyp computes relative paths from the real cwd; macOS tmpdir is behind the /var -> /private/var link.
-  const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), "tree-sitter-rebuild-")))
+  const fixture = workspaceFixture("tree-sitter-rebuild")
   fixtures.push(fixture)
   const modules = path.join(fixture, "node_modules")
   const gyp = lockfileNodeGyp(root)!
@@ -324,7 +327,7 @@ test("ELF dynamic VA wins over off-table opposite-libc decoy; conflicting file o
 })
 
 test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("glibc preparation refuses same-CPU musl %s; native Linux additionally proves copy ordering", (slot) => {
-  const root = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-prepare-abi-"))
+  const root = workspaceFixture("tree-sitter-prepare-abi")
   fixtures.push(root)
   const target = { os: "linux", arch: process.platform === "linux" ? process.arch : "x64", rebuild: false }
   const machine = target.arch === "x64" ? 62 : 183
