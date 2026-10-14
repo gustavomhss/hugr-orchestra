@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
+import { createRoot } from "solid-js"
+import { createStore } from "solid-js/store"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
-import type { PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
-import { insertPromptEditorText, materializePromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import type { PromptInputV2PersistedState, PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
+import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
@@ -57,7 +59,7 @@ test.each(["\n\n", "\u200B", "\né — 😀\r\n\u200B\n", "```owner-demand\n\n``
   },
 )
 
-test("Shift+Enter owns terminal LF instead of Chromium's newline-text caret filler", () => {
+test("DOM-only literal HTML preserves Shift+Enter bytes; native undo requires hosted browser", () => {
   const editor = document.createElement("div")
   editor.contentEditable = "true"
   // Run 38571250935, V2 shift-enter trace, after@call@446: actual DOM before the final two keypresses.
@@ -65,11 +67,41 @@ test("Shift+Enter owns terminal LF instead of Chromium's newline-text caret fill
   document.body.appendChild(editor)
   editor.focus()
   setCursorPosition(editor, 13)
-  expect(insertPromptEditorText(editor, "\n", "insertLineBreak")).toBe(true)
-  expect(insertPromptEditorText(editor, "\n", "insertLineBreak")).toBe(true)
+  const fragment = document.createElement("template")
+  fragment.innerHTML = promptEditorInsertionHTML("\n\n", true)
+  editor.append(fragment.content)
+  setCursorPosition(editor, 15)
   const content = "lead\n\né — 😀\u200B\n\n"
   expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content, start: 0, end: 15 }])
   expect(getCursorPosition(editor)).toBe(15)
   expect(editor.querySelector("[data-prompt-caret]")?.textContent).toBe("\u200B")
   editor.remove()
+})
+
+test.each(['<>&"\r\n\u200B\n', "row\r\n".repeat(220)])("DOM-only insertion HTML keeps literal text %j", (content) => {
+  const editor = document.createElement("div")
+  editor.innerHTML = promptEditorInsertionHTML(content, true)
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content, start: 0, end: content.length }])
+})
+
+test("custom modified Enter handling runs before controller suggestion dispatch", () => {
+  createRoot((dispose) => {
+    const state = createPromptInputV2State()
+    state[1]("popover", { type: "command-inline", query: "", activeID: "cmd" })
+    const calls = { key: 0 }
+    const controller = createPromptInputV2Controller({
+      state,
+      store: createStore<PromptInputV2PersistedState>({ prompt: [{ type: "text", content: "keep", start: 0, end: 4 }], cursor: 4, context: { items: [] } }),
+      commands: () => [{ id: "cmd", kind: "command", label: "/cmd" }], context: () => [], searchContextFiles: () => [],
+      view: {
+        submit: { stopping: () => false, onSubmit: () => { throw new Error("UNEXPECTED_SUBMIT") }, onStop: () => { throw new Error("UNEXPECTED_STOP") } },
+        onKeyDown: (event) => { calls.key += 1; event.preventDefault() },
+      },
+    })
+    const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, ctrlKey: true, cancelable: true })
+    expect(controller.onKeyDown(event)).toBe(true)
+    expect(calls.key).toBe(1)
+    expect(controller.value()).toBe("keep")
+    dispose()
+  })
 })

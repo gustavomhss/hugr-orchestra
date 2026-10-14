@@ -56,6 +56,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
   const view = props.controller.view
   let editor: HTMLDivElement | undefined
   let localInput = false
+  const composition = { active: false }
   const updateCursor = () => {
     if (!editor || !window.getSelection()?.isCollapsed) return
     props.controller.onCursor(promptInputV2Cursor(editor))
@@ -174,12 +175,14 @@ export function PromptInputV2(props: PromptInputV2Props) {
               props.controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], cursor)
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && event.shiftKey) {
+              const composing = composition.active || event.isComposing || event.keyCode === 229
+              if (props.controller.onKeyDown(event, composing)) return
+              if (composing) return
+              if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
                 insertPromptEditorText(event.currentTarget, "\n", "insertLineBreak")
                 return
               }
-              if (props.controller.onKeyDown(event)) return
               if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault()
                 if (event.repeat) return
@@ -187,6 +190,9 @@ export function PromptInputV2(props: PromptInputV2Props) {
               }
             }}
             onKeyUp={updateCursor}
+            onCompositionStart={() => { composition.active = true }}
+            onCompositionEnd={() => { composition.active = false }}
+            onBlur={() => { composition.active = false }}
             onPointerUp={updateCursor}
             onPaste={props.controller.onPaste}
             onFocus={() => props.controller.dispatch({ type: "focus.editor" })}
