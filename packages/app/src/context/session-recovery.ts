@@ -14,6 +14,7 @@ export function createSessionRecovery(input: {
   generations: Map<string, object>
   read: (sessionID: string) => AppSession | undefined
   request: (sessionID: string) => Promise<AppSession>
+  source: "canonical" | "snapshot"
   retain: (info: AppSession) => AppSession
   busy: (sessionID: string) => boolean
 }) {
@@ -49,6 +50,8 @@ export function createSessionRecovery(input: {
         if (state.policyGeneration !== policyGeneration) return request()
         const observed = mergeSessionManagementInfo(state.policy,
           mergeSessionManagementInfo(fences.get(sessionID), input.read(sessionID) ?? result))
+        // Compatibility SDK snapshots carry no canonical V2 policy provenance.
+        if (input.source === "snapshot") return input.retain(mergeSessionManagementInfo(observed, result))
         local.receipt = Math.max(local.receipt, observed.subagentModelsReadReceipt ?? 0) + 1
         return input.retain({
           ...result,
@@ -126,7 +129,10 @@ export function createSessionRecovery(input: {
       return Promise.all([
         canonical || pending || !remembered ? resolve(sessionID, { force: true }) : Promise.resolve(remembered),
         ...(recovery ? [recovery] : []),
-      ])
+      ].map((read) => read.catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return
+        throw error
+      }))).then((rows) => rows.filter((row): row is AppSession => row !== undefined))
     },
   }
 }
