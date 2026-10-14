@@ -2,6 +2,7 @@
 // target ships, where its addon and supervisor come from, and the copy next to the binary.
 import fs from "fs"
 import path from "path"
+import { WorkspacePaths } from "./workspace-paths.ts"
 
 // D-L8/D-L9: the omni build each target ships, as hugr-omni's platform id. A target with `enabled: false` compiles
 // with OMNI_ENABLED=false (the legacy spawner) and ships no omni files. Flip a row once WP8a publishes its omni build.
@@ -61,8 +62,9 @@ function omniSources(os: string, id: string, single: boolean): OmniFiles | undef
   const addon =
     ({ darwin: "libhugr_omni_node.dylib", win32: "hugr_omni_node.dll" } as Record<string, string>)[os] ??
     "libhugr_omni_node.so"
+  const native = WorkspacePaths.make(import.meta.dirname).domain("omni")
   const found = ["release", "debug"]
-    .map((profile) => path.resolve(import.meta.dirname, "../../omni/target", profile))
+    .map((profile) => path.join(native, "target", profile))
     .map((target) => ({ addon: path.join(target, addon), supervisor: path.join(target, supervisor) }))
     .find((files) => fs.existsSync(files.addon) && fs.existsSync(files.supervisor))
   if (!found) {

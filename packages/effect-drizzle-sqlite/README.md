@@ -1,0 +1,59 @@
+# Effect Drizzle SQLite
+
+`@orchestra/effect-drizzle-sqlite` adapts Drizzle's SQLite query builders to Effect. It provides Effect-yieldable selects, inserts, updates, deletes, raw queries, and transactions while keeping Drizzle's SQLite schema and query APIs.
+
+The adapter uses the generic `effect/unstable/sql/SqlClient` service. It does not open a database or choose a native SQLite implementation; provide a compatible SQLite `SqlClient` from your runtime's provider.
+
+## Usage
+
+```ts
+import { SqliteClient } from "@effect/sql-sqlite-bun"
+import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { Effect } from "effect"
+
+const users = sqliteTable("users", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  name: text().notNull(),
+})
+
+const program = Effect.gen(function* () {
+  const db = yield* EffectDrizzleSqlite.makeWithDefaults()
+  return yield* db.select().from(users)
+}).pipe(Effect.provide(SqliteClient.layer({ filename: "app.db" })))
+```
+
+Use a provider compatible with the host runtime. Bun applications can provide a Bun SQLite client; Node applications can provide a Node SQLite client. The provider owns opening, configuring, and closing the native connection. This package only adapts the generic SQL service to Drizzle.
+
+The adapter source is runtime-neutral; its example and test harness use Bun. Core selects the concrete Bun or Node SQL provider for its runtime and passes the resulting `SqlClient` to this adapter.
+
+`make` requires `SqlClient`, `EffectLogger`, and `EffectCache` services. `makeWithDefaults` supplies Drizzle's default logger and cache; the SQLite `SqlClient` remains caller-provided. `DefaultServices` can be provided separately when using `make`.
+
+## Migrations
+
+`EffectDrizzleSqlite.migrate(db, { migrationsFolder })` runs Drizzle's SQLite SQL migration files and records them in `__drizzle_migrations`. It also upgrades the legacy migration journal schema when needed. This journal compatibility does not migrate application data or replace a consumer's domain-specific migration workflow.
+
+Core uses this package's `EffectSQLiteDatabase` with its runtime-selected SQLite SQL client. Core's TypeScript schema and data migrations remain owned by Core; they are not part of this adapter's migration API.
+
+## Entry points
+
+- `@orchestra/effect-drizzle-sqlite`: `EffectDrizzleSqlite`, `EffectSQLiteDatabase`, `make`, `makeWithDefaults`, `migrate`, and session exports.
+- `@orchestra/effect-drizzle-sqlite/effect-sqlite`: database and session APIs.
+- `@orchestra/effect-drizzle-sqlite/effect-sqlite/migrator`: Drizzle migration helper.
+- `@orchestra/effect-drizzle-sqlite/sqlite-core/effect`: Effect-yieldable SQLite query builders.
+
+The public names follow Drizzle's Effect SQLite adapter surface so consumers can keep familiar adapter identities.
+
+## Development
+
+In Orchestra, Core owns provider selection and application schema and data migrations; maintainers of this package own its generic Drizzle and Effect SQLite integration. Run its package-local typecheck from this directory:
+
+```sh
+bun typecheck
+```
+
+Run the package's real SQLite tests through hosted CI from the repository root:
+
+```sh
+bun run test:ci effect-drizzle-sqlite test/sqlite.test.ts
+```
