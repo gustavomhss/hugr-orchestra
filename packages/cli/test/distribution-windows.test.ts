@@ -125,3 +125,27 @@ process.kill(process.pid,'SIGKILL');
     } finally { await held }
   }
 }, 90_000)
+
+test("native Windows broker preserves split UTF-8 bytes from owned PowerShell pipes", async () => {
+  const reader = `
+import {existsSync,readFileSync} from 'node:fs';
+const result=process.argv[1]+'.result';
+while(!existsSync(result)) await new Promise(resolve=>setTimeout(resolve,10));
+console.log(readFileSync(result,'utf8'));
+`
+  // Each actual one-byte write is separated so the first UTF-8 character must
+  // cross an observed pipe-chunk boundary; the receipt proves that boundary.
+  const query = `$ErrorActionPreference='Stop'; $out=[Console]::OpenStandardOutput(); $err=[Console]::OpenStandardError();
+    foreach($byte in @(195,169,230,188,162,240,159,152,128)) {
+      $out.WriteByte([byte]$byte); $out.Flush(); $err.WriteByte([byte]$byte); $err.Flush(); [Threading.Thread]::Sleep(250)
+    }`
+  const output = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+    stdout: Schema.String, stderr: Schema.String, stdoutBytes: Schema.Int, stderrBytes: Schema.Int,
+    stdoutChunks: Schema.Int, stderrChunks: Schema.Int, firstStdoutChunkBytes: Schema.Int,
+    code: Schema.Int, closed: Schema.Boolean, error: Schema.String,
+  }))))(await WindowsProcessQuery.invoke(reader, "", { nonce: "split-utf8" }, 15_000, query))
+  expect(output).toMatchObject({ stdout: "é漢😀", stderr: "é漢😀", stdoutBytes: 9, stderrBytes: 9,
+    firstStdoutChunkBytes: 1, code: 0, closed: true, error: "" })
+  expect(output.stdoutChunks).toBeGreaterThan(1)
+  expect(output.stderrChunks).toBeGreaterThan(1)
+}, 30_000)

@@ -106,11 +106,12 @@ async function stopOwned(lease: Lease) {
   if (!result.value || result.value.code !== 0) throw new Error("NATIVE_DAEMON_STOP_COMMAND_FAILED")
   expect(await successful([lease.launcher, "service", "status"], lease.box, 15_000)).toBe("stopped")
   if (lease.tree) {
-    // Public stop already proved the exact daemon exited. Closing the retained
-    // harness job now releases its native ownership, including any helper tails.
+    // Public stop already proved the exact daemon exited. Stop the retained tree
+    // and prove empty membership before retiring the fixture lease. Native Job
+    // handle finalization belongs to the binding and is not observed here.
     await lease.tree.stop({ graceMs: 2_000 })
     expect(await lease.tree.processes()).toEqual([])
-    console.error(`NATIVE_DAEMON_TREE_RELEASED ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid })}`)
+    console.error(`NATIVE_DAEMON_TREE_STOPPED_EMPTY ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid })}`)
   }
   leases.delete(lease)
 }
