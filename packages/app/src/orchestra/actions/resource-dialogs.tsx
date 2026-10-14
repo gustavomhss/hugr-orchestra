@@ -8,6 +8,8 @@ import { actionsError } from "./api"
 import { resourcePayload } from "./resource-payload"
 import { Check, Field } from "./resource-fields"
 import { canRequest } from "./request-policy"
+import { ResourceScopeField } from "./resource-scopes-field"
+import { canConfigureLocalPolicy, canConfigureNativePolicy, localPolicyEvidence, nativePolicyEvidence, settingsPolicy } from "./settings-evidence"
 type ResourceKind = "create-variable" | "edit-variable" | "delete-variable" |
   "create-environment" | "edit-environment" | "delete-environment" |
   "create-runner" | "edit-runner" | "delete-runner" |
@@ -15,7 +17,6 @@ type ResourceKind = "create-variable" | "edit-variable" | "delete-variable" |
   "delete-artifact" | "delete-cache" | "clear-caches" | "project-settings"
 type ResourceDialog = Extract<Dialog, { kind: ResourceKind }>
 type Data = Record<string, unknown>
-type Option = { value: string; label: string }
 type Glyph = keyof typeof paths
 type NodeGlyph = keyof typeof nodePaths
 const paths = {
@@ -39,7 +40,7 @@ export function ResourceDialogs(props: ViewProps) {
   }
   const identity = () => {
     const dialog = selected()
-    return dialog ? dialogKey(state().binding?.id, dialog) : undefined
+    return dialog ? dialogKey(state().binding?.id, dialog, state().binding?.revision) : undefined
   }
   return <Show when={identity()} keyed>{(key) => {
     const dialog = selected()
@@ -57,18 +58,21 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     if (notify && p.state().submitting) return
     element?.querySelector<HTMLFormElement>("form")?.reset()
     element?.close()
-    if (notify && !disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog)) === p.identity) p.props.model.dialog(undefined)
+    if (notify && !disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) === p.identity) p.props.model.dialog(undefined)
   }
   const cancel = (event: Event) => { event.preventDefault(); close(true) }
   const submit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (event) => {
     event.preventDefault()
-    if (unavailable()) return
+    if (disposed || unavailable() || dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) !== p.identity) return
     const binding = p.state().binding
     if (!binding) return
     const data = new FormData(event.currentTarget)
     const resource = target()
     setFormState("error", undefined)
-    void Promise.resolve().then(() => p.props.model.submit(resourcePayload(data, { provider: binding.provider.kind, kind: p.dialog.kind, resource })))
+    void Promise.resolve().then(() => {
+      if (disposed || unavailable() || dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) !== p.identity) return
+      return p.props.model.submit(resourcePayload(data, { provider: binding.provider.kind, kind: p.dialog.kind, target: p.dialog.kind === "project-settings" ? p.dialog.target : undefined, resource }))
+    })
       .catch((error: unknown) => { if (!disposed) setFormState("error", actionsError(error)) })
   }
   const change: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
@@ -84,7 +88,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     if (!element) return
     const onClose = () => {
       element?.querySelector<HTMLFormElement>("form")?.reset()
-      if (!disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog)) === p.identity) p.props.model.dialog(undefined)
+      if (!disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) === p.identity) p.props.model.dialog(undefined)
     }
     element.addEventListener("cancel", cancel)
     element.addEventListener("close", onClose)
@@ -116,7 +120,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
         </button>
       </header>
       <div class="mx-dialog-body dialog-body">
-        <Body dialog={p.dialog} resource={target()} state={p.state()} t={t} disabled={unavailable()} />
+        <Body model={p.props.model} dialog={p.dialog} resource={target()} state={p.state()} t={t} disabled={unavailable()} />
       </div>
       <footer class="mx-dialog-foot">
         <Show when={formState.error ?? p.state().commandError} fallback={<span aria-hidden="true" />}>{(error) => <span id={`${id}-error`} class="ad-error" role="alert">{t(error().message)}</span>}</Show>
@@ -130,30 +134,41 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     </form>
   </dialog>
 }
-function Body(p: { dialog: ResourceDialog; resource?: Actions.Resource; state: State; t: Translate; disabled: boolean }) {
+function Body(p: ViewProps & { dialog: ResourceDialog; resource?: Actions.Resource; state: State; disabled: boolean }) {
   const data = record(p.resource?.data), github = p.state.binding?.provider.kind === "github"
-  const localPolicy = record(data.policy)
+  const localPolicy = localPolicyEvidence(p.resource)
   if (p.dialog.kind === "clear-caches") return <Review t={p.t}
      title={p.t("orchestra.actions.futureCacheNamespace")}
      entries={[[p.t("orchestra.actions.confirmationTarget"), p.t("orchestra.actions.projectRunnerCacheNamespace")]]}
      note={p.t("orchestra.actions.clearCachesConfirmation")} glyph="refresh" />
   if (p.dialog.kind.startsWith("delete")) return <DeleteReview dialog={p.dialog} resource={p.resource} data={data} state={p.state} t={p.t} />
+  if (p.dialog.kind === "project-settings" && p.dialog.target === "native") return nativePolicyFields(p)
   if (p.dialog.kind === "project-settings") return <>
-    <Group title={p.t("orchestra.actions.retentionExecution")}>
-       <Field t={p.t} label={p.t("orchestra.actions.artifactRetentionDays")} name="retention" value={text(localPolicy, "retentionDays")} type="number" min="1" required disabled={p.disabled} hint={p.t("orchestra.actions.retentionHint")} />
-       <Field t={p.t} label={p.t("orchestra.actions.defaultExecutionPolicy")} name="policy" value={text(localPolicy, "execution")} select={[{ value: "Project default", label: p.t("orchestra.actions.projectDefault") }, { value: "Restricted to approved actions", label: p.t("orchestra.actions.restrictedActions") }]} disabled={p.disabled} />
+    <Group title={p.t("orchestra.actions.localPolicy")}>
+       <Field t={p.t} label={p.t("orchestra.actions.retention")} name="retention" value={localPolicy.retentionDays?.toString()} type="number" min="1" required disabled={p.disabled} hint={p.t("orchestra.actions.localPolicyDetail")} />
+       <Field t={p.t} label={p.t("orchestra.actions.execution")} name="policy" value={localPolicy.execution} select={[{ value: "Project default", label: p.t("orchestra.actions.policyProjectDefault") }, { value: "Restricted to approved actions", label: p.t("orchestra.actions.policyRestricted") }]} required disabled={p.disabled} />
     </Group>
-    <Note t={p.t} title={p.t("orchestra.actions.inheritedPolicies")} text={p.t("orchestra.actions.inheritedPolicies.detail")} glyph="lock" />
+    <Note t={p.t} title={p.t("orchestra.actions.localPolicy")} text={p.t("orchestra.actions.localPolicyDetail")} glyph="lock" />
   </>
   if (p.dialog.kind.endsWith("variable")) return <VariableBody {...p} data={data} github={github} />
   if (p.dialog.kind.endsWith("environment")) return <EnvironmentBody {...p} data={data} github={github} />
   if (p.dialog.kind.endsWith("runner")) return <RunnerBody {...p} data={data} github={github} />
   return <ScheduleBody {...p} data={data} />
 }
-function VariableBody(p: { dialog: ResourceDialog; resource?: Actions.Resource; state: State; t: Translate; disabled: boolean; data: Data; github: boolean }) {
+function nativePolicyFields(p: { resource?: Actions.Resource; state: State; t: Translate; disabled: boolean }) {
+  const policy = nativePolicyEvidence(p.resource)
+  return <>
+    <Group title={p.t("orchestra.actions.nativePolicy")}>
+      <Show when={p.state.binding?.provider.kind === "github"}><Field t={p.t} label={p.t("orchestra.actions.execution")} name="policy" value={policy.value} select={[{ value: "Project default", label: p.t("orchestra.actions.policyProjectDefault") }, { value: "Restricted to approved actions", label: p.t("orchestra.actions.policyRestricted") }]} required disabled={p.disabled} /></Show>
+      <Show when={!policy.value || p.state.binding?.provider.kind !== "github"}><p class="mx-note">{p.t(p.state.binding?.provider.kind === "gitlab" || policy.unavailable ? "orchestra.actions.unavailable" : "orchestra.actions.unknown")}</p></Show>
+      <Show when={policy.settings}>{(settings) => <details><summary>{p.t("orchestra.actions.definition")}</summary><pre dir="ltr">{JSON.stringify(settings(), null, 2)}</pre></details>}</Show>
+    </Group>
+    <Note t={p.t} title={p.t("orchestra.actions.nativePolicy")} text={p.t("orchestra.actions.nativePolicyDetail")} glyph="lock" />
+  </>
+}
+function VariableBody(p: ViewProps & { dialog: ResourceDialog; resource?: Actions.Resource; state: State; disabled: boolean; data: Data; github: boolean }) {
   const flags = flagsOf(p.resource), secret = Boolean(!p.resource || p.resource.sensitive || text(p.data, "type") === "Secret" || flags.includes("Masked") || flags.includes("Hidden"))
   const redacted = Boolean(p.resource && secret)
-  const scopes = scopeOptions(p.state, p.resource?.scope, p.t)
   return <>
     <Show when={redacted}>
       <Note t={p.t} title={p.github ? p.t("orchestra.actions.existingValueRedacted.github") : p.t("orchestra.actions.existingValueRedacted.gitlab")} text={p.github ? p.t("orchestra.actions.existingValueRedacted.github.detail") : p.t("orchestra.actions.existingValueRedacted.gitlab.detail")} glyph="lock" />
@@ -162,7 +177,7 @@ function VariableBody(p: { dialog: ResourceDialog; resource?: Actions.Resource; 
        <Field t={p.t} label={p.t("orchestra.actions.name")} name="name" value={p.resource?.name} required mono locked={Boolean(p.resource && (!p.github || secret))} disabled={p.disabled} placeholder={p.t("orchestra.actions.variableNamePlaceholder")} hint={p.t("orchestra.actions.variableNameHint")} />
       <Grid>
         <Field t={p.t} label={p.t("orchestra.actions.variableTypeLabel")} name="type" value={text(p.data, "type") || "Secret"} locked={Boolean(p.resource)} select={[{ value: "Secret", label: p.t("orchestra.actions.secret") }, { value: "Variable", label: p.t("orchestra.actions.variable") }]} disabled={p.disabled} />
-        <Field t={p.t} label={p.t("orchestra.actions.scope")} name="scope" value={p.resource?.scope ?? "Repository"} locked={p.github && Boolean(p.resource)} select={scopes} disabled={p.disabled} />
+        <ResourceScopeField model={p.model} t={p.t} name="scope" value={p.resource?.scope ?? ("scope" in p.dialog ? p.dialog.scope : undefined) ?? p.state.filters.scope} locked={p.github && Boolean(p.resource)} disabled={p.disabled} />
       </Grid>
     </Group>
     <Group title={p.t(redacted ? "orchestra.actions.replacementValue" : "orchestra.actions.configurationValue")}>
@@ -290,21 +305,9 @@ function isChecked(value: unknown): boolean {
   return value instanceof HTMLInputElement && value.checked
 }
 
-function scopeOptions(state: State, existing: string | undefined, t: Translate): Option[] {
-  const values = [
-    "Repository",
-    ...(state.resources.value?.items ?? []).filter((item) => item.kind === "environments").map((item) => item.name),
-    existing,
-  ].filter((value): value is string => value !== undefined)
-  return [...new Set(values)].map((value) => ({
-    value,
-    label: value === "Repository" && state.binding?.provider.kind === "gitlab" ? t("orchestra.actions.project") : value,
-  }))
-}
-
 function resourceFor(state: State, dialog: ResourceDialog): Actions.Resource | undefined {
   const items = [...(state.resources.value?.items ?? []), ...(state.artifacts.value?.items ?? [])]
-  if (dialog.kind === "project-settings") return items.find((item) => item.bindingID === state.binding?.id && item.kind === "policy")
+  if (dialog.kind === "project-settings") return settingsPolicy(state)
   if (!("id" in dialog) || !dialog.id) return undefined
   const expected = dialog.kind.endsWith("variable") ? "variables" : dialog.kind.endsWith("environment") ? "environments" : dialog.kind.endsWith("runner") ? "runners" : dialog.kind.endsWith("schedule") ? "schedules" : dialog.kind === "delete-artifact" ? "artifacts" : "caches"
   return items.find((item) => item.bindingID === state.binding?.id && item.kind === expected && item.id === dialog.id && (!("scope" in dialog) || dialog.scope === undefined || item.scope === dialog.scope))
@@ -329,12 +332,18 @@ function operation(dialog: ResourceDialog): string {
   if (dialog.kind.startsWith("edit")) return "resource.update"
   return dialog.kind === "create-runner" ? "runner.register" : "resource.create"
 }
-function disabled(state: State, dialog: ResourceDialog, resource?: Actions.Resource): boolean { const data = record(resource?.data), inherited = resource?.kind === "runners" && (data.inherited === true || text(data, "origin").startsWith("Inherited")); const ready = resource?.kind === "artifacts" ? state.artifacts.status === "ready" || state.resources.status === "ready" : state.resources.status === "ready"; return state.submitting || state.unsupported || !state.binding || !ready || !hasTarget(dialog, resource) || Boolean(data.historical === true || inherited || historical(state, resource)) || dialog.kind !== "project-settings" && (data.readOnly === true || data.readonly === true || dialog.kind === "edit-environment" && state.binding.provider.kind === "gitlab" && (data.reviewersReadOnly === true || typeof data.reviewers !== "string" || typeof data.preventSelfReview !== "boolean") || dialog.kind.startsWith("edit") && data.editable === false || !capable(state, operation(dialog), resource)) }
-function dialogKey(binding: string | undefined, dialog?: ResourceDialog): string {
-  if (!dialog) return `${binding ?? ""}:none`
+function disabled(state: State, dialog: ResourceDialog, resource?: Actions.Resource): boolean {
+  if (dialog.kind === "project-settings") return !(dialog.target === "native" ? canConfigureNativePolicy(state, resource) : canConfigureLocalPolicy(state, resource))
+  const data = record(resource?.data), inherited = resource?.kind === "runners" && (data.inherited === true || text(data, "origin").startsWith("Inherited"))
+  const ready = resource?.kind === "artifacts" ? state.artifacts.status === "ready" || state.resources.status === "ready" : state.resources.status === "ready"
+  return state.submitting || state.unsupported || !state.binding || !ready || !hasTarget(dialog, resource) || Boolean(data.historical === true || inherited || historical(state, resource))
+    || data.readOnly === true || data.readonly === true || dialog.kind === "edit-environment" && state.binding.provider.kind === "gitlab" && (data.reviewersReadOnly === true || typeof data.reviewers !== "string" || typeof data.preventSelfReview !== "boolean") || dialog.kind.startsWith("edit") && data.editable === false || !capable(state, operation(dialog), resource)
+}
+function dialogKey(binding: string | undefined, dialog?: ResourceDialog, revision?: number): string {
+  if (!dialog) return `${binding ?? ""}:${revision ?? ""}:none`
   const id = "id" in dialog ? dialog.id ?? "" : ""
   const scope = "scope" in dialog ? dialog.scope ?? "" : ""
-  return `${binding ?? ""}:${dialog.kind}:${id}:${scope}`
+  return JSON.stringify([binding, revision, dialog.kind, id, scope, dialog.kind === "project-settings" ? dialog.target ?? "local" : ""])
 }
 function supported(dialog: Dialog | undefined): ResourceDialog | undefined {
   if (!dialog) return undefined
@@ -352,7 +361,7 @@ function nodeGlyph(kind: ResourceKind): NodeGlyph { return kind.endsWith("variab
 function headerLabel(providerKind: string | undefined, t: Translate): string { return t("orchestra.actions.projectScope", { provider: t(providerKind === "github" ? "orchestra.actions.github" : "orchestra.actions.gitlab") }) }
 function title(dialog: ResourceDialog, resource: Actions.Resource | undefined, t: Translate): string {
    if (dialog.kind === "clear-caches") return t("orchestra.actions.clearProjectRunnerCachesTitle")
-  if (dialog.kind === "project-settings") return t("orchestra.actions.projectExecutionSettings")
+  if (dialog.kind === "project-settings") return t(dialog.target === "native" ? "orchestra.actions.nativePolicy" : "orchestra.actions.localPolicy")
   if (dialog.kind.startsWith("delete")) return t("orchestra.actions.deleteResourceTitle", {
     name: resource?.name ?? ("id" in dialog ? dialog.id ?? "" : ""),
   })
@@ -367,7 +376,7 @@ function title(dialog: ResourceDialog, resource: Actions.Resource | undefined, t
 }
 function context(dialog: ResourceDialog, resource: Actions.Resource | undefined, providerKind: string | undefined, t: Translate): string {
    if (dialog.kind === "clear-caches") return t("orchestra.actions.clearCachesConfirmation")
-  if (dialog.kind === "project-settings") return t("orchestra.actions.projectExecutionSettings.detail")
+  if (dialog.kind === "project-settings") return t(dialog.target === "native" ? "orchestra.actions.nativePolicyDetail" : "orchestra.actions.localPolicyDetail")
   if (dialog.kind === "create-variable") return t("orchestra.actions.variableCreateContext")
   if (dialog.kind === "edit-variable") return t("orchestra.actions.variableEditContext", { scope: resource?.scope ?? "", type: text(record(resource?.data), "type") })
   if (dialog.kind === "create-environment" || dialog.kind === "edit-environment") return t("orchestra.actions.environmentContext")
