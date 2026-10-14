@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { existsSync, lstatSync } from "node:fs"
 import { lstat, mkdir, readlink, realpath, symlink, unlink } from "node:fs/promises"
 import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
-import { rethrow } from "../lib/rejection"
+import { rejection, rethrow } from "../lib/rejection"
 
 test("SDK fixture preserves actual package-resolution identity; conflicting existing modules are rejected", async () => {
   await using tmp = await tmpdir()
@@ -20,6 +21,7 @@ test("SDK fixture preserves actual package-resolution identity; conflicting exis
   expect(await rethrow(prepareArsenalSDK(conflict.path, path.join(conflict.path, "config")))).toThrow(
     "Arsenal fixture SDK installation mismatch",
   )
+  await settleArsenalConfig(path.join(conflict.path, "config"))
 })
 
 test("SDK fixture accepts an existing distinct modules root only with the same physical SDK", async () => {
@@ -69,7 +71,7 @@ test("fixture cleanup removes owned SDK junctions without deleting the installed
     )
   }
   await tmp[Symbol.asyncDispose]()
-  await expect(lstat(tmp.path)).rejects.toMatchObject({ code: "ENOENT" })
+  expect(await rejection(lstat(tmp.path))).toMatchObject({ code: "ENOENT" })
   expect(await Bun.file(installed).text()).toBe(before)
   console.info("fixture cleanup SDK:", JSON.stringify({ root: tmp.path, removed: true, installed, unchanged: true }))
 })
@@ -98,7 +100,7 @@ test("fixture cleanup never follows nested links into another directory", async 
     await symlink(path.join(shared.path, "missing"), path.join(tmp.path, "nested", "dangling"), "file")
   }
   await tmp[Symbol.asyncDispose]()
-  await expect(lstat(tmp.path)).rejects.toMatchObject({ code: "ENOENT" })
+  expect(await rejection(lstat(tmp.path))).toMatchObject({ code: "ENOENT" })
   expect((await lstat(shared.path)).isDirectory()).toBe(true)
   expect(await Bun.file(sentinel).text()).toBe("shared target survives")
   // Removing an already-absent root must not act on any former link target.
@@ -152,7 +154,7 @@ test.skipIf(process.platform !== "win32")(
       const release = Bun.sleep(100).then(unlock)
       try {
         await tmp[Symbol.asyncDispose]()
-        await expect(lstat(tmp.path)).rejects.toMatchObject({ code: "ENOENT" })
+        expect(await rejection(lstat(tmp.path))).toMatchObject({ code: "ENOENT" })
         expect(await Bun.file(path.join(shared.path, "keep.txt")).text()).toBe("shared target survives")
       } finally {
         await release
@@ -174,8 +176,16 @@ test("SDK fixture refuses workspace aliases at modules root and scoped parent", 
   const manifest = path.join(scope, "plugin", "package.json")
   const before = await Bun.file(manifest).text()
   for (const scoped of [false, true]) {
-    const tmp = await tmpdir()
-    const target = path.join(tmp.path, ".orchestra", "node_modules")
+    const disposals: string[] = []
+    const tmp = await tmpdir({
+      dispose: async (directory) => {
+        disposals.push(directory)
+      },
+    })
+    const root = tmp.path
+    expect(Object.getOwnPropertyDescriptor(tmp, "path")?.get).toBeUndefined()
+    expect(Object.getOwnPropertyDescriptor(tmp, "path")?.value).toBe(root)
+    const target = path.join(root, ".orchestra", "node_modules")
     const link = scoped ? path.join(target, "@orchestra") : target
     await mkdir(scoped ? target : path.dirname(target), { recursive: true })
     await symlink(scoped ? scope : modules, link, process.platform === "win32" ? "junction" : "dir")
@@ -191,30 +201,126 @@ test("SDK fixture refuses workspace aliases at modules root and scoped parent", 
         symbolicLink: (await lstat(link)).isSymbolicLink(),
       }),
     )
-    expect(await rethrow(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))).toThrow(
+    expect(await rethrow(prepareArsenalSDK(root, path.join(root, "config")))).toThrow(
       "modules parent outside fixture ownership",
     )
+    console.info(
+      "fixture config publication after rejection:",
+      JSON.stringify({
+        root,
+        publication: await lstat(path.join(root, "config", "package-lock.json")).then(
+          (entry) => ({ size: entry.size }),
+          (error: unknown) => {
+            if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")
+              return "pending"
+            throw error
+          },
+        ),
+      }),
+    )
+    // Promise.all rejects before the other SDK branch finishes. Its recursive mkdir/Bun.write can recreate
+    // an already-removed root. Observe that branch's final publication before releasing its owned directory.
+    await settleArsenalConfig(path.join(root, "config"))
     try {
       await tmp[Symbol.asyncDispose]()
+      expect(disposals).toEqual([root])
     } finally {
-      console.info(
-        "fixture cleanup root:",
-        JSON.stringify({
-          root: tmp.path,
-          exists: await lstat(tmp.path).then(
-            () => true,
-            (error: unknown) => {
-              if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")
-                return false
-              throw error
-            },
-          ),
-        }),
-      )
+      console.info("fixture cleanup root:", JSON.stringify(await observeRoot(root)))
     }
-    await expect(lstat(tmp.path)).rejects.toMatchObject({ code: "ENOENT" })
+    const absent = await observeRoot(root)
+    expect(absent.existsSync).toBe(false)
+    expect(absent.sync).toBeNull()
+    expect(absent.async.exists).toBe(false)
+    if (absent.native) {
+      expect(absent.native.attributes).toBe(0xffffffff)
+      expect([2, 3]).toContain(absent.native.error)
+    }
+    expect(await rejection(lstat(root))).toMatchObject({ code: "ENOENT" })
     expect(await realpath(modules)).toBe(modules)
     expect(await realpath(scope)).toBe(scope)
     expect(await Bun.file(manifest).text()).toBe(before)
   }
 })
+
+test("root observation detects real recreation and rejects a surviving fixture root", async () => {
+  await using tmp = await tmpdir()
+  const root = tmp.path
+  const original = await observeRoot(root)
+  expect(original.existsSync).toBe(true)
+  expect(original.sync?.isDirectory).toBe(true)
+  expect(original.async.exists).toBe(true)
+  await tmp[Symbol.asyncDispose]()
+  const absent = await observeRoot(root)
+  expect(absent.existsSync).toBe(false)
+  expect(absent.sync).toBeNull()
+  expect(absent.async.exists).toBe(false)
+  if (absent.native) {
+    expect(absent.native.attributes).toBe(0xffffffff)
+    expect([2, 3]).toContain(absent.native.error)
+  }
+  // The same real Bun.write used by SDK preparation recreates missing parents; this is not cached metadata.
+  await Bun.write(path.join(root, "config", "published.txt"), "late publisher")
+  const recreated = await observeRoot(root)
+  expect(recreated.existsSync).toBe(true)
+  expect(recreated.sync?.isDirectory).toBe(true)
+  expect(recreated.async.exists).toBe(true)
+  if (recreated.native) expect(recreated.native.attributes & 0x10).toBe(0x10)
+  expect(await Bun.file(path.join(root, "config", "published.txt")).text()).toBe("late publisher")
+  const survivor = await rejection(lstat(root)).then(
+    () => undefined,
+    (error: unknown) => error,
+  )
+  expect(survivor).toMatchObject({ message: "Expected promise to reject" })
+  console.info("fixture cleanup API controls:", JSON.stringify({ original, absent, recreated }))
+  await tmp[Symbol.asyncDispose]()
+  expect(await rejection(lstat(root))).toMatchObject({ code: "ENOENT" })
+})
+
+async function settleArsenalConfig(config: string) {
+  const deadline = performance.now() + 5_000
+  for (;;) {
+    const published = await lstat(path.join(config, "package-lock.json")).then(
+      (entry) => entry.isFile() && entry.size > 0,
+      (error: unknown) => {
+        if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return false
+        throw error
+      },
+    )
+    if (published) return
+    if (performance.now() >= deadline) throw new Error(`Arsenal config publication still pending: ${config}`)
+    await Bun.sleep(25)
+  }
+}
+
+async function observeRoot(root: string) {
+  const sync = lstatSync(root, { throwIfNoEntry: false })
+  const async = await lstat(root).then(
+    (entry) => ({ exists: true, ino: entry.ino, birthtime: entry.birthtimeMs }),
+    (error: unknown) => {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")
+        return { exists: false }
+      throw error
+    },
+  )
+  const native = await (async () => {
+    if (process.platform !== "win32") return undefined
+    const { dlopen, ptr } = await import("bun:ffi")
+    const kernel = dlopen("kernel32.dll", {
+      GetFileAttributesW: { args: ["ptr"], returns: "u32" },
+      GetLastError: { args: [], returns: "u32" },
+    })
+    try {
+      const attributes = kernel.symbols.GetFileAttributesW(ptr(Buffer.from(root + "\0", "utf16le")))
+      return { attributes, error: attributes === 0xffffffff ? kernel.symbols.GetLastError() : 0 }
+    } finally {
+      kernel.close()
+    }
+  })()
+  return {
+    root,
+    existsSync: existsSync(root),
+    sync: sync ? { ino: sync.ino, birthtime: sync.birthtimeMs, isDirectory: sync.isDirectory() } : null,
+    async,
+    native,
+  }
+}
