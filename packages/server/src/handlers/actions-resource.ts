@@ -10,8 +10,14 @@ export const ActionsResourceHandler = HttpApiBuilder.group(Api, "server.actionsR
     .handle("actions.resource.list", (ctx) => result(Effect.gen(function* () {
       const actions = yield* Actions.Service
       return yield* actions.resources(bindingRef(ctx), {
-        kind: ctx.query.kind, runID: ctx.query.runID, resourceID: ctx.query.resourceID, scope: ctx.query.scope,
-        ref: ctx.query.ref, query: ctx.query.query, cursor: ctx.query.cursor, limit: ctx.query.limit,
+        kind: ctx.query.kind,
+        ...(ctx.query.runID === undefined ? {} : { runID: ctx.query.runID }),
+        ...(ctx.query.resourceID === undefined ? {} : { resourceID: ctx.query.resourceID }),
+        ...(ctx.query.scope === undefined ? {} : { scope: ctx.query.scope }),
+        ...(ctx.query.ref === undefined ? {} : { ref: ctx.query.ref }),
+        ...(ctx.query.query === undefined ? {} : { query: ctx.query.query }),
+        ...(ctx.query.cursor === undefined ? {} : { cursor: ctx.query.cursor }),
+        ...(ctx.query.limit === undefined ? {} : { limit: ctx.query.limit }),
       })
     })))
     .handle("actions.resource.command", (ctx) => result(Effect.gen(function* () {
