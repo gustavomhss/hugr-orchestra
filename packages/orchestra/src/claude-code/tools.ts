@@ -1,10 +1,10 @@
-// Orchestra's tools, handed to Claude Code as in-process SDK tools. Claude Code calls them by name; the handler runs
-// Orchestra's own implementation on the mirrored session and writes the result on the mirrored part.
+// Orchestra's tools, served to Claude Code by the in-process `orchestra` MCP server (host/mcp.ts). They are additive:
+// Claude Code's own built-ins stay on. Claude Code calls them by name; the handler runs Orchestra's own implementation
+// on the mirrored session and writes the result on the mirrored part.
 import { Cause, Effect, Exit } from "effect"
 import { createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk"
 import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import type { Agent } from "@/agent/agent"
 import type { Tool } from "@/tool/tool"
 import { ToolJsonSchema } from "@/tool/json-schema"
 import { PartID } from "@/session/schema"
@@ -12,37 +12,20 @@ import { PartID } from "@/session/schema"
 export const SERVER = "orchestra"
 const PREFIX = `mcp__${SERVER}__`
 
-/** The Orchestra tools a seat on Claude Code runs in-process. */
-export const IDS = ["read", "edit", "write", "context_recall", "context_compact"]
+// Orchestra tools Claude mode never serves. Claude Code compacts its own context, so Orchestra's context_compact
+// (a maintenance pass through Orchestra's continuity) has nothing to act on here.
+const UNSERVED = ["invalid", "context_compact"]
 
-/** Orchestra tools Claude Code runs natively, by Claude Code name; Orchestra's gate (permissions.ts) decides each call. */
+/** Orchestra tools that Claude Code has natively, by Claude Code name. The mirror shows them under Orchestra's id. */
 export const NATIVE: Record<string, string> = { bash: "Bash", grep: "Grep", glob: "Glob", webfetch: "WebFetch", websearch: "WebSearch" }
-
-/**
- * The Orchestra tools an agent runs in-process. Maestro keeps its whole Orchestra toolset, delegation included, with
- * the texts and permissions it has on Orchestra's loop; only the tools Claude Code runs natively stay native.
- */
-export function served(agent: Agent.Info, defs: readonly Tool.Def[]) {
-  if (!conductor(agent)) return defs.filter((def) => IDS.includes(def.id))
-  return defs.filter(servable)
-}
-
-/** Maestro's Claude Code built-ins: the native counterparts of the Orchestra tools it has. Seats keep the preset set. */
-export function builtins(agent: Agent.Info, defs: readonly Tool.Def[]) {
-  return conductor(agent) ? defs.flatMap((def) => NATIVE[def.id] ?? []) : undefined
-}
 
 /** The Orchestra tool a Claude Code tool name calls, when it is an in-process one. */
 export function orchestra(name: string) {
   return name.startsWith(PREFIX) ? name.slice(PREFIX.length) : undefined
 }
 
-export function conductor(agent: Agent.Info) {
-  return agent.id === "maestro" && agent.native === true
-}
-
 function servable(def: Tool.Def) {
-  return def.id !== "invalid" && !Object.hasOwn(NATIVE, def.id)
+  return !UNSERVED.includes(def.id) && !Object.hasOwn(NATIVE, def.id)
 }
 
 /** A rejected or failed call, as the model reads it. */
