@@ -16,6 +16,7 @@ import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
 import { diffs as list, message as clean } from "@/utils/diffs"
 import { messageKey } from "@/utils/session-message"
+import { applySessionManagementEvent, mergeSessionManagementInfo, type AppSession, type SessionManagementEvent } from "@/utils/session"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const SESSION_CONTENT_EVENTS = new Set([
@@ -107,7 +108,8 @@ export function cleanupDroppedSessionCaches(
 }
 
 export function applyDirectoryEvent(input: {
-  event: { type: string; properties?: unknown }
+  event: SessionManagementEvent
+  readSession?: (id: string) => AppSession | undefined
   store: Store<State>
   setStore: SetStoreFunction<State>
   push: (directory: string) => void
@@ -129,8 +131,10 @@ export function applyDirectoryEvent(input: {
       return
     }
     case "session.created": {
-      const info = (event.properties as { info: Session }).info
-      const result = Binary.search(input.store.session, info.id, (s) => s.id)
+      const snapshot = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, snapshot.id, (s) => s.id)
+      const info = mergeSessionManagementInfo(input.readSession?.(snapshot.id),
+        mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, snapshot))
       if (result.found) {
         input.setStore("session", result.index, reconcile(info))
         break
@@ -144,8 +148,10 @@ export function applyDirectoryEvent(input: {
       break
     }
     case "session.updated": {
-      const info = (event.properties as { info: Session }).info
-      const result = Binary.search(input.store.session, info.id, (s) => s.id)
+      const snapshot = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, snapshot.id, (s) => s.id)
+      const info = mergeSessionManagementInfo(input.readSession?.(snapshot.id),
+        mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, snapshot))
       if (info.time.archived) {
         if (!result.found) break
         if (input.store.session[result.index]!.time.archived === info.time.archived) break
@@ -210,6 +216,18 @@ export function applyDirectoryEvent(input: {
         cost: properties.cost,
         tokens: properties.tokens,
       }))
+      break
+    }
+    case "session.next.subagent.models.changed": {
+      const properties = event.properties
+      if (!properties || typeof properties !== "object" || !("sessionID" in properties) || typeof properties.sessionID !== "string") break
+      const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
+      const row = input.store.session[result.index]
+      if (!result.found || !row) break
+      const current = mergeSessionManagementInfo(input.readSession?.(row.id), row)
+      const next = applySessionManagementEvent(current, event)
+      // The server store may already hold this same sequence; still forward its fenced row to the directory.
+      input.setStore("session", result.index, reconcile(next ?? current))
       break
     }
     // case "session.archived": {
