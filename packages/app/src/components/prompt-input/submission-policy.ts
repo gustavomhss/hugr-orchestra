@@ -46,10 +46,11 @@ export async function acknowledgeDraftPolicy(input: {
   written: () => boolean
   markWritten: () => void
   failedMessage: string
+  beforeWrite?: () => Promise<unknown>
 }) {
   while (input.current()) {
     const snapshot = pendingSnapshot(input.key)
-    await input.wait()
+    await (input.beforeWrite?.() ?? input.wait())
     if (!input.current()) return
     if (pendingSnapshot(input.key).revision !== snapshot.revision) continue
     if (snapshot.revision > 0 || input.written()) {
@@ -73,12 +74,13 @@ export function createSubmissionPolicy(input: {
     waitSubagentModels?: (id: string) => Promise<void>
   }
   legacyWrite: (permission: ModelRule[]) => Promise<unknown>
-  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean }
+  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: { cause: unknown } }
   current: () => boolean
   initialPolicy?: SubagentModelPolicy
   failedMessage: string
 }) {
-  const expected = { policy: input.initialPolicy }
+  const expected = { policy: input.admission.acknowledgedPolicy ?? input.initialPolicy }
+  const failedWrite = input.admission.failedWrite
   const wait = async (signal: AbortSignal) => {
     if (!input.current() || signal.aborted) return false
     if ((await waitForSubmission(input.protocol, signal)) === "v2") {
@@ -100,10 +102,21 @@ export function createSubmissionPolicy(input: {
       markWritten: () => { input.admission.policyWritten = true },
       failedMessage: input.failedMessage,
       wait: () => wait(signal),
+      beforeWrite: () => wait(signal).catch(async (cause: unknown) => {
+        if (!failedWrite || failedWrite.cause !== cause || !input.current() || signal.aborted) throw cause
+        const canonical = await waitForSubmission(input.management.readSubagentModels(input.sessionID), signal)
+        if (expected.policy && !sameModelPolicy(canonical.policy, expected.policy)) throw new Error(input.failedMessage)
+      }),
       write: async (policy) => {
         if ((await waitForSubmission(input.protocol, signal)) === "v2") {
-          const acknowledged = await input.management.setSubagentModels(input.sessionID, policy)
+          const acknowledged = await input.management.setSubagentModels(input.sessionID, policy).catch((cause: unknown) => {
+            input.admission.failedWrite = { cause }
+            throw cause
+          })
+          if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
           expected.policy = acknowledged
+          input.admission.acknowledgedPolicy = acknowledged
+          input.admission.failedWrite = undefined
           return acknowledged
         }
         if (policy.mode === "inherit") {

@@ -16,7 +16,8 @@ import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
-import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
+import { clearPending } from "@/components/draft-subagent-models"
+import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync, type DirectorySync } from "@/context/sync"
@@ -35,7 +36,16 @@ import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, wai
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
-type Admission = { busy: boolean; directory?: string; session?: Session; policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; cleanup?: VoidFunction }
+type Admission = {
+  busy: boolean
+  directory?: string
+  session?: Session
+  policyWritten?: boolean
+  legacyOverrideAcknowledged?: boolean
+  acknowledgedPolicy?: SubagentModelPolicy
+  failedWrite?: { cause: unknown }
+  cleanup?: VoidFunction
+}
 const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
 
 type PendingPrompt = {
@@ -274,9 +284,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const draftServer = draftID ? tabs.draft(draftID).server : undefined
     const handoff = { accepted: false }
     const ownsSource = () => {
-      if (!owner.current() || serverSDK() !== server || sdk().scope !== directorySDK.scope) return false
-      if (handoff.accepted) return sdk().directory === admission.directory && params.id === admission.session?.id && submission.current(prompt.capture())
-      if (sdk().directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
+      if (!owner.current()) return false
+      const source = sdk()
+      if (serverSDK() !== server || source.scope !== directorySDK.scope) return false
+      if (handoff.accepted) return source.directory === admission.directory && params.id === admission.session?.id && submission.current(prompt.capture())
+      if (source.directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
       return !draftID || tabs.store.some((tab) =>
         tab.type === "draft" && tab.draftID === draftID && tab.server === draftServer && tab.directory === projectDirectory,
       )
