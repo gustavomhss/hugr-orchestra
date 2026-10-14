@@ -1,5 +1,6 @@
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { SessionInput } from "@orchestra/schema/session-input"
+import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { Session } from "@orchestra/schema/session"
 import { Project } from "@orchestra/schema/project"
@@ -167,6 +168,38 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.get",
             summary: "Get session",
             description: "Retrieve a session by ID.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.getSubagentModels", "/api/session/:sessionID/subagent-models", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: SessionSubagentModels.Policy }),
+        error: [SessionNotFoundError, ServiceUnavailableError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.getSubagentModels",
+            summary: "Get session subagent model policy",
+            description: "Read the stored outgoing subagent model policy. Corrupt stored policy is refused.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.setSubagentModels", "/api/session/:sessionID/subagent-models", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ policy: SessionSubagentModels.Policy }),
+        success: Schema.Struct({ data: SessionSubagentModels.Policy }),
+        error: [SessionNotFoundError, ServiceUnavailableError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.setSubagentModels",
+            summary: "Set session subagent model policy",
+            description:
+              "Durably replace the outgoing subagent model policy; inheritance and an empty allowlist are distinct.",
           }),
         ),
     )
