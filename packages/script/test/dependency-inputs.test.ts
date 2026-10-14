@@ -18,6 +18,7 @@ test("dependency fingerprint includes relocated packages, manifestless modules a
       "domains/knowledge/source.ts": "export const value = 1\n",
       "packages/retained/package.json": "{}",
       "modules/specialists/backend/skills/backend-check/SKILL.md": "backend bytes\n",
+      "assets/brand/mark.svg": "brand bytes\n",
       "bun.lock": "fixture lock",
       "nix/node_modules.nix": "fixture expression",
     }

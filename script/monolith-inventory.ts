@@ -42,7 +42,8 @@ export async function monolithInventory(directory: string, revision?: string) {
 
   const assetDirectories = [
     ...(await source.directories("packages")).map((name) => `packages/${name}`),
-    ...new Set((await source.scan(".", "modules/*/**")).map((file) => file.split("/").slice(0, 2).join("/"))),
+    ...new Set((await Promise.all(["modules", "assets"].map((prefix) => source.scan(".", `${prefix}/*/**`))))
+      .flat().map((file) => file.split("/").slice(0, 2).join("/"))),
   ]
   const assets = await Promise.all(assetDirectories
     .filter((directory) => !modules.some((module) => module.path === directory || module.path.startsWith(`${directory}/`)))
