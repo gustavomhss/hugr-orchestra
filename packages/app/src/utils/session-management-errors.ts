@@ -10,6 +10,8 @@ export function sessionManagementUnsupported(error: unknown): boolean {
   let current: unknown = error
   while (current && typeof current === "object" && !seen.has(current)) {
     if ("_tag" in current && current._tag === "SessionNotFoundError") return false
+    const body = "body" in current ? current.body : undefined
+    if (body && typeof body === "object" && "_tag" in body && body._tag === "SessionNotFoundError") return false
     seen.add(current)
     chain.push(current)
     current = "cause" in current ? current.cause : undefined
