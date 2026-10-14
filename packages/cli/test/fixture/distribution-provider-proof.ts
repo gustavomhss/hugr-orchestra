@@ -63,7 +63,7 @@ export async function qualifyProvider(input: {
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
       expect((await lstat(workdir)).isDirectory()).toBe(true)
-      const shell = `printf '%s\\n' '${nonce}' > '${file}' && sleep 3 && cat '${file}'`
+      const shell = `printf '%s' '${nonce}' > '${file}' && sleep 3 && cat '${file}'`
       expect(await absent(file)).toBe(true)
       const config = {
         model: `distribution/${model}`, default_agent: "distribution-proof", snapshots: false, autoupdate: false,
@@ -89,7 +89,7 @@ export async function qualifyProvider(input: {
       Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })(config)
       await Bun.write(join(box.cwd, "orchestra.json"), JSON.stringify(config, null, 2))
       await Bun.write(join(evidence, "location-config.json"), JSON.stringify(config, null, 2))
-      const prompt = `Call bash exactly once with command: ${shell}\nSet workdir to ${workdir} and timeout to 10000. After the actual tool result, give a short final response containing the nonce from its output. If the tool fails, report failure. /no_think`
+      const prompt = `Call bash exactly once with this JSON input, verbatim: ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}\nAfter the actual tool result, give a short final response containing the nonce from its output. If the tool fails, report failure. /no_think`
       proxy.arm(kind)
       const daemon = providerDaemon(launcher, payload, input.version, { ...box, env }, evidence)
       const state: { monitor?: Awaited<ReturnType<typeof observeInstalledTool>> } = {}
@@ -232,7 +232,7 @@ export async function qualifyProvider(input: {
         }
         if (kind !== "fault") {
           const stdout = await readFile(file, "utf8")
-          expect(stdout).toBe(`${nonce}\n`)
+          expect(stdout).toBe(nonce)
           const info = await lstat(file)
           expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
           // File, DB projection and serving-daemon ancestry are genuine and stay
