@@ -144,8 +144,10 @@ import fs from 'node:fs';
 const request = JSON.parse(process.argv[2]);
 fs.writeFileSync(request.nonce + '.tmp', JSON.stringify({pid:process.pid, nonce:request.nonce, file:import.meta.filename}));
 fs.renameSync(request.nonce + '.tmp', request.nonce);
+console.error('deadline-stderr-marker' + 'x'.repeat(20000));
 setTimeout(() => console.log('LATE SUCCESS'), 20000);
-`, decoder, { nonce }, 10000).then((stdout) => ({ stdout, error: "" }), (error: Error) => ({ stdout: "", error: error.message }))
+`, decoder, { nonce }, 10000).then((stdout) => ({ stdout, error: "", diagnostics: undefined }),
+    (error: Error & { diagnostics?: unknown }) => ({ stdout: "", error: error.message, diagnostics: error.diagnostics }))
   const observer = WindowsProcessQuery.invoke(OBSERVER, decoder, { nonce }, 35000)
     .then((stdout) => ({ stdout, error: "" }), (error: Error) => ({ stdout: "", error: error.message }))
   try {
@@ -160,6 +162,33 @@ setTimeout(() => console.log('LATE SUCCESS'), 20000);
     const proof = await observer
     console.log("WINDOWS_QUERY_DEADLINE_PROOF " + JSON.stringify({ os: process.platform, pinned, elapsedMs, result, proof }))
     expect(result.error).toContain("deadline expired")
+    // Inspect the real expiry snapshot rendered in the error; no fake timers, census or process APIs.
+    const diagnostic = JSON.parse(result.error.split("; diagnostics: ")[1])
+    expect(result.diagnostics).toEqual(diagnostic)
+    // Keep the snapshot intact: Bun's asymmetric object matcher can replace its
+    // fields with matcher objects before the phase/byte checks below.
+    expect(diagnostic.budgetMs).toBe(10000)
+    expect(diagnostic.attested).toBe(true)
+    expect(diagnostic.admitted).toBe(true)
+    expect(typeof diagnostic.sourceComplete).toBe("boolean")
+    expect(typeof diagnostic.complete).toBe("boolean")
+    expect(typeof diagnostic.brokerClosed).toBe("boolean")
+    expect(typeof diagnostic.controlClosed).toBe("boolean")
+    expect(typeof diagnostic.helperPID).toBe("number")
+    expect(diagnostic.source.pid).toBe(recorded.pid)
+    expect(diagnostic.source.file).toBe(recorded.file)
+    expect(typeof diagnostic.source.nonce).toBe("string")
+    expect(diagnostic.bytes).toBe(0)
+    expect(typeof diagnostic.controlBytes).toBe("number")
+    expect(diagnostic.stderrBytes).toBe(16384)
+    expect(diagnostic.stderr).toContain("deadline-stderr-marker")
+    expect(diagnostic.elapsedMs).toBeGreaterThanOrEqual(10000)
+    expect(diagnostic.sourceComplete).toBe(diagnostic.complete)
+    expect(diagnostic.phaseMs.attested).toBeGreaterThanOrEqual(diagnostic.phaseMs.spawned)
+    expect(diagnostic.phaseMs.admitted).toBeGreaterThanOrEqual(diagnostic.phaseMs.attested)
+    expect(diagnostic.phaseMs.deadline).toBeGreaterThanOrEqual(10000)
+    expect(diagnostic.phaseMs.deadline).toBeLessThanOrEqual(diagnostic.elapsedMs)
+    expect(Buffer.byteLength(diagnostic.stderr)).toBe(16384)
     expect(result.stdout).toBe("")
     expect(elapsedMs).toBeLessThan(15000)
     expect(proof.error).toBe("")
