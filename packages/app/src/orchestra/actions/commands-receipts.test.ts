@@ -48,7 +48,9 @@ describe("Actions definitive and ambiguous receipts", () => {
         expect(scope.state.submitting).toBe(false)
         expect(JSON.stringify(scope.state.commandError ?? {})).not.toContain("secret")
         if (item.error === "outcome_unknown") {
-          expect(scope.remembered.at(-1)?.operationID).toBe("aop_native")
+          const operation = scope.receipts.at(-1)
+          if (!operation) throw new Error("missing admitted receipt")
+          expect(scope.remembered.at(-1)?.operationID).toBe(operation.id)
           await scope.commands.submit({ provider: "github", mode: "all" })
           expect(scope.intents).toHaveLength(1)
           expect(scope.requests.filter((request) => request.method === "POST")).toHaveLength(phase === "prepare" ? 1 : 2)

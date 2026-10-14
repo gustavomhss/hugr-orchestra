@@ -151,7 +151,9 @@ describe("Actions command admission parity", () => {
     expect(scope.intents).toHaveLength(1)
     expect(scope.requests).toHaveLength(1)
     expect(scope.state.commandError?.kind).toBe("outcome_unknown")
-    expect(scope.remembered.at(-1)?.operationID).toBe("aop_native")
+    const operation = scope.receipts.at(-1)
+    if (!operation) throw new Error("missing admitted receipt")
+    expect(scope.remembered.at(-1)?.operationID).toBe(operation.id)
   })
 
   test("resource scopes select native denial without blocking an unrelated variable scope", async () => {
