@@ -209,7 +209,11 @@ async function setup(page: Page) {
   }, { directory, draftID, server, otherServer, otherID })
   await page.goto(draftURL)
   await expectAppVisible(page.locator(editor))
-  await expect(page.locator('[data-component="prompt-input-v2"]').getByRole("button", { name: "Choose model", exact: true })).toContainText("Draft Model")
+  // App supplies its shared model control; "Choose model" is tooltip copy, not this button's name.
+  const model = page.locator('[data-component="prompt-input-v2"] [data-action="prompt-model"]')
+  await expect(model).toHaveCount(1)
+  await expect(model).toHaveText("Draft Model")
+  await expect(model).toBeEnabled()
   await expect(page.locator(editor)).toBeEditable()
   return fixture
 }
