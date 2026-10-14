@@ -1,5 +1,5 @@
 // V5: compiled Orchestra /mcp connects after 1 MiB stderr; last line in real debug logs and failure diagnostics.
-// ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v5-mcp.ts [--mutation-legacy]
+// ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v5-mcp.ts [--mutation-legacy]
 import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"
 import path from "node:path"
