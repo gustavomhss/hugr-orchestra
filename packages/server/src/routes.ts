@@ -9,6 +9,7 @@ import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
@@ -33,6 +34,7 @@ const applicationServices = LayerNode.group([
   ToolOutputStore.cleanupNode,
   ResearchArtifacts.node,
   SessionV2.node,
+  SessionSubagentModels.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,
   PermissionSaved.node,
