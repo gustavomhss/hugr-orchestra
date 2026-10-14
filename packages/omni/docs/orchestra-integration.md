@@ -331,7 +331,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   Windows).
 
 **WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`packages/orchestra/src/{util,lsp,mcp,session/prompt.ts,cli}`,
-`packages/maestro-arsenal`)
+`modules/maestro/arsenal`)
 
 - **`util/process.ts`.** Uses an explicit mapping table that must be written before any code, covering:
   - `Stdio`: `inherit`, numeric descriptors and streams are rejected, and the callers that need them move to

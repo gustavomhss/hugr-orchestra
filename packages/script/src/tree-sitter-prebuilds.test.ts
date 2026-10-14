@@ -129,7 +129,7 @@ test("a mislabeled host prebuild is rebuilt from source and loads", () => {
   })
 }, 600_000)
 
-const resolve = createRequire(path.join(root, "packages", "maestro-arsenal", "package.json")).resolve
+const resolve = createRequire(path.join(root, "modules", "maestro", "arsenal", "package.json")).resolve
 const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.json")))
 
 // A real tree-sitter-python beside host-CPU javascript/typescript stubs. The core package is either a stub with a

@@ -7,7 +7,7 @@ Host baseline: Orchestra `628f72404baaf1cd3f5adedf497e830e176503d9`.
 
 Maestro owns architectural/scope judgments and integration. Normal work remains lightweight; governed work retains existing durable admission, grounded context, validation, approval and authorization. This port supplies capabilities on demand, not a mandatory wave ceremony or a completed specialist-team design.
 
-- `packages/maestro-arsenal` owns reusable computation and explicitly scoped acquisition. Runtime must not import the external TechLead checkout, user-global skills, Claude settings or Python hook executables.
+- `modules/maestro/arsenal` owns reusable computation and explicitly scoped acquisition. Runtime must not import the external TechLead checkout, user-global skills, Claude settings or Python hook executables.
 - Orchestra owns tool permissions, project placement, model selection, output storage, durable Session evidence and actual tool interception. Arsenal advice cannot grant authority or certify execution.
 - Atlas owns verified static Own facts, source identities, completeness and receipts. Repository maps and Composer results cannot replace grounded context.
 - Composer owns FastAPI catalog discovery and generation through existing `hugr-*` tools. Maestro loads detailed usage guidance only when relevant. Its subprocess stays lazy; context/output pressure uses existing Orchestra mechanisms.
