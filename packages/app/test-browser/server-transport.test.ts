@@ -180,7 +180,8 @@ test("legacy fetch fence blocks disposed owners despite live caller signals over
   const caller = new AbortController()
   try {
     expect(await state.sdk.protocol).toBe("v1")
-    await Promise.all(sends.map((send) => send(caller.signal)))
+    // Keep client-path assertions independent of concurrent HTTP arrival order.
+    for (const send of sends) await send(caller.signal)
     expect(requests).toHaveLength(sends.length)
     expect(requests.every((request) => request.path === "/session/ses_probe/prompt_async")).toBe(true)
     expect(requests.slice(0, 3).map((request) => request.directory && decodeURIComponent(request.directory))).toEqual([
