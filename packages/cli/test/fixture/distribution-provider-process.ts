@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { lstat, readFile, readdir, readlink, realpath, stat } from "node:fs/promises"
 import { join } from "node:path"
 import { sha256 } from "./distribution-native"
-import { requireAddonMappings, requireExecutableStat } from "./distribution-provider-provenance"
+import { parseProcessStat, procObservationScope, readOwnedProcesses, requireAddonMappings, requireExecutableStat } from "./distribution-provider-provenance"
 
 type Identity = { pid: number; parent: number; start: string; executable: string; cwd: string; argv: string[] }
 
@@ -47,9 +47,7 @@ export async function identity(pid: number): Promise<Identity | undefined> {
     readFile(`/proc/${pid}/stat`, "utf8"), readlink(`/proc/${pid}/exe`), readlink(`/proc/${pid}/cwd`),
     readFile(`/proc/${pid}/cmdline`, "utf8"),
   ]).then(([stat, executable, cwd, argv]) => {
-    const fields = stat.slice(stat.lastIndexOf(")") + 2).trim().split(/\s+/)
-    if (!/^\d+$/.test(fields[1]) || !/^\d+$/.test(fields[19])) throw new Error("PROVIDER_PROC_STAT_INVALID")
-    return { pid, parent: Number(fields[1]), start: fields[19], executable, cwd, argv: argv.split("\0").filter(Boolean) }
+    return { ...parseProcessStat(pid, stat), executable, cwd, argv: argv.split("\0").filter(Boolean) }
   }).catch((error: unknown) => {
     if (error && typeof error === "object" && "code" in error && ["ENOENT", "ESRCH"].includes(String(error.code))) return undefined
     throw error
@@ -59,13 +57,11 @@ export async function identity(pid: number): Promise<Identity | undefined> {
 // Observe installed supervisor -> shell, plus supervisor's installed native CLI
 // parent and isolated DB environment. Host harness's supervisor cannot satisfy it.
 export async function observeInstalledTool(payload: string, database: string, cwd: string, command: string, daemon: Identity) {
-  const ownerUID = process.getuid?.()
-  if (ownerUID === undefined) throw new Error("PROVIDER_PROC_OWNER_UID_UNAVAILABLE")
   const native = await realpath(join(payload, "bin/orchestra"))
   const nativeDigest = sha256(await readFile(native))
   const supervisor = await realpath(join(payload, "bin/hugr-omni-supervisor"))
   const digest = sha256(await readFile(supervisor))
-  const observed: Array<{ native: Identity; supervisor: Identity; shell: Identity; digest: string; nativeDigest: string;
+  const observed: Array<{ scope: string; native: Identity; supervisor: Identity; shell: Identity; digest: string; nativeDigest: string;
     addon: Awaited<ReturnType<typeof installedAddon>>; supervisorImage: Awaited<ReturnType<typeof installedExecutable>> }> = []
   const state = { stopped: false }
   const control = await identity(process.pid)
@@ -76,20 +72,16 @@ export async function observeInstalledTool(payload: string, database: string, cw
   const scan = (async () => {
     while (!state.stopped) {
       const pids = (await readdir("/proc")).filter((name) => /^\d+$/.test(name)).map(Number)
-      // Other users' processes (including root-owned Docker daemon) are outside
-      // this observer's reach. Do not turn their ptrace restrictions into a miss
-      // on our own readable chain; unexpected failures on owned-user PIDs fail.
-      const rows = (await Promise.all(pids.map(async (pid) => {
-        const status = await readFile(`/proc/${pid}/status`, "utf8").catch((error: unknown) => {
+      // UID is not ownership. Census lightweight kernel ancestry first; ptrace-
+      // restricted exe/cwd/maps are read only after exact daemon ancestry is proven.
+      const census = (await Promise.all(pids.map(async (pid) => {
+        const text = await readFile(`/proc/${pid}/stat`, "utf8").catch((error: unknown) => {
           if (error && typeof error === "object" && "code" in error && ["ENOENT", "ESRCH"].includes(String(error.code))) return undefined
-          throw error
+          throw new Error(`PROVIDER_PROC_CENSUS_READ_FAILED: daemon=${daemon.pid}/${daemon.start} pid=${pid}; ${procObservationScope}; ${String(error)}`, { cause: error })
         })
-        if (status === undefined) return
-        const uid = /^Uid:\s+(\d+)/m.exec(status)?.[1]
-        if (!uid) throw new Error("PROVIDER_PROC_UID_INVALID")
-        if (Number(uid) !== ownerUID) return
-        return identity(pid)
-      }))).filter((row): row is Identity => row !== undefined)
+        return text === undefined ? undefined : parseProcessStat(pid, text)
+      }))).filter((row): row is ReturnType<typeof parseProcessStat> => row !== undefined)
+      const rows = await readOwnedProcesses(daemon, census, identity)
       const byPID = new Map(rows.map((row) => [row.pid, row]))
       for (const shell of rows.filter((row) => row.argv.includes(command) && row.cwd === cwd)) {
         const parent = byPID.get(shell.parent)
@@ -111,7 +103,7 @@ export async function observeInstalledTool(payload: string, database: string, cw
         expect(nativeImage.sha256).toBe(nativeDigest)
         if ((await identity(cli.pid))?.start !== cli.start || (await identity(parent.pid))?.start !== parent.start ||
             (await identity(shell.pid))?.start !== shell.start) throw new Error("PROVIDER_TOOL_CHAIN_BIRTH_CHANGED_DURING_OBSERVATION")
-        observed.push({ native: cli, supervisor: parent, shell, digest, nativeDigest, addon, supervisorImage })
+        observed.push({ scope: procObservationScope, native: cli, supervisor: parent, shell, digest, nativeDigest, addon, supervisorImage })
       }
       await Bun.sleep(20)
     }
