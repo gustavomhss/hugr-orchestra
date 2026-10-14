@@ -11,13 +11,14 @@ import { assertVersion, command, successful, snapshot, skillIdentity } from "./d
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
 import type { WindowsIdentity } from "./distribution-windows-process"
+import type { Omni } from "@orchestra/core/omni"
 
 const Registration = Schema.Struct({
   id: Schema.String.check(Schema.isPattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)),
   pid: Schema.Int.check(Schema.isGreaterThan(0)), version: Schema.String, url: Schema.String,
 })
 type Receipt = typeof Registration.Type
-type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; identity?: WindowsIdentity; failure?: Error }
+type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; identity?: WindowsIdentity; tree?: Omni.Child; failure?: Error }
 const leases = new Set<Lease>()
 
 export async function stopServices() {
@@ -64,8 +65,20 @@ async function stop(lease: Lease) {
   // A later status/cleanup retry must not erase a prior unproved detached start
   // or surviving PID and allow afterAll to delete the diagnostic fixture.
   if (lease.failure) throw lease.failure
-  return stopOwned(lease).catch((error: unknown) => {
+  return stopOwned(lease).catch(async (error: unknown) => {
     lease.failure = error instanceof Error ? error : new Error("NATIVE_DAEMON_CLEANUP_UNKNOWN_FAILURE")
+    // Failure recovery stops only this fixture's retained native Job, never a
+    // bare registration PID. It cannot satisfy public-stop/exit qualification;
+    // keep the failure, lease and diagnostic files even after owned-tree cleanup.
+    const tree = lease.tree
+    if (tree) {
+      await tree.stop({ graceMs: 2_000 }).then(async () => {
+        if ((await tree.processes()).length !== 0) throw new Error("NATIVE_DAEMON_RECOVERY_TREE_NOT_EMPTY")
+        console.error(`NATIVE_DAEMON_TREE_RECOVERY ${JSON.stringify({ rootPID: tree.pid, empty: true })}`)
+      }).catch((failure: unknown) => {
+        lease.failure = new AggregateError([lease.failure, failure], "NATIVE_DAEMON_OWNED_TREE_CLEANUP_FAILED")
+      })
+    }
     throw lease.failure
   })
 }
@@ -82,7 +95,8 @@ async function stopOwned(lease: Lease) {
   if (process.platform === "win32") {
     const identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
     if (!identity || !lease.identity || identity.startTime !== lease.identity.startTime)
-      throw new Error("NATIVE_DAEMON_IDENTITY_CHANGED_BEFORE_STOP")
+      throw new Error(`NATIVE_DAEMON_IDENTITY_CHANGED_BEFORE_STOP: ${JSON.stringify({ pid: receipt.pid,
+        expected: lease.identity ?? null, observed: identity ?? null })}`)
   }
   const result = await command([lease.launcher, "service", "stop"], lease.box, 20_000)
     .then((value) => ({ value }), () => ({ value: undefined }))
@@ -91,6 +105,13 @@ async function stopOwned(lease: Lease) {
   await exited(receipt.pid, lease.identity)
   if (!result.value || result.value.code !== 0) throw new Error("NATIVE_DAEMON_STOP_COMMAND_FAILED")
   expect(await successful([lease.launcher, "service", "status"], lease.box, 15_000)).toBe("stopped")
+  if (lease.tree) {
+    // Public stop already proved the exact daemon exited. Closing the retained
+    // harness job now releases its native ownership, including any helper tails.
+    await lease.tree.stop({ graceMs: 2_000 })
+    expect(await lease.tree.processes()).toEqual([])
+    console.error(`NATIVE_DAEMON_TREE_RELEASED ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid })}`)
+  }
   leases.delete(lease)
 }
 
@@ -132,7 +153,19 @@ async function captureReceipt(lease: Lease) {
       if (receipt.version !== lease.version) throw new Error("NATIVE_DAEMON_REGISTRATION_VERSION_MISMATCH")
       if (lease.receipt && !sameReceipt(receipt, lease.receipt))
         throw new Error("NATIVE_DAEMON_REGISTRATION_CHANGED")
-      if (!lease.receipt) lease.identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
+      if (!lease.receipt) {
+        lease.identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
+        if (process.platform === "win32") {
+          if (!lease.tree) throw new Error("NATIVE_DAEMON_START_TREE_NOT_ADOPTED")
+          const members = await lease.tree.processes()
+          const rootExit = await lease.tree.wait()
+          console.error(`NATIVE_DAEMON_OWNED_TREE ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid,
+            creationTime: lease.identity?.startTime, rootExit, members })}`)
+          expect(rootExit.exitCode).toBe(0)
+          if (!members.some((member) => member.pid === receipt.pid))
+            throw new Error("NATIVE_DAEMON_PID_OUTSIDE_OWNED_START_TREE")
+        }
+      }
       lease.receipt = receipt
       return
     }
@@ -148,6 +181,7 @@ async function exited(pid: number, identity?: WindowsIdentity) {
       if (!identity) throw new Error("NATIVE_DAEMON_WINDOWS_IDENTITY_MISSING")
       const { windowsIdentity } = await import("./distribution-windows-process")
       const current = await windowsIdentity(pid)
+      console.error(`NATIVE_DAEMON_EXIT_OBSERVATION ${JSON.stringify({ pid, expected: identity, observed: current ?? null })}`)
       if (!current || current.startTime !== identity.startTime) return
       if (current.executable.toLowerCase() !== identity.executable.toLowerCase())
         throw new Error("NATIVE_DAEMON_WINDOWS_EXECUTABLE_CHANGED")
@@ -267,7 +301,21 @@ export async function qualify(input: {
     if (!input.negative) await companionSuccess(input.payload, input.box)
     await symbols(input.launcher, input.box)
     lease.attempted = true
-    const started = await successful([input.launcher, "service", "start"], input.box, 30_000)
+    const started = await (process.platform === "win32"
+      ? command([input.launcher, "service", "start"], input.box, 30_000, {
+        register: (tree) => Effect.gen(function* () {
+          if (lease.tree) {
+            yield* Effect.promise(() => tree.stop({ graceMs: 2_000 }))
+            return yield* Effect.fail(new Error("NATIVE_DAEMON_START_TREE_ALREADY_ADOPTED"))
+          }
+          lease.tree = tree
+          console.error(`NATIVE_DAEMON_START_TREE_ADOPTED ${JSON.stringify({ rootPID: tree.pid, version: lease.version })}`)
+        }),
+      }).then((result) => {
+        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}`)
+        return result.stdout.trim()
+      })
+      : successful([input.launcher, "service", "start"], input.box, 30_000))
       .finally(() => captureReceipt(lease))
     if (!lease.receipt) throw new Error("NATIVE_DAEMON_RECEIPT_MISSING_AFTER_START")
     if (started !== lease.receipt.url) throw new Error("NATIVE_DAEMON_START_RECEIPT_ENDPOINT_MISMATCH")
