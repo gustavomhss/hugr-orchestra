@@ -3,7 +3,7 @@ import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
-import { batch, startTransition, type Accessor } from "solid-js"
+import { batch, onCleanup, startTransition, type Accessor } from "solid-js"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
@@ -31,7 +31,8 @@ import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
-import { acknowledgeDraftPolicy, createSubmissionOwner, sendFollowupRequest, waitForSubmissionWorktree } from "./submission-policy"
+import { acknowledgeDraftPolicy, createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubagentPolicy, waitForSubmissionWorktree } from "./submission-policy"
+import { queuedPromptSources, type QueuedPromptSource, type QueuedPromptRuntime } from "./queued-prompt"
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
@@ -66,14 +67,7 @@ export type FollowupDraft = {
   system?: string
   // An explicit V2 delivery mode; omitted, the server steers.
   delivery?: "steer" | "queue"
-  // Queued handoff retains the admitting source and rechecks its latest writes at send time.
-  source?: {
-    api: DirectorySDK["api"]["session"]
-    serverSync: ServerSync
-    sync: DirectorySync
-    current: () => boolean
-    before: () => Promise<boolean>
-  }
+  source?: QueuedPromptSource
 }
 
 export type FollowupSendInput = {
@@ -87,7 +81,16 @@ export type FollowupSendInput = {
   pending?: boolean
   signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
-  runtime?: FollowupDraft["source"] & { before: (signal?: AbortSignal) => Promise<boolean> }
+  runtime?: QueuedPromptRuntime
+  deliberate?: boolean
+  currentSource?: {
+    serverScopeKey: ServerScope
+    directory: string
+    sessionID: string | undefined
+    protocol: Parameters<typeof createSubmissionPolicy>[0]["protocol"]
+    management: Parameters<typeof createSubmissionPolicy>[0]["management"]
+    current: () => boolean
+  }
 }
 
 // Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
@@ -95,14 +98,36 @@ export function followupSystem(platform: Platform, scope: ServerScope, serverSyn
   return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
 }
 
-export async function sendFollowupDraft(input: FollowupSendInput) {
-  return sendFollowupRequest({
-    ...input,
-    api: input.draft.source?.api ?? input.api,
-    sync: input.draft.source?.sync ?? input.sync,
-    serverSync: input.draft.source?.serverSync ?? input.serverSync,
-    runtime: input.draft.source ?? input.runtime,
-  })
+export const sendFollowupDraft = createFollowupSender()
+
+export function createFollowupSender(sources = queuedPromptSources) {
+  return async (input: FollowupSendInput) => {
+    const controller = !input.signal ? new AbortController() : undefined
+    const current = input.currentSource
+    const rebound = current?.sessionID ? {
+      serverScopeKey: current.serverScopeKey, directory: current.directory, sessionID: current.sessionID,
+      api: input.api, sync: input.sync, serverSync: input.serverSync, current: current.current,
+      before: (signal = input.signal ?? controller!.signal) => waitForSubagentPolicy({ ...current, sessionID: current.sessionID!, signal }),
+    } : undefined
+    const source = input.runtime ?? sources.resolve(input.draft.source, input.draft, rebound, input.deliberate)
+    if (!source && (input.currentSource || "source" in input.draft)) return false
+    const untrack = controller && source ? trackPendingPrompt(source.serverScopeKey, input.draft.sessionID, {
+      abort: controller,
+      cleanup: () => {},
+    }) : undefined
+    try {
+      return await sendFollowupRequest({
+        ...input,
+        api: source?.api ?? input.api,
+        sync: source?.sync ?? input.sync,
+        serverSync: source?.serverSync ?? input.serverSync,
+        signal: input.signal ?? controller?.signal,
+        runtime: source,
+      })
+    } finally {
+      untrack?.()
+    }
+  }
 }
 
 // Shared by the composer and evidence replay: every shell run gets a new event ID, and
@@ -169,6 +194,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
+  const queueOwner = {}
+  onCleanup(() => queuedPromptSources.releaseOwner(queueOwner))
   const ownership = createSubmissionOwner(() => {
     const source = sdk()
     const draftID = search.draftId
@@ -468,7 +495,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       model,
       variant,
       delivery,
-      source: { api, sync: syncState, serverSync: serverState, current: ownsSource, before: waitPolicy },
+      source: queuedPromptSources.capture({
+        serverScopeKey: directorySDK.scope, directory: sessionDirectory, sessionID: session.id,
+        api, sync: syncState, serverSync: serverState, current: ownsSource, before: waitPolicy,
+      }, queueOwner),
     }
 
     const clearInput = () => {
