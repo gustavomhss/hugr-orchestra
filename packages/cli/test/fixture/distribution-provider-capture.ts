@@ -1,75 +1,19 @@
-import { Schema } from "effect"
 import { join } from "node:path"
 import { model } from "./distribution-provider-ollama"
-
-export const WireCall = Schema.Struct({
-  id: Schema.String,
-  function: Schema.Struct({ name: Schema.String, arguments: Schema.String }),
-})
-export const WireRequest = Schema.Struct({
-  model: Schema.String,
-  messages: Schema.Array(Schema.Struct({
-    role: Schema.String,
-    content: Schema.optional(Schema.Unknown),
-    tool_call_id: Schema.optional(Schema.String),
-    tool_calls: Schema.optional(Schema.Array(WireCall)),
-  })),
-  tools: Schema.optional(Schema.Array(Schema.Struct({
-    type: Schema.String,
-    function: Schema.Struct({ name: Schema.String }),
-  }))),
-})
-
-const Frame = Schema.Struct({
-  choices: Schema.Array(Schema.Struct({
-    delta: Schema.Struct({
-      content: Schema.optional(Schema.NullOr(Schema.String)),
-      tool_calls: Schema.optional(Schema.Array(Schema.Struct({
-        index: Schema.Int,
-        id: Schema.optional(Schema.String),
-        function: Schema.optional(Schema.Struct({
-          name: Schema.optional(Schema.String), arguments: Schema.optional(Schema.String),
-        })),
-      }))),
-    }),
-    finish_reason: Schema.optional(Schema.NullOr(Schema.String)),
-  })),
-})
-
-export function streamedCompletion(text: string) {
-  const calls = new Map<number, { id: string; name: string; arguments: string }>()
-  const content: string[] = []
-  const finishes: string[] = []
-  const frames = text.split(/\r?\n/).filter((line) => line.startsWith("data: "))
-  if (frames.length === 0 || !frames.includes("data: [DONE]")) throw new Error("OLLAMA_SSE_INCOMPLETE")
-  frames.filter((line) => line !== "data: [DONE]").forEach((line) => {
-    const frame = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Frame)))(line.slice(6))
-    frame.choices.forEach((choice) => {
-      if (choice.delta.content) content.push(choice.delta.content)
-      if (choice.finish_reason) finishes.push(choice.finish_reason)
-      choice.delta.tool_calls?.forEach((part) => {
-        const call = calls.get(part.index) ?? { id: "", name: "", arguments: "" }
-        call.id += part.id ?? ""
-        call.name += part.function?.name ?? ""
-        call.arguments += part.function?.arguments ?? ""
-        calls.set(part.index, call)
-      })
-    })
-  })
-  return { content: content.join(""), calls: [...calls.values()], finishes }
-}
+import { WireRequest, decodeCaptureRequest } from "./distribution-provider-wire"
+import { captureByteCap, readCaptureBytes, requireCaptureLength } from "./distribution-provider-bytes"
+export { WireCall, WireRequest, streamedCompletion } from "./distribution-provider-wire"
 
 // Every admitted response body comes from upstream Ollama. No replay, scripted
 // completion, tool-call injection or response rewriting. Headers are never logged.
 export function captureInference(endpoint: string, evidence: string) {
-  const cap = 8 * 1024 * 1024
   const records: Array<{ request: typeof WireRequest.Type; requestJSON: string; response: string; status: number }> = []
   const pending = new Set<Promise<void>>()
   const controllers = new Set<AbortController>()
   const failures: unknown[] = []
   const state = { stage: "unarmed", turns: 0 }
   const server = Bun.serve({
-    hostname: "127.0.0.1", port: 0, maxRequestBodySize: cap,
+    hostname: "127.0.0.1", port: 0, maxRequestBodySize: captureByteCap,
     async fetch(request) {
       const route = new URL(request.url)
       if (state.stage === "unarmed" || request.method !== "POST" || route.pathname !== "/v1/chat/completions" || route.search)
@@ -77,29 +21,12 @@ export function captureInference(endpoint: string, evidence: string) {
       if (++state.turns > 4) throw new Error("PROVIDER_CAPTURE_TURN_LIMIT")
       const stage = state.stage
       const turn = state.turns
-      const length = request.headers.get("content-length")
-      if (length && (!/^\d+$/.test(length) || Number(length) > cap)) throw new Error("PROVIDER_CAPTURE_REQUEST_TOO_LARGE")
-      const chunks: Uint8Array[] = []
-      const incoming = { bytes: 0 }
-      if (request.body) {
-        const reader = request.body.getReader()
-        while (true) {
-          const chunk = await reader.read()
-          if (chunk.done) break
-          incoming.bytes += chunk.value.byteLength
-          if (incoming.bytes > cap) {
-            const error = new Error("PROVIDER_CAPTURE_REQUEST_TOO_LARGE")
-            failures.push(error)
-            await reader.cancel(error)
-            throw error
-          }
-          chunks.push(chunk.value)
-        }
-      }
-      const payload = Buffer.concat(chunks)
-      const json = new TextDecoder("utf-8", { fatal: true }).decode(payload)
-      const decoded = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(WireRequest)))(json)
-      if (decoded.model !== model) throw new Error("PROVIDER_CAPTURE_MODEL_MISMATCH")
+      requireCaptureLength(request.headers.get("content-length"))
+      const payload = await readCaptureBytes(request.body, { failure: "PROVIDER_CAPTURE_REQUEST_TOO_LARGE",
+        report: (error) => failures.push(error) })
+      const parsed = decodeCaptureRequest(payload, model)
+      const json = parsed.json
+      const decoded = parsed.request
       await Bun.write(join(evidence, `${stage}-turn-${turn}-request.json`), JSON.stringify({
         upstream: endpoint, method: "POST", path: route.pathname, request: decoded, requestJSON: json,
       }, null, 2) + "\n")
@@ -120,24 +47,12 @@ export function captureInference(endpoint: string, evidence: string) {
       const record = { request: decoded, requestJSON: json, response: "", status: upstream.status }
       records.push(record)
       const task = (async () => {
-        const reader = capture.getReader()
-        const chunks: Uint8Array[] = []
-        const size = { bytes: 0 }
-        while (true) {
-          const chunk = await reader.read()
-          if (chunk.done) break
-          size.bytes += chunk.value.byteLength
-          if (size.bytes > cap) {
-            const error = new Error("PROVIDER_CAPTURE_RESPONSE_TOO_LARGE")
+        record.response = (await readCaptureBytes(capture, { failure: "PROVIDER_CAPTURE_RESPONSE_TOO_LARGE", controller,
+          report(error, bytes) {
             failures.push(error)
-            console.error(`${error.message} ${JSON.stringify({ stage, turn, bytes: size.bytes, cap })}`)
-            controller.abort(error) // Abort both tee branches before cancellation can wait for its sibling.
-            await reader.cancel(error)
-            throw error
-          }
-          chunks.push(chunk.value)
-        }
-        record.response = Buffer.concat(chunks).toString("utf8")
+            console.error(`${error.message} ${JSON.stringify({ stage, turn, bytes, cap: captureByteCap })}`)
+          },
+        })).toString("utf8")
         await Bun.write(join(evidence, `${stage}-turn-${turn}.json`), JSON.stringify({
           upstream: endpoint, method: "POST", path: route.pathname, ...record,
         }, null, 2) + "\n")

@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { lstat, readFile, readdir, readlink, realpath, stat } from "node:fs/promises"
 import { join } from "node:path"
 import { sha256 } from "./distribution-native"
+import { requireAddonMappings, requireExecutableStat } from "./distribution-provider-provenance"
 
 type Identity = { pid: number; parent: number; start: string; executable: string; cwd: string; argv: string[] }
 
@@ -17,22 +18,7 @@ export async function installedAddon(payload: string, process: Identity) {
   if (!before || before.start !== process.start) throw new Error("PROVIDER_ADDON_PID_BIRTH_MISMATCH")
   const file = join(await realpath(payload), "bin/hugr_omni.node")
   const expected = await fileIdentity(file)
-  const rows = (await readFile(`/proc/${process.pid}/maps`, "utf8")).trim().split("\n").map((line) => {
-    const match = /^([a-f0-9]+)-([a-f0-9]+) ([rwxps-]{4}) ([a-f0-9]+) ([a-f0-9]+):([a-f0-9]+) (\d+)\s*(.*)$/.exec(line)
-    if (!match) throw new Error("PROVIDER_PROC_MAPS_ROW_INVALID")
-    return { start: match[1], end: match[2], flags: match[3], offset: match[4], major: match[5], minor: match[6], ino: match[7], path: match[8] }
-  }).filter((row) => row.path.includes("hugr_omni.node"))
-  if (!rows.length) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_MISSING")
-  const device = BigInt(expected.dev)
-  const major = (device >> 8n & 0xfffn) | (device >> 32n & 0xfffff000n)
-  const minor = (device & 0xffn) | (device >> 12n & 0xffffff00n)
-  for (const row of rows) {
-    if (row.path.endsWith(" (deleted)")) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_DELETED")
-    if (row.path !== expected.path || BigInt(row.ino) !== BigInt(expected.ino) ||
-        BigInt(`0x${row.major}`) !== major || BigInt(`0x${row.minor}`) !== minor)
-      throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_IDENTITY_MISMATCH")
-  }
-  if (!rows.some((row) => row.flags.includes("x"))) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_NOT_EXECUTABLE")
+  const rows = requireAddonMappings(await readFile(`/proc/${process.pid}/maps`, "utf8"), expected)
   const afterFile = await fileIdentity(file)
   if (JSON.stringify(afterFile) !== JSON.stringify(expected)) throw new Error("PROVIDER_INSTALLED_ADDON_STAT_CHANGED")
   const after = await identity(process.pid)
@@ -45,12 +31,9 @@ async function installedExecutable(file: string, process: Identity) {
   if (!before || before.start !== process.start) throw new Error("PROVIDER_IMAGE_PID_BIRTH_MISMATCH")
   const expected = await fileIdentity(file)
   const link = await readlink(`/proc/${process.pid}/exe`)
-  if (link.endsWith(" (deleted)")) throw new Error("PROVIDER_INSTALLED_EXECUTABLE_DELETED")
   const opened = await stat(`/proc/${process.pid}/exe`, { bigint: true })
-  if (link !== expected.path || opened.dev.toString() !== expected.dev || opened.ino.toString() !== expected.ino ||
-      opened.size.toString() !== expected.size || opened.mode.toString() !== expected.mode ||
-      opened.mtimeNs.toString() !== expected.mtime || opened.ctimeNs.toString() !== expected.ctime || !opened.isFile())
-    throw new Error("PROVIDER_INSTALLED_EXECUTABLE_IDENTITY_MISMATCH")
+  requireExecutableStat(link, { path: link, dev: opened.dev.toString(), ino: opened.ino.toString(), size: opened.size.toString(),
+    mode: opened.mode.toString(), mtime: opened.mtimeNs.toString(), ctime: opened.ctimeNs.toString(), regular: opened.isFile() }, expected)
   const digest = sha256(await readFile(`/proc/${process.pid}/exe`))
   const afterFile = await fileIdentity(file)
   const after = await identity(process.pid)
