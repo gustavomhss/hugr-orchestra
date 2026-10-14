@@ -34,8 +34,11 @@ export function makeJson(value: unknown): Schema.JsonObject {
 }
 
 export function make(provider: Actions.ProviderKind, options: {
+  readonly path?: string
+  readonly configPath?: string | null
   readonly write?: (request: ActionsContract.Request) => Effect.Effect<ActionsContract.Response, ActionsError>
   readonly read?: (request: ActionsContract.Request) => ActionsContract.Json | undefined
+  readonly readResponse?: (request: ActionsContract.Request) => Effect.Effect<ActionsContract.Response, ActionsError> | undefined
   readonly postReadFails?: boolean
 } = {}) {
   const bound = binding(provider)
@@ -66,16 +69,18 @@ export function make(provider: Actions.ProviderKind, options: {
         state.lastCommit = nextCommit
         state.text = draft
         state.exists = true
-        return provider === "github" ? success({ content: { type: "file", path: path(provider), sha: blob(draft) }, commit: { sha: nextCommit } }, existed ? 200 : 201)
-          : success({ file_path: path(provider), branch }, existed ? 200 : 201)
+        return provider === "github" ? success({ content: { type: "file", path: options.path ?? path(provider), sha: blob(draft) }, commit: { sha: nextCommit } }, existed ? 200 : 201)
+          : success({ file_path: options.path ?? path(provider), branch }, existed ? 200 : 201)
       }
       if (state.writes && options.postReadFails) return Effect.fail(fail)
+      const response = options.readResponse?.(request)
+      if (response !== undefined) return response
       const overridden = options.read?.(request)
       if (overridden !== undefined) return success(overridden)
       if (request.path === "user") return success({ id: 7, login: "author", username: "author", harmless_extra: true })
       if (request.path === "repositories/21") return success({ id: 21, full_name: "owner/project", default_branch: "dev", permissions: { push: true } })
       if (request.path === "projects/21") return success({ id: 21, name: "Project", path_with_namespace: "owner/project",
-        ci_config_path: null, default_branch: "dev", permissions: { project_access: { access_level: 40 }, group_access: null } })
+        ci_config_path: options.configPath ?? null, default_branch: "dev", permissions: { project_access: { access_level: 40 }, group_access: null } })
       if (request.path.includes("/git/ref/heads/")) return success({ ref: `refs/heads/${request.path.split("/heads/")[1]}`,
         object: { type: "commit", sha: state.commit }, harmless_extra: true })
       if (request.path.includes("/repository/branches/")) return success({ name: decodeURIComponent(request.path.split("/branches/")[1]),
@@ -84,8 +89,8 @@ export function make(provider: Actions.ProviderKind, options: {
       if (request.path.includes("/contents/") || request.path.includes("/repository/files/")) {
         if (!state.exists) return Effect.fail(new ActionsError({ kind: "not_found", message: "Native file missing", disposition: "definitely_rejected" }))
         const content = Buffer.from(state.text).toString("base64")
-        return provider === "github" ? success({ type: "file", path: path(provider), sha: blob(state.text), size: Buffer.byteLength(state.text), encoding: "base64", content })
-          : success({ file_path: path(provider), encoding: "base64", content, blob_id: blob(state.text), commit_id: state.commit, last_commit_id: state.lastCommit })
+        return provider === "github" ? success({ type: "file", path: options.path ?? path(provider), sha: blob(state.text), size: Buffer.byteLength(state.text), encoding: "base64", content })
+          : success({ file_path: options.path ?? path(provider), encoding: "base64", content, blob_id: blob(state.text), commit_id: state.commit, last_commit_id: state.lastCommit })
       }
       return Effect.fail(fail)
     }),

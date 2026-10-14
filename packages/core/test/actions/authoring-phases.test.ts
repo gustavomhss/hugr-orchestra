@@ -113,11 +113,11 @@ providers.forEach((provider) => {
   }))
 })
 
-it.live("GitLab external configuration refuses local fallback", Effect.gen(function* () {
+it.live("GitLab rejects an external admitted path without local fallback", Effect.gen(function* () {
   const fixture = AuthoringFixture.make("gitlab", { read: (request) => request.path === "projects/21"
     ? AuthoringFixture.makeJson({ id: 21, name: "Project", path_with_namespace: "owner/project", ci_config_path: "ci.yml@other/project", default_branch: "dev" }) : undefined })
   const result = yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent("gitlab", "source.write", {
-    ref: AuthoringFixture.branch, path: ".gitlab-ci.yml",
+    ref: AuthoringFixture.branch, path: "ci.yml@other/project",
   }), { provider: "gitlab", mode: "update", message: "ci: update", text: AuthoringFixture.draft }).pipe(Effect.flip)
   expect(result.kind).toBe("source_unresolved")
   expect(fixture.state.writes).toBe(0)

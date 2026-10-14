@@ -4,8 +4,9 @@ import { Effect, Schema } from "effect"
 import { ActionsContract } from "../contract"
 import { ActionsError } from "../error"
 import { GitHubNative } from "../github/native"
+import { ActionsGitLabNative } from "../gitlab/native"
 import { ActionsResponse } from "../transport/response"
-import { bytes, decode, error, native, source, version } from "./input"
+import { branch, bytes, decode, error, native, source, version } from "./input"
 import type { Services } from "./input"
 
 export type Plan = {
@@ -47,9 +48,21 @@ export const actor = Effect.fn("ActionsAuthoring.actor")(function* (services: Se
     return yield* error(binding, "binding_stale", "Source authoring account changed after admission")
 })
 
+/** Call only after the exact project, actor and base branch/commit have been proved. */
+export const absent = Effect.fn("ActionsAuthoring.absent")(function* (services: Services, binding: Actions.Binding, path: string, commit: string) {
+  // Keep the transport's rejection evidence until classification. A generic/partial not_found is not absence.
+  const response = yield* before(binding, services.transport.request(binding, { method: "GET", path, query: { ref: commit } }).pipe(
+    Effect.catchIf((cause) => cause.kind === "not_found" && cause.disposition === "definitely_rejected", () => Effect.succeed(undefined)),
+  ))
+  if (!response || response.status === 404) return
+  if (response.status === 200) return yield* error(binding, "source_conflict", "New source file already exists at the admitted base commit")
+  const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+  return yield* error(binding, failure.kind, "Source file absence was not proved")
+})
+
 export const current = Effect.fn("ActionsAuthoring.current")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent) {
   if (!intent.target.path || !intent.target.ref) return yield* error(binding, "invalid_input", "Source precondition requires a path and branch")
-  const value = yield* before(binding, services.reader.source(binding, { path: intent.target.path, ref: intent.target.ref }))
+  const value = yield* before(binding, readSource(services, binding, intent.target.path, intent.target.ref))
   return yield* guard(binding, () => source(binding, intent, value))
 })
 
@@ -62,7 +75,7 @@ export const written = Effect.fn("ActionsAuthoring.written")(function* (
   services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, text: string, commit?: string, blobID?: string,
 ) {
   if (!intent.target.path || !intent.target.ref) return yield* error(binding, "outcome_unknown", "Written source target is missing", "unknown")
-  const value = yield* services.reader.source(binding, { path: intent.target.path, ref: intent.target.ref })
+  const value = yield* readSource(services, binding, intent.target.path, intent.target.ref)
   return yield* guard(binding, () => {
     const native = version(binding, value.version)
     if (value.bindingID !== binding.id || value.path !== intent.target.path || value.ref !== intent.target.ref || !value.commit ||
@@ -74,6 +87,21 @@ export const written = Effect.fn("ActionsAuthoring.written")(function* (
     decode(binding, GitHubNative.SHA, value.commit)
     return { acknowledgement: { resourceID: value.commit } }
   })
+})
+
+const readSource = Effect.fn("ActionsAuthoring.readSource")(function* (services: Services, binding: Actions.Binding, path: string, ref: string) {
+  if (binding.provider.kind === "github") return yield* services.reader.source(binding, { path, ref })
+  // Read the exact local file at the proved branch head. Project CI settings do not select a proposal's path.
+  const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
+  yield* guard(binding, () => branch(binding, ref))
+  const response = yield* get(services, binding, `${root}/repository/branches/${encodeURIComponent(ref)}`)
+  const head = yield* guard(binding, () => native(binding, Schema.Struct({ name: Schema.NonEmptyString,
+    commit: Schema.Struct({ id: ActionsGitLabNative.SHA }) }), response.data))
+  if (head.name !== ref) return yield* error(binding, "source_conflict", "GitLab branch identity differs from the admitted source")
+  const value = yield* services.reader.source(binding, { path, ref: head.commit.id })
+  if (value.bindingID !== binding.id || value.path !== path || value.ref !== head.commit.id || value.commit !== head.commit.id)
+    return yield* error(binding, "source_unresolved", "Reader did not prove the exact local file at the observed branch head")
+  return { ...value, ref }
 })
 
 export function reviewURL(binding: Actions.Binding, url: string, path: string) {
