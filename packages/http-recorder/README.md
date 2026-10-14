@@ -6,24 +6,16 @@ Use it for provider integrations, retries, polling, multi-step flows, and any te
 
 > Public beta. The API depends on Effect 4 beta and may change with Effect's unstable transport modules.
 
+The repository package manifest currently declares `effect@4.0.0-beta.83` as its peer dependency. The `@beta` install tag is independently published and may refer to a different package revision; this guide does not claim a published beta matches this checkout.
+
 ## Install
 
 ```sh
-bun add effect@4.0.0-beta.74
+bun add effect@4.0.0-beta.83
 bun add -d @orchestra/http-recorder@beta @effect/vitest vitest
 ```
 
 The package supports Node.js 22+ and Bun. It is not intended for browsers, workers, or Deno.
-
-Effect `4.0.0-beta.74` has a known declaration error (`SchemaErrorTypeId` is missing). Until that upstream declaration is fixed, TypeScript consumers need:
-
-```json
-{
-  "compilerOptions": {
-    "skipLibCheck": true
-  }
-}
-```
 
 ## Quick Start
 
@@ -56,7 +48,7 @@ describe("getUser", () => {
 })
 ```
 
-Run the test with Vitest. The first local run calls the real API and records:
+Run the test with your chosen test runner. The first local run calls the real API and records:
 
 ```sh
 bunx vitest run users.test.ts
@@ -211,6 +203,10 @@ Cassettes are readable JSON files intended to be committed with your tests. HTTP
 - WebSocket transcripts are retained in memory until the connection finishes; avoid using this beta for unbounded sessions.
 - The package currently requires the exact Effect beta listed above.
 - Cassette format version `1` has no migration tooling yet.
+
+## Repository ownership and checks
+
+The http-recorder package maintainers own this guide and the recorder contract. In this repository, run `bun run typecheck` from `packages/http-recorder`; tests run through GitHub Actions with `bun run test:ci http-recorder test/record-replay.test.ts` from the repository root. The generic recording workflow above describes library behavior; repository CI policy is separate.
 
 ## License
 
