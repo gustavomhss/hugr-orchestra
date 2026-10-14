@@ -129,7 +129,7 @@ export function treeSitterBundle(input: Target) {
 
 /**
  * Where each bin/tree-sitter/ file of a build comes from. `artifacts` (TREE_SITTER_ARTIFACTS, as OMNI_ARTIFACTS for
- * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds.ts <os> <arch> --out <artifacts>`),
+ * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds-cli.ts <os> <arch> --out <artifacts>`),
  * one per <os>-<arch>/ directory; a target with one there ships it once every file and every binding's CPU checks out.
  * A target without one takes maestro-arsenal's own dependencies under `root`, once prepareTreeSitterPrebuilds has
  * repaired or built its bindings, or stops with that function's named error (another target's core binding cannot be

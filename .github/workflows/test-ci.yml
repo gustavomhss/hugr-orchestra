@@ -22,7 +22,8 @@ jobs:
         # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
         # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
         # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
+        # Extension: ci-run-linux-arm64-* selects only ubuntu-24.04-arm before the generic Linux fallback.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -31,6 +32,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # Extension: branch-scoped so a misrouted ARM64 request cannot skip its CPU assertion.
+      - name: Assert Linux ARM64
+        if: startsWith(github.ref_name, 'ci-run-linux-arm64-')
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != aarch64 ]; then
+            echo "::error::${{ matrix.host }} must provide native Linux ARM64 (RUNNER_ARCH=ARM64, uname -m=aarch64)"
+            exit 2
+          fi
 
       - name: Assert macOS arm64
         if: runner.os == 'macOS' && matrix.host != 'macos-15-intel'

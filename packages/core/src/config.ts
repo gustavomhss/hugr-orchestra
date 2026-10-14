@@ -7,7 +7,9 @@ import { Context, Effect, Layer, Option, Schema } from "effect"
 import { Permission } from "@orchestra/schema/permission"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
+import { InstallationVersion } from "./installation/version"
 import { Location } from "./location"
+import { PackagedSkills } from "./packaged-skills"
 import { Policy } from "./policy"
 import { AbsolutePath } from "./schema"
 import { ConfigAgent } from "./config/agent"
@@ -120,6 +122,8 @@ export function latest<K extends keyof Info>(entries: readonly Entry[], key: K):
 export interface Interface {
   /** Returns location config documents and supplemental directories from lowest to highest priority. */
   readonly entries: () => Effect.Effect<Entry[]>
+  /** Returns packaged roots already admitted during required location initialization. */
+  readonly packagedSkills?: () => Effect.Effect<readonly string[]>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Config") {}
@@ -129,6 +133,10 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
+    // Required admission must fail before recoverable plugin boot can swallow packaging defects.
+    const packagedSkills = yield* Effect.promise(() =>
+      PackagedSkills.materialize({ cache: global.cache, version: InstallationVersion }),
+    )
     const location = yield* Location.Service
     const policy = yield* Policy.Service
     const names = ["orchestra.json", "orchestra.jsonc"]
@@ -203,6 +211,7 @@ const layer = Layer.effect(
     )
 
     return Service.of({
+      packagedSkills: () => Effect.succeed(packagedSkills),
       entries: Effect.fn("Config.entries")(function* () {
         return configs
       }),
