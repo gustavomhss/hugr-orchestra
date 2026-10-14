@@ -59,23 +59,28 @@ test("supports array workspaces and deduplicates overlapping discovery patterns"
   expect((await monolithInventory(fixture.path)).modules).toEqual(original.modules)
 })
 
-test("captures relocated manifestless skill assets without treating registered module trees as assets", async () => {
+test("captures relocated skill and brand assets without treating registered module trees as assets", async () => {
   await using fixture = await inventoryFixture()
   await Bun.write(path.join(fixture.path, "modules/specialists/backend/skills/backend-check/SKILL.md"), "backend bytes\n")
   await Bun.write(path.join(fixture.path, "modules/specialists/archie/skills/archie-plan/references/.hidden.md"), "archie bytes\n")
   await Bun.write(path.join(fixture.path, "modules/maestro/arsenal/package.json"), JSON.stringify({ name: "@fixture/arsenal" }))
   await Bun.write(path.join(fixture.path, "modules/maestro/arsenal/src/index.ts"), "export {}\n")
+  await Bun.write(path.join(fixture.path, "assets/brand/mark.png"), new Uint8Array([0, 0xff, 10, 13, 10]))
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify({
     name: "fixture", workspaces: ["packages/*", "packages/sdk/js", "packages/omni/bindings/node", "modules/maestro/arsenal"],
   }))
   const captured = await monolithInventory(fixture.path)
   expect(captured.modules.find((module) => module.name === "@fixture/arsenal")?.path).toBe("modules/maestro/arsenal")
-  expect(captured.assets.map((asset) => asset.path)).toEqual(["modules/specialists", "packages/skills"])
-  expect(captured.assets[0]?.files.map((file) => file.path)).toEqual([
+  expect(captured.assets.map((asset) => asset.path)).toEqual(["assets/brand", "modules/specialists", "packages/skills"])
+  const skills = captured.assets.find((asset) => asset.path === "modules/specialists")
+  expect(skills?.files.map((file) => file.path)).toEqual([
     "modules/specialists/archie/skills/archie-plan/references/.hidden.md",
     "modules/specialists/backend/skills/backend-check/SKILL.md",
   ])
-  expect(captured.assets[0]?.files[1]?.sha256).toBe(createHash("sha256").update("backend bytes\n").digest("hex"))
+  expect(skills?.files[1]?.sha256).toBe(createHash("sha256").update("backend bytes\n").digest("hex"))
+  expect(captured.assets.find((asset) => asset.path === "assets/brand")?.files).toEqual([{
+    path: "assets/brand/mark.png", sha256: createHash("sha256").update(new Uint8Array([0, 0xff, 10, 13, 10])).digest("hex"),
+  }])
   await Bun.write(path.join(fixture.path, "modules/specialists/backend/skills/backend-check/SKILL.md"), "changed bytes\n")
   expect((await monolithInventory(fixture.path)).fingerprint).not.toBe(captured.fingerprint)
 })

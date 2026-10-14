@@ -63,7 +63,7 @@ def fingerprint(revision):
                 and all(part not in {"", ".", ".."} for part in path.split("/")) for path in paths),
             "DEPENDENCY_REGISTRY_PATH_INVALID")
     entries = git_bytes("ls-tree", "-r", "-z", "--full-tree", revision, "--",
-                  "packages", "modules", "patches", "bun.lock", "package.json", "bunfig.toml", "tsconfig.json", "flake.lock",
+                  "packages", "modules", "assets", "patches", "bun.lock", "package.json", "bunfig.toml", "tsconfig.json", "flake.lock",
                   ".github/TEAM_MEMBERS", "flake.nix", "nix/node_modules.nix", "nix/bun.nix",
                   "nix/toolchain-sources.json", "nix/scripts/canonicalize-node-modules.ts",
                   "nix/scripts/normalize-bun-binaries.ts", "script/module-registry.json",
