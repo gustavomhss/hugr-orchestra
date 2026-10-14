@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
 import type { PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
+import { insertPromptEditorText } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
@@ -44,3 +45,20 @@ test.each(["\n\n", "\u200B", "\né — 😀\r\n\u200B\n", "```owner-demand\n\n``
     expect(parsePromptInputV2Editor(editor)).toEqual(prompt)
   },
 )
+
+test("Shift+Enter owns terminal LF instead of Chromium's newline-text caret filler", () => {
+  const editor = document.createElement("div")
+  editor.contentEditable = "true"
+  // Run 38571250935, V2 shift-enter trace, after@call@446: actual DOM before the final two keypresses.
+  editor.append(...["lead", "\n", "\n", "é — 😀\u200B", ""].map((text) => document.createTextNode(text)))
+  document.body.appendChild(editor)
+  editor.focus()
+  setCursorPosition(editor, 13)
+  expect(insertPromptEditorText(editor, "\n", "insertLineBreak")).toBe(true)
+  expect(insertPromptEditorText(editor, "\n", "insertLineBreak")).toBe(true)
+  const content = "lead\n\né — 😀\u200B\n\n"
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content, start: 0, end: 15 }])
+  expect(getCursorPosition(editor)).toBe(15)
+  expect(editor.querySelector("[data-prompt-caret]")?.textContent).toBe("\u200B")
+  editor.remove()
+})
