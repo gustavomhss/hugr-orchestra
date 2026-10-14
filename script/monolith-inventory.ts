@@ -131,7 +131,10 @@ async function captureSource(directory: string, revision?: string) {
   const entries = identity.mode === "git" ? new Map(git(root, ["ls-tree", "-r", "-z", identity.revision]).toString().split("\0").filter(Boolean).map((entry) => {
     const split = entry.indexOf("\t")
     const fields = entry.slice(0, split).split(" ")
-    return [entry.slice(split + 1), { mode: fields[0], sha: fields[2] }] as const
+    const mode = fields[0]
+    const sha = fields[2]
+    if (split < 0 || !mode || !sha) throw new Error("BASELINE_INVALID_GIT_ENTRY")
+    return [entry.slice(split + 1), { mode, sha }] as const
   })) : undefined
   const cache = new Map<string, Promise<{ path: string; sha256: string; bytes: Uint8Array }>>()
   const scans = new Map<string, string[]>()
@@ -161,7 +164,7 @@ async function captureSource(directory: string, revision?: string) {
     return files.map((file) => file.replaceAll("\\", "/")).sort()
   }
   const listDirectories = async (directory: string) => entries
-    ? [...new Set([...entries.keys()].filter((file) => file.startsWith(`${directory}/`)).map((file) => file.slice(directory.length + 1)).filter((file) => file.includes("/")).map((file) => file.split("/")[0]))].sort()
+    ? [...new Set([...entries.keys()].filter((file) => file.startsWith(`${directory}/`)).map((file) => file.slice(directory.length + 1)).filter((file) => file.includes("/")).flatMap((file) => file.split("/").slice(0, 1)))].sort()
     : (await readdir(path.join(root, directory), { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()
   return {
     identity, read,
