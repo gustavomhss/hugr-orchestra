@@ -74,7 +74,12 @@ describe("Actions native DTOs in client Solid stores", () => {
     expect(Object.getOwnPropertySymbols(store.base).length).toBeGreaterThan(0)
     expect(() => decodeAction(Actions.SourceBase, store.base)).toThrow("invalid_input")
     expect(() => decodeAction(Actions.Source, store.source)).toThrow("invalid_input")
-    expect(() => decodeAction(Schema.Record(Schema.String, Schema.Json), store.data)).toThrow("invalid_input")
+    // String-keyed Records ignore Store symbols; decoding still returns detached JSON metadata.
+    const decodedMetadata = decodeAction(Schema.Record(Schema.String, Schema.Json), store.data)
+    expect(decodedMetadata).toEqual(resource.data)
+    expect(decodedMetadata).not.toBe(store.data)
+    expect(decodedMetadata.flags).not.toBe(store.data.flags)
+    expect(decodedMetadata.limits).not.toBe(store.data.limits)
     const capturedBase = snapshotAction(Actions.SourceBase, store.base)
     const captured = snapshotAction(Actions.Source, store.source)
     const metadata = snapshotAction(Schema.Record(Schema.String, Schema.Json), store.data)
@@ -87,7 +92,8 @@ describe("Actions native DTOs in client Solid stores", () => {
     expect(metadata).not.toBe(store.data)
     expect(metadata.flags).not.toBe(store.data.flags)
     expect(metadata.limits).not.toBe(store.data.limits)
-    ;[capturedBase, captured, captured.includes, captured.diagnostics, metadata, metadata.flags, metadata.limits].forEach((value) => {
+    ;[capturedBase, captured, captured.includes, captured.diagnostics, metadata, metadata.flags, metadata.limits,
+      decodedMetadata, decodedMetadata.flags, decodedMetadata.limits].forEach((value) => {
       expect(value).toBeDefined()
       if (value && typeof value === "object") expect(Object.getOwnPropertySymbols(value)).toEqual([])
     })
@@ -106,6 +112,7 @@ describe("Actions native DTOs in client Solid stores", () => {
     expect(capturedBase).toEqual(base)
     expect(captured).toEqual(native)
     expect(metadata).toEqual(resource.data)
+    expect(decodedMetadata).toEqual(resource.data)
   })
 
   test("new local workflow validates with exact observed base, never a fabricated native Source", async () => {
@@ -180,7 +187,13 @@ describe("Actions native DTOs in client Solid stores", () => {
     await scope.model.refresh()
     const stored = scope.model.state.resources.value?.items[0]
     expect(stored).toEqual(resource)
-    expect(() => decodeAction(Schema.Record(Schema.String, Schema.Json), stored?.data)).toThrow("invalid_input")
+    const decodedMetadata = decodeAction(Schema.Record(Schema.String, Schema.Json), stored?.data)
+    expect(decodedMetadata).toEqual(resource.data)
+    expect(decodedMetadata).not.toBe(stored?.data)
+    ;[decodedMetadata, decodedMetadata.flags, decodedMetadata.limits].forEach((value) => {
+      expect(value).toBeDefined()
+      if (value && typeof value === "object") expect(Object.getOwnPropertySymbols(value)).toEqual([])
+    })
     const before = scope.requests.length
     scope.model.dialog({ kind: "delete-variable", id: resource.id, scope: resource.scope })
     expect(scope.model.state.commandError).toBeUndefined()

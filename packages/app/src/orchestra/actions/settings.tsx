@@ -15,6 +15,7 @@ type SettingsState = {
   id?: Actions.BindingID
   revision?: number
   error: string
+  policyFocus?: { bindingID: Actions.BindingID; revision: number; route: string; target: "local" | "native"; phase: "requested" | "loading" | "opened" }
 }
 
 export function Settings(props: ViewProps) {
@@ -27,6 +28,8 @@ export function Settings(props: ViewProps) {
     error: "",
   })
   let dialog: HTMLDialogElement | undefined
+  let policyInvoker: HTMLButtonElement | undefined
+  let policyDialog: HTMLDialogElement | undefined
   const bindings = () => props.model.state.bindings.value ?? []
   const selected = () => props.model.state.binding
   const capabilityRows = () => [
@@ -48,6 +51,65 @@ export function Settings(props: ViewProps) {
     if (view.pending || props.model.state.submitting) return
     setView({ open: false, id: undefined, revision: undefined, error: "" })
   }
+  const clearPolicyFocus = () => {
+    policyInvoker = undefined
+    policyDialog = undefined
+    setView("policyFocus", undefined)
+  }
+  const editPolicy = (event: MouseEvent & { currentTarget: HTMLButtonElement }, target: "local" | "native") => {
+    const binding = selected()
+    if (!binding || view.disposed || event.currentTarget.disabled || !event.currentTarget.isConnected) return
+    clearPolicyFocus()
+    policyInvoker = event.currentTarget
+    setView("policyFocus", { bindingID: binding.id, revision: binding.revision, route: JSON.stringify(props.model.state.route), target, phase: "requested" })
+    props.model.dialog({ kind: "project-settings", target })
+  }
+
+  createEffect(() => {
+    const owner = view.policyFocus
+    if (!owner) return
+    const state = props.model.state
+    if (view.disposed || !policyInvoker?.isConnected || owner.bindingID !== selected()?.id || owner.revision !== selected()?.revision || owner.route !== JSON.stringify(state.route)) {
+      clearPolicyFocus()
+      return
+    }
+    if (state.dialog?.kind === "project-settings" && (state.dialog.target ?? "local") === owner.target) {
+      if (owner.phase !== "opened") {
+        setView("policyFocus", "phase", "opened")
+        queueMicrotask(() => {
+          if (view.policyFocus !== owner || state.dialog?.kind !== "project-settings" || (state.dialog.target ?? "local") !== owner.target) return
+          policyDialog = policyInvoker?.ownerDocument.activeElement?.closest<HTMLDialogElement>("dialog#dialog.actions-dialog[open]") ?? undefined
+        })
+      }
+      return
+    }
+    if (state.dialog) {
+      if (owner.phase !== "requested") clearPolicyFocus()
+      return
+    }
+    if (state.resources.status === "error") { clearPolicyFocus(); return }
+    // Hydration temporarily clears the dialog and disables its invoker before opening it.
+    if (owner.phase !== "opened") {
+      if (state.resources.status === "loading" && owner.phase !== "loading") setView("policyFocus", "phase", "loading")
+      return
+    }
+    if (state.resources.status !== "ready" || state.submitting) return
+    // Run after dialog disposal and the browser's own focus restoration.
+    queueMicrotask(() => {
+      if (view.policyFocus !== owner || view.disposed) return
+      if (!policyInvoker?.isConnected || owner.bindingID !== selected()?.id || owner.revision !== selected()?.revision || owner.route !== JSON.stringify(state.route)) {
+        clearPolicyFocus()
+        return
+      }
+      if (state.dialog || state.resources.status !== "ready" || state.submitting) return
+      const invoker = policyInvoker
+      const active = invoker.ownerDocument.activeElement
+      const restore = !active?.isConnected || active === invoker.ownerDocument.body || active === invoker.ownerDocument.documentElement
+        || active === invoker || policyDialog !== undefined && !policyDialog.open && policyDialog.contains(active)
+      clearPolicyFocus()
+      if (restore && invoker.isConnected && !invoker.disabled) invoker.focus({ preventScroll: true })
+    })
+  })
 
   createEffect(on(() => [view.open, view.id, view.revision, selected()?.id, selected()?.revision], () => {
     if (view.open && (view.id !== selected()?.id || view.revision !== selected()?.revision)) {
@@ -61,6 +123,7 @@ export function Settings(props: ViewProps) {
     if (!view.open && dialog.open) dialog.close()
   }))
   onCleanup(() => {
+    clearPolicyFocus()
     setView({ disposed: true, open: false, error: "" })
     if (dialog?.open) dialog.close()
   })
@@ -151,7 +214,7 @@ export function Settings(props: ViewProps) {
               <dt>{props.t("orchestra.actions.execution")}</dt><dd><bdi dir="auto">{localPolicy().execution ?? props.t("orchestra.actions.unknown")}</bdi></dd>
             </dl>
             <p class="mx-note">{props.t("orchestra.actions.localPolicyDetail")}</p>
-            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureLocalPolicy(props.model.state) || view.pending} onClick={() => props.model.dialog({ kind: "project-settings", target: "local" })}>{props.t("orchestra.actions.edit")}</button></div>
+            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureLocalPolicy(props.model.state) || view.pending} onClick={(event) => editPolicy(event, "local")}>{props.t("orchestra.actions.edit")}</button></div>
           </article>
           <article class="mx-card ar-setting-card">
             <div class="mx-card-top"><h3>{props.t("orchestra.actions.nativePolicy")}</h3></div>
@@ -163,7 +226,7 @@ export function Settings(props: ViewProps) {
             </dl>
             <Show when={nativePolicy().settings}>{(settings) => <details><summary>{props.t("orchestra.actions.definition")}</summary><pre dir="ltr">{JSON.stringify(settings(), null, 2)}</pre></details>}</Show>
             <p class="mx-note">{props.t("orchestra.actions.nativePolicyDetail")}</p>
-            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureNativePolicy(props.model.state) || view.pending} onClick={() => props.model.dialog({ kind: "project-settings", target: "native" })}>{props.t("orchestra.actions.edit")}</button></div>
+            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureNativePolicy(props.model.state) || view.pending} onClick={(event) => editPolicy(event, "native")}>{props.t("orchestra.actions.edit")}</button></div>
           </article>
       </div>
     </div>
