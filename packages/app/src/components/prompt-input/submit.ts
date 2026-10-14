@@ -35,17 +35,18 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
+type AdmissionRequest = { key: string; id: string; admitted: boolean; revision?: number; send?: () => Promise<unknown> }
 type Admission = {
-  busy: boolean
+  selection: string
   directory?: string
   session?: Pick<Session, "id">
   policyWritten?: boolean
   legacyOverrideAcknowledged?: boolean
-  request?: { key: string; id: string; admitted: boolean; revision?: number; send?: () => Promise<unknown> }
+  request?: AdmissionRequest
   promoted?: boolean
 }
-type PromptDispatch = (send: () => Promise<unknown>) => Promise<boolean>
-const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
+type PromptDispatch = (send: (request: AdmissionRequest) => Promise<unknown>) => Promise<boolean>
+const admissions = new WeakMap<PromptTarget, Map<string, { busy: boolean; selections: Map<string, Admission> }>>()
 
 /** Each edit, including restoring inheritance, needs its own durable receipt. */
 export async function acknowledgeDraftPolicy(input: {
@@ -169,9 +170,9 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       }
       setBusy()
       const messageID = Identifier.ascending("message")
-      const send = () => api.command({
+      const send = (request?: AdmissionRequest) => api.command({
         sessionID: input.draft.sessionID,
-        id: messageID,
+        id: request?.id ?? messageID,
         command: cmd,
         arguments: tail.join(" "),
         agent: input.draft.agent,
@@ -254,9 +255,9 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       return false
     }
 
-    const send = () => api.prompt({
+    const send = (request?: AdmissionRequest) => api.prompt({
       sessionID: input.draft.sessionID,
-      id: messageID,
+      id: request?.id ?? messageID,
       agent: input.draft.agent,
       model: input.draft.model,
       variant: input.draft.variant,
@@ -319,9 +320,9 @@ export async function submitShellCommand(input: {
 }) {
   if (input.current?.() === false) return
   if ((await input.before?.()) === false || input.current?.() === false) return
-  const send = () => input.api.shell({
+  const send = (request?: AdmissionRequest) => input.api.shell({
     sessionID: input.sessionID,
-    id: input.id ?? Event.ID.create(),
+    id: request ? Event.ID.make(request.id) : input.id ?? Event.ID.create(),
     command: input.command,
     agent: input.agent,
     model: input.model,
@@ -537,7 +538,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       )
     }
     const shouldAutoAccept = isNewSession && input.autoAccept()
-    const worktreeSelection = input.newSessionWorktree?.() || "main"
+    const worktreeSelection = admission.selection
 
     let sessionDirectory = admission.directory ?? projectDirectory
     const client = directorySDK.client
@@ -576,6 +577,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       if (sessionDirectory !== projectDirectory) {
         serverState.child(sessionDirectory)
       }
+      admission.directory = sessionDirectory
     }
 
     const api = sessionDirectory === projectDirectory
@@ -668,28 +670,28 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
     if (!(await waitPolicy()) || !ownsSource()) return
 
-    const requestID = () => {
-      if (!isNewSession) return Identifier.ascending("message")
+    const selectRequest = () => {
       const key = JSON.stringify({ currentPrompt, context, images, mode, agent, model, variant })
-      if (admission.request?.key !== key) {
+      if (admission.request?.key !== key ||
+        admission.request.revision !== undefined && admission.request.revision !== policy.revision) {
         admission.request = { key, id: mode === "shell" ? Event.ID.create() : Identifier.ascending("message"), admitted: false }
       }
-      return admission.request.id
+      return admission.request
     }
+    const requestID = () => isNewSession ? selectRequest().id : Identifier.ascending("message")
     // Only the final dispatch boundary may admit. No await between its owner/revision check and the captured API call.
     const dispatch: PromptDispatch = async (send) => {
       if (!(await waitForWorktree())) return false
       while (ownsSource()) {
         if (!(await waitPolicy()) || !ownsSource()) return false
         if (pendingSnapshot(rulesKey).revision !== policy.revision) continue
-        const request = admission.request
-        if (!request) return false
+        const request = selectRequest()
         if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
         if (!ownsSource()) return false
-        request.revision = policy.revision
         if (!request.admitted) {
+          request.revision = policy.revision
           // Retain the prepared payload as well as its ID across an exact retry, including V1 part IDs and system.
-          request.send ??= send
+          request.send ??= () => send(request)
           await request.send()
           request.admitted = true
         }
@@ -732,6 +734,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           if (!draftID) navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
         })
       })
+    }
+
+    if (isNewSession && selectRequest().admitted) {
+      await promote()
+      return
     }
 
     const draft: FollowupDraft = {
@@ -824,9 +831,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         clearInput()
         const messageID = requestID()
         serverState.session.set("session_status", session.id, { type: "busy" })
-        const send = () => api.command({
+        const send = (request?: AdmissionRequest) => api.command({
           sessionID: session.id,
-          id: messageID,
+          id: request?.id ?? messageID,
           command: commandName,
           arguments: args.join(" "),
           agent,
@@ -965,16 +972,19 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       event.preventDefault()
       if (ownership.disposed) return Promise.resolve()
       const target = prompt.capture()
-      if (params.id) return submit(target, { busy: false })
+      if (params.id) return submit(target, { selection: input.newSessionWorktree?.() || "main" })
       const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
-      const scoped = admissions.get(target) ?? new Map<string, Admission>()
+      const scoped = admissions.get(target) ?? new Map<string, { busy: boolean; selections: Map<string, Admission> }>()
       admissions.set(target, scoped)
-      const admission = scoped.get(key) ?? { busy: false }
-      if (admission.busy) return Promise.resolve()
-      scoped.set(key, admission)
-      admission.busy = true
+      const source = scoped.get(key) ?? { busy: false, selections: new Map<string, Admission>() }
+      if (source.busy) return Promise.resolve()
+      scoped.set(key, source)
+      const selection = input.newSessionWorktree?.() || "main"
+      const admission = source.selections.get(selection) ?? { selection }
+      source.selections.set(selection, admission)
+      source.busy = true
       return submit(target, admission).finally(() => {
-        admission.busy = false
+        source.busy = false
         if (admission.session && params.id === admission.session.id) scoped.delete(key)
       })
     },

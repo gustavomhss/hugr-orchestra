@@ -511,7 +511,9 @@ describe("durable subagent policy submission", () => {
     const key = draftSessionKey(ServerScope.local, "/repo/main")
     const entered = deferred()
     const gate = deferred()
-    sendHook = async () => { entered.resolve(); await gate.promise }
+    const revisions: number[] = []
+    sendHook = async () => { revisions.push(pendingSnapshot(key).revision); entered.resolve(); await gate.promise }
+    const initialRevision = pendingSnapshot(key).revision
     const real = createPromptState({ prompt: "admitted turn" })
     const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
     const sending = submit.handleSubmit(new Event("submit"))
@@ -529,9 +531,71 @@ describe("durable subagent policy submission", () => {
     expect(promoted).toEqual([])
     expect(promptInputs).toHaveLength(1)
     if (edit === "prompt") return
+    const first = promptInputs[0] as { id: string }
     await submit.handleSubmit(new Event("submit"))
-    expect(promptInputs).toHaveLength(1)
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).not.toMatchObject({ id: first.id })
+    expect(revisions).toEqual([initialRevision, policy.revision])
+    expect(createdSessions).toHaveLength(1)
+    expect(pendingSnapshot(key).revision).toBe(0)
     expect(promoted).toHaveLength(1)
+  })
+
+  test.each(["failed", "admitted"])("selection changed during %s request stays separate and shares source busy lock", async (outcome) => {
+    const entered = deferred()
+    const gate = deferred()
+    const failure = new Error("selection A send failed")
+    sendHook = async () => {
+      entered.resolve()
+      await gate.promise
+      if (outcome === "failed") throw failure
+    }
+    const real = createPromptState({ prompt: "placement-bound turn" })
+    const contents = real.current()
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected,
+      onNewSessionWorktreeReset: () => { worktreeResets++ },
+    })
+    const sending = submit.handleSubmit(new Event("submit"))
+    const settled = sending.then(() => undefined, (error: unknown) => error)
+    await entered.promise
+    selected = "/repo/worktree-b"
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a"])
+    expect(promptInputs).toHaveLength(1)
+    gate.resolve()
+    expect(await settled).toBe(outcome === "failed" ? failure : undefined)
+    expect(real.current()).toBe(contents)
+    expect(selected).toBe("/repo/worktree-b")
+    expect(promoted).toEqual([])
+    expect(worktreeResets).toBe(0)
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
+    expect(promptInputs).toEqual([
+      expect.objectContaining({ sessionID: "session-1" }), expect.objectContaining({ sessionID: "session-2" }),
+    ])
+    expect(promoted).toEqual([{ directory: "/repo/worktree-b", sessionID: "session-2" }])
+    expect(worktreeResets).toBe(1)
+  })
+
+  test("returning to failed selection A reuses only A's retained Session and action", async () => {
+    const real = createPromptState({ prompt: "retry chosen placement" })
+    const failure = new Error("placement send failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    selected = "/repo/worktree-b"
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    selected = "/repo/worktree-a"
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
+    const requests = promptInputs as { id: string; sessionID: string }[]
+    expect(requests.map((request) => request.sessionID)).toEqual(["session-1", "session-2", "session-1"])
+    expect(requests[2]?.id).toBe(requests[0]?.id)
+    expect(requests[1]?.id).not.toBe(requests[0]?.id)
+    expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: "session-1" }])
   })
 
   // Server Solid snapshots createMemo. Context edits require the browser child's real reactive accessor.
