@@ -44,7 +44,11 @@ export function createSessionManagementForServer(input: {
       : undefined,
   })
   const writes = new Map<string, Promise<SubagentModelPolicy>>()
-  lifetime?.addEventListener("abort", () => writes.clear(), { once: true })
+  const versions = new Map<string, number>()
+  lifetime?.addEventListener("abort", () => {
+    writes.clear()
+    versions.clear()
+  }, { once: true })
   return {
     listArchived(directory: string) {
       return runSessionManagementOperation(lifetime, async () => {
@@ -85,6 +89,7 @@ export function createSessionManagementForServer(input: {
     },
     setSubagentModels(sessionID: string, policy: SubagentModelPolicy): Promise<SubagentModelPolicy> {
       if (lifetime?.aborted) return Promise.reject(lifetime.reason)
+      versions.set(sessionID, (versions.get(sessionID) ?? 0) + 1)
       const previous = writes.get(sessionID)
       const write = runSessionManagementOperation(lifetime, async () => {
         // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
@@ -101,18 +106,24 @@ export function createSessionManagementForServer(input: {
       void write.catch(() => {})
       return write
     },
+    subagentModelsWriteVersion(id: string): number {
+      return versions.get(id) ?? 0
+    },
     waitSubagentModels(id: string): Promise<void> {
       // Capture the barrier before lifecycle cleanup can clear the map; a disposed lifetime still rejects the wait.
       const current = writes.get(id)
       return runSessionManagementOperation(lifetime, async () => {
-        if (current) await current
-        lifetime?.throwIfAborted()
-        while (true) {
-          const write = writes.get(id)
-          if (!write || write === current) return
-          await write
+        let write = current ?? writes.get(id)
+        while (write) {
+          const failure = await write.then(() => undefined, (error: unknown) => ({ error }))
           lifetime?.throwIfAborted()
-          if (writes.get(id) === write) return
+          const latest = writes.get(id)
+          if (latest && latest !== write) {
+            write = latest
+            continue
+          }
+          if (failure && latest === write) throw failure.error
+          return
         }
       })
     },
