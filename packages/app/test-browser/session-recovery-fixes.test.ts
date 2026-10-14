@@ -21,4 +21,5 @@ test("cold-review recovery regressions with isolated browser/service fixtures", 
     Bun.readableStreamToText(child.stderr),
   ])
   expect(code, stdout + stderr).toBe(0)
+  console.log(stdout + stderr)
 }, 125_000)
