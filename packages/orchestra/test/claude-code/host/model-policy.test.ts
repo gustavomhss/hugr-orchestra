@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Context, Deferred, Effect, Fiber, Schema } from "effect"
+import { Context, Deferred, Effect, Fiber, Schema, Scope } from "effect"
 import type { HookInput } from "@anthropic-ai/claude-agent-sdk"
 import { eq, sql } from "drizzle-orm"
 import { Catalog } from "@orchestra/core/catalog"
@@ -128,7 +128,7 @@ ClaudeEngineFixture.it.instance("registered final catalog remap denial retains s
   const decisions: unknown[] = []
   ClaudeEngineFixture.state.sdkAgents.push({ name: "orchestra:archie", model: "wire-fast", description: "SDK-owned proposal" })
   ClaudeEngineFixture.state.sdkModels.push(...sdkModels)
-  const context = yield* Effect.context<never>()
+  const context = yield* Effect.context<Scope.Scope>()
   ClaudeEngineFixture.state.initialize = () => Effect.runPromiseWith(context)(Effect.gen(function* () {
     metadata.calls++
     if (metadata.calls !== 3) return
@@ -190,13 +190,13 @@ ClaudeResearchFixture.it.instance("native Agent and Task enforce actual durable 
     const denied = yield* f.fire({ tool, type: "Explore", model: "opus" })
     expect(denied).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
       permissionDecisionReason: expect.stringContaining("identity is unknown") } })
-    expect(f.join.get(f.lastCall.value)).toBeUndefined()
+    expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
     expect(yield* f.sessions.children(f.parent.id)).toHaveLength(0)
   }
   const held = yield* f.fire({ type: "orchestra:archie" })
   expect(held).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("Subagent model denied") } })
-  expect(f.join.get(f.lastCall.value)).toBeUndefined()
+  expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
   expect(yield* f.sessions.children(f.parent.id)).toHaveLength(0)
   expect(yield* policies.assert(f.parent.id, large).pipe(Effect.exit)).toMatchObject({ _tag: "Success" })
   const allowed = yield* f.fire({ type: "Explore" })
@@ -209,7 +209,7 @@ ClaudeResearchFixture.it.instance("native Agent and Task enforce actual durable 
   const nested = yield* f.fire({ type: "Explore", model: "opus", agent: "joined-generic-agent" })
   expect(nested).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining(child.id) } })
-  expect(f.join.get(f.lastCall.value)).toBeUndefined()
+  expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
 }), 30000)
 
 ClaudeResearchFixture.it.instance("unknown SDK model identity fails closed only under actual restrictive ceilings", () => Effect.gen(function* () {
@@ -219,7 +219,7 @@ ClaudeResearchFixture.it.instance("unknown SDK model identity fails closed only 
   yield* policies.set(f.parent.id, fastPolicy)
   expect(yield* f.fire({ type: "unknown" })).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("identity is unknown") } })
-  expect(f.join.get(f.lastCall.value)).toBeUndefined()
+  expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
 }), 30000)
 
 ClaudeResearchFixture.it.instance("permission wait cannot retain a now-denied child model", () => Effect.gen(function* () {
@@ -233,7 +233,7 @@ ClaudeResearchFixture.it.instance("permission wait cannot retain a now-denied ch
   yield* Deferred.succeed(release, undefined)
   expect(yield* Fiber.join(waiting)).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("identity is unknown") } })
-  expect(f.join.get(f.lastCall.value)).toBeUndefined()
+  expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
 }), 30000)
 
 ClaudeResearchFixture.it.instance("cached inheritance and fork override never masquerade as concrete child identity", () => Effect.gen(function* () {
@@ -244,7 +244,7 @@ ClaudeResearchFixture.it.instance("cached inheritance and fork override never ma
     permissionDecisionReason: expect.stringContaining("identity is unknown") } })
   expect(yield* f.fire({ type: "fork", model: "haiku" })).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("identity is unknown") } })
-  expect(f.join.get(f.lastCall.value)).toBeUndefined()
+  expect(f.join.get(f.lastCall.value)?.hold).toContain("model policy denied")
 }), 30000)
 
 ClaudeResearchFixture.it.instance("final metadata wait denial is terminal even after the ceiling is relaxed", () => Effect.gen(function* () {
@@ -269,6 +269,55 @@ ClaudeResearchFixture.it.instance("final metadata wait denial is terminal even a
   yield* policies.set(f.parent.id, SessionSubagentModels.inherit)
   expect(yield* delegation.dispatch(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
   expect(yield* delegation.admit(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
+}), 30000)
+
+ClaudeResearchFixture.it.instance("generic dispatch replay denial stays terminal after policy relaxation", () => Effect.gen(function* () {
+  const f = yield* ClaudeResearchFixture.setup({ research: false })
+  const policies = yield* SessionSubagentModels.Service
+  const delegation = ClaudeHostDelegation.make({ sessionID: f.parent.id, agent: "maestro",
+    path: { cwd: f.parent.directory, root: f.parent.directory }, join: f.join })
+  const hook = { ...ClaudeResearchFixture.base, hook_event_name: "PreToolUse" as const, tool_name: "Agent",
+    tool_use_id: "terminal-generic-replay", tool_input: { subagent_type: "Explore" } }
+  const actor = { sessionID: f.parent.id, seat: "maestro" }
+  yield* delegation.dispatch(hook, actor)
+  expect(f.join.get(hook.tool_use_id)?.hold).toBeUndefined()
+  yield* policies.set(f.parent.id, fastPolicy)
+  expect(yield* delegation.dispatch(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
+  yield* policies.set(f.parent.id, SessionSubagentModels.inherit)
+  expect(yield* delegation.dispatch(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
+  expect(f.join.get(hook.tool_use_id)?.hold).toContain("model policy denied")
+}), 30000)
+
+ClaudeResearchFixture.it.instance("post-reservation model denial spends the real grant without creating a child", () => Effect.gen(function* () {
+  const f = yield* ClaudeResearchFixture.setup({ research: false })
+  const policies = yield* SessionSubagentModels.Service
+  const rules = yield* WriteRoots.bind("archie", ["proposal.md"], [])
+  const grantID = Identifier.create("grt", "ascending")
+  ClaudeHostMcp.grants(f.parent.id).set(grantID, { grantID, sessionID: f.parent.id, seat: "archie", writePaths: ["proposal.md"],
+    writeRoots: WriteRoots.read(rules) ?? [], purpose: "proposal", time: Date.now() })
+  const calls = { value: 0 }
+  const delegation = ClaudeHostDelegation.make({ sessionID: f.parent.id, agent: "maestro",
+    path: { cwd: f.parent.directory, root: f.parent.directory }, join: f.join,
+    models: () => Effect.gen(function* () {
+      if (++calls.value === 2) {
+        expect(ClaudeHostMcp.grants(f.parent.id).has(grantID)).toBe(false)
+        yield* policies.set(f.parent.id, { mode: "allowlist", models: [] })
+      }
+      return { model: "wire-fast", ref: ModelV2.Ref.make({ id: fast.id, providerID: fast.providerID }) }
+    }),
+  })
+  const hook = { ...ClaudeResearchFixture.base, hook_event_name: "PreToolUse" as const, tool_name: "Agent",
+    tool_use_id: "terminal-reserved-grant", tool_input: { subagent_type: "orchestra:archie", run_in_background: false,
+      prompt: `grantID: ${grantID}\nWrite proposal.md.` } }
+  const actor = { sessionID: f.parent.id, seat: "maestro" }
+  yield* policies.set(f.parent.id, fastPolicy)
+  expect(yield* delegation.dispatch(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
+  expect(ClaudeHostMcp.grants(f.parent.id).has(grantID)).toBe(false)
+  expect(yield* f.sessions.children(f.parent.id)).toHaveLength(0)
+  yield* policies.set(f.parent.id, SessionSubagentModels.inherit)
+  expect(yield* delegation.dispatch(hook, actor).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" })
+  expect(calls.value).toBe(2)
+  expect(f.join.get(hook.tool_use_id)?.hold).toContain("model policy denied")
 }), 30000)
 
 function setup(ask = Effect.void) {
