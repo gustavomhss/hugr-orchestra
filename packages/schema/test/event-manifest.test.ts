@@ -3,6 +3,7 @@ import { FileSystem, Integration, MaestroEvent, Permission, Project, Reference, 
 import { EventManifest } from "../src/event-manifest"
 import { IdeEvent } from "../src/ide-event"
 import { RelayHook } from "../src/relay-hook"
+import { ResearchEvent } from "../src/research-event"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
 import { SessionV1 } from "../src/session-v1"
@@ -27,6 +28,30 @@ describe("public event manifest", () => {
     ])
     expect(EventManifest.Latest.size).toBe(107)
     expect(EventManifest.Durable.size).toBe(70)
+  })
+
+  test("owns canonical research definitions only on the durable surface", () => {
+    const research = [
+      { type: "research.source.admitted", key: "research.source.admitted.1", definition: ResearchEvent.SourceAdmitted },
+      { type: "research.source.requested", key: "research.source.requested.1", definition: ResearchEvent.SourceRequested },
+      { type: "research.source.attempted", key: "research.source.attempted.1", definition: ResearchEvent.SourceAttempted },
+      { type: "research.record.committed", key: "research.record.committed.1", definition: ResearchEvent.RecordCommitted },
+      { type: "research.document.published", key: "research.document.published.1", definition: ResearchEvent.DocumentPublished },
+      { type: "research.allowance.bound", key: "research.allowance.bound.1", definition: ResearchEvent.AllowanceBound },
+      { type: "research.allowance.charged", key: "research.allowance.charged.1", definition: ResearchEvent.AllowanceCharged },
+    ] as const
+    expect([...ResearchEvent.Definitions]).toEqual(research.map((event) => event.definition))
+    expect([...EventManifest.Durable.keys()].filter((key) => key.startsWith("research.")).sort()).toEqual(
+      research.map((event) => event.key).sort(),
+    )
+    research.forEach((event) => {
+      expect(event.definition.type).toBe(event.type)
+      expect(event.definition.durable).toEqual({ version: 1, aggregate: "sessionID" })
+      expect(EventManifest.Durable.get(event.key)).toBe(event.definition)
+      expect(EventManifest.ServerDefinitions).not.toContain(event.definition)
+      expect(EventManifest.Definitions).not.toContain(event.definition)
+      expect(EventManifest.Latest.has(event.type)).toBe(false)
+    })
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -61,7 +86,9 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(70, 73)).toEqual([
+    const legacyParts = EventManifest.Definitions.indexOf(SessionV1.Event.PartDelta)
+    expect(legacyParts).toBeGreaterThanOrEqual(0)
+    expect(EventManifest.Definitions.slice(legacyParts, legacyParts + 3)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
