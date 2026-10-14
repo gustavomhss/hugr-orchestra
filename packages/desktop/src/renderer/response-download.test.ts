@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import { RESPONSE_DOWNLOAD_CHUNK_BYTES, type ResponseDownloadAPI } from "../preload/response-download"
+import { RESPONSE_DOWNLOAD_CHUNK_BYTES, type ResponseDownloadAPI, type ResponseDownloadResult } from "../preload/response-download"
 import { responseDownloadFixture } from "../main/response-download.fixture"
 import { rejection } from "../main/rejection.fixture"
 import { createResponseDownloader } from "./response-download"
-import { open, readdir, readFile, writeFile } from "node:fs/promises"
+import { open, readdir, readFile, rename, writeFile } from "node:fs/promises"
 
 test("bounded IPC copies preserve large source chunks and wait for each disk acknowledgement", async () => {
   const fixture = await responseDownloadFixture()
@@ -188,6 +188,72 @@ test("unmount during disk write cancels source immediately and waits for single 
     expect(await readdir(fixture.root)).toEqual([])
   } finally { release.resolve(); downloader.dispose(); await fixture.close() }
 })
+
+test("dispose during finalization preserves the sink's cancellation, commit or failure outcome", async () => {
+  for (const outcome of ["cancelled", "ok", "denied", "disk-error", "reply-error"] as const) {
+    const checkpoint = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const cancelled = Promise.withResolvers<void>()
+    const reason = new Error("finish acknowledgement failed")
+    const metrics: { finishes: number; cancels: number; closes: number; result?: ResponseDownloadResult } = {
+      finishes: 0, cancels: 0, closes: 0,
+    }
+    const fixture = await responseDownloadFixture({
+      open: async (path) => {
+        const file = await open(path, "wx", 0o600)
+        return { write: (bytes, offset, length) => file.write(bytes, offset, length), async close() {
+          metrics.closes++
+          await file.close()
+          if (outcome === "cancelled") { checkpoint.resolve(); await release.promise }
+        } }
+      },
+      rename: async (source, destination) => {
+        checkpoint.resolve()
+        await release.promise
+        if (outcome === "denied") throw Object.assign(new Error("rename denied"), { code: "EACCES" })
+        if (outcome === "disk-error") throw Object.assign(new Error("rename failed"), { code: "EIO" })
+        await rename(source, destination)
+      },
+    })
+    const downloader = createResponseDownloader({ ...fixture.api,
+      async finish(handle, sequence) {
+        metrics.finishes++
+        const result = await fixture.api.finish(handle, sequence)
+        metrics.result = result
+        if (outcome === "reply-error") throw reason
+        return result
+      },
+      cancel(handle) { metrics.cancels++; cancelled.resolve(); return fixture.api.cancel(handle) },
+    })
+    const response = new Response(new Uint8Array([0, 255, 10]))
+    try {
+      await writeFile(fixture.destination, "prior file")
+      const saving = downloader.downloadResponse(response, "download").then(() => undefined, (error: unknown) => error)
+      await checkpoint.promise
+      downloader.dispose()
+      await cancelled.promise
+      expect(await readFile(fixture.destination, "utf8")).toBe("prior file")
+      release.resolve()
+      const error = await saving
+      if (outcome === "ok") expect(error).toBeUndefined()
+      if (outcome === "cancelled") expect(error instanceof DOMException && error.name).toBe("AbortError")
+      if (outcome === "denied") expect(error instanceof DOMException && error.name).toBe("NotAllowedError")
+      if (outcome === "disk-error") expect(error instanceof Error && error.message).toBe("transfer_failed")
+      if (outcome === "reply-error") expect(error).toBe(reason)
+      expect(metrics.finishes).toBe(1)
+      expect(metrics.cancels).toBe(1)
+      expect(metrics.closes).toBe(1)
+      expect(metrics.result).toEqual(outcome === "cancelled" ? { status: "cancelled" }
+        : outcome === "denied" ? { status: "error", code: "permission_denied" }
+        : outcome === "disk-error" ? { status: "error", code: "transfer_failed" } : { status: "ok" })
+      expect(await readFile(fixture.destination)).toEqual(
+        outcome === "ok" || outcome === "reply-error" ? Buffer.from([0, 255, 10]) : Buffer.from("prior file"),
+      )
+      expect(await readdir(fixture.root)).toEqual(["download.bin"])
+      expect(response.body?.locked).toBe(false)
+    } finally { release.resolve(); downloader.dispose(); await fixture.close() }
+  }
+}, 10000)
 
 test("failure between a read and its continuation never starts another write or finish", async () => {
   const fixture = await responseDownloadFixture()

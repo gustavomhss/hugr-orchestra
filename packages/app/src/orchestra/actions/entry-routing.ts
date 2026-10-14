@@ -28,7 +28,7 @@ const preferencesSchema = Schema.Struct({
   bindingID: Schema.optional(Actions.BindingID),
   route: Schema.optional(routeSchema),
   filters: Schema.optional(Schema.Struct({
-    query: Schema.optional(text), status: Schema.optional(text), ref: Schema.optional(text), event: Schema.optional(text),
+    query: Schema.optional(text), status: Schema.optional(text), ref: Schema.optional(text), event: Schema.optional(text), scope: Schema.optional(text),
   })),
 })
 
@@ -43,7 +43,7 @@ const queryKeys = {
   bindingID: "actionsBinding", view: "actionsView", workflowID: "actionsWorkflow", runID: "actionsRun",
   jobID: "actionsJob", attempt: "actionsAttempt", path: "actionsPath", ref: "actionsRef",
   resourceKind: "actionsResource", tab: "actionsTab", query: "actionsQuery", status: "actionsStatus",
-  filterRef: "actionsFilterRef", event: "actionsEvent",
+  filterRef: "actionsFilterRef", event: "actionsEvent", scope: "actionsFilterScope",
 } as const
 
 type Query = Record<string, string | string[] | undefined>
@@ -58,7 +58,7 @@ export function readNavigation(query: Query): ActionsPreference | undefined {
       path: string(queryKeys.path), ref: string(queryKeys.ref), resourceKind: string(queryKeys.resourceKind), tab: string(queryKeys.tab),
     },
     filters: { query: string(queryKeys.query) ?? "", status: string(queryKeys.status) ?? "",
-      ref: string(queryKeys.filterRef) ?? "", event: string(queryKeys.event) ?? "" },
+      ref: string(queryKeys.filterRef) ?? "", event: string(queryKeys.event) ?? "", scope: string(queryKeys.scope) },
   })
   return Option.isSome(decoded) ? decoded.value : undefined
 }
@@ -70,7 +70,7 @@ export function navigationQuery(value: ActionsPreference) {
     actionsRun: route.runID, actionsJob: route.jobID, actionsAttempt: route.attempt?.toString(),
     actionsPath: route.path, actionsRef: route.ref, actionsResource: route.resourceKind, actionsTab: route.tab,
     actionsQuery: value.filters?.query || undefined, actionsStatus: value.filters?.status || undefined,
-    actionsFilterRef: value.filters?.ref || undefined, actionsEvent: value.filters?.event || undefined,
+    actionsFilterRef: value.filters?.ref || undefined, actionsEvent: value.filters?.event || undefined, actionsFilterScope: value.filters?.scope || undefined,
   }
 }
 
@@ -79,7 +79,7 @@ export function navigationKey(value: ActionsPreference) {
 }
 
 export function completeFilters(value?: Partial<Filters>): Filters {
-  return { query: value?.query ?? "", status: value?.status ?? "", ref: value?.ref ?? "", event: value?.event ?? "" }
+  return { query: value?.query ?? "", status: value?.status ?? "", ref: value?.ref ?? "", event: value?.event ?? "", ...(value?.scope ? { scope: value.scope } : {}) }
 }
 
 export function resourceDialog(value?: Dialog) {

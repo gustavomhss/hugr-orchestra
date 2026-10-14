@@ -166,4 +166,32 @@ describe("Actions bounded output", () => {
     expect(metrics).toEqual({ pulls: 2, cancels: 1 })
     expect(response.body?.locked).toBe(false)
   })
+
+  test("late abort preserves the save callback's authoritative finalization outcome", async () => {
+    for (const outcome of ["ok", "error"] as const) {
+      const entered = deferred<void>()
+      const finish = deferred<void>()
+      const abort = new AbortController()
+      const reason = new DOMException("permission_denied", "NotAllowedError")
+      const response = new Response(new Uint8Array([0, 255, 10]))
+      const saving = saveResponse(response, abort.signal, async (streamed) => {
+        const reader = streamed.body?.getReader()
+        if (!reader) throw new Error("missing save reader")
+        try {
+          expect((await reader.read()).value).toEqual(new Uint8Array([0, 255, 10]))
+          expect((await reader.read()).done).toBe(true)
+        } finally { reader.releaseLock() }
+        entered.resolve()
+        await finish.promise
+        if (outcome === "error") throw reason
+      }).then(() => undefined, (error: unknown) => error)
+      try {
+        await entered.promise
+        abort.abort()
+        finish.resolve()
+        expect(await saving).toBe(outcome === "ok" ? undefined : reason)
+        expect(response.body?.locked).toBe(false)
+      } finally { finish.resolve(); await saving }
+    }
+  })
 })

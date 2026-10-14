@@ -110,7 +110,8 @@ function Workbench(props: ChapterPageProps & {
   const native = createActionsModel({ api: props.api, save: props.save,
     preferences: { ...navigationPreferences(props.preferences), save: props.remember } })
   onCleanup(native.dispose)
-  const model: Model = { ...native, navigate: (route) => native.navigate(selectedRoute(native.state, route)) }
+  const model: Model = { ...native, get sourceDiscardBlocked() { return native.sourceDiscardBlocked },
+    navigate: (route) => native.navigate(selectedRoute(native.state, route)) }
   const state = model.state
   const [view, setView] = createStore({ query: "", ref: "" })
   const workflow = createMemo(() => state.workflows.value?.items.find((item) => item.bindingID === state.binding?.id
