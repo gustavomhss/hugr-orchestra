@@ -18,10 +18,11 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { machine } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLATFORMS, validateBinaries } from "../bindings/node/npm/pack.mjs";
+import { inspect, PLATFORMS, validateBinaries } from "../bindings/node/npm/pack.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const target = process.env.CARGO_TARGET_DIR ?? join(root, "target");
@@ -48,6 +49,11 @@ const p = BUILDS[id];
 assert(p, `unknown platform ${id} (one of ${Object.keys(PLATFORMS).join(", ")})`);
 assert.equal(process.platform, PLATFORMS[id].os, `${id} requires its native OS`);
 assert.equal(process.arch, PLATFORMS[id].cpu, `${id} requires its native CPU`);
+assert(process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === undefined || process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === "1",
+  "HUGR_BUILD_EXISTING_MUSL_GUEST must be 1 or unset");
+assert(!process.env.HUGR_BUILD_EXISTING_MUSL_GUEST || p.build === "alpine", "existing guest mode requires a musl target");
+// This entry never creates a container. Caller owns its pinned guest, namespaces,
+// writable checkout, toolchain caches and teardown. Flag alone proves no ABI.
 
 /** Runs `cmd` in this repository with its output on ours; a non-zero exit throws. */
 function run(cmd, cmdArgs, env = {}) {
@@ -65,6 +71,7 @@ const source = {
 if (process.env.HUGR_PROOF_HEAD) assert.equal(source.headSHA, process.env.HUGR_PROOF_HEAD, "checkout is not the current PR head");
 console.log(`source proof ${JSON.stringify(source)}`);
 const checks = {};
+const existingGuest = process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === "1" ? verifyExistingMuslGuest(id) : undefined;
 
 const windows = id.startsWith("win32-");
 const lib = windows ? "hugr_omni_node.dll" : id.startsWith("darwin-") ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so";
@@ -96,7 +103,12 @@ if (p.build === "zig") {
   // cdylib that links musl dynamically (-crt-static, set here and not in .cargo/config.toml: it must not reach the
   // supervisor), so a musl Node or Bun can dlopen it. The container's CPU is the host's. The image writes ./target.
   assert(target === join(root, "target"), "the alpine build writes ./target: unset CARGO_TARGET_DIR");
-  run("docker", ["run", "--rm", "-v", `${root}:/w`, "-w", "/w", "rust:1-alpine", "sh", "-euc", `
+  if (existingGuest) {
+    checks.existingMuslGuest = existingGuest;
+    run("cargo", ["build", "--locked", "--release", "-p", "omni-supervisor", "--target", p.supervisor]);
+    run("cargo", ["build", "--locked", "--release", "-p", "hugr-omni-node", "--target", p.addon],
+      { RUSTFLAGS: "-C target-feature=-crt-static" });
+  } else run("docker", ["run", "--rm", "-v", `${root}:/w`, "-w", "/w", "rust:1-alpine", "sh", "-euc", `
     apk add --no-cache gcc musl-dev >/dev/null
     rustup toolchain install
     cargo build --release -p omni-supervisor --target ${p.supervisor}
@@ -135,6 +147,33 @@ writeFileSync(join(dir, "proof.json"), JSON.stringify({
   deno: p.build === "alpine" ? "N/A: Deno has no musl build" : "required clean-install proof",
 }, null, 2));
 console.log(`built ${id}: ${join(dir, "hugr_omni.node")} ${join(dir, exe)}`);
+
+function verifyExistingMuslGuest(id) {
+  assert.equal(process.platform, "linux", "EXISTING_MUSL_GUEST_LINUX_REQUIRED");
+  const cpu = PLATFORMS[id].cpu === "x64" ? "x86_64" : "aarch64";
+  assert.equal(machine(), cpu, "EXISTING_MUSL_GUEST_NATIVE_CPU_MISMATCH");
+  const runtime = inspect("/proc/self/exe");
+  assert.equal(runtime.format, "elf", "EXISTING_MUSL_GUEST_ELF_REQUIRED");
+  assert.equal(runtime.cpu, PLATFORMS[id].cpu, "EXISTING_MUSL_GUEST_ELF_CPU_MISMATCH");
+  assert(runtime.needed.some((n) => n === `libc.musl-${cpu}.so.1` || n === "libc.so") &&
+    !runtime.needed.includes("libc.so.6"), "EXISTING_MUSL_GUEST_NODE_ABI_MISMATCH");
+  const maps = readFileSync("/proc/self/maps", "utf8").trim().split("\n").map((line) => {
+    const fields = /^\S+\s+([rwxps-]{4})\s+\S+\s+([0-9a-f]+):([0-9a-f]+)\s+(\d+)(?:\s+(.*))?$/.exec(line);
+    assert(fields, "EXISTING_MUSL_GUEST_MAPS_INVALID");
+    return { permissions: fields[1], major: parseInt(fields[2], 16), minor: parseInt(fields[3], 16), inode: BigInt(fields[4]), path: fields[5] };
+  });
+  assert(maps.length > 0, "EXISTING_MUSL_GUEST_MAPS_EMPTY");
+  assert(!maps.some((m) => m.path && /(?:libc\.so\.6|libgcompat|qemu)/.test(m.path)), "EXISTING_MUSL_GUEST_COMPAT_OR_EMULATION_REFUSED");
+  const library = realpathSync(`/lib/ld-musl-${cpu}.so.1`);
+  const stat = statSync(library, { bigint: true });
+  const major = Number((stat.dev >> 8n & 0xfffn) | (stat.dev >> 32n & 0xfffff000n));
+  const minor = Number((stat.dev & 0xffn) | (stat.dev >> 12n & 0xffffff00n));
+  assert(maps.some((m) => m.path === library && m.permissions.includes("x") && m.inode === stat.ino && m.major === major && m.minor === minor),
+    "EXISTING_MUSL_GUEST_LIBC_NOT_LOADED");
+  const rustHost = read("rustc", ["-vV"]).split("\n").find((line) => line.startsWith("host: "));
+  assert.equal(rustHost, `host: ${cpu}-unknown-linux-musl`, "EXISTING_MUSL_GUEST_RUST_HOST_MISMATCH");
+  return { cpu, library, inode: String(stat.ino), device: `${major}:${minor}`, runtime, rustHost };
+}
 
 /** The DLL names a PE file imports (directly and delay-loaded); the same reader as verify.mjs. */
 function peImports(pe) {

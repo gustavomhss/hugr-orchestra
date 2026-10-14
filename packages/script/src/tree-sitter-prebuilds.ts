@@ -24,9 +24,11 @@ import {
   readdirSync,
   realpathSync,
   rmSync,
+  statSync,
 } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
+import { machine } from "node:os"
 
 // ELF e_machine, Mach-O cputype, PE machine. The three numbering spaces do not collide for these targets.
 export const NATIVE_MACHINES: Record<string, number> = {
@@ -47,7 +49,8 @@ const REQUIRED = ["tree-sitter-javascript", "tree-sitter-python", "tree-sitter-t
  * otherwise the build stops with TREE_SITTER_PREBUILD_ARCH_MISMATCH instead of shipping it. The core binding is
  * built the same way when the target has none, or the build stops with TREE_SITTER_CORE_BINDING_MISSING.
  */
-export function prepareTreeSitterPrebuilds(input: { root: string; os: string; arch: string; rebuild?: boolean }) {
+export function prepareTreeSitterPrebuilds(input: Target & { root: string; rebuild?: boolean }) {
+  treeSitterArtifactKey(input)
   const target = `${input.os}-${input.arch}`
   const machine = NATIVE_MACHINES[target]
   if (machine === undefined) throw new Error(`TREE_SITTER_TARGET_UNSUPPORTED: ${target}`)
@@ -64,8 +67,25 @@ export function prepareTreeSitterPrebuilds(input: { root: string; os: string; ar
     ...REQUIRED.filter((name) => !packages.some((item) => item.name === name && item.files.length > 0)),
   ]
   if (missing.length > 0) throw new Error(`TREE_SITTER_PREBUILDS_MISSING: ${target}: ${missing.join(", ")}`)
+  if (input.abi === "musl") {
+    if (input.os !== "linux" || input.arch !== process.arch || process.platform !== "linux" ||
+        input.rebuild === false || linuxRuntimeLibc().kind !== "musl")
+      throw new Error(`TREE_SITTER_NATIVE_MUSL_BUILD_REQUIRED: ${treeSitterArtifactKey(input)}`)
+    // Same-CPU upstream prebuilds are glibc. Rebuild every core and grammar from
+    // source, including packages with apparently correct headers; never reuse a
+    // lifecycle build/Release (node-gyp-build gives it priority over prebuilds).
+    packages.forEach((item) => {
+      const files = item.files.length ? item.files : [path.join(item.dir, "prebuilds", target, `${item.name}.node`)]
+      files.forEach((file) => mkdirSync(path.dirname(file), { recursive: true }))
+      rebuildPackage(input.root, item.dir, files, machine, "musl")
+    })
+    return { target: treeSitterArtifactKey(input), checked: packages.flatMap((item) =>
+      nodeFiles(path.join(item.dir, "prebuilds", target))), rebuilt: packages.map((item) => item.name) }
+  }
   const broken = packages.filter((item) => item.files.some((file) => !nativeMachines(file).includes(machine)))
   const rebuild = input.rebuild ?? (process.platform === input.os && process.arch === input.arch)
+  if (rebuild && input.os === "linux" && process.platform === "linux" && linuxRuntimeLibc().kind !== "glibc")
+    throw new Error(`TREE_SITTER_NATIVE_GLIBC_BUILD_REQUIRED: ${target}`)
   if (broken.length > 0 && !rebuild)
     throw new Error(
       `TREE_SITTER_PREBUILD_ARCH_MISMATCH: ${target} needs a ${target} host to rebuild ` +
@@ -115,13 +135,18 @@ const SHIPPED: Record<string, string[]> = {
 
 type Target = { os: string; arch: string; abi?: string }
 
+export function treeSitterArtifactKey(input: Target) {
+  if (input.abi !== undefined && (input.abi !== "musl" || input.os !== "linux"))
+    throw new Error(`TREE_SITTER_ABI_UNSUPPORTED: ${input.os}-${input.arch}-${input.abi}`)
+  return `${input.os}-${input.arch}${input.abi === "musl" ? "-musl" : ""}`
+}
+
 /**
- * The paths under bin/tree-sitter/ that a compiled CLI for `os`/`arch` ships. A musl build ships none: the grammar
- * prebuilds and a glibc host's core build link glibc, so arsenal there reports parser-unavailable, as omni stays off
- * for musl (omniTargets).
+ * The paths inside bin/tree-sitter retain upstream OS/CPU names. ABI belongs to
+ * the external artifact key, not the binding paths the bundled consumer loads.
  */
 export function treeSitterBundle(input: Target) {
-  if (input.abi === "musl") return []
+  treeSitterArtifactKey(input)
   return Object.entries(SHIPPED).flatMap(([name, files]) =>
     [...files, `prebuilds/${input.os}-${input.arch}/${name}.node`].map((file) => `${name}/${file}`),
   )
@@ -130,37 +155,40 @@ export function treeSitterBundle(input: Target) {
 /**
  * Where each bin/tree-sitter/ file of a build comes from. `artifacts` (TREE_SITTER_ARTIFACTS, as OMNI_ARTIFACTS for
  * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds-cli.ts <os> <arch> --out <artifacts>`),
- * one per <os>-<arch>/ directory; a target with one there ships it once every file and every binding's CPU checks out.
+ * one per treeSitterArtifactKey directory; every binding's CPU and Linux libc must match.
  * A target without one takes maestro-arsenal's own dependencies under `root`, once prepareTreeSitterPrebuilds has
  * repaired or built its bindings, or stops with that function's named error (another target's core binding cannot be
  * built on this host). Resolve every build before building any.
  */
 export function resolveTreeSitter(input: Target & { root: string; artifacts?: string }) {
   const files = treeSitterBundle(input)
-  const exported = input.artifacts ? path.join(input.artifacts, `${input.os}-${input.arch}`) : ""
+  const exported = input.artifacts ? path.join(input.artifacts, treeSitterArtifactKey(input)) : ""
   if (files.length > 0 && exported && existsSync(exported)) {
     requireTreeSitterBundle(exported, input)
     return files.map((file) => ({ from: path.join(exported, ...file.split("/")), to: file }))
   }
-  if (files.length > 0) prepareTreeSitterPrebuilds({ root: input.root, os: input.os, arch: input.arch })
+  if (files.length > 0) prepareTreeSitterPrebuilds(input)
   const resolve = createRequire(path.join(input.root, "packages", "maestro-arsenal", "package.json")).resolve
-  return files.map((file) => {
+  const resolved = files.map((file) => {
     const [name, ...rest] = file.split("/")
     return { from: path.join(realpathSync(path.dirname(resolve(`${name}/package.json`))), ...rest), to: file }
   })
+  resolved.filter((file) => input.os === "linux" && file.to.endsWith(".node"))
+    .forEach((file) => requireElfLibc(file.from, input.abi === "musl" ? "musl" : "glibc"))
+  return resolved
 }
 
 /**
- * Exports the target's CLI bundle to `out`/<os>-<arch>/ for a cross build's TREE_SITTER_ARTIFACTS. Run it on the
+ * Exports to `out`/treeSitterArtifactKey for a cross build's TREE_SITTER_ARTIFACTS. Run it on the
  * target's own host: anywhere else resolveTreeSitter stops with its named error rather than export another CPU's
  * bindings.
  */
 export function exportTreeSitter(input: Target & { root: string; out: string }) {
-  const dir = path.join(path.resolve(input.out), `${input.os}-${input.arch}`)
+  const dir = path.join(path.resolve(input.out), treeSitterArtifactKey(input))
   const files = resolveTreeSitter({ root: input.root, os: input.os, arch: input.arch, abi: input.abi })
   rmSync(dir, { recursive: true, force: true })
   copyTreeSitter(files, dir, input)
-  return { target: `${input.os}-${input.arch}`, exported: dir, files: files.map((file) => file.to) }
+  return { target: treeSitterArtifactKey(input), exported: dir, files: files.map((file) => file.to) }
 }
 
 /** Copies resolved files into `dir` (a build's bin/tree-sitter) and checks the result as every consumer does. */
@@ -185,6 +213,8 @@ export function requireTreeSitterBundle(dir: string, input: Target) {
     const full = path.join(dir, ...file.split("/"))
     if (!lstatSync(full, { throwIfNoEntry: false })?.isFile()) return [`${file} is missing`]
     if (file.endsWith(".node") && !nativeMachines(full).includes(machine)) return [`${file} is not a ${target} binary`]
+    if (file.endsWith(".node") && input.os === "linux")
+      requireElfLibc(full, input.abi === "musl" ? "musl" : "glibc")
     return []
   })
   if (problems.length > 0) throw new Error(`TREE_SITTER_BUNDLE_INCOMPLETE: ${target} in ${dir}: ${problems.join(", ")}`)
@@ -259,7 +289,7 @@ export function lockfileNodeGyp(root: string) {
   ].find((file) => existsSync(file))
 }
 
-function rebuildPackage(root: string, dir: string, files: string[], machine: number) {
+function rebuildPackage(root: string, dir: string, files: string[], machine: number, libc?: "musl") {
   const gyp = lockfileNodeGyp(root)
   if (!gyp) throw new Error(`TREE_SITTER_REBUILD_UNAVAILABLE: no lockfile node-gyp under ${root}`)
   const build = path.join(dir, "build")
@@ -277,6 +307,7 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
       throw new Error(
         `TREE_SITTER_REBUILD_FAILED: ${dir} built ${outputs.join(", ") || "nothing"} for the wrong target`,
       )
+    if (libc) requireElfLibc(output, libc)
     files.forEach((file) => {
       // Bun links store files to its global cache; unlink first so the copy never rewrites the cached bytes.
       rmSync(file, { force: true })
@@ -287,4 +318,101 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
       .filter((name) => !before.has(name))
       .forEach((name) => rmSync(path.join(dir, name), { recursive: true, force: true }))
   }
+}
+
+// ELF64 program headers and dynamic entries, not byte-string sniffing. Bounds
+// apply before every indirect access; missing/unknown libc is a named refusal.
+export function inspectElf(file: string) {
+  const bytes = readFileSync(file)
+  const span = (offset: number, size: number) => {
+    if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(size) || offset < 0 || size < 0 || offset + size > bytes.length)
+      throw new Error(`ELF_TRUNCATED: ${file}`)
+    return offset
+  }
+  span(0, 64)
+  if (bytes.subarray(0, 7).toString("hex") !== "7f454c46020101" || bytes.readUInt16LE(54) !== 56 ||
+      ![2, 3].includes(bytes.readUInt16LE(16)) || bytes.readUInt32LE(20) !== 1)
+    throw new Error(`ELF64_UNSUPPORTED: ${file}`)
+  const count = bytes.readUInt16LE(56)
+  if (!count) throw new Error(`ELF_PROGRAM_HEADERS_EMPTY: ${file}`)
+  const start = span(Number(bytes.readBigUInt64LE(32)), count * 56)
+  const headers = Array.from({ length: count }, (_, i) => start + i * 56)
+  const segment = (h: number) => ({ offset: span(Number(bytes.readBigUInt64LE(h + 8)), Number(bytes.readBigUInt64LE(h + 32))),
+    size: Number(bytes.readBigUInt64LE(h + 32)), address: bytes.readBigUInt64LE(h + 16) })
+  headers.forEach(segment)
+  const strings = (offset: number, size: number) => {
+    span(offset, size)
+    const end = bytes.indexOf(0, offset)
+    if (end < offset || end >= offset + size) throw new Error(`ELF_STRING_UNTERMINATED: ${file}`)
+    return bytes.toString("utf8", offset, end)
+  }
+  const interpreters = headers.filter((h) => bytes.readUInt32LE(h) === 3)
+  if (interpreters.length > 1) throw new Error(`ELF_INTERPRETER_DUPLICATED: ${file}`)
+  const interpreter = interpreters.map(segment).map((s) => strings(s.offset, s.size))[0]
+  const needed: bigint[] = []
+  const tables: bigint[] = []
+  const sizes: bigint[] = []
+  headers.filter((h) => bytes.readUInt32LE(h) === 2).map(segment).forEach((s) => {
+    if (s.size % 16) throw new Error(`ELF_DYNAMIC_TRUNCATED: ${file}`)
+    const entries = Array.from({ length: s.size / 16 }, (_, i) => s.offset + i * 16)
+    const end = entries.findIndex((e) => bytes.readBigInt64LE(e) === 0n)
+    if (end < 0) throw new Error(`ELF_DYNAMIC_UNTERMINATED: ${file}`)
+    entries.slice(0, end).forEach((e) => {
+      const tag = bytes.readBigInt64LE(e)
+      if (tag === 1n) needed.push(bytes.readBigUInt64LE(e + 8))
+      if (tag === 5n) tables.push(bytes.readBigUInt64LE(e + 8))
+      if (tag === 10n) sizes.push(bytes.readBigUInt64LE(e + 8))
+    })
+  })
+  const dependencies = needed.map((n) => {
+    if (tables.length !== 1 || sizes.length !== 1 || n >= sizes[0]!) throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
+    const load = headers.filter((h) => bytes.readUInt32LE(h) === 1).map(segment)
+      .find((s) => tables[0]! >= s.address && tables[0]! + sizes[0]! <= s.address + BigInt(s.size))
+    if (!load) throw new Error(`ELF_STRING_TABLE_UNMAPPED: ${file}`)
+    return strings(load.offset + Number(tables[0]! - load.address + n), Number(sizes[0]! - n))
+  })
+  return { machine: bytes.readUInt16LE(18), interpreter, needed: dependencies }
+}
+
+export function requireElfLibc(file: string, expected: "musl" | "glibc") {
+  const elf = inspectElf(file)
+  const musl = elf.needed.some((name) => /^(?:libc\.musl-(?:x86_64|aarch64)\.so\.1|ld-musl-(?:x86_64|aarch64)\.so\.1|libc\.so)$/.test(name))
+  const glibc = elf.needed.includes("libc.so.6")
+  if (expected === "musl" ? !musl || glibc : !glibc || musl)
+    throw new Error(`ELF_LIBC_MISMATCH: ${file}: expected ${expected}; needed ${JSON.stringify(elf.needed)}`)
+  return elf
+}
+
+// Match running ELF interpreter to an actual executable libc mapping, including
+// inode and device identity. Merely having a musl loader on disk proves nothing.
+export function linuxRuntimeLibc() {
+  if (process.platform !== "linux" || !["x64", "arm64"].includes(process.arch)) throw new Error("NATIVE_LINUX_RUNTIME_REQUIRED")
+  const elf = inspectElf("/proc/self/exe")
+  const cpu = process.arch === "x64" ? "x86_64" : "aarch64"
+  if (elf.machine !== NATIVE_MACHINES[`linux-${process.arch}`] || ![cpu, process.arch].includes(machine()))
+    throw new Error("NATIVE_LINUX_RUNTIME_CPU_MISMATCH")
+  const kind = path.basename(elf.interpreter ?? "") === `ld-musl-${cpu}.so.1` ? "musl" :
+    path.basename(elf.interpreter ?? "") === (process.arch === "x64" ? "ld-linux-x86-64.so.2" : "ld-linux-aarch64.so.1") ? "glibc" : undefined
+  if (!kind || !elf.interpreter?.startsWith("/")) throw new Error("NATIVE_LINUX_RUNTIME_INTERPRETER_UNKNOWN")
+  const mappings = readFileSync("/proc/self/maps", "utf8").trim().split("\n").map((line) => {
+    const match = /^([0-9a-f]+)-([0-9a-f]+)\s+([rwxps-]{4})\s+[0-9a-f]+\s+([0-9a-f]+):([0-9a-f]+)\s+(\d+)(?:\s+(.*))?$/.exec(line)
+    if (!match) throw new Error("NATIVE_LINUX_RUNTIME_MAPS_INVALID")
+    return { permissions: match[3]!, major: parseInt(match[4]!, 16), minor: parseInt(match[5]!, 16), inode: BigInt(match[6]!), path: match[7] }
+  })
+  if (!mappings.length) throw new Error("NATIVE_LINUX_RUNTIME_MAPS_EMPTY")
+  const loaded = mappings.filter((m) => m.path?.startsWith("/") &&
+    /^(?:libc\.so\.6|libc\.musl-.*|ld-musl-.*|libgcompat.*)$/.test(path.basename(m.path)))
+  if (!loaded.length || loaded.some((m) => /gcompat|\(deleted\)/.test(m.path!)) ||
+      (kind === "musl" && loaded.some((m) => path.basename(m.path!) === "libc.so.6")) ||
+      (kind === "glibc" && loaded.some((m) => /musl/.test(path.basename(m.path!)))))
+    throw new Error("NATIVE_LINUX_RUNTIME_LIBC_MAPPING_MISMATCH")
+  if (mappings.some((m) => m.path && /(?:qemu|gcompat)/.test(path.basename(m.path))))
+    throw new Error("NATIVE_LINUX_RUNTIME_COMPAT_OR_EMULATION_REFUSED")
+  const library = kind === "musl" ? realpathSync(elf.interpreter) : realpathSync(loaded.find((m) => path.basename(m.path!) === "libc.so.6")!.path!)
+  const stat = statSync(library, { bigint: true })
+  const major = Number((stat.dev >> 8n & 0xfffn) | (stat.dev >> 32n & 0xfffff000n))
+  const minor = Number((stat.dev & 0xffn) | (stat.dev >> 12n & 0xffffff00n))
+  if (!mappings.some((m) => m.path === library && m.permissions.includes("x") && m.inode === stat.ino && m.major === major && m.minor === minor))
+    throw new Error("NATIVE_LINUX_RUNTIME_LIBC_NOT_LOADED")
+  return { kind, interpreter: elf.interpreter, library, machine: elf.machine, inode: String(stat.ino), device: `${major}:${minor}` }
 }
