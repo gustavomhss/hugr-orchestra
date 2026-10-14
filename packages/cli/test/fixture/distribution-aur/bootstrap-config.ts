@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises"
+import { readFile, realpath, stat } from "node:fs/promises"
 
 // Input is pacman-conf's complete, resolved serialization, never raw Include
 // syntax. Preserve every other byte so pacman remains the configuration parser.
@@ -60,8 +60,25 @@ export async function verifyBootstrapConfig(directory: string) {
   if (await readFile(`${directory}/bootstrap-pacman.conf`, "utf8") !== expected)
     throw new Error("AUR_PACMAN_OWNED_CONFIG_CHANGED")
   const resolved = await configQuery(directory, "enforced")
-  if (enforcedPacmanConfig(resolved) !== resolved || resolved !== expected)
+  if (enforcedPacmanConfig(resolved) !== resolved)
     throw new Error("AUR_PACMAN_ENFORCED_CONFIG_ROUNDTRIP_MISMATCH")
+  const canonical = await Promise.all([configDirectories(expected), configDirectories(resolved)])
+  if (canonical[0] !== canonical[1])
+    throw new Error("AUR_PACMAN_ENFORCED_CONFIG_ROUNDTRIP_MISMATCH")
+}
+
+async function configDirectories(config: string) {
+  let section = ""
+  return (await Promise.all(config.split("\n").map(async (line) => {
+    if (line.trim().startsWith("[")) section = line.trim()
+    // pacman-conf trims these two directory defaults on re-reading. Only their
+    // option values use OS physical identity; every other byte stays significant.
+    const field = section === "[options]" ? /^(\s*(?:DBPath|GPGDir)\s*=\s*)(.*)$/.exec(line) : null
+    if (!field) return line
+    const directory = await realpath(field[2])
+    if (!(await stat(directory)).isDirectory()) throw new Error("AUR_PACMAN_CONFIG_PATH_NOT_DIRECTORY")
+    return `${field[1]}${directory}`
+  }))).join("\n")
 }
 
 async function configQuery(directory: string, stage: string) {

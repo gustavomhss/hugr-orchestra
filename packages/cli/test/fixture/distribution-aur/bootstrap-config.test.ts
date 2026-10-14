@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { enforcedPacmanConfig, pacmanConfigQuery, prepareBootstrapConfig, verifyBootstrapConfig } from "./bootstrap-config"
@@ -105,6 +105,63 @@ test("missing query evidence and empty original cannot produce an owned configur
   await expect(prepareBootstrapConfig(f.directory)).rejects.toMatchObject({ code: "ENOENT" })
   expect(await Bun.file(join(f.directory, "bootstrap-pacman.conf")).exists()).toBe(false)
 })
+
+test("directory-default round-trip accepts physical identity while owned file remains byte-exact", async () => {
+  await using f = await directoryFixture()
+  await verifyBootstrapConfig(f.directory)
+  expect(await readFile(join(f.directory, "bootstrap-pacman.conf"), "utf8")).toBe(enforcedPacmanConfig(f.config))
+  await symlink(f.gpg, join(f.directory, "alias"), "junction")
+  const query = join(f.directory, "bootstrap-config-enforced.txt")
+  await Bun.write(query, (await readFile(query, "utf8")).replace(f.gpg, join(f.directory, "alias")))
+  await verifyBootstrapConfig(f.directory)
+  await Bun.write(join(f.directory, "bootstrap-pacman.conf"), enforcedPacmanConfig(f.config).replace(`${f.db}/`, f.db))
+  await expect(verifyBootstrapConfig(f.directory)).rejects.toThrow("AUR_PACMAN_OWNED_CONFIG_CHANGED")
+})
+
+for (const key of ["DBPath", "GPGDir"]) test(`${key} refuses different directory, missing path and regular file`, async () => {
+  await using f = await directoryFixture()
+  const path = join(f.directory, "bootstrap-config-enforced.txt")
+  const baseline = await readFile(path, "utf8")
+  const value = key === "DBPath" ? f.db : f.gpg
+  await Bun.write(path, baseline.replace(`${key} = ${value}`, `${key} = ${key === "DBPath" ? f.gpg : f.db}`))
+  await expect(verifyBootstrapConfig(f.directory)).rejects.toThrow("AUR_PACMAN_ENFORCED_CONFIG_ROUNDTRIP_MISMATCH")
+  await Bun.write(path, baseline.replace(`${key} = ${value}`, `${key} = ${join(f.directory, "missing")}`))
+  await expect(verifyBootstrapConfig(f.directory)).rejects.toMatchObject({ code: "ENOENT" })
+  await Bun.write(path, baseline.replace(`${key} = ${value}`, `${key} = ${join(f.directory, "bootstrap-pacman.conf")}`))
+  await expect(verifyBootstrapConfig(f.directory)).rejects.toThrow("AUR_PACMAN_CONFIG_PATH_NOT_DIRECTORY")
+  await Bun.write(path, baseline)
+  await verifyBootstrapConfig(f.directory)
+})
+
+for (const change of [
+  (config: string) => config.replace("DatabaseOptional", "DatabaseRequired"),
+  (config: string) => config.replace("https://geo.mirror.pkgbuild.com", "https://wrong.example"),
+  (config: string) => config.replace("etc/pacman.conf", "etc/changed.conf"),
+  (config: string) => config.replace("CacheDir = /var/cache/pacman/pkg/", "CacheDir = /var/cache/pacman/pkg"),
+  (config: string) => config.replace("[core]\n", "[other]\n"),
+  (config: string) => config.replace("DBPath =", "DBPath  ="),
+  (config: string) => config.replace("[core]\n", "[core]\nGPGDir = /repo/\n"),
+]) test("directory canonicalization still rejects unrelated bytes, keys, repository and policy drift", async () => {
+  await using f = await directoryFixture()
+  const path = join(f.directory, "bootstrap-config-enforced.txt")
+  const baseline = await readFile(path, "utf8")
+  await Bun.write(path, change(baseline))
+  await expect(verifyBootstrapConfig(f.directory)).rejects.toThrow("AUR_PACMAN_ENFORCED_CONFIG_ROUNDTRIP_MISMATCH")
+  await Bun.write(path, baseline)
+  await verifyBootstrapConfig(f.directory)
+})
+
+async function directoryFixture() {
+  const f = await fixture()
+  const db = join(f.directory, "db")
+  const gpg = join(f.directory, "gpg")
+  await Promise.all([mkdir(db), mkdir(gpg)])
+  const config = resolved.replace("RootDir = /\n", `RootDir = /\nDBPath = ${db}/\nGPGDir = ${gpg}/\n`)
+  await Bun.write(join(f.directory, "bootstrap-config-original.txt"), config)
+  await prepareBootstrapConfig(f.directory)
+  await Bun.write(join(f.directory, "bootstrap-config-enforced.txt"), enforcedPacmanConfig(config).replace(`${db}/`, db).replace(`${gpg}/`, gpg))
+  return { ...f, db, gpg, config }
+}
 
 async function fixture() {
   const directory = await mkdtemp(join(tmpdir(), "aur-bootstrap-config-unit-"))
