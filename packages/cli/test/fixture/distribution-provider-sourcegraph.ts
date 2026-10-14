@@ -2,7 +2,7 @@ import { Schema } from "effect"
 import ts from "typescript"
 import { builtinModules } from "node:module"
 import { lstat, readFile, realpath } from "node:fs/promises"
-import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { cli, sha256, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
 
@@ -123,7 +123,18 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
       const jsx = /\.[cm]?[jt]sx$/.test(input.path) && !input.path.includes(`${sep}node_modules${sep}`)
       if (input.transform !== (jsx ? "solid-jsx-babel" : "bun-native")) throw new Error(`PROVIDER_COMPILER_TRANSFORM_UNCLASSIFIED: ${input.key}`)
     }
-    const byPath = new Map(receipt.inputs.map((input) => [input.path, input.key]))
+    const capturedPaths = new Map<string, string[]>()
+    receipt.inputs.forEach((input) => capturedPaths.set(input.path, [...(capturedPaths.get(input.path) ?? []), input.key]))
+    const byPath = new Map([...capturedPaths].map(([path, keys]) => {
+      if (keys.length !== 1) throw new Error(`PROVIDER_COMPILER_INPUT_PATH_AMBIGUOUS: ${path}`)
+      return [path, keys[0]] as const
+    }))
+    const omni = receipt.inputs.find((input) => input.path === join(root, "packages/core/src/omni.ts"))
+    const selfEdge = omni && receipt.metafile.inputs[omni.key].imports.find((edge) => edge.kind === "import-statement" && edge.path === "./omni.ts")
+    if (!omni || !selfEdge) throw new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_MISSING")
+    await Bun.write(join(evidence, `compiler-edge-controls-${payload.version}.json`), JSON.stringify(
+      await calibrateCompilerEdge(omni, selfEdge.path, capturedPaths), null, 2,
+    ))
     for (const [file, blob] of Object.entries(bindings)) {
       const input = receipt.inputs.find((input) => input.path === join(root, file))
       if (!input || input.gitBlob !== blob) throw new Error(`PROVIDER_DISPATCH_SOURCE_PIN_MISMATCH: ${file}`)
@@ -151,12 +162,12 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
           external.push({ from: key, edge, reason: "Unselected lazy CLI branch in source-pinned real dispatch" })
           continue
         }
-        const direct = inputs.has(edge.path) ? edge.path : byPath.get(resolve(receipt.cwd, edge.path))
+        const direct = compilerInputEdge(input.path, edge.path, capturedPaths)
         if (direct) { walk(direct); continue }
         // Bun 1.3.14 --compile splitting marks a resolved dynamic chunk external.
         // Use its compiler output entryPoint, never resolve the source specifier.
         const chunks = Object.entries(receipt.metafile.outputs).filter(([name, output]) =>
-          output.entryPoint && basename(name) === basename(edge.path))
+          output.entryPoint && resolve(receipt.cwd, name) === resolve(receipt.cwd, edge.path))
         if (edge.kind === "dynamic-import" && chunks.length === 1) {
           const entry = chunks[0][1].entryPoint
           const destination = entry && (inputs.has(entry) ? entry : byPath.get(resolve(receipt.cwd, entry)))
@@ -214,6 +225,44 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
   }
   if (results.length !== 2) throw new Error("PROVIDER_COMPILER_TWO_BUILD_RECEIPTS_REQUIRED")
   return results
+}
+
+// This is compiler-record bookkeeping, not source-module resolution: normalize
+// the emitted edge path against its recorded importer, then consult only the
+// captured canonical input set. No basename search, extension guessing, index
+// probing, package exports lookup, or fallback to receipt.cwd for source edges.
+function compilerInputEdge(importer: string, path: string, captured: ReadonlyMap<string, readonly string[]>) {
+  const canonical = isAbsolute(path) ? resolve(path) : resolve(dirname(importer), path)
+  const keys = captured.get(canonical)
+  if (!keys) return undefined
+  if (keys.length !== 1) throw new Error("PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS")
+  return keys[0]
+}
+
+async function calibrateCompilerEdge(input: { path: string; key: string }, edge: string, captured: ReadonlyMap<string, readonly string[]>) {
+  const accepted = compilerInputEdge(input.path, edge, captured)
+  if (accepted !== input.key) throw new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_NOT_ACCEPTED")
+  const decoys = [...captured].filter(([path]) => path.endsWith(`${sep}omni.ts`) && path !== input.path)
+  if (!decoys.length) throw new Error("PROVIDER_COMPILER_SAME_BASENAME_CONTROL_MISSING")
+  const cases = [
+    { name: "same-basename-only", edge, captured: new Map(decoys), expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
+    { name: "wrong-parent", edge: "./__unrecorded-parent__/omni.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
+    { name: "unrecorded-edge", edge: "./__unrecorded-compiler-edge__.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
+    { name: "ambiguous-canonical-input", edge, captured: new Map([...captured, [input.path, [input.key, `duplicate:${input.key}`]]]),
+      expected: "PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS" },
+  ]
+  const rejected = await Promise.all(cases.map(async (control) => {
+    const observed = await Promise.resolve().then(() => {
+      if (compilerInputEdge(input.path, control.edge, control.captured) === undefined) throw new Error("PROVIDER_COMPILER_EDGE_NOT_CAPTURED")
+      throw new Error("PROVIDER_COMPILER_EDGE_MUTATION_ACCEPTED")
+    }).then(() => { throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_VACUOUS") }, (error: unknown) => {
+      if (!(error instanceof Error) || error.message !== control.expected) throw error
+      return error.message
+    })
+    return { name: control.name, edge: control.edge, observed }
+  }))
+  if (compilerInputEdge(input.path, edge, captured) !== accepted) throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_NOT_RESTORED")
+  return { boundary: "copied compiler edge/input-index oracle only", importer: input, edge, accepted, decoys: decoys.map(([path]) => path), rejected, restored: accepted }
 }
 
 async function requireCapturedFile(input: typeof CapturedFile.Type) {
