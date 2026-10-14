@@ -129,8 +129,7 @@ export const createDirSyncContext = (
           .map(normalizeSessionInfo)
           .sort((a, b) => cmp(a.id, b.id))
           .slice(0, store.limit)
-        sessions.forEach(serverSync.session.remember)
-        setStore("session", reconcile(sessions, { key: "id" }))
+        setStore("session", reconcile(sessions.map(serverSync.session.remember), { key: "id" }))
       },
       more: createMemo(() => current()[0].session.length >= current()[0].limit),
       archive: async (sessionID: string) => {

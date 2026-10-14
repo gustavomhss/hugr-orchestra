@@ -304,6 +304,16 @@ export type SessionsListOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -366,6 +376,16 @@ export type SessionsCreateOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -404,6 +424,16 @@ export type SessionsGetOutput = {
     readonly projectID: string
     readonly agent?: string
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly subagentModels?:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
     readonly cost: number
     readonly tokens: {
       readonly input: number
@@ -429,6 +459,42 @@ export type SessionsGetOutput = {
       }>
     }
   }
+}["data"]
+
+export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsGetSubagentModelsOutput = {
+  readonly data:
+    | { readonly mode: "inherit" }
+    | {
+        readonly mode: "allowlist"
+        readonly models: ReadonlyArray<{ readonly id: string; readonly providerID: string; readonly variant?: string }>
+      }
+}["data"]
+
+export type SessionsSetSubagentModelsInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly policy: {
+    readonly policy:
+      | { readonly mode: "inherit" }
+      | {
+          readonly mode: "allowlist"
+          readonly models: ReadonlyArray<{
+            readonly id: string
+            readonly providerID: string
+            readonly variant?: string
+          }>
+        }
+  }["policy"]
+}
+
+export type SessionsSetSubagentModelsOutput = {
+  readonly data:
+    | { readonly mode: "inherit" }
+    | {
+        readonly mode: "allowlist"
+        readonly models: ReadonlyArray<{ readonly id: string; readonly providerID: string; readonly variant?: string }>
+      }
 }["data"]
 
 export type SessionsSwitchAgentInput = {
