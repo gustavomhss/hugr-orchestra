@@ -30,6 +30,7 @@ import { createRequire } from "node:module"
 import path from "node:path"
 import { machine } from "node:os"
 import { Elf } from "@orchestra/schema/elf"
+import { WorkspacePaths } from "./workspace-paths.ts"
 
 // ELF e_machine, Mach-O cputype, PE machine. The three numbering spaces do not collide for these targets.
 export const NATIVE_MACHINES: Record<string, number> = {
@@ -121,7 +122,8 @@ export function prepareTreeSitterPrebuilds(input: Target & { root: string; rebui
     // The install script's own build, already checked against the target above, needs no second compile.
     const built = nodeFiles(path.join(item.dir, "build", "Release"))
     mkdirSync(path.dirname(file), { recursive: true })
-    if (built.length === 1) return copyFileSync(built[0]!, file)
+    const binding = built[0]
+    if (built.length === 1 && binding) return copyFileSync(binding, file)
     rebuildPackage(input.root, item.dir, [file], machine, input.os === "linux" ? "glibc" : undefined)
   })
   return {
@@ -181,7 +183,8 @@ export function resolveTreeSitter(input: Target & { root: string; artifacts?: st
     return files.map((file) => ({ from: path.join(exported, ...file.split("/")), to: file }))
   }
   if (files.length > 0) prepareTreeSitterPrebuilds(input)
-  const resolve = createRequire(path.join(input.root, "packages", "maestro-arsenal", "package.json")).resolve
+  if (files.length === 0) return []
+  const resolve = createRequire(path.join(WorkspacePaths.make(input.root).module("maestro-arsenal"), "package.json")).resolve
   const resolved = files.map((file) => {
     const [name, ...rest] = file.split("/")
     return { from: path.join(realpathSync(path.dirname(resolve(`${name}/package.json`))), ...rest), to: file }
@@ -263,13 +266,14 @@ export function nativeMachines(file: string) {
 
 // Isolated (.bun store), hoisted and per-workspace layouts; symlinked copies collapse to one real directory.
 function grammarPackages(root: string) {
-  const modules = path.join(root, "node_modules")
+  const workspace = WorkspacePaths.make(root)
+  const modules = path.join(workspace.root, "node_modules")
   const store = path.join(modules, ".bun")
   const parents = [
     modules,
     ...entries(store).map((name) => path.join(store, name, "node_modules")),
     ...grammars(modules).map((dir) => path.join(dir, "node_modules")),
-    ...entries(path.join(root, "packages")).map((name) => path.join(root, "packages", name, "node_modules")),
+    ...workspace.entries.map((entry) => path.join(entry.path, "node_modules")),
   ]
   return [...new Set(parents.flatMap(grammars).map((dir) => realpathSync(dir)))]
     .filter((dir) => existsSync(path.join(dir, "package.json")))

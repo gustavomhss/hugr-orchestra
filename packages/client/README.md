@@ -1,19 +1,19 @@
 # @orchestra/client
 
-Private generation target for clients derived directly from Orchestra's authoritative Effect `HttpApi`.
+Private network client package and generation target derived from Orchestra's authoritative Effect `HttpApi` contracts. It owns generated transport code and its lightweight client-local API projection; Server owns HTTP handlers and Core owns domain execution.
 
 ## Entrypoints
 
 - `@orchestra/client`: zero-Effect Promise client using `fetch`.
 - `@orchestra/client/effect`: rich Effect network client using an environment-provided `HttpClient`.
 
-The generated surface includes every standard HTTP group from Server's concrete API. The build compiler reads `@orchestra/server/api`; the generated Effect runtime imports a client-local projection built from Protocol, with a generation-equivalence test preventing transport drift. Custom transports such as the PTY WebSocket connection remain outside the generic HTTP client. Run `bun run generate` after changing the contract and `bun run check:generated` to detect committed-output drift.
+`script/build.ts` compiles `ClientApi` from `src/contract.ts`, which composes Protocol with client-local middleware tags, group/method names, and an explicit endpoint omission set. Generated Effect runtime code imports this projection, while generation-equivalence tests compare it with Server's concrete API. Raw file reads and PTY WebSocket connect/token operations are omitted from generic generation; their transports remain separate. Run `bun run generate` after changing the contract and `bun run check:generated` to detect committed-output drift.
 
-The Effect entrypoint uses canonical decoded values such as `Session.ID`, `Location.Ref`, and `Prompt`. These datatypes come from the lightweight `@orchestra/schema` package and are re-exported so callers depend only on the client surface. Protocol owns endpoint construction and middleware placement; Server supplies the concrete middleware keys used by the build-time API.
+The Effect entrypoint uses canonical decoded values such as `Session.ID`, `Location.Ref`, and `Prompt`. These datatypes come from the lightweight `@orchestra/schema` package and are re-exported so callers depend only on the client surface. Protocol owns endpoint construction and middleware placement. Client supplies local middleware keys for generation; Server supplies concrete keys for its API, with generation-equivalence tests comparing the resulting contracts.
 
 The Promise root remains structural and has no Core or Effect runtime dependency. `/effect` depends only on Effect, Schema, and Protocol and is browser-bundle safe. Bundle-boundary tests enforce both import graphs.
 
-Effect consumers construct canonical decoded inputs:
+Effect consumers construct canonical decoded inputs inside an Effect generator:
 
 ```ts
 import { AbsolutePath, Location, Orchestra, Prompt } from "@orchestra/client/effect"
@@ -25,3 +25,11 @@ yield *
   })
 yield * client.sessions.prompt({ sessionID, prompt: Prompt.make({ text: "Hello" }) })
 ```
+
+## Ownership and maintenance
+
+- Public package exports are the Promise root and `/effect`; internal generated paths are not additional public entrypoints.
+- `src/contract.ts` owns client naming/projection; `src/wire.ts` and Schema/Protocol own canonical wire contracts. Core and Server appear only as development/generation-equivalence inputs, never client runtime dependencies.
+- `src/generated` and `src/generated-effect` are generator-owned. After public Protocol/Server `HttpApi` changes, run `bun run generate` from this package; do not edit generated files directly.
+- From this directory, `bun typecheck` checks the package. The package's declared test script is `bun test --timeout 5000`; repository execution policy remains in `../../AGENTS.md`.
+- This package opens no local host database or embedded server. [`sdk-next`](../sdk-next/README.md) owns the Client/Core/Server composition for embedded consumers.
