@@ -63,7 +63,7 @@ import {
   setCursorPosition,
   setRangeEdge,
 } from "./prompt-input/editor-dom"
-import { readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import { insertPromptEditorText, materializePromptEditor, readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { createPromptAttachments } from "./prompt-input/attachments"
 import { ACCEPTED_FILE_TYPES, pickAttachmentFiles } from "./prompt-input/files"
 import {
@@ -858,9 +858,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const reconcile = (input: Prompt) => {
     if (mirror.input) {
       mirror.input = false
-      if (isNormalizedEditor()) return
-
-      renderEditorWithCursor(input)
+      // Keep native editing nodes/undo entries; materialize structural breaks only at the next editing boundary.
       return
     }
 
@@ -1021,7 +1019,13 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     if (selection.rangeCount === 0) return false
     const range = selection.getRangeAt(0)
-    if (!editorRef.contains(range.startContainer)) return false
+    if (!editorRef.contains(range.startContainer) || !editorRef.contains(range.endContainer)) return false
+    if (part.type === "text") {
+      const inserted = insertPromptEditorText(editorRef, part.content, "insertText")
+      closePopover()
+      return inserted
+    }
+    materializePromptEditor(editorRef, range)
 
     if (part.type === "file" || part.type === "agent") {
       const cursorPosition = getCursorPosition(editorRef)
@@ -1044,34 +1048,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       range.insertNode(gap)
       range.insertNode(pill)
       range.setStartAfter(gap)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    }
-
-    if (part.type === "text") {
-      const fragment = createTextFragment(part.content)
-      const last = fragment.lastChild
-      range.deleteContents()
-      range.insertNode(fragment)
-      if (last) {
-        if (last.nodeType === Node.TEXT_NODE) {
-          const text = last.textContent ?? ""
-          range.setStart(last, text.length)
-        }
-        if (last.nodeType !== Node.TEXT_NODE) {
-          const isBreak = last.nodeType === Node.ELEMENT_NODE && (last as HTMLElement).tagName === "BR"
-          const next = last.nextSibling
-          const emptyText = next?.nodeType === Node.TEXT_NODE && (next.textContent ?? "") === ""
-          if (isBreak && (!next || emptyText)) {
-            const placeholder = createCaretPlaceholder()
-            last.parentNode?.insertBefore(placeholder, next)
-            range.setStart(placeholder.firstChild!, 1)
-          } else {
-            range.setStartAfter(last)
-          }
-        }
-      }
       range.collapse(true)
       selection.removeAllRanges()
       selection.addRange(range)
@@ -1322,15 +1298,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       }
     }
 
-    // Handle Shift+Enter BEFORE IME check - Shift+Enter is never used for IME input
-    // and should always insert a newline regardless of composition state
-    if (event.key === "Enter" && event.shiftKey) {
+    if (event.key === "Enter" && isImeComposing(event)) return
+    if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
       addPart({ type: "text", content: "\n", start: 0, end: 0 })
       event.preventDefault()
-      return
-    }
-
-    if (event.key === "Enter" && isImeComposing(event)) {
       return
     }
 

@@ -184,7 +184,12 @@ export function createPromptInputV2Controller(input: {
     return result.handled
   }
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent, composing = event.isComposing || event.keyCode === 229) => {
+    const modified = event.altKey || event.ctrlKey || event.metaKey
+    if (modified) {
+      input.view.onKeyDown?.(event)
+      if (event.defaultPrevented) return true
+    }
     if (
       state.mode === "normal" &&
       (event.metaKey || event.ctrlKey) &&
@@ -200,7 +205,7 @@ export function createPromptInputV2Controller(input: {
       type: "key.down",
       key: event.key,
       ctrl: event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey,
-      composing: event.isComposing,
+      composing,
       ids: suggestions().map((item) => item.id),
       empty: draft.state.prompt.every((part) => !("content" in part) || part.content.length === 0),
     })
@@ -231,7 +236,7 @@ export function createPromptInputV2Controller(input: {
       event.preventDefault()
       return true
     }
-    input.view.onKeyDown?.(event)
+    if (!modified) input.view.onKeyDown?.(event)
     return event.defaultPrevented
   }
 
@@ -462,37 +467,29 @@ export function insertPromptEditorText(editor: HTMLElement, text: string, inputT
   if (!selection?.rangeCount) return false
   const range = selection.getRangeAt(0)
   if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return false
-  materializePromptEditor(editor, range)
-  const placeholder = range.startContainer.parentElement
-  if (
-    range.collapsed &&
-    range.startOffset === 1 &&
-    placeholder?.hasAttribute("data-prompt-caret") &&
-    placeholder.textContent === "\u200B"
-  ) {
-    range.setStartBefore(placeholder)
-    range.collapse(true)
-    placeholder.remove()
-  }
-  range.deleteContents()
-  const node = document.createTextNode(text)
-  range.insertNode(node)
-  range.setStart(node, text.length)
-  range.collapse(true)
-  const decoded = readPromptEditor(editor)
-  if (text.endsWith("\n") && decoded.positions.get(node)?.end === decoded.length) {
-    // Chromium pre-wrap Shift+Enter adds an unmarked LF for the caret. Own the LF and mark its placeholder.
-    const caret = document.createElement("span")
-    caret.setAttribute("data-prompt-caret", "")
-    caret.textContent = "\u200B"
-    editor.appendChild(caret)
-    range.setStart(caret.firstChild!, 1)
-    range.collapse(true)
-  }
+  const doc = editor.ownerDocument
+  if (typeof doc.execCommand !== "function") throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_UNAVAILABLE:${inputType}`)
+  const prepared = materializePromptEditor(editor, range)
   selection.removeAllRanges()
   selection.addRange(range)
-  editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType, data: text }))
+  // Native editing owns the undo transaction and input event. Never substitute synthetic input/undo.
+  if (!doc.execCommand("insertHTML", false, promptEditorInsertionHTML(text, prepared.end === readPromptEditor(editor).length))) {
+    throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_FAILED:${inputType}`)
+  }
   return true
+}
+
+export function promptEditorInsertionHTML(text: string, terminal: boolean) {
+  // Match the legacy renderer's 200-BR bound; references preserve literal CR and large multiline text.
+  const large = text.split("\n").length > 201
+  const escapes: Record<string, string> = {
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\r": "&#13;",
+    "\n": large ? "&#10;" : '<br data-prompt-break="">',
+  }
+  const escaped = text.replace(/[&<>"\r\n]/g, (char) => escapes[char]!)
+  return escaped + (terminal && text.endsWith("\n")
+    ? '<span data-prompt-caret="" contenteditable="false">&#8203;</span>'
+    : "")
 }
 
 // Shared by both composers: DOM line boxes are not additional characters after a BR.
