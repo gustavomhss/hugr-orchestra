@@ -1,6 +1,14 @@
 #!/usr/bin/bash
 set -euo pipefail
 fail() { printf '%s\n' "$1" >&2; exit 1; }
+pacman_policy_query() {
+  local receipt=$1 status=0
+  shift
+  LC_ALL=C pacman-conf "$@" > "$receipt.txt" 2> "$receipt.stderr" || status=$?
+  printf '%s\n' "$status" > "$receipt.status"
+  (( status == 0 )) || fail AUR_PACMAN_POLICY_QUERY_FAILED
+  [[ ! -s $receipt.stderr ]] || fail AUR_PACMAN_POLICY_QUERY_DIAGNOSTIC
+}
 [[ -f /.dockerenv && $(id -u) == 0 ]] || fail AUR_OWNED_DOCKER_GUEST_REQUIRED
 [[ $# == 2 ]] || fail AUR_GUEST_BOOTSTRAP_ARGUMENTS_REQUIRED
 [[ $(uname -m) == "$1" ]] || fail AUR_GUEST_NATIVE_CPU_MISMATCH
@@ -38,11 +46,14 @@ download_user=$(< /proof/evidence/bootstrap-sandbox-user.txt)
 download_uid=$(id -u -- "$download_user") || fail AUR_PACMAN_DOWNLOAD_USER_ACCOUNT_UNAVAILABLE
 [[ $download_uid =~ ^[1-9][0-9]*$ ]] || fail AUR_PACMAN_NONROOT_DOWNLOAD_USER_REQUIRED
 printf '%s\n' "$download_uid" > /proof/evidence/bootstrap-download-user-uid.txt
-pacman-conf --repo-list > /proof/evidence/bootstrap-repositories.txt
+pacman_policy_query /proof/evidence/bootstrap-repositories --repo-list
 [[ -s /proof/evidence/bootstrap-repositories.txt ]] || fail AUR_PACMAN_SIGNED_REPOSITORIES_EMPTY
+pacman_policy_query /proof/evidence/bootstrap-global-siglevel SigLevel
 while IFS= read -r repository; do
   [[ $repository =~ ^[a-zA-Z0-9_-]+$ ]] || fail AUR_PACMAN_REPOSITORY_NAME_INVALID
-  pacman-conf --repo "$repository" SigLevel > "/proof/evidence/bootstrap-siglevel-$repository.txt"
+  # Documented order: pacman-conf [options] [directive]. Empty successful
+  # SigLevel output is ALPM_SIG_USE_DEFAULT; the reader requires safe global.
+  pacman_policy_query "/proof/evidence/bootstrap-siglevel-$repository" --repo "$repository" SigLevel
 done < /proof/evidence/bootstrap-repositories.txt
 /proof/bun /repo/packages/cli/test/fixture/distribution-aur/sandbox-evidence.ts policy
 bootstrap_packages=(base-devel jq openssl ca-certificates curl nodejs git)
