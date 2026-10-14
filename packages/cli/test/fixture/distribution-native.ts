@@ -11,7 +11,7 @@ import { command } from "./distribution-native-process"
 export { command } from "./distribution-native-process"
 
 export const cli = resolve(import.meta.dirname, "../..")
-export const target = `${process.platform}-${process.arch}${process.arch === "x64" ? "-baseline" : ""}`
+export const target = `${process.platform === "win32" ? "windows" : process.platform}-${process.arch}${process.arch === "x64" ? "-baseline" : ""}`
 export const versions = ["1.18.27", "1.18.28"] as const
 export const sha256 = (bytes: string | Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 
@@ -23,7 +23,8 @@ export async function sandbox(directory: string) {
   ))
   const env = {
     ...Object.fromEntries(Object.entries(process.env).filter(([key]) =>
-      ["PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ"].includes(key.toUpperCase()),
+      ["PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ", ...(process.platform === "win32"
+        ? ["SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT"] : [])].includes(key.toUpperCase()),
     )),
     HOME: join(directory, "home"), USERPROFILE: join(directory, "home"),
     APPDATA: join(directory, "config"), LOCALAPPDATA: join(directory, "data"),
@@ -57,7 +58,7 @@ export async function successful(args: string[], box: Pick<Sandbox, "cwd" | "env
 export async function assertVersion(launcher: string, version: string, box: Sandbox) {
   const result = await command([launcher, "--version"], box, 15_000)
   expect(result.code, result.stderr).toBe(0)
-  expect(result.stdout).toBe(`${version}\n`)
+  expect(process.platform === "win32" ? result.stdout.replaceAll("\r\n", "\n") : result.stdout).toBe(`${version}\n`)
 }
 
 // Snapshot includes empty directories, regular-file modes and full bytes.
@@ -127,8 +128,8 @@ export async function buildVersions(directory: string) {
   const oracle = await captureOracle() // Canonical bytes captured before either compile.
   const release = resolve(cli, "../omni/target/release")
   const companions = [
-    { source: join(release, process.platform === "darwin" ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so"), path: "bin/hugr_omni.node" },
-    { source: join(release, "hugr-omni-supervisor"), path: "bin/hugr-omni-supervisor" },
+    { source: join(release, process.platform === "win32" ? "hugr_omni_node.dll" : process.platform === "darwin" ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so"), path: "bin/hugr_omni.node" },
+    { source: join(release, `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`), path: `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}` },
   ]
   const hashes = await Promise.all(companions.map(async (file) => {
     const info = await lstat(file.source)
@@ -136,7 +137,7 @@ export async function buildVersions(directory: string) {
     expect(info.size).toBeGreaterThan(0)
     return { ...file, sha256: sha256(await readFile(file.source)) }
   }))
-  expect(Boolean((await lstat(companions[1].source)).mode & 0o111)).toBe(true)
+  if (process.platform !== "win32") expect(Boolean((await lstat(companions[1].source)).mode & 0o111)).toBe(true)
   const models = join(box.directory, "models.json")
   await Bun.write(models, "{}") // Non-provider proof only; no model request is qualified.
   const payloads = []
@@ -164,8 +165,10 @@ export async function buildVersions(directory: string) {
     payloads.push({ version, payload, manifest, archive, snapshot: await snapshot(payload) })
   }
   expect(payloads).toHaveLength(2)
-  expect(payloads[0].manifest.files.find((file) => file.path === "bin/orchestra")?.sha256)
-    .not.toBe(payloads[1].manifest.files.find((file) => file.path === "bin/orchestra")?.sha256)
+  const executable = `bin/orchestra${process.platform === "win32" ? ".exe" : ""}`
+  const binaries = payloads.map((payload) => payload.manifest.files.find((file) => file.path === executable))
+  binaries.forEach((binary) => expect(binary?.sha256).toMatch(/^[a-f0-9]{64}$/))
+  expect(binaries[0]?.sha256).not.toBe(binaries[1]?.sha256)
   return { oracle, payloads }
 }
 export type Built = Awaited<ReturnType<typeof buildVersions>>
