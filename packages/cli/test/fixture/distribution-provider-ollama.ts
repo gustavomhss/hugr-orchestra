@@ -12,6 +12,15 @@ export const modelDigest = "sha256:7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5
 const weightsDigest = "sha256:7f4030143c1c477224c5434f8272c662a8b042079a0a584f0a27a1684fe2e1fa"
 const label = "org.orchestra.distribution-provider.owner"
 
+function requireModelDigest(value: unknown) {
+  // Ollama tags/ps use bare hex; OCI receipts use one sha256: prefix. No other
+  // normalization (case, whitespace, repeated prefixes or alternate algorithms).
+  const digest = typeof value === "string" && value.startsWith("sha256:") ? value.slice(7) : value
+  if (typeof digest !== "string" || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("OLLAMA_MODEL_DIGEST_FORMAT_INVALID")
+  if (digest !== modelDigest.slice(7)) throw new Error("OLLAMA_MODEL_DIGEST_MISMATCH")
+  return digest
+}
+
 export async function ownedOllama(directory: string, evidence: string) {
   const box = await sandbox(join(directory, "ollama-owner"))
   const token = randomUUID()
@@ -106,7 +115,7 @@ export async function ownedOllama(directory: string, evidence: string) {
       const tags = await request("/api/tags")
       expect(tags.models).toHaveLength(1)
       expect(tags.models[0].name).toBe(model)
-      expect(tags.models[0].digest).toBe(modelDigest)
+      requireModelDigest(tags.models[0].digest)
       const manifest = await successful(["docker", "exec", state.id!, "cat",
         "/root/.ollama/models/manifests/registry.ollama.ai/library/qwen3/0.6b"], box)
       expect(`sha256:${sha256(manifest)}`).toBe(modelDigest)
@@ -118,7 +127,7 @@ export async function ownedOllama(directory: string, evidence: string) {
       expect(weights.split(/\s+/)[0]).toBe(weightsDigest.slice(7))
       const show = await request("/api/show", { model })
       expect(show.capabilities).toContain("tools")
-      await receipt("model", { model, modelDigest, weightsDigest, manifest: parsed, capabilities: show.capabilities })
+      await receipt("model", { model, modelDigest, reportedDigest: tags.models[0].digest, weightsDigest, manifest: parsed, capabilities: show.capabilities })
       const positive = await request("/api/chat", { model, stream: false, think: false,
         messages: [{ role: "user", content: "Reply with one short greeting." }],
         options: { num_gpu: 0, num_predict: 64, temperature: 0 }, keep_alive: "10m" })
@@ -133,32 +142,47 @@ export async function ownedOllama(directory: string, evidence: string) {
       if (!state.endpoint) throw new Error("OLLAMA_OWNED_ENDPOINT_MISSING")
       return state.endpoint
     },
+    cleaned() { return !state.attempted || state.removed },
     async cpu() {
       await inspect()
       const ps = await request("/api/ps")
       expect(ps.models).toHaveLength(1)
       expect(ps.models[0].name).toBe(model)
-      expect(ps.models[0].digest).toBe(modelDigest)
+      requireModelDigest(ps.models[0].digest)
       expect(ps.models[0].size_vram).toBe(0)
       await receipt("cpu", ps)
     },
     async stop() {
       if (!state.attempted || state.removed) return
-      const current = await inspect() // No raw ID/name stop without exact ownership proof.
-      if (current.State.Running) await successful(["docker", "stop", "--time", "10", state.id!], box, 30_000)
-      expect((await inspect()).State.Running).toBe(false)
-      const logs = await command(["docker", "logs", state.id!], box)
-      expect(logs.code).toBe(0)
-      await Bun.write(join(evidence, "ollama-container.log"), logs.stdout + logs.stderr)
-      await inspect()
+      const failures: unknown[] = []
+      const attempt = <A>(work: () => Promise<A>) => work().catch((error: unknown) => { failures.push(error); return undefined })
+      await attempt(async () => {
+        const current = await inspect()
+        if (current.State.Running) await successful(["docker", "stop", "--time", "10", current.Id], box, 30_000)
+        expect((await inspect()).State.Running).toBe(false)
+      })
+      // Diagnostics cannot short-circuit owned teardown, including a failed log
+      // command or an unwritable evidence directory.
+      await attempt(async () => {
+        const current = await inspect()
+        const logs = await command(["docker", "logs", current.Id], box)
+        expect(logs.code).toBe(0)
+        await Bun.write(join(evidence, "ollama-container.log"), logs.stdout + logs.stderr)
+      })
       const list = ["docker", "ps", "--all", "--no-trunc", "--filter", `label=${label}=${token}`, "--format", "{{.ID}}"]
-      expect(await successful(list, box)).toBe(state.id!)
-      await successful(["docker", "rm", state.id!], box)
-      // Same listing saw exact ID before removal. Errors are never absence.
-      const remaining = await successful(list, box)
-      expect(remaining).toBe("")
-      state.removed = true
-      await receipt("cleanup", { id: state.id, label, token, stopped: true, removed: true, remaining })
+      const before = await attempt(() => successful(list, box))
+      await attempt(async () => { expect(before).toBe(state.id) })
+      await attempt(async () => {
+        const current = await inspect() // Recheck exact ID/label/name/image immediately before removal.
+        await successful(["docker", "rm", "--force", current.Id], box, 30_000)
+      })
+      // Always attempt this same query, even after stop/log/write/remove errors.
+      const remaining = await attempt(() => successful(list, box))
+      await attempt(async () => { expect(remaining).toBe("") })
+      state.removed = before === state.id && remaining === "" && state.id !== undefined
+      await attempt(() => receipt("cleanup", { id: state.id, label, token, before, remaining,
+        removed: state.removed, failures: failures.map((error) => error instanceof Error ? error.message : String(error)) }))
+      if (failures.length) throw new AggregateError(failures, "OLLAMA_OWNED_CLEANUP_FAILED")
     },
   }
 }

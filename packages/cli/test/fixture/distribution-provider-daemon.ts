@@ -4,7 +4,7 @@ import { dirname, join, sep } from "node:path"
 import { Schema } from "effect"
 import { command, sha256, successful } from "./distribution-native"
 import type { Sandbox } from "./distribution-native"
-import { identity, requireExited } from "./distribution-provider-process"
+import { identity, installedAddon, requireExited } from "./distribution-provider-process"
 
 const Registration = Schema.Struct({
   id: Schema.String.check(Schema.isPattern(/^[a-f0-9-]{36}$/)),
@@ -75,6 +75,7 @@ export function providerDaemon(launcher: string, payload: string, version: strin
       expect(Schema.decodeUnknownSync(Schema.Struct({ healthy: Schema.Boolean }))(health).healthy).toBe(true)
       await Bun.write(join(evidence, "daemon.json"), JSON.stringify({ ...state.receipt, process: state.process,
         nativeSHA256: sha256(await readFile(`/proc/${state.process.pid}/exe`)), strict: true,
+        addon: await installedAddon(payload, state.process),
         publicArgv: [[launcher, "service", "start"], [launcher, "service", "password"]] }, null, 2))
       return state.process
     },
