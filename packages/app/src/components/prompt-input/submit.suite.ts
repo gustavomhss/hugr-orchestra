@@ -507,7 +507,7 @@ describe("durable subagent policy submission", () => {
     expect(promptInputs).toHaveLength(1)
   })
 
-  test.each(["prompt", "context", "policy"])("fresh receipt preserves newer %s edit instead of deleting draft", async (edit) => {
+  test.each(["prompt", "policy"])("fresh receipt preserves newer %s edit instead of deleting draft", async (edit) => {
     const key = draftSessionKey(ServerScope.local, "/repo/main")
     const entered = deferred()
     const gate = deferred()
@@ -517,7 +517,6 @@ describe("durable subagent policy submission", () => {
     const sending = submit.handleSubmit(new Event("submit"))
     await entered.promise
     if (edit === "prompt") real.set([{ type: "text", content: "newer draft", start: 0, end: 11 }])
-    if (edit === "context") real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
     if (edit === "policy") togglePending(key, "provider", "new-model", true)
     const contents = real.current()
     const context = real.context.items()
@@ -529,10 +528,38 @@ describe("durable subagent policy submission", () => {
     expect(pendingSnapshot(key)).toEqual(policy)
     expect(promoted).toEqual([])
     expect(promptInputs).toHaveLength(1)
-    if (edit === "prompt" || edit === "context") return
+    if (edit === "prompt") return
     await submit.handleSubmit(new Event("submit"))
     expect(promptInputs).toHaveLength(1)
     expect(promoted).toHaveLength(1)
+  })
+
+  // Server Solid snapshots createMemo. Context edits require the browser child's real reactive accessor.
+  test.skipIf(isServer)("fresh receipt preserves newer context edit instead of deleting draft", async () => {
+    expect(isServer).toBe(false)
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "admitted turn" })
+    const contents = real.current()
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
+    // Positive control: the context edit must be visible to the accessor submit actually reads.
+    expect(real.context.items()).toEqual([
+      expect.objectContaining({ type: "file", path: "/repo/main/new", comment: "newer context" }),
+    ])
+    const context = real.context.items()
+    const policy = pendingSnapshot(key)
+    gate.resolve()
+    await sending
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingSnapshot(key)).toEqual(policy)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
   })
 
   test.skipIf(isServer).each(["dispose", "server ABA"])("fresh admission receipt after %s cannot promote stale owner", async (change) => {
