@@ -1,9 +1,13 @@
 import { afterAll, expect, test } from "bun:test"
 import { createHash, randomUUID } from "node:crypto"
-import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises"
+import { constants } from "node:fs"
+import type { Stats } from "node:fs"
+import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rm } from "node:fs/promises"
 import { machine } from "node:os"
-import { join, resolve } from "node:path"
+import { basename, dirname, isAbsolute, join, resolve } from "node:path"
+import { isDeepStrictEqual } from "node:util"
 import { Schema } from "effect"
+import { distributionDenoVersion } from "../../../script/distribution-deno"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { buildVersions, cli, command, sandbox, successful, target, versions } from "./fixture/distribution-native"
 import { aurProfileProvenance, aurSandboxProfile } from "./fixture/distribution-aur/sandbox-profile"
@@ -102,7 +106,11 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
       !/^sha256:[a-f0-9]{64}$/.test(inspected[0].Id) ||
       !inspected[0].RepoDigests.some((digest) => digest.endsWith(`@${guest.image.split("@")[1]}`)))
     throw new Error(`AUR_IMMUTABLE_GUEST_PROVENANCE_MISMATCH: ${image}`)
+  const denoRuntime = await copyDenoRuntime(repo, state.directory, state.host).catch((cause: unknown) => {
+    throw new Error("AUR_DENO_PROVENANCE_ADMISSION_FAILED", { cause })
+  })
   await Bun.write(join(state.directory, "evidence/provenance.json"), JSON.stringify({
+    denoRuntime,
     target, guest, inspectedImage: image, host: { cpu: machine(), arch: process.arch,
       runner: process.env.RUNNER_ARCH, environment: process.env.RUNNER_ENVIRONMENT,
       osRelease: await readFile("/etc/os-release", "utf8"), docker: daemon,
@@ -132,7 +140,7 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   process.once("SIGHUP", interrupt)
   for (const mode of ["diagnose", "enforce"] as const) {
     state.attempted = true // A timed-out create may still own the named container.
-    const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
+    const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init", "--network", "bridge",
       ...(mode === "enforce" ? ["--security-opt", `seccomp=${profilePath}`,
         "--security-opt", "no-new-privileges=true"] : []),
       "--platform", `linux/${guest.dockerArch}`, "--mount", `type=bind,source=${repo},target=/repo,readonly`,
@@ -145,6 +153,10 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
       `{{.Id}}|{{.Config.Image}}|{{index .Config.Labels "${label}"}}|{{.HostConfig.Init}}`, id]))
       .toBe(`${id}|${guest.image}|${nonce}|true`)
     const inspectedContainer = await docker(["inspect", id])
+    // Preserve Docker's actual normalized settings even when a guard fails.
+    await Bun.write(join(state.directory, `evidence/sandbox-${mode}-container.json`), JSON.stringify({
+      id, mode, profile: mode === "enforce" ? aurProfileProvenance : "daemon-original-default", inspectedContainer,
+    }, null, 2))
     const settings = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Array(Schema.Struct({
       HostConfig: Schema.Struct({ SecurityOpt: Schema.NullOr(Schema.Array(Schema.String)), Privileged: Schema.Boolean,
         CapAdd: Schema.NullOr(Schema.Array(Schema.String)), CapDrop: Schema.NullOr(Schema.Array(Schema.String)),
@@ -158,13 +170,17 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
     expect(config.CapDrop ?? []).toEqual([])
     expect(config.PidMode, "AUR_PRIVATE_PID_NAMESPACE_REQUIRED").toBe("")
     expect(config.IpcMode, "AUR_PRIVATE_IPC_NAMESPACE_REQUIRED").toBe("private")
-    expect(config.NetworkMode, "AUR_DEFAULT_NETWORK_NAMESPACE_REQUIRED").toBe("default")
+    // Exact bridge excludes host and container:<id> namespace sharing.
+    expect(config.NetworkMode, "AUR_BRIDGE_NETWORK_NAMESPACE_REQUIRED").toBe("bridge")
     expect(config.UsernsMode, "AUR_DEFAULT_USER_NAMESPACE_REQUIRED").toBe("")
     if (mode === "enforce") {
       const options = config.SecurityOpt ?? []
       expect(options).toHaveLength(2)
-      expect(options).toContain("no-new-privileges=true")
-      const applied = options.find((option) => option.startsWith("seccomp="))
+      // Docker supports bare true and '=' / legacy ':' delimiters. Only true
+      // is admitted; the native probe also requires PR_GET_NO_NEW_PRIVS == 1.
+      const nnp = options.filter((option) => /^(?:no-new-privileges|no-new-privileges[=:]true)$/.test(option))
+      if (nnp.length !== 1) throw new Error("AUR_DOCKER_NO_NEW_PRIVILEGES_TRUE_REQUIRED")
+      const applied = options.find((option) => /^seccomp[=:]/.test(option))
       if (!applied) throw new Error("AUR_APPLIED_SECCOMP_PROFILE_MISSING")
       const normalized = JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(applied.slice("seccomp=".length)))
       expect(createHash("sha256").update(normalized).digest("hex"), "AUR_DOCKER_APPLIED_PROFILE_DIGEST")
@@ -172,9 +188,6 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
       expect(createHash("sha256").update(await readFile(profilePath)).digest("hex"))
         .toBe(aurProfileProvenance.appliedSha256)
     }
-    await Bun.write(join(state.directory, `evidence/sandbox-${mode}-container.json`), JSON.stringify({
-      id, mode, profile: mode === "enforce" ? aurProfileProvenance : "daemon-original-default", inspectedContainer,
-    }, null, 2))
     await docker(["start", id])
     const measured = await command([state.docker, "exec", id, "/proof/sandbox-probe", mode,
       "/proof/sandbox-control/allowed", "/proof/sandbox-control/allowed/file", "/proof/sandbox-control/outside/file"], state.host)
@@ -204,10 +217,8 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   expect(built.payloads.map((payload) => payload.version)).toEqual([...versions])
   await copyFile(process.execPath, join(state.directory, "bun"))
   await chmod(join(state.directory, "bun"), 0o755)
-  if (!process.env.ORCHESTRA_DISTRIBUTION_DENO) throw new Error("AUR_NATIVE_DENO_EXECUTABLE_REQUIRED")
-  await copyFile(await realpath(process.env.ORCHESTRA_DISTRIBUTION_DENO), join(state.directory, "deno"))
-  await chmod(join(state.directory, "deno"), 0o755)
   await Bun.write(join(state.directory, "input.json"), JSON.stringify({ target, oracleDigest: built.oracle.digest,
+    denoSha256: denoRuntime.destination.sha256,
     payloads: built.payloads.map((payload) => ({ version: payload.version, archiveSha256: payload.archive.sha256 })),
   }, null, 2))
   const result = await command([state.docker, "exec", state.id, "/usr/bin/bash",
@@ -216,17 +227,21 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
   if (result.code !== 0) throw new Error(`AUR_NATIVE_GUEST_FAILED: ${guest.image}\n${result.stderr}`)
+  if (createHash("sha256").update(await readFile(join(state.directory, "deno"))).digest("hex") !== denoRuntime.source.sha256)
+    throw new Error("AUR_DENO_GUEST_RUNTIME_BYTES_CHANGED")
   const bootstrapSandbox = await aurBootstrapEvidence(join(state.directory, "evidence"))
   await aurBootstrapEvidenceTeeth(join(state.directory, "evidence"))
   const qualified = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     target: Schema.String, versions: Schema.Array(Schema.String), architecture: Schema.String,
     bootstrapDownloadSandbox: AurBootstrapEvidence,
+    denoRuntimeSha256: Schema.String,
     finalPackages: Schema.Array(Schema.Struct({ file: Schema.String, sha256: Schema.String })),
   }))))(await readFile(join(state.directory, "evidence/qualified.json"), "utf8"))
   expect(qualified.target).toBe(target)
   expect(qualified.versions).toEqual([...versions])
   expect(qualified.architecture).toBe(guest.cpu)
   expect(qualified.bootstrapDownloadSandbox).toEqual(bootstrapSandbox)
+  expect(qualified.denoRuntimeSha256).toBe(denoRuntime.source.sha256)
   expect(qualified.finalPackages).toHaveLength(2)
   const cleaned = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     qualified: Schema.Boolean, daemons: Schema.String, package: Schema.String,
@@ -235,6 +250,83 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   expect(cleaned).toEqual({ qualified: true, daemons: "shared-owned-receipts-and-PID-exit-proved",
     package: "pacman-uninstalled", packagesAndBuilds: "removed", activation: "absent" })
 }, 4_500_000)
+
+async function copyDenoRuntime(repo: string, directory: string, box: Awaited<ReturnType<typeof sandbox>>) {
+  if (!process.env.ORCHESTRA_DISTRIBUTION_DENO || !process.env.DISTRIBUTION_DENO_DIRECTORY || !process.env.RUNNER_TEMP ||
+      process.env.ORCHESTRA_DISTRIBUTION_DENO_VERSION !== distributionDenoVersion)
+    throw new Error("AUR_NATIVE_DENO_PINNED_HOST_SETUP_REQUIRED")
+  const hostDirectory = await realpath(process.env.DISTRIBUTION_DENO_DIRECTORY)
+  if (hostDirectory !== process.env.DISTRIBUTION_DENO_DIRECTORY || dirname(hostDirectory) !== await realpath(process.env.RUNNER_TEMP) ||
+      !/^distribution-deno-[a-zA-Z0-9]+$/.test(basename(hostDirectory)))
+    throw new Error("AUR_DENO_OWNED_EXTRACTION_DIRECTORY_REQUIRED")
+  const source = join(hostDirectory, "deno")
+  if (!isAbsolute(process.env.ORCHESTRA_DISTRIBUTION_DENO) || process.env.ORCHESTRA_DISTRIBUTION_DENO !== source || await realpath(source) !== source)
+    throw new Error("AUR_DENO_CANONICAL_EXTRACTION_EXECUTABLE_REQUIRED")
+  const receiptFile = join(repo, "distribution-logs/deno-runtime.json")
+  if (await realpath(receiptFile) !== receiptFile) throw new Error("AUR_DENO_OFFICIAL_RECEIPT_REDIRECTED")
+  const receiptBytes = await readFile(receiptFile).catch((cause: unknown) => {
+    throw new Error("AUR_DENO_OFFICIAL_DOWNLOAD_RECEIPT_UNAVAILABLE", { cause })
+  })
+  const receipt = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+    version: Schema.Literal(distributionDenoVersion), url: Schema.String,
+    sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
+    host: Schema.Struct({ os: Schema.Literal("linux"), cpu: Schema.Literals(["x64", "arm64"]) }), executable: Schema.String,
+  }))))(receiptBytes.toString("utf8"))
+  const triple = process.arch === "x64" ? "x86_64-unknown-linux-gnu" : "aarch64-unknown-linux-gnu"
+  if (receipt.host.cpu !== process.arch || receipt.executable !== source ||
+      receipt.url !== `https://github.com/denoland/deno/releases/download/v${distributionDenoVersion}/deno-${triple}.zip`)
+    throw new Error("AUR_DENO_OFFICIAL_DOWNLOAD_PIN_MISMATCH")
+  const archive = join(hostDirectory, "deno.zip")
+  if (await realpath(archive) !== archive) throw new Error("AUR_DENO_OFFICIAL_ARCHIVE_REDIRECTED")
+  const archiveIdentity = fileIdentity(await lstat(archive))
+  if (createHash("sha256").update(await readFile(archive)).digest("hex") !== receipt.sha256)
+    throw new Error("AUR_DENO_OFFICIAL_ARCHIVE_DIGEST_MISMATCH")
+  const handle = await open(source, constants.O_RDONLY | constants.O_NOFOLLOW)
+  return (async () => {
+    const identity = fileIdentity(await handle.stat())
+    if (!(identity.mode & 0o111) || !isDeepStrictEqual(identity, fileIdentity(await lstat(source))))
+      throw new Error("AUR_DENO_PHYSICAL_SOURCE_IDENTITY_MISMATCH")
+    const bytes = await handle.readFile()
+    const sha256 = createHash("sha256").update(bytes).digest("hex")
+    if (bytes.length < 64 || bytes.readUInt32BE(0) !== 0x7f454c46 || bytes[4] !== 2 || bytes[5] !== 1 || bytes[6] !== 1 ||
+        ![2, 3].includes(bytes.readUInt16LE(16)) || bytes.readUInt16LE(18) !== (process.arch === "x64" ? 62 : 183))
+      throw new Error("AUR_DENO_NATIVE_ELF64_HEADER_REQUIRED")
+    // The installer receipt pins the ZIP, not its extracted executable. Bind
+    // the physical source to the actual member of that retained, verified ZIP.
+    const member = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+      name: Schema.Literal("deno"), sha256: Schema.String, size: Schema.Int,
+    }))))(await successful(["python3", "-c", `import hashlib,json,sys,zipfile
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    if archive.namelist().count("deno") != 1: raise RuntimeError("AUR_DENO_ARCHIVE_MEMBER_NOT_UNIQUE")
+    data = archive.read("deno")
+    print(json.dumps({"name":"deno","sha256":hashlib.sha256(data).hexdigest(),"size":len(data)}))`, archive], box))
+    if (member.sha256 !== sha256 || member.size !== bytes.length)
+      throw new Error("AUR_DENO_ARCHIVE_EXECUTABLE_BINDING_MISMATCH")
+    const version = await successful([source, "--version"], box)
+    if (version.split("\n")[0] !== `deno ${distributionDenoVersion}`) throw new Error("AUR_DENO_NATIVE_VERSION_PIN_MISMATCH")
+    const destination = join(directory, "deno")
+    await copyFile(source, destination, constants.COPYFILE_EXCL)
+    await chmod(destination, 0o755)
+    const copied = await readFile(destination)
+    if (!copied.equals(bytes)) throw new Error("AUR_DENO_COPIED_FULL_BYTES_MISMATCH")
+    if (await realpath(destination) !== destination) throw new Error("AUR_DENO_COPY_REDIRECTED")
+    if (!isDeepStrictEqual(identity, fileIdentity(await handle.stat())) || !isDeepStrictEqual(identity, fileIdentity(await lstat(source))) ||
+        !isDeepStrictEqual(archiveIdentity, fileIdentity(await lstat(archive))) || !(await readFile(source)).equals(bytes))
+      throw new Error("AUR_DENO_HOST_SOURCE_CHANGED_DURING_COPY")
+    return { officialDownload: { file: receiptFile, sha256: createHash("sha256").update(receiptBytes).digest("hex"), receipt },
+      archive: { file: archive, identity: archiveIdentity, sha256: receipt.sha256, member },
+      source: { file: source, identity, sha256, header: { format: "ELF64", cpu: process.arch }, version },
+      destination: { file: destination, guestFile: "/proof/deno", identity: fileIdentity(await lstat(destination)),
+        sha256: createHash("sha256").update(copied).digest("hex"), fullBytesEqual: true },
+    }
+  })().finally(() => handle.close())
+}
+
+function fileIdentity(stat: Stats) {
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error("AUR_DENO_PHYSICAL_REGULAR_FILE_REQUIRED")
+  return { dev: stat.dev, ino: stat.ino, nlink: stat.nlink, mode: stat.mode, uid: stat.uid, gid: stat.gid,
+    size: stat.size, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs }
+}
 
 async function docker(args: string[], timeout = 90_000) {
   if (!state.docker || !state.host) throw new Error("AUR_DOCKER_LEASE_UNAVAILABLE")

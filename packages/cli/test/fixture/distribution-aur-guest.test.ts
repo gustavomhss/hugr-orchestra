@@ -14,6 +14,7 @@ import { aurArchives } from "./distribution-aur-https"
 import { aurBootstrapEvidence } from "./distribution-aur/sandbox-evidence"
 
 const Input = Schema.Struct({ target: Schema.String, oracleDigest: Schema.String,
+  denoSha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
   payloads: Schema.Array(Schema.Struct({ version: Schema.String, archiveSha256: Schema.String })) })
 const state: { box?: Awaited<ReturnType<typeof sandbox>>; attempted: boolean; qualified: boolean } = {
   attempted: false, qualified: false,
@@ -65,6 +66,8 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
     throw new Error("AUR_GUEST_NATIVE_ARCHITECTURE_REQUIRED")
   const input = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Input)))(
     await readFile("/proof/input.json", "utf8"))
+  if (await realpath("/proof/deno") !== "/proof/deno" || sha256(await readFile("/proof/deno")) !== input.denoSha256)
+    throw new Error("AUR_DENO_GUEST_COPIED_RUNTIME_DIGEST_MISMATCH")
   expect(input.target).toBe(target)
   expect(input.payloads.map((payload) => payload.version)).toEqual([...versions])
   const box = await sandbox("/proof/runtime")
@@ -249,6 +252,7 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       .toEqual([])
     state.qualified = true
     await Bun.write("/proof/evidence/qualified.json", JSON.stringify({ target, versions,
+      denoRuntimeSha256: input.denoSha256,
       bootstrapDownloadSandbox: bootstrapSandbox,
       landlockQualification: "kernel-ABI-ruleset-and-inside-allowed-outside-EACCES; actual-pacman-download-restrictions",
       architecture, distro: await readFile("/etc/os-release", "utf8"), launcher,
