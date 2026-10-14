@@ -86,7 +86,9 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(70, 73)).toEqual([
+    const legacyParts = EventManifest.Definitions.indexOf(SessionV1.Event.PartDelta)
+    expect(legacyParts).toBeGreaterThanOrEqual(0)
+    expect(EventManifest.Definitions.slice(legacyParts, legacyParts + 3)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,

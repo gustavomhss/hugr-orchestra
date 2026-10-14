@@ -16,6 +16,7 @@ process.disconnect(); const file=process.argv[2]; process.argv.splice(1,2,file);
 `
 const BROKER = `
 import {spawn} from 'node:child_process';
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
 import path from 'node:path';
 if (process.versions.bun || process.release.name !== 'node' || !/^\\d+\\.\\d+\\.\\d+/.test(process.versions.node ?? '')) throw Error('native Node attestation rejected');
 const [file,request,until,nonce] = process.argv.slice(2);
@@ -29,20 +30,46 @@ const admitted = await new Promise(resolve => {
 const run=admitted && performance.now() < deadline;
 if (!run) {await receipt({type:'not-admitted'}); process.exitCode=1; process.stdin.destroy(); process.disconnect()}
 if (run) {
+  const settings=JSON.parse(readFileSync(file+'.config','utf8'));
+  const query=settings.ownedQuery === undefined ? undefined : spawn('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',
+    Buffer.from('if([Console]::ReadLine() -ne "RUN"){exit 1}; '+settings.ownedQuery,'utf16le').toString('base64')],{stdio:['pipe','pipe','pipe'],windowsHide:true});
+  const queryOutput={stdout:'',stderr:'',stdoutBytes:0,stderrBytes:0,stdoutChunks:0,stderrChunks:0,firstStdoutChunkBytes:0,error:'',code:null,signal:null,closed:false};
+  const queryBuffers={stdout:[],stderr:[]};
+  // This broker, not source, owns the exact query handle and both pipe joins.
+  // A source kill cannot bypass this join or release the diagnostic directory.
+  const queryClose=query ? new Promise(resolve=>{
+    query.on('error',error=>{queryOutput.error=String(error)});
+    query.stdout.on('error',error=>{queryOutput.error=String(error);query.kill('SIGKILL')});
+    query.stderr.on('error',error=>{queryOutput.error=String(error);query.kill('SIGKILL')});
+    query.stdout.on('data',chunk=>{queryOutput.stdoutBytes+=chunk.length;queryOutput.stdoutChunks++;queryOutput.firstStdoutChunkBytes ||= chunk.length;
+      if(queryOutput.stdoutBytes>67108864) {queryOutput.error='owned query stdout exceeded 64 MiB';query.kill('SIGKILL');return} queryBuffers.stdout.push(chunk)});
+    query.stderr.on('data',chunk=>{queryOutput.stderrBytes+=chunk.length;queryOutput.stderrChunks++;
+      if(queryOutput.stderrBytes>16384) {queryOutput.error='owned query stderr exceeded 16 KiB';query.kill('SIGKILL');return} queryBuffers.stderr.push(chunk)});
+    query.once('close',(code,signal)=>{
+      queryOutput.code=code;queryOutput.signal=signal;queryOutput.closed=true;
+      queryOutput.stdout=Buffer.concat(queryBuffers.stdout).toString('utf8');queryOutput.stderr=Buffer.concat(queryBuffers.stderr).toString('utf8');
+      writeFileSync(file+'.result.tmp',JSON.stringify({pid:query.pid,...queryOutput}));
+      renameSync(file+'.result.tmp',file+'.result');resolve();
+    });
+  }) : Promise.resolve();
   const child=spawn(process.execPath,['--experimental-strip-types',path.join(path.dirname(file),'launcher.mjs'),file,request],{stdio:['ignore','pipe','pipe','ipc'],serialization:'json',windowsHide:true,detached:true});
-  const stop=()=>{process.exitCode=1; try {if(child.pid) child.kill('SIGKILL')} catch(error) {console.error(error)}};
+  const stop=()=>{process.exitCode=1; try {if(child.pid) child.kill('SIGKILL'); if(query && !queryOutput.closed) query.kill('SIGKILL')} catch(error) {console.error(error)}};
+  if(query) query.stdin.on('error',stop);
   process.stdin.once('end',stop); process.stdin.on('error',stop);
   if (process.stdin.readableEnded) stop();
   child.on('error',error=>{console.error(error); process.exitCode=1});
   child.once('spawn',()=>{
-    process.stdin.once('data',data=>{if(data.toString()!=='SOURCE\\n') return stop(); child.send('RUN',error=>{if(error) stop()})});
-    receipt({type:'admitted',source:{pid:child.pid,file,nonce}}).catch(stop);
+    process.stdin.once('data',data=>{if(data.toString()!=='SOURCE\\n') return stop(); child.send('RUN',error=>{if(error) return stop(); if(query) query.stdin.end('RUN\\n')})});
+    receipt({type:'admitted',source:{pid:child.pid,file,nonce},queryPID:query?.pid}).catch(stop);
   });
   child.stdout.on('error',stop); child.stderr.on('error',stop);
   child.stdout.pipe(process.stdout,{end:false}); child.stderr.pipe(process.stderr,{end:false});
   const timer=setTimeout(stop,Math.max(0,deadline-performance.now()));
   const [code,signal]=await new Promise(resolve=>child.once('close',(code,signal)=>resolve([code,signal])));
-  await receipt(child.pid ? {type:'completed',pid:child.pid,osClosed:true,stdioClosed:true,code,signal} : {type:'not-admitted'});
+  if(query && !queryOutput.closed) query.kill('SIGKILL');
+  await queryClose;
+  await receipt(child.pid ? {type:'completed',pid:child.pid,osClosed:true,stdioClosed:true,code,signal,
+    ...(query ? {queryPID:query.pid,queryOSClosed:queryOutput.closed,queryStdioClosed:queryOutput.closed} : {})} : {type:'not-admitted'});
   clearTimeout(timer); process.stdin.removeListener('end',stop); process.stdin.destroy(); process.disconnect();
   if (signal || code!==0) {console.error('source failed: code '+code+', signal '+signal); process.exitCode=code ?? 1}
 }
@@ -69,8 +96,12 @@ export function nodeExecutable(): string {
   throw new AggregateError(errors, "native Node executable unavailable")
 }
 
-/** Own the helper until OS exit AND stdio close; a failed join retains its files for diagnosis. */
-export async function invoke(source: string, decoder: string, request: readonly number[] | { nonce: string }, deadlineMs = 15000): Promise<string> {
+/** Own the helper until OS exit AND stdio close; a failed join retains its files for diagnosis.
+ * ownedQuery runs PowerShell under the broker, gates census on source admission,
+ * and publishes <source>.result only after query OS/stdio close. Source must not
+ * spawn an unowned query itself; its death/timeout joins this exact query handle.
+ */
+export async function invoke(source: string, decoder: string, request: readonly number[] | { nonce: string }, deadlineMs = 15000, ownedQuery?: string): Promise<string> {
   if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) throw new Error("Windows process query requires a positive deadline")
   const started = performance.now()
   const deadline = started + deadlineMs
@@ -81,7 +112,7 @@ export async function invoke(source: string, decoder: string, request: readonly 
   const state = { closed: true, failure: undefined as unknown }
   try {
     writeFileSync(file, source)
-    writeFileSync(file + ".config", JSON.stringify({ node, decoder }))
+    writeFileSync(file + ".config", JSON.stringify({ node, decoder, ownedQuery }))
     writeFileSync(path.join(dir, "broker.mjs"), BROKER)
     writeFileSync(path.join(dir, "launcher.mjs"), LAUNCHER)
     if (performance.now() >= deadline) throw new Error("Windows process query deadline expired before startup")
@@ -95,6 +126,7 @@ export async function invoke(source: string, decoder: string, request: readonly 
       const output = { chunks: [] as Buffer[], bytes: 0, stderr: Buffer.alloc(0), controlBytes: 0,
         attested: false, complete: false, brokerClosed: false, controlClosed: false, code: null as number | null, signal: null as string | null,
         source: undefined as { pid: number; file: string; nonce: string } | undefined, error: undefined as Error | undefined }
+      const query = { pid: undefined as number | undefined, osClosed: false, stdioClosed: false }
       const phaseMs = { spawned: null as number | null, attested: null as number | null, admitted: null as number | null,
         completed: null as number | null, brokerClosed: null as number | null, controlClosed: null as number | null,
         deadline: null as number | null }
@@ -104,6 +136,7 @@ export async function invoke(source: string, decoder: string, request: readonly 
         sourceComplete: output.source !== undefined && output.complete,
         brokerClosed: output.brokerClosed, controlClosed: output.controlClosed,
         helperPID: child.pid, source: output.source ? { ...output.source } : undefined,
+        ...(ownedQuery === undefined ? {} : { query: { ...query } }),
         code: output.code, signal: output.signal, bytes: output.bytes, controlBytes: output.controlBytes,
         stderrBytes: output.stderr.length, stderr: output.stderr.toString("utf8"),
       })
@@ -162,6 +195,11 @@ export async function invoke(source: string, decoder: string, request: readonly 
             output.complete = true; phaseMs.completed = performance.now() - started; return
           }
           if (output.attested && !output.source && !output.complete && reply.type === "admitted" && source && Number.isSafeInteger(source.pid) && source.pid > 0 && source.file === file && source.nonce === nonce) {
+            if (ownedQuery !== undefined) {
+              if (typeof reply.queryPID !== "number" || !Number.isSafeInteger(reply.queryPID) || reply.queryPID <= 0)
+                throw new Error("owned Windows query admission missing PID")
+              query.pid = reply.queryPID
+            }
             output.source = source
             phaseMs.admitted = performance.now() - started
             if (!output.error && performance.now() < deadline) child.stdin!.write("SOURCE\n")
@@ -169,6 +207,12 @@ export async function invoke(source: string, decoder: string, request: readonly 
             return
           }
           if (output.source && !output.complete && reply.type === "completed" && reply.pid === output.source.pid && reply.osClosed === true && reply.stdioClosed === true && (reply.code === null || Number.isInteger(reply.code)) && (reply.signal === null || typeof reply.signal === "string")) {
+            if (ownedQuery !== undefined) {
+              if (reply.queryPID !== query.pid || reply.queryOSClosed !== true || reply.queryStdioClosed !== true)
+                throw new Error("owned Windows query OS/stdio close missing")
+              query.osClosed = true
+              query.stdioClosed = true
+            }
             output.complete = true; phaseMs.completed = performance.now() - started; return
           }
           throw new Error("invalid control order or runtime identity")
@@ -184,9 +228,13 @@ export async function invoke(source: string, decoder: string, request: readonly 
         closed.resolve()
         clearTimeout(timers.operation)
         clearTimeout(timers.cleanup)
-        if (output.error) return reject(output.error)
-        if (performance.now() >= deadline) return reject(deadlineError())
-        if (output.signal || output.code !== 0) return reject(new Error(`Windows process query failed: code ${output.code}, signal ${output.signal}: ${output.stderr.toString("utf8")}`))
+        if (output.error) return reject(ownedQuery === undefined ? output.error :
+          Object.assign(output.error, { cleanup: diagnostics(), directory: dir }))
+        if (performance.now() >= deadline) return reject(ownedQuery === undefined ? deadlineError() :
+          Object.assign(deadlineError(), { cleanup: diagnostics(), directory: dir }))
+        if (output.signal || output.code !== 0) return reject(Object.assign(
+          new Error(`Windows process query failed: code ${output.code}, signal ${output.signal}: ${output.stderr.toString("utf8")}`),
+          ownedQuery === undefined ? {} : { cleanup: diagnostics(), directory: dir }))
         if (!output.attested) return reject(new Error("Windows process query native Node attestation missing"))
         const stdout = Buffer.concat(output.chunks).toString("utf8")
         if (!stdout.trim()) return reject(new Error("Windows process query empty output"))
