@@ -92,7 +92,7 @@ export type FollowupDraft = {
   }
 }
 
-type FollowupSendInput = {
+export type FollowupSendInput = {
   api: DirectorySDK["api"]["session"]
   serverSync: ServerSync
   sync: DirectorySync
@@ -101,7 +101,9 @@ type FollowupSendInput = {
   optimisticBusy?: boolean
   // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
   pending?: boolean
+  signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
+  runtime?: FollowupDraft["source"] & { before: (signal?: AbortSignal) => Promise<boolean> }
 }
 
 // Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
