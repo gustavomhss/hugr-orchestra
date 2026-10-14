@@ -10,6 +10,18 @@ const behavior = { id: "httpapi-behavior", name: "Exercise", instructions: "Answ
 const pullRequest = { title: "HttpApi exercise", body: "Isolated route probe", base: "dev" }
 
 export const catalogScenarios: Scenario[] = [
+  http.protected.get("/api/model/default", "v2.model.default").json(
+    200,
+    locationData((value) => {
+      if (value === null) return
+      object(value)
+      check(
+        typeof value.id === "string" && typeof value.providerID === "string",
+        "default model must have a catalog identity",
+      )
+      check(value.enabled === true, "default model must be enabled")
+    }),
+  ),
   // The isolated Git fixtures have no host remote. These requests exercise the real handler and its typed error
   // mapping without consulting the runner's signed-in gh/glab client or creating a remote pull request.
   http.protected.get("/api/pull-request", "v2.pullRequest.list").json(400, noPullRequestRemote, "status"),
