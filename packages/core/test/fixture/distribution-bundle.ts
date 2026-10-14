@@ -8,7 +8,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "../../src/process"
 
 const root = path.resolve(import.meta.dirname, "../../../..")
-const Row = Schema.Struct({ package: Schema.String, host: Schema.String, cpu: Schema.String,
+const Row = Schema.Struct({ lane: Schema.String, package: Schema.String, host: Schema.String, cpu: Schema.String,
   platform: Schema.String, files: Schema.Array(Schema.String) })
 const workflow = Schema.decodeUnknownSync(Schema.Struct({ jobs: Schema.Struct({ qualification: Schema.Struct({
   strategy: Schema.Struct({ matrix: Schema.Struct({ include: Schema.Array(Row) }) }),
@@ -49,11 +49,11 @@ function shellPath(file: string) {
   return process.platform === "win32" ? normalized.replace(/^([A-Za-z]):\//, (_, drive: string) => `/${drive.toLowerCase()}/`) : normalized
 }
 
-export const fixture = (pkg: "core" | "cli", files?: string[]) => Effect.gen(function* () {
-  const selected = workflow.jobs.qualification.strategy.matrix.include.find((row) =>
-    row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))
-  check(selected, `BUNDLE_FIXTURE_NATIVE_ROW_MISSING: ${pkg}/${process.platform}/${process.arch}`)
-  const row = { ...selected, files: files ?? [...selected.files] }
+export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "aur" | "musl" | "provider" = "regression") => Effect.gen(function* () {
+  const selected = workflow.jobs.qualification.strategy.matrix.include.filter((row) =>
+    row.lane === lane && row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))
+  check(selected.length === 1 && selected[0], `BUNDLE_FIXTURE_NATIVE_ROW_MISSING_OR_REPEATED: ${lane}/${pkg}/${process.platform}/${process.arch}`)
+  const row = { ...selected[0], files: files ?? [...selected[0].files] }
   const dir = yield* Effect.acquireRelease(
     Effect.promise(() => mkdtemp(path.join(tmpdir(), "distribution-bundle-"))),
     (dir) => Effect.promise(() => rm(dir, { recursive: true, force: true })),
@@ -101,7 +101,7 @@ process.exitCode = Number(process.env.BUNDLE_CHILD_EXIT)
   return { dir, row, capture, log, cwd: path.join(dir, "packages", pkg), env: {
     ...process.env,
     ROW: JSON.stringify(row), PACKAGE: pkg, GITHUB_WORKSPACE: dir,
-    RUNNER_ARCH: row.cpu, RUNNER_OS: row.platform === "linux" ? "Linux" : "Windows",
+    RUNNER_ARCH: row.cpu, RUNNER_OS: row.platform === "linux" ? "Linux" : row.platform === "darwin" ? "macOS" : "Windows",
     BUNDLE_REAL_BUN: process.execPath.replaceAll("\\", "/"),
     BUNDLE_REAL_BIN: shellPath(path.dirname(process.execPath)), BUNDLE_BIN: shellPath(path.join(dir, "fake-bin")),
     BUNDLE_CHILD: path.join(dir, "child.ts").replaceAll("\\", "/"),
