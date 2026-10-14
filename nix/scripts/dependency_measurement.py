@@ -35,7 +35,7 @@ def decode(text, label):
 
 
 def git(*args):
-    result = subprocess.run(["git", *args], text=True, capture_output=True)
+    result = subprocess.run(["git", "--no-replace-objects", *args], text=True, capture_output=True)
     require(result.returncode == 0, "SOURCE_GIT_LOOKUP_FAILED")
     return result.stdout.strip()
 
@@ -58,22 +58,30 @@ def fingerprint(revision):
                 and not re.search(r"[\\\x00-\x1f\x7f:]", path)
                 and all(part not in {"", ".", ".."} for part in path.split("/")) for path in paths),
             "DEPENDENCY_REGISTRY_PATH_INVALID")
-    entries = git("ls-tree", "-r", "--full-tree", revision, "--",
+    entries = git("ls-tree", "-r", "-z", "--full-tree", revision, "--",
                   "packages", "patches", "bun.lock", "package.json", "bunfig.toml", "tsconfig.json", "flake.lock",
                   ".github/TEAM_MEMBERS", "flake.nix", "nix/node_modules.nix", "nix/bun.nix",
                   "nix/toolchain-sources.json", "nix/scripts/canonicalize-node-modules.ts",
                   "nix/scripts/normalize-bun-binaries.ts", "script/module-registry.json",
-                  "script/toolchain-registry.json", *paths).splitlines()
+                  "script/toolchain-registry.json", *paths).split("\0")
     blobs = {}
+    modes = {}
     for line in entries:
+        if not line:
+            continue
         metadata, path = line.split("\t", 1)
         require(metadata.split()[1] == "blob", "DEPENDENCY_INPUT_NOT_BLOB:" + path)
         blobs[path] = metadata.split()[2]
+        modes[path] = metadata.split()[0]
     require("bun.lock" in blobs and "nix/node_modules.nix" in blobs, "DEPENDENCY_INPUTS_MISSING")
     for entry in registry["modules"]:
         require(entry["path"] + "/package.json" in blobs, "DEPENDENCY_MODULE_MISSING:" + entry["path"])
+        require(modes[entry["path"] + "/package.json"] in {"100644", "100755"},
+                "DEPENDENCY_MANIFEST_NOT_REGULAR:" + entry["path"] + "/package.json")
     for entry in roots:
         require(entry["path"] + "/" + entry["manifest"] in blobs, "DEPENDENCY_TOOLCHAIN_MISSING:" + entry["path"])
+        require(modes[entry["path"] + "/" + entry["manifest"]] in {"100644", "100755"},
+                "DEPENDENCY_MANIFEST_NOT_REGULAR:" + entry["path"] + "/" + entry["manifest"])
     return blobs
 
 
