@@ -84,6 +84,13 @@ test.each(['<>&"\r\n\u200B\n', "row\r\n".repeat(220)])("DOM-only insertion HTML 
   expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content, start: 0, end: content.length }])
 })
 
+test("large insertion retains final LF ownership before untouched paragraph", () => {
+  const content = "row\r\n".repeat(220)
+  const editor = document.createElement("div")
+  editor.innerHTML = promptEditorInsertionHTML(content, false) + "<div>b</div>"
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content: content + "\nb", start: 0, end: content.length + 2 }])
+})
+
 test("DOM-only terminal caret stays editable for the next native keypress", () => {
   const editor = document.createElement("div")
   editor.contentEditable = "true"

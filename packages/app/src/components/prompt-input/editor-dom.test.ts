@@ -126,6 +126,9 @@ describe("prompt-input editor dom", () => {
     ["<span>a<br></span>b", "a\nb"],
     ["<div>a<span><i><br></i></span>b</div>", "a\nb"],
     ["<div>a<span><br></span></div><div>b</div>", "a\nb"],
+    // Run 38598975727, both insert-break traces: native editing retains the original DIV separator.
+    ['a<br data-prompt-break=""><div>b</div>', "a\n\nb"],
+    ['a<span><br data-prompt-break=""></span><div>b</div>', "a\n\nb"],
     ["```owner-demand<div>é — 😀\u200B</div><div><br></div><div>```</div><div><br></div>", "```owner-demand\né — 😀\u200B\n\n```\n"],
   ])("decodes browser line boxes: %s", (html, expected) => {
     const container = document.createElement("div")

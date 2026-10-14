@@ -168,11 +168,16 @@ export function PromptInputV2(props: PromptInputV2Props) {
             class="relative z-10 block min-h-[60px] max-h-[180px] w-full overflow-y-auto whitespace-pre-wrap bg-transparent px-4 pt-4 pb-2 text-[13px] font-[440] leading-5 text-v2-text-text-base focus:outline-none empty:before:content-['\200B'] [&_[data-mention=file]]:text-syntax-property [&_[data-mention=agent]]:text-syntax-type [&_[data-mention=reference]]:text-syntax-keyword"
             classList={{ "font-mono!": state.mode === "shell", "opacity-50": props.disabled }}
             onInput={(event) => {
-              const cursor = promptInputV2Cursor(event.currentTarget)
-              const prompt = parsePromptInputV2Editor(event.currentTarget)
-              const images = props.controller.parts().filter((part) => part.type === "image")
-              localInput = true
-              props.controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], cursor)
+              const input = event.currentTarget
+              const controller = props.controller
+              const prompt = parsePromptInputV2Editor(input)
+              const images = controller.parts().filter((part) => part.type === "image")
+              // Native insertHTML emits input before its final selection is installed.
+              queueMicrotask(() => {
+                if (editor !== input) return
+                localInput = true
+                controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], promptInputV2Cursor(input))
+              })
             }}
             onKeyDown={(event) => {
               const composing = composition.active || event.isComposing || event.keyCode === 229
