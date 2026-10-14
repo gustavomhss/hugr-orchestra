@@ -16,7 +16,7 @@ function server(status: Record<string, number> = {}, htmlDefault = false) {
           return new Response("<!doctype html><title>UI catchall</title>", { headers: { "content-type": "text/html" } })
         if (status[url.pathname]) return Response.json({ message: "endpoint failed" }, { status: status[url.pathname] })
         if (url.pathname === "/api/provider")
-          return Response.json({ location: {}, data: [{ id: "opencode", name: "OpenCode" }] })
+          return Response.json({ location: {}, data: [{ id: "opencode", name: "Zen" }] })
         if (url.pathname === "/api/model")
           return Response.json({
             location: {},

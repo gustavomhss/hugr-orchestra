@@ -41,7 +41,7 @@ function provider(id: string, releases: Array<{ id: string; date: string; family
   }
 }
 
-test("old free OpenCode and slash-ID OpenRouter models remain selectable without saved preferences", () => {
+test("old free Zen and slash-ID OpenRouter models remain selectable without saved preferences", () => {
   createRoot((dispose) => {
     const catalog = createModelCatalog(
       () => [
