@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { LLM } from "@orchestra/llm"
 import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
-import { DateTime, Effect, Layer } from "effect"
+import { DateTime, Effect, Layer, Schema } from "effect"
 import { Headers } from "effect/unstable/http"
 import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
@@ -43,6 +43,54 @@ const model = (api: Api, variants: ModelV2.Info["variants"] = []) =>
   })
 
 describe("SessionRunnerModel", () => {
+  it.live("lowers canonical generation temperature zero to real HTTP and preserves omitted defaults", () =>
+    Effect.gen(function* () {
+      const captured: Array<Record<string, unknown>> = []
+      const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ port: 0, async fetch(request) {
+        captured.push(Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(await request.json()))
+        return new Response('data: {"id":"test","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n',
+          { headers: { "Content-Type": "text/event-stream" } })
+      } })), (server) => Effect.promise(() => server.stop(true)))
+      yield* Effect.forEach([undefined, { temperature: 0 }], (generation) => Effect.gen(function* () {
+        const resolved = yield* SessionRunnerModel.fromCatalogModel(model({
+          type: "aisdk", package: "@ai-sdk/openai-compatible", url: `${server.url.origin}/v1`,
+          settings: generation === undefined ? {} : { generation },
+        }))
+        if (generation === undefined) expect(resolved.route.defaults.generation).toBeUndefined()
+        yield* LLMClient.generate(LLM.request({ model: resolved, prompt: "Hello" })).pipe(
+          Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
+        )
+      }))
+      expect(captured).toHaveLength(2)
+      expect(Object.hasOwn(captured[0], "temperature")).toBe(false)
+      expect(captured[1].temperature).toBe(0)
+    }),
+  )
+
+  it.effect("rejects invalid generation settings with typed model-resolution failure", () =>
+    Effect.gen(function* () {
+      for (const generation of ["0", null, { temperature: "0" }, { temperature: 0, typo: true }]) {
+        const failure = yield* SessionRunnerModel.fromCatalogModel(model({
+          type: "aisdk", package: "@ai-sdk/openai-compatible", url: "https://compatible.example/v1", settings: { generation },
+        })).pipe(Effect.flip)
+        expect(failure).toMatchObject({ _tag: "SessionRunnerModel.ModelUnavailableError", providerID: "test-provider", modelID: "test-model",
+          cause: "Invalid api.settings.generation: expected canonical GenerationOptions" })
+      }
+    }),
+  )
+
+  it.effect("generation settings do not permit protocol-owned http body overlays", () =>
+    Effect.gen(function* () {
+      const catalog = model({ type: "aisdk", package: "@ai-sdk/openai-compatible", url: "https://compatible.example/v1",
+        settings: { generation: { temperature: 0 } } })
+      const resolved = yield* SessionRunnerModel.fromCatalogModel(ModelV2.Info.make({ ...catalog,
+        request: { headers: {}, body: { temperature: 0.5 } },
+      }))
+      const failure = yield* LLMClient.prepare(LLM.request({ model: resolved, prompt: "Hello" })).pipe(Effect.flip)
+      expect(failure.message).toContain("http.body cannot overlay protocol-owned field(s): temperature")
+    }),
+  )
+
   it.live("sends the OpenCode Zen user agent for free models after header overrides", () =>
     Effect.gen(function* () {
       const captured: Array<{ userAgent: string | null; custom: string | null; auth: string | null }> = []

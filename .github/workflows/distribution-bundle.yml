@@ -73,13 +73,13 @@ jobs:
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/session-runner-model.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - lane: regression
             package: core
             host: windows-latest
             cpu: X64
             platform: win32
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/session-runner-model.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - lane: regression
             package: cli
             host: macos-14
