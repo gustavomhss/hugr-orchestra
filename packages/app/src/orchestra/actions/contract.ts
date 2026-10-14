@@ -16,7 +16,7 @@ export type Route = {
 
 export type ErrorState = { kind: string; message: ActionKey; retryAfter?: number }
 export type Data<T> = { status: "idle" | "loading" | "ready" | "error"; value?: T; error?: ErrorState }
-export type Filters = { query: string; status: string; ref: string; event: string }
+export type Filters = { query: string; status: string; ref: string; event: string; scope?: string }
 export type Dialog =
   | { kind: "connect" }
   | { kind: "dispatch"; workflowID: string }
@@ -28,7 +28,7 @@ export type Dialog =
   | { kind: "create-workflow" }
   | { kind: "approval"; runID: string }
   | { kind: "review-source" }
-  | { kind: "project-settings" }
+  | { kind: "project-settings"; target?: "local" | "native" }
   | {
     kind: "create-variable" | "edit-variable" | "delete-variable" | "create-environment" | "edit-environment" |
       "delete-environment" | "create-runner" | "edit-runner" | "delete-runner" | "create-schedule" |
@@ -81,6 +81,9 @@ export type Model = {
   readonly previewLog: (jobID: string) => Promise<void>
   readonly editSource: (text: string) => void
   readonly validateSource: () => Promise<void>
+  readonly discardSource: () => void
+  readonly inspectWorkflow: (workflowID: string, ref: string, signal: AbortSignal) => Promise<Actions.Graph>
+  readonly resourceScopes: (signal: AbortSignal) => Promise<Actions.ResourcePage>
   readonly resourceAction: (action: "play" | "pause" | "keep", resource: Actions.Resource) => Promise<void>
   readonly workflowState: (enabled: boolean, workflowID: string) => Promise<void>
   readonly dispose: () => void

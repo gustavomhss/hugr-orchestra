@@ -9,6 +9,10 @@ import { createRequestOwner, createSourceDraft, previewResponse, saveResponse } 
 import { selectedRoute, visibleWorkflows } from "./selection"
 import { readPolicy } from "./policy"
 import { readDialog } from "./dialog-data"
+import { createActionsInspection } from "./inspection"
+import { readProposalSource } from "./proposal-source"
+import { saveLocalPolicy } from "./local-policy"
+import { validTransfer } from "./transfer-selection"
 
 export type ActionsPreference = { bindingID?: Actions.BindingID; route?: Route; filters?: Partial<Filters>; pending?: ActionsPending }
 export type ActionsPreferences = ActionsPreference & { save?: (value: ActionsPreference) => void }
@@ -75,7 +79,7 @@ export function createActionsModel(input: {
         if (data.status === "ready") pages[kind] = cursor
         update(kind === "resources" ? { resources: data } : { artifacts: data })
       }, async (signal) => {
-        const value = await input.api.resources(target, { kind: resourceKind, ...(route.runID ? { runID: route.runID } : {}), ...(resourceKind === "caches" && state.binding?.provider.kind === "gitlab" ? {} : { cursor, limit: 30 }) }, signal)
+        const value = await input.api.resources(target, { kind: resourceKind, ...(resourceKind === "variables" && filters.scope ? { scope: filters.scope } : {}), ...(route.runID ? { runID: route.runID } : {}), ...(resourceKind === "caches" && state.binding?.provider.kind === "gitlab" ? {} : { cursor, limit: 30 }) }, signal)
         value.items.forEach((item) => { bound(item, target); if (item.kind !== resourceKind) throw new ActionsRequestError("invalid_response") })
         if (value.items.length > 30) throw new ActionsRequestError("metadata_truncated")
         if (!filters.query) return value
@@ -161,7 +165,7 @@ export function createActionsModel(input: {
       if (data.status === "ready" && data.value) { editor.install({ ...data.value, editable: data.value.editable && !route.runID }); return }
       update({ source: { ...data, value: editor.base ?? data.value } })
     }, async (signal) =>
-      validate(await input.api.source(target, query, signal)))
+      validate(await readProposalSource(input.api, target, state.binding?.provider.kind ?? "github", query, signal)))
   }
   const view = (force: boolean) => owner.run("view", identity(), async (handle) => {
     if (state.route.view === "local") return
@@ -270,6 +274,13 @@ export function createActionsModel(input: {
   if (pending?.operationID) void commands.refreshReceipt()
   return {
     state, navigate, refresh, previewLog, dispose,
+    ...createActionsInspection({ api: input.api, state: () => state, disposed: () => owner.disposed }),
+    discardSource() {
+      if (owner.disposed || commands.sourceDiscardBlocked) return
+      const created = !!editor.created
+      editor.abandon()
+      if (created && !editor.dirty()) navigate({ view: "library" })
+    },
     dialog(dialog) {
       owner.cancel("dialog-data")
       if (!dialog || !state.binding || !["project-settings", "approval", "edit-environment"].includes(dialog.kind)) { commands.dialog(dialog); return }
@@ -286,19 +297,8 @@ export function createActionsModel(input: {
       }, (cause) => update({ resources: { status: "error", error: actionsError(cause) } }))
     },
     submit(payload) {
-      if (state.dialog?.kind !== "project-settings") return commands.submit(payload)
-      const provider = Schema.optional(Actions.ProviderKind)
-      const retention = Schema.Int.check(Schema.isGreaterThan(0))
-      const form = Schema.decodeUnknownOption(Schema.Union([Schema.Struct({ provider, retentionDays: retention, execution: Schema.NonEmptyString }),
-        Schema.Struct({ provider, retention, policy: Schema.NonEmptyString })]), { onExcessProperty: "error" })(payload)
-      if (!state.binding || Option.isNone(form) || (form.value.provider && form.value.provider !== state.binding.provider.kind)) { update({ commandError: actionsError(new ActionsRequestError("invalid_input")) }); return Promise.resolve() }
-      const target = scope(state.binding)
-      const value = "retentionDays" in form.value ? { retentionDays: form.value.retentionDays, execution: form.value.execution } : { retentionDays: form.value.retention, execution: form.value.policy }
-      return mutation("policy", async (signal) => {
-        const saved = await input.api.updatePolicy(target, value, signal)
-        if (saved.binding.id !== target.bindingID || saved.binding.revision !== target.revision + 1) throw new ActionsRequestError("binding_stale")
-        if (!owner.disposed && state.binding?.id === target.bindingID && state.binding.revision === target.revision) { update({ dialog: undefined }); await view(true) }
-      })
+      if (state.dialog?.kind !== "project-settings" || state.dialog.target === "native") return commands.submit(payload)
+      return saveLocalPolicy({ api: input.api, state: () => state, update, mutation, refresh: () => view(true) }, payload)
     },
     editSource: editor.edit, validateSource: editor.validate, resourceAction: commands.resourceAction, workflowState: commands.workflowState,
     filter(patch) {
@@ -384,14 +384,4 @@ export function createActionsModel(input: {
       }, (error) => update({ commandError: actionsError(error) }))
     },
   }
-}
-
-function validTransfer(state: State, target: Actions.TransferInput) {
-  if (target.kind === "artifact" && !state.route.runID) return state.resources.value?.items.some((item) => item.kind === "artifacts" && item.id === target.id && item.bindingID === state.binding?.id)
-  if (target.kind === "secureFile" || !state.binding || !state.route.runID || target.runID !== state.route.runID) return false
-  if (target.kind !== "artifact" && state.route.attempt !== undefined && target.attempt !== state.route.attempt) return false
-  if (target.kind === "runLog") return target.id === state.route.runID
-  if (target.kind === "artifact") return state.artifacts.value?.items.some((item) => item.id === target.id && item.bindingID === state.binding?.id)
-  return state.jobs.value?.items.some((item) => item.id === target.id && item.bindingID === state.binding?.id && item.runID === target.runID
-    && (target.attempt === undefined || item.attempt === undefined || item.attempt === target.attempt))
 }

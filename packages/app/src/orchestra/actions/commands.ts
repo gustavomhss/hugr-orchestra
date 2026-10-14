@@ -5,6 +5,7 @@ import type { Dialog, State } from "./contract"
 import { canEditSource, immutableSource, sourceIdentity, type createRequestOwner, type createSourceDraft } from "./requests"
 import { canRequest } from "./request-policy"
 import { canRequestAction, resourceWritable } from "./action-eligibility"
+import { readProposalSource } from "./proposal-source"
 
 type Phase = { clientID: string; operationID?: Actions.OperationID; kind: Actions.OperationKind }
 export type ActionsPending = { clientID: string; binding: Actions.BindingRef; operationID?: Actions.OperationID; intent?: Actions.OperationIntent; phases?: readonly Phase[] }
@@ -163,7 +164,7 @@ export function createActionsCommands(input: {
               if (observed.bindingID !== scope.bindingID || observed.ref !== plan.form.branch || observed.commit !== plan.base.commit)
                 throw new ActionsRequestError("source_conflict")
               if (plan.source) {
-                const native = await input.api.source(scope, { path: plan.path, ref: plan.form.branch }, handle.signal)
+                 const native = await readProposalSource(input.api, scope, captured.provider, { path: plan.path, ref: plan.form.branch }, handle.signal)
                 if (!handle.current() || review !== plan || !matches(captured)) return
                 if (sourceIdentity(native) !== sourceIdentity({ ...plan.source, ref: plan.form.branch }) || native.text !== plan.source.text)
                   throw new ActionsRequestError("source_conflict")
@@ -171,7 +172,7 @@ export function createActionsCommands(input: {
               plan.branched = observed
             }
             if (plan.step === 1) {
-              const observed = await input.api.source(scope, { path: plan.path, ref: plan.form.branch }, handle.signal)
+               const observed = await readProposalSource(input.api, scope, captured.provider, { path: plan.path, ref: plan.form.branch }, handle.signal)
               if (!handle.current() || review !== plan || !matches(captured)) return
               if (observed.bindingID !== scope.bindingID || observed.ref !== plan.form.branch || observed.path !== plan.path
                 || observed.text !== plan.form.text || !observed.commit || observed.commit === plan.branched?.commit
@@ -212,6 +213,7 @@ export function createActionsCommands(input: {
   }
   return {
     submit, refreshReceipt,
+    get sourceDiscardBlocked() { return !!lease?.uncertain || !!review },
     dialog(dialog?: Dialog) {
       if (input.owner.disposed || input.state().submitting) return
       input.editor?.cancelCreate()
