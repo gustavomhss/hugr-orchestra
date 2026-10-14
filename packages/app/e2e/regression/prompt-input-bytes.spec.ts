@@ -204,10 +204,13 @@ for (const newLayoutDesigns of [false, true]) {
         const query = scenario.mode === "popover-populated" ? "note" : "missing"
         const fetched = page.waitForResponse((response) => {
           const url = new URL(response.url())
-          return url.pathname === "/find/file" && url.searchParams.get("query") === query
+          return url.origin === new URL(server).origin && response.request().method() === "GET" &&
+            url.pathname === "/find/file" && url.searchParams.get("query") === query
         })
         await editor.fill(`see @${query}`)
-        await (await fetched).finished()
+        const response = await fetched
+        expect(response.ok()).toBe(true)
+        expect(await response.finished()).toBeNull()
         if (scenario.mode === "popover-populated") await expect(page.locator('[data-suggestion-id="file:note.md"]')).toBeVisible()
         if (scenario.mode === "popover-empty") await expect(page.getByText("No matching items", { exact: true })).toBeVisible()
         await editor.press("Shift+Enter")
@@ -302,10 +305,11 @@ for (const newLayoutDesigns of [false, true]) {
       await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
       expect(executions).toHaveLength(0)
       const pending = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint)
-      const failed = page.waitForEvent("requestfailed", { predicate: (request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint })
+      const failed = page.waitForEvent("requestfailed", { predicate: async (candidate) => candidate === await pending })
       await editor.press("Enter")
       const request = await pending
-      await failed
+      expect(new URL(request.url()).origin).toBe(new URL(server).origin)
+      expect(await failed).toBe(request)
       await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
       expect(executions).toHaveLength(1)
       expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
