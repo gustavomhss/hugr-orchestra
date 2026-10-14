@@ -23,8 +23,18 @@ async function source(text: string) {
   return { root, file }
 }
 
+const Compiler = Schema.Struct({ boundary: Schema.Literal("omni"), pid: Schema.NullOr(Schema.Int),
+  stopped: Schema.Boolean, osClosed: Schema.Boolean, outputSettled: Schema.Boolean, outputClosed: Schema.Boolean,
+  treeEmpty: Schema.Boolean, exitCode: Schema.NullOr(Schema.Int),
+  telemetry: Schema.Struct({ spawns: Schema.Int, delegations: Schema.Int }) })
 const Lifecycle = Schema.Struct({ directory: Schema.String, mapped: Schema.Boolean, compilerJoined: Schema.Boolean,
-  removed: Schema.Boolean, compiler: Schema.Struct({ spawns: Schema.Int, delegations: Schema.Int }) })
+  removed: Schema.Boolean, compiler: Compiler })
+
+function expectJoinedCompiler(compiler: typeof Compiler.Type) {
+  expect(compiler.pid).toBeGreaterThan(0)
+  expect(compiler).toMatchObject({ boundary: "omni", stopped: true, osClosed: true,
+    outputSettled: true, outputClosed: true, treeEmpty: true })
+}
 
 test("native Windows adapter releases buffer leases on failed pointers, closed calls and rejected live attestation", async () => {
   const native = await ArtifactNativeWindows.load()
@@ -77,8 +87,7 @@ test("native Windows adapter releases buffer leases on failed pointers, closed c
   expect(native.leases().pendingBuffers).toBe(0)
   expect(native.attest().arch).toBe(process.arch)
   expect(native.leases().pendingBuffers).toBe(0)
-  expect(native.compiler.spawns).toBeGreaterThan(0)
-  expect(native.compiler.delegations).toBe(0)
+  expectJoinedCompiler(native.compiler)
 }, 180_000)
 
 test("native Windows compiler failure and deadline join owned tree before private output cleanup", async () => {
@@ -92,8 +101,8 @@ test("native Windows compiler failure and deadline join owned tree before privat
     const lifecycle = Schema.decodeUnknownSync(Lifecycle)(failure.lifecycle)
     if (!lifecycle.compilerJoined) retained.add(input.root)
     expect(failure.message).toContain(mode === "deadline" ? "ARTIFACT_WINDOWS_NATIVE_BUILD_TIMEOUT" : "ARTIFACT_WINDOWS_NATIVE_BUILD_FAILED")
-    expect(lifecycle).toMatchObject({ mapped: false, compilerJoined: true, removed: true, compiler: { delegations: 0 } })
-    expect(lifecycle.compiler.spawns).toBeGreaterThan(0)
+    expect(lifecycle).toMatchObject({ mapped: false, compilerJoined: true, removed: true })
+    expectJoinedCompiler(lifecycle.compiler)
     await expect(lstat(lifecycle.directory)).rejects.toMatchObject({ code: "ENOENT" })
     expect(await readdir(input.root)).toEqual(["fault.rs"])
     expect(await Bun.file(input.file).text()).toContain("force_link")
@@ -108,8 +117,8 @@ test("native Windows mapped addon export failure retains explicit process-lifeti
   if (!(failure instanceof Error) || !("lifecycle" in failure)) throw failure
   expect(failure.message).toBe("ARTIFACT_WINDOWS_NATIVE_EXPORTS_MISSING")
   const lifecycle = Schema.decodeUnknownSync(Lifecycle)(failure.lifecycle)
-  expect(lifecycle).toMatchObject({ mapped: true, compilerJoined: true, removed: false, compiler: { delegations: 0 } })
-  expect(lifecycle.compiler.spawns).toBeGreaterThan(0)
+  expect(lifecycle).toMatchObject({ mapped: true, compilerJoined: true, removed: false })
+  expectJoinedCompiler(lifecycle.compiler)
   expect((await lstat(lifecycle.directory)).isDirectory()).toBe(true)
   expect(ArtifactNativeWindows.ownership()).toContainEqual({ directory: lifecycle.directory,
     module: join(lifecycle.directory, "artifact-native.node"), lifetime: "process" })
@@ -136,9 +145,68 @@ catch(error) { if (!error?.lifecycle) throw error; console.log(JSON.stringify({f
     }))))(result.stdout)
     if (!reply.lifecycle.compilerJoined) retained.add(input.root)
     expect(reply.flag).toBe(flag)
-    expect(reply.lifecycle).toMatchObject({ mapped: false, compilerJoined: true, removed: true, compiler: { delegations: 0 } })
-    expect(reply.lifecycle.compiler.spawns).toBeGreaterThan(0)
+    expect(reply.lifecycle).toMatchObject({ mapped: false, compilerJoined: true, removed: true })
+    expectJoinedCompiler(reply.lifecycle.compiler)
     await expect(lstat(reply.lifecycle.directory)).rejects.toMatchObject({ code: "ENOENT" })
     expect(await readdir(input.root)).toEqual(["fault.rs"])
   }
 }, 330_000)
+
+test("native Windows compiler accepts its joined child during unrelated concurrent on-mode delegation", async () => {
+  expectSpawn(import.meta.path)
+  // Isolate the real legacy delegation from the parent suite's strict counters.
+  // No environment flags or telemetry values are mutated in either process.
+  const script = `
+import { NodeFileSystem, NodePath } from '@effect/platform-node';
+import { Effect, Layer } from 'effect';
+import { ChildProcess, ChildProcessSpawner } from 'effect/unstable/process';
+import { AppProcess } from ${JSON.stringify(new URL("../../../core/src/process.ts", import.meta.url).href)};
+import { CrossSpawnSpawner } from ${JSON.stringify(new URL("../../../core/src/cross-spawn-spawner.ts", import.meta.url).href)};
+import { Omni } from ${JSON.stringify(new URL("../../../core/src/omni.ts", import.meta.url).href)};
+import { ArtifactNativeWindows } from ${JSON.stringify(new URL("../../../core/src/artifact-native-windows.ts", import.meta.url).href)};
+const spawner = Layer.effect(ChildProcessSpawner.ChildProcessSpawner, CrossSpawnSpawner.makeWith('on', {windowsHide:true}))
+  .pipe(Layer.provide(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)));
+const service = await Effect.runPromise(Effect.gen(function*(){
+  const app = yield* AppProcess.Service; return app;
+}).pipe(Effect.provide(AppProcess.layerWith('on').pipe(Layer.provide(spawner))), Effect.scoped));
+const pipeline = ChildProcess.make(process.execPath, ['--eval', "process.stdout.write('unrelated-delegation')"])
+  .pipe(ChildProcess.pipeTo(ChildProcess.make(process.execPath, ['--eval', 'process.stdin.pipe(process.stdout)'])));
+const before = Omni.snapshot();
+const state = {settled:false};
+const held = ArtifactNativeWindows.build().then(native=>({native}), error=>({error})).finally(()=>{state.settled=true});
+try {
+  const deadline = Date.now()+15000;
+  while(Omni.snapshot().spawns === before.spawns) {
+    if(state.settled || Date.now() >= deadline) throw Error('ARTIFACT_WINDOWS_CONCURRENT_CONTROL_NOT_ADMITTED');
+    await Bun.sleep(1);
+  }
+  if(state.settled) throw Error('ARTIFACT_WINDOWS_CONCURRENT_CONTROL_MISSED_ADMISSION');
+  const start = Omni.snapshot().delegations;
+  const unrelated = await Effect.runPromise(service.run(pipeline, {
+    timeout:20000, maxOutputBytes:4096, maxErrorBytes:4096,
+  }).pipe(Effect.scoped));
+  const delegations = Omni.snapshot().delegations-start;
+  if(unrelated.exitCode !== 0 || unrelated.stdout.toString('utf8') !== 'unrelated-delegation' || delegations < 1)
+    throw Error('ARTIFACT_WINDOWS_CONCURRENT_CONTROL_DELEGATION_UNPROVEN');
+  const result = await held;
+  if('error' in result) throw result.error;
+  // Positive telemetry here proves interference occurred inside the compiler's
+  // observation window; telemetry is not the producer's admission predicate.
+  if(result.native.compiler.telemetry.delegations < 1)
+    throw Error('ARTIFACT_WINDOWS_CONCURRENT_CONTROL_MISSED_COMPILER_WINDOW');
+  console.log(JSON.stringify({compiler:result.native.compiler,delegations,output:unrelated.stdout.toString('utf8')}));
+} finally { await held; }
+`
+  const result = await command([process.execPath, "--eval", script], {
+    cwd: fileURLToPath(new URL("../../../core", import.meta.url)), env: process.env,
+  }, 180_000)
+  expect(result.code, result.stderr).toBe(0)
+  const reply = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+    compiler: Compiler, delegations: Schema.Int, output: Schema.String,
+  }))))(result.stdout)
+  expect(reply.delegations).toBeGreaterThan(0)
+  expect(reply.output).toBe("unrelated-delegation")
+  expect(reply.compiler.telemetry.delegations).toBeGreaterThan(0)
+  expectJoinedCompiler(reply.compiler)
+  expect(reply.compiler.exitCode).toBe(0)
+}, 210_000)

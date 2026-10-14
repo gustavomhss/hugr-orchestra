@@ -17,12 +17,23 @@ type Scalar = number | bigint | null
 type Symbol = "NtCreateFile" | "NtQueryInformationFile" | "NtReadFile" | "NtWriteFile" | "NtQueryDirectoryFile" |
   "NtSetInformationFile" | "NtClose" | "QueryDosDeviceW" | "GetFinalPathNameByHandleW" | "CompareStringOrdinal"
 type Attestation = { arch: NodeJS.Architecture; processMachine: number; nativeMachine: number; moduleMachine: number; invalidHandleStatus: number }
+export type CompilerReceipt = {
+  boundary: "omni"
+  pid: number | null
+  stopped: boolean
+  osClosed: boolean
+  outputSettled: boolean
+  outputClosed: boolean
+  treeEmpty: boolean
+  exitCode: number | null
+  telemetry: { spawns: number; delegations: number }
+}
 export type Native = {
   ptr(buffer: Uint8Array): Pointer
   attest(cpu?: NodeJS.Architecture, processHandle?: bigint): Attestation
   attestation: Attestation
   ownership: Owner
-  compiler: { spawns: number; delegations: number }
+  compiler: CompilerReceipt
   leases(): { pendingBuffers: number }
   dlopen(library: string, definitions: Record<string, unknown>): { symbols: Record<Symbol, (...args: Scalar[]) => number>; close(): void }
 }
@@ -65,7 +76,9 @@ export async function build(input: { source?: string; parent?: string; timeoutMs
   const omni = await Omni.load()
   const directory = await mkdtemp(join(input.parent ?? tmpdir(), "orchestra-artifact-native-"))
   const output = join(directory, "artifact-native.node")
-  const lifecycle = { directory, mapped: false, compilerJoined: true, removed: false, compiler: { spawns: 0, delegations: 0 } }
+  const compiler: CompilerReceipt = { boundary: "omni", pid: null, stopped: false, osClosed: false,
+    outputSettled: false, outputClosed: false, treeEmpty: false, exitCode: null, telemetry: { spawns: 0, delegations: 0 } }
+  const lifecycle = { directory, mapped: false, compilerJoined: true, removed: false, compiler }
   try {
     const before = Omni.snapshot()
     const child = omni.spawn("rustup", ["run", "1.98.0", "rustc",
@@ -74,6 +87,7 @@ export async function build(input: { source?: string; parent?: string; timeoutMs
       input.source ? resolve(input.source) : fileURLToPath(new URL("./artifact-native-windows.rs", import.meta.url)), "-o", output,
     ], { cwd: directory, env: Omni.childEnv(), inheritEnv: false, text: false, backpressure: true, stdin: "closed" })
     lifecycle.compilerJoined = false
+    compiler.pid = child.pid
     Omni.count("spawns") // A real, owned native child now exists; no delegation path exists here.
     const streams = { stdout: { bytes: 0, chunks: [] as Buffer[] }, stderr: { bytes: 0, chunks: [] as Buffer[] } }
     const drain = (async () => {
@@ -89,6 +103,7 @@ export async function build(input: { source?: string; parent?: string; timeoutMs
     const timer: { current?: ReturnType<typeof setTimeout> } = {}
     const result = await (async () => {
       try {
+        if (!Number.isSafeInteger(child.pid) || child.pid <= 0) throw new Error("ARTIFACT_WINDOWS_NATIVE_COMPILER_PID_INVALID")
         return await Promise.race([
           Promise.all([child.wait(), drain]).then(([exit]) => exit),
           new Promise<never>((_, reject) => {
@@ -100,17 +115,24 @@ export async function build(input: { source?: string; parent?: string; timeoutMs
         // Join OS exit, pipe consumer and whole owned tree before touching the
         // private compiler directory. An unproved join is a retained failure.
         const joined = await Promise.allSettled([child.stop({ graceMs: 2_000 }), child.wait(), drain])
+        compiler.stopped = joined[0].status === "fulfilled"
+        compiler.osClosed = joined[1].status === "fulfilled"
+        compiler.outputSettled = true
+        compiler.outputClosed = joined[2].status === "fulfilled"
+        compiler.exitCode = joined[1].status === "fulfilled" ? joined[1].value.exitCode : null
+        // Process-global counters can include unrelated concurrent spawns and
+        // delegations. Report them, never use them to admit this owned child.
+        const after = Omni.snapshot()
+        compiler.telemetry = { spawns: after.spawns - before.spawns, delegations: after.delegations - before.delegations }
         const failures = joined.flatMap((item, index) => item.status === "rejected" && index !== 2 ? [item.reason] : [])
         if (failures.length) throw new AggregateError(failures, "ARTIFACT_WINDOWS_NATIVE_COMPILER_JOIN_FAILED")
-        if ((await child.processes()).length !== 0) throw new Error("ARTIFACT_WINDOWS_NATIVE_COMPILER_TREE_NOT_EMPTY")
+        compiler.treeEmpty = (await child.processes()).length === 0
+        if (!compiler.treeEmpty) throw new Error("ARTIFACT_WINDOWS_NATIVE_COMPILER_TREE_NOT_EMPTY")
         lifecycle.compilerJoined = true
-        const after = Omni.snapshot()
-        lifecycle.compiler = { spawns: after.spawns - before.spawns, delegations: after.delegations - before.delegations }
-        if (lifecycle.compiler.spawns <= 0 || lifecycle.compiler.delegations !== 0)
-          throw new Error("ARTIFACT_WINDOWS_NATIVE_COMPILER_OWNERSHIP_FAILED")
       }
     })()
-    const compiler = lifecycle.compiler
+    if (!compiler.stopped || !compiler.osClosed || !compiler.outputClosed || !compiler.treeEmpty)
+      throw new Error("ARTIFACT_WINDOWS_NATIVE_COMPILER_RECEIPT_INVALID")
     if (result.exitCode !== 0) throw new Error(`ARTIFACT_WINDOWS_NATIVE_BUILD_FAILED: ${Buffer.concat(streams.stderr.chunks).toString("utf8")}`)
     requireImage(await readFile(output), process.arch, true)
     const native: {
