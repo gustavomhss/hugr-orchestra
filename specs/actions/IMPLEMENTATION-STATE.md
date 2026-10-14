@@ -1,71 +1,89 @@
-# Actions implementation — active
+# Actions implementation — evidence snapshot, 2026-10-14
 
-Owner instructed execution on 2026-10-12. Planning/approval source remains in
-`/Users/gustavoschneiter/Documents/HuGR/_worktrees/actions-campaign/specs/actions`.
+Candidate C: `92af2d68bb492a28a9f905c20fea2c714d622fc7`, from real delivery
+root `/Users/gustavoschneiter/Documents/HuGR/_worktrees/actions-delivery`.
+Documentation branch/worktree: `actions-evidence-ledger`, based exactly on C.
+This SHA identifies the requested candidate, not an inferred current delivery HEAD.
 
-W0 baseline: `fork/dev` `e8319438e5cfb7a8039915ce6e8c2cf6ef390f6d`, tree
-`dabd6316bbe10134cc6f5ea6749ac096a3a06da1`. Implementation worktree:
-`/Users/gustavoschneiter/Documents/HuGR/_worktrees/actions-runtime`, branch
-`actions-runtime`. Frozen-lockfile installation completed; source instructions read.
+W0 remains `e8319438e5cfb7a8039915ce6e8c2cf6ef390f6d`, tree
+`dabd6316bbe10134cc6f5ea6749ac096a3a06da1`. Original `actions-runtime` work is
+preserved; publishing `dev` base is `e87fd95799cba0220abf5c86b203bc8d82b29732`.
+Planning authority remains `actions-campaign/specs/actions` and the approved mock.
+See [RESUME-VERIFICATION.md](RESUME-VERIFICATION.md) for exact evidence paths and
+historical CI references; [UI-MOCK-PARITY.md](UI-MOCK-PARITY.md) tracks P01–P20.
 
-Lead owns shared Schema facade/root exports, Core facade/Location registration,
-Protocol API/Server handler assembly, client contract/generation, App route/i18n
-assembly and SQL/migration integration. Other sessions remain independent.
+## Implemented scope, with qualification boundaries
 
-W1 wire schemas exist under `packages/schema/src/actions/**`. Schema and initial
-Core scaffold typechecks completed. Admission now uses explicit non-sensitive
-target/precondition DTOs instead of arbitrary persisted JSON. Binding resolution
-and GitLab multipart upload are explicit transport seams.
+- W1 bindings, credential-safe GitHub CLI/GitLab HTTPS transport, durable admission,
+  production migration `20261012115744_actions-operation`, read-only reconciliation
+  and raw Client streams are integrated. Safe acknowledgements persist; one-time
+  output stays request-owned. Unknown outcomes never automatically replay.
+- W2 native catalog/run/job/source reads, scoped cursors and bounded structural
+  YAML graph parsing are assembled through Core, Protocol, Server and generated
+  Client. Definitions remain separate from actual executions/attempts. Source reads
+  pin native commit/blob; missing identities and native totals are not invented.
+- W3 native commands, resources/configuration, source proposals and signed output
+  are implemented. Historical fixture green and cold reviews qualify their old
+  scopes only; final candidate tests, platform behavior and mutation facets remain
+  PENDING. `W1-*`, `W2-*`, `W3-COMMAND-BRIEF.md` are phase records, not final verdicts.
+- Resumed corrections cover action-specific request guards, view-owned dispatch
+  inspection, environment scope loading, exact local source proposals, and desktop
+  response streaming/finalization. Their presence is not execution evidence.
+- C includes native Solid-store snapshot detachment (`c27887b788`), store regression
+  cases (`a1286c5ad3`), policy focus restoration (`0c386bae4a`) and corrected Record
+  proxy expectations (`92af2d68bb`). All new focused CI qualification is PENDING.
 
-W1 foundations are integrated byte-exact from isolated writers and independently
-reviewed. Binding fixes include sanitized Git environment, exact POSIX path output
-and optimistic policy revisions. Operations use typed safe acknowledgements,
-read-only reconciliation and bounded non-executable admission tombstones. Client
-captures submitted identity/body/config before awaits and preserves raw streams.
+## Observed native/UI progress
 
-GitLab transport uses credential-safe scoped HTTPS per `W1-HTTP-DECISION.md`;
-local CLI configuration supplies request-memory-only authentication. Explicit TLS,
-manual redirects, actor checks and pull-independent shutdown are implemented.
-Post-send TLS errors remain outcome unknown. GitHub retains qualified CLI transport.
+J is the recorded 19:53 journey at application revision
+`a1286c5ad3209c5e5e5b1dd5218fd156f919f7e7`. Its overall status is **BLOCKED**,
+with diagnostics retained. It does not qualify later corrections in C.
 
-Generated SQLite migration: `20261012115744_actions-operation`. Operation fixtures
-no longer construct fallback tables; integrated run `38252950210` exercised the
-production Database migration: 29 tests pass on Linux and Windows. Migration check
-and Schema/Core/Protocol/Client typechecks completed. JSON clients regenerated.
+- Actual GitHub run `38177025125`, workflow `375039997`, attempt 1: 7 structural
+  definitions, 15 native jobs, 10 artifact metadata entries. Graph state is partial;
+  no fabricated matrix jobs. Job inspector and bounded 400-line log preview observed.
+- Execution source `.github/workflows/test.yml` stays pinned to
+  `e4045f16c04fefb8127ccdac5d653691b8211139`, blob
+  `9aba44be238b610f4a37c3324f4fbb2f9c14f3e3`, immutable. Run/source selection
+  survived Back/Forward/reload. Current `dev` is a separate source observation.
+- Typed dispatch fields `windows_e2e` and `cold` hydrated from both library and
+  workflow dialogs. Both canceled; no dispatch. Unknown authorization stayed Unknown.
+- New workflow observed native base on `dev`, local editor, successful local draft
+  validation, review dialog, cancel and explicit discard. No branch/write/review
+  provider publication or provider YAML acceptance was demonstrated.
+- Scope dialog read the native environment catalog, which was empty; only Repository
+  was offered. This proves the real empty-catalog case, not populated scope options.
+- English 1440px LTR/dark and forced-RTL/dark connection dialog geometry, Tab,
+  Escape and focus return were observed with a deliberately broken geometry control.
+  Real Arabic/light/420px stopped at `REAL_ARABIC_UI_NOT_OBSERVED`. The corrected
+  mixed Arabic/Latin local-input harness has no subsequent result; it is not provider
+  demo data or proof of translated Actions copy/full narrow geometry.
+- Native policy dialog exposed a real focus-return bug after hydration. C's
+  `settings.tsx` correction covers native/local invokers and stale ownership;
+  regression tests are written. Final UI proof and current CI remain PENDING.
 
-W1 review/evidence:
-- Binding APPROVE: `38215728565` (Linux17, Windows15 plus two named POSIX skips).
-- Operations APPROVE: `38214880315`, `38210909375`, `38211669826`; integrated above.
-- Raw Client APPROVE: `38213149427`; earlier downloads `38207523705`.
-- Transport APPROVE: `38245206834` plus final TLS-disposition `38248960760`.
-Each protection has an observed red/restored-green mutation in its review card.
+## Performance, delivery and remaining evidence
 
-Read/admission/graph API assembly is complete and independently reviewed. Server,
-Core, Protocol, Schema and Client typechecks pass; JSON clients regenerated. Real
-four-group HTTP qualification `38422976687` passed eight unfiltered tests per OS,
-including Location/auth/revision/native nullable-source/readback behavior. Core
-facade/readback qualification `38391576019` passed35 per OS. Both have observed
-meaningful mutation failures and independently verified source/snapshot readbacks.
+L completed descriptive curves at J's application revision: 5 warmups, 20 measured
+Home → Actions → Home cycles. Retention status here remains **NOISY / unresolved**;
+the artifact has no leak/stability/speed pass classifier. Positive controls observed
+allocation/release. Finite JS/DOM/listener curves do not prove absence of leaks or
+native-process retention. Baseline uses a different surface, revision and workload;
+publishing dev contains 225 commits not reachable from its baseline revision.
+No matched-workload regression or speed verdict follows. Shell relay 404 remains.
 
-GitHub/GitLab native execution command modules are integrated after cold review:
-GH `38424841106` (guarded dispatch) plus `38406651884`; GL `38425873127` (30 per OS).
-Schemas preserve provider-specific retry/play/erase/MR/trigger semantics. Public
-workflow/run/job/pipeline command routes now call durable Operations.execute;
-only safe acknowledgement enters storage, transient one-time output remains
-owner-request-only. Command HTTP lifetime/replay qualification is active next.
-Empty documented201/202/204 acknowledgements qualified in `38403587519` (16 per OS).
+43 child PRs are publication/packaging READY through `actions-epic-coverage` #620;
+they remain draft/unmerged. Closing bundle PR, final candidate/tree binding,
+reserved dependency reconciliation and final source-bound review remain PENDING.
+Packaging equality at the older frozen source does not qualify C's later changes.
 
-Resource management, authoring, signed raw transfers and production UI remain OPEN.
-No live-provider mutation, browser,
-macOS or native Node compatibility is inferred from Bun CI fixture evidence.
+All `providerMutationFacets` remain fixture-CI PENDING and live NOT AUTHORIZED.
+Downloads require final streaming/cancellation/physical-save proof. Remaining native
+GitLab, state/dialog/theme/direction and per-view cleanup facets are evidence gaps,
+not permission to substitute fixtures for native UI or mark all rows CLOSED.
 
-W2 read/source worktrees created at the W0 baseline: `actions-github-read`,
-`actions-gitlab-read`, `actions-source-code`, plus `actions-qualification` for cursor/
-migration integration tests. Frozen read contracts: `W2-READ-BRIEF.md` and Core
-`ActionsCursor`. Node-safe structural parser dependency `yaml@2.8.2` added to Core
-and bun.lock; distributed dependency/source qualification remains final-candidate work.
-No Session/Task/Claude-host runtime writer is claimed by this front.
-
-All ACT implementation items remain OPEN until appropriate source-bound checks.
-No source test suite is run locally; focal tests use test:ci and heavy CI waits
-for the integrated campaign. Handwritten files remain under 400 LOC.
+Current owner cadence supersedes earlier per-unit testing language: tests and
+performance qualification are **CI-only, final bundled campaign only**. No local
+tests, local browser/performance harness reruns, mutation probes or intermediate
+focused CI through alternate commands. This doc-only update runs no tests, CI,
+typechecks or builds. Runtime dependency and generated-source ownership rules remain.
