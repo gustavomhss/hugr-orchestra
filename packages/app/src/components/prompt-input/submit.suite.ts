@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { createStore } from "solid-js/store"
-import { createRoot } from "solid-js"
+import { createComputed, createRoot } from "solid-js"
 import { isServer } from "solid-js/web"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import type { ModelSelection } from "@/context/local"
@@ -417,6 +417,33 @@ beforeAll(async () => {
 })
 
 describe("durable subagent policy submission", () => {
+  test.skipIf(isServer)("submitting observes the retained source's actual finally after composer disposal/remount", async () => {
+    const gate = deferred()
+    createSessionGate = gate.promise
+    const real = createPromptState({ prompt: "retained source counter" })
+    const root = createRoot((dispose) => ({
+      dispose, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined }),
+    }))
+    expect(root.submit.submitting()).toBe(false)
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    expect(root.submit.submitting()).toBe(true)
+    root.dispose()
+    const observed: boolean[] = []
+    const remount = createRoot((dispose) => {
+      const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+      createComputed(() => { observed.push(submit.submitting()) })
+      return { dispose, submit }
+    })
+    expect(observed).toEqual([true])
+    gate.resolve()
+    await sending
+    expect(remount.submit.submitting()).toBe(false)
+    expect(observed).toEqual([true, false])
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs).toEqual([])
+    remount.dispose()
+  })
+
   test.each(["prompt", "command", "shell"])("fresh %s dispatch survives promotion unmount, but only after receipt", async (pathway) => {
     search.draftId = "draft-1"
     const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
@@ -879,6 +906,7 @@ describe("durable subagent policy submission", () => {
     const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
     const first = submit.handleSubmit(new Event("submit"))
     await entered.promise
+    expect(submit.submitting()).toBe(false)
     real.set([{ type: "text", content: "second queue", start: 0, end: 12 }])
     delivery = "queue"
     const second = submit.handleSubmit(new Event("submit"))
