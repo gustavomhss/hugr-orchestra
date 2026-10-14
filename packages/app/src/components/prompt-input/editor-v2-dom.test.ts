@@ -161,6 +161,21 @@ test("native range remapping leaves paragraph nodes intact", () => {
   expect(editor.innerHTML).toBe("<div>a</div><div>b</div>")
 })
 
+test.each([
+  { html: 'a<br data-prompt-break=""><div>b</div>', text: "a\n\nb" },
+  { html: 'ax<span style="background-color: transparent">b</span>', text: "axb" },
+])("DOM-only logical cursor restoration after native edit %j", ({ html, text }) => {
+  const editor = document.createElement("div")
+  editor.innerHTML = html
+  document.body.appendChild(editor)
+  const nodes = Array.from(editor.childNodes)
+  setCursorPosition(editor, 2)
+  expect(getCursorPosition(editor)).toBe(2)
+  expect(Array.from(editor.childNodes)).toEqual(nodes)
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content: text, start: 0, end: text.length }])
+  editor.remove()
+})
+
 test("known unsupported NUL is rejected before HTML normalization", () => {
   expect(() => promptEditorInsertionHTML("a\u0000b", true)).toThrow("PROMPT_EDITOR_UNSUPPORTED_NUL")
 })

@@ -480,7 +480,12 @@ export function insertPromptEditorText(editor: HTMLElement, text: string, inputT
   if (!doc.execCommand("insertHTML", false, promptEditorInsertionHTML(text, terminal))) {
     throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_FAILED:${inputType}`)
   }
-  if (terminal && text.endsWith("\n")) restorePromptEditorCaret(editor, prepared.start + text.length)
+  const cursor = prepared.start + text.length
+  if (terminal && text.endsWith("\n")) {
+    restorePromptEditorCaret(editor, cursor)
+    return true
+  }
+  setEditorCursor(editor, cursor)
   return true
 }
 
