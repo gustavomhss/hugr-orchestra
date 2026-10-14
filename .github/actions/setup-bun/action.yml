@@ -63,6 +63,7 @@ runs:
           packages/*/*/node_modules
           modules/*/node_modules
           modules/*/*/node_modules
+          tooling/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
 
     - name: Restore Bun dependencies
@@ -128,4 +129,5 @@ runs:
           packages/*/*/node_modules
           modules/*/node_modules
           modules/*/*/node_modules
+          tooling/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
