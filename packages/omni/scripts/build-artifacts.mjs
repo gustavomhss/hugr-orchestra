@@ -54,7 +54,6 @@ assert(process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === undefined || process.env.H
 assert(!process.env.HUGR_BUILD_EXISTING_MUSL_GUEST || p.build === "alpine", "existing guest mode requires a musl target");
 // This entry never creates a container. Caller owns its pinned guest, namespaces,
 // writable checkout, toolchain caches and teardown. Flag alone proves no ABI.
-const existingGuest = process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === "1" ? verifyExistingMuslGuest(id) : undefined;
 
 /** Runs `cmd` in this repository with its output on ours; a non-zero exit throws. */
 function run(cmd, cmdArgs, env = {}) {
@@ -72,6 +71,7 @@ const source = {
 if (process.env.HUGR_PROOF_HEAD) assert.equal(source.headSHA, process.env.HUGR_PROOF_HEAD, "checkout is not the current PR head");
 console.log(`source proof ${JSON.stringify(source)}`);
 const checks = {};
+const existingGuest = process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === "1" ? verifyExistingMuslGuest(id) : undefined;
 
 const windows = id.startsWith("win32-");
 const lib = windows ? "hugr_omni_node.dll" : id.startsWith("darwin-") ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so";
@@ -170,7 +170,9 @@ function verifyExistingMuslGuest(id) {
   const minor = Number((stat.dev & 0xffn) | (stat.dev >> 12n & 0xffffff00n));
   assert(maps.some((m) => m.path === library && m.permissions.includes("x") && m.inode === stat.ino && m.major === major && m.minor === minor),
     "EXISTING_MUSL_GUEST_LIBC_NOT_LOADED");
-  return { cpu, library, inode: String(stat.ino), device: `${major}:${minor}`, runtime };
+  const rustHost = read("rustc", ["-vV"]).split("\n").find((line) => line.startsWith("host: "));
+  assert.equal(rustHost, `host: ${cpu}-unknown-linux-musl`, "EXISTING_MUSL_GUEST_RUST_HOST_MISMATCH");
+  return { cpu, library, inode: String(stat.ino), device: `${major}:${minor}`, runtime, rustHost };
 }
 
 /** The DLL names a PE file imports (directly and delay-loaded); the same reader as verify.mjs. */

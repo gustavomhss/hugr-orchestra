@@ -123,7 +123,7 @@ export function skillIdentity(version: string, oracle: Oracle) {
   return `${version.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 60)}-${sha256(version)}-${oracle.digest}`
 }
 
-export async function buildVersions(directory: string, artifacts?: { omni: string; treeSitter: string }) {
+export async function buildVersions(directory: string, artifacts?: { omni: string; treeSitter: string; logs: string }) {
   const { resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
   const box = await sandbox(join(directory, "builder"))
   if (artifacts && nativeLibc?.kind !== "musl") throw new Error("NATIVE_EXPLICIT_ARTIFACTS_REQUIRE_VERIFIED_MUSL")
@@ -149,7 +149,10 @@ export async function buildVersions(directory: string, artifacts?: { omni: strin
       ...(artifacts ? { OMNI_ARTIFACTS: artifacts.omni, TREE_SITTER_ARTIFACTS: artifacts.treeSitter } : {}) }
     if (!artifacts) expect("OMNI_ARTIFACTS" in env).toBe(false)
     expect("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER" in env).toBe(false)
-    await successful([process.execPath, "script/build.ts", "--single", "--skip-install", "--target", target], { cwd: cli, env }, 900_000)
+    const args = [process.execPath, "script/build.ts", "--single", "--skip-install", "--target", target]
+    const compiled = await command(args, { cwd: cli, env }, 900_000)
+    if (artifacts) await Bun.write(join(artifacts.logs, `cli-build-${version}.json`), JSON.stringify(compiled, null, 2))
+    if (compiled.code !== 0) throw new Error(`Command failed (${compiled.code}): ${args.join(" ")}\n${compiled.stderr}`)
     const built = join(cli, "dist", `cli-${target}`)
     for (const file of hashes) {
       expect(sha256(await readFile(file.source))).toBe(file.sha256)

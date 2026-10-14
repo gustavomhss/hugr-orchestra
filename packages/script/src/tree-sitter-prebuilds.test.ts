@@ -254,7 +254,9 @@ test("parsed ELF dependencies reject truncated, unknown and mixed libc rather th
     // Inert synthetic ELF only calibrates parser/admission, never native runtime.
     const bytes = Buffer.alloc(512)
     Buffer.from("7f454c46020101", "hex").copy(bytes)
+    bytes.writeUInt16LE(3, 16)
     bytes.writeUInt16LE(62, 18)
+    bytes.writeUInt32LE(1, 20)
     bytes.writeBigUInt64LE(64n, 32)
     bytes.writeUInt16LE(56, 54)
     bytes.writeUInt16LE(2, 56)

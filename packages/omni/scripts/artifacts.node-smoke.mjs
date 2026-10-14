@@ -85,8 +85,9 @@ test("existing-musl-guest build refuses unknown flag and non-musl target before 
 if (process.env.HUGR_PROOF_REAL === "true") test("real shipped binaries pass; empty and wrong architecture mutations go red", () => {
   const id = process.env.HUGR_PROOF_ID;
   assert(PLATFORMS[id], "HUGR_PROOF_ID must name the built target");
-  const addon = join(root, "dist/omni", id, "hugr_omni.node");
-  const supervisor = join(root, "dist/omni", id, `hugr-omni-supervisor${PLATFORMS[id].os === "win32" ? ".exe" : ""}`);
+  const artifacts = process.env.HUGR_PROOF_ARTIFACTS ?? join(root, "dist/omni");
+  const addon = join(artifacts, id, "hugr_omni.node");
+  const supervisor = join(artifacts, id, `hugr-omni-supervisor${PLATFORMS[id].os === "win32" ? ".exe" : ""}`);
   const tmp = mkdtempSync(join(tmpdir(), "omni-real-mutation-"));
   try {
     validateBinaries(id, addon, supervisor);

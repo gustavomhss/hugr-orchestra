@@ -54,7 +54,7 @@ async function main() {
   if (
     item.os !== process.platform || item.arch !== process.arch ||
     !(item.arch === "x64" ? ["x86_64", "amd64", "x64"] : ["aarch64", "arm64"]).includes(cpu) ||
-    (item.os !== "linux" && item.target !== nativeCliTarget(process.platform, process.arch))
+    (item.abi !== "musl" && item.target !== nativeCliTarget(process.platform, process.arch))
   )
     throw new Error(`NATIVE_HOST_CPU_UNAVAILABLE: ${item.target}`)
   if (item.os === "linux" && linuxRuntimeLibc().kind !== (item.abi === "musl" ? "musl" : "glibc"))

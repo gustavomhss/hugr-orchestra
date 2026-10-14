@@ -50,6 +50,7 @@ const REQUIRED = ["tree-sitter-javascript", "tree-sitter-python", "tree-sitter-t
  * built the same way when the target has none, or the build stops with TREE_SITTER_CORE_BINDING_MISSING.
  */
 export function prepareTreeSitterPrebuilds(input: Target & { root: string; rebuild?: boolean }) {
+  treeSitterArtifactKey(input)
   const target = `${input.os}-${input.arch}`
   const machine = NATIVE_MACHINES[target]
   if (machine === undefined) throw new Error(`TREE_SITTER_TARGET_UNSUPPORTED: ${target}`)
@@ -73,8 +74,11 @@ export function prepareTreeSitterPrebuilds(input: Target & { root: string; rebui
     // Same-CPU upstream prebuilds are glibc. Rebuild every core and grammar from
     // source, including packages with apparently correct headers; never reuse a
     // lifecycle build/Release (node-gyp-build gives it priority over prebuilds).
-    packages.forEach((item) => rebuildPackage(input.root, item.dir,
-      item.files.length ? item.files : [path.join(item.dir, "prebuilds", target, `${item.name}.node`)], machine, "musl"))
+    packages.forEach((item) => {
+      const files = item.files.length ? item.files : [path.join(item.dir, "prebuilds", target, `${item.name}.node`)]
+      files.forEach((file) => mkdirSync(path.dirname(file), { recursive: true }))
+      rebuildPackage(input.root, item.dir, files, machine, "musl")
+    })
     return { target: treeSitterArtifactKey(input), checked: packages.flatMap((item) =>
       nodeFiles(path.join(item.dir, "prebuilds", target))), rebuilt: packages.map((item) => item.name) }
   }
@@ -151,7 +155,7 @@ export function treeSitterBundle(input: Target) {
 /**
  * Where each bin/tree-sitter/ file of a build comes from. `artifacts` (TREE_SITTER_ARTIFACTS, as OMNI_ARTIFACTS for
  * omni) holds bundles exported on each target's own host (`tree-sitter-prebuilds-cli.ts <os> <arch> --out <artifacts>`),
- * one per <os>-<arch>/ directory; a target with one there ships it once every file and every binding's CPU checks out.
+ * one per treeSitterArtifactKey directory; every binding's CPU and Linux libc must match.
  * A target without one takes maestro-arsenal's own dependencies under `root`, once prepareTreeSitterPrebuilds has
  * repaired or built its bindings, or stops with that function's named error (another target's core binding cannot be
  * built on this host). Resolve every build before building any.
@@ -175,7 +179,7 @@ export function resolveTreeSitter(input: Target & { root: string; artifacts?: st
 }
 
 /**
- * Exports the target's CLI bundle to `out`/<os>-<arch>/ for a cross build's TREE_SITTER_ARTIFACTS. Run it on the
+ * Exports to `out`/treeSitterArtifactKey for a cross build's TREE_SITTER_ARTIFACTS. Run it on the
  * target's own host: anywhere else resolveTreeSitter stops with its named error rather than export another CPU's
  * bindings.
  */
@@ -326,7 +330,8 @@ export function inspectElf(file: string) {
     return offset
   }
   span(0, 64)
-  if (bytes.subarray(0, 7).toString("hex") !== "7f454c46020101" || bytes.readUInt16LE(54) !== 56)
+  if (bytes.subarray(0, 7).toString("hex") !== "7f454c46020101" || bytes.readUInt16LE(54) !== 56 ||
+      ![2, 3].includes(bytes.readUInt16LE(16)) || bytes.readUInt32LE(20) !== 1)
     throw new Error(`ELF64_UNSUPPORTED: ${file}`)
   const count = bytes.readUInt16LE(56)
   if (!count) throw new Error(`ELF_PROGRAM_HEADERS_EMPTY: ${file}`)
@@ -401,6 +406,8 @@ export function linuxRuntimeLibc() {
       (kind === "musl" && loaded.some((m) => path.basename(m.path!) === "libc.so.6")) ||
       (kind === "glibc" && loaded.some((m) => /musl/.test(path.basename(m.path!)))))
     throw new Error("NATIVE_LINUX_RUNTIME_LIBC_MAPPING_MISMATCH")
+  if (mappings.some((m) => m.path && /(?:qemu|gcompat)/.test(path.basename(m.path))))
+    throw new Error("NATIVE_LINUX_RUNTIME_COMPAT_OR_EMULATION_REFUSED")
   const library = kind === "musl" ? realpathSync(elf.interpreter) : realpathSync(loaded.find((m) => path.basename(m.path!) === "libc.so.6")!.path!)
   const stat = statSync(library, { bigint: true })
   const major = Number((stat.dev >> 8n & 0xfffn) | (stat.dev >> 32n & 0xfffff000n))
