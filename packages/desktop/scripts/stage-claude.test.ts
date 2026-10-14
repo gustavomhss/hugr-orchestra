@@ -1,22 +1,24 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
-import { chmod, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, open, readFile, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { stageClaude, verifyClaudeAsset } from "./stage-claude"
 
-const roots: string[] = []
+const roots: { directory: string; settled?: Promise<void> }[] = []
 afterEach(async () => {
   await Promise.all(
-    roots.splice(0).map(async (directory) => {
-      expect(existsSync(directory)).toBe(true)
+    roots.splice(0).map(async (root) => {
       const started = performance.now()
-      await rm(directory, { recursive: true, force: true })
-      expect(existsSync(directory)).toBe(false)
+      // A Bun timeout can leave the body running; wait for its handle/restore finalizers before deleting its root.
+      await root.settled
+      expect(existsSync(root.directory)).toBe(true)
+      await rm(root.directory, { recursive: true, force: true })
+      expect(existsSync(root.directory)).toBe(false)
       console.log(
         "claude-stage-cleanup",
-        JSON.stringify({ elapsedMs: performance.now() - started, rootExists: existsSync(directory) }),
+        JSON.stringify({ elapsedMs: performance.now() - started, rootExists: existsSync(root.directory) }),
       )
     }),
   )
@@ -24,7 +26,7 @@ afterEach(async () => {
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "orchestra-claude-stage-"))
-  roots.push(root)
+  roots.push({ directory: root })
   const sdk = join(root, "sdk")
   const platform = process.platform
   const arch = process.arch
@@ -190,55 +192,97 @@ test("receipt cannot name another SDK version, target, executable path or an emp
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
 })
 
-// Windows CI 38499642864: 249,522,848-byte asset, 9.80s body, 8.53s in two full-file writes (38498912054: 7.39s body).
-// 15s bounds native disk/hash work with 5.20s headroom over the measured max; cleanup keeps its separate 5s deadline.
+// Windows CI 38513424131 spent 15.96s rewriting 249,522,848 bytes. Probe one byte and rename the owned copy instead.
+// Keep the existing 15s native filesystem/hash budget and separate 5s cleanup deadline.
 test("installed native SDK package stages without executing Claude or reading login", async () => {
   const started = performance.now()
   const phases: { phase: string; ms: number; elapsedMs: number }[] = []
-  const phase = (name: string) => {
+  const phase = (name: string, details: Record<string, number | boolean> = {}) => {
     const elapsedMs = performance.now() - started
     const entry = { phase: name, ms: elapsedMs - (phases.at(-1)?.elapsedMs ?? 0), elapsedMs }
     phases.push(entry)
-    console.log("claude-stage-phase", JSON.stringify(entry))
+    console.log("claude-stage-phase", JSON.stringify({ ...entry, ...details }))
   }
   const directory = await mkdtemp(join(tmpdir(), "orchestra-claude-installed-"))
-  roots.push(directory)
-  phase("create-root")
-  const staged = await stageClaude({ directory: join(directory, "claude-code") })
-  phase("stage-source-hash-copy-staging-and-installed-verification")
-  expect(staged.target).toBe(`${process.platform}-${process.arch}`)
-  expect(staged.sdkVersion).toBe("0.3.289")
-  expect(staged.claudeCodeVersion).toBe("2.1.289")
-  expect(await verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).toEqual(staged)
-  phase("verify-admitted-read-sha256")
-  const original = await readFile(staged.path)
-  phase("read-original")
-  const changed = Buffer.from(original)
-  changed[changed.length - 1] ^= 1
-  phase("copy-and-mutate-buffer")
-  await writeFile(staged.path, changed)
-  phase("write-tampered-binary")
-  await expect(verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).rejects.toThrow(
-    "CLAUDE_ASSET_DIGEST_MISMATCH",
-  )
-  phase("verify-tampered-read-sha256")
-  await rm(staged.path)
-  phase("unlink-binary")
-  await expect(verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).rejects.toThrow(
-    "CLAUDE_ASSET_MISSING",
-  )
-  phase("verify-missing")
-  await writeFile(staged.path, original, { mode: 0o755 })
-  phase("write-restored-binary")
-  expect(await verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).toEqual(staged)
-  phase("verify-restored-read-sha256")
-  console.log(
-    "claude-stage-body",
-    JSON.stringify({
-      platform: process.platform,
-      arch: process.arch,
-      bytes: original.length,
-      elapsedMs: performance.now() - started,
-    }),
-  )
+  const settled = Promise.withResolvers<void>()
+  roots.push({ directory, settled: settled.promise })
+  try {
+    phase("create-root")
+    const staged = await stageClaude({ directory: join(directory, "claude-code") })
+    phase("stage-source-hash-copy-staging-and-installed-verification")
+    expect(staged.target).toBe(`${process.platform}-${process.arch}`)
+    expect(staged.sdkVersion).toBe("0.3.289")
+    expect(staged.claudeCodeVersion).toBe("2.1.289")
+    expect(staged.sha256).toMatch(/^[a-f0-9]{64}$/)
+    const verify = () => verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)
+    expect(await verify()).toEqual(staged)
+    phase("verify-admitted-read-sha256")
+
+    const payload = await stat(staged.path)
+    expect(payload.isFile()).toBe(true)
+    expect(payload.size).toBeGreaterThan(0)
+    if (process.platform !== "win32") expect(payload.mode & 0o111).toBeGreaterThan(0)
+    const original = Buffer.alloc(1)
+    const handle = await open(staged.path, "r+")
+    try {
+      expect((await handle.read(original, 0, 1, payload.size - 1)).bytesRead).toBe(1)
+    } finally {
+      await handle.close()
+    }
+    phase("read-last-byte-and-close", {
+      bytesRead: original.length,
+      payloadBytes: payload.size,
+      fileHandleClosed: true,
+    })
+
+    const writeByte = async (byte: Buffer) => {
+      const handle = await open(staged.path, "r+")
+      try {
+        const written = await handle.write(byte, 0, 1, payload.size - 1)
+        expect(written.bytesWritten).toBe(1)
+        return written.bytesWritten
+      } finally {
+        await handle.close()
+      }
+    }
+    try {
+      phase("write-one-flipped-byte-and-close", {
+        bytesWritten: await writeByte(Buffer.from([original[0] ^ 1])),
+        fileHandleClosed: true,
+      })
+      await expect(verify()).rejects.toThrow("CLAUDE_ASSET_DIGEST_MISMATCH")
+      phase("verify-tampered-read-sha256")
+    } finally {
+      phase("restore-one-original-byte-and-close", { bytesWritten: await writeByte(original), fileHandleClosed: true })
+    }
+    expect(await verify()).toEqual(staged)
+    phase("verify-byte-restoration-read-sha256")
+
+    const sibling = `${staged.path}.missing`
+    await rename(staged.path, sibling)
+    try {
+      phase("rename-to-sibling", { bytesWritten: 0 })
+      await expect(verify()).rejects.toThrow("CLAUDE_ASSET_MISSING")
+      phase("verify-missing")
+    } finally {
+      await rename(sibling, staged.path)
+      phase("rename-back", { bytesWritten: 0 })
+    }
+    expect(await verify()).toEqual(staged)
+    phase("verify-rename-restoration-read-sha256")
+    const restored = await stat(staged.path)
+    expect(restored.size).toBe(payload.size)
+    expect(restored.mode).toBe(payload.mode)
+    console.log(
+      "claude-stage-body",
+      JSON.stringify({
+        platform: process.platform,
+        arch: process.arch,
+        bytes: payload.size,
+        elapsedMs: performance.now() - started,
+      }),
+    )
+  } finally {
+    settled.resolve()
+  }
 }, 15000)
