@@ -18,67 +18,85 @@ export function createResponseDownloader(api: ResponseDownloadAPI) {
       if (!response.body) throw new Error("transfer_failed")
       const reader = response.body.getReader()
       const controller = new AbortController()
-      const stopped = Promise.withResolvers<never>()
       const state: {
         failed: boolean
+        reason?: unknown
+        waiter?: (error: unknown) => void
         handle?: string
-        sourceCancellation?: Promise<void>
+        sourceCancelled: boolean
         targetCancellation?: Promise<unknown>
-      } = { failed: false }
-      const cancelSource = (reason?: unknown) => state.sourceCancellation ??= reader.cancel(reason).catch(() => undefined)
+      } = { failed: false, sourceCancelled: false }
+      const cancelSource = (reason?: unknown) => {
+        if (state.sourceCancelled) return
+        state.sourceCancelled = true
+        // A tee's cancellation promise can wait for its other branch indefinitely.
+        void reader.cancel(reason).catch(() => undefined)
+      }
       const cancelTarget = () => {
         if (state.handle) state.targetCancellation ??= api.cancel(state.handle).catch(() => undefined)
       }
       const fail = (error: unknown) => {
         if (state.failed) return
         state.failed = true
-        stopped.reject(error)
-        void cancelSource(error)
+        state.reason = error
+        const reject = state.waiter
+        state.waiter = undefined
+        reject?.(error)
+        cancelSource(error)
         cancelTarget()
+      }
+      const wait = <T>(operation: () => Promise<T>) => {
+        if (state.failed) return Promise.reject<T>(state.reason)
+        // Only the current operation owns a reject callback; settled chunks have no shared stop promise root.
+        return new Promise<T>((resolve, reject) => {
+          state.waiter = reject
+          Promise.resolve().then(() => {
+            if (state.failed) throw state.reason
+            return operation()
+          }).then(
+            (value) => { if (state.waiter === reject) state.waiter = undefined; resolve(value) },
+            (error: unknown) => { if (state.waiter === reject) state.waiter = undefined; reject(error) },
+          )
+        })
       }
       const abort = () => fail(new DOMException("", "AbortError"))
       controller.signal.addEventListener("abort", abort, { once: true })
       active.add(controller)
       // Observe abort/source errors even while the native chooser or disk acknowledgement is pending.
-      void stopped.promise.catch(() => undefined)
       void reader.closed.catch(fail)
       try {
         if (disposed) abort()
-        if (state.failed) return await stopped.promise
-        const started = await Promise.race([
-          api.start(filename).then((result) => {
-            if (result.status === "ok") state.handle = result.handle
-            if (state.failed) cancelTarget()
-            return result
-          }),
-          stopped.promise,
-        ])
+        const started = await wait(() => api.start(filename).then((result) => {
+          if (result.status === "ok") state.handle = result.handle
+          if (state.failed) cancelTarget()
+          return result
+        }))
         requireDownloadSuccess(started)
         if (started.status !== "ok") return
-        requireDownloadSuccess(await Promise.race([api.ready(started.handle), stopped.promise]))
+        requireDownloadSuccess(await wait(() => api.ready(started.handle)))
         let sequence = 0
         while (true) {
-          const chunk = await Promise.race([reader.read(), stopped.promise])
+          const chunk = await wait(() => reader.read())
           if (chunk.done) break
           if (!(chunk.value instanceof Uint8Array)) throw new Error("transfer_failed")
           for (let offset = 0; offset < chunk.value.byteLength; offset += RESPONSE_DOWNLOAD_CHUNK_BYTES) {
             // Copy only this chunk: passing a view clones its entire backing buffer over IPC.
             const bytes = new ArrayBuffer(Math.min(RESPONSE_DOWNLOAD_CHUNK_BYTES, chunk.value.byteLength - offset))
             new Uint8Array(bytes).set(chunk.value.subarray(offset, offset + bytes.byteLength))
-            requireDownloadSuccess(await Promise.race([api.write(started.handle, sequence, bytes), stopped.promise]))
+            requireDownloadSuccess(await wait(() => api.write(started.handle, sequence, bytes)))
             sequence++
           }
         }
-        requireDownloadSuccess(await Promise.race([api.finish(started.handle, sequence), stopped.promise]))
+        requireDownloadSuccess(await wait(() => api.finish(started.handle, sequence)))
       } catch (error) {
         fail(error)
-        throw error
+        throw state.reason
       } finally {
         controller.signal.removeEventListener("abort", abort)
         active.delete(controller)
-        await cancelSource()
-        await state.targetCancellation
+        cancelSource()
         reader.releaseLock()
+        await state.targetCancellation
       }
     },
   }

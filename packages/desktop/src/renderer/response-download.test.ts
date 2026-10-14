@@ -179,6 +179,7 @@ test("unmount during disk write cancels source immediately and waits for single 
     await entered.promise
     downloader.dispose()
     await cancelled.promise
+    expect(response.body?.locked).toBe(false)
     expect(metrics).toEqual({ pulls: 1, closes: 0 })
     release.resolve()
     const error = await saving
@@ -187,3 +188,95 @@ test("unmount during disk write cancels source immediately and waits for single 
     expect(await readdir(fixture.root)).toEqual([])
   } finally { release.resolve(); downloader.dispose(); await fixture.close() }
 })
+
+test("failure between a read and its continuation never starts another write or finish", async () => {
+  const fixture = await responseDownloadFixture()
+  const metrics = { writes: 0, finishes: 0, pulls: 0 }
+  const downloader = createResponseDownloader({ ...fixture.api,
+    write(handle, sequence, bytes) { metrics.writes++; return fixture.api.write(handle, sequence, bytes) },
+    finish(handle, sequence) { metrics.finishes++; return fixture.api.finish(handle, sequence) },
+  })
+  const reason = new Error("source failed before continuation")
+  const response = new Response(new ReadableStream<Uint8Array>({ pull(controller) {
+    metrics.pulls++
+    controller.enqueue(new Uint8Array([0, 255]))
+    queueMicrotask(() => controller.error(reason))
+  } }, { highWaterMark: 0 }))
+  try {
+    expect(await rejection(downloader.downloadResponse(response, "download"))).toBe(reason)
+    expect(metrics).toEqual({ writes: 0, finishes: 0, pulls: 1 })
+    expect(fixture.metrics.closes).toBe(1)
+    expect(await readdir(fixture.root)).toEqual([])
+  } finally { downloader.dispose(); await fixture.close() }
+})
+
+test("pending clone-branch cancellation does not hold original failure or reader lock behind upstream cleanup", async () => {
+  const fixture = await responseDownloadFixture()
+  const reason = new Error("native acknowledgement failed")
+  const downloader = createResponseDownloader({ ...fixture.api, async ready(handle) {
+    expect(await fixture.api.ready(handle)).toEqual({ status: "ok" })
+    throw reason
+  } })
+  const state: { controller?: ReadableStreamDefaultController<Uint8Array>; cancels: number } = { cancels: 0 }
+  const response = new Response(new ReadableStream<Uint8Array>({
+    start(controller) { state.controller = controller }, cancel() { state.cancels++ },
+  }, { highWaterMark: 0 }))
+  const clone = response.clone()
+  const deadline = Promise.withResolvers<never>()
+  const timer = setTimeout(() => deadline.reject(new Error("Save awaited pending clone cancellation")), 3000)
+  try {
+    const error = await Promise.race([rejection(downloader.downloadResponse(response, "download")), deadline.promise])
+      .finally(() => clearTimeout(timer))
+    expect(error).toBe(reason)
+    expect(response.body?.locked).toBe(false)
+    expect(state.cancels).toBe(0)
+    expect(fixture.metrics.closes).toBe(1)
+    expect(await readdir(fixture.root)).toEqual([])
+    await clone.body?.cancel()
+    expect(state.cancels).toBe(1)
+  } finally {
+    clearTimeout(timer)
+    if (!state.cancels) state.controller?.close()
+    await clone.body?.cancel().catch(() => undefined)
+    downloader.dispose()
+    await fixture.close()
+  }
+}, 10000)
+
+test("completed source chunks are collectible while an actual save stays parked on its next read", async () => {
+  const fixture = await responseDownloadFixture()
+  const downloader = createResponseDownloader(fixture.api)
+  const parked = Promise.withResolvers<void>()
+  const chunks: WeakRef<Uint8Array>[] = []
+  const state: { controller?: ReadableStreamDefaultController<Uint8Array>; produced: number } = { produced: 0 }
+  const response = new Response(new ReadableStream<Uint8Array>({
+    start(controller) { state.controller = controller },
+    pull(controller) {
+      if (state.produced === 32) { parked.resolve(); return }
+      const bytes = new Uint8Array(16 * 1024).fill(state.produced++)
+      chunks.push(new WeakRef(bytes))
+      controller.enqueue(bytes)
+    },
+  }, { highWaterMark: 0 }))
+  const saving = downloader.downloadResponse(response, "download")
+  try {
+    await parked.promise
+    expect(chunks).toHaveLength(32)
+    expect(fixture.metrics.writes).toBeGreaterThanOrEqual(32)
+    const held = new Uint8Array(1)
+    const alive = new WeakRef(held)
+    const released = (() => new WeakRef(new Uint8Array(1)))()
+    // Use actual object reachability, not RSS estimates or a replacement Promise implementation.
+    for (let pass = 0; pass < 4; pass++) { await Bun.sleep(0); Bun.gc(true) }
+    expect(alive.deref()).toBe(held)
+    expect(released.deref()).toBeUndefined()
+    // Engines may retain the most recent loop value; retaining every completed race result is the regression.
+    expect(chunks.filter((chunk) => chunk.deref() !== undefined).length).toBeLessThanOrEqual(2)
+    state.controller?.close()
+    await saving
+  } finally {
+    downloader.dispose()
+    await saving.catch(() => undefined)
+    await fixture.close()
+  }
+}, 10000)

@@ -19,6 +19,6 @@ export async function saveActionsResponse(response: Response, platform: Platform
     if (!(target instanceof WritableStream)) throw new Error("streaming_save_unavailable")
     await response.body.pipeTo(target)
   } finally {
-    if (!response.body.locked) await response.body.cancel().catch(() => undefined)
+    if (!response.body.locked) void response.body.cancel().catch(() => undefined)
   }
 }

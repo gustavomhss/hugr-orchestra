@@ -56,6 +56,9 @@ async function main(root: string) {
 
     choice.mode = "cancel"
     assert.deepEqual(await execute(owned, "window.responseSaveFixture.download('bytes')"), { status: "error", name: "AbortError", message: "", pulls: 0, cancels: 1 })
+    assert.deepEqual(await execute(owned, "window.responseSaveFixture.download('clone')"), {
+      status: "error", name: "AbortError", message: "", pulls: 0, cancels: 0, locked: false,
+    }, "Live clone branch must not retain failed save or reader lock")
     choice.mode = "denied"
     const denied = await execute(owned, "window.responseSaveFixture.download('bytes')")
     assert.equal(denied.name, "NotAllowedError")
