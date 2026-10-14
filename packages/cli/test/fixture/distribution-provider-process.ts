@@ -5,7 +5,7 @@ import { sha256 } from "./distribution-native"
 
 type Identity = { pid: number; parent: number; start: string; executable: string; cwd: string; argv: string[] }
 
-async function identity(pid: number): Promise<Identity | undefined> {
+export async function identity(pid: number): Promise<Identity | undefined> {
   return Promise.all([
     readFile(`/proc/${pid}/stat`, "utf8"), readlink(`/proc/${pid}/exe`), readlink(`/proc/${pid}/cwd`),
     readFile(`/proc/${pid}/cmdline`, "utf8"),
@@ -21,7 +21,7 @@ async function identity(pid: number): Promise<Identity | undefined> {
 
 // Observe installed supervisor -> shell, plus supervisor's installed native CLI
 // parent and isolated DB environment. Host harness's supervisor cannot satisfy it.
-export async function observeInstalledTool(payload: string, database: string, cwd: string, command: string) {
+export async function observeInstalledTool(payload: string, database: string, cwd: string, command: string, daemon: Identity) {
   const ownerUID = process.getuid?.()
   if (ownerUID === undefined) throw new Error("PROVIDER_PROC_OWNER_UID_UNAVAILABLE")
   const native = await realpath(join(payload, "bin/orchestra"))
@@ -33,6 +33,8 @@ export async function observeInstalledTool(payload: string, database: string, cw
   const control = await identity(process.pid)
   expect(control?.pid).toBe(process.pid)
   expect(control?.executable).toBe(await realpath(process.execPath))
+  expect(daemon.executable).toBe(native)
+  expect((await identity(daemon.pid))?.start).toBe(daemon.start)
   const scan = (async () => {
     while (!state.stopped) {
       const pids = (await readdir("/proc")).filter((name) => /^\d+$/.test(name)).map(Number)
@@ -55,7 +57,7 @@ export async function observeInstalledTool(payload: string, database: string, cw
         const parent = byPID.get(shell.parent)
         if (parent?.executable !== supervisor) continue
         const cli = byPID.get(parent.parent)
-        if (cli?.executable !== native) continue
+        if (cli?.executable !== native || cli.pid !== daemon.pid || cli.start !== daemon.start) continue
         if (observed.some((row) => row.supervisor.pid === parent.pid && row.supervisor.start === parent.start)) continue
         const env = await readFile(`/proc/${cli.pid}/environ`, "utf8").catch((error: unknown) => {
           if (error && typeof error === "object" && "code" in error && ["ENOENT", "ESRCH"].includes(String(error.code))) return ""
@@ -80,19 +82,22 @@ export async function observeInstalledTool(payload: string, database: string, cw
       const failure = (await result).error
       if (failure) throw failure
       if (required && observed.length === 0) throw new Error("INSTALLED_SUPERVISOR_TOOL_CHAIN_UNOBSERVED")
-      // No raw-PID signaling: command scope owns cleanup. Confirm captured identities
-      // exited; a recycled PID is not the same process.
-      const deadline = Date.now() + 10_000
-      while (true) {
-        const live = (await Promise.all(observed.flatMap((row) => [row.native, row.supervisor, row.shell])
-          .map(async (old) => {
-            const current = await identity(old.pid)
-            return current?.start === old.start ? current : undefined
-          }))).filter((row): row is Identity => row !== undefined)
-        if (live.length === 0) return observed
-        if (Date.now() >= deadline) throw new Error(`INSTALLED_TOOL_CHAIN_SURVIVED: ${JSON.stringify(live)}`)
-        await Bun.sleep(100)
-      }
+      // Daemon/supervisor intentionally stay live here. Public authenticated
+      // service stop below owns teardown, then checks every captured identity.
+      return observed
     },
+  }
+}
+
+export async function requireExited(identities: readonly Identity[]) {
+  const deadline = Date.now() + 15_000
+  while (true) {
+    const live = (await Promise.all(identities.map(async (old) => {
+      const current = await identity(old.pid)
+      return current?.start === old.start ? current : undefined
+    }))).filter((row): row is Identity => row !== undefined)
+    if (live.length === 0) return
+    if (Date.now() >= deadline) throw new Error(`INSTALLED_TOOL_CHAIN_SURVIVED: ${JSON.stringify(live)}`)
+    await Bun.sleep(100)
   }
 }

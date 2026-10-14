@@ -10,6 +10,8 @@ import { stopServices } from "./fixture/distribution-native-proof"
 import { model, modelDigest, image, ownedOllama } from "./fixture/distribution-provider-ollama"
 import type { OwnedOllama } from "./fixture/distribution-provider-ollama"
 import { qualifyProvider } from "./fixture/distribution-provider-proof"
+import { stopProviderDaemons } from "./fixture/distribution-provider-daemon"
+import { requireV2SourceGraph } from "./fixture/distribution-provider-sourcegraph"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 
 // Lead registers this file only on hosted Ubuntu x64. No local execution, skip,
@@ -33,6 +35,7 @@ beforeAll(async () => {
   process.once("SIGINT", interrupt)
   process.once("SIGTERM", interrupt)
   process.once("SIGHUP", interrupt)
+  await requireV2SourceGraph(state.evidence)
   // Register ownership before setup can fail. Cleanup never touches host Ollama.
   state.ollama = await ownedOllama(state.directory, state.evidence)
   await state.ollama.start()
@@ -48,7 +51,7 @@ afterAll(async () => {
 
 function cleanup() {
   state.cleanup ??= (async () => {
-    const results = await Promise.allSettled([stopServices(), state.ollama?.stop()])
+    const results = await Promise.allSettled([stopServices(), stopProviderDaemons(), state.ollama?.stop()])
     const failed = results.filter((result) => result.status === "rejected")
     if (failed.length) throw new AggregateError(failed.map((result) => result.reason), "PROVIDER_OWNED_CLEANUP_FAILED")
     if (!state.directory) return
@@ -77,7 +80,7 @@ function cleanup() {
   return state.cleanup
 }
 
-test("npm-installed public run infers, executes installed-supervisor shell, continues with real tool result across install/update/downgrade", async () => {
+test("npm-installed public service/api drives Session V2 inference, installed-supervisor shell and real continuation across install/update/downgrade", async () => {
   expectSpawn(import.meta.path)
   if (!state.directory || !state.evidence || !state.built || !state.ollama) throw new Error("PROVIDER_BUILD_FIXTURE_MISSING")
   const fixture = { directory: state.directory, evidence: state.evidence, built: state.built, ollama: state.ollama }
@@ -88,12 +91,9 @@ test("npm-installed public run infers, executes installed-supervisor shell, cont
     admitted.push(installed.version)
   }).catch(async (error: unknown) => {
     const failure = error instanceof Error ? error.message : String(error)
-    const framingMismatch = failure.includes("DISTRIBUTION_PUBLIC_RUN_UNAVAILABLE")
     await Bun.write(join(fixture.evidence, "pending.json"), JSON.stringify({
-      status: "pending", image, model, modelDigest, admitted, failure, framingMismatch,
-      recommendation: framingMismatch
-        ? "Lead must expose frozen public run contract in shipped CLI, or explicitly approve another public flow."
-        : "Inspect captured real requests/responses, tool projections and supervisor oracle. If qwen3:0.6b lacks reliable tool use within budget, keep qualification pending and ask lead to approve a stronger pinned model; do not substitute scripted output.",
+      status: "pending", image, model, modelDigest, admitted, failure,
+      recommendation: "Inspect Session V2 admission/context/history, real requests/responses and installed daemon/supervisor oracle. If qwen3:0.6b lacks reliable tool use within budget, keep qualification pending and ask lead to approve a stronger pinned model; do not substitute scripted output.",
     }, null, 2))
     throw error
   })
