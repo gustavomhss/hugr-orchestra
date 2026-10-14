@@ -291,6 +291,10 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     { id: "plugins-a", name: "Plugins A", worktree: "/plugins-a", sandboxes: [], time: { created: 1, updated: 1 } },
     { id: "plugins-b", name: "Plugins B", worktree: "/plugins-b", sandboxes: [], time: { created: 1, updated: 1 } },
   ]
+  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  const foreign = "http://fixture-foreign.invalid"
+  // This lower-priority route proves that the profile override leaves foreign origins alone.
+  await page.route(`${foreign}/**`, (route) => route.fulfill({ status: 418, json: { owner: "foreign" } }))
   await mockOrchestraServer(page, {
     directory: "/plugins-a",
     project: projects[0],
@@ -298,9 +302,27 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     sessions: [],
     pageMessages: () => ({ items: [] }),
   })
-  await page.route(`http://127.0.0.1:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}/project`, (route) =>
+  await page.route(`${server}/project`, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(projects) }),
   )
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url())
+    if (url.origin !== server || !["/path", "/project/current"].includes(url.pathname)) return route.fallback()
+    const project = projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? "/plugins-a"))
+    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
+    return route.fulfill({
+      json:
+        url.pathname === "/project/current"
+          ? project
+          : {
+              state: project.worktree,
+              config: project.worktree,
+              worktree: project.worktree,
+              directory: project.worktree,
+              home: "/",
+            },
+    })
+  })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
@@ -335,4 +357,12 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   await expect(toggle()).toHaveAttribute("aria-checked", "false")
   await pick("Plugins A")
   await expect(toggle()).toHaveAttribute("aria-checked", "true")
+  for (const path of ["/path", "/project/current"]) {
+    const outside = await page.goto(`${foreign}${path}?directory=/plugins-b`)
+    expect(outside?.status()).toBe(418)
+    expect(await outside?.json()).toEqual({ owner: "foreign" })
+    const unknown = await page.goto(`${server}${path}?directory=/plugins-unknown`)
+    expect(unknown?.status()).toBe(404)
+    expect(await unknown?.json()).toEqual({ name: "NotFound" })
+  }
 })
