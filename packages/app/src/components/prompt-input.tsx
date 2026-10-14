@@ -51,7 +51,9 @@ import { usePermission } from "@/context/permission"
 import { useLanguage } from "@/context/language"
 import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
+import { useServerProtocol } from "@/context/server-sdk"
+import { useDraftSessionKey, useSubagentModelPolicy } from "./prompt-input/draft-session"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { usePlatform } from "@/context/platform"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { createTextFragment, getCursorPosition, setCursorPosition, setRangeEdge } from "./prompt-input/editor-dom"
@@ -1197,6 +1199,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   // Check provider variants directly: `variants` also includes the UI-only default option.
   const showVariantControl = createMemo(() => props.controls.model.selection.variant.list().length > 0)
   const local = useLocal()
+  const pendingKey = useDraftSessionKey()
+  const protocol = useServerProtocol()
+  const policyLanguage = sessionRecoveryLanguage(language)
+  const subagentPolicy = useSubagentModelPolicy(() => props.controls.session.id, pendingKey)
   const subagentRules = createMemo(() => {
     const id = props.controls.session.id
     if (!id) return []
@@ -1204,10 +1210,12 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return Array.isArray(permission) ? permission : []
   })
   const subagentLabel = createMemo(() => {
-    if (!props.controls.session.id) {
-      draftVersion()
-      const n = pendingSelection(sdk().directory ?? "").size
-      return n > 0 ? `${n}` : language.t("session.tasks.models.all")
+    if (props.controls.session.id && protocol() === undefined) return language.t("common.loading")
+    if (!props.controls.session.id || protocol() === "v2") {
+      const policy = subagentPolicy.policy()
+      if (subagentPolicy.error()) return policyLanguage.t("session.subagentModels.loadFailed")
+      if (!policy) return language.t("common.loading")
+      return policy.mode === "inherit" ? policyLanguage.t("dialog.subagentModels.inherited") : `${policy.models.length}`
     }
     if (!hasModelScope(subagentRules())) return language.t("session.tasks.models.all")
     const allowed = local.model
@@ -1217,10 +1225,13 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return `${allowed}`
   })
   const openSubagentModels = () => {
-    const directory = sdk().directory
+    const source = sdk()
+    const directory = source.directory
     if (!directory) return
+    const selection = { sessionID: props.controls.session.id, directory, pendingKey: pendingKey() }
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => <x.DialogSubagentModels sessionID={props.controls.session.id} directory={directory} />)
+      if (sdk() !== source || props.controls.session.id !== selection.sessionID || pendingKey() !== selection.pendingKey) return
+      dialog.show(() => <x.DialogSubagentModels {...selection} />)
     })
   }
   const accepting = createMemo(() => {
@@ -1252,6 +1263,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         setStore({ popover, slashMenu: false, slashMenuQuery: "" })
       },
       newSessionWorktree: () => props.newSessionWorktree,
+      pendingKey,
       onNewSessionWorktreeReset: props.onNewSessionWorktreeReset,
       shouldQueue: props.shouldQueue,
       onQueue: props.onQueue,

@@ -1,55 +1,59 @@
-import { parseModelKey, type ModelRule, type SubagentModelPolicy } from "./subagent-model-rules"
-
-import { createSignal } from "solid-js"
+import { toggleModelPolicy, type ModelRule, type SubagentModelPolicy } from "./subagent-model-rules"
+import { createStore } from "solid-js/store"
 
 /** Pending selections before a session exists. Callers supply an opaque scope key
     (legacy callers may still use a directory), and own the flush/clear lifecycle. */
-const pending = new Map<string, Set<string>>()
+const pending = new Map<string, { revision: number; policy: SubagentModelPolicy }>()
 
-const [version, bumpVersion] = createSignal(0)
+const [state, setState] = createStore({ version: 0 })
 /** Reactive clock: read inside memos/render so plain-Set mutations propagate. */
-export const draftVersion = version
+export const draftVersion = () => state.version
 
 export const modelKey = (providerID: string, modelID: string) => `${providerID}/${modelID}`
 
 export function pendingSelection(directory: string): Set<string> {
-  return pending.get(directory) ?? new Set()
+  const policy = pendingPolicy(directory)
+  return new Set(policy.mode === "allowlist" ? policy.models.map((model) => modelKey(model.providerID, model.id)) : [])
 }
 
 export function togglePending(directory: string, providerID: string, modelID: string, allow?: boolean): boolean {
-  const set = pendingSelection(directory)
-  pending.set(directory, set)
   const key = modelKey(providerID, modelID)
-  const next = allow ?? !set.has(key)
-  if (next) set.add(key)
-  if (!next) set.delete(key)
-  bumpVersion((v) => v + 1)
+  const next = allow ?? !pendingSelection(directory).has(key)
+  pending.set(directory, {
+    revision: state.version + 1,
+    policy: toggleModelPolicy(pendingPolicy(directory), providerID, modelID, next),
+  })
+  setState("version", (version) => version + 1)
   return next
 }
 
-export function clearPending(directory: string) {
-  if (pending.delete(directory)) bumpVersion((v) => v + 1)
+export function clearPending(directory: string, revision?: number) {
+  if (revision === undefined) {
+    pending.set(directory, { revision: state.version + 1, policy: { mode: "inherit" } })
+    setState("version", (version) => version + 1)
+    return true
+  }
+  if (pendingSnapshot(directory).revision !== revision) return false
+  if (pending.delete(directory)) setState("version", (version) => version + 1)
+  return true
 }
 
 export function pendingPolicy(key: string): SubagentModelPolicy {
-  const selected = pending.get(key)
-  if (!selected) return { mode: "inherit" }
-  return {
-    mode: "allowlist",
-    models: [...selected].flatMap((key) => {
-      const model = parseModelKey(key)
-      return model ? [{ providerID: model.providerID, id: model.modelID }] : []
-    }),
-  }
+  draftVersion()
+  return structuredClone(pending.get(key)?.policy ?? { mode: "inherit" })
+}
+
+export function pendingSnapshot(key: string) {
+  return { revision: pending.get(key)?.revision ?? 0, policy: pendingPolicy(key) }
 }
 
 /** Builds the rule batch for a fresh selection: deny-all baseline plus one
     allow per selected model (server merges, last match wins). */
 export function pendingRules(directory: string): ModelRule[] {
-  const selected = pendingSelection(directory)
-  if (selected.size === 0) return []
+  const policy = pendingPolicy(directory)
+  if (policy.mode === "inherit") return []
   return [
     { permission: "task", pattern: "*/*", action: "deny" as const },
-    ...[...selected].map((key): ModelRule => ({ permission: "task", pattern: key, action: "allow" as const })),
+    ...policy.models.map((model): ModelRule => ({ permission: "task", pattern: modelKey(model.providerID, model.id), action: "allow" })),
   ]
 }
