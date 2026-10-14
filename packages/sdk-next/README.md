@@ -1,29 +1,44 @@
 # @orchestra/sdk-next
 
-Effect-native scoped Orchestra host for in-process applications. This transitional package will replace the existing generated `@orchestra/sdk` after its consumers migrate.
+Effect-native, in-process Orchestra host for embedded applications. This transitional package is intended to replace the generated `@orchestra/sdk` after its consumers migrate; the existing SDK remains available for compatibility.
 
-The SDK executes Server's assembled HTTP router in memory. It opens no listener and performs no network I/O, while preserving the same routing, middleware, handlers, codecs, and errors as the network client.
-
-```ts
-import { Orchestra } from "@orchestra/sdk-next"
-
-const orchestra = yield * Orchestra.create()
-const session = yield * orchestra.sessions.get({ sessionID })
-```
-
-It also exports `Tool` and exposes local-only `tools.register(...)`, replacing the former `@orchestra/core/public` facade. Registration uses Core's host-level `ApplicationTools` service shared by the host's Locations; each Location retains its own `ToolRegistry` for overlay, lookup, and settlement. Closing the owning Effect Scope releases router resources, location services, fibers, and scoped tool registrations.
-
-`sessions.events({ sessionID, after })` replays durable events after the optional aggregate sequence, then emits newly committed durable events. `sessions.interrupt(...)` targets execution owned by this host, and `sessions.message(...)` retrieves one projected Session message.
-
-The same constructor is available as a service Layer:
+The SDK composes Client + Core + Server and runs Server's assembled HTTP router in memory. The embedded client-to-router transport opens no listener and performs no network I/O, while preserving the same routing, middleware, handlers, codecs, and errors as the network client. Provider calls, tools, and host durable storage can perform I/O. The legacy `@orchestra/sdk` `createOrchestra()` instead launches the `orchestra serve` executable and returns a network client and server handle.
 
 ```ts
+import { AbsolutePath, Location, Orchestra, Prompt, Tool } from "@orchestra/sdk-next"
+import { Effect, Schema } from "effect"
+
 const program = Effect.gen(function* () {
-  const orchestra = yield* Orchestra.Service
-  return yield* orchestra.sessions.get({ sessionID })
+  const orchestra = yield* Orchestra.create()
+  yield* orchestra.tools.register({
+    greeting: Tool.make({
+      description: "Return a greeting",
+      input: Schema.Struct({}),
+      output: Schema.Struct({ message: Schema.String }),
+      execute: () => Effect.succeed({ message: "Hello" }),
+    }),
+  })
+
+  const session = yield* orchestra.sessions.create({
+    location: Location.Ref.make({ directory: AbsolutePath.make(process.cwd()) }),
+  })
+  yield* orchestra.sessions.prompt({
+    sessionID: session.id,
+    prompt: Prompt.make({ text: "Hello" }),
+    resume: false,
+  })
+  return session.id
 })
 
-yield * program.pipe(Effect.provide(Orchestra.layer))
+const sessionID = await Effect.runPromise(Effect.scoped(program))
 ```
 
-`Orchestra.layer` adapts `Orchestra.create()` for dependency injection; it does not define another host implementation.
+The example uses `resume: false`, so `sessions.prompt(...)` admits the input without scheduling model execution. Closing the scope immediately afterward does not wait for a model turn. `Orchestra.create()` requires an Effect Scope. Closing it disposes the embedded router and releases host location services, fibers, and scoped tool registrations. `Orchestra.layer` provides the same constructor as `Orchestra.Service` for dependency injection; it is not a separate host implementation. Host-level tool registration is shared across that host's Locations; each Location keeps its own registry for overlay, lookup, and settlement.
+
+The host exposes the Client session and event APIs, including `sessions.events({ sessionID, after })` for durable replay followed by new durable events, `sessions.interrupt(...)` for execution owned by this host, and `sessions.message(...)` for one projected message. The entry point also exports the `Tool` namespace (`make`, `Failure`, and `RegistrationError`) and named client types and schemas such as `Session`, `Prompt`, `Location`, `Model`, and `OrchestraEvent`.
+
+Import from `@orchestra/sdk-next` only. Its public entry point intentionally bundles the Client, Core, and Server implementation; do not reach into package `src` paths or make Client depend on Core or Server. The bundle boundary is covered by `test/import-boundaries.test.ts`.
+
+**Owning role:** SDK package maintainers own this API and README. Cross-package architecture, manifests, registries, and merge order remain with the integration lead.
+
+**Checks:** run the package typecheck from this directory with `bun typecheck`. Hosted CI for both package tests is requested from the repository root with `bun run test:ci sdk-next test/embedded.test.ts test/import-boundaries.test.ts`. The latter uploads the working tree and runs GitHub Actions; source review alone is not execution evidence.
