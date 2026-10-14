@@ -14,6 +14,8 @@ import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
 import { detectServerProtocol, type ServerProtocol, type ServerProtocolOptions } from "@/utils/server-protocol"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
+import { createSessionManagementForServer } from "@/utils/session-management"
+import { createScopedFetch } from "@/utils/scoped-fetch"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
 
@@ -223,6 +225,7 @@ type ServerSDKBase = {
   client: ReturnType<typeof createSdkForServer>
   api: CompatibleApi
   currentApi: ServerApi
+  sessionManagement: ReturnType<typeof createSessionManagementForServer>
   event: {
     on: ServerEventEmitter["on"]
     listen: ServerEventEmitter["listen"]
@@ -285,15 +288,7 @@ function createServerSdkContextBase(
   const abort = new AbortController()
   const http = { ...server.http }
   const scopedFetch = (fetcher = platform.fetch ?? globalThis.fetch): typeof fetch =>
-    Object.assign(
-      (request: string | URL | Request, init?: RequestInit) => {
-        const caller = init?.signal ?? (request instanceof Request ? request.signal : undefined)
-        const signal = caller ? AbortSignal.any([abort.signal, caller]) : abort.signal
-        signal.throwIfAborted()
-        return fetcher(request, { ...init, signal })
-      },
-      { preconnect: fetcher.preconnect },
-    )
+    createScopedFetch(fetcher, abort.signal)
 
   const eventFetch = (() => {
     if (!platform.fetch || !server) return
@@ -309,7 +304,7 @@ function createServerSdkContextBase(
   const eventApi = createApiForServer({ server: http, fetch: scopedFetch(eventFetch ?? globalThis.fetch) })
   const eventSdk = createSdkForServer({
     signal: abort.signal,
-    fetch: eventFetch,
+    fetch: scopedFetch(eventFetch ?? globalThis.fetch),
     server: http,
   })
   const [protocolState, setProtocolState] = createStore({ kind: undefined as ServerProtocol | undefined })
@@ -449,15 +444,22 @@ function createServerSdkContextBase(
   const sdk = createSdkForServer({
     signal: abort.signal,
     server: http,
-    fetch: platform.fetch,
+    fetch: scopedFetch(),
     throwOnError: true,
   })
   const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
+  const sessionManagement = createSessionManagementForServer({
+    server: http,
+    fetch: scopedFetch(),
+    protocol,
+    legacy: sdk,
+    signal: abort.signal,
+  })
   const legacy = (directory?: string) =>
     createSdkForServer({
       signal: abort.signal,
       server: http,
-      fetch: platform.fetch,
+      fetch: scopedFetch(),
       throwOnError: true,
       directory,
     })
@@ -472,6 +474,7 @@ function createServerSdkContextBase(
     client: sdk,
     api,
     currentApi,
+    sessionManagement,
     event: {
       on: emitter.on.bind(emitter),
       listen: emitter.listen.bind(emitter),
@@ -481,7 +484,7 @@ function createServerSdkContextBase(
       return createSdkForServer({
         signal: abort.signal,
         server: http,
-        fetch: platform.fetch,
+        fetch: scopedFetch(),
         ...opts,
       })
     },
