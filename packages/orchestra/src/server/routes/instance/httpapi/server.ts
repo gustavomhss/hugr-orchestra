@@ -11,6 +11,9 @@ import { BackgroundJob } from "@/background/job"
 import { BackgroundProcess } from "@/background/process"
 import { Command } from "@/command"
 import { Config } from "@/config/config"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { HostCatalog } from "./handlers/catalog"
+import { HostAgentExecution } from "./handlers/agent-execution"
 import { Credential } from "@orchestra/core/credential"
 import { Workspace } from "@/control-plane/workspace"
 import { Env } from "@/env"
@@ -69,6 +72,7 @@ import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { lazy } from "@/util/lazy"
 import { CorsConfig, isAllowedCorsOrigin, type CorsOptions } from "@orchestra/server/cors"
 import { serveUIEffect } from "@/server/shared/ui"
@@ -97,7 +101,6 @@ import { permissionHandlers } from "./handlers/permission"
 import { projectHandlers } from "./handlers/project"
 import { projectCopyHandlers } from "./handlers/project-copy"
 import { providerHandlers } from "./handlers/provider"
-import { HostAgentExecution } from "./handlers/agent-execution"
 import { ptyConnectHandlers, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
 import { sessionHandlers } from "./handlers/session"
@@ -169,7 +172,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     ptyHandlers,
     questionHandlers,
     permissionHandlers,
-    providerHandlers,
+    providerHandlers.pipe(Layer.provide(ClaudeCodeSDK.layer)),
     sessionHandlers,
     sessionProcessHandlers,
     syncHandlers,
@@ -183,6 +186,8 @@ const instanceRoutes = instanceApiRoutes.pipe(
 )
 const serverRoutes = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(handlers),
+  Layer.provide(HostCatalog.layer.pipe(Layer.provide(ClaudeCodeSDK.layer))),
+  Layer.provide(HostAgentExecution.layer),
   Layer.provide(PluginPtyEnvironment.layer),
   Layer.provide([serverHttpApiAuthLayer, v2SchemaErrorLayer]),
 )
@@ -294,7 +299,10 @@ export function createRoutes(
       ScheduledTask.node,
       ScheduledTask.daemonNode,
     ]),
-    [[LocationServiceMap.node, locationServiceMapV2]],
+    [
+      [LocationServiceMap.node, locationServiceMapV2],
+      [SessionExecution.node, SessionExecutionLocal.node],
+    ],
   )
 
   return Layer.mergeAll(
@@ -311,7 +319,6 @@ export function createRoutes(
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(PtyEnvironment.layer),
-    Layer.provide(HostAgentExecution.layer),
     Layer.provide(services),
     // Must stay last: layers provided later in this pipe build beneath earlier ones,
     // so Observability must come after every service graph. Otherwise eagerly forked

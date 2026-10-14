@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
+import { existsSync } from "node:fs"
 import { chmod, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -7,8 +8,19 @@ import { stageClaude, verifyClaudeAsset } from "./stage-claude"
 
 const roots: string[] = []
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((directory) => rm(directory, { recursive: true, force: true })))
-})
+  await Promise.all(
+    roots.splice(0).map(async (directory) => {
+      expect(existsSync(directory)).toBe(true)
+      const started = performance.now()
+      await rm(directory, { recursive: true, force: true })
+      expect(existsSync(directory)).toBe(false)
+      console.log(
+        "claude-stage-cleanup",
+        JSON.stringify({ elapsedMs: performance.now() - started, rootExists: existsSync(directory) }),
+      )
+    }),
+  )
+}, 5000)
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "orchestra-claude-stage-"))
@@ -178,25 +190,55 @@ test("receipt cannot name another SDK version, target, executable path or an emp
   await expect(verify()).rejects.toThrow("CLAUDE_ASSET_BINARY_TARGET_MISMATCH")
 })
 
+// Windows CI 38499642864: 249,522,848-byte asset, 9.80s body, 8.53s in two full-file writes (38498912054: 7.39s body).
+// 15s bounds native disk/hash work with 5.20s headroom over the measured max; cleanup keeps its separate 5s deadline.
 test("installed native SDK package stages without executing Claude or reading login", async () => {
+  const started = performance.now()
+  const phases: { phase: string; ms: number; elapsedMs: number }[] = []
+  const phase = (name: string) => {
+    const elapsedMs = performance.now() - started
+    const entry = { phase: name, ms: elapsedMs - (phases.at(-1)?.elapsedMs ?? 0), elapsedMs }
+    phases.push(entry)
+    console.log("claude-stage-phase", JSON.stringify(entry))
+  }
   const directory = await mkdtemp(join(tmpdir(), "orchestra-claude-installed-"))
   roots.push(directory)
+  phase("create-root")
   const staged = await stageClaude({ directory: join(directory, "claude-code") })
+  phase("stage-source-hash-copy-staging-and-installed-verification")
   expect(staged.target).toBe(`${process.platform}-${process.arch}`)
   expect(staged.sdkVersion).toBe("0.3.289")
   expect(staged.claudeCodeVersion).toBe("2.1.289")
   expect(await verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).toEqual(staged)
+  phase("verify-admitted-read-sha256")
   const original = await readFile(staged.path)
+  phase("read-original")
   const changed = Buffer.from(original)
   changed[changed.length - 1] ^= 1
+  phase("copy-and-mutate-buffer")
   await writeFile(staged.path, changed)
+  phase("write-tampered-binary")
   await expect(verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).rejects.toThrow(
     "CLAUDE_ASSET_DIGEST_MISMATCH",
   )
+  phase("verify-tampered-read-sha256")
   await rm(staged.path)
+  phase("unlink-binary")
   await expect(verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).rejects.toThrow(
     "CLAUDE_ASSET_MISSING",
   )
+  phase("verify-missing")
   await writeFile(staged.path, original, { mode: 0o755 })
+  phase("write-restored-binary")
   expect(await verifyClaudeAsset(join(directory, "claude-code"), process.platform, process.arch)).toEqual(staged)
-})
+  phase("verify-restored-read-sha256")
+  console.log(
+    "claude-stage-body",
+    JSON.stringify({
+      platform: process.platform,
+      arch: process.arch,
+      bytes: original.length,
+      elapsedMs: performance.now() - started,
+    }),
+  )
+}, 15000)
