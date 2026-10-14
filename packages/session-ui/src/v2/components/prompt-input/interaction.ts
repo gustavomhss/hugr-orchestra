@@ -507,7 +507,9 @@ export function promptEditorInsertionHTML(text: string, terminal: boolean) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\r": "&#13;",
     "\n": large ? "&#10;" : '<br data-prompt-break="">',
   }
-  const escaped = text.replace(/[&<>"\r\n]/g, (char) => escapes[char]!)
+  const escaped = text.replace(/[&<>"\r\n]/g, (char, offset: number) =>
+    char === "\n" && offset === text.length - 1 ? '<br data-prompt-break="">' : escapes[char]!,
+  )
   return escaped + (terminal && text.endsWith("\n")
     ? '<span data-prompt-caret="" contenteditable="true">&#8203;</span>'
     : "")
@@ -523,11 +525,12 @@ export function readPromptEditor(root: Node) {
     length += content.length
   }
   const block = (node: Node) => node instanceof HTMLElement && (node.tagName === "DIV" || node.tagName === "P")
+  const markedBreak = (node: Node | undefined) => node instanceof HTMLElement && node.tagName === "BR" && node.hasAttribute("data-prompt-break")
   const empty = (node: Node) =>
     (node.nodeType === Node.TEXT_NODE && !node.textContent) ||
     (node instanceof HTMLElement && node.hasAttribute("data-prompt-caret") && node.textContent === "\u200B")
   const filler = (node: Node) => {
-    if (!(node instanceof HTMLElement) || node.tagName !== "BR" || node.hasAttribute("data-prompt-break")) return false
+    if (!(node instanceof HTMLElement) || node.tagName !== "BR" || markedBreak(node)) return false
     let current: Node = node
     while (current.parentNode) {
       const parent = current.parentNode
@@ -577,7 +580,8 @@ export function readPromptEditor(root: Node) {
           !startsBreak &&
           previous &&
           (block(previous) || block(child)) &&
-          (emptyBlock || !segments[segments.length - 1]?.content.endsWith("\n"))
+          // An owned inserted LF and the following paragraph separator are distinct logical breaks.
+          (emptyBlock || markedBreak(segments[segments.length - 1]?.node) || !segments[segments.length - 1]?.content.endsWith("\n"))
         ) {
           append(node, "\n")
         }
