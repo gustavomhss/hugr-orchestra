@@ -12,6 +12,7 @@ import { clearPending, pendingPolicy, pendingSelection, pendingSnapshot, toggleP
 import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
 import type { ServerApi } from "@/utils/server"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
+import { Worktree } from "@/utils/worktree"
 
 let createPromptSubmit: typeof import("./submit").createPromptSubmit
 let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
@@ -59,6 +60,9 @@ let selected = "/repo/worktree-a"
 let variant: string | undefined
 let permissionServer = "server-a"
 let createSessionGate: Promise<void> | undefined
+let sendHook = async () => {}
+let behaviorHook = async () => {}
+let promoteHook = () => {}
 const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
 let policyWrite = async () => {}
 let policyWait = async () => {}
@@ -149,13 +153,16 @@ const clientFor = (directory: string) => {
         prompt: async (input: unknown) => {
           sentPrompts.push(directory)
           promptInputs.push(input)
+          await sendHook()
           return { data: undefined }
         },
         command: async (input: unknown) => {
           sentCommands.push(input)
+          await sendHook()
         },
         shell: async (input: { sessionID: string; id?: string; command: string }) => {
           sentShell.push(input)
+          await sendHook()
         },
         interrupt: async (input: { sessionID: string }) => { interruptedSessions.push(input.sessionID) },
       },
@@ -264,6 +271,7 @@ beforeAll(async () => {
     resolveBehaviorSystem: async (input: { scope: string; directory: string; projects: unknown }) => {
       events.push("resolve behaviors")
       behaviorReads.push({ scope: input.scope, directory: input.directory, projects: input.projects })
+      await behaviorHook()
       if (behaviors.fail) throw new Error("storage unavailable")
       return behaviors.system
     },
@@ -306,6 +314,7 @@ beforeAll(async () => {
       promoteDraft: (draftID: string, session: { server: string; sessionId: string }) => {
         promotedDrafts.push({ draftID, ...session })
         promoteRoute(promoted.at(-1)?.directory ?? currentSDK.directory, session.sessionId)
+        promoteHook()
       },
     }),
   }))
@@ -406,6 +415,154 @@ beforeAll(async () => {
 })
 
 describe("durable subagent policy submission", () => {
+  test.each(["prompt", "command", "shell"])("fresh %s dispatch survives promotion unmount, but only after receipt", async (pathway) => {
+    search.draftId = "draft-1"
+    const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+    togglePending(key, "provider", "model", true)
+    commands.push({ name: "review" })
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "first turn" })
+      real.context.add({ type: "file", path: "/repo/main/file", comment: "retain until admission" })
+      return { dispose, real, submit: createPromptSubmit({
+        ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key,
+        autoAccept: () => true, mode: () => pathway === "shell" ? "shell" : "normal",
+        onNewSessionWorktreeReset: () => { worktreeResets++ },
+      }) }
+    })
+    const contents = root.real.current()
+    const context = root.real.context.items()
+    // The production draft route unmounts here; the old fixture only changed params.
+    promoteHook = root.dispose
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    expect(promotedDrafts).toEqual([])
+    expect(root.real.current()).toBe(contents)
+    expect(root.real.context.items()).toBe(context)
+    expect(worktreeResets).toBe(0)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(enabledAutoAccept).toHaveLength(1)
+    await root.submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    gate.resolve()
+    await sending
+    expect(promotedDrafts).toHaveLength(1)
+    expect(worktreeResets).toBe(1)
+    expect(pendingSnapshot(key).revision).toBe(0)
+    await root.submit.handleSubmit(new Event("submit"))
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+  })
+
+  test.each(["prompt", "command", "shell"])("failed fresh %s keeps admission, payload ID, context and selections for retry", async (pathway) => {
+    search.draftId = "draft-1"
+    const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+    commands.push({ name: "review" })
+    togglePending(key, "provider", "model", true)
+    const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "retry turn" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "retain context" })
+    const contents = real.current()
+    const context = real.context.items()
+    const failure = new Error("admission failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key,
+      newSessionWorktree: () => "/repo/worktree-a", mode: () => pathway === "shell" ? "shell" : "normal",
+      onNewSessionWorktreeReset: () => { worktreeResets++ },
+    })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(promotedDrafts).toEqual([])
+    expect(worktreeResets).toBe(0)
+    const first = [...promptInputs, ...sentCommands, ...sentShell][0] as { id: string }
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/worktree-a"])
+    expect([...promptInputs, ...sentCommands, ...sentShell]).toEqual([
+      expect.objectContaining({ id: first.id }), expect.objectContaining({ id: first.id }),
+    ])
+    expect(promotedDrafts).toHaveLength(1)
+    expect(worktreeResets).toBe(1)
+  })
+
+  test("policy edit during request preparation gets latest ACK before actual dispatch", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    togglePending(key, "provider", "model", true)
+    const entered = deferred()
+    const gate = deferred()
+    behaviorHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "latest policy" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    clearPending(key)
+    sendHook = async () => { expect(policyWrites.at(-1)?.policy).toEqual({ mode: "inherit" }) }
+    gate.resolve()
+    await sending
+    expect(policyWrites.map((write) => write.policy.mode)).toEqual(["allowlist", "inherit"])
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test.each(["prompt", "context", "policy"])("fresh receipt preserves newer %s edit instead of deleting draft", async (edit) => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "admitted turn" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    if (edit === "prompt") real.set([{ type: "text", content: "newer draft", start: 0, end: 11 }])
+    if (edit === "context") real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
+    if (edit === "policy") togglePending(key, "provider", "new-model", true)
+    const contents = real.current()
+    const context = real.context.items()
+    const policy = pendingSnapshot(key)
+    gate.resolve()
+    await sending
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingSnapshot(key)).toEqual(policy)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+    if (edit === "prompt" || edit === "context") return
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs).toHaveLength(1)
+    expect(promoted).toHaveLength(1)
+  })
+
+  test.skipIf(isServer).each(["dispose", "server ABA"])("fresh admission receipt after %s cannot promote stale owner", async (change) => {
+    const source = { server: currentServer, sdk: currentSDK }
+    const otherServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    setReactiveOwner("read", () => () => source)
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "captured server" })
+      return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined }) }
+    })
+    const contents = root.real.current()
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    if (change === "dispose") root.dispose()
+    if (change === "server ABA") {
+      setReactiveOwner("read", () => () => ({ server: otherServer, sdk: sdkFor("/repo/main", otherServer) }))
+      await Promise.resolve()
+      setReactiveOwner("read", () => () => source)
+    }
+    gate.resolve()
+    await sending
+    expect(root.real.current()).toBe(contents)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+    root.dispose()
+  })
+
   test("inherited-policy ABA during ACK wait persists latest inherit tombstone", async () => {
     const key = draftSessionKey(ServerScope.local, "/repo/main")
     const initial = pendingSnapshot(key)
@@ -611,6 +768,7 @@ describe("durable subagent policy submission", () => {
     expect(worktreeResets).toBe(0)
 
     policyWrite = async () => {}
+    Worktree.ready(ServerScope.local, "/repo/main/new")
     await submit.handleSubmit(new Event("submit"))
     expect(createdSessions).toEqual(["/repo/main/new"])
     expect(sentShell).toHaveLength(1)
@@ -876,6 +1034,9 @@ beforeEach(() => {
   variant = undefined
   permissionServer = "server-a"
   createSessionGate = undefined
+  sendHook = async () => {}
+  behaviorHook = async () => {}
+  promoteHook = () => {}
   serverSessionSyncs = 0
   policyWrites.length = 0
   policyWrite = async () => {}
