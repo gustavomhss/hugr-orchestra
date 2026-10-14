@@ -50,6 +50,8 @@ export type Context = {
   readonly policy?: ClaudeHostGate.Ports
   /** Accepted per-call MCP dispatches and their SDK cancellation signals, owned by the query bridge. */
   readonly calls?: ClaudeHostMcp.Calls
+  /** Resolve SDK selection metadata to canonical catalog identity; missing facts remain unknown. */
+  readonly models?: ClaudeHostDelegation.Models
 }
 
 /**
@@ -70,7 +72,7 @@ const CAPTURED = ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "LSP"]
 
 export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
-    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts, research: ctx.research })
+    path: { cwd: ctx.directory, root: ctx.worktree }, join: ctx.join, parts: ctx.parts, research: ctx.research, models: ctx.models })
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
@@ -120,6 +122,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
           return ClaudeHostGate.deny(ClaudeCodeTools.failure(charged.cause))
         }
       }
+      if (ClaudeHostGate.agentCall(input.tool_name)) yield* delegation.admit(input, actor)
       const own = ClaudeCodeTools.orchestra(input.tool_name)
       if (own && ctx.calls) return ClaudeHostGate.output({ ...decision, input: ctx.calls.reserve({
         callID: input.tool_use_id, sessionID: actor.sessionID, seat: actor.seat,
