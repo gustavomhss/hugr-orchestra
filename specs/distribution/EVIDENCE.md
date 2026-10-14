@@ -6,7 +6,7 @@ The original stack adopted `dev` at `6dbb3546fc`, then qualified its integration
 
 ## Native Windows and AUR closure
 
-[38494570524](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38494570524) passed all eight jobs at runtime snapshot `21de9ed50eb98b84f55085a8b4a2e35cd38b893f`, based on `5c87f7826e`. Windows and both AUR qualification rows passed; retained logs were independently checked for their named runtime tests, zero failures and nonce-bound actual omni controls. Documentation-only follow-up does not alter that runtime snapshot.
+[38494570524](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38494570524) passed all eight jobs at runtime snapshot `21de9ed50eb98b84f55085a8b4a2e35cd38b893f`, based on `5c87f7826e`. Windows and both AUR qualification rows passed; retained logs were independently checked for their named runtime tests, zero failures and nonce-bound actual omni controls. The subsequent integration with `dev` at `318fce61458e8201827fcc3a379053d56ccf03ef` requires its own full-bundle qualification before landing; that run and the exact landing tree are recorded on the bundle PR.
 
 - **Windows x64:** two actual `windows-x64-baseline` builds, real npm registry install/update/exact downgrade, public `.cmd` launcher, PE executable/addon/supervisor checks, TS/Python parsers, independent exact installed-companion spawn, authenticated service/catalog and complete skill/reference bytes. Native PID, image and creation-time queries corroborate each daemon; the fixture adopts its Windows job until authenticated stop, independent exit observation and job release. Forced-reader/deadline controls prove the query broker closes its own PowerShell child.
 - **AUR x64 / ARM64:** actual nonroot `makepkg`, final archive after tidy, native `pacman` v1 install/v2 update/original retained-v1 downgrade, public `/usr/bin/orchestra`, all runtime and skill-byte oracles above, wrong-download checksum refusal before extraction/install, retained-source/cache preservation and owned guest/host fixture teardown.
@@ -39,6 +39,8 @@ The final native Homebrew fixtures also preload an official blob-filtered sparse
 ## Local static checks
 
 After the fixture repair, `bun typecheck` passed from both `packages/cli` and `packages/core`; `bun run check:spawn-imports`, `GODFILE_BASE_REF=fork/dev bun run check:godfile` and `git diff --check` also passed. The size gate reported 332 warnings and zero errors. These are local static checks, not substitutes for the hosted runtime checks above.
+
+After integrating `318fce6145`, both package typechecks and those static gates passed again, including `actionlint .github/workflows/distribution-bundle.yml`. The updated size gate reported 340 warnings and zero errors.
 
 ## Mutation controls
 
