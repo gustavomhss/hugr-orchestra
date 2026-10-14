@@ -96,20 +96,32 @@ export function prepareTreeSitterPrebuilds(input: Target & { root: string; rebui
     .flatMap((item) => nodeFiles(path.join(item.dir, "build", "Release")))
     .filter((file) => !nativeMachines(file).includes(machine))
   if (stale.length > 0) throw new Error(`TREE_SITTER_CORE_BUILD_STALE: ${target}: ${stale.join(", ")}`)
+  const preferred = packages.flatMap((item) => nodeFiles(path.join(item.dir, "build", "Release")))
+  const foreignPreferred = preferred.filter((file) => !nativeMachines(file).includes(machine))
+  if (foreignPreferred.length) throw new Error(`TREE_SITTER_PREFERRED_BUILD_STALE: ${target}: ${foreignPreferred.join(", ")}`)
+  // Preflight every reusable binding, including node-gyp-build's preferred
+  // build/Release in grammars. Refuse before any other package is rebuilt/copied.
+  if (input.os === "linux") {
+    [...packages.flatMap((item) => item.files), ...preferred]
+      .filter((file) => nativeMachines(file).includes(machine))
+      .forEach((file) => requireElfLibc(file, "glibc"))
+    if (rebuild && (process.platform !== "linux" || process.arch !== input.arch || linuxRuntimeLibc().kind !== "glibc"))
+      throw new Error(`TREE_SITTER_NATIVE_GLIBC_BUILD_REQUIRED: ${target}`)
+  }
   const unbound = cores.filter((item) => item.files.length === 0)
   if (unbound.length > 0 && !rebuild)
     throw new Error(
       `TREE_SITTER_CORE_BINDING_MISSING: ${target} needs a ${target} host to build ` +
         unbound.map((item) => path.join(item.dir, "prebuilds", target, "tree-sitter.node")).join(", "),
     )
-  broken.forEach((item) => rebuildPackage(input.root, item.dir, item.files, machine))
+  broken.forEach((item) => rebuildPackage(input.root, item.dir, item.files, machine, input.os === "linux" ? "glibc" : undefined))
   unbound.forEach((item) => {
     const file = path.join(item.dir, "prebuilds", target, "tree-sitter.node")
     // The install script's own build, already checked against the target above, needs no second compile.
     const built = nodeFiles(path.join(item.dir, "build", "Release"))
     mkdirSync(path.dirname(file), { recursive: true })
     if (built.length === 1) return copyFileSync(built[0]!, file)
-    rebuildPackage(input.root, item.dir, [file], machine)
+    rebuildPackage(input.root, item.dir, [file], machine, input.os === "linux" ? "glibc" : undefined)
   })
   return {
     target,
@@ -289,7 +301,7 @@ export function lockfileNodeGyp(root: string) {
   ].find((file) => existsSync(file))
 }
 
-function rebuildPackage(root: string, dir: string, files: string[], machine: number, libc?: "musl") {
+function rebuildPackage(root: string, dir: string, files: string[], machine: number, libc?: "musl" | "glibc") {
   const gyp = lockfileNodeGyp(root)
   if (!gyp) throw new Error(`TREE_SITTER_REBUILD_UNAVAILABLE: no lockfile node-gyp under ${root}`)
   const build = path.join(dir, "build")
@@ -337,24 +349,49 @@ export function inspectElf(file: string) {
   if (!count) throw new Error(`ELF_PROGRAM_HEADERS_EMPTY: ${file}`)
   const start = span(Number(bytes.readBigUInt64LE(32)), count * 56)
   const headers = Array.from({ length: count }, (_, i) => start + i * 56)
-  const segment = (h: number) => ({ offset: span(Number(bytes.readBigUInt64LE(h + 8)), Number(bytes.readBigUInt64LE(h + 32))),
-    size: Number(bytes.readBigUInt64LE(h + 32)), address: bytes.readBigUInt64LE(h + 16) })
-  headers.forEach(segment)
+  const segments = headers.map((h) => {
+    const size = bytes.readBigUInt64LE(h + 32)
+    const memory = bytes.readBigUInt64LE(h + 40)
+    const address = bytes.readBigUInt64LE(h + 16)
+    if (size > memory || address + memory > 0xffffffffffffffffn)
+      throw new Error(`ELF_SEGMENT_MEMORY_INVALID: ${file}`)
+    return { type: bytes.readUInt32LE(h), offset: span(Number(bytes.readBigUInt64LE(h + 8)), Number(size)),
+      size: Number(size), memory, address }
+  })
+  const loads = segments.filter((s) => s.type === 1)
+  if (!loads.length) throw new Error(`ELF_LOAD_SEGMENTS_EMPTY: ${file}`)
+  if (loads.some((s, i) => loads.slice(i + 1).some((other) => s.memory > 0n && other.memory > 0n &&
+      s.address < other.address + other.memory && other.address < s.address + s.memory)))
+    throw new Error(`ELF_LOAD_MAPPING_AMBIGUOUS: ${file}`)
+  const mapped = (address: bigint, size: bigint) => {
+    if (size <= 0n || address + size > 0xffffffffffffffffn) throw new Error(`ELF_MAPPING_RANGE_INVALID: ${file}`)
+    const matches = loads.filter((s) => address >= s.address && address + size <= s.address + s.memory)
+    if (matches.length !== 1) throw new Error(`ELF_MAPPING_UNMAPPED: ${file}`)
+    const load = matches[0]!
+    if (address - load.address + size > BigInt(load.size)) throw new Error(`ELF_MAPPING_NOT_FILE_BACKED: ${file}`)
+    return span(load.offset + Number(address - load.address), Number(size))
+  }
   const strings = (offset: number, size: number) => {
     span(offset, size)
     const end = bytes.indexOf(0, offset)
     if (end < offset || end >= offset + size) throw new Error(`ELF_STRING_UNTERMINATED: ${file}`)
     return bytes.toString("utf8", offset, end)
   }
-  const interpreters = headers.filter((h) => bytes.readUInt32LE(h) === 3)
+  const interpreters = segments.filter((s) => s.type === 3)
   if (interpreters.length > 1) throw new Error(`ELF_INTERPRETER_DUPLICATED: ${file}`)
-  const interpreter = interpreters.map(segment).map((s) => strings(s.offset, s.size))[0]
+  const interpreter = interpreters.map((s) => strings(s.offset, s.size))[0]
   const needed: bigint[] = []
   const tables: bigint[] = []
   const sizes: bigint[] = []
-  headers.filter((h) => bytes.readUInt32LE(h) === 2).map(segment).forEach((s) => {
-    if (s.size % 16) throw new Error(`ELF_DYNAMIC_TRUNCATED: ${file}`)
-    const entries = Array.from({ length: s.size / 16 }, (_, i) => s.offset + i * 16)
+  const dynamics = segments.filter((s) => s.type === 2)
+  if (dynamics.length > 1) throw new Error(`ELF_DYNAMIC_DUPLICATED: ${file}`)
+  dynamics.forEach((s) => {
+    if (!s.size || s.size % 16) throw new Error(`ELF_DYNAMIC_TRUNCATED: ${file}`)
+    const offset = mapped(s.address, BigInt(s.size))
+    if (offset !== s.offset) throw new Error(`ELF_DYNAMIC_OFFSET_MISMATCH: ${file}`)
+    if (!loads.some((load) => s.address >= load.address && s.address + s.memory <= load.address + load.memory))
+      throw new Error(`ELF_DYNAMIC_MEMORY_UNMAPPED: ${file}`)
+    const entries = Array.from({ length: s.size / 16 }, (_, i) => offset + i * 16)
     const end = entries.findIndex((e) => bytes.readBigInt64LE(e) === 0n)
     if (end < 0) throw new Error(`ELF_DYNAMIC_UNTERMINATED: ${file}`)
     entries.slice(0, end).forEach((e) => {
@@ -364,12 +401,12 @@ export function inspectElf(file: string) {
       if (tag === 10n) sizes.push(bytes.readBigUInt64LE(e + 8))
     })
   })
+  if ((tables.length || sizes.length || needed.length) && (tables.length !== 1 || sizes.length !== 1))
+    throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
+  const table = tables.length ? mapped(tables[0]!, sizes[0]!) : undefined
   const dependencies = needed.map((n) => {
-    if (tables.length !== 1 || sizes.length !== 1 || n >= sizes[0]!) throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
-    const load = headers.filter((h) => bytes.readUInt32LE(h) === 1).map(segment)
-      .find((s) => tables[0]! >= s.address && tables[0]! + sizes[0]! <= s.address + BigInt(s.size))
-    if (!load) throw new Error(`ELF_STRING_TABLE_UNMAPPED: ${file}`)
-    return strings(load.offset + Number(tables[0]! - load.address + n), Number(sizes[0]! - n))
+    if (table === undefined || n >= sizes[0]!) throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
+    return strings(table + Number(n), Number(sizes[0]! - n))
   })
   return { machine: bytes.readUInt16LE(18), interpreter, needed: dependencies }
 }

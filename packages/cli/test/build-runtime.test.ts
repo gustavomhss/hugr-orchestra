@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { copyFile, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises"
+import { chmod, copyFile, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { omniTargets } from "@orchestra/script/omni"
+import { omniTargets, requireOmniFiles } from "@orchestra/script/omni"
 import { requireElfLibc, requireTreeSitterBundle, treeSitterArtifactKey, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
 import { namedTargets } from "../script/targets"
 
@@ -195,9 +195,15 @@ async function handedArtifacts() {
     Object.values(omniTargets)
       .filter((item) => item.enabled)
       .flatMap((item) =>
-        ["hugr_omni.node", `hugr-omni-supervisor${item.id.startsWith("win32-") ? ".exe" : ""}`].map((file) =>
-          Bun.write(path.join(omni, item.id, file), `fixture ${item.id} ${file}`),
-        ),
+        ["hugr_omni.node", `hugr-omni-supervisor${item.id.startsWith("win32-") ? ".exe" : ""}`].map(async (file) => {
+          const destination = path.join(omni, item.id, file)
+          const os = item.id.split("-")[0]
+          const arch = item.id.split("-")[1]
+          const supervisor = file.startsWith("hugr-omni-supervisor")
+          await Bun.write(destination, os === "linux" ? elfBinding(arch, supervisor ? undefined : item.id.endsWith("-musl") ? "musl" : "glibc") :
+            omniHeader(os, arch))
+          if (supervisor && os !== "win32") await chmod(destination, 0o755)
+        }),
       ),
   )
   await Promise.all(
@@ -220,7 +226,7 @@ async function handedArtifacts() {
 
 // Independent ELF fixture: no production inspector generates these bytes and
 // no glibc prebuild is relabeled musl. Shared object has no executable code.
-function elfBinding(arch: string, libc: "glibc" | "musl") {
+function elfBinding(arch: string, libc?: "glibc" | "musl") {
   const bytes = Buffer.alloc(512)
   Buffer.from("7f454c46020101", "hex").copy(bytes)
   bytes.writeUInt16LE(3, 16)
@@ -235,6 +241,7 @@ function elfBinding(arch: string, libc: "glibc" | "musl") {
   bytes.writeBigUInt64LE(512n, 96)
   bytes.writeBigUInt64LE(512n, 104)
   bytes.writeBigUInt64LE(4096n, 112)
+  if (!libc) { bytes.writeUInt16LE(1, 56); return bytes }
   bytes.writeUInt32LE(2, 120)
   bytes.writeUInt32LE(4, 124)
   bytes.writeBigUInt64LE(176n, 128)
@@ -251,11 +258,80 @@ function elfBinding(arch: string, libc: "glibc" | "musl") {
   return bytes
 }
 
+function omniHeader(os: string, arch: string) {
+  const bytes = Buffer.alloc(128)
+  if (os === "darwin") { bytes.writeUInt32LE(0xfeedfacf); bytes.writeUInt32LE(arch === "x64" ? 0x01000007 : 0x0100000c, 4); return bytes }
+  bytes.writeUInt16LE(0x5a4d)
+  bytes.writeUInt32LE(64, 0x3c)
+  bytes.writeUInt32LE(0x4550, 64)
+  bytes.writeUInt16LE(arch === "x64" ? 0x8664 : 0xaa64, 68)
+  bytes.writeUInt16LE(0x20b, 88)
+  return bytes
+}
+
 test("all explicit targets produce correct executable format/architecture and preserve siblings", async () => {
   const sentinel = path.join(root, "dist/cli-preserved/sentinel")
   const artifacts = new Map<string, string>()
   const handed = await handedArtifacts()
   await Bun.write(sentinel, "preserve these bytes")
+  // Local --single fallback is exercised from a copied producer module, never
+  // by replacing the runner's genuine release companions. Fixtures are structural.
+  const producer = path.join(home, "local-producer/packages/script/src")
+  await Bun.write(path.join(producer, "omni.ts"), Bun.file(path.resolve(root, "../script/src/omni.ts")))
+  await Bun.write(path.join(producer, "tree-sitter-prebuilds.ts"), Bun.file(path.resolve(root, "../script/src/tree-sitter-prebuilds.ts")))
+  const release = path.join(home, "local-producer/packages/omni/target/release")
+  for (const selected of ["linux-x64-musl", "linux-x64-baseline-musl", "linux-arm64-musl", "windows-arm64"]) {
+    const item = namedTargets.find((item) => item.target === selected)!
+    const id = omniTargets[selected].id
+    const addon = path.join(release, item.os === "win32" ? "hugr_omni_node.dll" : "libhugr_omni_node.so")
+    const supervisor = path.join(release, `hugr-omni-supervisor${item.os === "win32" ? ".exe" : ""}`)
+    const probe = [process.execPath, "--eval", `import { resolveOmni } from ${JSON.stringify(path.join(producer, "omni.ts"))};
+      const result = resolveOmni(${JSON.stringify({ name: selected, target: selected, os: item.os, single: true })});
+      if (!result.omni.enabled || !result.omniFiles) throw new Error("OMNI_LOCAL_ADMISSION_EMPTY"); console.log("admitted")`]
+    await rm(release, { recursive: true, force: true })
+    const missing = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+    expect(missing.code).not.toBe(0)
+    expect(missing.stderr).toContain("OMNI_LOCAL_COMPANIONS_MISSING")
+    await Bun.write(addon, Bun.file(path.join(handed.OMNI_ARTIFACTS, id, "hugr_omni.node")))
+    const incomplete = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+    expect(incomplete.code).not.toBe(0)
+    expect(incomplete.stderr).toContain("OMNI_COMPANION_MISSING_OR_NOT_REGULAR")
+    await Bun.write(supervisor, Bun.file(path.join(handed.OMNI_ARTIFACTS, id, path.basename(supervisor))))
+    await chmod(supervisor, 0o755)
+    expect((await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })).stdout).toBe("admitted")
+    const original = await readFile(addon)
+    try {
+      await Bun.write(addon, item.os === "linux" ? elfBinding(item.arch === "x64" ? "arm64" : "x64", "musl") : omniHeader("win32", "x64"))
+      const wrongCPU = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+      expect(wrongCPU.code).not.toBe(0)
+      expect(wrongCPU.stderr).toContain("OMNI_COMPANION_CPU_MISMATCH")
+      if (item.os === "linux") {
+        await Bun.write(addon, elfBinding(item.arch, "glibc"))
+        const wrongABI = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+        expect(wrongABI.code).not.toBe(0)
+        expect(wrongABI.stderr).toContain("ELF_LIBC_MISMATCH")
+      }
+    } finally { await Bun.write(addon, original) }
+    const originalSupervisor = await readFile(supervisor)
+    try {
+      await Bun.write(supervisor, item.os === "linux" ? elfBinding(item.arch === "x64" ? "arm64" : "x64") : omniHeader("win32", "x64"))
+      const wrongCPU = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+      expect(wrongCPU.code).not.toBe(0)
+      expect(wrongCPU.stderr).toContain("OMNI_COMPANION_CPU_MISMATCH")
+      if (item.os === "linux") {
+        await Bun.write(supervisor, elfBinding(item.arch, "musl"))
+        const dynamic = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+        expect(dynamic.code).not.toBe(0)
+        expect(dynamic.stderr).toContain("OMNI_SUPERVISOR_INTERPRETER_MISMATCH")
+        await Bun.write(supervisor, originalSupervisor)
+        await chmod(supervisor, 0o644)
+        const nonExecutable = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
+        expect(nonExecutable.code).not.toBe(0)
+        expect(nonExecutable.stderr).toContain("OMNI_SUPERVISOR_NOT_EXECUTABLE")
+      }
+    } finally { await Bun.write(supervisor, originalSupervisor); await chmod(supervisor, 0o755) }
+    expect((await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })).stdout).toBe("admitted")
+  }
   // On the Windows runner Bun 1.3.14 fails to extract the compile targets it downloads ("Failed to extract executable
   // for 'bun-linux-aarch64-v1.3.14'" and 'bun-windows-aarch64-v1.3.14', actions runs 38150190807 and 38150514459), so
   // a Windows host proves only its own target, which needs no download. The Linux host, where the release producers
@@ -290,6 +366,16 @@ test("all explicit targets produce correct executable format/architecture and pr
     const item = namedTargets.find((item) => item.target === target)!
     const stale = path.join(root, `dist/cli-${target}/stale-output`)
     await Bun.write(stale, "selected target must replace this")
+    const id = omniTargets[target].id
+    const handedAddon = path.join(handed.OMNI_ARTIFACTS, id, "hugr_omni.node")
+    const originalAddon = await readFile(handedAddon)
+    try {
+      await rm(handedAddon)
+      const rejected = await run([process.execPath, "script/build.ts", "--skip-install", "--target", target], 120_000, handed)
+      expect(rejected.code).not.toBe(0)
+      expect(rejected.stderr).toContain("OMNI_COMPANION_MISSING_OR_NOT_REGULAR")
+      expect(await Bun.file(stale).text()).toBe("selected target must replace this")
+    } finally { await Bun.write(handedAddon, originalAddon) }
     if (item.os === "linux") {
       const binding = path.join(handed.TREE_SITTER_ARTIFACTS, treeSitterArtifactKey(item),
         "tree-sitter/prebuilds", `${item.os}-${item.arch}`, "tree-sitter.node")
@@ -337,10 +423,13 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(manifest.cpu).toEqual([arm ? "arm64" : "x64"])
     const omni = omniTargets[target]!
     expect(await Bun.file(path.join(root, `dist/cli-${target}/bin/hugr_omni.node`)).exists()).toBe(omni.enabled)
-    if (omni.enabled)
-      expect(await Bun.file(path.join(root, `dist/cli-${target}/bin/hugr_omni.node`)).text()).toBe(
-        `fixture ${omni.id} hugr_omni.node`,
-      )
+    if (omni.enabled) {
+      const source = path.join(handed.OMNI_ARTIFACTS, omni.id)
+      const supervisor = `hugr-omni-supervisor${item.os === "win32" ? ".exe" : ""}`
+      requireOmniFiles({ addon: path.join(source, "hugr_omni.node"), supervisor: path.join(source, supervisor) }, item)
+      for (const file of ["hugr_omni.node", supervisor])
+        expect(await digest(path.join(root, `dist/cli-${target}/bin`, file))).toBe(await digest(path.join(source, file)))
+    }
     // Every ABI ships the handed bundle with unchanged internal OS/CPU paths.
     const shipped = path.join(root, `dist/cli-${target}/bin/tree-sitter`)
     requireTreeSitterBundle(shipped, item)

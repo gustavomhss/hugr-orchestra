@@ -6,6 +6,8 @@ import { join, resolve } from "node:path"
 import { Schema } from "effect"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { cli, command, nativeLibc, sandbox, sha256, successful, versions } from "./fixture/distribution-native"
+import { removeOwnedMuslContainers } from "./fixture/distribution-musl/cleanup"
+import type { MuslContainerLease } from "./fixture/distribution-musl/cleanup"
 
 // Lead wires only this wrapper into matching hosted Ubuntu rows and excludes the
 // guest from generic discovery. Per-CPU rust:1-alpine manifests, Docker Hub
@@ -22,8 +24,10 @@ const name = `orchestra-musl-${nonce}`
 const state: {
   directory?: string; host?: Awaited<ReturnType<typeof sandbox>>; docker?: string; id?: string;
   attempted: boolean; artifact?: string; owner?: { uid: number; gid: number };
-  identity?: { dev: number; ino: number }; cleanup?: Promise<void>;
-} = { attempted: false }
+  identity?: { dev: number; ino: number }; cleanup?: Promise<void>; lease?: MuslContainerLease;
+  teardown: boolean; failure?: unknown;
+  control?: { scope: Omit<MuslContainerLease, "id">; known?: MuslContainerLease };
+} = { attempted: false, teardown: false }
 const interrupt = () => { void cleanup().then(() => process.exit(1), () => {
   console.error(`MUSL_INTERRUPTED_CLEANUP_FAILED: name=${name} fixture=${state.directory}`)
   process.exit(1)
@@ -105,6 +109,7 @@ export async function runMuslQualification() {
   await Bun.write(join(state.directory, "evidence/provenance.json"), JSON.stringify({ guest, sourceSHA, treeHash, bundleSha256,
     inspectedImage: image, host: { libc: nativeLibc, cpu: machine(), arch: process.arch, osRelease: await readFile("/etc/os-release", "utf8"),
       docker: daemon, runner: process.env.RUNNER_ARCH, environment: process.env.RUNNER_ENVIRONMENT } }, null, 2))
+  await censusFailureControl(guest.image, guest.dockerArch)
   expect(await ownedContainers()).toEqual([])
   state.attempted = true
   const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
@@ -112,13 +117,14 @@ export async function runMuslQualification() {
     "--mount", `type=bind,source=${state.directory},target=/proof`, "--workdir", "/proof", guest.image, "/bin/sleep", "infinity"])
   if (!/^[a-f0-9]{64}$/.test(id)) throw new Error("MUSL_OWNED_CONTAINER_ID_INVALID")
   state.id = id
+  expect(await docker(["inspect", "--format", `{{.Id}}|{{.Name}}|{{.Config.Image}}|{{index .Config.Labels "${label}"}}|{{.HostConfig.Init}}`, id]))
+    .toBe(`${id}|/${name}|${guest.image}|${nonce}|true`)
+  state.lease = { id, name, label, nonce }
   expect(await ownedContainers(), "MUSL_CONTAINER_ENUMERATION_POSITIVE_CONTROL").toEqual([id])
-  expect(await docker(["inspect", "--format", `{{.Id}}|{{.Config.Image}}|{{index .Config.Labels "${label}"}}|{{.HostConfig.Init}}`, id]))
-    .toBe(`${id}|${guest.image}|${nonce}|true`)
   await docker(["start", id])
   const result = await command([state.docker, "exec", id, "/bin/sh", "/repo/packages/cli/test/fixture/distribution-musl/bootstrap.sh",
     guest.cpu, sourceSHA, treeHash, bundleSha256], state.host, 4_800_000)
-  if (state.cleanup) throw new Error("MUSL_GUEST_COMPLETED_AFTER_TEARDOWN_STARTED")
+  if (state.teardown) throw new Error("MUSL_GUEST_COMPLETED_AFTER_TEARDOWN_STARTED")
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
   if (result.code !== 0) throw new Error(`MUSL_NATIVE_GUEST_FAILED: ${guest.image}; logs=${state.artifact}\n${result.stderr}`)
@@ -146,25 +152,30 @@ async function ownedContainers() {
   return ids
 }
 
-function cleanup() { return state.cleanup ??= cleanupOwned() }
+function cleanup() {
+  state.teardown = true
+  if (state.cleanup) return state.cleanup
+  const cleaning = cleanupOwned().catch((cause: unknown) => { state.failure ??= cause; throw cause })
+  state.cleanup = cleaning
+  void cleaning.catch(() => { if (state.cleanup === cleaning) state.cleanup = undefined })
+  return cleaning
+}
 
 async function cleanupOwned() {
   if (!state.directory) return
-  const ids = state.attempted ? await ownedContainers() : []
-  if (ids.length > 1 || (state.id && ids.some((id) => id !== state.id))) throw new Error("MUSL_CONTAINER_OWNERSHIP_CHANGED")
-  const owned: string[] = []
-  const failures: unknown[] = []
-  for (const id of ids) {
-    expect(await docker(["inspect", "--format", `{{.Name}}|{{index .Config.Labels "${label}"}}`, id])).toBe(`/${name}|${nonce}`)
-    owned.push(id)
-    await repairFixtureOwner(id).catch((cause: unknown) => { failures.push(cause) })
+  const prepare = async (ids: string[]) => {
+    const failures: unknown[] = []
+    if (state.control) await removeOwnedMuslContainers({ scope: state.control.scope, known: state.control.known, run: dockerResult })
+      .then(() => { state.control = undefined }, (cause: unknown) => { failures.push(cause) })
+    for (const id of ids) await repairFixtureOwner(id).catch((cause: unknown) => { failures.push(cause) })
+    await preserveEvidence().catch((cause: unknown) => { failures.push(cause) })
+    if (failures.length) throw new AggregateError(failures, "MUSL_FIXTURE_REPAIR_OR_EVIDENCE_FAILED")
   }
-  await preserveEvidence().catch((cause: unknown) => { failures.push(cause) })
-  for (const id of owned) await docker(["rm", "--force", "--volumes", id], 60_000).catch((cause: unknown) => { failures.push(cause) })
-  if (state.attempted) await ownedContainers().then((remaining) => {
-    expect(remaining, "MUSL_OWNED_CONTAINER_SURVIVED_REMOVAL").toEqual([])
-  }).catch((cause: unknown) => { failures.push(cause) })
-  if (failures.length) throw new AggregateError(failures, `MUSL_OWNED_TEARDOWN_INCOMPLETE: ${state.directory}`)
+  const retired = state.attempted ? await removeOwnedMuslContainers({ scope: { name, label, nonce }, known: state.lease,
+    run: dockerResult, prepare }) : (await prepare([]), { retired: [] })
+  // A successful resource retry cannot erase the original failed qualification
+  // or permit deletion of its diagnostic fixture.
+  if (state.failure) throw state.failure
   await fixtureRoot()
   await rm(state.directory, { recursive: true, force: true })
   const survived = await lstat(state.directory).catch((error: unknown) => {
@@ -175,7 +186,53 @@ async function cleanupOwned() {
   if (state.artifact) await Bun.write(join(state.artifact, "host-cleanup.json"), JSON.stringify({ name, id: state.id,
     container: state.attempted ? "owned-label-enumerated-and-removed; post-removal-list-empty" : "not-created",
     fixture: "host-deletion-proved", owner: state.owner,
-    repair: ids.length ? "owned-/proof-bind; guest-writers-stopped; no-symlink-traversal; full-owner-verified" : "not-needed" }, null, 2))
+    repair: retired.retired.length ? "owned-/proof-bind; guest-writers-stopped; no-symlink-traversal; full-owner-verified" : "not-needed" }, null, 2))
+}
+
+function dockerResult(args: string[]) {
+  if (!state.docker || !state.host) throw new Error("MUSL_DOCKER_LEASE_UNAVAILABLE")
+  return command([state.docker, ...args], state.host, 90_000)
+}
+
+async function censusFailureControl(image: string, architecture: string) {
+  const scope = { name: `${name}-census-control`, label: `${label}.control`, nonce }
+  const control: { scope: Omit<MuslContainerLease, "id">; known?: MuslContainerLease } = { scope }
+  state.control = control
+  try {
+    const id = await docker(["create", "--name", scope.name, "--label", `${scope.label}=${nonce}`, "--init",
+      "--platform", `linux/${architecture}`, image, "/bin/sleep", "infinity"])
+    if (!/^[a-f0-9]{64}$/.test(id)) throw new Error("MUSL_CENSUS_CONTROL_ID_INVALID")
+    expect(await docker(["inspect", "--format", `{{.Id}}|{{.Name}}|{{index .Config.Labels "${scope.label}"}}`, id]))
+      .toBe(`${id}|/${scope.name}|${nonce}`)
+    control.known = { ...scope, id }
+    if (state.teardown) throw new Error("MUSL_CENSUS_CONTROL_COMPLETED_AFTER_TEARDOWN_STARTED")
+    const list = ["ps", "--all", "--no-trunc", "--filter", `label=${scope.label}=${nonce}`, "--format", "{{.ID}}"]
+    expect(await docker(list), "MUSL_FAULT_CENSUS_POSITIVE_CONTROL").toBe(id)
+    // Real Docker rejects this invalid template against the known live object.
+    // No global Docker mock; production cleanup gets the actual command failure.
+    const failure = await removeOwnedMuslContainers({ scope, known: control.known, run: dockerResult,
+      censusFormat: "{{.OrchestraMissingCensusField}}" }).then(() => undefined, (cause: unknown) => cause)
+    expect(failure).toBeInstanceOf(AggregateError)
+    if (!(failure instanceof AggregateError)) throw new Error("MUSL_CENSUS_FAILURE_CONTROL_DID_NOT_FAIL")
+    const censusError: unknown = failure.errors.find((error: unknown) => error instanceof Error && error.message === "MUSL_CONTAINER_CENSUS_FAILED")
+    if (!(censusError instanceof Error) || !(censusError.cause instanceof Error)) throw new Error("MUSL_CENSUS_FAULT_DIAGNOSTIC_MISSING")
+    expect(censusError.cause.message).toContain("MUSL_DOCKER_OPERATION_FAILED")
+    const diagnostic = Schema.decodeUnknownSync(Schema.Struct({ code: Schema.Int, stderr: Schema.String }))(censusError.cause.cause)
+    expect(diagnostic.code).not.toBe(0)
+    expect(diagnostic.stderr).toContain("OrchestraMissingCensusField")
+    expect(await docker(list), "MUSL_KNOWN_LEASE_SURVIVED_FAILED_CENSUS").toBe("")
+    const inspected = await dockerResult(["inspect", id])
+    expect(inspected.code).toBe(1)
+    expect(inspected.stderr).toMatch(/No such (?:object|container)/i)
+    if (!state.directory) throw new Error("MUSL_CENSUS_CONTROL_FIXTURE_MISSING")
+    await Bun.write(join(state.directory, "evidence/cleanup-census-control.json"), JSON.stringify({ id,
+      retired: true, inspected, errors: failure.errors.filter((error: unknown): error is Error => error instanceof Error)
+        .map((error: Error) => ({ message: error.message, cause: error.cause instanceof Error ?
+          { message: error.cause.message, result: error.cause.cause } : error.cause })) }, null, 2))
+  } finally {
+    await removeOwnedMuslContainers({ scope, known: control.known, run: dockerResult })
+    if (state.control === control) state.control = undefined
+  }
 }
 
 async function repairFixtureOwner(id: string) {

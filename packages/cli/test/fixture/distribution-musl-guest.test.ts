@@ -11,6 +11,7 @@ import { curlChannel } from "./distribution-native-curl"
 import { npmChannel } from "./distribution-native-npm"
 import { emergencyStop, stopServices } from "./distribution-native-proof"
 import { muslPayloadAbi } from "./distribution-musl/abi"
+import { muslPrefixReceipt } from "./distribution-musl/prefix"
 
 const Input = Schema.Struct({ target: Schema.String, sourceSHA: Schema.String, treeHash: Schema.String, bundleSha256: Schema.String,
   image: Schema.String, cpu: Schema.String, controls: Schema.Array(Schema.Struct({ file: Schema.String, sha256: Schema.String })) })
@@ -66,6 +67,8 @@ test("MUSL-GUEST actual native musl compile and real curl/npm lifecycle with ful
   expect(await sourceReceipt(box)).toEqual(source)
   await Bun.write("/proof/evidence/source-before.json", JSON.stringify({ sourceSHA: input.sourceSHA, treeHash: input.treeHash, files: source }, null, 2))
   expect(input.controls.map((control) => control.file).sort()).toEqual(["glibc-addon.node", "glibc-bun"])
+  // glibc-bun is an ELF-admission control only, never launched here. Actual
+  // incompatible addon/parser execution controls live in muslPayloadAbi().
   for (const control of input.controls) {
     expect(sha256(await readFile(`/proof/controls/${control.file}`))).toBe(control.sha256)
     expect(requireElfLibc(`/proof/controls/${control.file}`, "glibc").machine).toBe(NATIVE_MACHINES[`linux-${process.arch}`])
@@ -113,16 +116,17 @@ test("MUSL-GUEST actual native musl compile and real curl/npm lifecycle with ful
     expect(rg.stdout).toContain("RIPGREP_BUNDLE")
   }
   const wrongPrefix = "/proof/wrong-libc-prefix"
-  expect(await snapshot(wrongPrefix)).toBeUndefined()
+  const selectedPrefix = { target, version: built.payloads[0].version }
+  expect(await muslPrefixReceipt(wrongPrefix, selectedPrefix)).toBeUndefined()
   const rejectWrongInstallerABI = async (prefix: string) => {
     const receipts = []
-    const before = await snapshot(prefix)
+    const before = await muslPrefixReceipt(prefix, selectedPrefix)
     for (const args of [["--version", built.payloads[0].version, "--archive", built.payloads[0].archive.file,
       "--sha256", built.payloads[0].archive.sha256], ["--rollback", built.payloads[0].version]]) {
       const refused = await command(["sh", join(cli, "distribution/install.sh"), "--prefix", prefix, "--target", wrongTarget, ...args], box)
       expect(refused.code, "MUSL_INSTALLER_GLIBC_REQUEST_MUST_FAIL").toBe(1)
       expect(refused.stderr).toContain("target does not match host libc")
-      expect(await snapshot(prefix), "MUSL_WRONG_ABI_MUST_NOT_TOUCH_PREFIX_OR_LOCK").toEqual(before)
+      expect(await muslPrefixReceipt(prefix, selectedPrefix), "MUSL_WRONG_ABI_MUST_NOT_TOUCH_PREFIX_OR_LOCK").toEqual(before)
       receipts.push({ prefix, target: wrongTarget, refused, existed: before !== undefined })
     }
     return receipts
