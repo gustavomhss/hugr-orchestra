@@ -42,6 +42,15 @@ export const groupNames = {
   "server.relay.hook": "relayHooks",
   "server.pullRequest": "pullRequests",
   "server.schedule": "schedules",
+  "server.actionsBinding": "actionsBindings",
+  "server.actionsOperation": "actionsOperations",
+  "server.actionsWorkflow": "actionsWorkflows",
+  "server.actionsRun": "actionsRuns",
+  "server.actionsJob": "actionsJobs",
+  "server.actionsPipeline": "actionsPipelines",
+  "server.actionsResource": "actionsResources",
+  "server.actionsTransfer": "actionsTransfers",
+  "server.actionsSource": "actionsSource",
 } as const
 
 export const endpointNames = {
@@ -64,4 +73,5 @@ export const endpointNames = {
   "relay.scope.remove": "removeScope",
 } as const
 
-export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken"])
+// Raw transfers use the handwritten streaming adapter; JSON metadata/admission stay generated.
+export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload"])
