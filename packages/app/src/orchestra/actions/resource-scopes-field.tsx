@@ -33,10 +33,10 @@ export function ResourceScopeField(p: ViewProps & {
   return <div class="ad-scope-field" aria-busy={scopes.status === "loading"}>
     <label class="mx-field" for={id}>
       <span>{p.t("orchestra.actions.scope")}</span>
-      <Show when={provider() === "github"} fallback={<>
+      <Show when={provider() === "github" && p.locked} fallback={<>
         <input id={id} name={p.name} list={`${id}-options`} value={selection.value} required={!p.filter} maxLength={1024}
           disabled={p.disabled} readOnly={p.locked} dir="auto" autocomplete="off" aria-describedby={`${id}-status`}
-          placeholder={p.filter ? p.t("orchestra.actions.all") : undefined} onChange={(event) => change(event.currentTarget.value)} />
+          placeholder={p.filter && provider() === "gitlab" ? p.t("orchestra.actions.all") : undefined} onChange={(event) => change(event.currentTarget.value)} />
         <datalist id={`${id}-options`}><For each={options()}>{(value) => <option value={value} label={label(value)} dir="auto" />}</For></datalist>
       </>}>
         <select id={id} name={p.name} required={!p.filter} disabled={p.disabled || p.locked}

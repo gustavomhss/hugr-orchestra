@@ -44,7 +44,10 @@ function fixture(kind: Actions.ProviderKind = "github") {
     async submit(payload) { submissions.push(payload) },
     selectBinding() {}, async refresh() {}, async more() {}, async connect() {}, async removeBinding() {},
     async download() {}, async previewLog() {}, editSource() {}, async validateSource() {}, async resourceAction() {},
-    async workflowState() {}, dispose() {}, discardSource() {},
+    async workflowState() {}, dispose() {},
+    // This resource-only fixture has no source lease; source actions must fail loudly.
+    sourceDiscardBlocked: false,
+    discardSource() { throw new Error("Unexpected source discard") },
     async inspectWorkflow() { throw new Error("Unexpected workflow inspection") },
   }
   return { model, state, setState, reads, filters, submissions }
@@ -128,14 +131,14 @@ describe("variable scope controls", () => {
     expect(view.host.textContent).toContain("orchestra.actions.loading")
     scope.reads[0].result.resolve(page(["production", "preview / 雪"], "ab_scope", { total: 3 }))
     await Bun.sleep(0)
-    const select = control<HTMLSelectElement>(view.host, ".ad-scope-field select")
-    expect([...select.options].map((option) => option.value)).toEqual(["Repository", "production", "preview / 雪"])
+    const input = control<HTMLInputElement>(view.host, ".ad-scope-field input")
+    expect([...view.host.querySelectorAll("datalist option")].map((option) => option.getAttribute("value"))).toEqual(["Repository", "production", "preview / 雪"])
     expect(view.host.textContent).toContain("orchestra.actions.resourceScopesTruncated")
-    select.value = "preview / 雪"
-    select.dispatchEvent(new Event("change", { bubbles: true }))
+    input.value = "preview / 雪"
+    input.dispatchEvent(new Event("change", { bubbles: true }))
     expect(scope.filters).toEqual([{ scope: "preview / 雪" }])
     scope.setState("resources", { status: "error", error: { kind: "permission_denied", message: "orchestra.actions.unavailable" } })
-    expect(control<HTMLSelectElement>(view.host, ".ad-scope-field select").value).toBe("preview / 雪")
+    expect(control<HTMLInputElement>(view.host, ".ad-scope-field input").value).toBe("preview / 雪")
     expect(scope.reads).toHaveLength(1)
     scope.setState("route", { view: "resources", resourceKind: "runners" })
     expect(scope.reads[0].signal.aborted).toBe(true)
@@ -155,9 +158,51 @@ describe("variable scope controls", () => {
     expect([...view.host.querySelectorAll("datalist option")].map((option) => option.getAttribute("value"))).toEqual(["*", "production", "review/*"])
     input.value = "*"
     input.dispatchEvent(new Event("change", { bubbles: true }))
+    input.value = "Repository"
+    input.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(control<HTMLOptionElement>(view.host, 'datalist option[value="Repository"]').label).toBe("Repository")
     input.value = ""
     input.dispatchEvent(new Event("change", { bubbles: true }))
-    expect(scope.filters).toEqual([{ scope: "review/*" }, { scope: "*" }, { scope: undefined }])
+    expect(scope.filters).toEqual([{ scope: "review/*" }, { scope: "*" }, { scope: "Repository" }, { scope: undefined }])
+  })
+
+  test.each(["truncated", "error"])("GitHub known environment remains filter/create requestable after catalog %s", async (outcome) => {
+    const scope = fixture()
+    using list = mount(Resources, scope)
+    await Bun.sleep(0)
+    if (outcome === "truncated") scope.reads[0].result.resolve(page(Array.from({ length: 30 }, (_, index) => `env-${index}`), "ab_scope", { next: "next" }))
+    if (outcome === "error") scope.reads[0].result.reject(new Error("catalog unavailable"))
+    await Bun.sleep(0)
+    const known = "outside-first-page / 雪"
+    expect([...list.host.querySelectorAll("datalist option")].map((option) => option.getAttribute("value"))).not.toContain(known)
+    expect(list.host.textContent).toContain(outcome === "truncated" ? "orchestra.actions.resourceScopesTruncated" : "orchestra.actions.unavailable")
+    const filter = control<HTMLInputElement>(list.host, ".ad-scope-field input")
+    expect(filter.disabled).toBe(false)
+    expect(filter.readOnly).toBe(false)
+    filter.value = known
+    filter.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(scope.filters).toEqual([{ scope: known }])
+    scope.model.dialog({ kind: "create-variable" })
+    using modal = mount(ResourceDialogs, scope)
+    await Bun.sleep(0)
+    if (outcome === "truncated") scope.reads[1].result.resolve(page(["env-0"], "ab_scope", { next: "next" }))
+    if (outcome === "error") scope.reads[1].result.reject(new Error("catalog unavailable"))
+    await Bun.sleep(0)
+    expect(modal.host.textContent).toContain(outcome === "truncated" ? "orchestra.actions.resourceScopesTruncated" : "orchestra.actions.unavailable")
+    const input = control<HTMLInputElement>(modal.host, 'input[name="scope"]')
+    expect(input.value).toBe(known)
+    expect(input.disabled).toBe(false)
+    expect(input.readOnly).toBe(false)
+    input.value = `${known} exact`
+    input.dispatchEvent(new Event("change", { bubbles: true }))
+    control<HTMLInputElement>(modal.host, 'input[name="name"]').value = "TOKEN"
+    control<HTMLInputElement>(modal.host, 'input[name="value"]').value = "replacement"
+    const form = control<HTMLFormElement>(modal.host, "form")
+    expect(form.checkValidity()).toBe(true)
+    expect(control<HTMLButtonElement>(modal.host, 'button[type="submit"]').disabled).toBe(false)
+    form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true }))
+    await Bun.sleep(0)
+    expect(scope.submissions).toEqual([{ provider: "github", name: "TOKEN", type: "Secret", scope: `${known} exact`, value: "replacement" }])
   })
 
   test("GitHub create uses independent environment records; edit keeps native name/type/scope locks", async () => {
@@ -167,7 +212,7 @@ describe("variable scope controls", () => {
     await Bun.sleep(0)
     scope.reads[0].result.resolve(page(["production"]))
     await Bun.sleep(0)
-    expect([...control<HTMLSelectElement>(view.host, 'select[name="scope"]').options].map((option) => option.value)).toEqual(["Repository", "production"])
+    expect([...view.host.querySelectorAll("datalist option")].map((option) => option.getAttribute("value"))).toEqual(["Repository", "production"])
     const resource = variable("retired")
     scope.setState("resources", "value", { items: [resource], capturedAt: 1 })
     scope.model.dialog({ kind: "edit-variable", id: resource.id, scope: resource.scope })
@@ -187,6 +232,23 @@ describe("variable scope controls", () => {
     expect(value.isConnected).toBe(false)
     expect(control<HTMLInputElement>(view.host, 'input[name="value"]').value).toBe("")
     expect(scope.reads[1].signal.aborted).toBe(true)
+  })
+
+  test("GitLab literal Repository survives form editing and submission without becoming project scope", async () => {
+    const scope = fixture("gitlab")
+    const resource = variable("Repository")
+    scope.setState("resources", "value", { items: [resource], capturedAt: 1 })
+    scope.model.dialog({ kind: "edit-variable", id: resource.id, scope: resource.scope })
+    using view = mount(ResourceDialogs, scope)
+    const input = control<HTMLInputElement>(view.host, 'input[name="scope"]')
+    expect(input.value).toBe("Repository")
+    expect(control<HTMLOptionElement>(view.host, 'datalist option[value="Repository"]').label).toBe("Repository")
+    control<HTMLInputElement>(view.host, 'input[name="value"]').value = "replacement"
+    const form = control<HTMLFormElement>(view.host, "form")
+    expect(form.checkValidity()).toBe(true)
+    form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true }))
+    await Bun.sleep(0)
+    expect(scope.submissions).toEqual([{ provider: "gitlab", name: "TOKEN", type: "Secret", scope: "Repository", value: "replacement", protected: false, masked: true }])
   })
 
   test("GitLab create defaults '*', keeps arbitrary edit scope and retains hidden/read-only restrictions", async () => {
