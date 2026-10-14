@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "modules": [
+    { "alias": "atlas-boundary", "kind": "bun", "scope": ".", "name": "@orchestra/atlas-boundary", "path": "packages/atlas-boundary" },
+    { "alias": "app", "kind": "bun", "scope": ".", "name": "@orchestra/app", "path": "packages/app" },
+    { "alias": "capability-assets", "kind": "bun", "scope": ".", "name": "@orchestra/capability-assets", "path": "packages/capability-assets" },
+    { "alias": "cli", "kind": "bun", "scope": ".", "name": "@orchestra/cli", "path": "packages/cli" },
+    { "alias": "client", "kind": "bun", "scope": ".", "name": "@orchestra/client", "path": "packages/client" },
+    { "alias": "codemode", "kind": "bun", "scope": ".", "name": "@orchestra/codemode", "path": "packages/codemode" },
+    { "alias": "core", "kind": "bun", "scope": ".", "name": "@orchestra/core", "path": "packages/core" },
+    { "alias": "desktop", "kind": "bun", "scope": ".", "name": "@orchestra/desktop", "path": "packages/desktop" },
+    { "alias": "effect-drizzle-sqlite", "kind": "bun", "scope": ".", "name": "@orchestra/effect-drizzle-sqlite", "path": "packages/effect-drizzle-sqlite" },
+    { "alias": "effect-sqlite-node", "kind": "bun", "scope": ".", "name": "@orchestra/effect-sqlite-node", "path": "packages/effect-sqlite-node" },
+    { "alias": "http-recorder", "kind": "bun", "scope": ".", "name": "@orchestra/http-recorder", "path": "packages/http-recorder" },
+    { "alias": "httpapi-codegen", "kind": "bun", "scope": ".", "name": "@orchestra/httpapi-codegen", "path": "packages/httpapi-codegen" },
+    { "alias": "llm", "kind": "bun", "scope": ".", "name": "@orchestra/llm", "path": "packages/llm" },
+    { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "packages/maestro-arsenal" },
+    { "alias": "omni/bindings/node", "kind": "bun", "scope": ".", "name": "hugr-omni", "path": "packages/omni/bindings/node" },
+    { "alias": "orchestra", "kind": "bun", "scope": ".", "name": "orchestra", "path": "packages/orchestra" },
+    { "alias": "plugin", "kind": "bun", "scope": ".", "name": "@orchestra/plugin", "path": "packages/plugin" },
+    { "alias": "protocol", "kind": "bun", "scope": ".", "name": "@orchestra/protocol", "path": "packages/protocol" },
+    { "alias": "relay", "kind": "bun", "scope": ".", "name": "@orchestra/relay", "path": "packages/relay" },
+    { "alias": "schema", "kind": "bun", "scope": ".", "name": "@orchestra/schema", "path": "packages/schema" },
+    { "alias": "sdk-next", "kind": "bun", "scope": ".", "name": "@orchestra/sdk-next", "path": "packages/sdk-next" },
+    { "alias": "sdk/js", "kind": "bun", "scope": ".", "name": "@orchestra/sdk", "path": "packages/sdk/js" },
+    { "alias": "script", "kind": "bun", "scope": ".", "name": "@orchestra/script", "path": "packages/script" },
+    { "alias": "server", "kind": "bun", "scope": ".", "name": "@orchestra/server", "path": "packages/server" },
+    { "alias": "session-ui", "kind": "bun", "scope": ".", "name": "@orchestra/session-ui", "path": "packages/session-ui" },
+    { "alias": "storybook", "kind": "bun", "scope": ".", "name": "@orchestra/storybook", "path": "packages/storybook" },
+    { "alias": "tui", "kind": "bun", "scope": ".", "name": "@orchestra/tui", "path": "packages/tui" },
+    { "alias": "ui", "kind": "bun", "scope": ".", "name": "@orchestra/ui", "path": "packages/ui" }
+  ]
+}
