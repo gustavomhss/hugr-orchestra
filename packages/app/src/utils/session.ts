@@ -2,7 +2,7 @@ import type { SessionApi, SessionInfo, SessionListInput } from "@opencode-ai/cli
 import type { Session } from "@orchestra/sdk/v2/client"
 import { withTimestampedFallback } from "./session-title"
 
-export function normalizeSessionInfo(input: SessionInfo | Session): Session {
+export function normalizeSessionInfo(input: (SessionInfo & Pick<Session, "metadata">) | Session): Session {
   if (!("location" in input)) return input
   return {
     id: input.id,
@@ -17,6 +17,7 @@ export function normalizeSessionInfo(input: SessionInfo | Session): Session {
     title: withTimestampedFallback(input),
     agent: input.agent,
     model: input.model,
+    ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
     version: "",
     time: input.time,
     revert: input.revert && {
