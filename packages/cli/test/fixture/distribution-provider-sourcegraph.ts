@@ -5,7 +5,7 @@ import { lstat, readFile, realpath } from "node:fs/promises"
 import { dirname, extname, join, relative, resolve, sep } from "node:path"
 import { cli, sha256, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
-import { calibrateCompilerEdge, compilerInputEdge } from "./distribution-provider-compiler-edge"
+import { calibrateCompilerEdge, compilerInputEdge, compilerRuntimeEdge } from "./distribution-provider-compiler-edge"
 
 const Edge = Schema.Struct({ path: Schema.String, kind: Schema.String, original: Schema.optional(Schema.String), external: Schema.optional(Schema.Boolean) })
 const CapturedFile = Schema.Struct({ path: Schema.String, sha256: Schema.String, gitBlob: Schema.String, bytes: Schema.Number })
@@ -176,6 +176,7 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
           walk(destination)
           continue
         }
+        if (compilerRuntimeEdge(edge)) { external.push({ from: key, edge, reason: "Bun compiler-injected internal runtime helper" }); continue }
         if (edge.external && builtins.has(edge.path)) { external.push({ from: key, edge, reason: "Bun/Node builtin module" }); continue }
         if (edge.external && edge.path === "node-gyp") { external.push({ from: key, edge, reason: "Explicit build external; proof loads installed addon, never builds addons" }); continue }
         throw new Error(`PROVIDER_COMPILER_EDGE_UNCLASSIFIED: ${key} -> ${edge.kind}:${edge.path}`)

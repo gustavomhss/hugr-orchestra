@@ -1,6 +1,27 @@
 import { expect, test } from "bun:test"
 import { join, resolve } from "node:path"
-import { calibrateCompilerEdge, compilerInputEdge } from "../distribution-provider-compiler-edge"
+import { calibrateCompilerEdge, compilerInputEdge, compilerRuntimeEdge } from "../distribution-provider-compiler-edge"
+
+test("Bun 1.3.14 injected CommonJS runtime edge needs no external flag or captured file", () => {
+  // Recorded from an in-memory Bun.build({ target: "bun", metafile: true })
+  // importing CJS: const name = globalThis.name; module.exports = require(name);
+  const edge = { path: "bun:wrap", kind: "import-statement" }
+  expect(compilerInputEdge(import.meta.path, edge.path, new Map())).toBeUndefined()
+  expect(compilerRuntimeEdge(edge)).toBe(true)
+  expect(compilerRuntimeEdge({ ...edge, external: false })).toBe(true)
+})
+
+test("compiler runtime classification refuses unknown paths and mutated record shapes", () => {
+  const edge = { path: "bun:wrap", kind: "import-statement" }
+  for (const path of ["bun:unknown", "bun:wrapper", "bun:wrap/extra", "node:bun:wrap", "./bun:wrap", "bun", "node:fs"]) {
+    expect(compilerRuntimeEdge({ ...edge, path })).toBe(false)
+  }
+  for (const kind of ["dynamic-import", "require-call", "require-resolve", "unknown"]) {
+    expect(compilerRuntimeEdge({ ...edge, kind })).toBe(false)
+  }
+  expect(compilerRuntimeEdge({ ...edge, external: true })).toBe(false)
+  expect(compilerRuntimeEdge({ ...edge, original: "./unrecorded.js" })).toBe(false)
+})
 
 // R6 receipt relationship, with portable canonical paths and no filesystem or
 // build dependency: ../core/src/omni.ts -> import-statement:./omni.ts.

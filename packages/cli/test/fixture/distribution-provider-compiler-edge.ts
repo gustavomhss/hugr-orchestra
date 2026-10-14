@@ -1,5 +1,12 @@
 import { dirname, isAbsolute, resolve, sep } from "node:path"
 
+// Bun 1.3.14 injects this internal helper for dynamic CommonJS require(). It is
+// absent from captured file inputs and is NOT an external runtime module.
+// https://github.com/oven-sh/bun/blob/bun-v1.3.14/src/bundler/bundle_v2.zig#L2971-L2976
+export function compilerRuntimeEdge(edge: { path: string; kind: string; original?: string; external?: boolean }) {
+  return edge.path === "bun:wrap" && edge.kind === "import-statement" && edge.original === undefined && edge.external !== true
+}
+
 // Compiler-record bookkeeping only: no basename search, extension guessing,
 // package resolution or receipt.cwd fallback for a relative source edge.
 export function compilerInputEdge(importer: string, path: string, captured: ReadonlyMap<string, readonly string[]>) {
