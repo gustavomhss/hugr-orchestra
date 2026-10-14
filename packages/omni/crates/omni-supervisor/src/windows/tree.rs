@@ -31,7 +31,10 @@ pub(super) struct Tree {
     /// Held until the record is dropped, so the root's pid (also its console process group) is never reused
     /// while this supervisor may still signal it.
     _process: OwnedHandle,
-    job: OwnedHandle,
+    job: Option<OwnedHandle>,
+    /// Mutation control: retain the real owned Job after the production gone transition.
+    #[cfg(test)]
+    pub(super) retain_job_on_gone: bool,
     pty: Option<ConPty>,
     /// When the Job was first seen empty.
     empty_since: Option<Instant>,
@@ -56,7 +59,9 @@ impl Tree {
             id,
             pid,
             _process: process,
-            job,
+            job: Some(job),
+            #[cfg(test)]
+            retain_job_on_gone: false,
             pty,
             empty_since: None,
             grace_ms,
@@ -70,6 +75,9 @@ impl Tree {
     /// Starts a stop or joins the one in progress; the earliest deadline wins. `grace_ms` 0 forces at once.
     /// `now` is when the request was received.
     pub(super) fn stop(&mut self, waiter: Option<u64>, grace_ms: u32, now: Instant) {
+        if self.gone {
+            return;
+        }
         let deadline = now + Duration::from_millis(grace_ms.into());
         match &mut self.stop {
             Some(s) => {
@@ -92,9 +100,14 @@ impl Tree {
 
     /// Forces the tree once its deadline has passed (`settle` repeats the pass until the Job is empty).
     pub(super) fn enforce(&mut self, now: Instant) {
+        if self.gone {
+            return;
+        }
         if let Some(s) = self.stop.as_mut().filter(|s| !s.forced && now >= s.deadline) {
             s.forced = true;
-            job::terminate(&self.job);
+            if let Some(job) = &self.job {
+                job::terminate(job);
+            }
             self.close_pty(now);
         }
     }
@@ -112,23 +125,26 @@ impl Tree {
 
     /// Gone = the root exited, the Job has no live member (an unknown count is not zero), and every process
     /// that ever joined it is proven gone (`Members::prove`), or `PROOF_BOUND` has passed since the Job was
-    /// first seen empty (then one diagnostic line says why). Returns the `Stop` waiters to answer, once.
+    /// first seen empty (then one diagnostic line says why). Closes the owned Job before returning the
+    /// `Stop` waiters to answer, once; the root's pid pin stays until the record is released and dropped.
     /// While a forced stop's Job still has members, each call repeats the forced pass.
     pub(super) fn settle(&mut self, members: &Members, diag: &Diag, now: Instant) -> Option<Vec<u64>> {
         if self.gone {
             return None;
         }
-        let active = job::active(&self.job);
+        // A missing handle on a live tree cannot establish an empty Job or complete its proof.
+        let job = self.job.as_ref()?;
+        let active = job::active(job);
         if active != Some(0) && self.stop.as_ref().is_some_and(|s| s.forced) {
             // Forced means until the Job is empty, as SIGKILL until the session is empty on Unix: what a pass
             // left alive (it failed, or a process was still joining the Job while it ran) meets the next one.
-            job::terminate(&self.job);
+            job::terminate(job);
         }
         if self.exit.is_none() || active != Some(0) {
             return None;
         }
         let since = *self.empty_since.get_or_insert(now);
-        match members.prove(self.id, &self.job) {
+        match members.prove(self.id, job) {
             Proof::Gone => {}
             Proof::Pending(why) | Proof::Unknown(why) if now >= since + PROOF_BOUND => diag.report(format!(
                 "tree {} reported gone {} ms after its Job emptied, unproven: {why}",
@@ -137,6 +153,7 @@ impl Tree {
             )),
             _ => return None,
         }
+        self.close_job();
         self.gone = true;
         Some(self.stop.take().map(|s| s.waiters).unwrap_or_default())
     }
@@ -151,7 +168,11 @@ impl Tree {
             return Ok(Vec::new());
         }
         // A Windows root that exited is not a member any more; it is excluded in case the scan races it.
-        inventory::list(&self.job, self.exit.map(|_| self.pid))
+        let job = self
+            .job
+            .as_ref()
+            .ok_or_else(|| std::io::Error::other("a live tree has no Job handle"))?;
+        inventory::list(job, self.exit.map(|_| self.pid))
     }
 
     pub(super) fn resize(&self, cols: u16, rows: u16) -> Ack {
@@ -181,10 +202,28 @@ impl Tree {
             pty.close(deadline);
         }
     }
+
+    /// End kernel containment only after the existing gone proof, before any `Stopped` reply.
+    fn close_job(&mut self) {
+        #[cfg(test)]
+        if self.retain_job_on_gone {
+            return;
+        }
+        drop(self.job.take());
+    }
+
+    /// Exact owned handle values, without cloning (a clone would keep the resource alive).
+    #[cfg(test)]
+    pub(super) fn raw_handles(&self) -> (Option<std::os::windows::io::RawHandle>, std::os::windows::io::RawHandle) {
+        (
+            self.job.as_ref().map(AsRawHandle::as_raw_handle),
+            self._process.as_raw_handle(),
+        )
+    }
 }
 
 impl Drop for Tree {
-    /// Closing the Job handle ends whatever is left (KILL_ON_JOB_CLOSE).
+    /// A live tree still owns its Job: dropping it ends whatever is left (KILL_ON_JOB_CLOSE).
     fn drop(&mut self) {
         self.close_pty(Instant::now());
     }
