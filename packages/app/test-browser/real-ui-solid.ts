@@ -1,6 +1,7 @@
 import { createRequire } from "node:module"
+export { solidDom } from "./solid-dom"
 
-// Compile the real components with the same Solid preset as Vite, rather than Bun's React JSX transform.
+// Shared-registry fixtures import rendered graphs through solidDom(); the plain loader below serves isolated suites.
 const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "real-ui-solid",

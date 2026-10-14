@@ -1,28 +1,36 @@
 import { expect, mock, test } from "bun:test"
 import { createServer } from "node:http"
 import path from "node:path"
+import { Process } from "../../orchestra/src/util/process"
+import { Omni } from "../../core/src/omni"
+import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { ServerConnection } from "@/context/server"
-import type { JSX } from "solid-js"
+import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 
 async function child(args: string[], env = process.env) {
-  const process = Bun.spawn([Bun.which("bun")!, ...args], {
-    cwd: path.resolve(import.meta.dir, ".."), env, stdout: "pipe", stderr: "pipe", timeout: 180000,
+  const before = Omni.snapshot()
+  const result = await Process.run([process.execPath, ...args], {
+    cwd: path.resolve(import.meta.dir, ".."), env, nothrow: true, deadline: 180000,
   })
-  const [out, err, code] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited])
-  if (code !== 0) throw new Error(`${args.join(" ")} exited ${code}\n${out}\n${err}`)
-  console.log(out + err)
+  const output = result.stdout.toString() + result.stderr.toString()
+  expect(result.code, output).toBe(0)
+  expect(output).toMatch(/\b[1-9]\d* pass\b/)
+  expect(output).not.toMatch(/\b[1-9]\d* skip\b/)
+  expect(Omni.snapshot().spawns).toBeGreaterThan(before.spawns)
+  expect(Omni.snapshot().delegations).toBe(before.delegations)
+  console.log(output)
 }
 
 if (process.env.LEAN_CHAPTER_DOM !== "1") {
   test("actual Lean chapter route/default entry in isolated browser lane", async () => {
+    expectSpawn(import.meta.path)
     await child(["--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path], {
       ...process.env, LEAN_CHAPTER_DOM: "1",
     })
   }, 240000)
 } else {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
-  const { createContext, useContext } = await import("solid-js")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")
   const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
@@ -42,6 +50,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   type Event = { name: string; details: { type: string } }
   async function nativeServer(bytes: number, name: string, protocol: "v1" | "v2" = "v1") {
     const data = new Map<string, LeanDashboard.Info>()
+    const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
+    const catalogs = new Map<string, { directory: string; provider_ready: boolean; provider: typeof provider }>()
     const requests: { method: string; directory: string; path: string; body?: LeanDashboard.Update }[] = []
     const listeners = new Set<(event: Event) => void>()
     const gates = { read: undefined as Promise<void> | undefined, write: undefined as Promise<void> | undefined,
@@ -77,9 +87,14 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const connection: ServerConnection.Any = { type: "http", http: { url: `http://127.0.0.1:${address.port}` } }
     const scope = ServerScope.fromServerKey(ServerConnection.key(connection))
     return {
-      connection, data, requests, gates, listeners,
+      connection, data, requests, gates, listeners, catalogs,
       projects: { list: () => [{ id: "same-git-project", name, worktree: "/one", sandboxes: ["/two"] }] },
-      sdk: { scope, protocol: Promise.resolve(protocol),
+      sync: { data: { provider }, child: (directory: string) => {
+        const catalog = catalogs.get(directory) ?? { directory, provider_ready: true, provider }
+        catalogs.set(directory, catalog)
+        return [catalog] as const
+      } },
+      sdk: { scope, protocol: Promise.resolve(protocol), protocolKind: () => protocol,
         ensureDirSdkContext: (directory: string) => ({ scope, directory, protocol: Promise.resolve(protocol),
           client: createSdkForServer({ server: connection.http, directory, throwOnError: true }) }),
         event: { listen: (listener: (event: Event) => void) => { listeners.add(listener); return () => { listeners.delete(listener) } } },
@@ -95,7 +110,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const servers = [one, two, unsupported]
     const [selection, select] = createStore({ server: ServerConnection.key(one.connection), directory: "/one" })
     const opened: { server: ServerConnection.Key; sessionId: string }[] = []
-    const Context = createContext<typeof one.sdk>()
     // Native context fixtures only; real route, SDKProvider, generated client, controller and U view execute. Fixtures
     // replace the solidDom() copies (./solid-dom) that the rendered route imports.
     mock.module(solidDom("../src/context/global", import.meta.dir), () => ({ useGlobal: () => ({
@@ -103,20 +117,21 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       ensureServerCtx: (connection: ServerConnection.Any) => servers.find((server) => server.connection === connection)!,
     }) }))
     mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ home: { selection: () => selection } }) }))
+    mock.module(solidDom("../src/context/server", import.meta.dir), () => ({ ServerConnection, useServer: () => ({
+      get current() { return servers.find((server) => ServerConnection.key(server.connection) === selection.server)?.connection },
+    }) }))
     mock.module(solidDom("../src/context/tabs", import.meta.dir), () => ({ useTabs: () => ({ addSessionTab: (value: typeof opened[number]) => value,
       select: (value: typeof opened[number]) => opened.push(value) }) }))
-    mock.module(solidDom("../src/context/server-sync", import.meta.dir), () => ({ ServerSyncProvider: (props: { children?: JSX.Element }) => props.children }))
-    mock.module(solidDom("../src/context/server-sdk", import.meta.dir), () => ({
-      ServerSDKProvider: (props: { server: () => ServerConnection.Any; children?: JSX.Element }) => createComponent(Context.Provider, {
-        value: servers.find((server) => server.connection === props.server())!.sdk, get children() { return props.children },
-      }),
-      useServerSDK: () => { const value = useContext(Context)!; return () => value },
-    }))
+    // The real SDK/Sync providers capture each route owner; protocol reads follow the selected fixture SDK.
+    const { ServerSDKProvider, useServerProtocol }: typeof import("@/context/server-sdk") = await import(
+      solidDom("@/context/server-sdk", import.meta.dir)
+    )
     const { OrchestraChapterRoute, chapterPages }: typeof import("@/orchestra/chapter-route") = await import(
       solidDom("@/orchestra/chapter-route", import.meta.dir)
     )
     expect(typeof chapterPages.lean).toBe("function")
     expect(navigation.filter((item) => item.id === "lean")).toHaveLength(1)
+    const protocol = { read: undefined as ReturnType<typeof useServerProtocol> | undefined }
     const host = document.createElement("div")
     document.body.append(host)
     const history = createMemoryHistory()
@@ -124,9 +139,15 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const dispose = render(() => createComponent(PlatformProvider, {
       value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} }, get children() {
         return createComponent(LanguageProvider, { locale: "en", get children() {
-          return createComponent(MemoryRouter, { history, get children() {
-            return createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute })
-          } })
+          return createComponent(ServerSDKProvider, {
+            server: () => servers.find((server) => ServerConnection.key(server.connection) === selection.server)!.connection,
+            get children() {
+              protocol.read = useServerProtocol()
+              return createComponent(MemoryRouter, { history, get children() {
+                return createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute })
+              } })
+            },
+          })
         } })
       },
     }), host)
@@ -140,6 +161,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const late = Promise.withResolvers<void>()
     try {
       await until(() => total() === "+800")
+      expect(protocol.read?.()).toBe("v1")
       expect(host.querySelector('[data-mx-page="orchestra-lean"]') !== null).toBe(true)
       expect(host.textContent).toContain("Native named profile")
       toggle("cargo").click()
@@ -180,11 +202,15 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       await until(() => host.textContent!.includes("Orchestra profile · fallback-name"))
       select("server", ServerConnection.key(unsupported.connection))
       await until(() => !!host.querySelector('[role="alert"]'))
+      expect(protocol.read?.()).toBe("v2")
       expect(total()).toBe("Unavailable")
       expect(host.querySelector('[role="switch"]')).toBeNull()
       expect(unsupported.requests).toHaveLength(0)
       expect(one.listeners.size).toBe(0)
       expect(two.listeners.size).toBe(0)
+      expect([...one.catalogs.keys()]).toEqual(["/one", "/two"])
+      expect([...two.catalogs.keys()]).toEqual(["/two", "/fallback-name"])
+      expect([...unsupported.catalogs.keys()]).toEqual(["/fallback-name"])
     } finally {
       late.resolve()
       dispose(); host.remove()
