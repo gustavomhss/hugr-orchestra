@@ -90,7 +90,7 @@ for (const variant of ["literal-names", "module-symlink", "domain-symlink"] as c
 }
 
 async function run(cwd: string, cmd: string[]) {
-  const child = Bun.spawn(cmd, { cwd, stdout: "pipe", stderr: "pipe" })
+  const child = Bun.spawn(cmd, { cwd, env: { ...process.env, PYTHONIOENCODING: "utf-8" }, stdout: "pipe", stderr: "pipe" })
   const [output, error, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   if (status !== 0) throw new Error(error)
   return output.trim()
