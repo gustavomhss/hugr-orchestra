@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto"
 import { lstat, mkdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { sandbox, sha256, successful, command } from "./distribution-native"
+import { pullOllamaModel } from "./distribution-provider/model-pull"
 
 // Linux amd64 manifest, not a mutable tag or a multi-architecture index.
 // Source: Docker Hub ollama/ollama:0.9.6 and Ollama registry qwen3:0.6b.
@@ -29,6 +30,7 @@ export async function ownedOllama(directory: string, evidence: string) {
   const state: { id?: string; endpoint?: string; imageID?: string; attempted: boolean; removed: boolean } = {
     attempted: false, removed: false,
   }
+  const pull = new AbortController()
   const receipt = async (stage: string, data: unknown) => {
     await Bun.write(join(evidence, `ollama-${stage}.json`), JSON.stringify(data, null, 2) + "\n")
     console.error(`DISTRIBUTION_PROVIDER_OLLAMA_${stage.toUpperCase()} ${JSON.stringify(data)}`)
@@ -111,7 +113,7 @@ export async function ownedOllama(directory: string, evidence: string) {
       }
       await receipt("container", { id: state.id, name, label, token, image, imageID: state.imageID,
         endpoint: state.endpoint, native: { host: host.Architecture, image: images[0].Architecture }, gpuDevices: [] })
-      await request("/api/pull", { model, stream: false }, 600_000)
+      await pullOllamaModel(state.endpoint, model, pull.signal, (report) => receipt("pull", report), 600_000)
       const tags = await request("/api/tags")
       expect(tags.models).toHaveLength(1)
       expect(tags.models[0].name).toBe(model)
@@ -153,6 +155,7 @@ export async function ownedOllama(directory: string, evidence: string) {
       await receipt("cpu", ps)
     },
     async stop() {
+      pull.abort(new Error("OLLAMA_PULL_OWNER_STOPPED"))
       if (!state.attempted || state.removed) return
       const failures: unknown[] = []
       const attempt = <A>(work: () => Promise<A>) => work().catch((error: unknown) => { failures.push(error); return undefined })
