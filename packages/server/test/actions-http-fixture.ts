@@ -20,6 +20,7 @@ import { ActionsBindingGroup } from "@orchestra/protocol/groups/actions-binding"
 import { ActionsOperationGroup } from "@orchestra/protocol/groups/actions-operation"
 import { ActionsWorkflowGroup } from "@orchestra/protocol/groups/actions-workflow"
 import { ActionsRunGroup } from "@orchestra/protocol/groups/actions-run"
+import { ActionsResourceGroup } from "@orchestra/protocol/groups/actions-resource"
 import { Authorization } from "@orchestra/protocol/middleware/authorization"
 import { SchemaErrorMiddleware } from "@orchestra/protocol/middleware/schema-error"
 import type { Binding, ErrorKind, OperationAcknowledgement, OperationID } from "@orchestra/schema/actions"
@@ -34,6 +35,7 @@ import { ActionsBindingHandler } from "../src/handlers/actions-binding"
 import { ActionsOperationHandler } from "../src/handlers/actions-operation"
 import { ActionsWorkflowHandler } from "../src/handlers/actions-workflow"
 import { ActionsRunHandler } from "../src/handlers/actions-run"
+import { ActionsResourceHandler } from "../src/handlers/actions-resource"
 import { layer, LocationMiddleware } from "../src/location"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
@@ -63,7 +65,9 @@ const omitted = locationServices.dependencies
   .filter((node) => !kept.has(node.name))
   .map((node): LayerNode.Replacement => [node, Layer.empty])
 
-export const httpFixture = Effect.fnUntraced(function* () {
+export const httpFixture = Effect.fnUntraced(function* (
+  input: { resources?: (service: Actions.Interface) => Actions.Interface["resources"] } = {},
+) {
   const core = yield* fixture()
   const clone = yield* core.clone()
   const fs = yield* FSUtil.Service
@@ -101,13 +105,14 @@ export const httpFixture = Effect.fnUntraced(function* () {
       Effect.gen(function* () {
         const location = yield* Location.Service
         const global = yield* Global.Service
-        return yield* Actions.make({
+        const actions = yield* Actions.make({
           directory: location.directory,
           workspaceID: location.workspaceID,
           projectID: location.project.id,
           stateDirectory: global.data,
           transport,
         })
+        return input.resources ? { ...actions, resources: input.resources(actions) } : actions
       }),
     ),
   })
@@ -128,9 +133,18 @@ export const httpFixture = Effect.fnUntraced(function* () {
       }),
     ),
   )
-  const routes = HttpApiBuilder.layer(focusedApi, { openapiPath: "/openapi.json" }).pipe(
+  const routes = HttpApiBuilder.layer(
+    input.resources ? focusedApi.add(ActionsResourceGroup.middleware(LocationMiddleware)) : focusedApi,
+    { openapiPath: "/openapi.json" },
+  ).pipe(
     Layer.provide(
-      Layer.mergeAll(ActionsBindingHandler, ActionsOperationHandler, ActionsWorkflowHandler, ActionsRunHandler),
+      Layer.mergeAll(
+        ActionsBindingHandler,
+        ActionsOperationHandler,
+        ActionsWorkflowHandler,
+        ActionsRunHandler,
+        ActionsResourceHandler,
+      ),
     ),
     Layer.provide(layer),
     Layer.provide(Layer.succeed(LocationServiceMap.Service, map)),
