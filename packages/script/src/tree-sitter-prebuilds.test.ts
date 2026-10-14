@@ -25,6 +25,9 @@ import {
   requireTreeSitterBundle,
   resolveTreeSitter,
   treeSitterBundle,
+  treeSitterArtifactKey,
+  inspectElf,
+  requireElfLibc,
 } from "./tree-sitter-prebuilds"
 
 const root = path.resolve(import.meta.dir, "../../..")
@@ -226,9 +229,54 @@ test.each(Object.keys(NATIVE_MACHINES))(
   },
 )
 
-test("a musl CLI ships no tree-sitter, and its build resolves nothing", () => {
-  expect(treeSitterBundle({ os: "linux", arch: "x64", abi: "musl" })).toEqual([])
-  expect(resolveTreeSitter({ root, os: "linux", arch: "x64", abi: "musl" })).toEqual([])
+test("musl artifact keys differ from glibc but keep runtime binding paths; same-CPU glibc exports refuse admission", () => {
+  const target = { os: "linux", arch: "x64", abi: "musl" }
+  expect(treeSitterArtifactKey(target)).toBe("linux-x64-musl")
+  expect(treeSitterArtifactKey({ ...target, abi: undefined })).toBe("linux-x64")
+  expect(treeSitterBundle(target)).toEqual(treeSitterBundle({ ...target, abi: undefined }))
+  expect(treeSitterBundle(target).filter((file) => file.endsWith(".node"))).toHaveLength(3)
+  const artifacts = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-musl-artifacts-"))
+  fixtures.push(artifacts)
+  renameSync(bundleFixture(target), path.join(artifacts, "linux-x64-musl"))
+  expect(() => resolveTreeSitter({ root, ...target, artifacts })).toThrow("ELF_LIBC_MISMATCH")
+  expect(() => prepareTreeSitterPrebuilds({ root, ...target, rebuild: false })).toThrow("TREE_SITTER_NATIVE_MUSL_BUILD_REQUIRED")
+})
+
+test("parsed ELF dependencies reject truncated, unknown and mixed libc rather than scanning source bytes", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-elf-"))
+  fixtures.push(dir)
+  const file = path.join(dir, "binding.node")
+  writeFileSync(file, Buffer.alloc(0))
+  expect(() => inspectElf(file)).toThrow("ELF_TRUNCATED")
+  writeFileSync(file, Buffer.alloc(64))
+  expect(() => inspectElf(file)).toThrow("ELF64_UNSUPPORTED")
+  for (const [names, abi] of [["libc.so.6", "glibc"], ["libc.musl-x86_64.so.1", "musl"], ["libc.so.6,libc.musl-x86_64.so.1", undefined], ["libunknown.so", undefined]] as const) {
+    // Inert synthetic ELF only calibrates parser/admission, never native runtime.
+    const bytes = Buffer.alloc(512)
+    Buffer.from("7f454c46020101", "hex").copy(bytes)
+    bytes.writeUInt16LE(62, 18)
+    bytes.writeBigUInt64LE(64n, 32)
+    bytes.writeUInt16LE(56, 54)
+    bytes.writeUInt16LE(2, 56)
+    bytes.writeUInt32LE(1, 64)
+    bytes.writeBigUInt64LE(512n, 96)
+    bytes.writeUInt32LE(2, 120)
+    bytes.writeBigUInt64LE(176n, 128)
+    const strings = Buffer.from(names.replaceAll(",", "\0") + "\0")
+    strings.copy(bytes, 352)
+    const entries = [[5n, 352n], [10n, BigInt(strings.length)], ...names.split(",").map((name, i, all) =>
+      [1n, BigInt(all.slice(0, i).reduce((n, s) => n + s.length + 1, 0))]), [0n, 0n]]
+    bytes.writeBigUInt64LE(BigInt(entries.length * 16), 152)
+    entries.forEach(([tag, value], i) => { bytes.writeBigInt64LE(tag!, 176 + i * 16); bytes.writeBigUInt64LE(value!, 184 + i * 16) })
+    writeFileSync(file, bytes)
+    expect(inspectElf(file).needed).toEqual(names.split(","))
+    for (const expected of ["musl", "glibc"] as const) {
+      if (abi === expected) expect(requireElfLibc(file, expected).machine).toBe(62)
+      if (abi !== expected) expect(() => requireElfLibc(file, expected)).toThrow("ELF_LIBC_MISMATCH")
+    }
+    writeFileSync(file, bytes.subarray(0, 180))
+    expect(() => inspectElf(file)).toThrow("ELF_TRUNCATED")
+  }
 })
 
 test("copyTreeSitter places the bundle under the given directory and checks it there", () => {

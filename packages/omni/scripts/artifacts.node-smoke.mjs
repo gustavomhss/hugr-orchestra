@@ -69,6 +69,19 @@ test("runtime identity rejects emulated CPU, wrong OS and wrong launcher", () =>
   assert.throws(() => validateRuntimeIdentity({ ...identity, version: "" }, "bun", "win32-arm64-msvc"), /empty runtime identity/);
 });
 
+test("existing-musl-guest build refuses unknown flag and non-musl target before Cargo", () => {
+  const id = process.platform === "linux" ? `linux-${process.arch}-gnu` :
+    process.platform === "darwin" ? `darwin-${process.arch}` : `win32-${process.arch}-msvc`;
+  for (const [flag, diagnostic] of [["yes", "must be 1 or unset"], ["1", "existing guest mode requires a musl target"]]) {
+    const result = spawnSync(process.execPath, [join(root, "scripts/build-artifacts.mjs"), id], {
+      cwd: root, encoding: "utf8", env: { ...process.env, HUGR_BUILD_EXISTING_MUSL_GUEST: flag },
+    });
+    assert.notEqual(result.status, 0);
+    assert(result.stderr.includes(diagnostic), result.stderr);
+    assert(!result.stdout.includes("$ cargo"));
+  }
+});
+
 if (process.env.HUGR_PROOF_REAL === "true") test("real shipped binaries pass; empty and wrong architecture mutations go red", () => {
   const id = process.env.HUGR_PROOF_ID;
   assert(PLATFORMS[id], "HUGR_PROOF_ID must name the built target");
