@@ -772,4 +772,4 @@ describe("UpstreamProvenance.observe", () => {
   }))
 })
 
-export { corruptBinding, it, refusal, seed, settled, upstreamMemberID }
+export { card, corruptBinding, fenced, it, refusal, seed, settled, upstreamMemberID }
