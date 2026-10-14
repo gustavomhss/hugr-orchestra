@@ -3,7 +3,7 @@ import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
-import { batch, startTransition, type Accessor } from "solid-js"
+import { batch, onCleanup, startTransition, type Accessor } from "solid-js"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
@@ -33,6 +33,7 @@ import { blobDataUrl } from "@/utils/draft-store"
 import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubmissionWorktree } from "./submission-policy"
+import { queuedPromptSources, type QueuedPromptSource, type QueuedPromptRuntime } from "./queued-prompt"
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
@@ -76,14 +77,7 @@ export type FollowupDraft = {
   system?: string
   // An explicit V2 delivery mode; omitted, the server steers.
   delivery?: "steer" | "queue"
-  source?: {
-    scope: ServerScope
-    api: DirectorySDK["api"]["session"]
-    serverSync: ServerSync
-    sync: DirectorySync
-    current: () => boolean
-    before: (signal?: AbortSignal) => Promise<boolean>
-  }
+  source?: QueuedPromptSource
 }
 
 export type FollowupSendInput = {
@@ -97,6 +91,16 @@ export type FollowupSendInput = {
   pending?: boolean
   signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
+  runtime?: QueuedPromptRuntime
+  deliberate?: boolean
+  currentSource?: {
+    serverScopeKey: ServerScope
+    directory: string
+    sessionID: string | undefined
+    protocol: Parameters<typeof createSubmissionPolicy>[0]["protocol"]
+    management: Parameters<typeof createSubmissionPolicy>[0]["management"]
+    current: () => boolean
+  }
 }
 
 // Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
@@ -104,23 +108,40 @@ export function followupSystem(platform: Platform, scope: ServerScope, serverSyn
   return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
 }
 
-export async function sendFollowupDraft(input: FollowupSendInput) {
-  const source = input.draft.source
-  const controller = source && !input.signal ? new AbortController() : undefined
-  const untrack = controller && source ? trackPendingPrompt(source.scope, input.draft.sessionID, {
-    abort: controller,
-    cleanup: () => {},
-  }) : undefined
-  try {
-    return await sendFollowupRequest({
-      ...input,
-      api: source?.api ?? input.api,
-      sync: source?.sync ?? input.sync,
-      serverSync: source?.serverSync ?? input.serverSync,
-      signal: input.signal ?? controller?.signal,
-    })
-  } finally {
-    untrack?.()
+export const sendFollowupDraft = createFollowupSender()
+
+export function createFollowupSender(sources = queuedPromptSources) {
+  return async (input: FollowupSendInput) => {
+    const controller = !input.signal ? new AbortController() : undefined
+    const current = input.currentSource
+    const policy = current?.sessionID ? createSubmissionPolicy({
+      key: "", sessionID: current.sessionID, protocol: current.protocol, management: current.management,
+      admission: {}, current: current.current, failedMessage: "QueuedPromptPolicyChanged",
+      legacyWrite: async () => { throw new Error("QueuedPromptPolicyWriteUnsupported") },
+    }) : undefined
+    const rebound = current?.sessionID && policy ? {
+      serverScopeKey: current.serverScopeKey, directory: current.directory, sessionID: current.sessionID,
+      api: input.api, sync: input.sync, serverSync: input.serverSync, current: current.current,
+      before: (signal = input.signal ?? controller!.signal) => policy.wait(signal),
+    } : undefined
+    const source = input.runtime ?? sources.resolve(input.draft.source, input.draft, rebound, input.deliberate)
+    if (!source && (input.currentSource || "source" in input.draft)) return false
+    const untrack = controller && source ? trackPendingPrompt(source.serverScopeKey, input.draft.sessionID, {
+      abort: controller,
+      cleanup: () => {},
+    }) : undefined
+    try {
+      return await sendFollowupRequest({
+        ...input,
+        api: source?.api ?? input.api,
+        sync: source?.sync ?? input.sync,
+        serverSync: source?.serverSync ?? input.serverSync,
+        signal: input.signal ?? controller?.signal,
+        runtime: source,
+      })
+    } finally {
+      untrack?.()
+    }
   }
 }
 
@@ -188,12 +209,14 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
+  const queueOwner = {}
+  onCleanup(() => queuedPromptSources.releaseOwner(queueOwner))
   const ownership = createSubmissionOwner(() => {
     const source = sdk()
     const draftID = search.draftId
     const tab = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === draftID)
     return {
-      server: serverSDK(), scope: source.scope, directory: source.directory,
+      server: serverSDK(), credentials: JSON.stringify(serverSDK().server?.http), scope: source.scope, directory: source.directory,
       sessionID: params.id, draftID, target: prompt.capture(),
       draftServer: tab?.type === "draft" ? tab.server : undefined,
       draftDirectory: tab?.type === "draft" ? tab.directory : undefined, draftExists: tab !== undefined,
@@ -277,6 +300,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     const directorySDK = sdk()
     const server = serverSDK()
+    const credentials = JSON.stringify(server.server?.http)
     const serverState = serverSync()
     const syncState = sync()
     const projectDirectory = directorySDK.directory
@@ -289,7 +313,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const ownsSource = () => {
       if (!owner.current()) return false
       const source = sdk()
-      if (serverSDK() !== server || source.scope !== directorySDK.scope) return false
+      if (serverSDK() !== server || source.scope !== directorySDK.scope || JSON.stringify(server.server?.http) !== credentials) return false
       if (handoff.accepted) return source.directory === admission.directory && params.id === admission.session?.id && submission.current(prompt.capture())
       if (source.directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
       return !draftID || tabs.store.some((tab) =>
@@ -452,8 +476,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return false as const
     }
     const waitPolicy = () => policy.wait(controller.signal).catch(policyError)
-    draft.source = {
-      scope: directorySDK.scope, api, sync: syncState, serverSync: serverState, current: ownsSource,
+    const runtime = {
+      serverScopeKey: directorySDK.scope, directory: sessionDirectory, sessionID: session.id,
+      api, sync: syncState, serverSync: serverState, current: ownsSource,
       before: (signal = controller.signal) => policy.wait(signal),
     }
     if (isNewSession) {
@@ -463,7 +488,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       await startTransition(() => {
         if (!ownsSource() || !clearPending(rulesKey, receipt.revision)) return
         const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
-        owner.handoff((value) => value.server === server && value.scope === directorySDK.scope &&
+        owner.handoff((value) => value.server === server && value.credentials === credentials && value.scope === directorySDK.scope &&
           value.directory === sessionDirectory && value.sessionID === session.id && value.draftID === undefined && value.target === next)
         batch(() => {
           if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
@@ -481,6 +506,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
     if (!(await waitPolicy()) || !ownsSource()) return false
     if (shouldQueue) {
+      draft.source = queuedPromptSources.capture(runtime, queueOwner)
       input.onQueue?.(draft)
       clearInput("all")
       return
@@ -570,6 +596,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       pending: queued,
       signal: controller.signal,
       before: waitForWorktree,
+      runtime,
     })
       .then((sent) => {
         if (!sent) restoreInput()

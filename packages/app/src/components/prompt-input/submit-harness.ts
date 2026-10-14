@@ -12,6 +12,8 @@ import { clearPending, pendingSnapshot } from "../draft-subagent-models"
 
 export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
+export let createFollowupSender: typeof import("./submit").createFollowupSender
+export let followupInput: (draft: import("./submit").FollowupDraft) => import("./submit").FollowupSendInput
 export let followupSystem: typeof import("./submit").followupSystem
 export let acknowledgeDraftPolicy: typeof import("./submit").acknowledgeDraftPolicy
 export const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
@@ -479,6 +481,13 @@ beforeAll(async () => {
     return createRoot((dispose) => { roots.push(dispose); return mod.createPromptSubmit(input) })
   }
   sendFollowupDraft = mod.sendFollowupDraft
+  createFollowupSender = mod.createFollowupSender
+  const { useSync } = await import("@/context/sync")
+  const { useServerSync } = await import("@/context/server-sync")
+  followupInput = (draft) => ({
+    api: policyFixture.sdk.api.session as import("./submit").FollowupSendInput["api"],
+    sync: useSync()(), serverSync: useServerSync()(), draft,
+  })
   followupSystem = mod.followupSystem
   acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
 })

@@ -33,6 +33,8 @@ test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)",
       "reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session",
       "reactive owner disposal during ACK expires attempt without consuming draft",
       "reactive owner ABA after queued clear cannot revive captured queued send",
+      "queued store JSON roundtrip and explicit reload Send: same-owner",
+      "disposed or credentials-edited live sources cannot silently rebind",
     ].forEach((name) => expect(stdout + stderr).toContain(`(pass) ${name}`))
   }
 }, 35_000)
