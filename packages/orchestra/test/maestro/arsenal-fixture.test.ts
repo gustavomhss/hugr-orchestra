@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { lstat, mkdir, readlink, realpath, symlink } from "node:fs/promises"
+import { lstat, mkdir, readlink, realpath, symlink, unlink } from "node:fs/promises"
 import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
 import { rethrow } from "../lib/rejection"
@@ -109,6 +109,60 @@ test("fixture cleanup never follows nested links into another directory", async 
     JSON.stringify({ root: tmp.path, removed: true, sentinel, unchanged: true }),
   )
 })
+
+test.skipIf(process.platform !== "win32")(
+  "fixture cleanup retries a junction held without delete sharing",
+  async () => {
+    const { dlopen, ptr } = await import("bun:ffi")
+    await using shared = await tmpdir()
+    await using tmp = await tmpdir()
+    const link = path.join(tmp.path, "shared")
+    await Bun.write(path.join(shared.path, "keep.txt"), "shared target survives")
+    await symlink(shared.path, link, "junction")
+    const kernel = dlopen("kernel32.dll", {
+      CreateFileW: { args: ["ptr", "u32", "u32", "ptr", "u32", "u32", "u64"], returns: "u64" },
+      CloseHandle: { args: ["u64"], returns: "i32" },
+    })
+    // Open the junction itself, sharing reads/writes but denying deletion; never lock its shared target.
+    const handle = kernel.symbols.CreateFileW(
+      ptr(Buffer.from(link + "\0", "utf16le")),
+      0x80000000,
+      3,
+      null,
+      3,
+      0x02200000,
+      0n,
+    )
+    const lock = { closed: false }
+    const unlock = () => {
+      if (lock.closed) return
+      lock.closed = true
+      expect(kernel.symbols.CloseHandle(handle)).toBe(1)
+    }
+    try {
+      expect(handle).not.toBe(0xffffffffffffffffn)
+      const blocked = await unlink(link).then(
+        () => undefined,
+        (error: unknown) => error,
+      )
+      expect(blocked).toMatchObject({ code: expect.stringMatching(/^(EBUSY|EPERM)$/) })
+      expect((await lstat(link)).isSymbolicLink()).toBe(true)
+      console.info("fixture cleanup locked junction:", JSON.stringify({ root: tmp.path, link, blocked }))
+      // The real handle stays held during cleanup's first unlink attempts, then releases within its existing bound.
+      const release = Bun.sleep(100).then(unlock)
+      try {
+        await tmp[Symbol.asyncDispose]()
+        await expect(lstat(tmp.path)).rejects.toMatchObject({ code: "ENOENT" })
+        expect(await Bun.file(path.join(shared.path, "keep.txt")).text()).toBe("shared target survives")
+      } finally {
+        await release
+      }
+    } finally {
+      unlock()
+      kernel.close()
+    }
+  },
+)
 
 test("SDK fixture refuses workspace aliases at modules root and scoped parent", async () => {
   const modules = await realpath(path.resolve(import.meta.dir, "../../../../node_modules"))
