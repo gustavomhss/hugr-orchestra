@@ -14,6 +14,10 @@ import { Effect, Exit, Semaphore } from "effect"
 import type { PreToolUseHookInput, PostToolUseHookInput, PostToolUseFailureHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
+import { Database } from "@orchestra/core/database/database"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { eq } from "drizzle-orm"
 import type { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
@@ -68,6 +72,9 @@ type Record = {
   readonly subagentType: string
   readonly description: string
   readonly dispatcher: ClaudeHostGate.Actor
+  /** Admitted SDK-owned concrete wire identity. */
+  readonly model?: string
+  readonly modelRef?: ModelV2.Ref
   readonly background: boolean
   /** Absent for Claude Code's own subagents (not Orchestra seats): they act under their dispatcher's rules. */
   readonly seat?: Seat
@@ -82,6 +89,7 @@ type Record = {
   notice?: SDKTaskNotificationMessage
   settled?: boolean
   delivered?: boolean
+  admitted?: boolean
   /** Admitted inspection refusal; survives cancellation of the fiber waiting to retain its HOLD. */
   rejection?: PostToolUseHookInput
   rejectionHold?: string
@@ -101,6 +109,8 @@ type Admission = {
   grant?: ClaudeHostMcp.Grant
   grants?: Map<string, ClaudeHostMcp.Grant>
   spent: boolean
+  denied?: string
+  cleanup?: SessionID
 }
 
 export type Summary = Pick<Record, "toolUseID" | "subagentType" | "child" | "grantID" | "writeRoots" | "background" | "settled"> & {
@@ -112,6 +122,9 @@ export type Summary = Pick<Record, "toolUseID" | "subagentType" | "child" | "gra
 /** The actor of a call, or the HOLD that refuses it. */
 export type Resolved = ClaudeHostGate.Actor | { readonly hold: string }
 
+export type ModelSelection = { readonly model: string; readonly ref: ModelV2.Ref }
+export type Models = (type: string, override: unknown) => Effect.Effect<ModelSelection | undefined, unknown>
+
 export function make(input: {
   readonly sessionID: SessionID
   readonly agent: string
@@ -119,6 +132,7 @@ export function make(input: {
   readonly join: ClaudeHostJoin.Join
   readonly parts?: Parts
   readonly research?: ClaudeHostResearchResult.Port
+  readonly models?: Models
 }) {
   const records = new Map<string, Record>()
   const join = input.join
@@ -171,18 +185,32 @@ export function make(input: {
       const prior = admissions.get(hook.tool_use_id)
       if (prior && (prior.toolName !== hook.tool_name || !isDeepStrictEqual(prior.args, hook.tool_input) ||
         !isDeepStrictEqual(prior.dispatcher, dispatcher))) return yield* refuse(`HOLD: conflicting reuse of ${hook.tool_use_id}`)
+      if (prior?.denied) {
+        yield* cleanup(prior)
+        return yield* refuse(prior.denied)
+      }
+      const args = record(hook.tool_input)
+      const subagentType = text(args, "subagent_type") ?? "general-purpose"
+      const policies = yield* SessionSubagentModels.Service
       const existing = records.get(hook.tool_use_id)
-      if (existing) return existing.seat ? yield* running(existing) : undefined
+      if (existing) {
+        yield* policies.assertChild(dispatcher.sessionID, existing.modelRef)
+        if (existing.seat) yield* running(existing)
+        yield* policies.assertChild(dispatcher.sessionID, existing.modelRef)
+        return
+      }
+      const selection = input.models ? yield* input.models(subagentType, args.model) : undefined
+      // Recheck after the per-call wait and model lookup, before any grant/child/native dispatch.
+      // Generic agents pass this same canonical boundary, even though they have no seat reservation.
+      yield* policies.assertChild(dispatcher.sessionID, selection?.ref)
       if (prior?.spent) return yield* refuse(`HOLD: admission for ${hook.tool_use_id} already spent its grant; no new child may be created`)
       const ownership: Admission = { args: structuredClone(hook.tool_input), toolName: hook.tool_name, dispatcher: { ...dispatcher }, spent: false }
       admissions.set(hook.tool_use_id, ownership)
       return yield* Effect.gen(function* () {
-        const args = record(hook.tool_input)
         // Claude Code runs a subagent in the background unless the call says otherwise; an absent type is its default agent.
-        const subagentType = text(args, "subagent_type") ?? "general-purpose"
         const base = { toolUseID: hook.tool_use_id, toolName: hook.tool_name === "Task" ? "Task" as const : "Agent" as const, subagentType,
           description: text(args, "description") ?? subagentType, dispatcher, background: args.run_in_background !== false,
-          writeRoots: [] }
+          writeRoots: [], model: selection?.model, modelRef: selection?.ref }
         if (!subagentType.startsWith(PREFIX)) {
           records.set(hook.tool_use_id, base)
           join.dispatched(hook.tool_use_id, {})
@@ -204,10 +232,13 @@ export function make(input: {
         const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, parent.projectID)
         if (authority.ancestry.length - 1 >= (cfg.subagent_depth ?? 1))
           return yield* refuse("You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.")
+        yield* policies.assertChild(dispatcher.sessionID, selection?.ref)
         const grant = seat.writeRoots ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID, ownership) : undefined
         const permission = yield* WriteRoots.bind(seat.id, grant?.writePaths,
           GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }))
         const brief = yield* lastUser(parent.id)
+        const confirmed = input.models ? yield* input.models(subagentType, args.model) : undefined
+        yield* policies.assertChild(dispatcher.sessionID, confirmed?.ref)
         // Once child creation starts, failures are closed: restoring this capability could authorize another child.
         ownership.spent = true
         const child = yield* sessions.create({ parentID: parent.id, title: `${base.description} (@${next.name} subagent)`, agent: seat.id, permission })
@@ -217,7 +248,7 @@ export function make(input: {
         const prompt = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: child.id, agent: seat.id,
           model: brief.model, time: { created: Date.now() } } satisfies SessionV1.User)
         yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: prompt.id, type: "text", text: text(args, "prompt") ?? "" })
-        const entry = { ...base, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
+        const entry = { ...base, model: confirmed?.model, modelRef: confirmed?.ref, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
           writeRoots: WriteRoots.read(permission) ?? [] }
         records.set(hook.tool_use_id, entry)
         join.dispatched(hook.tool_use_id, { seat: seat.id, grantID: entry.grantID, child: child.id })
@@ -231,6 +262,51 @@ export function make(input: {
       })))
     }))
   })
+
+  /** Last hook admission checkpoint, after research and other awaited setup. */
+  const admit = Effect.fn("ClaudeHostDelegation.admit")(function* (hook: PreToolUseHookInput, dispatcher: ClaudeHostGate.Actor) {
+    return yield* exclusive(hook.tool_use_id, Effect.gen(function* () {
+      const entry = records.get(hook.tool_use_id)
+      const ownership = admissions.get(hook.tool_use_id)
+      if (!entry || !ownership || ownership.denied || join.get(hook.tool_use_id)?.hold)
+        return yield* refuse(ownership?.denied ?? "HOLD: native model admission is unavailable")
+      const policies = yield* SessionSubagentModels.Service
+      const checked = yield* Effect.exit(Effect.gen(function* () {
+        const selection = entry.admitted ? undefined : input.models
+          ? yield* input.models(entry.subagentType, record(hook.tool_input).model) : undefined
+        yield* policies.assertChild(dispatcher.sessionID, entry.admitted ? entry.modelRef : selection?.ref)
+        return selection
+      }))
+      if (Exit.isSuccess(checked)) {
+        records.set(hook.tool_use_id, entry.admitted ? entry : { ...entry, model: checked.value?.model, modelRef: checked.value?.ref, admitted: true })
+        return
+      }
+      // Latch refusal and remove replay eligibility before any fallible teardown.
+      ownership.denied = "HOLD: subagent model policy denied this native admission"
+      ownership.cleanup = entry.admitted ? undefined : entry.child
+      join.hold(hook.tool_use_id, ownership.denied)
+      records.delete(hook.tool_use_id)
+      yield* cleanup(ownership)
+      return yield* Effect.failCause(checked.cause)
+    }))
+  })
+
+  function cleanup(ownership: Admission) {
+    return Effect.gen(function* () {
+      if (!ownership.cleanup) return
+      const child = ownership.cleanup
+      const database = yield* Database.Service
+      const sessions = yield* Session.Service
+      const present = () => database.db.select({ id: SessionTable.id }).from(SessionTable)
+        .where(eq(SessionTable.id, child)).get().pipe(Effect.orDie)
+      const removal = yield* Effect.exit(Effect.gen(function* () {
+        if (yield* present()) yield* sessions.remove(child)
+      }))
+      if (yield* present()) return yield* Exit.isFailure(removal) ? Effect.failCause(removal.cause)
+        : refuse("HOLD: denied native admission cleanup is still pending")
+      ownership.cleanup = undefined
+    }).pipe(Effect.uninterruptible)
+  }
 
   /** `SubagentStop`: the subagent's last text. It delivers nothing (spike S12): a background run is delivered on notice. */
   const stop = (agentID: string, final: string | undefined) => {
@@ -443,6 +519,7 @@ export function make(input: {
   return {
     actor,
     dispatch,
+    admit,
     stop,
     settle,
     fail,
