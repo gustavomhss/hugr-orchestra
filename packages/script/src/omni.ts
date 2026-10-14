@@ -3,6 +3,7 @@
 import fs from "fs"
 import path from "path"
 import { inspectElf, nativeMachines, NATIVE_MACHINES, requireElfLibc } from "./tree-sitter-prebuilds"
+import { WorkspacePaths } from "./workspace-paths.ts"
 
 // D-L8/D-L9: the omni build each target ships, as hugr-omni's platform id. A target with `enabled: false` compiles
 // with OMNI_ENABLED=false (the legacy spawner) and ships no omni files. Every declared CLI target has a native build.
@@ -65,8 +66,9 @@ function omniSources(os: string, id: string, single: boolean): OmniFiles {
   const addon =
     ({ darwin: "libhugr_omni_node.dylib", win32: "hugr_omni_node.dll" } as Record<string, string>)[os] ??
     "libhugr_omni_node.so"
+  const native = WorkspacePaths.make(import.meta.dirname).domain("omni")
   const found = ["release", "debug"]
-    .map((profile) => path.resolve(import.meta.dirname, "../../omni/target", profile))
+    .map((profile) => path.join(native, "target", profile))
     .map((target) => ({ addon: path.join(target, addon), supervisor: path.join(target, supervisor) }))
     .find((files) => fs.existsSync(files.addon) || fs.existsSync(files.supervisor))
   if (!found) throw new Error(`OMNI_LOCAL_COMPANIONS_MISSING: ${id}: packages/omni/target/{release,debug}`)

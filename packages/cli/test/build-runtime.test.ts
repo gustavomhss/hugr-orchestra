@@ -276,13 +276,28 @@ test("all explicit targets produce correct executable format/architecture and pr
   await Bun.write(sentinel, "preserve these bytes")
   // Local --single fallback is exercised from a copied producer module, never
   // by replacing the runner's genuine release companions. Fixtures are structural.
-  const producer = path.join(home, "local-producer/packages/script/src")
-  await Bun.write(path.join(producer, "omni.ts"), Bun.file(path.resolve(root, "../script/src/omni.ts")))
-  await Bun.write(path.join(producer, "tree-sitter-prebuilds.ts"), Bun.file(path.resolve(root, "../script/src/tree-sitter-prebuilds.ts")))
-  const schema = path.join(home, "local-producer/node_modules/@orchestra/schema")
-  await Bun.write(path.join(schema, "package.json"), JSON.stringify({ type: "module", exports: { "./elf": "./elf.ts" } }))
+  const local = path.join(home, "local-producer")
+  const producer = path.join(local, "packages/script/src")
+  await Promise.all(["omni.ts", "tree-sitter-prebuilds.ts", "workspace-paths.ts", "module-catalog.ts", "module-resolver.ts"]
+    .map((file) => Bun.write(path.join(producer, file), Bun.file(path.resolve(root, "../script/src", file)))))
+  const modules = [
+    { alias: "script", kind: "bun", scope: ".", name: "@orchestra/script", path: "packages/script" },
+    { alias: "maestro-arsenal", kind: "bun", scope: ".", name: "@orchestra/maestro-arsenal", path: "tools/arsenal" },
+  ]
+  const domains = {
+    omni: { path: "native/omni", manifest: "Cargo.toml" },
+    atlas: { path: "domains/atlas", manifest: "package.json" },
+  }
+  await Bun.write(path.join(local, "package.json"), JSON.stringify({ name: "local-producer", private: true, type: "module" }))
+  await Bun.write(path.join(local, "script/module-registry.json"), JSON.stringify({ format: 1, modules }))
+  await Bun.write(path.join(local, "script/toolchain-registry.json"), JSON.stringify({ format: 1, roots: domains }))
+  await Promise.all(modules.map((entry) => Bun.write(path.join(local, entry.path, "package.json"), JSON.stringify({ name: entry.name }))))
+  await Promise.all(Object.values(domains).map((entry) => Bun.write(path.join(local, entry.path, entry.manifest),
+    entry.manifest === "Cargo.toml" ? "[workspace]\n" : JSON.stringify({ name: "atlas", private: true }))))
+  const schema = path.join(local, "node_modules/@orchestra/schema")
+  await Bun.write(path.join(schema, "package.json"), JSON.stringify({ name: "@orchestra/schema", type: "module", exports: { "./elf": "./elf.ts" } }))
   await Bun.write(path.join(schema, "elf.ts"), Bun.file(path.resolve(root, "../schema/src/elf.ts")))
-  const release = path.join(home, "local-producer/packages/omni/target/release")
+  const release = path.join(local, domains.omni.path, "target/release")
   // MUSL-POSIX-PROBES BEGIN: Unix permission semantics require a POSIX host.
   // Native Linux rows must exercise every Unix mode control. Windows still
   // exercises ARM64 PE/CPU admission; NTFS is not a Unix execute-bit oracle.
