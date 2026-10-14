@@ -1,6 +1,6 @@
 # V2 upstream Arsenal binding handoff
 
-Current identity correction: active upstream ID `archie`, profile `upstream`, assets `packages/archie-specialist`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Literal service checks, source paths and pins below describe the historical baseline; current naming does not preserve an old-ID routing alias.
+Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Literal service checks, source paths and pins below describe the historical baseline; current naming does not preserve an old-ID routing alias.
 
 Baseline: `abf7a72c77fcaeee1206400a8270b2581ae9839c`. Frozen contract: `specs/upstream-specialist/wave-2.md` in the lead worktree.
 

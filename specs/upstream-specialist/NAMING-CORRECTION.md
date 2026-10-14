@@ -10,7 +10,7 @@ display label. Refer to the member by role or ID; display text stays in the cent
 |---|---|
 | Native seat, Agent/service checks, Task `subagent_type`, author/provenance member | `archie` |
 | Native profile projection / attribution profile | `upstream` |
-| Packaged source/embedded assets | `packages/archie-specialist/skills/` |
+| Packaged source/embedded assets | `modules/specialists/archie/skills/` |
 | Entry skills | `archie-plan`, `archie-work-package` |
 | Config / central presentation resolver | `agent.archie.name`, existing `UPSTREAM_DEFAULT_LABEL` / `HUGR_UPSTREAM_NAME` |
 | Foundation ontology definition producer | `slot === "definition" && curatedBy === "archie"` |
