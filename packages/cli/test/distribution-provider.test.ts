@@ -15,7 +15,7 @@ import { expectSpawn } from "../../core/test/fixture/omni-expect"
 // Lead registers this file only on hosted Ubuntu x64. No local execution, skip,
 // emulation, credential-dependent provider, fake inference or source CLI fallback.
 // Runtime qualification remains pending until all actual controls execute in CI.
-const state: { directory?: string; evidence?: string; built?: Built; ollama?: OwnedOllama; cleanup?: Promise<void> } = {}
+const state: { directory?: string; evidence?: string; built?: Built; ollama?: OwnedOllama; cleanup?: Promise<void>; controlsComplete?: string[] } = {}
 const owner = randomUUID()
 const interrupt = () => { void cleanup().then(() => process.exit(1), () => process.exit(1)) }
 
@@ -66,6 +66,12 @@ function cleanup() {
       owner, directory: state.directory, ownedContainerStoppedAndRemoved: true, ownedDaemonsStopped: true,
       fixtureRemoved: true, evidenceRetained: state.evidence,
     }, null, 2))
+    if (state.controlsComplete && state.evidence) await Bun.write(join(state.evidence, "qualified.json"), JSON.stringify({
+      status: "qualified", image, model, modelDigest, admitted: state.controlsComplete,
+      controls: ["real-inference", "native-cpu", "outside-cwd-nonce", "real-tool-result-continuation",
+        "terminal-assistant", "durable-user-assistant-tool", "exact-installed-supervisor-chain", "fault-blocked", "restored",
+        "owned-container-stopped-removed", "owned-fixture-removed"],
+    }, null, 2))
     console.error(`DISTRIBUTION_PROVIDER_FIXTURE_REMOVED ${state.directory}`)
   })()
   return state.cleanup
@@ -93,7 +99,8 @@ test("npm-installed public run infers, executes installed-supervisor shell, cont
   })
   expect(admitted).toEqual([versions[0], versions[1], versions[0]])
   for (const payload of fixture.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
-  await Bun.write(join(fixture.evidence, "qualified.json"), JSON.stringify({ status: "qualified", image, model,
-    modelDigest, admitted, controls: ["real-inference", "native-cpu", "outside-cwd-nonce", "real-tool-result-continuation",
-      "terminal-assistant", "durable-user-assistant-tool", "exact-installed-supervisor-chain", "fault-blocked", "restored"] }, null, 2))
+  await Bun.write(join(fixture.evidence, "controls-complete.json"), JSON.stringify({
+    status: "controls-complete-cleanup-pending", image, model, modelDigest, admitted,
+  }, null, 2))
+  state.controlsComplete = admitted
 }, 1_800_000)

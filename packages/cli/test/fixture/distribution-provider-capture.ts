@@ -64,6 +64,7 @@ export function streamedCompletion(text: string) {
 export function captureInference(endpoint: string, evidence: string) {
   const records: Array<{ request: typeof WireRequest.Type; requestJSON: string; response: string; status: number }> = []
   const pending = new Set<Promise<void>>()
+  const controllers = new Set<AbortController>()
   const failures: unknown[] = []
   const state = { stage: "unarmed", turns: 0 }
   const server = Bun.serve({
@@ -79,11 +80,22 @@ export function captureInference(endpoint: string, evidence: string) {
       if (Buffer.byteLength(json) > 1024 * 1024) throw new Error("PROVIDER_CAPTURE_REQUEST_TOO_LARGE")
       const decoded = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(WireRequest)))(json)
       if (decoded.model !== model) throw new Error("PROVIDER_CAPTURE_MODEL_MISMATCH")
+      await Bun.write(join(evidence, `${stage}-turn-${turn}-request.json`), JSON.stringify({
+        upstream: endpoint, method: "POST", path: route.pathname, request: decoded, requestJSON: json,
+      }, null, 2) + "\n")
+      const controller = new AbortController()
+      controllers.add(controller)
       const upstream = await fetch(endpoint + route.pathname, {
         method: "POST", headers: { "content-type": "application/json" }, body: json,
-        signal: AbortSignal.timeout(240_000), redirect: "error",
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(240_000)]), redirect: "error",
+      }).catch((error: unknown) => {
+        controllers.delete(controller)
+        throw error
       })
-      if (!upstream.body) throw new Error("PROVIDER_CAPTURE_UPSTREAM_BODY_MISSING")
+      if (!upstream.body) {
+        controllers.delete(controller)
+        throw new Error("PROVIDER_CAPTURE_UPSTREAM_BODY_MISSING")
+      }
       const [client, capture] = upstream.body.tee()
       const record = { request: decoded, requestJSON: json, response: "", status: upstream.status }
       records.push(record)
@@ -105,7 +117,10 @@ export function captureInference(endpoint: string, evidence: string) {
         await Bun.write(join(evidence, `${stage}-turn-${turn}.json`), JSON.stringify({
           upstream: endpoint, method: "POST", path: route.pathname, ...record,
         }, null, 2) + "\n")
-      })().catch((error: unknown) => { failures.push(error) }).finally(() => pending.delete(task))
+      })().catch((error: unknown) => { failures.push(error) }).finally(() => {
+        controllers.delete(controller)
+        pending.delete(task)
+      })
       pending.add(task)
       // Forward exact status, content type and bytes. No upstream auth required.
       return new Response(client, { status: upstream.status,
@@ -134,7 +149,8 @@ export function captureInference(endpoint: string, evidence: string) {
       return [...records]
     },
     async stop() {
-      server.stop(true)
+      controllers.forEach((controller) => controller.abort())
+      await server.stop(true)
       await Promise.all([...pending])
     },
   }

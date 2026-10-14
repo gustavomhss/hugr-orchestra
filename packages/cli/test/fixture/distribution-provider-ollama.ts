@@ -81,7 +81,7 @@ export async function ownedOllama(directory: string, evidence: string) {
         "--publish", "127.0.0.1::11434", "--env", "OLLAMA_HOST=0.0.0.0:11434",
         "--env", "OLLAMA_NUM_PARALLEL=1", "--env", "OLLAMA_MAX_LOADED_MODELS=1",
         "--env", "OLLAMA_CONTEXT_LENGTH=8192", "--env", "CUDA_VISIBLE_DEVICES=-1",
-        "--env", "HIP_VISIBLE_DEVICES=-1", image], box)
+        "--env", "HIP_VISIBLE_DEVICES=-1", "--env", "NVIDIA_VISIBLE_DEVICES=void", image], box)
       await inspect()
       expect(id).toBe(state.id!)
       await successful(["docker", "start", state.id!], box)
@@ -151,10 +151,11 @@ export async function ownedOllama(directory: string, evidence: string) {
       expect(logs.code).toBe(0)
       await Bun.write(join(evidence, "ollama-container.log"), logs.stdout + logs.stderr)
       await inspect()
+      const list = ["docker", "ps", "--all", "--no-trunc", "--filter", `label=${label}=${token}`, "--format", "{{.ID}}"]
+      expect(await successful(list, box)).toBe(state.id!)
       await successful(["docker", "rm", state.id!], box)
-      // Listing must first see our ID while it exists (inspect above); errors are not absence.
-      const remaining = await successful(["docker", "ps", "--all", "--no-trunc", "--filter", `label=${label}=${token}`,
-        "--format", "{{.ID}}"], box)
+      // Same listing saw exact ID before removal. Errors are never absence.
+      const remaining = await successful(list, box)
       expect(remaining).toBe("")
       state.removed = true
       await receipt("cleanup", { id: state.id, label, token, stopped: true, removed: true, remaining })

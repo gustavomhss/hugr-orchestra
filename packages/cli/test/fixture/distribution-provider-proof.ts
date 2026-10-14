@@ -90,20 +90,23 @@ export async function qualifyProvider(input: {
       await Bun.write(join(stage, `${kind}-config.json`), JSON.stringify(config, null, 2))
       const env = { ...strict.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }
       const prompt = `Call bash once with command exactly: ${shell}\nUse workdir ${box.cwd} and timeout 10000. After the tool result, give a short final response containing the nonce from its output. /no_think`
-      const monitor = await observeInstalledTool(payload, env.ORCHESTRA_DB, box.cwd, shell)
       proxy.arm(kind)
-      if (kind === "fault") {
-        // Existing executable path remains discoverable. Replacement never runs
-        // a tool: marker proves this exact installed supervisor was attempted.
-        await writeFile(supervisor, `#!/bin/sh\nprintf '%s\\n' 'installed-supervisor-fault' > '${faultMarker}'\nexit 97\n`)
-        await chmod(supervisor, mode)
-      }
+      const monitor = await observeInstalledTool(payload, env.ORCHESTRA_DB, box.cwd, shell)
       const observation: { chain?: Awaited<ReturnType<typeof monitor.stop>> } = {}
-      const result = await command([launcher, "run", "--agent", "distribution-proof", "--model", `distribution/${model}`,
-        "--format", "json", "--title", `Distribution provider ${input.stage} ${kind}`, prompt], { ...box, env }, 300_000)
+      const result = await (async () => {
+        if (kind === "fault") {
+          // Existing executable path remains discoverable. Replacement never runs
+          // a tool: marker proves this exact installed supervisor was attempted.
+          await writeFile(supervisor, `#!/bin/sh\nprintf '%s\\n' 'installed-supervisor-fault' > '${faultMarker}'\nexit 97\n`)
+          await chmod(supervisor, mode)
+        }
+        return command([launcher, "run", "--agent", "distribution-proof", "--model", `distribution/${model}`,
+          "--format", "json", "--title", `Distribution provider ${input.stage} ${kind}`, prompt], { ...box, env }, 300_000)
+      })()
         .finally(async () => {
-          if (kind === "fault") { await writeFile(supervisor, original); await chmod(supervisor, mode) }
-          observation.chain = await monitor.stop(false)
+          try {
+            if (kind === "fault") { await writeFile(supervisor, original); await chmod(supervisor, mode) }
+          } finally { observation.chain = await monitor.stop(false) }
         })
       await Bun.write(join(stage, `${kind}-cli.json`), JSON.stringify(result, null, 2))
       const records = await proxy.drain()
@@ -124,7 +127,7 @@ export async function qualifyProvider(input: {
         expect(record.request.model).toBe(model)
         expect((record.request.tools ?? []).map((tool) => tool.function.name).filter((name) => name !== "bash")).toEqual([])
       })
-      const first = records.find((record) => record.request.messages.some((message) => message.role === "user" && String(message.content).includes(nonce)))
+      const first = records.find((record) => record.request.messages.some((message) => message.role === "user" && JSON.stringify(message.content)?.includes(nonce)))
       if (!first) throw new Error("PROVIDER_USER_PROMPT_NOT_CAPTURED")
       expect(first.request.tools?.map((tool) => tool.function.name)).toEqual(["bash"])
       const inferred = streamedCompletion(first.response)
@@ -134,6 +137,9 @@ export async function qualifyProvider(input: {
       const continuation = records.find((record) => record.request.messages.some((message) => message.role === "tool" && message.tool_call_id === callID))
       if (!continuation) throw new Error("PROVIDER_REAL_TOOL_RESULT_NOT_CAPTURED")
       const sent = continuation.request.messages.find((message) => message.role === "tool" && message.tool_call_id === callID)!
+      expect(typeof sent.content).toBe("string")
+      expect(continuation.request.messages.flatMap((message) => message.role === "assistant" ? message.tool_calls ?? [] : [])
+        .filter((call) => call.id === callID)).toHaveLength(1)
       const terminal = streamedCompletion(records.at(-1)!.response)
       expect(terminal.calls).toHaveLength(0)
       expect(terminal.finishes).toContain("stop")
@@ -162,21 +168,27 @@ export async function qualifyProvider(input: {
       expect(projection.parts.filter((part) => part.type === "tool" && part.callID === callID)).toHaveLength(1)
       const durable = projection.parts.find((part) => part.type === "tool" && part.callID === callID)!
       expect(durable.state?.status).toBe(kind === "fault" ? "error" : "completed")
+      expect(durable.state?.input).toMatchObject({ command: shell })
+      const terminalMessage = projection.messages.filter((message) => message.role === "assistant").at(-1)
+      if (!terminalMessage) throw new Error("PROVIDER_DURABLE_TERMINAL_ASSISTANT_MISSING")
+      expect(terminalMessage.finish).toBe("stop")
+      expect(projection.parts.some((part) => part.messageID === terminalMessage.id && part.type === "text" && part.text === terminal.content)).toBe(true)
       await Bun.write(join(stage, `${kind}-projections.json`), JSON.stringify(projection, null, 2))
       if (kind === "fault") {
         expect(await absent(file)).toBe(true)
         expect(await readFile(faultMarker, "utf8")).toBe("installed-supervisor-fault\n")
         expect(tools[0].part?.state?.status).toBe("error")
         expect(durable.state?.error?.length).toBeGreaterThan(0)
-        expect(JSON.stringify(sent.content)).toContain(durable.state!.error!)
+        expect(sent.content).toContain(durable.state!.error!)
       }
       if (kind !== "fault") {
         expect(result.code, result.stderr).toBe(0)
         expect(await readFile(file, "utf8")).toBe(`${nonce}\n`)
-        expect((await lstat(file)).isFile()).toBe(true)
+        const info = await lstat(file)
+        expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
         expect(tools[0].part?.state?.status).toBe("completed")
         expect(tools[0].part?.state?.output).toContain(nonce)
-        expect(JSON.stringify(sent.content)).toContain(nonce)
+        expect(sent.content).toContain(nonce)
         expect(durable.state?.output).toContain(nonce)
         expect(terminal.content).toContain(nonce)
         expect(observation.chain!.length).toBeGreaterThan(0)
@@ -189,7 +201,9 @@ export async function qualifyProvider(input: {
       console.error(`DISTRIBUTION_PROVIDER_CONTROL ${JSON.stringify({ stage: input.stage, kind, version: input.version,
         turns: records.length, callID, fileCreated: kind !== "fault", evidence: stage })}`)
     }
-  } finally { await proxy.stop(); await writeFile(supervisor, original); await chmod(supervisor, mode) }
+  } finally {
+    await proxy.stop().finally(async () => { await writeFile(supervisor, original); await chmod(supervisor, mode) })
+  }
 }
 
 async function absent(file: string) {
