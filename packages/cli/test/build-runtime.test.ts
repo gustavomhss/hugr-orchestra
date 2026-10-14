@@ -202,7 +202,7 @@ async function handedArtifacts() {
           const supervisor = file.startsWith("hugr-omni-supervisor")
           await Bun.write(destination, os === "linux" ? elfBinding(arch, supervisor ? undefined : item.id.endsWith("-musl") ? "musl" : "glibc") :
             omniHeader(os, arch))
-          if (supervisor && os !== "win32") await chmod(destination, 0o755)
+          if (supervisor && os !== "win32" && process.platform !== "win32") await chmod(destination, 0o755)
         }),
       ),
   )
@@ -280,7 +280,14 @@ test("all explicit targets produce correct executable format/architecture and pr
   await Bun.write(path.join(producer, "omni.ts"), Bun.file(path.resolve(root, "../script/src/omni.ts")))
   await Bun.write(path.join(producer, "tree-sitter-prebuilds.ts"), Bun.file(path.resolve(root, "../script/src/tree-sitter-prebuilds.ts")))
   const release = path.join(home, "local-producer/packages/omni/target/release")
-  for (const selected of ["linux-x64-musl", "linux-x64-baseline-musl", "linux-arm64-musl", "windows-arm64"]) {
+  // MUSL-POSIX-PROBES BEGIN: Unix permission semantics require a POSIX host.
+  // Native Linux rows must exercise every Unix mode control. Windows still
+  // exercises ARM64 PE/CPU admission; NTFS is not a Unix execute-bit oracle.
+  const localTargets = [...(process.platform === "win32" ? [] :
+    ["linux-x64-musl", "linux-x64-baseline-musl", "linux-arm64-musl"]), "windows-arm64"]
+  const modeTargets: string[] = []
+  const admittedTargets: string[] = []
+  for (const selected of localTargets) {
     const item = namedTargets.find((item) => item.target === selected)!
     const id = omniTargets[selected].id
     const addon = path.join(release, item.os === "win32" ? "hugr_omni_node.dll" : "libhugr_omni_node.so")
@@ -297,7 +304,7 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(incomplete.code).not.toBe(0)
     expect(incomplete.stderr).toContain("OMNI_COMPANION_MISSING_OR_NOT_REGULAR")
     await Bun.write(supervisor, Bun.file(path.join(handed.OMNI_ARTIFACTS, id, path.basename(supervisor))))
-    await chmod(supervisor, 0o755)
+    if (item.os !== "win32" && process.platform !== "win32") await chmod(supervisor, 0o755)
     expect((await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })).stdout).toBe("admitted")
     const original = await readFile(addon)
     try {
@@ -328,10 +335,19 @@ test("all explicit targets produce correct executable format/architecture and pr
         const nonExecutable = await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })
         expect(nonExecutable.code).not.toBe(0)
         expect(nonExecutable.stderr).toContain("OMNI_SUPERVISOR_NOT_EXECUTABLE")
+        modeTargets.push(selected)
       }
-    } finally { await Bun.write(supervisor, originalSupervisor); await chmod(supervisor, 0o755) }
+    } finally {
+      await Bun.write(supervisor, originalSupervisor)
+      if (item.os !== "win32" && process.platform !== "win32") await chmod(supervisor, 0o755)
+    }
     expect((await run(probe, 30_000, { OMNI_ARTIFACTS: undefined })).stdout).toBe("admitted")
+    admittedTargets.push(selected)
   }
+  expect(admittedTargets, "WINDOWS_ARM64_PE_CPU_CONTROL_REQUIRED").toContain("windows-arm64")
+  if (process.platform === "linux") expect(modeTargets.toSorted(), "UNIX_PERMISSION_CONTROLS_REQUIRED_ON_NATIVE_LINUX")
+    .toEqual(["linux-x64-musl", "linux-x64-baseline-musl", "linux-arm64-musl"].toSorted())
+  // MUSL-POSIX-PROBES END
   // On the Windows runner Bun 1.3.14 fails to extract the compile targets it downloads ("Failed to extract executable
   // for 'bun-linux-aarch64-v1.3.14'" and 'bun-windows-aarch64-v1.3.14', actions runs 38150190807 and 38150514459), so
   // a Windows host proves only its own target, which needs no download. The Linux host, where the release producers
