@@ -2,6 +2,7 @@
 // them: test-ci.ts starts uploading as soon as it is loaded.
 
 import { $ } from "bun"
+import { testPathsAt } from "./test-ci-paths.ts"
 
 export function workflowRun<T extends { databaseId: number; url: string; workflowName: string; headBranch: string; headSha: string }>(
   runs: T[],
@@ -19,13 +20,7 @@ export function workflowRun<T extends { databaseId: number; url: string; workflo
 // ./<file> with forward slashes. Anything else, such as a directory, a filter or a glob, passes through as a filter.
 // Paths may be given from the repository root or from the package directory.
 export function testPaths(name: string, args: string[], isFile: (file: string) => boolean) {
-  const prefix = new RegExp(`^(\\./)?packages/${name}/`)
-  return args.map((arg) => {
-    const file = arg.replaceAll("\\", "/").replace(prefix, "")
-    if (file.startsWith("/")) return arg
-    if (file.startsWith("./") || isFile(file)) return `./${file.replace(/^\.\//, "")}`
-    return arg.replace(prefix, "")
-  })
+  return testPathsAt(`packages/${name}`, args, isFile, name)
 }
 
 // Of the merge-bases of HEAD with each ref that exists, the one whose tree differs from `tree` in the fewest files.
