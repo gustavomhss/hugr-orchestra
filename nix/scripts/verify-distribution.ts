@@ -7,12 +7,13 @@ import { tmpdir } from "node:os"
 import { lstat, readdir, readFile, realpath, stat } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { parseArgs } from "node:util"
-import { cliTreeSitterTarget, nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
-import { requireTreeSitterBundle } from "../../packages/script/src/tree-sitter-prebuilds"
+import { requireTreeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
+import { sourceModule } from "./workspace-config.ts"
 
 const args = parseArgs({
   options: {
     source: { type: "string" },
+    "workspace-config": { type: "string" },
     cli: { type: "string" },
     desktop: { type: "string" },
     system: { type: "string" },
@@ -22,14 +23,19 @@ const args = parseArgs({
   strict: true,
   allowPositionals: false,
 }).values
-const source = args.source
-const cli = args.cli
-const desktop = args.desktop
-const system = args.system
-const version = args.version
-const electronVersion = args["electron-version"]
-if (!source || !cli || !desktop || !system || !version || !electronVersion) fail("MISSING_OUTPUT_ARGUMENT")
+const source = requireArgument(args.source)
+const cli = requireArgument(args.cli)
+const desktop = requireArgument(args.desktop)
+const system = requireArgument(args.system)
+const version = requireArgument(args.version)
+const electronVersion = requireArgument(args["electron-version"])
+requireArgument(args["workspace-config"])
 async function verify() {
+const { cliTreeSitterTarget, nativeCliTarget, readCliManifest, verifyCliArtifact } =
+  await import(join(await sourceModule(source, "desktop"), "src/main/cli-artifacts.ts")) as
+    Pick<typeof import("../../packages/desktop/src/main/cli-artifacts.ts"),
+      "cliTreeSitterTarget" | "nativeCliTarget" | "readCliManifest" | "verifyCliArtifact">
+const omniLoader = join(await sourceModule(source, "omni/bindings/node"), "index.js")
 const manifest = await Bun.file(join(source, "nix/toolchain-sources.json")).json()
 if (!(system in manifest.bun.sources)) fail(`UNSUPPORTED_SYSTEM:${system}`)
 const platform = system.endsWith("-darwin") ? "darwin" : "linux"
@@ -44,7 +50,7 @@ const executable = platform === "darwin"
   : join(desktop, "opt/orchestra-desktop/ai.hugr.orchestra")
 const artifacts = await Promise.all([join(cli, "share/orchestra/cli"), join(resources, "cli")].map(async (directory) => {
   const receipt = await readCliManifest(directory)
-  if (receipt.version !== version || receipt.artifacts.length !== 1 || receipt.artifacts[0].target !== target)
+  if (receipt.version !== version || receipt.artifacts.length !== 1 || receipt.artifacts[0]?.target !== target)
     fail(`ARTIFACT_TUPLE_MISMATCH:${directory}`)
   const artifact = await verifyCliArtifact(directory, target)
   await image(artifact.path)
@@ -52,15 +58,17 @@ const artifacts = await Promise.all([join(cli, "share/orchestra/cli"), join(reso
 }))
 // The compiled CLI resolves omni next to realpath(process.execPath) (packages/core/src/omni.ts); artifact.path is
 // real. Checked before any CLI runs, so a CLI whose omni preflight fails is still named by the omni failure.
-const omniCli = await omni(dirname(artifacts[0].path), process.execPath, {})
+const cliArtifact = artifacts[0]
+if (!cliArtifact) fail("EMPTY_CLI_ARTIFACTS")
+const omniCli = await omni(dirname(cliArtifact.path), process.execPath, {})
 // The packaged CLI (Resources/cli) resolves Resources/omni through ../omni: check it before that CLI runs too.
 // Resources/omni is outside app.asar.unpacked, so the addon scan below never sees it; packaged Electron loads it here.
 const omniDesktop = await omni(join(resources, "omni"), executable, { ELECTRON_RUN_AS_NODE: "1" })
 // maestro-arsenal in the compiled CLI loads tree-sitter/ beside realpath(process.execPath). The desktop stages its
 // bundle from the CLI output's tree-sitter-<target>/ and ships it in Resources/cli for the CLI it installs.
 const treeSitterBundles = {
-  cli: await treeSitter(join(dirname(artifacts[0].path), "tree-sitter"), process.execPath, {}),
-  cliStaged: await treeSitter(join(dirname(artifacts[0].path), `tree-sitter-${target}`), process.execPath, {}),
+  cli: await treeSitter(join(dirname(cliArtifact.path), "tree-sitter"), process.execPath, {}),
+  cliStaged: await treeSitter(join(dirname(cliArtifact.path), `tree-sitter-${target}`), process.execPath, {}),
   desktop: await treeSitter(join(resources, "cli", `tree-sitter-${target}`), executable, { ELECTRON_RUN_AS_NODE: "1" }),
 }
 // The owned CLI prints exactly its version for --version (packages/cli/src/index.ts).
@@ -140,7 +148,7 @@ async function omni(directory: string, runtime: string, env: Record<string, stri
     console.log("OMNI_LOAD_OK " + JSON.stringify({ opened, exports: Object.keys(omni),
       runtime: process.versions.electron ? "electron " + process.versions.electron : "bun " + process.versions.bun }))
   `], {
-    env: { ...inherited, ...env, NIX_OMNI_LOADER: join(source!, "packages/omni/bindings/node/index.js"),
+    env: { ...inherited, ...env, NIX_OMNI_LOADER: omniLoader,
       NIX_OMNI_ADDON: addon, NIX_OMNI_SUPERVISOR: supervisor },
     encoding: "utf8", timeout: 60_000,
   })
@@ -219,6 +227,11 @@ verify().then((result) => console.log(JSON.stringify(result, null, 2)), (error: 
 
 function fail(label: string): never {
   throw new Error(`NIX_DISTRIBUTION_FAILURE:${label}`)
+}
+
+function requireArgument(value: string | undefined) {
+  if (!value) fail("MISSING_OUTPUT_ARGUMENT")
+  return value
 }
 
 function execute(file: string, argv: string[], electron = false) {
