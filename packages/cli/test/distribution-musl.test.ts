@@ -157,7 +157,7 @@ function cleanup() {
   if (state.cleanup) return state.cleanup
   const cleaning = cleanupOwned().catch((cause: unknown) => { state.failure ??= cause; throw cause })
   state.cleanup = cleaning
-  void cleaning.then(() => { state.cleanup = undefined }, () => { state.cleanup = undefined })
+  void cleaning.catch(() => { if (state.cleanup === cleaning) state.cleanup = undefined })
   return cleaning
 }
 
