@@ -19,7 +19,7 @@ const HOSTS = [
   "static.rust-lang.org",
   "static.crates.io",
 ]
-const SKILLS = (await fs.readdir(path.resolve(import.meta.dirname, "../../backend-specialist/skills"), { withFileTypes: true }))
+const SKILLS = (await fs.readdir(path.resolve(import.meta.dirname, "../../../modules/specialists/backend/skills"), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
 const packs = Object.values<BackendToolkitManifest.Pack>(BackendToolkitManifest.ENGINES)
 const runtimes = Object.values(BackendToolkitManifest.RUNTIMES)

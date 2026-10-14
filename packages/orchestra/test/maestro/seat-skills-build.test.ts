@@ -85,7 +85,7 @@ describe("seat skill packaging", () => {
     expect(() => SeatSkillContent.validate("cold", { [entry]: "\ud800" })).toThrow("Nonlossless UTF-8 seat skill content")
   })
 
-  test.each((["bun", "node"] as const).flatMap((target) => (["backend", "jimmy"] as const).map((seat) => ({ target, seat }))))(
+  test.each((["bun", "node"] as const).flatMap((target) => (["backend", "archie", "jimmy"] as const).map((seat) => ({ target, seat }))))(
     "$target compiled bundle extracts the $seat production files map without authored source", async ({ target, seat }) => {
     await using tmp = await tmpdir()
     const result = await bundle(tmp.path, target, await seatSkillsFiles(), seat)
@@ -138,13 +138,17 @@ describe("seat skill packaging", () => {
     await using tmp = await tmpdir()
     const root = path.resolve(import.meta.dir, "../../../..")
     await Bun.write(path.join(tmp.path, ".gitattributes"), Bun.file(path.join(root, ".gitattributes")))
-    const files = Object.fromEntries(["cold", "backend"].flatMap((id) => [
-      [`packages/${id}-specialist/skills/${id}-review/SKILL.md`, valid],
-      [`packages/${id}-specialist/skills/${id}-review/references/notes.md`, "日本語\n"],
-      [`packages/${id}-specialist/skills/${id}-review/references/config.json`, '{"name":"日本語"}\n'],
-      [`packages/${id}-specialist/skills/${id}-review/references/example.ts`, 'export const name = "日本語"\n'],
+    const trees = [
+      ...["cold", "backend"].map((id) => `packages/${id}-specialist/skills/${id}-review`),
+      ...["backend", "archie"].map((id) => `modules/specialists/${id}/skills/${id}-review`),
+    ]
+    const files = Object.fromEntries(trees.flatMap((tree) => [
+      [`${tree}/SKILL.md`, valid],
+      [`${tree}/references/notes.md`, "日本語\n"],
+      [`${tree}/references/config.json`, '{"name":"日本語"}\n'],
+      [`${tree}/references/example.ts`, 'export const name = "日本語"\n'],
     ]))
-    const binary = ["cold", "backend"].map((id) => `packages/${id}-specialist/skills/${id}-review/references/data.bin`)
+    const binary = trees.map((tree) => `${tree}/references/data.bin`)
     const bytes = new Uint8Array([0, 0xff, 10, 13, 10])
     await Promise.all(Object.entries(files).map(([file, text]) => Bun.write(path.join(tmp.path, file), text)))
     await Promise.all(binary.map((file) => Bun.write(path.join(tmp.path, file), bytes)))
