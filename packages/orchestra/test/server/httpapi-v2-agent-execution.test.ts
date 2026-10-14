@@ -21,7 +21,7 @@ import { layer, LocationMiddleware } from "@orchestra/server/location"
 import { authorizationLayer } from "@orchestra/server/middleware/authorization"
 import { schemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { Agent } from "../../src/agent/agent"
-import { AppNodeBuilderV1 } from "../../src/effect/app-node-builder-v1"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { InstanceStore } from "../../src/project/instance-store"
 import { HostAgentExecution } from "../../src/server/routes/instance/httpapi/handlers/agent-execution"
 import { tmpdirScoped } from "../fixture/fixture"
@@ -30,7 +30,7 @@ import { testEffect } from "../lib/effect"
 // Exercise the production handler and middleware with real registries and persisted Instance placement.
 // The lead owns application assembly; this narrow API composes the new adapter without editing server.ts.
 const api = HttpApi.make("server").add(AgentGroup.middleware(LocationMiddleware))
-const services = AppNodeBuilderV1.build(
+const services = NativeSessionFixture.legacy(
   LayerNode.group([Agent.node, InstanceStore.node, FSUtil.node, LocationServiceMap.node]),
 )
 const it = testEffect(Layer.mergeAll(services, NodeHttpServer.layerTest, NodeServices.layer))
