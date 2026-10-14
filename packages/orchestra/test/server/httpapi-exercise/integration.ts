@@ -1,19 +1,11 @@
 import { Effect } from "effect"
-import path from "node:path"
+import { oauthProject } from "../fixtures/oauth-project"
 import { array, check, locationData, object, stable } from "./assertions"
 import { call } from "./backend"
 import { http, route } from "./dsl"
 import { type CallResult, type Scenario, type ScenarioContext } from "./types"
 
 // The real plugin supplies deterministic OAuth callbacks; all attempt state and credentials belong to Core.
-const oauthProject = {
-  git: true,
-  config: {
-    formatter: false as const,
-    lsp: false as const,
-    plugin: [path.resolve(import.meta.dir, "../fixtures/oauth-compat.ts")],
-  },
-}
 const canonicalPath = "/api/integration/attempt/{attemptID}"
 const aliasPath = "/api/integration/{integrationID}/connect/oauth/{attemptID}"
 

@@ -1,17 +1,19 @@
 import { afterAll, expect, test } from "bun:test"
 import { Context } from "effect"
 import { OpenCode } from "@opencode-ai/client/promise"
-import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
 import { tmpdir } from "../fixture/fixture"
+import { oauthProject } from "./fixtures/oauth-project"
+import { httpApiFixture } from "./httpapi-fixture"
 
 const context = Context.empty() as Context.Context<unknown>
-afterAll(() => HttpApiApp.webHandler().dispose())
+const fixture = httpApiFixture()
+afterAll(() => fixture.dispose())
 
 test("missing canonical and alias OAuth status share a typed transport refusal", async () => {
   await using tmp = await tmpdir({ git: true, config: { formatter: false, lsp: false } })
   const replies = []
   for (const route of ["/api/integration/attempt/con_missing", "/api/integration/compat-a/connect/oauth/con_missing"]) {
-    const response = await HttpApiApp.webHandler().handler(
+    const response = await fixture.handler(
       new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
       context,
     )
@@ -23,23 +25,11 @@ test("missing canonical and alias OAuth status share a typed transport refusal",
 }, 30_000)
 
 test("vendored OAuth DELETE cancels only its integration owner and removes canonical attempt state", async () => {
-  await using tmp = await tmpdir({
-    git: true,
-    config: { formatter: false, lsp: false, plugin: ["./oauth-compat.ts"] },
-    init: async (directory) =>
-      Bun.write(
-        `${directory}/oauth-compat.ts`,
-        (await Bun.file(`${import.meta.dir}/fixtures/oauth-compat.ts`).text()).replace(
-          '"effect"',
-          JSON.stringify(Bun.resolveSync("effect", import.meta.dir)),
-        ),
-      ),
-  })
+  await using tmp = await tmpdir(oauthProject)
   const api = OpenCode.make({
     baseUrl: "http://localhost",
     fetch: Object.assign(
-      (input: RequestInfo | URL, init?: RequestInit) =>
-        HttpApiApp.webHandler().handler(new Request(input, init), context),
+      (input: RequestInfo | URL, init?: RequestInit) => fixture.handler(new Request(input, init), context),
       { preconnect() {} },
     ),
   })
@@ -55,7 +45,7 @@ test("vendored OAuth DELETE cancels only its integration owner and removes canon
   const owned = { integrationID: "compat-a", attemptID: attempt.attemptID, location }
   // The raw response assertion detects the old HTML-200 catchall. The vendored client requires
   // NoContent, and ownership must be checked before any cancellation.
-  const wrong = await HttpApiApp.webHandler().handler(
+  const wrong = await fixture.handler(
     new Request(
       `http://localhost/api/integration/compat-b/connect/oauth/${attempt.attemptID}?location[directory]=${encodeURIComponent(tmp.path)}`,
       { method: "DELETE" },
@@ -66,7 +56,7 @@ test("vendored OAuth DELETE cancels only its integration owner and removes canon
   expect(await wrong.json()).toMatchObject({ kind: "integration_attempt_owner" })
   expect((await api.integration.oauth.status(owned)).data.status).toBe("pending")
   await api.integration.oauth.cancel(owned)
-  const canonical = await HttpApiApp.webHandler().handler(
+  const canonical = await fixture.handler(
     new Request(
       `http://localhost/api/integration/attempt/${attempt.attemptID}?location[directory]=${encodeURIComponent(tmp.path)}`,
     ),
@@ -78,18 +68,7 @@ test("vendored OAuth DELETE cancels only its integration owner and removes canon
 }, 60_000)
 
 test("vendored OAuth paths validate authoritative ownership and share canonical attempts", async () => {
-  await using tmp = await tmpdir({
-    git: true,
-    config: { formatter: false, lsp: false, plugin: ["./oauth-compat.ts"] },
-    init: async (directory) =>
-      Bun.write(
-        `${directory}/oauth-compat.ts`,
-        (await Bun.file(`${import.meta.dir}/fixtures/oauth-compat.ts`).text()).replace(
-          '"effect"',
-          JSON.stringify(Bun.resolveSync("effect", import.meta.dir)),
-        ),
-      ),
-  })
+  await using tmp = await tmpdir(oauthProject)
   const requests: string[] = []
   const api = OpenCode.make({
     baseUrl: "http://localhost",
@@ -97,7 +76,7 @@ test("vendored OAuth paths validate authoritative ownership and share canonical 
       async (input: RequestInfo | URL, init?: RequestInit) => {
         const request = new Request(input, init)
         requests.push(new URL(request.url).pathname)
-        return HttpApiApp.webHandler().handler(request, context)
+        return fixture.handler(request, context)
       },
       { preconnect() {} },
     ),
@@ -132,7 +111,7 @@ test("vendored OAuth paths validate authoritative ownership and share canonical 
   })
 
   const canonical = `http://localhost/api/integration/attempt/${attempt.attemptID}?location[directory]=${encodeURIComponent(tmp.path)}`
-  const response = await HttpApiApp.webHandler().handler(new Request(canonical), context)
+  const response = await fixture.handler(new Request(canonical), context)
   expect(response.status).toBe(200)
   expect(await response.json()).toMatchObject({ data: { status: "complete" } })
   expect((await api.integration.get({ integrationID: "compat-a", location })).data?.connections).toHaveLength(1)
@@ -152,7 +131,7 @@ test("vendored OAuth paths validate authoritative ownership and share canonical 
   const canonicalAttempt = (
     await api.integration.oauth.connect({ integrationID: "compat-b", methodID: "code", inputs: {}, location })
   ).data
-  const completed = await HttpApiApp.webHandler().handler(
+  const completed = await fixture.handler(
     new Request(
       `http://localhost/api/integration/attempt/${canonicalAttempt.attemptID}/complete?location[directory]=${encodeURIComponent(tmp.path)}`,
       { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: "ok" }) },
