@@ -16,6 +16,10 @@ import type {
   SessionsActiveOutput,
   SessionsGetInput,
   SessionsGetOutput,
+  SessionsGetSubagentModelsInput,
+  SessionsGetSubagentModelsOutput,
+  SessionsSetSubagentModelsInput,
+  SessionsSetSubagentModelsOutput,
   SessionsSwitchAgentInput,
   SessionsSwitchAgentOutput,
   SessionsSwitchModelInput,
@@ -448,6 +452,29 @@ export function make(options: ClientOptions) {
             path: `/api/session/${encodeURIComponent(input.sessionID)}`,
             successStatus: 200,
             declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      getSubagentModels: (input: SessionsGetSubagentModelsInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsGetSubagentModelsOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/subagent-models`,
+            successStatus: 200,
+            declaredStatuses: [404, 503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      setSubagentModels: (input: SessionsSetSubagentModelsInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsSetSubagentModelsOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/subagent-models`,
+            body: { policy: input["policy"] },
+            successStatus: 200,
+            declaredStatuses: [404, 503, 400, 401],
             empty: false,
           },
           requestOptions,
