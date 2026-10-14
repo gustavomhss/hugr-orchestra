@@ -6,20 +6,20 @@ import { ConflictError, InvalidRequestError, UnknownError } from "@orchestra/pro
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { response } from "../location"
 import { AgentExecution } from "../agent-execution"
+import { response } from "../location"
 
 export const AgentHandler = HttpApiBuilder.group(Api, "server.agent", (handlers) =>
   Effect.gen(function* () {
     // Agent files are read and written with the process-global FSUtil, captured here so it does not
     // leak into per-request requirements that every host would otherwise have to provide.
     const fs = yield* FSUtil.Service
+    const annotate = yield* AgentExecution.Annotate
 
     return handlers
       .handle("agent.list", () =>
         Effect.gen(function* () {
           const agents = yield* AgentV2.Service
-          const annotate = yield* AgentExecution.Annotate
           return yield* response(agents.all().pipe(Effect.flatMap(annotate)))
         }),
       )
