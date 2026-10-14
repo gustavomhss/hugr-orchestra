@@ -12,11 +12,14 @@ import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetyAppContainer } from "./tool-safety-appcontainer"
 import { ToolSafetyGitHost } from "./tool-safety-git-host"
+import { ToolSafetySandboxHomes } from "./tool-safety-sandbox-homes"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 import { SandboxParents } from "./sandbox-parents"
 import { SandboxProjectConfig } from "./sandbox-project-config"
 import { Shell } from "./shell"
 import { TcpProxy } from "./tcp-proxy"
+
+export { toolchain, homeGrants } from "./tool-safety-sandbox-homes"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
 export function environment(input: NodeJS.ProcessEnv = process.env) {
@@ -190,6 +193,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
     path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
     ...(profile?.managedPaths ?? []), ...(profile?.sandbox?.denyPaths ?? []), ...(profile?.neverTouch ?? []),
+    // Deny missing names too: credentials may be created after this policy is allocated.
+    ...(reads ? yield* ToolSafetySandboxHomes.secrets(env, cwd) : []),
   ])]
   const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
   const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
@@ -258,14 +263,10 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Confined reads: the granted roots, the write roots and the host toolchain. A toolchain path inside a denied path
   // stays denied; a granted root inside one (saved tool output under data) is carved out of it.
   const granted = reads ? yield* existing(fs, reads) : []
-  const readable = reads ? [...new Set([...roots, ...granted, ...(yield* existing(fs, [
-    ...toolchain(confined),
-    ...(sandbox.kind === "srt" && sandbox.directory ? [sandbox.directory] : []),
-  ])).flatMap((entry) => {
-    // xcode-select's developer directory lies inside an Xcode bundle, whose Info.plist and frameworks xcrun loads.
-    const bundle = /^(\/.+?\.app)\/Contents\/Developer$/.exec(entry)?.[1]
-    return bundle ? [entry, bundle] : [entry]
-  }).filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
+  const readable = reads ? [...new Set([...roots, ...granted, ...[...(yield* ToolSafetySandboxHomes.contained(fs, ToolSafetySandboxHomes.homeGrants(confined))), ...(yield* ToolSafetySandboxHomes.programRoots(fs, [
+    ...ToolSafetySandboxHomes.programs(confined),
+    ...(sandbox.kind === "srt" && sandbox.directory ? [{ entry: sandbox.directory, prefix: false }] : []),
+  ]))].filter((entry) => !deny.some((denied) => FSUtil.contains(denied, entry)))])] : undefined
   const carved = granted.filter((entry) => deny.some((denied) => denied !== entry && FSUtil.contains(denied, entry)))
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
@@ -313,10 +314,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const policy = path.join(temp, "settings.json")
   // bwrap blocks creating an absent deny path by binding /dev/null there, which its nodev bind makes unreadable:
   // `grep -r`, `ls -l` and `find` fail on the ghost. srt binds a read-only empty directory instead when the absent name
-  // is the parent of another deny path: just as uncreatable, and it reads as empty. Only in an existing directory, where
-  // bwrap can make that mount point.
+  // is the parent of another deny path: just as uncreatable, and it reads as empty. Include srt 0.0.78's mandatory cwd
+  // denies (linuxGetCwdMandatoryDenyPaths), not only Orchestra config. The git leaves apply only to a real .git directory;
+  // a worktree's .git file must never get child mounts. Policy preparation creates no host-side placeholders.
   const absent = process.platform === "linux"
-    ? yield* Effect.filter(guarded, (entry) => fs.isDir(path.dirname(entry)).pipe(
+    ? yield* Effect.filter([...guarded, ...[
+        ".gitconfig", ".gitmodules", ".bashrc", ".bash_profile", ".zshrc", ".zprofile", ".profile", ".ripgreprc", ".mcp.json",
+        ".vscode", ".idea", ".claude/commands", ".claude/agents",
+        ...(yield* fs.isDir(path.join(cwd, ".git"))) ? [".git/hooks", ".git/config"] : [],
+      ].map((entry) => path.join(cwd, entry))], (entry) => fs.isDir(path.dirname(entry)).pipe(
         Effect.map((directory) => directory && !lstatSync(entry, { throwIfNoEntry: false }))))
     : []
   // Plain TCP clients (libpq, SQLx, PGLS) cannot speak CONNECT. This host-written forwarder runs first inside the same
@@ -332,7 +338,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     // srt expands a "/" read deny into the root's children (never /proc, /dev or /sys) and re-mounts allowRead paths.
     // Under confined reads the endpoint forwarder still needs its own script and this process's runtime.
     filesystem: {
-      allowRead: readable ? [...readable, ...(forwarder ? [temp, path.dirname(process.execPath)] : [])] : [],
+      allowRead: readable ? [...readable, ...(forwarder ? [temp] : [])] : [],
       denyRead: readable ? ["/", ...deny, ...nested] : deny,
       allowWrite: roots,
       denyWrite: [...deny, ...guarded, ...(forwarder ? [temp] : []), ...absent.map((entry) => path.join(entry, "orchestra-guard"))],
@@ -525,51 +531,11 @@ const pick = Effect.fnUntraced(function* (start: boolean, pinned = false, comman
     args: [...RUNTIME_FLAGS, ToolSafetySandboxRuntime.cli(runtime.directory)],
     // A compiled Bun binary runs scripts only when told to; Electron runs as Node only when told to.
     env: process.versions.bun ? { BUN_BE_BUN: "1" } : process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {},
-    ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
+    ripgrep: runtime.ripgrep ?? ToolSafetySandboxRuntime.ripgrep(runtime.directory),
     // Confined reads keep the runtime readable: srt starts its seccomp helper from it inside the jail.
     directory: runtime.directory,
   }
 })
-
-// Entries an /etc may hold that programs read to start, resolve users, hosts and time, verify TLS or load libraries.
-// /etc/hostname, machine-id, shadow and ssh are not among them.
-const ETC = [
-  "alternatives", "ca-certificates", "ca-certificates.conf", "crypto-policies", "gai.conf", "gitconfig", "group", "host.conf",
-  "hosts", "ld.so.cache", "ld.so.conf", "ld.so.conf.d", "locale.alias", "locale.conf", "localtime", "lsb-release",
-  "mime.types", "nix", "nsswitch.conf", "os-release", "passwd", "paths", "paths.d", "pki", "protocols", "resolv.conf",
-  "services", "shells", "ssl", "static", "terminfo", "timezone",
-]
-
-/**
- * What a confined-read command may read besides its roots: the system's programs, libraries and essential /etc entries,
- * this process's runtime install, every PATH directory, rustup toolchains and cargo crate sources, and git's global
- * config (git refuses to start when that file exists but cannot be read). A PATH directory named `bin` also exposes its
- * install prefix (node's lib beside its bin), unless that prefix is the home directory or one of its direct children,
- * such as ~/.local or ~/.cargo, which hold user data and credentials. Nothing that contains the home directory is ever
- * listed.
- */
-export function toolchain(env: NodeJS.ProcessEnv = process.env) {
-  // The account's home and the one Orchestra uses (a test home differs); neither is ever exposed.
-  const homes = [...new Set([Global.Path.home, os.homedir()])]
-  const system = process.platform === "darwin"
-    ? ["/usr", "/bin", "/sbin", "/System", "/Library/Apple", "/Library/Developer", "/Library/Frameworks", "/opt", "/nix", "/dev",
-        "/private/var/db/dyld", "/private/var/db/timezone", "/private/var/select", "/private/var/db/xcode_select_link",
-        ...ETC.map((entry) => path.join("/private/etc", entry))]
-    : ["/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/libx32", "/opt", "/nix", ...ETC.map((entry) => path.join("/etc", entry))]
-  const bins = [path.dirname(process.execPath), ...(env.PATH ?? env.Path ?? "").split(path.delimiter).filter((entry) => path.isAbsolute(entry))]
-  const prefixes = bins.filter((entry) => path.basename(entry) === "bin").map((entry) => path.dirname(entry))
-    .filter((prefix) => !homes.includes(path.dirname(prefix)))
-  const git = homes.flatMap((home) => [path.join(home, ".gitconfig"), path.join(home, ".config", "git")])
-  // rustup's cargo and rustc proxies resolve their toolchain under RUSTUP_HOME, and cargo builds read crate sources
-  // from CARGO_HOME's registry and git checkouts. CARGO_HOME's credentials stay unreadable.
-  const rust = [
-    ...(env.RUSTUP_HOME ? [env.RUSTUP_HOME] : homes.map((home) => path.join(home, ".rustup"))),
-    ...(env.CARGO_HOME ? [env.CARGO_HOME] : homes.map((home) => path.join(home, ".cargo")))
-      .flatMap((cargo) => [path.join(cargo, "registry"), path.join(cargo, "git")]),
-  ]
-  return [...system, ...bins, ...prefixes, ...git, ...rust, ...(env.XDG_CONFIG_HOME ? [path.join(env.XDG_CONFIG_HOME, "git")] : [])]
-    .filter((entry) => !homes.some((home) => FSUtil.contains(entry, home)))
-}
 
 /** An exclusively created empty file at a missing write root whose parent exists, with its identity; else undefined. */
 function placeholder(root: string) {
@@ -619,16 +585,7 @@ export function readonlyGoCache(input: string) {
 }
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
-const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, ToolSafety.Denied> {
-  return yield* fs.realPath(target).pipe(
-    Effect.catchReason("PlatformError", "NotFound", () => Effect.gen(function* () {
-      const parent = path.dirname(target)
-      if (parent === target) return yield* new ToolSafety.Denied({ reason: "sandbox-deny-root-acquisition" })
-      return path.join(yield* canonical(fs, parent), path.basename(target))
-    })),
-    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-deny-path-acquisition" })),
-  )
-})
+const canonical = ToolSafetySandboxHomes.canonical
 
 const policyPath = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, entry: string, seatbelt: boolean) {
   const target = path.resolve(directory, entry)

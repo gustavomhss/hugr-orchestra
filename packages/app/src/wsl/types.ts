@@ -29,6 +29,9 @@ export type WslOrchestraCheck = {
   expectedVersion: string | null
   matchesDesktop: boolean | null
   error: string | null
+  // "unfixable": the installed server cannot run and reinstalling would not change that; `error` says why.
+  // "retry": the check itself failed (a WSL command error or timeout); "Check again" repeats it.
+  problem?: "unfixable" | "retry"
 }
 
 export type WslServerConfig = {

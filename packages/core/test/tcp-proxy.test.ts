@@ -12,6 +12,7 @@ import { Flag } from "../src/flag/flag"
 import { Omni } from "../src/omni"
 import { TcpProxy } from "../src/tcp-proxy"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
+import { expectSpawn } from "./fixture/omni-expect"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
@@ -20,6 +21,7 @@ const live = process.platform === "win32" ? it.live.skip : it.live
 // Unix broker cases are skipped on Windows; still exercise the real spawner required by the suite-wide control.
 if (process.platform === "win32") it.live("Windows real AppProcess control runs while Unix broker cases stay skipped", () => Effect.gen(function* () {
   const processes = yield* AppProcess.Service
+  expectSpawn(import.meta.path)
   const before = Omni.snapshot()
   const response = yield* processes.run(ChildProcess.make("node", ["-e", "process.stdout.write('process-control')"]))
   expect(response.exitCode).toBe(0)
@@ -75,6 +77,7 @@ const exchange = (destination: string | { host: string; port: number }, payload 
 
 live("native broker startup uses AppProcess without delegation before client exchange", () => Effect.gen(function* () {
   const one = yield* target()
+  expectSpawn(import.meta.path)
   const before = Omni.snapshot()
   const sockets = yield* TcpProxy.listen([one.port])
   const after = Omni.snapshot()

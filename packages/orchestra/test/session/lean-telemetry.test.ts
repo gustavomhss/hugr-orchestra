@@ -144,13 +144,14 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       sessionID: session.id, callID: tool.callID })
     expect(decision.model).toEqual({ provider: "test", id: "test-model" })
     expect(decision.orchestraProfile).toBe(prefs.scope.profileID)
-    expect(decision.itemID).toBe(name === "bash" && mode !== "unknown" ? "go" : undefined)
-    expect(decision.producer).toBe(["failure", "truncated", "read"].includes(mode) ? "unverified" : "native-shell")
-    expect(decision.eligible).toBe(!["failure", "truncated", "read"].includes(mode))
+    // Lean 2.0 attests failed, truncated and read results too; these small ones stay below the summary thresholds.
+    expect(decision.itemID).toBe(name === "read" ? "read" : mode === "unknown" ? "shell" : "go")
+    expect(decision.producer).toBe(name === "read" ? "native-tool" : "native-shell")
+    expect(decision.eligible).toBe(true)
     expect(decision.status).toBe(mode === "enabled" ? "applied" : "passthrough")
     expect(decision.reason).toBe(mode === "enabled" ? "profile_reduction" : mode === "disabled" ? "disabled"
       : mode === "plugin" || mode === "plugin-error" ? "policy_mapping_changed"
-        : mode === "unknown" ? "no_profile" : "not_eligible")
+        : mode === "unknown" ? "no_profile" : mode === "read" ? "not_smaller" : "below_threshold")
     expect(decision.filterProfile).toBe(mode === "enabled" ? "go-test-verbose" : undefined)
     expect(decision.bytes).toEqual({ before: Buffer.byteLength(approved.output, "utf8"),
       after: Buffer.byteLength(stored, "utf8"), saved: Buffer.byteLength(approved.output, "utf8") - Buffer.byteLength(stored, "utf8") })
@@ -160,7 +161,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
     expect(Number.isFinite(decision.durationMs)).toBe(true)
     expect(decision.durationMs).toBeGreaterThanOrEqual(0)
     expect(Object.keys(lean as object).sort()).toEqual(["bytes", "durationMs", "eligible", "engine",
-      ...(mode === "enabled" ? ["filterProfile"] : []), ...(name === "bash" && mode !== "unknown" ? ["itemID"] : []),
+      ...(mode === "enabled" ? ["filterProfile"] : []), "itemID",
       "orchestraProfile", "model", "owner", "producer", "reason", "scope", "status", "tokens", "version"].sort())
     for (const privateText of ["go test", "PRIVATE_METRIC_PAYLOAD", "PRIVATE_POLICY_NOTE", "synthetic-key", "example.test"])
       expect(JSON.stringify(lean)).not.toContain(privateText)
@@ -192,20 +193,21 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       })
       const binding = LegacyLeanCapture.bind(raw, raw, decision.owner)
       expect(binding).toBeDefined()
-      const baseline = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
+      const project = (value: Parameters<typeof LegacyLeanOutput.project>[0]) => Effect.promise(() => LegacyLeanOutput.project(value))
+      const baseline = yield* project({ output: raw, binding, owner: decision.owner, enabled: true,
         limits: { maxLines: 10000, maxBytes: 1000000 } })
       expect(baseline.output).not.toContain("=== RUN")
       if (budget) {
         const approved = { ...raw, output: `${raw.output}\n\nPOLICY SUFFIX 😀` }
         const telemetry = { owner: decision.owner, model: decision.model }
-        const selected = LegacyLeanOutput.project({ output: approved, binding, owner: decision.owner, enabled: true,
+        const selected = yield* project({ output: approved, binding, owner: decision.owner, enabled: true,
           limits: { maxLines: 10000, maxBytes: 1000000 }, telemetry })
         expect(selected.output).toBe(`${baseline.output}\n\nPOLICY SUFFIX 😀`)
         expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))?.status).toBe("applied")
         const limits = budget === "lines" ? { maxLines: 1, maxBytes: 1000000 } : { maxLines: 10000, maxBytes: 1 }
         const input = { output: approved, binding, owner: decision.owner, enabled: true, limits }
-        expect(LegacyLeanOutput.project(input)).toBe(approved)
-        const declined = LegacyLeanOutput.project({ ...input, telemetry })
+        expect(yield* project(input)).toBe(approved)
+        const declined = yield* project({ ...input, telemetry })
         expect(declined.output).toBe(approved.output)
         expect(LeanMetrics.decode(Reflect.get(declined.metadata, "lean"))).toMatchObject({ eligible: true,
           status: "passthrough", reason: `projection_budget_max_${budget}`, bytes: { saved: 0 } })
@@ -213,7 +215,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       }
       const originalMetadata = { ...raw.metadata }
       const fault = { writes: 0 }
-      const selected = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
+      const selected = yield* project({ output: raw, binding, owner: decision.owner, enabled: true,
         limits: { maxLines: 10000, maxBytes: 1000000 }, telemetry: {
           get owner() {
             // Inject a one-shot copy fault only after genuine native selection has settled.

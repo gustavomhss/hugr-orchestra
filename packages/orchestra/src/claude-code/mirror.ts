@@ -1,9 +1,10 @@
+export * as ClaudeCodeMirror from "./mirror"
+
 // Mirrors one Claude Code turn into Orchestra's session: the same message and part writes the processor makes, so the
-// UI, the database, revert and the archive need no change.
+// UI, the database, revert and the archive need no change. host/mirror.ts builds on it for a Claude-hosted session.
 // - One Orchestra assistant message per Claude API message (`message.id`); Claude Code streams it block by block.
 // - Claude Code's own tool parts carry `metadata.providerExecuted`: Claude Code runs them, so Orchestra's loop never
-//   waits on them. Orchestra's in-process tools (tools.ts) do not: Orchestra ran them, and the governance that reads a
-//   `task` call (work results, settlement, provenance) accepts only calls Orchestra executed.
+//   waits on them. Orchestra's MCP tools (tools.ts) do not: Orchestra ran them.
 // - Each assistant message is a step: `step-start`/`step-finish` with snapshots and a `patch` part, as the processor
 //   writes them, so revert restores files whichever tool changed them.
 import { Effect } from "effect"
@@ -11,6 +12,7 @@ import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { AbortedError } from "@orchestra/core/v1/session"
 import { NamedError } from "@orchestra/core/util/error"
+import { ModelV2 } from "@orchestra/core/model"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import type { Snapshot } from "@/snapshot"
@@ -31,11 +33,14 @@ const FINISH: Record<string, string> = {
 }
 
 type Usage = { input_tokens?: number | null; output_tokens?: number | null;
-  cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null }
+  cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null;
+  output_tokens_details?: { thinking_tokens?: number | null } | null }
 
 type Step = {
   info: SessionV1.Assistant
   apiID: string
+  /** A model from an actual SDK assistant frame, not the requested model fallback. */
+  model?: string
   start?: string
   /** Text and reasoning parts by stream block index, with the text received so far. */
   blocks: Map<number, { part: SessionV1.TextPart | SessionV1.ReasoningPart }>
@@ -53,7 +58,6 @@ export function create(input: {
   sessions: Session.Interface
   snapshot: Snapshot.Interface
   record?: (input: { apiID?: string; uuid?: string; messageID: MessageID }) => Effect.Effect<void>
-  onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>
 }) {
   const { sessionID, sessions, snapshot } = input
   const tools = new Map<string, SessionV1.ToolPart>()
@@ -61,8 +65,16 @@ export function create(input: {
   const uuids = new Map<string, MessageID>()
   let step: Step | undefined
   let last: SessionV1.Assistant | undefined
-  let cost = 0
+  let lastFinish: SessionV1.StepFinishPart | undefined
+  let lastModel: string | undefined
+  let costModel: string | undefined
+  let costOwner: MessageID | undefined
+  let costReceipt: PartID | undefined
+  let pendingCostOwner = false
+  let cost: number | undefined
+  let rejectedBaseline: number | undefined
   let ended = false
+  let parentID = input.user.id
 
   const open = (apiID: string) => Effect.gen(function* () {
     if (step?.apiID === apiID) return step
@@ -71,7 +83,7 @@ export function create(input: {
       return yield* Effect.die(new Error("Claude Code began a step before prior tools finished"))
     yield* close()
     const info: SessionV1.Assistant = {
-      id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
+      id: MessageID.ascending(), sessionID, parentID, role: "assistant",
       mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, variant: input.user.model.variant,
       path: input.path, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       modelID: input.user.model.modelID, providerID: input.user.model.providerID, time: { created: Date.now() },
@@ -104,13 +116,18 @@ export function create(input: {
     const now = Date.now()
     for (const part of current.open) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
     const usage = current.usage
-    const tokens = { input: usage.input_tokens ?? 0, output: usage.output_tokens ?? 0, reasoning: 0,
+    const reasoning = exactReasoning(usage)
+    const tokens = { input: usage.input_tokens ?? 0, output: Math.max(0, (usage.output_tokens ?? 0) - reasoning), reasoning,
       cache: { read: usage.cache_read_input_tokens ?? 0, write: usage.cache_creation_input_tokens ?? 0 } }
     // A failed step still finishes ("error"), so the loop sees the turn answered and ends.
     const finish = error ? "error" : FINISH[current.stop ?? ""] ?? "other"
     const end = yield* snapshot.track()
-    yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: current.info.id, type: "step-finish",
-      reason: finish, snapshot: end, cost: 0, tokens })
+    const part: SessionV1.StepFinishPart = { id: PartID.ascending(), sessionID, messageID: current.info.id, type: "step-finish",
+      reason: finish, snapshot: end, cost: 0, tokens }
+    yield* sessions.updatePart(part)
+    lastFinish = part
+    lastModel = current.model
+    if (costOwner === current.info.id) costReceipt = part.id
     if (current.start) {
       const patch = yield* snapshot.patch(current.start)
       if (patch.files.length)
@@ -120,9 +137,6 @@ export function create(input: {
     current.info = { ...current.info, tokens, finish, error, time: { ...current.info.time, completed: now } }
     yield* sessions.updateMessage(current.info)
     last = current.info
-    if (!error && ["stop", "tool-calls"].includes(finish) && !current.open.length && input.onStep &&
-      ![...tools.values()].some((part) => part.messageID === current.info.id &&
-        (part.state.status === "pending" || part.state.status === "running"))) yield* input.onStep(current.info)
   })
 
   const toolResult = (block: { tool_use_id: string; content?: unknown; is_error?: boolean | null }) => Effect.gen(function* () {
@@ -139,7 +153,8 @@ export function create(input: {
     })
     const start = part.state.status === "running" ? part.state.time.start : Date.now()
     const next: SessionV1.ToolPart = block.is_error
-      ? { ...part, state: { status: "error", input: part.state.input, error: output || "Tool failed", time: { start, end: Date.now() } } }
+      ? { ...part, state: { status: "error", input: part.state.input, error: output || "Tool failed",
+          metadata: { ...(part.state.status === "running" ? part.state.metadata : {}), output }, time: { start, end: Date.now() } } }
       : { ...part, state: { status: "completed", input: part.state.input, output,
           title: String((part.state.input as Record<string, unknown>).description ?? (part.state.input as Record<string, unknown>).command ?? part.tool),
           metadata: { output }, attachments, time: { start, end: Date.now() } } }
@@ -152,23 +167,63 @@ export function create(input: {
     on: (message: SDKMessage) => Effect.gen(function* () {
       if (ended) return
       if (message.type === "result") {
-        if ("total_cost_usd" in message && typeof message.total_cost_usd === "number") cost = message.total_cost_usd
-        if (!step && message.subtype === "success") {
+        cost = undefined
+        costModel = undefined
+        costOwner = step?.info.id ?? last?.id
+        costReceipt = costOwner === last?.id ? lastFinish?.id : undefined
+        pendingCostOwner = costOwner === undefined
+        // The result observer may overwrite this scalar before finish; retain it for rejected ownership too.
+        const stored = yield* sessions.get(sessionID).pipe(Effect.orDie)
+        const previous = stored.metadata?.claudeCode?.cost
+        rejectedBaseline = typeof previous === "number" && Number.isFinite(previous) && previous >= 0 ? previous : undefined
+        if (Number.isFinite(message.total_cost_usd) && message.total_cost_usd >= 0) {
+          const model = step?.model ?? lastModel
+          const expected = model ?? input.user.model.modelID
+          const reported = Object.entries(message.modelUsage ?? {}).find(([id, usage]) =>
+            id === expected || usage.canonicalModel === expected)?.[1]
+          const priced = Object.values(message.modelUsage ?? {}).every((usage) =>
+            usage.costBasis !== "unknown" && Number.isFinite(usage.costUSD) && usage.costUSD >= 0)
+          // No-frame errors may use a matching reported model total, never the requested model alone.
+          // Host owns query replay/reset admission; this mirror only projects the admitted allocation.
+          costModel = message.modelUsage === undefined ? model
+            : reported && priced ? expected : undefined
+          // A reported zero resets the cumulative baseline without claiming priced model work.
+          if (costModel || message.total_cost_usd === 0) cost = message.total_cost_usd
+        }
+        if (!step && !last && message.subtype === "success") {
           const current = yield* open(`result:${message.uuid}`)
+          if (pendingCostOwner) {
+            costOwner = current.info.id
+            pendingCostOwner = false
+          }
           if (message.result) {
             const part = yield* text(current, "text", false)
             yield* sessions.updatePart({ ...part, text: message.result, time: { start: Date.now(), end: Date.now() } })
           }
         }
         if (step && message.stop_reason) step.stop = message.stop_reason
+        if (!step && last && lastFinish && costOwner === last.id && costReceipt === lastFinish.id &&
+          message.stop_reason && last.finish !== "error") {
+          const finish = FINISH[message.stop_reason] ?? last.finish ?? "other"
+          const receipt = { ...lastFinish, reason: finish }
+          const info = { ...last, finish }
+          yield* sessions.updatePart(receipt)
+          yield* sessions.updateMessage(info)
+          lastFinish = receipt
+          last = info
+        }
         return
       }
-      // Claude Code's own subagent frames are not mirrored: its Task is disallowed; Orchestra's task runs a child session.
+      // A subagent's frames belong to its seat's child session: host/mirror.ts hands them to that session's mirror.
       if ("parent_tool_use_id" in message && message.parent_tool_use_id) return
       if (message.type === "stream_event") {
         const event = message.event
         if (event.type === "message_start") {
+          pendingCostOwner = false
           const current = yield* open(event.message.id)
+          current.model = event.message.model || current.model
+          current.info = { ...current.info, modelID: ModelV2.ID.make(event.message.model || current.info.modelID) }
+          yield* sessions.updateMessage(current.info)
           current.usage = { ...current.usage, ...event.message.usage }
           return
         }
@@ -191,7 +246,11 @@ export function create(input: {
         return
       }
       if (message.type === "assistant") {
+        pendingCostOwner = false
         const current = yield* open(message.message.id)
+        current.model = message.message.model || current.model
+        current.info = { ...current.info, modelID: ModelV2.ID.make(message.message.model || current.info.modelID) }
+        yield* sessions.updateMessage(current.info)
         uuids.set(message.uuid, current.info.id)
         if (input.record) yield* input.record({ apiID: message.message.id, uuid: message.uuid, messageID: current.info.id })
         current.usage = { ...current.usage, ...message.message.usage }
@@ -224,12 +283,28 @@ export function create(input: {
 
     /** The open step's message, and a mirrored tool call by its `tool_use_id`. */
     current: () => step?.info,
+    /** A receipt may first arrive with the complete assistant for an already-open stream. */
+    parent: (next: MessageID) => Effect.gen(function* () {
+      parentID = next
+      if (!step) return
+      step.info = { ...step.info, parentID: next }
+      yield* sessions.updateMessage(step.info)
+    }),
     tool: (callID: string) => tools.get(callID),
     retract: (ids: readonly string[]) => Effect.gen(function* () {
       const messages = new Set(ids.flatMap((id) => uuids.get(id) ? [uuids.get(id) as MessageID] : []))
       for (const messageID of messages) {
+        if (costOwner === messageID) {
+          costOwner = undefined
+          costReceipt = undefined
+          pendingCostOwner = false
+        }
         if (step?.info.id === messageID) step = undefined
-        if (last?.id === messageID) last = undefined
+        if (last?.id === messageID) {
+          last = undefined
+          lastFinish = undefined
+          lastModel = undefined
+        }
         for (const [callID, part] of tools) if (part.messageID === messageID) tools.delete(callID)
         yield* sessions.removeMessage({ sessionID, messageID })
       }
@@ -252,14 +327,23 @@ export function create(input: {
       yield* sessions.updatePart(part)
     }),
 
-    /** The turn ended: close the last step and put the turn's cost on it. */
+    /** Host serializes on/finish/retract; receipt replacement does not synchronize concurrent callers. */
     finish: (previousCost: number) => Effect.gen(function* () {
       yield* close()
-      if (last && cost > previousCost) {
-        last = { ...last, cost: cost - previousCost }
-        yield* sessions.updateMessage(last)
+      const owned = last !== undefined && lastFinish !== undefined && costOwner === last.id &&
+        costReceipt === lastFinish.id && lastFinish.messageID === last.id && costModel === last.modelID
+      if (cost !== undefined && last && lastFinish && owned &&
+        Number.isFinite(previousCost) && previousCost >= 0 && cost > previousCost && last.cost !== cost - previousCost) {
+        // Core aggregates parts, not assistant.cost. Reuse this receipt so retries replace, never append usage.
+        const receipt = { ...lastFinish, cost: cost - previousCost }
+        yield* sessions.updatePart(receipt)
+        const info = { ...last, cost: cost - previousCost }
+        yield* sessions.updateMessage(info)
+        lastFinish = receipt
+        last = info
       }
-      return { cost, last }
+      // Undefined means no accepted total, whereas an accepted zero is a genuine producer reset.
+      return { cost: cost !== undefined && (owned || cost === 0) ? cost : rejectedBaseline ?? previousCost, last }
     }),
 
     /** The turn failed or was cancelled: running tools are aborted and the open step carries the error. */
@@ -268,10 +352,13 @@ export function create(input: {
       ended = true
       const now = Date.now()
       const current = step
+      const retained = !current && last?.id === costOwner && lastFinish?.messageID === last?.id ? last : undefined
+      const retainedFinish = retained ? lastFinish : undefined
       for (const part of tools.values()) {
         if (part.state.status !== "running" && part.state.status !== "pending") continue
         const aborted: SessionV1.ToolPart = { ...part, metadata: { ...part.metadata, interrupted: true },
           state: { status: "error", input: part.state.input, error: "Tool execution aborted",
+            metadata: { ...(part.state.status === "running" ? part.state.metadata : {}), aborted: true },
             time: { start: part.state.status === "running" ? part.state.time.start : now, end: now } } }
         tools.set(part.callID, aborted)
         yield* sessions.updatePart(aborted)
@@ -279,24 +366,39 @@ export function create(input: {
       const error = cause.aborted
         ? new AbortedError({ message: cause.message }).toObject()
         : new NamedError.Unknown({ message: cause.message }).toObject()
-      // Persist the failure before best-effort snapshots, without touching the failed native store.
-      const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
+      // Persist the failure before best-effort snapshots.
+      const info: SessionV1.Assistant = current?.info ?? retained ?? { id: MessageID.ascending(), sessionID, parentID, role: "assistant",
         mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, path: input.path,
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: now } }
       const usage = current?.usage
-      const tokens = { input: usage?.input_tokens ?? 0, output: usage?.output_tokens ?? 0, reasoning: 0,
+      const reasoning = exactReasoning(usage)
+      const tokens = retained?.tokens ?? { input: usage?.input_tokens ?? 0, output: Math.max(0, (usage?.output_tokens ?? 0) - reasoning), reasoning,
         cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
       for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
       last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
+      lastModel = current?.model ?? (retained ? lastModel : undefined)
       step = undefined
       yield* sessions.updateMessage(last)
-      // Native persistence is not part of this path. Healthy snapshots still retain actual undo evidence on Stop.
+      // Healthy snapshots still retain actual undo evidence on Stop.
       const patch = current?.start ? yield* snapshot.patch(current.start).pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       const end = current?.start ? yield* snapshot.track().pipe(Effect.catchCause(() => Effect.succeed(undefined))) : undefined
       if (patch?.files.length) yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "patch", hash: patch.hash, files: patch.files })
-      yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end })
+      lastFinish = retainedFinish ? { ...retainedFinish, reason: "error", tokens: last.tokens }
+        : { id: PartID.ascending(), sessionID, messageID: last.id, type: "step-finish", reason: "error", cost: 0, tokens: last.tokens, snapshot: end }
+      yield* sessions.updatePart(lastFinish)
+      if (pendingCostOwner) {
+        costOwner = last.id
+        pendingCostOwner = false
+      }
+      if (costOwner === last.id) costReceipt = lastFinish.id
       return last
     }),
   }
+}
+
+// Thinking is a subset of output. Missing or invalid per-message details remain unallocated.
+function exactReasoning(usage: Usage | undefined) {
+  const tokens = usage?.output_tokens_details?.thinking_tokens
+  return typeof tokens === "number" && Number.isFinite(tokens) && tokens >= 0 && tokens <= (usage?.output_tokens ?? 0) ? tokens : 0
 }

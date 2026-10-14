@@ -1,4 +1,5 @@
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -19,8 +20,47 @@ const DefaultSessionHistoryLimit = 50
 export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handlers) =>
   Effect.gen(function* () {
     const session = yield* SessionV2.Service
+    const subagentModels = yield* SessionSubagentModels.Service
+
+    const policyResult = <A>(effect: Effect.Effect<A, SessionSubagentModels.Error>) =>
+      effect.pipe(
+        Effect.catchTag(
+          "SessionSubagentModels.NotFoundError",
+          (error) =>
+            new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
+        ),
+        Effect.catchTags({
+          "SessionSubagentModels.StorageError": () =>
+            new ServiceUnavailableError({
+              service: "session-subagent-models",
+              message: "Session model policy storage is unavailable",
+            }),
+          "SessionSubagentModels.InvalidChainError": () =>
+            new ServiceUnavailableError({
+              service: "session-subagent-models",
+              message: "Session model policy ancestry is invalid",
+            }),
+          "SessionSubagentModels.ModelDeniedError": () =>
+            new ServiceUnavailableError({
+              service: "session-subagent-models",
+              message: "Session model policy could not be evaluated",
+            }),
+        }),
+      )
 
     return handlers
+      .handle(
+        "session.getSubagentModels",
+        Effect.fn(function* (ctx) {
+          return { data: yield* policyResult(subagentModels.get(ctx.params.sessionID)) }
+        }),
+      )
+      .handle(
+        "session.setSubagentModels",
+        Effect.fn(function* (ctx) {
+          return { data: yield* policyResult(subagentModels.set(ctx.params.sessionID, ctx.payload.policy)) }
+        }),
+      )
       .handle(
         "session.list",
         Effect.fn(function* (ctx) {

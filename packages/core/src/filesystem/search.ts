@@ -2,7 +2,7 @@ export * as FileSystemSearch from "./search"
 
 import { makeLocationNode } from "../effect/app-node"
 import path from "path"
-import { Context, Effect, Layer } from "effect"
+import { Context, Deferred, Effect, Exit, Layer, Schema, Scope } from "effect"
 import { Fff } from "#fff"
 import fuzzysort from "fuzzysort"
 import { FileSystem } from "../filesystem"
@@ -12,13 +12,20 @@ import { Ripgrep } from "../ripgrep"
 import { RelativePath } from "../schema"
 import { Flag } from "../flag/flag"
 
+/** A search that could not run, with ripgrep's reason (missing, still downloading, an invalid pattern). */
+export class SearchError extends Schema.TaggedErrorClass<SearchError>()("FileSystem.SearchError", {
+  message: Schema.String,
+}) {}
+
 export interface Interface {
-  readonly find: (input: FileSystem.FindInput) => Effect.Effect<FileSystem.Entry[]>
-  readonly glob: (input: FileSystem.GlobInput) => Effect.Effect<readonly FileSystem.Entry[]>
-  readonly grep: (input: FileSystem.GrepInput) => Effect.Effect<readonly FileSystem.Match[]>
+  readonly find: (input: FileSystem.FindInput) => Effect.Effect<FileSystem.Entry[], SearchError>
+  readonly glob: (input: FileSystem.GlobInput) => Effect.Effect<readonly FileSystem.Entry[], SearchError>
+  readonly grep: (input: FileSystem.GrepInput) => Effect.Effect<readonly FileSystem.Match[], SearchError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileSystem/Search") {}
+
+const searchError = (error: { readonly message: string }) => new SearchError({ message: error.message })
 
 export const ripgrepLayer = Layer.effect(
   Service,
@@ -26,25 +33,60 @@ export const ripgrepLayer = Layer.effect(
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
     const ripgrep = yield* Ripgrep.Service
+    const scope = yield* Scope.Scope
     const state = {
       files: [] as string[],
       directories: [] as string[],
+      index: Deferred.makeUnsafe<void, SearchError>(),
     }
-    const directories = new Set<string>()
-    yield* ripgrep
-      .find({
-        cwd: location.directory,
-        pattern: "*",
-        limit: location.vcs ? Number.MAX_SAFE_INTEGER : 100_000,
-        onEntry: (entry) =>
-          Effect.sync(() => {
-            state.files.push(entry.path)
-            const parts = entry.path.split("/")
-            parts.slice(0, -1).forEach((_, index) => directories.add(parts.slice(0, index + 1).join("/") + path.sep))
-            state.directories = Array.from(directories)
-          }),
-      })
-      .pipe(Effect.orDie, Effect.asVoid)
+
+    // Builds the file index in the background, so opening a Location never waits for ripgrep. The check and the
+    // registration are one synchronous step, so concurrent callers share one scan.
+    const start = () => {
+      const done = Deferred.makeUnsafe<void, SearchError>()
+      state.index = done
+      const files: string[] = []
+      const directories = new Set<string>()
+      return ripgrep
+        .find({
+          cwd: location.directory,
+          pattern: "*",
+          limit: location.vcs ? Number.MAX_SAFE_INTEGER : 100_000,
+          onEntry: (entry) =>
+            Effect.sync(() => {
+              files.push(entry.path)
+              const parts = entry.path.split("/")
+              parts.slice(0, -1).forEach((_, index) => directories.add(parts.slice(0, index + 1).join("/") + path.sep))
+            }),
+        })
+        .pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              state.files = files
+              state.directories = Array.from(directories)
+            }),
+          ),
+          Effect.asVoid,
+          Effect.mapError(searchError),
+          Effect.tapError((error) => Effect.logWarning("failed to index files with ripgrep", { error: error.message })),
+          Effect.exit,
+          Effect.flatMap((exit) => Deferred.done(done, exit)),
+          Effect.forkIn(scope),
+          Effect.as(done),
+        )
+    }
+    yield* start()
+
+    // Waits for the index. A failed index is rebuilt once per call, so find recovers when ripgrep becomes available
+    // (ripgrep's own cooldown keeps a failing rebuild cheap); if it still fails, find fails with the reason.
+    const indexed = Effect.gen(function* () {
+      const attempt = state.index
+      const first = yield* Effect.exit(Deferred.await(attempt))
+      if (Exit.isSuccess(first)) return
+      const retry = yield* Effect.suspend(() => (state.index === attempt ? start() : Effect.succeed(state.index)))
+      yield* Deferred.await(retry)
+    })
+
     return Service.of({
       glob: (input) =>
         Effect.gen(function* () {
@@ -66,7 +108,7 @@ export const ripgrepLayer = Layer.effect(
                   }),
                 ),
               ),
-              Effect.orDie,
+              Effect.mapError(searchError),
             )
         }),
       grep: (input) =>
@@ -94,11 +136,12 @@ export const ripgrepLayer = Layer.effect(
                   }),
                 ),
               ),
-              Effect.orDie,
+              Effect.mapError(searchError),
             )
         }),
       find: (input) =>
         Effect.gen(function* () {
+          yield* indexed
           const items =
             input.type === "file"
               ? state.files
