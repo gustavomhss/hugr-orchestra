@@ -17,8 +17,15 @@ export type ArtifactNative = {
   close(): void
 }
 
-export function artifactNativeError(operation: string, code: string | number): never {
-  throw Object.assign(new Error(`Artifact native ${operation} failed: ${code}`), { code })
+export function artifactNativeError(
+  operation: string,
+  code: string | number,
+  details?: { result: number; errno: number; parent: number; leaf: string; output?: string },
+): never {
+  throw Object.assign(
+    new Error(`Artifact native ${operation} failed: ${code}${details ? ` ${JSON.stringify(details)}` : ""}`),
+    { code, ...details },
+  )
 }
 
 export function requireArtifactLeaf(name: string) {

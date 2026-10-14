@@ -16,10 +16,12 @@ export type ArtifactPosixInput = {
 }
 
 export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
-  const check = (value: number, operation: string) => {
+  const check = (value: number, operation: string, parent: number, leaf: string, output?: string) => {
     if (value >= 0) return value
     const errno = input.errno()
-    return artifactNativeError(operation, errno === 2 ? "ENOENT" : errno === 17 ? "EEXIST" : errno)
+    return artifactNativeError(operation, errno === 2 ? "ENOENT" : errno === 17 ? "EEXIST" : errno, {
+      result: value, errno, parent, leaf, ...(output === undefined ? {} : { output }),
+    })
   }
   const identity = (fd: number) => {
     const stat = fstatSync(fd, { bigint: true })
@@ -37,7 +39,7 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
   }
   const file = (parent: ArtifactDirectory, name: string) => {
     requireArtifactLeaf(name)
-    const fd = check(input.open(Number(parent.handle), name, input.flags.read, 0), "open file")
+    const fd = check(input.open(Number(parent.handle), name, input.flags.read, 0), "open file", Number(parent.handle), name)
     return artifactOwnedHandle(
       fd,
       (fd) => {
@@ -50,7 +52,7 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
   return {
     root: (path) => {
       if (path !== "/") throw new Error("Artifact POSIX root acquisition requires filesystem root")
-      return directory(check(input.open(-1, path, input.flags.root, 0), "open root"))
+      return directory(check(input.open(-1, path, input.flags.root, 0), "open root", -1, path))
     },
     directory: (parent, name, options = {}) => {
       requireArtifactLeaf(name)
@@ -58,9 +60,11 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
         const result = input.mkdir(Number(parent.handle), name)
         const errno = result < 0 ? input.errno() : 0
         if (result < 0 && (options.exclusive || errno !== 17))
-          artifactNativeError("mkdir", errno === 17 ? "EEXIST" : errno)
+          artifactNativeError("mkdir", errno === 17 ? "EEXIST" : errno, {
+            result, errno, parent: Number(parent.handle), leaf: name,
+          })
       }
-      return directory(check(input.open(Number(parent.handle), name, input.flags.directory, 0), "open directory"))
+      return directory(check(input.open(Number(parent.handle), name, input.flags.directory, 0), "open directory", Number(parent.handle), name))
     },
     read: (parent, name) => {
       const fd = file(parent, name)
@@ -86,7 +90,7 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
     },
     write: (parent, name, bytes, executable) => {
       requireArtifactLeaf(name)
-      const fd = check(input.open(Number(parent.handle), name, input.flags.write, 0o600), "create file")
+      const fd = check(input.open(Number(parent.handle), name, input.flags.write, 0o600), "create file", Number(parent.handle), name)
       try {
         if (!fstatSync(fd).isFile()) throw new Error("Artifact stage must be regular")
         for (let offset = 0; offset < bytes.length; ) {
@@ -106,10 +110,10 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
       // Stable, exclusively build-owned namespace; cooperating producers only.
       // Defense in depth, not source-name CAS: an authorized hostile actor can
       // replace this entry between the identity check and the native rename.
-      const current = check(input.open(Number(parent.handle), name, input.flags.directory, 0), "reopen stage")
+      const current = check(input.open(Number(parent.handle), name, input.flags.directory, 0), "reopen stage", Number(parent.handle), name)
       try {
         if (identity(current) !== directory.identity) throw new Error("Artifact staging identity changed")
-        check(input.publish(Number(parent.handle), name, output), "exclusive publication")
+        check(input.publish(Number(parent.handle), name, output), "exclusive publication", Number(parent.handle), name, output)
       } finally {
         closeSync(current)
       }
@@ -117,17 +121,17 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
     removeFile: (parent, name) => {
       requireArtifactLeaf(name)
       const result = input.unlink(Number(parent.handle), name, false)
-      if (result < 0 && input.errno() !== 2) check(result, "unlink file")
+      if (result < 0 && input.errno() !== 2) check(result, "unlink file", Number(parent.handle), name)
     },
     removeDirectory: (parent, name, pinned) => {
       // Same controlled-build boundary. This precheck is not inode/name CAS
       // and cannot protect name-based unlink from an authorized hostile writer.
       const fd = input.open(Number(parent.handle), name, input.flags.directory, 0)
       if (fd < 0 && input.errno() === 2) return
-      check(fd, "reopen cleanup directory")
+      check(fd, "reopen cleanup directory", Number(parent.handle), name)
       try {
         if (identity(fd) !== pinned.identity) throw new Error("Artifact cleanup directory identity changed")
-        check(input.unlink(Number(parent.handle), name, true), "unlink directory")
+        check(input.unlink(Number(parent.handle), name, true), "unlink directory", Number(parent.handle), name)
       } finally {
         closeSync(fd)
       }
