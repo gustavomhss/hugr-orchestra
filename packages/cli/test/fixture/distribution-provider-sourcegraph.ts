@@ -2,20 +2,33 @@ import { Schema } from "effect"
 import ts from "typescript"
 import { builtinModules } from "node:module"
 import { lstat, readFile, realpath } from "node:fs/promises"
-import { basename, extname, join, relative, resolve, sep } from "node:path"
+import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
 import { cli, sha256, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
 
 const Edge = Schema.Struct({ path: Schema.String, kind: Schema.String, original: Schema.optional(Schema.String), external: Schema.optional(Schema.Boolean) })
+const CapturedFile = Schema.Struct({ path: Schema.String, sha256: Schema.String, gitBlob: Schema.String, bytes: Schema.Number })
+const Metafile = Schema.Struct({
+  inputs: Schema.Record(Schema.String, Schema.Struct({ bytes: Schema.Number, imports: Schema.Array(Edge), format: Schema.optional(Schema.String) })),
+  outputs: Schema.Record(Schema.String, Schema.Struct({ bytes: Schema.Number, inputs: Schema.Record(Schema.String,
+    Schema.Struct({ bytesInOutput: Schema.Number })), imports: Schema.Array(Edge), exports: Schema.Array(Schema.String), entryPoint: Schema.optional(Schema.String) })),
+})
 const Receipt = Schema.Struct({
-  schema: Schema.Literal("orchestra-compile-evidence-v1"), bun: Schema.Literal("1.3.14"), cwd: Schema.String,
+  schema: Schema.Literal("orchestra-compile-evidence-v2"), bun: Schema.Literal("1.3.14"), cwd: Schema.String,
   version: Schema.String, target: Schema.String, entrypoints: Schema.Array(Schema.String),
   binary: Schema.Struct({ path: Schema.String, sha256: Schema.String }),
-  inputs: Schema.Array(Schema.Struct({ key: Schema.String, path: Schema.String, sha256: Schema.String, gitBlob: Schema.String, bytes: Schema.Number })),
-  metafile: Schema.Struct({
-    inputs: Schema.Record(Schema.String, Schema.Struct({ bytes: Schema.Number, imports: Schema.Array(Edge), format: Schema.optional(Schema.String) })),
-    outputs: Schema.Record(Schema.String, Schema.Struct({ bytes: Schema.Number, inputs: Schema.Record(Schema.String,
-      Schema.Struct({ bytesInOutput: Schema.Number })), imports: Schema.Array(Edge), exports: Schema.Array(Schema.String), entryPoint: Schema.optional(Schema.String) })),
+  inputs: Schema.Array(Schema.Struct({ ...CapturedFile.fields,
+    key: Schema.String, analysisKey: Schema.String, capture: Schema.Literal("raw-resolved-file"),
+    analysisBytes: Schema.Number, compilerBytes: Schema.Number,
+    transform: Schema.Literals(["bun-native", "solid-runtime-replacement", "solid-jsx-babel"]),
+    backing: Schema.optional(CapturedFile), packageFile: Schema.optional(CapturedFile),
+    packageVersion: Schema.optional(Schema.String), loader: Schema.optional(Schema.Literal("js")),
+  })),
+  metafile: Metafile, analysisMetafile: Metafile,
+  transformLedger: Schema.Struct({
+    toolchain: Schema.Struct({ name: Schema.Literal("@opentui/solid"), version: Schema.Literal("0.4.5"),
+      plugin: CapturedFile, transform: CapturedFile, packageFile: CapturedFile, lockfile: CapturedFile }),
+    scope: Schema.String,
   }),
 })
 
@@ -78,11 +91,37 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
     const inputs = new Map(receipt.inputs.map((input) => [input.key, input]))
     if (!inputs.size || inputs.size !== receipt.inputs.length || inputs.size !== Object.keys(receipt.metafile.inputs).length ||
         Object.keys(receipt.metafile.inputs).some((key) => !inputs.has(key))) throw new Error("PROVIDER_COMPILER_INPUT_SET_INVALID")
+    if (inputs.size !== Object.keys(receipt.analysisMetafile.inputs).length || new Set(receipt.inputs.map((input) => input.analysisKey)).size !== inputs.size ||
+        receipt.inputs.some((input) => !receipt.analysisMetafile.inputs[input.analysisKey] ||
+          receipt.analysisMetafile.inputs[input.analysisKey].bytes !== input.analysisBytes || receipt.metafile.inputs[input.key].bytes !== input.compilerBytes ||
+          input.analysisBytes !== input.compilerBytes)) throw new Error("PROVIDER_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+    const toolchain = receipt.transformLedger.toolchain
+    if (toolchain.plugin.gitBlob !== "28c0b12271d07444f36b81cb36f1f332b76bbe4b" ||
+        toolchain.transform.gitBlob !== "6987446ee22b4fc9e6544e913524b1f243dc36db") throw new Error("PROVIDER_SOLID_PLUGIN_SOURCE_UNAUDITED")
+    for (const captured of [toolchain.plugin, toolchain.transform, toolchain.packageFile, toolchain.lockfile]) await requireCapturedFile(captured)
+    const pluginPackage = await Bun.file(toolchain.packageFile.path).json()
+    if (pluginPackage.name !== toolchain.name || pluginPackage.version !== toolchain.version) throw new Error("PROVIDER_SOLID_PLUGIN_VERSION_MISMATCH")
     for (const input of inputs.values()) {
-      const source = await readFile(input.path)
-      const blob = new Bun.CryptoHasher("sha1").update(`blob ${source.byteLength}\0`).update(source).digest("hex")
-      if (await realpath(input.path) !== input.path || sha256(source) !== input.sha256 || blob !== input.gitBlob || source.byteLength !== input.bytes)
-        throw new Error(`PROVIDER_COMPILER_SOURCE_SHA_MISMATCH: ${input.key}`)
+      await requireCapturedFile(input)
+      const replacement = /[/\\]node_modules[/\\]solid-js[/\\]dist[/\\]server\.js$/.test(input.path) ? "solid.js"
+        : /[/\\]node_modules[/\\]solid-js[/\\]store[/\\]dist[/\\]server\.js$/.test(input.path) ? "store.js" : undefined
+      if (replacement) {
+        if (input.transform !== "solid-runtime-replacement" || !input.backing || !input.packageFile || input.loader !== "js" ||
+            input.backing.path !== join(dirname(input.path), replacement) ||
+            input.packageFile.path !== resolve(dirname(input.path), replacement === "solid.js" ? "../package.json" : "../../package.json"))
+          throw new Error(`PROVIDER_SOLID_REPLACEMENT_RELATIONSHIP_INVALID: ${input.key}`)
+        await requireCapturedFile(input.backing)
+        await requireCapturedFile(input.packageFile)
+        if (input.compilerBytes !== input.backing.bytes) throw new Error(`PROVIDER_SOLID_BACKING_CONTENT_SIZE_MISMATCH: ${input.key}`)
+        const runtimePackage = await Bun.file(input.packageFile.path).json()
+        if (runtimePackage.name !== "solid-js" || runtimePackage.version !== input.packageVersion || !["1.9.10", "1.9.12"].includes(input.packageVersion ?? ""))
+          throw new Error(`PROVIDER_SOLID_RUNTIME_VERSION_UNAUDITED: ${input.key}`)
+        continue
+      }
+      if (input.backing || input.packageFile || input.packageVersion || input.loader || input.transform === "solid-runtime-replacement")
+        throw new Error(`PROVIDER_SOLID_REPLACEMENT_UNCLASSIFIED: ${input.key}`)
+      const jsx = /\.[cm]?[jt]sx$/.test(input.path) && !input.path.includes(`${sep}node_modules${sep}`)
+      if (input.transform !== (jsx ? "solid-jsx-babel" : "bun-native")) throw new Error(`PROVIDER_COMPILER_TRANSFORM_UNCLASSIFIED: ${input.key}`)
     }
     const byPath = new Map(receipt.inputs.map((input) => [input.path, input.key]))
     for (const [file, blob] of Object.entries(bindings)) {
@@ -175,6 +214,14 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
   }
   if (results.length !== 2) throw new Error("PROVIDER_COMPILER_TWO_BUILD_RECEIPTS_REQUIRED")
   return results
+}
+
+async function requireCapturedFile(input: typeof CapturedFile.Type) {
+  const source = await readFile(input.path)
+  const blob = new Bun.CryptoHasher("sha1").update(`blob ${source.byteLength}\0`).update(source).digest("hex")
+  if (await realpath(input.path) !== input.path || !(await lstat(input.path)).isFile() ||
+      sha256(source) !== input.sha256 || blob !== input.gitBlob || source.byteLength !== input.bytes)
+    throw new Error(`PROVIDER_COMPILER_SOURCE_SHA_MISMATCH: ${input.path}`)
 }
 
 export type CompilerReceipts = Awaited<ReturnType<typeof requireV2SourceGraph>>

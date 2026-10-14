@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { chmod, copyFile, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises"
+import { chmod, copyFile, lstat, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRequire } from "node:module"
 import path from "node:path"
@@ -474,13 +474,63 @@ async function digest(file: string) {
 
 test("single and baseline retain native-only selection semantics", async () => {
   await build(["--single", "--baseline"], await handedArtifacts())
-  expect((await readdir(path.join(root, "dist"))).sort()).toEqual(
-    [
-      `cli-${native}`,
-      ...(process.arch === "x64" ? [`cli-${native}-baseline`] : []),
-      ...(process.platform === "linux" && process.arch === "x64" ? [`cli-${native}-baseline-musl`] : []),
-    ].sort(),
-  )
+  await requireDistInventory([
+    native,
+    ...(process.arch === "x64" ? [`${native}-baseline`] : []),
+    ...(process.platform === "linux" && process.arch === "x64" ? [`${native}-baseline-musl`] : []),
+  ], [version])
   await build(["--single"], await handedArtifacts())
-  expect(await readdir(path.join(root, "dist"))).toEqual([`cli-${native}`])
+  await requireDistInventory([native], [version])
 }, 900_000)
+
+test("explicit replacement retains two version-bound receipts outside the selected payload", async () => {
+  const versions = [`${version}-first`, `${version}-second`]
+  const handed = await handedArtifacts()
+  await build(["--single"], { ...handed, ORCHESTRA_VERSION: versions[0] })
+  await requireDistInventory([native], [versions[0]])
+  const before = await readFile(path.join(root, "dist", `compile-evidence-${native}-${versions[0]}.json`))
+  const first = await digest(binary)
+  await build(["--single", "--target", native], { ...handed, ORCHESTRA_VERSION: versions[1] })
+  await requireDistInventory([native], versions)
+  expect(await readFile(path.join(root, "dist", `compile-evidence-${native}-${versions[0]}.json`))).toEqual(before)
+  expect(await digest(binary)).not.toBe(first)
+  expect(JSON.parse(before.toString("utf8")).binary.sha256).toBe(first)
+}, 900_000)
+
+async function requireDistInventory(selected: string[], versions: string[]) {
+  // Exact allow-list, not an unknown-entry filter: both directories and versioned
+  // receipts are producer outputs, and no receipt is part of an admitted payload.
+  const expected = [...selected.map((target) => `cli-${target}`),
+    ...selected.flatMap((target) => versions.map((version) => `compile-evidence-${target}-${version}.json`))].sort()
+  expect((await readdir(path.join(root, "dist"))).sort()).toEqual(expected)
+  for (const target of selected) {
+    const directory = path.join(root, "dist", `cli-${target}`)
+    const info = await lstat(directory)
+    expect(info.isDirectory() && !info.isSymbolicLink()).toBe(true)
+    expect((await readdir(directory)).sort()).toEqual(["bin", "package.json"])
+    expect((await readdir(directory, { recursive: true })).some((name) => path.basename(name).startsWith("compile-evidence"))).toBe(false)
+    const activeBinary = path.join(directory, "bin", `orchestra${target.startsWith("windows-") ? ".exe" : ""}`)
+    for (const version of versions) {
+      const file = path.join(root, "dist", `compile-evidence-${target}-${version}.json`)
+      const info = await lstat(file)
+      expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
+      const receipt = await Bun.file(file).json()
+      expect(receipt.schema).toBe("orchestra-compile-evidence-v2")
+      expect(receipt.target).toBe(target)
+      expect(receipt.version).toBe(version)
+      expect(receipt.inputs.length).toBeGreaterThan(0)
+      expect(Object.keys(receipt.analysisMetafile.inputs).length).toBe(receipt.inputs.length)
+      expect(Object.keys(receipt.metafile.inputs).length).toBe(receipt.inputs.length)
+      expect(receipt.transformLedger.toolchain.version).toBe("0.4.5")
+      const replacements = receipt.inputs.filter((input: { transform: string }) => input.transform === "solid-runtime-replacement")
+      expect(replacements.length).toBeGreaterThan(0)
+      for (const input of replacements) {
+        expect(input.capture).toBe("raw-resolved-file")
+        expect(input.backing.path).not.toBe(input.path)
+        expect(input.backing.sha256).toBe(await digest(input.backing.path))
+        expect(input.analysisBytes).toBe(input.compilerBytes)
+      }
+      if (version === versions.at(-1)) expect(receipt.binary.sha256).toBe(await digest(activeBinary))
+    }
+  }
+}

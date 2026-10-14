@@ -74,42 +74,18 @@ const prepared = builds.map((build) => ({
 for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
-  const sources = new Map<string, { path: string; sha256: string; gitBlob: string; bytes: number }>()
-  const evidencePlugin: Bun.BunPlugin = {
-    name: "compile-input-receipt",
-    setup(builder) {
-      builder.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
-        const canonical = await realpath(args.path)
-        const bytes = new Uint8Array(await Bun.file(canonical).arrayBuffer())
-        sources.set(canonical, { path: canonical, bytes: bytes.byteLength,
-          sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
-          gitBlob: new Bun.CryptoHasher("sha1").update(`blob ${bytes.byteLength}\0`).update(bytes).digest("hex") })
-        // Observe only. Bun and the Solid plugin still own resolution/transforms.
-        return undefined
-      })
-    },
-  }
-  const result = await Bun.build({
+  const options: Bun.BuildConfig = {
     // The omni preflight runs first and imports ./src/index.ts.
     entrypoints: ["./src/omni-entry.ts"],
+    target: "bun",
     tsconfig: "./tsconfig.json",
-    plugins: [...(compileEvidence ? [evidencePlugin] : []), plugin],
+    plugins: [plugin],
     metafile: compileEvidence,
     external: ["node-gyp"],
     format: "esm",
     minify: true,
     sourcemap: sourcemapsFlag ? "linked" : "none",
     splitting: true,
-    compile: {
-      autoloadBunfig: false,
-      autoloadDotenv: false,
-      autoloadTsconfig: true,
-      autoloadPackageJson: true,
-      target: `bun-${item.target}` as Bun.Build.CompileTarget,
-      outfile: `./dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`,
-      execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
-      windows: {},
-    },
     define: {
       ORCHESTRA_VERSION: JSON.stringify(Script.version),
       ORCHESTRA_CLI_NAME: JSON.stringify(binary),
@@ -124,7 +100,45 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
       ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
     },
-  })
+  }
+  const toolchain = compileEvidence ? await solidToolchain() : undefined
+  // Original, unwrapped plugin in BOTH builds. Catch-all onLoad observers corrupt
+  // Bun 1.3.14 FILE-asset bookkeeping under --compile (appendIsolatedHashesForImportedChunks).
+  // No outdir/compile: the analysis outputs are memory-only and are never shipped.
+  const analysis = compileEvidence ? await Bun.build({ ...options, sourcemap: sourcemapsFlag ? "external" : "none" }) : undefined
+  const analysisMetafile = analysis?.metafile
+  if (analysis && (!analysis.success || !analysisMetafile || !Object.keys(analysisMetafile.inputs).length))
+    throw new Error("CLI_COMPILER_ANALYSIS_FAILED_OR_EMPTY")
+  const before = analysisMetafile ? await Promise.all(Object.keys(analysisMetafile.inputs).map(async (key): Promise<CompilerInput> => {
+    const source = await sourceFile(path.resolve(dir, key))
+    const replacement = /[/\\]node_modules[/\\]solid-js[/\\]dist[/\\]server\.js$/.test(source.path)
+      ? "solid.js"
+      : /[/\\]node_modules[/\\]solid-js[/\\]store[/\\]dist[/\\]server\.js$/.test(source.path) ? "store.js" : undefined
+    const backing = replacement ? await sourceFile(path.join(path.dirname(source.path), replacement)) : undefined
+    const packageFile = replacement ? await sourceFile(path.resolve(path.dirname(source.path), replacement === "solid.js" ? "../package.json" : "../../package.json")) : undefined
+    const packageData = packageFile ? await Bun.file(packageFile.path).json() : undefined
+    if (packageFile && (!packageData || packageData.name !== "solid-js" || !["1.9.10", "1.9.12"].includes(packageData.version)))
+      throw new Error(`CLI_SOLID_RUNTIME_VERSION_UNAUDITED: ${source.path}`)
+    if (backing && backing.bytes !== analysisMetafile.inputs[key].bytes) throw new Error(`CLI_SOLID_BACKING_CONTENT_SIZE_MISMATCH: ${key}`)
+    return { analysisKey: key, ...source, capture: "raw-resolved-file" as const,
+      analysisBytes: analysisMetafile.inputs[key].bytes,
+      transform: replacement ? "solid-runtime-replacement" as const
+        : /\.[cm]?[jt]sx$/.test(source.path) && !source.path.includes(`${path.sep}node_modules${path.sep}`)
+          ? "solid-jsx-babel" as const : "bun-native" as const,
+      ...(backing && packageFile ? { backing, packageFile, packageVersion: String(packageData.version), loader: "js" as const } : {}),
+    }
+  })) : []
+  const observed = new Map(before.map((input) => [input.path, input]))
+  const result = await Bun.build({ ...options, compile: {
+    autoloadBunfig: false,
+    autoloadDotenv: false,
+    autoloadTsconfig: true,
+    autoloadPackageJson: true,
+    target: `bun-${item.target}` as Bun.Build.CompileTarget,
+    outfile: `./dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`,
+    execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
+    windows: {},
+  } })
 
   if (!result.success) {
     for (const log of result.logs) console.error(log)
@@ -132,26 +146,39 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   }
 
   if (compileEvidence) {
-    if (!result.metafile || !Object.keys(result.metafile.inputs).length || !Object.keys(result.metafile.outputs).length)
+    const metafile = result.metafile
+    if (!metafile || !Object.keys(metafile.inputs).length || !Object.keys(metafile.outputs).length)
       throw new Error("CLI_COMPILE_METAFILE_MISSING_OR_EMPTY")
-    const inputs = await Promise.all(Object.keys(result.metafile.inputs).map(async (key) => {
-      const canonical = await realpath(path.resolve(dir, key))
-      const observed = sources.get(canonical)
-      if (!observed) throw new Error(`CLI_COMPILER_INPUT_NOT_OBSERVED: ${key}`)
-      const bytes = new Uint8Array(await Bun.file(canonical).arrayBuffer())
-      if (new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== observed.sha256)
+    const inputs = await Promise.all(Object.keys(metafile.inputs).map(async (key) => {
+      const canonical = await realpath(path.resolve(dir, key)).catch((cause: unknown) => {
+        throw new Error(`CLI_COMPILER_INPUT_NOT_OBSERVED: ${key}`, { cause })
+      })
+      const input = observed.get(canonical)
+      if (!input) throw new Error(`CLI_COMPILER_INPUT_NOT_OBSERVED: ${key}`)
+      if (JSON.stringify(await sourceFile(canonical)) !== JSON.stringify({ path: input.path, bytes: input.bytes, sha256: input.sha256, gitBlob: input.gitBlob }))
         throw new Error(`CLI_COMPILER_INPUT_CHANGED_DURING_BUILD: ${key}`)
-      return { key, ...observed }
+      if (input.analysisBytes !== metafile.inputs[key].bytes) throw new Error(`CLI_COMPILER_EFFECTIVE_INPUT_CHANGED: ${key}`)
+      if (input.backing) {
+        if (!input.packageFile || JSON.stringify(await sourceFile(input.backing.path)) !== JSON.stringify(input.backing) ||
+            JSON.stringify(await sourceFile(input.packageFile.path)) !== JSON.stringify(input.packageFile))
+          throw new Error(`CLI_SOLID_BACKING_CHANGED_DURING_BUILD: ${key}`)
+      }
+      return { key, ...input, compilerBytes: metafile.inputs[key].bytes }
     }))
+    if (inputs.length !== before.length || new Set(inputs.map((input) => input.path)).size !== observed.size ||
+        before.some((input) => !inputs.some((compiled) => compiled.path === input.path)))
+      throw new Error("CLI_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+    if (JSON.stringify(await solidToolchain()) !== JSON.stringify(toolchain)) throw new Error("CLI_SOLID_TOOLCHAIN_CHANGED_DURING_BUILD")
     const executable = path.resolve(dir, `dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`)
     if (!(await lstat(executable)).isFile()) throw new Error("CLI_COMPILE_BINARY_NOT_REGULAR")
     // Sibling of the payload root: distribution-payload admits only package.json
     // and bin/**. Versioned sibling survives the next native buildVersions turn.
     await Bun.write(path.join(dir, "dist", `compile-evidence-${item.target}-${Script.version}.json`), JSON.stringify({
-      schema: "orchestra-compile-evidence-v1", bun: process.versions.bun, cwd: await realpath(dir),
+      schema: "orchestra-compile-evidence-v2", bun: process.versions.bun, cwd: await realpath(dir),
       version: Script.version, target: item.target, entrypoints: ["./src/omni-entry.ts"],
       binary: { path: executable, sha256: new Bun.CryptoHasher("sha256").update(await Bun.file(executable).arrayBuffer()).digest("hex") },
-      inputs, metafile: result.metafile,
+      inputs, metafile, analysisMetafile,
+      transformLedger: { toolchain, scope: "Raw resolved files and audited backing files captured before/after original-plugin compile; JSX effective data is compiler byte-count evidence, not a claimed raw-file hash" },
     }, null, 2))
   }
 
@@ -180,4 +207,38 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       2,
     ),
   )
+}
+
+type CompilerInput = Awaited<ReturnType<typeof sourceFile>> & {
+  analysisKey: string
+  capture: "raw-resolved-file"
+  analysisBytes: number
+  transform: "bun-native" | "solid-runtime-replacement" | "solid-jsx-babel"
+  backing?: Awaited<ReturnType<typeof sourceFile>>
+  packageFile?: Awaited<ReturnType<typeof sourceFile>>
+  packageVersion?: string
+  loader?: "js"
+}
+
+async function sourceFile(file: string) {
+  const canonical = await realpath(file).catch((cause: unknown) => {
+    throw new Error(`CLI_COMPILER_SOURCE_UNOBSERVED: ${file}`, { cause })
+  })
+  if (!(await lstat(canonical)).isFile()) throw new Error(`CLI_COMPILER_SOURCE_NOT_REGULAR: ${file}`)
+  const bytes = new Uint8Array(await Bun.file(canonical).arrayBuffer())
+  return { path: canonical, bytes: bytes.byteLength,
+    sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
+    gitBlob: new Bun.CryptoHasher("sha1").update(`blob ${bytes.byteLength}\0`).update(bytes).digest("hex") }
+}
+
+async function solidToolchain() {
+  const plugin = await sourceFile(Bun.resolveSync("@opentui/solid/bun-plugin", dir))
+  const transform = await sourceFile(path.join(path.dirname(plugin.path), "solid-transform.js"))
+  const packageFile = await sourceFile(path.resolve(path.dirname(plugin.path), "../package.json"))
+  const metadata = await Bun.file(packageFile.path).json()
+  if (metadata.name !== "@opentui/solid" || metadata.version !== "0.4.5" ||
+      plugin.gitBlob !== "28c0b12271d07444f36b81cb36f1f332b76bbe4b" || transform.gitBlob !== "6987446ee22b4fc9e6544e913524b1f243dc36db")
+    throw new Error("CLI_SOLID_PLUGIN_SOURCE_UNAUDITED")
+  return { name: metadata.name, version: metadata.version, plugin, transform, packageFile,
+    lockfile: await sourceFile(path.resolve(dir, "../../bun.lock")) }
 }
