@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun"
-import { rm } from "fs/promises"
+import { lstat, realpath, rm } from "fs/promises"
 import path from "path"
 import { namedTargets } from "./targets"
 
@@ -12,6 +12,7 @@ const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
 const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
+const compileEvidence = !process.argv.includes("--no-compile-evidence")
 
 const targetArgs = process.argv.slice(2).flatMap((arg, index, args) =>
   arg === "--target" ? [args[index + 1] ?? ""] : arg.startsWith("--target=") ? [arg.slice(9)] : [],
@@ -73,11 +74,27 @@ const prepared = builds.map((build) => ({
 for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
   if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
+  const sources = new Map<string, { path: string; sha256: string; gitBlob: string; bytes: number }>()
+  const evidencePlugin: Bun.BunPlugin = {
+    name: "compile-input-receipt",
+    setup(builder) {
+      builder.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
+        const canonical = await realpath(args.path)
+        const bytes = new Uint8Array(await Bun.file(canonical).arrayBuffer())
+        sources.set(canonical, { path: canonical, bytes: bytes.byteLength,
+          sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
+          gitBlob: new Bun.CryptoHasher("sha1").update(`blob ${bytes.byteLength}\0`).update(bytes).digest("hex") })
+        // Observe only. Bun and the Solid plugin still own resolution/transforms.
+        return undefined
+      })
+    },
+  }
   const result = await Bun.build({
     // The omni preflight runs first and imports ./src/index.ts.
     entrypoints: ["./src/omni-entry.ts"],
     tsconfig: "./tsconfig.json",
-    plugins: [plugin],
+    plugins: [...(compileEvidence ? [evidencePlugin] : []), plugin],
+    metafile: compileEvidence,
     external: ["node-gyp"],
     format: "esm",
     minify: true,
@@ -112,6 +129,30 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   if (!result.success) {
     for (const log of result.logs) console.error(log)
     process.exit(1)
+  }
+
+  if (compileEvidence) {
+    if (!result.metafile || !Object.keys(result.metafile.inputs).length || !Object.keys(result.metafile.outputs).length)
+      throw new Error("CLI_COMPILE_METAFILE_MISSING_OR_EMPTY")
+    const inputs = await Promise.all(Object.keys(result.metafile.inputs).map(async (key) => {
+      const canonical = await realpath(path.resolve(dir, key))
+      const observed = sources.get(canonical)
+      if (!observed) throw new Error(`CLI_COMPILER_INPUT_NOT_OBSERVED: ${key}`)
+      const bytes = new Uint8Array(await Bun.file(canonical).arrayBuffer())
+      if (new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== observed.sha256)
+        throw new Error(`CLI_COMPILER_INPUT_CHANGED_DURING_BUILD: ${key}`)
+      return { key, ...observed }
+    }))
+    const executable = path.resolve(dir, `dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`)
+    if (!(await lstat(executable)).isFile()) throw new Error("CLI_COMPILE_BINARY_NOT_REGULAR")
+    // Sibling of the payload root: distribution-payload admits only package.json
+    // and bin/**. Versioned sibling survives the next native buildVersions turn.
+    await Bun.write(path.join(dir, "dist", `compile-evidence-${item.target}-${Script.version}.json`), JSON.stringify({
+      schema: "orchestra-compile-evidence-v1", bun: process.versions.bun, cwd: await realpath(dir),
+      version: Script.version, target: item.target, entrypoints: ["./src/omni-entry.ts"],
+      binary: { path: executable, sha256: new Bun.CryptoHasher("sha256").update(await Bun.file(executable).arrayBuffer()).digest("hex") },
+      inputs, metafile: result.metafile,
+    }, null, 2))
   }
 
   copyOmni(omniFiles, `dist/${name}/bin`)
