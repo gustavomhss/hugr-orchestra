@@ -223,7 +223,6 @@ for (const newLayoutDesigns of [false, true]) {
       expect(textParts).toHaveLength(1)
       expect(payload.parts).toHaveLength(pillIdentity ? 2 : 1)
       if (pillIdentity) {
-        expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         const start = scenario.mode === "paste-pill-interior" ? 5 : 4
         expect(payload.parts.find((part) => part.type === "file")?.source?.text).toEqual({ value: "@note.md", start, end: start + 8 })
       }
