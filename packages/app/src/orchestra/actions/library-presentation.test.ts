@@ -4,7 +4,7 @@ import { initial, type State } from "./contract"
 import { libraryPresentation, workflowState } from "./library-presentation"
 
 const binding: Actions.Binding = {
-  id: Actions.BindingID.make("ab_library"), revision: 1, remote: "origin", projectID: "21", projectPath: "gustavomhss/hugr-orchestra",
+  id: Actions.BindingID.make("ab_library"), revision: 1, remote: "origin", projectID: "21", projectPath: "gustavomhss/hugr-orchestra", directory: "/repo/native",
   provider: { kind: "github", hostname: "github.com", apiOrigin: "https://api.github.com" },
 }
 const workflow: Actions.Workflow = {
