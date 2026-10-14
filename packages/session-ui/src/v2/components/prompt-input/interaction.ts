@@ -470,13 +470,29 @@ export function insertPromptEditorText(editor: HTMLElement, text: string, inputT
   const doc = editor.ownerDocument
   if (typeof doc.execCommand !== "function") throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_UNAVAILABLE:${inputType}`)
   const prepared = materializePromptEditor(editor, range)
+  const terminal = prepared.end === readPromptEditor(editor).length
   selection.removeAllRanges()
   selection.addRange(range)
   // Native editing owns the undo transaction and input event. Never substitute synthetic input/undo.
-  if (!doc.execCommand("insertHTML", false, promptEditorInsertionHTML(text, prepared.end === readPromptEditor(editor).length))) {
+  if (!doc.execCommand("insertHTML", false, promptEditorInsertionHTML(text, terminal))) {
     throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_FAILED:${inputType}`)
   }
+  if (terminal && text.endsWith("\n")) restorePromptEditorCaret(editor, prepared.start + text.length)
   return true
+}
+
+export function restorePromptEditorCaret(editor: HTMLElement, offset: number) {
+  const decoded = readPromptEditor(editor)
+  const caret = Array.from(editor.querySelectorAll<HTMLElement>("[data-prompt-caret]")).reverse().find((node) =>
+    node.textContent === "\u200B" && decoded.positions.get(node)?.end === offset,
+  )
+  if (!caret?.firstChild || caret.firstChild.nodeType !== Node.TEXT_NODE) throw new Error("PROMPT_EDITOR_CARET_UNMAPPABLE")
+  const range = editor.ownerDocument.createRange()
+  range.setStart(caret.firstChild, 1)
+  range.collapse(true)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
 }
 
 export function promptEditorInsertionHTML(text: string, terminal: boolean) {
@@ -488,7 +504,7 @@ export function promptEditorInsertionHTML(text: string, terminal: boolean) {
   }
   const escaped = text.replace(/[&<>"\r\n]/g, (char) => escapes[char]!)
   return escaped + (terminal && text.endsWith("\n")
-    ? '<span data-prompt-caret="" contenteditable="false">&#8203;</span>'
+    ? '<span data-prompt-caret="" contenteditable="true">&#8203;</span>'
     : "")
 }
 
@@ -511,7 +527,7 @@ export function readPromptEditor(root: Node) {
     while (current.parentNode) {
       const parent = current.parentNode
       const siblings = Array.from(parent.childNodes)
-      if (!siblings.slice(siblings.indexOf(current) + 1).every(empty)) return false
+      if (!siblings.slice(siblings.findIndex((sibling) => sibling === current) + 1).every(empty)) return false
       if (block(parent) || (parent === root && parent instanceof HTMLElement && parent.isContentEditable)) return true
       if (parent === root) return false
       current = parent
