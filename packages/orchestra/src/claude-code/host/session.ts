@@ -10,7 +10,7 @@ export * as ClaudeHost from "./session"
 //   `resume` / `forkSession` and need no transcript store;
 import { createHash } from "node:crypto"
 import { Context, Effect, Exit, FileSystem, Layer, Semaphore } from "effect"
-import type { CanUseTool, ModelUsage, PermissionResult, Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { AgentDefinition, AgentInfo, CanUseTool, ModelInfo, ModelUsage, PermissionResult, Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import type { SessionV1 } from "@orchestra/core/v1/session"
@@ -54,11 +54,16 @@ import { ClaudeCodeTranscript } from "../transcript"
 import { asks } from "../permissions"
 import { ClaudeHostBridge } from "./bridge"
 import { ClaudeHostHooks } from "./hooks"
+import { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostJoin } from "./join"
 import { ClaudeHostResearch } from "./research"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Catalog } from "@orchestra/core/catalog"
+import { ModelV2 } from "@orchestra/core/model"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
@@ -160,6 +165,9 @@ const layer = Layer.effect(
     const researchExecution = yield* ResearchExecution.Service
     const researchAllowance = yield* ResearchAllowance.Service
     const researchRecords = yield* ResearchRecords.Service
+    const subagentModels = yield* SessionSubagentModels.Service
+    const locations = yield* LocationServiceMap.Service
+    const overrides = yield* Adapters
     const bindings = yield* ArsenalBindings.make
     const lifecycle = yield* SessionLifecycle.Service
     const summary = yield* SessionSummary.Service
@@ -431,7 +439,6 @@ const layer = Layer.effect(
       if (releasing.has(input.sessionID)) return yield* Effect.fail(new Error("Claude Code session is being released"))
       const ownership = yield* InstanceState.get(custody)
       const instance = yield* InstanceState.context
-      const overrides = yield* Adapters
       const env = yield* ClaudeCodeSDK.Environment
       const session = yield* sessions.get(input.sessionID).pipe(Effect.orDie)
       const prepared = overrides.plugin && overrides.mcp ? undefined
@@ -440,7 +447,8 @@ const layer = Layer.effect(
       const release = yield* IdleRelease
       // Retain private layer services and the real filesystem; HTTP callers can supply a noop filesystem.
       // Instance placement and request references still come from the caller.
-      const context = Context.add(Context.merge(preparation, Context.omit(FileSystem.FileSystem)(yield* Effect.context<never>())), ResearchRecords.Service, researchRecords)
+      const context = Context.add(Context.add(Context.merge(preparation, Context.omit(FileSystem.FileSystem)(yield* Effect.context<never>())),
+        ResearchRecords.Service, researchRecords), SessionSubagentModels.Service, subagentModels)
       const abort = new AbortController()
       const fork = ClaudeCodeTranscript.record(input.state.forkFrom) ? input.state.forkFrom : undefined
       const resume = typeof input.state.sessionId === "string" ? { resume: input.state.sessionId,
@@ -492,11 +500,26 @@ const layer = Layer.effect(
       const bridge = ClaudeHostBridge.create(live, ctx, { sessions, permission, agents, research, withSession: bindings.withSession })
       live.bridge = bridge
       const adapters: ClaudeHostOptions.Adapters = {
-        plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {} })),
+        plugin: overrides.plugin ?? (() => ClaudeHostPlugin.build({ seats: prepared?.seats ?? [], tools: prepared?.granted ?? {},
+          // SDK-owned definitions stay fixed for this query, unlike hot-reloaded project agent files.
+          sdk: Object.fromEntries((prepared?.seats ?? []).map((seat) => [seat.id, {}])),
+        })),
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
         hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge, research,
           run: live.run as ClaudeHostHooks.Context["run"],
+          models: (type, override) => Effect.gen(function* () {
+            if (override !== undefined || type === "fork" || !definitions[type]?.model || definitions[type].model === "inherit") return undefined
+            // Corroborate our fixed SDK definition using public metadata, without another provider turn.
+            const metadata = yield* Effect.tryPromise(() => live.query.initializationResult()).pipe(Effect.option)
+            if (metadata._tag === "None") return undefined
+            if (metadata.value.agents.filter((entry) => entry.name === type).length !== 1) return undefined
+            const entries = yield* Effect.gen(function* () {
+              const catalog = yield* Catalog.Service
+              return yield* catalog.model.all()
+            }).pipe(Effect.provide(locations.get({ directory: AbsolutePath.make(instance.directory), workspaceID: undefined })))
+            return selectModel(metadata.value.agents, metadata.value.models, entries, type, override, definitions)
+          }),
           parts: { tool: (callID) => live.turn?.view.tool(callID) ?? live.known.calls.get(callID)?.tool(callID),
             author: (callID) => live.turn?.view.author(callID) ?? live.known.calls.get(callID)?.author(callID),
             complete: bridge.complete } })),
@@ -505,6 +528,8 @@ const layer = Layer.effect(
         ctx: { ...ctx, join: live.join },
         adapters, model: input.model, session: resume, abortController: abort, canUseTool: permit(live), env,
       }))
+      const definitions = Object.freeze(Object.fromEntries(Object.entries(options.agents ?? {}).map(([name, definition]) =>
+        [name, Object.freeze({ model: definition.model })])))
       if (releasing.has(input.sessionID) || ownership.disposed || serviceState.disposed) return yield* Effect.fail(new Error("Claude Code host was disposed before startup completed"))
       const lifetime = ClaudeCodeSDK.processLifetime(options)
       live.processJoin = lifetime.join
@@ -772,7 +797,26 @@ function answered(history: readonly SessionV1.WithParts[]) {
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
+  deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionSubagentModels.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
 })
+
+/** SDK aliases are not catalog ids. Missing/ambiguous mappings stay unknown to the canonical guard. */
+export function selectModel(agents: readonly AgentInfo[], sdkModels: readonly ModelInfo[], catalog: readonly ModelV2.Info[],
+  type: string, override: unknown, definitions?: Readonly<Record<string, Pick<AgentDefinition, "model">>>): ClaudeHostDelegation.ModelSelection | undefined {
+  const agent = agents.filter((entry) => entry.name === type)
+  if (agent.length !== 1) return undefined
+  // Family aliases can reuse a different parent version. Project definitions can hot-reload;
+  // neither cached initialization rows nor a literal "inherit" prove the effective model.
+  if (override !== undefined || type === "fork") return undefined
+  const selected = definitions?.[type]?.model
+  if (!selected || selected === "inherit" || agent[0].model !== selected) return undefined
+  const mappings = [...new Set(sdkModels.filter((entry) => entry.resolvedModel === selected)
+    .flatMap((entry) => entry.resolvedModel ? [entry.resolvedModel] : []))]
+  const model = mappings.length === 1 ? mappings[0] : undefined
+  if (!model) return undefined
+  const matching = catalog.filter((entry) => entry.providerID === "anthropic" && entry.api.id === model)
+  if (matching.length !== 1) return undefined
+  return { model, ref: ModelV2.Ref.make({ providerID: matching[0].providerID, id: matching[0].id }) }
+}
