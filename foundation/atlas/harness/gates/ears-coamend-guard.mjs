@@ -39,7 +39,7 @@ const REQ_DIR = join(ROOT, "docs", "requirements")
 
 /** Strict Git reads; only default base discovery retains the local missing-base policy. */
 function git(args) {
-  return execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] })
+  return execFileSync("git", ["--no-replace-objects", "-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] })
 }
 
 function defaultBase() {
