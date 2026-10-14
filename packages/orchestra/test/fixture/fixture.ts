@@ -68,15 +68,17 @@ function sanitizePath(p: string): string {
 async function clean(dir: string) {
   const deadline = performance.now() + 5_000
   for (;;) {
-    const error = await unlinkFixtureLinks(dir)
+    const observation = await unlinkFixtureLinks(dir)
       .then(() => fs.rm(dir, { recursive: true, force: true }))
+      .then(() => fixtureStat(dir))
       .then(
-        () => undefined,
-        (error: unknown) => error,
+        (entry) => ({ removed: entry === undefined, error: undefined }),
+        (error: unknown) => ({ removed: false, error }),
       )
+    const error = observation.error
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined
     if (error !== undefined && code !== "EBUSY" && code !== "ENOTEMPTY" && code !== "EPERM") throw error
-    if (error === undefined && (await fixtureStat(dir)) === undefined) return
+    if (observation.removed) return
     if (performance.now() >= deadline) throw error ?? new Error(`tmpdir: ${dir} still exists after removal`)
     await Bun.sleep(25)
   }
