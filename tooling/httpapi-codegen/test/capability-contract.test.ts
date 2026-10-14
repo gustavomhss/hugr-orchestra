@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url"
 import { Cause, Effect, Exit, Predicate, Schema, SchemaAST } from "effect"
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
-import { Capability } from "../../schema/src/capability"
+import { Capability } from "../../../packages/schema/src/capability"
 import { compile, emitEffect, emitEffectImported, emitPromise, GenerationError } from "../src"
 
 const authoritativeSchema = Capability.Failure
