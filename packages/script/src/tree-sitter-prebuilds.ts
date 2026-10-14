@@ -29,6 +29,7 @@ import {
 import { createRequire } from "node:module"
 import path from "node:path"
 import { machine } from "node:os"
+import { Elf } from "@orchestra/schema/elf"
 
 // ELF e_machine, Mach-O cputype, PE machine. The three numbering spaces do not collide for these targets.
 export const NATIVE_MACHINES: Record<string, number> = {
@@ -335,89 +336,11 @@ function rebuildPackage(root: string, dir: string, files: string[], machine: num
 // ELF64 program headers and dynamic entries, not byte-string sniffing. Bounds
 // apply before every indirect access; missing/unknown libc is a named refusal.
 export function inspectElf(file: string) {
-  const bytes = readFileSync(file)
-  const span = (offset: number, size: number) => {
-    if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(size) || offset < 0 || size < 0 || offset + size > bytes.length)
-      throw new Error(`ELF_TRUNCATED: ${file}`)
-    return offset
-  }
-  span(0, 64)
-  if (bytes.subarray(0, 7).toString("hex") !== "7f454c46020101" || bytes.readUInt16LE(54) !== 56 ||
-      ![2, 3].includes(bytes.readUInt16LE(16)) || bytes.readUInt32LE(20) !== 1)
-    throw new Error(`ELF64_UNSUPPORTED: ${file}`)
-  const count = bytes.readUInt16LE(56)
-  if (!count) throw new Error(`ELF_PROGRAM_HEADERS_EMPTY: ${file}`)
-  const start = span(Number(bytes.readBigUInt64LE(32)), count * 56)
-  const headers = Array.from({ length: count }, (_, i) => start + i * 56)
-  const segments = headers.map((h) => {
-    const size = bytes.readBigUInt64LE(h + 32)
-    const memory = bytes.readBigUInt64LE(h + 40)
-    const address = bytes.readBigUInt64LE(h + 16)
-    if (size > memory || address + memory > 0xffffffffffffffffn)
-      throw new Error(`ELF_SEGMENT_MEMORY_INVALID: ${file}`)
-    return { type: bytes.readUInt32LE(h), offset: span(Number(bytes.readBigUInt64LE(h + 8)), Number(size)),
-      size: Number(size), memory, address }
-  })
-  const loads = segments.filter((s) => s.type === 1)
-  if (!loads.length) throw new Error(`ELF_LOAD_SEGMENTS_EMPTY: ${file}`)
-  if (loads.some((s, i) => loads.slice(i + 1).some((other) => s.memory > 0n && other.memory > 0n &&
-      s.address < other.address + other.memory && other.address < s.address + s.memory)))
-    throw new Error(`ELF_LOAD_MAPPING_AMBIGUOUS: ${file}`)
-  const mapped = (address: bigint, size: bigint) => {
-    if (size <= 0n || address + size > 0xffffffffffffffffn) throw new Error(`ELF_MAPPING_RANGE_INVALID: ${file}`)
-    const matches = loads.filter((s) => address >= s.address && address + size <= s.address + s.memory)
-    if (matches.length !== 1) throw new Error(`ELF_MAPPING_UNMAPPED: ${file}`)
-    const load = matches[0]!
-    if (address - load.address + size > BigInt(load.size)) throw new Error(`ELF_MAPPING_NOT_FILE_BACKED: ${file}`)
-    return span(load.offset + Number(address - load.address), Number(size))
-  }
-  const strings = (offset: number, size: number) => {
-    span(offset, size)
-    const end = bytes.indexOf(0, offset)
-    if (end < offset || end >= offset + size) throw new Error(`ELF_STRING_UNTERMINATED: ${file}`)
-    return bytes.toString("utf8", offset, end)
-  }
-  const interpreters = segments.filter((s) => s.type === 3)
-  if (interpreters.length > 1) throw new Error(`ELF_INTERPRETER_DUPLICATED: ${file}`)
-  const interpreter = interpreters.map((s) => strings(s.offset, s.size))[0]
-  const needed: bigint[] = []
-  const tables: bigint[] = []
-  const sizes: bigint[] = []
-  const dynamics = segments.filter((s) => s.type === 2)
-  if (dynamics.length > 1) throw new Error(`ELF_DYNAMIC_DUPLICATED: ${file}`)
-  dynamics.forEach((s) => {
-    if (!s.size || s.size % 16) throw new Error(`ELF_DYNAMIC_TRUNCATED: ${file}`)
-    const offset = mapped(s.address, BigInt(s.size))
-    if (offset !== s.offset) throw new Error(`ELF_DYNAMIC_OFFSET_MISMATCH: ${file}`)
-    if (!loads.some((load) => s.address >= load.address && s.address + s.memory <= load.address + load.memory))
-      throw new Error(`ELF_DYNAMIC_MEMORY_UNMAPPED: ${file}`)
-    const entries = Array.from({ length: s.size / 16 }, (_, i) => offset + i * 16)
-    const end = entries.findIndex((e) => bytes.readBigInt64LE(e) === 0n)
-    if (end < 0) throw new Error(`ELF_DYNAMIC_UNTERMINATED: ${file}`)
-    entries.slice(0, end).forEach((e) => {
-      const tag = bytes.readBigInt64LE(e)
-      if (tag === 1n) needed.push(bytes.readBigUInt64LE(e + 8))
-      if (tag === 5n) tables.push(bytes.readBigUInt64LE(e + 8))
-      if (tag === 10n) sizes.push(bytes.readBigUInt64LE(e + 8))
-    })
-  })
-  if ((tables.length || sizes.length || needed.length) && (tables.length !== 1 || sizes.length !== 1))
-    throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
-  const table = tables.length ? mapped(tables[0]!, sizes[0]!) : undefined
-  const dependencies = needed.map((n) => {
-    if (table === undefined || n >= sizes[0]!) throw new Error(`ELF_STRING_TABLE_INVALID: ${file}`)
-    return strings(table + Number(n), Number(sizes[0]! - n))
-  })
-  return { machine: bytes.readUInt16LE(18), interpreter, needed: dependencies }
+  return Elf.inspect(readFileSync(file), file)
 }
 
 export function requireElfLibc(file: string, expected: "musl" | "glibc") {
-  const elf = inspectElf(file)
-  const musl = elf.needed.some((name) => /^(?:libc\.musl-(?:x86_64|aarch64)\.so\.1|ld-musl-(?:x86_64|aarch64)\.so\.1|libc\.so)$/.test(name))
-  const glibc = elf.needed.includes("libc.so.6")
-  if (expected === "musl" ? !musl || glibc : !glibc || musl)
-    throw new Error(`ELF_LIBC_MISMATCH: ${file}: expected ${expected}; needed ${JSON.stringify(elf.needed)}`)
-  return elf
+  return Elf.requireLibc(readFileSync(file), expected, file)
 }
 
 // Match running ELF interpreter to an actual executable libc mapping, including

@@ -6,6 +6,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@orchestra/schema": "workspace:*",
     "semver": "^7.6.3"
   },
   "devDependencies": {
