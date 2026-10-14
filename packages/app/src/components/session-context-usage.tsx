@@ -68,7 +68,7 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
 
   const formatter = createMemo(() => createSessionContextFormatter(language.intl()))
 
-  const context = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part))
+  const context = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part, info()?.metadata))
   const cost = createMemo(() => {
     return formatter().currency(
       getSessionCost(
@@ -76,6 +76,7 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
         params.id ? sync().data.message[params.id] : undefined,
         [...providers.all().values()],
         sync().data.part,
+        info()?.metadata,
       ),
     )
   })
