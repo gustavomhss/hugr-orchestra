@@ -6,8 +6,9 @@ import {
   getNodeLength,
   getTextLength,
   setCursorPosition,
+  setRangeEdge,
 } from "./editor-dom"
-import { readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import { materializePromptEditor, promptEditorPoint, readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { normalizePaste } from "./paste"
 
 describe("prompt-input editor dom", () => {
@@ -121,6 +122,10 @@ describe("prompt-input editor dom", () => {
     ["<br>", ""],
     ["a<br><br>b", "a\n\nb"],
     ["<div>a</div><br>b", "a\nb"],
+    ["<div>a<span><br></span>b</div>", "a\nb"],
+    ["<span>a<br></span>b", "a\nb"],
+    ["<div>a<span><i><br></i></span>b</div>", "a\nb"],
+    ["<div>a<span><br></span></div><div>b</div>", "a\nb"],
     ["```owner-demand<div>é — 😀\u200B</div><div><br></div><div>```</div><div><br></div>", "```owner-demand\né — 😀\u200B\n\n```\n"],
   ])("decodes browser line boxes: %s", (html, expected) => {
     const container = document.createElement("div")
@@ -159,5 +164,37 @@ describe("prompt-input editor dom", () => {
     container.innerHTML = "<div><br></div><div>b</div>"
     container.insertBefore(document.createTextNode(""), container.lastChild)
     expect(readPromptEditor(container).segments.map((part) => part.content).join("")).toBe("\nb")
+  })
+
+  // DOM-only range splice: this fixture has no browser editing/undo engine. Hosted keyboard cases cover undo.
+  test.each([
+    { start: 1, end: 2, insert: "x", expected: "axb" },
+    { start: 1, end: 1, insert: "\n", expected: "a\n\nb" },
+  ])("materializes structural breaks before editing %j", ({ start, end, insert, expected }) => {
+    const editor = document.createElement("div")
+    editor.innerHTML = "<div>a</div><div>b</div>"
+    const range = document.createRange()
+    setRangeEdge(editor, range, "start", start)
+    setRangeEdge(editor, range, "end", end)
+    const prepared = materializePromptEditor(editor, range)
+    expect([prepared.start, prepared.end]).toEqual([start, end])
+    range.deleteContents()
+    range.insertNode(document.createTextNode(insert))
+    expect(readPromptEditor(editor).segments.map((part) => part.content).join("")).toBe(expected)
+  })
+
+  test("pill interiors choose nearest boundary, ties right, for points and ranges", () => {
+    const editor = document.createElement("div")
+    editor.innerHTML = 'a<span data-mention="agent" contenteditable="false">@backend</span>b'
+    document.body.appendChild(editor)
+    const pill = editor.children[0]!
+    expect(promptEditorPoint(editor, pill.firstChild!, 1)).toBe(1)
+    expect(promptEditorPoint(editor, pill.firstChild!, 4)).toBe(9)
+    Array.of([2, 1], [5, 9], [8, 9]).forEach(([input, expected]) => {
+      setCursorPosition(editor, input!)
+      expect(getCursorPosition(editor)).toBe(expected!)
+      expect(pill.contains(window.getSelection()!.getRangeAt(0).startContainer)).toBe(false)
+    })
+    editor.remove()
   })
 })
