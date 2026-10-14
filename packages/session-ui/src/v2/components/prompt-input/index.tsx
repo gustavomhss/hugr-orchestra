@@ -24,7 +24,7 @@ import type {
   PromptInputV2Suggestion,
 } from "./types"
 import type { PromptInputV2Interaction, PromptInputV2SelectControl } from "./interaction"
-import { promptEditorCursor, promptEditorRangeEdge, readPromptEditor } from "./interaction"
+import { insertPromptEditorText, promptEditorCursor, promptEditorRangeEdge, readPromptEditor } from "./interaction"
 import "./attachments.css"
 
 export type {
@@ -174,6 +174,11 @@ export function PromptInputV2(props: PromptInputV2Props) {
               props.controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], cursor)
             }}
             onKeyDown={(event) => {
+              if (event.key === "Enter" && event.shiftKey) {
+                event.preventDefault()
+                insertPromptEditorText(event.currentTarget, "\n", "insertLineBreak")
+                return
+              }
               if (props.controller.onKeyDown(event)) return
               if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault()

@@ -62,7 +62,9 @@ for (const newLayoutDesigns of [false, true]) {
         route.request().method() === "POST" ? route.abort("blockedbyclient") : route.fallback(),
       )
       await page.addInitScript(({ newLayoutDesigns, directory, server, sessionID }) => {
-        localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns, shouldDisplayTabsToast: false } }))
+        localStorage.setItem("settings.v3", JSON.stringify({ general: {
+          newLayoutDesigns, layoutTransitionEligible: true, shouldDisplayTabsToast: false,
+        } }))
         if (!newLayoutDesigns) localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.17.20" }))
         localStorage.setItem("orchestra.global.dat:server", JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] }, lastProject: { local: directory },
@@ -71,6 +73,8 @@ for (const newLayoutDesigns of [false, true]) {
           { type: "session", server, sessionId: sessionID },
         ]))
       }, { newLayoutDesigns, directory, server, sessionID })
+      // Retirement overrides the legacy preference; exercise the real legacy layout before its sunset.
+      if (!newLayoutDesigns) await page.clock.setSystemTime(new Date(2026, 8, 1))
       await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
       const editor = page.locator('[data-component="prompt-input"][contenteditable="true"]')
       await expect(editor).toHaveCount(1)

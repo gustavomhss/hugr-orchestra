@@ -389,17 +389,7 @@ export function createPromptInputV2Controller(input: {
       event.preventDefault()
       // Insert the clipboard's literal text; execCommand may fold CR or create line-box DOM.
       const target = event.currentTarget
-      const selection = window.getSelection()
-      if (!(target instanceof HTMLElement) || !selection?.rangeCount || !target.contains(selection.anchorNode)) return
-      const range = selection.getRangeAt(0)
-      range.deleteContents()
-      const node = document.createTextNode(text)
-      range.insertNode(node)
-      range.setStartAfter(node)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-      target.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertFromPaste", data: text }))
+      if (target instanceof HTMLElement) insertPromptEditorText(target, text, "insertFromPaste")
     },
     onDragEnter(event: DragEvent) {
       event.preventDefault()
@@ -467,6 +457,43 @@ function setEditorCursor(editor: HTMLElement | undefined, cursor: number) {
   selection?.addRange(range)
 }
 
+export function insertPromptEditorText(editor: HTMLElement, text: string, inputType: string) {
+  const selection = window.getSelection()
+  if (!selection?.rangeCount) return false
+  const range = selection.getRangeAt(0)
+  if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return false
+  const placeholder = range.startContainer.parentElement
+  if (
+    range.collapsed &&
+    range.startOffset === 1 &&
+    placeholder?.hasAttribute("data-prompt-caret") &&
+    placeholder.textContent === "\u200B"
+  ) {
+    range.setStartBefore(placeholder)
+    range.collapse(true)
+    placeholder.remove()
+  }
+  range.deleteContents()
+  const node = document.createTextNode(text)
+  range.insertNode(node)
+  range.setStart(node, text.length)
+  range.collapse(true)
+  const decoded = readPromptEditor(editor)
+  if (text.endsWith("\n") && decoded.positions.get(node)?.end === decoded.length) {
+    // Chromium pre-wrap Shift+Enter adds an unmarked LF for the caret. Own the LF and mark its placeholder.
+    const caret = document.createElement("span")
+    caret.setAttribute("data-prompt-caret", "")
+    caret.textContent = "\u200B"
+    editor.appendChild(caret)
+    range.setStart(caret.firstChild!, 1)
+    range.collapse(true)
+  }
+  selection.removeAllRanges()
+  selection.addRange(range)
+  editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType, data: text }))
+  return true
+}
+
 // Shared by both composers: DOM line boxes are not additional characters after a BR.
 export function readPromptEditor(root: Node) {
   const segments: { node: Node; content: string }[] = []
@@ -509,7 +536,10 @@ export function readPromptEditor(root: Node) {
           child instanceof HTMLElement &&
           child.tagName === "BR" &&
           !child.hasAttribute("data-prompt-break") &&
-          children.slice(index + 1).every((next) => next.nodeType === Node.TEXT_NODE && !next.textContent)
+          children.slice(index + 1).every((next) =>
+            (next.nodeType === Node.TEXT_NODE && !next.textContent) ||
+            (next instanceof HTMLElement && next.hasAttribute("data-prompt-caret") && next.textContent === "\u200B"),
+          )
         const empty =
           (child.nodeType === Node.TEXT_NODE && !child.textContent) ||
           (child instanceof HTMLElement && child.hasAttribute("data-prompt-caret") && child.textContent === "\u200B")
