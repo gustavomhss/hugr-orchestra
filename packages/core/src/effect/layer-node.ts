@@ -250,6 +250,7 @@ export function hoist<A, E, T extends Tag, const Items extends Replacements = re
 export function compile<A, E, const Items extends Replacements = readonly []>(
   root: Node<A, E, any>,
   replacements?: ValidReplacements<Items>,
+  options?: { readonly transformLayer: (layer: RuntimeLayer, node: AnyNode) => RuntimeLayer },
 ): Layer.Layer<A, E> {
   const replacementMap = replacementMapFrom(replacements)
   const cache = new Map<AnyNode, RuntimeLayer>()
@@ -260,9 +261,10 @@ export function compile<A, E, const Items extends Replacements = readonly []>(
         if (node.kind === "unbound") throw new Error(`Unbound layer node: ${node.name}`)
         const dependencies = node.dependencies.flatMap(flatten).map(context.visit)
         const implementation = node.implementation! as RuntimeLayer
+        const transformed = options?.transformLayer ? options.transformLayer(implementation, node) : implementation
         return dependencies.length === 0
-          ? implementation
-          : implementation.pipe(Layer.provide(dependencies as [RuntimeLayer, ...RuntimeLayer[]]))
+          ? transformed
+          : transformed.pipe(Layer.provide(dependencies as [RuntimeLayer, ...RuntimeLayer[]]))
       },
       { cache, resolve: (node) => replacementMap.get(node.name) ?? node },
     )
