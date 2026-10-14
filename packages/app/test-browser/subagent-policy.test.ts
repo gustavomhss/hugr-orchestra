@@ -332,11 +332,11 @@ test("failed pre-ACK reads never prevent mandatory fresh canonical read after su
   root.dispose()
 })
 
-test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and reveals keyboard-focused last row (%s)", async (direction) => {
+test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and retains focus on search-revealed last model (%s)", async (direction) => {
   const key = `virtual-picker/${direction}`
   const models = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => {
     const id = `model-${String(index).padStart(4, "0")}`
-    return [id, { ...model, id, name: id }]
+    return [id, { ...model, id, name: id }] as const
   }))
   const host = document.createElement("div")
   host.dir = direction
@@ -353,15 +353,18 @@ test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and rev
   await settle()
   expect(host.querySelector('[data-virtual="true"]')).not.toBeNull()
   expect(host.querySelectorAll('[data-slot="list-item"]').length).toBeLessThan(30)
-  const first = host.querySelector<HTMLButtonElement>('[data-slot="list-item"]')
-  if (!first) throw new Error("Missing virtualized first row")
-  first.focus()
-  first.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true, cancelable: true }))
+  const search = host.querySelector<HTMLInputElement>('[data-slot="list-search"] input')
+  if (!search) throw new Error("Missing virtualized search input")
+  search.focus()
+  search.value = "model-0999"
+  search.dispatchEvent(new InputEvent("input", { bubbles: true }))
   await settle()
   const last = host.querySelector<HTMLButtonElement>('[data-slot="list-item"][data-key="router:model-0999"]')
-  expect(last).not.toBeNull()
+  if (!last) throw new Error("Search did not reveal the last catalog model")
+  expect(host.querySelectorAll('[data-slot="list-item"]').length).toBe(1)
+  last.focus()
   expect(document.activeElement).toBe(last)
-  last?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
+  last.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
   await settle()
   expect(drafts.pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "model-0999" }] })
   expect(document.activeElement).toBe(last)
