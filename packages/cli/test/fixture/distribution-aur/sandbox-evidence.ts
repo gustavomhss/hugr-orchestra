@@ -50,7 +50,7 @@ export async function aurBootstrapEvidence(directory: string) {
 
 function pacmanFilesystemRestrictions(log: string) {
   const restrictions = log.split("\n").filter((line) =>
-    /filesystem access has been restricted to .+, [Ll]andlock ABI is [1-9][0-9]*/.test(line))
+    /^debug: filesystem access has been restricted to .+, [Ll]andlock ABI is [1-9][0-9]*$/.test(line))
   if (restrictions.length === 0 || /error:|landlock is not supported|Landlock is not supported/.test(log))
     throw new Error("AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED")
   return restrictions
