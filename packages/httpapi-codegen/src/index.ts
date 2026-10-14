@@ -2,9 +2,8 @@ import { isAbsolute, join } from "node:path"
 import { Effect, FileSystem, PlatformError, Schema, SchemaAST, SchemaRepresentation } from "effect"
 import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
-import { format } from "prettier"
 import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
-import { assertSplitGroups, renderPromiseGroup, splitPromiseRequest, splitPromiseTypes } from "./layout"
+import { assertSplitGroups, formatFiles, renderPromiseGroup, splitPromiseRequest, splitPromiseTypes } from "./layout"
 import { renderImportedEffectFiles } from "./imported-effect"
 
 export type InputField = {
@@ -26,6 +25,7 @@ export type Output = {
   readonly files: ReadonlyArray<{
     readonly path: string
     readonly content: string
+    readonly boundedTypes?: true
   }>
 }
 
@@ -247,7 +247,7 @@ export function emitPromise(
   for (const group of groups) {
     for (const endpoint of group.endpoints) assertPromiseEndpoint(endpoint)
   }
-  const splitFiles: Array<{ path: string; content: string }> = []
+  const splitFiles: Array<Output["files"][number]> = []
   const source = renderPromiseClient(groups, options?.splitGroups, splitFiles)
   const request = options?.splitGroups?.size ? splitPromiseRequest(source) : undefined
   if (request) splitFiles.push({ path: "request.ts", content: request.split })
@@ -277,7 +277,7 @@ export function emitPromise(
         return [...(endpoint.operation.inputMode === "none" ? [] : [`${prefix}Input`]), `${prefix}Output`]
       })
       const split = splitPromiseTypes(content, names, `${group.module}-types`)
-      splitFiles.push({ path: `${group.module}-types.ts`, content: split.split })
+      splitFiles.push({ path: `${group.module}-types.ts`, content: split.split, boundedTypes: true })
       return split.main
     }, errorTypes?.main ?? declarations)
   return {
@@ -680,9 +680,13 @@ export function write(
   directory: string,
 ): Effect.Effect<void, GenerationError | PlatformError.PlatformError, FileSystem.FileSystem> {
   return Effect.gen(function* () {
+    const files = yield* Effect.tryPromise({
+      try: () => formatFiles(output.files),
+      catch: (error) => (error instanceof GenerationError ? error : new GenerationError({ reason: String(error) })),
+    })
     const paths = new Set<string>()
     const normalizedPaths = new Set<string>()
-    for (const file of output.files) {
+    for (const file of files) {
       if (!isSafeOutputPath(file.path)) yield* new GenerationError({ reason: `Unsafe output path: ${file.path}` })
       const path = file.path.toLowerCase()
       if (normalizedPaths.has(path)) yield* new GenerationError({ reason: `Duplicate output path: ${file.path}` })
@@ -707,7 +711,7 @@ export function write(
       { concurrency: 8, discard: true },
     )
     yield* Effect.forEach(
-      output.files,
+      files,
       (file) =>
         fs.exists(join(directory, file.path)).pipe(
           Effect.flatMap((exists) => (exists ? fs.stat(join(directory, file.path)) : Effect.succeed(undefined))),
@@ -719,16 +723,11 @@ export function write(
         ),
       { concurrency: 8, discard: true },
     )
-    yield* Effect.forEach(
-      output.files,
-      (file) =>
-        Effect.tryPromise({
-          try: () => format(file.content, { filepath: file.path, parser: "typescript", semi: false, printWidth: 120 }),
-          catch: (error) => new GenerationError({ reason: `Failed to format ${file.path}: ${String(error)}` }),
-        }).pipe(Effect.flatMap((content) => fs.writeFileString(join(directory, file.path), content))),
-      { concurrency: 8, discard: true },
-    )
-    yield* fs.writeFileString(manifest, JSON.stringify(output.files.map((file) => file.path).sort(), null, 2) + "\n")
+    yield* Effect.forEach(files, (file) => fs.writeFileString(join(directory, file.path), file.content), {
+      concurrency: 8,
+      discard: true,
+    })
+    yield* fs.writeFileString(manifest, JSON.stringify(files.map((file) => file.path).sort(), null, 2) + "\n")
   })
 }
 
