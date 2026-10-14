@@ -7,6 +7,8 @@ import { Global } from "@orchestra/core/global"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Seats } from "./seats"
 import { SeatSkillContent } from "./seat-skill-content"
+import { PlaybookContent } from "./playbook-content"
+import { fileURLToPath } from "node:url"
 
 declare const ORCHESTRA_COMPILED: boolean
 
@@ -25,7 +27,7 @@ const embedded = typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED
 if (typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED &&
   (!embedded || typeof embedded !== "object" || Array.isArray(embedded)))
   throw new SeatSkillContent.PackagingError("Invalid compiled seat skill module")
-if (embedded && Object.keys(embedded).some((id) => !Seats.find(id)?.skills.length))
+if (embedded && Object.keys(embedded).some((id) => id !== "maestro" && !Seats.find(id)?.skills.length))
   throw new SeatSkillContent.PackagingError("Foreign embedded seat skill tree")
 
 /** The skill root of every seat that has skills, by seat id. */
@@ -45,6 +47,23 @@ export const roots: Readonly<Record<string, string>> = Object.freeze(
     ),
   ),
 )
+
+/** Maestro uses the same content-addressed extraction as seat skills, including standalone Bun/Node builds. */
+export const playbooks = await (async () => {
+  const files = embedded?.maestro
+  if (embedded && !files) throw new SeatSkillContent.PackagingError("Missing embedded Maestro playbook tree")
+  if (files) PlaybookContent.validate(files)
+  const root =
+    process.env.ORCHESTRA_PLAYBOOKS_DIR ??
+    (files
+      ? await extract("maestro", files, Global.Path.cache, InstallationVersion)
+      : fileURLToPath(new URL("../../playbooks", import.meta.url)))
+  // Overrides are explicit roots, never permission to publish an empty or incomplete plugin as success.
+  const actual = await PlaybookContent.read(root)
+  if (files && Object.keys(files).some((file) => actual[file] !== files[file]))
+    throw new SeatSkillContent.PackagingError("Deployed Maestro playbooks differ from embedded source")
+  return root
+})()
 
 // Copies `files` into a directory keyed `<version>-<digest12>` by the installation version and the embedded content
 // digest (the F6.12 manifest), unless it already holds exactly those bytes. Two builds never share a copy, even with the
