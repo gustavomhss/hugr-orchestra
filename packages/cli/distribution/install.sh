@@ -83,6 +83,7 @@ linux_host_libc() {
     END { if(!lines || bad || !mapped || glibc==musl || (glibc && !gx) || (musl && !mx)) exit 1
       print musl ? "musl" : "glibc" }
   ' "/proc/$runtime_pid/maps") || fail 'cannot determine Linux host libc from loaded process'
+  case "$runtime_loaded_libc" in glibc|musl) ;; *) fail 'cannot determine Linux host libc from loaded process' ;; esac
   [ "$runtime_loaded_libc" = "$runtime_loader_libc" ] || fail 'Linux host interpreter does not match loaded libc'
   printf '%s\n' "$runtime_loaded_libc"
 }
