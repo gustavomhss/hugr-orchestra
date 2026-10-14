@@ -111,14 +111,19 @@ function fixture() {
       }
       const snapshot = info()
       gates.readStarted.resolve()
+      gates.resolveStarted.resolve()
       await gates.read
+      await gates.resolve
       return Response.json({ data: snapshot })
     },
     { preconnect: fetch.preconnect },
   )
   const http = { url: "https://origin.test", username: "owner", password: "fixture" }
   const client = createSdkForServer({ server: http, fetch: fetcher, throwOnError: true })
-  const session = createServerSession(client, { protocol: Promise.resolve("v2") })
+  const canonicalApi = createApiForServer({ server: http, fetch: fetcher })
+  const session = createServerSession(client, canonicalApi.session, canonicalApi.message, {
+    protocol: Promise.resolve("v2"),
+  })
   session.remember(normalizeSessionInfo(info()))
   session.apply({
     type: "session.next.subagent.models.changed",
@@ -137,7 +142,7 @@ function fixture() {
     client,
     api: createCompatibleApi({
       protocol: Promise.resolve("v2"),
-      current: createApiForServer({ server: http, fetch: fetcher }),
+      current: canonicalApi,
       legacy: () => client,
     }),
     sessionManagement: createSessionManagementForServer({
@@ -158,7 +163,7 @@ function fixture() {
     set,
     query,
     home,
-    sync: { data, set, session },
+    sync: { directory, data, set, session },
     serverState: { session, homeSessions: home, queryOptions: { providers: () => ({}) } },
   }
 }
@@ -240,9 +245,24 @@ function mount(view: () => ReturnType<typeof createComponent>) {
   }
 }
 async function until(check: () => boolean) {
-  for (let turn = 0; turn < 100 && !check(); turn++) await new Promise((resolve) => setTimeout(resolve, 0))
+  await new Promise<void>((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (!check()) return
+      observer.disconnect()
+      resolve()
+    })
+    disposals.push(() => observer.disconnect())
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true })
+    if (!check()) return
+    observer.disconnect()
+    resolve()
+  })
   expect(check()).toBe(true)
 }
+const canonicalReads = () =>
+  current.requests.filter(
+    (request) => request.method === "GET" && new URL(request.url).pathname === `/api/session/${id}`,
+  )
 const nativePolicy = (policy: SubagentModelPolicy, timestamp: number, seq: number) =>
   current.session.apply({
     type: "session.next.subagent.models.changed",
@@ -276,7 +296,7 @@ test("archive history DOM uses generated includeArchived/cursor transport pinned
   view.dispose()
 })
 
-test("actual session store keeps sequenced management fields across equal-time revisionless snapshots", () => {
+test("actual session store keeps sequenced management fields across equal-time revisionless snapshots", async () => {
   nativePolicy(deny, 20, 3)
   nativeArchive(20, 20, 4)
   const stale = normalizeSessionInfo(current.info())
@@ -292,39 +312,85 @@ test("actual session store keeps sequenced management fields across equal-time r
   current.canonical.timestamp = 21
   current.canonical.policy = deny
   current.canonical.archived = 21
-  const fresh = current.session.remember(normalizeSessionInfo(current.info()))
+  const untrusted = current.session.remember(normalizeSessionInfo(current.info()))
+  expect(untrusted.subagentModels).toEqual(allow)
+  expect(untrusted.subagentModelsRevision).toBe(5)
+  expect(untrusted.subagentModelsReadReceipt).toBeUndefined()
+  expect(untrusted.time.archived).toBe(21)
+  expect(untrusted.archiveRevision).toBeUndefined()
+  expect(canonicalReads()).toHaveLength(0)
+  const fresh = await current.session.resolve(id, { force: true })
   expect(fresh.subagentModels).toEqual(deny)
-  expect(fresh.subagentModelsRevision).toBeUndefined()
+  expect(fresh.subagentModelsRevision).toBe(5)
+  expect(fresh.subagentModelsChangedAt).toBe(20)
+  expect(fresh.subagentModelsReadReceipt).toBe(1)
+  expect(current.session.get(id)?.subagentModels).toEqual(deny)
+  expect(current.session.get(id)?.subagentModelsReadReceipt).toBe(1)
+  expect(canonicalReads()).toHaveLength(1)
+  expect(new URL(canonicalReads()[0].url).origin).toBe("https://origin.test")
+  expect(canonicalReads()[0].headers.get("authorization")).toBe(`Basic ${btoa("owner:fixture")}`)
+  expect(fresh.time.updated).toBe(21)
   expect(fresh.time.archived).toBe(21)
   expect(fresh.archiveRevision).toBeUndefined()
 })
 
 test("real policy dialog retains ACK for ambiguous equal-time event until a post-event canonical read", async () => {
   const view = mount(() => createComponent(DialogSubagentModels, { directory, sessionID: id }))
-  await until(() => !!view.host.querySelector<HTMLInputElement>('input[role="switch"]')?.checked)
+  await until(() => {
+    const choice = view.host.querySelector<HTMLInputElement>('input[role="switch"]')
+    return !!choice?.checked && !choice.disabled && !choice.readOnly
+  })
   const choice = view.host.querySelector<HTMLInputElement>('input[role="switch"]')!
+  expect(canonicalReads()).toHaveLength(1)
   choice.click()
-  await until(() => !!view.host.querySelector('[data-status="none-allowed"]'))
+  await until(() => !!view.host.querySelector('[data-status="none-allowed"]') && !choice.readOnly)
+  expect(current.requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
+    `GET /api/session/${id}/subagent-models`,
+    `GET /api/session/${id}`,
+    `POST /api/session/${id}/subagent-models`,
+    `GET /api/session/${id}`,
+  ])
   const gate = Promise.withResolvers<void>()
   current.gates.read = gate.promise
   current.gates.readStarted = Promise.withResolvers<void>()
   nativePolicy(allow, 20, 2)
   expect(choice.checked).toBe(false)
   await current.gates.readStarted.promise
+  expect(canonicalReads()).toHaveLength(3)
   expect(choice.checked).toBe(false)
   gate.resolve()
-  await until(
-    () => current.requests.filter((request) => new URL(request.url).pathname === `/api/session/${id}`).length >= 3,
-  )
   expect(choice.checked).toBe(false)
-  current.gates.read = undefined
+  const inherit = Promise.withResolvers<void>()
+  current.gates.read = inherit.promise
+  current.gates.readStarted = Promise.withResolvers<void>()
   current.canonical.policy = { mode: "inherit" }
   nativePolicy(current.canonical.policy, 20, 3)
+  await current.gates.readStarted.promise
+  expect(view.host.querySelector('[data-status="inherited"]')).toBeNull()
+  expect(choice.checked).toBe(false)
+  inherit.resolve()
   await until(() => !!view.host.querySelector('[data-status="inherited"]'))
+  expect(canonicalReads().length).toBeGreaterThanOrEqual(4)
+  current.gates.read = undefined
   current.canonical.policy = allow
   current.canonical.timestamp = 21
   nativePolicy(allow, 21, 4)
   await until(() => choice.checked)
+  view.dispose()
+})
+
+test("policy dialog with a mismatched captured directory stays disabled and cannot write", async () => {
+  current.sync.directory = "/other"
+  const view = mount(() => createComponent(DialogSubagentModels, { directory, sessionID: id }))
+  await until(() => !!view.host.querySelector<HTMLInputElement>('input[role="switch"]')?.disabled)
+  const choice = view.host.querySelector<HTMLInputElement>('input[role="switch"]')!
+  expect(choice.checked).toBe(true)
+  const row = view.host.querySelector<HTMLButtonElement>('[data-slot="list-item"]')
+  if (!row) throw new Error("Missing policy row")
+  row.click()
+  expect(current.requests.filter((request) => request.method === "POST")).toEqual([])
+  expect(current.canonical.policy).toEqual(allow)
+  expect(choice.disabled).toBe(true)
   view.dispose()
 })
 
