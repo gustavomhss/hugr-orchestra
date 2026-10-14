@@ -184,6 +184,10 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@orchestra/server#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/atlas-boundary#test": {
       "dependsOn": ["transit"],
       "outputs": []

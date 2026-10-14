@@ -1,20 +1,22 @@
 import { expect } from "bun:test"
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "../../../core/src/process"
 import { LayerNode } from "../../../core/src/effect/layer-node"
 import { testEffect } from "../../../core/test/lib/effect"
 import { expectSpawn } from "../../../core/test/fixture/omni-expect"
+import { installElectron } from "../../scripts/install-electron"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
 
-// Final CI needs installed Electron plus a GUI session (e.g. xvfb on Linux). Never skip missing native prerequisites.
+// Bootstrap Electron even when install scripts were ignored; missing Xvfb/native prerequisites fail the test.
 it.live("actual Electron preload/frame IPC saves bounded bytes and cleans cancellation/crash", Effect.gen(function* () {
   expectSpawn(import.meta.path)
+  yield* Effect.promise(() => installElectron())
   const root = yield* Effect.acquireRelease(
     Effect.promise(() => mkdtemp(join(tmpdir(), "orchestra-response-download-native-"))),
     (root) => Effect.promise(() => rm(root, { recursive: true, force: true })),
@@ -32,11 +34,19 @@ it.live("actual Electron preload/frame IPC saves bounded bytes and cleans cancel
     await writeFile(join(root, "fixture.html"), '<!doctype html><script type="module" src="renderer.js"></script>')
   })
   const proc = yield* AppProcess.Service
-  const executable: string = createRequire(import.meta.url)("electron")
-  const result = yield* proc.run(ChildProcess.make(executable, ["--no-sandbox", join(root, "main.cjs")], {
+  const electronDirectory = dirname(createRequire(import.meta.url).resolve("electron/package.json"))
+  const electron = join(
+    electronDirectory,
+    "dist",
+    (yield* Effect.promise(() => readFile(join(electronDirectory, "path.txt"), "utf8"))).trim(),
+  )
+  const command = process.platform === "linux" ? "xvfb-run" : electron
+  const args = [...(process.platform === "linux" ? ["-a", electron] : []), "--no-sandbox", join(root, "main.cjs")]
+  console.log("Native response download command", { executable: command, args })
+  const result = yield* proc.run(ChildProcess.make(command, args, {
     env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined, RESPONSE_DOWNLOAD_FIXTURE_ROOT: root }, extendEnv: false,
     stdin: "ignore", stdout: "pipe", stderr: "pipe",
   }), { timeout: "45 seconds", maxOutputBytes: 16 * 1024, maxErrorBytes: 32 * 1024 })
   expect(result.exitCode, result.stderr.toString()).toBe(0)
   expect(result.stdout.toString()).toContain("response-download-native:pass")
-}), 60000)
+}), 180000)
