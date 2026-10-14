@@ -6877,6 +6877,4079 @@ export type SchedulesRunOutput = {
   }
   readonly data: { readonly sessionID: string }
 }
+
+export type ActionsBindingsListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ActionsBindingsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly revision: number
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectID: string
+    readonly projectPath: string
+    readonly account?: string
+    readonly directory: string
+    readonly workspaceID?: string
+  }>
+}
+
+export type ActionsBindingsCreateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly remote: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["remote"]
+  readonly provider: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["provider"]
+  readonly projectPath: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["projectPath"]
+  readonly expectedRevision?: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["expectedRevision"]
+}
+
+export type ActionsBindingsCreateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly revision: number
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectID: string
+    readonly projectPath: string
+    readonly account?: string
+    readonly directory: string
+    readonly workspaceID?: string
+  }
+}
+
+export type ActionsBindingsGetInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsBindingsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly revision: number
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectID: string
+    readonly projectPath: string
+    readonly account?: string
+    readonly directory: string
+    readonly workspaceID?: string
+  }
+}
+
+export type ActionsBindingsUpdateInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly remote: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["remote"]
+  readonly provider: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["provider"]
+  readonly projectPath: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["projectPath"]
+  readonly expectedRevision?: {
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectPath: string
+    readonly expectedRevision?: number
+  }["expectedRevision"]
+}
+
+export type ActionsBindingsUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly revision: number
+    readonly remote: string
+    readonly provider: {
+      readonly kind: "github" | "gitlab"
+      readonly hostname: string
+      readonly apiOrigin: string
+      readonly version?: string
+    }
+    readonly projectID: string
+    readonly projectPath: string
+    readonly account?: string
+    readonly directory: string
+    readonly workspaceID?: string
+  }
+}
+
+export type ActionsBindingsRemoveInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsBindingsRemoveOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: null
+}
+
+export type ActionsBindingsCapabilitiesInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsBindingsCapabilitiesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly operation: string
+    readonly state: "available" | "unavailable" | "unknown"
+    readonly reason?: string
+    readonly scope?: string
+    readonly observedAt: number | "Infinity" | "-Infinity" | "NaN"
+  }>
+}
+
+export type ActionsBindingsPolicyInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsBindingsPolicyOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly policy: { readonly retentionDays?: number; readonly execution?: string }
+  }
+}
+
+export type ActionsBindingsUpdatePolicyInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly retentionDays?: { readonly retentionDays?: number; readonly execution?: string }["retentionDays"]
+  readonly execution?: { readonly retentionDays?: number; readonly execution?: string }["execution"]
+}
+
+export type ActionsBindingsUpdatePolicyOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly policy: { readonly retentionDays?: number; readonly execution?: string }
+  }
+}
+
+export type ActionsOperationsPrepareInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly clientID: {
+    readonly clientID: string
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly expected?: {
+      readonly sourceVersion?: string
+      readonly commit?: string
+      readonly attempt?: number
+      readonly resourceVersion?: string
+    }
+  }["clientID"]
+  readonly binding: {
+    readonly clientID: string
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly expected?: {
+      readonly sourceVersion?: string
+      readonly commit?: string
+      readonly attempt?: number
+      readonly resourceVersion?: string
+    }
+  }["binding"]
+  readonly kind: {
+    readonly clientID: string
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly expected?: {
+      readonly sourceVersion?: string
+      readonly commit?: string
+      readonly attempt?: number
+      readonly resourceVersion?: string
+    }
+  }["kind"]
+  readonly target: {
+    readonly clientID: string
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly expected?: {
+      readonly sourceVersion?: string
+      readonly commit?: string
+      readonly attempt?: number
+      readonly resourceVersion?: string
+    }
+  }["target"]
+  readonly expected?: {
+    readonly clientID: string
+    readonly binding: { readonly id: string; readonly revision: number }
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly expected?: {
+      readonly sourceVersion?: string
+      readonly commit?: string
+      readonly attempt?: number
+      readonly resourceVersion?: string
+    }
+  }["expected"]
+}
+
+export type ActionsOperationsPrepareOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}
+
+export type ActionsOperationsGetInput = {
+  readonly bindingID: { readonly bindingID: string; readonly operationID: string }["bindingID"]
+  readonly operationID: { readonly bindingID: string; readonly operationID: string }["operationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsOperationsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}
+
+export type ActionsOperationsReconcileInput = {
+  readonly bindingID: { readonly bindingID: string; readonly operationID: string }["bindingID"]
+  readonly operationID: { readonly bindingID: string; readonly operationID: string }["operationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsOperationsReconcileOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}
+
+export type ActionsWorkflowsListInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["revision"]
+  readonly cursor?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["cursor"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["limit"]
+  readonly query?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["query"]
+  readonly state?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly query?: string | undefined
+    readonly state?: string | undefined
+  }["state"]
+}
+
+export type ActionsWorkflowsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly items: ReadonlyArray<{
+      readonly id: string
+      readonly bindingID: string
+      readonly name: string | null
+      readonly path: string
+      readonly defaultRef?: string
+      readonly state: string
+      readonly dispatchable: boolean
+      readonly dispatchState?: "available" | "unavailable" | "unknown"
+      readonly inputs?: ReadonlyArray<{
+        readonly name: string
+        readonly description?: string
+        readonly type: "string" | "boolean" | "number" | "choice" | "environment" | "file" | "array"
+        readonly required: boolean
+        readonly default?: JsonValue
+        readonly options?: ReadonlyArray<string | boolean | number | "Infinity" | "-Infinity" | "NaN">
+      }>
+      readonly triggers?: ReadonlyArray<string>
+      readonly updatedAt?: string
+    }>
+    readonly next?: string
+    readonly total?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly capturedAt: number | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
+export type ActionsWorkflowsSourceInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["revision"]
+  readonly path: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["path"]
+  readonly ref: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["ref"]
+}
+
+export type ActionsWorkflowsSourceOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly bindingID: string
+    readonly path: string
+    readonly ref: string
+    readonly commit?: string
+    readonly version: string
+    readonly text: string
+    readonly editable: boolean
+    readonly includes?: ReadonlyArray<string>
+    readonly diagnostics?: ReadonlyArray<string>
+  }
+}
+
+export type ActionsWorkflowsGraphInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["revision"]
+  readonly path: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["path"]
+  readonly ref: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly path: string
+    readonly ref: string
+  }["ref"]
+}
+
+export type ActionsWorkflowsGraphOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: {
+      readonly bindingID: string
+      readonly path: string
+      readonly ref: string
+      readonly commit?: string
+      readonly version: string
+      readonly text: string
+      readonly editable: boolean
+      readonly includes?: ReadonlyArray<string>
+      readonly diagnostics?: ReadonlyArray<string>
+    }
+    readonly state: "complete" | "partial" | "unresolved"
+    readonly jobs: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly needs: ReadonlyArray<string>
+      readonly stage?: string
+      readonly condition?: string
+      readonly runner?: JsonValue
+      readonly matrix?: JsonValue
+      readonly reusable?: string
+      readonly configuration?: JsonValue
+      readonly steps: ReadonlyArray<{
+        readonly name: string
+        readonly uses?: string
+        readonly run?: string
+        readonly condition?: string
+      }>
+    }>
+    readonly diagnostics: ReadonlyArray<string>
+    readonly triggers?: JsonValue
+    readonly stages?: ReadonlyArray<string>
+    readonly includes?: JsonValue
+    readonly inputs?: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string
+      readonly type: "string" | "boolean" | "number" | "choice" | "environment" | "file" | "array"
+      readonly required: boolean
+      readonly default?: JsonValue
+      readonly options?: ReadonlyArray<string | boolean | number | "Infinity" | "-Infinity" | "NaN">
+    }>
+    readonly header?: JsonValue
+  }
+}
+
+export type ActionsWorkflowsDispatchInput = {
+  readonly bindingID: { readonly bindingID: string; readonly workflowID: string }["bindingID"]
+  readonly workflowID: { readonly bindingID: string; readonly workflowID: string }["workflowID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: {
+    readonly id: string
+    readonly input:
+      | {
+          readonly provider: "github"
+          readonly ref: string
+          readonly inputs?: { readonly [x: string]: string | number | "Infinity" | "-Infinity" | "NaN" | boolean }
+        }
+      | {
+          readonly provider: "gitlab"
+          readonly ref: string
+          readonly variables?: ReadonlyArray<{
+            readonly key: string
+            readonly value: string
+            readonly variable_type?: "env_var" | "file"
+          }>
+          readonly inputs?: { readonly [x: string]: JsonValue }
+        }
+  }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input:
+      | {
+          readonly provider: "github"
+          readonly ref: string
+          readonly inputs?: { readonly [x: string]: string | number | "Infinity" | "-Infinity" | "NaN" | boolean }
+        }
+      | {
+          readonly provider: "gitlab"
+          readonly ref: string
+          readonly variables?: ReadonlyArray<{
+            readonly key: string
+            readonly value: string
+            readonly variable_type?: "env_var" | "file"
+          }>
+          readonly inputs?: { readonly [x: string]: JsonValue }
+        }
+  }["input"]
+}
+
+export type ActionsWorkflowsDispatchOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsWorkflowsStateInput = {
+  readonly bindingID: { readonly bindingID: string; readonly workflowID: string }["bindingID"]
+  readonly workflowID: { readonly bindingID: string; readonly workflowID: string }["workflowID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "github"; readonly enabled: boolean } }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input: { readonly provider: "github"; readonly enabled: boolean }
+  }["input"]
+}
+
+export type ActionsWorkflowsStateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsListInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["revision"]
+  readonly workflowID?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["workflowID"]
+  readonly cursor?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["cursor"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["limit"]
+  readonly ref?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["ref"]
+  readonly event?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["event"]
+  readonly status?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["status"]
+  readonly commit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["commit"]
+  readonly actor?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["actor"]
+  readonly created?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["created"]
+  readonly createdAfter?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["createdAfter"]
+  readonly createdBefore?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["createdBefore"]
+  readonly updatedAfter?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["updatedAfter"]
+  readonly updatedBefore?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly workflowID?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+    readonly ref?: string | undefined
+    readonly event?: string | undefined
+    readonly status?: string | undefined
+    readonly commit?: string | undefined
+    readonly actor?: string | undefined
+    readonly created?: string | undefined
+    readonly createdAfter?: string | undefined
+    readonly createdBefore?: string | undefined
+    readonly updatedAfter?: string | undefined
+    readonly updatedBefore?: string | undefined
+  }["updatedBefore"]
+}
+
+export type ActionsRunsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly items: ReadonlyArray<{
+      readonly id: string
+      readonly bindingID: string
+      readonly workflowID: string
+      readonly name: string | null
+      readonly ref: string | null
+      readonly commit: string
+      readonly event: string
+      readonly actor?: string
+      readonly status: string | null
+      readonly conclusion?: string | null
+      readonly attempt?: number
+      readonly createdAt?: string
+      readonly startedAt?: string
+      readonly finishedAt?: string
+      readonly updatedAt?: string
+      readonly triggeringActor?: string
+      readonly repositoryID?: string
+      readonly duration?: number | "Infinity" | "-Infinity" | "NaN"
+      readonly parentID?: string
+      readonly url?: string
+    }>
+    readonly next?: string
+    readonly total?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly capturedAt: number | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
+export type ActionsRunsGetInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsRunsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly workflowID: string
+    readonly name: string | null
+    readonly ref: string | null
+    readonly commit: string
+    readonly event: string
+    readonly actor?: string
+    readonly status: string | null
+    readonly conclusion?: string | null
+    readonly attempt?: number
+    readonly createdAt?: string
+    readonly startedAt?: string
+    readonly finishedAt?: string
+    readonly updatedAt?: string
+    readonly triggeringActor?: string
+    readonly repositoryID?: string
+    readonly duration?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly parentID?: string
+    readonly url?: string
+  }
+}
+
+export type ActionsRunsJobsInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly attempt?: number | undefined
+    readonly cursor?: string | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly attempt?: number | undefined
+    readonly cursor?: string | undefined
+  }["revision"]
+  readonly attempt?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly attempt?: number | undefined
+    readonly cursor?: string | undefined
+  }["attempt"]
+  readonly cursor?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly attempt?: number | undefined
+    readonly cursor?: string | undefined
+  }["cursor"]
+}
+
+export type ActionsRunsJobsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly items: ReadonlyArray<{
+      readonly id: string
+      readonly bindingID: string
+      readonly runID: string
+      readonly name: string
+      readonly status: string | null
+      readonly conclusion?: string | null
+      readonly definitionID?: string
+      readonly runner?: string
+      readonly runnerID?: string
+      readonly runnerLabels?: ReadonlyArray<string>
+      readonly runnerGroupID?: string
+      readonly attempt?: number
+      readonly startedAt?: string
+      readonly finishedAt?: string
+      readonly downstreamID?: string
+      readonly downstreamProjectID?: string
+      readonly kind?: "job" | "bridge"
+      readonly stage?: string
+      readonly retried?: boolean
+      readonly retryOf?: string
+      readonly allowFailure?: boolean
+      readonly steps: ReadonlyArray<{
+        readonly number: number | "Infinity" | "-Infinity" | "NaN"
+        readonly name: string
+        readonly status: string | null
+        readonly conclusion?: string | null
+        readonly startedAt?: string
+        readonly finishedAt?: string
+      }>
+    }>
+    readonly next?: string
+    readonly total?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly capturedAt: number | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
+export type ActionsRunsRetryInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: {
+    readonly id: string
+    readonly input:
+      | { readonly provider: "github"; readonly mode: "all" | "failed"; readonly enableDebugLogging?: boolean }
+      | { readonly provider: "gitlab"; readonly mode: "failed" }
+  }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input:
+      | { readonly provider: "github"; readonly mode: "all" | "failed"; readonly enableDebugLogging?: boolean }
+      | { readonly provider: "gitlab"; readonly mode: "failed" }
+  }["input"]
+}
+
+export type ActionsRunsRetryOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsCancelInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "github" | "gitlab" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "github" | "gitlab" } }["input"]
+}
+
+export type ActionsRunsCancelOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsForceCancelInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "github" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "github" } }["input"]
+}
+
+export type ActionsRunsForceCancelOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsRemoveInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "github" | "gitlab" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "github" | "gitlab" } }["input"]
+}
+
+export type ActionsRunsRemoveOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsApproveForkInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "github" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "github" } }["input"]
+}
+
+export type ActionsRunsApproveForkOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsRunsRenameInput = {
+  readonly bindingID: { readonly bindingID: string; readonly runID: string }["bindingID"]
+  readonly runID: { readonly bindingID: string; readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "gitlab"; readonly name: string } }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input: { readonly provider: "gitlab"; readonly name: string }
+  }["input"]
+}
+
+export type ActionsRunsRenameOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsJobsRetryInput = {
+  readonly bindingID: { readonly bindingID: string; readonly jobID: string }["bindingID"]
+  readonly jobID: { readonly bindingID: string; readonly jobID: string }["jobID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: {
+    readonly id: string
+    readonly input:
+      | { readonly provider: "github"; readonly enableDebugLogging?: boolean }
+      | { readonly provider: "gitlab" }
+  }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input:
+      | { readonly provider: "github"; readonly enableDebugLogging?: boolean }
+      | { readonly provider: "gitlab" }
+  }["input"]
+}
+
+export type ActionsJobsRetryOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsJobsPlayInput = {
+  readonly bindingID: { readonly bindingID: string; readonly jobID: string }["bindingID"]
+  readonly jobID: { readonly bindingID: string; readonly jobID: string }["jobID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: {
+    readonly id: string
+    readonly input: {
+      readonly provider: "gitlab"
+      readonly variables?: ReadonlyArray<{
+        readonly key: string
+        readonly value: string
+        readonly variable_type?: "env_var" | "file"
+      }>
+    }
+  }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input: {
+      readonly provider: "gitlab"
+      readonly variables?: ReadonlyArray<{
+        readonly key: string
+        readonly value: string
+        readonly variable_type?: "env_var" | "file"
+      }>
+    }
+  }["input"]
+}
+
+export type ActionsJobsPlayOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsJobsCancelInput = {
+  readonly bindingID: { readonly bindingID: string; readonly jobID: string }["bindingID"]
+  readonly jobID: { readonly bindingID: string; readonly jobID: string }["jobID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["input"]
+}
+
+export type ActionsJobsCancelOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsJobsEraseInput = {
+  readonly bindingID: { readonly bindingID: string; readonly jobID: string }["bindingID"]
+  readonly jobID: { readonly bindingID: string; readonly jobID: string }["jobID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["input"]
+}
+
+export type ActionsJobsEraseOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsPipelinesMergeRequestInput = {
+  readonly bindingID: { readonly bindingID: string; readonly mergeRequestID: string }["bindingID"]
+  readonly mergeRequestID: { readonly bindingID: string; readonly mergeRequestID: string }["mergeRequestID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["id"]
+  readonly input: { readonly id: string; readonly input: { readonly provider: "gitlab" } }["input"]
+}
+
+export type ActionsPipelinesMergeRequestOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsPipelinesTriggerInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: {
+    readonly id: string
+    readonly input: {
+      readonly provider: "gitlab"
+      readonly ref: string
+      readonly token: string
+      readonly variables?: { readonly [x: string]: string }
+      readonly inputs?: { readonly [x: string]: JsonValue }
+    }
+  }["id"]
+  readonly input: {
+    readonly id: string
+    readonly input: {
+      readonly provider: "gitlab"
+      readonly ref: string
+      readonly token: string
+      readonly variables?: { readonly [x: string]: string }
+      readonly inputs?: { readonly [x: string]: JsonValue }
+    }
+  }["input"]
+}
+
+export type ActionsPipelinesTriggerOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsResourcesListInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["revision"]
+  readonly kind: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["kind"]
+  readonly runID?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["runID"]
+  readonly resourceID?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["resourceID"]
+  readonly scope?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["scope"]
+  readonly ref?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["ref"]
+  readonly query?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["query"]
+  readonly cursor?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["cursor"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly runID?: string | undefined
+    readonly resourceID?: string | undefined
+    readonly scope?: string | undefined
+    readonly ref?: string | undefined
+    readonly query?: string | undefined
+    readonly cursor?: string | undefined
+    readonly limit?: number | undefined
+  }["limit"]
+}
+
+export type ActionsResourcesListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly items: ReadonlyArray<{
+      readonly id: string
+      readonly bindingID: string
+      readonly kind:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly name: string
+      readonly scope?: string
+      readonly owner?: string
+      readonly status?: string
+      readonly sensitive?: boolean
+      readonly data: JsonValue
+    }>
+    readonly next?: string
+    readonly total?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly capturedAt: number | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
+export type ActionsResourcesCommandInput = {
+  readonly bindingID: {
+    readonly bindingID: string
+    readonly resourceKind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly action: "create" | "update" | "delete" | "play" | "pause" | "keep" | "clear"
+  }["bindingID"]
+  readonly resourceKind: {
+    readonly bindingID: string
+    readonly resourceKind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly action: "create" | "update" | "delete" | "play" | "pause" | "keep" | "clear"
+  }["resourceKind"]
+  readonly action: {
+    readonly bindingID: string
+    readonly resourceKind:
+      | "artifacts"
+      | "environments"
+      | "deployments"
+      | "variables"
+      | "runners"
+      | "caches"
+      | "schedules"
+      | "triggers"
+      | "secureFiles"
+      | "resourceGroups"
+      | "pipelineVariables"
+      | "testReports"
+      | "policy"
+    readonly action: "create" | "update" | "delete" | "play" | "pause" | "keep" | "clear"
+  }["action"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: JsonValue }["id"]
+  readonly input: { readonly id: string; readonly input: JsonValue }["input"]
+}
+
+export type ActionsResourcesCommandOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsSourceBaseInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly ref?: string | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly ref?: string | undefined
+  }["revision"]
+  readonly ref?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly ref?: string | undefined
+  }["ref"]
+}
+
+export type ActionsSourceBaseOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly bindingID: string; readonly ref: string; readonly commit: string }
+}
+
+export type ActionsSourceValidateDraftInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly base: {
+    readonly base: { readonly bindingID: string; readonly ref: string; readonly commit: string }
+    readonly path: string
+    readonly draft: string
+  }["base"]
+  readonly path: {
+    readonly base: { readonly bindingID: string; readonly ref: string; readonly commit: string }
+    readonly path: string
+    readonly draft: string
+  }["path"]
+  readonly draft: {
+    readonly base: { readonly bindingID: string; readonly ref: string; readonly commit: string }
+    readonly path: string
+    readonly draft: string
+  }["draft"]
+}
+
+export type ActionsSourceValidateDraftOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: {
+      readonly bindingID: string
+      readonly path: string
+      readonly ref: string
+      readonly commit?: string
+      readonly version: string
+      readonly text: string
+      readonly editable: boolean
+      readonly includes?: ReadonlyArray<string>
+      readonly diagnostics?: ReadonlyArray<string>
+    }
+    readonly state: "complete" | "partial" | "unresolved"
+    readonly jobs: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly needs: ReadonlyArray<string>
+      readonly stage?: string
+      readonly condition?: string
+      readonly runner?: JsonValue
+      readonly matrix?: JsonValue
+      readonly reusable?: string
+      readonly configuration?: JsonValue
+      readonly steps: ReadonlyArray<{
+        readonly name: string
+        readonly uses?: string
+        readonly run?: string
+        readonly condition?: string
+      }>
+    }>
+    readonly diagnostics: ReadonlyArray<string>
+    readonly triggers?: JsonValue
+    readonly stages?: ReadonlyArray<string>
+    readonly includes?: JsonValue
+    readonly inputs?: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string
+      readonly type: "string" | "boolean" | "number" | "choice" | "environment" | "file" | "array"
+      readonly required: boolean
+      readonly default?: JsonValue
+      readonly options?: ReadonlyArray<string | boolean | number | "Infinity" | "-Infinity" | "NaN">
+    }>
+    readonly header?: JsonValue
+  }
+}
+
+export type ActionsSourceValidateInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly source: {
+    readonly source: {
+      readonly bindingID: string
+      readonly path: string
+      readonly ref: string
+      readonly commit?: string
+      readonly version: string
+      readonly text: string
+      readonly editable: boolean
+      readonly includes?: ReadonlyArray<string>
+      readonly diagnostics?: ReadonlyArray<string>
+    }
+    readonly draft: string
+  }["source"]
+  readonly draft: {
+    readonly source: {
+      readonly bindingID: string
+      readonly path: string
+      readonly ref: string
+      readonly commit?: string
+      readonly version: string
+      readonly text: string
+      readonly editable: boolean
+      readonly includes?: ReadonlyArray<string>
+      readonly diagnostics?: ReadonlyArray<string>
+    }
+    readonly draft: string
+  }["draft"]
+}
+
+export type ActionsSourceValidateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: {
+      readonly bindingID: string
+      readonly path: string
+      readonly ref: string
+      readonly commit?: string
+      readonly version: string
+      readonly text: string
+      readonly editable: boolean
+      readonly includes?: ReadonlyArray<string>
+      readonly diagnostics?: ReadonlyArray<string>
+    }
+    readonly state: "complete" | "partial" | "unresolved"
+    readonly jobs: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly needs: ReadonlyArray<string>
+      readonly stage?: string
+      readonly condition?: string
+      readonly runner?: JsonValue
+      readonly matrix?: JsonValue
+      readonly reusable?: string
+      readonly configuration?: JsonValue
+      readonly steps: ReadonlyArray<{
+        readonly name: string
+        readonly uses?: string
+        readonly run?: string
+        readonly condition?: string
+      }>
+    }>
+    readonly diagnostics: ReadonlyArray<string>
+    readonly triggers?: JsonValue
+    readonly stages?: ReadonlyArray<string>
+    readonly includes?: JsonValue
+    readonly inputs?: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string
+      readonly type: "string" | "boolean" | "number" | "choice" | "environment" | "file" | "array"
+      readonly required: boolean
+      readonly default?: JsonValue
+      readonly options?: ReadonlyArray<string | boolean | number | "Infinity" | "-Infinity" | "NaN">
+    }>
+    readonly header?: JsonValue
+  }
+}
+
+export type ActionsSourceCommandInput = {
+  readonly bindingID: { readonly bindingID: string; readonly action: "branch" | "write" | "review" }["bindingID"]
+  readonly action: { readonly bindingID: string; readonly action: "branch" | "write" | "review" }["action"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+  readonly id: { readonly id: string; readonly input: JsonValue }["id"]
+  readonly input: { readonly id: string; readonly input: JsonValue }["input"]
+}
+
+export type ActionsSourceCommandOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly operation: {
+      readonly id: string
+      readonly bindingID: string
+      readonly clientID: string
+      readonly kind:
+        | "workflow.dispatch"
+        | "workflow.enable"
+        | "workflow.disable"
+        | "run.retry"
+        | "run.retryFailed"
+        | "run.cancel"
+        | "run.forceCancel"
+        | "run.delete"
+        | "run.approveFork"
+        | "run.rename"
+        | "job.retry"
+        | "job.play"
+        | "job.cancel"
+        | "job.erase"
+        | "logs.delete"
+        | "source.branch"
+        | "source.write"
+        | "source.delete"
+        | "source.review"
+        | "resource.create"
+        | "resource.update"
+        | "resource.delete"
+        | "artifact.keep"
+        | "deployment.review"
+        | "environment.stop"
+        | "runner.register"
+        | "runner.assign"
+        | "runner.remove"
+        | "cache.clear"
+        | "schedule.play"
+        | "schedule.takeOwnership"
+        | "pipeline.mergeRequest"
+        | "pipeline.trigger"
+        | "secureFile.upload"
+        | "resourceGroup.processMode"
+      readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+      readonly target: {
+        readonly workflowID?: string
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly resourceKind?:
+          | "artifacts"
+          | "environments"
+          | "deployments"
+          | "variables"
+          | "runners"
+          | "caches"
+          | "schedules"
+          | "triggers"
+          | "secureFiles"
+          | "resourceGroups"
+          | "pipelineVariables"
+          | "testReports"
+          | "policy"
+        readonly scope?: string
+        readonly path?: string
+        readonly ref?: string
+      }
+      readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly result?: {
+        readonly runID?: string
+        readonly jobID?: string
+        readonly resourceID?: string
+        readonly attempt?: number
+        readonly unattributed?: boolean
+      }
+      readonly reason?: string
+    }
+    readonly output?:
+      | {
+          readonly kind: "runnerToken"
+          readonly token: string
+          readonly expiresAt?: string
+          readonly runnerID?: string
+        }
+      | { readonly kind: "runnerJit"; readonly encodedConfiguration: string; readonly runnerID: string }
+      | { readonly kind: "triggerToken"; readonly token: string; readonly triggerID: string }
+      | { readonly kind: "sourceReview"; readonly id: string; readonly url: string }
+  }
+}
+
+export type ActionsTransfersInfoInput = {
+  readonly bindingID: { readonly bindingID: string }["bindingID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["revision"]
+  readonly kind: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["kind"]
+  readonly id: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["id"]
+  readonly runID?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["runID"]
+  readonly attempt?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["attempt"]
+  readonly path?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+    readonly kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    readonly id: string
+    readonly runID?: string | undefined
+    readonly attempt?: number | undefined
+    readonly path?: string | undefined
+  }["path"]
+}
+
+export type ActionsTransfersInfoOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly filename: string
+    readonly contentType: string
+    readonly size?: number | "Infinity" | "-Infinity" | "NaN"
+    readonly digest?: string
+  }
+}
 export {
   type UnauthorizedError,
   isUnauthorizedError,
@@ -6922,6 +10995,8 @@ export {
   isScheduleNotFoundError,
   type ScheduleRunError,
   isScheduleRunError,
+  type ActionsError,
+  isActionsError,
 } from "./errors"
 
 export { type ResearchArtifactInput, type ResearchArtifactOutput } from "./research-types"
