@@ -2,11 +2,13 @@ import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { chmod, link, lstat, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { dirname, join } from "node:path"
+import { dirname, join, parse, sep } from "node:path"
 import { prepareNpmDistribution } from "../script/distribution-npm"
 import { archiveDistribution, prepareDistribution, verifyDistribution } from "../script/distribution-payload"
 import { requireDistributionHost } from "./fixture/distribution-host"
 import { binding, payloadFixture, payloadSnapshot, tuple } from "./fixture/distribution-payload"
+import { requireArtifactHost } from "../script/artifact-native"
+import { artifactNative } from "../script/artifact-fs"
 
 requireDistributionHost()
 
@@ -16,6 +18,92 @@ afterEach(async () => {
 })
 
 const fixture = (parent?: string) => payloadFixture(roots, parent)
+
+test("producer policy admits only supported 64-bit OS/CPU pairs", () => {
+  for (const os of ["linux", "darwin", "win32"])
+    for (const cpu of ["x64", "arm64"]) expect(() => requireArtifactHost(os, cpu)).not.toThrow()
+  for (const [os, cpu] of [["win32", "ia32"], ["win32", "arm"], ["win32", "riscv64"], ["freebsd", "x64"], ["", "arm64"]])
+    expect(() => requireArtifactHost(os, cpu)).toThrow("Unsupported artifact producer host")
+})
+
+if (process.platform === "win32") test("Windows producer ABI rejects emulation and wrong real PE CPU/flags before accepting restored bytes", async () => {
+  const { ArtifactNativeWindows } = await import("@orchestra/core/artifact-native-windows")
+  const bytes = await readFile(process.execPath)
+  const machine = process.arch === "arm64" ? 0xaa64 : 0x8664
+  const foreign = process.arch === "arm64" ? 0x8664 : 0xaa64
+  ArtifactNativeWindows.requireImage(bytes, process.arch, false)
+  ArtifactNativeWindows.requireMachine(process.arch, 0, machine, machine)
+  for (const observed of [[foreign, machine, machine], [0, foreign, machine], [0, machine, foreign]])
+    expect(() => ArtifactNativeWindows.requireMachine(process.arch, observed[0], observed[1], observed[2])).toThrow("ARTIFACT_WINDOWS_NATIVE_ABI_MISMATCH")
+  expect(() => ArtifactNativeWindows.requireImage(bytes, process.arch === "arm64" ? "x64" : "arm64", false)).toThrow("ARTIFACT_WINDOWS_PE_CPU_OR_FLAGS_INVALID")
+  const offset = bytes.readUInt32LE(60)
+  for (const mutation of [
+    { offset: offset + 4, value: foreign },
+    { offset: offset + 24, value: 0x10b },
+    { offset: offset + 20, value: 2 },
+    { offset: offset + 22, value: bytes.readUInt16LE(offset + 22) & ~2 },
+    { offset: offset + 22, value: bytes.readUInt16LE(offset + 22) ^ 0x2000 },
+  ]) {
+    const corrupted = Buffer.from(bytes)
+    corrupted.writeUInt16LE(mutation.value, mutation.offset)
+    expect(() => ArtifactNativeWindows.requireImage(corrupted, process.arch, false)).toThrow("ARTIFACT_WINDOWS_PE_CPU_OR_FLAGS_INVALID")
+    ArtifactNativeWindows.requireImage(bytes, process.arch, false)
+  }
+})
+
+if (process.platform === "win32") test("native Windows producer handles preserve exact bytes, exclusive publication and closed-handle rejection", async () => {
+  const value = await fixture()
+  const native = await artifactNative()
+  const start = parse(value.root).root
+  const current = { directory: native.root(start) }
+  const pins = [current.directory]
+  try {
+    value.root.slice(start.length).split(sep).filter(Boolean)
+      .forEach((name) => {
+        current.directory = native.directory(current.directory, name)
+        pins.push(current.directory)
+      })
+    const parent = current.directory
+    pins[0].validateRoot?.()
+    const stage = native.directory(parent, "native-stage", { create: true, exclusive: true, removable: true })
+    pins.push(stage)
+    const occupied = native.directory(parent, "occupied", { create: true, exclusive: true, removable: true })
+    pins.push(occupied)
+    const bytes = Buffer.concat([Buffer.from("é漢😀\0"), Buffer.alloc(192 * 1024, 0xff)])
+    native.write(stage, "é漢😀.bin", bytes, false)
+    expect(native.list(stage)).toEqual(["é漢😀.bin"])
+    expect(native.read(stage, "é漢😀.bin").bytes).toEqual(bytes)
+    expect(await readFile(join(value.root, "native-stage/é漢😀.bin"))).toEqual(bytes)
+    expect(() => native.write(stage, "é漢😀.bin", Buffer.from("replacement"), false)).toThrow()
+    expect(() => native.publish(parent, "native-stage", stage, "occupied")).toThrow()
+    expect(native.list(occupied)).toEqual([])
+    expect(native.read(stage, "é漢😀.bin").bytes).toEqual(bytes)
+    const identity = (await lstat(join(value.root, "native-stage/é漢😀.bin"), { bigint: true })).ino
+    native.publish(parent, "native-stage", stage, "published")
+    expect(() => native.directory(parent, "native-stage")).toThrow("ENOENT")
+    const published = native.directory(parent, "published")
+    pins.push(published)
+    expect(published.identity).toBe(stage.identity)
+    expect((await lstat(join(value.root, "published/é漢😀.bin"), { bigint: true })).ino).toBe(identity)
+    expect(await readFile(join(value.root, "published/é漢😀.bin"))).toEqual(bytes)
+    native.removeFile(stage, "é漢😀.bin")
+    native.removeDirectory(parent, "published", stage)
+    native.closeDirectory(published)
+    pins.pop()
+    native.removeDirectory(parent, "occupied", occupied)
+    native.closeDirectory(occupied)
+    pins.pop()
+    native.closeDirectory(stage)
+    pins.pop()
+    expect(() => native.list(stage)).toThrow("NTSTATUS 0xc0000008")
+    expect((await readdir(value.root)).sort()).toEqual(["dist"])
+    console.error(`ARTIFACT_WINDOWS_NATIVE_HANDLE_CONTROL ${JSON.stringify({ arch: process.arch,
+      bytes: bytes.length, exclusiveWrite: true, exclusivePublish: true, renamedIdentity: true, closedHandle: true })}`)
+  } finally {
+    pins.reverse().forEach((pin) => native.closeDirectory(pin))
+    native.close()
+  }
+})
 
 test("complete payload retains the full bin tree, verifies and reuses exact publication", async () => {
   const value = await fixture()

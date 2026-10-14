@@ -8,9 +8,9 @@ import { requireOrdinaryWindowsPath } from "../script/artifact-windows-root"
 import { namedTargets } from "../script/targets"
 import { artifactFixture } from "./artifact-fs.test"
 
-test("producer host policy rejects Windows ARM but preserves Windows ARM targets", () => {
-  expect(() => requireArtifactHost("win32", "arm64")).toThrow("Unsupported artifact producer host: win32/arm64")
-  expect(() => requireArtifactHost("win32", "x64")).not.toThrow()
+test("producer host policy admits Windows 64-bit CPUs and rejects unsupported hosts", () => {
+  for (const cpu of ["x64", "arm64"]) expect(() => requireArtifactHost("win32", cpu)).not.toThrow()
+  for (const cpu of ["ia32", "arm", "riscv64", ""]) expect(() => requireArtifactHost("win32", cpu)).toThrow("Unsupported artifact producer host")
   expect(namedTargets.some((entry) => entry.target === "windows-arm64")).toBe(true)
   expect(() => requireArtifactHost("freebsd", "x64")).toThrow("Unsupported artifact producer host")
 })
