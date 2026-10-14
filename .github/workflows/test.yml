@@ -70,7 +70,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if printf '%s\n' "$changed" | grep -Eq '^(foundation/atlas/|\.github/workflows/test\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^((foundation|modules)/atlas/|\.github/workflows/test\.yml$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -85,7 +85,7 @@ jobs:
     if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
     defaults:
       run:
-        working-directory: foundation/atlas
+        working-directory: modules/atlas
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -97,9 +97,9 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: foundation/atlas/package-lock.json
+          cache-dependency-path: modules/atlas/package-lock.json
 
-      # foundation/atlas/.github/workflows/ci.yml documents Atlas's standalone
+      # modules/atlas/.github/workflows/ci.yml documents Atlas's standalone
       # contract. This host-level job makes that contract reachable in this repo.
       - name: Install Atlas dependencies
         run: npm ci
@@ -144,7 +144,7 @@ jobs:
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
-          if echo "$CHANGED" | grep -qE '^(foundation/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
+          if echo "$CHANGED" | grep -qE '^((foundation|modules)/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
             echo "touches_code=true" >> "$GITHUB_OUTPUT"
           else
             echo "touches_code=false" >> "$GITHUB_OUTPUT"
@@ -377,7 +377,7 @@ jobs:
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
       - name: Check generated Atlas boundary
         if: matrix.part == 'packages'
-        working-directory: packages/atlas-boundary
+        working-directory: modules/atlas/boundary
         run: bun run check:generated
 
       - name: Fetch target branch for godfile

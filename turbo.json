@@ -41,11 +41,11 @@
       "dependsOn": ["^transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/omni/crates/**",
-        "$TURBO_ROOT$/packages/omni/Cargo.toml",
-        "$TURBO_ROOT$/packages/omni/Cargo.lock",
-        "$TURBO_ROOT$/packages/omni/rust-toolchain.toml",
-        "$TURBO_ROOT$/packages/omni/.cargo/**"
+        "$TURBO_ROOT$/native/omni/crates/**",
+        "$TURBO_ROOT$/native/omni/Cargo.toml",
+        "$TURBO_ROOT$/native/omni/Cargo.lock",
+        "$TURBO_ROOT$/native/omni/rust-toolchain.toml",
+        "$TURBO_ROOT$/native/omni/.cargo/**"
       ]
     },
     "orchestra#test": {
@@ -58,7 +58,7 @@
       // Core's tests read these out-of-package CI sources and execute the campaign observation helpers.
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/omni/campaign/**/*.ts",
+        "$TURBO_ROOT$/native/omni/campaign/**/*.ts",
         "$TURBO_ROOT$/script/test-ci-request.ts",
         "$TURBO_ROOT$/script/test-ci-desktop.ts",
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",

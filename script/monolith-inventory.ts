@@ -15,13 +15,31 @@ export async function monolithInventory(directory: string, revision?: string) {
     return { value: record(value, file), sha256: captured.sha256 }
   }
   const workspace = await read("package.json")
-  const atlas = await read("foundation/atlas/package.json")
-  const cargo = await read("packages/omni/Cargo.toml", "toml")
-  const qa = await read("packages/omni/qa/Cargo.toml", "toml")
+  const registered = await source.scan(".", "script/toolchain-registry.json")
+  // Historical captures predate the registry; only actual absence permits the legacy layout.
+  const toolchain = registered.length ? (await read("script/toolchain-registry.json")).value : {
+    format: 1, roots: {
+      omni: { path: "packages/omni", manifest: "Cargo.toml" }, atlas: { path: "foundation/atlas", manifest: "package.json" },
+    },
+  }
+  const roots = record(toolchain.roots, "toolchain roots")
+  if (toolchain.format !== 1 || Object.keys(roots).sort().join(",") !== "atlas,omni") throw new Error("BASELINE_INVALID_TOOLCHAIN_REGISTRY")
+  const omniRoot = record(roots.omni, "Omni toolchain root")
+  const atlasRoot = record(roots.atlas, "Atlas toolchain root")
+  if (typeof omniRoot.path !== "string" || omniRoot.manifest !== "Cargo.toml" ||
+      typeof atlasRoot.path !== "string" || atlasRoot.manifest !== "package.json") throw new Error("BASELINE_INVALID_TOOLCHAIN_ROOT")
+  relative(omniRoot.path)
+  relative(atlasRoot.path)
+  const atlasManifest = `${atlasRoot.path}/package.json`
+  const cargoManifest = `${omniRoot.path}/Cargo.toml`
+  const qaManifest = `${omniRoot.path}/qa/Cargo.toml`
+  const atlas = await read(atlasManifest)
+  const cargo = await read(cargoManifest, "toml")
+  const qa = await read(qaManifest, "toml")
   const domains = [
     { kind: "bun" as const, scope: ".", patterns: list(Array.isArray(workspace.value.workspaces) ? workspace.value.workspaces : record(workspace.value.workspaces, "package.json workspaces").packages, "Bun workspaces") },
-    { kind: "npm" as const, scope: "foundation/atlas", patterns: list(atlas.value.workspaces, "Atlas workspaces") },
-    { kind: "cargo" as const, scope: "packages/omni", patterns: list(record(cargo.value.workspace, "Cargo workspace").members, "Cargo members") },
+    { kind: "npm" as const, scope: atlasRoot.path, patterns: list(atlas.value.workspaces, "Atlas workspaces") },
+    { kind: "cargo" as const, scope: omniRoot.path, patterns: list(record(cargo.value.workspace, "Cargo workspace").members, "Cargo members") },
   ]
   const modules = (await Promise.all(domains.map(async (domain) => {
     const manifest = domain.kind === "cargo" ? "Cargo.toml" : "package.json"
@@ -33,12 +51,12 @@ export async function monolithInventory(directory: string, revision?: string) {
     }))).flat())].sort()
     return Promise.all(files.map(async (file) => moduleRecord(domain.kind, domain.scope, file, await read(file, domain.kind === "cargo" ? "toml" : "json"))))
   }))).flat()
-  modules.push(moduleRecord("cargo", "packages/omni/qa", "packages/omni/qa/Cargo.toml", qa))
+  modules.push(moduleRecord("cargo", `${omniRoot.path}/qa`, qaManifest, qa))
   const identities = modules.map((module) => `${module.kind}:${module.scope}:${module.name}`)
   const duplicate = identities.find((identity, index) => identities.indexOf(identity) !== index)
   if (duplicate) throw new Error(`BASELINE_DUPLICATE_IDENTITY:${duplicate}`)
   if (!modules.length) throw new Error("BASELINE_EMPTY_MODULES")
-  cargoDependencies(record(cargo.value.workspace, "Cargo workspace"), "packages/omni/Cargo.toml workspace")
+  cargoDependencies(record(cargo.value.workspace, "Cargo workspace"), `${cargoManifest} workspace`)
 
   const assetDirectories = [
     ...(await source.directories("packages")).map((name) => `packages/${name}`),
@@ -54,8 +72,8 @@ export async function monolithInventory(directory: string, revision?: string) {
     }))
   const patches = Object.values(record(workspace.value.patchedDependencies === undefined ? {} : workspace.value.patchedDependencies, "patchedDependencies"))
   if (!patches.every((value): value is string => typeof value === "string")) throw new Error("BASELINE_INVALID_PATCH_PATH")
-  const roots = [moduleRecord("bun", ".", "package.json", workspace), moduleRecord("npm", "foundation/atlas", "foundation/atlas/package.json", atlas)]
-  const vendors = [...roots, ...modules].filter((module) => module.kind !== "cargo").flatMap((module) => Object.values(module.dependencies).flatMap((dependencies) =>
+  const workspaceRoots = [moduleRecord("bun", ".", "package.json", workspace), moduleRecord("npm", atlasRoot.path, atlasManifest, atlas)]
+  const vendors = [...workspaceRoots, ...modules].filter((module) => module.kind !== "cargo").flatMap((module) => Object.values(module.dependencies).flatMap((dependencies) =>
     Object.values(dependencies).filter((value): value is string => typeof value === "string" && value.startsWith("file:")).map((value) => {
       const referenced = value.slice(5).replaceAll("\\", "/")
       if (path.posix.isAbsolute(referenced) || path.win32.isAbsolute(referenced)) throw new Error(`BASELINE_INVALID_PATH:${value}`)
@@ -65,9 +83,9 @@ export async function monolithInventory(directory: string, revision?: string) {
     }),
   ))
   const inputs = await Promise.all([...new Set([
-    "package.json", "bun.lock", "foundation/atlas/package.json", "foundation/atlas/package-lock.json",
-    "packages/omni/Cargo.toml", "packages/omni/Cargo.lock", "packages/omni/qa/Cargo.toml", "packages/omni/qa/Cargo.lock",
-    ...patches, ...vendors,
+    "package.json", "bun.lock", atlasManifest, `${atlasRoot.path}/package-lock.json`,
+    cargoManifest, `${omniRoot.path}/Cargo.lock`, qaManifest, `${omniRoot.path}/qa/Cargo.lock`,
+    ...registered, ...patches, ...vendors,
   ])].sort().map((file) => fingerprintInput(source, file)))
   const captured = {
     format: 1, scope: "declared-manifests-assets-and-pins", source: source.identity,

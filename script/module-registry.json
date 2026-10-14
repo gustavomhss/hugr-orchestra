@@ -1,7 +1,7 @@
 {
   "format": 1,
   "modules": [
-    { "alias": "atlas-boundary", "kind": "bun", "scope": ".", "name": "@orchestra/atlas-boundary", "path": "packages/atlas-boundary" },
+    { "alias": "atlas-boundary", "kind": "bun", "scope": ".", "name": "@orchestra/atlas-boundary", "path": "modules/atlas/boundary" },
     { "alias": "app", "kind": "bun", "scope": ".", "name": "@orchestra/app", "path": "packages/app" },
     { "alias": "capability-assets", "kind": "bun", "scope": ".", "name": "@orchestra/capability-assets", "path": "modules/capability-assets" },
     { "alias": "cli", "kind": "bun", "scope": ".", "name": "@orchestra/cli", "path": "packages/cli" },
@@ -15,7 +15,7 @@
     { "alias": "httpapi-codegen", "kind": "bun", "scope": ".", "name": "@orchestra/httpapi-codegen", "path": "tooling/httpapi-codegen" },
     { "alias": "llm", "kind": "bun", "scope": ".", "name": "@orchestra/llm", "path": "packages/llm" },
     { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "modules/maestro/arsenal" },
-    { "alias": "omni/bindings/node", "kind": "bun", "scope": ".", "name": "hugr-omni", "path": "packages/omni/bindings/node" },
+    { "alias": "omni/bindings/node", "kind": "bun", "scope": ".", "name": "hugr-omni", "path": "native/omni/bindings/node" },
     { "alias": "orchestra", "kind": "bun", "scope": ".", "name": "orchestra", "path": "packages/orchestra" },
     { "alias": "plugin", "kind": "bun", "scope": ".", "name": "@orchestra/plugin", "path": "packages/plugin" },
     { "alias": "protocol", "kind": "bun", "scope": ".", "name": "@orchestra/protocol", "path": "packages/protocol" },
