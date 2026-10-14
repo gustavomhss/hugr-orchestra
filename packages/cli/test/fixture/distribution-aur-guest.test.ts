@@ -242,6 +242,8 @@ test("AUR-GUEST real nonroot makepkg final tidy/pacman install/update/retained o
       .toEqual([])
     state.qualified = true
     await Bun.write("/proof/evidence/qualified.json", JSON.stringify({ target, versions,
+      bootstrapDownloadSandbox: process.env.ORCHESTRA_AUR_BOOTSTRAP_SANDBOX,
+      landlockQualification: "not-claimed",
       architecture, distro: await readFile("/etc/os-release", "utf8"), launcher,
       finalPackages: [...retained].map(([file, sha256]) => ({ file, sha256 })),
       retainedDownloadedArchives: [...downloads].map(([file, sha256]) => ({ file, sha256 })),
