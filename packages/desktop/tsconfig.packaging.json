@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "scripts/resource-paths.ts",
+    "scripts/utils.ts",
+    "scripts/predev.ts",
+    "scripts/prebuild.ts",
+    "scripts/stage-omni.ts",
+    "electron-builder.config.ts",
+    "electron-builder.candidate.config.ts",
+    "electron.vite.config.ts"
+  ],
+  "exclude": ["scripts/**/*.test.ts", "scripts/**/*.fixture.ts"]
+}

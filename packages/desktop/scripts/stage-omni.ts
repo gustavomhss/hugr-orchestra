@@ -8,6 +8,7 @@ import { chmod, copyFile, mkdir, rm } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { join, resolve } from "node:path"
 import type { Channel } from "./utils"
+import { ResourcePaths } from "./resource-paths"
 
 const SUPERVISOR = `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`
 // The shipped name, then the name Cargo gives the addon.
@@ -41,7 +42,7 @@ function locate(channel: Channel) {
     throw new Error(
       `stage-omni: a ${channel} build needs OMNI_ARTIFACTS (or OMNI_ENABLED=false for a target omni lacks)`,
     )
-  const target = resolve(import.meta.dir, "..", "..", "omni", "target")
+  const target = resolve(ResourcePaths.make(import.meta.dir).omni, "target")
   return pair(["release", "debug"].map((profile) => join(target, profile)))
 }
 

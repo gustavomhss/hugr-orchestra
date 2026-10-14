@@ -1,17 +1,21 @@
 import { execFile } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readFile } from "node:fs/promises"
+import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
-import source from "../orchestra/package.json"
 
 const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
-const rootDir = path.resolve(packageDir, "../..")
+const workspace = WorkspacePaths.make(packageDir)
+const rootDir = workspace.root
+const orchestraDir = workspace.module("orchestra")
+const source: { version: string } = JSON.parse(readFileSync(path.join(orchestraDir, "package.json"), "utf8"))
 const signScript = path.join(rootDir, "script", "sign-windows.ps1")
 // The Electron 42 packaging update briefly installed Linux launchers/icons under
 // "orchestra-desktop". Keep that hidden desktop entry around so existing GNOME/KDE
@@ -77,7 +81,7 @@ const APP_IDS = {
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
   const { verifyClaudeAsset } = await import("./scripts/stage-claude")
-  const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
+  const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
   const { Arch } = await import("electron-builder")
   const directory =
     context.electronPlatformName === "darwin"
@@ -132,11 +136,19 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/cli{,/**/*}", "!resources/icons/**/*", "!resources/omni/**", "!resources/claude-code{,/**/*}"],
+  files: [
+    "out/**/*",
+    "resources/**/*",
+    "!resources/orchestra-cli*",
+    "!resources/cli{,/**/*}",
+    "!resources/icons/**/*",
+    "!resources/omni/**",
+    "!resources/claude-code{,/**/*}",
+  ],
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
-    const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
+    const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
@@ -157,7 +169,7 @@ const getBase = (appId: string): Configuration => ({
     )
     const platform = context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName
     const staged = await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), platform, Arch[context.arch])
-    const produced = verifyClaudeCodeResource(path.join(packageDir, "../orchestra/dist/node/claude-code"), {
+    const produced = verifyClaudeCodeResource(path.join(orchestraDir, "dist/node/claude-code"), {
       os: platform,
       arch: Arch[context.arch],
     })
@@ -183,14 +195,14 @@ const getBase = (appId: string): Configuration => ({
     },
     // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
     {
-      from: "../orchestra/playbooks",
+      from: path.join(orchestraDir, "playbooks"),
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
     // One writer for the executable and receipt; the Node producer contributes only its required notices.
     { from: "resources/claude-code", to: "claude-code", filter: ["claude", "claude.exe", "manifest.json"] },
-    { from: "../orchestra/dist/node/claude-code/README.md", to: "claude-code/README.md" },
-    { from: "../orchestra/dist/node/claude-code/LICENSE.md", to: "claude-code/LICENSE.md" },
+    { from: path.join(orchestraDir, "dist/node/claude-code/README.md"), to: "claude-code/README.md" },
+    { from: path.join(orchestraDir, "dist/node/claude-code/LICENSE.md"), to: "claude-code/LICENSE.md" },
     {
       from: "resources/omni",
       to: "omni",
