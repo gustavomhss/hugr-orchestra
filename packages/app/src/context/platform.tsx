@@ -66,6 +66,9 @@ type PlatformBase = {
   /** Open a native save file picker dialog (desktop only) */
   saveFilePickerDialog?(opts?: SaveFilePickerOptions): Promise<string | null>
 
+  /** Save raw response bytes with backpressure; cancellation rejects with AbortError. */
+  downloadResponse?(response: Response, filename: string): Promise<void>
+
   /** Storage mechanism, defaults to localStorage */
   storage?: (name?: string) => SyncStorage | AsyncStorage
 
