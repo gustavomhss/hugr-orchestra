@@ -72,7 +72,7 @@ describe("draft subagent models", () => {
     pendingSelection(key).clear()
     const snapshot = pendingSnapshot(key)
     if (snapshot.policy.mode !== "allowlist") throw new Error("Missing explicit policy")
-    snapshot.policy.models[0].id = "mutated"
+    Reflect.set(snapshot.policy.models[0], "id", "mutated")
     expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model" }] })
     clearPending(key, snapshot.revision)
   })

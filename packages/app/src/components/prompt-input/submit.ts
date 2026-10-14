@@ -33,6 +33,7 @@ import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
+import { waitForSubmissionWorktree } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
 type Admission = { busy: boolean; directory?: string; session?: Session; rules?: boolean }
@@ -57,6 +58,14 @@ export type FollowupDraft = {
   system?: string
   // An explicit V2 delivery mode; omitted, the server steers.
   delivery?: "steer" | "queue"
+  source?: {
+    scope: ServerScope
+    api: DirectorySDK["api"]["session"]
+    serverSync: ServerSync
+    sync: DirectorySync
+    current: () => boolean
+    before: (signal?: AbortSignal) => Promise<boolean>
+  }
 }
 
 type FollowupSendInput = {
@@ -82,35 +91,61 @@ const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? 
 const draftImages = (prompt: Prompt) => prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
 
 export async function sendFollowupDraft(input: FollowupSendInput) {
-  if (input.signal?.aborted) return false
+  const source = input.draft.source
+  const controller = source && !input.signal ? new AbortController() : undefined
+  const untrack = controller && source ? trackPendingPrompt(source.scope, input.draft.sessionID, {
+    abort: controller,
+    cleanup: () => {},
+  }) : undefined
+  try {
+    return await dispatchFollowupDraft({
+      ...input,
+      api: source?.api ?? input.api,
+      sync: source?.sync ?? input.sync,
+      serverSync: source?.serverSync ?? input.serverSync,
+      signal: input.signal ?? controller?.signal,
+    })
+  } finally {
+    untrack?.()
+  }
+}
+
+async function dispatchFollowupDraft(input: FollowupSendInput) {
+  const current = () => !input.signal?.aborted && input.draft.source?.current() !== false
+  if (!current()) return false
   const text = draftText(input.draft.prompt)
   const images = draftImages(input.draft.prompt)
   const setBusy = () => {
-    if (!input.optimisticBusy || input.signal?.aborted) return
+    if (!input.optimisticBusy || !current()) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
   }
 
   const setIdle = () => {
-    if (!input.optimisticBusy || input.signal?.aborted) return
+    if (!input.optimisticBusy || !current()) return
     input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
   }
 
   const wait = async () => {
+    if (!current()) return false
     const ok = await input.before?.()
-    if (ok === false) return false
-    return true
+    if (ok === false || !current()) return false
+    const ready = await input.draft.source?.before(input.signal)
+    return ready !== false && current()
   }
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
   if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
-    setBusy()
+    if (!(await wait())) return false
+    const files = await Promise.all(images.map(async (attachment) => ({
+      uri: await blobDataUrl(attachment.blob, attachment.mime), name: attachment.filename,
+    })))
     try {
-      if (!(await wait()) || input.signal?.aborted) {
+      if (!(await wait())) {
         setIdle()
         return false
       }
-
+      setBusy()
       const messageID = Identifier.ascending("message")
       await input.api.command(
         {
@@ -125,12 +160,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
             variant: input.draft.variant,
           },
           delivery: input.draft.delivery,
-          files: await Promise.all(
-            images.map(async (attachment) => ({
-              uri: await blobDataUrl(attachment.blob, attachment.mime),
-              name: attachment.filename,
-            })),
-          ),
+          files,
         },
         { signal: input.signal },
       )
@@ -142,13 +172,14 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   }
 
   const messageID = input.messageID ?? Identifier.ascending("message")
+  if (!(await wait())) return false
   const encodedImages = await Promise.all(
     images.map(async (attachment) => ({
       ...attachment,
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
     })),
   )
-  if (input.signal?.aborted) return false
+  if (!(await wait())) return false
   const { requestParts, optimisticParts } = buildRequestParts({
     prompt: input.draft.prompt,
     context: input.draft.context,
@@ -190,7 +221,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   })
 
   try {
-    if (!(await wait()) || input.signal?.aborted) {
+    if (!(await wait())) {
       batch(() => {
         setIdle()
         remove()
@@ -247,20 +278,25 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
 
 // Shared by the composer and evidence replay: every shell run gets a new event ID, and
 // the request carries no workdir, so callers must only replay in the session directory.
-export function submitShellCommand(input: {
+export async function submitShellCommand(input: {
   api: DirectorySDK["api"]["session"]
   sessionID: string
   command: string
   agent: string
   model: { providerID: string; modelID: string }
+  signal?: AbortSignal
+  before?: () => Promise<boolean> | boolean
+  current?: () => boolean
 }) {
+  if (input.signal?.aborted || input.current?.() === false) return false
+  if ((await input.before?.()) === false || input.signal?.aborted || input.current?.() === false) return false
   return input.api.shell({
     sessionID: input.sessionID,
     id: Event.ID.create(),
     command: input.command,
     agent: input.agent,
     model: input.model,
-  })
+  }, { signal: input.signal })
 }
 
 type PromptSubmitInput = {
@@ -679,8 +715,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     clearInput("comments")
 
     const controller = new AbortController()
-    const key = ScopedKey.from(directorySDK.scope, session.id)
-    const jobs = pending.get(key) ?? new Set<PendingPrompt>()
     const job = {
       abort: controller,
       cleanup: () => {
@@ -688,55 +722,16 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         restoreInput()
       },
     }
-    jobs.add(job)
-    pending.set(key, jobs)
+    const untrack = trackPendingPrompt(directorySDK.scope, session.id, job)
 
-    const waitForWorktree = async () => {
-      if (controller.signal.aborted) return false
-      const worktree = WorktreeState.get(directorySDK.scope, sessionDirectory)
-      if (!worktree || worktree.status !== "pending") return true
-
-      if (sessionDirectory === projectDirectory) {
-        syncState.set("session_status", session.id, { type: "busy" })
-      }
-
-      const abortWait = new Promise<Awaited<ReturnType<typeof WorktreeState.wait>>>((resolve) => {
-        if (controller.signal.aborted) {
-          resolve({ status: "failed", message: "aborted" })
-          return
-        }
-        controller.signal.addEventListener(
-          "abort",
-          () => {
-            resolve({ status: "failed", message: "aborted" })
-          },
-          { once: true },
-        )
-      })
-
-      const timeoutMs = 5 * 60 * 1000
-      const timer = { id: undefined as number | undefined }
-      const timeout = new Promise<Awaited<ReturnType<typeof WorktreeState.wait>>>((resolve) => {
-        timer.id = window.setTimeout(() => {
-          resolve({
-            status: "failed",
-            message: language.t("workspace.error.stillPreparing"),
-          })
-        }, timeoutMs)
-      })
-
-      const result = await Promise.race([
-        WorktreeState.wait(directorySDK.scope, sessionDirectory),
-        abortWait,
-        timeout,
-      ]).finally(() => {
-        if (timer.id === undefined) return
-        clearTimeout(timer.id)
-      })
-      if (controller.signal.aborted) return false
-      if (result.status === "failed") throw new Error(result.message)
-      return true
-    }
+    const waitForWorktree = () => waitForSubmissionWorktree({
+      scope: directorySDK.scope, directory: sessionDirectory, signal: controller.signal,
+      current: () => !controller.signal.aborted,
+      onWaiting: () => {
+        if (sessionDirectory === projectDirectory) syncState.set("session_status", session.id, { type: "busy" })
+      },
+      failedMessage: language.t("workspace.error.stillPreparing"),
+    })
 
     const queued = draft.delivery === "queue" && input.working()
     // The input is already cleared, so waiting on the profile's behaviors cannot resend this message.
@@ -767,8 +762,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         restoreInput()
       })
       .finally(() => {
-        jobs.delete(job)
-        if (pending.get(key) === jobs && jobs.size === 0) pending.delete(key)
+        untrack()
       })
   }
 
@@ -789,5 +783,16 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         admission.busy = false
       })
     },
+  }
+}
+
+function trackPendingPrompt(scope: ServerScope, sessionID: string, job: PendingPrompt) {
+  const key = ScopedKey.from(scope, sessionID)
+  const jobs = pending.get(key) ?? new Set<PendingPrompt>()
+  jobs.add(job)
+  pending.set(key, jobs)
+  return () => {
+    jobs.delete(job)
+    if (pending.get(key) === jobs && jobs.size === 0) pending.delete(key)
   }
 }

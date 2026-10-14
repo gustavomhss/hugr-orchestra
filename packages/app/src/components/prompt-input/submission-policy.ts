@@ -4,6 +4,8 @@ import { sameModelPolicy, type ModelRule, type SubagentModelPolicy } from "../su
 import type { SessionManagement } from "@/utils/session-management"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import type { ServerProtocol } from "@/utils/server-protocol"
+import { Worktree } from "@/utils/worktree"
+import type { ServerScope } from "@/utils/server-scope"
 
 /** Departure permanently invalidates an attempt, even when its owner later returns. */
 export function createSubmissionOwner<T extends Record<string, unknown>>(read: () => T) {
@@ -119,4 +121,29 @@ export async function waitForSubmission<T>(operation: Promise<T>, signal: AbortS
   const abort = () => cancelled.reject(signal.reason)
   signal.addEventListener("abort", abort, { once: true })
   return Promise.race([operation, cancelled.promise]).finally(() => signal.removeEventListener("abort", abort))
+}
+
+export async function waitForSubmissionWorktree(input: {
+  scope: ServerScope
+  directory: string
+  signal: AbortSignal
+  current: () => boolean
+  onWaiting: () => void
+  failedMessage: string
+}) {
+  if (!input.current() || input.signal.aborted) return false
+  if (Worktree.get(input.scope, input.directory)?.status !== "pending") return true
+  input.onWaiting()
+  const timer = { id: undefined as number | undefined }
+  const timeout = new Promise<Awaited<ReturnType<typeof Worktree.wait>>>((resolve) => {
+    timer.id = window.setTimeout(() => resolve({ status: "failed", message: input.failedMessage }), 5 * 60 * 1000)
+  })
+  const result = await waitForSubmission(Promise.race([
+    Worktree.wait(input.scope, input.directory), timeout,
+  ]), input.signal).finally(() => {
+    if (timer.id !== undefined) clearTimeout(timer.id)
+  })
+  if (!input.current() || input.signal.aborted) return false
+  if (result.status === "failed") throw new Error(result.message)
+  return true
 }
