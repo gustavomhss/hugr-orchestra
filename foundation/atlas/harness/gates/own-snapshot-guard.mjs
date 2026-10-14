@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process"
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs"
 import { join, relative } from "node:path"
 import { pathToFileURL, fileURLToPath } from "node:url"
+import { atlasRevisionSource } from "../../scripts/git-source-root.mjs"
 
 const ROOT = process.env.OWN_SNAPSHOT_GUARD_ROOT ?? join(fileURLToPath(new URL("../..", import.meta.url)))
 const SNAPSHOT_REL = "OWN-SNAPSHOT.json"
@@ -31,24 +32,24 @@ function files(dir) {
   return out
 }
 
+function git(args) {
+  return execFileSync("git", ["-C", ROOT, ...args], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  })
+}
+
 function currentBlob(path) {
   try {
-    return execFileSync("git", ["-C", ROOT, "hash-object", "--", path], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    }).trim()
+    return git(["hash-object", "--", path]).trim()
   } catch {
     return undefined
   }
 }
 
-function revisionBlob(revision, path) {
+function revisionBlob(source, path) {
   try {
-    // `./` makes revision:path relative to Atlas when this foundation is vendored below a larger Git root.
-    return execFileSync("git", ["-C", ROOT, "rev-parse", `${revision}:./${path}`], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    }).trim()
+    return git(["rev-parse", `${source.revision}:${source.prefix ? `${source.prefix}/` : ""}${path}`]).trim()
   } catch {
     return undefined
   }
@@ -85,6 +86,7 @@ try {
   fail([`snapshot sourceRevision is not a Git commit reachable from HEAD: ${snapshot.sourceRevision}`])
 }
 
+const source = atlasRevisionSource(snapshot.sourceRevision, git)
 const revisionIssues = []
 for (const entry of snapshot.units) {
   for (const [path, blob] of Object.entries(entry.sourceBlobs)) {
@@ -97,7 +99,7 @@ for (const entry of snapshot.units) {
       revisionIssues.push(`source anchor is not a regular file: ${entry.unit.id} -> ${path}`)
       continue
     }
-    if (revisionBlob(snapshot.sourceRevision, path) !== blob) {
+    if (revisionBlob(source, path) !== blob) {
       revisionIssues.push(`snapshot revision blob drift: ${entry.unit.id} -> ${path}`)
     }
   }
