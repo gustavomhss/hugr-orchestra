@@ -1,4 +1,5 @@
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { isTaskTool } from "@orchestra/core/util/task-tool"
 import { createHash } from "node:crypto"
 
 /**
@@ -63,7 +64,7 @@ export function answers(part: SessionV1.Part) {
 export function child(part: SessionV1.Part) {
   if (part.type !== "tool" || part.state.status === "pending") return
   const meta = part.state.metadata
-  const id = part.tool === "task" ? meta?.sessionId : meta?.childSessionID
+  const id = isTaskTool(part.tool) ? meta?.sessionId : meta?.childSessionID
   return typeof id === "string" && id ? id : undefined
 }
 
