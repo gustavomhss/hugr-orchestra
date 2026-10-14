@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { link, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises"
+import { createServer } from "node:http"
+import type { Socket } from "node:net"
 import path from "node:path"
-import { Effect } from "effect"
+import { Cause, Effect } from "effect"
 import { it } from "./lib/effect"
 import { admitDistributionDeno, distributionDenoMaxBytes, distributionDenoVersion, downloadDistributionDeno,
   installDistributionDeno, requireDistributionDenoVersion } from "../../../script/distribution-deno"
@@ -73,31 +75,51 @@ for (const defect of ["wrong checkout", "relative temp", "outside environment", 
 }
 
 const http = () => Effect.gen(function* () {
-  const state = { cancelled: false, chunks: 0 }
+  const state = { transportClosed: false, responseFinished: false, chunks: 0, sockets: new Set<Socket>() }
   const bytes = new TextEncoder().encode("digest control")
   const digest = createHash("sha256").update(bytes).digest("hex")
-  const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
-    fetch(request) {
-      const route = new URL(request.url).pathname
-      if (route === "/ok") return new Response(bytes)
-      if (route === "/http-error") return new Response("unavailable", { status: 503 })
-      if (route === "/empty") return new Response(new Uint8Array())
-      if (route === "/length") return new Response(new ReadableStream({
-        start(controller) { controller.enqueue(bytes) },
-      }), { headers: { "content-length": String(distributionDenoMaxBytes + 1) } })
-      // Real socket and fetch reader; chunked transfer cannot hide behind Content-Length.
-      request.signal.addEventListener("abort", () => { state.cancelled = true })
-      return new Response(new ReadableStream<Uint8Array>({
-        pull(controller) {
+  const server = yield* Effect.acquireRelease(Effect.promise(async () => {
+    const server = createServer((request, response) => {
+      state.sockets.add(request.socket)
+      request.socket.once("close", () => {
+        state.sockets.delete(request.socket)
+        // Observe the real connection, not a ReadableStream cancellation callback.
+        if (!response.writableFinished) state.transportClosed = true
+      })
+      response.once("finish", () => { state.responseFinished = true })
+      const route = new URL(request.url ?? "/", "http://127.0.0.1").pathname
+      if (route === "/ok") return response.end(bytes)
+      if (route === "/http-error") { response.statusCode = 503; return response.end("unavailable") }
+      if (route === "/empty") return response.end()
+      if (route === "/length") {
+        response.setHeader("content-length", String(distributionDenoMaxBytes + 1))
+        response.flushHeaders()
+        response.write(bytes)
+        return // Deliberately unfinished: the client must close this transport.
+      }
+      response.flushHeaders()
+      const chunk = Buffer.alloc(8 * 1024 * 1024)
+      const pump = () => {
+        while (!response.destroyed && state.chunks < 64) {
           state.chunks++
-          controller.enqueue(new Uint8Array(8 * 1024 * 1024))
-          if (state.chunks === 64) controller.close()
-        },
-        cancel() { state.cancelled = true },
-      }))
-    },
-  })), (server) => Effect.sync(() => server.stop(true)))
-  return { state, bytes, digest, url: `http://127.0.0.1:${server.port}` }
+          if (!response.write(chunk)) { response.once("drain", pump); return }
+        }
+        // Never end the response: draining buffered bytes is not a cancellation oracle.
+      }
+      pump()
+    })
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject)
+      server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve() })
+    })
+    return server
+  }), (server) => Effect.promise(() => new Promise<void>((resolve) => {
+    server.close(() => resolve())
+    state.sockets.forEach((socket) => socket.destroy())
+  })))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("DENO_HTTP_FIXTURE_ADDRESS_MISSING")
+  return { state, bytes, digest, url: `http://127.0.0.1:${address.port}` }
 })
 
 it.live("Deno actual streaming download returns bytes only after digest positive control", () => Effect.gen(function* () {
@@ -106,6 +128,22 @@ it.live("Deno actual streaming download returns bytes only after digest positive
   const result = yield* Effect.promise(() => downloadDistributionDeno(`${server.url}/ok`, server.digest))
   expect(result.bytes).toEqual(Buffer.from(server.bytes))
   expect(result.sha256).toBe(server.digest)
+  expect(server.state.responseFinished, "DENO_HTTP_POSITIVE_RESPONSE_INCOMPLETE").toBe(true)
+  expect(server.state.transportClosed).toBe(false)
+}))
+
+it.live("Deno HTTP cancellation oracle rejects a live response and observes actual fetch abort", () => Effect.gen(function* () {
+  yield* box()
+  const server = yield* http()
+  const controller = yield* Effect.acquireRelease(Effect.sync(() => new AbortController()),
+    (controller) => Effect.sync(() => controller.abort()))
+  const response = yield* Effect.promise(() => fetch(`${server.url}/length`, { signal: controller.signal }))
+  expect(response.headers.get("content-length")).toBe(String(distributionDenoMaxBytes + 1))
+  const live = yield* Effect.exit(Effect.promise(() => requireTransportClosed(server.state, "length", 50)))
+  expect(live._tag === "Failure" && Cause.pretty(live.cause).includes("DENO_OVERFLOW_HTTP_LENGTH_NOT_CANCELLED")).toBe(true)
+  controller.abort()
+  yield* Effect.promise(async () => { await response.body?.cancel().catch(() => {}) })
+  yield* Effect.promise(() => requireTransportClosed(server.state, "length"))
 }))
 
 for (const [route, diagnostic] of [["http-error", "DENO_UPSTREAM_DOWNLOAD_FAILED: HTTP 503"], ["empty", "DENO_DOWNLOAD_SIZE_MISMATCH"],
@@ -113,13 +151,16 @@ for (const [route, diagnostic] of [["http-error", "DENO_UPSTREAM_DOWNLOAD_FAILED
   it.live(`Deno actual HTTP rejects ${route} with ${diagnostic}`, () => Effect.gen(function* () {
     const owned = yield* box()
     const server = yield* http()
-    yield* Effect.promise(async () => { await expect(downloadDistributionDeno(`${server.url}/${route}`, "0".repeat(64))).rejects.toThrow(diagnostic) })
+    yield* Effect.promise(async () => {
+      const error = await downloadDistributionDeno(`${server.url}/${route}`, "0".repeat(64)).then(() => undefined, (error: unknown) => error)
+      if (!(error instanceof Error)) throw new Error("DENO_DOWNLOAD_NAMED_ERROR_MISSING")
+      if (route === "length" || route === "stream") { expect(error.message).toBe(diagnostic); return }
+      expect(error.message).toContain(diagnostic)
+    })
+    if (route === "length" || route === "stream") {
+      yield* Effect.promise(() => requireTransportClosed(server.state, route))
+    }
     if (route === "stream") {
-      yield* Effect.promise(async () => {
-        const deadline = Date.now() + 5000
-        while (!server.state.cancelled && Date.now() < deadline) await Bun.sleep(10)
-      })
-      expect(server.state.cancelled, "DENO_OVERFLOW_HTTP_STREAM_NOT_CANCELLED").toBe(true)
       expect(server.state.chunks).toBeGreaterThan(16)
     }
     expect(yield* Effect.promise(() => readdir(owned.temp))).toEqual(["github-env"])
@@ -136,4 +177,10 @@ test("Deno actual runtime version parser rejects wrong/empty/comment-only versio
 async function rejectDenoSetup(env: typeof process.env, diagnostic: string) {
   await expect(admitDistributionDeno(env)).rejects.toThrow(diagnostic)
   await expect(installDistributionDeno(env)).rejects.toThrow(diagnostic)
+}
+
+async function requireTransportClosed(state: { transportClosed: boolean; responseFinished: boolean }, route: string, timeout = 5000) {
+  const deadline = Date.now() + timeout
+  while (!state.transportClosed && Date.now() < deadline) await Bun.sleep(10)
+  if (!state.transportClosed || state.responseFinished) throw new Error(`DENO_OVERFLOW_HTTP_${route.toUpperCase()}_NOT_CANCELLED`)
 }

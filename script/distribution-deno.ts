@@ -51,15 +51,14 @@ export async function admitDistributionDeno(env = process.env) {
 
 // Same streaming boundary serves upstream setup and hosted loopback HTTP controls.
 export async function downloadDistributionDeno(url: string, digest: string) {
-  const response = await fetch(url, { signal: AbortSignal.timeout(120_000), redirect: "follow" })
+  const controller = new AbortController()
+  const response = await fetch(url, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)]), redirect: "follow" })
   if (!response.ok) {
-    await response.body?.cancel()
-    throw new Error(`DENO_UPSTREAM_DOWNLOAD_FAILED: HTTP ${response.status}`)
+    return rejectDownload(controller, new Error(`DENO_UPSTREAM_DOWNLOAD_FAILED: HTTP ${response.status}`), () => response.body?.cancel())
   }
   const length = response.headers.get("content-length")
   if (length !== null && (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length)) || Number(length) > distributionDenoMaxBytes)) {
-    await response.body?.cancel()
-    throw new Error("DENO_DOWNLOAD_CONTENT_LENGTH_LIMIT")
+    return rejectDownload(controller, new Error("DENO_DOWNLOAD_CONTENT_LENGTH_LIMIT"), () => response.body?.cancel())
   }
   if (!response.body) throw new Error("DENO_DOWNLOAD_BODY_MISSING")
   const reader = response.body.getReader()
@@ -70,8 +69,7 @@ export async function downloadDistributionDeno(url: string, digest: string) {
     if (chunk.done) break
     size.bytes += chunk.value.byteLength
     if (size.bytes > distributionDenoMaxBytes) {
-      await reader.cancel()
-      throw new Error("DENO_DOWNLOAD_STREAM_LIMIT")
+      return rejectDownload(controller, new Error("DENO_DOWNLOAD_STREAM_LIMIT"), () => reader.cancel())
     }
     chunks.push(chunk.value)
   }
@@ -80,6 +78,13 @@ export async function downloadDistributionDeno(url: string, digest: string) {
   const sha256 = createHash("sha256").update(bytes).digest("hex")
   if (sha256 !== digest) throw new Error(`DENO_UPSTREAM_DIGEST_MISMATCH: ${sha256}`)
   return { bytes, sha256 }
+}
+
+async function rejectDownload(controller: AbortController, error: Error, cancel: () => Promise<unknown> | undefined): Promise<never> {
+  // The named failure exists before abort; network teardown must precede stream cleanup.
+  controller.abort(error)
+  await cancel()?.catch(() => {}) // AbortError from cleanup must not replace the primary failure.
+  throw error
 }
 
 export function requireDistributionDenoVersion(output: string) {
