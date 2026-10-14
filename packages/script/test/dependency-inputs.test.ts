@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
-test("dependency fingerprint includes relocated modules and both native/domain roots", async () => {
+test("dependency fingerprint includes relocated packages, manifestless modules and both native/domain roots", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "dependency-inputs-"))
   try {
     const files = {
@@ -17,6 +17,7 @@ test("dependency fingerprint includes relocated modules and both native/domain r
       "domains/knowledge/package.json": '{"name":"atlas"}',
       "domains/knowledge/source.ts": "export const value = 1\n",
       "packages/retained/package.json": "{}",
+      "modules/specialists/backend/skills/backend-check/SKILL.md": "backend bytes\n",
       "bun.lock": "fixture lock",
       "nix/node_modules.nix": "fixture expression",
     }
@@ -35,6 +36,12 @@ test("dependency fingerprint includes relocated modules and both native/domain r
     await run(root, ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "domain changed"])
     const after = JSON.parse(await run(root, ["python3", "-c", code]))
     expect(after["domains/knowledge/source.ts"]).not.toBe(before["domains/knowledge/source.ts"])
+    await Bun.write(path.join(root, "modules/specialists/backend/skills/backend-check/SKILL.md"), "changed backend bytes\n")
+    await run(root, ["git", "add", "modules/specialists/backend/skills/backend-check/SKILL.md"])
+    await run(root, ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "asset changed"])
+    const assets = JSON.parse(await run(root, ["python3", "-c", code]))
+    expect(assets["modules/specialists/backend/skills/backend-check/SKILL.md"])
+      .not.toBe(before["modules/specialists/backend/skills/backend-check/SKILL.md"])
     await run(root, ["git", "rm", "native/engine/Cargo.toml"])
     await run(root, ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "missing domain"])
     await expect(run(root, ["python3", "-c", code])).rejects.toThrow("DEPENDENCY_TOOLCHAIN_MISSING:native/engine")

@@ -17,6 +17,9 @@ const trees = (await fs.readdir(path.resolve(source, ".."), { withFileTypes: tru
   .filter((entry) => entry.isDirectory() && entry.name.endsWith("-specialist"))
 if (trees.length === 0) throw new Error("Second-seat specialist snapshot is empty")
 await Promise.all(trees.map((entry) => fs.cp(path.resolve(source, "..", entry.name), path.join(snapshot, "packages", entry.name), { recursive: true })))
+await Promise.all(["modules/specialists/backend", "modules/specialists/archie"].map((tree) =>
+  fs.cp(path.resolve(source, "../..", tree), path.join(snapshot, tree), { recursive: true }),
+))
 // The scaffold validates canonical identity through the live roster. Run it in a separate process so that
 // validation cannot cache this process's registry before the synthetic registry loader is registered.
 const scaffold = Bun.spawn([process.execPath, "-e", `const { add } = await import(${JSON.stringify(path.join(source, "script/seat.ts"))}); await add("sample-seat", "synthetic packet execution", process.argv[1])`, packageRoot], {

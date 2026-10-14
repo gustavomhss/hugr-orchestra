@@ -4,7 +4,9 @@
     "script/test-omni-control.ts",
     ".github/actions/omni-binaries/action.yml",
     "script/module-registry.json",
-    "script/toolchain-registry.json"
+    "script/toolchain-registry.json",
+    "packages/*-specialist/skills/**",
+    "modules/specialists/*/skills/**"
   ],
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"],
@@ -89,7 +91,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts",
         "$TURBO_ROOT$/packages/orchestra/src/maestro/**",
-        "$TURBO_ROOT$/packages/*-specialist/skills/**"
+        "$TURBO_ROOT$/packages/*-specialist/skills/**",
+        "$TURBO_ROOT$/modules/specialists/*/skills/**"
       ],
       "outputs": [],
       // The compiled-CLI suites run only on an Actions runner (GITHUB_ACTIONS=false plus RUNNER_OS) and hand each

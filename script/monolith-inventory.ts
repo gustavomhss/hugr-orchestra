@@ -40,10 +40,13 @@ export async function monolithInventory(directory: string, revision?: string) {
   if (!modules.length) throw new Error("BASELINE_EMPTY_MODULES")
   cargoDependencies(record(cargo.value.workspace, "Cargo workspace"), "packages/omni/Cargo.toml workspace")
 
-  const assets = await Promise.all((await source.directories("packages"))
-    .filter((name) => !modules.some((module) => module.path === `packages/${name}` || module.path.startsWith(`packages/${name}/`)))
-    .map(async (name) => {
-      const directory = `packages/${name}`
+  const assetDirectories = [
+    ...(await source.directories("packages")).map((name) => `packages/${name}`),
+    ...new Set((await source.scan(".", "modules/*/**")).map((file) => file.split("/").slice(0, 2).join("/"))),
+  ]
+  const assets = await Promise.all(assetDirectories
+    .filter((directory) => !modules.some((module) => module.path === directory || module.path.startsWith(`${directory}/`)))
+    .map(async (directory) => {
       const files = await source.scan(directory, "**/*")
       if (!files.length) throw new Error(`BASELINE_EMPTY_ASSET_MODULE:${directory}`)
       return { path: directory, files: await Promise.all(files.map((file) => fingerprintInput(source, `${directory}/${file}`))) }

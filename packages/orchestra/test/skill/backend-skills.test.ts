@@ -12,7 +12,7 @@ import { testEffect } from "../lib/effect"
 // Conformance of the authored backend specialist skill tree (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md, F6)
 // through the real V1 discovery path: config `skills.paths` (F6.13), scanned and parsed by Skill.Service.
 
-const ROOT = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
+const ROOT = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
 const ENTRY_NAMES = [
   "backend-implement",
   "backend-api",

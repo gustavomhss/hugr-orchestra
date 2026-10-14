@@ -155,7 +155,7 @@ it.instance("backend alone gets backend skills and Atlas grants", () =>
     const check = (permission: string, pattern: string) =>
       Permission.evaluate(permission, pattern, backend.permission).action
 
-    expect(backendSkills.root).toBe(path.resolve(import.meta.dir, "../../../backend-specialist/skills"))
+    expect(backendSkills.root).toBe(path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills"))
     for (const name of backendSkills.names) expect(check("skill", name)).toBe("allow")
     expect(check("skill", "maestro-governed")).toBe("deny")
     expect(check("skill", "own_backend-implement")).toBe("deny")
