@@ -39,6 +39,9 @@ test("resolves historical old and new roots after exact relocation, independent 
 
   assert.deepEqual(fx.source(old, undefined, join(fx.root, "modules/atlas")), { revision: old, prefix: "foundation/atlas", tree: git(fx.root, ["rev-parse", `${old}:foundation/atlas`]).trim() })
   assert.deepEqual(fx.source(current, undefined, join(fx.root, "modules/atlas")), { revision: current, prefix: "modules/atlas", tree: git(fx.root, ["rev-parse", `${current}:modules/atlas`]).trim() })
+  const original = fx.source(old, undefined, join(fx.root, "modules/atlas"))
+  git(fx.root, ["replace", old, current])
+  assert.deepEqual(fx.source(old, undefined, join(fx.root, "modules/atlas")), original)
 })
 
 test("resolves standalone Atlas and reports ambiguous, missing, invalid, and non-tree sources", (t) => {
