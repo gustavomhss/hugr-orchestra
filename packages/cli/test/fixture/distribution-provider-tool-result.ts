@@ -16,8 +16,8 @@ export function requireSuccessfulBashResult(request: typeof WireRequest.Type, to
   ])) throw new Error("PROVIDER_DURABLE_BASH_CONTENT_MISMATCH")
   const results = request.messages.filter((message) => message.role === "tool" && message.tool_call_id === tool.id)
   if (results.length !== 1) throw new Error("PROVIDER_WIRE_BASH_TOOL_RESULT_CARDINALITY")
-  // stdout already ends in a newline. The second newline separates the complete
-  // stdout block from exit status; nonce-only text cannot satisfy this contract.
+  // One separator joins the complete stdout block and exit status; nonce-only
+  // text cannot satisfy this contract, whether stdout ends in a newline or not.
   if (results[0].content !== `${stdout}\nCommand exited with code 0.`)
     throw new Error("PROVIDER_WIRE_BASH_TOOL_RESULT_MISMATCH")
   return { callID: tool.id, stdout, exit: 0, truncated: false, wireContent: results[0].content }
