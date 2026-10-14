@@ -1,7 +1,7 @@
 // Actual product HTTP admission drives write/LSP, bash, MCP stdio and two terminals.
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { BUN, ORCHESTRA, control, fakeLLM, fileTree, isolated, provider, table, until, win } from "../../../omni/campaign/lib"
+import { BUN, ORCHESTRA, control, fakeLLM, fileTree, isolated, provider, table, until, win } from "../../../../native/omni/campaign/lib"
 
 export async function fixtures() {
   const scratch = isolated("actual-desktop", {})
