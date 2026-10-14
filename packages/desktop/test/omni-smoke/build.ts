@@ -38,12 +38,17 @@ export async function build() {
   mkdirSync(native, { recursive: true })
   copyFileSync(addon, path.join(native, "hugr_omni.node"))
   copyFileSync(supervisor, path.join(native, path.basename(supervisor)))
+  // CLI builds resolve <root>/<platform>; Desktop staging also accepts the pair directly under <root>.
+  copyFileSync(addon, path.join(path.dirname(native), "hugr_omni.node"))
+  copyFileSync(supervisor, path.join(path.dirname(native), path.basename(supervisor)))
+  // A Windows bundle's CLIs come prebuilt from a Linux producer (omni-desktop-smoke.yml windows-cli).
+  if (win && !process.env.ORCHESTRA_CLI_PREBUILT_DIR) throw new Error("a Windows desktop needs ORCHESTRA_CLI_PREBUILT_DIR with its produced CLIs")
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
     at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
   // Hosted ARM Mac's default 2 GiB V8 limit cannot transform this actual server bundle (measured OOM).
   // Builder only: none of these options reach the app fixture's isolated environment.
-  const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=4096", ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: native }
+  const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=4096", ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: path.dirname(native) }
   await command([process.execPath, "scripts/prebuild.ts"], env)
   await command([process.execPath, "x", "electron-vite", "build"], env)
   await command([process.execPath, "x", "electron-builder", "--dir", process.platform === "darwin" ? "--mac" : win ? "--win" : "--linux", "--config", "test/omni-smoke/unsigned.config.ts"], env)

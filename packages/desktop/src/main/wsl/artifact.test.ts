@@ -92,9 +92,10 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
   // The digest over `sha256sum` lines of the tree's files, sorted by path.
   const treeSitter = join(root, "tree-sitter ' $(touch planted)")
   const treeDigest = sha(`${sha("index")}  tree-sitter/index.js\n${sha("binding")}  tree-sitter/prebuilds/linux-x64/tree-sitter.node\n`)
-  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon"), treeHash = treeDigest) => shell(
+  const ripgrep = join(root, "rg ' $(touch planted)")
+  const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s", addonHash = sha("addon"), treeHash = treeDigest, ripgrepHash = sha("rg")) => shell(
     ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version,
-      addon, addonHash, supervisor, sha("supervisor"), treeSitter, treeHash], root,
+      addon, addonHash, supervisor, sha("supervisor"), treeSitter, treeHash, ripgrep, ripgrepHash], root,
   )
   try {
     await Bun.write(source, bytes)
@@ -102,8 +103,11 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
     await Bun.write(supervisor, "supervisor")
     await Bun.write(join(treeSitter, "tree-sitter/index.js"), "index")
     await Bun.write(join(treeSitter, "tree-sitter/prebuilds/linux-x64/tree-sitter.node"), "binding")
+    await Bun.write(ripgrep, "rg")
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
+    expect(await readFile(join(root, ".orchestra/bin/ripgrep/rg"), "utf8")).toBe("rg")
+    expect((await stat(join(root, ".orchestra/bin/ripgrep/rg"))).mode & 0o777).toBe(0o755)
     expect((await stat(destination)).mode & 0o777).toBe(0o755)
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[0]), "utf8")).toBe("addon")
     expect(await readFile(join(root, ".orchestra/bin", omniCompanions[1]), "utf8")).toBe("supervisor")
@@ -114,6 +118,11 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
     expect((await execute(source, digest, "1.16.2", "5s", sha("addon"), "0".repeat(64))).code).toBe(84)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    // An rg that is not the bundle's bytes stops the install before anything is replaced.
+    await Bun.write(join(root, ".orchestra/bin/ripgrep/rg"), "previous rg")
+    expect((await execute(source, digest, "1.16.2", "5s", sha("addon"), treeDigest, "0".repeat(64))).code).toBe(84)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect(await readFile(join(root, ".orchestra/bin/ripgrep/rg"), "utf8")).toBe("previous rg")
     // A symlink in the tree is not one of its regular files, so the digest no longer matches.
     await rm(join(treeSitter, "tree-sitter/index.js"))
     await symlink(source, join(treeSitter, "tree-sitter/index.js"))
@@ -144,7 +153,7 @@ linuxGuestTest("Linux transfer verifies bytes/version, replaces foreign executab
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
-    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "tree-sitter"].sort())
+    expect((await readdir(join(root, ".orchestra/bin"))).sort()).toEqual([...omniCompanions, "orchestra", "ripgrep", "tree-sitter"].sort())
     const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
     await Bun.write(source, hung)
     expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
@@ -170,8 +179,10 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   const directory = await mkdtemp(join(tmpdir(), "w4-seam-"))
   await Promise.all(omniCompanions.map((name) => Bun.write(join(directory, "omni-linux-arm64", name), name)))
   await writeTreeSitterBundle(join(directory, "tree-sitter-linux-arm64"), "linux-arm64")
+  await Bun.write(join(directory, "ripgrep-linux-arm64", "rg"), "rg")
   const options = {
     directory,
+    ripgrepPin: () => createHash("sha256").update("rg").digest("hex"),
     signal: abort.signal,
     timeoutMs: 90_000,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-arm64", file: "owned", sha256: "a".repeat(64) }] }),
@@ -191,17 +202,19 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   expect(commands[2]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[0])])
   expect(commands[3]).toEqual(["wslpath", "-u", "--", join(directory, "omni-linux-arm64", omniCompanions[1])])
   expect(commands[4]).toEqual(["wslpath", "-u", "--", join(directory, "tree-sitter-linux-arm64")])
-  expect(commands[5]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
-  expect(commands[5]?.slice(-9, -1)).toEqual([
+  expect(commands[5]).toEqual(["wslpath", "-u", "--", join(directory, "ripgrep-linux-arm64", "rg")])
+  expect(commands[6]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
+  expect(commands[6]?.slice(-11, -3)).toEqual([
     "/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2",
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[0]).digest("hex"),
     "/mnt/c/CLI ' $()/owned", createHash("sha256").update(omniCompanions[1]).digest("hex"),
     "/mnt/c/CLI ' $()/owned",
   ])
-  expect(commands[5]?.at(-1)).toMatch(/^[a-f0-9]{64}$/)
+  expect(commands[6]?.at(-3)).toMatch(/^[a-f0-9]{64}$/)
+  expect(commands[6]?.slice(-2)).toEqual(["/mnt/c/CLI ' $()/owned", createHash("sha256").update("rg").digest("hex")])
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
-  expect(commands.length).toBe(6)
+  expect(commands.length).toBe(7)
   const duringVerification = new AbortController()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", {
     ...options, signal: duringVerification.signal,
@@ -210,17 +223,21 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
       return { path: "unused", version: "1.16.2" }
     },
   })).rejects.toThrow()
-  expect(commands.length).toBe(7)
+  expect(commands.length).toBe(8)
   await rm(directory, { recursive: true, force: true })
 })
 
-test("bundle without the Linux omni pair or tree-sitter refuses the install by name before any transfer", async () => {
+test("bundle without the Linux omni pair, tree-sitter or rg refuses the install by name before any transfer", async () => {
   const directory = await mkdtemp(join(tmpdir(), "w4-unavailable-"))
   const treeSitter = join(directory, "tree-sitter-linux-x64-baseline")
   await writeTreeSitterBundle(treeSitter, "linux-x64-baseline")
+  const ripgrep = join(directory, "ripgrep-linux-x64-baseline", "rg")
+  await Bun.write(ripgrep, "rg")
   const commands: string[][] = []
+  const pin = { rg: createHash("sha256").update("rg").digest("hex") }
   const install = () => installWslArtifact("Ubuntu", "1.16.2", {
     directory,
+    ripgrepPin: () => pin.rg,
     readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: "a".repeat(64) }] }),
     verifyArtifact: async () => ({ path: join(directory, "owned"), version: "1.16.2" }),
     run: async (args: string[]) => {
@@ -246,10 +263,21 @@ test("bundle without the Linux omni pair or tree-sitter refuses the install by n
     expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
     expect(commands.map((args) => args[0])).toEqual(["bash"])
     await rename(`${binding}.away`, binding)
-    // Control: with both companions and tree-sitter present the same seam reaches the guest transfer.
+    await rename(ripgrep, `${ripgrep}.away`)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("unavailable")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    await rename(`${ripgrep}.away`, ripgrep)
+    // An rg that is not the pinned executable is refused before any transfer, whatever the bundle says.
+    pin.rg = "0".repeat(64)
+    commands.length = 0
+    expect(((await install()) as WslArtifactError).reason).toBe("bytes")
+    expect(commands.map((args) => args[0])).toEqual(["bash"])
+    pin.rg = createHash("sha256").update("rg").digest("hex")
+    // Control: with both companions, tree-sitter and rg present the same seam reaches the guest transfer.
     commands.length = 0
     expect(await install()).toBeUndefined()
-    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "wslpath", "timeout"])
+    expect(commands.map((args) => args[0])).toEqual(["bash", "wslpath", "wslpath", "wslpath", "wslpath", "wslpath", "timeout"])
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
@@ -303,6 +331,7 @@ linuxGuestTest("owned CLI source entry (bun, built version defined) passes guest
   const options = {
     directory: root,
     timeoutMs: 20_000,
+    ripgrepPin: (target: string) => createHash("sha256").update(`rg ${target}`).digest("hex"),
     readManifest: async () => ({
       schema: 1 as const,
       version,
@@ -318,6 +347,7 @@ linuxGuestTest("owned CLI source entry (bun, built version defined) passes guest
     await chmod(executable, 0o755)
     await Promise.all(targets.flatMap((target) => omniCompanions.map((name) => Bun.write(join(root, `omni-${target}`, name), name))))
     await Promise.all(targets.map((target) => writeTreeSitterBundle(join(root, `tree-sitter-${target}`), target)))
+    await Promise.all(targets.map((target) => Bun.write(join(root, `ripgrep-${target}`, "rg"), `rg ${target}`)))
     await installWslArtifact("Ubuntu", version, options)
     expect(await readWslCommandVersion(join(root, ".orchestra/bin/orchestra"), "Ubuntu", options)).toBe(version)
   } finally {

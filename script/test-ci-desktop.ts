@@ -5,8 +5,31 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
 import path from "node:path"
 import { parseArgs } from "node:util"
 
+const proof = "src/main/jimmy-desktop-proof.test.ts"
+
 export function desktopSelection(request: { package: string; runner: string; args: string[] }, cwd: string) {
-  if (request.package !== "desktop" || request.runner !== "bun") return []
+  return resolve(request, cwd).selected
+}
+
+// The proof's own platform contract (src/main/jimmy-desktop-proof.test.ts): Linux, and macOS on native arm64.
+export function proofPlatform(platform: string, arch: string) {
+  return platform === "linux" || (platform === "darwin" && arch === "arm64")
+}
+
+// Whether this run provisions the proof and then requires its completion records. On a supported platform that is
+// every selection containing it (exact, directory, filter or whole package). Elsewhere the proof cannot run, so only
+// a request that names it alone (a path or filter whose own matches are exactly the proof) still opts in and keeps
+// the test's named platform refusal; a directory or whole-package run there leaves it skipped.
+export function desktopProof(request: { package: string; runner: string; args: string[] }, cwd: string,
+  host: { platform: string; arch: string }) {
+  const resolved = resolve(request, cwd)
+  if (!resolved.selected.includes(proof)) return false
+  if (proofPlatform(host.platform, host.arch)) return true
+  return resolved.groups.some((group) => group.length > 0 && group.every((file) => file === proof))
+}
+
+function resolve(request: { package: string; runner: string; args: string[] }, cwd: string) {
+  if (request.package !== "desktop" || request.runner !== "bun") return { selected: [], groups: [] }
   // Only documented test-ci value options and file-neutral Bun switches are accepted here.
   // Unknown options (including --changed/--shard/--cwd) cannot silently change the selection.
   const parsed = parseArgs({ args: request.args, allowPositionals: true, options: {
@@ -29,29 +52,33 @@ export function desktopSelection(request: { package: string; runner: string; arg
     (patterns[index].includes("**") && glob.match(`${file}/`)))
   const explicit = parsed.positionals.some((arg) => path.isAbsolute(arg) || arg.startsWith("./") || arg.startsWith("../") ||
     (process.platform === "win32" && (arg.startsWith(".\\") || arg.startsWith("..\\"))))
-  const scan = (entry: string, direct: boolean): string[] => {
+  const matches = (full: string, file: string, arg: string) =>
+    full.startsWith(process.platform === "win32" ? arg.replaceAll("/", "\\") : arg) ||
+    file.includes(process.platform === "win32" ? arg.replaceAll("\\", "/") : arg)
+  const scan = (entry: string, direct: boolean, keep: (full: string, file: string) => boolean): string[] => {
     const full = path.resolve(cwd, entry)
     const file = path.relative(cwd, full).replaceAll("\\", "/")
     if (skip(file)) return []
     const stat = statSync(full, { throwIfNoEntry: false })
     if (!stat) return []
     if (stat.isDirectory()) return readdirSync(full).flatMap((name) =>
-      name.startsWith(".") || name.toLowerCase() === "node_modules" ? [] : scan(path.join(entry, name), false))
+      name.startsWith(".") || name.toLowerCase() === "node_modules" ? [] : scan(path.join(entry, name), false, keep))
     if (!stat.isFile() || !/\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$/i.test(file)) return []
     if (!direct && !/[._](test|spec)\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$/i.test(file)) return []
-    if (explicit || parsed.positionals.length === 0 || parsed.positionals.some((arg) =>
-      full.startsWith(process.platform === "win32" ? arg.replaceAll("/", "\\") : arg) ||
-      file.includes(process.platform === "win32" ? arg.replaceAll("\\", "/") : arg))) return [file]
-    return []
+    return keep(full, file) ? [file] : []
   }
-  const selected = [...new Set((explicit ? parsed.positionals : ["."]).flatMap((entry) => scan(entry, explicit)))]
+  // What each positional selects by itself, in the same path or filter mode; a whole-package run has none.
+  const groups = parsed.positionals.map((arg) =>
+    explicit ? scan(arg, true, () => true) : scan(".", false, (full, file) => matches(full, file, arg)))
+  const selected = [...new Set(explicit ? groups.flat() : scan(".", false, (full, file) =>
+    parsed.positionals.length === 0 || parsed.positionals.some((arg) => matches(full, file, arg))))]
   if (selected.length === 0) throw new Error("Jimmy desktop empty test selection")
-  return selected
+  return { selected, groups }
 }
 
-export function requireDesktopEvidence(selected: string[], directory: string,
+export function requireDesktopEvidence(required: boolean, directory: string,
   current: { sha: string | undefined; runID: string | undefined; platform: string; arch: string }) {
-  if (!selected.includes("src/main/jimmy-desktop-proof.test.ts")) return false
+  if (!required) return false
   if (!current.sha || !current.runID) throw new Error("Jimmy desktop missing current-run identity")
   const load = (name: string) => {
     const file = path.join(directory, `jimmy-desktop-${name}.json`)

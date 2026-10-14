@@ -127,7 +127,18 @@ const layer = Layer.effectDiscard(
                     ),
                   ),
                 )
-            }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to grep for ${input.pattern}` }))),
+            }).pipe(
+              // Ripgrep's reason (missing, still downloading, an invalid pattern) is the actionable part.
+              Effect.mapError(
+                (error) =>
+                  new ToolFailure({
+                    message:
+                      error instanceof Ripgrep.Error || error instanceof Ripgrep.InvalidPatternError
+                        ? `Unable to grep for ${input.pattern}: ${error.message}`
+                        : `Unable to grep for ${input.pattern}`,
+                  }),
+              ),
+            ),
         }),
       })
       .pipe(Effect.orDie)

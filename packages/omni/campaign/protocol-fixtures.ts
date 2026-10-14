@@ -1,17 +1,18 @@
 // Local WP10 helpers. lib.ts and the product remain frozen. Node builtins only.
-import { spawn, spawnSync, type ChildProcess } from "node:child_process"
+import { execFile, spawn, type ChildProcess } from "node:child_process"
 import { createHash, randomUUID } from "node:crypto"
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { promisify } from "node:util"
 import { cleanup, cli, isolated, LOGS, own, reap, ROOT, sweep, table, until } from "./lib.ts"
 
 export function requireLocal() {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1") throw new Error("campaign requires ORCHESTRA_LOCAL_TESTS=1")
 }
 
-export function fixture(name: string, config: Record<string, unknown> = {}) {
+export async function fixture(name: string, config: Record<string, unknown> = {}) {
   requireLocal()
   const scratch = isolated(name, { plugin: [], ...config })
   // Do not inherit provider tokens, server credentials, npm/git auth, or a user configuration path.
@@ -22,11 +23,12 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
   delete env.ORCHESTRA_SERVER_PASSWORD
   delete env.ORCHESTRA_SERVER_USERNAME
-  const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p",
+  // Asynchronous: Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock
+  // (oven-sh/bun#33932), so a later cell's fixture would kill this query within milliseconds.
+  const resolved = await promisify(execFile)(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p",
     "JSON.stringify({node:process.execPath,home:require('node:fs').realpathSync.native(process.argv[1])})", scratch.home], {
     env, encoding: "utf8", windowsHide: true, timeout: 10_000,
-  })
-  if (resolved.status !== 0) throw new Error(`node unavailable: ${resolved.stderr}`)
+  }).catch((error: { stderr?: string }) => { throw new Error(`node unavailable: ${error.stderr ?? String(error)}`) })
   const native = JSON.parse(resolved.stdout.trim()) as { node: string; home: string }
   // Bun may retain Windows TEMP's 8.3 spelling; CLI/Node module loading canonicalizes it. One spelling makes
   // copied TLS/tsserver marker arguments join the real OS argv instead of silently excluding those processes.
@@ -37,7 +39,7 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
     tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
 }
 
-export type Fixture = ReturnType<typeof fixture>
+export type Fixture = Awaited<ReturnType<typeof fixture>>
 
 export function evidence(scratch: Fixture) {
   const bin = cli()
