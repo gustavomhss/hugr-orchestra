@@ -88,6 +88,14 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/script/monolith-inventory.ts",
+        "$TURBO_ROOT$/script/module-registry.json",
+        "$TURBO_ROOT$/script/test-ci-package.ts",
+        "$TURBO_ROOT$/script/test-ci-location.ts",
+        "$TURBO_ROOT$/script/test-ci-request.ts",
+        "$TURBO_ROOT$/script/test-ci-paths.ts",
+        "$TURBO_ROOT$/script/archive-inventory.ts",
+        "$TURBO_ROOT$/script/archive-scopes.json",
+        "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/script/test-guard.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
