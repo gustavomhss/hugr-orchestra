@@ -3,11 +3,12 @@
 Schema-first LLM core for orchestra. One typed request, response, event, and tool language; provider quirks live in adapters, not in calling code.
 
 ```ts
-import { Effect } from "effect"
+import { Config, Effect, Layer } from "effect"
 import { LLM, LLMClient } from "@orchestra/llm"
+import { RequestExecutor } from "@orchestra/llm/route"
 import { OpenAI } from "@orchestra/llm/providers"
 
-const model = OpenAI.configure({ apiKey: process.env.OPENAI_API_KEY }).responses("gpt-4o-mini")
+const model = OpenAI.configure({ apiKey: Config.redacted("OPENAI_API_KEY") }).model("gpt-4o-mini")
 
 const request = LLM.request({
   model,
@@ -16,10 +17,17 @@ const request = LLM.request({
   generation: { maxTokens: 40 },
 })
 
+const llmDeps = RequestExecutor.fetchLayer
+const llmClientLayer = LLMClient.layer.pipe(Layer.provide(llmDeps))
+
 const program = Effect.gen(function* () {
   const response = yield* LLMClient.generate(request)
   console.log(response.text)
-})
+}).pipe(
+  Effect.provide(Layer.mergeAll(llmDeps, llmClientLayer)),
+)
+
+Effect.runPromise(program)
 ```
 
 Run `LLMClient.stream(request)` instead of `generate` when you want incremental `LLMEvent`s. The event stream is provider-neutral — same shape across OpenAI Chat, OpenAI Responses, Anthropic Messages, Gemini, Bedrock Converse, and any OpenAI-compatible deployment.
@@ -120,9 +128,9 @@ Route/provider defaults are overridden by request-level values for each axis.
 
 Adding a new model or deployment is usually 5-15 lines using `Route.make({ protocol, endpoint, auth, framing, ... })`. The route owns endpoint/auth/framing and the protocol owns body construction plus stream parsing. Transports are reusable IO templates that receive route endpoint/auth at compile time. Capability/catalog metadata lives outside this low-level package; unsupported request shapes fail during protocol lowering. See `AGENTS.md` for the architectural detail.
 
-## Effect
+## Package role, runtime, and checks
 
-This package is built on Effect. Public methods return `Effect` or `Stream`; provide `LLMClient.layer` for runtime dispatch and import the provider/protocol modules for the routes you use. The example at `example/tutorial.ts` is a runnable walkthrough.
+This package owns the shared LLM schemas, provider protocols, routes, and transports; session orchestration owns model/runtime selection, permissions, tools, history, and continuation. Public methods return `Effect` or `Stream`; provide `LLMClient.layer` with `RequestExecutor.fetchLayer` for HTTP dispatch (and `WebSocketExecutor.layer` when using WebSocket routes). Run `bun run typecheck` from `packages/llm` and scoped tests through `bun run test:ci llm <test-file>` from the repository root. The example at `example/tutorial.ts` is a runnable walkthrough.
 
 ## See also
 

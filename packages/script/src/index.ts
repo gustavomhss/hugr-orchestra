@@ -1,10 +1,11 @@
 import { $ } from "bun"
 import semver from "semver"
 import path from "path"
-import pkg from "../../orchestra/package.json" with { type: "json" }
+import { WorkspacePaths } from "./workspace-paths.ts"
 
-const rootPkgPath = path.resolve(import.meta.dir, "../../../package.json")
-const rootPkg = await Bun.file(rootPkgPath).json()
+const workspace = WorkspacePaths.make(import.meta.dir)
+const pkg: { version: string } = await Bun.file(path.join(workspace.module("orchestra"), "package.json")).json()
+const rootPkg = await Bun.file(path.join(workspace.root, "package.json")).json()
 const expectedBunVersion = rootPkg.packageManager?.split("@")[1]
 
 if (!expectedBunVersion) {
@@ -51,7 +52,7 @@ const VERSION = (() => {
 })()
 
 const bot = ["actions-user", "orchestra", "orchestra-agent[bot]"]
-const teamPath = path.resolve(import.meta.dir, "../../../.github/TEAM_MEMBERS")
+const teamPath = path.join(workspace.root, ".github/TEAM_MEMBERS")
 const team = [
   ...(await Bun.file(teamPath)
     .text()
