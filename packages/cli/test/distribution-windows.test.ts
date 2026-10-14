@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { lstat, mkdtemp, realpath, rm } from "node:fs/promises"
+import { constants } from "node:fs"
+import { copyFile, lstat, mkdtemp, open, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve, sep } from "node:path"
 import { assertVersion, buildVersions, captureOracle, cli, snapshot, target } from "./fixture/distribution-native"
 import type { Built } from "./fixture/distribution-native"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { emergencyStop, stopServices } from "./fixture/distribution-native-proof"
-import { assertWindowsPE, nativeNodeCPU, windowsIdentity } from "./fixture/distribution-windows-process"
+import { assertWindowsPE, nativeNodeCPU, windowsIdentity, windowsPEIO, windowsPEField, windowsFileSHA256 } from "./fixture/distribution-windows-process"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { namedTargets } from "../script/targets"
 import { WindowsProcessQuery } from "../../core/test/fixture/windows-process-query"
@@ -75,39 +76,108 @@ test("native Windows npm install, update and exact downgrade qualify PE closure,
 
 test("native Windows PE admission rejects wrong machine, PE32 and executable/DLL flag corruption before restored real images pass", async () => {
   if (!state.directory || !state.built) throw new Error("NATIVE_WINDOWS_BUILD_FIXTURE_MISSING")
+  // Stop admitting work before Bun's hard deadline; reserve 30 s for restoring
+  // the active field/mode and joining its handle, never start later cases late.
+  const budget = windowsPEIO(150_000)
+  const PEIO = Schema.Struct({ imageBytes: Schema.Int, bytesRead: Schema.Int, readCalls: Schema.Int })
   for (const image of [
     { path: "bin/orchestra.exe", dll: false },
     { path: "bin/hugr-omni-supervisor.exe", dll: false },
     { path: "bin/hugr_omni.node", dll: true },
   ]) {
-    // Mutate copies of actual compiled payload images, never fabricated PE bytes.
-    const original = Buffer.from(await Bun.file(join(state.built.payloads[0].payload, image.path)).arrayBuffer())
+    budget.check("next PE image")
+    const source = join(state.built.payloads[0].payload, image.path)
+    const original = await assertWindowsPE(source, image.dll, budget)
+    const expected = state.built.payloads[0].manifest.files.find((file) => file.path === image.path)
+    if (!expected) throw new Error(`WINDOWS_PE_CONTROL_SOURCE_DIGEST_MISSING: ${image.path}`)
+    // One complete real-image copy; each negative changes only its two-byte
+    // COFF/optional-header field. No synthetic PE and no full-image rewrites.
     const file = join(state.directory, `pe-control-${image.path.slice(4)}`)
-    const offset = original.readUInt32LE(60)
-    await Bun.write(file, original)
-    await assertWindowsPE(file, image.dll)
-    for (const mutation of [
-      { name: "wrong-machine", offset: offset + 4, value: process.arch === "arm64" ? 0x8664 : 0xaa64 },
-      { name: "pe32", offset: offset + 24, value: 0x10b },
-      { name: "short-optional-header", offset: offset + 20, value: 2 },
-      { name: "not-executable", offset: offset + 22, value: original.readUInt16LE(offset + 22) & ~2 },
-      { name: "wrong-dll-flag", offset: offset + 22, value: original.readUInt16LE(offset + 22) ^ 0x2000 },
-    ]) {
-      const corrupt = Buffer.from(original)
-      corrupt.writeUInt16LE(mutation.value, mutation.offset)
-      try {
-        await Bun.write(file, corrupt)
-        await expect(assertWindowsPE(file, image.dll)).rejects.toThrow(`WINDOWS_PE_${process.arch.toUpperCase()}_FLAGS_INVALID:`)
-      } finally { await Bun.write(file, original) }
-      await assertWindowsPE(file, image.dll)
-      expect(Buffer.from(await Bun.file(file).arrayBuffer())).toEqual(original)
-      console.error(`NATIVE_WINDOWS_PE_CONTROL ${JSON.stringify({ arch: process.arch, image: image.path,
-        mutation: mutation.name, rejected: true, restored: true })}`)
+    await windowsPEIO(30_000, budget).run("copy real PE", () => copyFile(source, file, constants.COPYFILE_EXCL))
+    const copied = await assertWindowsPE(file, image.dll, budget)
+    expect(copied.mode).toBe(original.mode)
+    expect(copied.io.imageBytes).toBe(original.io.imageBytes)
+    expect(copied.io.bytesRead).toBe(64 + 24 + copied.optional.length)
+    expect(copied.io.readCalls).toBeGreaterThanOrEqual(3)
+    const initial = await windowsFileSHA256(file, budget)
+    expect(initial).toEqual({ sha256: expected.sha256, bytesRead: original.io.imageBytes })
+    const io = { imageBytes: original.io.imageBytes, copies: 1,
+      admissionBytesRead: original.io.bytesRead + copied.io.bytesRead, fieldBytesWritten: 0, fieldBytesRead: 0,
+      shaBytesRead: initial.bytesRead }
+    const opening = windowsPEIO(15_000, budget)
+    opening.check("open owned PE writer")
+    const writer = await open(file, "r+")
+    try {
+      opening.check("open owned PE writer")
+      const expired = windowsPEIO(1, budget)
+      await Bun.sleep(5)
+      await expect(windowsPEField(writer, original.offset + 4, process.arch === "arm64" ? 0x8664 : 0xaa64, expired))
+        .rejects.toThrow("WINDOWS_PE_IO_DEADLINE_EXPIRED:")
+      const unchanged = await assertWindowsPE(file, image.dll, budget)
+      expect(unchanged.coff).toEqual(original.coff)
+      expect(unchanged.optional).toEqual(original.optional)
+      expect(unchanged.mode).toBe(original.mode)
+      io.admissionBytesRead += unchanged.io.bytesRead
+      for (const mutation of [
+        { name: "wrong-machine", offset: original.offset + 4, original: original.coff.readUInt16LE(4), value: process.arch === "arm64" ? 0x8664 : 0xaa64 },
+        { name: "pe32", offset: original.offset + 24, original: original.optional.readUInt16LE(0), value: 0x10b },
+        { name: "short-optional-header", offset: original.offset + 20, original: original.coff.readUInt16LE(20), value: 2 },
+        { name: "not-executable", offset: original.offset + 22, original: original.coff.readUInt16LE(22), value: original.coff.readUInt16LE(22) & ~2 },
+        { name: "wrong-dll-flag", offset: original.offset + 22, original: original.coff.readUInt16LE(22), value: original.coff.readUInt16LE(22) ^ 0x2000 },
+      ]) {
+        budget.check(`next PE mutation: ${mutation.name}`)
+        try {
+          const patch = await windowsPEField(writer, mutation.offset, mutation.value, budget)
+          expect(patch).toEqual({ bytesWritten: 2, bytesRead: 2 })
+          io.fieldBytesWritten += patch.bytesWritten
+          io.fieldBytesRead += patch.bytesRead
+          const failure = await assertWindowsPE(file, image.dll, budget).then(
+            () => { throw new Error(`WINDOWS_PE_CONTROL_UNEXPECTED_ADMISSION: ${mutation.name}`) }, (error: unknown) => error)
+          if (!(failure instanceof Error) || !("peIO" in failure)) throw failure
+          expect(failure.message).toContain(`WINDOWS_PE_${process.arch.toUpperCase()}_FLAGS_INVALID:`)
+          const rejected = Schema.decodeUnknownSync(PEIO)(failure.peIO)
+          expect(rejected.imageBytes).toBe(original.io.imageBytes)
+          expect(rejected.bytesRead).toBeGreaterThanOrEqual(64 + 24)
+          expect(rejected.bytesRead).toBeLessThanOrEqual(64 + 24 + 0xffff)
+          expect(rejected.readCalls).toBeGreaterThanOrEqual(2)
+          io.admissionBytesRead += rejected.bytesRead
+        } finally {
+          // Cleanup gets its own bounded reserve even if work admission expired.
+          const cleanup = windowsPEIO(15_000)
+          const restored = await windowsPEField(writer, mutation.offset, mutation.original, cleanup)
+          expect(restored).toEqual({ bytesWritten: 2, bytesRead: 2 })
+          io.fieldBytesWritten += restored.bytesWritten
+          io.fieldBytesRead += restored.bytesRead
+          await cleanup.run("restore PE mode", () => writer.chmod(original.mode))
+        }
+        const restored = await assertWindowsPE(file, image.dll, budget)
+        expect(restored.mode).toBe(original.mode)
+        expect(restored.coff).toEqual(original.coff)
+        expect(restored.optional).toEqual(original.optional)
+        expect(restored.io.bytesRead).toBe(64 + 24 + restored.optional.length)
+        io.admissionBytesRead += restored.io.bytesRead
+        console.error(`NATIVE_WINDOWS_PE_CONTROL ${JSON.stringify({ arch: process.arch, image: image.path,
+          mutation: mutation.name, rejected: true, restored: true, patchBytes: 2, restoreBytes: 2,
+          restoredAdmissionBytesRead: restored.io.bytesRead })}`)
+      }
+      await windowsPEIO(15_000, budget).run("flush restored PE", () => writer.sync())
+      const final = await windowsFileSHA256(file, budget)
+      expect(final).toEqual(initial)
+      io.shaBytesRead += final.bytesRead
+      const info = await windowsPEIO(15_000, budget).run("stat restored PE", () => writer.stat())
+      expect(info.size).toBe(original.io.imageBytes)
+      expect(info.mode & 0o777).toBe(original.mode)
+      console.error(`NATIVE_WINDOWS_PE_IMAGE_IO ${JSON.stringify({ arch: process.arch, image: image.path,
+        ...io, sha256: final.sha256, mode: original.mode, expiredFieldWriteRefused: true, completeImageRestored: true })}`)
+    } finally {
+      await windowsPEIO(15_000).run("close owned PE writer", () => writer.close())
     }
-    await rm(file)
+    await windowsPEIO(15_000, budget).run("remove owned PE copy", () => rm(file))
   }
-  for (const payload of state.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
-}, 60_000)
+  for (const payload of state.built.payloads)
+    expect(await windowsPEIO(30_000, budget).run("verify source payload unchanged", () => snapshot(payload.payload))).toEqual(payload.snapshot)
+  budget.check("complete PE controls")
+}, 180_000)
 
 test("native Windows broker closes owned pwsh after forced reader death and absolute timeout", async () => {
   const identity = Schema.Struct({ pid: Schema.Int, startTime: Schema.String })
