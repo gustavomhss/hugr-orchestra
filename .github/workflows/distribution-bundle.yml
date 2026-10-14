@@ -227,7 +227,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-aur/bootstrap-config.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts ./test/fixture/distribution-provider/model-pull.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |
