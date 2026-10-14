@@ -13,6 +13,7 @@ import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
 import type { ServerApi } from "@/utils/server"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import { Worktree } from "@/utils/worktree"
+import type { Part } from "@orchestra/sdk/v2/client"
 
 let createPromptSubmit: typeof import("./submit").createPromptSubmit
 let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
@@ -32,11 +33,16 @@ const optimistic: Array<{
   directory?: string
   sessionID?: string
   message: {
+    id: string
     agent: string
     model: { providerID: string; modelID: string }
     variant?: string
   }
+  parts: Part[]
 }> = []
+const optimisticRemovals: { messageID: string }[] = []
+const statusUpdates: unknown[][] = []
+let statusObserved = (_args: unknown[]) => {}
 const optimisticSeeded: boolean[] = []
 const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 const promoted: Array<{ directory: string; sessionID: string }> = []
@@ -344,11 +350,7 @@ beforeAll(async () => {
       data: { command: commands },
       session: {
         optimistic: {
-          add: (value: {
-            directory?: string
-            sessionID?: string
-            message: { agent: string; model: { providerID: string; modelID: string; variant?: string } }
-          }) => {
+          add: (value: (typeof optimistic)[number]) => {
             optimistic.push(value)
             optimisticSeeded.push(
               !!value.directory &&
@@ -356,10 +358,10 @@ beforeAll(async () => {
                 !!storedSessions[value.directory]?.find((item) => item.id === value.sessionID)?.title,
             )
           },
-          remove: () => undefined,
+          remove: (value: { messageID: string }) => { optimisticRemovals.push(value) },
         },
       },
-      set: () => undefined,
+      set: (...args: unknown[]) => { if (args[0] === "session_status") statusUpdates.push(args); statusObserved(args) },
     }),
   }))
 
@@ -368,7 +370,7 @@ beforeAll(async () => {
       data: { project: profileProjects },
       session: {
         remember: () => undefined,
-        set: () => undefined,
+        set: (...args: unknown[]) => { if (args[0] === "session_status") statusUpdates.push(args); statusObserved(args) },
         sync: async () => {
           serverSessionSyncs++
         },
@@ -487,6 +489,101 @@ describe("durable subagent policy submission", () => {
     ])
     expect(promotedDrafts).toHaveLength(1)
     expect(worktreeResets).toBe(1)
+  })
+
+  test("failed exact retry reuses the wire preparation and matching optimistic part IDs and system", async () => {
+    const real = createPromptState()
+    real.set([
+      { type: "text", content: "retry ", start: 0, end: 6 },
+      { type: "file", path: "file.ts", content: "@file.ts", start: 6, end: 14 },
+    ])
+    behaviors.system = "first prepared system"
+    const failure = new Error("prepared request failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    const first = promptInputs[0] as { id: string; legacyParts: { id: string }[]; system?: string }
+    expect(first.legacyParts.length).toBeGreaterThan(1)
+    expect(optimistic[0].parts.map((part) => part.id)).toEqual(first.legacyParts.map((part) => part.id))
+    expect(optimisticRemovals).toContainEqual(expect.objectContaining({ messageID: first.id }))
+    behaviors.system = "later profile system"
+    sendHook = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs[1]).toEqual(first)
+    expect(first.system).toBe("first prepared system")
+    expect(optimistic).toHaveLength(2)
+    expect(optimistic[1].message.id).toBe(first.id)
+    expect(optimistic[1].parts).toEqual(optimistic[0].parts)
+    expect(optimistic[1].parts.every((part) => part.messageID === first.id)).toBe(true)
+    expect(createdSessions).toHaveLength(1)
+  })
+
+  test.each(["prompt", "command", "shell"])("admitted %s receipt reconciliation performs no new dispatch, optimistic insertion or busy mutation", async (pathway) => {
+    selected = "main"
+    commands.push({ name: "review" })
+    const entered = deferred()
+    const gate = deferred()
+    sendHook = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "receipt-only turn" })
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, newSessionWorktree: () => selected,
+      mode: () => pathway === "shell" ? "shell" : "normal",
+    })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    selected = "/repo/worktree-b"
+    gate.resolve()
+    await sending
+    expect(promoted).toEqual([])
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    if (pathway !== "shell") expect(statusUpdates.length).toBeGreaterThan(0)
+    const insertions = optimistic.length
+    const statuses = statusUpdates.slice()
+    selected = "main"
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
+    expect(optimistic).toHaveLength(insertions)
+    expect(statusUpdates).toEqual(statuses)
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+  })
+
+  test("policy changed at a retry's worktree boundary rebinds cached wire and optimistic IDs together", async () => {
+    const directory = "/repo/preparation-fence"
+    currentSDK = sdkFor(directory, currentServer)
+    const key = draftSessionKey(ServerScope.local, directory)
+    togglePending(key, "provider", "first-model", true)
+    const real = createPromptState({ prompt: "prepared turn at final fence" })
+    const failure = new Error("first prepared send failed")
+    sendHook = async () => { throw failure }
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+    Worktree.pending(ServerScope.local, directory)
+    expect(Worktree.get(ServerScope.local, directory)).toEqual({ status: "pending" })
+    const entered = deferred()
+    statusObserved = (args) => {
+      if (args[0] === "session_status" && Worktree.get(ServerScope.local, directory)?.status === "pending") entered.resolve()
+    }
+    const retry = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    togglePending(key, "provider", "second-model", true)
+    const latest = pendingSnapshot(key)
+    sendHook = async () => { expect(pendingSnapshot(key).revision).toBe(latest.revision) }
+    Worktree.ready(ServerScope.local, directory)
+    await retry
+    expect(promptInputs).toHaveLength(2)
+    const second = promptInputs[1] as { id: string; legacyParts: { id: string }[] }
+    expect(second.id).not.toBe(first.id)
+    expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+    expect(optimistic).toHaveLength(2)
+    expect(optimistic[1].message.id).toBe(second.id)
+    expect(optimistic[1].parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
+    expect(optimistic[1].parts.every((part) => part.messageID === second.id)).toBe(true)
+    expect(policyWrites.at(-1)?.policy).toEqual(latest.policy)
+    expect(createdSessions).toEqual([directory])
+    expect(pendingSnapshot(key).revision).toBe(0)
   })
 
   test("policy edit during request preparation gets latest ACK before actual dispatch", async () => {
@@ -1104,6 +1201,9 @@ beforeEach(() => {
   sessionCreateInputs.length = 0
   enabledAutoAccept.length = 0
   optimistic.length = 0
+  optimisticRemovals.length = 0
+  statusUpdates.length = 0
+  statusObserved = () => {}
   optimisticSeeded.length = 0
   promoted.length = 0
   promotedAgents.length = 0

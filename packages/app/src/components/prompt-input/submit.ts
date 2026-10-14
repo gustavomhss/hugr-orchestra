@@ -35,7 +35,16 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
-type AdmissionRequest = { key: string; id: string; admitted: boolean; revision?: number; send?: () => Promise<unknown> }
+type PromptPreparation = ReturnType<typeof buildRequestParts> & { system?: string }
+type AdmissionRequest = {
+  key: string
+  id: string
+  admitted: boolean
+  revision?: number
+  preparation?: PromptPreparation
+  command?: Parameters<DirectorySDK["api"]["session"]["command"]>[0]
+  shell?: Parameters<DirectorySDK["api"]["session"]["shell"]>[0]
+}
 type Admission = {
   selection: string
   directory?: string
@@ -113,6 +122,7 @@ type FollowupSendInput = {
   pending?: boolean
   before?: () => Promise<boolean> | boolean
   dispatch?: PromptDispatch
+  request?: AdmissionRequest
 }
 
 // Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
@@ -129,6 +139,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   const serverState = input.draft.source?.serverSync ?? input.serverSync
   const syncState = input.draft.source?.sync ?? input.sync
   const current = () => input.draft.source?.current() !== false
+  if (input.request?.admitted) return current()
   const text = draftText(input.draft.prompt)
   const images = draftImages(input.draft.prompt)
   const setBusy = () => {
@@ -155,8 +166,8 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && syncState.data.command.find((item) => item.name === cmd)) {
-    const files = await Promise.all(
+  if (cmd && !input.request?.preparation && (input.request?.command || syncState.data.command.find((item) => item.name === cmd))) {
+    const files = input.request?.command?.files ?? await Promise.all(
       images.map(async (attachment) => ({
         uri: await blobDataUrl(attachment.blob, attachment.mime),
         name: attachment.filename,
@@ -168,22 +179,27 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
         setIdle()
         return false
       }
-      setBusy()
+      if (!input.dispatch) setBusy()
       const messageID = Identifier.ascending("message")
-      const send = (request?: AdmissionRequest) => api.command({
-        sessionID: input.draft.sessionID,
-        id: request?.id ?? messageID,
-        command: cmd,
-        arguments: tail.join(" "),
-        agent: input.draft.agent,
-        model: {
-          id: input.draft.model.modelID,
-          providerID: input.draft.model.providerID,
-          variant: input.draft.variant,
-        },
-        delivery: input.draft.delivery,
-        files,
-      })
+      const send = (request?: AdmissionRequest) => {
+        const command = request?.command ?? {
+          sessionID: input.draft.sessionID,
+          id: request?.id ?? messageID,
+          command: cmd,
+          arguments: tail.join(" "),
+          agent: input.draft.agent,
+          model: {
+            id: input.draft.model.modelID,
+            providerID: input.draft.model.providerID,
+            variant: input.draft.variant,
+          },
+          delivery: input.draft.delivery,
+          files,
+        }
+        if (request) request.command = command
+        if (input.dispatch) setBusy()
+        return api.command(command)
+      }
       if (input.dispatch) {
         const sent = await input.dispatch(send)
         if (!sent) setIdle()
@@ -198,7 +214,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   }
 
   const messageID = input.messageID ?? Identifier.ascending("message")
-  const encodedImages = await Promise.all(
+  const encodedImages = input.request?.preparation ? [] : await Promise.all(
     images.map(async (attachment) => ({
       ...attachment,
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
@@ -206,15 +222,20 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   )
   if (!current()) return false
   if (!(await wait()) || !current()) return false
-  const { requestParts, optimisticParts } = buildRequestParts({
-    prompt: input.draft.prompt,
-    context: input.draft.context,
-    images: encodedImages,
-    text,
-    sessionID: input.draft.sessionID,
-    messageID,
-    sessionDirectory: input.draft.sessionDirectory,
-  })
+  const preparation = input.request?.preparation ?? {
+    ...buildRequestParts({
+      prompt: input.draft.prompt,
+      context: input.draft.context,
+      images: encodedImages,
+      text,
+      sessionID: input.draft.sessionID,
+      messageID,
+      sessionDirectory: input.draft.sessionDirectory,
+    }),
+    system: input.draft.system,
+  }
+  if (input.request) input.request.preparation = preparation
+  const prepared = { request: input.request, value: preparation }
 
   const message: Message = {
     id: messageID,
@@ -229,19 +250,19 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     syncState.session.optimistic.add({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      message,
-      parts: optimisticParts,
+      message: { ...message, id: prepared.request?.id ?? messageID },
+      parts: prepared.value.optimisticParts,
     })
 
   const remove = () =>
     syncState.session.optimistic.remove({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      messageID,
+      messageID: prepared.request?.id ?? messageID,
     })
 
   batch(() => {
-    if (input.pending) return
+    if (input.pending || input.dispatch) return
     setBusy()
     add()
   })
@@ -255,40 +276,61 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       return false
     }
 
-    const send = (request?: AdmissionRequest) => api.prompt({
-      sessionID: input.draft.sessionID,
-      id: request?.id ?? messageID,
-      agent: input.draft.agent,
-      model: input.draft.model,
-      variant: input.draft.variant,
-      system: input.draft.system,
-      delivery: input.draft.delivery,
-      legacyParts: requestParts,
-      text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-      files: requestParts.flatMap((part) => {
-        if (part.type !== "file") return []
-        const text = part.source?.text
-        return [
-          {
-            uri: part.url,
-            name: part.filename,
-            mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
-          },
-        ]
-      }),
-      agents: requestParts.flatMap((part) =>
-        part.type === "agent"
-          ? [
-              {
-                name: part.name,
-                mention: part.source
-                  ? { start: part.source.start, end: part.source.end, text: part.source.value }
-                  : undefined,
-              },
-            ]
-          : [],
-      ),
-    })
+    const send = (request?: AdmissionRequest) => {
+      if (request) {
+        if (!request.preparation) {
+          // A policy change at the final fence is a new action. Rebind both sides of the prepared turn together.
+          const requestParts = prepared.value.requestParts.map((part) => ({ ...part, id: Identifier.ascending("part") }))
+          request.preparation = {
+            requestParts,
+            optimisticParts: prepared.value.optimisticParts.map((part, index) => ({ ...part, id: requestParts[index].id, messageID: request.id })),
+            system: prepared.value.system,
+          }
+        }
+        prepared.request = request
+        prepared.value = request.preparation
+        batch(() => {
+          if (input.pending) return
+          setBusy()
+          add()
+        })
+      }
+      const requestParts = prepared.value.requestParts
+      return api.prompt({
+        sessionID: input.draft.sessionID,
+        id: request?.id ?? messageID,
+        agent: input.draft.agent,
+        model: input.draft.model,
+        variant: input.draft.variant,
+        system: prepared.value.system,
+        delivery: input.draft.delivery,
+        legacyParts: requestParts,
+        text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+        files: requestParts.flatMap((part) => {
+          if (part.type !== "file") return []
+          const text = part.source?.text
+          return [
+            {
+              uri: part.url,
+              name: part.filename,
+              mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
+            },
+          ]
+        }),
+        agents: requestParts.flatMap((part) =>
+          part.type === "agent"
+            ? [
+                {
+                  name: part.name,
+                  mention: part.source
+                    ? { start: part.source.start, end: part.source.end, text: part.source.value }
+                    : undefined,
+                },
+              ]
+            : [],
+        ),
+      })
+    }
     if (input.dispatch) {
       const sent = await input.dispatch(send)
       if (!sent) batch(() => { setIdle(); remove() })
@@ -320,13 +362,17 @@ export async function submitShellCommand(input: {
 }) {
   if (input.current?.() === false) return
   if ((await input.before?.()) === false || input.current?.() === false) return
-  const send = (request?: AdmissionRequest) => input.api.shell({
-    sessionID: input.sessionID,
-    id: request ? Event.ID.make(request.id) : input.id ?? Event.ID.create(),
-    command: input.command,
-    agent: input.agent,
-    model: input.model,
-  })
+  const send = (request?: AdmissionRequest) => {
+    const shell = request?.shell ?? {
+      sessionID: input.sessionID,
+      id: request ? Event.ID.make(request.id) : input.id ?? Event.ID.create(),
+      command: input.command,
+      agent: input.agent,
+      model: input.model,
+    }
+    if (request) request.shell = shell
+    return input.api.shell(shell)
+  }
   if (input.dispatch) return input.dispatch(send)
   return send()
 }
@@ -685,14 +731,14 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       while (ownsSource()) {
         if (!(await waitPolicy()) || !ownsSource()) return false
         if (pendingSnapshot(rulesKey).revision !== policy.revision) continue
-        const request = selectRequest()
         if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
         if (!ownsSource()) return false
+        if (pendingSnapshot(rulesKey).revision !== policy.revision) continue
+        const request = selectRequest()
         if (!request.admitted) {
+          // The final fence stamps an unadmitted action; a successful receipt is never re-stamped.
           request.revision = policy.revision
-          // Retain the prepared payload as well as its ID across an exact retry, including V1 part IDs and system.
-          request.send ??= () => send(request)
-          await request.send()
+          await send(request)
           request.admitted = true
         }
         return true
@@ -819,8 +865,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       const [cmdName, ...args] = text.split(" ")
       const commandName = cmdName.slice(1)
       const customCommand = syncState.data.command.find((c) => c.name === commandName)
-      if (customCommand) {
-        const files = await Promise.all(
+      if ((!isNewSession || !admission.request?.preparation) && (customCommand || isNewSession && admission.request?.command)) {
+        const files = (isNewSession ? admission.request?.command?.files : undefined) ?? await Promise.all(
           images.map(async (attachment) => ({
             uri: await blobDataUrl(attachment.blob, attachment.mime),
             name: attachment.filename,
@@ -830,17 +876,22 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         if (!(await waitPolicy()) || !ownsSource()) return
         clearInput()
         const messageID = requestID()
-        serverState.session.set("session_status", session.id, { type: "busy" })
-        const send = (request?: AdmissionRequest) => api.command({
-          sessionID: session.id,
-          id: request?.id ?? messageID,
-          command: commandName,
-          arguments: args.join(" "),
-          agent,
-          model: { id: model.modelID, providerID: model.providerID, variant },
-          delivery: draft.delivery,
-          files,
-        })
+        if (!isNewSession) serverState.session.set("session_status", session.id, { type: "busy" })
+        const send = (request?: AdmissionRequest) => {
+          const command = request?.command ?? {
+            sessionID: session.id,
+            id: request?.id ?? messageID,
+            command: commandName,
+            arguments: args.join(" "),
+            agent,
+            model: { id: model.modelID, providerID: model.providerID, variant },
+            delivery: draft.delivery,
+            files,
+          }
+          if (request) request.command = command
+          if (isNewSession) serverState.session.set("session_status", session.id, { type: "busy" })
+          return api.command(command)
+        }
         await (isNewSession ? dispatch(send) : send()).catch((err) => {
           if (isNewSession && !ownsSource()) throw err
           serverState.session.set("session_status", session.id, { type: "idle" })
@@ -857,7 +908,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
 
     const commentItems = context.filter((item) => item.type === "file" && !!item.comment?.trim())
-    const system = isNewSession ? await followupSystem(platform, directorySDK.scope, serverState, projectDirectory) : undefined
+    const system = isNewSession
+      ? admission.request?.preparation
+        ? admission.request.preparation.system
+        : await followupSystem(platform, directorySDK.scope, serverState, projectDirectory)
+      : undefined
     if (!ownsSource()) return
     const messageID = requestID()
 
@@ -865,7 +920,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       syncState.session.optimistic.remove({
         directory: sessionDirectory,
         sessionID: session.id,
-        messageID,
+        messageID: isNewSession ? admission.request?.id ?? messageID : messageID,
       })
     }
 
@@ -945,6 +1000,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       pending: queued,
       before: () => waitForWorktree(removeOptimisticMessage),
       dispatch: isNewSession ? dispatch : undefined,
+      request: isNewSession ? admission.request : undefined,
     })
       .then((sent) => {
         if (sent && queued) showToast({ title: language.t("orchestra.chat.delivery.queued") })
