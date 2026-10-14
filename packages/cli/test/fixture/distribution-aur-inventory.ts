@@ -93,12 +93,15 @@ export async function aurFinalPackage(extracted: string, payload: AurPayload, re
   expect(info.split("\n")).toContain(`pkgver = ${payload.version}-1`)
   expect(info.split("\n")).toContain(`arch = ${process.arch === "x64" ? "x86_64" : "aarch64"}`)
   const build = (await readFile(join(extracted, ".BUILDINFO"), "utf8")).split("\n")
-  expect(build, "AUR_MAKEPKG_MUST_IDENTIFY_EXACT_PRODUCTION_RECIPE")
-    .toContain(`pkgbuild_sha256sum = ${sha256(recipe)}`)
-  // Frozen advertised options; the final archive records makepkg's effective
-  // configuration as well as proving preservation of every shipped file.
-  for (const option of ["!strip", "!debug", "!lto", "libtool", "staticlibs", "!purge", "docs", "!zipman", "emptydirs"])
-    expect(build, `AUR_MAKEPKG_EFFECTIVE_OPTION_REQUIRED: ${option}`).toContain(`options = ${option}`)
+  expect(build.filter((line) => line.startsWith("pkgbuild_sha256sum = ")),
+    "AUR_MAKEPKG_MUST_IDENTIFY_EXACT_PRODUCTION_RECIPE").toEqual([`pkgbuild_sha256sum = ${sha256(recipe)}`])
+  expect(build, "AUR_BUILDINFO_MAKEPKG_IDENTITY_REQUIRED").toContain("buildtool = makepkg")
+  // BUILDINFO options record makepkg.conf global defaults, not PKGBUILD overrides.
+  // The recipe hash binds the executed production recipe; the complete final
+  // archive above proves shipped bytes/modes/inventory survive actual tidy.
+  console.info(`AUR BUILDINFO provenance: ${JSON.stringify({ recipeSha256: sha256(recipe),
+    globalDefaultOptions: build.filter((line) => line.startsWith("options = ")).map((line) => line.slice("options = ".length)),
+  })}`)
 }
 
 // Calibrate the real final-package oracle on the first real archive. Every
@@ -150,6 +153,17 @@ export async function aurInventoryTeeth(extracted: string, payload: AurPayload, 
     await rename(metadata, stored)
     await expect(check(), "AUR_INVENTORY_MISSING_PACKAGE_METADATA_MUST_FAIL").rejects.toThrow()
   } finally { await rename(stored, metadata) }
+  const buildinfo = join(extracted, ".BUILDINFO")
+  const buildBytes = await readFile(buildinfo)
+  const buildMode = (await lstat(buildinfo)).mode & 0o7777
+  const recipeHash = sha256(recipe)
+  const wrongHash = `${recipeHash[0] === "0" ? "1" : "0"}${recipeHash.slice(1)}`
+  try {
+    await Bun.write(buildinfo, buildBytes.toString("utf8").replace(
+      `pkgbuild_sha256sum = ${recipeHash}`, `pkgbuild_sha256sum = ${wrongHash}`))
+    await expect(check(), "AUR_INVENTORY_WRONG_RECIPE_HASH_MUST_FAIL")
+      .rejects.toThrow("AUR_MAKEPKG_MUST_IDENTIFY_EXACT_PRODUCTION_RECIPE")
+  } finally { await Bun.write(buildinfo, buildBytes); await chmod(buildinfo, buildMode) }
   await check()
-  console.info("AUR final-package oracle controls: bytes/executable-mode/nonexecutable-mode/missing/extra/empty-directory/link/metadata rejected; restored archive accepted")
+  console.info("AUR final-package oracle controls: bytes/executable-mode/nonexecutable-mode/missing/extra/empty-directory/link/metadata/recipe-hash rejected; restored archive accepted")
 }
