@@ -33,6 +33,16 @@ export async function corroborateProcess(pid: number, executable: string, box: B
 export async function command(args: string[], box: Box, timeout = 90_000) {
   if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
   const invocation = await commandInvocation(args)
+  const started = performance.now()
+  // Windows diagnostics allow Cause.pretty only for these read-only stages. Service
+  // start/password and child eval scripts must never log their output or cause.
+  const diagnostic = process.platform === "win32" && (
+    (args.length === 2 && args[1] === "--version") ||
+    (args.length === 4 && args[1] === "debug" && args[2] === "symbols") ||
+    (args.length === 3 && args[1] === "service" && args[2] === "status")
+  ) ? { stage: args.slice(1), launcher: args[0], program: invocation.args[0],
+    arguments: invocation.args.slice(1), shell: invocation.shell, cwd: box.cwd, timeoutMs: timeout } : undefined
+  if (diagnostic) console.error(`NATIVE_COMMAND_START ${JSON.stringify(diagnostic)}`)
   const result = await Effect.runPromise(Effect.gen(function* () {
     const service = yield* AppProcess.Service
     return yield* service.run(ChildProcess.make(invocation.args[0], invocation.args.slice(1), {
@@ -47,22 +57,25 @@ export async function command(args: string[], box: Box, timeout = 90_000) {
     }),
     Effect.scoped,
     // Do not expose daemon stdout/password or a native error containing its output.
-    Effect.catchCause((cause) => Effect.fail(new Error(`NATIVE_COMMAND_PROCESS_OR_TIMEOUT_FAILURE: ${args[0]}${basename(args[0]) === "brew" ? ` ${args.slice(1).join(" ")}\n${Cause.pretty(cause)}` : ""}`))),
+    Effect.catchCause((cause) => Effect.fail(new Error(`NATIVE_COMMAND_PROCESS_OR_TIMEOUT_FAILURE: ${args[0]}${diagnostic
+      ? `\n${JSON.stringify({ ...diagnostic, elapsedMs: Math.round(performance.now() - started) })}\n${Cause.pretty(cause)}`
+      : basename(args[0]) === "brew" ? ` ${args.slice(1).join(" ")}\n${Cause.pretty(cause)}` : ""}`))),
   ))
+  if (diagnostic) console.error(`NATIVE_COMMAND_EXIT ${JSON.stringify({ ...diagnostic,
+    elapsedMs: Math.round(performance.now() - started), code: result.exitCode,
+    stdoutBytes: result.stdout.length, stderrBytes: result.stderr.length })}`)
   if (result.stdoutTruncated || result.stderrTruncated)
     throw new Error(`NATIVE_COMMAND_OUTPUT_TRUNCATED: ${args[0]}`)
   return { code: result.exitCode, stdout: result.stdout.toString("utf8"), stderr: result.stderr.toString("utf8") }
 }
 
-// npm.cmd is not a PE executable. npm uses its real Node CLI; public npm CMD
-// shims use omni's supported verbatim cmd.exe shell boundary, never legacy spawn.
+// npm uses its real Node CLI. Pass public CMD shims and argv unquoted: omni's
+// native Windows batch route supplies system cmd.exe and Rust std batch quoting
+// (/e:ON /v:OFF /d /c), with the CMD/Node/PE tree inside its owned job. shell:true
+// selects a different verbatim /s /c path and bypasses this batch argv encoder.
 async function commandInvocation(args: string[]) {
   if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
   if (process.platform !== "win32") return { args: [args[0], ...args.slice(1)] as const, shell: false }
-  if (/\.cmd$/i.test(args[0])) {
-    if (args.some((arg) => /["%\r\n\0]/.test(arg))) throw new Error("NATIVE_CMD_UNSAFE_ARGUMENT")
-    return { args: [`"${args[0]}"`, ...args.slice(1).map((arg) => `"${arg}"`)] as const, shell: true }
-  }
   if (args[0] === "npm" || /\.cjs$/i.test(args[0])) {
     const { WindowsProcessQuery } = await import("../../../core/test/fixture/windows-process-query")
     const node = WindowsProcessQuery.nodeExecutable()

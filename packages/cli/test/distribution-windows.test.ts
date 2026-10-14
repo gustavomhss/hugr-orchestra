@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, test } from "bun:test"
 import { lstat, mkdtemp, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve, sep } from "node:path"
-import { buildVersions, captureOracle, cli, snapshot, target } from "./fixture/distribution-native"
+import { assertVersion, buildVersions, captureOracle, cli, snapshot, target } from "./fixture/distribution-native"
 import type { Built } from "./fixture/distribution-native"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { emergencyStop, stopServices } from "./fixture/distribution-native-proof"
@@ -59,7 +59,11 @@ afterAll(async () => {
 test("native Windows npm install, update and exact downgrade qualify PE closure, public CMD launcher and owned daemon exit", async () => {
   expectSpawn(import.meta.path)
   if (!state.directory || !state.built) throw new Error("NATIVE_WINDOWS_BUILD_FIXTURE_MISSING")
-  await npmChannel(state.directory, state.built)
+  await npmChannel(state.directory, state.built, async (installed) => {
+    // Separately diagnose compiled runtime before the required public CMD shim
+    // on install, update and downgrade. Same env, cwd, 15 s budget, owned tree.
+    await assertVersion(join(installed.payload, "bin/orchestra.exe"), installed.version, installed.box)
+  })
   for (const payload of state.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
   expect((await captureOracle()).trees).toEqual(state.built.oracle.trees)
 }, 900_000)

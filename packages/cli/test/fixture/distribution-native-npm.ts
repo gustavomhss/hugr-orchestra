@@ -5,12 +5,16 @@ import { join } from "node:path"
 import { prepareNpmDistribution } from "../../script/distribution-npm"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { sandbox, successful, snapshot, skillIdentity, target } from "./distribution-native"
-import type { Built } from "./distribution-native"
+import type { Built, Sandbox } from "./distribution-native"
 import { qualify, stopServices } from "./distribution-native-proof"
 
 type RegistryVersion = Record<string, unknown> & { dist: { tarball: string; integrity: string; shasum: string } }
 
-export async function npmChannel(directory: string, built: Built) {
+export async function npmChannel(
+  directory: string,
+  built: Built,
+  beforePublic?: (input: { payload: string; version: string; box: Sandbox }) => Promise<void>,
+) {
   const box = await sandbox(join(directory, "npm"))
   const systemRoot = process.env.SystemRoot ?? process.env.SYSTEMROOT
   const tar = process.platform === "win32" ? join(systemRoot ?? "", "System32/tar.exe") : "tar"
@@ -121,6 +125,9 @@ export async function npmChannel(directory: string, built: Built) {
         expect(shims.directories).toEqual([])
         for (const shim of shims.files.values()) expect(shim.bytes.length).toBeGreaterThan(0)
       }
+      // Optional host diagnostic runs the exact verified npm-installed closure.
+      // Public launcher qualification remains mandatory after this control.
+      if (beforePublic) await beforePublic({ payload: platform, version: payload.version, box })
       const root = await qualify({ launcher: join(modules, `.bin/orchestra${process.platform === "win32" ? ".cmd" : ""}`), payload: platform, version: payload.version,
         box, oracle: built.oracle, negative: payload === built.payloads[1] })
       skills.set(root, await snapshot(root))
