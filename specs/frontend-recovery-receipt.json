@@ -16,7 +16,7 @@
   "closedRootCauses": [
     "Catalog bootstrap depended on an absent default-model endpoint",
     "Release-date and family filters silently hid available models",
-    "Anonymous free OpenCode models were excluded by credential availability",
+    "Anonymous free Zen models were excluded by credential availability",
     "Missing pricing was incorrectly converted into free pricing",
     "Vendored OAuth status, completion and cancellation routes differed from Server",
     "Two QueryClients prevented deduplication and coherent catalog refresh",
