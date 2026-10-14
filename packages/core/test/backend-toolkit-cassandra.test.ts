@@ -55,7 +55,7 @@ it.live("verified upstream source gets exactly one catalog guard and a private d
     yield* Effect.promise(() => readFile(path.join(f.original, "src/LICENSE"))),
   )
   const notice = yield* Effect.promise(() => readFile(path.join(directory, "src/cmd/schemagen/ORCHESTRA-MODIFICATIONS.txt"), "utf8"))
-  expect(notice).toContain("Orchestra cassandra3: schemagen.go changed")
+  expect(notice).toContain("Orchestra cassandra4: schemagen.go changed")
   expect(notice).toContain("Upstream gocqlx v3.0.4 (Apache-2.0)")
   expect(notice).toContain(`source SHA-256 ${BackendToolkitCassandraDialer.BEFORE}`)
   expect(notice).toContain(`modified SHA-256 ${BackendToolkitCassandraDialer.AFTER}`)
@@ -110,7 +110,7 @@ it.live("source mutations, empty/malformed bytes and missing inputs produce type
   expect(yield* Effect.promise(() => readFile(path.join(missingGenerator, "src/go.mod")))).toEqual(module)
 }), 120_000)
 
-it.live("original, cassandra1 or cassandra2 ready binaries cannot satisfy cassandra3 cache identity", () => Effect.gen(function* () {
+it.live("original, cassandra1, cassandra2 or cassandra3 ready binaries cannot satisfy cassandra4 cache identity", () => Effect.gen(function* () {
   const root = yield* Effect.acquireRelease(
     Effect.promise(() => mkdtemp(path.join(tmpdir(), "cassandra-cache-"))),
     (root) => Effect.promise(async () => {
@@ -127,7 +127,8 @@ it.live("original, cassandra1 or cassandra2 ready binaries cannot satisfy cassan
   const old = path.join(root, `engines/gocqlx-schemagen/3.0.4-${host.target}`)
   const previous = path.join(root, `engines/gocqlx-schemagen/3.0.4+orchestra.cassandra1-${host.target}`)
   const unix = path.join(root, `engines/gocqlx-schemagen/3.0.4+orchestra.cassandra2-${host.target}`)
-  yield* Effect.forEach([[old, "old binary"], [previous, "previous binary"], [unix, "unix binary"]], ([directory, text]) =>
+  const connect = path.join(root, `engines/gocqlx-schemagen/3.0.4+orchestra.cassandra3-${host.target}`)
+  yield* Effect.forEach([[old, "old binary"], [previous, "previous binary"], [unix, "unix binary"], [connect, "connect binary"]], ([directory, text]) =>
     Effect.promise(async () => {
       await mkdir(directory, { recursive: true })
       await writeFile(path.join(directory, ".complete"), "")
@@ -136,12 +137,13 @@ it.live("original, cassandra1 or cassandra2 ready binaries cannot satisfy cassan
   expect(yield* PinnedArtifact.installed(old)).toBe(true)
   expect(yield* PinnedArtifact.installed(previous)).toBe(true)
   expect(yield* PinnedArtifact.installed(unix)).toBe(true)
-  expect(pack.version).toBe("3.0.4+orchestra.cassandra3")
+  expect(yield* PinnedArtifact.installed(connect)).toBe(true)
+  expect(pack.version).toBe("3.0.4+orchestra.cassandra4")
   expect(pack.install.artifact.url).toEndWith("/v3.0.4.zip")
   expect(yield* BackendToolkit.status("gocqlx-schemagen").pipe(
     Effect.provideService(BackendToolkit.Root, root),
     Effect.provideService(BackendToolkit.Target, host),
-  )).toMatchObject([{ version: "3.0.4+orchestra.cassandra3", status: "absent" }])
+  )).toMatchObject([{ version: "3.0.4+orchestra.cassandra4", status: "absent" }])
   // Real production acquisition must reach the helper before building, not merely pass its isolated unit checks.
   const owned = yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
   expect(path.dirname(owned.executable)).toBe(path.join(root, `engines/gocqlx-schemagen/${pack.version}-${host.target}`))
@@ -156,6 +158,7 @@ it.live("original, cassandra1 or cassandra2 ready binaries cannot satisfy cassan
   expect(yield* Effect.promise(() => readFile(path.join(old, "gocqlx-schemagen"), "utf8"))).toBe("old binary")
   expect(yield* Effect.promise(() => readFile(path.join(previous, "gocqlx-schemagen"), "utf8"))).toBe("previous binary")
   expect(yield* Effect.promise(() => readFile(path.join(unix, "gocqlx-schemagen"), "utf8"))).toBe("unix binary")
+  expect(yield* Effect.promise(() => readFile(path.join(connect, "gocqlx-schemagen"), "utf8"))).toBe("connect binary")
   const go = path.join(root, "runtimes", "go", `${BackendToolkitManifest.RUNTIMES.go.version}-${host.target}`, BackendToolkitManifest.RUNTIMES.go.targets[host.target].executable)
   yield* Effect.promise(() => cp(path.join(import.meta.dirname, "fixtures/cassandra-dialer_test.go"), path.join(path.dirname(owned.executable), "src/cmd/schemagen/orchestra_dialer_test.go")))
   yield* Effect.promise(() => cp(path.join(import.meta.dirname, "fixtures/cassandra-dialer-linux_test.go"), path.join(path.dirname(owned.executable), "src/cmd/schemagen/orchestra_dialer_linux_test.go")))
@@ -168,7 +171,7 @@ it.live("original, cassandra1 or cassandra2 ready binaries cannot satisfy cassan
     const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
     return { stdout, stderr, exit }
   })
-  const parsed = yield* command(["test", "./cmd/schemagen", "-run", "TestOrchestra(Routes|Address|Connect|Tunnel)$", "-count=1"])
+  const parsed = yield* command(["test", "./cmd/schemagen", "-run", "TestOrchestra(Routes|DrivePaths|Address|Connect|Tunnel)$", "-count=1"])
   expect(parsed, parsed.stderr).toMatchObject({ exit: 0 })
   // The Unix broker roundtrip runs on Linux/macOS; Windows still builds and runs parser and CONNECT tunnel tests.
   if (process.platform === "win32") return

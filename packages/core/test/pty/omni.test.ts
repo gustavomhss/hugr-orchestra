@@ -19,6 +19,7 @@ import { PtyProtocol } from "@orchestra/core/pty/protocol"
 import type { PtyID } from "@orchestra/core/pty/schema"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { location } from "../fixture/location"
+import { expectSpawn } from "../fixture/omni-expect"
 import { alive, gone, reap, sweep, tree } from "../fixture/process-tree"
 import { testEffect } from "../lib/effect"
 
@@ -116,6 +117,7 @@ describe("pty on omni", () => {
     () =>
       Effect.gen(function* () {
         const pty = yield* Pty.Service
+        expectSpawn(import.meta.path)
         const direct = tree(2)
         const root = yield* create({ command: direct.command, args: direct.args })
         yield* (yield* attach(root.id)).until((text) => plain(text).includes(direct.ready), "ready line")

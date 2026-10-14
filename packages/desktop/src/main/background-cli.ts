@@ -4,7 +4,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import { app } from "electron"
-import { nativeCliTarget, verifyCliArtifact } from "./cli-artifacts"
+import { nativeCliTarget, signatureCheck, verifyCliArtifact } from "./cli-artifacts"
 import { installCliArtifact } from "./cli-install"
 
 const execFileAsync = promisify(execFile)
@@ -21,11 +21,21 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
   const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
   const target = nativeCliTarget(process.platform, process.arch)
   const artifact = app.isPackaged
-    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"))
+    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"), {
+        // The installed copy takes the bundle's rg along; signed, it must still carry a valid signature.
+        signature: async (file) => {
+          const check = signatureCheck(target, file)
+          if (!check) return false
+          return execFileAsync(check.command, check.args, { windowsHide: true }).then(
+            (result) => check.valid(result.stdout),
+            () => false,
+          )
+        },
+      })
     : await verifyCliArtifact(directory, target)
   const binary = artifact.path
   logger.log("v2 CLI executable resolved", { binary, version: artifact.version, packaged: app.isPackaged })
-  if (![artifact.version, `orchestra v${artifact.version}`].includes(await run(binary, ["--version"], logger)))
+  if ((await run(binary, ["--version"], logger)) !== artifact.version)
     throw new Error("Owned CLI executable version differs from its manifest")
 
   const candidates = [

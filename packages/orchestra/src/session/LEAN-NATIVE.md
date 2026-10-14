@@ -1,51 +1,46 @@
-# Standard native shell model projection
+# Standard native tool model projection (Lean 2.0)
 
-The standard Orchestra shell now uses the one approved `hugr-lean/core` backend
-dependency after native execution and baseline policy/plugin processing. Commands,
-permissions, exit status, streamed metadata and lifecycle are not rewritten.
+The standard Orchestra V1 tools use the approved `hugr-lean@0.4.0` dependency after
+native execution and baseline policy/plugin processing. Commands, permissions, exit
+status, streamed metadata and lifecycle are not rewritten; only the model-visible
+output text changes.
 
-## Eligibility and configuration
+## Pipeline
 
-Native ShellTool issues an owner-bound capability only for complete nonempty
-in-memory output from an actual exit-zero call. Timeout, abort, generic truncation,
-blocked toolkit output, missing call identity and synthesized no-output text do
-not issue a capability. Tool names or serialized metadata cannot impersonate it.
+1. Native ShellTool attests every real result with nonempty output (any exit code,
+   timeout, truncation); `Tool.define` attests native `read`, `webfetch`, `glob` and
+   `grep` results. Tool names or serialized metadata cannot impersonate either.
+2. The lossless profile engine (`LeanProcessor`) runs first, exactly as in 0.2.0: only
+   exit-0, complete shell output, within the whole-view budget.
+3. Lean 2.0 `summarize()` then runs on that text: shell output above 4 KiB becomes
+   head + tail + every failure block (kept whole when the command failed) with omission
+   markers; `read` above 8 KiB is cut at a line with a `Use offset=N to continue` hint;
+   `webfetch` above 8 KiB is capped; `glob`/`grep` and small outputs only get lossless
+   compaction (ANSI, CR overwrites, repeats, path factoring).
+4. A lossy summary first stores the complete approved original in the profile's
+   `RawStore` (`<data>/lean/raw/<sha256(project, directory)>`, 64 MiB, 7-day TTL,
+   oldest evicted when full) and ends with `[full output: lean recall <id>]`.
+   Append-only policy text stays after it. Storage failure keeps the lossless text.
+5. The native `lean_recall` tool returns that original byte for byte, or a 1-based line
+   range. It is offered to every agent that can run `bash`, `read` or `webfetch`, except
+   the discovery seat, whose research sources stay exact (no lossy summaries there).
 
-When configuration is available, filtering is enabled unless explicitly disabled:
+## Configuration
+
+Enabled unless explicitly disabled globally or for the Orchestra profile:
 
 ```json
-{
-  "tool_output": {
-    "lean": { "enabled": false }
-  }
-}
+{ "tool_output": { "lean": { "enabled": false } } }
 ```
 
-Unknown commands/grammars, failed processing, wrong owners, policy mutations or
-whole-model-view budget failure preserve the existing approved result. Core
-processor, not the adapter, owns command recognition and evidence preservation.
+Per-item toggles on the profile screen switch off both stages for that item: command
+families (Cargo, Go, …), `Other shell commands` (compound or unattributed commands),
+`Read`, `Web fetch`, `Glob` and `Grep`. Unknown config, unreadable preferences, wrong
+owners, plugin mutations or budget refusal preserve the approved result.
 
-Before/after plugins and installed ToolSafety hooks retain their baseline view.
-Any external plugin mutation invalidates the native mapping, including root
-outcome fields and unknown extensions. Known append-only installed policy text
-survives the selected projection. Only output text changes; other result fields
-remain those of the approved object.
+## Persistence and metrics
 
-## Persistence and measured proof
-
-Existing SessionProcessor persists the returned selected output once. The immediate
-next provider request and canonical replay lowering reuse that saved text; no
-history re-filtering or new model call is introduced.
-
-Focused native proof executes real `go test -v .` through actual ShellTool and
-SessionPrompt with only the HTTP model scripted. It covers enabled/disabled,
-command failure, plugin text/root-error mutations, unsupported command arguments,
-and native truncation. Each next provider tool result is correlated by call ID
-and equals durable/replayed text exactly. Tests run through the repository's
-scoped GitHub CI on Linux and Windows; not against a paid model or restarted app.
-
-The dependency is the approved immutable 0.2.0 package with source/license/hash
-record in `packages/core/vendor/README.md`. Expansion/release stays separate.
-Certified complete-spool filtering, original-recovery UI, an alternate Core
-registry adapter and Claude SDK result eligibility are separate integration cuts;
-this standard-shell proof does not claim those boundaries.
+SessionProcessor persists the selected output once; the next provider request and replay
+reuse it. Each decision (`metadata.lean`) records bytes and estimated tokens before and
+after, so the profile screen's KPIs include summaries. Decisions stamped by earlier engine
+versions stay decodable.

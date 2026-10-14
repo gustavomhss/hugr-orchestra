@@ -13,7 +13,7 @@
 // --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
 // (*.node-smoke.mjs) with node instead of bun test.
 //
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms]
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|linux-arm64|windows|macos|macos-intel|both|all] [--timeout ms]
 //        [--env KEY=VALUE] [--runner bun|node]
 //        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
 // Performance config also requires --benchmark-renderer current|legacy.
@@ -26,11 +26,11 @@ import { existsSync, realpathSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
-import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
-import { parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
+import { closestBase, parseResponse, rateLimitDelay, testPaths, workflowRun } from "./test-ci-upload"
+import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
 const USAGE =
-  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]"
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|linux-arm64|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node|playwright [--config <config> [--benchmark-renderer current|legacy]]]\nExtension: --os linux-arm64 selects only ubuntu-24.04-arm (native Linux ARM64 distribution qualification)."
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -72,11 +72,11 @@ const removeBranch = () => api("DELETE", `repos/${repo}/git/refs/heads/${branch}
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, () => void removeBranch().finally(() => process.exit(130)))
 
-// Look the run up by its unique commit: `--workflow` only resolves workflows that exist on the default branch.
+// Bind the run to both its temporary branch and commit; concurrent snapshots can share a commit SHA.
 const run = await waitFor("the workflow run to start", 180_000, async () => {
-  const runs: { databaseId: number; url: string; workflowName: string }[] =
-    await $`gh run list --repo ${repo} --commit ${commit.sha} --json databaseId,url,workflowName`.quiet().json()
-  return runs.find((entry) => entry.workflowName === "test-ci")
+  const runs: { databaseId: number; url: string; workflowName: string; headBranch: string; headSha: string }[] =
+    await $`gh run list --repo ${repo} --branch ${branch} --commit ${commit.sha} --json databaseId,url,workflowName,headBranch,headSha`.quiet().json()
+  return workflowRun(runs, branch, commit.sha)
 })
 console.log(`test-ci: ${run.url}`)
 const finished = await follow(run.databaseId)
@@ -281,6 +281,9 @@ type RunView = {
 
 async function report(view: RunView) {
   const tests = requireTestJobs(request.os, view.jobs)
+  const bunfig = Bun.file(path.join(root, "packages", request.package, "bunfig.toml"))
+  const control = request.runner === "bun" && (await bunfig.exists()) && preloadsControl(Bun.TOML.parse(await bunfig.text()))
+  let missing = false
   for (const job of tests) {
     const log = await waitFor(`${job.name}: nonempty job log`, 120_000, async () => {
       const result = await $`gh run view --repo ${repo} --job ${job.databaseId} --log`.quiet().nothrow()
@@ -290,9 +293,18 @@ async function report(view: RunView) {
     // Keep setup diagnostics for failed jobs; only summaries for successful jobs.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
+    if (!control) continue
+    // The control's verdict is required apart from the job's result: a job without exactly one verdict carrying its
+    // nonce fails this report even when every test passed.
+    try {
+      console.log(`test-ci: ${job.name} ${controlVerdict(job, log)}`)
+    } catch (error) {
+      missing = true
+      console.log(`test-ci: ${job.name} omni positive control: MISSING (${(error as Error).message})`)
+    }
   }
-  console.log(`\ntest-ci: ${view.conclusion}`)
-  return view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
+  console.log(`\ntest-ci: ${view.conclusion}${missing ? " (omni positive control verdict missing)" : ""}`)
+  return missing || view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
 }
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {

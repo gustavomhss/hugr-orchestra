@@ -1219,7 +1219,7 @@ it.instance(
         expect(exitA.value.info.id).toBe(exitB.value.info.id)
       }
     }),
-  { git: true },
+  // No git repo: this checks one cancelled run reaching every queued caller; git snapshots took ~1 s on Windows.
   10_000,
 )
 

@@ -61,8 +61,8 @@ path on one Linux runner is not native build coverage.
 
 1. **Native CLI staging is missing.** `desktop.nix` never copies `${orchestra}`
    into desktop resources. `packages/desktop/scripts/prebuild.ts` builds the Node
-   server; only `dev` calls `downloadCliToResources`. The latter installs
-   `@opencode-ai/cli-*` at `0.0.0-next-16350` and copies `opencode2` into
+   server; only `dev` calls `downloadCliToResources`. The latter installs the
+   upstream opencode CLI packages at `0.0.0-next-16350` and copies their binary into
    `resources/orchestra-cli` (`scripts/utils.ts`). The current production
    electron-builder configuration only adds those CLI resources for `dev`
    (`electron-builder.config.ts:83-91`). `src/main/background-cli.ts` resolves

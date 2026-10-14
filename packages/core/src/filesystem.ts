@@ -49,9 +49,9 @@ export const Event = FileSystem.Event
 export interface Interface {
   readonly read: (input: ReadInput) => Effect.Effect<{ readonly content: Uint8Array; readonly mime: string }>
   readonly list: (input?: ListInput) => Effect.Effect<Entry[]>
-  readonly find: (input: FindInput) => Effect.Effect<Entry[]>
-  readonly glob: (input: GlobInput) => Effect.Effect<readonly Entry[]>
-  readonly grep: (input: GrepInput) => Effect.Effect<readonly Match[]>
+  readonly find: (input: FindInput) => Effect.Effect<Entry[], FileSystemSearch.SearchError>
+  readonly glob: (input: GlobInput) => Effect.Effect<readonly Entry[], FileSystemSearch.SearchError>
+  readonly grep: (input: GrepInput) => Effect.Effect<readonly Match[], FileSystemSearch.SearchError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileSystem") {}

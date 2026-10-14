@@ -20,8 +20,92 @@ permissions:
   contents: read
 
 jobs:
+  # A Windows desktop bundles its own CLI and the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Bun 1.3.14 on
+  # Windows cannot cross-compile the Linux CLIs ("Failed to extract executable for 'bun-linux-aarch64-v1.3.14'"), so a
+  # Linux producer builds all three, as runtime-products.yml and runtime-wsl.yml do, with the omni pairs and tree-sitter
+  # bundles built on their own hosts, and hands them to the Windows build as ORCHESTRA_CLI_PREBUILT_DIR.
+  guest-omni:
+    uses: ./.github/workflows/omni-artifacts.yml
+
+  guest-tree-sitter:
+    uses: ./.github/workflows/tree-sitter-artifacts.yml
+    with:
+      targets: '["linux-arm64","win32-x64"]'
+
+  windows-cli:
+    needs: [guest-omni, guest-tree-sitter]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact child head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile --os="*" --cpu="*"
+      # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads them.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-win32-x64-msvc
+          path: ${{ runner.temp }}/omni-artifacts/win32-x64-msvc
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-x64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-x64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-arm64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-arm64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-linux-arm64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/linux-arm64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-win32-x64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/win32-x64
+      # The smoke packages the beta channel at the package version (test/omni-smoke/build.ts); the CLIs must match.
+      - name: Build and export the Windows bundle's three CLIs
+        env:
+          OMNI_ARTIFACTS: ${{ runner.temp }}/omni-artifacts
+          TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
+          ORCHESTRA_CHANNEL: beta
+        run: |
+          set -euo pipefail
+          ORCHESTRA_VERSION="$(bun -p 'require("./packages/orchestra/package.json").version')"
+          export ORCHESTRA_VERSION
+          targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
+          for target in $targets; do
+            bun packages/cli/script/build.ts --skip-install --target "$target"
+          done
+          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
+            --target windows-x64-baseline --target linux-arm64 --target linux-x64-baseline
+          # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each WSL guest's
+          # omni pair in omni-<target>/ (scripts/cli-staging.ts reads them there).
+          for target in $targets; do
+            bin="packages/cli/dist/cli-$target/bin"
+            cp -R "$bin/tree-sitter" "windows-cli/tree-sitter-$target"
+            cp -R "$bin/ripgrep" "windows-cli/ripgrep-$target"
+            if [[ "$target" == linux-* ]]; then
+              mkdir -p "windows-cli/omni-$target"
+              cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "windows-cli/omni-$target/"
+            fi
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-cli
+          path: windows-cli/
+          if-no-files-found: error
+
   smoke:
     name: actual packaged desktop (${{ matrix.os }})
+    needs: [windows-cli]
     strategy:
       fail-fast: false
       matrix:
@@ -54,6 +138,16 @@ jobs:
       - name: Exact-source release omni binaries
         uses: ./.github/actions/omni-binaries
 
+      - name: The Windows bundle's CLIs from the Linux producer
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-cli
+          path: ${{ runner.temp }}/windows-cli
+      - name: Point the build at the produced CLIs
+        if: runner.os == 'Windows'
+        run: echo "ORCHESTRA_CLI_PREBUILT_DIR=$RUNNER_TEMP/windows-cli" >> "$GITHUB_ENV"
+
       - name: Linux GUI display capability
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
@@ -74,6 +168,19 @@ jobs:
           # App must discover its own Resources/omni. Environment cannot rescue packaging.
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
           bun test/omni-smoke/packaged.ts --require main,shell,terminal --diagnose-main
+
+      # Resources/cli/ripgrep-<target>: pinned (or validly signed) rg, refused when moved away, and the packaged CLI
+      # (pointed at it as main points the server, and its installed copy) searches with it and never downloads one,
+      # each with its mutant (test/omni-smoke/ripgrep.ts).
+      - name: Packaged ripgrep, used by the packaged CLI and never downloaded, mutants then restored
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: packages/desktop
+        run: bun test/omni-smoke/ripgrep.ts
+
+      - name: Distributables keep the executable bits of the CLI, its rg and omni
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
+        working-directory: packages/desktop
+        run: bun test/omni-smoke/distributables.ts
 
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()

@@ -13,7 +13,9 @@ import { Research } from "../../../schema/src/research"
 import { reply } from "../../../orchestra/test/lib/llm-server"
 import { testProviderConfig } from "../../../orchestra/test/lib/test-provider"
 import ts from "typescript"
+import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { cleanupProofRoot } from "./jimmy-desktop-cleanup.fixture"
+import { DesktopOmni } from "./omni-process"
 
 const desktop = path.resolve(import.meta.dir, "../..")
 const repo = path.resolve(desktop, "../..")
@@ -56,6 +58,8 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     NODE_OPTIONS: "--max-old-space-size=5120",
   }
   try {
+    // The host's build commands run through DesktopOmni.execFile when omni is on (command() below).
+    expectSpawn(import.meta.path)
     await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), env, 60000)
     await command([process.execPath, "script/build-node.ts"], path.join(repo, "packages/orchestra"), env, 90000)
     const require = createRequire(path.join(desktop, "package.json"))
@@ -144,6 +148,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
 test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("owned desktop proof typechecks", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof typecheck")
   stage("typecheck-start")
+  expectSpawn(import.meta.path)
   await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), process.env, 60000)
   await command([process.execPath, "typecheck", "src/main/jimmy-desktop-proof.tsconfig.json"], desktop, process.env, 90000)
   await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-typecheck.json"), JSON.stringify({ schema: "jimmy-desktop-typecheck-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, passed: true }))
@@ -285,7 +290,10 @@ async function runProof(root: string, install: string, electron: string, mutant:
   const child = spawn(executable, process.platform === "linux" ? ["-a", electron, "--no-sandbox", entry] : [entry], {
     cwd: project, stdio: ["pipe", "pipe", "pipe"], detached: true,
     env: {
-      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "TMPDIR", "DISPLAY", "XAUTHORITY"].includes(key))),
+      // The relocated install ships no omni files; the run's omni mode and CI's explicit omni-binaries paths
+      // (HUGR_OMNI_*, see desktop omni-host.ts) are what spawnLocalServer's sidecarEnv locates.
+      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "TMPDIR", "DISPLAY", "XAUTHORITY",
+        "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"].includes(key))),
       HOME: path.join(owned, "home"), XDG_CACHE_HOME: path.join(owned, "cache"), XDG_DATA_HOME: path.join(owned, "data"), XDG_CONFIG_HOME: path.join(owned, "config"), XDG_STATE_HOME: path.join(owned, "state"),
       ORCHESTRA_DB: path.join(owned, "native.db"), ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_TEST_HOME: path.join(owned, "home"), ORCHESTRA_TEST_MANAGED_CONFIG_DIR: path.join(owned, "managed"),
       ORCHESTRA_CONFIG_CONTENT: "{}", ORCHESTRA_CLIENT: "desktop", ORCHESTRA_PURE: "true", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "true", ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "true", ORCHESTRA_DISABLE_MODELS_FETCH: "true", ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", ORCHESTRA_DISABLE_EMBEDDED_WEB_UI: "true", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
@@ -552,7 +560,16 @@ function waitForPortRefusal(port: number, timeout = 3000) {
   })
 }
 
+// Like the desktop's own spawn sites, the host's build and typecheck children go through omni when it is on, so a
+// run of this file alone meets the omni positive control (script/test-omni-control.ts) with real spawns.
 async function command(cmd: string[], cwd: string, env: Record<string, string | undefined>, timeout: number) {
+  if (DesktopOmni.enabled()) {
+    const result = await DesktopOmni.execFile(cmd[0], cmd.slice(1), { cwd, env, timeout, killSignal: "SIGKILL", maxBuffer: 256 * 1024 * 1024 })
+      .catch((error: Error & { code?: unknown; stdout?: string; stderr?: string }) => {
+        throw new Error(`${cmd.join(" ")} failed (${String(error.code)}):\n${error.stdout ?? ""}\n${error.stderr ?? ""}`, { cause: error })
+      })
+    return result.stdout
+  }
   const child = Bun.spawn(cmd, { cwd, env, stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout, killSignal: "SIGKILL" })
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   if (code !== 0) throw new Error(`${cmd.join(" ")} failed (${code}):\n${stdout}\n${stderr}`)

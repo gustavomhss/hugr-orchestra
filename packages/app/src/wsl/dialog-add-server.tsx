@@ -21,6 +21,7 @@ function isWslRuntimeMissing(error: string | null | undefined) {
 }
 
 function translate(language: ReturnType<typeof useLanguage>, value: AddServerText) {
+  if ("text" in value) return value.text
   if (value.params) return language.t(value.key, value.params)
   return language.t(value.key)
 }

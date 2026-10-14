@@ -61,6 +61,7 @@ const icons = {
   skills: '<path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>',
   plugins: '<path d="M2 3h4a2 2 0 1 1 4 0h4v4a2 2 0 1 0 0 4v3h-4a2 2 0 1 0-4 0H2V3Z"/>',
   hooks: '<path d="M4 2v7a4 4 0 0 0 8 0V7M9 9l3-3 3 3"/><circle cx="4" cy="2" r="1"/>',
+  lean: '<path d="M13.5 2.5c0 6-2 10-6 10a4 4 0 0 1-4-4c0-4 4-6 10-6ZM2.5 13.5l7-7"/>',
   cicd: '<circle cx="3" cy="8" r="2"/><circle cx="13" cy="4" r="2"/><circle cx="13" cy="12" r="2"/><path d="M5 8h3V4h3M8 8v4h3"/>',
   schedule: '<circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/>',
   env: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="m5 6 2 2-2 2M9 10h2"/>',

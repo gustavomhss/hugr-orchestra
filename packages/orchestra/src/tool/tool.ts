@@ -13,6 +13,8 @@ import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { InstanceRef } from "@/effect/instance-ref"
+import { LeanSummary } from "@orchestra/core/tool/lean-summary"
+import { LegacyLeanCapture } from "./lean-capture"
 
 interface Metadata {
   [key: string]: any
@@ -161,12 +163,9 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
             ToolSafety.sanitizeFailure,
           )
           yield* ToolSafety.inspect(result)
-          if (result.metadata.truncated !== undefined) {
-            return result
-          }
-          const agent = yield* agents.get(ctx.agentID ?? ctx.agent)
-          const truncated = yield* truncate.output(result.output, {}, agent)
-          return {
+          const agent = result.metadata.truncated === undefined ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
+          const truncated = agent ? yield* truncate.output(result.output, {}, agent) : undefined
+          const final = !truncated ? result : {
             ...result,
             output: truncated.content,
             metadata: {
@@ -175,6 +174,11 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
               ...(truncated.truncated && { outputPath: truncated.outputPath }),
             },
           }
+          // Native read/fetch/search results are attested for Lean 2.0; plugin tools never pass through here.
+          if (ctx.callID && id !== "bash" && LeanSummary.supported(id) && typeof final.output === "string" && final.output.length > 0)
+            LegacyLeanCapture.record(final, { source: "other", command: id, output: final.output, termination: { kind: "exited", code: 0 },
+              completeness: final.metadata.truncated ? "truncated" : "complete", presentation: "unknown" }, { sessionID: ctx.sessionID, callID: ctx.callID })
+          return final
         }).pipe(ToolSafety.sanitizeFailure, Effect.orDie, Effect.withSpan("Tool.execute", { attributes: attrs }))
       }
       return toolInfo

@@ -11,6 +11,7 @@
 mod boot;
 mod channel;
 mod cmdline;
+pub(crate) mod container;
 mod create;
 mod diag;
 mod inventory;

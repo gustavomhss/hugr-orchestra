@@ -22,7 +22,8 @@ jobs:
         # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
         # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
         # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
+        # Extension: ci-run-linux-arm64-* selects only ubuntu-24.04-arm before the generic Linux fallback.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -31,6 +32,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # Extension: branch-scoped so a misrouted ARM64 request cannot skip its CPU assertion.
+      - name: Assert Linux ARM64
+        if: startsWith(github.ref_name, 'ci-run-linux-arm64-')
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != aarch64 ]; then
+            echo "::error::${{ matrix.host }} must provide native Linux ARM64 (RUNNER_ARCH=ARM64, uname -m=aarch64)"
+            exit 2
+          fi
 
       - name: Assert macOS arm64
         if: runner.os == 'macOS' && matrix.host != 'macos-15-intel'
@@ -51,7 +62,7 @@ jobs:
           node --input-type=module <<'NODE'
           import { appendFileSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
           import path from 'node:path'
-          import { validateRequest } from './script/test-ci-request.ts'
+          import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
               realpathSync(file).startsWith(realpathSync('.') + path.sep))
@@ -59,12 +70,18 @@ jobs:
           mkdirSync('test-ci-evidence', { recursive: true })
           writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
             platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
-          appendFileSync(process.env.GITHUB_OUTPUT, `package=${request.package}\nrunner=${request.runner}\n`)
+          appendFileSync(process.env.GITHUB_OUTPUT,
+            `package=${request.package}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
           NODE
 
       - name: Setup Bun
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun
+
+      # Tests find rg on PATH and must never download it (packages/core/src/ripgrep/binary.ts).
+      - name: ripgrep
+        if: steps.request.outputs.runner != 'pytest'
+        uses: ./.github/actions/ripgrep
 
       # setup-bun selects Node 24; match the existing e2e lane's extraction workaround afterwards.
       - name: Setup Playwright Node
@@ -111,16 +128,18 @@ jobs:
         run: |
           bun --eval "$(cat <<'BUN'
           import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-          import { desktopSelection } from './script/test-ci-desktop.ts'
+          import { desktopProof, desktopSelection } from './script/test-ci-desktop.ts'
           // A snapshot or rerun cannot supply completion records for this execution.
           for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
-          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
-          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(selected))
-          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${selected.includes('src/main/jimmy-desktop-proof.test.ts')}\n`)
+          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
+          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, 'packages/desktop')))
+          const proof = desktopProof(request, 'packages/desktop', { platform: process.platform, arch: process.arch })
+          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${proof}\n`)
           BUN
           )"
 
-      # Repair: exact files, directory/filter matches and whole-package runs share one selector.
+      # Repair: exact files, directory/filter matches and whole-package runs share one selector. Off the proof's
+      # platforms (Windows, Intel macOS) only a request naming the proof alone opts in, and then fails by name.
       - name: Setup Jimmy desktop Electron runtime
         if: steps.desktop-selection.outputs.proof == 'true'
         run: |
@@ -153,9 +172,20 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
+      # A per-run secret for the omni positive control's verdict line: script/test-omni-control.ts prints it in its one
+      # verdict line and removes it from the environment before any test loads; test-ci.ts accepts only that line.
+      - name: Omni control nonce
+        run: |
+          nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
+          echo "ORCHESTRA_OMNI_CONTROL_NONCE=$nonce" >> "$GITHUB_ENV"
+          echo "omni control nonce: $nonce"
+
+      # The control's scope comes from the request (script/test-ci-request.ts omniControlScope): a whole-package request
+      # is "suite" like every test.yml lane, a narrower one is "declared". Not an --env key; an empty value fails the run.
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          ORCHESTRA_OMNI_CONTROL: ${{ steps.request.outputs.omni_control }}
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |
@@ -205,6 +235,17 @@ jobs:
               ;;
           esac
 
+      - name: Upload Lean dashboard previews (extension)
+        if: always() && hashFiles('packages/app/e2e/test-results/lean-visual/*.png') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lean-visual-${{ runner.os }}
+          path: |
+            packages/app/e2e/test-results/lean-visual/*.png
+            packages/app/e2e/test-results/lean-visual/*.json
+          if-no-files-found: error
+          retention-days: 7
+
       # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
       - name: Assert Jimmy desktop detecting evidence
         id: jimmy-evidence
@@ -212,9 +253,10 @@ jobs:
         run: |
           bun --eval "$(cat <<'BUN'
           import { appendFileSync, readFileSync } from 'node:fs'
-          import { desktopSelection, requireDesktopEvidence } from './script/test-ci-desktop.ts'
-          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
-          if (requireDesktopEvidence(selected, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
+          import { desktopProof, requireDesktopEvidence } from './script/test-ci-desktop.ts'
+          const proof = desktopProof(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop',
+            { platform: process.platform, arch: process.arch })
+          if (requireDesktopEvidence(proof, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
               runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
             appendFileSync(process.env.GITHUB_OUTPUT, 'proof=true\n')
           BUN
