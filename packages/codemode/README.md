@@ -6,6 +6,8 @@ CodeMode lets a model write a small JavaScript program that can call only the to
 
 The package is currently private to this workspace. Its API is designed around one-shot and reusable execution:
 
+The `yield*` examples below are Effect generator bodies and belong inside `Effect.gen(function* () { ... })`.
+
 ```ts
 // One execution
 yield * CodeMode.execute({ tools, code })
@@ -52,12 +54,14 @@ const runtime = CodeMode.make({
   },
 })
 
-const result =
-  yield *
-  runtime.execute(`
-  const order = await tools.orders.lookup({ id: "order_42" })
-  return { id: order.id, needsAttention: order.status !== "complete" }
-`)
+const program = Effect.gen(function* () {
+  const result = yield* runtime.execute(`
+    const order = await tools.orders.lookup({ id: "order_42" })
+    return { id: order.id, needsAttention: order.status !== "complete" }
+  `)
+
+  return result
+})
 ```
 
 `result` is always a `CodeMode.Result`. Program, validation, limit, and tool failures are returned as diagnostics rather than failing the Effect. Host interruption remains interruption.
@@ -115,7 +119,7 @@ const runtime = CodeMode.make({
 
 runtime.catalog() // structured tool descriptions
 runtime.instructions() // model-facing syntax and tool guide
-runtime.execute(source) // CodeMode.Result
+runtime.execute(source) // Effect yielding CodeMode.Result
 ```
 
 `CodeMode.Input`, `CodeMode.Result`, `CodeMode.Success`, `CodeMode.Failure`, `CodeMode.Diagnostic`, and `CodeMode.DiagnosticKind` are both Effect schemas and their inferred TypeScript types. Hosts can combine `CodeMode.Input` and `CodeMode.Result` with `runtime.instructions()` and `runtime.execute()` when constructing a framework-specific agent tool.
@@ -357,13 +361,10 @@ The public contract is guided by these equivalences:
 
 Applications that need approval or durable consequences should model those above CodeMode and expose only the currently authorized tools.
 
-## Testing
+## Purpose, ownership, and checks
 
-From the package directory:
+Purpose: CodeMode runs bounded JavaScript programs over the tools explicitly supplied by a host. It owns
+interpretation and tool data boundaries; hosts own authorization, credentials, persistence, and delivery.
 
-```sh
-bun test
-bun run typecheck
-```
-
-The direct suite covers public projections, discovery, schema boundaries, diagnostic sanitization, resource limits, tool-call observation, and interruption.
+Checks: run `bun typecheck` from `packages/codemode`; run tests through hosted CI from the repository root with
+`bun run test:ci codemode` (optionally followed by test file paths). These are check instructions, not results.
