@@ -213,9 +213,10 @@ describe("Actions source proposals", () => {
   test("lost branch admission requires explicit same-UUID recovery, never automatic execution", async () => {
     const admissions: unknown[] = []
     using scope = fixture({ async respond(request) {
-      if (request.method !== "POST" || new URL(request.url).pathname !== "/api/actions/operation/ab_proposal") return
+      if (request.method !== "POST" || new URL(request.url).pathname !== "/api/actions/operation/ab_proposal") return undefined
       admissions.push(await request.json())
       if (admissions.length === 1) throw new Error("private-token admission response lost")
+      return undefined
     } })
     await scope.create(); scope.commands.dialog({ kind: "review-source" }); await scope.commands.submit(reviewForm)
     expect(scope.state.commandError?.kind).toBe("outcome_unknown")

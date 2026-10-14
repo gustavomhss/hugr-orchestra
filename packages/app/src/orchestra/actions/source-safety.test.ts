@@ -101,6 +101,7 @@ describe("Actions source safety", () => {
     using scope = fixture({ respond(request) {
       if (request.method === "POST" && new URL(request.url).pathname === "/api/actions/operation/ab_proposal")
         throw new Error("admission ACK lost")
+      return undefined
     } })
     await scope.create(); scope.commands.dialog({ kind: "review-source" }); await scope.commands.submit(reviewForm)
     expect(scope.state.commandError?.kind).toBe("outcome_unknown")
