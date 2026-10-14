@@ -30,7 +30,8 @@ process.env.ORCHESTRA_SEAT_SKILL_BYTES = await Bun.file(path.join(snapshot, "pac
 const registrySource = (await Bun.file(path.join(packageRoot, "src/maestro/seats/index.ts")).text())
   .replaceAll('from "./', `from "${path.join(packageRoot, "src/maestro/seats").replaceAll("\\", "/")}/`)
 
-const taskSource = await Bun.file(path.join(source, "src/tool/task.ts")).text()
+const taskPath = await fs.realpath(path.join(source, "src/tool/task.ts"))
+const taskSource = await Bun.file(taskPath).text()
 const binding = "const seat = next.native === true ? Seats.find(nextID) : undefined"
 const mutation = "const seat = nextID === \"backend\" ? Seats.find(nextID) : undefined"
 if (process.env.ORCHESTRA_SEAT_MUTATION === "backend-only-task") {
@@ -43,9 +44,14 @@ export const snapshotPlugin: BunPlugin = {
   setup(build) {
     build.onLoad({ filter: /[\\/]maestro[\\/]seats[\\/]index\.ts$/ }, () => ({ loader: "ts", contents: registrySource }))
     if (process.env.ORCHESTRA_SEAT_MUTATION === "backend-only-task") {
-      build.onLoad({ filter: /[\\/]src[\\/]tool[\\/]task\.ts$/ }, async () => ({
-        loader: "ts", contents: await Bun.file(path.join(packageRoot, "src/tool/task.ts")).text(),
-      }))
+      // Runtime loaders cannot decline asynchronously; exclude Core Task before entering this callback.
+      build.onLoad(
+        { filter: new RegExp(`^${taskPath.split(path.sep).map(RegExp.escape).join("[\\\\/]")}$`) },
+        async () => ({
+          loader: "ts",
+          contents: await Bun.file(path.join(packageRoot, "src/tool/task.ts")).text(),
+        }),
+      )
     }
   },
 }

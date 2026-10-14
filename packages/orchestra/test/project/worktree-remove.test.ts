@@ -2,7 +2,7 @@ import { $ } from "bun"
 import { describe, expect } from "bun:test"
 import * as fs from "fs/promises"
 import path from "path"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { Effect } from "effect"
 import { InstanceBootstrap } from "../../src/project/bootstrap"
 import { InstanceStore } from "../../src/project/instance-store"
@@ -10,7 +10,9 @@ import { Worktree } from "../../src/worktree"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
-const it = testEffect(LayerNode.compile(Worktree.node, [[InstanceStore.bootstrapNode, InstanceBootstrap.node]]))
+const it = testEffect(
+  NativeSessionFixture.build(Worktree.node, [[InstanceStore.bootstrapNode, InstanceBootstrap.node]]),
+)
 const wintest = process.platform === "win32" ? it.instance : it.instance.skip
 
 describe("Worktree.remove", () => {
