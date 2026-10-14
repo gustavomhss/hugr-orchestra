@@ -3,7 +3,7 @@ import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
 import type { PromptInputV2PersistedState, PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
-import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML, restorePromptEditorCaret } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML, remapPromptEditorRange, restorePromptEditorCaret } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
@@ -118,6 +118,60 @@ test("custom modified Enter handling runs before controller suggestion dispatch"
     const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, ctrlKey: true, cancelable: true })
     expect(controller.onKeyDown(event)).toBe(true)
     expect(calls.key).toBe(1)
+    expect(controller.value()).toBe("keep")
+    dispose()
+  })
+})
+
+test("remapping includes pure caret marker without moving or rewriting existing nodes", () => {
+  const editor = document.createElement("div")
+  editor.innerHTML = "a" + promptEditorInsertionHTML("\n", true)
+  const caret = editor.querySelector<HTMLElement>("[data-prompt-caret]")!
+  const nodes = Array.from(editor.childNodes)
+  const html = editor.innerHTML
+  const range = document.createRange()
+  range.setStart(caret.firstChild!, 1)
+  range.collapse(true)
+  expect(remapPromptEditorRange(editor, range).start).toBe(2)
+  expect(range.startContainer).toBe(editor)
+  expect(range.endContainer).toBe(editor)
+  expect(range.cloneContents().querySelector("[data-prompt-caret]")?.textContent).toBe("\u200B")
+  expect(Array.from(editor.childNodes)).toEqual(nodes)
+  expect(editor.innerHTML).toBe(html)
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content: "a\n", start: 0, end: 2 }])
+})
+
+test("native range remapping leaves paragraph nodes intact", () => {
+  const editor = document.createElement("div")
+  editor.innerHTML = "<div>a</div><div>b</div>"
+  const nodes = Array.from(editor.childNodes)
+  const range = document.createRange()
+  range.setStart(editor.children[0]!.firstChild!, 1)
+  range.setEnd(editor.children[1]!.firstChild!, 0)
+  const remapped = remapPromptEditorRange(editor, range)
+  expect([remapped.start, remapped.end]).toEqual([1, 2])
+  expect(Array.from(editor.childNodes)).toEqual(nodes)
+  expect(editor.innerHTML).toBe("<div>a</div><div>b</div>")
+})
+
+test("known unsupported NUL is rejected before HTML normalization", () => {
+  expect(() => promptEditorInsertionHTML("a\u0000b", true)).toThrow("PROMPT_EDITOR_UNSUPPORTED_NUL")
+})
+
+test.each([false, true])("Shift+Enter bypasses suggestion dispatch, populated=%s", (populated) => {
+  createRoot((dispose) => {
+    const state = createPromptInputV2State()
+    state[1]("popover", { type: "command-inline", query: "", activeID: populated ? "cmd" : undefined })
+    const controller = createPromptInputV2Controller({
+      state,
+      store: createStore<PromptInputV2PersistedState>({ prompt: [{ type: "text", content: "keep", start: 0, end: 4 }], cursor: 4, context: { items: [] } }),
+      commands: () => populated ? [{ id: "cmd", kind: "command", label: "/cmd" }] : [],
+      context: () => [], searchContextFiles: () => [],
+      view: { submit: { stopping: () => false, onSubmit: () => { throw new Error("UNEXPECTED_SUBMIT") }, onStop: () => { throw new Error("UNEXPECTED_STOP") } } },
+    })
+    const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, cancelable: true })
+    expect(controller.onKeyDown(event)).toBe(false)
+    expect(event.defaultPrevented).toBe(false)
     expect(controller.value()).toBe("keep")
     dispose()
   })

@@ -190,6 +190,9 @@ export function createPromptInputV2Controller(input: {
       input.view.onKeyDown?.(event)
       if (event.defaultPrevented) return true
     }
+    if (composing || event.isComposing || event.keyCode === 229) return false
+    // Shift+Enter belongs to the editor, including populated and empty suggestion popovers.
+    if (event.key === "Enter" && event.shiftKey && !modified) return false
     if (
       state.mode === "normal" &&
       (event.metaKey || event.ctrlKey) &&
@@ -469,7 +472,7 @@ export function insertPromptEditorText(editor: HTMLElement, text: string, inputT
   if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return false
   const doc = editor.ownerDocument
   if (typeof doc.execCommand !== "function") throw new Error(`PROMPT_EDITOR_NATIVE_EDITING_UNAVAILABLE:${inputType}`)
-  const prepared = materializePromptEditor(editor, range)
+  const prepared = remapPromptEditorRange(editor, range)
   const terminal = prepared.end === readPromptEditor(editor).length
   selection.removeAllRanges()
   selection.addRange(range)
@@ -496,6 +499,8 @@ export function restorePromptEditorCaret(editor: HTMLElement, offset: number) {
 }
 
 export function promptEditorInsertionHTML(text: string, terminal: boolean) {
+  // HTML cannot represent NUL faithfully; reject this known unsupported input instead of normalizing it.
+  if (text.includes("\u0000")) throw new Error("PROMPT_EDITOR_UNSUPPORTED_NUL")
   // Match the legacy renderer's 200-BR bound; references preserve literal CR and large multiline text.
   const large = text.split("\n").length > 201
   const escapes: Record<string, string> = {
@@ -638,6 +643,23 @@ function isPromptMention(node: Node): node is HTMLElement {
   return node instanceof HTMLElement && !!(node.dataset.mention || node.dataset.type === "file" || node.dataset.type === "agent")
 }
 
+function isPurePromptCaret(node: Node): node is HTMLElement {
+  return node instanceof HTMLElement && node.hasAttribute("data-prompt-caret") && node.textContent === "\u200B"
+}
+
+export function remapPromptEditorRange(editor: HTMLElement, range: Range) {
+  const start = promptEditorPoint(editor, range.startContainer, range.startOffset)
+  const end = promptEditorPoint(editor, range.endContainer, range.endOffset)
+  promptEditorRangeEdge(editor, range, "start", start)
+  promptEditorRangeEdge(editor, range, "end", end)
+  const decoded = readPromptEditor(editor)
+  // Consume old zero-width caret markers in the native replacement transaction, never by manual DOM edits.
+  Array.from(editor.querySelectorAll<HTMLElement>("[data-prompt-caret]")).forEach((node) => {
+    if (isPurePromptCaret(node) && decoded.positions.get(node)?.end === end) range.setEndAfter(node)
+  })
+  return { range, start, end }
+}
+
 export function materializePromptEditor(editor: HTMLElement, range: Range) {
   const start = promptEditorPoint(editor, range.startContainer, range.startOffset)
   const end = promptEditorPoint(editor, range.endContainer, range.endOffset)
@@ -663,6 +685,12 @@ export function promptEditorRangeEdge(editor: HTMLElement, range: Range, edge: "
     if (edge === "start") range.setStart(node, index)
     if (edge === "end") range.setEnd(node, index)
   }
+  const caret = Array.from(decoded.positions).find(([node, position]) => isPurePromptCaret(node) && position.start === target)
+  if (caret) {
+    if (edge === "start") range.setStartBefore(caret[0])
+    if (edge === "end") range.setEndBefore(caret[0])
+    return
+  }
   for (const [node, position] of decoded.positions) {
     if (node.nodeType !== Node.TEXT_NODE || target < position.start || target > position.end) continue
     if (node.parentElement?.hasAttribute("data-prompt-caret") && node.parentElement.textContent === "\u200B") continue
@@ -670,6 +698,7 @@ export function promptEditorRangeEdge(editor: HTMLElement, range: Range, edge: "
     return
   }
   for (const [node, position] of decoded.positions) {
+    if (isPurePromptCaret(node)) continue
     if (
       node instanceof HTMLElement &&
       (node.dataset.type === "file" || node.dataset.type === "agent" || node.dataset.mention)
