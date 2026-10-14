@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
+import { realpathSync } from "node:fs"
 import path from "node:path"
 import type { Configuration } from "electron-builder"
 
 const legacyDesktopEntry = "resources/linux/orchestra-desktop.desktop"
+const orchestraDir = realpathSync(path.join(import.meta.dir, "../orchestra"))
 
 const channels = [
   { channel: "dev", appId: "ai.hugr.orchestra.dev" },
@@ -74,9 +76,9 @@ for (const channel of channels) {
     else process.env.ORCHESTRA_CHANNEL = previous
 
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
-    expect(config.extraResources).toContainEqual({ from: "../orchestra/playbooks", to: "playbooks" })
+    expect(config.extraResources).toContainEqual({ from: path.join(orchestraDir, "playbooks"), to: "playbooks" })
     expect(
-      await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists(),
+      await Bun.file(path.join(orchestraDir, "playbooks/maestro-governed/SKILL.md")).exists(),
     ).toBe(true)
   })
 }
@@ -136,11 +138,11 @@ for (const channel of ["dev", "beta", "prod"] as const) {
       filter: ["claude", "claude.exe", "manifest.json"],
     })
     expect(config.extraResources).toContainEqual({
-      from: "../orchestra/dist/node/claude-code/README.md",
+      from: path.join(orchestraDir, "dist/node/claude-code/README.md"),
       to: "claude-code/README.md",
     })
     expect(config.extraResources).toContainEqual({
-      from: "../orchestra/dist/node/claude-code/LICENSE.md",
+      from: path.join(orchestraDir, "dist/node/claude-code/LICENSE.md"),
       to: "claude-code/LICENSE.md",
     })
     const resources = [config.extraResources ?? []].flat()
