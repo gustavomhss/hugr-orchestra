@@ -26,6 +26,7 @@ import {
   resolveTreeSitter,
   treeSitterBundle,
 } from "./tree-sitter-prebuilds"
+import { workspaceFixture } from "../test/fixture/workspace"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const host = `${process.platform}-${process.arch}`
@@ -63,6 +64,15 @@ test.each(["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64"
 test("an install without the grammars or the core package is a named failure, not a pass", () => {
   const empty = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-empty-"))
   fixtures.push(empty)
+  const workspace = workspaceFixture(empty)
+  expect(workspace.module("maestro-arsenal")).toBe(path.join(realpathSync(empty), "packages/maestro-arsenal"))
+  const registry = path.join(empty, "script/module-registry.json")
+  renameSync(registry, `${registry}.away`)
+  try {
+    expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow("WORKSPACE_ROOT_NOT_FOUND:")
+  } finally {
+    renameSync(`${registry}.away`, registry)
+  }
   expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow(
     "TREE_SITTER_PREBUILDS_MISSING: linux-x64: tree-sitter, tree-sitter-javascript, tree-sitter-python, tree-sitter-typescript",
   )
@@ -138,6 +148,7 @@ function grammarFixture(core: "stub" | "source") {
   // gyp computes relative paths from the real cwd; macOS tmpdir is behind the /var -> /private/var link.
   const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), "tree-sitter-rebuild-")))
   fixtures.push(fixture)
+  workspaceFixture(fixture)
   const modules = path.join(fixture, "node_modules")
   const gyp = lockfileNodeGyp(root)!
   const source = realpathSync(path.dirname(resolve("tree-sitter/package.json")))

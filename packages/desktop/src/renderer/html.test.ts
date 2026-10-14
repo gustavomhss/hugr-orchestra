@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { join, dirname, resolve } from "node:path"
-import { existsSync } from "node:fs"
+import { existsSync, lstatSync, realpathSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -52,19 +52,25 @@ describe("electron renderer html", () => {
 
 /**
  * Vite resolves `publicDir` relative to `root`, not the config file.
- * This test reads the actual values from electron.vite.config.ts to catch
+ * This test evaluates the actual values from electron.vite.config.ts to catch
  * regressions where the publicDir path no longer resolves correctly
  * after the renderer root is accounted for.
  */
 describe("electron vite publicDir", () => {
   test("configured publicDir resolves to a directory with oc-theme-preload.js", async () => {
-    const config = await Bun.file(join(root, "electron.vite.config.ts")).text()
-    const pub = config.match(/publicDir:\s*["']([^"']+)["']/)
-    const rendererRoot = config.match(/root:\s*["']([^"']+)["']/)
-    expect(pub).not.toBeNull()
-    expect(rendererRoot).not.toBeNull()
-    const resolved = resolve(root, rendererRoot![1], pub![1])
-    expect(existsSync(resolved)).toBe(true)
-    expect(existsSync(join(resolved, "oc-theme-preload.js"))).toBe(true)
-  })
+    const child = Bun.spawn(["node", "--input-type=module", "--eval", `
+      import { loadConfigFromFile } from "electron-vite"
+      import path from "node:path"
+      const loaded = await loadConfigFromFile({ command: "build", mode: "production" }, "electron.vite.config.ts", process.cwd())
+      if (!loaded.config.renderer || typeof loaded.config.renderer.root !== "string" || typeof loaded.config.renderer.publicDir !== "string")
+        throw new Error("RENDERER_PUBLIC_DIRECTORY_MISSING")
+      console.log(JSON.stringify({ publicDir: path.resolve(process.cwd(), loaded.config.renderer.root, loaded.config.renderer.publicDir) }))
+    `], { cwd: root, env: { PATH: process.env.PATH, ORCHESTRA_CHANNEL: "dev" }, stdout: "pipe", stderr: "pipe" })
+    const [output, error, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+    expect({ status, error }).toEqual({ status: 0, error: "" })
+    const configured = JSON.parse(output) as { publicDir: string }
+    expect(configured.publicDir).toBe(realpathSync(resolve(root, "../app/public")))
+    expect(lstatSync(configured.publicDir).isDirectory()).toBe(true)
+    expect(lstatSync(join(configured.publicDir, "oc-theme-preload.js")).isFile()).toBe(true)
+  }, 15_000)
 })
