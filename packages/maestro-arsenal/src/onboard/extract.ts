@@ -9,6 +9,8 @@ import { AcquisitionError, requireContext } from "../engine/acquisition.ts";
 import { runProcess } from "../engine/process.ts";
 import { trustedAsset } from "../engine/trusted-assets.ts";
 import { type FileSymbols, type SymbolInfo, type SymbolKind, type FileImport } from "./contracts.ts";
+import { requirePackagedParserBindings } from "./parser-bindings.ts";
+declare const ORCHESTRA_LIBC: string | undefined;
 // A compiled CLI has no node_modules and no package files. It ships tree-sitter in tree-sitter/ beside
 // realpath(execPath), loaded there by path so a missing file never resolves through some ancestor's node_modules, and
 // it has no parser-worker asset, so a binding it lacks ends at parser-unavailable.
@@ -47,6 +49,9 @@ export function extractNative(path: string, source: string): FileSymbols {
   try {
     const require = createRequire(import.meta.url);
     const shipped = compiled ? join(dirname(realpathSync(process.execPath)), "tree-sitter") : undefined;
+    if (shipped && process.platform === "linux") requirePackagedParserBindings(shipped, {
+      arch: process.arch, libc: typeof ORCHESTRA_LIBC === "undefined" ? undefined : ORCHESTRA_LIBC,
+    });
     const load = (name: string): unknown => require(shipped ? join(shipped, name) : name);
     const ParserCtor = load("tree-sitter") as typeof import("tree-sitter");
     const parser = new ParserCtor();

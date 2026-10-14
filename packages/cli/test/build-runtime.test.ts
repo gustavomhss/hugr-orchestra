@@ -279,6 +279,9 @@ test("all explicit targets produce correct executable format/architecture and pr
   const producer = path.join(home, "local-producer/packages/script/src")
   await Bun.write(path.join(producer, "omni.ts"), Bun.file(path.resolve(root, "../script/src/omni.ts")))
   await Bun.write(path.join(producer, "tree-sitter-prebuilds.ts"), Bun.file(path.resolve(root, "../script/src/tree-sitter-prebuilds.ts")))
+  const schema = path.join(home, "local-producer/node_modules/@orchestra/schema")
+  await Bun.write(path.join(schema, "package.json"), JSON.stringify({ type: "module", exports: { "./elf": "./elf.ts" } }))
+  await Bun.write(path.join(schema, "elf.ts"), Bun.file(path.resolve(root, "../schema/src/elf.ts")))
   const release = path.join(home, "local-producer/packages/omni/target/release")
   // MUSL-POSIX-PROBES BEGIN: Unix permission semantics require a POSIX host.
   // Native Linux rows must exercise every Unix mode control. Windows still

@@ -47,7 +47,7 @@ console.log(JSON.stringify({ libc, files }))`
   if (!negative) return { executable: sha256(await readFile(executable)), elf, loaded, supervisor }
   const controls = [
     { installed: bindings[0], foreign: "/proof/controls/glibc-addon.node", kind: "addon" },
-    { installed: bindings[2], foreign: "/proof/controls/glibc-python.node", kind: "parser" },
+    ...bindings.slice(1).map((installed) => ({ installed, foreign: "/proof/controls/glibc-python.node", kind: "parser" })),
   ]
   for (const control of controls) {
     const original = await readFile(control.installed)
@@ -65,8 +65,11 @@ console.log(JSON.stringify({ libc, files }))`
         expect(refused.stderr).toContain("hugr-omni CLI preflight failed:")
       }
       if (control.kind === "parser") {
-        const refused = JSON.parse(await successful([executable, "debug", "symbols", join(box.cwd, "sample.py")], box))
-        expect(refused).toMatchObject({ symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } })
+        for (const sample of ["sample.py", "sample.ts"]) {
+          const refused = JSON.parse(await successful([executable, "debug", "symbols", join(box.cwd, sample)], box))
+          expect(refused).toMatchObject({ symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } })
+          expect(refused.coverage.detail).toContain(`ELF_LIBC_MISMATCH: ${control.installed}`)
+        }
       }
     } finally { await writeFile(control.installed, original); await chmod(control.installed, mode) }
     expect(sha256(await readFile(control.installed))).toBe(sha256(original))
