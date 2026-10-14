@@ -5,7 +5,7 @@ import { Empty, Status } from "./components"
 import type { ViewProps } from "./contract"
 import { duration, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
-import { canRequest } from "./request-policy"
+import { canRequestAction } from "./action-eligibility"
 
 export function WorkflowDetail(props: ViewProps) {
   const workflow = createMemo(() => {
@@ -64,7 +64,7 @@ function WorkflowHeader(props: { props: ViewProps; workflow: Actions.Workflow })
       </div>
       <p>{props.workflow.triggers?.join(" · ")}</p>
       <div class="heading-actions">
-        <button type="button" class="mx-btn primary" disabled={!canRequest(model.state, "workflow.dispatch") || props.workflow.dispatchState === "unavailable" || props.workflow.state.startsWith("disabled") || props.workflow.state === "source_unresolved"} onClick={() => model.dialog({ kind: "dispatch", workflowID: props.workflow.id })}>
+        <button type="button" class="mx-btn primary" disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequestAction(model.state, { kind: "workflow.dispatch", target: { workflowID: props.workflow.id, path: props.workflow.path } })} onClick={() => model.dialog({ kind: "dispatch", workflowID: props.workflow.id })}>
           {model.state.binding?.provider.kind === "gitlab" ? props.props.t("orchestra.actions.dispatchPipeline") : props.props.t("orchestra.actions.dispatch")}
         </button>
       </div>
@@ -97,10 +97,9 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
 }
 
 function RunControls(props: { props: ViewProps; run: Actions.Run }) {
-  const provider = createMemo(() => props.props.model.state.binding?.provider.kind)
-  const retryable = createMemo(() => provider() === "github" ? props.run.status === "completed" : props.run.status === "failed" || props.run.status === "canceled")
-  const active = createMemo(() => provider() === "github" ? ["queued", "in_progress", "requested", "waiting"].includes(props.run.status ?? "") : ["created", "pending", "running"].includes(props.run.status ?? ""))
-  return <div class="heading-actions"><Show when={retryable()}><button type="button" class="mx-btn" onClick={() => props.props.model.dialog({ kind: "retry", runID: props.run.id })}>{props.props.t("orchestra.actions.retry")}</button></Show><Show when={active()}><button type="button" class="mx-btn" onClick={() => props.props.model.dialog({ kind: "cancel", runID: props.run.id })}>{props.props.t("orchestra.actions.stop")}</button></Show></div>
+  const allowed = (kind: "run.retry" | "run.retryFailed" | "run.cancel") => props.run.bindingID === props.props.model.state.binding?.id
+    && canRequestAction(props.props.model.state, { kind, target: { runID: props.run.id }, expected: { commit: props.run.commit, attempt: props.run.attempt } })
+  return <div class="heading-actions"><button type="button" class="mx-btn" disabled={!allowed("run.retry") && !allowed("run.retryFailed")} onClick={() => props.props.model.dialog({ kind: "retry", runID: props.run.id })}>{props.props.t("orchestra.actions.retry")}</button><button type="button" class="mx-btn" disabled={!allowed("run.cancel")} onClick={() => props.props.model.dialog({ kind: "cancel", runID: props.run.id })}>{props.props.t("orchestra.actions.stop")}</button></div>
 }
 
 function JobHeader(props: { props: ViewProps; job: Actions.Job }) {
@@ -120,8 +119,9 @@ function JobFacts(props: { props: ViewProps; job: Actions.Job }) {
 
 function JobSteps(props: { props: ViewProps; job: Actions.Job }) {
   const provider = createMemo(() => props.props.model.state.binding?.provider.kind)
-  const retryable = createMemo(() => provider() === "github" ? props.job.status === "completed" : props.job.status === "failed" || props.job.status === "canceled")
-  return <div class="collection-section"><h2>{props.props.t("orchestra.actions.steps")}</h2><Show when={props.job.steps.length} fallback={<p>{props.props.t("orchestra.actions.noSteps")}</p>}><div class="mx-table"><For each={props.job.steps.slice(0, 100)}>{(step) => <div class="mx-row"><span class="mx-grow"><bdi>{step.name}</bdi><small>{stamp(step.startedAt)} · {stamp(step.finishedAt)}</small></span><Status status={step.status} conclusion={step.conclusion} t={props.props.t} /></div>}</For></div></Show><Show when={retryable() || provider() === "gitlab" && props.job.status === "manual"}><div class="mx-card-foot"><Show when={retryable()}><button type="button" class="mx-btn" onClick={() => props.props.model.dialog({ kind: "jobRetry", jobID: props.job.id })}>{props.props.t("orchestra.actions.retryJob")}</button></Show><Show when={provider() === "gitlab" && props.job.status === "manual"}><button type="button" class="mx-btn" onClick={() => props.props.model.dialog({ kind: "jobPlay", jobID: props.job.id })}>{props.props.t("orchestra.actions.play")}</button></Show></div></Show></div>
+  const allowed = (kind: "job.retry" | "job.play") => props.job.bindingID === props.props.model.state.binding?.id
+    && canRequestAction(props.props.model.state, { kind, target: { jobID: props.job.id, runID: props.job.runID }, expected: { attempt: props.job.attempt } })
+  return <div class="collection-section"><h2>{props.props.t("orchestra.actions.steps")}</h2><Show when={props.job.steps.length} fallback={<p>{props.props.t("orchestra.actions.noSteps")}</p>}><div class="mx-table"><For each={props.job.steps.slice(0, 100)}>{(step) => <div class="mx-row"><span class="mx-grow"><bdi>{step.name}</bdi><small>{stamp(step.startedAt)} · {stamp(step.finishedAt)}</small></span><Status status={step.status} conclusion={step.conclusion} t={props.props.t} /></div>}</For></div></Show><div class="mx-card-foot"><button type="button" class="mx-btn" disabled={!allowed("job.retry")} onClick={() => props.props.model.dialog({ kind: "jobRetry", jobID: props.job.id })}>{props.props.t("orchestra.actions.retryJob")}</button><Show when={provider() === "gitlab"}><button type="button" class="mx-btn" disabled={!allowed("job.play")} onClick={() => props.props.model.dialog({ kind: "jobPlay", jobID: props.job.id })}>{props.props.t("orchestra.actions.play")}</button></Show></div></div>
 }
 
 function JobList(props: { props: ViewProps; runID: string }) {
