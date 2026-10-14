@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto"
 import { copyFile, mkdtemp, readFile, rm } from "node:fs/promises"
-import { Schema } from "effect"
+import { isDeepStrictEqual } from "node:util"
+import { Option, Schema, SchemaIssue } from "effect"
 
 export const AurSandboxEvidence = Schema.Struct({
   mode: Schema.Literal("enforce"), seccomp: Schema.Literal(2), noNewPrivileges: Schema.Literal(1),
-  abi: Schema.Number.check(Schema.isGreaterThanOrEqualTo(1)), abiErrno: Schema.Literal(0),
+  abi: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)), abiErrno: Schema.Literal(0),
   unshareResult: Schema.Literal(-1), unshareErrno: Schema.Literal(1),
   initialRestrictResult: Schema.Literal(0), initialRestrictErrno: Schema.Literal(0),
   finalNoNewPrivileges: Schema.Literal(1), outsideBefore: Schema.Literal("read-write-allowed"),
@@ -53,44 +54,151 @@ function pacmanFilesystemRestrictions(log: string) {
 // used by both callers, then restore. No fabricated replacement package manager.
 export async function aurBootstrapEvidenceTeeth(directory: string) {
   const receipt = await aurBootstrapEvidence(directory)
+  const log = await readFile(`${directory}/bootstrap-pacman.log`, "utf8")
+  const nonenforcement = log.split("\n").find((line) => line.trim() && !receipt.filesystemRestrictions.includes(line))
+  if (!nonenforcement) throw new Error("AUR_PACMAN_LOG_CONTROL_NONENFORCEMENT_TEXT_UNAVAILABLE")
   const control = await mkdtemp(`${directory}/sandbox-receipt-controls-`)
   const files = ["bootstrap-sandbox.json", "bootstrap-pacman.log", "bootstrap-repositories.txt", "bootstrap-sandbox-user.txt",
     ...receipt.repositories.map((repo) => `bootstrap-siglevel-${repo.name}.txt`)]
   const mutations = [
-    { name: "seccomp-disabled", receipt: { ...receipt, probe: { ...receipt.probe, seccomp: 0 } } },
-    { name: "no-new-privileges-disabled", receipt: { ...receipt, probe: { ...receipt.probe, noNewPrivileges: 0 } } },
-    { name: "forbidden-syscall-allowed", receipt: { ...receipt, probe: { ...receipt.probe, unshareResult: 0 } } },
-    { name: "landlock-unavailable", receipt: { ...receipt, probe: { ...receipt.probe, abi: 0 } } },
-    { name: "outside-read-allowed", receipt: { ...receipt, probe: { ...receipt.probe, outsideReadErrno: 0 } } },
-    { name: "outside-write-allowed", receipt: { ...receipt, probe: { ...receipt.probe, outsideWriteErrno: 0 } } },
-    { name: "sandbox-not-enforced", receipt: { ...receipt, sandbox: "disabled" } },
-    { name: "repositories-empty", receipt: { ...receipt, repositories: [] } },
-    { name: "pacman-enforcement-empty", receipt: { ...receipt, filesystemRestrictions: [] } },
-    { name: "pacman-log-digest-wrong", receipt: { ...receipt, logSha256: "0".repeat(64) } },
+    { name: "seccomp-disabled", receipt: { ...receipt, probe: { ...receipt.probe, seccomp: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "seccomp"], value: 0 } } },
+    { name: "no-new-privileges-disabled", receipt: { ...receipt, probe: { ...receipt.probe, noNewPrivileges: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "noNewPrivileges"], value: 0 } } },
+    { name: "forbidden-syscall-allowed", receipt: { ...receipt, probe: { ...receipt.probe, unshareResult: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "unshareResult"], value: 0 } } },
+    { name: "landlock-unavailable", receipt: { ...receipt, probe: { ...receipt.probe, abi: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "abi"], value: 0 } } },
+    { name: "landlock-abi-fractional", receipt: { ...receipt, probe: { ...receipt.probe, abi: 1.5 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "abi"], value: 1.5 } } },
+    { name: "outside-read-allowed", receipt: { ...receipt, probe: { ...receipt.probe, outsideReadErrno: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "outsideReadErrno"], value: 0 } } },
+    { name: "outside-write-allowed", receipt: { ...receipt, probe: { ...receipt.probe, outsideWriteErrno: 0 } },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "outsideWriteErrno"], value: 0 } } },
+    { name: "sandbox-not-enforced", receipt: { ...receipt, sandbox: "disabled" },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["sandbox"], value: "disabled" } } },
+    { name: "repositories-empty", receipt: { ...receipt, repositories: [] },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_EVIDENCE_EMPTY" } },
+    { name: "pacman-enforcement-empty", receipt: { ...receipt, filesystemRestrictions: [] },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_EVIDENCE_EMPTY" } },
+    { name: "pacman-log-digest-wrong", receipt: { ...receipt, logSha256: "0".repeat(64) },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_LOG_DIGEST_MISMATCH" } },
   ]
-  const rejected: { name: string; error: string }[] = []
-  const reject = async (name: string) => {
-    const error = await aurBootstrapEvidence(control).then(() => undefined, (cause: unknown) => String(cause))
-    if (!error?.includes("AUR_")) throw new Error(`AUR_SANDBOX_RECEIPT_MUTATION_ACCEPTED_OR_UNNAMED: ${name}`)
-    rejected.push({ name, error })
+  const rejected: { name: string; expected: SandboxExpectedFailure; observed: ReturnType<typeof requireSandboxRejection>; restored: string }[] = []
+  const restore = async () => {
+    await Promise.all(files.map((file) => copyFile(`${directory}/${file}`, `${control}/${file}`)))
+    if (!isDeepStrictEqual(await aurBootstrapEvidence(control), receipt))
+      throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_BASELINE_CHANGED")
+  }
+  const reject = async (name: string, expected: SandboxExpectedFailure) => {
+    const observed = requireSandboxRejection(await aurBootstrapEvidence(control).then(() => undefined, (cause: unknown) => cause), expected)
+    await restore()
+    rejected.push({ name, expected, observed, restored: "real-baseline-readmitted" })
   }
   try {
-    await Promise.all(files.map((file) => copyFile(`${directory}/${file}`, `${control}/${file}`)))
-    await aurBootstrapEvidence(control)
+    await restore()
     for (const mutation of mutations) {
       await Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify(mutation.receipt))
-      await reject(mutation.name)
+      await reject(mutation.name, mutation.expected)
     }
     await rm(`${control}/bootstrap-sandbox.json`)
-    await reject("mandatory-receipt-missing")
-    await copyFile(`${directory}/bootstrap-sandbox.json`, `${control}/bootstrap-sandbox.json`)
+    await reject("mandatory-receipt-missing", { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE",
+      causeCode: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_UNAVAILABLE" })
     const signatures = `bootstrap-siglevel-${receipt.repositories[0].name}.txt`
     await Bun.write(`${control}/${signatures}`, "PackageNever\nPackageTrustAll\nDatabaseOptional\nDatabaseTrustedOnly\n")
-    await reject("unsigned-repository-policy")
-    await copyFile(`${directory}/${signatures}`, `${control}/${signatures}`)
-    await aurBootstrapEvidence(control)
-    await Bun.write(`${directory}/sandbox-receipt-controls.json`, JSON.stringify({ rejected, restored: "accepted" }, null, 2))
+    await reject("unsigned-repository-policy", { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID",
+      causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" })
+    const logMutations = [
+      { name: "pacman-enforcement-records-removed",
+        log: log.split("\n").filter((line) => !receipt.filesystemRestrictions.includes(line)).join("\n"),
+        lines: [nonenforcement], expected: { code: "AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED" } },
+      { name: "pacman-enforcement-replaced-by-real-nonenforcement-text",
+        log: log.split("\n").map((line) => receipt.filesystemRestrictions.includes(line) ? nonenforcement : line).join("\n"),
+        lines: [nonenforcement], expected: { code: "AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED" } },
+      // Exact diagnostic measured in hosted ARM run 38501502021, alongside the
+      // real successful log here. A success record cannot mask this failure.
+      { name: "pacman-success-plus-actual-landlock-failure",
+        log: `${log}\nerror: restricting filesystem access failed because the Landlock ruleset could not be applied: Operation not permitted\n`,
+        lines: receipt.filesystemRestrictions, expected: { code: "AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED" } },
+    ]
+    for (const mutation of logMutations) {
+      if (!mutation.lines.length || mutation.lines.some((line) => !mutation.log.split("\n").includes(line)))
+        throw new Error("AUR_PACMAN_LOG_CONTROL_RECEIPT_LINES_INVALID")
+      await Bun.write(`${control}/bootstrap-pacman.log`, mutation.log)
+      await Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify({ ...receipt,
+        logSha256: createHash("sha256").update(mutation.log).digest("hex"), filesystemRestrictions: mutation.lines,
+      }))
+      await reject(mutation.name, mutation.expected)
+    }
+    // Calibrate the rejection oracle itself with real unrelated reader failures.
+    // Each must fail the seccomp mutation control, rather than count as its RED.
+    const unrelated = [
+      { name: "unrelated-log-missing", expected: { code: "AUR_BOOTSTRAP_SANDBOX_LOG_UNAVAILABLE" },
+        expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_ERROR",
+        mutate: () => rm(`${control}/bootstrap-pacman.log`) },
+      { name: "unrelated-signature-missing", expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID",
+        causeSystemCode: "ENOENT" }, expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_ERROR",
+        mutate: () => rm(`${control}/${signatures}`) },
+      { name: "unrelated-signature-policy", expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID",
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+        expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_ERROR",
+        mutate: () => Bun.write(`${control}/${signatures}`, "PackageNever\nPackageTrustAll\nDatabaseOptional\nDatabaseTrustedOnly\n") },
+      { name: "unrelated-log-digest", expected: { code: "AUR_BOOTSTRAP_SANDBOX_LOG_DIGEST_MISMATCH" },
+        expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_ERROR",
+        mutate: () => Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify({ ...receipt, logSha256: "0".repeat(64) })) },
+      { name: "unrelated-schema-field", expected: mutations[1].expected,
+        expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_SCHEMA_CAUSE",
+        mutate: () => Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify(mutations[1].receipt)) },
+      { name: "unrelated-schema-value", expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE",
+        schema: { path: ["probe", "seccomp"], value: 3 } }, expectedControlError: "AUR_SANDBOX_RECEIPT_CONTROL_WRONG_SCHEMA_CAUSE",
+        mutate: () => Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify({ ...receipt, probe: { ...receipt.probe, seccomp: 3 } })) },
+    ]
+    const oracleControls: { name: string; readerError: SandboxExpectedFailure; observed: ReturnType<typeof requireSandboxRejection>;
+      expectedControlError: string; restored: string }[] = []
+    for (const mutation of unrelated) {
+      await mutation.mutate()
+      const error = await aurBootstrapEvidence(control).then(() => undefined, (cause: unknown) => cause)
+      const observed = requireSandboxRejection(error, mutation.expected)
+      const controlError = await Promise.resolve().then(() => requireSandboxRejection(error, mutations[0].expected))
+        .then(() => undefined, (cause: unknown) => cause)
+      if (!(controlError instanceof Error) || controlError.message !== mutation.expectedControlError || controlError.cause !== error)
+        throw new Error(`AUR_SANDBOX_RECEIPT_CONTROL_ACCEPTED_UNRELATED_FAILURE: ${mutation.name}`)
+      await restore()
+      oracleControls.push({ name: mutation.name, readerError: mutation.expected, observed,
+        expectedControlError: controlError.message, restored: "real-baseline-readmitted" })
+    }
+    await Bun.write(`${directory}/sandbox-receipt-controls.json`, JSON.stringify({ rejected, oracleControls,
+      restored: "real-baseline-readmitted-after-every-mutation" }, null, 2))
   } finally { await rm(control, { recursive: true, force: true }) }
+}
+
+type SandboxExpectedFailure = { code: string; causeCode?: string; causeSystemCode?: string;
+  schema?: { path: readonly PropertyKey[]; value: unknown } }
+
+function requireSandboxRejection(error: unknown, expected: SandboxExpectedFailure) {
+  if (!(error instanceof Error)) throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_ACCEPTED_OR_UNSTRUCTURED", { cause: error })
+  if (error.message !== expected.code) throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_WRONG_ERROR", { cause: error })
+  if (expected.causeCode && (!(error.cause instanceof Error) || error.cause.message !== expected.causeCode))
+    throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_WRONG_NESTED_CAUSE", { cause: error })
+  if (expected.causeSystemCode && (!(error.cause instanceof Error) || !("code" in error.cause) || error.cause.code !== expected.causeSystemCode))
+    throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_WRONG_SYSTEM_CAUSE", { cause: error })
+  if (!expected.schema) return { code: error.message, causeCode: error.cause instanceof Error ? error.cause.message : undefined,
+    causeSystemCode: error.cause instanceof Error && "code" in error.cause ? error.cause.code : undefined }
+  if (!Schema.isSchemaError(error.cause)) throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_SCHEMA_ERROR_REQUIRED", { cause: error })
+  const failures = sandboxSchemaFailures(error.cause.issue)
+  if (failures.length !== 1 || failures[0].path.length !== expected.schema.path.length ||
+      !failures[0].path.every((key, index) => Object.is(key, expected.schema?.path[index])) ||
+      !Object.is(failures[0].value, expected.schema.value))
+    throw new Error("AUR_SANDBOX_RECEIPT_CONTROL_WRONG_SCHEMA_CAUSE", { cause: error })
+  return { code: error.message, schema: failures[0] }
+}
+
+function sandboxSchemaFailures(issue: SchemaIssue.Issue, path: readonly PropertyKey[] = []): { path: readonly PropertyKey[]; value: unknown }[] {
+  if (issue._tag === "Pointer") return sandboxSchemaFailures(issue.issue, [...path, ...issue.path])
+  if (issue._tag === "Encoding" || issue._tag === "Filter") return sandboxSchemaFailures(issue.issue, path)
+  if (issue._tag === "Composite" || issue._tag === "AnyOf") return issue.issues.flatMap((child) => sandboxSchemaFailures(child, path))
+  const actual = SchemaIssue.getActual(issue)
+  return Option.isSome(actual) ? [{ path, value: actual.value }] : []
 }
 
 async function aurRepositoryPolicy(directory: string) {
