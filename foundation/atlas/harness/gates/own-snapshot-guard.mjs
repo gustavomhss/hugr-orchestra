@@ -33,7 +33,7 @@ function files(dir) {
 }
 
 function git(args) {
-  return execFileSync("git", ["-C", ROOT, ...args], {
+  return execFileSync("git", ["--no-replace-objects", "-C", ROOT, ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   })
@@ -80,8 +80,8 @@ if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(snapshot.sourceRevision))
   fail([`snapshot sourceRevision is not an immutable lowercase full Git OID: ${snapshot.sourceRevision}`])
 
 try {
-  execFileSync("git", ["-C", ROOT, "cat-file", "-e", `${snapshot.sourceRevision}^{commit}`], { stdio: "ignore" })
-  execFileSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", snapshot.sourceRevision, "HEAD"], { stdio: "ignore" })
+  execFileSync("git", ["--no-replace-objects", "-C", ROOT, "cat-file", "-e", `${snapshot.sourceRevision}^{commit}`], { stdio: "ignore" })
+  execFileSync("git", ["--no-replace-objects", "-C", ROOT, "merge-base", "--is-ancestor", snapshot.sourceRevision, "HEAD"], { stdio: "ignore" })
 } catch {
   fail([`snapshot sourceRevision is not a Git commit reachable from HEAD: ${snapshot.sourceRevision}`])
 }

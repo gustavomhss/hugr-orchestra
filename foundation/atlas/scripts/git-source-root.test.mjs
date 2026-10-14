@@ -109,4 +109,8 @@ test("EARS gate passes an unchanged corpus across relocation and catches an unpa
   const changed = run()
   assert.notEqual(changed.status, 0)
   assert.match(`${changed.stdout}${changed.stderr}`, /REQ-A-1/)
+  git(fx.root, ["replace", base, "HEAD"])
+  const replaced = run()
+  assert.notEqual(replaced.status, 0)
+  assert.match(`${replaced.stdout}${replaced.stderr}`, /REQ-A-1/)
 })
