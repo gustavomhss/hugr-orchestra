@@ -61,7 +61,7 @@ function list(directory: string) {
 }
 
 describe("V2 agent execution annotation", () => {
-  it.live("standalone Server keeps the identity default and omits engine on the wire", () =>
+  it.live("standalone Server preserves native metadata without adding host engine annotations", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true, config: { agent: { maestro: { engine: "claude-code" } } } })
       const locations = yield* LocationServiceMap.Service
@@ -69,20 +69,25 @@ describe("V2 agent execution annotation", () => {
         directory: AbsolutePath.make(directory),
         workspaceID: undefined,
       }))
-      yield* Effect.gen(function* () {
+      const input = yield* Effect.gen(function* () {
         const plugins = yield* PluginV2.Service
         yield* plugins.wait(PluginV2.ID.make("config-agent"))
         const agents = yield* AgentV2.Service
         const input = yield* agents.all()
         const annotate = yield* AgentExecution.Annotate
-        expect(yield* annotate(input)).toBe(input)
+        const annotated = yield* annotate(input)
+        expect(annotated).toEqual(input)
+        expect(annotated).not.toBe(input)
+        annotated.forEach((agent, index) => expect(agent).toBe(input[index]))
         expect(Schema.encodeSync(AgentV2.Info)(AgentV2.Info.empty(AgentV2.defaultID))).not.toHaveProperty("engine")
         expect(() => Schema.decodeUnknownSync(AgentV2.Info)({ ...input[0], engine: "other" })).toThrow()
+        return input
       }).pipe(Effect.provide(context))
       yield* serve(false)
       const result = yield* list(directory)
-      expect(result.data.find((agent) => agent.id === "maestro")).toBeDefined()
-      expect(result.data.every((agent) => agent.engine === undefined)).toBe(true)
+      expect(result.data).toEqual(input)
+      expect(result.data.find((agent) => agent.id === "maestro")?.engine).toBe("claude-code")
+      expect(result.data.find((agent) => agent.id === "general")?.engine).toBeUndefined()
     }),
   )
 
