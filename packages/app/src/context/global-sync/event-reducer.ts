@@ -16,7 +16,7 @@ import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
 import { diffs as list, message as clean } from "@/utils/diffs"
 import { messageKey } from "@/utils/session-message"
-import { applySessionManagementEvent, decodeSessionManagementEvent, type AppSession } from "@/utils/session"
+import { applySessionManagementEvent, decodeSessionManagementEvent, mergeSessionManagementInfo, type AppSession } from "@/utils/session"
 import { sessionManagementFences } from "../session-management-state"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
@@ -122,6 +122,7 @@ export function applyDirectoryEvent(input: {
   sessionContent?: boolean
   permission?: State["permission"]
   fenceOwner?: object
+  readSession?: (sessionID: string) => AppSession | undefined
 }) {
   const event = input.event
   if (input.sessionContent === false && SESSION_CONTENT_EVENTS.has(event.type)) return
@@ -136,7 +137,7 @@ export function applyDirectoryEvent(input: {
       const incoming = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
       const info = fences.merge(
-        incoming,
+        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
         result.found ? input.store.session[result.index] : undefined,
       )
       if (info.time.archived !== undefined) {
@@ -159,7 +160,7 @@ export function applyDirectoryEvent(input: {
       const incoming = (event.properties as { info: AppSession }).info
       const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
       const info = fences.merge(
-        incoming,
+        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
         result.found ? input.store.session[result.index] : undefined,
       )
       if (info.time.archived !== undefined) {
@@ -239,7 +240,8 @@ export function applyDirectoryEvent(input: {
         if (fences.apply(decoded) && event.type === "session.next.archive.changed") input.push(input.directory)
         break
       }
-      const current = fences.merge(input.store.session[result.index]!)
+      const row = input.store.session[result.index]!
+      const current = fences.merge(row, input.readSession?.(row.id))
       const changed = applySessionManagementEvent(current, decoded)
       // Server and directory stores can share a row that this event already updated.
       const info = changed ? fences.merge(changed, current) : current
@@ -249,7 +251,6 @@ export function applyDirectoryEvent(input: {
         if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
         break
       }
-      if (!changed) break
       input.setStore("session", result.index, reconcile(info))
       break
     }
