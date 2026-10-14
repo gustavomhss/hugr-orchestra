@@ -66,7 +66,7 @@ let selected = "/repo/worktree-a"
 let variant: string | undefined
 let permissionServer = "server-a"
 let createSessionGate: Promise<void> | undefined
-let sendHook = async () => {}
+let sendHook = async (_input: unknown) => {}
 let behaviorHook = async () => {}
 let promoteHook = () => {}
 const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
@@ -159,16 +159,16 @@ const clientFor = (directory: string) => {
         prompt: async (input: unknown) => {
           sentPrompts.push(directory)
           promptInputs.push(input)
-          await sendHook()
+          await sendHook(input)
           return { data: undefined }
         },
         command: async (input: unknown) => {
           sentCommands.push(input)
-          await sendHook()
+          await sendHook(input)
         },
         shell: async (input: { sessionID: string; id?: string; command: string }) => {
           sentShell.push(input)
-          await sendHook()
+          await sendHook(input)
         },
         interrupt: async (input: { sessionID: string }) => { interruptedSessions.push(input.sessionID) },
       },
@@ -919,7 +919,7 @@ describe("durable subagent policy submission", () => {
     const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
     const first = submit.handleSubmit(new Event("submit"))
     await entered.promise
-    expect(submit.submitting()).toBe(false)
+    expect(submit.submitting()).toBe(true)
     real.set([{ type: "text", content: "second queue", start: 0, end: 12 }])
     delivery = "queue"
     const second = submit.handleSubmit(new Event("submit"))
@@ -928,11 +928,58 @@ describe("durable subagent policy submission", () => {
     expect(promptInputs).toEqual([])
     gate.resolve()
     await Promise.all([first, second])
+    expect(submit.submitting()).toBe(false)
     expect(promptInputs).toHaveLength(2)
     expect(promptInputs).toEqual(expect.arrayContaining([
       expect.objectContaining({ text: "first steer", delivery: "steer" }),
       expect.objectContaining({ text: "second queue", delivery: "queue" }),
     ]))
+  })
+
+  test.skipIf(isServer).each(["steer", "queue"] as const)("existing submitting remains reactive while %s fails and the other admission is still pending", async (failed) => {
+    params.id = "session-1"
+    const entered = { steer: deferred(), queue: deferred() }
+    const gates = { steer: deferred(), queue: deferred() }
+    const failure = new Error(`${failed} admission failed`)
+    sendHook = async (input) => {
+      const request = input as { delivery: string }
+      if (request.delivery !== "steer" && request.delivery !== "queue") throw new Error("Unexpected existing delivery")
+      entered[request.delivery].resolve()
+      await gates[request.delivery].promise
+      if (request.delivery === failed) throw failure
+    }
+    let delivery: "steer" | "queue" = "steer"
+    const observed: boolean[] = []
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "concurrent steer" })
+      const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
+      createComputed(() => { observed.push(submit.submitting()) })
+      return { dispose, real, submit }
+    })
+    expect(observed).toEqual([false])
+    const steer = root.submit.handleSubmit(new Event("submit")).then(() => undefined, (error: unknown) => error)
+    await entered.steer.promise
+    expect(root.submit.submitting()).toBe(true)
+    root.real.set([{ type: "text", content: "concurrent queue", start: 0, end: 16 }])
+    delivery = "queue"
+    const queue = root.submit.handleSubmit(new Event("submit")).then(() => undefined, (error: unknown) => error)
+    await entered.queue.promise
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ text: "concurrent steer", delivery: "steer" }),
+      expect.objectContaining({ text: "concurrent queue", delivery: "queue" }),
+    ]))
+    const outcomes = { steer, queue }
+    gates[failed].resolve()
+    expect(await outcomes[failed]).toBe(failure)
+    expect(root.submit.submitting()).toBe(true)
+    expect(observed.at(-1)).toBe(true)
+    const remaining = failed === "steer" ? "queue" : "steer"
+    gates[remaining].resolve()
+    expect(await outcomes[remaining]).toBeUndefined()
+    expect(root.submit.submitting()).toBe(false)
+    expect(observed.at(-1)).toBe(false)
+    root.dispose()
   })
 
   test("empty existing Session submit interrupts while another submission awaits policy", async () => {

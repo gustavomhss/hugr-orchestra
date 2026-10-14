@@ -424,6 +424,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
+  const [activity, setActivity] = createStore({ existing: 0 })
   const pendingKey = (sessionID: string) => ScopedKey.from(sdk().scope, sessionID)
   const ownerIdentity = createMemo(() => {
     const source = sdk()
@@ -1051,6 +1052,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   return {
     abort,
     submitting: () => {
+      if (activity.existing > 0) return true
       if (!params.id) return sourceAdmission().source.state.busy
       const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
       return admissions.get(prompt.capture())?.get(key)?.state.busy ?? false
@@ -1059,7 +1061,12 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       event.preventDefault()
       if (ownership.disposed) return Promise.resolve()
       const target = prompt.capture()
-      if (params.id) return submit(target, { selection: input.newSessionWorktree?.() || "main" })
+      if (params.id) {
+        setActivity("existing", (count) => count + 1)
+        return submit(target, { selection: input.newSessionWorktree?.() || "main" }).finally(() => {
+          setActivity("existing", (count) => count - 1)
+        })
+      }
       const current = sourceAdmission(target)
       if (current.source.state.busy) return Promise.resolve()
       const selection = input.newSessionWorktree?.() || "main"
