@@ -11,6 +11,7 @@ import {
   rmSync,
   symlinkSync,
   writeFileSync,
+  readFileSync,
 } from "node:fs"
 import { createRequire } from "node:module"
 import os from "node:os"
@@ -252,24 +253,7 @@ test("parsed ELF dependencies reject truncated, unknown and mixed libc rather th
   expect(() => inspectElf(file)).toThrow("ELF64_UNSUPPORTED")
   for (const [names, abi] of [["libc.so.6", "glibc"], ["libc.musl-x86_64.so.1", "musl"], ["libc.so.6,libc.musl-x86_64.so.1", undefined], ["libunknown.so", undefined]] as const) {
     // Inert synthetic ELF only calibrates parser/admission, never native runtime.
-    const bytes = Buffer.alloc(512)
-    Buffer.from("7f454c46020101", "hex").copy(bytes)
-    bytes.writeUInt16LE(3, 16)
-    bytes.writeUInt16LE(62, 18)
-    bytes.writeUInt32LE(1, 20)
-    bytes.writeBigUInt64LE(64n, 32)
-    bytes.writeUInt16LE(56, 54)
-    bytes.writeUInt16LE(2, 56)
-    bytes.writeUInt32LE(1, 64)
-    bytes.writeBigUInt64LE(512n, 96)
-    bytes.writeUInt32LE(2, 120)
-    bytes.writeBigUInt64LE(176n, 128)
-    const strings = Buffer.from(names.replaceAll(",", "\0") + "\0")
-    strings.copy(bytes, 352)
-    const entries = [[5n, 352n], [10n, BigInt(strings.length)], ...names.split(",").map((name, i, all) =>
-      [1n, BigInt(all.slice(0, i).reduce((n, s) => n + s.length + 1, 0))]), [0n, 0n]]
-    bytes.writeBigUInt64LE(BigInt(entries.length * 16), 152)
-    entries.forEach(([tag, value], i) => { bytes.writeBigInt64LE(tag!, 176 + i * 16); bytes.writeBigUInt64LE(value!, 184 + i * 16) })
+    const bytes = elfFixture(names.split(","))
     writeFileSync(file, bytes)
     expect(inspectElf(file).needed).toEqual(names.split(","))
     for (const expected of ["musl", "glibc"] as const) {
@@ -279,6 +263,89 @@ test("parsed ELF dependencies reject truncated, unknown and mixed libc rather th
     writeFileSync(file, bytes.subarray(0, 180))
     expect(() => inspectElf(file)).toThrow("ELF_TRUNCATED")
   }
+})
+
+function elfFixture(names: string[], machine = 62) {
+  const bytes = Buffer.alloc(512)
+  Buffer.from("7f454c46020101", "hex").copy(bytes)
+  bytes.writeUInt16LE(3, 16)
+  bytes.writeUInt16LE(machine, 18)
+  bytes.writeUInt32LE(1, 20)
+  bytes.writeBigUInt64LE(64n, 32)
+  bytes.writeUInt16LE(56, 54)
+  bytes.writeUInt16LE(2, 56)
+  bytes.writeUInt32LE(1, 64)
+  bytes.writeBigUInt64LE(0x1000n, 80)
+  bytes.writeBigUInt64LE(512n, 96)
+  bytes.writeBigUInt64LE(512n, 104)
+  bytes.writeUInt32LE(2, 120)
+  bytes.writeBigUInt64LE(176n, 128)
+  bytes.writeBigUInt64LE(0x10b0n, 136)
+  const strings = Buffer.from(names.join("\0") + "\0")
+  strings.copy(bytes, 352)
+  const entries = [[5n, 0x1160n], [10n, BigInt(strings.length)], ...names.map((_, i) =>
+    [1n, BigInt(names.slice(0, i).reduce((n, s) => n + s.length + 1, 0))]), [0n, 0n]]
+  bytes.writeBigUInt64LE(BigInt(entries.length * 16), 152)
+  bytes.writeBigUInt64LE(BigInt(entries.length * 16), 160)
+  entries.forEach(([tag, value], i) => { bytes.writeBigInt64LE(tag!, 176 + i * 16); bytes.writeBigUInt64LE(value!, 184 + i * 16) })
+  return bytes
+}
+
+test("ELF dynamic VA wins over off-table opposite-libc decoy; conflicting file offset and indirect bounds refuse", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-elf-mapping-"))
+  fixtures.push(dir)
+  const file = path.join(dir, "binding.node")
+  const actual = elfFixture(["libc.musl-x86_64.so.1"])
+  elfFixture(["libc.so.6"]).subarray(176, 240).copy(actual, 256)
+  actual.writeBigUInt64LE(0x11c0n, 264)
+  Buffer.from("libc.so.6\0").copy(actual, 448)
+  writeFileSync(file, actual)
+  expect(requireElfLibc(file, "musl").needed).toEqual(["libc.musl-x86_64.so.1"])
+  expect(() => requireElfLibc(file, "glibc")).toThrow("ELF_LIBC_MISMATCH")
+  for (const [mutate, diagnostic] of [
+    [(b: Buffer) => b.writeBigUInt64LE(256n, 128), "ELF_DYNAMIC_OFFSET_MISMATCH"],
+    [(b: Buffer) => b.writeBigUInt64LE(0x5000n, 136), "ELF_MAPPING_UNMAPPED"],
+    [(b: Buffer) => b.writeBigUInt64LE(511n, 104), "ELF_SEGMENT_MEMORY_INVALID"],
+    [(b: Buffer) => { b.writeBigUInt64LE(768n, 104); b.writeBigUInt64LE(0x1200n, 184) }, "ELF_MAPPING_NOT_FILE_BACKED"],
+    [(b: Buffer) => b.writeBigUInt64LE(999n, 216), "ELF_STRING_TABLE_INVALID"],
+    [(b: Buffer) => b.writeBigUInt64LE(4n, 200), "ELF_STRING_UNTERMINATED"],
+    [(b: Buffer) => b.writeBigInt64LE(21n, 224), "ELF_DYNAMIC_UNTERMINATED"],
+    [(b: Buffer) => { b.writeUInt16LE(3, 56); b.copy(b, 176, 120, 176) }, "ELF_DYNAMIC_DUPLICATED"],
+    [(b: Buffer) => { b.writeUInt16LE(3, 56); b.copy(b, 176, 64, 120) }, "ELF_LOAD_MAPPING_AMBIGUOUS"],
+  ] as const) {
+    const mutant = Buffer.from(actual)
+    mutate(mutant)
+    writeFileSync(file, mutant)
+    expect(() => inspectElf(file)).toThrow(diagnostic)
+  }
+  writeFileSync(file, actual)
+  expect(requireElfLibc(file, "musl").needed).toEqual(["libc.musl-x86_64.so.1"])
+})
+
+test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("glibc preparation refuses same-CPU musl %s before modifying any package", (slot) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-prepare-abi-"))
+  fixtures.push(root)
+  const target = { os: "linux", arch: "x64", rebuild: false }
+  const names = ["tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"]
+  const files = names.map((name) => {
+    const dir = path.join(root, "node_modules", name)
+    mkdirSync(path.join(dir, "prebuilds/linux-x64"), { recursive: true })
+    writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name }))
+    const file = path.join(dir, "prebuilds/linux-x64", `${name}.node`)
+    writeFileSync(file, elfFixture(["libc.so.6"]))
+    return file
+  })
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
+  const original = files.map((file) => readFileSync(file))
+  const bad = slot === "prebuild" ? files[2]! : path.join(root, "node_modules",
+    slot === "preferred-core-release" ? "tree-sitter" : "tree-sitter-python", "build/Release/preferred.node")
+  mkdirSync(path.dirname(bad), { recursive: true })
+  writeFileSync(bad, elfFixture(["libc.musl-x86_64.so.1"]))
+  expect(() => prepareTreeSitterPrebuilds({ root, ...target })).toThrow("ELF_LIBC_MISMATCH")
+  files.filter((file) => file !== bad).forEach((file) => expect(readFileSync(file)).toEqual(original[files.indexOf(file)]!))
+  rmSync(bad)
+  if (slot === "prebuild") writeFileSync(bad, original[2]!)
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
 })
 
 test("copyTreeSitter places the bundle under the given directory and checks it there", () => {
