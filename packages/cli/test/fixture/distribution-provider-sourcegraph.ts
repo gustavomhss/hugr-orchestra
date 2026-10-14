@@ -19,7 +19,9 @@ const Receipt = Schema.Struct({
   }),
 })
 
-// Reviewed routing/composition bytes at 0001b09c39. Content hashes, not a syntax
+// Reviewed routing/composition bytes at 0001b09c39 plus dev e6c39ff72d's
+// SessionSubagentModels handlers/layer. Existing V2 execution edges are unchanged.
+// Content hashes, not a syntax
 // approximation, bind dispatch semantics. Any changed route needs lead review
 // before its new source hash is admitted, even if all modules remain in a bundle.
 const bindings = {
@@ -35,8 +37,8 @@ const bindings = {
   "packages/cli/src/commands/handlers/service/stop.ts": "8da9b04cffd5b2e8e893aecab117ff5140950caf",
   "packages/cli/src/commands/handlers/service/status.ts": "d409970e8bcd1b998473ce083d9f1b618ec5de75",
   "packages/cli/src/services/daemon.ts": "c7374a8960ca825418676f7a86b792a3ce2b723b",
-  "packages/server/src/routes.ts": "6eee926608c8a2e25c43587dec09e4f274167ba8",
-  "packages/server/src/handlers/session.ts": "5fc8bf39cf04a3cffea5f349b818de70971ebac2",
+  "packages/server/src/routes.ts": "5b37e6caeae0cbd1ef00f4549e7b42d90c78945c",
+  "packages/server/src/handlers/session.ts": "7b4886f3c2980d54b845c0b91ee213028caf6705",
   "packages/core/src/session.ts": "ee09320406f19c18347c2904b4ed7cbc46d0b7a3",
   "packages/core/src/session/execution/local.ts": "d874c40832a3571297e78e912c2ae137fb7acc12",
   "packages/core/src/location-services.ts": "aa917b5a6092053b253890ec979c4f34bee9829b",
