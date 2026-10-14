@@ -1,7 +1,7 @@
 import { Schema } from "effect"
 import { isDeepStrictEqual } from "node:util"
 import type { SessionMessage } from "../../../schema/src/session-message"
-import { WireRequest } from "./distribution-provider-capture"
+import { WireRequest } from "./distribution-provider-wire"
 
 // Independent oracle for this proof's bounded bash command, not the production
 // ToolOutput/Session-history mapper. File bytes establish exact stdout; completed
