@@ -4,7 +4,7 @@ import { createStore } from "solid-js/store"
 import { ActionsRequestError } from "./api"
 import { initial } from "./contract"
 import { createDispatchData, dispatchDefaultRef, dispatchDefinitions, dispatchSelection, environmentOptions, sameDispatchSelection, type DispatchData } from "./dispatch-data"
-import { parseInputs } from "./source-dialogs"
+import { parseInputs } from "./input-definitions"
 
 const binding: Actions.Binding = { id: Actions.BindingID.make("ab_dispatch"), revision: 7, remote: "origin", projectID: "1",
   projectPath: "owner/project", directory: "/repo", provider: { kind: "github", hostname: "github.com", apiOrigin: "https://api.github.com" } }
