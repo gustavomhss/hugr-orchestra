@@ -3,12 +3,12 @@ import path from "node:path"
 
 // Bun's module mocks outlive their test file. Keep the original suite in a child
 // process so its SDK and context mocks cannot replace other tests' real imports.
-test("prompt submit with isolated module mocks", async () => {
+test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)", async (condition) => {
   const child = Bun.spawn(
     [
       process.execPath,
       "test",
-      "--conditions=solid",
+      `--conditions=${condition}`,
       "--preload",
       "./happydom.ts",
       "./src/components/prompt-input/submit.suite.ts",
