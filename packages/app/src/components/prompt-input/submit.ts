@@ -51,6 +51,15 @@ const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
 type PendingPrompt = {
   abort: AbortController
   cleanup: VoidFunction
+  draft?: {
+    key: string
+    target: PromptTarget
+    scope: ServerScope
+    directory: string
+    sessionID: string
+    api: DirectorySDK["api"]["session"]
+    serverState: ServerSync
+  }
 }
 
 const pending = new Map<string, Set<PendingPrompt>>()
@@ -203,25 +212,19 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
   const abort = async () => {
     const sessionID = params.id
-    if (!sessionID) return Promise.resolve()
     const source = sdk()
     const serverState = serverSync()
-
-    serverState.session.set("todo", sessionID, [])
-
     input.onAbort?.()
-
-    const key = ScopedKey.from(source.scope, sessionID)
-    const queued = pending.get(key)
-    if (queued) {
-      pending.delete(key)
-      serverState.session.set("session_status", sessionID, { type: "idle" })
-      ;[...queued].reverse().forEach((job) => {
-        job.abort.abort()
-        job.cleanup()
-      })
-    }
-    return source.api.session.interrupt({ sessionID }).catch(() => {})
+    if (sessionID) return interruptPendingSession(source.scope, sessionID, source.api.session, serverState)
+    const key = input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
+    const target = prompt.capture()
+    const drafts = [...pending.values()].flatMap((jobs) => [...jobs].flatMap((job) => {
+      const draft = job.draft
+      return draft && draft.key === key && draft.target === target && draft.scope === source.scope &&
+        draft.directory === source.directory ? [draft] : []
+    }))
+    return Promise.all([...new Map(drafts.map((draft) => [ScopedKey.from(draft.scope, draft.sessionID), draft])).values()]
+      .map((draft) => interruptPendingSession(draft.scope, draft.sessionID, draft.api, draft.serverState)))
   }
 
   const seed = (state: ServerSync, dir: string, info: Session) => {
@@ -429,6 +432,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     admission.cleanup = trackPendingPrompt(directorySDK.scope, session.id, {
       abort: controller,
       cleanup: () => { removeOptimisticMessage(); restoreInput() },
+      draft: isNewSession ? {
+        key: rulesKey, target, scope: directorySDK.scope, directory: projectDirectory,
+        sessionID: session.id, api, serverState,
+      } : undefined,
     })
     const policy = createSubmissionPolicy({
       key: rulesKey, sessionID: session.id, protocol: server.protocol,
@@ -619,4 +626,16 @@ function trackPendingPrompt(scope: ServerScope, sessionID: string, job: PendingP
     jobs.delete(job)
     if (pending.get(key) === jobs && jobs.size === 0) pending.delete(key)
   }
+}
+
+function interruptPendingSession(scope: ServerScope, sessionID: string, api: DirectorySDK["api"]["session"], state: ServerSync) {
+  state.session.set("todo", sessionID, [])
+  const key = ScopedKey.from(scope, sessionID)
+  const jobs = pending.get(key)
+  if (jobs) {
+    pending.delete(key)
+    state.session.set("session_status", sessionID, { type: "idle" })
+    ;[...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
+  }
+  return api.interrupt({ sessionID }).catch(() => {})
 }
