@@ -48,6 +48,10 @@ describe("setup-bun cache architecture repair", () => {
       expect(modulesRestore.with?.key).toBe("${{ steps.keys.outputs.modules }}")
       expect(modulesSave.with?.key).toBe(modulesRestore.with?.key)
       expect(modulesRestore.with?.["restore-keys"]).toBeUndefined()
+      expect(modulesSave.with?.path).toBe(modulesRestore.with?.path)
+      const paths = text(modulesRestore.with?.path, "CACHE_MODULE_PATHS_MISSING").trim().split(/\r?\n/)
+      ;["packages/*/node_modules", "packages/*/*/node_modules", "modules/*/node_modules", "modules/*/*/node_modules"]
+        .forEach((pattern) => expect(paths).toContain(pattern))
 
       const rows = yield* Effect.all(
         runners.map((runner) => runEmitter(text(keys.run, "CACHE_KEY_SCRIPT_MISSING"), runner)),

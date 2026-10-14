@@ -28,6 +28,7 @@
     "packages": [
       "packages/*",
       "modules/relay",
+      "modules/capability-assets",
       "packages/sdk/js",
       "packages/omni/bindings/node"
     ],
