@@ -231,6 +231,93 @@ linux("Linux loaded-process ABI ignores failing ldd and rejects successful-but-e
   expect(await snapshotTree(prefix)).toEqual(before)
 }), 120_000)
 
+linux("Linux shell ELF producer failures, static/unknown interpreter and changed loader identity reject fresh and retained prefixes", () => isolated(async (root, prefix) => {
+  const payload = await fixture(root, "1.0.0")
+  expect((await install(prefix, payload)).code).toBe(0)
+  await expectLauncher(prefix, payload.version)
+  const retained = await snapshotTree(prefix)
+  // Installer reads both injected ELF views under this actual dynamic shell. Its genuine
+  // recognized libc map cannot substitute for a missing/unknown PT_INTERP.
+  const mapped = await command(["sh", "-c", `awk '$2 ~ /x/ && $6 ~ /\\/(libc\\.so\\.6|libc-[0-9.]+\\.so|libc\\.musl-.*|ld-musl-.*)$/ { print $6 }' /proc/$$/maps`])
+  expect(mapped.code).toBe(0)
+  expect(mapped.stdout).toMatch(/libc|ld-musl/)
+  const bin = path.join(root, "elf-tools")
+  await mkdir(bin)
+  const realOd = (await command(["sh", "-c", "command -v od"])).stdout.trim()
+  const realStat = (await command(["sh", "-c", "command -v stat"])).stdout.trim()
+  expect(path.isAbsolute(realOd)).toBe(true)
+  expect(path.isAbsolute(realStat)).toBe(true)
+  await Bun.write(path.join(bin, "od"), `#!/bin/sh
+set -eu
+if [ "$ELF_FAULT" = od-nonzero ]; then "$REAL_OD" "$@"; exit 9; fi
+offset=0; count=
+while [ "$#" -gt 0 ]; do
+  case "$1" in -j) offset=$2; shift 2 ;; -N) count=$2; shift 2 ;; -N*) count=\${1#-N}; shift ;; *) shift ;; esac
+done
+exec "$REAL_OD" -An -v -tu1 -j "$offset" -N "$count" "$ELF_FAULT_SOURCE"
+`)
+  await chmod(path.join(bin, "od"), 0o755)
+  await Bun.write(path.join(bin, "stat"), `#!/bin/sh
+set -eu
+if [ "$ELF_FAULT" = identity ] && [ "$2" = '%D %i' ]; then
+  identity=$("$REAL_STAT" "$@")
+  set -- $identity
+  printf '%s %s0\\n' "$1" "$2"
+  exit 0
+fi
+exec "$REAL_STAT" "$@"
+`)
+  await chmod(path.join(bin, "stat"), 0o755)
+  const control = { PATH: `${bin}:${process.env.PATH}`, REAL_OD: realOd, REAL_STAT: realStat, ELF_FAULT: "od-nonzero" }
+  const args = ["-An", "-v", "-tu1", "-N64", `/proc/${process.pid}/exe`]
+  const emitted = await command([path.join(bin, "od"), ...args], control)
+  expect(emitted.code).toBe(9)
+  const actual = await command([realOd, ...args])
+  expect(actual.code).toBe(0)
+  expect(emitted.stdout).toBe(actual.stdout)
+  expect(emitted.stdout.trim().split(/\s+/)).toHaveLength(64)
+  for (const [fault, diagnostic] of [["od-nonzero", "cannot read Linux host runtime ELF"], ["static", "Linux host PT_INTERP missing or invalid"],
+    ["unknown", "unknown Linux host interpreter"], ["identity", "cannot determine Linux host libc from loaded process"]]) {
+    const bytes = Buffer.alloc(512)
+    nativeHeader(cpu, "linux").copy(bytes)
+    bytes.writeBigUInt64LE(64n, 32)
+    bytes.writeUInt16LE(56, 54)
+    bytes.writeUInt16LE(fault === "unknown" ? 2 : 1, 56)
+    bytes.writeUInt32LE(1, 64)
+    bytes.writeBigUInt64LE(512n, 96)
+    bytes.writeBigUInt64LE(512n, 104)
+    if (fault === "unknown") {
+      const interpreter = Buffer.from("/lib/orchestra-unknown-loader\0")
+      bytes.writeUInt32LE(3, 120)
+      bytes.writeBigUInt64LE(256n, 128)
+      bytes.writeBigUInt64LE(BigInt(interpreter.length), 152)
+      bytes.writeBigUInt64LE(BigInt(interpreter.length), 160)
+      interpreter.copy(bytes, 256)
+    }
+    const source = path.join(root, `elf-${fault}`)
+    await Bun.write(source, bytes)
+    const env = { ...control, ELF_FAULT: fault, ELF_FAULT_SOURCE: source,
+      // Identity control forwards the actual shell ELF; only physical stat
+      // identity is corrupted. No fake libc maps or native execution claim.
+      PATH: fault === "identity" ? `${path.join(root, "stat-tools")}:${process.env.PATH}` : control.PATH }
+    if (fault === "identity") {
+      await mkdir(path.join(root, "stat-tools"))
+      await Bun.write(path.join(root, "stat-tools/stat"), Bun.file(path.join(bin, "stat")))
+      await chmod(path.join(root, "stat-tools/stat"), 0o755)
+    }
+    for (const destination of [path.join(root, `fresh-${fault}`), prefix]) {
+      const result = await install(destination, payload, [], env)
+      expect(result.code).toBe(1)
+      expect(result.stderr).toContain(diagnostic)
+      expect(await readdir(root)).not.toContain(`fresh-${fault}`)
+      expect(await snapshotTree(prefix)).toEqual(retained)
+    }
+  }
+  expect((await install(prefix, payload)).code).toBe(0)
+  expect(await snapshotTree(prefix)).toEqual(retained)
+  await expectLauncher(prefix, payload.version)
+}), 120_000)
+
 posix("native headers validate every addon CPU/class/endianness before CLI execution", () => isolated(async (root, prefix) => {
   const v1 = await fixture(root, "1.0.0")
   expect((await install(prefix, v1)).code).toBe(0)
