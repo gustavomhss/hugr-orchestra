@@ -20,7 +20,9 @@ export type SessionManagementInfo = Pick<AppSession,
   "id" | "subagentModels" | "subagentModelsChangedAt" | "subagentModelsRevision" | "archiveChangedAt" | "archiveRevision"
 > & { time: Pick<AppSession["time"], "updated" | "archived"> }
 
-export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | SessionsGetOutput | AppSession): AppSession {
+export function normalizeSessionInfo(
+  input: (SessionInfo & Pick<Session, "metadata">) | SessionV2Info | SessionsGetOutput | AppSession,
+): AppSession {
   if (!("location" in input)) return input
   return {
     id: input.id,
@@ -35,6 +37,7 @@ export function normalizeSessionInfo(input: SessionInfo | SessionV2Info | Sessio
     title: withTimestampedFallback(input),
     agent: input.agent,
     model: input.model,
+    ...("metadata" in input && input.metadata !== undefined ? { metadata: input.metadata } : {}),
     subagentModels:
       "subagentModels" in input && input.subagentModels !== undefined
         ? Schema.encodeSync(SessionSubagentModels.Policy)(
