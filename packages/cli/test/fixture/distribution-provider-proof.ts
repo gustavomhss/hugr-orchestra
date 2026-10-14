@@ -172,7 +172,7 @@ export async function qualifyProvider(input: {
         })
         const first = records[0]
         expect(first.request.messages.some((message) => message.role === "user" && JSON.stringify(message.content)?.includes(shell))).toBe(true)
-        expect(JSON.stringify(first.request).includes(nonce)).toBe(false)
+        expect(JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(first.requestJSON)).includes(nonce)).toBe(false)
         expect(first.request.tools?.map((item) => item.function.name)).toEqual(["bash"])
         const inferred = streamedCompletion(first.response)
         expect(inferred.calls).toHaveLength(1)
