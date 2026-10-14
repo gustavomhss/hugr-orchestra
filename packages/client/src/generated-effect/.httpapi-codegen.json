@@ -1,6 +1,16 @@
 [
+  "actionsBindings.ts",
+  "actionsJobs.ts",
+  "actionsOperations.ts",
+  "actionsPipelines.ts",
+  "actionsResources.ts",
+  "actionsRuns.ts",
+  "actionsSource.ts",
+  "actionsTransfers.ts",
+  "actionsWorkflows.ts",
   "client-error.ts",
   "client.ts",
   "index.ts",
-  "research.ts"
+  "research.ts",
+  "schedules.ts"
 ]

@@ -5,7 +5,19 @@ import { Effect } from "effect"
 import { fileURLToPath } from "url"
 
 const contract = compile(ClientApi, { groupNames, endpointNames, omitEndpoints })
-const splitGroups = new Set(["research"])
+const splitGroups = new Set([
+  "research",
+  "schedules",
+  "actionsBindings",
+  "actionsOperations",
+  "actionsWorkflows",
+  "actionsRuns",
+  "actionsJobs",
+  "actionsPipelines",
+  "actionsResources",
+  "actionsTransfers",
+  "actionsSource",
+])
 
 await Effect.runPromise(
   Effect.all(
