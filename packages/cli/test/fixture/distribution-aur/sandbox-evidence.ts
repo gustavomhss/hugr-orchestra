@@ -16,7 +16,10 @@ export const AurSandboxEvidence = Schema.Struct({
 export const AurBootstrapEvidence = Schema.Struct({
   sandbox: Schema.Literal("enforced"), pacmanExit: Schema.Literal(0), sandboxUser: Schema.String,
   downloadUserDirective: Schema.Literal("DownloadUser"), downloadUserUID: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
-  repositories: Schema.Array(Schema.Struct({ name: Schema.String, sigLevel: Schema.Array(Schema.String) })),
+  globalSigLevel: Schema.Array(Schema.String),
+  repositories: Schema.Array(Schema.Struct({ name: Schema.String, sigLevel: Schema.Array(Schema.String),
+    queriedSigLevel: Schema.Array(Schema.String), sigLevelSource: Schema.Literals(["global-inherited", "pacman-conf-resolved-override"]),
+  })),
   filesystemRestrictions: Schema.Array(Schema.String), logSha256: Schema.String,
   probe: AurSandboxEvidence,
 })
@@ -37,6 +40,7 @@ export async function aurBootstrapEvidence(directory: string) {
     throw new Error("AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", { cause })
   })
   if (receipt.sandboxUser !== policy.sandboxUser || receipt.downloadUserUID !== policy.downloadUserUID ||
+      !isDeepStrictEqual(receipt.globalSigLevel, policy.globalSigLevel) ||
       JSON.stringify(receipt.repositories) !== JSON.stringify(policy.repositories))
     throw new Error("AUR_BOOTSTRAP_REPOSITORY_POLICY_RECEIPT_MISMATCH")
   if (JSON.stringify(receipt.filesystemRestrictions) !== JSON.stringify(pacmanFilesystemRestrictions(log)))
@@ -62,7 +66,9 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
   const control = await mkdtemp(`${directory}/sandbox-receipt-controls-`)
   const files = ["bootstrap-sandbox.json", "bootstrap-pacman.log", "bootstrap-repositories.txt", "bootstrap-sandbox-user.txt",
     "bootstrap-download-user.stderr", "bootstrap-download-user-uid.txt",
-    ...receipt.repositories.map((repo) => `bootstrap-siglevel-${repo.name}.txt`)]
+    "bootstrap-repositories.stderr", "bootstrap-repositories.status",
+    ...["bootstrap-global-siglevel", ...receipt.repositories.map((repo) => `bootstrap-siglevel-${repo.name}`)]
+      .flatMap((name) => ["txt", "stderr", "status"].map((extension) => `${name}.${extension}`))]
   const mutations = [
     { name: "seccomp-disabled", receipt: { ...receipt, probe: { ...receipt.probe, seccomp: 0 } },
       expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "seccomp"], value: 0 } } },
@@ -131,6 +137,59 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
       await Bun.write(`${control}/${mutation.file}`, mutation.bytes)
       await reject(mutation.name, mutation.expected)
     }
+    const policyControls: { name: string; effective: readonly string[]; source: string; restored: string }[] = []
+    // Positive controls use the actual captured global policy, including both
+    // supported database modes. Only complete resolved tool projections pass.
+    for (const kind of ["global-inherited", "DatabaseRequired", "DatabaseOptional"] as const) {
+      const sigLevel = kind === "global-inherited" ? receipt.globalSigLevel
+        : receipt.globalSigLevel.map((token) => token === "DatabaseRequired" || token === "DatabaseOptional" ? kind : token)
+      const queriedSigLevel = kind === "global-inherited" ? [] : sigLevel
+      const sigLevelSource = kind === "global-inherited" ? "global-inherited" : "pacman-conf-resolved-override"
+      await Bun.write(`${control}/${signatures}`, queriedSigLevel.length ? `${queriedSigLevel.join("\n")}\n` : "")
+      const repositories = receipt.repositories.map((repo, index) => index === 0 ? { ...repo, sigLevel, queriedSigLevel, sigLevelSource } : repo)
+      await Bun.write(`${control}/bootstrap-sandbox.json`, JSON.stringify({ ...receipt, repositories }))
+      const admitted = await aurBootstrapEvidence(control)
+      if (!isDeepStrictEqual(admitted.repositories, repositories)) throw new Error(`AUR_SIGLEVEL_POSITIVE_CONTROL_FAILED: ${kind}`)
+      await restore()
+      policyControls.push({ name: kind, effective: sigLevel, source: sigLevelSource, restored: "real-baseline-readmitted" })
+    }
+    const signatureMutations = [
+      { name: "empty-global-cannot-supply-inheritance", file: "bootstrap-global-siglevel.txt", bytes: "", inherit: true,
+        causeCode: "AUR_GLOBAL_SIGLEVEL_REQUIRED" },
+      { name: "unknown-global-policy", file: "bootstrap-global-siglevel.txt", bytes: "UnknownPolicy\n", inherit: true,
+        causeCode: "AUR_GLOBAL_SIGLEVEL_UNSAFE_OR_UNSUPPORTED" },
+      { name: "unsafe-inherited-package-policy", file: "bootstrap-global-siglevel.txt", inherit: true,
+        bytes: `${receipt.globalSigLevel.map((token) => token === "PackageRequired" ? "PackageOptional" : token).join("\n")}\n`,
+        causeCode: "AUR_GLOBAL_SIGLEVEL_UNSAFE_OR_UNSUPPORTED" },
+      { name: "untrusted-inherited-package-policy", file: "bootstrap-global-siglevel.txt", inherit: true,
+        bytes: `${receipt.globalSigLevel.map((token) => token === "PackageTrustedOnly" ? "PackageTrustAll" : token).join("\n")}\n`,
+        causeCode: "AUR_GLOBAL_SIGLEVEL_UNSAFE_OR_UNSUPPORTED" },
+      { name: "unsafe-explicit-package-override", file: signatures,
+        bytes: `${receipt.globalSigLevel.map((token) => token === "PackageRequired" ? "PackageOptional" : token).join("\n")}\n`,
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+      { name: "untrusted-explicit-database-override", file: signatures,
+        bytes: `${receipt.globalSigLevel.map((token) => token === "DatabaseTrustedOnly" ? "DatabaseTrustAll" : token).join("\n")}\n`,
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+      { name: "unresolved-partial-override", file: signatures, bytes: "DatabaseOptional\n",
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+      { name: "unknown-explicit-override", file: signatures, bytes: "UnknownPolicy\n",
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+      { name: "whitespace-is-not-unset-marker", file: signatures, bytes: "\n",
+        causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" },
+      { name: "global-query-warning", file: "bootstrap-global-siglevel.stderr", bytes: "warning: unknown directive 'SigLevel'\n",
+        causeCode: "AUR_PACMAN_POLICY_QUERY_DIAGNOSTIC" },
+      { name: "global-query-failed", file: "bootstrap-global-siglevel.status", bytes: "1\n",
+        causeCode: "AUR_PACMAN_POLICY_QUERY_FAILED" },
+      { name: "repository-query-warning", file: signatures.replace(/\.txt$/, ".stderr"), bytes: "warning: unknown directive 'SigLevel'\n",
+        causeCode: "AUR_PACMAN_POLICY_QUERY_DIAGNOSTIC" },
+      { name: "repository-query-failed", file: signatures.replace(/\.txt$/, ".status"), bytes: "1\n",
+        causeCode: "AUR_PACMAN_POLICY_QUERY_FAILED" },
+    ]
+    for (const mutation of signatureMutations) {
+      if ("inherit" in mutation && mutation.inherit) await Bun.write(`${control}/${signatures}`, "")
+      await Bun.write(`${control}/${mutation.file}`, mutation.bytes)
+      await reject(mutation.name, { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: mutation.causeCode })
+    }
     const logMutations = [
       { name: "pacman-enforcement-records-removed",
         log: log.split("\n").filter((line) => !receipt.filesystemRestrictions.includes(line)).join("\n"),
@@ -190,7 +249,7 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
       oracleControls.push({ name: mutation.name, readerError: mutation.expected, observed,
         expectedControlError: controlError.message, restored: "real-baseline-readmitted" })
     }
-    await Bun.write(`${directory}/sandbox-receipt-controls.json`, JSON.stringify({ rejected, oracleControls,
+    await Bun.write(`${directory}/sandbox-receipt-controls.json`, JSON.stringify({ rejected, policyControls, oracleControls,
       restored: "real-baseline-readmitted-after-every-mutation" }, null, 2))
   } finally { await rm(control, { recursive: true, force: true }) }
 }
@@ -233,18 +292,37 @@ async function aurRepositoryPolicy(directory: string) {
   const uid = (await readFile(`${directory}/bootstrap-download-user-uid.txt`, "utf8")).trim()
   if (!/^[1-9][0-9]*$/.test(uid) || !Number.isSafeInteger(Number(uid)))
     throw new Error("AUR_PACMAN_NONROOT_DOWNLOAD_USER_REQUIRED")
-  const names = (await readFile(`${directory}/bootstrap-repositories.txt`, "utf8")).trim().split("\n")
+  const names = (await pacmanPolicyQuery(directory, "bootstrap-repositories")).trim().split("\n")
   if (!sandboxUser || names.length === 0 || names.some((name) => !/^[a-zA-Z0-9_-]+$/.test(name)) || new Set(names).size !== names.length)
     throw new Error("AUR_SIGNED_REPOSITORY_POLICY_EMPTY_OR_INVALID")
-  const repositories = await Promise.all(names.map(async (name) => ({ name,
-    sigLevel: (await readFile(`${directory}/bootstrap-siglevel-${name}.txt`, "utf8")).trim().split(/\s+/),
-  })))
-  if (repositories.some((repo) => repo.sigLevel.length !== 4 || new Set(repo.sigLevel).size !== 4 ||
-      !repo.sigLevel.includes("PackageRequired") || !repo.sigLevel.includes("PackageTrustedOnly") ||
-      !repo.sigLevel.includes("DatabaseTrustedOnly") ||
-      !(repo.sigLevel.includes("DatabaseRequired") || repo.sigLevel.includes("DatabaseOptional"))))
-    throw new Error("AUR_SIGNED_REPOSITORIES_REQUIRED")
-  return { sandboxUser, downloadUserDirective: "DownloadUser" as const, downloadUserUID: Number(uid), repositories }
+  const global = await pacmanPolicyQuery(directory, "bootstrap-global-siglevel")
+  if (!global.trim()) throw new Error("AUR_GLOBAL_SIGLEVEL_REQUIRED")
+  const globalSigLevel = trustedSigLevel(global, "AUR_GLOBAL_SIGLEVEL_UNSAFE_OR_UNSUPPORTED")
+  const repositories = await Promise.all(names.map(async (name) => {
+    const queried = await pacmanPolicyQuery(directory, `bootstrap-siglevel-${name}`)
+    // pacman-conf.c show_siglevel() emits zero bytes only for ALPM_SIG_USE_DEFAULT.
+    // conf.c setdefaults() already resolves explicit overrides with its own mask.
+    // Reviewed source: devkitPro/pacman cf473bcfbd275044250fa6ce3703dd7059a52273.
+    // No replica of pacman's partial-override merge is performed here.
+    if (queried === "") return { name, queriedSigLevel: [], sigLevel: globalSigLevel, sigLevelSource: "global-inherited" as const }
+    const sigLevel = trustedSigLevel(queried, "AUR_SIGNED_REPOSITORIES_REQUIRED")
+    return { name, queriedSigLevel: sigLevel, sigLevel, sigLevelSource: "pacman-conf-resolved-override" as const }
+  }))
+  return { sandboxUser, downloadUserDirective: "DownloadUser" as const, downloadUserUID: Number(uid), globalSigLevel, repositories }
+}
+
+async function pacmanPolicyQuery(directory: string, name: string) {
+  if (await readFile(`${directory}/${name}.status`, "utf8") !== "0\n") throw new Error("AUR_PACMAN_POLICY_QUERY_FAILED")
+  if ((await readFile(`${directory}/${name}.stderr`, "utf8")).length !== 0) throw new Error("AUR_PACMAN_POLICY_QUERY_DIAGNOSTIC")
+  return readFile(`${directory}/${name}.txt`, "utf8")
+}
+
+function trustedSigLevel(output: string, code: string) {
+  const tokens = output.trim().split(/\s+/)
+  if (tokens.length !== 4 || new Set(tokens).size !== 4 || !tokens.includes("PackageRequired") ||
+      !tokens.includes("PackageTrustedOnly") || !tokens.includes("DatabaseTrustedOnly") ||
+      !(tokens.includes("DatabaseRequired") || tokens.includes("DatabaseOptional"))) throw new Error(code)
+  return tokens
 }
 
 // Run only inside the owned hosted guest, after the actual signed -Syu command.
