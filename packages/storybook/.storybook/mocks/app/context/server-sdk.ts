@@ -42,8 +42,14 @@ const client = {
   },
 }
 
+const protocolKind = () => "v1" as const
+
 export function useServerSDK() {
-  return () => ({ client })
+  return () => ({ client, protocolKind })
+}
+
+export function useServerProtocol() {
+  return protocolKind
 }
 
 export function ServerSDKProvider(props: { children?: unknown }) {
