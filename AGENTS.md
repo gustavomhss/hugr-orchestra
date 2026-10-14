@@ -159,8 +159,8 @@ const table = sqliteTable("session", {
 ## Spawning Processes
 
 - Orchestra code starts child processes only through `ChildProcessSpawner`, `Process`, or `Process.interactive`.
-- Only `packages/core/src/omni.ts` imports `hugr-omni` (`packages/omni`); everything else goes through it.
-- The sites that stay outside omni, and why, are listed in `packages/omni/docs/orchestra-integration.md` §3.
+- Only `packages/core/src/omni.ts` imports `hugr-omni` (`native/omni`); everything else goes through it.
+- The sites that stay outside omni, and why, are listed in `native/omni/docs/orchestra-integration.md` §3.
 - `bun run check:spawn-imports` fails on any other import of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or `hugr-omni`, or use of `StdioClientTransport`. Today's sites are in `script/spawn-allowlist.json`; entries are only removed, never added without the lead.
 
 ## CI Cadence

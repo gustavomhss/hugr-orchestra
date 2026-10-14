@@ -151,6 +151,7 @@ verified: `415038b`).
 | `core/src/backend-toolkit/target.ts` (`spawnSync`) | Synchronous host detection (`sysctl`, `ldd`); omni has no synchronous API. |
 | `atlas-boundary/src/generated/native-memory.js` (`execFileSync`) | Canonically generated Atlas secret scanner with a synchronous, fail-closed write contract and a 5 s timeout. Changing the scanner's execution contract belongs to Atlas. |
 | `nix/scripts/probe-distribution.ts`, `nix/scripts/verify-distribution.ts` (`child_process`) | Lead-declared Nix exception, 2026-10-11: CI-only distribution oracles that execute the built CLI, supervisor and packaged Electron to prove the shipped outputs, including omni itself. They are not shipped process paths. |
+| `script/atlas-baseline.mjs` (`execFileSync`) | Lead-declared, 2026-10-14: CI-only synchronous Git tree projection previously inline in the host workflow. It preserves immutable Atlas baseline objects and emits the EARS baseline; not a shipped process path or product authority. |
 | `cli/bin/orchestra.cjs` (`spawnSync`) | Launcher host detection (`sysctl`, PowerShell, `ldd`) before any orchestra code loads; synchronous and bounded. |
 | `cli/script/runtime-proof.ts`, `desktop/scripts/install-electron.ts` (`spawnSync`, `execFile`) | Build and proof scripts; not a shipped process path. |
 | `desktop/scripts/lean-candidate.ts` (`spawn`, detached process groups) | CI-only macOS candidate build and packaging script; owns each tool's process group to enforce deadlines and kill TERM-resistant descendants. Not a shipped process path. |
