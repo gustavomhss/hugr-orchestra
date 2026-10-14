@@ -522,7 +522,7 @@ const scenarios: Scenario[] = [
     ),
   http.protected.get("/api/health", "v2.health.get").json(200, (body) => {
     object(body)
-    check(body.healthy === true, "v2 server should report healthy")
+    check(body.healthy === true && typeof body.pid === "number" && body.pid > 0, "v2 health must identify the ready process")
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),

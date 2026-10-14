@@ -157,9 +157,15 @@ function matchLegacyOpenApi(input: Record<string, unknown>) {
           if (properties?.id) properties.id = { anyOf: [properties.id, { type: "null" }] }
         }
       }
-      for (const response of Object.values(operation.responses ?? {})) {
+      for (const [status, response] of Object.entries(operation.responses ?? {})) {
         for (const content of Object.values(response.content ?? {})) {
           if (content.schema) content.schema = stripOptionalNull(structuredClone(content.schema))
+        }
+        // The default-model envelope declares required Schema.NullOr(Model.Info):
+        // an empty catalog returns data: null, not an omitted optional field.
+        const schema = response.content?.["application/json"]?.schema
+        if (path === "/api/model/default" && method === "get" && status === "200" && schema?.properties?.data) {
+          schema.properties.data = nullable(schema.properties.data)
         }
       }
       if (!isV2Api) {

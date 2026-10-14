@@ -166,6 +166,7 @@ const layer = Layer.effect(
       state,
       nativeHost,
       prompt: (input, options) => prompt(input, options),
+      interrupt: claudeCode.interrupt,
     })
 
     const title = Effect.fn("SessionPrompt.ensureTitle")(function* (input: {
@@ -1021,6 +1022,8 @@ const layer = Layer.effect(
 
     const prompt: TaskPromptOperations.Prompt = yield* PromptHost.make({
       sessions, continuity, schema: PromptInput, build: createUserMessage, loop: (input) => loop(input),
+      beforeAdmission: (session, request) => claudeCode.reconcileRevert(session, request.agent),
+      admitted: claudeCode.admitted,
     })
 
     const lastAssistant = Effect.fnUntraced(function* (sessionID: SessionID) {
