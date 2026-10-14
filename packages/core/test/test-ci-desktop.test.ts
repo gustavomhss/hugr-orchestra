@@ -30,7 +30,7 @@ async function fixture(args: string[]) {
   await Bun.write(path.join(cwd, "packages/desktop/bunfig.toml"), '[test]\npathIgnorePatterns = ["src/main/ignored.test.ts"]\n')
   await Promise.all([proof, ordinary, extra, "src/main/ignored.test.ts", "src/main/helper.ts", ".hidden/hidden.test.ts", "node_modules/hidden.test.ts"].map((file) =>
     Bun.write(path.join(cwd, "packages/desktop", file), `import { test } from "bun:test"\nconsole.log(${JSON.stringify(`SELECTED ${file}`)})\ntest("fixture selected", () => {})\n`)))
-  const request = { package: "desktop", runner: "bun", args: [...testPaths("desktop", args,
+  const request = { package: "desktop", directory: "packages/desktop", runner: "bun", args: [...testPaths("desktop", args,
     (file) => [proof, ordinary, extra, "src/main/helper.ts"].includes(file.replace(/^\.\//, ""))), "--timeout", "120000"] }
   await Bun.write(path.join(cwd, ".ci-run.json"), JSON.stringify(request))
   return { cwd, request, desktop: path.join(cwd, "packages/desktop") }
@@ -209,7 +209,7 @@ test("proof opt-in is issued only by selected provisioning after successful inst
   expect(JSON.stringify(workflow).split("ORCHESTRA_JIMMY_DESKTOP_PROOF")).toHaveLength(2)
   expect(commands[0]).toBe("set -euo pipefail")
   expect(commands).toContain("sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64")
-  expect(commands).toContain("node -e \"require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))\"")
+  expect(commands).toContain("node -e \"require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:[process.env.DIRECTORY]})), 'install.js'))\"")
   expect(commands.at(-1)).toBe('echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"')
   expect(steps.indexOf(runtime)).toBeGreaterThan(steps.indexOf(selection))
   expect(steps.indexOf(runtime)).toBeLessThan(steps.findIndex((step) => step.name === "Run tests"))
