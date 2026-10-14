@@ -66,7 +66,9 @@ esac
 # only that filesystem opt-out. All policy queries and -Syu use this owned file.
 cp -- /etc/pacman.conf /proof/evidence/bootstrap-pacman-original.conf
 checked_pacman_query /proof/evidence/bootstrap-pacman-version pacman --version
-checked_pacman_query /proof/evidence/bootstrap-pacman-package pacman -Q pacman
+# Identity reads only the local package DB; sync repositories do not exist yet.
+# Runtime policy queries and bootstrap still use the checked owned configuration.
+checked_pacman_query /proof/evidence/bootstrap-pacman-package pacman --config /dev/null -Q pacman
 pacman_config=/etc/pacman.conf
 pacman_policy_query /proof/evidence/bootstrap-config-original
 bootstrap_evidence config
