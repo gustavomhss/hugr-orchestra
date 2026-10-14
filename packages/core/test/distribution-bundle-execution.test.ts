@@ -35,7 +35,20 @@ for (const pkg of ["core", "cli"] as const) {
   }))
 }
 
+// Core Linux qualification observes dedicated native-host rows' emitted shell without running native builds/models.
+if (process.platform === "linux") {
+  for (const lane of ["aur", "musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const box = yield* fixture("cli", undefined, lane)
+    expect(box.row.files).toEqual([`./test/distribution-${lane}.test.ts`])
+    yield* admit(box)
+    yield* observe(box, run, 0)
+  }))
+}
+
 const admissionCases = [
+  { name: "missing lane", diagnostic: "BUNDLE_LANE_INVALID", row: { lane: undefined } },
+  { name: "unknown lane", diagnostic: "BUNDLE_LANE_INVALID", row: { lane: "heavy" } },
   { name: "CPU", diagnostic: "BUNDLE_NATIVE_HOST_MISMATCH", row: { cpu: process.arch === "x64" ? "ARM64" : "X64" },
     env: { RUNNER_ARCH: process.arch === "x64" ? "ARM64" : "X64" } },
   { name: "platform", diagnostic: "BUNDLE_NATIVE_HOST_MISMATCH", row: { platform: process.platform === "win32" ? "linux" : "win32" },

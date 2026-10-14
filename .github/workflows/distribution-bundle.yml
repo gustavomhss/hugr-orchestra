@@ -34,56 +34,94 @@ jobs:
           GODFILE_BASE_REF: origin/dev
       - run: git diff --check origin/dev HEAD
   qualification:
-    name: qualification (${{ matrix.package }}, ${{ matrix.host }})
+    name: qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})
     runs-on: ${{ matrix.host }}
     timeout-minutes: 90
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 13
       matrix:
         include:
-          # New closure lanes first for earlier feedback; every regression row stays present.
-          - package: cli
+          # Preserve regression coverage; expensive closures get independent native runners.
+          - lane: regression
+            package: cli
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/distribution-aur.test.ts, ./test/distribution-musl.test.ts, ./test/distribution-provider.test.ts, ./test/build-runtime.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - package: cli
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/build-runtime.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - lane: regression
+            package: cli
             host: windows-latest
             cpu: X64
             platform: win32
             # Includes actual Windows PE/npm/service/parser/embedded-skill lifecycle.
             files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-windows.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - package: cli
+          - lane: regression
+            package: cli
             host: ubuntu-24.04-arm
             cpu: ARM64
             platform: linux
-            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-aur.test.ts, ./test/distribution-musl.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - package: cli
+            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - lane: regression
+            package: cli
             host: windows-11-arm
             cpu: ARM64
             platform: win32
             files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-windows.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - package: core
+          - lane: regression
+            package: core
             host: ubuntu-latest
             cpu: X64
             platform: linux
             files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
-          - package: core
+          - lane: regression
+            package: core
             host: windows-latest
             cpu: X64
             platform: win32
             files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
-          - package: cli
+          - lane: regression
+            package: cli
             host: macos-14
             cpu: ARM64
             platform: darwin
             files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - package: cli
+          - lane: regression
+            package: cli
             host: macos-15-intel
             cpu: X64
             platform: darwin
             files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - lane: aur
+            package: cli
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/distribution-aur.test.ts]
+          - lane: aur
+            package: cli
+            host: ubuntu-24.04-arm
+            cpu: ARM64
+            platform: linux
+            files: [./test/distribution-aur.test.ts]
+          - lane: musl
+            package: cli
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/distribution-musl.test.ts]
+          - lane: musl
+            package: cli
+            host: ubuntu-24.04-arm
+            cpu: ARM64
+            platform: linux
+            files: [./test/distribution-musl.test.ts]
+          - lane: provider
+            package: cli
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/distribution-provider.test.ts]
     env:
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
@@ -111,6 +149,7 @@ jobs:
           import { validateRequest } from './script/test-ci-request.ts'
           // bundle-program:begin
           const row = JSON.parse(process.env.ROW)
+          if (!['regression', 'aur', 'musl', 'provider'].includes(row.lane)) throw new Error('BUNDLE_LANE_INVALID')
           const arch = { X64: 'x64', ARM64: 'arm64' }[row.cpu]
           const os = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }[row.platform]
           if (!arch || !os || process.arch !== arch || process.platform !== row.platform || process.env.RUNNER_ARCH !== row.cpu || process.env.RUNNER_OS !== os)
@@ -155,28 +194,28 @@ jobs:
           cargo test --release -p omni-supervisor windows::tests -- --nocapture --test-threads=1 2>&1 | tee ../../distribution-logs/windows-native-job.log
           bun ../core/test/distribution-bundle-gates.ts ../../distribution-logs/windows-native-job.log
       - name: Prove source ABI producers
-        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
         working-directory: packages/script
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/tree-sitter-prebuilds.test.ts 2>&1 | tee ../../distribution-logs/source-abi.log
       - name: Prove Desktop ABI consumer
-        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
         working-directory: packages/desktop
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/main/cli-artifacts.test.ts 2>&1 | tee ../../distribution-logs/desktop-abi.log
       - name: Prove Schema ELF ABI
-        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
         working-directory: packages/schema
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/elf.test.ts 2>&1 | tee ../../distribution-logs/schema-elf-abi.log
       - name: Prove packaged parser ABI
-        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
         working-directory: packages/maestro-arsenal
         run: |
           set -euo pipefail
@@ -225,7 +264,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: distribution-${{ matrix.package }}-${{ matrix.host }}-${{ github.run_attempt }}
+          name: distribution-${{ matrix.lane }}-${{ matrix.package }}-${{ matrix.host }}-${{ github.run_attempt }}
           path: distribution-logs
           if-no-files-found: error
           retention-days: 7
