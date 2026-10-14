@@ -2,9 +2,9 @@
 import { expect, test } from "bun:test"
 import { existsSync } from "node:fs"
 import path from "node:path"
-import { ORCHESTRA, ROOT, cli } from "../../omni/campaign/lib.ts"
-import { run } from "../../omni/campaign/v8-windows.ts"
-import { appRuntime, effectModules } from "../../omni/campaign/delivery-fixtures.ts"
+import { ORCHESTRA, ROOT, cli } from "../../../native/omni/campaign/lib.ts"
+import { run } from "../../../native/omni/campaign/v8-windows.ts"
+import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
 
 // Explicit Windows-only request. A wrong runner is red, never an unexecuted Windows green.
 test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", async () => {
@@ -36,7 +36,7 @@ test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", as
   const v8 = await run()
   console.log("WINDOWS_V8_PROOF " + JSON.stringify(v8))
   // Run V9 in a separate process so its compiled fallback mutation remains isolated from this test's runtime.
-  const v9 = Bun.spawn([process.execPath, path.join(ROOT, "packages/omni/campaign/v9-broken-artifacts.ts"), "--quiet", "--mutation", "--diagnose"], {
+  const v9 = Bun.spawn([process.execPath, path.join(ROOT, "native/omni/campaign/v9-broken-artifacts.ts"), "--quiet", "--mutation", "--diagnose"], {
     cwd: ROOT, stdout: "pipe", stderr: "pipe", timeout: 120_000,
   })
   const [stdout, stderr, code] = await Promise.all([new Response(v9.stdout).text(), new Response(v9.stderr).text(), v9.exited])
