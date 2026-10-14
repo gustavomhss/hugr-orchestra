@@ -1,6 +1,27 @@
 #!/usr/bin/bash
 set -euo pipefail
 fail() { printf '%s\n' "$1" >&2; exit 1; }
+record_stdio() {
+  local stage=$1 fd
+  for fd in 1 2; do
+    # Inspect the shell's descriptors, not cat's redirected output descriptor.
+    /usr/bin/readlink "/proc/$$/fd/$fd" > "/proof/evidence/bootstrap-$stage-fd-$fd.target"
+    /usr/bin/cat "/proc/$$/fdinfo/$fd" > "/proof/evidence/bootstrap-$stage-fd-$fd.fdinfo"
+  done
+}
+bootstrap_evidence() {
+  local stage=$1 status=0 log="/proof/evidence/bootstrap-$1-helper"
+  record_stdio "before-$stage"
+  # Bun's stdio initialization can set O_NONBLOCK on shared inherited pipe
+  # descriptions. Give short helpers their own files; the shell keeps its pipes.
+  /proof/bun /repo/packages/cli/test/fixture/distribution-aur/sandbox-evidence.ts "$stage" > "$log.stdout.log" 2> "$log.stderr.log" || status=$?
+  printf '%s\n' "$status" > "$log.status"
+  record_stdio "after-$stage"
+  if (( status != 0 )); then
+    printf 'AUR_BOOTSTRAP_EVIDENCE_HELPER_FAILED: stage=%s exit=%s stdout=%s stderr=%s\n' "$stage" "$status" "$log.stdout.log" "$log.stderr.log" >&2
+    exit "$status"
+  fi
+}
 pacman_policy_query() {
   local receipt=$1 status=0
   shift
@@ -12,6 +33,7 @@ pacman_policy_query() {
 [[ -f /.dockerenv && $(id -u) == 0 ]] || fail AUR_OWNED_DOCKER_GUEST_REQUIRED
 [[ $# == 2 ]] || fail AUR_GUEST_BOOTSTRAP_ARGUMENTS_REQUIRED
 [[ $(uname -m) == "$1" ]] || fail AUR_GUEST_NATIVE_CPU_MISMATCH
+record_stdio entry
 # Mandatory process state, including container init, before package-manager work.
 for status in /proc/self/status /proc/1/status; do
   seccomp= nnp=
@@ -55,13 +77,19 @@ while IFS= read -r repository; do
   # SigLevel output is ALPM_SIG_USE_DEFAULT; the reader requires safe global.
   pacman_policy_query "/proof/evidence/bootstrap-siglevel-$repository" --repo "$repository" SigLevel
 done < /proof/evidence/bootstrap-repositories.txt
-/proof/bun /repo/packages/cli/test/fixture/distribution-aur/sandbox-evidence.ts policy
+bootstrap_evidence policy
 bootstrap_packages=(base-devel jq openssl ca-certificates curl nodejs git)
 bootstrap_status=0
 LC_ALL=C pacman --debug -Syu --noconfirm --needed "${bootstrap_packages[@]}" > /proof/evidence/bootstrap-pacman.log 2>&1 || bootstrap_status=$?
-printf '%s\n' "$(< /proof/evidence/bootstrap-pacman.log)"
+# A failed log replay must not hide the package manager's actual exit status.
+printf '%s\n' "$bootstrap_status" > /proof/evidence/bootstrap-pacman.status
+record_stdio after-pacman
+bootstrap_log_status=0
+printf '%s\n' "$(< /proof/evidence/bootstrap-pacman.log)" || bootstrap_log_status=$?
+printf '%s\n' "$bootstrap_log_status" > /proof/evidence/bootstrap-pacman-replay.status
+(( bootstrap_log_status == 0 )) || exit "$bootstrap_log_status"
 (( bootstrap_status == 0 )) || fail "AUR_SIGNED_SANDBOXED_REPOSITORY_BOOTSTRAP_FAILED: pacman exit=$bootstrap_status"
-/proof/bun /repo/packages/cli/test/fixture/distribution-aur/sandbox-evidence.ts receipt
+bootstrap_evidence receipt
 useradd --create-home --uid 10001 builder
 [[ $(id -u builder) != 0 ]] || fail AUR_MAKEPKG_NONROOT_REQUIRED
 printf 'AUR guest provenance: image=%s cpu=%s distro=%s name=%s\n' "$2" "$(uname -m)" "$ID" "$NAME"
