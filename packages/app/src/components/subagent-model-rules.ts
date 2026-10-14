@@ -47,6 +47,7 @@ export function createModelPolicyEditor(input: {
   const [state, setState] = createStore({
     saving: false,
     failed: false,
+    error: undefined as unknown,
     acknowledged: undefined as SubagentModelPolicy | undefined,
     retry: undefined as SubagentModelPolicy | undefined,
   })
@@ -99,13 +100,19 @@ export function createModelPolicyEditor(input: {
   }
   const replace = async (next: SubagentModelPolicy) => {
     if (state.saving) return
+    const selected = policy()
     const current = input.read()
-    freshness.predecessors.push(policy())
+    // Adopt canonical authority before the next write fence can hide it behind an older ACK.
+    if (state.acknowledged && !sameModelPolicy(selected, state.acknowledged)) {
+      freshness.ackRevision = current.revision
+      setState({ acknowledged: selected })
+    }
+    freshness.predecessors.push(selected)
     freshness.timestamp = current.timestamp
     freshness.revision = current.revision
     freshness.readVersion = current.readVersion ?? freshness.readVersion
     freshness.caughtUp = false
-    setState({ saving: true, failed: false, retry: next })
+    setState({ saving: true, failed: false, error: undefined, retry: next })
     await input
       .write(next)
       .then((acknowledged) => {
@@ -123,7 +130,7 @@ export function createModelPolicyEditor(input: {
         freshness.ackRevision = undefined
         setState({ acknowledged, retry: undefined })
       })
-      .catch(() => setState("failed", true))
+      .catch((error: unknown) => setState({ failed: true, error }))
       .finally(() => setState("saving", false))
   }
   return {
