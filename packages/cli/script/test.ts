@@ -6,6 +6,10 @@ const elsewhere = [
   // distribution-bundle.yml: native POSIX lifecycle and native macOS Homebrew qualification only.
   "test/distribution-native.test.ts",
   "test/distribution-homebrew.test.ts",
+  // distribution-bundle.yml: actual Windows npm and matching native Arch guests.
+  "test/distribution-windows.test.ts",
+  "test/distribution-aur.test.ts",
+  "test/fixture/distribution-aur-guest.test.ts",
   // artifact-native.yml: needs ORCHESTRA_ARTIFACT_NATIVE_LANE on a Darwin, musl or glibc-with-musl host, and imports
   // the artifact suites below on that host.
   "test/artifact-native-lane.test.ts",

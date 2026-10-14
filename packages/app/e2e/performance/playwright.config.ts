@@ -14,6 +14,11 @@ export default {
   reporter: [["html", { outputFolder: "../playwright-report/performance", open: "never" }], ["line"]],
   webServer: {
     ...config.webServer,
+    // Imported base config captures its port before this module sets the mock server port.
+    env: {
+      VITE_ORCHESTRA_SERVER_HOST: process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1",
+      VITE_ORCHESTRA_SERVER_PORT: String(port),
+    },
     command: `bun run build && bun run serve -- --host 0.0.0.0 --port ${port} --strictPort`,
     reuseExistingServer: false,
   },
