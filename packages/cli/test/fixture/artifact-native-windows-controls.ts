@@ -1,12 +1,13 @@
 import { afterEach, expect, test } from "bun:test"
 import { lstat, mkdtemp, readdir, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, parse } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Schema } from "effect"
 import { ArtifactNativeWindows } from "@orchestra/core/artifact-native-windows"
 import { expectSpawn } from "../../../core/test/fixture/omni-expect"
 import { command } from "./distribution-native-process"
+import { artifactNative } from "../../script/artifact-fs"
 
 const roots: string[] = []
 const retained = new Set<string>()
@@ -54,11 +55,23 @@ test("native Windows adapter releases buffer leases on failed pointers, closed c
   expect(() => library.symbols.CompareStringOrdinal(native.ptr(left), -1, native.ptr(right), -1, 1))
     .toThrow("ARTIFACT_WINDOWS_NATIVE_LIBRARY_CLOSED")
   expect(native.leases().pendingBuffers).toBe(0)
-  native.ptr(left)
-  // NULL is a real invalid process handle: the OS query fails after both
-  // native output-buffer pointers have been leased, before receipt decoding.
-  expect(() => native.attest(process.arch, 0n)).toThrow("ARTIFACT_WINDOWS_NATIVE_CPU_QUERY_FAILED")
-  expect(native.leases().pendingBuffers).toBe(0)
+  const filesystem = await artifactNative()
+  try {
+    const directory = filesystem.root(parse(await realpath(tmpdir())).root)
+    try {
+      expect(directory.handle).toBeGreaterThan(0n)
+      expect(directory.identity).toMatch(/^[0-9a-f]{48}$/)
+      if (!directory.validateRoot) throw new Error("ARTIFACT_WINDOWS_NATIVE_DIRECTORY_CONTROL_UNVALIDATED")
+      directory.validateRoot()
+      native.ptr(left)
+      expect(native.leases().pendingBuffers).toBe(1)
+      // This live, identity-validated NT directory is not a process object.
+      // IsWow64Process2 must fail at the OS query after leasing both outputs;
+      // unlike NULL, this nonzero handle cannot select the current-process default.
+      expect(() => native.attest(process.arch, directory.handle)).toThrow("ARTIFACT_WINDOWS_NATIVE_CPU_QUERY_FAILED")
+      expect(native.leases().pendingBuffers).toBe(0)
+    } finally { filesystem.closeDirectory(directory) }
+  } finally { filesystem.close() }
   native.ptr(left)
   expect(() => native.attest(process.arch === "arm64" ? "x64" : "arm64")).toThrow("ARTIFACT_WINDOWS_NATIVE_ABI_MISMATCH")
   expect(native.leases().pendingBuffers).toBe(0)
