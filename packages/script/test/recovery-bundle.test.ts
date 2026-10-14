@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
+import { symlinkSync } from "node:fs"
 import { chmod, lstat, mkdir, mkdtemp, readdir, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRecoveryBundle, restoreRecoveryBundle } from "../../../script/recovery-bundle.ts"
@@ -127,6 +128,95 @@ test.skipIf(process.platform === "win32")("restore rejects symlink payload, mani
     await symlink(path.join(fixture.root, "manifest"), path.join(fixture.bundle, "manifest.json"))
     await expect(restoreRecoveryBundle(fixture.bundle, fixture.restored)).rejects.toThrow("RECOVERY_INPUT_INVALID")
   } finally { await rm(fixture.root, { recursive: true, force: true }) }
+})
+
+test("restore rejects portable forbidden names and normalized aliases before destination writes", async () => {
+  const fixture = await makeFixture()
+  try {
+    const original = await createRecoveryBundle(fixture.repository, "HEAD", fixture.bundle, scopes)
+    const scope = original.scopes[0]
+    if (!scope) throw new Error("FIXTURE_SCOPE_MISSING")
+    for (const invalid of ["?", "*", "<", ">", '"', "|", "unicode-member", "unicode-scope"]) {
+      const manifest = structuredClone(original)
+      const file = manifest.files[0]
+      if (!file) throw new Error("FIXTURE_MEMBER_MISSING")
+      if (invalid === "unicode-member") {
+        file.path = "scope/é"
+        manifest.files.push({ ...file, path: "scope/e\u0301" })
+      }
+      if (invalid === "unicode-scope") {
+        manifest.scopes = scopes.map((scope) => ({ ...scope, path: "scopé" }))
+        manifest.scopes.push({ ...scope, path: "scope\u0301" })
+      }
+      if (!invalid.startsWith("unicode-")) file.path = `scope/bad${invalid}.txt`
+      const bytes = JSON.stringify(manifest)
+      await Bun.write(path.join(fixture.bundle, "manifest.json"), bytes)
+      await Bun.write(path.join(fixture.bundle, "manifest.sha256"), createHash("sha256").update(bytes).digest("hex") + "\n")
+      const expected = invalid === "unicode-member" ? "RECOVERY_MEMBER_OVERLAP" : invalid === "unicode-scope" ? "RECOVERY_SCOPE_OVERLAP" : "RECOVERY_PATH_INVALID"
+      await expect(restoreRecoveryBundle(fixture.bundle, fixture.restored)).rejects.toThrow(expected)
+      await expect(lstat(fixture.restored)).rejects.toThrow()
+    }
+  } finally { await rm(fixture.root, { recursive: true, force: true }) }
+})
+
+test("concurrent disjoint restores publish exactly one complete bundle", async () => {
+  const first = await makeFixture()
+  const second = await makeFixture()
+  try {
+    await git(second.repository, ["mv", "scope", "second-scope"])
+    await git(second.repository, ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "disjoint scope"])
+    await createRecoveryBundle(first.repository, "HEAD", first.bundle, scopes)
+    await createRecoveryBundle(second.repository, "HEAD", second.bundle, scopes.map((scope) => ({ ...scope, path: "second-scope" })))
+    await mkdir(first.restored)
+    const results = await Promise.allSettled([
+      restoreRecoveryBundle(first.bundle, first.restored), restoreRecoveryBundle(second.bundle, first.restored),
+    ])
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1)
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1)
+    const winner = results.find((result) => result.status === "fulfilled")
+    if (!winner || winner.status !== "fulfilled") throw new Error("FIXTURE_RESTORE_WINNER_MISSING")
+    const scope = winner.value.scopes[0]
+    if (!scope) throw new Error("FIXTURE_SCOPE_MISSING")
+    expect(await readdir(first.restored)).toEqual(winner.value.scopes.map((scope) => scope.path))
+    expect((await readdir(path.join(first.restored, scope.path))).sort()).toEqual(["binary", "copy", "run.sh"])
+  } finally {
+    await rm(first.root, { recursive: true, force: true })
+    await rm(second.root, { recursive: true, force: true })
+  }
+})
+
+test("destination symlink injection cannot redirect private restore writes", async () => {
+  const fixture = await makeFixture()
+  const external = path.join(fixture.root, "external-destination")
+  try {
+    await Promise.all(Array.from({ length: 32 }, (_, index) => Bun.write(path.join(fixture.repository, "scope", `witness-${index}`), "small member")))
+    await git(fixture.repository, ["add", "scope"])
+    await git(fixture.repository, ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "race witness members"])
+    await createRecoveryBundle(fixture.repository, "HEAD", fixture.bundle, scopes)
+    await mkdir(fixture.restored)
+    await mkdir(external)
+    await Bun.write(path.join(external, "keep"), "retained")
+    const observed = { swapped: false, settled: false }
+    const pending = restoreRecoveryBundle(fixture.bundle, fixture.restored).then(
+      (manifest) => ({ status: "fulfilled" as const, manifest }),
+      (error: unknown) => ({ status: "rejected" as const, error }),
+    ).finally(() => { observed.settled = true })
+    const deadline = Date.now() + 5000
+    while (!observed.swapped && !observed.settled && Date.now() < deadline) {
+      if (!(await readdir(fixture.root)).some((name) => name.startsWith(".orchestra-recovery-"))) continue
+      symlinkSync(external, path.join(fixture.restored, "scope"), "junction")
+      observed.swapped = true
+    }
+    const result = await pending
+    expect(observed.swapped).toBe(true)
+    expect(result.status).toBe("rejected")
+    if (result.status !== "rejected") throw new Error("FIXTURE_RESTORE_ACCEPTED_CHANGED_DESTINATION")
+    expect(String(result.error)).toContain("RECOVERY_DESTINATION_CHANGED")
+    expect(await readdir(external)).toEqual(["keep"])
+    expect(await Bun.file(path.join(external, "keep")).text()).toBe("retained")
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true })
+  }
 })
 
 async function makeFixture() {

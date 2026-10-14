@@ -1,6 +1,7 @@
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { chmod, lstat, mkdir, readdir, realpath, writeFile } from "node:fs/promises"
+import { constants } from "node:fs"
+import { lstat, mkdir, mkdtemp, open, readdir, realpath, rename, rm, rmdir, writeFile } from "node:fs/promises"
 import { archiveInventory, type Scope } from "./archive-inventory.ts"
 
 type Member = { path: string; mode: string; gitBlob: string; bytes: number; sha256: string }
@@ -9,37 +10,42 @@ const objectID = (value: unknown): value is string => typeof value === "string" 
 const sha256 = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{64}$/.test(value)
 const record = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
 const overlaps = (a: string, b: string, separator = path.sep) => a === b || a.startsWith(b + separator) || b.startsWith(a + separator)
+const noFollow = process.platform === "win32" ? 0 : constants.O_NOFOLLOW
 
 export async function createRecoveryBundle(repository: string, revision: string, destination: string, scopes?: Scope[]) {
   const source = await realpath((await git(repository, ["rev-parse", "--show-toplevel"])).toString().trim())
   const inventory = await archiveInventory(source, revision, scopes)
   const output = await emptyDestination(destination, [source])
-  await mkdir(path.join(output, "blobs"))
-  const files: Member[] = []
-  const stored = new Set<string>()
-  // Read one Git object at a time; never archive/extract the checkout or burst per-file reads.
-  for (const scope of inventory.scopes) {
-    for (const member of scope.files) {
-      safePath(member.path)
-      const bytes = await git(source, ["cat-file", "blob", member.blob])
-      const gitBlob = createHash(member.blob.length === 40 ? "sha1" : "sha256")
-        .update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
-      if (bytes.length !== member.bytes || gitBlob !== member.blob) throw new Error(`RECOVERY_GIT_BLOB_INVALID:${member.path}`)
-      const hash = digest(bytes)
-      if (!stored.has(hash)) {
-        await writeFile(path.join(output, "blobs", hash), bytes, { flag: "wx", mode: 0o600 })
-        stored.add(hash)
+  try {
+    await mkdir(path.join(output.staging, "blobs"), { mode: 0o700 })
+    const files: Member[] = []
+    const stored = new Set<string>()
+    // Read one Git object at a time; never archive/extract the checkout or burst per-file reads.
+    for (const scope of inventory.scopes) {
+      for (const member of scope.files) {
+        safePath(member.path)
+        const bytes = await git(source, ["cat-file", "blob", member.blob])
+        const gitBlob = createHash(member.blob.length === 40 ? "sha1" : "sha256")
+          .update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
+        if (bytes.length !== member.bytes || gitBlob !== member.blob) throw new Error(`RECOVERY_GIT_BLOB_INVALID:${member.path}`)
+        const hash = digest(bytes)
+        if (!stored.has(hash)) {
+          await writeFile(path.join(output.staging, "blobs", hash), bytes, { flag: "wx", mode: 0o600 })
+          stored.add(hash)
+        }
+        files.push({ path: member.path, mode: member.mode, gitBlob: member.blob, bytes: bytes.length, sha256: hash })
       }
-      files.push({ path: member.path, mode: member.mode, gitBlob: member.blob, bytes: bytes.length, sha256: hash })
     }
+    const manifest = { format: 1 as const, source: inventory.source, scopes: inventory.scopes.map(({ files, ...scope }) => scope), files }
+    validateManifest(manifest)
+    const bytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n")
+    await writeFile(path.join(output.staging, "manifest.json"), bytes, { flag: "wx", mode: 0o600 })
+    await writeFile(path.join(output.staging, "manifest.sha256"), digest(bytes) + "\n", { flag: "wx", mode: 0o600 })
+    await publish(output)
+    return manifest
+  } finally {
+    await discard(output)
   }
-  const manifest = { format: 1 as const, source: inventory.source, scopes: inventory.scopes.map(({ files, ...scope }) => scope), files }
-  validateManifest(manifest)
-  const bytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n")
-  // The checksum is the final publication marker. Partial bundles cannot be restored.
-  await writeFile(path.join(output, "manifest.json"), bytes, { flag: "wx", mode: 0o600 })
-  await writeFile(path.join(output, "manifest.sha256"), digest(bytes) + "\n", { flag: "wx", mode: 0o600 })
-  return manifest
 }
 
 export async function restoreRecoveryBundle(bundle: string, destination: string) {
@@ -58,17 +64,43 @@ export async function restoreRecoveryBundle(bundle: string, destination: string)
   // Validate all payloads before even creating the destination.
   for (const file of manifest.files) await verifiedBlob(blobs, file)
   const output = await emptyDestination(destination, [input], true)
-  for (const file of manifest.files) {
-    const target = path.join(output, file.path)
-    await mkdir(path.dirname(target), { recursive: true })
-    await writeFile(target, await verifiedBlob(blobs, file), { flag: "wx", mode: file.mode === "100755" ? 0o755 : 0o644 })
-    await chmod(target, file.mode === "100755" ? 0o755 : 0o644)
+  try {
+    // Private sibling staging isolates writes from caller-controlled destination paths.
+    // Exclusive placeholders ask the destination filesystem to detect path aliases.
+    const members = []
+    const directories = new Map<string, string>()
+    for (const file of manifest.files) {
+      const target = await memberTarget(output.staging, file.path, directories)
+      const handle = await open(target, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | noFollow, 0o600)
+        .catch((cause: unknown) => { throw new Error(`RECOVERY_MEMBER_CREATE_FAILED:${file.path}`, { cause }) })
+      try {
+        members.push({ file, target, identity: await handle.stat() })
+      } finally {
+        await handle.close()
+      }
+    }
+    for (const member of members) {
+      await memberTarget(output.staging, member.file.path, directories)
+      const handle = await open(member.target, constants.O_WRONLY | noFollow)
+      try {
+        const info = await handle.stat()
+        if (!info.isFile() || info.nlink !== 1 || info.dev !== member.identity.dev || info.ino !== member.identity.ino)
+          throw new Error(`RECOVERY_MEMBER_CHANGED:${member.file.path}`)
+        await handle.writeFile(await verifiedBlob(blobs, member.file))
+        await handle.chmod(member.file.mode === "100755" ? 0o755 : 0o644)
+      } finally {
+        await handle.close()
+      }
+    }
+    await publish(output)
+    return manifest
+  } finally {
+    await discard(output)
   }
-  return manifest
 }
 
 function safePath(value: unknown): asserts value is string {
-  if (typeof value !== "string" || !value || path.posix.isAbsolute(value) || path.win32.isAbsolute(value) || /[\\:\x00-\x1f\x7f]/.test(value) || value.split("/").some((part) => !part || part === "." || part === ".." || /[. ]$/.test(part) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)))
+  if (typeof value !== "string" || !value || path.posix.isAbsolute(value) || path.win32.isAbsolute(value) || /[\\:*?"<>|\x00-\x1f\x7f]/.test(value) || value.split("/").some((part) => !part || part === "." || part === ".." || /[. ]$/.test(part) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)))
     throw new Error(`RECOVERY_PATH_INVALID:${String(value)}`)
 }
 
@@ -82,7 +114,7 @@ function validateManifest(value: unknown) {
     if ((disposition !== "retain-recovery" && disposition !== "retain-runtime" && disposition !== "review-history") || typeof scope.owner !== "string" || !scope.owner.trim() || !Array.isArray(scope.readers) || !scope.readers.length || !scope.readers.every((reader): reader is string => typeof reader === "string" && !!reader.trim()) || (scope.uncertainty !== undefined && (typeof scope.uncertainty !== "string" || !scope.uncertainty.trim()))) throw new Error(`RECOVERY_SCOPE_INVALID:${scope.path}`)
     return { path: scope.path, disposition, owner: scope.owner, readers: scope.readers, ...(typeof scope.uncertainty === "string" ? { uncertainty: scope.uncertainty } : {}) }
   })
-  const duplicateScope = scopes.find((scope, index) => scopes.some((other, otherIndex) => index !== otherIndex && overlaps(scope.path.toLowerCase(), other.path.toLowerCase(), "/")))
+  const duplicateScope = scopes.find((scope, index) => scopes.some((other, otherIndex) => index !== otherIndex && overlaps(scope.path.normalize("NFC").toLowerCase(), other.path.normalize("NFC").toLowerCase(), "/")))
   if (duplicateScope) throw new Error(`RECOVERY_SCOPE_OVERLAP:${duplicateScope.path}`)
   const files = value.files.map((file): Member => {
     if (!record(file)) throw new Error("RECOVERY_MEMBER_INVALID")
@@ -92,7 +124,7 @@ function validateManifest(value: unknown) {
     if (!scopes.some((scope) => member.path.startsWith(scope.path + "/"))) throw new Error(`RECOVERY_MEMBER_SCOPE_INVALID:${member.path}`)
     return member
   })
-  const duplicate = files.find((file, index) => files.some((other, otherIndex) => index !== otherIndex && overlaps(file.path.toLowerCase(), other.path.toLowerCase(), "/")))
+  const duplicate = files.find((file, index) => files.some((other, otherIndex) => index !== otherIndex && overlaps(file.path.normalize("NFC").toLowerCase(), other.path.normalize("NFC").toLowerCase(), "/")))
   if (duplicate) throw new Error(`RECOVERY_MEMBER_OVERLAP:${duplicate.path}`)
   const empty = scopes.find((scope) => !files.some((file) => file.path.startsWith(scope.path + "/")))
   if (empty) throw new Error(`RECOVERY_SCOPE_EMPTY:${empty.path}`)
@@ -108,7 +140,16 @@ async function ownedDirectory(directory: string) {
 async function ownedFile(file: string) {
   const info = await lstat(file).catch((error: unknown) => { throw new Error(`RECOVERY_INPUT_MISSING:${file}`, { cause: error }) })
   if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || (process.getuid && info.uid !== process.getuid())) throw new Error(`RECOVERY_INPUT_INVALID:${file}`)
-  return Buffer.from(await Bun.file(file).arrayBuffer())
+  const handle = await open(file, constants.O_RDONLY | noFollow)
+    .catch((cause: unknown) => { throw new Error(`RECOVERY_INPUT_INVALID:${file}`, { cause }) })
+  try {
+    const opened = await handle.stat()
+    if (!opened.isFile() || opened.nlink !== 1 || opened.dev !== info.dev || opened.ino !== info.ino)
+      throw new Error(`RECOVERY_INPUT_INVALID:${file}`)
+    return await handle.readFile()
+  } finally {
+    await handle.close()
+  }
 }
 
 async function verifiedBlob(directory: string, file: Member) {
@@ -143,8 +184,56 @@ async function emptyDestination(destination: string, excluded: string[], rejectR
     }
   }
   if (info && (await readdir(target)).length) throw new Error(`RECOVERY_DESTINATION_NOT_EMPTY:${destination}`)
-  if (!info) await mkdir(target, { mode: 0o700 })
-  return target
+  const staging = await mkdtemp(path.join(parent, ".orchestra-recovery-"))
+  return { target, staging, identity: info, stagingIdentity: await lstat(staging), parent, parentIdentity: await lstat(parent) }
+}
+
+async function memberTarget(staging: string, member: string, directories: Map<string, string>) {
+  const components = member.split("/")
+  for (const length of components.slice(0, -1).map((_, index) => index + 1)) {
+    const directory = path.join(staging, ...components.slice(0, length))
+    await mkdir(directory, { mode: 0o700 }).catch((error: unknown) => {
+      if (record(error) && error.code === "EEXIST") return
+      throw error
+    })
+    const physical = await ownedDirectory(directory)
+    const info = await lstat(directory)
+    const identity = `${info.dev}:${info.ino}`
+    const previous = directories.get(identity)
+    if (previous && previous !== directory) throw new Error(`RECOVERY_MEMBER_DIRECTORY_ALIAS:${member}`)
+    directories.set(identity, directory)
+    const relative = path.relative(staging, physical)
+    if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
+      throw new Error(`RECOVERY_MEMBER_DIRECTORY_INVALID:${member}`)
+  }
+  return path.join(staging, ...components)
+}
+
+async function publish(output: Awaited<ReturnType<typeof emptyDestination>>) {
+  const parent = await lstat(output.parent)
+  if (parent.dev !== output.parentIdentity.dev || parent.ino !== output.parentIdentity.ino || parent.isSymbolicLink())
+    throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`)
+  const current = await lstat(output.target).catch((error: unknown) => {
+    if (record(error) && error.code === "ENOENT") return undefined
+    throw error
+  })
+  if (current) {
+    if (!output.identity || current.dev !== output.identity.dev || current.ino !== output.identity.ino || !current.isDirectory() || current.isSymbolicLink())
+      throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`)
+    // rmdir only removes an empty slot. Publication never merges two directory trees.
+    await rmdir(output.target).catch((cause: unknown) => { throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`, { cause }) })
+  }
+  await rename(output.staging, output.target)
+    .catch((cause: unknown) => { throw new Error(`RECOVERY_DESTINATION_PUBLISH_FAILED:${output.target}`, { cause }) })
+}
+
+async function discard(output: Awaited<ReturnType<typeof emptyDestination>>) {
+  const current = await lstat(output.staging).catch((error: unknown) => {
+    if (record(error) && error.code === "ENOENT") return undefined
+    throw error
+  })
+  if (current?.dev === output.stagingIdentity.dev && current.ino === output.stagingIdentity.ino)
+    await rm(output.staging, { recursive: true, force: true })
 }
 
 function ancestors(directory: string): string[] {
