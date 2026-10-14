@@ -92,14 +92,14 @@ jobs:
         if: matrix.package == 'cli'
         run: |
           set -euo pipefail
-          DENO=$(npm exec --yes --package=deno@2.9.7 -- deno eval 'console.log(Deno.execPath())')
-          export DENO
-          bun --eval "$(cat <<'BUN'
-          import { realpathSync, appendFileSync } from "node:fs"
-          const executable = realpathSync(process.env.DENO.trim())
-          appendFileSync(process.env.GITHUB_ENV, `ORCHESTRA_DISTRIBUTION_DENO=${executable}\nORCHESTRA_DISTRIBUTION_DENO_VERSION=2.9.7\n`)
-          BUN
-          )"
+          bun script/distribution-deno.ts
+      - name: Extract native Deno
+        if: matrix.package == 'cli'
+        run: |
+          set -euo pipefail
+          unzip -q "$DISTRIBUTION_DENO_DIRECTORY/deno.zip" -d "$DISTRIBUTION_DENO_DIRECTORY"
+          [ "$RUNNER_OS" = Windows ] || chmod +x "$ORCHESTRA_DISTRIBUTION_DENO"
+          "$ORCHESTRA_DISTRIBUTION_DENO" --version
       - name: Prepare native Windows Rust
         if: matrix.platform == 'win32'
         run: |
