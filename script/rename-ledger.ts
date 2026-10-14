@@ -106,6 +106,16 @@ export const protectedStrings: Protected[] = [
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {
+    pattern: /"@opencode-ai\/client": "file:\.\.\/app\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
+    paths: /^packages\/orchestra\/package\.json$/,
+    reason: "Orchestra's HTTP compatibility proofs depend on the exact published client name and vendored tarball",
+  },
+  {
+    pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
+    paths: /^packages\/storybook\/\.storybook\/mocks\/app\/context\/server-sdk\.ts$/,
+    reason: "Storybook's OAuth mock imports the vendored promise client's upstream integration types",
+  },
+  {
     pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
     paths: /^packages\/app\/src\//,
     reason: "names exported by the vendored upstream @opencode-ai/client tarball",
@@ -251,9 +261,14 @@ export const protectedStrings: Protected[] = [
     reason: "decoded provider keys must equal the raw models.dev snapshot's external ids",
   },
   {
-    pattern: /@opencode-ai\/client\/dist\/promise\/index\.js/g,
+    pattern: /\bmodel: "opencode\/httpapi-free"|\benabled_providers: \["opencode"\]/g,
+    paths: /^packages\/orchestra\/test\/server\/httpapi-exercise\/catalog\.ts$/,
+    reason: "HTTP default-model exercise config must select and enable the external Zen provider by its wire id",
+  },
+  {
+    pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
     paths: /^packages\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
-    reason: "HTTP compatibility proof imports the installed vendored upstream promise client by its published path",
+    reason: "HTTP compatibility proof imports the vendored upstream client's published promise entrypoint",
   },
   {
     pattern: /\bOpenCode(?=\.make\()|(?<=import \{ )OpenCode(?= \} from)/g,

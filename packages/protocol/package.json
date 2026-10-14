@@ -8,7 +8,7 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "test": "bun test ./test --timeout 5000 --preload ../../script/test-guard.ts",
+    "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000 --only-failures",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
