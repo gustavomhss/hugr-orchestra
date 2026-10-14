@@ -258,7 +258,9 @@ async function companionFailures(launcher: string, payload: string, box: Sandbox
       const result = JSON.parse(await successful([launcher, "debug", "symbols", join(box.cwd, "sample.ts")], box))
       expect(result).toMatchObject({ symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } })
       expect(result.coverage.detail).toStartWith("native symbol extraction unavailable: ")
-      expect(result.coverage.detail).toContain("tree-sitter")
+      if (process.platform === "win32" && kind === "corrupt")
+        expect(result.coverage.detail).toMatch(/^native symbol extraction unavailable: LoadLibrary failed:/)
+      if (process.platform !== "win32" || kind !== "corrupt") expect(result.coverage.detail).toContain("tree-sitter")
       expect(result.coverage.detail).not.toContain("parser-worker")
     } finally { await writeFile(parser, binding); await chmod(parser, parserMode) }
     await symbols(launcher, box)
