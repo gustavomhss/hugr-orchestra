@@ -3,7 +3,7 @@ import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
 import type { PromptInputV2PersistedState, PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
-import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML, restorePromptEditorCaret } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
@@ -82,6 +82,23 @@ test.each(['<>&"\r\n\u200B\n', "row\r\n".repeat(220)])("DOM-only insertion HTML 
   const editor = document.createElement("div")
   editor.innerHTML = promptEditorInsertionHTML(content, true)
   expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content, start: 0, end: content.length }])
+})
+
+test("DOM-only terminal caret stays editable for the next native keypress", () => {
+  const editor = document.createElement("div")
+  editor.contentEditable = "true"
+  // Run 38585726177 showed lead + marked BR + non-editable caret: subsequent typing never reached the editor.
+  editor.innerHTML = "lead" + promptEditorInsertionHTML("\n", true)
+  document.body.appendChild(editor)
+  editor.focus()
+  restorePromptEditorCaret(editor, 5)
+  const caret = editor.querySelector<HTMLElement>("[data-prompt-caret]")!
+  expect(caret.contentEditable).toBe("true")
+  expect(window.getSelection()!.getRangeAt(0).startContainer).toBe(caret.firstChild!)
+  expect(window.getSelection()!.getRangeAt(0).startOffset).toBe(1)
+  expect(getCursorPosition(editor)).toBe(5)
+  expect(parsePromptInputV2Editor(editor)).toEqual([{ type: "text", content: "lead\n", start: 0, end: 5 }])
+  editor.remove()
 })
 
 test("custom modified Enter handling runs before controller suggestion dispatch", () => {
