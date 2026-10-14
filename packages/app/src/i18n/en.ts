@@ -1,9 +1,11 @@
 import { dict as leanEn } from "./lean/en"
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
+import { ActionsCopy } from "./actions"
 
 export const dict = {
   ...leanEn,
   ...DESKTOP_NATIVE_ENGLISH,
+  ...ActionsCopy.dict,
   "command.category.suggested": "Suggested",
   "command.category.view": "View",
   "command.category.project": "Project",

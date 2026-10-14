@@ -1,0 +1,56 @@
+# Job definitions, not expanded matrix executions. Keep this comment verbatim.
+name: provider-native
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        required: true
+        options: [staging, production]
+        default: staging
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64]
+    environment: {name: staging, url: "${{ steps.deploy.outputs.url }}"}
+    concurrency: {group: build, cancel-in-progress: false}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux, windows]
+        version: [20, 22]
+        include: [{os: macos, version: 24}]
+        exclude: [{os: windows, version: 20}]
+    steps:
+      - id: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with: {fetch-depth: 0}
+      - name: Build
+        if: "${{ vendor.unknown('leave me literal') }}"
+        run: |
+          echo keep unknown job keys
+          npm run build
+        timeout-minutes: 9
+    unknown-native-key: {nested: [true, null, 3]}
+  audit:
+    needs: build
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - run: npm audit
+  call:
+    needs: [build, audit]
+    if: "${{ always() && needs.audit.result != 'cancelled' }}"
+    uses: owner/repository/.github/workflows/release.yml@0123456789abcdef
+    secrets: inherit
+    with: {target: "${{ inputs.target }}"}
+  dynamic:
+    needs: build
+    runs-on: "${{ matrix.host }}"
+    strategy:
+      matrix: "${{ fromJSON(needs.build.outputs.matrix) }}"
+    steps:
+      - run: echo dynamic
