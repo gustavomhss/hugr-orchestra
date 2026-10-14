@@ -1,4 +1,4 @@
-import { createMemo, createResource, type Component } from "solid-js"
+import { createEffect, createMemo, createResource, onCleanup, type Component } from "solid-js"
 import { useQuery } from "@tanstack/solid-query"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -18,13 +18,23 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
   const origin = serverSDK()
   const directoryState = sync()
   const serverState = serverSync()
-  const catalog = useQuery(() => serverState.queryOptions.providers(directoryKey(props.directory)))
-  const [state, setState] = createStore({ unsupported: false })
+  const directory = props.directory
   const sessionID = props.sessionID
+  const pendingKey = props.pendingKey ?? directory
+  const catalog = useQuery(() => serverState.queryOptions.providers(directoryKey(directory)))
+  const [state, setState] = createStore({ unsupported: false, active: true })
+  const owns = () => state.active && serverSDK() === origin && sync() === directoryState &&
+    sync().directory === directory && props.directory === directory && props.sessionID === sessionID &&
+    (props.pendingKey ?? props.directory) === pendingKey
+  onCleanup(() => setState("active", false))
+  createEffect(() => {
+    if (!owns()) setState("active", false)
+  })
   const policy = sessionID
     ? createSessionModelPolicy({
         sessionID,
         management: origin.sessionManagement,
+        owns,
         readEvent: () => {
           const current = directoryState.session.get(sessionID)
           return current && {
@@ -36,11 +46,13 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
       })
     : undefined
   const [snapshot, actions] = createResource(
-    () => ({ source: origin, sessionID: props.sessionID }),
+    () => ({ source: origin, sessionID }),
     ({ source, sessionID }) => {
+      if (!owns()) return { source, protocol: source.protocolKind(), error: new DOMException("", "AbortError") }
       setState("unsupported", false)
       return source.protocol
         .then(async (protocol) => {
+          if (!owns()) throw new DOMException("", "AbortError")
           if (protocol !== "v2" || !sessionID)
             return {
               protocol, source, error: undefined as unknown,
@@ -63,42 +75,45 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
   })
   return (
     <SubagentModelPicker
-      sessionID={props.sessionID}
-      directory={props.directory}
-      pendingKey={props.pendingKey ?? props.directory}
+      sessionID={sessionID}
+      directory={directory}
+      pendingKey={pendingKey}
       providers={providers()}
       status={catalog.status}
       protocol={protocol()}
-      supported={unsupported() ? false : failure() || snapshot.loading ? undefined : !!snapshot()}
+      supported={!owns() || unsupported() ? false : failure() || snapshot.loading ? undefined : !!snapshot()}
       loadFailed={!!failure() && !unsupported()}
       rulesReady={
-        protocol() === "v2"
+        owns() && (protocol() === "v2"
           ? !!snapshot() && !failure() && !snapshot.loading
-          : !props.sessionID || !!directoryState.session.get(props.sessionID)
+          : !sessionID || !!directoryState.session.get(sessionID))
       }
-      readRules={() => (props.sessionID ? (directoryState.session.get(props.sessionID)?.permission ?? []) : [])}
+      readRules={() => (sessionID ? (directoryState.session.get(sessionID)?.permission ?? []) : [])}
       writeRules={async (permission) => {
-        const source = snapshot()!.source
-        const result = await source.client.session.update({
-          sessionID: props.sessionID!,
-          directory: props.directory,
+        if (!owns() || !sessionID) throw new DOMException("", "AbortError")
+        const result = await origin.client.session.update({
+          sessionID,
+          directory,
           permission,
         })
+        if (!owns()) throw new DOMException("", "AbortError")
         if (!result.data) throw new Error("Session update returned no data")
         return result.data.permission ?? []
       }}
       policy={{
         read: () => policy?.read() ?? { policy: { mode: "inherit" } },
         write: (next) => {
-          return policy!
+          if (!owns() || !policy) return Promise.reject(new DOMException("", "AbortError"))
+          return policy
             .write(next)
             .catch((error: unknown) => {
-              if (sessionManagementUnsupported(error)) setState("unsupported", true)
+              if (owns() && sessionManagementUnsupported(error)) setState("unsupported", true)
               throw error
             })
         },
       }}
       onRetry={() => {
+        if (!owns()) return
         void catalog.refetch()
         void actions.refetch()
       }}

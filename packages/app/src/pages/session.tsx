@@ -64,6 +64,7 @@ import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, followupSystem, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
 import {
   createEvidenceComposerActions,
   createPromptInputController,
@@ -95,7 +96,6 @@ import { useSessionCommands } from "@/pages/session/use-session-commands"
 import { useSessionHashScroll } from "@/pages/session/use-session-hash-scroll"
 import { Identifier } from "@/utils/id"
 import { diffs as list } from "@/utils/diffs"
-import { Persist, persisted } from "@/utils/persist"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { formatServerError, isLocalSessionNotFoundError, isSessionNotFoundError } from "@/utils/server-errors"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
@@ -104,7 +104,7 @@ import { createSessionLineage } from "./session/session-lineage"
 import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
-type FollowupItem = FollowupDraft & { id: string }
+type FollowupItem = QueuedPrompt
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
 const emptyFollowups: FollowupItem[] = []
 
@@ -595,20 +595,8 @@ export default function Page() {
     deferRender: false,
   })
 
-  const [followup, setFollowup] = persisted(
-    Persist.serverWorkspace(serverSDK().scope, sdk().directory, "followup", ["followup.v1"]),
-    createStore<{
-      items: Record<string, FollowupItem[] | undefined>
-      failed: Record<string, string | undefined>
-      paused: Record<string, boolean | undefined>
-      edit: Record<string, FollowupEdit | undefined>
-    }>({
-      items: {},
-      failed: {},
-      paused: {},
-      edit: {},
-    }),
-  )
+  const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
+  const [followup, setFollowup] = createQueuedPromptStore(followupOwner)
 
   createComputed((prev) => {
     const key = sessionKey()
@@ -1710,6 +1698,14 @@ export default function Page() {
   const followupMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; id: string; manual?: boolean }) => {
       const owner = sessionOwnership.capture()
+      const directorySDK = sdk()
+      const server = serverSDK()
+      const directorySync = sync()
+      const state = serverSync()
+      const sessionID = params.id
+      const credentials = JSON.stringify(server.server.http)
+      const current = () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
+        sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
 
@@ -1717,18 +1713,26 @@ export default function Page() {
       setFollowup("failed", input.sessionID, undefined)
 
       const ok = await sendFollowupDraft({
-        api: sdk().api.session,
-        sync: sync(),
-        serverSync: serverSync(),
-        draft: { ...item, system: await followupSystem(platform, sdk().scope, serverSync(), sdk().directory) },
-        optimisticBusy: item.sessionDirectory === sdk().directory,
+        api: directorySDK.api.session,
+        sync: directorySync,
+        serverSync: state,
+        draft: { ...item, system: await followupSystem(platform, directorySDK.scope, state, directorySDK.directory) },
+        optimisticBusy: item.sessionDirectory === directorySDK.directory,
+        deliberate: input.manual === true,
+        currentSource: {
+          serverScopeKey: directorySDK.scope, directory: directorySDK.directory, sessionID,
+          protocol: server.protocol, management: server.sessionManagement,
+          current,
+        },
       }).catch((err) => {
-        setFollowup("failed", input.sessionID, input.id)
+        if (current()) setFollowup("failed", input.sessionID, input.id)
         fail(err)
         return false
       })
+      if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
+      if (item.source) queuedPromptSources.release(item.source)
       setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry.id !== input.id))
       if (input.manual) owner.run(resumeScroll)
     },
@@ -1770,7 +1774,7 @@ export default function Page() {
   const queueFollowup = (draft: FollowupDraft) => {
     setFollowup("items", draft.sessionID, (items) => [
       ...(items ?? []),
-      { id: Identifier.ascending("message"), ...draft },
+      queuedPromptPayload(draft, Identifier.ascending("message")),
     ])
     setFollowup("failed", draft.sessionID, undefined)
     setFollowup("paused", draft.sessionID, undefined)
@@ -1795,6 +1799,7 @@ export default function Page() {
     const item = queuedFollowups().find((entry) => entry.id === id)
     if (!item) return
 
+    if (item.source) queuedPromptSources.release(item.source)
     setFollowup("items", sessionID, (items) => (items ?? []).filter((entry) => entry.id !== id))
     setFollowup("failed", sessionID, (value) => (value === id ? undefined : value))
     setFollowup("edit", sessionID, {
