@@ -42,6 +42,12 @@ export function dispatchSelection(state: SelectionState, ref: string): Selection
     provider: state.binding.provider.kind, workflowID: dialog.workflowID, path: workflow.path, ref: ref.trim() }
 }
 
+export function sameDispatchSelection(before: Selection | undefined, after: Selection | undefined) {
+  return before === after || !!before && !!after && before.dialog === after.dialog && before.bindingID === after.bindingID
+    && before.revision === after.revision && before.provider === after.provider && before.workflowID === after.workflowID
+    && before.path === after.path && before.ref === after.ref
+}
+
 /** One dialog owns these reads. Transport cancellation alone cannot fence late completions. */
 export function createDispatchData(input: {
   model: Reader
@@ -52,13 +58,7 @@ export function createDispatchData(input: {
   let generation = 0
   let disposed = false
   let loaded: Selection | undefined
-  const matches = (selection: Selection) => {
-    const current = input.current()
-    return !!current && current.dialog === selection.dialog && current.bindingID === selection.bindingID
-      && current.revision === selection.revision && current.provider === selection.provider
-      && current.path === selection.path && current.ref === selection.ref
-      && current.workflowID === selection.workflowID
-  }
+  const matches = (selection: Selection) => sameDispatchSelection(input.current(), selection)
   const cancel = () => {
     generation++
     loaded = undefined
@@ -88,7 +88,7 @@ export function createDispatchData(input: {
         const definitions = dispatchDefinitions(graph, selection.provider)
         if (!definitions) {
           input.update({ status: "unresolved", definitions: undefined, error: {
-            kind: graph.diagnostics.some((item) => item.startsWith("inputs_include_unresolved:")) ? "inputs_include_unresolved" : "source_unresolved",
+            kind: inputDiagnostic(graph) ?? "source_unresolved",
             message: "orchestra.actions.partialGraph",
           } })
           return
@@ -107,7 +107,8 @@ export function createDispatchData(input: {
 }
 
 export function dispatchDefinitions(graph: Actions.Graph, provider: Actions.ProviderKind) {
-  if (graph.diagnostics.some((item) => /^(inputs_include_unresolved|input_unresolved|input_invalid):/.test(item))) return
+  if (inputDiagnostic(graph)) return
+  if (provider === "github" && graph.state === "complete" && githubDispatchMissing(graph.triggers)) throw new ActionsRequestError("capability_unavailable")
   if (provider === "gitlab" && graph.header && typeof graph.header === "object" && !Array.isArray(graph.header)
     && graph.header.spec && typeof graph.header.spec === "object" && !Array.isArray(graph.header.spec) && "include" in graph.header.spec) return
   const definitions = provider === "github" ? githubDefinitions(graph.triggers)
@@ -115,6 +116,18 @@ export function dispatchDefinitions(graph: Actions.Graph, provider: Actions.Prov
   // Native GitLab options can be numbers or booleans. Index-valued selects preserve those types.
   return definitions?.map((item): Actions.InputDefinition => item.options && item.type !== "environment" && item.type !== "array"
     ? { ...item, type: "choice" } : item)
+}
+
+function inputDiagnostic(graph: Actions.Graph) {
+  // Source projection wraps native diagnostic codes with a known severity prefix.
+  return graph.diagnostics.map((item) => item.replace(/^source_(?:partial|unresolved):/, ""))
+    .find((item) => /^(inputs_include_unresolved|input_unresolved|input_invalid|input_constraints):/.test(item))?.split(":", 1)[0]
+}
+
+function githubDispatchMissing(triggers: Actions.Graph["triggers"]) {
+  if (typeof triggers === "string") return triggers !== "workflow_dispatch"
+  if (Array.isArray(triggers)) return triggers.every((item) => typeof item === "string") && !triggers.includes("workflow_dispatch")
+  return !!triggers && typeof triggers === "object" && !("workflow_dispatch" in triggers)
 }
 
 export function environmentOptions(page: Actions.ResourcePage, bindingID: Actions.BindingID) {

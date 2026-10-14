@@ -3,7 +3,7 @@ import { Actions } from "@orchestra/schema/actions"
 import { createStore } from "solid-js/store"
 import { ActionsRequestError } from "./api"
 import { initial } from "./contract"
-import { createDispatchData, dispatchDefaultRef, dispatchDefinitions, dispatchSelection, environmentOptions, type DispatchData } from "./dispatch-data"
+import { createDispatchData, dispatchDefaultRef, dispatchDefinitions, dispatchSelection, environmentOptions, sameDispatchSelection, type DispatchData } from "./dispatch-data"
 import { parseInputs } from "./source-dialogs"
 
 const binding: Actions.Binding = { id: Actions.BindingID.make("ab_dispatch"), revision: 7, remote: "origin", projectID: "1",
@@ -41,6 +41,20 @@ function fixture(options: { inspect?: (workflowID: string, ref: string, signal: 
 }
 
 describe("dispatch dialog data", () => {
+  test("selection equality uses trimmed ref and every captured native/dialog identity", () => {
+    using scope = fixture()
+    const selection = dispatchSelection(scope.state, "native-default")
+    if (!selection) throw new Error("Missing dispatch fixture selection")
+    expect(sameDispatchSelection(selection, dispatchSelection(scope.state, " native-default  "))).toBe(true)
+    expect(sameDispatchSelection(undefined, undefined)).toBe(true)
+    expect(sameDispatchSelection(selection, undefined)).toBe(false)
+    expect(sameDispatchSelection(undefined, selection)).toBe(false)
+    ;[{ ...selection, dialog: { ...selection.dialog } }, { ...selection, bindingID: Actions.BindingID.make("ab_other") },
+      { ...selection, revision: selection.revision + 1 }, { ...selection, provider: "gitlab" as const },
+      { ...selection, workflowID: other.id }, { ...selection, path: other.path }, { ...selection, ref: "new-ref" }]
+      .forEach((changed) => expect(sameDispatchSelection(selection, changed)).toBe(false))
+  })
+
   test("library default belongs to selected native catalog item, never recent run or unrelated route", () => {
     using scope = fixture()
     scope.state.route = { view: "library", workflowID: other.id, path: other.path, ref: "unrelated-route" }
@@ -178,6 +192,49 @@ describe("dispatch dialog data", () => {
     expect(scope.reader.ready()).toBe(false)
     expect(scope.scopes).toEqual([])
     expect(dispatchDefinitions({ ...graph(), inputs: [], header: { spec: { include: "external.yml", inputs: {} } } }, "gitlab")).toBeUndefined()
+  })
+
+  ;["inputs_include_unresolved", "input_unresolved", "input_invalid", "input_constraints"]
+    .flatMap((kind) => ["", "source_partial:", "source_unresolved:"].map((prefix) => ({ kind, prefix })))
+    .forEach((diagnostic) => test(`GitLab ${diagnostic.prefix}${diagnostic.kind} blocks projected defaults and keeps exact failure kind`, async () => {
+      const projected: Actions.Graph = { ...graph(), state: diagnostic.kind === "input_invalid" ? "unresolved" : "partial",
+        inputs: [{ name: "target", type: "string", required: false, default: "unverified" }],
+        diagnostics: [`${diagnostic.prefix}${diagnostic.kind}:native input declaration is not admissible`] }
+      expect(dispatchDefinitions(projected, "gitlab")).toBeUndefined()
+      using scope = fixture({ inspect: async () => projected })
+      scope.state.binding = { ...binding, provider: { kind: "gitlab", hostname: "gitlab.com", apiOrigin: "https://gitlab.com" } }
+      await scope.reader.load()
+      expect(scope.data.status).toBe("unresolved")
+      expect(scope.data.error).toEqual({ kind: diagnostic.kind, message: "orchestra.actions.partialGraph" })
+      expect(scope.data.definitions).toBeUndefined()
+      expect(scope.reader.ready()).toBe(false)
+    }))
+
+  ;["push", ["push", "pull_request"], { push: null }].forEach((triggers) => test(`complete GitHub source without workflow_dispatch is known unavailable: ${JSON.stringify(triggers)}`, async () => {
+    using scope = fixture({ inspect: async () => ({ ...graph(), triggers }) })
+    await scope.reader.load()
+    expect(scope.data.status).toBe("error")
+    expect(scope.data.error).toEqual({ kind: "capability_unavailable", message: "orchestra.actions.unavailable" })
+    expect(scope.data.definitions).toBeUndefined()
+    expect(scope.reader.ready()).toBe(false)
+  }))
+
+  ;["workflow_dispatch", ["push", "workflow_dispatch"], { workflow_dispatch: null }, { workflow_dispatch: {} }]
+    .forEach((triggers) => test(`GitHub dispatch without inputs is ready with typed empty definitions: ${JSON.stringify(triggers)}`, async () => {
+      using scope = fixture({ inspect: async () => ({ ...graph(), triggers }) })
+      await scope.reader.load()
+      expect(scope.data.status).toBe("ready")
+      expect(scope.data.definitions).toEqual([])
+      expect(scope.reader.ready()).toBe(true)
+      expect(scope.scopes).toEqual([])
+    }))
+
+  test("unrecognized GitHub triggers remain unresolved, not a known capability denial", async () => {
+    using scope = fixture({ inspect: async () => ({ ...graph(), triggers: true }) })
+    await scope.reader.load()
+    expect(scope.data.status).toBe("unresolved")
+    expect(scope.data.error).toEqual({ kind: "source_unresolved", message: "orchestra.actions.partialGraph" })
+    expect(scope.reader.ready()).toBe(false)
   })
 
   test("environment choices load lazily from environment records, not variables page", async () => {
