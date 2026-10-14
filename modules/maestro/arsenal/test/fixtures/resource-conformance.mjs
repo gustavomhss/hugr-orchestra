@@ -40,7 +40,7 @@ const { LayerNode } = await load("effect/layer-node.ts");
 const { Tool } = await load("tool/tool.ts");
 const registry = await import(pathToFileURL(process.env.MAESTRO_BRIEF_ASSEMBLY
   ? join(process.env.MAESTRO_BRIEF_ASSEMBLY, "src/registry.ts")
-  : join(root, "packages/maestro-arsenal/src/registry.ts")).href);
+  : join(root, "modules/maestro/arsenal/src/registry.ts")).href);
 const projectID = Project.ID.make("arsenal-resource-conformance");
 const sessionID = SessionV2.ID.make("ses_arsenal_resource");
 const agentID = AgentV2.ID.make("maestro");
