@@ -152,9 +152,12 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   // The tab strip is profile-scoped. Switch profiles through the real app to navigate A -> B -> A.
   await selectProfile(page, "draft-handoff-b")
   await expect(page).toHaveURL(otherURL)
-  const otherTab = page.locator('[data-slot="titlebar-tabs"]').getByRole("link").filter({ hasText: "Other server session" })
+  // The sortable wrapper also exposes a link role. Target the desktop portal's actual navigation anchor.
+  const otherTab = page.locator(`#orchestra-session-tabs:visible [data-titlebar-tab-link][href="${otherURL}"]`)
   await expect(otherTab).toHaveCount(1)
+  await expect(otherTab).toBeVisible()
   await expect(otherTab).toHaveAttribute("href", otherURL)
+  await expect(otherTab.locator('[data-slot="tab-title"]')).toHaveText("Other server session")
   await expect(page.getByRole("heading", { name: "Other server session", exact: true })).toBeVisible()
   expect(await original.evaluate((element) => element.isConnected)).toBe(false)
   await selectProfile(page, "draft-handoff")
