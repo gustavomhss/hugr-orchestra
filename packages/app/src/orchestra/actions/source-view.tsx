@@ -12,7 +12,7 @@ export function SourceView(props: ViewProps) {
   const state = props.model.state
   const [view, setView] = createStore({ ref: "", discard: false })
   const dirty = createMemo(() => sourceDraftDirty(state))
-  const discardBlocked = createMemo(() => sourceDiscardBlocked(state))
+  const discardBlocked = createMemo(() => sourceDiscardBlocked(state) || props.model.sourceDiscardBlocked)
   const historical = createMemo(() => Boolean(state.route.runID || state.route.view === "run" || state.route.view === "job"))
   const originalSource = createMemo(() => {
     const source = state.source.value

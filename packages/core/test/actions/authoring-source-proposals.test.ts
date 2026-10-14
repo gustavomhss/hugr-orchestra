@@ -156,3 +156,36 @@ it.live("GitLab local proposals keep exact path through branch/write/review desp
     }
   }
 }))
+
+it.live("GitHub workflow directory casing rejects branch/write/review before any native reads", Effect.gen(function* () {
+  for (const path of [".GITHUB/workflows/ci.yml", ".github/WORKFLOWS/ci.yml", ".GITHUB/WORKFLOWS/ci.yml", ".GitHub/Workflows/ci.YAML"]) {
+    for (const kind of ["source.branch", "source.write", "source.review"] as const) {
+      const fixture = AuthoringFixture.make("github")
+      const result = yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent("github", kind,
+        { path, ref: "dev", ...(kind === "source.branch" ? { resourceID: AuthoringFixture.branch } : {}) }, { commit: AuthoringFixture.commit }),
+        kind === "source.branch" ? { provider: "github", branch: AuthoringFixture.branch }
+          : kind === "source.write" ? { provider: "github", mode: "create", message: "ci: proposal", text: AuthoringFixture.draft }
+          : { provider: "github", title: "Update CI", text: "Review text" }).pipe(Effect.flip)
+      expect(result.kind).toBe("source_unresolved")
+      expect(result.disposition).toBe("definitely_unsent")
+      expect(fixture.requests).toEqual([])
+    }
+  }
+}))
+
+it.live("GitHub workflow extensions remain case-insensitive under exact lowercase directory", Effect.gen(function* () {
+  for (const path of [".github/workflows/CI.YML", ".github/workflows/CI.YaML"]) {
+    const fixture = AuthoringFixture.make("github", { path })
+    fixture.state.exists = false
+    const result = yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent("github", "source.branch", {
+      path, ref: "dev", resourceID: AuthoringFixture.branch,
+    }, { commit: AuthoringFixture.commit }), { provider: "github", branch: AuthoringFixture.branch })
+    expect(result.acknowledgement.resourceID).toBe(AuthoringFixture.branch)
+    expect(fixture.requests.filter((request) => request.path.includes("/contents/"))).toEqual([
+      { method: "GET", path: `repositories/21/contents/${path}`, query: { ref: AuthoringFixture.commit } },
+    ])
+    expect(fixture.requests.filter((request) => request.method !== "GET")).toEqual([
+      { method: "POST", path: "repositories/21/git/refs", body: { ref: `refs/heads/${AuthoringFixture.branch}`, sha: AuthoringFixture.commit } },
+    ])
+  }
+}))

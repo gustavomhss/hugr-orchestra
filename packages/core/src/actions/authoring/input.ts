@@ -56,7 +56,7 @@ export function sourcePath(binding: Actions.Binding, value: string | undefined) 
     return value
   }
   GitHubNative.path(binding, value)
-  if (!/^\.github\/workflows\/[^/]+\.ya?ml$/i.test(value))
+  if (!value.startsWith(".github/workflows/") || !/^[^/]+\.ya?ml$/i.test(value.slice(".github/workflows/".length)))
     throw error(binding, "source_unresolved", "GitHub source proposals require a native workflow YAML path")
   return value
 }

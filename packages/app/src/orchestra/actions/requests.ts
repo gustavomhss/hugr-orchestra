@@ -111,7 +111,8 @@ export const SOURCE_DRAFT_BYTES = 1024 * 1024
 export function sourceProposalPath(provider: Actions.ProviderKind, path: string) {
   if (!path || path.length > 2048 || !path.isWellFormed() || path.startsWith("/") || /[\\\x00-\x1f\x7f]/.test(path)
     || path.split("/").some((part) => !part || part === "." || part === "..")) return false
-  return provider === "github" ? !/[%{}:]/.test(path) && /^\.github\/workflows\/[^/]+\.ya?ml$/i.test(path)
+  return provider === "github" ? !/[%{}:]/.test(path) && path.startsWith(".github/workflows/")
+    && /^[^/]+\.ya?ml$/i.test(path.slice(".github/workflows/".length))
     : !/[:@?*{}$]/.test(path)
 }
 
