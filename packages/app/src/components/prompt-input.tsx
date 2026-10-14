@@ -1192,7 +1192,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return permission.isAutoAccepting(id, sdk().directory)
   })
 
-  const { abort, handleSubmit } =
+  const { abort, handleSubmit, submitting } =
     props.submission ??
     createPromptSubmit({
       prompt,
@@ -1449,6 +1449,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       />
       <DockShellForm
         data-dock-border-underlay="legacy"
+        data-prompt-admitting={String(submitting?.() ?? false)}
         onSubmit={handleSubmit}
         classList={{
           "group/prompt-input": true,
