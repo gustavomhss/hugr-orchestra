@@ -1,13 +1,15 @@
 import { Actions } from "@orchestra/schema/actions"
 import { Schema } from "effect"
 import { actionsError, ActionsRequestError, CreateWorkflowForm, decodeAction, requestError, ResourceForms, ReviewSourceForm, type ActionsCommand, type ActionsScope, type createActionsAPI, type ResourceAction } from "./api"
-import type { Dialog, State } from "./contract"
+import type { Dialog, ErrorState, State } from "./contract"
 import { canEditSource, immutableSource, sourceIdentity, type createRequestOwner, type createSourceDraft } from "./requests"
 import { canRequest } from "./request-policy"
+import { canRequestAction, resourceWritable } from "./action-eligibility"
+import { readProposalSource } from "./proposal-source"
 
 type Phase = { clientID: string; operationID?: Actions.OperationID; kind: Actions.OperationKind }
 export type ActionsPending = { clientID: string; binding: Actions.BindingRef; operationID?: Actions.OperationID; intent?: Actions.OperationIntent; phases?: readonly Phase[] }
-type Lease = ActionsPending & { scope: ActionsScope; command?: ActionsCommand; operation?: Actions.Operation; uncertain: boolean; restored?: boolean; sent?: boolean }
+type Lease = ActionsPending & { scope: ActionsScope; command?: ActionsCommand; operation?: Actions.Operation; failure?: ErrorState; uncertain: boolean; restored?: boolean; sent?: boolean }
 type Selection = ReturnType<typeof selection>
 type Review = { base: Actions.SourceBase; source?: Actions.Source; path: string; create: boolean;
   form: { branch: string; message: string; title: string; text: string }; step: number; phases: Phase[]; clients: string[];
@@ -22,12 +24,14 @@ export function createActionsCommands(input: {
   let review: Review | undefined
   let lease: Lease | undefined = input.pending ? { ...input.pending, scope: { bindingID: input.pending.binding.id, revision: input.pending.binding.revision }, uncertain: true, restored: true } : undefined
   const error = (cause: unknown) => input.update({ commandError: actionsError(cause) })
+  const admissionError = () => new ActionsRequestError(input.state().commandError?.kind === "outcome_unknown"
+    || input.state().operation?.state === "outcome_unknown" || input.state().operation?.state === "sending" ? "outcome_unknown" : "capability_unavailable")
   if (lease) error(new ActionsRequestError("outcome_unknown"))
   const remember = (active?: Lease) => input.remember?.(active ? { clientID: active.clientID, binding: active.binding,
     operationID: active.operationID, intent: active.intent, ...(active.phases?.length ? { phases: active.phases.slice(-3) } : {}) } : undefined)
   const matches = (captured: Selection) => !!input.state().binding
     && (captured.dialog.kind !== "review-source" || input.state().dialog?.kind === "review-source")
-    && JSON.stringify(selection(input.state(), captured.dialog)) === JSON.stringify(captured)
+    && JSON.stringify(selection(input.state(), captured.dialog, captured.operation)) === JSON.stringify(captured)
   const receive = (operation: Actions.Operation, active: Lease, read = false) => {
     if (operation.bindingID !== active.scope.bindingID || operation.clientID !== active.clientID || (active.operationID && operation.id !== active.operationID)
       || (active.intent && (operation.kind !== active.intent.kind || JSON.stringify(decodeAction(Actions.OperationTarget, operation.target)) !== JSON.stringify(decodeAction(Actions.OperationTarget, active.intent.target)))))
@@ -35,7 +39,7 @@ export function createActionsCommands(input: {
     if (!read) input.owner.cancel("receipt")
     active.operationID = operation.id
     active.operation = { ...operation, reason: undefined }
-    active.uncertain = !known(operation) && (operation.state !== "prepared" || active.restored === true || active.sent === true)
+    active.uncertain = ambiguous(operation, active)
     remember(review || active.intent?.kind === "source.branch" || active.intent?.kind === "source.write" || active.uncertain || operation.state === "prepared" ? active : undefined)
     input.update({ operation: active.operation })
   }
@@ -47,10 +51,8 @@ export function createActionsCommands(input: {
         : await input.api.prepare(active.scope, decodeAction(Actions.OperationIntent, active.intent), handle.signal)
       if (!handle.current() || lease !== active) return
       receive(operation, active, true)
-      active.uncertain = (active.restored === true || active.sent === true) && operation.state === "prepared" || ["sending", "outcome_unknown"].includes(operation.state)
-      input.update({ commandError: active.uncertain ? actionsError(new ActionsRequestError("outcome_unknown"))
-        : operation.state === "expired" ? actionsError(new ActionsRequestError("operation_expired"))
-        : operation.state === "prepared" && input.state().commandError?.kind !== "outcome_unknown" ? input.state().commandError : undefined })
+      input.update({ commandError: operationFailure(operation, active.failure) ?? (active.uncertain ? actionsError(new ActionsRequestError("outcome_unknown"))
+        : operation.state === "prepared" && input.state().commandError?.kind !== "outcome_unknown" ? input.state().commandError : undefined) })
     }, (cause) => error(active.uncertain ? new ActionsRequestError("outcome_unknown") : cause), true)
   }
   const perform = async (command: ActionsCommand, captured: Selection, handle: { signal: AbortSignal; current: () => boolean }, reuse = false, initialID?: string) => {
@@ -65,15 +67,17 @@ export function createActionsCommands(input: {
     let sending = false
     try {
       if (!matches(captured)) throw new ActionsRequestError("binding_stale")
-      if (command.kind.startsWith("source.") && !canRequest({ ...input.state(), submitting: false }, command.kind)) throw new ActionsRequestError("capability_unavailable")
+      if (!canRequestAction(input.state(), command, handle)) throw admissionError()
       const prepared = active.operation ?? await input.api.prepare(active.scope, decodeAction(Actions.OperationIntent, active.intent), handle.signal)
       if (!handle.current()) return
       receive(prepared, active)
       if (known(prepared)) return prepared
-      if (prepared.state === "expired" || prepared.state === "rejected") { active.uncertain = false; error(new ActionsRequestError(prepared.state === "expired" ? "operation_expired" : "operation_reused")); return }
+      const preparationFailure = operationFailure(prepared, active.failure)
+      if (preparationFailure) { input.update({ commandError: preparationFailure }); return }
       if (prepared.state !== "prepared" || active.restored || active.sent || !active.command) { active.uncertain = true; error(new ActionsRequestError("outcome_unknown")); return }
       if (!matches(captured)) throw new ActionsRequestError("binding_stale")
-      if (command.kind.startsWith("source.") && !canRequest({ ...input.state(), submitting: false }, command.kind)) throw new ActionsRequestError("capability_unavailable")
+      if (!canRequestAction(input.state(), command, handle)) throw admissionError()
+      active.failure = undefined
       sending = true
       // A late prepared receipt cannot authorize another send after a lost execution response.
       active.sent = true
@@ -81,6 +85,8 @@ export function createActionsCommands(input: {
       if (!handle.current()) return
       const operation = execution.operation
       receive(operation, active)
+      const executionFailure = operationFailure(operation, active.failure)
+      if (executionFailure) { input.update({ commandError: executionFailure }); return }
       if (!known(operation)) { active.uncertain = true; remember(active); error(new ActionsRequestError("outcome_unknown")); return }
       if (command.kind === "source.review" && execution.output && (execution.output.kind !== "sourceReview"
         || execution.output.id !== operation.result?.resourceID)) throw new ActionsRequestError("outcome_unknown")
@@ -91,6 +97,7 @@ export function createActionsCommands(input: {
       const safe = requestError(cause)
       active.operationID ??= safe.operationID
       active.uncertain = safe.kind === "outcome_unknown" || safe.disposition === "unknown" || (safe.disposition === undefined && ["transport_failed", "invalid_response"].includes(safe.kind))
+      active.failure = active.uncertain ? undefined : actionsError(safe)
       remember(active.uncertain || active.operationID || review ? active : undefined)
       error(active.uncertain ? new ActionsRequestError("outcome_unknown") : safe)
       if (active.operationID && sending) await refreshReceipt()
@@ -160,7 +167,7 @@ export function createActionsCommands(input: {
               if (observed.bindingID !== scope.bindingID || observed.ref !== plan.form.branch || observed.commit !== plan.base.commit)
                 throw new ActionsRequestError("source_conflict")
               if (plan.source) {
-                const native = await input.api.source(scope, { path: plan.path, ref: plan.form.branch }, handle.signal)
+                 const native = await readProposalSource(input.api, scope, captured.provider, { path: plan.path, ref: plan.form.branch }, handle.signal)
                 if (!handle.current() || review !== plan || !matches(captured)) return
                 if (sourceIdentity(native) !== sourceIdentity({ ...plan.source, ref: plan.form.branch }) || native.text !== plan.source.text)
                   throw new ActionsRequestError("source_conflict")
@@ -168,7 +175,7 @@ export function createActionsCommands(input: {
               plan.branched = observed
             }
             if (plan.step === 1) {
-              const observed = await input.api.source(scope, { path: plan.path, ref: plan.form.branch }, handle.signal)
+               const observed = await readProposalSource(input.api, scope, captured.provider, { path: plan.path, ref: plan.form.branch }, handle.signal)
               if (!handle.current() || review !== plan || !matches(captured)) return
               if (observed.bindingID !== scope.bindingID || observed.ref !== plan.form.branch || observed.path !== plan.path
                 || observed.text !== plan.form.text || !observed.commit || observed.commit === plan.branched?.commit
@@ -190,6 +197,7 @@ export function createActionsCommands(input: {
       }
       if (lease?.restored && lease.phases?.length) throw new ActionsRequestError("outcome_unknown")
       const command = resolve(captured, payload)
+      if (!canRequestAction(input.state(), command)) throw admissionError()
       const prepared = lease?.operation?.state === "prepared" ? lease.command : undefined
       if (prepared && (JSON.stringify(prepared.target) !== JSON.stringify(command.target) || JSON.stringify(prepared.input) !== JSON.stringify(command.input))) throw new ActionsRequestError("intent_conflict")
       const reuse = !!prepared
@@ -208,6 +216,8 @@ export function createActionsCommands(input: {
   }
   return {
     submit, refreshReceipt,
+    get sourceDiscardBlocked() { return !!lease?.uncertain || !!review || lease?.restored === true
+      && (!!lease.phases?.length || lease.intent?.kind.startsWith("source.") === true) },
     dialog(dialog?: Dialog) {
       if (input.owner.disposed || input.state().submitting) return
       input.editor?.cancelCreate()
@@ -224,15 +234,17 @@ export function createActionsCommands(input: {
       if (lease?.uncertain) return refreshReceipt()
       const found = [...(input.state().resources.value?.items ?? []), ...(input.state().artifacts.value?.items ?? [])]
         .find((item) => item.id === resource.id && item.kind === resource.kind && item.scope === resource.scope && item.bindingID === resource.bindingID)
-      if (!found || !writable(found)) { error(new ActionsRequestError("binding_stale")); return Promise.resolve() }
+      if (!found) { error(new ActionsRequestError("binding_stale")); return Promise.resolve() }
+      const kind = action === "keep" ? "artifact.keep" : action === "play" ? "schedule.play" : "resource.update"
       const dialog: Dialog = { kind: resource.kind === "schedules" ? "edit-schedule" : "delete-artifact", id: found.id, scope: found.scope }
-      const captured = selection(input.state(), dialog)
+      const captured = selection(input.state(), dialog, kind)
       if (!captured.valid || (action === "keep" ? resource.kind !== "artifacts" : resource.kind !== "schedules")) { error(new ActionsRequestError("invalid_input")); return Promise.resolve() }
       const data = metadata(found)
-      const command: ActionsCommand = { kind: action === "keep" ? "artifact.keep" : action === "play" ? "schedule.play" : "resource.update",
+      const command: ActionsCommand = { kind,
         target: { resourceKind: found.kind, resourceID: found.id, scope: found.scope ?? captured.namespace }, action,
         expected: typeof data.resourceVersion === "string" ? { resourceVersion: data.resourceVersion } : undefined,
         input: action === "pause" ? { provider: captured.provider, enabled: data.enabled === false || data.active === false || found.status?.toLowerCase() === "paused" } : { provider: captured.provider } }
+      if (!canRequestAction(input.state(), command)) { error(admissionError()); return Promise.resolve() }
       return start(async (handle, clientID) => { await perform(command, captured, handle, false, clientID) })
     },
     workflowState(enabled: boolean, workflowID: string) {
@@ -241,7 +253,9 @@ export function createActionsCommands(input: {
       if (!input.state().binding) { error(new ActionsRequestError("binding_missing")); return Promise.resolve() }
       const captured = selection(input.state(), { kind: "dispatch", workflowID })
       if (!captured.path || captured.provider !== "github") { error(new ActionsRequestError("capability_unavailable")); return Promise.resolve() }
-      return start(async (handle, clientID) => { await perform({ kind: enabled ? "workflow.enable" : "workflow.disable", target: { workflowID, path: captured.path }, input: { provider: "github", enabled } }, captured, handle, false, clientID) })
+      const command: ActionsCommand = { kind: enabled ? "workflow.enable" : "workflow.disable", target: { workflowID, path: captured.path }, input: { provider: "github", enabled } }
+      if (!captured.valid || !canRequestAction(input.state(), command)) { error(admissionError()); return Promise.resolve() }
+      return start(async (handle, clientID) => { await perform(command, captured, handle, false, clientID) })
     },
     dispose() { input.editor?.cancelCreate(); input.owner.cancel("command"); input.owner.cancel("receipt");
       selected = undefined; lease = undefined; review = undefined; input.update({ commandOutput: undefined, submitting: false }) },
@@ -255,37 +269,41 @@ const resourceDialogs: Partial<Record<Dialog["kind"], readonly [Actions.Resource
   "create-schedule": ["schedules", "create"], "edit-schedule": ["schedules", "update"], "delete-schedule": ["schedules", "delete"],
   "delete-artifact": ["artifacts", "delete"], "delete-cache": ["caches", "delete"], "clear-caches": ["caches", "clear"], "project-settings": ["policy", "update"],
 }
-function selection(state: State, dialog: Exclude<Dialog, { kind: "connect" }>) {
+function selection(state: State, dialog: Exclude<Dialog, { kind: "connect" }>, operation?: Actions.OperationKind) {
   const binding = state.binding
   if (!binding) throw new ActionsRequestError("binding_missing")
   const family = resourceDialogs[dialog.kind]
+  const resourceOperation = operation ?? (family?.[1] === "clear" ? "cache.clear" : family?.[0] === "runners" && family[1] === "create" ? "runner.register"
+    : family?.[0] === "runners" && family[1] === "delete" ? "runner.remove" : family?.[1] === "create" ? "resource.create" : family?.[1] === "update" ? "resource.update" : "resource.delete")
   const id = dialog.kind === "project-settings" ? "project-settings" : "id" in dialog ? dialog.id : undefined
   const resource = id ? [...(state.resources.value?.items ?? []), ...(state.artifacts.value?.items ?? [])]
     .find((item) => item.id === id && item.kind === family?.[0] && (!("scope" in dialog) || dialog.scope === undefined || item.scope === dialog.scope)) : undefined
   const workflow = dialog.kind === "dispatch" ? state.workflows.value?.items.find((item) => item.id === dialog.workflowID) : undefined
-  const runID = "runID" in dialog ? dialog.runID : state.route.runID
+  const job = "jobID" in dialog && state.jobs.status === "ready" ? state.jobs.value?.items.find((item) => item.id === dialog.jobID && item.bindingID === binding.id && item.runID === state.route.runID) : undefined
+  const runID = "runID" in dialog ? dialog.runID : job?.runID ?? state.route.runID
   const run = state.run.value?.id === runID ? state.run.value : state.runs.value?.items.find((item) => item.id === runID)
-  const job = "jobID" in dialog ? state.jobs.value?.items.find((item) => item.id === dialog.jobID) : undefined
   const source = state.draftBase ? undefined : state.source.value ?? state.graph.value?.source
   const historical = source && run && source.bindingID === binding?.id && source.commit === run.commit ? { path: source.path, sourceVersion: source.version } : undefined
   const data = resource ? metadata(resource) : undefined
-  return { dialog: { ...dialog }, scope: { bindingID: binding.id, revision: binding.revision }, provider: binding.provider.kind,
+  return { dialog: { ...dialog }, operation, scope: { bindingID: binding.id, revision: binding.revision }, provider: binding.provider.kind,
     namespace: `${binding.provider.kind === "github" ? "repository" : "project"}:${binding.projectID}`, route: { ...state.route }, path: workflow?.path, family,
     source: source ? sourceIdentity(source) : undefined, draftBase: state.draftBase ? JSON.stringify(state.draftBase) : undefined,
     draft: dialog.kind === "review-source" ? state.draft : undefined, resource: resource ? { id: resource.id, kind: resource.kind, scope: resource.scope, bindingID: resource.bindingID,
      name: resource.name, type: data?.type, ref: data?.ref, path: data?.path, sourceVersion: data?.sourceVersion, commit: data?.commit,
-    version: typeof data?.resourceVersion === "string" ? data.resourceVersion : undefined, writable: writable(resource) } : undefined,
+    version: typeof data?.resourceVersion === "string" ? data.resourceVersion : undefined, writable: resourceWritable(resource, resourceOperation) } : undefined,
     approvals: dialog.kind === "approval" ? state.resources.value?.items.filter((item) => item.kind === "environments" && item.bindingID === binding.id && metadata(item).runID === dialog.runID)
       .map((item) => ({ id: item.id, scope: item.scope, version: metadata(item).resourceVersion })) : undefined,
     expected: run ? { ...(run.commit ? { commit: run.commit } : {}), ...(historical ? { sourceVersion: historical.sourceVersion } : {}),
-      ...((state.route.attempt ?? job?.attempt ?? run.attempt) === undefined ? {} : { attempt: state.route.attempt ?? job?.attempt ?? run.attempt }) } : undefined, historical,
-    valid: !!binding && (family ? family[1] === "create" || dialog.kind === "clear-caches" || (!!resource && resource.bindingID === binding.id && writable(resource))
+      ...((job?.attempt ?? state.route.attempt ?? run.attempt) === undefined ? {} : { attempt: job?.attempt ?? state.route.attempt ?? run.attempt }) } : undefined, historical,
+    valid: !!binding && (family ? family[1] === "create" || dialog.kind === "clear-caches" || (!!resource && resource.bindingID === binding.id && resourceWritable(resource, resourceOperation))
       : ["create-workflow", "review-source"].includes(dialog.kind) ? true : dialog.kind === "dispatch" ? !!workflow && workflow.bindingID === binding.id
-      : !!run && run.bindingID === binding.id && ("jobID" in dialog ? job?.bindingID === binding.id && job.runID === run.id && (state.route.attempt === undefined || job.attempt === state.route.attempt) : true)) }
+      : !!run && run.bindingID === binding.id && ("jobID" in dialog ? job?.bindingID === binding.id && job.runID === run.id
+        && (binding.provider.kind !== "github" || job.attempt !== undefined && job.attempt === run.attempt)
+        && (state.route.attempt === undefined || job.attempt === state.route.attempt) : true)) }
 }
 function resolve(captured: Selection, payload: unknown): ActionsCommand {
   const raw = decodeAction(Schema.Record(Schema.String, Schema.Json), payload)
-  const value: Schema.JsonObject = { provider: captured.provider, ...raw, ...(captured.provider === "gitlab" && captured.family?.[0] === "variables" && raw.scope === "Repository" ? { scope: "*" } : {}) }
+   const value: Schema.JsonObject = { provider: captured.provider, ...raw }
   if (value.provider !== captured.provider) throw new ActionsRequestError("invalid_input")
   const dialog = captured.dialog
   if (captured.family) {
@@ -326,9 +344,16 @@ function resolve(captured: Selection, payload: unknown): ActionsCommand {
   throw new ActionsRequestError("invalid_input")
 }
 function known(operation: Actions.Operation) { return operation.state === "accepted" || operation.state === "confirmed" }
+function ambiguous(operation: Actions.Operation, active: Lease) {
+  return operation.state === "sending" || operation.state === "outcome_unknown"
+    || operation.state === "prepared" && (active.restored === true || active.sent === true)
+}
+function operationFailure(operation: Actions.Operation, failure?: ErrorState) {
+  if (operation.state === "rejected") return failure ?? actionsError(new ActionsRequestError("operation_rejected"))
+  if (operation.state === "expired") return actionsError(new ActionsRequestError("operation_expired"))
+}
 function immutable<T>(value: T): T { if (value && typeof value === "object") { Object.values(value).forEach(immutable); Object.freeze(value) }; return value }
 function metadata(resource: Actions.Resource) { return decodeAction(Schema.Record(Schema.String, Schema.Json), resource.data) }
-function writable(resource: Actions.Resource) { const data = metadata(resource); return data.readOnly !== true && data.readonly !== true && data.inherited !== true && data.editable !== false && resource.status?.toLowerCase() !== "inherited" }
 function template(provider: Actions.ProviderKind, name: string, kind: string) {
   const blank = kind === "Blank configuration" || kind === "blank"
   const release = kind === "Release" || kind === "release"

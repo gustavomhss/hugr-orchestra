@@ -1,63 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
-import { Schema } from "effect"
-import { createActionsAPI } from "./api"
-import { createActionsCommands, type ActionsPending } from "./commands"
-import { initial } from "./contract"
-import { createRequestOwner } from "./requests"
-
-const directory = "/repo/native"
-const located = (data: unknown) => Response.json({ location: { directory }, data })
-
-function deferred<T>() {
-  const result: { resolve?: (value: T) => void } = {}
-  const promise = new Promise<T>((resolve) => { result.resolve = resolve })
-  return { promise, resolve(value: T) { result.resolve?.(value) } }
-}
-
-function fixture(provider: "github" | "gitlab" = "github", respond?: (request: Request) => Response | void | Promise<Response | void>, pending?: ActionsPending) {
-  const state = initial()
-  state.binding = { id: Actions.BindingID.make("ab_native"), revision: 7, remote: "origin", projectID: "1", projectPath: "owner/repo", directory,
-    provider: { kind: provider, hostname: `${provider}.com`, apiOrigin: `https://${provider}.com` } }
-  state.route = { view: "run", runID: "101", ...(provider === "github" ? { attempt: 2 } : {}) }
-  state.run = { status: "ready", value: { id: "101", bindingID: state.binding.id, workflowID: "11", name: "CI", ref: "main", commit: "a".repeat(40), event: "push", status: "completed",
-    ...(provider === "github" ? { attempt: 2 } : {}) } }
-  state.workflows = { status: "ready", value: { items: [{ id: "11", bindingID: state.binding.id, name: "CI", path: ".github/workflows/native.yml", dispatchable: true, state: "active" }], capturedAt: 1 } }
-  state.jobs = { status: "ready", value: { items: [{ id: "202", bindingID: state.binding.id, runID: "101", name: "build", status: "manual", steps: [],
-    ...(provider === "github" ? { attempt: 2 } : {}) }], capturedAt: 1 } }
-  const requests: Request[] = []
-  const intents: Actions.OperationIntent[] = []
-  const receipts: Actions.Operation[] = []
-  const remembered: Array<ActionsPending | undefined> = []
-  const fetch = Object.assign(async (value: string | URL | Request, init?: RequestInit) => {
-    const request = new Request(value, init)
-    requests.push(request.clone())
-    const custom = await respond?.(request.clone())
-    if (custom) return custom
-    const url = new URL(request.url)
-    if (url.pathname.endsWith("/source")) return located({ bindingID: "ab_native", path: url.searchParams.get("path"), ref: url.searchParams.get("ref"),
-      commit: "a".repeat(40), version: "b".repeat(40), text: "inputs: {}", editable: false })
-    if (url.pathname === "/api/actions/operation/ab_native" && request.method === "POST") {
-      const intent = Schema.decodeUnknownSync(Actions.OperationIntent)(await request.json())
-      intents.push(intent)
-      const operation = Actions.Operation.make({ id: Actions.OperationID.make("aop_native"), bindingID: intent.binding.id,
-        clientID: intent.clientID, kind: intent.kind, target: intent.target, state: "prepared", createdAt: 1, expiresAt: 100, updatedAt: 1 })
-      receipts.push(operation)
-      return located(operation)
-    }
-    if (url.pathname === "/api/actions/operation/ab_native/aop_native") return located(receipts.at(-1))
-    const last = receipts.at(-1)
-    if (!last) throw new Error("execution before admission")
-    const operation: Actions.Operation = { ...last, state: "accepted", updatedAt: 2, reason: "input secret must not reach UI" }
-    receipts.push(operation)
-    return located({ operation })
-  }, { preconnect: globalThis.fetch.preconnect })
-  const api = createActionsAPI({ server: { type: "http", http: { url: "http://localhost:4096" } }, fetch, directory })
-  const owner = createRequestOwner()
-  const commands = createActionsCommands({ api, owner, state: () => state, update: (patch) => Object.assign(state, patch), pending,
-    remember: (value) => remembered.push(value) })
-  return { state, requests, intents, receipts, remembered, commands, [Symbol.dispose]() { owner.dispose(); commands.dispose() } }
-}
+import type { ActionsPending } from "./commands"
+import { deferred, fixture, located, runStatus } from "./commands.fixture"
 
 describe("Actions immutable native intents", () => {
   test("one logical submit captures one UUID and immutable payload; admission precedes execution without input values", async () => {
@@ -132,6 +76,7 @@ describe("Actions immutable native intents", () => {
       started.resolve()
       await allow.promise
     })
+    runStatus(scope.state, "in_progress")
     scope.commands.dialog({ kind: "cancel", runID: "101" })
     const sending = scope.commands.submit({ provider: "github" })
     await started.promise
@@ -153,6 +98,7 @@ describe("Actions immutable native intents", () => {
       scope.receipts.push({ ...prepared, state: "outcome_unknown" })
       return Response.json({ _tag: "ActionsError", kind: "outcome_unknown", operationID: "aop_native", message: "secret native failure" }, { status: 400 })
     })
+    runStatus(scope.state, "in_progress")
     scope.commands.dialog({ kind: "cancel", runID: "101" })
     await scope.commands.submit({ provider: "github" })
     expect(scope.state.operation?.state).toBe("outcome_unknown")
@@ -168,6 +114,7 @@ describe("Actions immutable native intents", () => {
     using scope = fixture("github", (request) => {
       if (new URL(request.url).pathname === "/api/actions/operation/ab_native") throw new Error("connection lost with token=secret")
     })
+    runStatus(scope.state, "in_progress")
     scope.commands.dialog({ kind: "cancel", runID: "101" })
     await scope.commands.submit({ provider: "github" })
     expect(scope.state.commandError?.kind).toBe("outcome_unknown")
@@ -231,6 +178,7 @@ describe("Actions immutable native intents", () => {
       if (path.endsWith("/cancel")) { executing.resolve(); return execute.promise }
       if (path.endsWith("/aop_native")) { reading.resolve(request.signal); return old.promise }
     })
+    runStatus(scope.state, "in_progress")
     scope.commands.dialog({ kind: "cancel", runID: "101" })
     const sending = scope.commands.submit({ provider: "github" })
     await executing.promise
@@ -255,6 +203,7 @@ describe("Actions immutable native intents", () => {
       attempts.push(await request.json())
       if (attempts.length === 1) throw new Error("lost admission response")
     })
+    runStatus(scope.state, "in_progress")
     scope.commands.dialog({ kind: "cancel", runID: "101" })
     await scope.commands.submit({ provider: "github" })
     expect(scope.state.commandError?.kind).toBe("outcome_unknown")
