@@ -1,6 +1,11 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
+  "globalDependencies": [
+    "script/test-omni-control.ts",
+    ".github/actions/omni-binaries/action.yml",
+    "script/module-registry.json",
+    "script/toolchain-registry.json"
+  ],
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"],
   "tasks": {
@@ -104,6 +109,14 @@
         "$TURBO_ROOT$/script/test-ci-paths.ts",
         "$TURBO_ROOT$/script/archive-inventory.ts",
         "$TURBO_ROOT$/script/archive-scopes.json",
+        "$TURBO_ROOT$/script/recovery-bundle.ts",
+        "$TURBO_ROOT$/nix/scripts/workspace-config.ts",
+        "$TURBO_ROOT$/nix/scripts/verify-distribution.ts",
+        "$TURBO_ROOT$/nix/scripts/probe-distribution.ts",
+        "$TURBO_ROOT$/nix/scripts/dependency_measurement.py",
+        "$TURBO_ROOT$/packages/cli/script/build.ts",
+        "$TURBO_ROOT$/packages/cli/script/targets.ts",
+        "$TURBO_ROOT$/packages/desktop/scripts/resource-paths.ts",
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/script/test-guard.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
