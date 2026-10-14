@@ -26,7 +26,9 @@ import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
+import { useServerProtocol } from "@/context/server-sdk"
+import { useDraftSessionKey, useSubagentModelPolicy } from "@/components/prompt-input/draft-session"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
@@ -49,6 +51,7 @@ export type PromptInputV2ComposerProps = {
 export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission">
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
+  readonly pendingKey: () => string
 }
 
 export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
@@ -87,7 +90,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
             <Show when={props.sessionID}>
               {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
             </Show>
-            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
+            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} pendingKey={props.controller.pendingKey()} />
           </>
         }
         modelControl={
@@ -120,6 +123,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const language = useLanguage()
   const platform = usePlatform()
   const prompt = props.state ?? usePrompt()
+  const pendingKey = useDraftSessionKey()
   let editor: HTMLDivElement | undefined
 
   const interaction = createPromptInputV2State()
@@ -243,6 +247,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       if (!popover) controller.dispatch({ type: "popover.close" })
     },
     newSessionWorktree: () => props.newSessionWorktree,
+    pendingKey,
     onNewSessionWorktreeReset: props.onNewSessionWorktreeReset,
     shouldQueue: props.shouldQueue,
     onQueue: props.onQueue,
@@ -429,7 +434,8 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       },
     },
   })
-  Object.defineProperty(controller, "model", { get: () => props.controls.model })
+  const composer = Object.assign(controller, { model: props.controls.model, pendingKey })
+  Object.defineProperty(composer, "model", { get: () => props.controls.model })
 
   command.register("prompt-input", () => [
     {
@@ -486,15 +492,17 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     ),
   )
 
-  return controller as PromptInputV2ComposerController
+  return composer
 }
 
-function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
+function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pendingKey: string }) {
   const dialog = useDialog()
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const sdk = useSDK()
   const sync = useSync()
   const local = useLocal()
+  const protocol = useServerProtocol()
+  const policy = useSubagentModelPolicy(() => props.sessionID, () => props.pendingKey)
 
   const rules = () => {
     const id = props.sessionID
@@ -503,11 +511,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
     return Array.isArray(permission) ? permission : []
   }
   const label = () => {
-    // Drafts have no session yet: show the pending selection.
-    if (!props.sessionID) {
-      draftVersion()
-      const n = pendingSelection(sdk().directory ?? "").size
-      return n > 0 ? `${n}` : language.t("session.tasks.models.all")
+    if (props.sessionID && protocol() === undefined) return language.t("common.loading")
+    if (!props.sessionID || protocol() === "v2") {
+      const current = policy.policy()
+      if (policy.error()) return language.t("session.subagentModels.loadFailed")
+      if (!current) return language.t("common.loading")
+      return current.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${current.models.length}`
     }
     const scoped = hasModelScope(rules())
     if (!scoped) return language.t("session.tasks.models.all")
@@ -516,10 +525,13 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
     return `${allowed}`
   }
   const open = () => {
-    const directory = sdk().directory
+    const source = sdk()
+    const directory = source.directory
     if (!directory) return
+    const selection = { sessionID: props.sessionID, directory, pendingKey: props.pendingKey }
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />)
+      if (sdk() !== source || props.sessionID !== selection.sessionID || props.pendingKey !== selection.pendingKey) return
+      dialog.show(() => <x.DialogSubagentModels {...selection} />)
     })
   }
 
@@ -535,7 +547,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
         onClick={open}
       >
         <span class="truncate leading-4">
-          {props.sessionID
+          {props.sessionID && protocol() !== "v2"
             ? hasModelScope(rules())
               ? language.t("orchestra.chat.models.count", { count: label() })
               : language.t("orchestra.chat.models.all")
