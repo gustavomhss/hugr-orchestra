@@ -72,6 +72,26 @@ function isBuiltInEndpointError(name: string) {
 }
 
 describe("PublicApi OpenAPI v2 errors", () => {
+  test("keeps the required nullable default-model data without loosening other responses", () => {
+    const spec = OpenApi.fromApi(PublicApi) as OpenApiSpec
+    const schema = spec.paths["/api/model/default"]?.get?.responses?.["200"]?.content?.["application/json"]?.schema
+
+    expect(schema?.required).toEqual(expect.arrayContaining(["location", "data"]))
+    expect(schema?.properties?.data).toEqual({
+      anyOf: [{ $ref: "#/components/schemas/ModelV2Info" }, { type: "null" }],
+    })
+    expect(spec.components.schemas.ModelV2Info?.properties?.id.type).toBe("string")
+    expect(
+      spec.paths["/api/model"]?.get?.responses?.["200"]?.content?.["application/json"]?.schema?.properties?.data.type,
+    ).toBe("array")
+    // Legacy optional fields still have their old SDK shape; the fix is endpoint-specific.
+    expect(spec.components.schemas.SessionV1PromptTransition?.properties?.expectedRevert.anyOf).toContainEqual({
+      type: "null",
+    })
+    expect(spec.components.schemas.ModelV2Info?.properties?.family).toEqual({ type: "string" })
+    expect(spec.components.schemas.Session?.properties?.parentID).toMatchObject({ type: "string" })
+  })
+
   test("V1 prompt transition preserves actual nullable CAS expectations in generated OpenAPI", () => {
     const value = Schema.decodeUnknownSync(SessionV1.PromptTransition)({
       expectedRevert: null,
@@ -236,6 +256,9 @@ describe("PublicApi OpenAPI v2 errors", () => {
       "ServiceUnavailableError",
     )
     expect(componentName(responseRef(spec.paths["/api/model"]?.get?.responses?.["503"]) ?? "")).toBe(
+      "ServiceUnavailableError",
+    )
+    expect(componentName(responseRef(spec.paths["/api/model/default"]?.get?.responses?.["503"]) ?? "")).toBe(
       "ServiceUnavailableError",
     )
     expect(componentName(responseRef(spec.paths["/api/provider/{providerID}"]?.get?.responses?.["404"]) ?? "")).toBe(

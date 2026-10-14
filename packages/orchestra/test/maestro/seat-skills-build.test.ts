@@ -4,6 +4,7 @@ import path from "node:path"
 import { seatSkillsFiles, seatSkillsModule } from "../../script/seat-skills"
 import { SeatSkillContent } from "@/maestro/seat-skill-content"
 import { Seats } from "@/maestro/seats"
+import { PlaybookContent } from "@/maestro/playbook-content"
 import { tmpdir } from "../fixture/fixture"
 
 const entry = "cold-review/SKILL.md"
@@ -89,7 +90,8 @@ describe("seat skill packaging", () => {
     await using tmp = await tmpdir()
     const result = await bundle(tmp.path, target, await seatSkillsFiles(), seat)
     if (result.exit !== 0) throw new Error(`Compiled seat root acquisition failed (${target}, ${result.exit}):\n${result.stderr}`)
-    const evidence = JSON.parse(result.stdout) as { root: string; files: Record<string, string>; sourceAvailable: boolean }
+    const evidence = JSON.parse(result.stdout) as { root: string; files: Record<string, string>; sourceAvailable: boolean; playbooks: Record<string, string> }
+    expect(evidence.playbooks).toEqual(await PlaybookContent.read(path.resolve(import.meta.dir, "../../playbooks")))
     expect(evidence.sourceAvailable).toBe(false)
     expect(evidence.root).not.toBe(Seats.skillSource(seat))
     expect(path.basename(evidence.root)).toMatch(/^local-[0-9a-f]{12}$/)
@@ -101,6 +103,22 @@ describe("seat skill packaging", () => {
     const result = await bundle(tmp.path, "bun", {})
     expect(result.exit).not.toBe(0)
     expect(result.stderr).toContain("SeatSkillPackagingError: Cannot import compiled seat skill module")
+  }, 60000)
+
+  test.each(["missing maestro", "missing companion", "missing override"])("compiled %s cannot publish empty playbook success", async (kind) => {
+    await using tmp = await tmpdir()
+    await Bun.write(path.join(tmp.path, "inventory.mjs"), await seatSkillsModule())
+    const inventory = await import(path.join(tmp.path, "inventory.mjs"))
+    const tree = kind === "missing maestro"
+      ? Object.fromEntries(Object.entries(inventory.default).filter(([id]) => id !== "maestro"))
+      : { ...inventory.default, maestro: kind === "missing companion"
+        ? Object.fromEntries(Object.entries(inventory.default.maestro).filter(([file]) => file !== "maestro-verify/review-checks.md"))
+        : inventory.default.maestro }
+    const result = await bundle(tmp.path, "bun", { [moduleName]: `export default ${JSON.stringify(tree)}` }, "backend",
+      kind === "missing override" ? { ORCHESTRA_PLAYBOOKS_DIR: path.join(tmp.path, "absent") } : {})
+    expect(result.exit).not.toBe(0)
+    expect(result.stderr).toContain(kind === "missing maestro" ? "Missing embedded Maestro playbook tree" :
+      kind === "missing companion" ? "Maestro playbook files differ from required source inventory" : "Cannot acquire seat skill source root: maestro")
   }, 60000)
 
   test.each([
@@ -149,7 +167,7 @@ describe("seat skill packaging", () => {
   })
 })
 
-async function bundle(dir: string, target: "bun" | "node", files: Record<string, string>, seat = "backend") {
+async function bundle(dir: string, target: "bun" | "node", files: Record<string, string>, seat = "backend", env: Record<string, string> = {}) {
   const rootModule = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts").replaceAll("\\", "/")
   const seatsModule = path.resolve(import.meta.dir, "../../src/maestro/seats/index.ts").replaceAll("\\", "/")
   const config = {
@@ -173,8 +191,13 @@ async function bundle(dir: string, target: "bun" | "node", files: Record<string,
           const target = path.join(e.parentPath, e.name);
           return [path.relative(root, target).split(path.sep).join("/"), await fs.readFile(target, "utf8")];
         })));
+        const playbookEntries = await fs.readdir(SeatSkillRoot.playbooks, { recursive: true, withFileTypes: true });
+        const playbooks = Object.fromEntries(await Promise.all(playbookEntries.filter(e => e.isFile()).map(async e => {
+          const target = path.join(e.parentPath, e.name);
+          return [path.relative(SeatSkillRoot.playbooks, target).split(path.sep).join("/"), await fs.readFile(target, "utf8")];
+        })));
         // Await the complete pipe write before natural exit; the production map can exceed one buffered chunk.
-        await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ root, files, sourceAvailable }), error => error ? reject(error) : resolve(undefined)));
+        await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ root, files, sourceAvailable, playbooks }), error => error ? reject(error) : resolve(undefined)));
       `,
     },
     external: Object.hasOwn(files, moduleName) ? [] : [moduleName],
@@ -194,6 +217,7 @@ async function bundle(dir: string, target: "bun" | "node", files: Record<string,
   const child = Bun.spawn([target === "bun" ? process.execPath : "node", outfile], {
     env: {
       ...process.env,
+      ...env,
       XDG_CACHE_HOME: path.join(dir, "cache"),
       XDG_DATA_HOME: path.join(dir, "data"),
       XDG_CONFIG_HOME: path.join(dir, "config"),
