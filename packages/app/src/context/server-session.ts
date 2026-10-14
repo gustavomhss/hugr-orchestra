@@ -19,18 +19,15 @@ import { message as cleanMessage } from "@/utils/diffs"
 import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
 import {
-  applySessionManagementEvent,
   decodeSessionManagementEvent,
-  mergeSessionManagementInfo,
   normalizeSessionInfo,
   type AppSession,
-  type SessionManagementEvent,
-  type SessionManagementInfo,
 } from "@/utils/session"
-import { SessionEvent } from "@orchestra/schema/session-event"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
+import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
+import { createSessionRecovery } from "./session-recovery"
 import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
@@ -203,9 +200,8 @@ export function createServerSession(
 ) {
   const sessionApi = messageApi ? (sessionApiOrOptions as SessionApi) : undefined
   const options = messageApi ? currentOptions : (sessionApiOrOptions as ServerSessionOptions | undefined)
-  const sessionInfo: Record<string, AppSession | undefined> = {}
   const [data, setData] = createStore({
-    info: sessionInfo,
+    info: {} as Record<string, AppSession | undefined>,
     session_status: {} as Record<string, SessionStatus>,
     session_diff: {} as Record<string, FileDiffInfo[]>,
     todo: {} as Record<string, Todo[]>,
@@ -219,12 +215,7 @@ export function createServerSession(
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
   })
-  const requests = new Map<string, {
-    promise: Promise<AppSession>
-    state: { policyGeneration: object; policy?: SessionManagementInfo }
-  }>()
-  const policyFences = new Map<string, SessionManagementInfo>()
-  let policyReadReceipt = 0
+  const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
@@ -248,13 +239,6 @@ export function createServerSession(
   const infoSeen = new Set<string>()
   const pinned = new Map<string, number>()
   const generations = new Map<string, object>()
-  const generation = (sessionID: string) => {
-    const current = generations.get(sessionID)
-    if (current) return current
-    const created = {}
-    generations.set(sessionID, created)
-    return created
-  }
   const [meta, setMeta] = createStore({
     limit: {} as Record<string, number | undefined>,
     cursor: {} as Record<string, string | undefined>,
@@ -274,19 +258,7 @@ export function createServerSession(
   }
 
   const remember = (session: AppSession) => {
-    const info = mergeSessionManagementInfo(
-      policyFences.get(session.id),
-      mergeSessionManagementInfo(data.info[session.id], session),
-    )
-    if (policyFences.has(session.id)) policyFences.set(session.id, {
-      id: info.id,
-      subagentModels: info.subagentModels,
-      subagentModelsChangedAt: info.subagentModelsChangedAt,
-      subagentModelsRevision: info.subagentModelsRevision,
-      subagentModelsReadReceipt: info.subagentModelsReadReceipt,
-      time: { updated: info.time.updated },
-    })
-    setData("info", session.id, reconcile(info))
+    setData("info", session.id, reconcile(recovery.merge(session)))
     infoSeen.delete(session.id)
     infoSeen.add(session.id)
     if (infoSeen.size > sessionInfoLimit) {
@@ -310,61 +282,24 @@ export function createServerSession(
         produce((draft) => stale.forEach((sessionID) => delete draft[sessionID])),
       )
     }
-    return info
+    return data.info[session.id]!
   }
 
-  const resolve = (sessionID: string, options?: { force?: boolean }, recovery?: SessionManagementInfo): Promise<AppSession> => {
-    const cached = data.info[sessionID]
-    if (cached && !options?.force) return Promise.resolve(cached)
-    const pending = requests.get(sessionID)
-    if (pending) return pending.promise
-    const active = generation(sessionID)
-    const state = { policyGeneration: {}, policy: recovery ?? policyFences.get(sessionID) ?? cached }
-    const policyGeneration = state.policyGeneration
-    const request = sessionApi
-      ? sessionApi.get({ sessionID }).then(normalizeSessionInfo)
-      : client.session.get({ sessionID }).then((result) => {
-          if (!result.data) throw sessionNotFoundError(sessionID)
-          return result.data
-        })
-    const refresh = () => {
-      // Release the old record before retrying; otherwise resolve would join itself.
-      if (requests.get(sessionID)?.promise === resolved) requests.delete(sessionID)
-      return resolve(sessionID, { force: true }, state.policy)
-    }
-    const resolved: Promise<AppSession> = request.then((result) => {
-      if (generations.get(sessionID) !== active) throw sessionNotFoundError(sessionID)
-      if (state.policyGeneration !== policyGeneration) return refresh()
-      const observed = mergeSessionManagementInfo(state.policy,
-        mergeSessionManagementInfo(policyFences.get(sessionID), data.info[sessionID] ?? result))
-      policyReadReceipt = Math.max(policyReadReceipt, observed.subagentModelsReadReceipt ?? 0) + 1
-      // Only a completed HTTP read with both generations intact can mint this receipt.
-      return remember({
-        ...result,
-        subagentModelsChangedAt: observed.subagentModelsChangedAt,
-        subagentModelsRevision: observed.subagentModelsRevision,
-        subagentModelsReadReceipt: policyReadReceipt,
-      })
-    }, (error) => {
-      if (generations.get(sessionID) === active && state.policyGeneration !== policyGeneration) return refresh()
-      throw error
-    })
-    requests.set(sessionID, { promise: resolved, state })
-    const cleanup = () => {
-      if (requests.get(sessionID)?.promise === resolved) requests.delete(sessionID)
-      if (
-        generations.get(sessionID) === active &&
-        !data.info[sessionID] &&
-        !requests.has(sessionID) &&
-        !messageLoads.has(sessionID) &&
-        !inflight.has(sessionID) &&
-        !inflightTodo.has(sessionID)
-      )
-        generations.delete(sessionID)
-    }
-    void resolved.then(cleanup, cleanup)
-    return resolved
-  }
+  const recovery = createSessionRecovery({
+    requests,
+    generations,
+    read: (sessionID) => data.info[sessionID],
+    source: sessionApi ? "canonical" : "snapshot",
+    request: (sessionID) =>
+      sessionApi
+        ? sessionApi.get({ sessionID }).then(normalizeSessionInfo)
+        : client.session.get({ sessionID }).then((result) => {
+            if (!result.data) throw sessionNotFoundError(sessionID)
+            return result.data
+          }),
+    retain: remember,
+    busy: (sessionID) => messageLoads.has(sessionID) || inflight.has(sessionID) || inflightTodo.has(sessionID),
+  })
 
   const peekLineage = (sessionID: string) => {
     const session = data.info[sessionID]
@@ -764,7 +699,7 @@ export function createServerSession(
 
   const loadMessages = async (sessionID: string, limit: number, before?: string, mode?: "replace" | "prepend") => {
     if (meta.loading[sessionID]) return
-    const active = generation(sessionID)
+    const active = recovery.generation(sessionID)
     const load: MessageLoadState = {
       touchedMessages: new Set(),
       removedMessages: new Set(),
@@ -868,10 +803,14 @@ export function createServerSession(
   const sync = (sessionID: string, options?: { force?: boolean; messageLimit?: number }) => {
     touch(sessionID)
     return runInflight(inflight, sessionID, async () => {
+      const active = recovery.generation(sessionID)
       const cached = data.message[sessionID] !== undefined && meta.limit[sessionID] !== undefined
       if (cached && data.info[sessionID] && !options?.force) return
       await Promise.all([
-        resolve(sessionID, options),
+        recovery.resolve(sessionID, options).catch((error: unknown) => {
+          if (generations.get(sessionID) !== active && error instanceof DOMException && error.name === "AbortError") return
+          throw error
+        }),
         cached && !options?.force
           ? Promise.resolve()
           : loadMessages(sessionID, options?.messageLimit ?? meta.limit[sessionID] ?? initialMessagePageSize),
@@ -888,28 +827,6 @@ export function createServerSession(
     )
       return
     await runInflight(inflight, sessionID, () => loadMessages(sessionID, limit))
-  }
-
-  const eventSessionID = (event: { type: string; properties?: unknown }) => {
-    const properties = event.properties
-    if (!properties || typeof properties !== "object") return
-    if ("sessionID" in properties && typeof properties.sessionID === "string") return properties.sessionID
-    if (
-      "info" in properties &&
-      properties.info &&
-      typeof properties.info === "object" &&
-      "sessionID" in properties.info &&
-      typeof properties.info.sessionID === "string"
-    )
-      return properties.info.sessionID
-    if (
-      "part" in properties &&
-      properties.part &&
-      typeof properties.part === "object" &&
-      "sessionID" in properties.part &&
-      typeof properties.part.sessionID === "string"
-    )
-      return properties.part.sessionID
   }
 
   const projectV2 = (reduction: V2SessionReduction) => {
@@ -966,8 +883,8 @@ export function createServerSession(
   }
 
   const applyV2 = (event: ServerCurrentEvent) => {
-    // Policy projection belongs to apply(); the compatibility transcript reducer predates this event.
-    if (event.type === SessionEvent.SubagentModelsChanged.type) return
+    const eventType: string = event.type
+    if (eventType === "session.next.subagent.models.changed") return
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
@@ -1008,16 +925,16 @@ export function createServerSession(
         message: event.data.error.message,
         next: event.data.at,
       })
-    if (event.type === "session.forked") void resolve(sessionID, { force: true }).catch(() => {})
+    if (event.type === "session.forked") void recovery.resolve(sessionID, { force: true }).catch(() => {})
     if (
       event.type === "session.revert.staged" ||
       event.type === "session.revert.cleared" ||
       event.type === "session.revert.committed"
     )
-      void resolve(sessionID, { force: true }).catch(() => {})
+      void recovery.resolve(sessionID, { force: true }).catch(() => {})
   }
 
-  const apply = (event: SessionManagementEvent) => {
+  const apply = (event: { type: string; properties?: unknown; current?: unknown }) => {
     const eventID = eventSessionID(event)
     if (eventID) {
       touch(eventID)
@@ -1026,63 +943,33 @@ export function createServerSession(
         event.type !== "session.created" &&
         event.type !== "session.updated" &&
         event.type !== "session.deleted" &&
-        event.type !== SessionEvent.SubagentModelsChanged.type
+        event.type !== "session.next.subagent.models.changed" &&
+        event.type !== "session.next.archive.changed"
       )
-        void resolve(eventID).catch(() => {})
+        void recovery.resolve(eventID).catch(() => {})
     }
     switch (event.type) {
-      case SessionEvent.SubagentModelsChanged.type: {
+      case "session.next.subagent.models.changed":
+        return recovery.applyPolicy(event)
+      case "session.next.archive.changed": {
         const decoded = decodeSessionManagementEvent(event)
         if (!decoded) return
         const sessionID = decoded.properties.sessionID
-        const info = data.info[sessionID]
-        const pending = requests.get(sessionID)
-        const current = mergeSessionManagementInfo(pending?.state.policy, info
-          ? mergeSessionManagementInfo(policyFences.get(sessionID), info)
-          : policyFences.get(sessionID) ?? { id: sessionID, time: { updated: 0 } })
-        const next = applySessionManagementEvent(current, decoded)
-        if (!next) return
-        const canonical = current.subagentModelsReadReceipt !== undefined &&
-          next.subagentModels === current.subagentModels
-        if (pending) {
-          pending.state.policyGeneration = {}
-          pending.state.policy = next
-        }
-        policyFences.delete(sessionID)
-        policyFences.set(sessionID, {
-          id: next.id,
-          subagentModels: next.subagentModels,
-          subagentModelsChangedAt: next.subagentModelsChangedAt,
-          subagentModelsRevision: next.subagentModelsRevision,
-          subagentModelsReadReceipt: next.subagentModelsReadReceipt,
-          time: { updated: next.time.updated },
-        })
-        const oldest = policyFences.size > sessionInfoLimit ? policyFences.keys().next().value : undefined
-        const recovery = oldest !== undefined && !data.info[oldest]
-          ? (() => {
-              const pending = requests.get(oldest)
-              if (pending) pending.state.policyGeneration = {}
-              // Carry the floor in request-owned state before dropping the bounded fence.
-              return resolve(oldest, { force: true }, policyFences.get(oldest))
-            })()
-          : undefined
-        if (oldest !== undefined) policyFences.delete(oldest)
-        if (info) {
-          const remembered = remember({ ...info, ...next, time: { ...info.time, ...next.time } })
-          if (!canonical && !pending && !recovery) return
-          return Promise.all([
-            canonical || pending ? resolve(sessionID, { force: true }) : Promise.resolve(remembered),
-            ...(recovery ? [recovery] : []),
-          ])
-        }
-        return Promise.all([resolve(sessionID, { force: true }), ...(recovery ? [recovery] : [])])
+        const active = recovery.generation(sessionID)
+        return projectSessionManagementEvent(
+          decoded,
+          sessionID,
+          data.info,
+          remember,
+          recovery.resolve,
+          () => generations.get(sessionID) === active,
+        )
       }
       case "session.created":
         remember((event.properties as { info: Session }).info)
         return
       case "session.updated": {
-        const info = (event.properties as { info: Session }).info
-        remember(info)
+        const info = remember((event.properties as { info: AppSession }).info)
         if (info.time.archived) evict([info.id])
         return
       }
@@ -1090,7 +977,7 @@ export function createServerSession(
         const properties = event.properties as { sessionID?: string; info?: Session }
         const sessionID = properties.info?.id ?? properties.sessionID
         if (!sessionID) return
-        policyFences.delete(sessionID)
+        recovery.forget(sessionID)
         infoSeen.delete(sessionID)
         setData(
           "info",
@@ -1381,12 +1268,12 @@ export function createServerSession(
     get: (sessionID: string) => data.info[sessionID],
     peek: (sessionID: string) => data.info[sessionID],
     remember,
-    resolve: (sessionID: string, options?: { force?: boolean }) => resolve(sessionID, options),
+    resolve: (sessionID: string, options?: { force?: boolean }) => recovery.resolve(sessionID, options),
     lineage: {
       peek: peekLineage,
       async resolve(sessionID: string) {
-        const session = await resolve(sessionID)
-        return { session, root: await rootSession(session, resolve) }
+        const session = await recovery.resolve(sessionID)
+        return { session, root: await rootSession(session, recovery.resolve) }
       },
     },
     sync,
@@ -1467,7 +1354,7 @@ export function createServerSession(
         return
       }
       return runInflight(inflightTodo, sessionID, () => {
-        const active = generation(sessionID)
+        const active = recovery.generation(sessionID)
         return (options?.retry ?? retry)(() => client.session.todo({ sessionID })).then((result) => {
           if (generations.get(sessionID) !== active) return
           setData("todo", sessionID, reconcile(result.data ?? [], { key: "id" }))
