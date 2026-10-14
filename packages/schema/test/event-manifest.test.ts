@@ -3,6 +3,7 @@ import { FileSystem, Integration, MaestroEvent, Permission, Project, Reference, 
 import { EventManifest } from "../src/event-manifest"
 import { IdeEvent } from "../src/ide-event"
 import { RelayHook } from "../src/relay-hook"
+import { ResearchEvent } from "../src/research-event"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
 import { SessionV1 } from "../src/session-v1"
@@ -139,9 +140,34 @@ describe("public event manifest", () => {
       SessionV1.Event.Error,
     ])
     expectPublicTypes([...EventManifest.Latest.keys()])
+    expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's seven durable-only definitions are already canonical; the two Session settings events add two more.
     expect(EventManifest.Durable.size).toBe(72)
+  })
+
+  test("owns canonical research definitions only on the durable surface", () => {
+    const research = [
+      ["research.source.admitted", ResearchEvent.SourceAdmitted],
+      ["research.source.requested", ResearchEvent.SourceRequested],
+      ["research.source.attempted", ResearchEvent.SourceAttempted],
+      ["research.record.committed", ResearchEvent.RecordCommitted],
+      ["research.document.published", ResearchEvent.DocumentPublished],
+      ["research.allowance.bound", ResearchEvent.AllowanceBound],
+      ["research.allowance.charged", ResearchEvent.AllowanceCharged],
+    ] as const
+    expect([...ResearchEvent.Definitions]).toEqual(research.map((event) => event[1]))
+    expect([...EventManifest.Durable.keys()].filter((key) => key.startsWith("research.")).sort()).toEqual(
+      research.map((event) => `${event[0]}.1`).sort(),
+    )
+    research.forEach((event) => {
+      expect(event[1].type, event[0]).toBe(event[0])
+      expect(event[1].durable, event[0]).toEqual({ version: 1, aggregate: "sessionID" })
+      expect(EventManifest.Durable.get(`${event[0]}.1`), event[0]).toBe(event[1])
+      expect(EventManifest.ServerDefinitions, event[0]).not.toContain(event[1])
+      expect(EventManifest.Definitions, event[0]).not.toContain(event[1])
+      expect(EventManifest.Latest.has(event[0]), event[0]).toBe(false)
+    })
   })
 
   test("public-name pin rejects missing, unknown and same-count replacement events", () => {
@@ -204,7 +230,9 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(72, 75)).toEqual([
+    const legacyParts = EventManifest.Definitions.indexOf(SessionV1.Event.PartDelta)
+    expect(legacyParts).toBeGreaterThanOrEqual(0)
+    expect(EventManifest.Definitions.slice(legacyParts, legacyParts + 3)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
