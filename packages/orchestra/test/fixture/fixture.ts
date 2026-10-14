@@ -63,15 +63,17 @@ function sanitizePath(p: string): string {
  * most 5 s; anything else, or a holder that outlasts the bound, rejects so the leak is reported instead of hidden.
  * Unlink fixture-owned symlinks/junctions first: Windows Bun recursive rm has failed with EFAULT on Arsenal's
  * workspace aliases. Walk only lstat-confirmed directories, never the shared directories those links target.
+ * Link traversal and recursive removal share the same deadline and transient-error retry path.
  */
 async function clean(dir: string) {
-  await unlinkFixtureLinks(dir)
   const deadline = performance.now() + 5_000
   for (;;) {
-    const error = await fs.rm(dir, { recursive: true, force: true }).then(
-      () => undefined,
-      (error: unknown) => error,
-    )
+    const error = await unlinkFixtureLinks(dir)
+      .then(() => fs.rm(dir, { recursive: true, force: true }))
+      .then(
+        () => undefined,
+        (error: unknown) => error,
+      )
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined
     if (error !== undefined && code !== "EBUSY" && code !== "ENOTEMPTY" && code !== "EPERM") throw error
     if (error === undefined && (await fixtureStat(dir)) === undefined) return
