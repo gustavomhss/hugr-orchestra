@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
 import type { PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
-import { insertPromptEditorText } from "@orchestra/session-ui/v2/prompt-input/interaction"
+import { insertPromptEditorText, materializePromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { getCursorPosition, setCursorPosition } from "./editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
@@ -28,6 +28,17 @@ test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", (
     expect(getCursorPosition(editor)).toBe(cursor)
     expect(parsePromptInputV2Editor(editor)).toEqual(prompt)
   })
+  const pill = editor.querySelector('[data-mention="file"]')!
+  const wrapper = document.createElement("div")
+  wrapper.append(...Array.from(editor.childNodes))
+  editor.replaceChildren(wrapper)
+  const range = document.createRange()
+  range.setStart(pill.firstChild!, 1)
+  range.collapse(true)
+  expect(materializePromptEditor(editor, range).start).toBe(3)
+  expect(editor.querySelector('[data-mention="file"]')).toBe(pill)
+  expect(pill.contains(range.startContainer)).toBe(false)
+  expect(parsePromptInputV2Editor(editor)).toEqual(prompt)
   editor.firstChild!.textContent = "x" + editor.firstChild!.textContent
   const file = parsePromptInputV2Editor(editor).find((part) => part.type === "file")
   expect(file?.selection).toEqual({ startLine: 1, startChar: 2, endLine: 3, endChar: 4 })

@@ -462,6 +462,7 @@ export function insertPromptEditorText(editor: HTMLElement, text: string, inputT
   if (!selection?.rangeCount) return false
   const range = selection.getRangeAt(0)
   if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return false
+  materializePromptEditor(editor, range)
   const placeholder = range.startContainer.parentElement
   if (
     range.collapsed &&
@@ -504,6 +505,22 @@ export function readPromptEditor(root: Node) {
     length += content.length
   }
   const block = (node: Node) => node instanceof HTMLElement && (node.tagName === "DIV" || node.tagName === "P")
+  const empty = (node: Node) =>
+    (node.nodeType === Node.TEXT_NODE && !node.textContent) ||
+    (node instanceof HTMLElement && node.hasAttribute("data-prompt-caret") && node.textContent === "\u200B")
+  const filler = (node: Node) => {
+    if (!(node instanceof HTMLElement) || node.tagName !== "BR" || node.hasAttribute("data-prompt-break")) return false
+    let current: Node = node
+    while (current.parentNode) {
+      const parent = current.parentNode
+      const siblings = Array.from(parent.childNodes)
+      if (!siblings.slice(siblings.indexOf(current) + 1).every(empty)) return false
+      if (block(parent) || (parent === root && parent instanceof HTMLElement && parent.isContentEditable)) return true
+      if (parent === root) return false
+      current = parent
+    }
+    return false
+  }
   const visit = (node: Node) => {
     const start = length
     const text = node.textContent ?? ""
@@ -532,23 +549,13 @@ export function readPromptEditor(root: Node) {
       children.forEach((child, index) => {
         offsets[index] = length
         // Chromium's terminal, unmarked BR holds the caret; an empty DIV is already a line box.
-        const filler =
-          child instanceof HTMLElement &&
-          child.tagName === "BR" &&
-          !child.hasAttribute("data-prompt-break") &&
-          children.slice(index + 1).every((next) =>
-            (next.nodeType === Node.TEXT_NODE && !next.textContent) ||
-            (next instanceof HTMLElement && next.hasAttribute("data-prompt-caret") && next.textContent === "\u200B"),
-          )
-        const empty =
-          (child.nodeType === Node.TEXT_NODE && !child.textContent) ||
-          (child instanceof HTMLElement && child.hasAttribute("data-prompt-caret") && child.textContent === "\u200B")
+        const isFiller = filler(child)
         const startsBreak =
           (child instanceof HTMLElement && child.tagName === "BR") ||
           (child.nodeType === Node.TEXT_NODE && (child.textContent ?? "").startsWith("\n"))
         if (
-          !filler &&
-          !empty &&
+          !isFiller &&
+          !empty(child) &&
           !startsBreak &&
           previous &&
           (block(previous) || block(child)) &&
@@ -557,8 +564,8 @@ export function readPromptEditor(root: Node) {
           append(node, "\n")
         }
         const before = length
-        if (filler) positions.set(child, { start: length, end: length, skip: 0 })
-        if (!filler) visit(child)
+        if (isFiller) positions.set(child, { start: length, end: length, skip: 0 })
+        if (!isFiller) visit(child)
         offsets[index + 1] = length
         if (block(child) || length > before) {
           previous = child
@@ -578,26 +585,74 @@ export function promptEditorCursor(editor: HTMLElement) {
   const selection = window.getSelection()
   if (!selection?.rangeCount || !editor.contains(selection.anchorNode)) return 0
   const range = selection.getRangeAt(0)
+  return promptEditorPoint(editor, range.startContainer, range.startOffset)
+}
+
+export function promptEditorPoint(editor: HTMLElement, node: Node, offset: number) {
   const decoded = readPromptEditor(editor)
-  const position = decoded.positions.get(range.startContainer)
-  if (!position && range.startContainer.parentElement) {
-    const parent = decoded.positions.get(range.startContainer.parentElement)
-    if (parent) return parent.start + Math.min(parent.end - parent.start, range.startOffset)
+  const mention = (node instanceof HTMLElement ? node : node.parentElement)?.closest(
+    '[data-mention], [data-type="file"], [data-type="agent"]',
+  )
+  if (mention && editor.contains(mention)) {
+    const position = decoded.positions.get(mention)
+    if (!position) throw new Error("PROMPT_EDITOR_POINT_UNMAPPABLE")
+    const prefix = document.createRange()
+    prefix.selectNodeContents(mention)
+    prefix.setEnd(node, offset)
+    return atomicPromptOffset(decoded, position.start + prefix.toString().length)
   }
-  if (!position) return 0
-  if (position.offsets) return position.offsets[range.startOffset] ?? position.end
-  return position.start + Math.max(0, Math.min(position.end - position.start, range.startOffset - position.skip))
+  const position = decoded.positions.get(node)
+  if (!position) throw new Error("PROMPT_EDITOR_POINT_UNMAPPABLE")
+  return atomicPromptOffset(decoded, position.offsets
+    ? position.offsets[offset] ?? position.end
+    : position.start + Math.max(0, Math.min(position.end - position.start, offset - position.skip)))
+}
+
+// Nearest atomic boundary, with ties going right, for reads, ranges and every insertion.
+function atomicPromptOffset(decoded: ReturnType<typeof readPromptEditor>, offset: number) {
+  const target = Math.max(0, Math.min(decoded.length, offset))
+  const mention = decoded.segments.find((segment) => {
+    if (!isPromptMention(segment.node)) return false
+    const position = decoded.positions.get(segment.node)!
+    return target > position.start && target < position.end
+  })
+  if (!mention) return target
+  const position = decoded.positions.get(mention.node)!
+  return target - position.start < position.end - target ? position.start : position.end
+}
+
+function isPromptMention(node: Node): node is HTMLElement {
+  return node instanceof HTMLElement && !!(node.dataset.mention || node.dataset.type === "file" || node.dataset.type === "agent")
+}
+
+export function materializePromptEditor(editor: HTMLElement, range: Range) {
+  const start = promptEditorPoint(editor, range.startContainer, range.startOffset)
+  const end = promptEditorPoint(editor, range.endContainer, range.endOffset)
+  if (!Array.from(editor.childNodes).every((node) =>
+    node.nodeType === Node.TEXT_NODE || isPromptMention(node) ||
+    (node instanceof HTMLElement && ((node.tagName === "BR" && node.hasAttribute("data-prompt-break")) ||
+      (node.hasAttribute("data-prompt-caret") && node.textContent === "\u200B"))),
+  )) {
+    // Structural separators become real text. Move original pill nodes so their WeakMap metadata survives.
+    editor.replaceChildren(...readPromptEditor(editor).segments.map((segment) =>
+      isPromptMention(segment.node) ? segment.node : document.createTextNode(segment.content),
+    ))
+  }
+  promptEditorRangeEdge(editor, range, "start", start)
+  promptEditorRangeEdge(editor, range, "end", end)
+  return { range, start, end }
 }
 
 export function promptEditorRangeEdge(editor: HTMLElement, range: Range, edge: "start" | "end", offset: number) {
   const decoded = readPromptEditor(editor)
-  const target = Math.max(0, Math.min(decoded.length, offset))
+  const target = atomicPromptOffset(decoded, offset)
   const set = (node: Node, index: number) => {
     if (edge === "start") range.setStart(node, index)
     if (edge === "end") range.setEnd(node, index)
   }
   for (const [node, position] of decoded.positions) {
     if (node.nodeType !== Node.TEXT_NODE || target < position.start || target > position.end) continue
+    if (node.parentElement?.hasAttribute("data-prompt-caret") && node.parentElement.textContent === "\u200B") continue
     set(node, target - position.start + position.skip)
     return
   }
@@ -611,5 +666,5 @@ export function promptEditorRangeEdge(editor: HTMLElement, range: Range, edge: "
     set(node, index)
     return
   }
-  set(editor, editor.childNodes.length)
+  throw new Error("PROMPT_EDITOR_OFFSET_UNMAPPABLE")
 }
