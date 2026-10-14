@@ -2,7 +2,7 @@ import type { Actions } from "@orchestra/schema/actions"
 import type { Schema } from "effect"
 import { actionsError, ActionsRequestError } from "./api"
 import type { Dialog, ErrorState, State } from "./contract"
-import { githubDefinitions, headerDefinitions } from "./source-dialogs"
+import { githubDefinitions, headerDefinitions } from "./input-definitions"
 
 type DispatchDialog = Extract<Dialog, { kind: "dispatch" }>
 type SelectionState = Pick<State, "binding" | "dialog" | "route" | "workflows">
