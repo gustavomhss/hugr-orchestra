@@ -7,7 +7,7 @@ import { Schema } from "effect"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { buildVersions, cli, command, sandbox, successful, target, versions } from "./fixture/distribution-native"
 import { aurProfileProvenance, aurSandboxProfile } from "./fixture/distribution-aur/sandbox-profile"
-import { AurSandboxEvidence, aurBootstrapEvidence } from "./fixture/distribution-aur/sandbox-evidence"
+import { AurBootstrapEvidence, AurSandboxEvidence, aurBootstrapEvidence, aurBootstrapEvidenceTeeth } from "./fixture/distribution-aur/sandbox-evidence"
 
 // Extension: real native AUR package-manager closure, both production target rows.
 // Lead wires this exact test into ubuntu x64/ARM64 hosted bundle rows. No unavailable
@@ -88,6 +88,9 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   const daemon = await docker(["info", "--format", "{{.OSType}}|{{.Architecture}}"], 30_000)
   if (daemon !== `linux|${guest.cpu}` && daemon !== `linux|${guest.dockerArch}`)
     throw new Error(`AUR_NATIVE_DOCKER_DAEMON_ARCH_MISMATCH: ${daemon}`)
+  const daemonVersion = await docker(["version", "--format", "{{.Server.Version}}"])
+  if (daemonVersion !== aurProfileProvenance.daemonVersion)
+    throw new Error(`AUR_PINNED_DOCKER_DEFAULT_VERSION_MISMATCH: required=${aurProfileProvenance.daemonVersion} actual=${daemonVersion}`)
   console.info(`AUR guest selection: ${JSON.stringify({ target, ...guest })}`)
   await docker(["pull", "--platform", `linux/${guest.dockerArch}`, guest.image], 300_000)
     .catch((cause: unknown) => { throw new Error(`AUR_PINNED_GUEST_IMAGE_UNAVAILABLE: ${guest.image}`, { cause }) })
@@ -187,7 +190,11 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
       continue
     }
     await docker(["rm", "--force", "--volumes", id], 60_000)
-    expect(await ownedContainers(), "AUR_DIAGNOSTIC_CONTAINER_REMOVAL_PROVED").toEqual([])
+    const remaining = await ownedContainers()
+    expect(remaining, "AUR_DIAGNOSTIC_CONTAINER_REMOVAL_PROVED").toEqual([])
+    await Bun.write(join(state.directory, "evidence/sandbox-diagnostic-cleanup.json"), JSON.stringify({
+      id, name, label: `${label}=${nonce}`, remaining,
+    }, null, 2))
     state.id = undefined
   }
   if (!state.id) throw new Error("AUR_ENFORCED_GUEST_MISSING")
@@ -206,14 +213,17 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
   if (result.code !== 0) throw new Error(`AUR_NATIVE_GUEST_FAILED: ${guest.image}\n${result.stderr}`)
-  await aurBootstrapEvidence(join(state.directory, "evidence"))
+  const bootstrapSandbox = await aurBootstrapEvidence(join(state.directory, "evidence"))
+  await aurBootstrapEvidenceTeeth(join(state.directory, "evidence"))
   const qualified = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     target: Schema.String, versions: Schema.Array(Schema.String), architecture: Schema.String,
+    bootstrapDownloadSandbox: AurBootstrapEvidence,
     finalPackages: Schema.Array(Schema.Struct({ file: Schema.String, sha256: Schema.String })),
   }))))(await readFile(join(state.directory, "evidence/qualified.json"), "utf8"))
   expect(qualified.target).toBe(target)
   expect(qualified.versions).toEqual([...versions])
   expect(qualified.architecture).toBe(guest.cpu)
+  expect(qualified.bootstrapDownloadSandbox).toEqual(bootstrapSandbox)
   expect(qualified.finalPackages).toHaveLength(2)
   const cleaned = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     qualified: Schema.Boolean, daemons: Schema.String, package: Schema.String,
