@@ -76,6 +76,13 @@ jobs:
             `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
           NODE
 
+      - name: Fetch source history for Script fixtures
+        if: steps.request.outputs.package == 'script' && steps.request.outputs.runner == 'bun'
+        run: |
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --unshallow --no-tags origin
+          fi
+
       - name: Setup Bun
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/setup-bun

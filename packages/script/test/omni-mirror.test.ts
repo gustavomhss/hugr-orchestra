@@ -29,7 +29,8 @@ async function fixture() {
 }
 
 function run(source: string, mirror: string, target: string, file = script, ...args: string[]) {
-  return Bun.spawnSync(["bash", file, target, mirror, ...args], { cwd: source, stdout: "pipe", stderr: "pipe" })
+  const bash = process.platform === "win32" ? join(process.env.ProgramFiles ?? "C:/Program Files", "Git/bin/bash.exe") : "bash"
+  return Bun.spawnSync([bash, file.replaceAll("\\", "/"), target, mirror.replaceAll("\\", "/"), ...args], { cwd: source, stdout: "pipe", stderr: "pipe" })
 }
 
 function replay(source: string, mirror: string, target: string) {
