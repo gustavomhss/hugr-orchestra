@@ -33,7 +33,7 @@ export const CreateWorkflowForm = Schema.Struct({ provider: Schema.optional(Acti
 export const ReviewSourceForm = Schema.Struct({ provider: Schema.optional(Actions.ProviderKind), branch: Schema.NonEmptyString,
   message: Schema.NonEmptyString, title: Schema.NonEmptyString, text: Schema.optional(Schema.String), content: Schema.optional(Schema.String) })
 
-/** Reject excess fields and non-JSON values, then detach Solid proxies before the first await. */
+/** Reject excess fields and non-JSON values, then detach the payload before the first await. */
 export function decodeAction<S extends Schema.Decoder<unknown>>(schema: S, value: unknown): S["Type"] {
   // Native optional fields omit undefined on the wire but allow it in typed client forms.
   const decoded = Schema.decodeUnknownOption(Schema.toType(schema), { onExcessProperty: "error" })(value)
@@ -43,6 +43,13 @@ export function decodeAction<S extends Schema.Decoder<unknown>>(schema: S, value
   const result = Schema.decodeUnknownOption(schema, { onExcessProperty: "error" })(json.value)
   if (Option.isNone(result)) throw new ActionsRequestError("invalid_input")
   return result.value
+}
+
+/** Native DTOs were validated before Store adoption; detach its private symbols before revalidation. */
+export function snapshotAction<S extends Schema.Decoder<unknown>>(schema: S, value: unknown): S["Type"] {
+  const json = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Json))(JSON.stringify(value))
+  if (Option.isNone(json)) throw new ActionsRequestError("invalid_input")
+  return decodeAction(schema, json.value)
 }
 function jsonBody(value: unknown) { return Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Json))(JSON.stringify(value)) }
 function nativeID(value?: string) { if (!value) throw new ActionsRequestError("invalid_input"); return value }

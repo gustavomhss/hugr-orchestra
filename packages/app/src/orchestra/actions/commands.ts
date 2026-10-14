@@ -1,6 +1,6 @@
 import { Actions } from "@orchestra/schema/actions"
 import { Schema } from "effect"
-import { actionsError, ActionsRequestError, CreateWorkflowForm, decodeAction, requestError, ResourceForms, ReviewSourceForm, type ActionsCommand, type ActionsScope, type createActionsAPI, type ResourceAction } from "./api"
+import { actionsError, ActionsRequestError, CreateWorkflowForm, decodeAction, requestError, snapshotAction, ResourceForms, ReviewSourceForm, type ActionsCommand, type ActionsScope, type createActionsAPI, type ResourceAction } from "./api"
 import type { Dialog, ErrorState, State } from "./contract"
 import { canEditSource, immutableSource, sourceIdentity, type createRequestOwner, type createSourceDraft } from "./requests"
 import { canRequest } from "./request-policy"
@@ -129,7 +129,7 @@ export function createActionsCommands(input: {
         if (!baseline?.commit || baseline.bindingID !== captured.scope.bindingID || immutableSource(input.state(), baseline)
           || (created ? created.path !== captured.route.path || created.ref !== baseline.ref || input.state().source.status !== "idle"
             : !source || source.version.startsWith("draft:")) || !canEditSource(input.state(), source)) throw new ActionsRequestError("source_unresolved")
-        const base = decodeAction(Actions.SourceBase, baseline)
+        const base = snapshotAction(Actions.SourceBase, baseline)
         if (!["source.branch", "source.write", "source.review"].every((kind) => canRequest(input.state(), kind))) throw new ActionsRequestError("capability_unavailable")
         if (form.provider && form.provider !== captured.provider || form.branch === base.ref || immutableSource(input.state(), { ref: form.branch })) throw new ActionsRequestError("invalid_input")
         const text = form.content ?? form.text ?? input.state().draft
@@ -137,7 +137,7 @@ export function createActionsCommands(input: {
         if (text !== input.state().draft) throw new ActionsRequestError("source_conflict")
         if (review && JSON.stringify(review.form) !== JSON.stringify(values)) throw new ActionsRequestError("intent_conflict")
         if (!review && lease?.restored && (lease.phases?.length || lease.intent?.kind.startsWith("source."))) throw new ActionsRequestError("outcome_unknown")
-        review ??= { base, source: source && decodeAction(Actions.Source, source), path: created?.path ?? source?.path ?? "",
+        review ??= { base, source: source && snapshotAction(Actions.Source, source), path: created?.path ?? source?.path ?? "",
           create: !!created, form: values, step: 0, phases: [], clients: [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()] }
         const plan = review
         return start(async (handle) => {
@@ -353,7 +353,7 @@ function operationFailure(operation: Actions.Operation, failure?: ErrorState) {
   if (operation.state === "expired") return actionsError(new ActionsRequestError("operation_expired"))
 }
 function immutable<T>(value: T): T { if (value && typeof value === "object") { Object.values(value).forEach(immutable); Object.freeze(value) }; return value }
-function metadata(resource: Actions.Resource) { return decodeAction(Schema.Record(Schema.String, Schema.Json), resource.data) }
+function metadata(resource: Actions.Resource) { return snapshotAction(Schema.Record(Schema.String, Schema.Json), resource.data) }
 function template(provider: Actions.ProviderKind, name: string, kind: string) {
   const blank = kind === "Blank configuration" || kind === "blank"
   const release = kind === "Release" || kind === "release"

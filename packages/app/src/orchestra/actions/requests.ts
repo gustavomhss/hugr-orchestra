@@ -1,5 +1,5 @@
 import { Actions } from "@orchestra/schema/actions"
-import { decodeAction, type createActionsAPI } from "./api"
+import { decodeAction, snapshotAction, type createActionsAPI } from "./api"
 import type { ErrorState, Route, State } from "./contract"
 import { canRequest } from "./request-policy"
 
@@ -219,8 +219,8 @@ export function createSourceDraft(input: {
       input.update({ draft: base?.text ?? "", draftBase: undefined, graph: { status: "idle" }, diagnostics: [], commandError: undefined }) },
     validate() {
       if (input.owner.disposed) return Promise.resolve()
-      const source = base && decodeAction(Actions.Source, base)
-      const baseline = created && input.state().draftBase ? decodeAction(Actions.SourceBase, input.state().draftBase) : undefined
+      const source = base && snapshotAction(Actions.Source, base)
+      const baseline = created && input.state().draftBase ? snapshotAction(Actions.SourceBase, input.state().draftBase) : undefined
       const path = created?.path
       const binding = input.state().binding
       if (!binding || (created ? !baseline || baseline.bindingID !== binding.id || created.ref !== baseline.ref
