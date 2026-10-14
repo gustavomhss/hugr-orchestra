@@ -300,6 +300,9 @@ export function createPromptInputV2Controller(input: {
     parts() {
       return draft.state.prompt
     },
+    cursor() {
+      return draft.state.cursor
+    },
     addPart,
     contextItem(id: string) {
       return draft.state.context.items.find((item) => item.key === id)
@@ -384,7 +387,7 @@ export function createPromptInputV2Controller(input: {
       const text = clipboard?.getData("text/plain")
       if (!text) return
       event.preventDefault()
-      if (typeof document.execCommand === "function" && document.execCommand("insertText", false, text)) return
+      // Insert the clipboard's literal text; execCommand may fold CR or create line-box DOM.
       const target = event.currentTarget
       const selection = window.getSelection()
       if (!(target instanceof HTMLElement) || !selection?.rangeCount || !target.contains(selection.anchorNode)) return
@@ -451,31 +454,132 @@ function promptLength(prompt: PromptInputV2PersistedState["prompt"]) {
 }
 
 function editorCursor(editor: HTMLElement) {
-  const selection = window.getSelection()
-  if (!selection?.rangeCount || !editor.contains(selection.anchorNode)) return editor.textContent?.length ?? 0
-  const range = selection.getRangeAt(0).cloneRange()
-  range.selectNodeContents(editor)
-  range.setEnd(selection.anchorNode!, selection.anchorOffset)
-  return range.toString().length
+  return promptEditorCursor(editor)
 }
 
 function setEditorCursor(editor: HTMLElement | undefined, cursor: number) {
   if (!editor) return
-  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
-  let remaining = cursor
-  let node = walker.nextNode()
-  while (node) {
-    const length = node.textContent?.length ?? 0
-    if (remaining <= length) {
-      const range = document.createRange()
-      range.setStart(node, remaining)
-      range.collapse(true)
-      const selection = window.getSelection()
-      selection?.removeAllRanges()
-      selection?.addRange(range)
+  const range = document.createRange()
+  promptEditorRangeEdge(editor, range, "start", cursor)
+  range.collapse(true)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
+
+// Shared by both composers: DOM line boxes are not additional characters after a BR.
+export function readPromptEditor(root: Node) {
+  const segments: { node: Node; content: string }[] = []
+  const positions = new Map<Node, { start: number; end: number; skip: number; offsets?: number[] }>()
+  let length = 0
+  const append = (node: Node, content: string) => {
+    if (content) segments.push({ node, content })
+    length += content.length
+  }
+  const block = (node: Node) => node instanceof HTMLElement && (node.tagName === "DIV" || node.tagName === "P")
+  const visit = (node: Node) => {
+    const start = length
+    const text = node.textContent ?? ""
+    const skip =
+      node.nodeType === Node.TEXT_NODE &&
+      node.parentElement?.hasAttribute("data-prompt-caret") &&
+      node === node.parentElement.firstChild &&
+      text.startsWith("\u200B")
+        ? 1
+        : 0
+    if (node.nodeType === Node.TEXT_NODE) append(node, text.slice(skip))
+    if (
+      node instanceof HTMLElement &&
+      (node.dataset.type === "file" || node.dataset.type === "agent" || node.dataset.mention)
+    ) {
+      append(node, text)
+      positions.set(node, { start, end: length, skip: 0, offsets: [start, length] })
       return
     }
-    remaining -= length
-    node = walker.nextNode()
+    if (node instanceof HTMLElement && node.tagName === "BR") append(node, "\n")
+    if (node.nodeType !== Node.TEXT_NODE && !(node instanceof HTMLElement && node.tagName === "BR")) {
+      const children = Array.from(node.childNodes)
+      const offsets = [length]
+      let previous: Node | undefined
+      let emptyBlock = false
+      children.forEach((child, index) => {
+        offsets[index] = length
+        // Chromium's terminal, unmarked BR holds the caret; an empty DIV is already a line box.
+        const filler =
+          child instanceof HTMLElement &&
+          child.tagName === "BR" &&
+          !child.hasAttribute("data-prompt-break") &&
+          children.slice(index + 1).every((next) => next.nodeType === Node.TEXT_NODE && !next.textContent)
+        const empty =
+          (child.nodeType === Node.TEXT_NODE && !child.textContent) ||
+          (child instanceof HTMLElement && child.hasAttribute("data-prompt-caret") && child.textContent === "\u200B")
+        const startsBreak =
+          (child instanceof HTMLElement && child.tagName === "BR") ||
+          (child.nodeType === Node.TEXT_NODE && (child.textContent ?? "").startsWith("\n"))
+        if (
+          !filler &&
+          !empty &&
+          !startsBreak &&
+          previous &&
+          (block(previous) || block(child)) &&
+          (emptyBlock || !segments[segments.length - 1]?.content.endsWith("\n"))
+        ) {
+          append(node, "\n")
+        }
+        const before = length
+        if (filler) positions.set(child, { start: length, end: length, skip: 0 })
+        if (!filler) visit(child)
+        offsets[index + 1] = length
+        if (block(child) || length > before) {
+          previous = child
+          emptyBlock = block(child) && length === before
+        }
+      })
+      positions.set(node, { start, end: length, skip: 0, offsets })
+      return
+    }
+    positions.set(node, { start, end: length, skip })
   }
+  visit(root)
+  return { segments, positions, length }
+}
+
+export function promptEditorCursor(editor: HTMLElement) {
+  const selection = window.getSelection()
+  if (!selection?.rangeCount || !editor.contains(selection.anchorNode)) return 0
+  const range = selection.getRangeAt(0)
+  const decoded = readPromptEditor(editor)
+  const position = decoded.positions.get(range.startContainer)
+  if (!position && range.startContainer.parentElement) {
+    const parent = decoded.positions.get(range.startContainer.parentElement)
+    if (parent) return parent.start + Math.min(parent.end - parent.start, range.startOffset)
+  }
+  if (!position) return 0
+  if (position.offsets) return position.offsets[range.startOffset] ?? position.end
+  return position.start + Math.max(0, Math.min(position.end - position.start, range.startOffset - position.skip))
+}
+
+export function promptEditorRangeEdge(editor: HTMLElement, range: Range, edge: "start" | "end", offset: number) {
+  const decoded = readPromptEditor(editor)
+  const target = Math.max(0, Math.min(decoded.length, offset))
+  const set = (node: Node, index: number) => {
+    if (edge === "start") range.setStart(node, index)
+    if (edge === "end") range.setEnd(node, index)
+  }
+  for (const [node, position] of decoded.positions) {
+    if (node.nodeType !== Node.TEXT_NODE || target < position.start || target > position.end) continue
+    set(node, target - position.start + position.skip)
+    return
+  }
+  for (const [node, position] of decoded.positions) {
+    if (
+      node instanceof HTMLElement &&
+      (node.dataset.type === "file" || node.dataset.type === "agent" || node.dataset.mention)
+    ) continue
+    const index = position.offsets?.indexOf(target) ?? -1
+    if (index < 0) continue
+    set(node, index)
+    return
+  }
+  set(editor, editor.childNodes.length)
 }
