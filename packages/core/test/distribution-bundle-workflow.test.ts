@@ -45,7 +45,7 @@ test("real bundle source passes structural coverage and generic CLI discovery ch
       expect(exits, "CLI_SELECTOR_EXIT").toEqual([exitCode])
       const args = calls[0] ?? []
       const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
-      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-aur.test.ts", "./test/fixture/distribution-aur-guest.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
+      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-aur.test.ts", "./test/fixture/distribution-aur-guest.test.ts", "./test/distribution-musl.test.ts", "./test/fixture/distribution-musl-guest.test.ts", "./test/distribution-provider.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
       expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
       exclusions.forEach((file) => check(statSync(path.join(root, "packages/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
     }
@@ -61,6 +61,11 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_HOMEBREW_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-homebrew.test.ts")) }))],
     ["BUNDLE_WINDOWS_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-windows.test.ts")) }))],
     ["BUNDLE_AUR_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-aur.test.ts")) }))],
+    ["BUNDLE_MUSL_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-musl.test.ts")) }))],
+    ["BUNDLE_PROVIDER_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-provider.test.ts")) }))],
+    ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
+    ["BUNDLE_NATIVE_JOB", (value) => patchStep(value, "Prove native Windows Job handle closure", () => undefined)],
+    ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", () => undefined)],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
   ]
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
@@ -74,12 +79,13 @@ function inspect(input: unknown) {
   expect(Object.keys(value.jobs).toSorted()).toEqual(["qualification", "static"])
   check(value.defaults.run.shell === "bash" && value.env.CI === "true", "BUNDLE_SHELL_CI")
   const job = value.jobs.qualification
-  check(job?.strategy?.matrix.include?.length === 7 && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 3, "BUNDLE_MATRIX")
+  check(job?.strategy?.matrix.include?.length === 8 && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 3, "BUNDLE_MATRIX")
   const rows = job.strategy.matrix.include
   expect(rows.map((row) => [row.package, row.host, row.cpu, row.platform]).toSorted()).toEqual([
     ["core", "ubuntu-latest", "X64", "linux"], ["core", "windows-latest", "X64", "win32"],
     ["cli", "ubuntu-latest", "X64", "linux"], ["cli", "windows-latest", "X64", "win32"],
     ["cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["cli", "macos-14", "ARM64", "darwin"], ["cli", "macos-15-intel", "X64", "darwin"],
+    ["cli", "windows-11-arm", "ARM64", "win32"],
   ].toSorted())
   check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
   check(job.env.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER === "${{ matrix.platform == 'win32' && 'true' || 'false' }}", "BUNDLE_JOB_ENV_CONTEXT")
@@ -88,6 +94,12 @@ function inspect(input: unknown) {
   const admission = requireStep(job.steps, "Assert native CPU and exact files", "BUNDLE_CPU")
   const control = requireStep(job.steps, "Require nonce-bound positive control", "BUNDLE_CONTROL")
   const run = requireStep(job.steps, "Run tests", "BUNDLE_RUN")
+  const deno = requireStep(job.steps, "Install native Deno", "BUNDLE_DENO")
+  const nativeJob = requireStep(job.steps, "Prove native Windows Job handle closure", "BUNDLE_NATIVE_JOB")
+  const abi = requireStep(job.steps, "Prove source ABI producers", "BUNDLE_SOURCE_ABI")
+  check(deno.if === "matrix.package == 'cli'" && deno.run?.includes("deno@2.9.7") && job.steps.indexOf(deno) < job.steps.indexOf(run), "BUNDLE_DENO")
+  check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && nativeJob.run?.includes("cargo test --release -p omni-supervisor windows::tests") && nativeJob.run.includes("windows-native-job.log") && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
+  check(abi.if === "matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && abi.run?.includes("./src/tree-sitter-prebuilds.test.ts") && abi.run.includes("../desktop/src/main/cli-artifacts.test.ts") && abi.run.includes("source-abi.log"), "BUNDLE_SOURCE_ABI")
   check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "packages/${{ matrix.package }}", "BUNDLE_EXECUTION")
   check(job.steps.indexOf(admission) < job.steps.indexOf(run) && job.steps.indexOf(run) < job.steps.indexOf(control), "BUNDLE_ORDER")
   check(distribution.length > 0, "BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
@@ -99,10 +111,12 @@ function inspect(input: unknown) {
       check(files.includes("./test/distribution-homebrew.test.ts") === (row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.host}`)
       check(files.includes("./test/distribution-windows.test.ts") === (row.platform === "win32"), `BUNDLE_WINDOWS_PROOF: ${row.host}`)
       check(files.includes("./test/distribution-aur.test.ts") === (row.platform === "linux"), `BUNDLE_AUR_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-musl.test.ts") === (row.platform === "linux"), `BUNDLE_MUSL_PROOF: ${row.host}`)
+      check(files.includes("./test/distribution-provider.test.ts") === (row.host === "ubuntu-latest"), `BUNDLE_PROVIDER_PROOF: ${row.host}`)
     }
-    const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "effect/cross-spawn-spawner"].map((name) => `./test/${name}.test.ts`)
+    const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "effect/cross-spawn-spawner", "ripgrep-binary", "ripgrep-bundle"].map((name) => `./test/${name}.test.ts`)
       : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !["distribution-homebrew.test.ts", "distribution-windows.test.ts"].some((name) => file.endsWith(name)))
-        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation", "aur"]).map((name) => `./test/distribution-${name}.test.ts`)), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
+        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation", "aur", "musl"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     expect(files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
     files.forEach((file) => check(statSync(path.join(root, "packages", row.package, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`))
   })
@@ -113,7 +127,7 @@ function inspect(input: unknown) {
   const staticJob = value.jobs.static
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
-    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined],
+    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
 }

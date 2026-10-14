@@ -7,7 +7,7 @@ import { Skill } from "../../../schema/src/skill"
 import { Location } from "../../../schema/src/location"
 import { AbsolutePath } from "../../../schema/src/schema"
 import { PackagedSkills } from "@orchestra/core/packaged-skills"
-import { assertVersion, command, successful, snapshot, skillIdentity } from "./distribution-native"
+import { assertVersion, command, successful, snapshot, skillIdentity, nativeLibc } from "./distribution-native"
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
 import type { WindowsIdentity } from "./distribution-windows-process"
@@ -106,12 +106,12 @@ async function stopOwned(lease: Lease) {
   if (!result.value || result.value.code !== 0) throw new Error("NATIVE_DAEMON_STOP_COMMAND_FAILED")
   expect(await successful([lease.launcher, "service", "status"], lease.box, 15_000)).toBe("stopped")
   if (lease.tree) {
-    // Public stop already proved the exact daemon exited. Stop the retained tree
-    // and prove empty membership before retiring the fixture lease. Native Job
-    // handle finalization belongs to the binding and is not observed here.
+    // The Windows supervisor closes its owned Job before completing Stop, while
+    // retaining the root PID pin until client Release. Its real OS-handle oracle
+    // runs in the bundle before these installed-companion lifecycle tests.
     await lease.tree.stop({ graceMs: 2_000 })
     expect(await lease.tree.processes()).toEqual([])
-    console.error(`NATIVE_DAEMON_TREE_STOPPED_EMPTY ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid })}`)
+    console.error(`NATIVE_DAEMON_JOB_CLOSED ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid, treeEmpty: true })}`)
   }
   leases.delete(lease)
 }
@@ -302,7 +302,24 @@ export async function qualify(input: {
     expect(await successful([input.launcher, "service", "status"], input.box, 15_000)).toBe("stopped")
     if (input.negative) await companionFailures(input.launcher, input.payload, input.box, input.version)
     if (!input.negative) await companionSuccess(input.payload, input.box)
+    if (nativeLibc?.kind !== "musl") {
+      const { denoInstalledProbe } = await import("./distribution-native-deno")
+      const deno = await denoInstalledProbe(input.payload, input.box)
+      expect(deno.code, deno.stderr).toBe(0)
+      expect(deno.stderr).toBe("")
+      const receipt = JSON.parse(deno.stdout)
+      expect(receipt.oracle).toBe("installed-deno-companion")
+      expect(receipt.controls).toHaveLength(4)
+      console.info(`NATIVE_DENO_COMPANION ${deno.stdout.trim()}`)
+    }
     await symbols(input.launcher, input.box)
+    const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
+    const { RipgrepRelease } = await import("@orchestra/core/ripgrep/release")
+    const key = RipgrepRelease.key({ arch: process.arch, platform: process.platform, musl: nativeLibc?.kind === "musl" })
+    const rg = join(input.payload, "bin/ripgrep")
+    await RipgrepBundle.verify(rg, key)
+    expect(await successful([join(rg, RipgrepRelease.executable()), "--version"], input.box)).toStartWith(`ripgrep ${RipgrepRelease.VERSION}\n`)
+    expect(await successful([join(rg, RipgrepRelease.executable()), "--fixed-strings", "--count-matches", "export interface Shape", "sample.ts"], input.box)).toBe("1")
     lease.attempted = true
     const started = await (process.platform === "win32"
       ? command([input.launcher, "service", "start"], input.box, 30_000, {

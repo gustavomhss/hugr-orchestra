@@ -54,5 +54,6 @@ cd /repo/packages/cli
 exec /usr/bin/env CI=true PATH=/usr/local/sbin:/usr/local/bin:/usr/bin ORCHESTRA_AUR_GUEST=owned \
   ORCHESTRA_AUR_BOOTSTRAP_SANDBOX=enforced \
   ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict ORCHESTRA_OMNI_CONTROL=declared \
+  ORCHESTRA_DISTRIBUTION_DENO=/proof/deno ORCHESTRA_DISTRIBUTION_DENO_VERSION=2.9.7 \
   /proof/bun test --preload /repo/script/test-omni-control.ts --timeout 1800000 \
   ./test/fixture/distribution-aur-guest.test.ts

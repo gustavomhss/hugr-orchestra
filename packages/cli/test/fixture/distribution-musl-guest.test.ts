@@ -104,7 +104,14 @@ test("MUSL-GUEST actual native musl compile and real curl/npm lifecycle with ful
   const built = await buildVersions("/proof/builds", { omni: "/proof/omni-artifacts", treeSitter: "/proof/parser-artifacts", logs: "/proof/evidence" })
   expect(built.payloads.map((payload) => payload.version)).toEqual([...versions])
   const abi = []
-  for (const payload of built.payloads) abi.push(await muslPayloadAbi(payload.payload, payload.version, box))
+  for (const payload of built.payloads) {
+    abi.push(await muslPayloadAbi(payload.payload, payload.version, box))
+    const rg = await command([process.execPath, join(cli, "script/ripgrep-proof.ts"), "--target", target,
+      "--binary", join(payload.payload, "bin/orchestra"), "--ripgrep", join(payload.payload, "bin/ripgrep"), "--mutate"], box, 180_000)
+    await Bun.write(`/proof/evidence/ripgrep-${payload.version}.json`, JSON.stringify(rg, null, 2))
+    expect(rg.code, rg.stderr).toBe(0)
+    expect(rg.stdout).toContain("RIPGREP_BUNDLE")
+  }
   const wrongPrefix = "/proof/wrong-libc-prefix"
   expect(await snapshot(wrongPrefix)).toBeUndefined()
   const rejectWrongInstallerABI = async (prefix: string) => {

@@ -4,18 +4,18 @@ import fs from "fs"
 import path from "path"
 
 // D-L8/D-L9: the omni build each target ships, as hugr-omni's platform id. A target with `enabled: false` compiles
-// with OMNI_ENABLED=false (the legacy spawner) and ships no omni files. Flip a row once WP8a publishes its omni build.
+// with OMNI_ENABLED=false (the legacy spawner) and ships no omni files. Every declared CLI target has a native build.
 export const omniTargets: Record<string, { id: string; enabled: boolean }> = {
   "linux-arm64": { id: "linux-arm64-gnu", enabled: true },
   "linux-x64": { id: "linux-x64-gnu", enabled: true },
   "linux-x64-baseline": { id: "linux-x64-gnu", enabled: true },
-  "linux-arm64-musl": { id: "linux-arm64-musl", enabled: false },
-  "linux-x64-musl": { id: "linux-x64-musl", enabled: false },
-  "linux-x64-baseline-musl": { id: "linux-x64-musl", enabled: false },
+  "linux-arm64-musl": { id: "linux-arm64-musl", enabled: true },
+  "linux-x64-musl": { id: "linux-x64-musl", enabled: true },
+  "linux-x64-baseline-musl": { id: "linux-x64-musl", enabled: true },
   "darwin-arm64": { id: "darwin-arm64", enabled: true },
   "darwin-x64": { id: "darwin-x64", enabled: true },
   "darwin-x64-baseline": { id: "darwin-x64", enabled: true },
-  "windows-arm64": { id: "win32-arm64-msvc", enabled: false },
+  "windows-arm64": { id: "win32-arm64-msvc", enabled: true },
   "windows-x64": { id: "win32-x64-msvc", enabled: true },
   "windows-x64-baseline": { id: "win32-x64-msvc", enabled: true },
 }

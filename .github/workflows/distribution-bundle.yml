@@ -22,6 +22,8 @@ jobs:
         working-directory: packages/cli
       - run: bun typecheck
         working-directory: packages/core
+      - run: bun typecheck
+        working-directory: packages/script
       - run: bun run check:spawn-imports
       - run: bun run check:godfile
         env:
@@ -41,7 +43,7 @@ jobs:
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/distribution-aur.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/distribution-aur.test.ts, ./test/distribution-musl.test.ts, ./test/distribution-provider.test.ts, ./test/build-runtime.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: windows-latest
             cpu: X64
@@ -52,17 +54,22 @@ jobs:
             host: ubuntu-24.04-arm
             cpu: ARM64
             platform: linux
-            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-aur.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-aur.test.ts, ./test/distribution-musl.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: cli
+            host: windows-11-arm
+            cpu: ARM64
+            platform: win32
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-windows.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: core
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - package: core
             host: windows-latest
             cpu: X64
             platform: win32
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - package: cli
             host: macos-14
             cpu: ARM64
@@ -81,6 +88,28 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
+      - name: Install native Deno
+        if: matrix.package == 'cli'
+        run: |
+          set -euo pipefail
+          DENO=$(npm exec --yes --package=deno@2.9.7 -- deno eval 'console.log(Deno.execPath())')
+          export DENO
+          bun --eval "$(cat <<'BUN'
+          import { realpathSync, appendFileSync } from "node:fs"
+          const executable = realpathSync(process.env.DENO.trim())
+          appendFileSync(process.env.GITHUB_ENV, `ORCHESTRA_DISTRIBUTION_DENO=${executable}\nORCHESTRA_DISTRIBUTION_DENO_VERSION=2.9.7\n`)
+          BUN
+          )"
+      - name: Prepare native Windows Rust
+        if: matrix.platform == 'win32'
+        run: |
+          set -euo pipefail
+          if ! command -v rustup >/dev/null; then
+            host=$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64-pc-windows-msvc || echo x86_64-pc-windows-msvc)
+            curl --fail --silent --show-error --location -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/$host/rustup-init.exe"
+            "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
+            printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
+          fi
       - name: Assert native CPU and exact files
         run: |
           set -euo pipefail
@@ -110,6 +139,20 @@ jobs:
           )"
       - uses: ./.github/actions/ripgrep
       - uses: ./.github/actions/omni-binaries
+      - name: Prove native Windows Job handle closure
+        if: matrix.platform == 'win32'
+        working-directory: packages/omni
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          cargo test --release -p omni-supervisor windows::tests -- --nocapture 2>&1 | tee ../../distribution-logs/windows-native-job.log
+      - name: Prove source ABI producers
+        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        working-directory: packages/script
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/tree-sitter-prebuilds.test.ts ../desktop/src/main/cli-artifacts.test.ts 2>&1 | tee ../../distribution-logs/source-abi.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |

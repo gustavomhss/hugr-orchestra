@@ -204,6 +204,9 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   expect(built.payloads.map((payload) => payload.version)).toEqual([...versions])
   await copyFile(process.execPath, join(state.directory, "bun"))
   await chmod(join(state.directory, "bun"), 0o755)
+  if (!process.env.ORCHESTRA_DISTRIBUTION_DENO) throw new Error("AUR_NATIVE_DENO_EXECUTABLE_REQUIRED")
+  await copyFile(await realpath(process.env.ORCHESTRA_DISTRIBUTION_DENO), join(state.directory, "deno"))
+  await chmod(join(state.directory, "deno"), 0o755)
   await Bun.write(join(state.directory, "input.json"), JSON.stringify({ target, oracleDigest: built.oracle.digest,
     payloads: built.payloads.map((payload) => ({ version: payload.version, archiveSha256: payload.archive.sha256 })),
   }, null, 2))

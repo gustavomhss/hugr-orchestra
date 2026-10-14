@@ -51,7 +51,7 @@ const builds = targets.map((item) => {
 })
 
 // Each build ships the pinned rg in bin/ripgrep and never downloads one (ORCHESTRA_RIPGREP_BESIDE_BINARY below), unless
-// RIPGREP_BUNDLED=false declares that the packager puts rg on PATH (Nix). ripgrep has no arm64 musl build.
+// RIPGREP_BUNDLED=false declares that the packager puts rg on PATH (Nix).
 const ripgrep = RipgrepBundle.enabled()
 if (!ripgrep) console.warn(`${RipgrepBundle.BUNDLED}=false: no ripgrep bundled, the packager puts rg on PATH`)
 for (const build of builds.filter((build) => ripgrep && !RipgrepBundle.key(build.item)))
