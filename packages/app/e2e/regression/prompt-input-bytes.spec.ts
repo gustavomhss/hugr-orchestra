@@ -42,12 +42,15 @@ const cases = [
   { mode: "undo-pill", before: "see @note.md ", text: "see @note.md x" },
   { mode: "paste-pill-interior", before: "see @note.md ", text: "see x@note.md ", cursor: 5 },
   { mode: "guarded-enter", text: "keep" },
+  { mode: "popover-populated", text: "see @note\n" },
+  { mode: "popover-empty", text: "see @missing\n" },
+  { mode: "undo-pill-history", text: "see @note.md x\n", cursor: 14 },
 ] as const
 
 // Production app and real editor/store/serializer; fixtures stop at the HTTP boundary.
 // Execution requests are captured and aborted, never replaced by model or Agent frames.
 for (const newLayoutDesigns of [false, true]) {
-  for (const scenario of cases.filter((item) => newLayoutDesigns || !["undo-pill", "paste-pill-interior", "guarded-enter"].includes(item.mode))) {
+  for (const scenario of cases.filter((item) => newLayoutDesigns || !["undo-pill", "paste-pill-interior", "guarded-enter", "popover-populated", "popover-empty", "undo-pill-history"].includes(item.mode))) {
     test(`prompt bytes: ${newLayoutDesigns ? "V2" : "legacy"} ${scenario.mode}`, async ({ page, context }, info) => {
       const sessionID = `ses_prompt_bytes_${randomUUID().replaceAll("-", "")}`
       await mockOrchestraServer(page, {
@@ -64,12 +67,16 @@ for (const newLayoutDesigns of [false, true]) {
           time: { created: 1700000000000, updated: 1700000000000 },
         }],
         pageMessages: () => ({ items: [] }),
-        findFiles: () => ["note.md"],
+        findFiles: ({ query }) => query.includes("note") ? ["note.md"] : [],
       })
       const endpoint = `/session/${sessionID}/prompt_async`
-      await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) =>
-        route.request().method() === "POST" ? route.abort("blockedbyclient") : route.fallback(),
-      )
+      const executions: { url: string; body: string | null }[] = []
+      await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) => {
+        const request = route.request()
+        if (request.method() !== "POST") return route.fallback()
+        executions.push({ url: request.url(), body: request.postData() })
+        return route.abort("blockedbyclient")
+      })
       await page.addInitScript(({ newLayoutDesigns, directory, server, sessionID }) => {
         localStorage.setItem("settings.v3", JSON.stringify({ general: {
           newLayoutDesigns, layoutTransitionEligible: true, shouldDisplayTabsToast: false,
@@ -90,6 +97,11 @@ for (const newLayoutDesigns of [false, true]) {
       await expect(editor).toBeEditable()
       await expect(page.locator('[data-component="prompt-input-v2"]')).toHaveCount(newLayoutDesigns ? 1 : 0)
       await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
+      // Lead-owned join exposes the shared submitting lifecycle on both composers.
+      const admission = page.locator("[data-prompt-admitting]")
+      await expect(admission).toHaveCount(1)
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(0)
 
       const before = "before" in scenario ? scenario.before : undefined
       if (before && scenario.mode !== "undo-pill" && scenario.mode !== "paste-pill-interior") await editor.fill(before)
@@ -114,14 +126,35 @@ for (const newLayoutDesigns of [false, true]) {
         }, rawClipboard)
       }
       const pill = editor.locator('[data-mention="file"]')
-      const pillIdentity = (scenario.mode === "undo-pill" || scenario.mode === "paste-pill-interior") ? await (async () => {
+      const pillIdentity = (["undo-pill", "paste-pill-interior", "undo-pill-history"].includes(scenario.mode)) ? await (async () => {
         await editor.fill("see @note")
         await page.locator('[data-suggestion-id="file:note.md"]').click()
         await expect(pill).toHaveText("@note.md")
         await editor.press("End")
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: before, cursor: 13 })
+        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md ", cursor: 13 })
         const identity = await pill.elementHandle()
         if (!identity) throw new Error("PROMPT_BYTES_PILL_IDENTITY_MISSING")
+        if (scenario.mode === "undo-pill-history") {
+          await page.keyboard.insertText("base")
+          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base", cursor: 17 })
+          expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
+          await editor.press("Shift+Enter")
+          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base\n", cursor: 18 })
+          expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
+          // Fixture selects the known typed word; replacement and history below use native keyboard actions.
+          await editor.evaluate((element) => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            let node = walker.nextNode()
+            while (node && !(node.textContent ?? "").endsWith("base")) node = walker.nextNode()
+            if (!node) throw new Error("PROMPT_HISTORY_TYPED_WORD_MISSING")
+            const range = document.createRange()
+            range.setStart(node, (node.textContent ?? "").length - 4)
+            range.setEnd(node, (node.textContent ?? "").length)
+            const selection = window.getSelection()!
+            selection.removeAllRanges()
+            selection.addRange(range)
+          })
+        }
         if (scenario.mode === "paste-pill-interior") await pill.evaluate((element) => {
           // Synthetic interior endpoint, followed by a genuine native paste: must snap left, outside the pill.
           const range = document.createRange()
@@ -167,6 +200,20 @@ for (const newLayoutDesigns of [false, true]) {
         }, scenario.text)
       }
 
+      if (scenario.mode === "popover-populated" || scenario.mode === "popover-empty") {
+        const query = scenario.mode === "popover-populated" ? "note" : "missing"
+        const fetched = page.waitForResponse((response) => {
+          const url = new URL(response.url())
+          return url.pathname === "/find/file" && url.searchParams.get("query") === query
+        })
+        await editor.fill(`see @${query}`)
+        await (await fetched).finished()
+        if (scenario.mode === "popover-populated") await expect(page.locator('[data-suggestion-id="file:note.md"]')).toBeVisible()
+        if (scenario.mode === "popover-empty") await expect(page.getByText("No matching items", { exact: true })).toBeVisible()
+        await editor.press("Shift+Enter")
+        await expect(editor.locator("[data-mention]")).toHaveCount(0)
+      }
+
       if (scenario.mode === "guarded-enter") {
         await editor.fill("keep")
         // Synthetic dispatch verifies production handler guards; this is not a native OS IME proof.
@@ -188,6 +235,23 @@ for (const newLayoutDesigns of [false, true]) {
       }
 
       const expectedCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
+      if (scenario.mode === "undo-pill-history") {
+        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
+        for (const text of ["see @note.md base\n", "see @note.md base", "see @note.md "]) {
+          await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
+          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
+          const canonical = await canonicalDraft(page, sessionID)
+          await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ canonical, ...receipt(canonical.text) }) })
+        }
+        for (const text of ["see @note.md base", "see @note.md base\n", scenario.text]) {
+          await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
+          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
+          const canonical = await canonicalDraft(page, sessionID)
+          await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ canonical, ...receipt(canonical.text) }) })
+        }
+      }
       if (before) {
         await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
@@ -215,9 +279,17 @@ for (const newLayoutDesigns of [false, true]) {
       await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
       const canonical = await canonicalDraft(page, sessionID)
       const dom = await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(0)
       const pending = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint)
+      const failed = page.waitForEvent("requestfailed", { predicate: (request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint })
       await editor.press("Enter")
       const request = await pending
+      await failed
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(1)
+      expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
+      expect(executions[0]!.body).toBe(request.postData())
       const payload: { parts: (TextPartInput | FilePartInput)[]; model: { providerID: string; modelID: string } } = request.postDataJSON()
       const textParts = payload.parts.filter((part) => part.type === "text")
       expect(textParts).toHaveLength(1)
@@ -230,11 +302,12 @@ for (const newLayoutDesigns of [false, true]) {
       await info.attach("prompt-byte-contract.json", {
         contentType: "application/json",
         body: JSON.stringify({
-          protocol: "v1", newLayoutDesigns, mode: scenario.mode, sessionID, dom, canonical, payload,
+          protocol: "v1", newLayoutDesigns, mode: scenario.mode, sessionID, dom, canonical, payload, executions,
           inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
             ? "synthetic-raw-clipboard-event; native keyboard history when requested"
             : scenario.mode === "guarded-enter" ? "synthetic IME/modifier dispatch; no native OS IME claim"
             : scenario.mode === "paste-pill-interior" ? "synthetic pill endpoint; native clipboard/history"
+            : scenario.mode === "undo-pill-history" ? "native typing/line edit/history; synthetic typed-word selection; native paste"
             : scenario.mode === "paste" ? "native-clipboard-shortcut" : scenario.mode,
           requestBody: request.postData(),
           expected: receipt(scenario.text), domHTMLBytes: receipt(dom.html), domTextBytes: receipt(dom.textContent ?? ""),
