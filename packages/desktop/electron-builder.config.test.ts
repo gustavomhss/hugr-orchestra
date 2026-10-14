@@ -130,7 +130,25 @@ for (const channel of ["dev", "beta", "prod"] as const) {
     expect(config.mac?.signIgnore).toContain("/Resources/cli/")
     expect(config.mac?.signIgnore).toContain("/Resources/claude-code/")
     expect(config.files).toContain("!resources/claude-code{,/**/*}")
-    expect(config.extraResources).toContainEqual({ from: "resources/claude-code", to: "claude-code" })
+    expect(config.extraResources).toContainEqual({
+      from: "resources/claude-code",
+      to: "claude-code",
+      filter: ["claude", "claude.exe", "manifest.json"],
+    })
+    expect(config.extraResources).toContainEqual({
+      from: "../orchestra/dist/node/claude-code/README.md",
+      to: "claude-code/README.md",
+    })
+    expect(config.extraResources).toContainEqual({
+      from: "../orchestra/dist/node/claude-code/LICENSE.md",
+      to: "claude-code/LICENSE.md",
+    })
+    const resources = [config.extraResources ?? []].flat()
+      .filter((resource): resource is Exclude<typeof resource, string> => typeof resource !== "string")
+      .filter((resource) => resource.to === "claude-code" || resource.to?.startsWith("claude-code/"))
+    expect(resources.map((resource) => resource.to).sort()).toEqual([
+      "claude-code", "claude-code/LICENSE.md", "claude-code/README.md",
+    ])
     expect(config.extraMetadata?.version).toBe(process.env.ORCHESTRA_VERSION ?? "1.18.27")
   })
 }
