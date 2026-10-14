@@ -61,26 +61,49 @@ export function parseOptions(argv: string[]) {
   return { positional, options, env }
 }
 
-export function validateRequest(input: unknown, isFile: (file: string) => boolean) {
+export function validateRequest(
+  input: unknown,
+  isFile: (file: string) => boolean,
+  resolvePackage?: (selector: string) => { package: string; directory: string },
+) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error(".ci-run.json must be an object")
   const request = input as Record<string, unknown>
-  if (typeof request.package !== "string" || !/^[\w-]+(?:\/[\w-]+)*$/.test(request.package))
+  if (typeof request.package !== "string" || !request.package || /[\x00-\x1f\x7f]/.test(request.package) ||
+    (!resolvePackage && !/^[\w-]+(?:\/[\w-]+)*$/.test(request.package)))
     throw new Error(".ci-run.json names no valid package")
+  if (request.packageSelector !== undefined && (typeof request.packageSelector !== "string" || !request.packageSelector || /[\x00-\x1f\x7f]/.test(request.packageSelector)))
+    throw new Error(".ci-run.json has an invalid package selector")
+  if (request.packageSelector !== undefined && !resolvePackage)
+    throw new Error(".ci-run.json package selector requires a resolver")
+  const resolved = resolvePackage?.(typeof request.packageSelector === "string" ? request.packageSelector : request.package)
+  const name = resolved?.package ?? request.package
+  if (typeof name !== "string" || !/^[\w-]+(?:\/[\w-]+)*$/.test(name)) throw new Error(".ci-run.json names no valid resolved package")
+  if (request.packageSelector !== undefined && name !== request.package)
+    throw new Error(".ci-run.json package selector does not match normalized package")
+  const directory = resolved?.directory ?? `packages/${name}`
+  if (typeof directory !== "string" || /[\x00-\x1f\x7f:\\]/.test(directory) ||
+    directory.split("/").some((part) => !part || part === "." || part === ".."))
+    throw new Error(".ci-run.json has an invalid package directory")
+  if (request.directory !== undefined && request.directory !== directory)
+    throw new Error(".ci-run.json directory does not match resolved package location")
+  const location: { directory?: string; packageSelector?: string } = resolved
+    ? { directory, ...(typeof request.packageSelector === "string" ? { packageSelector: request.packageSelector } : {}) }
+    : {}
   if (!Array.isArray(request.args) || !request.args.every((arg): arg is string => typeof arg === "string" && !/[\r\n\0]/.test(arg)))
     throw new Error(".ci-run.json args must be a string array without control characters")
   const env = requireEnv(request.env ?? {}, ".ci-run.json env")
-  const dir = `packages/${request.package}/`
+  const dir = `${directory}/`
   const runner = request.runner === undefined || request.runner === null || request.runner === ""
     ? (isFile(`${dir}package.json`) ? "bun" : "pytest") : request.runner
   const required = runner === "pytest" ? "requirements-dev.txt" : "package.json"
   if (typeof runner !== "string" || !["bun", "node", "pytest", "playwright"].includes(runner) || !isFile(dir + required))
-    throw new Error(`packages/${request.package} cannot run ${String(runner)} tests`)
+    throw new Error(`${directory} cannot run ${String(runner)} tests`)
   if (runner !== "playwright") {
     if (request.config !== undefined) throw new Error("config requires runner playwright")
     if (request.benchmarkRenderer !== undefined) throw new Error("--benchmark-renderer requires Playwright performance config")
-    return { package: request.package, runner: String(runner), args: request.args, env, config: undefined }
+    return { package: name, ...location, runner: String(runner), args: request.args, env, config: undefined }
   }
-  if (request.package !== "app") throw new Error("playwright requires package app")
+  if (name !== "app") throw new Error("playwright requires package app")
   if (typeof request.config !== "string" || !Object.hasOwn(configs, request.config))
     throw new Error(`playwright config must be ${Object.keys(configs).join(" or ")}`)
   if (!isFile(dir + request.config)) throw new Error(`playwright config missing: ${request.config}`)
@@ -88,7 +111,9 @@ export function validateRequest(input: unknown, isFile: (file: string) => boolea
   const config = configs[request.config as keyof typeof configs]
   const benchmarkRenderer = requireBenchmarkRenderer(request.config, request.benchmarkRenderer)
   const args = request.args.map((arg) => {
-    const file = arg.replaceAll("\\", "/").replace(/^(\.\/)?packages\/app\//, "").replace(/^\.\//, "")
+    const relative = arg.replaceAll("\\", "/").replace(/^\.\//, "")
+    const prefix = [`${directory}/`, "packages/app/"].find((prefix) => relative.startsWith(prefix))
+    const file = prefix === undefined ? relative : relative.slice(prefix.length).replace(/^\.\//, "")
     if (
       !/^[\w./-]+\.spec\.ts$/.test(file) || file.split("/").some((part) => !part || part === "." || part === "..") ||
       !file.startsWith(config.prefix) || (config.repeat === 1 && file.startsWith("e2e/performance/"))
@@ -98,7 +123,7 @@ export function validateRequest(input: unknown, isFile: (file: string) => boolea
     return file
   })
   if (new Set(args).size !== args.length) throw new Error("playwright spec files repeated")
-  return { package: request.package, runner: "playwright", args, env, config: request.config, benchmarkRenderer }
+  return { package: name, ...location, runner: "playwright", args, env, config: request.config, benchmarkRenderer }
 }
 
 function requireEnv(env: unknown, source: string) {
