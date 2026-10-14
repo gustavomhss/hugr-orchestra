@@ -35,24 +35,59 @@ def decode(text, label):
 
 
 def git(*args):
-    result = subprocess.run(["git", *args], text=True, capture_output=True)
+    return git_bytes(*args).decode("utf-8").strip()
+
+
+def git_bytes(*args):
+    result = subprocess.run(["git", "--no-replace-objects", *args], capture_output=True)
     require(result.returncode == 0, "SOURCE_GIT_LOOKUP_FAILED")
-    return result.stdout.strip()
+    return result.stdout
 
 
 def fingerprint(revision):
-    entries = git("ls-tree", "-r", "--full-tree", revision, "--",
+    registry = decode(git("show", revision + ":script/module-registry.json"), "DEPENDENCY_REGISTRY_INVALID")
+    require(isinstance(registry, dict) and registry.get("format") == 1
+            and isinstance(registry.get("modules"), list) and registry["modules"], "DEPENDENCY_REGISTRY_INVALID")
+    toolchain = decode(git("show", revision + ":script/toolchain-registry.json"), "DEPENDENCY_TOOLCHAIN_INVALID")
+    require(isinstance(toolchain, dict) and toolchain.get("format") == 1
+            and isinstance(toolchain.get("roots"), dict) and set(toolchain["roots"]) == {"omni", "atlas"},
+            "DEPENDENCY_TOOLCHAIN_INVALID")
+    roots = list(toolchain["roots"].values())
+    require(all(isinstance(toolchain["roots"][alias], dict)
+                and toolchain["roots"][alias].get("manifest") == manifest
+                for alias, manifest in [("omni", "Cargo.toml"), ("atlas", "package.json")]),
+            "DEPENDENCY_TOOLCHAIN_INVALID")
+    paths = [entry.get("path") if isinstance(entry, dict) else None for entry in [*registry["modules"], *roots]]
+    require(all(isinstance(path, str) and path and not path.startswith("/")
+                and not re.search(r"[\\\x00-\x1f\x7f:]", path)
+                and all(part not in {"", ".", ".."} for part in path.split("/")) for path in paths),
+            "DEPENDENCY_REGISTRY_PATH_INVALID")
+    entries = git_bytes("ls-tree", "-r", "-z", "--full-tree", revision, "--",
                   "packages", "patches", "bun.lock", "package.json", "bunfig.toml", "tsconfig.json", "flake.lock",
                   ".github/TEAM_MEMBERS", "flake.nix", "nix/node_modules.nix", "nix/bun.nix",
                   "nix/toolchain-sources.json", "nix/scripts/canonicalize-node-modules.ts",
-                  "nix/scripts/normalize-bun-binaries.ts").splitlines()
+                  "nix/scripts/normalize-bun-binaries.ts", "script/module-registry.json",
+                  "script/toolchain-registry.json", *paths).split(b"\0")
     blobs = {}
+    modes = {}
     for line in entries:
-        metadata, path = line.split("\t", 1)
+        if not line:
+            continue
+        metadata, raw_path = line.split(b"\t", 1)
+        metadata = metadata.decode("ascii")
+        path = raw_path.decode("utf-8")
         require(metadata.split()[1] == "blob", "DEPENDENCY_INPUT_NOT_BLOB:" + path)
         blobs[path] = metadata.split()[2]
+        modes[path] = metadata.split()[0]
     require("bun.lock" in blobs and "nix/node_modules.nix" in blobs, "DEPENDENCY_INPUTS_MISSING")
-    require(any(path.startswith("packages/") for path in blobs), "EMPTY_WORKSPACE_INPUTS")
+    for entry in registry["modules"]:
+        require(entry["path"] + "/package.json" in blobs, "DEPENDENCY_MODULE_MISSING:" + entry["path"])
+        require(modes[entry["path"] + "/package.json"] in {"100644", "100755"},
+                "DEPENDENCY_MANIFEST_NOT_REGULAR:" + entry["path"] + "/package.json")
+    for entry in roots:
+        require(entry["path"] + "/" + entry["manifest"] in blobs, "DEPENDENCY_TOOLCHAIN_MISSING:" + entry["path"])
+        require(modes[entry["path"] + "/" + entry["manifest"]] in {"100644", "100755"},
+                "DEPENDENCY_MANIFEST_NOT_REGULAR:" + entry["path"] + "/" + entry["manifest"])
     return blobs
 
 

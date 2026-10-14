@@ -1,15 +1,19 @@
 import { execFile } from "node:child_process"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
+import { readFileSync } from "node:fs"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
-import source from "../orchestra/package.json"
 
 const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
-const rootDir = path.resolve(packageDir, "../..")
+const workspace = WorkspacePaths.make(packageDir)
+const rootDir = workspace.root
+const orchestraDir = workspace.module("orchestra")
+const source: { version: string } = JSON.parse(readFileSync(path.join(orchestraDir, "package.json"), "utf8"))
 const signScript = path.join(rootDir, "script", "sign-windows.ps1")
 // The Electron 42 packaging update briefly installed Linux launchers/icons under
 // "orchestra-desktop". Keep that hidden desktop entry around so existing GNOME/KDE
@@ -71,7 +75,7 @@ const APP_IDS = {
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
   const { Arch } = await import("electron-builder")
-  const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
+  const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
   const directory =
     context.electronPlatformName === "darwin"
       ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
@@ -137,8 +141,8 @@ const getBase = (appId: string): Configuration => ({
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
-    const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
-    verifyClaudeCodeResource(path.join(packageDir, "../orchestra/dist/node/claude-code"), {
+    const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
+    verifyClaudeCodeResource(path.join(orchestraDir, "dist/node/claude-code"), {
       os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
       arch: Arch[context.arch],
     })
@@ -178,11 +182,11 @@ const getBase = (appId: string): Configuration => ({
     },
     // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
     {
-      from: "../orchestra/playbooks",
+      from: path.join(orchestraDir, "playbooks"),
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
-    { from: "../orchestra/dist/node/claude-code", to: "claude-code" },
+    { from: path.join(orchestraDir, "dist/node/claude-code"), to: "claude-code" },
     {
       from: "resources/omni",
       to: "omni",
