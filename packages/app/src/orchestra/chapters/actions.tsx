@@ -13,6 +13,7 @@ import { navigationPreferences, readNavigation, resourceDialog, resourceLinks, s
 import { createActionsModel, type ActionsPreference } from "../actions/model"
 import { saveActionsResponse } from "../actions/save"
 import { canRequest } from "../actions/request-policy"
+import { settingsConnection } from "../actions/settings-evidence"
 import "./kit.css"
 import "../actions/actions.css"
 import "../actions/actions-detail.css"
@@ -208,7 +209,7 @@ function Workbench(props: ChapterPageProps & {
                 {props.t(binding.provider.kind === "github" ? "orchestra.actions.github" : "orchestra.actions.gitlab")} · {binding.projectPath} · {binding.provider.hostname}
               </option>}</For></select></label>
             <Show when={state.binding}>{(binding) => <><span class="divider" /><bdi class="repo-name">{binding().projectPath}</bdi>
-              <code dir="ltr">{binding().provider.hostname}</code><span class="mx-badge good">{props.t("orchestra.actions.connected")}</span></>}</Show>
+              <code dir="ltr">{binding().provider.hostname}</code><span class={`mx-badge ${settingsConnection(state).state === "available" ? "good" : ""}`}>{props.t(settingsConnection(state).label)}</span></>}</Show>
             <button type="button" class="mx-btn repo-connection" disabled={state.submitting} onClick={() => model.dialog({ kind: "connect" })}>
               <Icon name="settings" />{props.t("orchestra.actions.connect")}</button>
           </div></Show>
