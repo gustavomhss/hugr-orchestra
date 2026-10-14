@@ -29,6 +29,7 @@ export function Settings(props: ViewProps) {
   })
   let dialog: HTMLDialogElement | undefined
   let policyInvoker: HTMLButtonElement | undefined
+  let policyDialog: HTMLDialogElement | undefined
   const bindings = () => props.model.state.bindings.value ?? []
   const selected = () => props.model.state.binding
   const capabilityRows = () => [
@@ -52,6 +53,7 @@ export function Settings(props: ViewProps) {
   }
   const clearPolicyFocus = () => {
     policyInvoker = undefined
+    policyDialog = undefined
     setView("policyFocus", undefined)
   }
   const editPolicy = (event: MouseEvent & { currentTarget: HTMLButtonElement }, target: "local" | "native") => {
@@ -72,7 +74,13 @@ export function Settings(props: ViewProps) {
       return
     }
     if (state.dialog?.kind === "project-settings" && (state.dialog.target ?? "local") === owner.target) {
-      if (owner.phase !== "opened") setView("policyFocus", "phase", "opened")
+      if (owner.phase !== "opened") {
+        setView("policyFocus", "phase", "opened")
+        queueMicrotask(() => {
+          if (view.policyFocus !== owner || state.dialog?.kind !== "project-settings" || (state.dialog.target ?? "local") !== owner.target) return
+          policyDialog = policyInvoker?.ownerDocument.activeElement?.closest<HTMLDialogElement>("dialog#dialog.actions-dialog[open]") ?? undefined
+        })
+      }
       return
     }
     if (state.dialog) {
@@ -95,8 +103,11 @@ export function Settings(props: ViewProps) {
       }
       if (state.dialog || state.resources.status !== "ready" || state.submitting) return
       const invoker = policyInvoker
+      const active = invoker.ownerDocument.activeElement
+      const restore = !active?.isConnected || active === invoker.ownerDocument.body || active === invoker.ownerDocument.documentElement
+        || active === invoker || policyDialog !== undefined && !policyDialog.open && policyDialog.contains(active)
       clearPolicyFocus()
-      if (invoker.isConnected && !invoker.disabled) invoker.focus({ preventScroll: true })
+      if (restore && invoker.isConnected && !invoker.disabled) invoker.focus({ preventScroll: true })
     })
   })
 
