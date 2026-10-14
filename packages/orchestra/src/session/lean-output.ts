@@ -3,6 +3,7 @@ export * as LegacyLeanOutput from "./lean-output"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 import { ToolModelProjection } from "@orchestra/core/tool/model-projection"
 import { LeanProcessor } from "@orchestra/core/tool/lean-processor"
+import { LeanSummary } from "@orchestra/core/tool/lean-summary"
 import { LeanTelemetry } from "@orchestra/core/tool/lean-telemetry"
 import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { LeanCoverage } from "@orchestra/schema/lean-coverage"
@@ -29,33 +30,44 @@ interface Input<A extends LegacyLeanCapture.Output> {
   readonly limits: { readonly maxLines: number; readonly maxBytes: number }
   readonly policyMappingChanged?: boolean
   readonly telemetry?: Pick<LeanTelemetry.Input, "owner" | "model" | "orchestraProfile">
+  /** Registry tool id and arguments; Lean 2.0 summarizes only attested native results of `LeanSummary.tools`. */
+  readonly tool?: string
+  readonly args?: Readonly<Record<string, unknown>>
+  /** Where complete originals go before a lossy summary replaces them; no store means no lossy summary. */
+  readonly store?: { readonly put: (text: string) => Promise<string> }
 }
 
-export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A {
+const refused = ["config_unavailable", "preferences_unavailable", "preferences_scope_mismatch", "disabled", "item_disabled",
+  "processorfailed", "policy_mapping_changed", "projection_budget_max_lines", "projection_budget_max_bytes"]
+type Decision = ToolModelProjection.FilterResult | { readonly status: "summarized" | "rewritten"; readonly reason: string }
+
+export async function project<A extends LegacyLeanCapture.Output>(input: Input<A>): Promise<A> {
   const start = now()
+  const trusted = attested(input)
   const identity = identify(input)
-  const selected = select(input, identity.itemID, identity.failed)
+  // Unattributed attested shell commands and native read/fetch/search results have their own item toggles.
+  const item = identity.itemID
+    ?? (trusted ? trusted.source === "shell" ? "shell" : LeanCoverage.ids.find((id) => id === input.tool) : undefined)
+  const lossless = select(input, item, identity.failed)
+  const selected = await condense(input, trusted, lossless)
   const end = now()
   if (!input.telemetry || start === undefined || end === undefined) return selected.output
   try {
     // SessionProcessor may still change text when an image fails normalization.
     if (selected.output.attachments?.some((part) => typeof part === "object" && part !== null
       && "mime" in part && typeof part.mime === "string" && part.mime.startsWith("image/"))) return selected.output
-    const candidate = input.binding?.candidate
-    const trusted = input.binding && ToolModelCapture.bound(input.binding) && candidate
-      && ToolModelCapture.authentic(candidate) && candidate.owner.sessionID === input.owner.sessionID
-      && candidate.owner.callID === input.owner.callID && candidate.observation.source === "shell"
-    const eligible = !!trusted && candidate.observation.completeness === "complete"
-      && candidate.observation.termination.kind === "exited" && candidate.observation.termination.code === 0
+    const status = selected.decision?.status
+    const profile = selected.decision && "profile" in selected.decision ? selected.decision.profile : undefined
+    // Attribution: the command's item, else the lossless profile's item, else the tool's own row.
+    const itemID = identity.itemID ?? (profile ? LeanCoverage.forProfile(profile) : undefined) ?? item
     const metrics = LeanMetrics.decode(LeanTelemetry.measure({
       owner: input.telemetry.owner, model: input.telemetry.model, orchestraProfile: input.telemetry.orchestraProfile,
-      itemID: identity.itemID,
-      producer: trusted ? "native-shell" : "unverified", eligible,
-      status: selected.decision?.status === "reduced" ? "applied"
-        : selected.decision?.status === "normalized" ? "normalized" : "passthrough",
-      reason: !eligible && selected.reason === "projection_declined" ? "not_eligible" : selected.reason,
-      filterProfile: selected.decision && "profile" in selected.decision ? selected.decision.profile : undefined,
-      before: input.output.output, after: selected.output.output, durationMs: end - start,
+      itemID,
+      producer: !trusted ? "unverified" : trusted.source === "shell" ? "native-shell" : "native-tool", eligible: !!trusted,
+      status: status === "reduced" || status === "summarized" || status === "rewritten" ? "applied"
+        : status === "normalized" ? "normalized" : "passthrough",
+      reason: !trusted && selected.reason === "projection_declined" ? "not_eligible" : selected.reason,
+      filterProfile: profile, before: input.output.output, after: selected.output.output, durationMs: end - start,
     }))
     if (!metrics) return selected.output
     return { ...selected.output, metadata: { ...selected.output.metadata, lean: metrics } }
@@ -73,10 +85,25 @@ function now(): number | undefined {
   }
 }
 
+/** The native producer's attested observation for exactly this call, or nothing. */
+function attested(input: Input<LegacyLeanCapture.Output>): ToolModelCapture.Observation | undefined {
+  try {
+    const candidate = input.binding?.candidate
+    if (!input.binding || !ToolModelCapture.bound(input.binding) || !candidate || !ToolModelCapture.authentic(candidate)
+      || candidate.owner.sessionID !== input.owner.sessionID || candidate.owner.callID !== input.owner.callID) return undefined
+    const observation = candidate.observation
+    if (observation.source === "shell") return input.tool === undefined || input.tool === "bash" ? observation : undefined
+    return input.tool !== undefined && input.tool !== "bash" && observation.command === input.tool && LeanSummary.supported(input.tool)
+      ? observation : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function identify(input: Input<LegacyLeanCapture.Output>): { itemID?: LeanCoverage.ItemID; failed?: boolean } {
   try {
     // Host passes the actual post-before-hook invocation, including unsuccessful native calls.
-    const command = input.command ?? input.binding?.candidate.observation.command
+    const command = input.command ?? (input.binding?.candidate.observation.source === "shell" ? input.binding.candidate.observation.command : undefined)
     if (typeof command !== "string") return {}
     if (command.length === 0 || command.length > 65536) return { failed: true }
     const itemID = LeanProcessor.identify(command)
@@ -87,7 +114,7 @@ function identify(input: Input<LegacyLeanCapture.Output>): { itemID?: LeanCovera
 }
 
 function select<A extends LegacyLeanCapture.Output>(input: Input<A>, itemID?: LeanCoverage.ItemID, identityFailed?: boolean): {
-  output: A; reason: string; decision?: ToolModelProjection.FilterResult
+  output: A; reason: string; decision?: Decision
 } {
   const declined = (reason: string) => ({ output: input.output, reason })
   if (input.unavailable) return declined(input.unavailable)
@@ -133,5 +160,38 @@ function select<A extends LegacyLeanCapture.Output>(input: Input<A>, itemID?: Le
     return { output: { ...input.output, output }, decision: selected.decision, reason: selected.decision.reason }
   } catch {
     return declined("projection_declined")
+  }
+}
+
+/**
+ * Lean 2.0 after the lossless stage: summarize the attested text (failure lines kept whole, exit taken from the
+ * native observation), store the complete approved original first and end the summary with its recall line.
+ * Append-only policy text stays after it. Any refusal or storage failure keeps the lossless selection.
+ */
+async function condense<A extends LegacyLeanCapture.Output>(input: Input<A>, trusted: ToolModelCapture.Observation | undefined,
+  lossless: ReturnType<typeof select<A>>): Promise<{ output: A; reason: string; decision?: Decision }> {
+  try {
+    const tool = trusted?.source === "shell" ? "bash" : input.tool
+    // select() already refused unavailable/disabled profiles, disabled items, failed identity and plugin mutations.
+    if (!trusted || !tool || !LeanSummary.supported(tool) || !input.binding || refused.includes(lossless.reason)
+      || "researchSource" in input.output.metadata) return lossless
+    const baseline = input.binding.baseline.content[0]
+    if (baseline?.type !== "text" || !input.output.output.startsWith(baseline.text)) return lossless
+    const suffix = input.output.output.slice(baseline.text.length)
+    if (suffix && !suffix.startsWith("\n\n")) return lossless
+    const text = lossless.output.output.slice(0, lossless.output.output.length - suffix.length)
+    const exit = trusted.termination.kind === "exited" ? trusted.termination.code : undefined
+    const result = LeanSummary.summarize({ tool, output: text, ...(input.args ? { args: input.args } : {}),
+      metadata: tool === "bash" ? { exit } : { ...input.output.metadata } })
+    const ineligible = lossless.reason === "projection_declined" || lossless.reason === "not_eligible"
+    if (result.status === "unchanged") return ineligible ? { ...lossless, reason: result.reason } : lossless
+    if (result.status === "rewritten")
+      return { output: { ...input.output, output: result.replacement + suffix }, reason: result.reason, decision: result }
+    if (!input.store) return lossless
+    const id = await input.store.put(input.output.output)
+    return { output: { ...input.output, output: result.replacement + LeanSummary.recoveryLine(id) + suffix },
+      reason: result.reason, decision: result }
+  } catch {
+    return lossless
   }
 }

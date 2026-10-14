@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
     "check:spawn-imports": "bun run script/check-spawn-imports.ts",
+    "check:ripgrep-pins": "bun run script/check-ripgrep-pins.ts",
     "typecheck": "bun turbo typecheck",
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
     "postinstall": "bun run --cwd packages/core fix-node-pty",
@@ -155,6 +156,7 @@
     "@ai-sdk/groq@3.0.31": "patches/@ai-sdk%2Fgroq@3.0.31.patch",
     "@ai-sdk/anthropic@3.0.111": "patches/@ai-sdk%2Fanthropic@3.0.111.patch",
     "@ai-sdk/amazon-bedrock@4.0.166": "patches/@ai-sdk%2Famazon-bedrock@4.0.166.patch",
-    "tree-sitter@0.25.0": "patches/tree-sitter@0.25.0.patch"
+    "tree-sitter@0.25.0": "patches/tree-sitter@0.25.0.patch",
+    "@opentui/core@0.4.5": "patches/@opentui%2Fcore@0.4.5.patch"
   }
 }

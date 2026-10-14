@@ -45,7 +45,7 @@ const metainfoFpm = (appId: string) =>
 
 async function signWindows(configuration: { path: string }) {
   // CLI bytes are already signed and hashed by staging. Re-signing would invalidate their manifest.
-  if (configuration.path.replaceAll("\\", "/").includes("/resources/cli/")) return
+  if (/\/resources\/(cli|claude-code)\//.test(configuration.path.replaceAll("\\", "/"))) return
   if (process.platform !== "win32") return
   if (process.env.GITHUB_ACTIONS !== "true") return
 
@@ -71,11 +71,39 @@ const APP_IDS = {
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
   const { Arch } = await import("electron-builder")
+  const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
   const directory =
     context.electronPlatformName === "darwin"
       ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
       : path.join(context.appOutDir, "resources/cli")
-  await verifyPackagedCli(directory, context.electronPlatformName, Arch[context.arch], context.packager.appInfo.version)
+  await verifyPackagedCli(
+    directory,
+    context.electronPlatformName,
+    Arch[context.arch],
+    context.packager.appInfo.version,
+    await ripgrepChecks(),
+  )
+  verifyClaudeCodeResource(path.join(path.dirname(directory), "claude-code"), {
+    os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
+    arch: Arch[context.arch],
+  })
+}
+
+// The rg each CLI target ships in Resources/cli/ripgrep-<target>/ is signed by staging, not here (Resources/cli is
+// skipped below): every pack checks it is the pinned executable or, signed, carries a valid signature.
+async function ripgrepChecks() {
+  const { ripgrepSigning, signatureCheck } = await import("./src/main/cli-artifacts")
+  return {
+    signing: (target: string) => ripgrepSigning(target),
+    signature: async (file: string, target: string) => {
+      const check = signatureCheck(target, file)
+      if (!check) return false
+      return execFileAsync(check.command, check.args).then(
+        (result) => check.valid(result.stdout),
+        () => false,
+      )
+    },
+  }
 }
 
 const getBase = (appId: string): Configuration => ({
@@ -97,11 +125,23 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/cli{,/**/*}", "!resources/icons/**/*", "!resources/omni/**"],
+  files: [
+    "out/**/*",
+    "resources/**/*",
+    "!resources/orchestra-cli*",
+    "!resources/cli{,/**/*}",
+    "!resources/icons/**/*",
+    "!resources/omni/**",
+  ],
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
+    const { verifyClaudeCodeResource } = await import("../orchestra/script/claude-code-resources")
+    verifyClaudeCodeResource(path.join(packageDir, "../orchestra/dist/node/claude-code"), {
+      os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
+      arch: Arch[context.arch],
+    })
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
     // build or refuse them before electron-builder copies them.
     // A universal macOS app is packed per architecture first, and each of those passes is checked.
@@ -116,6 +156,7 @@ const getBase = (appId: string): Configuration => ({
       context.electronPlatformName,
       Arch[context.arch],
       context.packager.appInfo.version,
+      await ripgrepChecks(),
     )
   },
   afterPack: verifyPackagedResources,
@@ -141,13 +182,14 @@ const getBase = (appId: string): Configuration => ({
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
+    { from: "../orchestra/dist/node/claude-code", to: "claude-code" },
     {
       from: "resources/omni",
       to: "omni",
     },
   ],
   mac: {
-    signIgnore: ["/Resources/cli/"],
+    signIgnore: ["/Resources/cli/", "/Resources/claude-code/"],
     category: "public.app-category.developer-tools",
     icon: `resources/icons/icon.icns`,
     hardenedRuntime: true,
@@ -172,8 +214,9 @@ const getBase = (appId: string): Configuration => ({
       sign: signWindows,
     },
     target: ["nsis"],
-    // The supervisor (.exe) is signed by default; the omni addon is a .node.
-    signExts: [".node"],
+    // Named, not left to the default: the supervisor is an .exe and the omni addon a .node. Resources/cli (the CLIs and
+    // the rg they ship) is signed by staging, which signWindows skips.
+    signExts: [".exe", ".node"],
     verifyUpdateCodeSignature: false,
   },
   nsis: {

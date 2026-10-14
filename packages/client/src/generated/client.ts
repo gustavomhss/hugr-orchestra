@@ -16,6 +16,10 @@ import type {
   SessionsActiveOutput,
   SessionsGetInput,
   SessionsGetOutput,
+  SessionsGetSubagentModelsInput,
+  SessionsGetSubagentModelsOutput,
+  SessionsSetSubagentModelsInput,
+  SessionsSetSubagentModelsOutput,
   SessionsSwitchAgentInput,
   SessionsSwitchAgentOutput,
   SessionsSwitchModelInput,
@@ -46,6 +50,8 @@ import type {
   MessagesListOutput,
   ModelsListInput,
   ModelsListOutput,
+  ModelsDefaultInput,
+  ModelsDefaultOutput,
   ProvidersListInput,
   ProvidersListOutput,
   ProvidersGetInput,
@@ -444,6 +450,29 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ).then((value) => value.data),
+      getSubagentModels: (input: SessionsGetSubagentModelsInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsGetSubagentModelsOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/subagent-models`,
+            successStatus: 200,
+            declaredStatuses: [404, 503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      setSubagentModels: (input: SessionsSetSubagentModelsInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsSetSubagentModelsOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/subagent-models`,
+            body: { policy: input["policy"] },
+            successStatus: 200,
+            declaredStatuses: [404, 503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       switchAgent: (input: SessionsSwitchAgentInput, requestOptions?: RequestOptions) =>
         request<SessionsSwitchAgentOutput>(
           {
@@ -615,6 +644,18 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/model`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      default: (input?: ModelsDefaultInput, requestOptions?: RequestOptions) =>
+        request<ModelsDefaultOutput>(
+          {
+            method: "GET",
+            path: `/api/model/default`,
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [503, 401, 400],
