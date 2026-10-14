@@ -7,7 +7,7 @@ type Spec = { name: "gitleaks"; command: string; args: string[]; cleanExitCodes:
 // The canonical scanner the native-memory bundle inlines. The bundle runs detection right before every scan, which
 // refreshes Bun's synchronous-spawn clock, so a stale clock cannot show through it; this drives the scan directly.
 const scanner: { runScanner(spec: Spec, record: unknown, timeoutMs: number): Verdict } = await import(
-  path.resolve(import.meta.dir, "../../../foundation/atlas/packages/adapter-io/src/scanner.ts")
+  path.resolve(import.meta.dir, "../../packages/adapter-io/src/scanner.ts")
 )
 
 const sleeper = (ms: number): Spec => ({

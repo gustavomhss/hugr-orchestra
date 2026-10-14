@@ -96,7 +96,7 @@
         "vite-plugin-solid": "catalog:",
       },
     },
-    "packages/atlas-boundary": {
+    "modules/atlas/boundary": {
       "name": "@orchestra/atlas-boundary",
       "version": "0.0.0",
       "devDependencies": {
@@ -1549,7 +1549,7 @@
 
     "@orchestra/app": ["@orchestra/app@workspace:packages/app"],
 
-    "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:packages/atlas-boundary"],
+    "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:modules/atlas/boundary"],
 
     "@orchestra/capability-assets": ["@orchestra/capability-assets@workspace:modules/capability-assets"],
 

@@ -5,9 +5,9 @@ import path from "node:path"
 
 // Eighteen real generator runs over four bundles: Windows runners need well over two minutes.
 test("real generator reproduces committed bytes and rejects every generated-file mismatch or absence", async () => {
-  const root = path.resolve(import.meta.dir, "../../..")
+  const root = path.resolve(import.meta.dir, "../../../..")
   const fixture = await realpath(await mkdtemp(path.join(tmpdir(), "atlas-boundary-build-")))
-  const base = path.join(fixture, "packages/atlas-boundary")
+  const base = path.join(fixture, "modules/atlas/boundary")
   const files = [
     "boundary.js",
     "boundary.d.ts",
@@ -33,17 +33,17 @@ test("real generator reproduces committed bytes and rejects every generated-file
   }
   try {
     await mkdir(base, { recursive: true })
-    await cp(path.join(root, "foundation/atlas/packages"), path.join(fixture, "foundation/atlas/packages"), {
+    await cp(path.join(root, "modules/atlas/packages"), path.join(fixture, "modules/atlas/packages"), {
       recursive: true,
       filter: (file) => path.basename(file) !== "node_modules",
     })
     await Promise.all(
       ["script", "src/generated", "package.json"].map((file) =>
-        cp(path.join(root, "packages/atlas-boundary", file), path.join(base, file), { recursive: true }),
+        cp(path.join(root, "modules/atlas/boundary", file), path.join(base, file), { recursive: true }),
       ),
     )
     await symlink(path.join(root, "node_modules"), path.join(fixture, "node_modules"), "junction")
-    const installed = path.join(root, "packages/atlas-boundary/node_modules")
+    const installed = path.join(root, "modules/atlas/boundary/node_modules")
     await symlink(
       (await Bun.file(path.join(installed, "@noble/hashes/package.json")).exists())
         ? installed

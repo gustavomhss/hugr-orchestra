@@ -2,6 +2,6 @@
   "format": 1,
   "roots": {
     "omni": { "path": "native/omni", "manifest": "Cargo.toml" },
-    "atlas": { "path": "foundation/atlas", "manifest": "package.json" }
+    "atlas": { "path": "modules/atlas", "manifest": "package.json" }
   }
 }

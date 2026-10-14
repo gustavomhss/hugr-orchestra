@@ -61,7 +61,7 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
 | [`native/omni`](native/omni/README.md) | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
 | [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
-| `foundation/atlas`         | Atlas, the grounded knowledge layer for a codebase; see its `README.md` and `docs/`             |
+| [`modules/atlas`](modules/atlas/README.md) | Atlas npm workspace, corpus/Own and source domain; `boundary/` retains the host bundles |
 | `specs/hugr-maestro`       | Maestro's contracts, roadmap and work packages                                                  |
 | `specs/backend-specialist` | The backend specialist's architecture and tool contracts                                        |
 | `specs/orchestra-visual`   | The visual design handoff and its verification                                                  |
