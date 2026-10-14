@@ -41,7 +41,7 @@ export async function aurBootstrapEvidence(directory: string) {
   })
   if (receipt.sandboxUser !== policy.sandboxUser || receipt.downloadUserUID !== policy.downloadUserUID ||
       !isDeepStrictEqual(receipt.globalSigLevel, policy.globalSigLevel) ||
-      JSON.stringify(receipt.repositories) !== JSON.stringify(policy.repositories))
+       !isDeepStrictEqual(receipt.repositories, policy.repositories))
     throw new Error("AUR_BOOTSTRAP_REPOSITORY_POLICY_RECEIPT_MISMATCH")
   if (JSON.stringify(receipt.filesystemRestrictions) !== JSON.stringify(pacmanFilesystemRestrictions(log)))
     throw new Error("AUR_PACMAN_FILESYSTEM_RESTRICTION_RECEIPT_MISMATCH")
