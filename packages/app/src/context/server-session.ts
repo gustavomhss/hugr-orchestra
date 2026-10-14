@@ -20,7 +20,6 @@ import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
 import {
   decodeSessionManagementEvent,
-  mergeSessionManagementInfo,
   normalizeSessionInfo,
   type AppSession,
 } from "@/utils/session"
@@ -259,7 +258,7 @@ export function createServerSession(
   }
 
   const remember = (session: AppSession) => {
-    setData("info", session.id, reconcile(mergeSessionManagementInfo(data.info[session.id], session)))
+    setData("info", session.id, reconcile(recovery.merge(session)))
     infoSeen.delete(session.id)
     infoSeen.add(session.id)
     if (infoSeen.size > sessionInfoLimit) {
@@ -290,6 +289,7 @@ export function createServerSession(
     requests,
     generations,
     read: (sessionID) => data.info[sessionID],
+    source: sessionApi ? "canonical" : "snapshot",
     request: (sessionID) =>
       sessionApi
         ? sessionApi.get({ sessionID }).then(normalizeSessionInfo)
@@ -883,6 +883,8 @@ export function createServerSession(
   }
 
   const applyV2 = (event: ServerCurrentEvent) => {
+    const eventType: string = event.type
+    if (eventType === "session.next.subagent.models.changed") return
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
@@ -948,6 +950,7 @@ export function createServerSession(
     }
     switch (event.type) {
       case "session.next.subagent.models.changed":
+        return recovery.applyPolicy(event)
       case "session.next.archive.changed": {
         const decoded = decodeSessionManagementEvent(event)
         if (!decoded) return
@@ -974,6 +977,7 @@ export function createServerSession(
         const properties = event.properties as { sessionID?: string; info?: Session }
         const sessionID = properties.info?.id ?? properties.sessionID
         if (!sessionID) return
+        recovery.forget(sessionID)
         infoSeen.delete(sessionID)
         setData(
           "info",
@@ -1264,7 +1268,7 @@ export function createServerSession(
     get: (sessionID: string) => data.info[sessionID],
     peek: (sessionID: string) => data.info[sessionID],
     remember,
-    resolve: recovery.resolve,
+    resolve: (sessionID: string, options?: { force?: boolean }) => recovery.resolve(sessionID, options),
     lineage: {
       peek: peekLineage,
       async resolve(sessionID: string) {
