@@ -58,6 +58,10 @@ import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionStore } from "@orchestra/core/session/store"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 
 export const AppLayer = AppNodeBuilderV1.build(
@@ -114,8 +118,12 @@ export const AppLayer = AppNodeBuilderV1.build(
     LocationServiceMap.node,
     EventV2.node,
     SessionStore.node,
+    SessionV2.node,
+    SessionExecution.node,
+    SessionSubagentModels.node,
     ArsenalObservations.node,
   ]),
+  [[SessionExecution.node, SessionExecutionLocal.node]],
 ).pipe(Layer.provideMerge(AppNodeBuilderV1.build(Ripgrep.node)), Layer.provideMerge(Observability.layer))
 
 const rt = ManagedRuntime.make(AppLayer, { memoMap })
