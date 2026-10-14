@@ -58,12 +58,15 @@ import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionStore } from "@orchestra/core/session/store"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 
 export const AppLayer = AppNodeBuilderV1.build(
   LayerNode.group([
     Npm.node,
     FSUtil.node,
+    Ripgrep.node,
     Database.node,
     Auth.node,
     Account.node,
@@ -114,9 +117,12 @@ export const AppLayer = AppNodeBuilderV1.build(
     LocationServiceMap.node,
     EventV2.node,
     SessionStore.node,
+    // Bootstrap and tools open native Locations through this process-owned root.
+    SessionV2.node,
+    SessionExecution.node,
     ArsenalObservations.node,
   ]),
-).pipe(Layer.provideMerge(AppNodeBuilderV1.build(Ripgrep.node)), Layer.provideMerge(Observability.layer))
+).pipe(Layer.provideMerge(Observability.layer))
 
 const rt = ManagedRuntime.make(AppLayer, { memoMap })
 type Runtime = Pick<typeof rt, "runSync" | "runPromise" | "runPromiseExit" | "runFork" | "runCallback" | "dispose">

@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
-import { DateTime, Effect, Equal, Hash, Schema } from "effect"
+import { Effect, Equal, Hash, Schema } from "effect"
 import { Tool } from "@orchestra/core/tool/tool"
 import { define } from "@orchestra/plugin/v2/effect"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -12,10 +12,11 @@ import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Location } from "@orchestra/core/location"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { ModelV2 } from "@orchestra/core/model"
-import { ProjectV2 } from "@orchestra/core/project"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -33,7 +34,17 @@ import { ToolRegistry } from "../src/tool/registry"
 import { ApplicationTools } from "../src/tool/application-tools"
 
 const it = testEffect(
-  AppNodeBuilder.build(LayerNode.group([ApplicationTools.node, Database.node, EventV2.node, LocationServiceMap.node])),
+  AppNodeBuilder.build(
+    LayerNode.group([
+      ApplicationTools.node,
+      Database.node,
+      EventV2.node,
+      LocationServiceMap.node,
+      SessionV2.node,
+      SessionExecution.node,
+    ]),
+    [[SessionExecution.node, SessionExecutionLocal.node]],
+  ),
 )
 
 describe("LocationServiceMap", () => {
@@ -113,6 +124,7 @@ describe("LocationServiceMap", () => {
             "question",
             "read",
             "skill",
+            "task",
             "todowrite",
             "webfetch",
             "websearch",
@@ -130,6 +142,7 @@ describe("LocationServiceMap", () => {
             "question",
             "read",
             "skill",
+            "task",
             "todowrite",
             "webfetch",
             "websearch",
@@ -162,23 +175,19 @@ describe("LocationServiceMap", () => {
               }),
             ),
           )
-          const failure = yield* SessionRunnerModel.Service.use((models) =>
-            models.resolve(
-              SessionV2.Info.make({
-                id: SessionV2.ID.make("ses_unavailable_model"),
-                projectID: ProjectV2.ID.global,
-                title: "test",
-                model: {
-                  id: ModelV2.ID.make("chat"),
-                  providerID: ProviderV2.ID.make("unavailable"),
-                },
-                cost: 0,
-                tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-                time: { created: DateTime.makeUnsafe(0), updated: DateTime.makeUnsafe(0) },
-                location,
-              }),
-            ),
-          ).pipe(Effect.provide(LocationServiceMap.Service.get(location)), Effect.flip)
+          const sessions = yield* SessionV2.Service
+          const session = yield* sessions.create({
+            id: SessionV2.ID.make("ses_unavailable_model"),
+            model: {
+              id: ModelV2.ID.make("chat"),
+              providerID: ProviderV2.ID.make("unavailable"),
+            },
+            location,
+          })
+          const failure = yield* SessionRunnerModel.Service.use((models) => models.resolve(session)).pipe(
+            Effect.provide(LocationServiceMap.Service.get(location)),
+            Effect.flip,
+          )
 
           expect(failure).toMatchObject({
             _tag: "SessionRunnerModel.ModelUnavailableError",

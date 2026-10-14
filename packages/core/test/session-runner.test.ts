@@ -2341,18 +2341,15 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const session = yield* SessionV2.Service
       const parentID = SessionV2.ID.make("ses_runner_parent")
+      yield* insertSession(parentID)
       const { db } = yield* Database.Service
-      yield* db
-        .update(SessionTable)
-        .set({ parent_id: parentID })
-        .where(eq(SessionTable.id, sessionID))
-        .run()
-        .pipe(Effect.orDie)
+      yield* db.update(SessionTable).set({ parent_id: parentID }).where(eq(SessionTable.id, sessionID)).run()
       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Run child request" }), resume: false })
 
       requests.length = 0
       yield* session.resume(sessionID)
 
+      expect(requests).toHaveLength(1)
       expect(requests[0]?.http?.headers?.["x-parent-session-id"]).toBe(parentID)
     }),
   )

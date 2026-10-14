@@ -180,6 +180,7 @@ function services<A, E>(
       AppNodeBuilder.build(
         LayerNode.group([
           SessionV2.node,
+          SessionExecution.node,
           Database.node,
           EventV2.node,
           SessionProjector.node,
