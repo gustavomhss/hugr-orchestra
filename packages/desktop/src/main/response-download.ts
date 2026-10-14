@@ -20,12 +20,14 @@ type Save = {
   sequence: number
   ended: boolean
   commit: boolean
+  committing: boolean
+  cancellation: boolean
   path?: string
   temporary?: string
   file?: DownloadFile
   opening?: Promise<void>
   writing?: Promise<void>
-  clearing?: Promise<void>
+  clearing?: Promise<ResponseDownloadResult>
   ready?: Promise<ResponseDownloadResult>
   prepare(): Promise<ResponseDownloadResult>
   detach(): void
@@ -36,6 +38,7 @@ type Deps = {
   BrowserWindow: typeof import("electron").BrowserWindow
   choose(win: BrowserWindow, filename: string): Promise<{ canceled: boolean; filePath?: string }>
   open?: (path: string) => Promise<DownloadFile>
+  rename?: typeof rename
 }
 
 /** Chooser grants one opaque capability, never a renderer-supplied path. */
@@ -44,17 +47,24 @@ export function registerResponseDownloadIpc(deps: Deps) {
   const choosers = new WeakSet<WebContents>()
   let quitting = false
   const clear = (save: Save, commit = false) => {
-    if (!commit) save.commit = false
+    if (!commit && !save.committing) save.commit = false
     if (save.clearing) return save.clearing
     save.ended = true
     save.commit = commit
-    save.clearing = (async () => {
+    save.clearing = (async (): Promise<ResponseDownloadResult> => {
       try {
         // A chooser can stay open after cancellation. Only an already-started open/write is awaited.
         await save.opening?.catch(() => undefined)
         await save.writing?.catch(() => undefined)
         await save.file?.close()
-        if (save.commit && save.temporary && save.path) await rename(save.temporary, save.path)
+        if (save.commit && save.temporary && save.path) {
+          // Submission is irreversible: cancellation now observes this rename's actual result.
+          save.committing = true
+          await (deps.rename ?? rename)(save.temporary, save.path)
+          save.temporary = undefined
+          return { status: "ok" }
+        }
+        return { status: "cancelled" }
       } finally {
         try {
           // Exclusive open can collide: never unlink a path unless this save acquired its handle.
@@ -112,6 +122,8 @@ export function registerResponseDownloadIpc(deps: Deps) {
       sequence: 0,
       ended: false,
       commit: false,
+      committing: false,
+      cancellation: false,
       async prepare() {
         if (save.ended) return { status: "cancelled" }
         // Save dialogs have no abort API. Retain their slot until dismissal, even after handle cancellation.
@@ -139,7 +151,10 @@ export function registerResponseDownloadIpc(deps: Deps) {
         save.win.removeListener("closed", cancel)
       },
     }
-    const cancel = () => { void clear(save).catch(() => undefined) }
+    const cancel = () => {
+      if (save.ended && (!save.commit || save.committing)) return
+      void clear(save).catch(() => undefined)
+    }
     const navigate = (details: { isMainFrame: boolean; isSameDocument: boolean }) => {
       if (details.isMainFrame && !details.isSameDocument) cancel()
     }
@@ -153,13 +168,17 @@ export function registerResponseDownloadIpc(deps: Deps) {
   deps.ipcMain.handle("response-download-ready", (event, handle: unknown) => {
     const save = selection(event, handle)
     if (!save) return downloadFailure({ code: "EACCES" })
-    return save.ready ??= save.prepare().catch((error: unknown) => fail(save, error))
+    // Only one IPC reply may wait for the chooser; duplicate callers never join its promise.
+    if (save.ended || save.ready) return downloadFailure(undefined)
+    save.ready = save.prepare().catch((error: unknown) => fail(save, error))
+    return save.ready
   })
   deps.ipcMain.handle("response-download-write", async (event, handle: unknown, sequence: unknown, chunk: unknown) => {
     const save = selection(event, handle)
     if (!save) return downloadFailure({ code: "EACCES" })
+    if (save.ended) return downloadFailure(undefined)
     if (
-      save.ended || !save.file || save.writing || !Number.isSafeInteger(sequence) || sequence !== save.sequence
+      !save.file || save.writing || !Number.isSafeInteger(sequence) || sequence !== save.sequence
       || !(chunk instanceof ArrayBuffer) || chunk.byteLength === 0 || chunk.byteLength > RESPONSE_DOWNLOAD_CHUNK_BYTES
     )
       return fail(save, undefined)
@@ -189,17 +208,18 @@ export function registerResponseDownloadIpc(deps: Deps) {
   deps.ipcMain.handle("response-download-finish", async (event, handle: unknown, sequence: unknown) => {
     const save = selection(event, handle)
     if (!save) return downloadFailure({ code: "EACCES" })
-    if (save.ended || !save.file || save.writing || !Number.isSafeInteger(sequence) || sequence !== save.sequence)
+    if (save.ended) return downloadFailure(undefined)
+    if (!save.file || save.writing || !Number.isSafeInteger(sequence) || sequence !== save.sequence)
       return fail(save, undefined)
-    return clear(save, true).then(
-      () => ({ status: save.commit ? "ok" : "cancelled" }),
-      downloadFailure,
-    )
+    return clear(save, true).catch(downloadFailure)
   })
   deps.ipcMain.handle("response-download-cancel", (event, handle: unknown) => {
     const save = selection(event, handle)
     if (!save) return downloadFailure({ code: "EACCES" })
-    return clear(save).then(() => ({ status: "cancelled" }), downloadFailure)
+    // Admit one cancel before commit, or one observer after irreversible rename submission.
+    if (save.cancellation || (save.ended && !save.commit)) return downloadFailure(undefined)
+    save.cancellation = true
+    return clear(save).catch(downloadFailure)
   })
   return { clear: cleanup }
 }

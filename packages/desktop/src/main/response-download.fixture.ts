@@ -10,6 +10,7 @@ type Handler = (event: unknown, ...args: unknown[]) => unknown
 export async function responseDownloadFixture(options: {
   choose?: Parameters<typeof registerResponseDownloadIpc>[0]["choose"]
   open?: Parameters<typeof registerResponseDownloadIpc>[0]["open"]
+  rename?: Parameters<typeof registerResponseDownloadIpc>[0]["rename"]
 } = {}) {
   const root = await mkdtemp(join(tmpdir(), "orchestra-response-download-"))
   const destination = join(root, "download.bin")
@@ -24,6 +25,7 @@ export async function responseDownloadFixture(options: {
     app,
     BrowserWindow: { fromWebContents: (candidate: unknown) => candidate === sender ? win : null },
     choose: options.choose ?? (async () => ({ canceled: false, filePath: destination })),
+    rename: options.rename,
     open: options.open ?? (async (path: string) => {
       const file = await open(path, "wx", 0o600)
       return {
