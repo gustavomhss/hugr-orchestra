@@ -36,6 +36,9 @@ function expected(box: Box, name: string) {
     ["bun", "../core/test/distribution-bundle-gates.ts", "../../distribution-logs/windows-native-job.log"]]
   if (name === "Prove Schema ELF ABI") return [["bun", "test", "--timeout", "120000", "./test/elf.test.ts"]]
   if (name === "Prove packaged parser ABI") return [["bun", "test", "--timeout", "120000", "./test/parser-bindings.test.ts", "./test/onboard.test.ts"]]
+  if (name === "Prove localized proof oracles") return [["bun", "test", "--timeout", "30000",
+    "./test/fixture/distribution-aur/sandbox-evidence.test.ts",
+    ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]]
   return [["bun", "test", "--timeout", "120000", name === "Prove source ABI producers" ? "./src/tree-sitter-prebuilds.test.ts" : "./src/main/cli-artifacts.test.ts"]]
 }
 
@@ -47,9 +50,9 @@ const observe = (box: Box, step: typeof boundaries[number], text = step.run, fai
   const failIndex = wanted.findIndex(([cmd, , arg]) => (cmd === "bun" && step.name === "Install native Deno" ? arg ?? "download" : cmd) === failed)
   check(JSON.stringify(trace.map((entry) => [entry.cmd, ...entry.argv])) === JSON.stringify(failed ? wanted.slice(0, failIndex + 1) : wanted), `BUNDLE_BOUNDARY_ARGV_ORDER: ${step.name}`)
   check(trace.every((entry) => entry.cwd === realpathSync(path.join(box.dir, step.cwd))), `BUNDLE_BOUNDARY_CWD: ${step.name}`)
-  if (step.name.includes("ABI")) check(trace.every((entry) => entry.githubActions === "false" && entry.control === "declared"), `BUNDLE_BOUNDARY_ENV: ${step.name}`)
+  if (step.name.includes("ABI") || step.name === "Prove localized proof oracles") check(trace.every((entry) => entry.githubActions === "false" && entry.control === "declared"), `BUNDLE_BOUNDARY_ENV: ${step.name}`)
   const log = step.name === "Install native Deno" ? "deno-download" : step.name === "Extract native Deno" ? failed === "unzip" || failed === "chmod" ? "deno-extract" : "deno-version"
-    : step.name.includes("Windows") ? "windows-native-job" : step.name.includes("Desktop") ? "desktop-abi" : step.name.includes("Schema") ? "schema-elf-abi" : step.name.includes("parser") ? "parser-abi" : "source-abi"
+    : step.name === "Prove localized proof oracles" ? "localized-oracles" : step.name.includes("Windows") ? "windows-native-job" : step.name.includes("Desktop") ? "desktop-abi" : step.name.includes("Schema") ? "schema-elf-abi" : step.name.includes("parser") ? "parser-abi" : "source-abi"
   if (failed === "--admit") {
     check(!(yield* Effect.promise(() => Bun.file(path.join(box.dir, "distribution-logs/deno-download.log")).exists())), "BUNDLE_DENO_DOWNLOAD_BEFORE_ADMISSION")
     return

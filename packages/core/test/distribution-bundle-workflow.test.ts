@@ -29,6 +29,8 @@ const selector = await Bun.file(path.join(root, "packages/cli/script/test.ts")).
 const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "packages/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
 const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
 const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+const localized = ["./test/fixture/distribution-aur/sandbox-evidence.test.ts",
+  ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]
 
 test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
   inspect(source)
@@ -93,8 +95,16 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_DESKTOP_ABI", (value) => patchStep(value, "Prove Desktop ABI consumer", () => undefined)],
     ["BUNDLE_SCHEMA_ELF", (value) => patchStep(value, "Prove Schema ELF ABI", () => undefined)],
     ["BUNDLE_PARSER_ABI", (value) => patchStep(value, "Prove packaged parser ABI", () => undefined)],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", () => undefined)],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, if: "matrix.package == 'cli'" }))],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, "working-directory": "packages/core" }))],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, run: step.run?.replace("set -euo pipefail", "set -eu") }))],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, run: step.run?.replace("localized-oracles.log", "wrong.log") }))],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, run: step.run?.split("\n").map((line) => `# ${line}`).join("\n") }))],
+    ["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, run: `${step.run}\nexit 0` }))],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
   ]
+  localized.forEach((file) => mutations.push(["BUNDLE_LOCALIZED_ORACLES", (value) => patchStep(value, "Prove localized proof oracles", (step) => ({ ...step, run: step.run?.replace(file, "") }))]))
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
 })
 
@@ -142,9 +152,13 @@ function inspect(input: unknown, discovered = distribution) {
   const desktop = requireStep(job.steps, "Prove Desktop ABI consumer", "BUNDLE_DESKTOP_ABI")
   const elf = requireStep(job.steps, "Prove Schema ELF ABI", "BUNDLE_SCHEMA_ELF")
   const parser = requireStep(job.steps, "Prove packaged parser ABI", "BUNDLE_PARSER_ABI")
+  const oracles = requireStep(job.steps, "Prove localized proof oracles", "BUNDLE_LOCALIZED_ORACLES")
   check(abi.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && desktop.if === abi.if && desktop["working-directory"] === "packages/desktop" && job.steps.indexOf(abi) < job.steps.indexOf(desktop) && job.steps.indexOf(desktop) < job.steps.indexOf(run), "BUNDLE_SOURCE_ABI")
   check(elf.if === abi.if && elf["working-directory"] === "packages/schema" && job.steps.indexOf(elf) < job.steps.indexOf(run), "BUNDLE_SCHEMA_ELF")
   check(parser.if === abi.if && parser["working-directory"] === "packages/maestro-arsenal" && job.steps.indexOf(parser) < job.steps.indexOf(run), "BUNDLE_PARSER_ABI")
+  check(oracles.if === `${abi.if} && matrix.cpu == 'X64'` && oracles["working-directory"] === "packages/cli" && job.steps.indexOf(parser) < job.steps.indexOf(oracles) && job.steps.indexOf(oracles) < job.steps.indexOf(run), "BUNDLE_LOCALIZED_ORACLES")
+  check(oracles.run === `set -euo pipefail\nmkdir -p ../../distribution-logs\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ${localized.join(" ")} 2>&1 | tee ../../distribution-logs/localized-oracles.log\n`, "BUNDLE_LOCALIZED_ORACLES")
+  localized.forEach((file) => check(statSync(path.join(root, "packages/cli", file), { throwIfNoEntry: false })?.isFile() && !rows.some((row) => row.files?.includes(file)), `BUNDLE_LOCALIZED_ORACLE_MISSING_OR_REPEATED: ${file}`))
   check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
   check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
   check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
