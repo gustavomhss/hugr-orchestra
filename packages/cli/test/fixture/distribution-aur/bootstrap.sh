@@ -27,8 +27,17 @@ case "$1" in
   *) fail AUR_UNSUPPORTED_GUEST_CPU ;;
 esac
 # Keep effective signed-repository policy and sandbox-user receipts. No fallback.
-pacman-conf SandboxUser > /proof/evidence/bootstrap-sandbox-user.txt
-[[ -s /proof/evidence/bootstrap-sandbox-user.txt ]] || fail AUR_PACMAN_SANDBOX_USER_REQUIRED
+# pacman.conf(5), Pacman 7.1: DownloadUser selects the download/sandbox user.
+if ! LC_ALL=C pacman-conf DownloadUser > /proof/evidence/bootstrap-sandbox-user.txt 2> /proof/evidence/bootstrap-download-user.stderr; then
+  printf '%s\n' "$(< /proof/evidence/bootstrap-download-user.stderr)" >&2
+  fail AUR_PACMAN_DOWNLOAD_USER_QUERY_FAILED
+fi
+[[ ! -s /proof/evidence/bootstrap-download-user.stderr ]] || fail AUR_PACMAN_DOWNLOAD_USER_QUERY_DIAGNOSTIC
+download_user=$(< /proof/evidence/bootstrap-sandbox-user.txt)
+[[ $download_user == alpm ]] || fail AUR_PACMAN_ALPM_DOWNLOAD_USER_REQUIRED
+download_uid=$(id -u -- "$download_user") || fail AUR_PACMAN_DOWNLOAD_USER_ACCOUNT_UNAVAILABLE
+[[ $download_uid =~ ^[1-9][0-9]*$ ]] || fail AUR_PACMAN_NONROOT_DOWNLOAD_USER_REQUIRED
+printf '%s\n' "$download_uid" > /proof/evidence/bootstrap-download-user-uid.txt
 pacman-conf --repo-list > /proof/evidence/bootstrap-repositories.txt
 [[ -s /proof/evidence/bootstrap-repositories.txt ]] || fail AUR_PACMAN_SIGNED_REPOSITORIES_EMPTY
 while IFS= read -r repository; do
