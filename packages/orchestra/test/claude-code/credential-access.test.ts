@@ -22,6 +22,7 @@ const SCOPE = [
   "packages/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
   "modules/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
   "modules/*/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
+  "tooling/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
 ]
 const READS = [/find-(generic|internet)-password/, /\.credentials\.json/, /Claude Code-credentials/, /claudeAiOauth/]
 
@@ -199,6 +200,7 @@ test("Bun inventory reaches planted package source, script and Desktop test read
     { file: "packages/desktop/src/main/noop.ts", text: '// Bun["file"](".credentials.json")' },
     { file: "modules/capability-assets/src/catalog.ts", text: 'Bun["file"](".credentials.json")' },
     { file: "modules/maestro/arsenal/src/registry.ts", text: '(readFileSync)(".credentials.json")' },
+    { file: "tooling/httpapi-codegen/src/index.ts", text: 'Bun["file"](".credentials.json")' },
     { file: "packages/desktop/src/node_modules/ignored.ts", text: 'Bun["file"](".credentials.json")' },
     { file: "packages/desktop/test/outside.ts", text: 'Bun["file"](".credentials.json")' },
   ]
@@ -207,9 +209,9 @@ test("Bun inventory reaches planted package source, script and Desktop test read
     await Bun.write(path.join(fixture.root, item.file), item.text)
   }))
   const files = await inventory(fixture.root)
-  expect(files.toSorted()).toEqual(planted.slice(0, 6).map((item) => item.file).toSorted())
+  expect(files.toSorted()).toEqual(planted.slice(0, 7).map((item) => item.file).toSorted())
   const found = (await Promise.all(files.map(async (file) => hits(file, await Bun.file(path.join(fixture.root, file)).text())))).flat()
-  expect(found).toHaveLength(4)
+  expect(found).toHaveLength(5)
   expect(found.some((hit) => hit.includes("credential-control.test.ts:"))).toBe(true)
   expect(found.some((hit) => hit.includes("credential-control.cjs:"))).toBe(true)
 })
@@ -222,6 +224,7 @@ test("package sources and scripts contain no declared credential access construc
   expect(scanned).toContain("modules/capability-assets/src/catalog.ts")
   expect(scanned).toContain("modules/relay/src/arm/evaluate.ts")
   expect(scanned).toContain("modules/maestro/arsenal/src/registry.ts")
+  expect(scanned).toContain("tooling/httpapi-codegen/src/index.ts")
   expect(scanned.length).toBeGreaterThan(500)
   const found = (await Promise.all(scanned.map(async (file) => hits(file, await Bun.file(path.join(ROOT, file)).text())))).flat()
   if (found.length) throw new Error(["Credential access constructs or raw non-JS indicators found:", ...found].join("\n"))

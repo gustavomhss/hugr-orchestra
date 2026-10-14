@@ -148,6 +148,7 @@ describe("seat skill packaging", () => {
       [`${tree}/references/config.json`, '{"name":"日本語"}\n'],
       [`${tree}/references/example.ts`, 'export const name = "日本語"\n'],
     ]))
+    files["tooling/httpapi-codegen/test/generated/control.ts"] = 'export const generated = "日本語"\n'
     const binary = trees.map((tree) => `${tree}/references/data.bin`)
     const bytes = new Uint8Array([0, 0xff, 10, 13, 10])
     await Promise.all(Object.entries(files).map(([file, text]) => Bun.write(path.join(tmp.path, file), text)))

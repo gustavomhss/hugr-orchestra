@@ -380,7 +380,7 @@
         "effect": "4.0.0-beta.83",
       },
     },
-    "packages/httpapi-codegen": {
+    "tooling/httpapi-codegen": {
       "name": "@orchestra/httpapi-codegen",
       "dependencies": {
         "effect": "catalog:",
@@ -1569,7 +1569,7 @@
 
     "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:packages/http-recorder"],
 
-    "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:packages/httpapi-codegen"],
+    "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:tooling/httpapi-codegen"],
 
     "@orchestra/llm": ["@orchestra/llm@workspace:packages/llm"],
 

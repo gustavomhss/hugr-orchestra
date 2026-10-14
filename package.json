@@ -30,6 +30,7 @@
       "modules/relay",
       "modules/capability-assets",
       "modules/maestro/arsenal",
+      "tooling/httpapi-codegen",
       "packages/sdk/js",
       "packages/omni/bindings/node"
     ],
