@@ -1,4 +1,8 @@
+import { FrontendRecovery } from "./frontend-recovery"
+
 export const dict: Record<string, string> = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.si,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "HuGR Orchestra ගැන",
   "desktop.menu.hide": "HuGR Orchestra සඟවන්න",
@@ -684,9 +688,6 @@ export const dict: Record<string, string> = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",

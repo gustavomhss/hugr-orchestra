@@ -1,4 +1,5 @@
 import { DESKTOP_NATIVE_KEYS } from "./desktop-native"
+import { FrontendRecovery } from "./frontend-recovery"
 
 const desktop = [
   "HuGR Orchestra",
@@ -91,6 +92,8 @@ const desktop = [
 ]
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.is,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Tillögur",
   "command.category.view": "Skoða",
@@ -689,9 +692,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
