@@ -16,6 +16,8 @@ import { detectServerProtocol, type ServerProtocol, type ServerProtocolOptions }
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
+import { createSessionManagementForServer, type SessionManagement } from "@/utils/session-management"
+import { createScopedFetch } from "@/utils/scoped-fetch"
 
 const isAbortError = (error: unknown) =>
   error !== null && typeof error === "object" && "name" in error && error.name === "AbortError"
@@ -24,8 +26,14 @@ const isStreamClosed = (error: unknown, signal?: AbortSignal) => isAbortError(er
 type NativeToolSuccess = Omit<Extract<OpenCodeEvent, { type: "session.tool.success" }>, "durable"> & {
   durable?: Schema.Codec.Encoded<typeof SessionEvent.Tool.Success>["durable"]
 }
-export type ServerCurrentEvent = OpenCodeEvent | NativeToolSuccess
-export type ServerEvent = Event & { current?: ServerCurrentEvent }
+type NativeSubagentModelsChanged = Schema.Codec.Encoded<typeof SessionEvent.SubagentModelsChanged>
+export type ServerCurrentEvent = OpenCodeEvent | NativeToolSuccess | NativeSubagentModelsChanged
+export type ServerEvent = (Event & { current?: ServerCurrentEvent }) | {
+  id: string
+  type: NativeSubagentModelsChanged["type"]
+  properties: NativeSubagentModelsChanged["data"]
+  current: NativeSubagentModelsChanged
+}
 type QueuedServerEvent = { directory: string; payload: ServerEvent }
 type CurrentDelta = Extract<
   OpenCodeEvent,
@@ -35,6 +43,12 @@ type CurrentDelta = Extract<
 export function adaptServerEvent(
   event: ServerCurrentEvent | Schema.Codec.Encoded<typeof SessionEvent.Tool.Success>,
 ): ServerEvent {
+  if (event.type === SessionEvent.SubagentModelsChanged.type) {
+    const native = Schema.encodeSync(SessionEvent.SubagentModelsChanged)(
+      Schema.decodeUnknownSync(SessionEvent.SubagentModelsChanged)(event),
+    )
+    return { id: native.id, type: native.type, properties: native.data, current: native }
+  }
   // The bundled compatibility client predates the native tool event name and structured output.
   if (event.type === SessionEvent.Tool.Success.type) {
     const native = Schema.encodeSync(SessionEvent.Tool.Success)(
@@ -223,6 +237,7 @@ type ServerSDKBase = {
   client: ReturnType<typeof createSdkForServer>
   api: CompatibleApi
   currentApi: ServerApi
+  sessionManagement: SessionManagement
   event: {
     on: ServerEventEmitter["on"]
     listen: ServerEventEmitter["listen"]
@@ -433,6 +448,12 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
     throwOnError: true,
   })
   const currentApi: ServerApi = createApiForServer({ server: server.http, fetch: platform.fetch })
+  const sessionManagement = createSessionManagementForServer({
+    server: server.http,
+    fetch: createScopedFetch(platform.fetch ?? globalThis.fetch, abort.signal),
+    protocol,
+    signal: abort.signal,
+  })
   const legacy = (directory?: string) =>
     createSdkForServer({
       server: server.http,
@@ -451,6 +472,7 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
     client: sdk,
     api,
     currentApi,
+    sessionManagement,
     event: {
       on: emitter.on.bind(emitter),
       listen: emitter.listen.bind(emitter),
@@ -500,7 +522,7 @@ export function useServerProtocol() {
 }
 
 type SDKEventMap = {
-  [key in Event["type"]]: Extract<ServerEvent, { type: key }>
+  [key in ServerEvent["type"]]: Extract<ServerEvent, { type: key }>
 }
 
 function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
