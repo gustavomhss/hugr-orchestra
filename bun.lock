@@ -361,7 +361,7 @@
         "@typescript/native-preview": "catalog:",
       },
     },
-    "packages/http-recorder": {
+    "tooling/http-recorder": {
       "name": "@orchestra/http-recorder",
       "version": "1.18.27",
       "dependencies": {
@@ -1567,7 +1567,7 @@
 
     "@orchestra/effect-sqlite-node": ["@orchestra/effect-sqlite-node@workspace:packages/effect-sqlite-node"],
 
-    "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:packages/http-recorder"],
+    "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:tooling/http-recorder"],
 
     "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:tooling/httpapi-codegen"],
 

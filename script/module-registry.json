@@ -11,7 +11,7 @@
     { "alias": "desktop", "kind": "bun", "scope": ".", "name": "@orchestra/desktop", "path": "packages/desktop" },
     { "alias": "effect-drizzle-sqlite", "kind": "bun", "scope": ".", "name": "@orchestra/effect-drizzle-sqlite", "path": "packages/effect-drizzle-sqlite" },
     { "alias": "effect-sqlite-node", "kind": "bun", "scope": ".", "name": "@orchestra/effect-sqlite-node", "path": "packages/effect-sqlite-node" },
-    { "alias": "http-recorder", "kind": "bun", "scope": ".", "name": "@orchestra/http-recorder", "path": "packages/http-recorder" },
+    { "alias": "http-recorder", "kind": "bun", "scope": ".", "name": "@orchestra/http-recorder", "path": "tooling/http-recorder" },
     { "alias": "httpapi-codegen", "kind": "bun", "scope": ".", "name": "@orchestra/httpapi-codegen", "path": "tooling/httpapi-codegen" },
     { "alias": "llm", "kind": "bun", "scope": ".", "name": "@orchestra/llm", "path": "packages/llm" },
     { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "modules/maestro/arsenal" },

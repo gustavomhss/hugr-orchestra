@@ -49,7 +49,7 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
-    path: /^packages\/[^/]+\/test\/fixtures\/recordings\//,
+    path: /^(?:packages\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
     reason:
       "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
   },

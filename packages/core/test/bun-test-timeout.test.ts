@@ -66,6 +66,7 @@ it.live("every Bun test package loads the shared guard", () => Effect.gen(functi
   expect(configs).toContain("modules/relay/bunfig.toml")
   expect(configs).toContain("modules/maestro/arsenal/bunfig.toml")
   expect(configs).toContain("tooling/httpapi-codegen/bunfig.toml")
+  expect(configs).toContain("tooling/http-recorder/bunfig.toml")
   expect(configs.length).toBeGreaterThan(10)
   yield* Effect.promise(() => Promise.all(configs.map(async (file) => {
     const config = TOML.parse(await Bun.file(path.join(root, file)).text()) as { test?: { preload?: string[] } }
