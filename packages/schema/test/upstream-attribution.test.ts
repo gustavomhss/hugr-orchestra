@@ -172,6 +172,91 @@ describe("upstream attribution contract", () => {
   })
 })
 
+const claudeCodeDispatch = {
+  kind: "claude-code-agent",
+  tool: "Agent",
+  subagentType: "orchestra:archie",
+  executor: "claude-code-host",
+  agentID: "agent-archie-1",
+  grantID: "grant-archie-1",
+} satisfies typeof UpstreamAttribution.ClaudeCodeAgentDispatch.Type
+
+const attributionV2 = {
+  ...attribution,
+  schema: "maestro-upstream-attribution-v2",
+  parentCallID: "toolu_dispatch",
+  dispatch: claudeCodeDispatch,
+} satisfies UpstreamAttribution.V2
+
+describe("upstream attribution V2 contract", () => {
+  test.each([
+    { kind: "claude-code-agent", dispatch: claudeCodeDispatch },
+    { kind: "claude-code-agent with older Task tool name", dispatch: { ...claudeCodeDispatch, tool: "Task" } },
+    { kind: "orchestra-task", dispatch: { kind: "orchestra-task" } },
+  ])("V2 $kind decodes and round trips without adding fields", ({ dispatch }) => {
+    const input = { ...attributionV2, dispatch }
+    const decoded: UpstreamAttribution.V2 = Schema.decodeUnknownSync(UpstreamAttribution.V2)(input)
+    expect(decoded).toEqual(input)
+    expect(Schema.encodeSync(UpstreamAttribution.V2)(decoded)).toEqual(input)
+  })
+
+  test("V2 reuses V1 references and identity schemas", () => {
+    expect(SchemaAST.resolveIdentifier(UpstreamAttribution.V2.ast)).toBe("Maestro.UpstreamAttribution.V2")
+    expect(Object.keys(UpstreamAttribution.V2.fields).sort()).toEqual(
+      [...Object.keys(UpstreamAttribution.V1.fields), "dispatch"].sort(),
+    )
+    Object.keys(UpstreamAttribution.V1.fields)
+      .filter((key) => key !== "schema")
+      .forEach((key) =>
+        expect(Reflect.get(UpstreamAttribution.V2.fields, key)).toBe(Reflect.get(UpstreamAttribution.V1.fields, key)),
+      )
+    expect(UpstreamAttribution.V2.fields.schema.literal).toBe("maestro-upstream-attribution-v2")
+  })
+
+  test.each([
+    { name: "excess top-level key", input: { ...attributionV2, verified: true } },
+    { name: "missing dispatch", input: { ...attribution, schema: "maestro-upstream-attribution-v2" } },
+    { name: "excess dispatch key", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, toolUseID: "toolu_dispatch" } } },
+    { name: "excess orchestra-task key", input: { ...attributionV2, dispatch: { kind: "orchestra-task", tool: "task" } } },
+    { name: "missing agentID", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, agentID: undefined } } },
+    { name: "missing grantID", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, grantID: undefined } } },
+    { name: "empty agentID", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, agentID: "" } } },
+    { name: "lowercase task tool", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, tool: "task" } } },
+    { name: "unscoped subagent type", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, subagentType: "archie" } } },
+    { name: "other executor", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, executor: "orchestra" } } },
+    { name: "unknown kind", input: { ...attributionV2, dispatch: { ...claudeCodeDispatch, kind: "codex-agent" } } },
+    { name: "V1 schema literal", input: { ...attributionV2, schema: "maestro-upstream-attribution-v1" } },
+    { name: "empty projectID", input: { ...attributionV2, projectID: "" } },
+    { name: "other member", input: { ...attributionV2, memberID: "walt" } },
+  ])("V2 rejects $name", ({ input }) => {
+    expect(() => Schema.decodeUnknownSync(UpstreamAttribution.V2)(input)).toThrow()
+    expect(() => Schema.decodeUnknownSync(UpstreamAttribution.Any)(input)).toThrow()
+  })
+
+  test("Any decodes V1 and V2 and keeps V1 closed", () => {
+    expect(Schema.decodeUnknownSync(UpstreamAttribution.Any)(attribution)).toEqual(attribution)
+    expect(Schema.decodeUnknownSync(UpstreamAttribution.Any)(attributionV2)).toEqual(attributionV2)
+    expect(Schema.encodeSync(UpstreamAttribution.Any)(attributionV2)).toEqual(attributionV2)
+    expect(() => Schema.decodeUnknownSync(UpstreamAttribution.V1)(attributionV2)).toThrow()
+    expect(() => Schema.decodeUnknownSync(UpstreamAttribution.Any)({ ...attribution, dispatch: claudeCodeDispatch })).toThrow()
+    expect(SchemaAST.resolveIdentifier(UpstreamAttribution.V1.ast)).toBe("Maestro.UpstreamAttribution.V1")
+  })
+
+  test("V3 PlanRevision retains V2 attribution in data and envelope", () => {
+    const input = { ...revisionV3, goal: upstream, upstreamAttribution: attributionV2 }
+    const decoded = Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)(input)
+    expect(decoded).toEqual(input)
+    expect(Schema.encodeSync(MaestroEvent.PlanRevision.RecordedV3.data)(decoded)).toEqual(input)
+    expect(Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope(input, 3)).data).toEqual(input)
+    expect(() =>
+      Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)({
+        ...input,
+        upstreamAttribution: { ...attributionV2, dispatch: { ...claudeCodeDispatch, verified: true } },
+      }),
+    ).toThrow()
+  })
+})
+
 describe("PlanRevision attribution versions", () => {
   test("V1 and V2 preserve historical shape and never synthesize attribution", () => {
     const historical = [
