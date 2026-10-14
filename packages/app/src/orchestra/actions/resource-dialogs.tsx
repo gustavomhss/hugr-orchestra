@@ -8,6 +8,7 @@ import { actionsError } from "./api"
 import { resourcePayload } from "./resource-payload"
 import { Check, Field } from "./resource-fields"
 import { canRequest } from "./request-policy"
+import { ResourceScopeField } from "./resource-scopes-field"
 type ResourceKind = "create-variable" | "edit-variable" | "delete-variable" |
   "create-environment" | "edit-environment" | "delete-environment" |
   "create-runner" | "edit-runner" | "delete-runner" |
@@ -15,7 +16,6 @@ type ResourceKind = "create-variable" | "edit-variable" | "delete-variable" |
   "delete-artifact" | "delete-cache" | "clear-caches" | "project-settings"
 type ResourceDialog = Extract<Dialog, { kind: ResourceKind }>
 type Data = Record<string, unknown>
-type Option = { value: string; label: string }
 type Glyph = keyof typeof paths
 type NodeGlyph = keyof typeof nodePaths
 const paths = {
@@ -39,7 +39,7 @@ export function ResourceDialogs(props: ViewProps) {
   }
   const identity = () => {
     const dialog = selected()
-    return dialog ? dialogKey(state().binding?.id, dialog) : undefined
+    return dialog ? dialogKey(state().binding?.id, dialog, state().binding?.revision) : undefined
   }
   return <Show when={identity()} keyed>{(key) => {
     const dialog = selected()
@@ -57,7 +57,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     if (notify && p.state().submitting) return
     element?.querySelector<HTMLFormElement>("form")?.reset()
     element?.close()
-    if (notify && !disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog)) === p.identity) p.props.model.dialog(undefined)
+    if (notify && !disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) === p.identity) p.props.model.dialog(undefined)
   }
   const cancel = (event: Event) => { event.preventDefault(); close(true) }
   const submit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (event) => {
@@ -84,7 +84,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     if (!element) return
     const onClose = () => {
       element?.querySelector<HTMLFormElement>("form")?.reset()
-      if (!disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog)) === p.identity) p.props.model.dialog(undefined)
+      if (!disposed && dialogKey(p.state().binding?.id, supported(p.state().dialog), p.state().binding?.revision) === p.identity) p.props.model.dialog(undefined)
     }
     element.addEventListener("cancel", cancel)
     element.addEventListener("close", onClose)
@@ -116,7 +116,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
         </button>
       </header>
       <div class="mx-dialog-body dialog-body">
-        <Body dialog={p.dialog} resource={target()} state={p.state()} t={t} disabled={unavailable()} />
+        <Body model={p.props.model} dialog={p.dialog} resource={target()} state={p.state()} t={t} disabled={unavailable()} />
       </div>
       <footer class="mx-dialog-foot">
         <Show when={formState.error ?? p.state().commandError} fallback={<span aria-hidden="true" />}>{(error) => <span id={`${id}-error`} class="ad-error" role="alert">{t(error().message)}</span>}</Show>
@@ -130,7 +130,7 @@ function Modal(p: { props: ViewProps; state: () => State; dialog: ResourceDialog
     </form>
   </dialog>
 }
-function Body(p: { dialog: ResourceDialog; resource?: Actions.Resource; state: State; t: Translate; disabled: boolean }) {
+function Body(p: ViewProps & { dialog: ResourceDialog; resource?: Actions.Resource; state: State; disabled: boolean }) {
   const data = record(p.resource?.data), github = p.state.binding?.provider.kind === "github"
   const localPolicy = record(data.policy)
   if (p.dialog.kind === "clear-caches") return <Review t={p.t}
@@ -150,10 +150,9 @@ function Body(p: { dialog: ResourceDialog; resource?: Actions.Resource; state: S
   if (p.dialog.kind.endsWith("runner")) return <RunnerBody {...p} data={data} github={github} />
   return <ScheduleBody {...p} data={data} />
 }
-function VariableBody(p: { dialog: ResourceDialog; resource?: Actions.Resource; state: State; t: Translate; disabled: boolean; data: Data; github: boolean }) {
+function VariableBody(p: ViewProps & { dialog: ResourceDialog; resource?: Actions.Resource; state: State; disabled: boolean; data: Data; github: boolean }) {
   const flags = flagsOf(p.resource), secret = Boolean(!p.resource || p.resource.sensitive || text(p.data, "type") === "Secret" || flags.includes("Masked") || flags.includes("Hidden"))
   const redacted = Boolean(p.resource && secret)
-  const scopes = scopeOptions(p.state, p.resource?.scope, p.t)
   return <>
     <Show when={redacted}>
       <Note t={p.t} title={p.github ? p.t("orchestra.actions.existingValueRedacted.github") : p.t("orchestra.actions.existingValueRedacted.gitlab")} text={p.github ? p.t("orchestra.actions.existingValueRedacted.github.detail") : p.t("orchestra.actions.existingValueRedacted.gitlab.detail")} glyph="lock" />
@@ -162,7 +161,7 @@ function VariableBody(p: { dialog: ResourceDialog; resource?: Actions.Resource; 
        <Field t={p.t} label={p.t("orchestra.actions.name")} name="name" value={p.resource?.name} required mono locked={Boolean(p.resource && (!p.github || secret))} disabled={p.disabled} placeholder={p.t("orchestra.actions.variableNamePlaceholder")} hint={p.t("orchestra.actions.variableNameHint")} />
       <Grid>
         <Field t={p.t} label={p.t("orchestra.actions.variableTypeLabel")} name="type" value={text(p.data, "type") || "Secret"} locked={Boolean(p.resource)} select={[{ value: "Secret", label: p.t("orchestra.actions.secret") }, { value: "Variable", label: p.t("orchestra.actions.variable") }]} disabled={p.disabled} />
-        <Field t={p.t} label={p.t("orchestra.actions.scope")} name="scope" value={p.resource?.scope ?? "Repository"} locked={p.github && Boolean(p.resource)} select={scopes} disabled={p.disabled} />
+        <ResourceScopeField model={p.model} t={p.t} name="scope" value={p.resource?.scope ?? ("scope" in p.dialog ? p.dialog.scope : undefined) ?? p.state.filters.scope} locked={p.github && Boolean(p.resource)} disabled={p.disabled} />
       </Grid>
     </Group>
     <Group title={p.t(redacted ? "orchestra.actions.replacementValue" : "orchestra.actions.configurationValue")}>
@@ -290,18 +289,6 @@ function isChecked(value: unknown): boolean {
   return value instanceof HTMLInputElement && value.checked
 }
 
-function scopeOptions(state: State, existing: string | undefined, t: Translate): Option[] {
-  const values = [
-    "Repository",
-    ...(state.resources.value?.items ?? []).filter((item) => item.kind === "environments").map((item) => item.name),
-    existing,
-  ].filter((value): value is string => value !== undefined)
-  return [...new Set(values)].map((value) => ({
-    value,
-    label: value === "Repository" && state.binding?.provider.kind === "gitlab" ? t("orchestra.actions.project") : value,
-  }))
-}
-
 function resourceFor(state: State, dialog: ResourceDialog): Actions.Resource | undefined {
   const items = [...(state.resources.value?.items ?? []), ...(state.artifacts.value?.items ?? [])]
   if (dialog.kind === "project-settings") return items.find((item) => item.bindingID === state.binding?.id && item.kind === "policy")
@@ -330,11 +317,11 @@ function operation(dialog: ResourceDialog): string {
   return dialog.kind === "create-runner" ? "runner.register" : "resource.create"
 }
 function disabled(state: State, dialog: ResourceDialog, resource?: Actions.Resource): boolean { const data = record(resource?.data), inherited = resource?.kind === "runners" && (data.inherited === true || text(data, "origin").startsWith("Inherited")); const ready = resource?.kind === "artifacts" ? state.artifacts.status === "ready" || state.resources.status === "ready" : state.resources.status === "ready"; return state.submitting || state.unsupported || !state.binding || !ready || !hasTarget(dialog, resource) || Boolean(data.historical === true || inherited || historical(state, resource)) || dialog.kind !== "project-settings" && (data.readOnly === true || data.readonly === true || dialog.kind === "edit-environment" && state.binding.provider.kind === "gitlab" && (data.reviewersReadOnly === true || typeof data.reviewers !== "string" || typeof data.preventSelfReview !== "boolean") || dialog.kind.startsWith("edit") && data.editable === false || !capable(state, operation(dialog), resource)) }
-function dialogKey(binding: string | undefined, dialog?: ResourceDialog): string {
-  if (!dialog) return `${binding ?? ""}:none`
+function dialogKey(binding: string | undefined, dialog?: ResourceDialog, revision?: number): string {
+  if (!dialog) return `${binding ?? ""}:${revision ?? ""}:none`
   const id = "id" in dialog ? dialog.id ?? "" : ""
   const scope = "scope" in dialog ? dialog.scope ?? "" : ""
-  return `${binding ?? ""}:${dialog.kind}:${id}:${scope}`
+  return JSON.stringify([binding, revision, dialog.kind, id, scope])
 }
 function supported(dialog: Dialog | undefined): ResourceDialog | undefined {
   if (!dialog) return undefined

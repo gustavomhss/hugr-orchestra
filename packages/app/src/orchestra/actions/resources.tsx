@@ -4,6 +4,7 @@ import { Empty, Icon } from "./components"
 import type { Model, State, Translate, ViewProps } from "./contract"
 import { ArtifactRow } from "./output-views"
 import { canRequest } from "./request-policy"
+import { ResourceScopeField } from "./resource-scopes-field"
 
 type Item = Actions.Resource
 type Data = Record<string, unknown>
@@ -55,7 +56,11 @@ export function Resources(props: ViewProps) {
         </For>
       </nav>
       <section class="resource-body">
-        <Show keyed when={`${state().binding?.id ?? ""}:${kind()}`}>
+        <Show when={kind() === "variables" && state().binding && !state().unsupported}>
+          <ResourceScopeField {...props} filter value={state().filters.scope} disabled={state().submitting}
+            onChange={(scope) => props.model.filter({ scope: scope || undefined })} />
+        </Show>
+        <Show keyed when={`${state().binding?.id ?? ""}:${state().binding?.revision ?? ""}:${kind()}`}>
           {(_owner) => (
             <Show when={ready()} fallback={<Empty title={props.t(title())} error={page().status === "error" ? props.t(page().error?.message ?? "orchestra.actions.unavailable") : undefined} busy={page().status === "loading"} />}>
               <Switch>
