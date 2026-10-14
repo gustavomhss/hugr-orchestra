@@ -5,6 +5,7 @@ import { lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, w
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { randomUUID } from "node:crypto"
+import { atlasRevisionSource } from "./git-source-root.mjs"
 
 const ROOT = process.cwd()
 const SNAPSHOT_TARGET = join(ROOT, "OWN-SNAPSHOT.json")
@@ -91,15 +92,15 @@ function containsAtlasDirectory(path) {
 }
 
 function git(args) {
-  return execFileSync("git", ["-C", ROOT, ...args], {
+  return execFileSync("git", ["--no-replace-objects", "-C", ROOT, ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
-  }).trim()
+  })
 }
 
-function revisionBlob(revision, path) {
+function revisionBlob(source, path) {
   try {
-    return git(["rev-parse", `${revision}:./${path}`])
+    return git(["rev-parse", `${source.revision}:${source.prefix ? `${source.prefix}/` : ""}${path}`]).trim()
   } catch {
     return undefined
   }
@@ -107,7 +108,7 @@ function revisionBlob(revision, path) {
 
 function currentBlob(path) {
   try {
-    return git(["hash-object", "--", path])
+    return git(["hash-object", "--", path]).trim()
   } catch {
     return undefined
   }
@@ -175,6 +176,7 @@ async function main() {
     fail(`sourceRevision is not a Git commit ancestor of HEAD: ${snapshot.sourceRevision}`)
   }
 
+  const source = atlasRevisionSource(snapshot.sourceRevision, git)
   const anchorIssues = []
   for (const entry of snapshot.units) {
     for (const [path, blob] of Object.entries(entry.sourceBlobs)) {
@@ -191,7 +193,7 @@ async function main() {
         anchorIssues.push(`source anchor is not a regular file: ${entry.unit.id} -> ${path}`)
         continue
       }
-      if (revisionBlob(snapshot.sourceRevision, path) !== blob) {
+      if (revisionBlob(source, path) !== blob) {
         anchorIssues.push(`snapshot revision blob mismatch: ${entry.unit.id} -> ${path}`)
       }
       if (currentBlob(path) !== blob) {
