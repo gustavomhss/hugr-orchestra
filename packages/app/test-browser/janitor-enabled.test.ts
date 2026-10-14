@@ -26,6 +26,8 @@ const useBoundary = () => {
 
 const implementation = process.env.JANITOR_TEST_IMPLEMENTATION ?? app
 const files = [resolve(implementation, "src/context/janitor.tsx"), resolve(app, "src/context/settings.tsx"), resolve(root, "packages/ui/src/context/helper.tsx")]
+// Cached plain Settings retains real Platform bindings; substitute only fresh fixture file identities.
+const suffix = "?janitor-fixture"
 plugin({
   name: "janitor-provider-boundaries",
   setup(build) {
@@ -40,28 +42,29 @@ plugin({
       },
       loader: "object",
     }))
-    build.onLoad({ filter: new RegExp(`^(?:${files.map((file) => file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`) }, async (args) => ({
-      contents: babel.transformSync((await Bun.file(args.path).text())
+    build.onLoad({ filter: new RegExp(`^(?:${files.map((file) => (file + suffix).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`) }, async (args) => {
+      const file = args.path.slice(0, args.path.length - suffix.length)
+      return { contents: babel.transformSync((await Bun.file(file).text())
         .replaceAll("import.meta.env.VITE_ORCHESTRA_CHANNEL", '"test"')
         .replace(/from "([^"]+)"/g, (_match, specifier: string) => {
           if (["@/context/language", "@/context/platform", "@/context/server", "@/context/server-sync", "@/utils/persist"].includes(specifier))
             return 'from "janitor-test:boundary"'
-          if (specifier === "@orchestra/ui/context") return `from ${JSON.stringify(resolve(root, "packages/ui/src/context/helper.tsx"))}`
+          if (specifier === "@orchestra/ui/context") return `from ${JSON.stringify(files[2] + suffix)}`
           if (specifier.startsWith("@/")) return `from ${JSON.stringify(resolve(app, "src", specifier.slice(2) + ".ts"))}`
           return `from ${JSON.stringify(Bun.resolveSync(specifier, app))}`
         }), {
-        filename: args.path,
+        filename: file,
         presets: [require.resolve("babel-preset-solid"), require.resolve("@babel/preset-typescript")],
         babelrc: false,
         configFile: false,
       })!.code!,
-      loader: "js",
-    }))
+      loader: "js" }
+    })
   },
 })
 // Only import boundaries are substituted; production provider logic is unchanged.
-const janitor = await import(resolve(process.env.JANITOR_TEST_IMPLEMENTATION ?? app, "src/context/janitor.tsx")) as typeof import("../src/context/janitor")
-const settings = await import(resolve(app, "src/context/settings.tsx")) as typeof import("../src/context/settings")
+const janitor: typeof import("../src/context/janitor") = await import(files[0] + suffix)
+const settings: typeof import("../src/context/settings") = await import(files[1] + suffix)
 
 const flush = async () => {
   await Promise.resolve()

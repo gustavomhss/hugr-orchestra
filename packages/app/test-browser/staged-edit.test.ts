@@ -1,15 +1,15 @@
 import { expect, test } from "bun:test"
-import "./real-ui-solid"
+import { solidDom } from "./real-ui-solid"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { createStore } from "solid-js/store"
 import type { ComponentProps, JSX } from "solid-js"
 
-const { ToolRegistry } = await import("@orchestra/session-ui/message-part")
-const { FileComponentProvider } = await import("@orchestra/ui/context/file")
-const { I18nProvider } = await import("@orchestra/ui/context/i18n")
-const { EDIT_REVIEW_COPY } = await import("@orchestra/ui/i18n/edit-review")
-const { DataProvider } = await import("@orchestra/session-ui/context")
+const { ToolRegistry }: typeof import("@orchestra/session-ui/message-part") = await import(solidDom("@orchestra/session-ui/message-part", import.meta.dir))
+const { FileComponentProvider }: typeof import("@orchestra/ui/context/file") = await import(solidDom("@orchestra/ui/context/file", import.meta.dir))
+const { I18nProvider }: typeof import("@orchestra/ui/context/i18n") = await import(solidDom("@orchestra/ui/context/i18n", import.meta.dir))
+const { EDIT_REVIEW_COPY }: typeof import("@orchestra/ui/i18n/edit-review") = await import(solidDom("@orchestra/ui/i18n/edit-review", import.meta.dir))
+const { DataProvider }: typeof import("@orchestra/session-ui/context") = await import(solidDom("@orchestra/session-ui/context", import.meta.dir))
 
 test("real generic Edit renderer holds staged edits without filediff metadata and restores an unstaged diff", () => {
   const Edit = ToolRegistry.render("edit")!
