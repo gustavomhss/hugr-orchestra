@@ -32,7 +32,7 @@ import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
-import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubmissionWorktree } from "./submission-policy"
+import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubagentPolicy, waitForSubmissionWorktree, type FailedPolicyWrite } from "./submission-policy"
 import { queuedPromptSources, type QueuedPromptSource, type QueuedPromptRuntime } from "./queued-prompt"
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
@@ -44,7 +44,7 @@ type Admission = {
   policyWritten?: boolean
   legacyOverrideAcknowledged?: boolean
   acknowledgedPolicy?: SubagentModelPolicy
-  failedWrite?: { cause: unknown }
+  failedWrite?: FailedPolicyWrite
   cleanup?: VoidFunction
 }
 const admissions = new WeakMap<PromptTarget, Map<string, Admission>>()
@@ -114,15 +114,10 @@ export function createFollowupSender(sources = queuedPromptSources) {
   return async (input: FollowupSendInput) => {
     const controller = !input.signal ? new AbortController() : undefined
     const current = input.currentSource
-    const policy = current?.sessionID ? createSubmissionPolicy({
-      key: "", sessionID: current.sessionID, protocol: current.protocol, management: current.management,
-      admission: {}, current: current.current, failedMessage: "QueuedPromptPolicyChanged",
-      legacyWrite: async () => { throw new Error("QueuedPromptPolicyWriteUnsupported") },
-    }) : undefined
-    const rebound = current?.sessionID && policy ? {
+    const rebound = current?.sessionID ? {
       serverScopeKey: current.serverScopeKey, directory: current.directory, sessionID: current.sessionID,
       api: input.api, sync: input.sync, serverSync: input.serverSync, current: current.current,
-      before: (signal = input.signal ?? controller!.signal) => policy.wait(signal),
+      before: (signal = input.signal ?? controller!.signal) => waitForSubagentPolicy({ ...current, sessionID: current.sessionID!, signal }),
     } : undefined
     const source = input.runtime ?? sources.resolve(input.draft.source, input.draft, rebound, input.deliberate)
     if (!source && (input.currentSource || "source" in input.draft)) return false
@@ -237,10 +232,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const sessionID = params.id
     const source = sdk()
     const serverState = serverSync()
+    const key = sessionID ? undefined : input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
+    const target = sessionID ? undefined : prompt.capture()
     input.onAbort?.()
     if (sessionID) return interruptPendingSession(source.scope, sessionID, source.api.session, serverState)
-    const key = input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
-    const target = prompt.capture()
     const drafts = [...pending.values()].flatMap((jobs) => [...jobs].flatMap((job) => {
       const draft = job.draft
       return draft && draft.key === key && draft.target === target && draft.scope === source.scope &&

@@ -13,6 +13,12 @@ import { blobDataUrl } from "@/utils/draft-store"
 import { buildRequestParts } from "./build-request-parts"
 import type { FollowupSendInput } from "./submit"
 
+export type FailedPolicyWrite = { cause: unknown; version?: number }
+type SubmissionManagement = Pick<SessionManagement, "setSubagentModels" | "readSubagentModels"> & {
+  waitSubagentModels?: (id: string) => Promise<void>
+  subagentModelsWriteVersion?: (id: string) => number
+}
+
 /** Departure permanently invalidates an attempt, even when its owner later returns. */
 export function createSubmissionOwner<T extends Record<string, unknown>>(read: () => T) {
   const identity = createMemo(read, undefined, {
@@ -70,29 +76,18 @@ export function createSubmissionPolicy(input: {
   key: string
   sessionID: string
   protocol: Promise<ServerProtocol>
-  management: Pick<SessionManagement, "setSubagentModels" | "readSubagentModels"> & {
-    waitSubagentModels?: (id: string) => Promise<void>
-  }
+  management: SubmissionManagement
   legacyWrite: (permission: ModelRule[]) => Promise<unknown>
-  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: { cause: unknown } }
+  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
   current: () => boolean
   initialPolicy?: SubagentModelPolicy
   failedMessage: string
 }) {
   const expected = { policy: input.admission.acknowledgedPolicy ?? input.initialPolicy }
   const failedWrite = input.admission.failedWrite
-  const wait = async (signal: AbortSignal) => {
-    if (!input.current() || signal.aborted) return false
-    if ((await waitForSubmission(input.protocol, signal)) === "v2") {
-      if (!input.management.waitSubagentModels) throw new SessionManagementUnsupported()
-      await waitForSubmission(input.management.waitSubagentModels(input.sessionID), signal)
-      if (expected.policy) {
-        const canonical = await waitForSubmission(input.management.readSubagentModels(input.sessionID), signal)
-        if (!sameModelPolicy(canonical.policy, expected.policy)) throw new Error(input.failedMessage)
-      }
-    }
-    return input.current() && !signal.aborted
-  }
+  const wait = (signal: AbortSignal, retry?: FailedPolicyWrite) => waitForSubagentPolicy({
+    ...input, signal, expected: () => expected.policy, retry,
+  })
   return {
     wait,
     acknowledge: (signal: AbortSignal) => acknowledgeDraftPolicy({
@@ -102,15 +97,13 @@ export function createSubmissionPolicy(input: {
       markWritten: () => { input.admission.policyWritten = true },
       failedMessage: input.failedMessage,
       wait: () => wait(signal),
-      beforeWrite: () => wait(signal).catch(async (cause: unknown) => {
-        if (!failedWrite || failedWrite.cause !== cause || !input.current() || signal.aborted) throw cause
-        const canonical = await waitForSubmission(input.management.readSubagentModels(input.sessionID), signal)
-        if (expected.policy && !sameModelPolicy(canonical.policy, expected.policy)) throw new Error(input.failedMessage)
-      }),
+      beforeWrite: () => wait(signal, failedWrite),
       write: async (policy) => {
         if ((await waitForSubmission(input.protocol, signal)) === "v2") {
-          const acknowledged = await input.management.setSubagentModels(input.sessionID, policy).catch((cause: unknown) => {
-            input.admission.failedWrite = { cause }
+          const write = input.management.setSubagentModels(input.sessionID, policy)
+          const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
+          const acknowledged = await write.catch((cause: unknown) => {
+            input.admission.failedWrite = { cause, version }
             throw cause
           })
           if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
@@ -132,6 +125,43 @@ export function createSubmissionPolicy(input: {
       },
     }),
   }
+}
+
+/** A canonical response is ready only across a stable per-Session SET generation. */
+export async function waitForSubagentPolicy(input: {
+  sessionID: string
+  protocol: Promise<ServerProtocol>
+  management: SubmissionManagement
+  current: () => boolean
+  signal: AbortSignal
+  expected?: () => SubagentModelPolicy | undefined
+  failedMessage?: string
+  retry?: FailedPolicyWrite
+}) {
+  if (!input.current() || input.signal.aborted) return false
+  if ((await waitForSubmission(input.protocol, input.signal)) !== "v2") return input.current() && !input.signal.aborted
+  const management = input.management
+  if (!management.waitSubagentModels) throw new SessionManagementUnsupported()
+  const join = () => waitForSubmission(management.waitSubagentModels!(input.sessionID), input.signal).catch((cause: unknown) => {
+    if (!input.retry || input.retry.cause !== cause || input.retry.version === undefined ||
+      management.subagentModelsWriteVersion?.(input.sessionID) !== input.retry.version ||
+      !input.current() || input.signal.aborted) throw cause
+  })
+  while (input.current() && !input.signal.aborted) {
+    await join()
+    if (!input.current() || input.signal.aborted) return false
+    const expected = input.expected?.()
+    if (!expected) return true
+    if (!management.subagentModelsWriteVersion) throw new SessionManagementUnsupported()
+    const version = management.subagentModelsWriteVersion(input.sessionID)
+    const canonical = await waitForSubmission(management.readSubagentModels(input.sessionID), input.signal)
+    await join()
+    if (!input.current() || input.signal.aborted) return false
+    if (management.subagentModelsWriteVersion(input.sessionID) !== version) continue
+    if (!sameModelPolicy(canonical.policy, expected)) throw new Error(input.failedMessage)
+    return true
+  }
+  return false
 }
 
 export async function waitForSubmission<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {

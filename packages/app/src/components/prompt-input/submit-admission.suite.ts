@@ -68,6 +68,53 @@ test("abort after a route change interrupts only the current Session", async () 
   clearPending(key)
 })
 
+test("abort callback navigation cannot retarget captured draft cancellation", async () => {
+  const selection = { key: "abort-callback-owner" }
+  const key = selection.key
+  togglePending(key, "provider", "model", true)
+  const gate = deferred()
+  state.rulesGate = gate.promise
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: createPromptState({ prompt: "cancel original" }), info: () => undefined,
+    pendingKey: () => selection.key,
+    onAbort: () => { selection.key = "foreign-draft"; state.params.id = "foreign-session" },
+  })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await state.rulesStarted.promise
+  await submit.abort()
+  expect(interrupts).toEqual(["session-1"])
+  gate.resolve()
+  await sending
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  clearPending(key)
+})
+
+test.skipIf(isServer)("pre-route abort still cancels its captured draft after owner ABA", async () => {
+  const key = "abort-draft-aba"
+  const original = { server: policyFixture.server, sdk: policyFixture.sdk }
+  const foreign = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("foreign")))
+  setReactiveOwner("read", () => () => original)
+  togglePending(key, "provider", "model", true)
+  const gate = deferred()
+  state.rulesGate = gate.promise
+  const root = createRoot((dispose) => ({ dispose, submit: createPromptSubmit({
+    ...submitInput(), prompt: createPromptState({ prompt: "cancel old attempt" }), info: () => undefined, pendingKey: () => key,
+  }) }))
+  const sending = root.submit.handleSubmit(new Event("submit"))
+  await state.rulesStarted.promise
+  setReactiveOwner("read", () => () => ({ server: foreign, sdk: sdkFor("/other", foreign) }))
+  setReactiveOwner("read", () => () => original)
+  await root.submit.abort()
+  expect(interrupts).toEqual(["session-1"])
+  gate.resolve()
+  await sending
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  root.dispose()
+  clearPending(key)
+})
+
 // Complete frozen e6c39ff72d cases, bound to the shared submission harness.
 test.skipIf(isServer)("reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session", async () => {
   expect(isServer).toBe(false)
