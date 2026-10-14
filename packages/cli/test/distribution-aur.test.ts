@@ -119,6 +119,9 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   process.once("SIGHUP", interrupt)
   state.attempted = true // A timed-out create may still have created the named container.
   const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
+    // The ARM runner's Docker seccomp blocks pacman's Landlock setup. The owned
+    // guest keeps its PID/mount namespaces, capability defaults and signed repos.
+    ...(process.arch === "arm64" ? ["--security-opt", "seccomp=unconfined"] : []),
     "--platform", `linux/${guest.dockerArch}`, "--mount", `type=bind,source=${repo},target=/repo,readonly`,
     "--mount", `type=bind,source=${state.directory},target=/proof`, "--workdir", "/repo/packages/cli",
     guest.image, "/usr/bin/sleep", "infinity"])
@@ -173,28 +176,26 @@ async function cleanupOwned() {
   const ids = state.attempted ? await ownedContainers() : []
   if (ids.length > 1 || (state.id && ids.some((id) => id !== state.id)))
     throw new Error("AUR_CONTAINER_OWNERSHIP_CHANGED")
+  const owned: string[] = []
+  const failures: unknown[] = []
   for (const id of ids) {
     const identity = await docker(["inspect", "--format", `{{.Name}}|{{index .Config.Labels "${label}"}}`, id])
     if (identity !== `/${name}|${nonce}`) throw new Error("AUR_CONTAINER_CLEANUP_IDENTITY_MISMATCH")
-    expect(await docker(["inspect", "--format",
-      '{{range .Mounts}}{{if eq .Destination "/proof"}}{{.Type}}|{{.Source}}|{{.RW}}{{end}}{{end}}', id]))
-      .toBe(`bind|${state.directory}|true`)
-    await fixtureRoot()
-    if (!state.owner) throw new Error("AUR_HOST_FIXTURE_OWNER_MISSING")
-    const running = await docker(["inspect", "--format", "{{.State.Running}}", id])
-    if (running !== "true" && running !== "false") throw new Error("AUR_CONTAINER_STATE_INVALID")
-    if (running === "false") await docker(["start", id])
-    expect(await docker(["exec", id, "/usr/bin/bash", "/repo/packages/cli/test/fixture/distribution-aur/repair-owner.sh",
-      nonce, String(state.owner.uid), String(state.owner.gid)], 60_000)).toBe("AUR_OWNED_FIXTURE_OWNER_REPAIRED")
-    await verifyFixtureOwner(state.directory)
+    owned.push(id)
+    await repairFixtureOwner(id).catch((cause: unknown) => { failures.push(cause) })
   }
-  // Guest writers are stopped and ownership repaired before evidence is copied.
-  // Copy failures still remove the owned container, while preserving its fixture.
-  const copyFailure = await preserveEvidence().then(() => undefined, (cause: unknown) =>
-    new Error("AUR_EVIDENCE_PRESERVATION_FAILED", { cause }))
-  for (const id of ids) await docker(["rm", "--force", "--volumes", id], 60_000)
-  if (state.attempted) expect(await ownedContainers(), "AUR_OWNED_CONTAINER_SURVIVED_REMOVAL").toEqual([])
-  if (copyFailure) throw copyFailure
+  // Every identity-verified container is removed even if permission repair or
+  // evidence copying fails. Failed repairs retain the host fixture for diagnosis.
+  await preserveEvidence().catch((cause: unknown) => { failures.push(cause) })
+  for (const id of owned)
+    await docker(["rm", "--force", "--volumes", id], 60_000).catch((cause: unknown) => { failures.push(cause) })
+  if (state.attempted) await ownedContainers().then((remaining) => {
+    expect(remaining, "AUR_OWNED_CONTAINER_SURVIVED_REMOVAL").toEqual([])
+  }).catch((cause: unknown) => { failures.push(cause) })
+  if (failures.length) {
+    state.preserve = true
+    throw new AggregateError(failures, "AUR_OWNED_TEARDOWN_INCOMPLETE")
+  }
   await fixtureRoot()
   await rm(state.directory, { recursive: true, force: true })
   const survived = await lstat(state.directory).catch((error: unknown) => {
@@ -207,6 +208,20 @@ async function cleanupOwned() {
     fixture: "host-deletion-proved", owner: state.owner,
     repair: ids.length ? "owned-/proof-bind; guest-writers-stopped; no-symlink-traversal; full-owner-verified" : "not-needed",
   }, null, 2))
+}
+
+async function repairFixtureOwner(id: string) {
+  expect(await docker(["inspect", "--format",
+    '{{range .Mounts}}{{if eq .Destination "/proof"}}{{.Type}}|{{.Source}}|{{.RW}}{{end}}{{end}}', id]))
+    .toBe(`bind|${state.directory}|true`)
+  await fixtureRoot()
+  if (!state.owner || !state.directory) throw new Error("AUR_HOST_FIXTURE_OWNER_MISSING")
+  const running = await docker(["inspect", "--format", "{{.State.Running}}", id])
+  if (running !== "true" && running !== "false") throw new Error("AUR_CONTAINER_STATE_INVALID")
+  if (running === "false") await docker(["start", id])
+  expect(await docker(["exec", id, "/usr/bin/bash", "/repo/packages/cli/test/fixture/distribution-aur/repair-owner.sh",
+    nonce, String(state.owner.uid), String(state.owner.gid)], 60_000)).toBe("AUR_OWNED_FIXTURE_OWNER_REPAIRED")
+  await verifyFixtureOwner(state.directory)
 }
 
 async function fixtureRoot() {
@@ -232,6 +247,7 @@ async function verifyFixtureOwner(directory: string) {
 
 async function preserveEvidence() {
   if (!state.directory || !state.artifact) return
+  await fixtureRoot()
   const source = join(state.directory, "evidence")
   const visit = async (path: string): Promise<void> => {
     const stat = await lstat(path)

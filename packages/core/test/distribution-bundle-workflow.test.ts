@@ -76,11 +76,11 @@ function inspect(input: unknown) {
   const job = value.jobs.qualification
   check(job?.strategy?.matrix.include?.length === 7 && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 3, "BUNDLE_MATRIX")
   const rows = job.strategy.matrix.include
-  expect(rows.map((row) => [row.package, row.host, row.cpu, row.platform])).toEqual([
+  expect(rows.map((row) => [row.package, row.host, row.cpu, row.platform]).toSorted()).toEqual([
     ["core", "ubuntu-latest", "X64", "linux"], ["core", "windows-latest", "X64", "win32"],
     ["cli", "ubuntu-latest", "X64", "linux"], ["cli", "windows-latest", "X64", "win32"],
     ["cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["cli", "macos-14", "ARM64", "darwin"], ["cli", "macos-15-intel", "X64", "darwin"],
-  ])
+  ].toSorted())
   check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
   check(job.env.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER === "${{ matrix.platform == 'win32' && 'true' || 'false' }}", "BUNDLE_JOB_ENV_CONTEXT")
   check(!JSON.stringify(value).includes("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"), "BUNDLE_SPAWNER_OVERRIDE")
