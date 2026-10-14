@@ -30,8 +30,7 @@ else
 fi
 case "$version" in ''|[!0-9A-Za-z]*|*[!0-9A-Za-z._+-]*|*..*) fail 'unsafe version' ;; esac
 case "$target" in
-  linux-arm64|linux-x64|linux-x64-baseline|darwin-arm64|darwin-x64|darwin-x64-baseline) ;;
-  *musl*) fail 'musl unsupported in POSIX preparation' ;;
+  linux-arm64|linux-x64|linux-x64-baseline|linux-arm64-musl|linux-x64-musl|linux-x64-baseline-musl|darwin-arm64|darwin-x64|darwin-x64-baseline) ;;
   *) fail 'unsupported POSIX target' ;;
 esac
 os=${target%%-*}; cpu=${target#*-}; cpu=${cpu%%-*}
@@ -39,6 +38,38 @@ host=$(uname -s)
 case "$host" in Linux) host_os=linux ;; Darwin) host_os=darwin ;; *) fail 'unsupported host' ;; esac
 case "$(uname -m)" in x86_64|amd64) host_cpu=x64 ;; arm64|aarch64) host_cpu=arm64 ;; *) fail 'unsupported host CPU' ;; esac
 [ "$os-$cpu" = "$host_os-$host_cpu" ] || fail 'target does not match host OS/CPU'
+# Inspect this running shell, not an ldd command's exit status or a loader merely
+# present on disk. A static shell, unreadable/unknown maps, compatibility libc or
+# mixed libc cannot establish an ABI. No prefix or lock has been touched here.
+if [ "$os" = linux ]; then
+  od -An -v -tu1 -N20 "/proc/$$/exe" | awk -v cpu="$cpu" '
+    { for(i=1;i<=NF;i++) b[++n]=$i }
+    END { if(n!=20 || b[1]!=127 || b[2]!=69 || b[3]!=76 || b[4]!=70 || b[5]!=2 || b[6]!=1 || b[7]!=1 ||
+      b[19]!=(cpu=="x64" ? 62 : 183) || b[20]!=0) exit 1 }
+  ' || fail 'cannot inspect Linux host runtime CPU'
+  host_libc=$(awk -v cpu="$cpu" '
+    { lines++
+      if(NF<5 || $1!~/^[0-9a-f]+-[0-9a-f]+$/ || $2!~/^[rwxps-]+$/ || length($2)!=4 ||
+         $3!~/^[0-9a-f]+$/ || $4!~/^[0-9a-f]+:[0-9a-f]+$/ || $5!~/^[0-9]+$/) bad=1
+      name=$6; sub(/^.*\//,"",name)
+      if(name ~ /qemu|gcompat/) bad=1
+      g=(name=="libc.so.6" || name~/^libc-[0-9]+\.[0-9]+\.so$/)
+      m=(name==(cpu=="x64" ? "libc.musl-x86_64.so.1" : "libc.musl-aarch64.so.1") ||
+         name==(cpu=="x64" ? "ld-musl-x86_64.so.1" : "ld-musl-aarch64.so.1"))
+      if(g || m) {
+        if(NF!=6 || $6!~/^\// || $5==0) bad=1
+        if(g) glibc=1
+        if(m) musl=1
+        if($2 ~ /x/) { if(g) gx=1; if(m) mx=1 }
+      }
+    }
+    END { if(!lines || bad || glibc==musl || (glibc && !gx) || (musl && !mx)) exit 1
+      print musl ? "musl" : "glibc" }
+  ' "/proc/$$/maps") || fail 'cannot determine Linux host libc from loaded process'
+  case "$host_libc" in glibc|musl) ;; *) fail 'cannot determine Linux host libc from loaded process' ;; esac
+  case "$target" in *-musl) target_libc=musl ;; *) target_libc=glibc ;; esac
+  [ "$host_libc" = "$target_libc" ] || fail 'target does not match host libc'
+fi
 if command -v sha256sum >/dev/null 2>&1; then hash() { sha256sum "$1" | cut -d ' ' -f 1; }
 elif command -v shasum >/dev/null 2>&1; then hash() { shasum -a 256 "$1" | cut -d ' ' -f 1; }
 else fail 'sha256sum or shasum required'; fi
