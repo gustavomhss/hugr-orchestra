@@ -40,7 +40,7 @@ const services = Layer.unwrap(
     const directory = yield* tmpdirScoped()
     const database = Database.layerFromPath(path.join(directory, "policy.sqlite"))
     return AppNodeBuilder.build(
-      LayerNode.group([Database.node, SessionV2.node, SessionSubagentModels.node, LocationServiceMap.node]),
+      LayerNode.group([Database.node, SessionV2.node, SessionExecution.node, SessionSubagentModels.node, LocationServiceMap.node]),
       [
         [Database.node, database],
         // One closed canonical producer prevents DB replacement from cloning Event descriptors across registry branches.
