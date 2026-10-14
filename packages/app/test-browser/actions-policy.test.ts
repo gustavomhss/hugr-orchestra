@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
-import { createComponent, type JSX } from "solid-js"
+import { createComponent, createRoot, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { initial, type Dialog, type Model, type State, type ViewProps } from "../src/orchestra/actions/contract"
@@ -8,6 +8,8 @@ import { solidDom } from "./solid-dom"
 
 const { Settings }: typeof import("../src/orchestra/actions/settings") = await import(solidDom("../src/orchestra/actions/settings", import.meta.dir))
 const { ResourceDialogs }: typeof import("../src/orchestra/actions/resource-dialogs") = await import(solidDom("../src/orchestra/actions/resource-dialogs", import.meta.dir))
+const { createActionsAPI }: typeof import("../src/orchestra/actions/api") = await import(solidDom("../src/orchestra/actions/api", import.meta.dir))
+const { createActionsModel }: typeof import("../src/orchestra/actions/model") = await import(solidDom("../src/orchestra/actions/model", import.meta.dir))
 
 function fixture(kind: Actions.ProviderKind = "github", data?: Actions.Resource["data"]) {
   const binding: Actions.Binding = { id: Actions.BindingID.make("ab_policy"), revision: 7, remote: "origin", directory: "/repo/policy", projectID: "42", projectPath: "org/repo", account: "alice",
@@ -32,7 +34,7 @@ function fixture(kind: Actions.ProviderKind = "github", data?: Actions.Resource[
   return { state, setState, model, dialogs }
 }
 
-function mount(component: (props: ViewProps) => JSX.Element, scope: ReturnType<typeof fixture>) {
+function mount(component: (props: ViewProps) => JSX.Element, scope: { model: Model }) {
   const host = document.createElement("div")
   host.dir = "rtl"
   document.body.append(host)
@@ -51,6 +53,151 @@ function card(host: Element, key: string) {
   if (!element) throw new Error(`Missing settings card: ${key}`)
   return element
 }
+
+function policyFocusFixture() {
+  const directory = "/repo/policy-focus"
+  const binding: Actions.Binding = { id: Actions.BindingID.make("ab_focus"), revision: 7, directory, remote: "origin", projectID: "42", projectPath: "org/repo",
+    provider: { kind: "github", hostname: "github.com", apiOrigin: "https://api.github.com" } }
+  const page: Actions.ResourcePage = { capturedAt: 1, items: [{ id: "project-settings", name: "Project settings", kind: "policy", bindingID: binding.id, scope: "Repository",
+    data: { policy: "Project default", nativeSettings: { enabled: false, allowed_actions: "all" }, resourceVersion: "native:version" } }] }
+  const hydration: { resolve?: (response: Response) => void; promise?: Promise<Response> } = {}
+  const located = (data: unknown) => Response.json({ location: { directory }, data })
+  const fetch = Object.assign(async (value: string | URL | Request, init?: RequestInit) => {
+    const request = new Request(value, init)
+    const path = new URL(request.url).pathname
+    if (request.method !== "GET") throw new Error(`Unexpected policy focus mutation: ${request.method} ${path}`)
+    if (path === "/api/actions/binding") return located([binding])
+    if (path.endsWith("/capabilities")) return located([])
+    if (path.endsWith("/policy")) return located({ binding: { id: binding.id, revision: binding.revision }, policy: { retentionDays: 17, execution: "Project default" } })
+    if (path === `/api/actions/resource/${binding.id}`) return hydration.promise ?? located(page)
+    throw new Error(`Unexpected policy focus request: ${path}`)
+  }, { preconnect() {} })
+  const api = createActionsAPI({ directory, fetch, server: { type: "http", http: { url: "http://localhost:4096" } } })
+  const owner = createRoot((dispose) => ({ dispose, model: createActionsModel({ api, preferences: { route: { view: "settings" } }, save: async () => undefined }) }))
+  return {
+    model: owner.model,
+    hydrate() {
+      hydration.promise = new Promise<Response>((resolve) => { hydration.resolve = resolve })
+      return () => { hydration.resolve?.(located(page)); hydration.promise = undefined; hydration.resolve = undefined }
+    },
+    [Symbol.dispose]() { owner.dispose(); hydration.resolve?.(located(page)); hydration.promise = undefined; hydration.resolve = undefined },
+  }
+}
+
+test.each(["native", "local"] as const)("%s policy Edit survives asynchronous hydration and restores focus after Escape", async (target) => {
+  using scope = policyFocusFixture()
+  await scope.model.refresh()
+  using settings = mount(Settings, scope)
+  using dialogs = mount(ResourceDialogs, scope)
+  const invoker = control<HTMLButtonElement>(card(settings.host, target === "native" ? "orchestra.actions.nativePolicy" : "orchestra.actions.localPolicy"), "button")
+  const release = scope.hydrate()
+  invoker.focus()
+  expect(document.activeElement).toBe(invoker)
+  invoker.click()
+  expect(scope.model.state.resources.status).toBe("loading")
+  expect(scope.model.state.dialog).toBeUndefined()
+  expect(invoker.disabled).toBe(true)
+  // Simulate browser blur when hydration disables the focused invoker.
+  invoker.blur()
+  await Bun.sleep(0)
+  expect(document.activeElement).toBe(document.body)
+  expect(dialogs.host.querySelector("dialog")).toBeNull()
+  release()
+  await Bun.sleep(0)
+  expect(scope.model.state.dialog).toEqual({ kind: "project-settings", target })
+  const dialog = control<HTMLDialogElement>(dialogs.host, "dialog")
+  expect(dialog.open).toBe(true)
+  expect(dialog.contains(document.activeElement)).toBe(true)
+  dialog.dispatchEvent(new Event("cancel", { cancelable: true }))
+  await Bun.sleep(0)
+  expect(scope.model.state.dialog).toBeUndefined()
+  expect(dialogs.host.querySelector("dialog")).toBeNull()
+  expect(invoker.disabled).toBe(false)
+  expect(document.activeElement).toBe(invoker)
+  invoker.blur()
+  await scope.model.refresh()
+  expect(document.activeElement).toBe(document.body)
+})
+
+test("policy focus waits for resources readiness and completed submission after dialog close", async () => {
+  const scope = fixture()
+  using settings = mount(Settings, scope)
+  using dialogs = mount(ResourceDialogs, scope)
+  const invoker = control<HTMLButtonElement>(card(settings.host, "orchestra.actions.nativePolicy"), "button")
+  invoker.focus()
+  invoker.click()
+  await Bun.sleep(0)
+  expect(control<HTMLDialogElement>(dialogs.host, "dialog").open).toBe(true)
+  scope.setState("resources", "status", "loading")
+  scope.setState("submitting", true)
+  scope.model.dialog(undefined)
+  invoker.blur()
+  await Bun.sleep(0)
+  expect(document.activeElement).not.toBe(invoker)
+  scope.setState("resources", "status", "ready")
+  await Bun.sleep(0)
+  expect(document.activeElement).not.toBe(invoker)
+  scope.setState("submitting", false)
+  await Bun.sleep(0)
+  expect(document.activeElement).toBe(invoker)
+})
+
+test("native policy close preserves unrelated input focus while readiness is pending and releases its focus owner", async () => {
+  const scope = fixture()
+  using settings = mount(Settings, scope)
+  using dialogs = mount(ResourceDialogs, scope)
+  const invoker = control<HTMLButtonElement>(card(settings.host, "orchestra.actions.nativePolicy"), "button")
+  const input = document.createElement("input")
+  settings.host.append(input)
+  invoker.focus()
+  invoker.click()
+  await Bun.sleep(0)
+  const dialog = control<HTMLDialogElement>(dialogs.host, "dialog")
+  expect(dialog.open).toBe(true)
+  scope.setState("resources", "status", "loading")
+  dialog.dispatchEvent(new Event("cancel", { cancelable: true }))
+  input.focus()
+  await Bun.sleep(0)
+  expect(scope.state.dialog).toBeUndefined()
+  expect(document.activeElement).toBe(input)
+  scope.setState("resources", "status", "ready")
+  await Bun.sleep(0)
+  expect(invoker.disabled).toBe(false)
+  expect(document.activeElement).toBe(input)
+  input.blur()
+  scope.setState("resources", "status", "loading")
+  scope.setState("resources", "status", "ready")
+  await Bun.sleep(0)
+  expect(document.activeElement).toBe(document.body)
+})
+
+test.each(["navigation", "binding", "revision", "detached", "disabled"])("policy focus drops stale %s invokers", async (change) => {
+  const scope = fixture()
+  using settings = mount(Settings, scope)
+  const invoker = control<HTMLButtonElement>(card(settings.host, "orchestra.actions.nativePolicy"), "button")
+  const footer = invoker.parentElement
+  if (!footer) throw new Error("Missing invoker footer")
+  invoker.focus()
+  invoker.click()
+  invoker.blur()
+  if (change === "navigation") scope.setState("route", "view", "runs")
+  if (change === "binding") scope.setState("binding", "id", Actions.BindingID.make("ab_other"))
+  if (change === "revision") scope.setState("binding", "revision", 8)
+  if (change === "detached") invoker.remove()
+  if (change === "disabled") scope.setState("capabilities", "value", [{ operation: "resource.update", state: "unavailable", scope: "Repository", observedAt: 1 }])
+  scope.model.dialog(undefined)
+  await Bun.sleep(0)
+  expect(document.activeElement).not.toBe(invoker)
+  scope.setState("route", "view", "settings")
+  scope.setState("binding", "id", Actions.BindingID.make("ab_policy"))
+  scope.setState("binding", "revision", 7)
+  scope.setState("capabilities", "value", [])
+  if (change === "detached") footer.append(invoker)
+  scope.setState("resources", "status", "loading")
+  scope.setState("resources", "status", "ready")
+  await Bun.sleep(0)
+  expect(document.activeElement).not.toBe(invoker)
+})
 
 test("settings separates local retention from native evidence and routes each edit to its explicit target", () => {
   const scope = fixture()
