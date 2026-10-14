@@ -1,6 +1,5 @@
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import path from "path"
-import { fileURLToPath } from "url"
 import { Effect, FileSystem, Layer, Context, Schema } from "effect"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { NamedError } from "@orchestra/core/util/error"
@@ -28,10 +27,7 @@ const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
 const ORCHESTRA_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
 const SKILL_PATTERN = "**/SKILL.md"
 
-// Maestro's playbooks ship with Orchestra, so every repository has them. The desktop app points
-// ORCHESTRA_PLAYBOOKS_DIR at its packaged copy; a run from this repository reads the source copy.
-export const PLAYBOOKS_DIR =
-  process.env.ORCHESTRA_PLAYBOOKS_DIR ?? fileURLToPath(new URL("../../playbooks", import.meta.url))
+export const PLAYBOOKS_DIR = SeatSkillRoot.playbooks
 
 export const Info = Schema.Struct({
   name: Schema.String,
