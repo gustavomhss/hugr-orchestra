@@ -14,7 +14,7 @@ import { Integration } from "./integration"
 export const VIRTUAL_SEPARATOR = "#"
 
 // Anonymous access is a Zen-only contract. Missing pricing and a paid tier are not proof of free use.
-const isAnonymousOpenCodeModel = (model: ModelV2.Info) =>
+const isAnonymousZenModel = (model: ModelV2.Info) =>
   model.providerID === ProviderV2.ID.opencode &&
   model.enabled &&
   model.status !== "deprecated" &&
@@ -115,7 +115,7 @@ const layer = Layer.effect(
       }
       // The V2 runner and legacy AISDK path both read request.body.apiKey. Add the public sentinel only
       // to explicitly free models; credentials still take precedence in the runner.
-      if (isAnonymousOpenCodeModel(model) && request.body.apiKey === undefined && api.settings?.apiKey === undefined)
+      if (isAnonymousZenModel(model) && request.body.apiKey === undefined && api.settings?.apiKey === undefined)
         request.body.apiKey = "public"
       return ModelV2.Info.make({
         ...model,
@@ -259,7 +259,7 @@ const layer = Layer.effect(
             return (
               !provider.disabled &&
               provider.id === ProviderV2.ID.opencode &&
-              [...(state.get().providers.get(provider.id)?.models.values() ?? [])].some(isAnonymousOpenCodeModel)
+              [...(state.get().providers.get(provider.id)?.models.values() ?? [])].some(isAnonymousZenModel)
             )
           })
         }),
@@ -294,15 +294,14 @@ const layer = Layer.effect(
 
         available: Effect.fn("CatalogV2.model.available")(function* () {
           const providers = new Map((yield* result.provider.available()).map((provider) => [provider.id, provider]))
-          const opencode = providers.get(ProviderV2.ID.opencode)
+          const zen = providers.get(ProviderV2.ID.opencode)
           const authenticated =
-            opencode &&
-            available(opencode, yield* integrations.get(opencode.integrationID ?? Integration.ID.make("opencode")))
+            zen && available(zen, yield* integrations.get(zen.integrationID ?? Integration.ID.make("opencode")))
           return (yield* result.model.all()).filter(
             (model) =>
               providers.has(model.providerID) &&
               model.enabled &&
-              (model.providerID !== ProviderV2.ID.opencode || authenticated || isAnonymousOpenCodeModel(model)),
+              (model.providerID !== ProviderV2.ID.opencode || authenticated || isAnonymousZenModel(model)),
           )
         }),
 
