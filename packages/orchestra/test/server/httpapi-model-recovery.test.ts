@@ -3,11 +3,11 @@ import { Context, Effect, ManagedRuntime } from "effect"
 import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { memoMap } from "@orchestra/core/effect/memo-map"
-import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
 import { tmpdir } from "../fixture/fixture"
+import { httpApiFixture } from "./httpapi-fixture"
 
 const context = Context.empty() as Context.Context<unknown>
+const fixture = httpApiFixture()
 const config = {
   formatter: false as const,
   lsp: false as const,
@@ -26,16 +26,16 @@ const config = {
   },
 }
 
-afterAll(() => HttpApiApp.webHandler().dispose())
+afterAll(() => fixture.dispose())
 
 test("fresh Location HTTP catalog exposes free Zen; key exposes paid; HTTP removal restores free", async () => {
   await using tmp = await tmpdir({ git: true, config })
   const consoleServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => Response.json({ config: {} }) })
-  const credentials = ManagedRuntime.make(LayerNode.compile(Credential.node), { memoMap })
+  const credentials = ManagedRuntime.make(LayerNode.compile(Credential.node), { memoMap: fixture.memoMap })
   const request = (route: string, init?: RequestInit) => {
     const url = new URL(route, "http://localhost")
     url.searchParams.set("location[directory]", tmp.path)
-    return HttpApiApp.webHandler().handler(new Request(url, init), context)
+    return fixture.handler(new Request(url, init), context)
   }
   const models = async () => {
     const response = await request("/api/model")
@@ -98,7 +98,7 @@ test("fresh Location HTTP catalog exposes free Zen; key exposes paid; HTTP remov
 test("HTTP default is null when provider is explicitly disabled", async () => {
   await using tmp = await tmpdir({ git: true, config: { ...config, disabled_providers: ["opencode"] } })
   for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
-    const response = await HttpApiApp.webHandler().handler(
+    const response = await fixture.handler(
       new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
       context,
     )
@@ -117,7 +117,7 @@ test("HTTP provider policy keeps anonymous Zen out and returns a null default", 
     },
   })
   for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
-    const response = await HttpApiApp.webHandler().handler(
+    const response = await fixture.handler(
       new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
       context,
     )
@@ -130,7 +130,7 @@ test("HTTP provider policy keeps anonymous Zen out and returns a null default", 
 test("an empty legacy provider allowlist suppresses anonymous models on HTTP", async () => {
   await using tmp = await tmpdir({ git: true, config: { ...config, enabled_providers: [] } })
   for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
-    const response = await HttpApiApp.webHandler().handler(
+    const response = await fixture.handler(
       new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
       context,
     )
