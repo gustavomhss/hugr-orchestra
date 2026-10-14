@@ -2,8 +2,17 @@ import type { Actions } from "@orchestra/schema/actions"
 import type { Dialog } from "./contract"
 import { ActionsRequestError } from "./api"
 import { Option, Schema } from "effect"
+import { nativePolicyEvidence } from "./settings-evidence"
 
-export function resourcePayload(data: FormData, input: { provider: Actions.ProviderKind; kind: Dialog["kind"]; resource?: Actions.Resource }) {
+export function resourcePayload(data: FormData, input: { provider: Actions.ProviderKind; kind: Dialog["kind"]; target?: "local" | "native"; resource?: Actions.Resource }): Record<string, string | number | boolean | readonly string[]> {
+  if (input.kind === "project-settings" && input.target === "native") {
+    if (input.provider !== "github") throw new ActionsRequestError("capability_unavailable")
+    const native = nativePolicyEvidence(input.resource)
+    if (native.value === undefined || native.version === undefined) throw new ActionsRequestError("source_unresolved")
+    const policy = data.get("policy")
+    if (policy !== "Project default" && policy !== "Restricted to approved actions") throw new ActionsRequestError("invalid_input")
+    return { provider: input.provider, policy }
+  }
   const payload: Record<string, string | number | boolean | readonly string[]> = Object.fromEntries([...data.entries()].map(([name, value]): [string, string] => {
     if (typeof value !== "string") throw new ActionsRequestError("invalid_input")
     return [name, value]

@@ -2,8 +2,8 @@ import { createEffect, For, on, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Actions } from "@orchestra/schema/actions"
 import type { ViewProps } from "./contract"
-import { policyResource } from "./source-dialogs"
 import { actionsError } from "./api"
+import { canConfigureLocalPolicy, canConfigureNativePolicy, localPolicyEvidence, nativePolicyEvidence, settingsConnection, settingsPolicy } from "./settings-evidence"
 
 type SettingsState = {
   open: boolean
@@ -38,9 +38,10 @@ export function Settings(props: ViewProps) {
     { label: props.t("orchestra.actions.logs"), requirements: [["logs.live"], ["logs.tail"]] },
   ]
   const capability = (requirements: readonly (readonly string[])[]) => capabilityValue(props.model.state.capabilities.status, props.model.state.capabilities.value, requirements)
-  const policyData = () => policyResource(props.model.state.resources.value?.items, selected()?.id)
-  const policy = () => props.model.state.resources.status === "ready" ? policyData() : undefined
-  const canConfigurePolicy = () => selected() !== undefined && props.model.state.resources.status === "ready" && !policyData()?.readOnly
+  const policy = () => settingsPolicy(props.model.state)
+  const localPolicy = () => localPolicyEvidence(policy())
+  const nativePolicy = () => nativePolicyEvidence(policy())
+  const connection = () => settingsConnection(props.model.state)
   const ownerMatches = (generation: number, id?: Actions.BindingID, revision?: number) =>
     !view.disposed && view.open && view.generation === generation && view.id === id && view.revision === revision
   const close = () => {
@@ -116,7 +117,7 @@ export function Settings(props: ViewProps) {
       </Show>
       <div class="settings-grid">
       <Show when={selected()}>{(binding) => <article class="mx-card ar-setting-card">
-        <div class="mx-card-top"><div class="mx-grow"><h3>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</h3><p><bdi dir="auto">{binding().account ?? binding().projectID}</bdi></p></div><span class="mx-badge good">{props.t("orchestra.actions.connected")}</span></div>
+        <div class="mx-card-top"><div class="mx-grow"><h3>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</h3><p><bdi dir="auto">{binding().account ?? binding().projectID}</bdi></p></div><span class={`mx-badge ${connection().state === "connected" ? "good" : ""}`}>{props.t(connection().label)}</span></div>
          <dl class="wf-kv ar-facts">
           <dt>{props.t("orchestra.actions.provider")}</dt><dd>{binding().provider.kind === "github" ? props.t("orchestra.actions.github") : props.t("orchestra.actions.gitlab")}</dd>
           <dt>{props.t("orchestra.actions.hostname")}</dt><dd dir="ltr"><bdi>{binding().provider.hostname}</bdi></dd>
@@ -142,17 +143,28 @@ export function Settings(props: ViewProps) {
            }}</For></div>
          </article>
          <article class="mx-card ar-setting-card">
-           <div class="mx-card-top"><h3>{props.t("orchestra.actions.projectSettings")}</h3></div>
+            <div class="mx-card-top"><h3>{props.t("orchestra.actions.localPolicy")}</h3></div>
            <Show when={props.model.state.resources.status === "loading"}><p class="mx-note">{props.t("orchestra.actions.loading")}</p></Show>
             <Show when={props.model.state.resources.status === "error"}><p class="mx-error" role="alert">{props.t(props.model.state.resources.error?.message ?? "orchestra.actions.unavailable")}</p></Show>
            <dl class="wf-kv ar-facts">
-             <dt>{props.t("orchestra.actions.retention")}</dt><dd>{policy()?.retentionDays ?? props.t("orchestra.actions.unknown")}</dd>
-             <dt>{props.t("orchestra.actions.execution")}</dt><dd>{policy()?.execution ?? props.t("orchestra.actions.unknown")}</dd>
-             <dt>{props.t("orchestra.actions.inherited")}</dt><dd>{policy()?.scope ?? props.t("orchestra.actions.unknown")}{policy()?.owner && policy()?.owner !== policy()?.scope ? ` · ${policy()?.owner}` : ""}</dd>
-           </dl>
-           <p class="mx-note">{props.t("orchestra.actions.inherited")}</p>
-           <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigurePolicy() || view.pending || props.model.state.submitting} onClick={() => props.model.dialog({ kind: "project-settings" })}>{props.t("orchestra.actions.edit")}</button></div>
-         </article>
+              <dt>{props.t("orchestra.actions.retention")}</dt><dd>{localPolicy().retentionDays ?? props.t("orchestra.actions.unknown")}</dd>
+              <dt>{props.t("orchestra.actions.execution")}</dt><dd><bdi dir="auto">{localPolicy().execution ?? props.t("orchestra.actions.unknown")}</bdi></dd>
+            </dl>
+            <p class="mx-note">{props.t("orchestra.actions.localPolicyDetail")}</p>
+            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureLocalPolicy(props.model.state) || view.pending} onClick={() => props.model.dialog({ kind: "project-settings", target: "local" })}>{props.t("orchestra.actions.edit")}</button></div>
+          </article>
+          <article class="mx-card ar-setting-card">
+            <div class="mx-card-top"><h3>{props.t("orchestra.actions.nativePolicy")}</h3></div>
+            <Show when={props.model.state.resources.status === "loading"}><p class="mx-note">{props.t("orchestra.actions.loading")}</p></Show>
+            <Show when={props.model.state.resources.status === "error"}><p class="mx-error" role="alert">{props.t(props.model.state.resources.error?.message ?? "orchestra.actions.unavailable")}</p></Show>
+            <dl class="wf-kv ar-facts">
+              <dt>{props.t("orchestra.actions.execution")}</dt><dd>{selected()?.provider.kind === "gitlab" || nativePolicy().unavailable ? props.t("orchestra.actions.unavailable") : nativePolicy().value === "Project default" ? props.t("orchestra.actions.policyProjectDefault") : nativePolicy().value === "Restricted to approved actions" ? props.t("orchestra.actions.policyRestricted") : props.t("orchestra.actions.unknown")}</dd>
+              <dt>{props.t("orchestra.actions.scope")}</dt><dd><bdi dir="auto">{policy()?.scope ?? props.t("orchestra.actions.unknown")}</bdi></dd>
+            </dl>
+            <Show when={nativePolicy().settings}>{(settings) => <details><summary>{props.t("orchestra.actions.definition")}</summary><pre dir="ltr">{JSON.stringify(settings(), null, 2)}</pre></details>}</Show>
+            <p class="mx-note">{props.t("orchestra.actions.nativePolicyDetail")}</p>
+            <div class="mx-card-foot"><span></span><button class="mx-btn" type="button" disabled={!canConfigureNativePolicy(props.model.state) || view.pending} onClick={() => props.model.dialog({ kind: "project-settings", target: "native" })}>{props.t("orchestra.actions.edit")}</button></div>
+          </article>
       </div>
     </div>
     <dialog ref={(value) => (dialog = value)} class="mx-dialog actions-dialog" aria-labelledby="actions-remove-title" aria-describedby="actions-remove-detail" onCancel={(event) => { event.preventDefault(); close() }}>
