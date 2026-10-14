@@ -172,6 +172,116 @@ test("serialized writes return canonical ACKs; dispatch waits follow latest fail
   }
 })
 
+test.each(["success", "failure", "owner-abort"] as const)("real HTTP waiter follows queued explicit retry %s after observed write fails", async (outcome) => {
+  const lifetime = new AbortController()
+  const started = [Promise.withResolvers<void>(), Promise.withResolvers<void>()]
+  const replies = [Promise.withResolvers<Response>(), Promise.withResolvers<Response>()]
+  const requests: { path: string; body: unknown; auth: string | null }[] = []
+  const server = Bun.serve({
+    hostname: "127.0.0.1", port: 0,
+    async fetch(request) {
+      requests.push({ path: new URL(request.url).pathname, body: await request.json(), auth: request.headers.get("authorization") })
+      const index = requests.length - 1
+      started[index]?.resolve()
+      return replies[index]?.promise ?? new Response(null, { status: 404 })
+    },
+  })
+  const port = management(createScopedFetch(fetch, lifetime.signal), {
+    server: { url: server.url.origin, username: "synthetic", password: "synthetic-auth" }, signal: lifetime.signal,
+  })
+  const first = result(port.setSubagentModels("ses_retry", policy))
+  try {
+    await started[0].promise
+    const waiting = result(port.waitSubagentModels("ses_retry"))
+    await Bun.sleep(0)
+    const retry = result(port.setSubagentModels("ses_retry", { mode: "inherit" }))
+    expect(port.subagentModelsWriteVersion("ses_retry")).toBe(2)
+    expect(requests).toHaveLength(1)
+    replies[0].resolve(Response.json({ message: "synthetic first failure" }, { status: 500 }))
+    const firstError = await first
+    expect(firstError).toBeInstanceOf(Error)
+    await started[1].promise
+    const canonical: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "canonical/retry" }] }
+    const reason = new Error("synthetic owner aborted after predecessor failed")
+    if (outcome === "owner-abort") lifetime.abort(reason)
+    if (outcome !== "owner-abort") replies[1].resolve(outcome === "success"
+      ? Response.json({ data: canonical })
+      : Response.json({ message: "synthetic retry failure" }, { status: 500 }))
+    const retried = await retry
+    if (outcome === "success") {
+      expect(retried).toEqual(canonical)
+      expect(await waiting).toBeUndefined()
+      expect(await result(port.waitSubagentModels("ses_retry"))).toBeUndefined()
+    }
+    if (outcome === "failure") {
+      expect(retried).toBeInstanceOf(Error)
+      expect(retried).not.toBe(firstError)
+      expect(await waiting).toBe(retried)
+      expect(await result(port.waitSubagentModels("ses_retry"))).toBe(retried)
+    }
+    if (outcome === "owner-abort") {
+      expect(retried).toBe(reason)
+      expect(await waiting).toBe(reason)
+      expect(await result(port.waitSubagentModels("ses_retry"))).toBe(reason)
+      expect(port.subagentModelsWriteVersion("ses_retry")).toBe(0)
+    }
+    expect(requests.map((request) => [request.path, request.body])).toEqual([
+      ["/api/session/ses_retry/subagent-models", { policy }],
+      ["/api/session/ses_retry/subagent-models", { policy: { mode: "inherit" } }],
+    ])
+    expect(requests.every((request) => request.auth === `Basic ${btoa("synthetic:synthetic-auth")}`)).toBe(true)
+  } finally {
+    lifetime.abort()
+    replies.forEach((reply) => reply.resolve(Response.json({ data: { mode: "inherit" } })))
+    await server.stop(true)
+  }
+})
+
+test("write generation changes at admission, survives ACK and exposes writes across a canonical GET", async () => {
+  const lifetime = new AbortController()
+  const readStarted = Promise.withResolvers<void>()
+  const readReply = Promise.withResolvers<Response>()
+  const writeStarted = Promise.withResolvers<void>()
+  const writeReply = Promise.withResolvers<Response>()
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    const request = new Request(input, init)
+    if (request.method === "GET") { readStarted.resolve(); return readReply.promise }
+    writeStarted.resolve()
+    return writeReply.promise.then((response) => response.clone())
+  }, { preconnect: fetch.preconnect })
+  const port = management(fetcher, { signal: lifetime.signal })
+  try {
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(0)
+    const beforeRead = port.subagentModelsWriteVersion("ses_generation")
+    const reading = port.readSubagentModels("ses_generation")
+    await readStarted.promise
+    const first = port.setSubagentModels("ses_generation", policy)
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(1)
+    await writeStarted.promise
+    const retry = port.setSubagentModels("ses_generation", { mode: "inherit" })
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(2)
+    expect(port.subagentModelsWriteVersion("ses_other")).toBe(0)
+    const other = management(fetcher)
+    expect(other.subagentModelsWriteVersion("ses_generation")).toBe(0)
+    writeReply.resolve(Response.json({ data: { mode: "inherit" } }))
+    await first
+    await retry
+    await port.waitSubagentModels("ses_generation")
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(2)
+    readReply.resolve(Response.json({ data: { ...snapshot("ses_generation"), subagentModels: { mode: "inherit" } } }))
+    await reading
+    expect(port.subagentModelsWriteVersion("ses_generation")).not.toBe(beforeRead)
+    const reason = new Error("synthetic disposed generation owner")
+    lifetime.abort(reason)
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(0)
+    expect(await result(port.setSubagentModels("ses_generation", policy))).toBe(reason)
+    expect(port.subagentModelsWriteVersion("ses_generation")).toBe(0)
+  } finally {
+    readReply.resolve(Response.json({ data: snapshot("ses_generation") }))
+    writeReply.resolve(Response.json({ data: { mode: "inherit" } }))
+  }
+})
+
 test("different Sessions and captured server instances have independent policy barriers", async () => {
   const started = Promise.withResolvers<void>()
   const ack = Promise.withResolvers<Response>()
