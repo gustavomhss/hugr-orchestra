@@ -1,14 +1,24 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 
 test("CLI rejects invalid target before loading the version snapshot", async () => {
-  const result = await run([path.resolve(import.meta.dir, "../../cli/script/build.ts"), "--target=invalid-wave-target"],
-    { ORCHESTRA_VERSION: "not-a-semver" })
-  expect(result.status).toBe(1)
-  expect(result.error).toContain("Invalid --target: invalid-wave-target. Expected one of:")
+  const directory = await mkdtemp(path.join(tmpdir(), "cli-preflight-"))
+  try {
+    await Promise.all(["build.ts", "targets.ts"].map(async (file) => {
+      await Bun.write(path.join(directory, file), await Bun.file(path.resolve(import.meta.dir, "../../cli/script", file)).arrayBuffer())
+    }))
+    await mkdir(path.join(directory, "node_modules/@orchestra"), { recursive: true })
+    await symlink(path.resolve(import.meta.dir, ".."), path.join(directory, "node_modules/@orchestra/script"), "junction")
+    const result = await run([path.join(directory, "build.ts"), "--target=invalid-wave-target"],
+      { ORCHESTRA_VERSION: "not-a-semver" }, directory)
+    expect(result.status).toBe(1)
+    expect(result.error).toContain("Invalid --target: invalid-wave-target. Expected one of:")
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })
 
 test("Nix verifier rejects missing arguments before output or native activity", async () => {
@@ -29,7 +39,7 @@ test("packaged admission modules import without a source workspace", async () =>
     await Promise.all(["tree-sitter-prebuilds.ts", "workspace-paths.ts", "module-catalog.ts", "module-resolver.ts"].map(async (file) => {
       await Bun.write(path.join(directory, file), await Bun.file(path.resolve(import.meta.dir, "../src", file)).arrayBuffer())
     }))
-    const result = await run(["-e", `const module = await import(${JSON.stringify(pathToFileURL(path.join(directory, "tree-sitter-prebuilds.ts")).href)}); if (typeof module.requireTreeSitterBundle !== "function") throw new Error("ADMISSION_MISSING"); console.log("ADMISSION_IMPORT_OK")`])
+    const result = await run(["-e", `const module = await import(${JSON.stringify(pathToFileURL(path.join(directory, "tree-sitter-prebuilds.ts")).href)}); if (typeof module.requireTreeSitterBundle !== "function") throw new Error("ADMISSION_MISSING"); console.log("ADMISSION_IMPORT_OK")`], {}, directory)
     expect(result.status).toBe(0)
     expect(result.output.trim()).toBe("ADMISSION_IMPORT_OK")
   } finally {
@@ -37,9 +47,9 @@ test("packaged admission modules import without a source workspace", async () =>
   }
 })
 
-async function run(args: string[], env: Record<string, string> = {}) {
+async function run(args: string[], env: Record<string, string> = {}, cwd?: string) {
   const child = Bun.spawn([process.execPath, "--no-install", ...args], {
-    env: { ...process.env, ...env }, stdout: "pipe", stderr: "pipe",
+    cwd, env: { ...process.env, ...env }, stdout: "pipe", stderr: "pipe",
   })
   const [output, error, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   return { status, output, error }

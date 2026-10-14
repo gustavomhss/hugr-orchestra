@@ -124,6 +124,20 @@
       ],
       "outputs": []
     },
+    "@orchestra/script#typecheck": {
+      "dependsOn": ["transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/script/*.ts",
+        "$TURBO_ROOT$/nix/scripts/workspace-config.ts",
+        "$TURBO_ROOT$/nix/scripts/verify-distribution.ts",
+        "$TURBO_ROOT$/nix/scripts/probe-distribution.ts",
+        "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts",
+        "$TURBO_ROOT$/packages/desktop/scripts/resource-paths.ts",
+        "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
+        "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
+      ]
+    },
     "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []
