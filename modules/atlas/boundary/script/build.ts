@@ -1,7 +1,7 @@
 import path from "node:path"
 import { generateDtsBundle } from "dts-bundle-generator"
 
-const root = path.resolve(import.meta.dir, "../../..")
+const root = path.resolve(import.meta.dir, "../../../..")
 const output = path.resolve(import.meta.dir, "../src/generated")
 const check = Bun.argv.includes("--check")
 await Promise.all(
@@ -15,7 +15,7 @@ await Promise.all(
       ["native-memory", "adapter-io/src/native-bound.ts"],
     ] as const
   ).map(async ([name, file]) => {
-    const entry = path.join(root, "foundation/atlas/packages", file)
+    const entry = path.join(root, "modules/atlas/packages", file)
     const result = await Bun.build({
       entrypoints: [entry],
       target: "node",
@@ -28,7 +28,7 @@ await Promise.all(
           name: "canonical-atlas-build-boundary",
           setup(builder) {
             builder.onResolve({ filter: /^@atlas\// }, (args) => ({
-              path: path.join(root, "foundation/atlas/packages", args.path.slice("@atlas/".length), "src/index.ts"),
+              path: path.join(root, "modules/atlas/packages", args.path.slice("@atlas/".length), "src/index.ts"),
             }))
             builder.onResolve({ filter: /^@noble\/hashes\// }, (args) => ({
               path: Bun.resolveSync(args.path, path.resolve(import.meta.dir, "..")),
