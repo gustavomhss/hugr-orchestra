@@ -202,7 +202,7 @@ function requirePrivateNonce(captured: typeof Capture.Type) {
 const observe = (box: Fixture, text: string, code: number) => Effect.gen(function* () {
   requireExit(yield* command(box, text, true, { ...box.env, BUNDLE_CHILD_EXIT: String(code) }, box.cwd), code, "BUNDLE_CHILD_EXIT_LOST")
   const captured = yield* capture(box)
-  expect(captured.argv).toEqual(["test", ...(box.row.package === "cli" ? ["--preload", "../../script/test-omni-control.ts"] : []), "--timeout", "30000", ...box.row.files])
+  expect(captured.argv).toEqual(["test", ...(box.row.package === "cli" ? ["--preload", "../../script/test-omni-control.ts"] : []), "--timeout", box.row.package === "cli" && box.row.platform === "linux" && box.row.files.some((file) => ["./test/distribution-provider.test.ts", "./test/distribution-musl.test.ts"].includes(file)) ? "4800000" : "30000", ...box.row.files])
   expect(captured.githubActions).toBe("false")
   expect(captured.nonce).toMatch(/^[0-9a-f]{32}$/)
   requirePrivateNonce(captured)

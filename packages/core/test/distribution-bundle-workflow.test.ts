@@ -33,6 +33,7 @@ const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
 test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
   inspect(source)
   check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/core/bunfig.toml")).text()))), "BUNDLE_CORE_PRELOAD")
+  check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/desktop/bunfig.toml")).text()))), "BUNDLE_DESKTOP_PRELOAD")
   for (const platform of ["linux", "win32", "darwin"]) {
     for (const exitCode of [0, 17]) {
       const calls: string[][] = []
@@ -66,6 +67,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
     ["BUNDLE_NATIVE_JOB", (value) => patchStep(value, "Prove native Windows Job handle closure", () => undefined)],
     ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", () => undefined)],
+    ["BUNDLE_DESKTOP_ABI", (value) => patchStep(value, "Prove Desktop ABI consumer", () => undefined)],
     ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
   ]
   mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
@@ -98,9 +100,11 @@ function inspect(input: unknown) {
   const nativeJob = requireStep(job.steps, "Prove native Windows Job handle closure", "BUNDLE_NATIVE_JOB")
   const abi = requireStep(job.steps, "Prove source ABI producers", "BUNDLE_SOURCE_ABI")
   const denoExtract = requireStep(job.steps, "Extract native Deno", "BUNDLE_DENO")
-  check(deno.if === "matrix.package == 'cli'" && deno.run?.includes("bun script/distribution-deno.ts") && denoExtract.if === deno.if && denoExtract.run?.includes("$ORCHESTRA_DISTRIBUTION_DENO") && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
-  check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && nativeJob.run?.includes("cargo test --release -p omni-supervisor windows::tests") && nativeJob.run.includes("windows-native-job.log") && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
-  check(abi.if === "matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && abi.run?.includes("./src/tree-sitter-prebuilds.test.ts") && abi.run.includes("../desktop/src/main/cli-artifacts.test.ts") && abi.run.includes("source-abi.log"), "BUNDLE_SOURCE_ABI")
+  const desktop = requireStep(job.steps, "Prove Desktop ABI consumer", "BUNDLE_DESKTOP_ABI")
+  check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
+  check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
+  check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
+  check(abi.if === "matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && desktop.if === abi.if && desktop["working-directory"] === "packages/desktop" && job.steps.indexOf(abi) < job.steps.indexOf(desktop) && job.steps.indexOf(desktop) < job.steps.indexOf(run), "BUNDLE_SOURCE_ABI")
   check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "packages/${{ matrix.package }}", "BUNDLE_EXECUTION")
   check(job.steps.indexOf(admission) < job.steps.indexOf(run) && job.steps.indexOf(run) < job.steps.indexOf(control), "BUNDLE_ORDER")
   check(distribution.length > 0, "BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
@@ -115,7 +119,7 @@ function inspect(input: unknown) {
       check(files.includes("./test/distribution-musl.test.ts") === (row.platform === "linux"), `BUNDLE_MUSL_PROOF: ${row.host}`)
       check(files.includes("./test/distribution-provider.test.ts") === (row.host === "ubuntu-latest"), `BUNDLE_PROVIDER_PROOF: ${row.host}`)
     }
-    const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "effect/cross-spawn-spawner", "ripgrep-binary", "ripgrep-bundle"].map((name) => `./test/${name}.test.ts`)
+    const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "distribution-bundle-boundaries", "distribution-bundle-deno", "effect/cross-spawn-spawner", "ripgrep-binary", "ripgrep-bundle"].map((name) => `./test/${name}.test.ts`)
       : [...(row.host === "ubuntu-latest" ? distribution.filter((file) => !["distribution-homebrew.test.ts", "distribution-windows.test.ts"].some((name) => file.endsWith(name)))
         : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation", "aur", "musl"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     expect(files.toSorted(), `BUNDLE_EXACT_FILES: ${row.host}`).toEqual([...new Set(expected)].toSorted())
@@ -126,6 +130,7 @@ function inspect(input: unknown) {
   expect(job.steps.filter((step) => step.uses).map((step) => step.uses)).toEqual([checkout, "./.github/actions/setup-bun", "./.github/actions/ripgrep", "./.github/actions/omni-binaries", upload])
   check(job.steps.find((step) => step.uses === upload)?.if === "always()" && job.steps.find((step) => step.uses === upload)?.with?.["if-no-files-found"] === "error" && job.steps.find((step) => step.uses === upload)?.with?.path === "distribution-logs", "BUNDLE_LOG_RETENTION")
   const staticJob = value.jobs.static
+  check(staticJob?.["timeout-minutes"] === 20, "BUNDLE_STATIC_TIMEOUT")
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
     ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined],
