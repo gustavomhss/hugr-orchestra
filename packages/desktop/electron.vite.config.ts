@@ -2,8 +2,11 @@ import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
 import appPlugin from "@orchestra/app/vite"
 import * as fs from "node:fs/promises"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+import path from "node:path"
 
-const ORCHESTRA_SERVER_DIST = "../orchestra/dist/node"
+const workspace = WorkspacePaths.make(import.meta.dirname)
+const ORCHESTRA_SERVER_DIST = path.join(workspace.module("orchestra"), "dist/node")
 
 const channel = (() => {
   const raw = process.env.ORCHESTRA_CHANNEL
@@ -93,7 +96,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
   },
   renderer: {
     plugins: [appPlugin, sentry],
-    publicDir: "../../../app/public",
+    publicDir: path.join(workspace.module("app"), "public"),
     root: "src/renderer",
     build: {
       sourcemap: process.env.ORCHESTRA_FAST_BUILD === "1" ? false : true,
