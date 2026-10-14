@@ -234,26 +234,32 @@ for (const newLayoutDesigns of [false, true]) {
         await editor.dispatchEvent("compositionend", { data: "" })
       }
 
-      const expectedCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
+      const insertionCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
+      const hasHistory = !!before || scenario.mode === "undo-pill-history"
+      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: insertionCursor })
+      if (hasHistory) {
+        const inserted = await canonicalDraft(page, sessionID)
+        await info.attach("immediate-insertion-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ phase: "immediate-insertion", expectedLogicalCursor: insertionCursor, canonical: inserted, ...receipt(inserted.text) }),
+        })
+      }
       if (scenario.mode === "undo-pill-history") {
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
         for (const text of ["see @note.md base\n", "see @note.md base", "see @note.md "]) {
           await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
           await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
           expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
           const canonical = await canonicalDraft(page, sessionID)
-          await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ canonical, ...receipt(canonical.text) }) })
+          await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-undo", canonical, ...receipt(canonical.text) }) })
         }
         for (const text of ["see @note.md base", "see @note.md base\n", scenario.text]) {
           await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
           await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
           expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
           const canonical = await canonicalDraft(page, sessionID)
-          await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ canonical, ...receipt(canonical.text) }) })
+          await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-redo", selectionPolicy: "browser-owned", canonical, ...receipt(canonical.text) }) })
         }
       }
       if (before) {
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
         await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(before)
@@ -261,14 +267,28 @@ for (const newLayoutDesigns of [false, true]) {
         const undone = await canonicalDraft(page, sessionID)
         expect(undone.text).toBe(before)
         await info.attach("native-undo-receipt.json", {
-          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", canonical: undone, ...receipt(undone.text) }),
+          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-undo", canonical: undone, ...receipt(undone.text) }),
         })
         await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
+        // Browser history owns Redo selection; our explicit post-insert caret move is outside its transaction.
+        // Immediate insertion above still requires the exact logical offset, including cursor 2 for boundary edits.
+        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(scenario.text)
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         const redone = await canonicalDraft(page, sessionID)
         await info.attach("native-redo-receipt.json", {
-          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", canonical: redone, ...receipt(redone.text) }),
+          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-redo", selectionPolicy: "browser-owned", canonical: redone, ...receipt(redone.text) }),
+        })
+      }
+
+      const finalCursor = hasHistory ? scenario.text.length : insertionCursor
+      if (hasHistory) {
+        await editor.press(process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End")
+        // Legacy persists navigation cursor on blur; use its normal focus lifecycle, never mutate draft storage.
+        await editor.blur()
+        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
+        const navigated = await canonicalDraft(page, sessionID)
+        await info.attach("post-history-navigation-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ phase: "explicit-end-navigation", expectedCursor: finalCursor, canonical: navigated, ...receipt(navigated.text) }),
         })
       }
 
@@ -276,7 +296,7 @@ for (const newLayoutDesigns of [false, true]) {
         contentType: "application/json",
         body: JSON.stringify(await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))),
       })
-      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: expectedCursor })
+      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
       const canonical = await canonicalDraft(page, sessionID)
       const dom = await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))
       await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
@@ -303,6 +323,7 @@ for (const newLayoutDesigns of [false, true]) {
         contentType: "application/json",
         body: JSON.stringify({
           protocol: "v1", newLayoutDesigns, mode: scenario.mode, sessionID, dom, canonical, payload, executions,
+          cursorContract: { immediateInsertion: insertionCursor, finalBeforeSend: finalCursor, nativeRedo: "browser-owned selection recorded in history receipts" },
           inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
             ? "synthetic-raw-clipboard-event; native keyboard history when requested"
             : scenario.mode === "guarded-enter" ? "synthetic IME/modifier dispatch; no native OS IME claim"
