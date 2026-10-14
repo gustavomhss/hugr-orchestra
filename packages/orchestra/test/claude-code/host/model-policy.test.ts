@@ -105,16 +105,18 @@ ClaudeEngineFixture.it.instance("real host captures canonical policy and resolve
   expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
 }), 30000)
 
-ClaudeEngineFixture.it.instance("registered final denial retains spent grant and cleanup obligation across swallowed removal failure", () => Effect.gen(function* () {
+ClaudeEngineFixture.it.instance("registered final catalog remap denial retains spent grant and cleanup obligation across swallowed removal failure", () => Effect.gen(function* () {
   ClaudeEngineFixture.reset()
   const f = yield* ClaudeEngineFixture.setup({ models: { archie: "anthropic/wire-fast" } })
   const locations = yield* LocationServiceMap.Service
   const database = yield* Database.Service
   const policies = yield* SessionSubagentModels.Service
-  yield* Effect.gen(function* () {
-    const catalog = yield* Catalog.Service
-    yield* catalog.transform((draft) => draft.model.update(fast.providerID, fast.id, (entry) => Object.assign(entry, fast)))
+  const catalog = yield* Effect.gen(function* () {
+    return yield* Catalog.Service
   }).pipe(Effect.provide(locations.get({ directory: AbsolutePath.make(f.chat.directory), workspaceID: undefined })))
+  yield* catalog.transform((draft) => draft.model.update(fast.providerID, fast.id, (entry) => Object.assign(entry, fast)))
+  expect((yield* catalog.model.all()).filter((entry) => entry.providerID === fast.providerID && entry.api.id === fast.api.id)
+    .map((entry) => entry.id)).toEqual([fast.id])
   yield* policies.set(f.chat.id, fastPolicy)
   const rules = yield* WriteRoots.bind("archie", ["proposal.md"], [])
   const grantID = Identifier.create("grt", "ascending")
@@ -145,7 +147,11 @@ ClaudeEngineFixture.it.instance("registered final denial retains spent grant and
     const options = { signal: new AbortController().signal }
     decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0](hook, undefined, options))
     await Effect.runPromiseWith(context)(database.db.run(sql`DROP TRIGGER keep_model_child`))
-    await Effect.runPromiseWith(context)(policies.set(f.chat.id, SessionSubagentModels.inherit))
+    // Cleanup masks the guard error; a distinct call exposes unknown identity under the unchanged ceiling.
+    decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0]({ ...hook, tool_use_id: "ambiguous-model-identity" }, undefined, options))
+    await Effect.runPromiseWith(context)(catalog.transform((draft) => draft.model.remove(fast.providerID, ModelV2.ID.make("same-wire-other-catalog"))))
+    expect((await Effect.runPromiseWith(context)(catalog.model.all())).filter((entry) => entry.providerID === fast.providerID && entry.api.id === fast.api.id)
+      .map((entry) => entry.id)).toEqual([fast.id])
     decisions.push(await params.options!.hooks!.PreToolUse![0].hooks[0](hook, undefined, options))
     yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...ClaudeEngineFixture.frame }
     for await (const _ of input) {}
@@ -161,12 +167,16 @@ ClaudeEngineFixture.it.instance("registered final denial retains spent grant and
   expect(kids).toHaveLength(1)
   expect(ClaudeHostMcp.grants(f.chat.id).has(grantID)).toBe(false)
   yield* database.db.run(sql.raw(`CREATE TRIGGER keep_model_child BEFORE DELETE ON session WHEN OLD.id = '${kids[0].id}' BEGIN SELECT RAISE(IGNORE); END`))
-  yield* policies.set(f.chat.id, { mode: "allowlist", models: [] })
+  yield* catalog.transform((draft) => draft.model.update(fast.providerID, ModelV2.ID.make("same-wire-other-catalog"), (entry) => Object.assign(entry, fast)))
+  expect((yield* catalog.model.all()).filter((entry) => entry.providerID === fast.providerID && entry.api.id === fast.api.id)
+    .map((entry) => entry.id)).toEqual([fast.id, ModelV2.ID.make("same-wire-other-catalog")])
   yield* Deferred.succeed(release, undefined)
   yield* Fiber.join(running)
   expect(decisions[0]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("cleanup is still pending") } })
   expect(decisions[1]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
+    permissionDecisionReason: expect.stringContaining("identity is unknown") } })
+  expect(decisions[2]).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny",
     permissionDecisionReason: expect.stringContaining("model policy denied") } })
   expect(yield* f.sessions.children(f.chat.id)).toHaveLength(0)
   expect(ClaudeHostMcp.grants(f.chat.id).has(grantID)).toBe(false)
