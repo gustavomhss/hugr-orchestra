@@ -14,7 +14,7 @@ const workflow: Actions.Workflow = { id: "11", bindingID: binding.id, name: "CI"
 const graph = (ref = "native-default"): Actions.Graph => ({ source: { bindingID: binding.id, path: workflow.path, ref,
   version: "a".repeat(40), text: "native source", editable: false }, state: "complete", jobs: [], diagnostics: [],
   triggers: { workflow_dispatch: { inputs: { debug: { type: "boolean", default: false }, target: { type: "choice", options: ["linux", "windows"], default: "linux" } } } } })
-const run: Actions.Run = { id: "101", bindingID: binding.id, name: "CI", commit: "b".repeat(40), ref: "native-default",
+const run: Actions.Run = { id: "101", bindingID: binding.id, workflowID: workflow.id, name: "CI", commit: "b".repeat(40), ref: "native-default",
   status: "completed", conclusion: "failure", attempt: 2, event: "workflow_dispatch" }
 
 function deferred<T>() {

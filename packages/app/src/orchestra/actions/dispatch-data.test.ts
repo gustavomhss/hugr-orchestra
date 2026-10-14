@@ -59,7 +59,7 @@ describe("dispatch dialog data", () => {
     using scope = fixture()
     scope.state.route = { view: "library", workflowID: other.id, path: other.path, ref: "unrelated-route" }
     scope.state.source = { status: "ready", value: graph("unrelated-source").source }
-    scope.state.run = { status: "ready", value: { id: "101", bindingID: binding.id, ref: "recent-run", commit: "a".repeat(40), name: "Old", event: "push", status: "completed" } }
+    scope.state.run = { status: "ready", value: { id: "101", bindingID: binding.id, workflowID: workflow.id, ref: "recent-run", commit: "a".repeat(40), name: "Old", event: "push", status: "completed" } }
     expect(dispatchDefaultRef(scope.state, { kind: "dispatch", workflowID: workflow.id })).toBe("native-default")
     expect(dispatchDefaultRef(scope.state, { kind: "dispatch", workflowID: other.id })).toBe("other-default")
     scope.state.workflows.value = { capturedAt: 1, items: [{ ...workflow, defaultRef: undefined }] }

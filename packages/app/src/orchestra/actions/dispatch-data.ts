@@ -1,4 +1,5 @@
 import type { Actions } from "@orchestra/schema/actions"
+import type { Schema } from "effect"
 import { actionsError, ActionsRequestError } from "./api"
 import type { Dialog, ErrorState, State } from "./contract"
 import { githubDefinitions, headerDefinitions } from "./source-dialogs"
@@ -109,8 +110,7 @@ export function createDispatchData(input: {
 export function dispatchDefinitions(graph: Actions.Graph, provider: Actions.ProviderKind) {
   if (inputDiagnostic(graph)) return
   if (provider === "github" && graph.state === "complete" && githubDispatchMissing(graph.triggers)) throw new ActionsRequestError("capability_unavailable")
-  if (provider === "gitlab" && graph.header && typeof graph.header === "object" && !Array.isArray(graph.header)
-    && graph.header.spec && typeof graph.header.spec === "object" && !Array.isArray(graph.header.spec) && "include" in graph.header.spec) return
+  if (provider === "gitlab" && isJsonObject(graph.header) && isJsonObject(graph.header.spec) && "include" in graph.header.spec) return
   const definitions = provider === "github" ? githubDefinitions(graph.triggers)
     : graph.inputs ?? headerDefinitions(graph.header) ?? (graph.header === undefined && graph.includes === undefined && !graph.source.includes?.length && graph.state !== "unresolved" ? [] : undefined)
   // Native GitLab options can be numbers or booleans. Index-valued selects preserve those types.
@@ -127,7 +127,11 @@ function inputDiagnostic(graph: Actions.Graph) {
 function githubDispatchMissing(triggers: Actions.Graph["triggers"]) {
   if (typeof triggers === "string") return triggers !== "workflow_dispatch"
   if (Array.isArray(triggers)) return triggers.every((item) => typeof item === "string") && !triggers.includes("workflow_dispatch")
-  return !!triggers && typeof triggers === "object" && !("workflow_dispatch" in triggers)
+  return isJsonObject(triggers) && !("workflow_dispatch" in triggers)
+}
+
+function isJsonObject(value: unknown): value is Schema.JsonObject {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
 export function environmentOptions(page: Actions.ResourcePage, bindingID: Actions.BindingID) {
