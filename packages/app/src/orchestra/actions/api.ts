@@ -62,6 +62,7 @@ export function actionsError(error: unknown): ErrorState {
       : safe.kind === "not_authenticated" ? "orchestra.actions.providerSignInRequired"
       : safe.kind === "server_auth" ? "orchestra.actions.serverAuthFailed"
       : safe.kind === "outcome_unknown" ? "orchestra.actions.unknownOutcome"
+      : safe.kind === "operation_rejected" ? "orchestra.actions.operationRejected"
       : safe.kind === "source_unresolved" ? "orchestra.actions.noSource" : "orchestra.actions.unavailable",
     ...(safe.retryAfter === undefined ? {} : { retryAfter: safe.retryAfter }),
   }

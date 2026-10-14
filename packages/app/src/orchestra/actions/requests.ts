@@ -108,8 +108,22 @@ export async function saveResponse(response: Response, signal: AbortSignal, save
 }
 
 export const SOURCE_DRAFT_BYTES = 1024 * 1024
+export function sourceProposalPath(provider: Actions.ProviderKind, path: string) {
+  if (!path || path.length > 2048 || !path.isWellFormed() || path.startsWith("/") || /[\\\x00-\x1f\x7f]/.test(path)
+    || path.split("/").some((part) => !part || part === "." || part === "..")) return false
+  return provider === "github" ? !/[%{}:]/.test(path) && path.startsWith(".github/workflows/")
+    && /^[^/]+\.ya?ml$/i.test(path.slice(".github/workflows/".length))
+    : !/[:@?*{}$]/.test(path)
+}
+
 export function sourceIdentity(source: Actions.Source) {
   return JSON.stringify([source.bindingID, source.path, source.ref, source.commit, source.version])
+}
+
+export function sourceDiscardBlocked(state: State) {
+  return state.submitting || state.commandError?.kind === "outcome_unknown"
+    || state.operation?.state === "sending" || state.operation?.state === "outcome_unknown"
+    || state.operation?.result?.unattributed === true
 }
 
 export function immutableSource(state: State, source?: { ref: string; commit?: string }) {
@@ -171,11 +185,10 @@ export function createSourceDraft(input: {
       if (input.owner.disposed) return
       if (dirty()) { fail("source_dirty"); return }
       if (!canRequest(input.state(), "source.write") || immutableSource(input.state(), ref ? { ref } : undefined)) { fail("capability_unavailable"); return }
-      if (!path || path.length > 2048 || path.startsWith("/") || path.includes("\\") || /[\x00-\x1f\x7f]/.test(path)
-        || path.split("/").some((part) => !part || part === "." || part === "..") || (ref !== undefined && (!ref || ref.length > 2048))) { fail("invalid_input"); return }
-      if (text.length > SOURCE_DRAFT_BYTES || new TextEncoder().encode(text).length > SOURCE_DRAFT_BYTES) { fail("metadata_truncated"); return }
       const binding = input.state().binding
       if (!binding) { fail("binding_missing"); return }
+      if (!sourceProposalPath(binding.provider.kind, path) || (ref !== undefined && (!ref || ref.length > 2048))) { fail("invalid_input"); return }
+      if (!text.isWellFormed() || text.length > SOURCE_DRAFT_BYTES || new TextEncoder().encode(text).length > SOURCE_DRAFT_BYTES) { fail("metadata_truncated"); return }
       const scope = { bindingID: binding.id, revision: binding.revision }
       const route = JSON.stringify(input.state().route)
       const dialog = JSON.stringify(input.state().dialog)
@@ -201,7 +214,8 @@ export function createSourceDraft(input: {
       }, (cause) => { if (current()) input.update({ commandError: input.error(cause) }) })
     },
     cancelCreate() { input.owner.cancel("draft-base") },
-    abandon() { created = undefined; generation++; input.owner.cancel("draft-base"); input.owner.cancel("validate");
+    abandon() { if (input.owner.disposed || sourceDiscardBlocked(input.state())) return
+      created = undefined; generation++; input.owner.cancel("draft-base"); input.owner.cancel("validate");
       input.update({ draft: base?.text ?? "", draftBase: undefined, graph: { status: "idle" }, diagnostics: [], commandError: undefined }) },
     validate() {
       if (input.owner.disposed) return Promise.resolve()
