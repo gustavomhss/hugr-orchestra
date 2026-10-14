@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 25
     defaults:
       run:
-        working-directory: packages/omni
+        working-directory: native/omni
     env:
       HUGR_PROOF_ID: ${{ matrix.target }}
     steps:
@@ -43,7 +43,7 @@ jobs:
           node-version: "22"
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: packages/omni -> target
+          workspaces: native/omni -> target
           key: release-${{ matrix.target }}
           save-if: false
       - uses: mlugg/setup-zig@v2
@@ -60,7 +60,7 @@ jobs:
         run: |
           bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
           target=$([ "${{ matrix.target }}" = linux-arm64-gnu ] && echo linux-arm64 || echo linux-x64-baseline)
-          export OMNI_ARTIFACTS="$PWD/packages/omni/dist/omni" ORCHESTRA_VERSION=1.18.27 ORCHESTRA_CHANNEL=beta
+          export OMNI_ARTIFACTS="$PWD/native/omni/dist/omni" ORCHESTRA_VERSION=1.18.27 ORCHESTRA_CHANNEL=beta
           bun packages/cli/script/build.ts --target "$target" --skip-install
           TARGET="$target" bun -e 'import{stageCliArtifacts}from"./packages/desktop/scripts/cli-staging";await stageCliArtifacts({dist:"packages/cli/dist",directory:`packages/desktop/.guest-cli-${process.env.TARGET}`,version:"1.18.27",targets:[process.env.TARGET]})'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-data-omni-${{ matrix.target }}
-          path: packages/omni/dist/omni/${{ matrix.target }}/
+          path: native/omni/dist/omni/${{ matrix.target }}/
           if-no-files-found: error
   proof:
     needs: [tree-sitter, omni-guests]

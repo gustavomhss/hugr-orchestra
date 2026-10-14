@@ -1,7 +1,7 @@
 // V10 serve: real CLI with initialized LSP/MCP, then SIGTERM through its normal runtime-disposal path.
 // A forced exit during cleanup never counts as evidence. Bound: 20 s against long-lived fixtures.
 // Desktop V10 belongs to the lead's Electron harness.
-// Run: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v10-exit.ts
+// Run: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v10-exit.ts
 import path from "node:path"
 import { BUN, ORCHESTRA, cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, mentioning, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
 

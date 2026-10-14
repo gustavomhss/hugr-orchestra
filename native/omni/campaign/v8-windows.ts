@@ -4,7 +4,7 @@
 // The wrapper builds the actual CLI once on Windows using CI's restored release native artifacts.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import type { OmniProc } from "../../core/src/pty/omni.ts"
+import type { OmniProc } from "../../../packages/core/src/pty/omni.ts"
 import { BUN, ROOT, adoptTree, cleanup, cli, fileTree, identity, isolated, kill9, members, remaining, supervised, table, until, win } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
@@ -92,9 +92,9 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
   if (!win) throw new Error("V8 host requires Windows")
   adoptTree(home, tree.nonce, [identity(process.pid)])
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../../core/src/process.ts")
-  const { Omni } = await import("../../core/src/omni.ts")
-  const { PtyOmni } = await import("../../core/src/pty/omni.ts")
+  const { AppProcess } = await import("../../../packages/core/src/process.ts")
+  const { Omni } = await import("../../../packages/core/src/omni.ts")
+  const { PtyOmni } = await import("../../../packages/core/src/pty/omni.ts")
   const runtime = await appRuntime()
   const cells: Cell[] = []
   const terminal = { proc: undefined as OmniProc | undefined }

@@ -81,9 +81,9 @@ export async function run(trace = false) {
 
 async function host() {
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../../core/src/process.ts")
-  const { Omni } = await import("../../core/src/omni.ts")
-  const { OmniSpawner } = await import("../../core/src/omni-spawner.ts")
+  const { AppProcess } = await import("../../../packages/core/src/process.ts")
+  const { Omni } = await import("../../../packages/core/src/omni.ts")
+  const { OmniSpawner } = await import("../../../packages/core/src/omni-spawner.ts")
   const runtime = await appRuntime()
   await runtime.context()
   const omni = await Omni.load()

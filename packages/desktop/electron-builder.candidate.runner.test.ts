@@ -176,7 +176,7 @@ test("real node child with the electron-vite env reports heap_size_limit at or a
 }, 20_000)
 
 test("omni source requires the action's paired absolute release binaries and never a disabled or foreign build", () => {
-  const dir = "/runner/work/repo/packages/omni/target/release"
+  const dir = "/runner/work/repo/native/omni/target/release"
   const exact = { HUGR_OMNI_ADDON: `${dir}/libhugr_omni_node.dylib`, HUGR_OMNI_SUPERVISOR: `${dir}/hugr-omni-supervisor` }
   expect(omniSource(exact)).toEqual({ directory: dir, addon: exact.HUGR_OMNI_ADDON, supervisor: exact.HUGR_OMNI_SUPERVISOR })
   expect(omniSource({ ...exact, OMNI_ARTIFACTS: dir }).directory).toBe(dir)

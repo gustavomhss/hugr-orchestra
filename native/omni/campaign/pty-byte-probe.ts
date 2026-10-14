@@ -1,10 +1,10 @@
 // Independent PTY byte observations: same producer, core-loader Omni, Python stdlib OS PTY, real Orchestra WS.
-// ORCHESTRA_LOCAL_TESTS=1 node --experimental-strip-types packages/omni/campaign/pty-byte-probe.ts
+// ORCHESTRA_LOCAL_TESTS=1 node --experimental-strip-types native/omni/campaign/pty-byte-probe.ts
 import { spawn } from "node:child_process"
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { Omni } from "../../core/src/omni.ts"
+import { Omni } from "../../../packages/core/src/omni.ts"
 import { cli, LOGS, until, verdict, win } from "./lib.ts"
 import { api, evidence, finish, fixture, main, processTable, start, type Fixture } from "./protocol-fixtures.ts"
 

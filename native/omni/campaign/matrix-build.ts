@@ -19,8 +19,8 @@ export async function prepare() {
   const sourceSHA = await command(["git", "rev-parse", "HEAD"])
   if (sourceSHA !== process.env.GITHUB_SHA) throw new Error("checkout/GITHUB_SHA mismatch")
   const tracked = (await command(["git", "ls-files", "-z"])).split("\0").filter(Boolean)
-  const nativeFiles = tracked.filter((file) => /^packages\/omni\/(crates\/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|\.cargo\/|bindings\/node\/(src\/|Cargo\.toml$|build\.rs$))/.test(file)).sort()
-  if (!nativeFiles.includes("packages/omni/Cargo.lock") || !nativeFiles.some((file) => file.includes("crates/omni-supervisor/src/")))
+  const nativeFiles = tracked.filter((file) => /^native\/omni\/(crates\/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|\.cargo\/|bindings\/node\/(src\/|Cargo\.toml$|build\.rs$))/.test(file)).sort()
+  if (!nativeFiles.includes("native/omni/Cargo.lock") || !nativeFiles.some((file) => file.includes("crates/omni-supervisor/src/")))
     throw new Error("native provenance enumeration incomplete")
   const sources = tracked.filter((file) => /^packages\/(core|orchestra|server|protocol|schema|llm)\/(src\/|package\.json$)/.test(file))
     .concat("bun.lock", "packages/orchestra/script/build.ts", ".github/actions/omni-binaries/action.yml")
@@ -30,7 +30,7 @@ export async function prepare() {
   const addon = process.env.HUGR_OMNI_ADDON
   const supervisor = process.env.HUGR_OMNI_SUPERVISOR
   if (!addon || !supervisor || !existsSync(addon) || !existsSync(supervisor) ||
-    [addon, supervisor].some((file) => !path.resolve(file).startsWith(path.join(ROOT, "packages/omni/target/release") + path.sep)))
+    [addon, supervisor].some((file) => !path.resolve(file).startsWith(path.join(ROOT, "native/omni/target/release") + path.sep)))
     throw new Error("matrix requires exact-source omni-binaries action release artifacts")
   const platform = win ? "win32-x64-msvc" : process.platform === "darwin" ? `darwin-${process.arch}` : `linux-${process.arch}-gnu`
   const artifacts = path.join(LOGS, "native", platform)

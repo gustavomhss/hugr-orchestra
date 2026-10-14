@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import path from "node:path"
-import { rm } from "node:fs/promises"
+import { mkdir, rename, rm } from "node:fs/promises"
 import { monolithInventory } from "../../../script/monolith-inventory"
 import { inventoryFixture } from "./fixture/monolith-inventory"
 
@@ -57,6 +57,39 @@ test("supports array workspaces and deduplicates overlapping discovery patterns"
     patchedDependencies: { "fix@1": "patches/fix.patch" },
   }))
   expect((await monolithInventory(fixture.path)).modules).toEqual(original.modules)
+})
+
+test("registered native and Atlas moves preserve declaration payloads and domain pins", async () => {
+  await using fixture = await inventoryFixture()
+  const before = await monolithInventory(fixture.path)
+  await mkdir(path.join(fixture.path, "native"))
+  await mkdir(path.join(fixture.path, "modules"))
+  await rename(path.join(fixture.path, "packages/omni"), path.join(fixture.path, "native/omni"))
+  await rename(path.join(fixture.path, "foundation/atlas"), path.join(fixture.path, "modules/atlas"))
+  await Bun.write(path.join(fixture.path, "script/toolchain-registry.json"), JSON.stringify({ format: 1, roots: {
+    omni: { path: "native/omni", manifest: "Cargo.toml" }, atlas: { path: "modules/atlas", manifest: "package.json" },
+  } }))
+  const manifest = await Bun.file(path.join(fixture.path, "package.json")).json()
+  manifest.workspaces.packages = ["packages/*", "packages/sdk/js", "native/omni/bindings/node"]
+  await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify(manifest))
+  const moved = await monolithInventory(fixture.path)
+  const declarations = (modules: typeof moved.modules) => modules.map((module) => ({
+    kind: module.kind, name: module.name, manifestHash: module.manifestHash, dependencies: module.dependencies,
+    exports: module.exports, lib: module.lib, bin: module.bin,
+  })).sort((left, right) => `${left.kind}:${left.name}`.localeCompare(`${right.kind}:${right.name}`))
+  expect(declarations(moved.modules)).toEqual(declarations(before.modules))
+  expect(moved.modules.find((module) => module.name === "runtime")?.scope).toBe("native/omni")
+  expect(moved.modules.find((module) => module.name === "@fixture/contracts")?.scope).toBe("modules/atlas")
+  expect(moved.inputs.find((input) => input.path === "native/omni/Cargo.lock")?.sha256)
+    .toBe(before.inputs.find((input) => input.path === "packages/omni/Cargo.lock")?.sha256)
+  expect(moved.inputs.find((input) => input.path === "modules/atlas/package-lock.json")?.sha256)
+    .toBe(before.inputs.find((input) => input.path === "foundation/atlas/package-lock.json")?.sha256)
+})
+
+test("present malformed toolchain registry cannot fall back to legacy roots", async () => {
+  await using fixture = await inventoryFixture()
+  await Bun.write(path.join(fixture.path, "script/toolchain-registry.json"), '{"format":2,"roots":{}}')
+  await expect(monolithInventory(fixture.path)).rejects.toThrow("BASELINE_INVALID_TOOLCHAIN_REGISTRY")
 })
 
 test("captures relocated skill and brand assets without treating registered module trees as assets", async () => {

@@ -428,7 +428,7 @@
         "@typescript/native-preview": "catalog:",
       },
     },
-    "packages/omni/bindings/node": {
+    "native/omni/bindings/node": {
       "name": "hugr-omni",
       "version": "0.1.0",
       "optionalDependencies": {
@@ -2907,7 +2907,7 @@
 
     "hugr-lean": ["hugr-lean@./vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz", { "bin": { "hugr-lean": "dist/cli/index.js" } }, "sha512-mN7VGI6MBXiswd5ye0zJZML5loxhdrL3/HJbzvvXT8Cv6kMTyYsR7YorNYk6REdwEE4E4BfiwnuzZljOCDlkew=="],
 
-    "hugr-omni": ["hugr-omni@workspace:packages/omni/bindings/node"],
+    "hugr-omni": ["hugr-omni@workspace:native/omni/bindings/node"],
 
     "human-signals": ["human-signals@5.0.0", "", {}, "sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ=="],
 

@@ -21,7 +21,7 @@
     "random": "echo 'Random script'",
     "translate:app": "bun run script/translate-app.ts",
     "test": "echo 'do not run tests from root' && exit 1",
-    "omni:build": "cargo build --manifest-path packages/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
+    "omni:build": "cargo build --manifest-path native/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
     "test:ci": "bun run script/test-ci.ts"
   },
   "workspaces": {
@@ -33,7 +33,7 @@
       "tooling/httpapi-codegen",
       "tooling/http-recorder",
       "packages/sdk/js",
-      "packages/omni/bindings/node"
+      "native/omni/bindings/node"
     ],
     "catalog": {
       "@effect/opentelemetry": "4.0.0-beta.83",

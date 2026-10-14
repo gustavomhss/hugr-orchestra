@@ -1,7 +1,30 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { rm } from "node:fs/promises"
 import { monolithInventory } from "../../../script/monolith-inventory"
 import { inventoryFixture } from "./fixture/monolith-inventory"
+
+test("registry absence permits legacy capture but a directory never does in either source mode", async () => {
+  await using fixture = await inventoryFixture()
+  const git = (args: string[]) => {
+    const result = Bun.spawnSync(["git", ...args], { cwd: fixture.path })
+    expect(result.exitCode).toBe(0)
+    return result.stdout.toString().trim()
+  }
+  const legacy = await monolithInventory(fixture.path)
+  expect(legacy.modules.length).toBeGreaterThan(0)
+  git(["init", "--quiet"])
+  git(["add", "--", "package.json", "bun.lock", "packages", "foundation", "patches"])
+  git(["-c", "user.name=baseline-fixture", "-c", "user.email=baseline@example.invalid", "commit", "--quiet", "-m", "legacy fixture"])
+  expect((await monolithInventory(fixture.path, "HEAD")).modules).toEqual(legacy.modules)
+  await Bun.write(path.join(fixture.path, "script/toolchain-registry.json/ignored.txt"), "not a registry\n")
+  git(["add", "--", "script/toolchain-registry.json/ignored.txt"])
+  git(["-c", "user.name=baseline-fixture", "-c", "user.email=baseline@example.invalid", "commit", "--quiet", "-m", "invalid registry directory"])
+  await expect(monolithInventory(fixture.path)).rejects.toThrow("BASELINE_INVALID_INPUT_TYPE:script/toolchain-registry.json")
+  await rm(path.join(fixture.path, "script/toolchain-registry.json"), { recursive: true })
+  await expect(monolithInventory(fixture.path, "HEAD")).rejects.toThrow("BASELINE_INVALID_INPUT_TYPE:script/toolchain-registry.json")
+  expect((await monolithInventory(fixture.path)).modules).toEqual(legacy.modules)
+})
 
 test("revision capture reads immutable Git blobs and binds revision and tree into its fingerprint", async () => {
   await using fixture = await inventoryFixture()

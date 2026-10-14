@@ -1,7 +1,7 @@
 // V4: actual typescript-language-server/tsserver behind a node wrapper, launched by compiled Orchestra LSP service.
 // Twenty demand-driven same-instance crash/restart cycles. Every replacement must finish a fresh TLS handshake.
-// npm install --prefix packages/omni/campaign/logs/tools --ignore-scripts typescript-language-server@4.3.4 typescript@5.8.2
-// ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v4-lsp.ts [--mutation-legacy]
+// npm install --prefix native/omni/campaign/logs/tools --ignore-scripts typescript-language-server@4.3.4 typescript@5.8.2
+// ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v4-lsp.ts [--mutation-legacy]
 import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
