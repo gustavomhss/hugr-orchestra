@@ -1,71 +1,60 @@
 import { expect, test } from "bun:test"
 import { join, resolve } from "node:path"
-import { calibrateCompilerEdge, compilerInputEdge, compilerRuntimeEdge } from "../distribution-provider-compiler-edge"
+import { requireCompilerProvenance } from "../distribution-provider-compiler-edge"
 
-test("Bun 1.3.14 injected CommonJS runtime edge needs no external flag or captured file", () => {
-  // Recorded from an in-memory Bun.build({ target: "bun", metafile: true })
-  // importing CJS: const name = globalThis.name; module.exports = require(name);
-  const edge = { path: "bun:wrap", kind: "import-statement" }
-  expect(compilerInputEdge(import.meta.path, edge.path, new Map())).toBeUndefined()
-  expect(compilerRuntimeEdge(edge)).toBe(true)
-  expect(compilerRuntimeEdge({ ...edge, external: false })).toBe(true)
-})
-
-test("compiler runtime classification refuses unknown paths and mutated record shapes", () => {
-  const edge = { path: "bun:wrap", kind: "import-statement" }
-  for (const path of ["bun:unknown", "bun:wrapper", "bun:wrap/extra", "node:bun:wrap", "./bun:wrap", "bun", "node:fs"]) {
-    expect(compilerRuntimeEdge({ ...edge, path })).toBe(false)
-  }
-  for (const kind of ["dynamic-import", "require-call", "require-resolve", "unknown"]) {
-    expect(compilerRuntimeEdge({ ...edge, kind })).toBe(false)
-  }
-  expect(compilerRuntimeEdge({ ...edge, external: true })).toBe(false)
-  expect(compilerRuntimeEdge({ ...edge, original: "./unrecorded.js" })).toBe(false)
-})
-
-// R6 receipt relationship, with portable canonical paths and no filesystem or
-// build dependency: ../core/src/omni.ts -> import-statement:./omni.ts.
 const root = resolve(import.meta.dirname, "recorded-checkout")
-const importer = join(root, "packages/core/src/omni.ts")
-const key = "../core/src/omni.ts"
-const decoy = join(root, "packages/core/src/pty/omni.ts")
-const captured = new Map([[importer, [key]], [decoy, ["../core/src/pty/omni.ts"]]])
-
-test("compiler self edge uses importer directory, not receipt cwd or basename", () => {
-  expect(compilerInputEdge(importer, "./omni.ts", captured)).toBe(key)
-  expect(compilerInputEdge(importer, importer, captured)).toBe(key)
-  expect(compilerInputEdge(decoy, "./omni.ts", captured)).toBe("../core/src/pty/omni.ts")
-  expect(compilerInputEdge(importer, "./omni.ts", new Map([[decoy, [key]]]))).toBeUndefined()
-  expect(compilerInputEdge(importer, "./wrong-parent/omni.ts", captured)).toBeUndefined()
-  expect(compilerInputEdge(importer, "./omni", captured)).toBeUndefined()
-  expect(compilerInputEdge(importer, "effect", captured)).toBeUndefined()
-  expect(compilerInputEdge(importer, "./not-recorded.ts", captured)).toBeUndefined()
+const file = "packages/cli/src/omni-entry.ts"
+const expected = { root, version: "1.18.27", target: "linux-x64-baseline", manifestSHA256: "binary-sha", binarySHA256: "binary-sha" }
+const bindings = { [file]: "reviewed-blob" }
+const fixture = () => ({
+  cwd: join(root, "packages/cli"), version: expected.version, target: expected.target, entrypoints: ["./src/omni-entry.ts"],
+  binary: { sha256: expected.binarySHA256 },
+  inputs: [{ key: "src/omni-entry.ts", analysisKey: "src/omni-entry.ts", path: join(root, file), gitBlob: "reviewed-blob", analysisBytes: 10, compilerBytes: 10 }],
+  metafile: { inputs: { "src/omni-entry.ts": { bytes: 10, imports: [{ path: "effect/Effect", kind: "import-statement" }] } },
+    outputs: { "./entry.js": { entryPoint: "src/omni-entry.ts", inputs: { "src/omni-entry.ts": { bytesInOutput: 5 } } } } },
+  analysisMetafile: { inputs: { "src/omni-entry.ts": { bytes: 10 } } },
 })
 
-test("ambiguous or empty canonical capture never selects an arbitrary key", () => {
-  for (const keys of [[], [key, "duplicate-key"]]) {
-    expect(() => compilerInputEdge(importer, "./omni.ts", new Map([[importer, keys]])))
-      .toThrow(new Error("PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS"))
-  }
+test("provenance admits emitted reviewed bytes without interpreting import records", () => {
+  expect(requireCompilerProvenance(fixture(), expected, bindings)).toEqual({
+    capturedInputs: ["src/omni-entry.ts"], entrypoint: "src/omni-entry.ts",
+    pins: [{ file, key: "src/omni-entry.ts", gitBlob: "reviewed-blob", emittedBytes: 5 }],
+  })
 })
 
-test("actual compiler-edge calibration rejects four named mutations and restores genuine index", async () => {
-  const before = structuredClone(captured)
-  const result = await calibrateCompilerEdge({ key, path: importer }, "./omni.ts", captured)
-  expect(result.accepted).toBe(key)
-  expect(result.restored).toBe(key)
-  expect(result.rejected.map((control) => [control.name, control.observed])).toEqual([
-    ["same-basename-only", "PROVIDER_COMPILER_EDGE_NOT_CAPTURED"],
-    ["wrong-parent", "PROVIDER_COMPILER_EDGE_NOT_CAPTURED"],
-    ["unrecorded-edge", "PROVIDER_COMPILER_EDGE_NOT_CAPTURED"],
-    ["ambiguous-canonical-input", "PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS"],
-  ])
-  expect(captured).toEqual(before)
+test("provenance refuses missing capture, divergent analysis and empty golden pins", () => {
+  expect(() => requireCompilerProvenance({ ...fixture(), inputs: [] }, expected, bindings)).toThrow("PROVIDER_COMPILER_INPUT_SET_INVALID")
+  expect(() => requireCompilerProvenance({ ...fixture(), analysisMetafile: { inputs: {} } }, expected, bindings)).toThrow("PROVIDER_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+  const receipt = fixture()
+  receipt.inputs[0].analysisBytes = 11
+  expect(() => requireCompilerProvenance(receipt, expected, bindings)).toThrow("PROVIDER_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+  expect(() => requireCompilerProvenance(fixture(), expected, {})).toThrow("PROVIDER_DISPATCH_SOURCE_PINS_EMPTY")
 })
 
-test("calibration cannot pass without genuine acceptance or same-basename decoy", async () => {
-  await expect(calibrateCompilerEdge({ key: "wrong-key", path: importer }, "./omni.ts", captured))
-    .rejects.toThrow(new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_NOT_ACCEPTED"))
-  await expect(calibrateCompilerEdge({ key, path: importer }, "./omni.ts", new Map([[importer, [key]]])))
-    .rejects.toThrow(new Error("PROVIDER_COMPILER_SAME_BASENAME_CONTROL_MISSING"))
+test("duplicate capture keys and canonical paths are refused", () => {
+  const receipt = fixture()
+  receipt.inputs.push({ ...receipt.inputs[0] })
+  expect(() => requireCompilerProvenance(receipt, expected, bindings)).toThrow("PROVIDER_COMPILER_INPUT_SET_INVALID")
+  const key = "src/duplicate.ts"
+  receipt.inputs[1] = { ...receipt.inputs[0], key, analysisKey: key }
+  expect(() => requireCompilerProvenance({ ...receipt,
+    metafile: { ...receipt.metafile, inputs: { ...receipt.metafile.inputs, [key]: receipt.metafile.inputs["src/omni-entry.ts"] } },
+    analysisMetafile: { inputs: { ...receipt.analysisMetafile.inputs, [key]: { bytes: 10 } } },
+  }, expected, bindings)).toThrow("PROVIDER_COMPILER_INPUT_PATH_AMBIGUOUS")
+})
+
+test("reviewed hashes and actual emission cannot be replaced by matching filenames", () => {
+  expect(() => requireCompilerProvenance(fixture(), expected, { [file]: "wrong-blob" })).toThrow(`PROVIDER_DISPATCH_SOURCE_PIN_MISMATCH: ${file}`)
+  const receipt = fixture()
+  receipt.metafile.outputs["./entry.js"].inputs["src/omni-entry.ts"].bytesInOutput = 0
+  expect(() => requireCompilerProvenance(receipt, expected, bindings)).toThrow(`PROVIDER_DISPATCH_SOURCE_NOT_EMITTED: ${file}`)
+})
+
+test("actual compiler entry and receipt/manifest/binary identity must all agree", () => {
+  const receipt = fixture()
+  receipt.metafile.outputs["./entry.js"].entryPoint = "src/other.ts"
+  expect(() => requireCompilerProvenance(receipt, expected, bindings)).toThrow("PROVIDER_COMPILER_ACTUAL_ENTRYPOINT_MISSING")
+  expect(() => requireCompilerProvenance({ ...fixture(), entrypoints: [] }, expected, bindings)).toThrow("PROVIDER_COMPILER_ENTRY_OR_VERSION_MISMATCH")
+  expect(() => requireCompilerProvenance(fixture(), { ...expected, binarySHA256: "wrong-sha" }, bindings)).toThrow("PROVIDER_COMPILER_BINARY_SHA_MISMATCH")
+  expect(() => requireCompilerProvenance(fixture(), { ...expected, manifestSHA256: "wrong-sha" }, bindings)).toThrow("PROVIDER_COMPILER_BINARY_SHA_MISMATCH")
 })
