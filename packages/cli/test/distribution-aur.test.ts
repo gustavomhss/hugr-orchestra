@@ -1,11 +1,13 @@
 import { afterAll, expect, test } from "bun:test"
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises"
 import { machine } from "node:os"
 import { join, resolve } from "node:path"
 import { Schema } from "effect"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { buildVersions, cli, command, sandbox, successful, target, versions } from "./fixture/distribution-native"
+import { aurProfileProvenance, aurSandboxProfile } from "./fixture/distribution-aur/sandbox-profile"
+import { AurSandboxEvidence, aurBootstrapEvidence } from "./fixture/distribution-aur/sandbox-evidence"
 
 // Extension: real native AUR package-manager closure, both production target rows.
 // Lead wires this exact test into ubuntu x64/ARM64 hosted bundle rows. No unavailable
@@ -104,6 +106,91 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
       version: await docker(["version", "--format", "{{.Client.Version}}|{{.Server.Version}}"]),
     },
   }, null, 2))
+  // Measure the ABI and original default-filter/privilege failure before any
+  // repository bootstrap or native payload build. Same native executable on
+  // host and guest; no cross compilation, emulation, or bootstrap dependency.
+  await successful(["gcc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror",
+    "-o", join(state.directory, "sandbox-probe"), join(cli, "test/fixture/distribution-aur/sandbox-probe.c")], state.host)
+  const hostControl = await successful([join(state.directory, "sandbox-probe"), "host"], state.host)
+  await Bun.write(join(state.directory, "evidence/sandbox-host-control.json"), hostControl)
+  Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+    mode: Schema.Literal("host"), unshareResult: Schema.Literal(0), unshareErrno: Schema.Literal(0),
+  }))))(hostControl)
+  const profile = await aurSandboxProfile()
+  const profilePath = join(state.directory, "seccomp.json")
+  await Bun.write(profilePath, profile)
+  await mkdir(join(state.directory, "sandbox-control/allowed"), { recursive: true })
+  await mkdir(join(state.directory, "sandbox-control/outside"))
+  await Bun.write(join(state.directory, "sandbox-control/allowed/file"), "inside\n")
+  await Bun.write(join(state.directory, "sandbox-control/outside/file"), "outside\n")
+  expect(await ownedContainers()).toEqual([])
+  process.once("SIGINT", interrupt)
+  process.once("SIGTERM", interrupt)
+  process.once("SIGHUP", interrupt)
+  for (const mode of ["diagnose", "enforce"] as const) {
+    state.attempted = true // A timed-out create may still own the named container.
+    const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
+      ...(mode === "enforce" ? ["--security-opt", `seccomp=${profilePath}`,
+        "--security-opt", "no-new-privileges=true"] : []),
+      "--platform", `linux/${guest.dockerArch}`, "--mount", `type=bind,source=${repo},target=/repo,readonly`,
+      "--mount", `type=bind,source=${state.directory},target=/proof`, "--workdir", "/repo/packages/cli",
+      guest.image, "/usr/bin/sleep", "infinity"])
+    if (!/^[a-f0-9]{64}$/.test(id)) throw new Error("AUR_OWNED_CONTAINER_ID_INVALID")
+    state.id = id
+    expect(await ownedContainers(), "AUR_CONTAINER_ENUMERATION_POSITIVE_CONTROL").toEqual([id])
+    expect(await docker(["inspect", "--format",
+      `{{.Id}}|{{.Config.Image}}|{{index .Config.Labels "${label}"}}|{{.HostConfig.Init}}`, id]))
+      .toBe(`${id}|${guest.image}|${nonce}|true`)
+    const inspectedContainer = await docker(["inspect", id])
+    const settings = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Array(Schema.Struct({
+      HostConfig: Schema.Struct({ SecurityOpt: Schema.NullOr(Schema.Array(Schema.String)), Privileged: Schema.Boolean,
+        CapAdd: Schema.NullOr(Schema.Array(Schema.String)), CapDrop: Schema.NullOr(Schema.Array(Schema.String)),
+        PidMode: Schema.String, IpcMode: Schema.String, NetworkMode: Schema.String, UsernsMode: Schema.String,
+      }),
+    })))))(inspectedContainer)
+    if (settings.length !== 1) throw new Error("AUR_CONTAINER_SECURITY_INSPECTION_INVALID")
+    const config = settings[0].HostConfig
+    expect(config.Privileged, "AUR_DEFAULT_CAPABILITIES_REQUIRED").toBe(false)
+    expect(config.CapAdd ?? []).toEqual([])
+    expect(config.CapDrop ?? []).toEqual([])
+    expect(config.PidMode, "AUR_PRIVATE_PID_NAMESPACE_REQUIRED").toBe("")
+    expect(config.IpcMode, "AUR_PRIVATE_IPC_NAMESPACE_REQUIRED").toBe("private")
+    expect(config.NetworkMode, "AUR_DEFAULT_NETWORK_NAMESPACE_REQUIRED").toBe("default")
+    expect(config.UsernsMode, "AUR_DEFAULT_USER_NAMESPACE_REQUIRED").toBe("")
+    if (mode === "enforce") {
+      const options = config.SecurityOpt ?? []
+      expect(options).toHaveLength(2)
+      expect(options).toContain("no-new-privileges=true")
+      const applied = options.find((option) => option.startsWith("seccomp="))
+      if (!applied) throw new Error("AUR_APPLIED_SECCOMP_PROFILE_MISSING")
+      const normalized = JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(applied.slice("seccomp=".length)))
+      expect(createHash("sha256").update(normalized).digest("hex"), "AUR_DOCKER_APPLIED_PROFILE_DIGEST")
+        .toBe(aurProfileProvenance.appliedSha256)
+      expect(createHash("sha256").update(await readFile(profilePath)).digest("hex"))
+        .toBe(aurProfileProvenance.appliedSha256)
+    }
+    await Bun.write(join(state.directory, `evidence/sandbox-${mode}-container.json`), JSON.stringify({
+      id, mode, profile: mode === "enforce" ? aurProfileProvenance : "daemon-original-default", inspectedContainer,
+    }, null, 2))
+    await docker(["start", id])
+    const measured = await command([state.docker, "exec", id, "/proof/sandbox-probe", mode,
+      "/proof/sandbox-control/allowed", "/proof/sandbox-control/allowed/file", "/proof/sandbox-control/outside/file"], state.host)
+    await Bun.write(join(state.directory, `evidence/sandbox-${mode}-process.json`), JSON.stringify(measured, null, 2))
+    await Bun.write(join(state.directory, `evidence/sandbox-${mode === "enforce" ? "enforced" : "diagnosis"}.json`), measured.stdout)
+    console.info(`AUR kernel sandbox ${mode}: ${measured.stdout.trim()}`)
+    if (measured.code !== 0) throw new Error(`AUR_KERNEL_SANDBOX_${mode.toUpperCase()}_FAILED: ${measured.stderr}\n${measured.stdout}`)
+    if (mode === "enforce") {
+      Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(AurSandboxEvidence)))(measured.stdout)
+      // Ending the scoped probe child is the only reset. A fresh process must
+      // regain access to the outside file while retaining seccomp and NNP.
+      expect(await docker(["exec", id, "/usr/bin/cat", "/proof/sandbox-control/outside/file"])).toBe("putside")
+      continue
+    }
+    await docker(["rm", "--force", "--volumes", id], 60_000)
+    expect(await ownedContainers(), "AUR_DIAGNOSTIC_CONTAINER_REMOVAL_PROVED").toEqual([])
+    state.id = undefined
+  }
+  if (!state.id) throw new Error("AUR_ENFORCED_GUEST_MISSING")
   // Shared builder compiles two real versions on the matching Ubuntu host and
   // admits all native companions and canonical skill/reference bytes before copy.
   const built = await buildVersions(state.directory)
@@ -113,32 +200,13 @@ test("AUR-NATIVE matching Arch guest makepkg/pacman install/update/retained-pack
   await Bun.write(join(state.directory, "input.json"), JSON.stringify({ target, oracleDigest: built.oracle.digest,
     payloads: built.payloads.map((payload) => ({ version: payload.version, archiveSha256: payload.archive.sha256 })),
   }, null, 2))
-  expect(await ownedContainers()).toEqual([])
-  process.once("SIGINT", interrupt)
-  process.once("SIGTERM", interrupt)
-  process.once("SIGHUP", interrupt)
-  state.attempted = true // A timed-out create may still have created the named container.
-  const id = await docker(["create", "--name", name, "--label", `${label}=${nonce}`, "--init",
-    // The ARM runner's Docker seccomp blocks pacman's Landlock setup. The owned
-    // guest keeps its PID/mount namespaces, capability defaults and signed repos.
-    ...(process.arch === "arm64" ? ["--security-opt", "seccomp=unconfined"] : []),
-    "--platform", `linux/${guest.dockerArch}`, "--mount", `type=bind,source=${repo},target=/repo,readonly`,
-    "--mount", `type=bind,source=${state.directory},target=/proof`, "--workdir", "/repo/packages/cli",
-    guest.image, "/usr/bin/sleep", "infinity"])
-  if (!/^[a-f0-9]{64}$/.test(id)) throw new Error("AUR_OWNED_CONTAINER_ID_INVALID")
-  state.id = id
-  // Positive control: the same label query used for absence MUST see this ID now.
-  expect(await ownedContainers(), "AUR_CONTAINER_ENUMERATION_POSITIVE_CONTROL").toEqual([id])
-  expect(await docker(["inspect", "--format",
-    `{{.Id}}|{{.Config.Image}}|{{index .Config.Labels "${label}"}}|{{.HostConfig.Init}}`, id]))
-    .toBe(`${id}|${guest.image}|${nonce}|true`)
-  await docker(["start", id])
-  const result = await command([state.docker, "exec", id, "/usr/bin/bash",
+  const result = await command([state.docker, "exec", state.id, "/usr/bin/bash",
     "/repo/packages/cli/test/fixture/distribution-aur/bootstrap.sh", guest.cpu, guest.image], state.host, 2_100_000)
   if (state.cleanup) throw new Error("AUR_GUEST_COMPLETED_AFTER_TEARDOWN_STARTED")
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
   if (result.code !== 0) throw new Error(`AUR_NATIVE_GUEST_FAILED: ${guest.image}\n${result.stderr}`)
+  await aurBootstrapEvidence(join(state.directory, "evidence"))
   const qualified = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     target: Schema.String, versions: Schema.Array(Schema.String), architecture: Schema.String,
     finalPackages: Schema.Array(Schema.Struct({ file: Schema.String, sha256: Schema.String })),
