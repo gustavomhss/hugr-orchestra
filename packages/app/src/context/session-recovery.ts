@@ -126,13 +126,20 @@ export function createSessionRecovery(input: {
       if (oldest !== undefined) fences.delete(oldest)
       const remembered = info ? input.retain({ ...info, ...next, time: { ...info.time, ...next.time } }) : undefined
       if (remembered && !canonical && !pending && !recovery) return
-      return Promise.all([
+      return Promise.allSettled([
         canonical || pending || !remembered ? resolve(sessionID, { force: true }) : Promise.resolve(remembered),
         ...(recovery ? [recovery] : []),
-      ].map((read) => read.catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return
-        throw error
-      }))).then((rows) => rows.filter((row): row is AppSession => row !== undefined))
+      ]).then((results) => {
+        const rows = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : [])
+        const failure = results.find((result): result is PromiseRejectedResult => result.status === "rejected" &&
+          !(result.reason instanceof DOMException && result.reason.name === "AbortError"))
+        results.forEach((result, index) => {
+          if (result.status !== "rejected" || (result.reason instanceof DOMException && result.reason.name === "AbortError")) return
+          console.error("Failed to recover session policy", { sessionID: index === 0 ? sessionID : oldest, error: result.reason })
+        })
+        if (!rows.length && failure) throw failure.reason
+        return rows
+      })
     },
   }
 }

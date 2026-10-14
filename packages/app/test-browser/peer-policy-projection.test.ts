@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { expect, spyOn, test } from "bun:test"
 import type { SessionApi, SessionInfo } from "@opencode-ai/client/promise"
 import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import { createRoot } from "solid-js"
@@ -456,3 +456,94 @@ test("observed policy sequence rejects an older sequence even with a newer event
   expect(ctx.server.get("ses_order")?.subagentModels).toEqual(denied)
   ctx.dispose()
 })
+
+test.each(["B fails before A", "B fails after A", "both succeed", "disposed owner", "all fail"])(
+  "independent policy recovery settlement: %s",
+  async (scenario) => {
+    const initialError = new Error("initial A GET failed")
+    const bError = new Error("B GET failed")
+    const aError = new Error("recovered A GET failed")
+    const a = Promise.withResolvers<SessionInfo>()
+    const b = Promise.withResolvers<SessionInfo>()
+    const requests: string[] = []
+    const ctx = projection((input) => {
+      requests.push(input.sessionID)
+      if (input.sessionID === "ses_partial_A") return requests.length === 1 ? Promise.reject(initialError) : a.promise
+      if (input.sessionID === "ses_partial_B") return b.promise
+      throw new Error(`Unexpected GET ${input.sessionID}`)
+    })
+    const diagnostics = spyOn(console, "error")
+    const [other, setOther] = createStore<State>({ ...ctx.store, session: [], sessionTotal: 0 })
+    const state = { disposed: false }
+    const children: Record<string, readonly [typeof ctx.store, typeof ctx.setStore]> = {
+      "/repo": [ctx.store, ctx.setStore], "/other": [other, setOther],
+    }
+    const dispatch = (event: SessionManagementEvent) => applySessionPolicyEvent({
+      event, session: ctx.server, children, disposed: () => state.disposed,
+      indexSession(row) {
+        const owner = children[row.directory === "/repo" ? "/repo" : "/other"]
+        if (!owner) throw new Error(`Missing captured owner ${row.directory}`)
+        applyDirectoryEvent({
+          event: { type: "session.created", properties: { info: row } },
+          readSession: ctx.server.get, fenceOwner: ctx.server, store: owner[0], setStore: owner[1],
+          directory: row.directory, push() {}, loadLsp() {},
+        })
+      },
+    })
+    try {
+      await expect(dispatch(policyEvent("ses_partial_A", 2, denied))).rejects.toBe(initialError)
+      // Fill the real bounded fence using cached rows; no pressure GETs or stand-in recovery logic.
+      Array.from({ length: 2_047 }, (_, index) => {
+        const id = `ses_cached-${index.toString().padStart(4, "0")}`
+        ctx.server.remember(normalizeSessionInfo(snapshot(id, inherited)))
+        expect(ctx.server.apply(policyEvent(id, 1, inherited))).toBeUndefined()
+      })
+      expect(requests).toEqual(["ses_partial_A"])
+      diagnostics.mockClear()
+      const pending = dispatch(policyEvent("ses_partial_B", 1, inherited))!
+      const settled = pending.then(() => undefined, (error: unknown) => error)
+      expect(requests).toEqual(["ses_partial_A", "ses_partial_A", "ses_partial_B"])
+      if (scenario === "disposed owner") state.disposed = true
+      if (scenario === "B fails before A" || scenario === "all fail") b.reject(bError)
+      if (scenario === "all fail") a.reject(aError)
+      if (scenario !== "all fail") a.resolve(snapshot("ses_partial_A", inherited, 10, "A recovered"))
+      if (scenario === "both succeed") b.resolve({ ...snapshot("ses_partial_B", inherited), location: { directory: "/other" } })
+      if (scenario === "B fails after A" || scenario === "disposed owner") {
+        await ctx.server.resolve("ses_partial_A", { force: true })
+        b.reject(bError)
+      }
+      const failure = await settled
+      if (scenario === "all fail") {
+        expect(failure).toBe(bError)
+        expect(ctx.server.get("ses_partial_A")).toBeUndefined()
+        expect(ctx.store.session).toEqual([])
+        expect(diagnostics.mock.calls.map((call) => call[1].error)).toEqual([bError, aError])
+        return
+      }
+      const canonical = ctx.server.get("ses_partial_A")!
+      expect(canonical.subagentModelsRevision).toBe(2)
+      expect(canonical.subagentModelsReadReceipt).toBe(1)
+      expect(canonical.title).toBe("A recovered")
+      if (scenario === "disposed owner") expect(ctx.store.session).toEqual([])
+      if (scenario !== "disposed owner") {
+        const published = ctx.store.session.find((row) => row.id === "ses_partial_A")!
+        expect(published).toBeDefined()
+        expect(published.subagentModelsRevision).toBe(2)
+        expect(published.subagentModelsReadReceipt).toBe(1)
+        expect(published.title).toBe("A recovered")
+      }
+      expect(failure).toBeUndefined()
+      expect(other.session.some((row) => row.id === "ses_partial_B")).toBe(scenario === "both succeed")
+      if (scenario === "both succeed") {
+        expect(other.session.find((row) => row.id === "ses_partial_B")?.subagentModelsRevision).toBe(1)
+        expect(other.session.find((row) => row.id === "ses_partial_B")?.subagentModelsReadReceipt).toBe(2)
+      }
+      expect(other.session.some((row) => row.id === "ses_partial_A")).toBe(false)
+      expect(diagnostics.mock.calls.map((call) => call[1].error)).toEqual(scenario === "both succeed" ? [] : [bError])
+    } finally {
+      diagnostics.mockRestore()
+      ctx.dispose()
+    }
+  },
+  120_000,
+)
