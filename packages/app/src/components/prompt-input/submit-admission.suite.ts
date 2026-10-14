@@ -23,10 +23,50 @@ import {
   storedSessions,
   submitInput,
   syncedDirectories,
-  policyFixture, serverFor, sdkFor, setReactiveOwner,
+  policyFixture, serverFor, sdkFor, setReactiveOwner, interrupts,
 } from "./submit-harness"
 
 const deferred = () => Promise.withResolvers<void>()
+
+test("abort cancels an admitted draft before its ACK without a session route", async () => {
+  const key = "abort-admitted-draft"
+  togglePending(key, "provider", "model", true)
+  const gate = deferred()
+  state.rulesGate = gate.promise
+  const real = createPromptState({ prompt: "retain cancelled draft" })
+  const contents = real.current()
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await state.rulesStarted.promise
+  expect(state.params.id).toBeUndefined()
+  await submit.abort()
+  expect(interrupts).toEqual(["session-1"])
+  gate.resolve()
+  await sending
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  expect(real.current()).toBe(contents)
+  expect(pendingPolicy(key).mode).toBe("allowlist")
+  clearPending(key)
+})
+
+test("abort after a route change interrupts only the current Session", async () => {
+  const key = "abort-foreign-route"
+  togglePending(key, "provider", "model", true)
+  const gate = deferred()
+  state.rulesGate = gate.promise
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "first" }), info: () => undefined, pendingKey: () => key })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await state.rulesStarted.promise
+  state.params.id = "other-session"
+  await submit.abort()
+  expect(interrupts).toEqual(["other-session"])
+  gate.resolve()
+  await sending
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  clearPending(key)
+})
 
 // Complete frozen e6c39ff72d cases, bound to the shared submission harness.
 test.skipIf(isServer)("reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session", async () => {
