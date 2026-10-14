@@ -91,9 +91,9 @@ providers.forEach((provider) => {
       ? Effect.succeed({ status: 404, headers: {}, data: null }) : undefined,
       write: (request) => request.path === file
         ? Effect.fail(ActionsResponse.failure(AuthoringFixture.binding(provider).provider, 1, Buffer.alloc(0), provider === "github" ? 422 : 400, {}, true))
-        : Effect.succeed({ status: 201, headers: {}, data: provider === "github"
+        : Effect.succeed({ status: 201, headers: {}, data: AuthoringFixture.makeJson(provider === "github"
           ? { ref: `refs/heads/${AuthoringFixture.branch}`, object: { type: "commit", sha: AuthoringFixture.commit } }
-          : { name: AuthoringFixture.branch, commit: { id: AuthoringFixture.commit } } }),
+          : { name: AuthoringFixture.branch, commit: { id: AuthoringFixture.commit } }) }),
     })
     yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent(provider, "source.branch", target,
       { commit: AuthoringFixture.commit }), { provider, branch: AuthoringFixture.branch })
