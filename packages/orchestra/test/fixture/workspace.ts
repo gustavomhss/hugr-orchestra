@@ -1,4 +1,4 @@
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { NativeSessionFixture } from "./native-session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -19,7 +19,7 @@ import { NpmTest } from "../fake/npm"
 // repository's own when a request falls back to the working directory. A real one outlives its test and, on Windows,
 // starves file I/O for later test files in the same process.
 export const workspaceLayerWithRuntimeFlags = (overrides: Partial<RuntimeFlags.Info>) =>
-  AppNodeBuilder.build(
+  NativeSessionFixture.build(
     LayerNode.group([
       Workspace.node,
       Auth.node,

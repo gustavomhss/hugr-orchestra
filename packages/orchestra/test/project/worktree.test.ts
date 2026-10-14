@@ -1,6 +1,7 @@
 import { afterEach, describe, expect } from "bun:test"
 import path from "path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import { GlobalBus, type GlobalEvent } from "../../src/bus/global"
@@ -12,7 +13,7 @@ import { disposeAllInstances, provideInstance, TestInstance } from "../fixture/f
 import { testEffect } from "../lib/effect"
 
 const it = testEffect(
-  LayerNode.compile(LayerNode.group([Worktree.node, FSUtil.node, Git.node]), [
+  NativeSessionFixture.build(LayerNode.group([Worktree.node, FSUtil.node, Git.node]), [
     [InstanceStore.bootstrapNode, InstanceBootstrap.node],
   ]),
 )
