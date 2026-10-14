@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
 import { Effect, Layer, Stream } from "effect"
-import type { Query, SDKControlInterruptResponse, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { AgentInfo, ModelInfo, Query, SDKControlInterruptResponse, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { LLM } from "@/session/llm"
 import { Session } from "@/session/session"
@@ -25,8 +25,12 @@ export const state: {
   models: (string | undefined)[]
   receipt?: SDKControlInterruptResponse
   apiCalls: number
+  sdkAgents: AgentInfo[]
+  sdkModels: ModelInfo[]
+  initialize?: () => Promise<void>
   construct: ClaudeCodeSDK.Interface["query"] | undefined
-} = { queries: [], scripts: [], inputs: [], messages: [], closed: [], interrupts: 0, stoppedTasks: [], models: [], apiCalls: 0, construct: undefined }
+} = { queries: [], scripts: [], inputs: [], messages: [], closed: [], interrupts: 0, stoppedTasks: [], models: [], apiCalls: 0,
+  sdkAgents: [], sdkModels: [], construct: undefined }
 
 export type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
 
@@ -44,6 +48,9 @@ export function reset() {
   state.models.length = 0
   state.receipt = undefined
   state.apiCalls = 0
+  state.sdkAgents.length = 0
+  state.sdkModels.length = 0
+  state.initialize = undefined
   state.construct = undefined
 }
 
@@ -79,6 +86,11 @@ function hosted(script: Script, params: Params) {
     stopTask: async (taskID: string) => { state.stoppedTasks.push(taskID) },
     setModel: async (model?: string) => { state.models.push(model) },
     accountInfo: async () => ({ subscriptionType: "Claude Max", apiProvider: "firstParty" }),
+    initializationResult: async () => {
+      await state.initialize?.()
+      return { agents: state.sdkAgents, models: state.sdkModels, commands: [], output_style: "default",
+        available_output_styles: [], account: { subscriptionType: "Claude Max", apiProvider: "firstParty" } }
+    },
     getContextUsage: async () => ({ totalTokens: 10, maxTokens: 200_000, percentage: 0 }),
   }) as unknown as Query
 }
@@ -114,10 +126,11 @@ export const replies = (...texts: string[]): Script => async function* (input) {
   for await (const _ of input) {}
 }
 
-export const setup = () => Effect.gen(function* () {
+export const setup = (input?: { models?: Record<string, string> }) => Effect.gen(function* () {
   const { directory } = yield* TestInstance
   writeFileSync(path.join(directory, "orchestra.json"), JSON.stringify({
-    agent: { claude: { mode: "primary", engine: "claude-code", model: "anthropic/claude-haiku-4-5-20251001" } },
+    agent: { claude: { mode: "primary", engine: "claude-code", model: "anthropic/claude-haiku-4-5-20251001" },
+      ...Object.fromEntries(Object.entries(input?.models ?? {}).map(([id, model]) => [id, { model }])) },
   }))
   const sessions = yield* Session.Service
   const chat = yield* sessions.create({ title: "Claude Code", permission: [{ permission: "*", pattern: "*", action: "allow" }] })

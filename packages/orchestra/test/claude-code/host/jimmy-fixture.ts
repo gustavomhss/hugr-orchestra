@@ -18,6 +18,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { Agent } from "@/agent/agent"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
@@ -42,7 +43,7 @@ import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { testEffect } from "../../lib/effect"
 
 export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
-  ClaudeHost.node, ToolRegistry.node, Agent.node, Config.node, Session.node, SessionProjector.node,
+  ClaudeHost.node, ToolRegistry.node, Agent.node, Config.node, Session.node, SessionProjector.node, SessionSubagentModels.node,
   ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, Database.node, EventV2Bridge.node,
   Permission.node, FSUtil.node, AppProcess.node, Git.node, ArsenalObservations.node, LocationServiceMap.node,
   Snapshot.node, Todo.node, SessionStatus.node, filesystem,
