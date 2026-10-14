@@ -14,6 +14,7 @@ packages/app/src/pages/session/orchestra-evidence-fixtures/** -text
 # Shipped specialist skills and seat prompts are LF on every platform (F6.6); Windows checkouts must not convert them.
 # All packaged skill-tree text uses LF, including companions; Git leaves detected binary files byte-exact.
 packages/*-specialist/skills/** text=auto eol=lf
+modules/specialists/*/skills/** text=auto eol=lf
 packages/orchestra/src/agent/prompt/*.txt text eol=lf
 packages/orchestra/playbooks/maestro-decompose/SKILL.md text eol=lf
 packages/orchestra/playbooks/maestro-contract/SKILL.md text eol=lf

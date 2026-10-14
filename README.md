@@ -54,6 +54,7 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | [`modules/relay`](modules/relay/README.md) | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle |
 | [`modules/capability-assets`](modules/capability-assets/README.md) | Data-only capability catalog, pinned source provenance, and license notices |
 | [`modules/maestro/arsenal`](modules/maestro/arsenal/README.md) | Maestro tool registry, MCP adapter, governance contracts, and host-authorized operations |
+| [`modules/specialists/backend`](modules/specialists/backend/README.md), [`archie`](modules/specialists/archie/README.md) | Authored native-seat skills and complete UTF-8 companions; source and embedded lookup share the existing seat framework |
 | `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
 | `packages/omni`            | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
 | [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
