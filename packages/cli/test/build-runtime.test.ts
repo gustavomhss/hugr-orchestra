@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { copyFile, mkdir, mkdtemp, open, readdir, rename, rm } from "node:fs/promises"
+import { copyFile, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRequire } from "node:module"
 import path from "node:path"
 import { omniTargets } from "@orchestra/script/omni"
-import { requireTreeSitterBundle, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
+import { requireElfLibc, requireTreeSitterBundle, treeSitterArtifactKey, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
 import { namedTargets } from "../script/targets"
 
 const root = path.resolve(import.meta.dirname, "..")
@@ -182,8 +182,9 @@ async function authenticatedHealth(url: string, password: string, pid: number) {
 
 // One host builds every target, as the cross lanes do, from the artifacts native hosts hand it: OMNI_ARTIFACTS and
 // TREE_SITTER_ARTIFACTS. The fixtures stand in for those builds: an omni pair per enabled id (the builder only copies
-// it), and per glibc target a tree-sitter bundle whose bindings are tree-sitter-python's published prebuild for that
-// target, a real native image of the target's CPU, which the builder checks before it ships.
+// it). Linux parser bindings are independent synthetic ELF CPU/libc fixtures;
+// other OS bindings retain published prebuild headers. These fixtures calibrate
+// structural copying/admission, never parser or omni runtime qualification.
 async function handedArtifacts() {
   const omni = path.join(home, "omni-artifacts")
   const treeSitter = path.join(home, "tree-sitter-artifacts")
@@ -201,19 +202,53 @@ async function handedArtifacts() {
   )
   await Promise.all(
     namedTargets
-      .filter((item) => item.abi === undefined && item.avx2 === undefined)
+      .filter((item) => item.avx2 === undefined)
       .flatMap((item) =>
         treeSitterBundle(item).map((file) =>
           Bun.write(
-            path.join(treeSitter, `${item.os}-${item.arch}`, file),
+            path.join(treeSitter, treeSitterArtifactKey(item), file),
             file.endsWith(".node")
-              ? Bun.file(path.join(python, "prebuilds", `${item.os}-${item.arch}`, "tree-sitter-python.node"))
+              ? item.os === "linux" ? elfBinding(item.arch, item.abi === "musl" ? "musl" : "glibc")
+                : Bun.file(path.join(python, "prebuilds", `${item.os}-${item.arch}`, "tree-sitter-python.node"))
               : file,
           ),
         ),
       ),
   )
   return { OMNI_ARTIFACTS: omni, TREE_SITTER_ARTIFACTS: treeSitter }
+}
+
+// Independent ELF fixture: no production inspector generates these bytes and
+// no glibc prebuild is relabeled musl. Shared object has no executable code.
+function elfBinding(arch: string, libc: "glibc" | "musl") {
+  const bytes = Buffer.alloc(512)
+  Buffer.from("7f454c46020101", "hex").copy(bytes)
+  bytes.writeUInt16LE(3, 16)
+  bytes.writeUInt16LE(arch === "x64" ? 62 : 183, 18)
+  bytes.writeUInt32LE(1, 20)
+  bytes.writeBigUInt64LE(64n, 32)
+  bytes.writeUInt16LE(64, 52)
+  bytes.writeUInt16LE(56, 54)
+  bytes.writeUInt16LE(2, 56)
+  bytes.writeUInt32LE(1, 64)
+  bytes.writeUInt32LE(4, 68)
+  bytes.writeBigUInt64LE(512n, 96)
+  bytes.writeBigUInt64LE(512n, 104)
+  bytes.writeBigUInt64LE(4096n, 112)
+  bytes.writeUInt32LE(2, 120)
+  bytes.writeUInt32LE(4, 124)
+  bytes.writeBigUInt64LE(176n, 128)
+  bytes.writeBigUInt64LE(176n, 136)
+  bytes.writeBigUInt64LE(64n, 152)
+  bytes.writeBigUInt64LE(64n, 160)
+  bytes.writeBigUInt64LE(8n, 168)
+  const strings = Buffer.from(`${libc === "glibc" ? "libc.so.6" : `libc.musl-${arch === "x64" ? "x86_64" : "aarch64"}.so.1`}\0`)
+  strings.copy(bytes, 352)
+  ;[[1n, 0n], [5n, 352n], [10n, BigInt(strings.length)], [0n, 0n]].forEach(([tag, value], i) => {
+    bytes.writeBigInt64LE(tag, 176 + i * 16)
+    bytes.writeBigUInt64LE(value, 184 + i * 16)
+  })
+  return bytes
 }
 
 test("all explicit targets produce correct executable format/architecture and preserve siblings", async () => {
@@ -252,8 +287,25 @@ test("all explicit targets produce correct executable format/architecture and pr
   expect(refused.stderr).toMatch(/TREE_SITTER_(CORE_BINDING_MISSING|CORE_BUILD_STALE|PREBUILD_ARCH_MISMATCH): /)
   expect(await Bun.file(path.join(root, `dist/cli-${foreign.target}/bin`)).exists()).toBe(false)
   for (const target of built) {
+    const item = namedTargets.find((item) => item.target === target)!
     const stale = path.join(root, `dist/cli-${target}/stale-output`)
     await Bun.write(stale, "selected target must replace this")
+    if (item.os === "linux") {
+      const binding = path.join(handed.TREE_SITTER_ARTIFACTS, treeSitterArtifactKey(item),
+        "tree-sitter/prebuilds", `${item.os}-${item.arch}`, "tree-sitter.node")
+      const original = await readFile(binding)
+      const libc = item.abi === "musl" ? "musl" : "glibc"
+      expect(requireElfLibc(binding, libc).needed).toEqual([libc === "musl" ?
+        `libc.musl-${item.arch === "x64" ? "x86_64" : "aarch64"}.so.1` : "libc.so.6"])
+      try {
+        await Bun.write(binding, elfBinding(item.arch, libc === "musl" ? "glibc" : "musl"))
+        const rejected = await run([process.execPath, "script/build.ts", "--skip-install", "--target", target], 120_000, handed)
+        expect(rejected.code).not.toBe(0)
+        expect(rejected.stderr).toContain("ELF_LIBC_MISMATCH")
+        expect(await Bun.file(stale).text()).toBe("selected target must replace this")
+        expect(await Bun.file(sentinel).text()).toBe("preserve these bytes")
+      } finally { await Bun.write(binding, original) }
+    }
     await build(["--target", target], handed)
     expect(await Bun.file(stale).exists()).toBe(false)
     expect(await Bun.file(sentinel).text()).toBe("preserve these bytes")
@@ -283,21 +335,21 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(manifest.version).toBe(version)
     expect(manifest.os).toEqual([target.startsWith("windows-") ? "win32" : target.split("-")[0]])
     expect(manifest.cpu).toEqual([arm ? "arm64" : "x64"])
-    const item = namedTargets.find((item) => item.target === target)!
     const omni = omniTargets[target]!
     expect(await Bun.file(path.join(root, `dist/cli-${target}/bin/hugr_omni.node`)).exists()).toBe(omni.enabled)
     if (omni.enabled)
       expect(await Bun.file(path.join(root, `dist/cli-${target}/bin/hugr_omni.node`)).text()).toBe(
         `fixture ${omni.id} hugr_omni.node`,
       )
-    // The shipped bundle is the handed one, checked for the target's CPU; musl ships none.
+    // Every ABI ships the handed bundle with unchanged internal OS/CPU paths.
     const shipped = path.join(root, `dist/cli-${target}/bin/tree-sitter`)
     requireTreeSitterBundle(shipped, item)
     const bundle = treeSitterBundle(item)
-    expect(bundle.length > 0).toBe(item.abi === undefined)
+    expect(bundle.length).toBeGreaterThan(0)
+    expect(bundle.filter((file) => file.endsWith(".node"))).toHaveLength(3)
     for (const file of bundle)
       expect(await digest(path.join(shipped, file))).toBe(
-        await digest(path.join(handed.TREE_SITTER_ARTIFACTS, `${item.os}-${item.arch}`, file)),
+        await digest(path.join(handed.TREE_SITTER_ARTIFACTS, treeSitterArtifactKey(item), file)),
       )
   }
   for (const [file, hash] of artifacts) expect(await digest(file)).toBe(hash)
@@ -316,7 +368,7 @@ async function digest(file: string) {
 }
 
 test("single and baseline retain native-only selection semantics", async () => {
-  await build(["--single", "--baseline"])
+  await build(["--single", "--baseline"], await handedArtifacts())
   expect((await readdir(path.join(root, "dist"))).sort()).toEqual(
     [
       `cli-${native}`,
@@ -324,6 +376,6 @@ test("single and baseline retain native-only selection semantics", async () => {
       ...(process.platform === "linux" && process.arch === "x64" ? [`cli-${native}-baseline-musl`] : []),
     ].sort(),
   )
-  await build(["--single"])
+  await build(["--single"], await handedArtifacts())
   expect(await readdir(path.join(root, "dist"))).toEqual([`cli-${native}`])
 }, 900_000)

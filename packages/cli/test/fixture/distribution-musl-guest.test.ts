@@ -105,7 +105,25 @@ test("MUSL-GUEST actual native musl compile and real curl/npm lifecycle with ful
   expect(built.payloads.map((payload) => payload.version)).toEqual([...versions])
   const abi = []
   for (const payload of built.payloads) abi.push(await muslPayloadAbi(payload.payload, payload.version, box))
+  const wrongPrefix = "/proof/wrong-libc-prefix"
+  expect(await snapshot(wrongPrefix)).toBeUndefined()
+  const rejectWrongInstallerABI = async (prefix: string) => {
+    const receipts = []
+    const before = await snapshot(prefix)
+    for (const args of [["--version", built.payloads[0].version, "--archive", built.payloads[0].archive.file,
+      "--sha256", built.payloads[0].archive.sha256], ["--rollback", built.payloads[0].version]]) {
+      const refused = await command(["sh", join(cli, "distribution/install.sh"), "--prefix", prefix, "--target", wrongTarget, ...args], box)
+      expect(refused.code, "MUSL_INSTALLER_GLIBC_REQUEST_MUST_FAIL").toBe(1)
+      expect(refused.stderr).toContain("target does not match host libc")
+      expect(await snapshot(prefix), "MUSL_WRONG_ABI_MUST_NOT_TOUCH_PREFIX_OR_LOCK").toEqual(before)
+      receipts.push({ prefix, target: wrongTarget, refused, existed: before !== undefined })
+    }
+    return receipts
+  }
+  const freshInstallerAbi = await rejectWrongInstallerABI(wrongPrefix)
   await curlChannel("/proof/channels", built)
+  const installerAbi = [...freshInstallerAbi, ...await rejectWrongInstallerABI("/proof/channels/curl/prefix")]
+  await Bun.write("/proof/evidence/installer-abi.json", JSON.stringify({ actual: nativeLibc, installerAbi }, null, 2))
   const curlBox = await sandbox("/proof/channels/curl")
   for (const payload of built.payloads) abi.push(await muslPayloadAbi(`/proof/channels/curl/prefix/versions/${payload.version}-${target}`,
     payload.version, curlBox, payload.version === versions[1]))

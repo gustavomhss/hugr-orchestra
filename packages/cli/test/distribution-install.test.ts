@@ -10,6 +10,8 @@ requireDistributionHost()
 if (!process.env.RUNNER_OS) throw new Error("Distribution installer fixture tests require an isolated CI runner")
 const posix = (name: string, run: () => Promise<void>, timeout: number) => test.skipIf(process.platform === "win32")(
   process.platform === "win32" ? `${name} [platform-unavailable: Windows has no supported POSIX installer]` : name, run, timeout)
+const linux = (name: string, run: () => Promise<void>, timeout: number) => test.skipIf(process.platform !== "linux")(
+  process.platform !== "linux" ? `${name} [platform-unavailable: Linux loaded-process ABI only]` : name, run, timeout)
 
 posix("producer gzip install, update, exact reuse and rollback preserve complete old trees and modes", () => isolated(async (root, prefix) => {
   const v1 = await producerFixture(root, "1.0.0")
@@ -151,6 +153,82 @@ posix("foreign host OS/CPU refuses before prefix creation or execution", () => i
     expect((await rollback(prefix, payload.version, { PATH: `${bin}:${process.env.PATH}` })).stderr).toContain("target does not match host OS/CPU")
     expect(await readdir(root)).not.toContain("prefix")
   }
+}), 120_000)
+
+linux("Linux wrong libc refuses install/rollback before touching fresh or retained prefix; compatible install remains usable", () => isolated(async (root, prefix) => {
+  const marker = path.join(root, "executed")
+  const payload = await fixture(root, "1.0.0", (files) => {
+    files["bin/orchestra"] = `#!/bin/sh\n: > '${marker}'\nprintf '%s\\n' '1.0.0'\n`
+  })
+  const wrong = target.endsWith("-musl") ? target.slice(0, -5) : `${target}-musl`
+  const installer = path.resolve(import.meta.dirname, "../distribution/install.sh")
+  const refuse = async () => {
+    for (const args of [["--version", payload.version, "--archive", payload.archive, "--sha256", payload.digest], ["--rollback", payload.version]]) {
+      const result = await command(["sh", installer, "--prefix", prefix, "--target", wrong, ...args])
+      expect(result.code).toBe(1)
+      expect(result.stderr).toContain("target does not match host libc")
+    }
+  }
+  const fresh = await snapshotTree(root)
+  for (const unlisted of ["linux-arm64-baseline-musl", "linux-riscv64-musl", "darwin-x64-musl"]) {
+    const result = await command(["sh", installer, "--prefix", prefix, "--target", unlisted, "--rollback", payload.version])
+    expect(result.code).toBe(1)
+    expect(result.stderr).toContain("unsupported POSIX target")
+    expect(await snapshotTree(root)).toEqual(fresh)
+  }
+  await refuse()
+  expect(await snapshotTree(root)).toEqual(fresh)
+  expect(await readdir(root)).not.toContain("prefix")
+  expect(await Bun.file(marker).exists()).toBe(false)
+  expect((await install(prefix, payload)).code).toBe(0)
+  expect(await readdir(root)).toContain("prefix")
+  expect(await Bun.file(marker).exists()).toBe(true)
+  await rm(marker)
+  await Bun.write(path.join(prefix, "user-state"), "caller-owned bytes\n")
+  const retained = await snapshotTree(prefix)
+  await refuse()
+  expect(await snapshotTree(prefix)).toEqual(retained)
+  expect(await Bun.file(marker).exists()).toBe(false)
+  expect((await rollback(prefix, payload.version)).code).toBe(0)
+  await expectLauncher(prefix, payload.version)
+}), 120_000)
+
+linux("Linux loaded-process ABI ignores failing ldd and rejects successful-but-empty maps census before prefix writes", () => isolated(async (root, prefix) => {
+  const payload = await fixture(root, "1.0.0")
+  const bin = path.join(root, "abi-tools")
+  await mkdir(bin)
+  const marker = path.join(root, "ldd-called")
+  await Bun.write(path.join(bin, "ldd"), `#!/bin/sh\nprintf '%s\\n' called > '${marker}'\nexit 1\n`)
+  await chmod(path.join(bin, "ldd"), 0o755)
+  // Calibrate the failing tool before proving installer never calls it.
+  expect((await command([path.join(bin, "ldd"), "--version"])).code).toBe(1)
+  expect(await Bun.file(marker).text()).toBe("called\n")
+  await rm(marker)
+  const env = { PATH: `${bin}:${process.env.PATH}` }
+  expect((await install(prefix, payload, [], env)).code).toBe(0)
+  expect(await Bun.file(marker).exists()).toBe(false)
+  await expectLauncher(prefix, payload.version)
+  const before = await snapshotTree(prefix)
+  const realAwk = (await command(["sh", "-c", "command -v awk"])).stdout.trim()
+  expect(path.isAbsolute(realAwk)).toBe(true)
+  const census = path.join(root, "maps-census")
+  // Fault injection, not a native-libc fixture: forward every normal invocation,
+  // but return successful empty output from the actual /proc/PID/maps census.
+  await Bun.write(path.join(bin, "awk"), `#!/bin/sh\nfor argument in "$@"; do\ncase "$argument" in /proc/[0-9]*/maps) printf '%s\\n' "$argument" >> "$CENSUS_MARKER"; exit 0 ;; esac\ndone\nexec "$REAL_AWK" "$@"\n`)
+  await chmod(path.join(bin, "awk"), 0o755)
+  const fault = { ...env, REAL_AWK: realAwk, CENSUS_MARKER: census }
+  for (const destination of [path.join(root, "unknown-prefix"), prefix]) {
+    const result = await install(destination, payload, [], fault)
+    expect(result.code).toBe(1)
+    expect(result.stderr).toContain("cannot determine Linux host libc from loaded process")
+    expect(await readdir(root)).not.toContain("unknown-prefix")
+    expect(await snapshotTree(prefix)).toEqual(before)
+  }
+  expect((await Bun.file(census).text()).trim().split("\n").every((line) => /^\/proc\/\d+\/maps$/.test(line))).toBe(true)
+  expect((await Bun.file(census).text()).trim().split("\n")).toHaveLength(2)
+  await rm(path.join(bin, "awk"))
+  expect((await install(prefix, payload, [], env)).code).toBe(0)
+  expect(await snapshotTree(prefix)).toEqual(before)
 }), 120_000)
 
 posix("native headers validate every addon CPU/class/endianness before CLI execution", () => isolated(async (root, prefix) => {
