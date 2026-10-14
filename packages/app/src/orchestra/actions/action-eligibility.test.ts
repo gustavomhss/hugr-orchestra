@@ -158,3 +158,19 @@ test("resource restrictions apply to exact native operation, not universal edita
   state.artifacts = { status: "ready", value: { capturedAt: 1, items: [{ ...schedule, data: { readOnly: true } }] } }
   expect(canRequestAction(state, { kind: "schedule.play", target })).toBe(false)
 })
+
+test("deployment review honors snake_case native reviewer denial without inferring permission from absence", () => {
+  const state = fixture()
+  const environment: Actions.Resource = { id: "production", bindingID: Actions.BindingID.make("ab_controls"), kind: "environments", name: "production", scope: "Repository",
+    data: { runID: "101", current_user_can_approve: false } }
+  const target = { resourceKind: "environments", resourceID: "production", scope: "Repository", runID: "101" } satisfies Actions.OperationTarget
+  state.resources = { status: "ready", value: { capturedAt: 1, items: [environment] } }
+  expect(canRequestAction(state, { kind: "deployment.review", target })).toBe(false)
+  expect(canRequestAction(state, { kind: "resource.update", target })).toBe(true)
+  expect(canRequestAction(state, { kind: "resource.delete", target })).toBe(true)
+  state.resources = { status: "ready", value: { capturedAt: 1, items: [{ ...environment, data: { runID: "101" } }] } }
+  expect(canRequestAction(state, { kind: "deployment.review", target })).toBe(true)
+  expect(state.capabilities.value).toEqual([])
+  state.resources = { status: "ready", value: { capturedAt: 1, items: [{ ...environment, data: { runID: "101", current_user_can_approve: true } }] } }
+  expect(canRequestAction(state, { kind: "deployment.review", target })).toBe(true)
+})

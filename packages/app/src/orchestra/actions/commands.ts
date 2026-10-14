@@ -1,7 +1,7 @@
 import { Actions } from "@orchestra/schema/actions"
 import { Schema } from "effect"
 import { actionsError, ActionsRequestError, CreateWorkflowForm, decodeAction, requestError, ResourceForms, ReviewSourceForm, type ActionsCommand, type ActionsScope, type createActionsAPI, type ResourceAction } from "./api"
-import type { Dialog, State } from "./contract"
+import type { Dialog, ErrorState, State } from "./contract"
 import { canEditSource, immutableSource, sourceIdentity, type createRequestOwner, type createSourceDraft } from "./requests"
 import { canRequest } from "./request-policy"
 import { canRequestAction, resourceWritable } from "./action-eligibility"
@@ -9,7 +9,7 @@ import { readProposalSource } from "./proposal-source"
 
 type Phase = { clientID: string; operationID?: Actions.OperationID; kind: Actions.OperationKind }
 export type ActionsPending = { clientID: string; binding: Actions.BindingRef; operationID?: Actions.OperationID; intent?: Actions.OperationIntent; phases?: readonly Phase[] }
-type Lease = ActionsPending & { scope: ActionsScope; command?: ActionsCommand; operation?: Actions.Operation; uncertain: boolean; restored?: boolean; sent?: boolean }
+type Lease = ActionsPending & { scope: ActionsScope; command?: ActionsCommand; operation?: Actions.Operation; failure?: ErrorState; uncertain: boolean; restored?: boolean; sent?: boolean }
 type Selection = ReturnType<typeof selection>
 type Review = { base: Actions.SourceBase; source?: Actions.Source; path: string; create: boolean;
   form: { branch: string; message: string; title: string; text: string }; step: number; phases: Phase[]; clients: string[];
@@ -39,7 +39,7 @@ export function createActionsCommands(input: {
     if (!read) input.owner.cancel("receipt")
     active.operationID = operation.id
     active.operation = { ...operation, reason: undefined }
-    active.uncertain = !known(operation) && (operation.state !== "prepared" || active.restored === true || active.sent === true)
+    active.uncertain = ambiguous(operation, active)
     remember(review || active.intent?.kind === "source.branch" || active.intent?.kind === "source.write" || active.uncertain || operation.state === "prepared" ? active : undefined)
     input.update({ operation: active.operation })
   }
@@ -51,10 +51,8 @@ export function createActionsCommands(input: {
         : await input.api.prepare(active.scope, decodeAction(Actions.OperationIntent, active.intent), handle.signal)
       if (!handle.current() || lease !== active) return
       receive(operation, active, true)
-      active.uncertain = (active.restored === true || active.sent === true) && operation.state === "prepared" || ["sending", "outcome_unknown"].includes(operation.state)
-      input.update({ commandError: active.uncertain ? actionsError(new ActionsRequestError("outcome_unknown"))
-        : operation.state === "expired" ? actionsError(new ActionsRequestError("operation_expired"))
-        : operation.state === "prepared" && input.state().commandError?.kind !== "outcome_unknown" ? input.state().commandError : undefined })
+      input.update({ commandError: operationFailure(operation, active.failure) ?? (active.uncertain ? actionsError(new ActionsRequestError("outcome_unknown"))
+        : operation.state === "prepared" && input.state().commandError?.kind !== "outcome_unknown" ? input.state().commandError : undefined) })
     }, (cause) => error(active.uncertain ? new ActionsRequestError("outcome_unknown") : cause), true)
   }
   const perform = async (command: ActionsCommand, captured: Selection, handle: { signal: AbortSignal; current: () => boolean }, reuse = false, initialID?: string) => {
@@ -74,10 +72,12 @@ export function createActionsCommands(input: {
       if (!handle.current()) return
       receive(prepared, active)
       if (known(prepared)) return prepared
-      if (prepared.state === "expired" || prepared.state === "rejected") { active.uncertain = false; error(new ActionsRequestError(prepared.state === "expired" ? "operation_expired" : "operation_reused")); return }
+      const preparationFailure = operationFailure(prepared, active.failure)
+      if (preparationFailure) { input.update({ commandError: preparationFailure }); return }
       if (prepared.state !== "prepared" || active.restored || active.sent || !active.command) { active.uncertain = true; error(new ActionsRequestError("outcome_unknown")); return }
       if (!matches(captured)) throw new ActionsRequestError("binding_stale")
       if (!canRequestAction(input.state(), command, handle)) throw admissionError()
+      active.failure = undefined
       sending = true
       // A late prepared receipt cannot authorize another send after a lost execution response.
       active.sent = true
@@ -85,6 +85,8 @@ export function createActionsCommands(input: {
       if (!handle.current()) return
       const operation = execution.operation
       receive(operation, active)
+      const executionFailure = operationFailure(operation, active.failure)
+      if (executionFailure) { input.update({ commandError: executionFailure }); return }
       if (!known(operation)) { active.uncertain = true; remember(active); error(new ActionsRequestError("outcome_unknown")); return }
       if (command.kind === "source.review" && execution.output && (execution.output.kind !== "sourceReview"
         || execution.output.id !== operation.result?.resourceID)) throw new ActionsRequestError("outcome_unknown")
@@ -95,6 +97,7 @@ export function createActionsCommands(input: {
       const safe = requestError(cause)
       active.operationID ??= safe.operationID
       active.uncertain = safe.kind === "outcome_unknown" || safe.disposition === "unknown" || (safe.disposition === undefined && ["transport_failed", "invalid_response"].includes(safe.kind))
+      active.failure = active.uncertain ? undefined : actionsError(safe)
       remember(active.uncertain || active.operationID || review ? active : undefined)
       error(active.uncertain ? new ActionsRequestError("outcome_unknown") : safe)
       if (active.operationID && sending) await refreshReceipt()
@@ -340,6 +343,14 @@ function resolve(captured: Selection, payload: unknown): ActionsCommand {
   throw new ActionsRequestError("invalid_input")
 }
 function known(operation: Actions.Operation) { return operation.state === "accepted" || operation.state === "confirmed" }
+function ambiguous(operation: Actions.Operation, active: Lease) {
+  return operation.state === "sending" || operation.state === "outcome_unknown"
+    || operation.state === "prepared" && (active.restored === true || active.sent === true)
+}
+function operationFailure(operation: Actions.Operation, failure?: ErrorState) {
+  if (operation.state === "rejected") return failure ?? actionsError(new ActionsRequestError("operation_rejected"))
+  if (operation.state === "expired") return actionsError(new ActionsRequestError("operation_expired"))
+}
 function immutable<T>(value: T): T { if (value && typeof value === "object") { Object.values(value).forEach(immutable); Object.freeze(value) }; return value }
 function metadata(resource: Actions.Resource) { return decodeAction(Schema.Record(Schema.String, Schema.Json), resource.data) }
 function template(provider: Actions.ProviderKind, name: string, kind: string) {

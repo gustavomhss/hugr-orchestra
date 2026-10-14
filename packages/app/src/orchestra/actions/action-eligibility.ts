@@ -10,6 +10,7 @@ export function resourceWritable(resource: Actions.Resource, operation: Actions.
   if (data.readOnly === true || data.readonly === true || data.inherited === true || resource.status?.toLowerCase() === "inherited") return false
   if (operation === "resource.update") return data.editable !== false && (resource.kind !== "schedules" || data.ownedByCurrentActor !== false)
   if (operation === "resource.delete" || operation === "runner.remove") return data.removable !== false
+  if (operation === "deployment.review") return data.current_user_can_approve !== false
   return true
 }
 
