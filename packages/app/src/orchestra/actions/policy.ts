@@ -7,6 +7,7 @@ export async function readPolicy(api: ReturnType<typeof createActionsAPI>, targe
   if (values[1].binding.id !== target.bindingID || values[1].binding.revision !== target.revision) throw new ActionsRequestError("binding_stale")
   return { ...values[0], items: values[0].items.map((item) => {
     if (item.bindingID !== target.bindingID || item.kind !== "policy") throw new ActionsRequestError("binding_stale")
-    return { ...item, data: { ...Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(item.data), policy: { ...values[1].policy } } }
+    const data = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(item.data)
+    return { ...item, data: { ...data, ...(data.policy === undefined ? {} : { nativePolicy: data.policy }), policy: { ...values[1].policy } } }
   }) }
 }

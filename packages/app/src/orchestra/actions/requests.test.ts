@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createRequestOwner, previewResponse, saveResponse } from "./requests"
+import { sourceUnloadGuard } from "./source-draft-ui"
 
 function deferred<T>() {
   const result: { resolve?: (value: T) => void } = {}
@@ -8,6 +9,26 @@ function deferred<T>() {
 }
 
 describe("Actions request ownership", () => {
+  test("source unload guard prevents dirty exit, leaves clean exit alone and removes exact listener", () => {
+    const state = { dirty: true, prevented: false }
+    const listeners = new Set<(event: { preventDefault(): void; returnValue: string }) => void>()
+    const cleanup = sourceUnloadGuard({
+      addEventListener(type, listener) { expect(type).toBe("beforeunload"); listeners.add(listener) },
+      removeEventListener(type, listener) { expect(type).toBe("beforeunload"); expect(listeners.has(listener)).toBe(true); listeners.delete(listener) },
+    }, () => state.dirty)
+    const event = { preventDefault() { state.prevented = true }, returnValue: "untouched" }
+    expect(listeners.size).toBe(1)
+    listeners.forEach((listener) => listener(event))
+    expect(state.prevented).toBe(true)
+    expect(event.returnValue).toBe("")
+    state.dirty = false; state.prevented = false; event.returnValue = "untouched"
+    listeners.forEach((listener) => listener(event))
+    expect(state.prevented).toBe(false)
+    expect(event.returnValue).toBe("untouched")
+    cleanup()
+    expect(listeners.size).toBe(0)
+  })
+
   test("deduplicates a read and rejects a late same-resource response after supersession", async () => {
     const owner = createRequestOwner()
     const old = deferred<string>()
