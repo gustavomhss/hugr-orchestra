@@ -1,15 +1,57 @@
-import { beforeAll, beforeEach, mock } from "bun:test"
-import { createStore } from "solid-js/store"
+import { afterEach, beforeAll, beforeEach, mock } from "bun:test"
+import { createRoot, getOwner } from "solid-js"
+import { createStore, type Store, type SetStoreFunction } from "solid-js/store"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import { pendingRules } from "../draft-subagent-models"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
-import { createApiForServer } from "@/utils/server"
-import type { SubagentModelPolicy } from "../subagent-model-rules"
+import { createApiForServer, type ServerApi } from "@/utils/server"
+import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
+import { draftSessionKey } from "./draft-session"
+import { clearPending, pendingSnapshot } from "../draft-subagent-models"
 
 export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
+export let createFollowupSender: typeof import("./submit").createFollowupSender
+export let followupInput: (draft: import("./submit").FollowupDraft) => import("./submit").FollowupSendInput
 export let followupSystem: typeof import("./submit").followupSystem
+export let acknowledgeDraftPolicy: typeof import("./submit").acknowledgeDraftPolicy
+export const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
+export const toasts: { title?: unknown; description?: unknown }[] = []
+export const legacyBaseline: ModelRule[] = []
+export const legacySessionPermissions = new Map<string, ModelRule[]>()
+type FixtureServer = {
+  scope: ServerScope
+  protocol: Promise<"v1" | "v2">
+  protocolKind: () => string
+  client: ReturnType<typeof clientFor>
+  currentApi: ServerApi
+  createClient: (options: { directory?: string }) => ReturnType<typeof clientFor>
+  sessionManagement: {
+    setSubagentModels: (id: string, policy: SubagentModelPolicy) => Promise<SubagentModelPolicy>
+    waitSubagentModels: (id: string) => Promise<void>
+    subagentModelsWriteVersion: (id: string) => number
+    readSubagentModels: (id: string) => Promise<{ policy: SubagentModelPolicy }>
+  }
+}
+type FixtureSDK = {
+  scope: ServerScope
+  directory: string
+  client: ReturnType<typeof clientFor>
+  api: ServerApi
+  url: string
+  createClient: FixtureServer["createClient"]
+}
+type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
+export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
+const policyVersions = new Map<string, number>()
+const roots: VoidFunction[] = []
+afterEach(() => roots.splice(0).forEach((dispose) => dispose()))
+export const [reactiveOwner, setReactiveOwner]: [Store<ReactiveOwner>, SetStoreFunction<ReactiveOwner>] = createStore<ReactiveOwner>({})
+export const policyFixture: { server: FixtureServer; sdk: FixtureSDK } = {
+  server: undefined as unknown as FixtureServer,
+  sdk: undefined as unknown as FixtureSDK,
+}
 
 export const createdClients: string[] = []
 export const createdSessions: string[] = []
@@ -69,6 +111,12 @@ export const state = {
   waiting: 0,
   waitersReady: Promise.withResolvers<void>(),
   promptValue: [{ type: "text", content: "ls", start: 0, end: 2 }] as Prompt,
+  policyWrite: async () => {},
+  policyWait: async () => {},
+  legacyUpdateHook: async () => {},
+  worktreeResets: 0,
+  promoteStarted: Promise.withResolvers<void>(),
+  promoteProbe: undefined as VoidFunction | undefined,
 }
 
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -126,6 +174,7 @@ export const clientFor = (directory: string) => {
         const location = input.location?.directory ?? directory
         createdSessions.push(location)
         sessionCreateInputs.push(input)
+        legacySessionPermissions.set(`session-${createdSessions.length}`, legacyBaseline.slice())
         return {
           id: `session-${createdSessions.length}`,
           projectID: "project",
@@ -135,6 +184,7 @@ export const clientFor = (directory: string) => {
           tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
           time: { created: 1, updated: 1 },
           title: `New session ${createdSessions.length}`,
+          permission: legacyBaseline.slice(),
           location: { directory: location },
         }
       },
@@ -180,6 +230,8 @@ export const clientFor = (directory: string) => {
         state.rulesStarted.resolve()
         await state.rulesGate
         if (state.rulesFailure) throw new Error("permission persistence failed")
+        await state.legacyUpdateHook()
+        legacySessionPermissions.set(input.sessionID, [...(legacySessionPermissions.get(input.sessionID) ?? legacyBaseline), ...input.permission])
         return { data: { ...input, id: input.sessionID } }
       },
       command: async () => ({ data: undefined }),
@@ -195,13 +247,52 @@ export const clientFor = (directory: string) => {
   }
 }
 
-beforeAll(async () => {
-  const rootClient = clientFor("/repo/main")
+export function serverFor(scope = ServerScope.local): FixtureServer {
+  const client = clientFor("/repo/main")
   const current = createApiForServer({ server: { url: "http://fixture.invalid" } })
-  const currentApi = { ...current, session: { ...current.session, ...rootClient.api.session } }
+  return {
+    scope, get protocol() { return Promise.resolve(state.protocol === "v1" ? "v1" as const : "v2" as const) },
+    protocolKind: () => state.protocol,
+    client, currentApi: { ...current, session: { ...current.session, ...client.api.session } } as unknown as ServerApi,
+    createClient: (options: { directory?: string }) => clientFor(options.directory ?? "/repo/main"),
+    sessionManagement: {
+      setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
+        policyVersions.set(sessionID, (policyVersions.get(sessionID) ?? 0) + 1)
+        savedPolicies.push({ sessionID, policy })
+        policyWrites.push({ id: sessionID, policy })
+        state.rulesStarted.resolve()
+        await state.rulesGate
+        await state.policyWrite()
+        if (state.rulesFailure) throw new Error("policy persistence failed")
+        canonicalPolicies.set(sessionID, structuredClone(policy))
+        return policy
+      },
+      waitSubagentModels: () => state.policyWait(),
+      subagentModelsWriteVersion: (id: string) => policyVersions.get(id) ?? 0,
+      readSubagentModels: async (id: string) => ({ policy: canonicalPolicies.get(id) ?? { mode: "inherit" as const } }),
+    },
+  }
+}
+
+export function sdkFor(directory: string, server: FixtureServer): FixtureSDK {
+  return { scope: server.scope, directory, client: server.client, api: server.currentApi, url: "http://fixture.invalid", createClient: server.createClient }
+}
+
+function promoteRoute(directory: string, id: string) {
+  state.params.id = id
+  state.search.draftId = undefined
+  const source = state.sdkOverride ?? policyFixture.sdk
+  state.sdkOverride = source && typeof source === "object" ? { ...source, directory } : undefined
+  policyFixture.sdk = sdkFor(directory, policyFixture.server)
+  const owner = reactiveOwner.read?.()
+  if (owner) setReactiveOwner("read", () => () => ({ server: owner.server, sdk: sdkFor(directory, owner.server) }))
+}
+
+beforeAll(async () => {
+  const { checksum } = await import("@orchestra/core/util/encode")
 
   mock.module("@solidjs/router", () => ({
-    useNavigate: () => () => undefined,
+    useNavigate: () => (url: string) => { const parts = url.split("/session/"); promoteRoute(parts[0].slice(1), parts[1]) },
     useParams: () => state.params,
     useLocation: () => ({}),
     useSearchParams: () => [state.search, () => undefined],
@@ -209,12 +300,13 @@ beforeAll(async () => {
 
   mock.module("@orchestra/ui/toast", () => ({
     Toast: { Region: () => null },
-    showToast: () => 0,
+    showToast: (input: { title?: unknown; description?: unknown }) => { toasts.push(input); return 0 },
     toaster: { dismiss: () => undefined },
   }))
 
   mock.module("@orchestra/core/util/encode", () => ({
     base64Encode: (value: string) => value,
+    checksum,
   }))
 
   // This suite runs Solid's server build, where persisted stores cannot load. The real store (storage
@@ -243,6 +335,8 @@ beforeAll(async () => {
       session: {
         promote(directory: string, sessionID: string, selection: { agent?: string }) {
           promoted.push({ directory, sessionID })
+          state.promoteProbe?.()
+          state.promoteStarted.resolve()
           promotedAgents.push(selection.agent)
         },
       },
@@ -258,10 +352,6 @@ beforeAll(async () => {
     return { usePermission: () => ({ currentServerState: () => permissionState(state.permissionServer) }) }
   })
 
-  mock.module("@/context/server-sdk", () => ({
-    useServerSDK: () => () => ({ protocol: "v2", client: rootClient }),
-  }))
-
   mock.module("@/context/tabs", () => ({
     useTabs: () => ({
       get store() {
@@ -272,6 +362,7 @@ beforeAll(async () => {
       draft: () => ({ server: "project-server" }),
       promoteDraft: (draftID: string, session: { server: string; sessionId: string }) => {
         promotedDrafts.push({ draftID, ...session })
+        promoteRoute(promoted.at(-1)?.directory ?? "/repo/main", session.sessionId)
       },
     }),
   }))
@@ -290,18 +381,8 @@ beforeAll(async () => {
 
   mock.module("@/context/sdk", () => ({
     useSDK: () => {
-      const sdk = {
-        scope: "local",
-        directory: "/repo/main",
-        client: rootClient,
-        api: rootClient.api,
-        url: "http://localhost:4096",
-        createClient(opts: { directory: string }) {
-          return clientFor(opts.directory)
-        },
-      }
       return () => {
-        const source = state.sdkOverride ?? sdk
+         const source = reactiveOwner.read?.().sdk ?? state.sdkOverride ?? policyFixture.sdk
         if (
           source && typeof source === "object" && "scope" in source && typeof source.scope === "string" &&
           "directory" in source && typeof source.directory === "string"
@@ -313,22 +394,7 @@ beforeAll(async () => {
   }))
 
   mock.module("@/context/server-sdk", () => ({
-    useServerSDK: () => () =>
-      state.serverOverride ?? {
-        protocol: Promise.resolve(state.protocol),
-        client: rootClient,
-        currentApi,
-        sessionManagement: {
-          setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
-            savedPolicies.push({ sessionID, policy })
-            state.rulesStarted.resolve()
-            await state.rulesGate
-            if (state.rulesFailure) throw new Error("policy persistence failed")
-            return policy
-          },
-        },
-        createClient: (opts: { directory?: string }) => clientFor(opts.directory ?? "/repo/main"),
-      },
+    useServerSDK: () => () => reactiveOwner.read?.().server ?? state.serverOverride ?? policyFixture.server,
   }))
 
   mock.module("@/context/sync", () => ({
@@ -409,18 +475,29 @@ beforeAll(async () => {
       setup(build) {
         build.onLoad({ filter: /\/prompt-input\/submit\.ts$/ }, async (args) => {
           const source = await Bun.file(args.path).text()
-          const anchor = "const ownsDraft = () =>"
+          const anchor = "const ownsSource = () => {"
           if (!source.includes(anchor)) throw new Error("Submit owner probe anchor missing")
           // Test-only in-memory mutation; never changes the production file or the normal test path.
-          return { contents: source.replace(anchor, `${anchor} true ||`), loader: "ts" }
+          return { contents: source.replace(anchor, `${anchor} return true;`), loader: "ts" }
         })
       },
     })
   }
   const mod = await import("./submit")
-  createPromptSubmit = mod.createPromptSubmit
+  createPromptSubmit = (input) => {
+    if (getOwner()) return mod.createPromptSubmit(input)
+    return createRoot((dispose) => { roots.push(dispose); return mod.createPromptSubmit(input) })
+  }
   sendFollowupDraft = mod.sendFollowupDraft
+  createFollowupSender = mod.createFollowupSender
+  const { useSync } = await import("@/context/sync")
+  const { useServerSync } = await import("@/context/server-sync")
+  followupInput = (draft) => ({
+    api: policyFixture.sdk.api.session as import("./submit").FollowupSendInput["api"],
+    sync: useSync()(), serverSync: useServerSync()(), draft,
+  })
   followupSystem = mod.followupSystem
+  acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
 })
 
 beforeEach(() => {
@@ -467,5 +544,23 @@ beforeEach(() => {
   state.waiting = 0
   state.waitersReady = Promise.withResolvers<void>()
   state.serverSessionSyncs = 0
+  state.policyWrite = async () => {}
+  state.policyWait = async () => {}
+  state.legacyUpdateHook = async () => {}
+  state.worktreeResets = 0
+  state.promoteStarted = Promise.withResolvers<void>()
+  state.promoteProbe = undefined
+  policyWrites.length = 0
+  toasts.length = 0
+  legacyBaseline.length = 0
+  legacySessionPermissions.clear()
+  canonicalPolicies.clear()
+  policyVersions.clear()
+  policyFixture.server = serverFor()
+  policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
+  setReactiveOwner("read", undefined)
+  ;[draftSessionKey(ServerScope.local, "/repo/main"), draftSessionKey(ServerScope.local, "/repo/main", "draft-1")]
+    .forEach((key) => clearPending(key, pendingSnapshot(key).revision))
+  createdClients.length = 0
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
 })
