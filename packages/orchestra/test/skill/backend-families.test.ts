@@ -9,7 +9,7 @@ import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest
 // resolution and depth-2 reachability are covered by backend-skills.test.ts; this file checks what that one cannot see:
 // which family a reference belongs to and which versions it may name.
 
-const REFERENCES = path.resolve(import.meta.dir, "../../../backend-specialist/skills/backend-implement/references")
+const REFERENCES = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills/backend-implement/references")
 // F6.4: `<familyId>` values, and the subset that may own a `languages/<familyId>.md` file.
 const FAMILIES = ["python", "go", "rust", "js-ts", "effect", "next", "jvm", "dotnet", "ruby", "php", "elixir", "cross"]
 const LANGUAGE_FAMILIES = ["python", "go", "rust", "js-ts", "jvm", "dotnet", "ruby", "php", "elixir"]
