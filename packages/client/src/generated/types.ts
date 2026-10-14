@@ -10,7 +10,7 @@ export type JsonValue =
   | ReadonlyArray<JsonValue>
   | { readonly [key: string]: JsonValue }
 
-export type HealthGetOutput = { readonly healthy: true }
+export type HealthGetOutput = { readonly healthy: true; readonly pid?: number | undefined }
 
 export type LocationGetInput = {
   readonly location?: {
