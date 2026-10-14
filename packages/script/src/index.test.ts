@@ -1,21 +1,20 @@
 import { expect, test } from "bun:test"
-import { mkdir, mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import semver from "semver"
 import pkg from "../../orchestra/package.json" with { type: "json" }
+import { workspaceFixture } from "../test/fixture/workspace"
 
-async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean } = {}) {
+async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean; missingRegistry?: boolean } = {}) {
   // A copied module reads a real isolated owned manifest, including SemVer boundary fixtures.
-  const fixture = options.source === undefined ? undefined : await mkdtemp(path.join(import.meta.dir, "../.version-"))
+  const fixture = options.source === undefined ? undefined : await mkdtemp(path.join(tmpdir(), "orchestra-version-"))
   try {
     if (fixture) {
-      await mkdir(path.join(fixture, "packages/script/src"), { recursive: true })
-      await Bun.write(path.join(fixture, "packages/script/src/index.ts"), Bun.file(path.join(import.meta.dir, "index.ts")))
-      await Bun.write(path.join(fixture, "packages/orchestra/package.json"), JSON.stringify({ version: options.source }))
-      await Bun.write(path.join(fixture, "package.json"), Bun.file(path.join(import.meta.dir, "../../../package.json")))
-      await Bun.write(path.join(fixture, ".github/TEAM_MEMBERS"), Bun.file(path.join(import.meta.dir, "../../../.github/TEAM_MEMBERS")))
+      workspaceFixture(fixture, { version: options.source, bootstrap: true })
+      if (options.missingRegistry) await rm(path.join(fixture, "script/module-registry.json"))
     }
-    const child = Bun.spawn([process.execPath, "--eval", `
+    const child = Bun.spawn([process.execPath, "--no-install", "--eval", `
       // The import has no network seam; guard fetch in this child only, never in the test process.
       globalThis.fetch = async (input) => { throw new Error('NETWORK_DISABLED:' + input) }
       ${options.probe ? "await fetch('https://registry.npmjs.org/orchestra-ai/latest')" : ""}
@@ -135,5 +134,13 @@ test("invalid owned source fails with named error", async () => {
   const result = await load({ source: "invalid", channel: "latest" })
   expect(result.exitCode).not.toBe(0)
   expect(result.stderr).toContain("Invalid source version: invalid")
+  expect(result.stderr).not.toContain("NETWORK_DISABLED:")
+})
+
+test("isolated source without its registry fails before version admission", async () => {
+  const result = await load({ source: "2.3.4", channel: "latest", missingRegistry: true })
+  expect(result.exitCode).not.toBe(0)
+  expect(result.stderr).toContain("WORKSPACE_ROOT_NOT_FOUND:")
+  expect(result.stderr).not.toContain("Cannot find module")
   expect(result.stderr).not.toContain("NETWORK_DISABLED:")
 })
