@@ -14,12 +14,16 @@ export type AppSession = Session & {
   subagentModelsChangedAt?: number
   archiveChangedAt?: number
   subagentModelsRevision?: number
+  // Local canonical-read provenance; never a backend revision or policy timestamp.
+  subagentModelsReadReceipt?: number
   archiveRevision?: number
 }
 
 export type SessionManagementInfo = Pick<AppSession,
-  "id" | "subagentModels" | "subagentModelsChangedAt" | "subagentModelsRevision" | "archiveChangedAt" | "archiveRevision"
+  "id" | "subagentModels" | "subagentModelsChangedAt" | "subagentModelsRevision" | "subagentModelsReadReceipt" | "archiveChangedAt" | "archiveRevision"
 > & { time: Pick<AppSession["time"], "updated" | "archived"> }
+
+export type SessionManagementEvent = { type: string; properties?: unknown; current?: unknown }
 
 export function normalizeSessionInfo(
   input: (SessionInfo & Pick<Session, "metadata">) | SessionV2Info | SessionsGetOutput | AppSession,
@@ -55,7 +59,7 @@ export function normalizeSessionInfo(
   }
 }
 
-export function decodeSessionManagementEvent(event: { type: string; properties?: unknown; current?: unknown }) {
+export function decodeSessionManagementEvent(event: SessionManagementEvent) {
   if (event.type === SessionEvent.SubagentModelsChanged.type) {
     const decoded = Schema.decodeUnknownResult(SessionEvent.SubagentModelsChanged.data)(event.properties)
     if (Result.isFailure(decoded)) {
@@ -84,28 +88,35 @@ export function decodeSessionManagementEvent(event: { type: string; properties?:
 
 export function applySessionManagementEvent<T extends SessionManagementInfo>(
   info: T,
-  input: { type: string; properties?: unknown; current?: unknown },
+  input: SessionManagementEvent,
 ): T | undefined {
   const event = decodeSessionManagementEvent(input)
   if (!event) return
   const current = event.current
   const durable = current && typeof current === "object" && "durable" in current ? current.durable : undefined
   const revision =
-    durable && typeof durable === "object" && "seq" in durable && typeof durable.seq === "number"
+    durable && typeof durable === "object" && "seq" in durable && typeof durable.seq === "number" &&
+      Number.isSafeInteger(durable.seq) && durable.seq >= 0
       ? durable.seq
       : undefined
   if (event.type === SessionEvent.SubagentModelsChanged.type) {
     const data = event.properties
     if (
       data.sessionID !== info.id ||
-      data.timestamp < (info.subagentModelsChangedAt ?? 0) ||
-      (revision !== undefined && info.subagentModelsRevision !== undefined && revision <= info.subagentModelsRevision)
+      (revision !== undefined && info.subagentModelsRevision !== undefined
+        ? revision <= info.subagentModelsRevision
+        : data.timestamp < (info.subagentModelsChangedAt ?? 0) ||
+          (revision === undefined && data.timestamp === info.subagentModelsChangedAt &&
+            (info.subagentModelsRevision !== undefined || info.subagentModelsReadReceipt !== undefined)))
     ) return
+    // A read receipt cannot order an unobserved SSE sequence against that read; recover conflicting policy via GET.
+    const canonical = info.subagentModelsReadReceipt !== undefined &&
+      JSON.stringify(info.subagentModels ?? { mode: "inherit" }) !== JSON.stringify(data.policy)
     return {
       ...info,
-      subagentModels: data.policy,
+      subagentModels: canonical ? info.subagentModels : data.policy,
       subagentModelsChangedAt: data.timestamp,
-      subagentModelsRevision: revision,
+      subagentModelsRevision: revision ?? info.subagentModelsRevision,
       time: { ...info.time, updated: Math.max(info.time.updated, data.timestamp) },
     }
   }
@@ -125,28 +136,31 @@ export function applySessionManagementEvent<T extends SessionManagementInfo>(
   }
 }
 
-export function mergeSessionManagementInfo(current: SessionManagementInfo | undefined, next: AppSession): AppSession {
+export function mergeSessionManagementInfo<T extends SessionManagementInfo>(current: SessionManagementInfo | undefined, next: T): T & SessionManagementInfo {
   if (!current) return next
-  const keepPolicy = current.subagentModelsChangedAt !== undefined &&
-    (next.time.updated < current.subagentModelsChangedAt ||
-      (next.time.updated === current.subagentModelsChangedAt && current.subagentModelsRevision !== undefined &&
-        (next.subagentModelsRevision === undefined || next.subagentModelsRevision <= current.subagentModelsRevision)))
+  const keepPolicy = (current.subagentModelsReadReceipt ?? 0) !== (next.subagentModelsReadReceipt ?? 0)
+    ? (current.subagentModelsReadReceipt ?? 0) > (next.subagentModelsReadReceipt ?? 0)
+    : current.subagentModelsRevision !== undefined && next.subagentModelsRevision !== undefined
+      ? next.subagentModelsRevision < current.subagentModelsRevision ||
+        (next.subagentModelsRevision === current.subagentModelsRevision &&
+          (next.subagentModelsChangedAt ?? -1) <= (current.subagentModelsChangedAt ?? -1))
+      : next.subagentModelsChangedAt !== undefined
+        ? next.subagentModelsChangedAt <= (current.subagentModelsChangedAt ?? -1)
+        : current.subagentModelsChangedAt !== undefined || current.subagentModelsRevision !== undefined ||
+          current.subagentModelsReadReceipt !== undefined
   const keepArchive = current.archiveChangedAt !== undefined &&
     (next.time.updated < current.archiveChangedAt ||
       (next.time.updated === current.archiveChangedAt && current.archiveRevision !== undefined &&
         (next.archiveRevision === undefined || next.archiveRevision <= current.archiveRevision)))
   return {
     ...next,
-    ...(keepPolicy
-      ? {
-          subagentModels: current.subagentModels,
-          subagentModelsChangedAt: current.subagentModelsChangedAt,
-          subagentModelsRevision: current.subagentModelsRevision,
-        }
-      : {
-          subagentModelsChangedAt: next.subagentModelsChangedAt ?? next.time.updated,
-          subagentModelsRevision: next.subagentModelsRevision,
-        }),
+    subagentModels: keepPolicy ? current.subagentModels : next.subagentModels,
+    subagentModelsChangedAt: keepPolicy ? current.subagentModelsChangedAt : next.subagentModelsChangedAt,
+    subagentModelsReadReceipt: keepPolicy ? current.subagentModelsReadReceipt : next.subagentModelsReadReceipt,
+    // Carry observed sequence floors even when a later canonical read replaces policy without another SSE.
+    subagentModelsRevision: current.subagentModelsRevision === undefined
+      ? next.subagentModelsRevision
+      : Math.max(current.subagentModelsRevision, next.subagentModelsRevision ?? current.subagentModelsRevision),
     time: {
       ...next.time,
       archived: keepArchive ? current.time.archived : next.time.archived,
