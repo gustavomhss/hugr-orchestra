@@ -1,4 +1,4 @@
-import type { Message, Session } from "@orchestra/sdk/v2/client"
+import type { Session } from "@orchestra/sdk/v2/client"
 import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
@@ -23,7 +23,6 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
-import { buildRequestParts } from "./build-request-parts"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError } from "@/utils/server-errors"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
@@ -33,7 +32,7 @@ import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
-import { waitForSubmissionWorktree } from "./submission-policy"
+import { sendFollowupRequest, waitForSubmissionWorktree } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
 type Admission = { busy: boolean; directory?: string; session?: Session; rules?: boolean }
@@ -68,7 +67,7 @@ export type FollowupDraft = {
   }
 }
 
-type FollowupSendInput = {
+export type FollowupSendInput = {
   api: DirectorySDK["api"]["session"]
   serverSync: ServerSync
   sync: DirectorySync
@@ -86,10 +85,6 @@ export function followupSystem(platform: Platform, scope: ServerScope, serverSyn
   return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
 }
 
-const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? part.content : "")).join("")
-
-const draftImages = (prompt: Prompt) => prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
-
 export async function sendFollowupDraft(input: FollowupSendInput) {
   const source = input.draft.source
   const controller = source && !input.signal ? new AbortController() : undefined
@@ -98,7 +93,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     cleanup: () => {},
   }) : undefined
   try {
-    return await dispatchFollowupDraft({
+    return await sendFollowupRequest({
       ...input,
       api: source?.api ?? input.api,
       sync: source?.sync ?? input.sync,
@@ -107,172 +102,6 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     })
   } finally {
     untrack?.()
-  }
-}
-
-async function dispatchFollowupDraft(input: FollowupSendInput) {
-  const current = () => !input.signal?.aborted && input.draft.source?.current() !== false
-  if (!current()) return false
-  const text = draftText(input.draft.prompt)
-  const images = draftImages(input.draft.prompt)
-  const setBusy = () => {
-    if (!input.optimisticBusy || !current()) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
-  }
-
-  const setIdle = () => {
-    if (!input.optimisticBusy || !current()) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
-  }
-
-  const wait = async () => {
-    if (!current()) return false
-    const ok = await input.before?.()
-    if (ok === false || !current()) return false
-    const ready = await input.draft.source?.before(input.signal)
-    return ready !== false && current()
-  }
-
-  const [head, ...tail] = text.split(" ")
-  const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
-    if (!(await wait())) return false
-    const files = await Promise.all(images.map(async (attachment) => ({
-      uri: await blobDataUrl(attachment.blob, attachment.mime), name: attachment.filename,
-    })))
-    try {
-      if (!(await wait())) {
-        setIdle()
-        return false
-      }
-      setBusy()
-      const messageID = Identifier.ascending("message")
-      await input.api.command(
-        {
-          sessionID: input.draft.sessionID,
-          id: messageID,
-          command: cmd,
-          arguments: tail.join(" "),
-          agent: input.draft.agent,
-          model: {
-            id: input.draft.model.modelID,
-            providerID: input.draft.model.providerID,
-            variant: input.draft.variant,
-          },
-          delivery: input.draft.delivery,
-          files,
-        },
-        { signal: input.signal },
-      )
-      return true
-    } catch (err) {
-      setIdle()
-      throw err
-    }
-  }
-
-  const messageID = input.messageID ?? Identifier.ascending("message")
-  if (!(await wait())) return false
-  const encodedImages = await Promise.all(
-    images.map(async (attachment) => ({
-      ...attachment,
-      dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
-    })),
-  )
-  if (!(await wait())) return false
-  const { requestParts, optimisticParts } = buildRequestParts({
-    prompt: input.draft.prompt,
-    context: input.draft.context,
-    images: encodedImages,
-    text,
-    sessionID: input.draft.sessionID,
-    messageID,
-    sessionDirectory: input.draft.sessionDirectory,
-  })
-
-  const message: Message = {
-    id: messageID,
-    sessionID: input.draft.sessionID,
-    role: "user",
-    time: { created: Date.now() },
-    agent: input.draft.agent,
-    model: { ...input.draft.model, variant: input.draft.variant },
-  }
-
-  const add = () =>
-    input.sync.session.optimistic.add({
-      directory: input.draft.sessionDirectory,
-      sessionID: input.draft.sessionID,
-      message,
-      parts: optimisticParts,
-    })
-
-  const remove = () =>
-    input.sync.session.optimistic.remove({
-      directory: input.draft.sessionDirectory,
-      sessionID: input.draft.sessionID,
-      messageID,
-    })
-
-  batch(() => {
-    if (input.pending) return
-    setBusy()
-    add()
-  })
-
-  try {
-    if (!(await wait())) {
-      batch(() => {
-        setIdle()
-        remove()
-      })
-      return false
-    }
-
-    await input.api.prompt(
-      {
-        sessionID: input.draft.sessionID,
-        id: messageID,
-        agent: input.draft.agent,
-        model: input.draft.model,
-        variant: input.draft.variant,
-        system: input.draft.system,
-        delivery: input.draft.delivery,
-        legacyParts: requestParts,
-        text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-        files: requestParts.flatMap((part) => {
-          if (part.type !== "file") return []
-          const text = part.source?.text
-          return [
-            {
-              uri: part.url,
-              name: part.filename,
-              mention: text ? { start: text.start, end: text.end, text: text.value } : undefined,
-            },
-          ]
-        }),
-        agents: requestParts.flatMap((part) =>
-          part.type === "agent"
-            ? [
-                {
-                  name: part.name,
-                  mention: part.source
-                    ? { start: part.source.start, end: part.source.end, text: part.source.value }
-                    : undefined,
-                },
-              ]
-            : [],
-        ),
-      },
-      { signal: input.signal },
-    )
-    return true
-  } catch (err) {
-    batch(() => {
-      setIdle()
-      remove()
-    })
-    throw err
   }
 }
 
