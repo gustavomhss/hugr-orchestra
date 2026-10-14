@@ -1,37 +1,40 @@
-import { dirname, isAbsolute, resolve, sep } from "node:path"
+import { join, resolve } from "node:path"
 
-// Compiler-record bookkeeping only: no basename search, extension guessing,
-// package resolution or receipt.cwd fallback for a relative source edge.
-export function compilerInputEdge(importer: string, path: string, captured: ReadonlyMap<string, readonly string[]>) {
-  const canonical = isAbsolute(path) ? resolve(path) : resolve(dirname(importer), path)
-  const keys = captured.get(canonical)
-  if (!keys) return undefined
-  if (keys.length !== 1) throw new Error("PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS")
-  return keys[0]
-}
-
-export async function calibrateCompilerEdge(input: { path: string; key: string }, edge: string, captured: ReadonlyMap<string, readonly string[]>) {
-  const accepted = compilerInputEdge(input.path, edge, captured)
-  if (accepted !== input.key) throw new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_NOT_ACCEPTED")
-  const decoys = [...captured].filter(([path]) => path.endsWith(`${sep}omni.ts`) && path !== input.path)
-  if (!decoys.length) throw new Error("PROVIDER_COMPILER_SAME_BASENAME_CONTROL_MISSING")
-  const cases = [
-    { name: "same-basename-only", edge, captured: new Map(decoys), expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "wrong-parent", edge: "./__unrecorded-parent__/omni.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "unrecorded-edge", edge: "./__unrecorded-compiler-edge__.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "ambiguous-canonical-input", edge, captured: new Map([...captured, [input.path, [input.key, `duplicate:${input.key}`]]]),
-      expected: "PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS" },
-  ]
-  const rejected = await Promise.all(cases.map(async (control) => {
-    const observed = await Promise.resolve().then(() => {
-      if (compilerInputEdge(input.path, control.edge, control.captured) === undefined) throw new Error("PROVIDER_COMPILER_EDGE_NOT_CAPTURED")
-      throw new Error("PROVIDER_COMPILER_EDGE_MUTATION_ACCEPTED")
-    }).then(() => { throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_VACUOUS") }, (error: unknown) => {
-      if (!(error instanceof Error) || error.message !== control.expected) throw error
-      return error.message
-    })
-    return { name: control.name, edge: control.edge, observed }
-  }))
-  if (compilerInputEdge(input.path, edge, captured) !== accepted) throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_NOT_RESTORED")
-  return { boundary: "copied compiler edge/input-index oracle only", importer: input, edge, accepted, decoys: decoys.map(([path]) => path), rejected, restored: accepted }
+// Pure receipt relationships only. Raw files/toolchain and installed binary bytes
+// are admitted by the caller; import records never decide resolution or liveness.
+export function requireCompilerProvenance(receipt: {
+  cwd: string; version: string; target: string; entrypoints: readonly string[]; binary: { sha256: string }
+  inputs: readonly { key: string; analysisKey: string; path: string; gitBlob: string; analysisBytes: number; compilerBytes: number }[]
+  metafile: {
+    inputs: Readonly<Record<string, { bytes: number }>>
+    outputs: Readonly<Record<string, { entryPoint?: string; inputs: Readonly<Record<string, { bytesInOutput: number }>> }>>
+  }
+  analysisMetafile: { inputs: Readonly<Record<string, { bytes: number }>> }
+}, expected: { root: string; version: string; target: string; manifestSHA256?: string; binarySHA256: string }, bindings: Readonly<Record<string, string>>) {
+  if (receipt.version !== expected.version || receipt.target !== expected.target || receipt.entrypoints.length !== 1 || receipt.entrypoints[0] !== "./src/omni-entry.ts")
+    throw new Error("PROVIDER_COMPILER_ENTRY_OR_VERSION_MISMATCH")
+  if (!expected.manifestSHA256 || receipt.binary.sha256 !== expected.manifestSHA256 || expected.binarySHA256 !== receipt.binary.sha256)
+    throw new Error("PROVIDER_COMPILER_BINARY_SHA_MISMATCH")
+  const inputs = new Map(receipt.inputs.map((input) => [input.key, input]))
+  if (!inputs.size || inputs.size !== receipt.inputs.length || inputs.size !== Object.keys(receipt.metafile.inputs).length ||
+      Object.keys(receipt.metafile.inputs).some((key) => !inputs.has(key))) throw new Error("PROVIDER_COMPILER_INPUT_SET_INVALID")
+  if (inputs.size !== Object.keys(receipt.analysisMetafile.inputs).length || new Set(receipt.inputs.map((input) => input.analysisKey)).size !== inputs.size ||
+      receipt.inputs.some((input) => !receipt.analysisMetafile.inputs[input.analysisKey] ||
+        receipt.analysisMetafile.inputs[input.analysisKey].bytes !== input.analysisBytes || receipt.metafile.inputs[input.key].bytes !== input.compilerBytes ||
+        input.analysisBytes !== input.compilerBytes)) throw new Error("PROVIDER_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+  const byPath = new Map(receipt.inputs.map((input) => [input.path, input]))
+  if (byPath.size !== inputs.size) throw new Error("PROVIDER_COMPILER_INPUT_PATH_AMBIGUOUS")
+  const outputs = Object.values(receipt.metafile.outputs)
+  const pins = Object.entries(bindings).map(([file, blob]) => {
+    const input = byPath.get(join(expected.root, file))
+    if (!input || input.gitBlob !== blob) throw new Error(`PROVIDER_DISPATCH_SOURCE_PIN_MISMATCH: ${file}`)
+    const emittedBytes = Math.max(0, ...outputs.map((output) => output.inputs[input.key]?.bytesInOutput ?? 0))
+    if (!(emittedBytes > 0)) throw new Error(`PROVIDER_DISPATCH_SOURCE_NOT_EMITTED: ${file}`)
+    return { file, key: input.key, gitBlob: blob, emittedBytes }
+  })
+  if (!pins.length) throw new Error("PROVIDER_DISPATCH_SOURCE_PINS_EMPTY")
+  const entry = byPath.get(join(expected.root, "packages/cli/src/omni-entry.ts"))
+  if (!entry || !outputs.some((output) => output.entryPoint && byPath.get(resolve(receipt.cwd, output.entryPoint)) === entry))
+    throw new Error("PROVIDER_COMPILER_ACTUAL_ENTRYPOINT_MISSING")
+  return { capturedInputs: [...inputs.keys()], pins, entrypoint: entry.key }
 }
