@@ -105,6 +105,10 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/script/monolith-inventory.ts",
+        "$TURBO_ROOT$/script/omni-mirror.sh",
+        "$TURBO_ROOT$/script/atlas-baseline.mjs",
+        "$TURBO_ROOT$/foundation/atlas/scripts/git-source-root.mjs",
+        "$TURBO_ROOT$/modules/atlas/scripts/git-source-root.mjs",
         "$TURBO_ROOT$/script/module-registry.json",
         "$TURBO_ROOT$/script/test-ci-package.ts",
         "$TURBO_ROOT$/script/test-ci-location.ts",

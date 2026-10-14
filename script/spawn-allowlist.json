@@ -73,6 +73,7 @@
     "packages/sdk/js/src/v2/server.ts": ["cross-spawn"],
     "packages/tui/src/clipboard.ts": ["child_process"],
     "packages/tui/src/editor.ts": ["child_process"],
+    "script/atlas-baseline.mjs": ["child_process"],
     "script/check-spawn-imports.ts": ["StdioClientTransport"],
     "script/godfile.ts": ["child_process"],
     "nix/scripts/probe-distribution.ts": ["child_process"],

@@ -51,6 +51,7 @@ jobs:
       - run: npm run doc-transcript-guard # every documented command transcript is re-run against the built binary, or named as unverifiable
       - run: npm run service-gate-guard # THE TRIPWIRE: no non-stdio transport while the service gates are shut (ARCH-12)
       - run: npm run own-snapshot-guard # Genesis snapshot exactly recomposes static Own skills; facts, units, and source blobs cannot drift
+      - run: node --test scripts/git-source-root.test.mjs scripts/own-history.test.mjs # historical root lookup and moved-corpus witnesses
       # Does this delivery touch CODE? On master (a push) ALWAYS run the suite — the
       # merge is the delivery. On a PR, run it only when the diff reaches packages/ or
       # harness/; a docs-only PR gets the guards above (which catch doc/REQ rot) and

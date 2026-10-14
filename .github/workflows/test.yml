@@ -110,15 +110,7 @@ jobs:
       - name: Set Atlas EARS baseline
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
-        run: |
-          if TREE=$(git rev-parse "$BASE_SHA:foundation/atlas" 2>/dev/null); then
-            echo "Using Atlas tree from $BASE_SHA"
-          else
-            TREE=$(git mktree </dev/null)
-            echo "Atlas absent at $BASE_SHA; using empty baseline tree"
-          fi
-          ATLAS_BASE=$(git -c user.name=atlas-ci -c user.email=atlas-ci@example.invalid commit-tree "$TREE" -m "Atlas CI baseline")
-          echo "EARS_COAMEND_BASE=$ATLAS_BASE" >> "$GITHUB_ENV"
+        run: node ../../script/atlas-baseline.mjs "$BASE_SHA"
 
       - name: Run Atlas guards
         run: |
@@ -138,6 +130,9 @@ jobs:
 
       - name: Test Own snapshot materializer
         run: node --test scripts/materialize-own-snapshot.test.mjs
+
+      - name: Test Atlas historical source roots
+        run: node --test scripts/git-source-root.test.mjs scripts/own-history.test.mjs
 
       - name: Test Own snapshot gate
         run: npm test -- harness/gates/own-snapshot-guard.test.mjs
