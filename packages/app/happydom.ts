@@ -21,6 +21,8 @@ const native = Object.fromEntries(
   }),
 )
 GlobalRegistrator.register()
+// GlobalWindow aliases defaultView to globalThis; retain DOM form serialization before restoring native HTTP globals.
+export const DOMFormData = window.FormData
 Object.defineProperties(globalThis, native)
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext

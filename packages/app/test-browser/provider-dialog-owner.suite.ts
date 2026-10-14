@@ -8,6 +8,7 @@ import { ServerConnection } from "../src/context/server"
 import { createServerContextCache } from "../src/context/global"
 import { ServerScope } from "../src/utils/server-scope"
 import type { Config } from "@orchestra/sdk/v2/client"
+import { DOMFormData } from "../happydom"
 
 const compiler = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 const subject = (path: string) => `${Bun.resolveSync(path, import.meta.dir)}?provider-owner`
@@ -15,6 +16,7 @@ const calls: Request[] = []
 const modelCatalogs: string[][] = []
 const failures: unknown[] = []
 const controls = { protocol: "v2" as "v1" | "v2" }
+const nativeHTTP = { FormData, Request, Response, Headers, fetch }
 const a: ServerConnection.Http = {
   type: "http",
   http: { url: "http://owner-a.test", username: "a", password: "synthetic-a" },
@@ -118,6 +120,7 @@ const tabs = Object.assign(container, {
 // View atoms and shell selection are fixtures. DialogProvider.show, runtime providers, model
 // preferences, SDK requests and transport revocation are real; sync supplies distinct A/B catalogs.
 const fixtures = {
+  forms: { FormData: DOMFormData },
   ui: {
     Button: button,
     ButtonV2: button,
@@ -223,13 +226,16 @@ Bun.plugin({
         return replacement ? `from ${JSON.stringify(replacement)}` : match
       })
       if (!file.endsWith(".tsx")) return { contents: source, loader: "ts" }
-      const result = await compiler("@babel/core").transformAsync(source, {
-        filename: file,
-        presets: [[compiler("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] },
-        configFile: false,
-        babelrc: false,
-      })
+      const result = await compiler("@babel/core").transformAsync(
+        file.endsWith("dialog-connect-provider.tsx") ? `import { FormData } from "owner-fixture:forms"\n${source}` : source,
+        {
+          filename: file,
+          presets: [[compiler("babel-preset-solid"), { generate: "dom" }]],
+          parserOpts: { plugins: ["jsx", "typescript"] },
+          configFile: false,
+          babelrc: false,
+        },
+      )
       return { contents: result.code, loader: "ts" }
     })
   },
@@ -264,6 +270,28 @@ async function until(predicate: () => boolean) {
 function fill(input: HTMLInputElement, value: string) {
   input.value = value
   input.dispatchEvent(new Event("input", { bubbles: true }))
+}
+
+function filledKey(input: HTMLInputElement, value: string) {
+  fill(input, value)
+  const form = input.form
+  const realm = form?.ownerDocument.defaultView as typeof window | null
+  if (!form || !realm) throw new Error("Filled provider key has no form realm")
+  const measured = {
+    name: input.name,
+    value: input.value,
+    associated: form.elements.namedItem(input.name) === input,
+    sameConstructor: globalThis.FormData === realm.FormData,
+    globalEntry: new globalThis.FormData(form).get(input.name),
+    realmEntry: new realm.FormData(form).get(input.name),
+    fixtureEntry: new fixtures.forms.FormData(form).get(input.name),
+  }
+  console.log("provider form realm", JSON.stringify(measured))
+  expect(measured.name).toBe("apiKey")
+  expect(measured.value).toBe(value)
+  expect(measured.associated).toBe(true)
+  expect(measured.fixtureEntry).toBe(value)
+  Object.entries(nativeHTTP).forEach(([key, constructor]) => expect(Reflect.get(globalThis, key)).toBe(constructor))
 }
 function mount() {
   const root = createRoot((dispose) => {
@@ -369,14 +397,15 @@ test("A-opened Settings replaces with B picker, catalog and key request; revoked
     await until(() => screen.host.textContent?.includes("owner-b.test discovery") === true)
     screen.host.querySelector<HTMLButtonElement>('[data-provider-id="openrouter"]')!.click()
     await until(() => !!screen.host.querySelector('input[name="apiKey"]'))
+    filledKey(screen.host.querySelector<HTMLInputElement>('input[name="apiKey"]')!, "synthetic-provider-key")
     expect(modelCatalogs.at(-1)).toEqual(["owner-b.test model"])
-    fill(screen.host.querySelector<HTMLInputElement>('input[name="apiKey"]')!, "synthetic-provider-key")
     // Changing the route and same-key credentials must not silently retarget an open secret form.
     setState("directory", "/changed")
     screen.host.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
     await until(() => calls.some((request) => request.method === "POST" && request.url.includes("/connect/key")))
     const write = calls.find((request) => request.method === "POST" && request.url.includes("/connect/key"))!
     expect(new URL(write.url).origin).toBe(b.http.url)
+    expect(write).toBeInstanceOf(nativeHTTP.Request)
     expect(write.headers.get("authorization")).toBe(`Basic ${btoa("b:synthetic-b")}`)
     expect(await write.clone().json()).toMatchObject({ key: "synthetic-provider-key" })
     expect(write.url).toContain(encodeURIComponent("/b"))
@@ -397,7 +426,7 @@ test("A-opened Settings replaces with B picker, catalog and key request; revoked
     )!
     add.click()
     await until(() => !!screen.host.querySelector('input[name="apiKey"]'))
-    fill(screen.host.querySelector<HTMLInputElement>('input[name="apiKey"]')!, "synthetic-revoked-key")
+    filledKey(screen.host.querySelector<HTMLInputElement>('input[name="apiKey"]')!, "synthetic-revoked-key")
     setState("servers", [a, { ...b, http: { ...b.http, password: "synthetic-edited" } }])
     const before = calls.filter((request) => request.url.includes("/connect/key")).length
     screen.host.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
