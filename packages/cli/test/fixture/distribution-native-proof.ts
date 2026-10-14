@@ -318,7 +318,8 @@ export async function qualify(input: {
     const key = RipgrepRelease.key({ arch: process.arch, platform: process.platform, musl: nativeLibc?.kind === "musl" })
     const rg = join(input.payload, "bin/ripgrep")
     await RipgrepBundle.verify(rg, key)
-    expect(await successful([join(rg, RipgrepRelease.executable()), "--version"], input.box)).toStartWith(`ripgrep ${RipgrepRelease.VERSION}\n`)
+    const rgVersion = (await successful([join(rg, RipgrepRelease.executable()), "--version"], input.box)).split("\n")[0]?.trim()
+    expect(rgVersion?.match(/^ripgrep (\d+\.\d+\.\d+)(?: \(rev [0-9a-f]+\))?$/)?.[1]).toBe(RipgrepRelease.VERSION)
     expect(await successful([join(rg, RipgrepRelease.executable()), "--fixed-strings", "--count-matches", "export interface Shape", "sample.ts"], input.box)).toBe("1")
     lease.attempted = true
     const started = await (process.platform === "win32"
