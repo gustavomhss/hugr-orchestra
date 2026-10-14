@@ -189,23 +189,22 @@ export function make(input: {
         yield* cleanup(prior)
         return yield* refuse(prior.denied)
       }
+      const ownership: Admission = prior ?? { args: structuredClone(hook.tool_input), toolName: hook.tool_name, dispatcher: { ...dispatcher }, spent: false }
+      admissions.set(hook.tool_use_id, ownership)
       const args = record(hook.tool_input)
       const subagentType = text(args, "subagent_type") ?? "general-purpose"
-      const policies = yield* SessionSubagentModels.Service
       const existing = records.get(hook.tool_use_id)
       if (existing) {
-        yield* policies.assertChild(dispatcher.sessionID, existing.modelRef)
+        yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, existing.modelRef)
         if (existing.seat) yield* running(existing)
-        yield* policies.assertChild(dispatcher.sessionID, existing.modelRef)
+        yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, existing.modelRef)
         return
       }
       const selection = input.models ? yield* input.models(subagentType, args.model) : undefined
       // Recheck after the per-call wait and model lookup, before any grant/child/native dispatch.
       // Generic agents pass this same canonical boundary, even though they have no seat reservation.
-      yield* policies.assertChild(dispatcher.sessionID, selection?.ref)
-      if (prior?.spent) return yield* refuse(`HOLD: admission for ${hook.tool_use_id} already spent its grant; no new child may be created`)
-      const ownership: Admission = { args: structuredClone(hook.tool_input), toolName: hook.tool_name, dispatcher: { ...dispatcher }, spent: false }
-      admissions.set(hook.tool_use_id, ownership)
+      yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, selection?.ref)
+      if (ownership.spent) return yield* refuse(`HOLD: admission for ${hook.tool_use_id} already spent its grant; no new child may be created`)
       return yield* Effect.gen(function* () {
         // Claude Code runs a subagent in the background unless the call says otherwise; an absent type is its default agent.
         const base = { toolUseID: hook.tool_use_id, toolName: hook.tool_name === "Task" ? "Task" as const : "Agent" as const, subagentType,
@@ -232,13 +231,13 @@ export function make(input: {
         const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, parent.projectID)
         if (authority.ancestry.length - 1 >= (cfg.subagent_depth ?? 1))
           return yield* refuse("You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.")
-        yield* policies.assertChild(dispatcher.sessionID, selection?.ref)
+        yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, selection?.ref)
         const grant = seat.writeRoots ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID, ownership) : undefined
         const permission = yield* WriteRoots.bind(seat.id, grant?.writePaths,
           GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }))
         const brief = yield* lastUser(parent.id)
         const confirmed = input.models ? yield* input.models(subagentType, args.model) : undefined
-        yield* policies.assertChild(dispatcher.sessionID, confirmed?.ref)
+        yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, confirmed?.ref)
         // Once child creation starts, failures are closed: restoring this capability could authorize another child.
         ownership.spent = true
         const child = yield* sessions.create({ parentID: parent.id, title: `${base.description} (@${next.name} subagent)`, agent: seat.id, permission })
@@ -281,15 +280,31 @@ export function make(input: {
         records.set(hook.tool_use_id, entry.admitted ? entry : { ...entry, model: checked.value?.model, modelRef: checked.value?.ref, admitted: true })
         return
       }
-      // Latch refusal and remove replay eligibility before any fallible teardown.
-      ownership.denied = "HOLD: subagent model policy denied this native admission"
-      ownership.cleanup = entry.admitted ? undefined : entry.child
-      join.hold(hook.tool_use_id, ownership.denied)
-      records.delete(hook.tool_use_id)
-      yield* cleanup(ownership)
+      yield* deny(hook.tool_use_id, ownership)
       return yield* Effect.failCause(checked.cause)
     }))
   })
+
+  function assertChild(toolUseID: string, ownership: Admission, sessionID: SessionID, model: ModelV2.Ref | undefined) {
+    return Effect.gen(function* () {
+      const policies = yield* SessionSubagentModels.Service
+      yield* policies.assertChild(sessionID, model).pipe(Effect.catchCause((cause) =>
+        deny(toolUseID, ownership).pipe(Effect.andThen(Effect.failCause(cause)))))
+    })
+  }
+
+  function deny(toolUseID: string, ownership: Admission) {
+    return Effect.gen(function* () {
+      const entry = records.get(toolUseID)
+      // Latch refusal, spend reserved authority and withdraw replay eligibility before fallible teardown.
+      ownership.denied ??= "HOLD: subagent model policy denied this native admission"
+      ownership.spent = true
+      ownership.cleanup ??= entry?.admitted ? undefined : entry?.child
+      join.hold(toolUseID, ownership.denied)
+      records.delete(toolUseID)
+      yield* cleanup(ownership)
+    }).pipe(Effect.uninterruptible)
+  }
 
   function cleanup(ownership: Admission) {
     return Effect.gen(function* () {
