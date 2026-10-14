@@ -1,9 +1,63 @@
 import { expect } from "bun:test"
-import { readFile, readdir, readlink, realpath } from "node:fs/promises"
+import { lstat, readFile, readdir, readlink, realpath, stat } from "node:fs/promises"
 import { join } from "node:path"
 import { sha256 } from "./distribution-native"
 
 type Identity = { pid: number; parent: number; start: string; executable: string; cwd: string; argv: string[] }
+
+async function fileIdentity(file: string) {
+  const info = await lstat(file, { bigint: true })
+  if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1n) throw new Error("PROVIDER_INSTALLED_IMAGE_NOT_REGULAR")
+  return { path: await realpath(file), dev: info.dev.toString(), ino: info.ino.toString(), size: info.size.toString(),
+    mode: info.mode.toString(), mtime: info.mtimeNs.toString(), ctime: info.ctimeNs.toString() }
+}
+
+export async function installedAddon(payload: string, process: Identity) {
+  const before = await identity(process.pid)
+  if (!before || before.start !== process.start) throw new Error("PROVIDER_ADDON_PID_BIRTH_MISMATCH")
+  const file = join(await realpath(payload), "bin/hugr_omni.node")
+  const expected = await fileIdentity(file)
+  const rows = (await readFile(`/proc/${process.pid}/maps`, "utf8")).trim().split("\n").map((line) => {
+    const match = /^([a-f0-9]+)-([a-f0-9]+) ([rwxps-]{4}) ([a-f0-9]+) ([a-f0-9]+):([a-f0-9]+) (\d+)\s*(.*)$/.exec(line)
+    if (!match) throw new Error("PROVIDER_PROC_MAPS_ROW_INVALID")
+    return { start: match[1], end: match[2], flags: match[3], offset: match[4], major: match[5], minor: match[6], ino: match[7], path: match[8] }
+  }).filter((row) => row.path.includes("hugr_omni.node"))
+  if (!rows.length) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_MISSING")
+  const device = BigInt(expected.dev)
+  const major = (device >> 8n & 0xfffn) | (device >> 32n & 0xfffff000n)
+  const minor = (device & 0xffn) | (device >> 12n & 0xffffff00n)
+  for (const row of rows) {
+    if (row.path.endsWith(" (deleted)")) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_DELETED")
+    if (row.path !== expected.path || BigInt(row.ino) !== BigInt(expected.ino) ||
+        BigInt(`0x${row.major}`) !== major || BigInt(`0x${row.minor}`) !== minor)
+      throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_IDENTITY_MISMATCH")
+  }
+  if (!rows.some((row) => row.flags.includes("x"))) throw new Error("PROVIDER_INSTALLED_ADDON_MAPPING_NOT_EXECUTABLE")
+  const afterFile = await fileIdentity(file)
+  if (JSON.stringify(afterFile) !== JSON.stringify(expected)) throw new Error("PROVIDER_INSTALLED_ADDON_STAT_CHANGED")
+  const after = await identity(process.pid)
+  if (!after || after.start !== before.start || after.executable !== before.executable) throw new Error("PROVIDER_ADDON_PID_CHANGED_DURING_OBSERVATION")
+  return { process: after, file: expected, mappings: rows }
+}
+
+async function installedExecutable(file: string, process: Identity) {
+  const before = await identity(process.pid)
+  if (!before || before.start !== process.start) throw new Error("PROVIDER_IMAGE_PID_BIRTH_MISMATCH")
+  const expected = await fileIdentity(file)
+  const link = await readlink(`/proc/${process.pid}/exe`)
+  if (link.endsWith(" (deleted)")) throw new Error("PROVIDER_INSTALLED_EXECUTABLE_DELETED")
+  const opened = await stat(`/proc/${process.pid}/exe`, { bigint: true })
+  if (link !== expected.path || opened.dev.toString() !== expected.dev || opened.ino.toString() !== expected.ino ||
+      opened.size.toString() !== expected.size || opened.mode.toString() !== expected.mode ||
+      opened.mtimeNs.toString() !== expected.mtime || opened.ctimeNs.toString() !== expected.ctime || !opened.isFile())
+    throw new Error("PROVIDER_INSTALLED_EXECUTABLE_IDENTITY_MISMATCH")
+  const digest = sha256(await readFile(`/proc/${process.pid}/exe`))
+  const afterFile = await fileIdentity(file)
+  const after = await identity(process.pid)
+  if (JSON.stringify(afterFile) !== JSON.stringify(expected) || !after || after.start !== before.start || after.executable !== link)
+    throw new Error("PROVIDER_EXECUTABLE_CHANGED_DURING_OBSERVATION")
+  return { process: after, file: expected, sha256: digest }
+}
 
 export async function identity(pid: number): Promise<Identity | undefined> {
   return Promise.all([
@@ -28,7 +82,8 @@ export async function observeInstalledTool(payload: string, database: string, cw
   const nativeDigest = sha256(await readFile(native))
   const supervisor = await realpath(join(payload, "bin/hugr-omni-supervisor"))
   const digest = sha256(await readFile(supervisor))
-  const observed: Array<{ native: Identity; supervisor: Identity; shell: Identity; digest: string; nativeDigest: string }> = []
+  const observed: Array<{ native: Identity; supervisor: Identity; shell: Identity; digest: string; nativeDigest: string;
+    addon: Awaited<ReturnType<typeof installedAddon>>; supervisorImage: Awaited<ReturnType<typeof installedExecutable>> }> = []
   const state = { stopped: false }
   const control = await identity(process.pid)
   expect(control?.pid).toBe(process.pid)
@@ -66,9 +121,14 @@ export async function observeInstalledTool(payload: string, database: string, cw
         if (!env.split("\0").includes(`ORCHESTRA_DB=${database}`)) continue
         expect(env.split("\0")).toContain("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict")
         expect(env.split("\0").filter((entry) => /^HUGR_OMNI_/i.test(entry))).toEqual([])
-        expect(sha256(await readFile(`/proc/${parent.pid}/exe`))).toBe(digest)
-        expect(sha256(await readFile(`/proc/${cli.pid}/exe`))).toBe(nativeDigest)
-        observed.push({ native: cli, supervisor: parent, shell, digest, nativeDigest })
+        const addon = await installedAddon(payload, cli)
+        const supervisorImage = await installedExecutable(supervisor, parent)
+        const nativeImage = await installedExecutable(native, cli)
+        expect(supervisorImage.sha256).toBe(digest)
+        expect(nativeImage.sha256).toBe(nativeDigest)
+        if ((await identity(cli.pid))?.start !== cli.start || (await identity(parent.pid))?.start !== parent.start ||
+            (await identity(shell.pid))?.start !== shell.start) throw new Error("PROVIDER_TOOL_CHAIN_BIRTH_CHANGED_DURING_OBSERVATION")
+        observed.push({ native: cli, supervisor: parent, shell, digest, nativeDigest, addon, supervisorImage })
       }
       await Bun.sleep(20)
     }

@@ -19,20 +19,25 @@ import type { OwnedOllama } from "./distribution-provider-ollama"
 import { captureInference, streamedCompletion } from "./distribution-provider-capture"
 import { observeInstalledTool } from "./distribution-provider-process"
 import { providerDaemon } from "./distribution-provider-daemon"
+import { calibrateSuccessfulBashResult, requireSuccessfulBashResult } from "./distribution-provider-tool-result"
+import type { CompilerReceipts } from "./distribution-provider-sourcegraph"
 
 const ContextResponse = Schema.Struct({ data: Schema.Array(SessionMessage.Message) })
 const ActiveResponse = Schema.Struct({ data: Schema.Record(Schema.String, Schema.Struct({ type: Schema.Literal("running") })) })
 const HistoryResponse = Schema.Struct({ data: Schema.Array(SessionEvent.Durable), hasMore: Schema.Boolean })
 
 // All Session operations use the npm-installed public wrapper's api command.
-// SessionHandler -> SessionV2 -> SessionExecutionLocal -> SessionRunnerLLM is
-// structurally checked in distribution-provider-sourcegraph.ts before builds.
+// Actual Bun --compile receipt/source pins bind dispatch and selected composition
+// to this binary; public V2 admission/projections below establish the live path.
 export async function qualifyProvider(input: {
   payload: string; version: string; box: Sandbox; stage: string; evidence: string; ollama: OwnedOllama
+  compiler: CompilerReceipts[number]
 }) {
   const modules = resolve(input.payload, "../..")
   const launcher = join(modules, ".bin/orchestra")
   const payload = await realpath(input.payload)
+  if (input.compiler.version !== input.version || sha256(await readFile(join(payload, "bin/orchestra"))) !== input.compiler.binarySHA256)
+    throw new Error("PROVIDER_INSTALLED_COMPILER_BINARY_MISMATCH")
   const publicPath = await realpath(launcher)
   expect(publicPath).toBe(await realpath(join(modules, "@orchestra/cli/bin/orchestra.cjs")))
   if (!payload.startsWith((await realpath(input.box.directory)) + sep)) throw new Error("PROVIDER_PAYLOAD_OUTSIDE_OWNED_NPM_BOX")
@@ -223,17 +228,21 @@ export async function qualifyProvider(input: {
           expect(result.error).toEqual(tool.state.error)
         }
         if (kind !== "fault") {
-          expect(await readFile(file, "utf8")).toBe(`${nonce}\n`)
+          const stdout = await readFile(file, "utf8")
+          expect(stdout).toBe(`${nonce}\n`)
           const info = await lstat(file)
           expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
-          if (tool.state.status !== "completed") throw new Error("PROVIDER_NATIVE_TOOL_NOT_COMPLETED")
-          expect(tool.state.structured).toMatchObject({ exit: 0, truncated: false })
-          expect(JSON.stringify(tool.state.content)).toContain(nonce)
-          expect(sent.content).toContain(nonce)
+          // File, DB projection and serving-daemon ancestry are genuine and stay
+          // fixed while the copied request's tool-result view alone is mutated.
+          records.slice(1).forEach((record) => requireSuccessfulBashResult(record.request, tool, stdout))
+          await Bun.write(join(evidence, "tool-result-oracle-control.json"), JSON.stringify(
+            await calibrateSuccessfulBashResult(continuation.requestJSON, tool, stdout, nonce), null, 2,
+          ))
           expect(terminal.content).toContain(nonce)
         }
         await Bun.write(join(evidence, "oracle.json"), JSON.stringify({ version: input.version, launcher, publicPath, payload,
           native: join(payload, "bin/orchestra"), supervisor, supervisorSHA256: sha256(original), serving, chain,
+          compiler: input.compiler,
           nonce, file, kind, sessionID: created.id, admissionID: admitted.id, callID: tool.id, turns: records.length,
           terminalCompletedAt: final.time.completed === undefined ? undefined : DateTime.toEpochMillis(final.time.completed),
           fileCreated: kind !== "fault", strict: true }, null, 2))
