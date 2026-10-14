@@ -1,6 +1,6 @@
 // Captures declarations and pins. Cargo resolution, import reachability and runtime qualification are separate checks.
 import path from "node:path"
-import { readdir, realpath } from "node:fs/promises"
+import { lstat, readdir, realpath } from "node:fs/promises"
 
 const producerHash = hash(await Bun.file(import.meta.filename).bytes())
 
@@ -15,7 +15,7 @@ export async function monolithInventory(directory: string, revision?: string) {
     return { value: record(value, file), sha256: captured.sha256 }
   }
   const workspace = await read("package.json")
-  const registered = await source.scan(".", "script/toolchain-registry.json")
+  const registered = await source.hasInput("script/toolchain-registry.json") ? ["script/toolchain-registry.json"] : []
   // Historical captures predate the registry; only actual absence permits the legacy layout.
   const toolchain = registered.length ? (await read("script/toolchain-registry.json")).value : {
     format: 1, roots: {
@@ -161,6 +161,22 @@ async function captureSource(directory: string, revision?: string) {
   const cache = new Map<string, Promise<{ path: string; sha256: string; bytes: Uint8Array }>>()
   const scans = new Map<string, string[]>()
   const directories = new Map<string, string[]>()
+  const presences = new Map<string, boolean>()
+  const hasInput = async (file: string) => {
+    relative(file)
+    if (entries && identity.mode === "git") {
+      const entry = entries.get(file)
+      if (entry && ["100644", "100755"].includes(entry.mode)) return true
+      if (entry || git(root, ["ls-tree", "-z", identity.revision, "--", file]).length) throw new Error(`BASELINE_INVALID_INPUT_TYPE:${file}`)
+      return false
+    }
+    const entry = await lstat(path.join(root, file)).catch((cause: unknown) => {
+      if (cause instanceof Error && "code" in cause && cause.code === "ENOENT") return undefined
+      throw new Error(`BASELINE_UNREADABLE_INPUT:${file}`, { cause })
+    })
+    if (entry && !entry.isFile()) throw new Error(`BASELINE_INVALID_INPUT_TYPE:${file}`)
+    return entry !== undefined
+  }
   const read = (file: string) => {
     relative(file)
     const pending = cache.get(file)
@@ -190,6 +206,11 @@ async function captureSource(directory: string, revision?: string) {
     : (await readdir(path.join(root, directory), { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()
   return {
     identity, read,
+    hasInput: async (file: string) => {
+      const present = await hasInput(file)
+      presences.set(file, present)
+      return present
+    },
     scan: async (directory: string, pattern: string) => {
       const files = await scan(directory, pattern)
       scans.set(JSON.stringify([directory, pattern]), files)
@@ -202,6 +223,9 @@ async function captureSource(directory: string, revision?: string) {
     },
     verify: async () => {
       if (entries) return
+      await Promise.all([...presences].map(async ([file, present]) => {
+        if (await hasInput(file) !== present) throw new Error(`BASELINE_DISCOVERY_DRIFT:${file}`)
+      }))
       await Promise.all([...cache].map(async ([file, captured]) => {
         if (hash(await input(root, file)) !== (await captured).sha256) throw new Error(`BASELINE_INPUT_DRIFT:${file}`)
       }))
