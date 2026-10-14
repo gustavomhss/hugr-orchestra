@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { lstat, mkdtemp, readFile, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve, sep } from "node:path"
-import { buildVersions, cli, snapshot, versions } from "./fixture/distribution-native"
+import { buildVersions, cli, sha256, snapshot, versions } from "./fixture/distribution-native"
 import type { Built } from "./fixture/distribution-native"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { stopServices } from "./fixture/distribution-native-proof"
@@ -72,6 +72,7 @@ function cleanup() {
     if (state.controlsComplete && state.evidence) await Bun.write(join(state.evidence, "qualified.json"), JSON.stringify({
       status: "qualified", image, model, modelDigest, admitted: state.controlsComplete,
       controls: ["real-inference", "native-cpu", "outside-cwd-nonce", "real-tool-result-continuation",
+        "exact-wire-bash-tool-result", "nonce-only-wire-oracle-mutation", "installed-platform-wrapper-preserved",
         "terminal-assistant", "durable-user-assistant-tool", "exact-installed-supervisor-chain", "fault-blocked", "restored",
         "owned-container-stopped-removed", "owned-fixture-removed"],
     }, null, 2))
@@ -87,7 +88,23 @@ test("npm-installed public service/api drives Session V2 inference, installed-su
   const admitted: string[] = []
   await npmChannel(fixture.directory, fixture.built, async (installed) => {
     const stage = `installed-${admitted.length + 1}-${installed.version}`
-    await qualifyProvider({ ...installed, stage, evidence: fixture.evidence, ollama: fixture.ollama })
+    const wrapper = resolve(installed.payload, "../cli")
+    const platformBefore = await snapshot(installed.payload)
+    const wrapperBefore = await snapshot(wrapper)
+    if (!platformBefore || !wrapperBefore) throw new Error("PROVIDER_INSTALLED_CLOSURE_SNAPSHOT_MISSING")
+    await qualifyProvider({ ...installed, stage, evidence: fixture.evidence, ollama: fixture.ollama }).finally(async () => {
+      // Compare complete installed bytes, executable flags, real-file types and
+      // inventory (including empty directories) before npm can replace this tree.
+      expect(await snapshot(installed.payload), `${stage}: installed platform payload changed`).toEqual(platformBefore)
+      expect(await snapshot(wrapper), `${stage}: installed public wrapper changed`).toEqual(wrapperBefore)
+      await Bun.write(join(fixture.evidence, `${stage}-installed-closure.json`), JSON.stringify({
+        stage, version: installed.version, platform: installed.payload, wrapper,
+        platformFiles: [...platformBefore.files].map(([path, file]) => ({ path, sha256: sha256(file.bytes), executable: file.executable })),
+        wrapperFiles: [...wrapperBefore.files].map(([path, file]) => ({ path, sha256: sha256(file.bytes), executable: file.executable })),
+        platformDirectories: platformBefore.directories, wrapperDirectories: wrapperBefore.directories,
+        completeSnapshotsEqual: true,
+      }, null, 2))
+    })
     admitted.push(installed.version)
   }).catch(async (error: unknown) => {
     const failure = error instanceof Error ? error.message : String(error)

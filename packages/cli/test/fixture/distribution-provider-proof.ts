@@ -19,6 +19,7 @@ import type { OwnedOllama } from "./distribution-provider-ollama"
 import { captureInference, streamedCompletion } from "./distribution-provider-capture"
 import { observeInstalledTool } from "./distribution-provider-process"
 import { providerDaemon } from "./distribution-provider-daemon"
+import { calibrateSuccessfulBashResult, requireSuccessfulBashResult } from "./distribution-provider-tool-result"
 
 const ContextResponse = Schema.Struct({ data: Schema.Array(SessionMessage.Message) })
 const ActiveResponse = Schema.Struct({ data: Schema.Record(Schema.String, Schema.Struct({ type: Schema.Literal("running") })) })
@@ -223,13 +224,16 @@ export async function qualifyProvider(input: {
           expect(result.error).toEqual(tool.state.error)
         }
         if (kind !== "fault") {
-          expect(await readFile(file, "utf8")).toBe(`${nonce}\n`)
+          const stdout = await readFile(file, "utf8")
+          expect(stdout).toBe(`${nonce}\n`)
           const info = await lstat(file)
           expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
-          if (tool.state.status !== "completed") throw new Error("PROVIDER_NATIVE_TOOL_NOT_COMPLETED")
-          expect(tool.state.structured).toMatchObject({ exit: 0, truncated: false })
-          expect(JSON.stringify(tool.state.content)).toContain(nonce)
-          expect(sent.content).toContain(nonce)
+          // File, DB projection and serving-daemon ancestry are genuine and stay
+          // fixed while the copied request's tool-result view alone is mutated.
+          records.slice(1).forEach((record) => requireSuccessfulBashResult(record.request, tool, stdout))
+          await Bun.write(join(evidence, "tool-result-oracle-control.json"), JSON.stringify(
+            await calibrateSuccessfulBashResult(continuation.requestJSON, tool, stdout, nonce), null, 2,
+          ))
           expect(terminal.content).toContain(nonce)
         }
         await Bun.write(join(evidence, "oracle.json"), JSON.stringify({ version: input.version, launcher, publicPath, payload,
