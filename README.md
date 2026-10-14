@@ -53,6 +53,7 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | [`packages/plugin`](packages/plugin/README.md) | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority |
 | [`modules/relay`](modules/relay/README.md) | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle |
 | [`modules/capability-assets`](modules/capability-assets/README.md) | Data-only capability catalog, pinned source provenance, and license notices |
+| [`modules/maestro/arsenal`](modules/maestro/arsenal/README.md) | Maestro tool registry, MCP adapter, governance contracts, and host-authorized operations |
 | `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
 | `packages/omni`            | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
 | [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
@@ -64,4 +65,4 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | `CONTEXT.md`               | Vocabulary of the session runtime                                                               |
 | `AGENTS.md`                | Rules for agents that work in this repository                                                   |
 
-Runtime direction is Schema → Core/Protocol → Server. Client runtime uses Schema/Protocol only; `sdk-next` is the permitted embedded composition. The table describes current paths. Relay is now in `modules/relay`; other planned `apps/`, `modules/`, `native/`, and `tooling/` moves remain separate deliveries.
+Runtime direction is Schema → Core/Protocol → Server. Client runtime uses Schema/Protocol only; `sdk-next` is the permitted embedded composition. The table describes current paths; remaining planned `apps/`, `modules/`, `native/`, and `tooling/` moves remain separate deliveries.
