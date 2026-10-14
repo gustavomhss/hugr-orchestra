@@ -11,6 +11,9 @@ import { BackgroundJob } from "@/background/job"
 import { BackgroundProcess } from "@/background/process"
 import { Command } from "@/command"
 import { Config } from "@/config/config"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { HostCatalog } from "./handlers/catalog"
+import { HostAgentExecution } from "./handlers/agent-execution"
 import { Credential } from "@orchestra/core/credential"
 import { Workspace } from "@/control-plane/workspace"
 import { Env } from "@/env"
@@ -67,8 +70,9 @@ import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
-import * as SessionExecutionLocal from "@orchestra/core/session/execution/local"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { lazy } from "@/util/lazy"
 import { CorsConfig, isAllowedCorsOrigin, type CorsOptions } from "@orchestra/server/cors"
 import { serveUIEffect } from "@/server/shared/ui"
@@ -97,7 +101,6 @@ import { permissionHandlers } from "./handlers/permission"
 import { projectHandlers } from "./handlers/project"
 import { projectCopyHandlers } from "./handlers/project-copy"
 import { providerHandlers } from "./handlers/provider"
-import { HostAgentExecution } from "./handlers/agent-execution"
 import { ptyConnectHandlers, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
 import { sessionHandlers } from "./handlers/session"
@@ -169,7 +172,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     ptyHandlers,
     questionHandlers,
     permissionHandlers,
-    providerHandlers,
+    providerHandlers.pipe(Layer.provide(ClaudeCodeSDK.layer)),
     sessionHandlers,
     sessionProcessHandlers,
     syncHandlers,
@@ -183,6 +186,8 @@ const instanceRoutes = instanceApiRoutes.pipe(
 )
 const serverRoutes = HttpApiBuilder.layer(Api).pipe(
   Layer.provide(handlers),
+  Layer.provide(HostCatalog.layer.pipe(Layer.provide(ClaudeCodeSDK.layer))),
+  Layer.provide(HostAgentExecution.layer),
   Layer.provide(PluginPtyEnvironment.layer),
   Layer.provide([serverHttpApiAuthLayer, v2SchemaErrorLayer]),
 )
@@ -281,6 +286,24 @@ export function createRoutes(
   corsOptions?: CorsOptions,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
   const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
+  // One root owns native Session execution, scheduled drains, legacy bootstrap,
+  // and every Location map captured by either protocol's constructors.
+  const services = AppNodeBuilderV1.build(
+    LayerNode.group([
+      app,
+      MoveSession.node,
+      LocationServiceMap.node,
+      SessionV2.node,
+      SessionExecution.node,
+      SessionSubagentModels.node,
+      ScheduledTask.node,
+      ScheduledTask.daemonNode,
+    ]),
+    [
+      [LocationServiceMap.node, locationServiceMapV2],
+      [SessionExecution.node, SessionExecutionLocal.node],
+    ],
+  )
 
   return Layer.mergeAll(
     rootApiRoutes,
@@ -291,30 +314,12 @@ export function createRoutes(
     docRoute,
     uiRoute,
   ).pipe(
-    Layer.provide([
-      errorLayer,
-      compressionLayer,
-      corsVaryFix,
-      fenceLayer,
-      cors(corsOptions),
-      AppNodeBuilderV1.build(MoveSession.node, [[LocationServiceMap.node, locationServiceMapV2]]),
-      HttpServer.layerServices,
-    ]),
+    Layer.provide([errorLayer, compressionLayer, corsVaryFix, fenceLayer, cors(corsOptions), HttpServer.layerServices]),
     Layer.provide(Layer.succeed(CorsConfig)(corsOptions)),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(PtyEnvironment.layer),
-    Layer.provide(
-      // Scheduled tasks share this build so their runs go through the same Session coordinator.
-      AppNodeBuilderV1.build(LayerNode.group([SessionV2.node, ScheduledTask.node, ScheduledTask.daemonNode]), [
-        [LocationServiceMap.node, locationServiceMapV2],
-        [SessionExecution.node, SessionExecutionLocal.node],
-      ]),
-    ),
-    Layer.provide(locationServiceMapV2),
-
-    Layer.provide(HostAgentExecution.layer),
-    Layer.provide(AppNodeBuilderV1.build(app)),
+    Layer.provide(services),
     // Must stay last: layers provided later in this pipe build beneath earlier ones,
     // so Observability must come after every service graph. Otherwise eagerly forked
     // fibers (e.g. the ModelsDev background refresh) capture Effect's default stdout
