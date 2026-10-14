@@ -87,6 +87,10 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     sourcemap: sourcemapsFlag ? "linked" : "none",
     splitting: true,
     define: {
+      // Noncompile analysis needs the same native constants as --compile so
+      // foreign optional dependency branches disappear before resolution.
+      "process.platform": JSON.stringify(item.os),
+      "process.arch": JSON.stringify(item.arch),
       ORCHESTRA_VERSION: JSON.stringify(Script.version),
       ORCHESTRA_CLI_NAME: JSON.stringify(binary),
       ORCHESTRA_MODELS_DEV: modelsData,
