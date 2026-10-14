@@ -1,6 +1,6 @@
 import { win32 } from "node:path"
 import type { ArtifactDirectory } from "./artifact-native"
-import { artifactOwnedHandle } from "./artifact-native"
+import { artifactOwnedHandle, artifactWindowsFFI } from "./artifact-native"
 
 // Closed input grammar: ordinary drive absolute, ordinary UNC, or unrooted
 // relative paths. Namespace/device/GUID and drive-relative paths are not inputs.
@@ -38,7 +38,7 @@ export async function artifactWindowsRoots(input: {
   identity(handle: bigint): string
   close(handle: bigint): void
 }) {
-  const { dlopen, ptr } = await import("bun:ffi")
+  const { dlopen, ptr } = await artifactWindowsFFI()
   const library = dlopen("kernel32.dll", {
     QueryDosDeviceW: { args: ["ptr", "ptr", "u32"], returns: "u32" },
     GetFinalPathNameByHandleW: { args: ["u64", "ptr", "u32", "u32"], returns: "u32" },

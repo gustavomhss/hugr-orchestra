@@ -1,12 +1,14 @@
-import { artifactNativeError, artifactOwnedHandle, requireArtifactLeaf, requireArtifactHost } from "./artifact-native"
+import { artifactNativeError, artifactOwnedHandle, requireArtifactLeaf, requireArtifactHost, artifactWindowsFFI } from "./artifact-native"
 import { artifactWindowsRoots } from "./artifact-windows-root"
 import type { ArtifactDirectory, ArtifactNative } from "./artifact-native"
 
 export async function artifactWindows(): Promise<ArtifactNative> {
   requireArtifactHost("win32", process.arch)
   if (process.platform !== "win32") throw new Error("Unsupported artifact Windows producer host")
-  const { dlopen, ptr } = await import("bun:ffi")
-  // HANDLE is an integer token, not a pointer. All three supported hosts use
+  // Bun 1.3.14 disables TinyCC on Windows ARM64. The producer-only native
+  // adapter calls these same NT APIs in-process; no pathname fallback.
+  const { dlopen, ptr } = await artifactWindowsFFI()
+  // HANDLE is an integer token, not a pointer. Both Windows CPUs use the
   // 64-bit ABI; the layouts below are Windows SDK OBJECT_ATTRIBUTES (48 bytes),
   // UNICODE_STRING (16), IO_STATUS_BLOCK (16), FILE_RENAME_INFORMATION (name@20).
   const library = dlopen("ntdll.dll", {
