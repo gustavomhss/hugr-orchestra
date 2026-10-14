@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Cause, Effect, Exit } from "effect"
-import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { SDKMessage, SDKResultSuccess } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { create } from "@/claude-code/mirror"
 import { MessageID, SessionID } from "@/session/schema"
@@ -18,7 +18,7 @@ const user = { id: MessageID.ascending(), sessionID, role: "user", time: { creat
   model: { providerID: "anthropic", modelID: "claude-haiku-4-5-20251001" } } as SessionV1.User
 const agent = { name: "claude", id: "claude", mode: "primary", permission: [], options: {}, engine: "claude-code" } as Agent.Info
 
-function setup(onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>) {
+function setup() {
   const messages = new Map<string, SessionV1.Info>()
   const parts = new Map<string, SessionV1.Part>()
   const deltas: string[] = []
@@ -32,7 +32,7 @@ function setup(onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>) {
     track: () => Effect.sync(() => `tree${++tracked}`),
     patch: (hash: string) => Effect.succeed({ hash, files: ["/repo/notes.txt"] }),
   } as unknown as Snapshot.Interface
-  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot, onStep })
+  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot })
   const feed = (list: unknown[]) => Effect.runPromise(Effect.forEach(list as SDKMessage[], (message) => view.on(message)))
   const ofType = <T extends SessionV1.Part["type"]>(type: T) =>
     [...parts.values()].filter((part): part is Extract<SessionV1.Part, { type: T }> => part.type === type)
@@ -131,7 +131,6 @@ test("a failure before any reply still answers the user", async () => {
   const view = create({ sessionID: chat.id, user: prompt, agent, sessions, snapshot,
     path: { cwd: instance.directory, root: instance.directory },
     record: (entry) => entry.uuid ? Effect.die(new Error("native record failed")) : Effect.void,
-    onStep: () => Effect.die(new Error("failed steps cannot trigger maintenance")),
   })
   yield* view.on(stream({ type: "message_start", message: { id: "usage", usage: {
     input_tokens: 37, output_tokens: 1, cache_read_input_tokens: 91, cache_creation_input_tokens: 23,
@@ -167,41 +166,35 @@ test("a failure before any reply still answers the user", async () => {
   expect(texts[0].time?.end).toBeDefined()
 }), 60_000))
 
-test("subagent frames are not mirrored", async () => {
+// host/mirror.ts hands a subagent's frames to its child session's mirror, without their parent id.
+test("a turn mirror leaves subagent frames to the child session", async () => {
   const { feed, messages } = setup()
   await feed([{ ...assistant("msg_sub", [{ type: "text", text: "inner" }]), parent_tool_use_id: "toolu_task" }])
   expect(messages.size).toBe(0)
 })
 
-test("maintenance is notified only at a completed step after every tool result, never on partial blocks", async () => {
-  const safe: SessionV1.Assistant[] = []
-  const { view, feed } = setup((message) => Effect.sync(() => { safe.push(message) }))
-  await feed([assistant("tools", [
-    { type: "tool_use", id: "a", name: "Bash", input: {} },
-    { type: "tool_use", id: "b", name: "Bash", input: {} },
-  ], "tool_use"), result([{ type: "tool_result", tool_use_id: "a", content: "a" }])])
-  expect(safe).toEqual([])
-  await feed([result([{ type: "tool_result", tool_use_id: "b", content: "b" }]), assistant("next", [{ type: "text", text: "done" }], "end_turn")])
-  expect(safe.map((message) => message.finish)).toEqual(["tool-calls"])
-  await Effect.runPromise(view.finish(0))
-  expect(safe.map((message) => message.finish)).toEqual(["tool-calls", "stop"])
-  const partial = setup((message) => Effect.sync(() => { safe.push(message) }))
-  await partial.feed([stream({ type: "message_start", message: { id: "partial", usage: {} } }),
-    stream({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } }),
-    stream({ type: "message_delta", delta: { stop_reason: "end_turn" }, usage: {} })])
-  await Effect.runPromise(partial.view.finish(0))
-  expect(safe).toHaveLength(2)
-})
-
-test("blockless SDK completion answers the turn, while unknown stop reasons never trigger maintenance", async () => {
-  const safe: SessionV1.Assistant[] = []
-  const f = setup((message) => Effect.sync(() => { safe.push(message) }))
-  await f.feed([{ type: "result", subtype: "success", result: "local command finished", stop_reason: null, uuid: "result", session_id: "s" }])
-  await Effect.runPromise(f.view.finish(0))
-  expect([...f.messages.values()].map((info) => info.role === "assistant" ? info.finish : "")).toEqual(["other"])
-  expect(f.ofType("text")[0].text).toBe("local command finished")
-  expect(safe).toEqual([])
-})
+it.instance("blockless SDK completion answers the turn", () => Effect.gen(function* () {
+  const sessions = yield* Session.Service
+  const snapshot = yield* Snapshot.Service
+  const instance = yield* TestInstance
+  const chat = yield* sessions.create({ title: "Local SDK command" })
+  const prompt = { ...user, sessionID: chat.id }
+  yield* sessions.updateMessage(prompt)
+  const view = create({ sessionID: chat.id, user: prompt, agent, sessions, snapshot,
+    path: { cwd: instance.directory, root: instance.directory } })
+  yield* view.on({ type: "result", subtype: "success", result: "local command finished", stop_reason: null,
+    uuid: crypto.randomUUID(), session_id: "s", is_error: false, total_cost_usd: 0,
+    duration_ms: 0, duration_api_ms: 0, num_turns: 0, permission_denials: [], modelUsage: {},
+    usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0,
+      cache_creation: { ephemeral_5m_input_tokens: 0, ephemeral_1h_input_tokens: 0 },
+      server_tool_use: { web_fetch_requests: 0, web_search_requests: 0 }, service_tier: "standard" },
+  } satisfies SDKResultSuccess)
+  yield* view.finish(0)
+  const replies = (yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")
+  expect(replies).toHaveLength(1)
+  expect(replies[0].info).toMatchObject({ finish: "other", parentID: prompt.id })
+  expect(replies[0].parts.filter((part) => part.type === "text")).toMatchObject([{ text: "local command finished" }])
+}))
 
 test("native tool-result images become host attachments while full text output remains intact", async () => {
   const f = setup()
