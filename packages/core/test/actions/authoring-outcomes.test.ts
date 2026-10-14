@@ -12,8 +12,9 @@ it.live("branch acknowledgement must prove the exact new ref and expected base c
   for (const data of [null, { ref: "refs/heads/other", object: { type: "commit", sha: AuthoringFixture.commit } },
     { ref: `refs/heads/${AuthoringFixture.branch}`, object: { type: "commit", sha: AuthoringFixture.nextCommit } }]) {
     const fixture = AuthoringFixture.make("github", { write: () => Effect.succeed({ status: 201, headers: {}, data }) })
+    fixture.state.exists = false
     const result = yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent("github", "source.branch", {
-      ref: "dev", resourceID: AuthoringFixture.branch,
+      ref: "dev", path: AuthoringFixture.path("github"), resourceID: AuthoringFixture.branch,
     }, { commit: AuthoringFixture.commit }), { provider: "github", branch: AuthoringFixture.branch }).pipe(Effect.flip)
     expect(result.kind).toBe("outcome_unknown")
     expect(result.disposition).toBe("unknown")
@@ -31,7 +32,7 @@ it.live("review never attributes a fork/other-project request to the captured sa
     const response: ActionsContract.Response = { status: 201, headers: {}, data }
     const fixture = AuthoringFixture.make(provider, { write: () => Effect.succeed(response) })
     const result = yield* fixture.service.perform(fixture.binding, AuthoringFixture.intent(provider, "source.review", {
-      ref: AuthoringFixture.branch, resourceID: "dev",
+      ref: AuthoringFixture.branch, path: AuthoringFixture.path(provider), resourceID: "dev",
     }, { commit: AuthoringFixture.commit }), { provider, title: "Update CI", text: "" }).pipe(Effect.flip)
     expect(result.kind).toBe("outcome_unknown")
     expect(fixture.state.writes).toBe(1)
