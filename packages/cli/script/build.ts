@@ -4,8 +4,8 @@ import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
 import { namedTargets } from "./targets"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 
-const dir = path.resolve(import.meta.dirname, "..")
 const binary = "orchestra"
 
 const singleFlag = process.argv.includes("--single")
@@ -32,6 +32,8 @@ const targets = targetArgs.length
     : namedTargets
 
 // Validate before loading build-time snapshots/dependencies or replacing any artifact.
+const workspace = WorkspacePaths.make(import.meta.dir)
+const dir = workspace.module("cli")
 process.chdir(dir)
 const { Script } = await import("@orchestra/script")
 const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
@@ -64,7 +66,7 @@ if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 const prepared = builds.map((build) => ({
   ...build,
   treeSitter: resolveTreeSitter({
-    root: path.resolve(dir, "../.."),
+    root: workspace.root,
     artifacts: process.env.TREE_SITTER_ARTIFACTS,
     ...build.item,
   }),
