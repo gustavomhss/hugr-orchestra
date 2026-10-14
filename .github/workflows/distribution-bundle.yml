@@ -221,6 +221,13 @@ jobs:
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../distribution-logs/parser-abi.log
+      - name: Prove localized proof oracles
+        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest' && matrix.cpu == 'X64'
+        working-directory: packages/cli
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |
