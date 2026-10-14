@@ -4,6 +4,7 @@ import { Cause, Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { OmniAdoption } from "@orchestra/core/omni-adoption"
 
 type Box = { cwd: string; env: Record<string, string | undefined> }
 
@@ -11,8 +12,12 @@ export async function corroborateProcess(pid: number, executable: string, box: B
   if (process.platform === "win32") {
     const { windowsIdentity } = await import("./distribution-windows-process")
     const identity = await windowsIdentity(pid)
-    if (!identity || identity.executable.toLowerCase() !== (await realpath(executable)).toLowerCase())
-      throw new Error("NATIVE_DAEMON_EXECUTABLE_MISMATCH")
+    const expected = await realpath(executable)
+    const diagnostic = { pid, expectedExecutable: expected, observed: identity ?? null }
+    console.error(`NATIVE_DAEMON_IDENTITY ${JSON.stringify(diagnostic)}`)
+    if (!identity) throw new Error(`NATIVE_DAEMON_PID_ABSENT: ${JSON.stringify(diagnostic)}`)
+    if (identity.executable.toLowerCase() !== expected.toLowerCase())
+      throw new Error(`NATIVE_DAEMON_EXECUTABLE_MISMATCH: ${JSON.stringify(diagnostic)}`)
     return identity
   }
   process.kill(pid, 0)
@@ -30,18 +35,22 @@ export async function corroborateProcess(pid: number, executable: string, box: B
 
 // HOST harness ownership, not evidence that the installed CLI uses its supervisor.
 // Caps select AppProcess's streamed/scoped path, including tree stop and pipe drain.
-export async function command(args: string[], box: Box, timeout = 90_000) {
+export async function command(args: string[], box: Box, timeout = 90_000, owner?: OmniAdoption.Interface) {
   if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
+  if (owner && (process.platform !== "win32" || args.length !== 3 || args[1] !== "service" || args[2] !== "start"))
+    throw new Error("NATIVE_COMMAND_ADOPTION_REQUIRES_WINDOWS_SERVICE_START")
   const invocation = await commandInvocation(args)
   const started = performance.now()
-  // Windows diagnostics allow Cause.pretty only for these read-only stages. Service
-  // start/password and child eval scripts must never log their output or cause.
-  const diagnostic = process.platform === "win32" && (
-    (args.length === 2 && args[1] === "--version") ||
+  // Start/stop get metadata only; password and eval get no diagnostics. Raw cause
+  // remains restricted to nonsecret version/symbols/status commands.
+  const safeCause = (args.length === 2 && args[1] === "--version") ||
     (args.length === 4 && args[1] === "debug" && args[2] === "symbols") ||
     (args.length === 3 && args[1] === "service" && args[2] === "status")
+  const diagnostic = process.platform === "win32" && (
+    safeCause || (args.length === 3 && args[1] === "service" && ["start", "stop"].includes(args[2]))
   ) ? { stage: args.slice(1), launcher: args[0], program: invocation.args[0],
-    arguments: invocation.args.slice(1), shell: invocation.shell, cwd: box.cwd, timeoutMs: timeout } : undefined
+    arguments: invocation.args.slice(1), shell: invocation.shell, cwd: box.cwd, timeoutMs: timeout,
+    ownership: owner ? "daemon-lease" : "command-scope" } : undefined
   if (diagnostic) console.error(`NATIVE_COMMAND_START ${JSON.stringify(diagnostic)}`)
   const result = await Effect.runPromise(Effect.gen(function* () {
     const service = yield* AppProcess.Service
@@ -51,6 +60,12 @@ export async function command(args: string[], box: Box, timeout = 90_000) {
       stdin: "ignore", stdout: "pipe", stderr: "pipe", forceKillAfter: "2 seconds",
     }), { timeout, maxOutputBytes: 16 * 1024 * 1024, maxErrorBytes: 256 * 1024 })
   }).pipe(
+    // Windows detached children stay in omni's non-breakaway Job. The explicit
+    // daemon lease adopts that exact tree when start's command scope succeeds.
+    (effect) => owner ? effect.pipe(
+      Effect.provideService(OmniAdoption.Service, { sessionID: box.cwd, policy: "tool" }),
+      Effect.provideService(OmniAdoption.Registry, owner),
+    ) : effect,
     Effect.provide(LayerNode.compile(AppProcess.node)),
     Effect.timeoutOrElse({ duration: timeout + 10_000,
       orElse: () => Effect.fail(new Error("NATIVE_COMMAND_SCOPE_TIMEOUT")),
@@ -58,7 +73,7 @@ export async function command(args: string[], box: Box, timeout = 90_000) {
     Effect.scoped,
     // Do not expose daemon stdout/password or a native error containing its output.
     Effect.catchCause((cause) => Effect.fail(new Error(`NATIVE_COMMAND_PROCESS_OR_TIMEOUT_FAILURE: ${args[0]}${diagnostic
-      ? `\n${JSON.stringify({ ...diagnostic, elapsedMs: Math.round(performance.now() - started) })}\n${Cause.pretty(cause)}`
+      ? `\n${JSON.stringify({ ...diagnostic, elapsedMs: Math.round(performance.now() - started) })}${safeCause ? `\n${Cause.pretty(cause)}` : ""}`
       : basename(args[0]) === "brew" ? ` ${args.slice(1).join(" ")}\n${Cause.pretty(cause)}` : ""}`))),
   ))
   if (diagnostic) console.error(`NATIVE_COMMAND_EXIT ${JSON.stringify({ ...diagnostic,
