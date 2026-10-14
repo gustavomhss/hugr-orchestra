@@ -99,7 +99,7 @@ export async function saveResponse(response: Response, signal: AbortSignal, save
   try {
     if (signal.aborted) { abort(); throw new DOMException("Aborted", "AbortError") }
     await save(new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers }))
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError")
+    // The save's outcome is authoritative: a late abort cannot undo its physical commit.
   } finally {
     signal.removeEventListener("abort", abort)
     await reader.cancel().catch(() => undefined)

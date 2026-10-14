@@ -20,12 +20,13 @@ export function createResponseDownloader(api: ResponseDownloadAPI) {
       const controller = new AbortController()
       const state: {
         failed: boolean
+        finalizing: boolean
         reason?: unknown
         waiter?: (error: unknown) => void
         handle?: string
         sourceCancelled: boolean
         targetCancellation?: Promise<unknown>
-      } = { failed: false, sourceCancelled: false }
+      } = { failed: false, finalizing: false, sourceCancelled: false }
       const cancelSource = (reason?: unknown) => {
         if (state.sourceCancelled) return
         state.sourceCancelled = true
@@ -87,10 +88,13 @@ export function createResponseDownloader(api: ResponseDownloadAPI) {
             sequence++
           }
         }
-        requireDownloadSuccess(await wait(() => api.finish(started.handle, sequence)))
+        if (state.failed) throw state.reason
+        // Once submitted, the sink decides whether cancellation beat commit or rename became irreversible.
+        state.finalizing = true
+        requireDownloadSuccess(await api.finish(started.handle, sequence))
       } catch (error) {
         fail(error)
-        throw state.reason
+        throw state.finalizing ? error : state.reason
       } finally {
         controller.signal.removeEventListener("abort", abort)
         active.delete(controller)

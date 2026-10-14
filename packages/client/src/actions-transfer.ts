@@ -121,7 +121,7 @@ export function makeActionsTransfer(options: ClientOptions) {
             })
           // Browsers must read duplex and must not coerce a stream to text. Bun's constructor
           // need not read duplex here; Bun's streaming fetch is covered by the real HTTP fixture.
-          if (supported.headers.has("content-type") || (!duplexRead && typeof Bun === "undefined"))
+          if (supported.headers.has("content-type") || (!duplexRead && (!("Bun" in globalThis) || typeof globalThis.Bun === "undefined")))
             throw new ActionsTransferError("Transport", {
               code: "UnsupportedStreaming",
               cause: new Error("fetch request streaming is unavailable; supply a Blob"),
