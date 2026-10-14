@@ -206,7 +206,7 @@ Cassettes are readable JSON files intended to be committed with your tests. HTTP
 
 ## Repository ownership and checks
 
-The http-recorder package maintainers own this guide and the recorder contract. In this repository, run `bun run typecheck` from `packages/http-recorder`; tests run through GitHub Actions with `bun run test:ci http-recorder test/record-replay.test.ts` from the repository root. The generic recording workflow above describes library behavior; repository CI policy is separate.
+The http-recorder package maintainers own this guide and the recorder contract. In this repository, run `bun run typecheck` from `tooling/http-recorder`; tests run through GitHub Actions with `bun run test:ci http-recorder test/record-replay.test.ts` from the repository root. The generic recording workflow above describes library behavior; repository CI policy is separate.
 
 ## License
 
