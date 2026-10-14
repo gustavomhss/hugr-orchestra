@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
+import { createRequire } from "node:module"
 import type { ModelSelection } from "@/context/local"
 import type { FollowupDraft } from "./submit"
 import { createPromptState } from "@/context/prompt-state"
@@ -6,6 +7,7 @@ import { createRoot } from "solid-js"
 import { isServer } from "solid-js/web"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
+import { queuedPromptSources } from "./queued-prompt"
 import {
   behaviorReads,
   behaviors,
@@ -23,7 +25,7 @@ import {
   sentPrompts,
   state,
   submitInput,
-  policyFixture, serverFor, sdkFor, setReactiveOwner,
+  policyFixture, serverFor, sdkFor, setReactiveOwner, followupInput,
 } from "./submit-harness"
 
 test("queued attachment preparation rechecks the shared policy barrier before dispatch", async () => {
@@ -37,7 +39,16 @@ test("queued attachment preparation rechecks the shared policy barrier before di
   const failure = new Error("policy changed during attachment preparation")
   const calls = { waits: 0 }
   state.policyWait = async () => { if (++calls.waits === 2) throw failure }
-  await expect(sendFollowupDraft({ ...draft.source, draft })).rejects.toBe(failure)
+  // Bun's native Blob is not a DOM Blob. Exercise real browser fetch/FileReader in one realm.
+  const { Window } = createRequire(Bun.resolveSync("@happy-dom/global-registrator", import.meta.dir))("happy-dom")
+  const browser = new Window()
+  const transport = spyOn(globalThis, "fetch").mockImplementation(browser.fetch.bind(browser) as unknown as typeof fetch)
+  try {
+    await expect(sendFollowupDraft(followupInput(draft))).rejects.toBe(failure)
+  } finally {
+    transport.mockRestore()
+    await browser.happyDOM.close()
+  }
   expect(calls.waits).toBe(2)
   expect(promptInputs).toEqual([])
   expect(optimistic).toEqual([])
@@ -51,14 +62,16 @@ test("HTTP prompt success remains admitted after the captured owner departs", as
   if (!draft?.source) throw new Error("missing source")
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
-  const api = draft.source.api
-  draft.source.api = { ...api, prompt: async (...args) => {
+  const runtime = queuedPromptSources.resolve(draft.source, draft)
+  if (!runtime) throw new Error("missing runtime")
+  const api = runtime.api
+  runtime.api = { ...api, prompt: async (...args) => {
     const admitted = api.prompt(...args)
     entered.resolve()
     await gate.promise
     return admitted
   } }
-  const sent = sendFollowupDraft({ ...draft.source, draft })
+  const sent = sendFollowupDraft(followupInput(draft))
   await entered.promise
   policyFixture.server = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("departed")))
   policyFixture.sdk = sdkFor("/other", policyFixture.server)
@@ -86,12 +99,14 @@ test.skipIf(isServer)("reactive owner ABA after queued clear cannot revive captu
   const draft = queued[0]
   if (!draft?.source) throw new Error("missing queued source")
   expect(root.real.current()).toEqual([{ type: "text", content: "", start: 0, end: 0 }])
-  expect(draft.source.current()).toBe(true)
+  const runtime = queuedPromptSources.resolve(draft.source, draft)
+  if (!runtime) throw new Error("missing runtime")
+  expect(runtime.current()).toBe(true)
   setReactiveOwner("read", () => () => other)
   await Promise.resolve()
   setReactiveOwner("read", () => () => source)
-  expect(draft.source.current()).toBe(false)
-  expect(await sendFollowupDraft({ ...draft.source, draft })).toBe(false)
+  expect(runtime.current()).toBe(false)
+  expect(await sendFollowupDraft(followupInput(draft))).toBe(false)
   expect(promptInputs).toEqual([])
   root.dispose()
 })
@@ -106,13 +121,13 @@ test("queued handoff rechecks latest write and uses captured source at actual se
   if (!draft?.source) throw new Error("missing captured queued source")
   const failure = new Error("queued policy failed")
   state.policyWait = async () => { throw failure }
-  await expect(sendFollowupDraft({ ...draft.source, draft })).rejects.toBe(failure)
+  await expect(sendFollowupDraft(followupInput(draft))).rejects.toBe(failure)
   expect(sentCommands).toEqual([])
   expect(optimistic).toEqual([])
   policyFixture.server = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
   policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
   state.policyWait = async () => {}
-  expect(await sendFollowupDraft({ ...draft.source, draft })).toBe(false)
+  expect(await sendFollowupDraft(followupInput(draft))).toBe(false)
   expect(sentCommands).toEqual([])
 })
 

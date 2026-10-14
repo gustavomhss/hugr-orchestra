@@ -169,7 +169,7 @@ export async function waitForSubmissionWorktree(input: {
 
 /** Prepare attachments between two policy barriers; a successful HTTP admission remains successful after departure. */
 export async function sendFollowupRequest(input: FollowupSendInput) {
-  const current = () => !input.signal?.aborted && input.draft.source?.current() !== false
+  const current = () => !input.signal?.aborted && input.runtime?.current() !== false
   if (!current()) return false
   const text = input.draft.prompt.map((part) => ("content" in part ? part.content : "")).join("")
   const images = input.draft.prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
@@ -187,7 +187,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     if (!current()) return false
     const ok = await input.before?.()
     if (ok === false || !current()) return false
-    const ready = await input.draft.source?.before(input.signal)
+    const ready = await input.runtime?.before(input.signal)
     return ready !== false && current()
   }
 
