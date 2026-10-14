@@ -15,6 +15,7 @@ export const AurSandboxEvidence = Schema.Struct({
 
 export const AurBootstrapEvidence = Schema.Struct({
   sandbox: Schema.Literal("enforced"), pacmanExit: Schema.Literal(0), sandboxUser: Schema.String,
+  downloadUserDirective: Schema.Literal("DownloadUser"), downloadUserUID: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   repositories: Schema.Array(Schema.Struct({ name: Schema.String, sigLevel: Schema.Array(Schema.String) })),
   filesystemRestrictions: Schema.Array(Schema.String), logSha256: Schema.String,
   probe: AurSandboxEvidence,
@@ -35,7 +36,8 @@ export async function aurBootstrapEvidence(directory: string) {
   const policy = await aurRepositoryPolicy(directory).catch((cause: unknown) => {
     throw new Error("AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", { cause })
   })
-  if (receipt.sandboxUser !== policy.sandboxUser || JSON.stringify(receipt.repositories) !== JSON.stringify(policy.repositories))
+  if (receipt.sandboxUser !== policy.sandboxUser || receipt.downloadUserUID !== policy.downloadUserUID ||
+      JSON.stringify(receipt.repositories) !== JSON.stringify(policy.repositories))
     throw new Error("AUR_BOOTSTRAP_REPOSITORY_POLICY_RECEIPT_MISMATCH")
   if (JSON.stringify(receipt.filesystemRestrictions) !== JSON.stringify(pacmanFilesystemRestrictions(log)))
     throw new Error("AUR_PACMAN_FILESYSTEM_RESTRICTION_RECEIPT_MISMATCH")
@@ -59,6 +61,7 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
   if (!nonenforcement) throw new Error("AUR_PACMAN_LOG_CONTROL_NONENFORCEMENT_TEXT_UNAVAILABLE")
   const control = await mkdtemp(`${directory}/sandbox-receipt-controls-`)
   const files = ["bootstrap-sandbox.json", "bootstrap-pacman.log", "bootstrap-repositories.txt", "bootstrap-sandbox-user.txt",
+    "bootstrap-download-user.stderr", "bootstrap-download-user-uid.txt",
     ...receipt.repositories.map((repo) => `bootstrap-siglevel-${repo.name}.txt`)]
   const mutations = [
     { name: "seccomp-disabled", receipt: { ...receipt, probe: { ...receipt.probe, seccomp: 0 } },
@@ -77,6 +80,10 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
       expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["probe", "outsideWriteErrno"], value: 0 } } },
     { name: "sandbox-not-enforced", receipt: { ...receipt, sandbox: "disabled" },
       expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["sandbox"], value: "disabled" } } },
+    { name: "unsupported-download-user-directive", receipt: { ...receipt, downloadUserDirective: "SandboxUser" },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["downloadUserDirective"], value: "SandboxUser" } } },
+    { name: "download-user-receipt-root-uid", receipt: { ...receipt, downloadUserUID: 0 },
+      expected: { code: "AUR_BOOTSTRAP_SANDBOX_RECEIPT_INVALID_OR_UNAVAILABLE", schema: { path: ["downloadUserUID"], value: 0 } } },
     { name: "repositories-empty", receipt: { ...receipt, repositories: [] },
       expected: { code: "AUR_BOOTSTRAP_SANDBOX_EVIDENCE_EMPTY" } },
     { name: "pacman-enforcement-empty", receipt: { ...receipt, filesystemRestrictions: [] },
@@ -108,6 +115,22 @@ export async function aurBootstrapEvidenceTeeth(directory: string) {
     await Bun.write(`${control}/${signatures}`, "PackageNever\nPackageTrustAll\nDatabaseOptional\nDatabaseTrustedOnly\n")
     await reject("unsigned-repository-policy", { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID",
       causeCode: "AUR_SIGNED_REPOSITORIES_REQUIRED" })
+    const userMutations = [
+      { name: "download-user-empty", file: "bootstrap-sandbox-user.txt", bytes: "\n",
+        expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: "AUR_PACMAN_ALPM_DOWNLOAD_USER_REQUIRED" } },
+      { name: "unknown-directive-warning-as-user", file: "bootstrap-sandbox-user.txt", bytes: "warning: unknown directive 'SandboxUser'\n",
+        expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: "AUR_PACMAN_ALPM_DOWNLOAD_USER_REQUIRED" } },
+      { name: "unknown-directive-query-diagnostic", file: "bootstrap-download-user.stderr", bytes: "warning: unknown directive 'SandboxUser'\n",
+        expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: "AUR_PACMAN_DOWNLOAD_USER_QUERY_DIAGNOSTIC" } },
+      { name: "download-user-root", file: "bootstrap-sandbox-user.txt", bytes: "root\n",
+        expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: "AUR_PACMAN_ALPM_DOWNLOAD_USER_REQUIRED" } },
+      { name: "download-user-root-uid", file: "bootstrap-download-user-uid.txt", bytes: "0\n",
+        expected: { code: "AUR_BOOTSTRAP_REPOSITORY_POLICY_UNAVAILABLE_OR_INVALID", causeCode: "AUR_PACMAN_NONROOT_DOWNLOAD_USER_REQUIRED" } },
+    ]
+    for (const mutation of userMutations) {
+      await Bun.write(`${control}/${mutation.file}`, mutation.bytes)
+      await reject(mutation.name, mutation.expected)
+    }
     const logMutations = [
       { name: "pacman-enforcement-records-removed",
         log: log.split("\n").filter((line) => !receipt.filesystemRestrictions.includes(line)).join("\n"),
@@ -202,7 +225,14 @@ function sandboxSchemaFailures(issue: SchemaIssue.Issue, path: readonly Property
 }
 
 async function aurRepositoryPolicy(directory: string) {
+  if ((await readFile(`${directory}/bootstrap-download-user.stderr`, "utf8")).length !== 0)
+    throw new Error("AUR_PACMAN_DOWNLOAD_USER_QUERY_DIAGNOSTIC")
+  // sandboxUser keeps its semantic meaning: the effective pacman DownloadUser.
   const sandboxUser = (await readFile(`${directory}/bootstrap-sandbox-user.txt`, "utf8")).trim()
+  if (sandboxUser !== "alpm") throw new Error("AUR_PACMAN_ALPM_DOWNLOAD_USER_REQUIRED")
+  const uid = (await readFile(`${directory}/bootstrap-download-user-uid.txt`, "utf8")).trim()
+  if (!/^[1-9][0-9]*$/.test(uid) || !Number.isSafeInteger(Number(uid)))
+    throw new Error("AUR_PACMAN_NONROOT_DOWNLOAD_USER_REQUIRED")
   const names = (await readFile(`${directory}/bootstrap-repositories.txt`, "utf8")).trim().split("\n")
   if (!sandboxUser || names.length === 0 || names.some((name) => !/^[a-zA-Z0-9_-]+$/.test(name)) || new Set(names).size !== names.length)
     throw new Error("AUR_SIGNED_REPOSITORY_POLICY_EMPTY_OR_INVALID")
@@ -214,7 +244,7 @@ async function aurRepositoryPolicy(directory: string) {
       !repo.sigLevel.includes("DatabaseTrustedOnly") ||
       !(repo.sigLevel.includes("DatabaseRequired") || repo.sigLevel.includes("DatabaseOptional"))))
     throw new Error("AUR_SIGNED_REPOSITORIES_REQUIRED")
-  return { sandboxUser, repositories }
+  return { sandboxUser, downloadUserDirective: "DownloadUser" as const, downloadUserUID: Number(uid), repositories }
 }
 
 // Run only inside the owned hosted guest, after the actual signed -Syu command.
