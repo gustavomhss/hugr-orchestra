@@ -1022,6 +1022,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (!editorRef.contains(range.startContainer) || !editorRef.contains(range.endContainer)) return false
     if (part.type === "text") {
       const inserted = insertPromptEditorText(editorRef, part.content, "insertText")
+      if (inserted) prompt.capture().store[1]("cursor", getCursorPosition(editorRef))
       closePopover()
       return inserted
     }
