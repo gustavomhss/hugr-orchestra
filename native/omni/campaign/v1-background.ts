@@ -1,6 +1,6 @@
 // V1: a real Maestro bash turn starts a background nonce tree. The tool and turn finish,
 // /session/:id/processes exposes the tree and post-adoption output, and Session.remove stops it.
-// Run: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v1-background.ts
+// Run: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v1-background.ts
 import { appendFileSync, writeFileSync } from "node:fs"
 import { randomUUID } from "node:crypto"
 import path from "node:path"

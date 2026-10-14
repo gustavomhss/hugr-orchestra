@@ -1,7 +1,7 @@
 // V7: 1000 samples per arm, sequential AB/BA pairs, 25 warmup pairs. Two persistent, separately flagged hosts.
 // Only AppProcess.run is timed (including Effect execution); HTTP, checks, counters and warmup are outside samples.
-// Readiness: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v7-overhead.ts --control
-// Quiet timing: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v7-overhead.ts --quiet
+// Readiness: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v7-overhead.ts --control
+// Quiet timing: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v7-overhead.ts --quiet
 import os from "node:os"
 import { inspect } from "node:util"
 import { BUN, ROOT, cleanup, isolated, kill9, load, sleep } from "./lib.ts"
@@ -109,9 +109,9 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean; int
 
 async function host() {
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../../core/src/process.ts")
-  const { Flag } = await import("../../core/src/flag/flag.ts")
-  const { Omni } = await import("../../core/src/omni.ts")
+  const { AppProcess } = await import("../../../packages/core/src/process.ts")
+  const { Flag } = await import("../../../packages/core/src/flag/flag.ts")
+  const { Omni } = await import("../../../packages/core/src/omni.ts")
   const runtime = await appRuntime()
   // Build services before reporting readiness: lazy startup is never a measured sample.
   await runtime.context()

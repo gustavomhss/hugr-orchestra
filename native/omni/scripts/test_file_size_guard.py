@@ -39,7 +39,7 @@ def lines(n: int, end_newline: bool = True) -> str:
     return body + ("\n" if end_newline else "")
 
 
-NESTED = "packages/omni"
+NESTED = "native/omni"
 
 CASES = [
     # (name, files, expected exit code, text that must appear in the output[, omni root inside the repo])
@@ -54,7 +54,7 @@ CASES = [
     ("unclassified extension is broken, named", {"src/a.rs": lines(1), "x.weird": "1\n"}, 2, "x.weird"),
     ("empty repo is broken, not a pass", {}, 2, "returned no files"),
     ("only documents is broken, not a pass", {"README.md": "hi\n"}, 2, "zero code files"),
-    # Inside a host repo (Orchestra's packages/omni) the guard scans its own subtree and nothing else.
+    # Inside a host repo (Orchestra's native/omni) the guard scans its own subtree and nothing else.
     ("nested: a big file outside the omni root is not ours",
      {"src/huge.ts": lines(5000), "x.weird": "1\n", f"{NESTED}/src/a.rs": lines(10)}, 0, "1 code files checked", NESTED),
     ("nested: a big file inside the omni root fails, named from the root",

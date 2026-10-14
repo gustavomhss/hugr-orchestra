@@ -128,13 +128,13 @@ export async function startServer(bin: string, args: string[], env: Record<strin
 
 export async function appRuntime() {
   const { ManagedRuntime } = await effectModules()
-  const { LayerNode } = await import("../../core/src/effect/layer-node.ts")
-  const { AppProcess } = await import("../../core/src/process.ts")
+  const { LayerNode } = await import("../../../packages/core/src/effect/layer-node.ts")
+  const { AppProcess } = await import("../../../packages/core/src/process.ts")
   return ManagedRuntime.make(LayerNode.compile(AppProcess.node))
 }
 
 /** campaign has no manifest: resolve the caller's Effect, preserving its runtime and type identity. */
 export async function effectModules() {
-  const { Effect, ManagedRuntime, ChildProcess } = await import("../../core/test/fixture/omni-effect.ts")
+  const { Effect, ManagedRuntime, ChildProcess } = await import("../../../packages/core/test/fixture/omni-effect.ts")
   return { Effect, ManagedRuntime, ChildProcess }
 }

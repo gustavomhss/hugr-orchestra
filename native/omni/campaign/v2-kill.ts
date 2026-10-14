@@ -1,7 +1,7 @@
 // V2: `kill -9` (TerminateProcess on Windows) of a live Orchestra host, while it runs a bash tool tree, an LSP, an MCP
 // stdio server (with a grandchild) and 2 terminals. KPI: 0 omni-tree processes 8 s after the kill.
 //
-//   bun packages/omni/campaign/v2-kill.ts [serve|tui|hold]
+//   bun native/omni/campaign/v2-kill.ts [serve|tui|hold]
 //
 //   serve  the compiled CLI's `orchestra serve`; a fake LLM drives a real agent turn (bash + write tools)
 //   tui    compiled TUI/Worker, fixed HTTP port; product ConPTY on Windows, python pty on Unix
@@ -35,7 +35,7 @@ import {
 } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import { consoleHost, consoleInput, finishCampaign, gracefulEvidence, isolatedEnvironment, windowsInventory, windowsSnapshots } from "./windows-lifecycle.ts"
-import { PtyOmni } from "../../core/src/pty/omni.ts"
+import { PtyOmni } from "../../../packages/core/src/pty/omni.ts"
 
 const KPI_MS = 8_000
 

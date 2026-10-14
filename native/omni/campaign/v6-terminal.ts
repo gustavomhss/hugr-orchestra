@@ -1,6 +1,6 @@
 // V6 terminal slice: real /pty API + WS, real vim edit/resize, UTF-16 replay, 50 MiB producer completion.
 // TUI quit belongs to the lifecycle owner; this verdict cannot claim full WP10 V6 acceptance.
-// ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v6-terminal.ts [--mutation-missing-replay]
+// ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v6-terminal.ts [--mutation-missing-replay]
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"

@@ -1,5 +1,5 @@
 // V9 runs copied shipped binaries, never source CLI or a bare binding. A usable checkout fallback is planted in temp.
-// ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v9-broken-artifacts.ts --quiet [--mutation] [--diagnose]
+// ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v9-broken-artifacts.ts --quiet [--mutation] [--diagnose]
 import { chmodSync, copyFileSync, existsSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import os from "node:os"
