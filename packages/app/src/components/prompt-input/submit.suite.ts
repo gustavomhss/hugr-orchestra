@@ -1,12 +1,23 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { createStore } from "solid-js/store"
+import { createRoot } from "solid-js"
+import { isServer } from "solid-js/web"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import type { ModelSelection } from "@/context/local"
 import type { FollowupDraft } from "./submit"
+import { createPromptState } from "@/context/prompt-state"
+import { ServerScope } from "@/utils/server-scope"
+import { ServerConnection } from "@/context/server"
+import { clearPending, pendingPolicy, pendingSelection, pendingSnapshot, togglePending } from "../draft-subagent-models"
+import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
+import type { ServerApi } from "@/utils/server"
+import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 
 let createPromptSubmit: typeof import("./submit").createPromptSubmit
 let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
 let followupSystem: typeof import("./submit").followupSystem
+let draftSessionKey: typeof import("./draft-session").draftSessionKey
+let acknowledgeDraftPolicy: typeof import("./submit").acknowledgeDraftPolicy
 
 const createdClients: string[] = []
 const createdSessions: string[] = []
@@ -48,6 +59,21 @@ let selected = "/repo/worktree-a"
 let variant: string | undefined
 let permissionServer = "server-a"
 let createSessionGate: Promise<void> | undefined
+const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
+let policyWrite = async () => {}
+let policyWait = async () => {}
+let worktreeResets = 0
+let currentSDK: ReturnType<typeof sdkFor>
+let currentServer: ReturnType<typeof serverFor>
+let protocol: "v1" | "v2" = "v2"
+const legacyUpdates: unknown[] = []
+const legacyBaseline: ModelRule[] = []
+const legacySessionPermissions = new Map<string, ModelRule[]>()
+let legacyUpdateHook = async () => {}
+const interruptedSessions: string[] = []
+const [reactiveOwner, setReactiveOwner] = createStore<{
+  read?: () => { sdk: ReturnType<typeof sdkFor>; server: ReturnType<typeof serverFor> }
+}>({})
 
 let promptValue: Prompt = [{ type: "text", content: "ls", start: 0, end: 2 }]
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -105,8 +131,10 @@ const clientFor = (directory: string) => {
           const location = input.location?.directory ?? directory
           createdSessions.push(location)
           sessionCreateInputs.push(input)
+          const sessionID = `session-${createdSessions.length}`
+          legacySessionPermissions.set(sessionID, legacyBaseline.slice())
           return {
-            id: `session-${createdSessions.length}`,
+            id: sessionID,
             projectID: "project",
             agent: input.agent,
             model: input.model,
@@ -115,6 +143,7 @@ const clientFor = (directory: string) => {
             time: { created: 1, updated: 1 },
             title: `New session ${createdSessions.length}`,
             location: { directory: location },
+            permission: legacyBaseline.slice(),
           }
         },
         prompt: async (input: unknown) => {
@@ -128,11 +157,13 @@ const clientFor = (directory: string) => {
         shell: async (input: { sessionID: string; id?: string; command: string }) => {
           sentShell.push(input)
         },
+        interrupt: async (input: { sessionID: string }) => { interruptedSessions.push(input.sessionID) },
       },
     },
     session: {
       command: async () => ({ data: undefined }),
       abort: async () => ({ data: undefined }),
+      update: async (input: unknown) => { legacyUpdates.push(input); await legacyUpdateHook() },
     },
     worktree: {
       create: async () => ({ data: { directory: `${directory}/new` } }),
@@ -140,11 +171,70 @@ const clientFor = (directory: string) => {
   }
 }
 
+function serverFor(scope = ServerScope.local) {
+  const client = clientFor("/repo/main")
+  return {
+    scope,
+    protocol: Promise.resolve(protocol),
+    protocolKind: () => protocol,
+    client,
+    currentApi: {
+      ...client.api,
+      session: {
+        ...client.api.session,
+        revert: {
+          commit: async (..._args: Parameters<ServerApi["session"]["revert"]["commit"]>) => {
+            throw new Error("Unexpected session.revert.commit in prompt submission fixture")
+          },
+        },
+      },
+      integration: { connect: {}, oauth: {} },
+    },
+    createClient: (options: { directory: string }) => clientFor(options.directory),
+    sessionManagement: {
+      setSubagentModels: async (id: string, policy: SubagentModelPolicy) => {
+        policyWrites.push({ id, policy })
+        await policyWrite()
+        return policy
+      },
+      waitSubagentModels: async () => { await policyWait() },
+    },
+  }
+}
+
+function sdkFor(directory: string, server: ReturnType<typeof serverFor>) {
+  return {
+    scope: server.scope,
+    directory,
+    client: server.client,
+    api: server.currentApi,
+    createClient: server.createClient,
+    url: "http://localhost:4096",
+  }
+}
+
+function promoteRoute(directory: string, id: string) {
+  params.id = id
+  search.draftId = undefined
+  currentSDK = sdkFor(directory, currentServer)
+  const owner = reactiveOwner.read?.()
+  if (owner) setReactiveOwner("read", () => () => ({ server: owner.server, sdk: sdkFor(directory, owner.server) }))
+}
+
+function deferred() {
+  const callbacks: { resolve: () => void; reject: (error: Error) => void } = { resolve: () => {}, reject: () => {} }
+  const promise = new Promise<void>((resolve, reject) => Object.assign(callbacks, { resolve, reject }))
+  return { promise, ...callbacks }
+}
+
 beforeAll(async () => {
-  const rootClient = clientFor("/repo/main")
+  const { checksum } = await import("@orchestra/core/util/encode")
 
   mock.module("@solidjs/router", () => ({
-    useNavigate: () => () => undefined,
+    useNavigate: () => (url: string) => {
+      const parts = url.split("/session/")
+      promoteRoute(parts[0].slice(1), parts[1])
+    },
     useParams: () => params,
     useLocation: () => ({}),
     useSearchParams: () => [search, () => undefined],
@@ -165,6 +255,7 @@ beforeAll(async () => {
 
   mock.module("@orchestra/core/util/encode", () => ({
     base64Encode: (value: string) => value,
+    checksum,
   }))
 
   // This suite runs Solid's server build, where persisted stores cannot load. The real store (storage
@@ -206,15 +297,15 @@ beforeAll(async () => {
     return { usePermission: () => ({ currentServerState: () => state(permissionServer) }) }
   })
 
-  mock.module("@/context/server-sdk", () => ({
-    useServerSDK: () => () => ({ protocol: "v2", client: rootClient }),
-  }))
-
   mock.module("@/context/tabs", () => ({
     useTabs: () => ({
       draft: () => ({ server: "project-server" }),
+      get store() {
+        return search.draftId ? [{ type: "draft", draftID: search.draftId, server: "project-server", directory: currentSDK.directory }] : []
+      },
       promoteDraft: (draftID: string, session: { server: string; sessionId: string }) => {
         promotedDrafts.push({ draftID, ...session })
+        promoteRoute(promoted.at(-1)?.directory ?? currentSDK.directory, session.sessionId)
       },
     }),
   }))
@@ -232,23 +323,11 @@ beforeAll(async () => {
   }))
 
   mock.module("@/context/sdk", () => ({
-    useSDK: () => {
-      const sdk = {
-        scope: "local",
-        directory: "/repo/main",
-        client: rootClient,
-        api: rootClient.api,
-        url: "http://localhost:4096",
-        createClient(opts: any) {
-          return clientFor(opts.directory)
-        },
-      }
-      return () => sdk
-    },
+    useSDK: () => () => reactiveOwner.read?.().sdk ?? currentSDK,
   }))
 
   mock.module("@/context/server-sdk", () => ({
-    useServerSDK: () => () => ({ protocol: Promise.resolve("v2") }),
+    useServerSDK: () => () => reactiveOwner.read?.().server ?? currentServer,
   }))
 
   mock.module("@/context/sync", () => ({
@@ -322,6 +401,452 @@ beforeAll(async () => {
   createPromptSubmit = mod.createPromptSubmit
   sendFollowupDraft = mod.sendFollowupDraft
   followupSystem = mod.followupSystem
+  acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
+  draftSessionKey = (await import("./draft-session")).draftSessionKey
+})
+
+describe("durable subagent policy submission", () => {
+  test("inherited-policy ABA during ACK wait persists latest inherit tombstone", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const initial = pendingSnapshot(key)
+    expect(initial.revision).toBe(0)
+    const entered = deferred()
+    const gate = deferred()
+    const writes: SubagentModelPolicy[] = []
+    const saving = acknowledgeDraftPolicy({
+      key, current: () => true, written: () => writes.length > 0, markWritten: () => {}, failedMessage: "bad ACK",
+      write: async (policy) => { writes.push(policy); return policy },
+      wait: async () => { entered.resolve(); await gate.promise },
+    })
+    await entered.promise
+    clearPending(key)
+    togglePending(key, "provider", "model", true)
+    clearPending(key)
+    const latest = pendingSnapshot(key)
+    expect(latest.revision).toBeGreaterThan(initial.revision)
+    expect(clearPending(key, initial.revision)).toBe(false)
+    gate.resolve()
+    const receipt = await saving
+    expect(writes).toEqual([{ mode: "inherit" }])
+    expect(receipt).toEqual(latest)
+    expect(pendingSnapshot(key)).toEqual(latest)
+    expect(clearPending(key, latest.revision)).toBe(true)
+  })
+
+  test.skipIf(isServer)("reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session", async () => {
+    expect(isServer).toBe(false)
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const source = { server: currentServer, sdk: currentSDK }
+    const otherServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    const other = { server: otherServer, sdk: sdkFor("/repo/main", otherServer) }
+    setReactiveOwner("read", () => () => source)
+    const entered = deferred()
+    const gate = deferred()
+    togglePending(key, "provider", "model", true)
+    policyWrite = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "source draft" })
+      real.context.add({ type: "file", path: "/repo/main/file", comment: "retain context" })
+      return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key }) }
+    })
+    const contents = root.real.current()
+    const context = root.real.context.items()
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    setReactiveOwner("read", () => () => other)
+    await Promise.resolve()
+    setReactiveOwner("read", () => () => source)
+    gate.resolve()
+    await sending
+    expect(root.real.current()).toBe(contents)
+    expect(root.real.context.items()).toBe(context)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(createdSessions).toHaveLength(1)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([])
+    policyWrite = async () => {}
+    await root.submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toHaveLength(1)
+    expect(promoted).toHaveLength(1)
+    expect(promptInputs).toHaveLength(1)
+    root.dispose()
+  })
+
+  test.skipIf(isServer)("reactive owner disposal during ACK expires attempt without consuming draft", async () => {
+    expect(isServer).toBe(false)
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    togglePending(key, "provider", "model", true)
+    policyWrite = async () => { entered.resolve(); await gate.promise }
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "retained on disposal" })
+      return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key }) }
+    })
+    const contents = root.real.current()
+    const sending = root.submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    root.dispose()
+    gate.resolve()
+    await sending
+    expect(root.real.current()).toBe(contents)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([])
+  })
+
+  test.skipIf(isServer)("reactive owner ABA after queued clear cannot revive captured queued send", async () => {
+    expect(isServer).toBe(false)
+    params.id = "session-1"
+    const source = { server: currentServer, sdk: currentSDK }
+    const otherServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    const other = { server: otherServer, sdk: sdkFor("/repo/main", otherServer) }
+    setReactiveOwner("read", () => () => source)
+    const queued: FollowupDraft[] = []
+    const root = createRoot((dispose) => {
+      const real = createPromptState({ prompt: "queued source" })
+      return { dispose, real, submit: createPromptSubmit({
+        ...submitInput(), prompt: real, shouldQueue: () => true, onQueue: (draft) => { queued.push(draft) },
+      }) }
+    })
+    await root.submit.handleSubmit(new Event("submit"))
+    const draft = queued[0]
+    if (!draft?.source) throw new Error("missing queued source")
+    expect(root.real.current()).toEqual([{ type: "text", content: "", start: 0, end: 0 }])
+    expect(draft.source.current()).toBe(true)
+    setReactiveOwner("read", () => () => other)
+    await Promise.resolve()
+    setReactiveOwner("read", () => () => source)
+    expect(draft.source.current()).toBe(false)
+    expect(await sendFollowupDraft({ ...draft.source, draft })).toBe(false)
+    expect(promptInputs).toEqual([])
+    root.dispose()
+  })
+
+  test("distinct existing Session steer and queue submissions both reach pending policy barrier", async () => {
+    params.id = "session-1"
+    const entered = deferred()
+    const gate = deferred()
+    const waits: string[] = []
+    policyWait = async () => { waits.push("policy"); entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "first steer" })
+    let delivery: "steer" | "queue" = "steer"
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
+    const first = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    real.set([{ type: "text", content: "second queue", start: 0, end: 12 }])
+    delivery = "queue"
+    const second = submit.handleSubmit(new Event("submit"))
+    await Bun.sleep(0)
+    expect(waits).toHaveLength(2)
+    expect(promptInputs).toEqual([])
+    gate.resolve()
+    await Promise.all([first, second])
+    expect(promptInputs).toHaveLength(2)
+    expect(promptInputs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ text: "first steer", delivery: "steer" }),
+      expect.objectContaining({ text: "second queue", delivery: "queue" }),
+    ]))
+  })
+
+  test("empty existing Session submit interrupts while another submission awaits policy", async () => {
+    params.id = "session-1"
+    const entered = deferred()
+    const gate = deferred()
+    policyWait = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "pending send" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, working: () => true })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    real.reset()
+    await submit.handleSubmit(new Event("submit"))
+    expect(interruptedSessions).toEqual(["session-1"])
+    expect(promptInputs).toEqual([])
+    gate.resolve()
+    await sending
+  })
+
+  test("untouched draft reads inherit; explicit empty selection writes deny-all", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    expect(pendingSelection(key).size).toBe(0)
+    expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+    const inherited = createPromptState({ prompt: "first" })
+    await createPromptSubmit({ ...submitInput(), prompt: inherited, info: () => undefined, pendingKey: () => key })
+      .handleSubmit(new Event("submit"))
+    expect(policyWrites).toEqual([])
+    expect(promptInputs).toHaveLength(1)
+
+    params.id = undefined
+    currentSDK = sdkFor("/repo/main", currentServer)
+    const denied = createPromptState({ prompt: "second" })
+    togglePending(key, "provider", "model", true)
+    togglePending(key, "provider", "model", false)
+    expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [] })
+    await createPromptSubmit({ ...submitInput(), prompt: denied, info: () => undefined, pendingKey: () => key })
+      .handleSubmit(new Event("submit"))
+    expect(policyWrites).toEqual([{ id: "session-2", policy: { mode: "allowlist", models: [] } }])
+    expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+  })
+
+  test("failed policy ACK retains draft/context/worktree/session; retry adopts same admission", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const real = createPromptState({ prompt: "ls" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "keep me" })
+    const contents = real.current()
+    const context = real.context.items()
+    togglePending(key, "provider", "model", true)
+    const failure = new Error("policy write failed")
+    policyWrite = async () => { throw failure }
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, info: () => undefined, mode: () => "shell", pendingKey: () => key,
+      newSessionWorktree: () => "create", onNewSessionWorktreeReset: () => { worktreeResets++ },
+    })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model" }] })
+    expect(createdSessions).toEqual(["/repo/main/new"])
+    expect(promoted).toEqual([])
+    expect(sentShell).toEqual([])
+    expect(worktreeResets).toBe(0)
+
+    policyWrite = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toEqual(["/repo/main/new"])
+    expect(sentShell).toHaveLength(1)
+    expect(sentShell[0]?.sessionID).toBe("session-1")
+    expect(promoted).toEqual([{ directory: "/repo/main/new", sessionID: "session-1" }])
+    expect(worktreeResets).toBe(1)
+    expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+  })
+
+  test("draft inheritance edit during write gets another ACK before promotion", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+    search.draftId = "draft-1"
+    const entered = deferred()
+    const gate = deferred()
+    togglePending(key, "provider", "model", true)
+    policyWrite = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "keep draft" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    clearPending(key)
+    expect(promotedDrafts).toEqual([])
+    expect(promptInputs).toEqual([])
+    gate.resolve()
+    await sending
+    expect(policyWrites.map((write) => write.policy)).toEqual([
+      { mode: "allowlist", models: [{ providerID: "provider", id: "model" }] }, { mode: "inherit" },
+    ])
+    expect(promotedDrafts).toHaveLength(1)
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test("double-click while ACK waits admits one Session and one prompt", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const entered = deferred()
+    const gate = deferred()
+    togglePending(key, "provider", "model", true)
+    policyWrite = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "send once" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const first = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs).toEqual([])
+    gate.resolve()
+    await first
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test("owner switch during ACK keeps source draft and admitted Session for retry", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const source = currentServer
+    const entered = deferred()
+    const gate = deferred()
+    togglePending(key, "provider", "model", true)
+    policyWrite = async () => { entered.resolve(); await gate.promise }
+    const real = createPromptState({ prompt: "source draft" })
+    const contents = real.current()
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    await entered.promise
+    currentServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    currentSDK = sdkFor("/repo/main", currentServer)
+    gate.resolve()
+    await sending
+    expect(real.current()).toBe(contents)
+    expect(pendingPolicy(key).mode).toBe("allowlist")
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([])
+
+    currentServer = source
+    currentSDK = sdkFor("/repo/main", source)
+    policyWrite = async () => {}
+    await submit.handleSubmit(new Event("submit"))
+    expect(createdSessions).toHaveLength(1)
+    expect(promptInputs).toHaveLength(1)
+  })
+
+  test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences failed writes without clearing", async (pathway) => {
+    params.id = "session-1"
+    commands.push({ name: "review" })
+    const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "keep input" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "keep comment" })
+    const contents = real.current()
+    const context = real.context.items()
+    const failure = new Error("latest write failed")
+    policyWait = async () => { throw failure }
+    const queued: FollowupDraft[] = []
+    const submit = createPromptSubmit({
+      ...submitInput(), prompt: real, mode: () => pathway === "shell" ? "shell" : "normal",
+      shouldQueue: () => pathway === "handoff", onQueue: (draft) => { queued.push(draft) },
+    })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBe(failure)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(promptInputs).toEqual([])
+    expect(sentCommands).toEqual([])
+    expect(sentShell).toEqual([])
+    expect(queued).toEqual([])
+  })
+
+  test("queued handoff rechecks latest write and uses captured source at actual send", async () => {
+    params.id = "session-1"
+    const queued: FollowupDraft[] = []
+    const real = createPromptState({ prompt: "/review changes" })
+    commands.push({ name: "review" })
+    await createPromptSubmit({
+      ...submitInput(), prompt: real, shouldQueue: () => true, onQueue: (draft) => { queued.push(draft) },
+    }).handleSubmit(new Event("submit"))
+    const draft = queued[0]
+    if (!draft?.source) throw new Error("missing captured queued source")
+    const failure = new Error("queued policy failed")
+    policyWait = async () => { throw failure }
+    await expect(sendFollowupDraft({ ...draft.source, draft })).rejects.toBe(failure)
+    expect(sentCommands).toEqual([])
+    expect(optimistic).toEqual([])
+    currentServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+    currentSDK = sdkFor("/repo/main", currentServer)
+    policyWait = async () => {}
+    expect(await sendFollowupDraft({ ...draft.source, draft })).toBe(false)
+    expect(sentCommands).toEqual([])
+  })
+
+  test("draft ACK fence detects same-policy ABA edits and clear only consumes exact revision", async () => {
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const gate = deferred()
+    const entered = deferred()
+    togglePending(key, "provider", "model", true)
+    const first = pendingSnapshot(key)
+    const writes: SubagentModelPolicy[] = []
+    const receipt = acknowledgeDraftPolicy({
+      key, current: () => true, written: () => writes.length > 0, markWritten: () => {}, failedMessage: "bad ACK",
+      wait: async () => {},
+      write: async (policy) => { writes.push(policy); entered.resolve(); await gate.promise; return policy },
+    })
+    await entered.promise
+    clearPending(key)
+    togglePending(key, "provider", "model", true)
+    expect(clearPending(key, first.revision)).toBe(false)
+    gate.resolve()
+    const acknowledged = await receipt
+    expect(writes).toHaveLength(2)
+    if (!acknowledged) throw new Error("missing draft ACK")
+    expect(clearPending(key, acknowledged.revision)).toBe(true)
+  })
+
+  test("V1 fresh allowlist to inherit preserves restrictive baseline without updating permission", async () => {
+    protocol = "v1"
+    currentServer = serverFor()
+    currentSDK = sdkFor("/repo/main", currentServer)
+    legacyBaseline.push(
+      { permission: "task", pattern: "*/*", action: "deny" },
+      { permission: "task", pattern: "provider/original", action: "allow" },
+    )
+    const baseline = legacyBaseline.slice()
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    const gate = deferred()
+    createSessionGate = gate.promise
+    togglePending(key, "provider", "draft-model", true)
+    const real = createPromptState({ prompt: "normal prompt under original rules" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    const sending = submit.handleSubmit(new Event("submit"))
+    clearPending(key)
+    expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+    expect(legacyUpdates).toEqual([])
+    expect(promoted).toEqual([])
+    gate.resolve()
+    await sending
+    expect(legacyUpdates).toEqual([])
+    expect(legacySessionPermissions.get("session-1")).toEqual(baseline)
+    expect(storedSessions["/repo/main"]?.[0]).toMatchObject({ id: "session-1" })
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+    expect(promptInputs).toEqual([expect.objectContaining({ sessionID: "session-1", text: "normal prompt under original rules" })])
+    expect(pendingSnapshot(key)).toEqual({ revision: 0, policy: { mode: "inherit" } })
+  })
+
+  test("V1 inherit after acknowledged override blocks promotion/send and retains selection on retry", async () => {
+    protocol = "v1"
+    currentServer = serverFor()
+    currentSDK = sdkFor("/repo/main", currentServer)
+    legacyBaseline.push(
+      { permission: "task", pattern: "*/*", action: "deny" },
+      { permission: "task", pattern: "provider/original", action: "allow" },
+    )
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    togglePending(key, "provider", "draft-model", true)
+    // The first update succeeds while the draft changes; its ACK must prevent an unsafe inherit retry.
+    legacyUpdateHook = async () => { clearPending(key) }
+    const real = createPromptState({ prompt: "retain after legacy override" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "retain comment" })
+    const contents = real.current()
+    const context = real.context.items()
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBeInstanceOf(SessionManagementUnsupported)
+    const selection = pendingSnapshot(key)
+    expect(selection.policy).toEqual({ mode: "inherit" })
+    expect(selection.revision).toBeGreaterThan(0)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(legacyUpdates).toEqual([{
+      sessionID: "session-1", directory: "/repo/main", permission: [
+        { permission: "task", pattern: "*/*", action: "deny" },
+        { permission: "task", pattern: "provider/draft-model", action: "allow" },
+      ],
+    }])
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([])
+    legacyUpdateHook = async () => {}
+    await expect(submit.handleSubmit(new Event("submit"))).rejects.toBeInstanceOf(SessionManagementUnsupported)
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(legacyUpdates).toHaveLength(1)
+    expect(pendingSnapshot(key)).toEqual(selection)
+    expect(real.current()).toBe(contents)
+    expect(real.context.items()).toBe(context)
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([])
+  })
+
+  test("V1 empty draft appends deny-all permission rules before sending", async () => {
+    protocol = "v1"
+    currentServer = serverFor()
+    currentSDK = sdkFor("/repo/main", currentServer)
+    const key = draftSessionKey(ServerScope.local, "/repo/main")
+    togglePending(key, "provider", "model", false)
+    const real = createPromptState({ prompt: "ls" })
+    await createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, mode: () => "shell", pendingKey: () => key })
+      .handleSubmit(new Event("submit"))
+    expect(legacyUpdates).toEqual([{
+      sessionID: "session-1", directory: "/repo/main", permission: [{ permission: "task", pattern: "*/*", action: "deny" }],
+    }])
+    expect(policyWrites).toEqual([])
+    expect(sentShell).toHaveLength(1)
+  })
 })
 
 beforeEach(() => {
@@ -352,6 +877,24 @@ beforeEach(() => {
   permissionServer = "server-a"
   createSessionGate = undefined
   serverSessionSyncs = 0
+  policyWrites.length = 0
+  policyWrite = async () => {}
+  policyWait = async () => {}
+  legacyUpdates.length = 0
+  legacyBaseline.length = 0
+  legacySessionPermissions.clear()
+  legacyUpdateHook = async () => {}
+  worktreeResets = 0
+  protocol = "v2"
+  currentServer = serverFor()
+  currentSDK = sdkFor("/repo/main", currentServer)
+  setReactiveOwner("read", undefined)
+  interruptedSessions.length = 0
+  const workspaceKey = draftSessionKey(ServerScope.local, "/repo/main")
+  const draftKey = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+  clearPending(workspaceKey, pendingSnapshot(workspaceKey).revision)
+  clearPending(draftKey, pendingSnapshot(draftKey).revision)
+  createdClients.length = 0
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
 })
 
@@ -380,10 +923,12 @@ describe("prompt submit worktree selection", () => {
     const event = { preventDefault: () => undefined } as unknown as Event
 
     await submit.handleSubmit(event)
+    params.id = undefined
+    currentSDK = sdkFor("/repo/main", currentServer)
     selected = "/repo/worktree-b"
     await submit.handleSubmit(event)
 
-    expect(createdClients).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
+    expect(createdClients).toEqual([])
     expect(createdSessions).toEqual(["/repo/worktree-a", "/repo/worktree-b"])
     expect(sessionCreateInputs).toEqual([
       {

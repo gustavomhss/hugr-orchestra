@@ -9,6 +9,10 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { Effect, Layer } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "../../src/background/job"
@@ -127,6 +131,9 @@ const promptRoot = LayerNode.group([
   SessionPrompt.node,
   Session.node,
   SessionProjector.node,
+  SessionSubagentModels.node,
+  SessionV2.node,
+  SessionExecution.node,
   MessageV2.node,
   Snapshot.node,
   LLM.node,
@@ -177,6 +184,7 @@ function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[]; real
     [LSP.node, lsp],
     [MCP.node, makeMcp(input?.mcpInstructions)],
     [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
+    [SessionExecution.node, SessionExecutionLocal.node],
   ] as const
 }
 

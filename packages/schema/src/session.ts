@@ -9,6 +9,7 @@ import { DateTimeUtcFromMillis, optional, RelativePath } from "./schema"
 import { SessionEvent } from "./session-event"
 import { SessionID } from "./session-id"
 import { Revert } from "./revert"
+import { SessionSubagentModels } from "./session-subagent-models"
 
 export const ID = SessionID
 export type ID = SessionID
@@ -22,6 +23,7 @@ export const Info = Schema.Struct({
   projectID: Project.ID,
   agent: Agent.ID.pipe(optional),
   model: Model.Ref.pipe(optional),
+  subagentModels: SessionSubagentModels.Policy.pipe(optional),
   cost: Schema.Finite,
   tokens: Schema.Struct({
     input: Schema.Finite,
