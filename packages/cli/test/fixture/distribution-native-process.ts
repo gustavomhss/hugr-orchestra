@@ -91,8 +91,8 @@ async function commandInvocation(args: string[]) {
 // not a claim about the public CLI's child-spawn path.
 export async function installedCompanionProbe(payload: string, box: Box) {
   const core = await realpath(resolve(import.meta.dirname, "../../../core"))
-  const effect = await realpath(join(core, "node_modules/effect/dist/index.js"))
-  const childProcess = await realpath(join(core, "node_modules/effect/dist/unstable/process/index.js"))
+  const effect = await realpath(Bun.resolveSync("effect", core))
+  const childProcess = await realpath(Bun.resolveSync("effect/unstable/process", core))
   const omni = await realpath(join(core, "src/omni.ts"))
   const appProcess = await realpath(join(core, "src/process.ts"))
   const layerNode = await realpath(join(core, "src/effect/layer-node.ts"))
