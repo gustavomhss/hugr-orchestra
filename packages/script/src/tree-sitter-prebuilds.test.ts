@@ -29,6 +29,7 @@ import {
   treeSitterArtifactKey,
   inspectElf,
   requireElfLibc,
+  linuxRuntimeLibc,
 } from "./tree-sitter-prebuilds"
 
 const root = path.resolve(import.meta.dir, "../../..")
@@ -322,17 +323,19 @@ test("ELF dynamic VA wins over off-table opposite-libc decoy; conflicting file o
   expect(requireElfLibc(file, "musl").needed).toEqual(["libc.musl-x86_64.so.1"])
 })
 
-test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("glibc preparation refuses same-CPU musl %s before modifying any package", (slot) => {
+test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("glibc preparation refuses same-CPU musl %s; native Linux additionally proves copy ordering", (slot) => {
   const root = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-prepare-abi-"))
   fixtures.push(root)
-  const target = { os: "linux", arch: "x64", rebuild: false }
+  const target = { os: "linux", arch: process.platform === "linux" ? process.arch : "x64", rebuild: false }
+  const machine = target.arch === "x64" ? 62 : 183
+  const musl = `libc.musl-${target.arch === "x64" ? "x86_64" : "aarch64"}.so.1`
   const names = ["tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"]
   const files = names.map((name) => {
     const dir = path.join(root, "node_modules", name)
-    mkdirSync(path.join(dir, "prebuilds/linux-x64"), { recursive: true })
+    mkdirSync(path.join(dir, "prebuilds", `linux-${target.arch}`), { recursive: true })
     writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name }))
-    const file = path.join(dir, "prebuilds/linux-x64", `${name}.node`)
-    writeFileSync(file, elfFixture(["libc.so.6"]))
+    const file = path.join(dir, "prebuilds", `linux-${target.arch}`, `${name}.node`)
+    writeFileSync(file, elfFixture(["libc.so.6"], machine))
     return file
   })
   expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
@@ -340,11 +343,39 @@ test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("
   const bad = slot === "prebuild" ? files[2]! : path.join(root, "node_modules",
     slot === "preferred-core-release" ? "tree-sitter" : "tree-sitter-python", "build/Release/preferred.node")
   mkdirSync(path.dirname(bad), { recursive: true })
-  writeFileSync(bad, elfFixture(["libc.musl-x86_64.so.1"]))
+  writeFileSync(bad, elfFixture([musl], machine))
   expect(() => prepareTreeSitterPrebuilds({ root, ...target })).toThrow("ELF_LIBC_MISMATCH")
   files.filter((file) => file !== bad).forEach((file) => expect(readFileSync(file)).toEqual(original[files.indexOf(file)]!))
   rmSync(bad)
   if (slot === "prebuild") writeFileSync(bad, original[2]!)
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
+  // All hosts exercised reuse admission above. Copy-order proof additionally
+  // needs the actual native GNU Linux host that authorizes this producer path.
+  // The bad parser is a different package from the eligible core copy candidate.
+  if (process.platform !== "linux" || slot === "preferred-core-release") return
+  expect(linuxRuntimeLibc().kind, "PARSER_COPY_ORDER_REQUIRES_NATIVE_GLIBC_LINUX").toBe("glibc")
+  const preferred = path.join(root, "node_modules/tree-sitter/build/Release/native-copy.node")
+  mkdirSync(path.dirname(preferred), { recursive: true })
+  writeFileSync(preferred, original[0]!)
+  rmSync(files[0]!)
+  expect(existsSync(files[0]!)).toBe(false)
+  const mutable = { ...target, rebuild: true }
+  expect(prepareTreeSitterPrebuilds({ root, ...mutable }).rebuilt, "REAL_CORE_COPY_BOUNDARY_POSITIVE_CONTROL").toContain("tree-sitter")
+  expect(readFileSync(files[0]!)).toEqual(readFileSync(preferred))
+  rmSync(files[0]!)
+  try {
+    writeFileSync(bad, elfFixture([musl], machine))
+    expect(() => prepareTreeSitterPrebuilds({ root, ...mutable })).toThrow("ELF_LIBC_MISMATCH")
+    expect(existsSync(files[0]!), "WRONG_ABI_MUST_PRECEDE_ELIGIBLE_CORE_COPY").toBe(false)
+    expect(readFileSync(preferred)).toEqual(original[0]!)
+    files.slice(1).filter((file) => file !== bad).forEach((file) => expect(readFileSync(file)).toEqual(original[files.indexOf(file)]!))
+  } finally {
+    if (slot === "prebuild") writeFileSync(bad, original[2]!)
+    if (slot !== "prebuild") rmSync(bad)
+  }
+  expect(prepareTreeSitterPrebuilds({ root, ...mutable }).rebuilt).toContain("tree-sitter")
+  expect(readFileSync(files[0]!)).toEqual(original[0]!)
+  rmSync(path.join(root, "node_modules/tree-sitter/build"), { recursive: true })
   expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
 })
 
