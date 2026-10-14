@@ -2,9 +2,10 @@ import { Schema } from "effect"
 import ts from "typescript"
 import { builtinModules } from "node:module"
 import { lstat, readFile, realpath } from "node:fs/promises"
-import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { dirname, extname, join, relative, resolve, sep } from "node:path"
 import { cli, sha256, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
+import { calibrateCompilerEdge, compilerInputEdge } from "./distribution-provider-compiler-edge"
 
 const Edge = Schema.Struct({ path: Schema.String, kind: Schema.String, original: Schema.optional(Schema.String), external: Schema.optional(Schema.Boolean) })
 const CapturedFile = Schema.Struct({ path: Schema.String, sha256: Schema.String, gitBlob: Schema.String, bytes: Schema.Number })
@@ -225,44 +226,6 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
   }
   if (results.length !== 2) throw new Error("PROVIDER_COMPILER_TWO_BUILD_RECEIPTS_REQUIRED")
   return results
-}
-
-// This is compiler-record bookkeeping, not source-module resolution: normalize
-// the emitted edge path against its recorded importer, then consult only the
-// captured canonical input set. No basename search, extension guessing, index
-// probing, package exports lookup, or fallback to receipt.cwd for source edges.
-function compilerInputEdge(importer: string, path: string, captured: ReadonlyMap<string, readonly string[]>) {
-  const canonical = isAbsolute(path) ? resolve(path) : resolve(dirname(importer), path)
-  const keys = captured.get(canonical)
-  if (!keys) return undefined
-  if (keys.length !== 1) throw new Error("PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS")
-  return keys[0]
-}
-
-async function calibrateCompilerEdge(input: { path: string; key: string }, edge: string, captured: ReadonlyMap<string, readonly string[]>) {
-  const accepted = compilerInputEdge(input.path, edge, captured)
-  if (accepted !== input.key) throw new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_NOT_ACCEPTED")
-  const decoys = [...captured].filter(([path]) => path.endsWith(`${sep}omni.ts`) && path !== input.path)
-  if (!decoys.length) throw new Error("PROVIDER_COMPILER_SAME_BASENAME_CONTROL_MISSING")
-  const cases = [
-    { name: "same-basename-only", edge, captured: new Map(decoys), expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "wrong-parent", edge: "./__unrecorded-parent__/omni.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "unrecorded-edge", edge: "./__unrecorded-compiler-edge__.ts", captured, expected: "PROVIDER_COMPILER_EDGE_NOT_CAPTURED" },
-    { name: "ambiguous-canonical-input", edge, captured: new Map([...captured, [input.path, [input.key, `duplicate:${input.key}`]]]),
-      expected: "PROVIDER_COMPILER_EDGE_PATH_AMBIGUOUS" },
-  ]
-  const rejected = await Promise.all(cases.map(async (control) => {
-    const observed = await Promise.resolve().then(() => {
-      if (compilerInputEdge(input.path, control.edge, control.captured) === undefined) throw new Error("PROVIDER_COMPILER_EDGE_NOT_CAPTURED")
-      throw new Error("PROVIDER_COMPILER_EDGE_MUTATION_ACCEPTED")
-    }).then(() => { throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_VACUOUS") }, (error: unknown) => {
-      if (!(error instanceof Error) || error.message !== control.expected) throw error
-      return error.message
-    })
-    return { name: control.name, edge: control.edge, observed }
-  }))
-  if (compilerInputEdge(input.path, edge, captured) !== accepted) throw new Error("PROVIDER_COMPILER_EDGE_CONTROL_NOT_RESTORED")
-  return { boundary: "copied compiler edge/input-index oracle only", importer: input, edge, accepted, decoys: decoys.map(([path]) => path), rejected, restored: accepted }
 }
 
 async function requireCapturedFile(input: typeof CapturedFile.Type) {
