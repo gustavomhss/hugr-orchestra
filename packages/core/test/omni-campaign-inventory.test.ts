@@ -3,9 +3,9 @@ import { spawn } from "node:child_process"
 import { readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until } from "../../omni/campaign/lib.ts"
-import { execute, startServer } from "../../omni/campaign/delivery-fixtures.ts"
-import { closeWithinDeadline } from "../../omni/campaign/v8-windows.ts"
+import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until } from "../../../native/omni/campaign/lib.ts"
+import { execute, startServer } from "../../../native/omni/campaign/delivery-fixtures.ts"
+import { closeWithinDeadline } from "../../../native/omni/campaign/v8-windows.ts"
 
 const host = { ProcessId: process.pid, ParentProcessId: 1, CommandLine: "campaign host", StartTime: "100", SessionId: 1 }
 const kernel = { ProcessId: 72, ParentProcessId: 4, CommandLine: null, StartTime: "134358940677579360", SessionId: 0 }
@@ -30,7 +30,7 @@ test("PID reuse rejects older PPID rows; equal/new births and named reparented i
   ]
   const scratch = isolated("birth-order-mutant", {})
   await instrumentCopy(scratch.home, (source) => replace(source, "return ordered", "return true"))
-  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../omni/campaign/lib.ts")
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../../native/omni/campaign/lib.ts")
   for (const clock of clocks) {
     const rows = [
       { pid: process.pid, parent: 1, args: "host", state: "live", startTime: clock[1]! },
@@ -51,7 +51,7 @@ test("PID reuse rejects older PPID rows; equal/new births and named reparented i
 
 test("DST fold epoch facts preserve actual child birth order; timezone-unspecified rows fail by name", async () => {
   const scratch = isolated("dst-fold-control", {})
-  const script = `const { inventoryScope } = await import(${JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts"))});
+  const script = `const { inventoryScope } = await import(${JSON.stringify(path.join(ROOT, "native/omni/campaign/lib.ts"))});
 const parentEpoch=Date.UTC(2026,10,1,5,55), childEpoch=Date.UTC(2026,10,1,6,5);
 const parent=new Date(parentEpoch), child=new Date(childEpoch);
 const oldParent=Date.parse('Sun Nov 1 01:55:00 2026'), oldChild=Date.parse('Sun Nov 1 01:05:00 2026');
@@ -99,7 +99,7 @@ if (process.platform === "darwin") test("real macOS Bun and Node nonce records s
       expect(members(fixture.nonce, rows).members).toHaveLength(fixture.size)
       expect(inventoryScope(rows).filter((row) => records.some((record) => matches(row, record)))).toHaveLength(fixture.size)
       await instrumentCopy(scratch.home, (source) => replace(source, 'TZ: "UTC"', "TZ: process.env.TZ"))
-      const result = await controller(`const actual=await import(${JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts"))}); const mutant=await import(${JSON.stringify(path.join(scratch.home, "lib.ts"))}); const records=${JSON.stringify(records)}; console.log('UTC_QUERY_MUTATION_PROOF '+JSON.stringify({actual:records.filter(record=>actual.table().some(row=>actual.matches(row,record))).length,mutant:records.filter(record=>mutant.table().some(row=>actual.matches(row,record))).length}));`, { ...scratch.env, TZ: "America/New_York" })
+      const result = await controller(`const actual=await import(${JSON.stringify(path.join(ROOT, "native/omni/campaign/lib.ts"))}); const mutant=await import(${JSON.stringify(path.join(scratch.home, "lib.ts"))}); const records=${JSON.stringify(records)}; console.log('UTC_QUERY_MUTATION_PROOF '+JSON.stringify({actual:records.filter(record=>actual.table().some(row=>actual.matches(row,record))).length,mutant:records.filter(record=>mutant.table().some(row=>actual.matches(row,record))).length}));`, { ...scratch.env, TZ: "America/New_York" })
       expect(result.code).toBe(0)
       const line = result.stdout.split("\n").find((line) => line.startsWith("UTC_QUERY_MUTATION_PROOF "))
       expect(line).toBeDefined()
@@ -218,7 +218,7 @@ test("actual unknown-row and stale-PID mutants turn both controls red", async ()
   await instrumentCopy(scratch.home,
     (source) => replace(source, 'if (!table().some((row) => matches(row, pinned) && !row.state.startsWith("Z"))) return false', "if (false) return false"),
     (source) => replace(replace(source, "return [{ pid: row.ProcessId, parent: row.ParentProcessId", "if (row.CommandLine === null) return []\n    return [{ pid: row.ProcessId, parent: row.ParentProcessId"), " -ne '${pinned.startTime", " -eq '${pinned.startTime"))
-  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../omni/campaign/lib.ts")
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../../native/omni/campaign/lib.ts")
   const unknownGatePass = mutant.decodeWindowsTable([host, kernel], 700099).some((row) => row.pid === 72 && row.args === null && row.startTime === kernel.StartTime)
   expect(unknownGatePass).toBe(false)
   const proc = spawn(BUN, ["-e", "setInterval(() => {}, 1000)"], { cwd: ROOT, env: scratch.env, stdio: "ignore" })
@@ -294,7 +294,7 @@ test("unconfirmed recorder kill keeps its handle; delayed close confirmation per
     'proc.on("close", () => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) })',
     'proc.on("close", () => { setTimeout(() => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) }, 500) })'),
     'const timer = setTimeout(() => resolve(false), timeoutMs)\n    state.close!.finally', 'const timer = setTimeout(() => resolve(false), 100)\n    state.close!.finally'))
-  const module = await import(path.join(scratch.home, "windows-inventory.ts")) as typeof import("../../omni/campaign/windows-inventory.ts")
+  const module = await import(path.join(scratch.home, "windows-inventory.ts")) as typeof import("../../../native/omni/campaign/windows-inventory.ts")
   const recorder = module.WindowsInventory.makeRecorder({ command: BUN, args: ["-e", 'console.log(JSON.stringify({ready:true}));process.stdin.resume();process.stdin.on("end",()=>process.exit(0));setInterval(()=>{},1000)'] }, 2000)
   try {
     await recorder.prepare()
@@ -311,16 +311,16 @@ test("unconfirmed recorder kill keeps its handle; delayed close confirmation per
 
 test("full close deadline rejects a delayed OS disappearance and delayed reachability; late-check mutant is red", async () => {
   const scratch = isolated("late-disappearance", {})
-  const source = await Bun.file(path.join(ROOT, "packages/omni/campaign/v8-windows.ts")).text()
+  const source = await Bun.file(path.join(ROOT, "native/omni/campaign/v8-windows.ts")).text()
   const file = path.join(scratch.home, "v8-mutant.ts")
   await Bun.write(file, replace(replace(source
-    .replace('"./lib.ts"', JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts")))
-    .replace('"./delivery-fixtures.ts"', JSON.stringify(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts"))),
+    .replace('"./lib.ts"', JSON.stringify(path.join(ROOT, "native/omni/campaign/lib.ts")))
+    .replace('"./delivery-fixtures.ts"', JSON.stringify(path.join(ROOT, "native/omni/campaign/delivery-fixtures.ts"))),
     'const within = () => { if (performance.now() >= deadline) throw new Error(`ConPTY complete close exceeded ${boundMs} ms`); return deadline - performance.now() }',
     'const within = () => deadline - performance.now()'),
     'timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), Math.max(0, deadline - performance.now()))',
     'timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), 10000)'))
-  const mutant = await import(file) as typeof import("../../omni/campaign/v8-windows.ts")
+  const mutant = await import(file) as typeof import("../../../native/omni/campaign/v8-windows.ts")
   for (const stage of ["OS-zero", "reachability"] as const) {
     for (const mutation of [false, true]) {
       const fixture = tree(0)
@@ -380,11 +380,11 @@ function replace(source: string, before: string, after: string) {
 }
 
 async function instrumentCopy(home: string, lib = (source: string) => source, windows = (source: string) => source) {
-  await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
+  await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "native/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
     .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
-  await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "packages/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
+  await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "native/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
   for (const name of ["delivery-fixtures.ts", "fake-llm.ts", "isolated-user.ts", "process-rows.ts", "server-client.ts", "wait.ts"])
-    await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "packages/omni/campaign", name)).text())
+    await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "native/omni/campaign", name)).text())
 }
 
 async function controller(script: string, env: Record<string, string>) {
