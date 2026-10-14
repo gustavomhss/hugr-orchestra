@@ -679,7 +679,7 @@ export const dict = {
   "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
   "dialog.subagentModels.unsupported": "Subagent model permissions cannot be changed on this server.",
   "dialog.subagentModels.saveFailed":
-    "Model permissions could not be saved. Your previous selection is unchanged. Try again.",
+    "Model permissions could not be confirmed. Try again.",
   "dialog.subagentModels.inherited":
     "No session model restriction is set. Subagents inherit their configured model or the parent session's model.",
   "dialog.subagentModels.noneAllowed": "No connected models are allowed for subagents in this session.",
