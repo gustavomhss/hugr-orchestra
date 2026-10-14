@@ -767,6 +767,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         if (!selectedAgent || agentKey(selectedAgent) !== agent) return
         if (!clearPending(rulesKey, request.revision)) return
         const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
+        // Handoff only activity, not admission records/locks, so the destination observes the original finally.
+        const current = sourceAdmission(target).source
+        const scoped = admissions.get(next) ?? new Map<string, AdmissionSource>()
+        scoped.set(draftSessionKey(directorySDK.scope, sessionDirectory), {
+          state: current.state, setBusy: current.setBusy, selections: new Map<string, Admission>(),
+        })
+        admissions.set(next, scoped)
         batch(() => {
           admission.promoted = true
           submission.retarget(next)
@@ -1043,7 +1050,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
   return {
     abort,
-    submitting: () => !params.id && sourceAdmission().source.state.busy,
+    submitting: () => {
+      if (!params.id) return sourceAdmission().source.state.busy
+      const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
+      return admissions.get(prompt.capture())?.get(key)?.state.busy ?? false
+    },
     handleSubmit(event: Event) {
       event.preventDefault()
       if (ownership.disposed) return Promise.resolve()

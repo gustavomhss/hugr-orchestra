@@ -16,6 +16,7 @@ const draftURL = `/new-session?draftId=${draftID}`
 const sessionURL = `/server/${base64Encode(server)}/session/${sessionID}`
 const otherURL = `/server/${base64Encode(otherServer)}/session/${otherID}`
 const draftTab = `[data-tab-key="draft:${draftID}"]`
+const composer = '[data-component="prompt-input-v2"]'
 const editor = '[data-component="prompt-input-v2"] [data-component="prompt-input"]'
 const submit = '[data-component="prompt-input-v2"] [data-action="prompt-submit"]'
 const promptPath = `/session/${sessionID}/prompt_async`
@@ -32,7 +33,8 @@ test("fresh Send admits exactly one first turn before route/tab remount", async 
   const request = page.waitForRequest(isPromptRequest)
   const response = page.waitForResponse((response) => isPromptRequest(response.request()))
   await page.locator(submit).click()
-  await request
+  const sent = await request
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   await expect(page).toHaveURL(draftURL)
   await expect(page.locator(draftTab)).toHaveCount(1)
   await expect(page.locator(editor)).toHaveText("first draft turn")
@@ -40,15 +42,20 @@ test("fresh Send admits exactly one first turn before route/tab remount", async 
   expect(fixture.creates).toHaveLength(1)
   expect(fixture.prompts).toHaveLength(1)
   gate.resolve()
-  expect((await response).status()).toBe(204)
+  const receipt = await response
+  expect(receipt.request()).toBe(sent)
+  expect(receipt.status()).toBe(204)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(draftTab)).toHaveCount(0)
   await expect(page.locator(userCard)).toHaveCount(1)
   await expect(page.locator(userText)).toHaveText("first draft turn")
   await expect(page.locator(editor)).toHaveText("")
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   expect(await original.evaluate((element) => element.isConnected)).toBe(false)
   expect(fixture.prompts).toEqual([expect.objectContaining({ text: "first draft turn", url: draftURL, draft: true })])
   expect(fixture.messages).toHaveLength(1)
+  expect(fixture.admissions).toHaveLength(1)
+  expect(fixture.creates).toHaveLength(1)
 })
 
 test("delayed failure keeps draft and retries same Session/message ID", async ({ page }) => {
@@ -58,11 +65,17 @@ test("delayed failure keeps draft and retries same Session/message ID", async ({
   fixture.fail = true
   await page.locator(editor).fill("retry retained turn")
   const request = page.waitForRequest(isPromptRequest)
+  const response = page.waitForResponse((response) => isPromptRequest(response.request()))
   await page.locator(submit).click()
-  await request
+  const sent = await request
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   await expect(page.locator(editor)).toHaveText("retry retained turn")
   await expect(page.locator(draftTab)).toHaveCount(1)
   gate.resolve()
+  const failure = await response
+  expect(failure.request()).toBe(sent)
+  expect(failure.status()).toBe(500)
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   await expect(page.getByText("Failed to send prompt", { exact: true })).toBeVisible()
   await expect(page).toHaveURL(draftURL)
   await expect(page.locator(editor)).toHaveText("retry retained turn")
@@ -70,15 +83,21 @@ test("delayed failure keeps draft and retries same Session/message ID", async ({
   expect(fixture.messages).toHaveLength(0)
   fixture.fail = false
   const retried = page.waitForResponse((response) => isPromptRequest(response.request()))
+  const retryRequest = page.waitForRequest(isPromptRequest)
   await page.locator(submit).click()
-  expect((await retried).status()).toBe(204)
+  const retryReceipt = await retried
+  expect(retryReceipt.request()).toBe(await retryRequest)
+  expect(retryReceipt.status()).toBe(204)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(1)
   await expect(page.locator(userText)).toHaveText("retry retained turn")
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   expect(fixture.creates).toHaveLength(1)
   expect(fixture.prompts).toHaveLength(2)
   expect(fixture.prompts[1]?.id).toBe(fixture.prompts[0]?.id)
+  expect(fixture.prompts[1]?.payload).toEqual(fixture.prompts[0]?.payload)
   expect(fixture.messages).toHaveLength(1)
+  expect(fixture.admissions).toHaveLength(2)
 })
 
 test("new edit during admission stays in draft until deliberate next Send", async ({ page }) => {
@@ -90,6 +109,7 @@ test("new edit during admission stays in draft until deliberate next Send", asyn
   const response = page.waitForResponse((response) => isPromptRequest(response.request()))
   await page.locator(submit).click()
   const sent = await request
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   await page.locator(editor).fill("newer unsent draft")
   await expect(page.locator(editor)).toHaveText("newer unsent draft")
   gate.resolve()
@@ -97,43 +117,56 @@ test("new edit during admission stays in draft until deliberate next Send", asyn
   const receipt = await response
   expect(receipt.request()).toBe(sent)
   expect(receipt.status()).toBe(204)
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   await expect(page.locator(editor)).toHaveText("newer unsent draft")
   await expect(page.locator(draftTab)).toHaveCount(1)
+  expect(fixture.admissions).toHaveLength(1)
   const next = page.waitForResponse((response) => isPromptRequest(response.request()))
+  const nextRequest = page.waitForRequest(isPromptRequest)
   await page.locator(submit).click()
-  expect((await next).status()).toBe(204)
+  const nextReceipt = await next
+  expect(nextReceipt.request()).toBe(await nextRequest)
+  expect(nextReceipt.status()).toBe(204)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(2)
   await expect(page.locator(userText)).toHaveText(["admitted original", "newer unsent draft"])
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   expect(fixture.creates).toHaveLength(1)
   expect(fixture.prompts).toHaveLength(2)
   expect(fixture.prompts[1]?.id).not.toBe(fixture.prompts[0]?.id)
+  expect(fixture.admissions).toHaveLength(2)
 })
 
-test("closing draft before creation receipt cancels its unadmitted prompt", async ({ page }) => {
+test("closing admitting draft tears down its owner and stays Home on a late creation receipt", async ({ page }) => {
   const fixture = await setup(page)
   const gate = Promise.withResolvers<void>()
   fixture.createGate = gate.promise
+  const original = await page.locator(composer).elementHandle()
+  if (!original) throw new Error("Missing draft composer")
   await page.locator(editor).fill("closed draft must not dispatch")
   const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/session" && request.method() === "POST")
   const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/session" && response.request().method() === "POST")
   await page.locator(submit).click()
-  await request
+  const sent = await request
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
+  fixture.rejectPrompts = true
   await page.locator(draftTab).getByRole("button", { name: "Close tab", exact: true }).click()
   await expect(page.locator(draftTab)).toHaveCount(0)
+  expect(await original.evaluate((element) => element.isConnected)).toBe(false)
   // Desktop tab close selects within the current profile; B's tab is deliberately hidden here.
   await expect(page).toHaveURL("/")
   await expect(page.locator('[data-component="orchestra-home"]')).toBeVisible()
   gate.resolve()
   const created = await response
+  expect(created.request()).toBe(sent)
   expect(created.status()).toBe(200)
   expect(await created.json()).toMatchObject({ id: sessionID, directory })
   await expect(page).toHaveURL("/")
   await selectProfile(page, "draft-handoff-b")
   await expect(page).toHaveURL(otherURL)
   await expect(page.getByRole("heading", { name: "Other server session", exact: true })).toBeVisible()
-  expect(fixture.prompts).toEqual([])
-  expect(fixture.messages).toEqual([])
+  // Closing deletes the source observer. Unit disposal/remount proof awaits its actual finally and checks zero dispatches.
+  // This browser case claims teardown and late-receipt UI behavior; unexpected prompt routes fail explicitly below.
   expect(fixture.creates).toHaveLength(1)
   await expect(page).toHaveURL(otherURL)
 })
@@ -148,7 +181,8 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/session" && request.method() === "POST")
   const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/session" && response.request().method() === "POST")
   await page.locator(submit).click()
-  await request
+  const sent = await request
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   // The tab strip is profile-scoped. Switch profiles through the real app to navigate A -> B -> A.
   await selectProfile(page, "draft-handoff-b")
   await expect(page).toHaveURL(otherURL)
@@ -164,22 +198,31 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   await expect(page).toHaveURL(draftURL)
   await expect(page.locator(draftTab)).toHaveCount(1)
   await expect(page.locator(editor)).toHaveText("server A retained turn")
+  // Positive control after A -> B -> A: this is the same retained source, not a fresh false counter.
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   gate.resolve()
   const created = await response
+  expect(created.request()).toBe(sent)
   expect(created.status()).toBe(200)
   expect(await created.json()).toMatchObject({ id: sessionID, directory })
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   await expect(page).toHaveURL(draftURL)
-  expect(fixture.prompts).toEqual([])
+  expect(fixture.admissions).toEqual([])
   // Positive control uses the same HTTP matcher and real composer after the cancelled attempt.
   const retried = page.waitForResponse((response) => isPromptRequest(response.request()))
+  const retryRequest = page.waitForRequest(isPromptRequest)
   await page.locator(submit).click()
-  expect((await retried).status()).toBe(204)
+  const retryReceipt = await retried
+  expect(retryReceipt.request()).toBe(await retryRequest)
+  expect(retryReceipt.status()).toBe(204)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(1)
   await expect(page.locator(userText)).toHaveText("server A retained turn")
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   expect(fixture.creates).toHaveLength(1)
   expect(fixture.prompts).toHaveLength(1)
   expect(fixture.prompts[0]?.server).toBe(server)
+  expect(fixture.admissions).toHaveLength(1)
 })
 
 async function setup(page: Page) {
@@ -190,13 +233,20 @@ async function setup(page: Page) {
   const sessions = [{ ...session, id: otherID, directory: otherDirectory, projectID: "proj_draft_handoff_other", title: "Other server session" }]
   const otherProject = { id: "proj_draft_handoff_other", worktree: otherDirectory, vcs: "git", name: "draft-handoff-b", time: session.time, sandboxes: [] }
   const fixture: {
-    creates: unknown[]
-    prompts: { id: string; text: string; server: string; url: string; draft: boolean }[]
+    creates: Request[]
+    admissions: Request[]
+    prompts: { id: string; text: string; server: string; url: string; draft: boolean; payload: unknown }[]
     messages: { info: { id: string; sessionID: string; role: "user"; agent: string; model: unknown; time: { created: number } }; parts: unknown[] }[]
     createGate?: Promise<void>
     promptGate?: Promise<void>
     fail: boolean
-  } = { creates: [], prompts: [], messages: [], fail: false }
+    rejectPrompts: boolean
+  } = { creates: [], admissions: [], prompts: [], messages: [], fail: false, rejectPrompts: false }
+  // Observe before route filtering: every Session write/admission, including wrong targets and methods, reaches the ledger.
+  page.on("request", (request) => {
+    if (isCreateWrite(request)) fixture.creates.push(request)
+    if (isAdmissionRequest(request)) fixture.admissions.push(request)
+  })
   await mockOrchestraServer(page, {
     directory,
     project: { id: session.projectID, worktree: directory, vcs: "git", name: "draft-handoff", time: session.time, sandboxes: [] },
@@ -211,6 +261,38 @@ async function setup(page: Page) {
     const request = route.request()
     const url = new URL(request.url())
     const path = url.pathname
+    if (isCreateWrite(request)) {
+      if (request.method() !== "POST" || url.origin !== server || path !== "/session") {
+        await route.fulfill({ status: 500, json: { error: "Unexpected creation request" }, headers: { "access-control-allow-origin": "*" } })
+        throw new Error(`Unexpected creation ${request.method()} ${request.url()}`)
+      }
+      await fixture.createGate
+      sessions.push(session)
+      return route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
+    }
+    if (isAdmissionRequest(request)) {
+      try {
+        if (fixture.rejectPrompts) throw new Error("Closed source attempted prompt admission")
+        if (!isPromptRequest(request)) throw new Error(`Unexpected admission ${request.method()} ${request.url()}`)
+        const body = requirePromptBody(request)
+        fixture.prompts.push({
+          id: body.messageID, text: body.parts.flatMap((part) => part.type === "text" ? [part.text ?? ""] : []).join("\n"),
+          server: url.origin, payload: body.payload,
+          url: new URL(page.url()).pathname + new URL(page.url()).search,
+          draft: await page.locator(draftTab).count() === 1,
+        })
+        await fixture.promptGate
+        if (fixture.fail) return route.fulfill({ status: 500, json: { name: "UnknownError", data: { message: "admission failed" } }, headers: { "access-control-allow-origin": "*" } })
+        if (!fixture.messages.some((message) => message.info.id === body.messageID)) fixture.messages.push({
+          info: { id: body.messageID, sessionID, role: "user", agent: body.agent, model: body.model, time: { created: Date.now() } },
+          parts: body.parts,
+        })
+        return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+      } catch (error) {
+        await route.fulfill({ status: 500, json: { error: String(error) }, headers: { "access-control-allow-origin": "*" } })
+        throw error
+      }
+    }
     if (request.method() === "GET" && url.origin === otherServer) {
       if (path === "/project" || path === "/project/current") return route.fulfill({
         json: path === "/project" ? [otherProject] : otherProject,
@@ -221,28 +303,7 @@ async function setup(page: Page) {
         headers: { "access-control-allow-origin": "*" },
       })
     }
-    if (request.method() !== "POST") return route.fallback()
-    if (path === "/session") {
-      fixture.creates.push(request.postDataJSON())
-      await fixture.createGate
-      sessions.push(session)
-      return route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
-    }
-    if (path !== promptPath) return route.fallback()
-    const body = request.postDataJSON() as { messageID: string; agent: string; model: unknown; parts: { type: string; text?: string }[] }
-    fixture.prompts.push({
-      id: body.messageID, text: body.parts.flatMap((part) => part.type === "text" ? [part.text ?? ""] : []).join("\n"),
-      server: url.origin,
-      url: new URL(page.url()).pathname + new URL(page.url()).search,
-      draft: await page.locator(draftTab).count() === 1,
-    })
-    await fixture.promptGate
-    if (fixture.fail) return route.fulfill({ status: 500, json: { name: "UnknownError", data: { message: "admission failed" } }, headers: { "access-control-allow-origin": "*" } })
-    if (!fixture.messages.some((message) => message.info.id === body.messageID)) fixture.messages.push({
-      info: { id: body.messageID, sessionID, role: "user", agent: body.agent, model: body.model, time: { created: Date.now() } },
-      parts: body.parts,
-    })
-    return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+    return route.fallback()
   })
   await page.addInitScript(({ directory, otherDirectory, draftID, server, otherServer, otherID, otherURL }) => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }))
@@ -265,6 +326,7 @@ async function setup(page: Page) {
   await expect(model).toHaveText("Draft Model")
   await expect(model).toBeEnabled()
   await expect(page.locator(editor)).toBeEditable()
+  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   return fixture
 }
 
@@ -280,4 +342,31 @@ async function selectProfile(page: Page, name: string) {
 function isPromptRequest(request: Request) {
   const url = new URL(request.url())
   return request.method() === "POST" && url.origin === server && url.pathname === promptPath
+}
+
+function isAdmissionRequest(request: Request) {
+  const path = new URL(request.url()).pathname
+  if (request.method() === "OPTIONS") return false
+  if (/^\/(?:api\/)?session\/[^/]+\/(?:prompt|prompt_async)$/.test(path)) return true
+  return /^\/(?:api\/)?session\/[^/]+(?:\/.*)?$/.test(path) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
+}
+
+function isCreateWrite(request: Request) {
+  return /^\/(?:api\/)?session$/.test(new URL(request.url()).pathname) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
+}
+
+function requirePromptBody(request: Request) {
+  const body: unknown = request.postDataJSON()
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Prompt body is not an object")
+  if (!("messageID" in body) || typeof body.messageID !== "string" || !/^msg_[0-9a-f]{12}[A-Za-z0-9]{14}$/.test(body.messageID)) {
+    throw new Error("Prompt messageID does not match Identifier.ascending(message)")
+  }
+  if (!("agent" in body) || typeof body.agent !== "string") throw new Error("Prompt agent is not a string")
+  if (!("parts" in body) || !Array.isArray(body.parts)) throw new Error("Prompt parts are not an array")
+  const parts = body.parts.map((part: unknown) => {
+    if (!part || typeof part !== "object" || !("type" in part) || typeof part.type !== "string") throw new Error("Invalid prompt part")
+    if ("text" in part && typeof part.text !== "string") throw new Error("Prompt part text is not a string")
+    return part as { type: string; text?: string }
+  })
+  return { messageID: body.messageID, agent: body.agent, model: "model" in body ? body.model : undefined, parts, payload: body }
 }

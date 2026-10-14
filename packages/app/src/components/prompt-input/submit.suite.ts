@@ -417,6 +417,19 @@ beforeAll(async () => {
 })
 
 describe("durable subagent policy submission", () => {
+  test("qualified promotion exposes original source activity on the Session target until finally", async () => {
+    search.draftId = "draft-1"
+    const real = createPromptState({ prompt: "handoff activity" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+    const observed: boolean[] = []
+    promoteHook = () => { observed.push(submit.submitting()) }
+    await submit.handleSubmit(new Event("submit"))
+    expect(params.id).toBe("session-1")
+    expect(observed).toEqual([true])
+    expect(submit.submitting()).toBe(false)
+    expect(promptInputs).toHaveLength(1)
+  })
+
   test.skipIf(isServer)("submitting observes the retained source's actual finally after composer disposal/remount", async () => {
     const gate = deferred()
     createSessionGate = gate.promise
