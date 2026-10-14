@@ -11,7 +11,7 @@ import { SessionPrompt } from "../../src/session/prompt"
 import { Session } from "../../src/session/session"
 import { Skill } from "../../src/skill"
 import { NpmTest } from "../fake/npm"
-import { TestInstance } from "../fixture/fixture"
+import { TestInstance, tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
 import { testProviderConfig } from "../lib/test-provider"
@@ -123,14 +123,22 @@ it.instance(
 )
 
 test("the desktop app's packaged copy replaces the source copy", async () => {
-  const previous = process.env.ORCHESTRA_PLAYBOOKS_DIR
-  process.env.ORCHESTRA_PLAYBOOKS_DIR = path.join(path.sep, "opt", "orchestra", "resources", "playbooks")
-  // The query loads a fresh copy of the module, which reads the variable as it loads.
-  const fresh = "../../src/skill/index.ts?packaged"
-  const packaged: typeof Skill = await import(fresh)
-  if (previous === undefined) delete process.env.ORCHESTRA_PLAYBOOKS_DIR
-  else process.env.ORCHESTRA_PLAYBOOKS_DIR = previous
-
-  expect(packaged.PLAYBOOKS_DIR).toBe(path.join(path.sep, "opt", "orchestra", "resources", "playbooks"))
+  await using tmp = await tmpdir()
+  const packaged = path.join(tmp.path, "resources", "playbooks")
+  await fs.cp(path.resolve(import.meta.dir, "../../playbooks"), packaged, { recursive: true })
+  // Both Skill and SeatSkillRoot must initialize in a fresh process with the complete packaged inventory.
+  const child = Bun.spawn([process.execPath, "--eval", `
+    const { Skill } = await import(${JSON.stringify(path.resolve(import.meta.dir, "../../src/skill/index.ts"))});
+    console.log(Skill.PLAYBOOKS_DIR);
+  `], {
+    cwd: tmp.path,
+    env: { ...process.env, ORCHESTRA_PLAYBOOKS_DIR: packaged,
+      XDG_CACHE_HOME: path.join(tmp.path, "cache"), XDG_DATA_HOME: path.join(tmp.path, "data"),
+      XDG_CONFIG_HOME: path.join(tmp.path, "config"), XDG_STATE_HOME: path.join(tmp.path, "state") },
+    stdout: "pipe", stderr: "pipe",
+  })
+  const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+  if (exit !== 0) throw new Error(`Packaged playbook root failed: ${stderr}`)
+  expect(stdout.trim()).toBe(packaged)
   expect(Skill.PLAYBOOKS_DIR).toBe(path.resolve(import.meta.dir, "../../playbooks"))
 })
