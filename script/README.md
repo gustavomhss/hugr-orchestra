@@ -90,3 +90,5 @@ Creation reads immutable Git blobs sequentially without replacement refs and pub
 Creation and restoration claim existing empty slots before private staging, verify the claimed identity, and publish with the OS's atomic no-replace operation. A later-created slot, including an empty directory, aborts publication and remains untouched; concurrent disjoint restores cannot merge their trees. Restored members use exclusive placeholders and pinned file handles; directory identities and the destination filesystem detect aliases. Portable names exclude Windows-forbidden characters and NFC/case-equivalent member or scope names. Darwin uses `renameatx_np(RENAME_EXCL)`, Linux uses `renameat2(RENAME_NOREPLACE)`, and Windows uses `MoveFileW`; unsupported publication primitives fail without an overwrite fallback.
 
 Retention of the output is what makes this a recovery copy. Creation alone does not establish durable storage or authorize source removal. Scope dispositions and reader uncertainty remain in the manifest for subsequent review.
+
+Owner-retained copies and measured recovery receipts are indexed in [docs/archives](../docs/archives/README.md).
