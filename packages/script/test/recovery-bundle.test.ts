@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { symlinkSync } from "node:fs"
+import { mkdirSync, symlinkSync } from "node:fs"
 import { chmod, lstat, mkdir, mkdtemp, readdir, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRecoveryBundle, restoreRecoveryBundle } from "../../../script/recovery-bundle.ts"
@@ -185,7 +185,7 @@ test("concurrent disjoint restores publish exactly one complete bundle", async (
   }
 })
 
-test("destination symlink injection cannot redirect private restore writes", async () => {
+test.each(["symlink", "empty-present", "empty-absent"] as const)("destination %s injection cannot replace private restore publication", async (variant) => {
   const fixture = await makeFixture()
   const external = path.join(fixture.root, "external-destination")
   try {
@@ -193,25 +193,44 @@ test("destination symlink injection cannot redirect private restore writes", asy
     await git(fixture.repository, ["add", "scope"])
     await git(fixture.repository, ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "race witness members"])
     await createRecoveryBundle(fixture.repository, "HEAD", fixture.bundle, scopes)
-    await mkdir(fixture.restored)
+    if (variant !== "empty-absent") await mkdir(fixture.restored)
+    const original = variant !== "empty-absent" ? await lstat(fixture.restored) : undefined
     await mkdir(external)
     await Bun.write(path.join(external, "keep"), "retained")
     const observed = { swapped: false, settled: false }
+    const identities: { dev: number; ino: number }[] = []
     const pending = restoreRecoveryBundle(fixture.bundle, fixture.restored).then(
       (manifest) => ({ status: "fulfilled" as const, manifest }),
       (error: unknown) => ({ status: "rejected" as const, error }),
     ).finally(() => { observed.settled = true })
     const deadline = Date.now() + 5000
     while (!observed.swapped && !observed.settled && Date.now() < deadline) {
-      if (!(await readdir(fixture.root)).some((name) => name.startsWith(".orchestra-recovery-"))) continue
-      symlinkSync(external, path.join(fixture.restored, "scope"), "junction")
+      const scratch = (await readdir(fixture.root)).find((name) => name.startsWith(".orchestra-recovery-"))
+      if (!scratch) continue
+      const claimed = await lstat(path.join(fixture.root, scratch, variant === "empty-absent" ? "snapshot" : "previous-slot"))
+        .catch(() => undefined)
+      if (!claimed?.isDirectory()) continue
+      if (original) {
+        expect(claimed.dev).toBe(original.dev)
+        expect(claimed.ino).toBe(original.ino)
+      }
+      mkdirSync(fixture.restored)
+      if (variant === "symlink") symlinkSync(external, path.join(fixture.restored, "scope"), "junction")
+      identities.push(await lstat(fixture.restored))
       observed.swapped = true
     }
     const result = await pending
     expect(observed.swapped).toBe(true)
     expect(result.status).toBe("rejected")
     if (result.status !== "rejected") throw new Error("FIXTURE_RESTORE_ACCEPTED_CHANGED_DESTINATION")
-    expect(String(result.error)).toContain("RECOVERY_DESTINATION_CHANGED")
+    expect(String(result.error)).toContain("RECOVERY_DESTINATION_PUBLISH_FAILED")
+    const current = await lstat(fixture.restored)
+    expect(identities).toHaveLength(1)
+    const identity = identities[0]
+    if (!identity) throw new Error("FIXTURE_COMPETING_SLOT_NOT_OBSERVED")
+    expect(current.dev).toBe(identity.dev)
+    expect(current.ino).toBe(identity.ino)
+    expect(await readdir(fixture.restored)).toEqual(variant === "symlink" ? ["scope"] : [])
     expect(await readdir(external)).toEqual(["keep"])
     expect(await Bun.file(path.join(external, "keep")).text()).toBe("retained")
   } finally {

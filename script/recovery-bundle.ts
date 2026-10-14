@@ -1,8 +1,9 @@
 import path from "node:path"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
-import { lstat, mkdir, mkdtemp, open, readdir, realpath, rename, rm, rmdir, writeFile } from "node:fs/promises"
+import { lstat, mkdir, mkdtemp, open, readdir, realpath, rm, rmdir, writeFile } from "node:fs/promises"
 import { archiveInventory, type Scope } from "./archive-inventory.ts"
+import { moveRecoveryEntry } from "./recovery-publication.ts"
 
 type Member = { path: string; mode: string; gitBlob: string; bytes: number; sha256: string }
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
@@ -184,8 +185,24 @@ async function emptyDestination(destination: string, excluded: string[], rejectR
     }
   }
   if (info && (await readdir(target)).length) throw new Error(`RECOVERY_DESTINATION_NOT_EMPTY:${destination}`)
-  const staging = await mkdtemp(path.join(parent, ".orchestra-recovery-"))
-  return { target, staging, identity: info, stagingIdentity: await lstat(staging), parent, parentIdentity: await lstat(parent) }
+  const scratch = await mkdtemp(path.join(parent, ".orchestra-recovery-"))
+  const staging = path.join(scratch, "snapshot")
+  const claim = path.join(scratch, "previous-slot")
+  await mkdir(staging, { mode: 0o700 })
+  if (info) {
+    await moveRecoveryEntry(target, claim).catch(async (cause: unknown) => {
+      await rm(scratch, { recursive: true })
+      throw new Error(`RECOVERY_DESTINATION_CHANGED:${destination}`, { cause })
+    })
+    const claimed = await lstat(claim)
+    if (claimed.dev !== info.dev || claimed.ino !== info.ino || !claimed.isDirectory() || claimed.isSymbolicLink() || (await readdir(claim)).length) {
+      await moveRecoveryEntry(claim, target)
+        .catch((cause: unknown) => { throw new Error(`RECOVERY_DESTINATION_CLAIM_RETAINED:${claim}`, { cause }) })
+      await rm(scratch, { recursive: true })
+      throw new Error(`RECOVERY_DESTINATION_CHANGED:${destination}`)
+    }
+  }
+  return { target, staging, scratch, claim: info ? claim : undefined, identity: info, stagingIdentity: await lstat(scratch), parent, parentIdentity: await lstat(parent), published: false }
 }
 
 async function memberTarget(staging: string, member: string, directories: Map<string, string>) {
@@ -213,27 +230,31 @@ async function publish(output: Awaited<ReturnType<typeof emptyDestination>>) {
   const parent = await lstat(output.parent)
   if (parent.dev !== output.parentIdentity.dev || parent.ino !== output.parentIdentity.ino || parent.isSymbolicLink())
     throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`)
-  const current = await lstat(output.target).catch((error: unknown) => {
-    if (record(error) && error.code === "ENOENT") return undefined
-    throw error
-  })
-  if (current) {
-    if (!output.identity || current.dev !== output.identity.dev || current.ino !== output.identity.ino || !current.isDirectory() || current.isSymbolicLink())
-      throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`)
-    // rmdir only removes an empty slot. Publication never merges two directory trees.
-    await rmdir(output.target).catch((cause: unknown) => { throw new Error(`RECOVERY_DESTINATION_CHANGED:${output.target}`, { cause }) })
-  }
-  await rename(output.staging, output.target)
+  await moveRecoveryEntry(output.staging, output.target)
     .catch((cause: unknown) => { throw new Error(`RECOVERY_DESTINATION_PUBLISH_FAILED:${output.target}`, { cause }) })
+  output.published = true
 }
 
 async function discard(output: Awaited<ReturnType<typeof emptyDestination>>) {
-  const current = await lstat(output.staging).catch((error: unknown) => {
+  const current = await lstat(output.scratch).catch((error: unknown) => {
     if (record(error) && error.code === "ENOENT") return undefined
     throw error
   })
-  if (current?.dev === output.stagingIdentity.dev && current.ino === output.stagingIdentity.ino)
-    await rm(output.staging, { recursive: true, force: true })
+  if (current?.dev !== output.stagingIdentity.dev || current.ino !== output.stagingIdentity.ino) return
+  if (output.claim) {
+    const claim = output.claim
+    const claimed = await lstat(claim)
+    if (claimed.dev !== output.identity?.dev || claimed.ino !== output.identity.ino || !claimed.isDirectory() || claimed.isSymbolicLink() || (await readdir(output.claim)).length)
+      throw new Error(`RECOVERY_DESTINATION_CLAIM_RETAINED:${output.claim}`)
+    if (output.published) await rmdir(claim)
+    if (!output.published) {
+      await moveRecoveryEntry(claim, output.target).catch(async () => {
+        // A competing slot remains untouched; this captured old slot is still empty.
+        await rmdir(claim)
+      })
+    }
+  }
+  await rm(output.scratch, { recursive: true, force: true })
 }
 
 function ancestors(directory: string): string[] {
