@@ -33,17 +33,21 @@ if (run) {
   const settings=JSON.parse(readFileSync(file+'.config','utf8'));
   const query=settings.ownedQuery === undefined ? undefined : spawn('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',
     Buffer.from('if([Console]::ReadLine() -ne "RUN"){exit 1}; '+settings.ownedQuery,'utf16le').toString('base64')],{stdio:['pipe','pipe','pipe'],windowsHide:true});
-  const queryOutput={stdout:'',stderr:'',error:'',code:null,signal:null,closed:false};
+  const queryOutput={stdout:'',stderr:'',stdoutBytes:0,stderrBytes:0,stdoutChunks:0,stderrChunks:0,firstStdoutChunkBytes:0,error:'',code:null,signal:null,closed:false};
+  const queryBuffers={stdout:[],stderr:[]};
   // This broker, not source, owns the exact query handle and both pipe joins.
   // A source kill cannot bypass this join or release the diagnostic directory.
   const queryClose=query ? new Promise(resolve=>{
     query.on('error',error=>{queryOutput.error=String(error)});
     query.stdout.on('error',error=>{queryOutput.error=String(error);query.kill('SIGKILL')});
     query.stderr.on('error',error=>{queryOutput.error=String(error);query.kill('SIGKILL')});
-    query.stdout.on('data',chunk=>{queryOutput.stdout+=chunk; if(Buffer.byteLength(queryOutput.stdout)>67108864) {queryOutput.error='owned query stdout exceeded 64 MiB';query.kill('SIGKILL')}});
-    query.stderr.on('data',chunk=>{queryOutput.stderr+=chunk; if(Buffer.byteLength(queryOutput.stderr)>16384) {queryOutput.error='owned query stderr exceeded 16 KiB';query.kill('SIGKILL')}});
+    query.stdout.on('data',chunk=>{queryOutput.stdoutBytes+=chunk.length;queryOutput.stdoutChunks++;queryOutput.firstStdoutChunkBytes ||= chunk.length;
+      if(queryOutput.stdoutBytes>67108864) {queryOutput.error='owned query stdout exceeded 64 MiB';query.kill('SIGKILL');return} queryBuffers.stdout.push(chunk)});
+    query.stderr.on('data',chunk=>{queryOutput.stderrBytes+=chunk.length;queryOutput.stderrChunks++;
+      if(queryOutput.stderrBytes>16384) {queryOutput.error='owned query stderr exceeded 16 KiB';query.kill('SIGKILL');return} queryBuffers.stderr.push(chunk)});
     query.once('close',(code,signal)=>{
       queryOutput.code=code;queryOutput.signal=signal;queryOutput.closed=true;
+      queryOutput.stdout=Buffer.concat(queryBuffers.stdout).toString('utf8');queryOutput.stderr=Buffer.concat(queryBuffers.stderr).toString('utf8');
       writeFileSync(file+'.result.tmp',JSON.stringify({pid:query.pid,...queryOutput}));
       renameSync(file+'.result.tmp',file+'.result');resolve();
     });
