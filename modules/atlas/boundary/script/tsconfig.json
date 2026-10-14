@@ -5,13 +5,13 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": "../../..",
+    "baseUrl": "../../../..",
     "paths": {
-      "@atlas/*": ["foundation/atlas/packages/*/src/index.ts"],
-      "@noble/hashes/*": ["packages/atlas-boundary/node_modules/@noble/hashes/*"]
+      "@atlas/*": ["modules/atlas/packages/*/src/index.ts"],
+      "@noble/hashes/*": ["modules/atlas/boundary/node_modules/@noble/hashes/*"]
     },
     "types": ["node"],
     "typeRoots": ["../node_modules/@types"]
   },
-  "files": ["../../../foundation/atlas/packages/retrieval/src/host-context.ts"]
+  "files": ["../../../../modules/atlas/packages/retrieval/src/host-context.ts"]
 }
