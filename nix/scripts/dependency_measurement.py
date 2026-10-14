@@ -35,9 +35,13 @@ def decode(text, label):
 
 
 def git(*args):
-    result = subprocess.run(["git", "--no-replace-objects", *args], text=True, capture_output=True)
+    return git_bytes(*args).decode("utf-8").strip()
+
+
+def git_bytes(*args):
+    result = subprocess.run(["git", "--no-replace-objects", *args], capture_output=True)
     require(result.returncode == 0, "SOURCE_GIT_LOOKUP_FAILED")
-    return result.stdout.strip()
+    return result.stdout
 
 
 def fingerprint(revision):
@@ -58,18 +62,20 @@ def fingerprint(revision):
                 and not re.search(r"[\\\x00-\x1f\x7f:]", path)
                 and all(part not in {"", ".", ".."} for part in path.split("/")) for path in paths),
             "DEPENDENCY_REGISTRY_PATH_INVALID")
-    entries = git("ls-tree", "-r", "-z", "--full-tree", revision, "--",
+    entries = git_bytes("ls-tree", "-r", "-z", "--full-tree", revision, "--",
                   "packages", "patches", "bun.lock", "package.json", "bunfig.toml", "tsconfig.json", "flake.lock",
                   ".github/TEAM_MEMBERS", "flake.nix", "nix/node_modules.nix", "nix/bun.nix",
                   "nix/toolchain-sources.json", "nix/scripts/canonicalize-node-modules.ts",
                   "nix/scripts/normalize-bun-binaries.ts", "script/module-registry.json",
-                  "script/toolchain-registry.json", *paths).split("\0")
+                  "script/toolchain-registry.json", *paths).split(b"\0")
     blobs = {}
     modes = {}
     for line in entries:
         if not line:
             continue
-        metadata, path = line.split("\t", 1)
+        metadata, raw_path = line.split(b"\t", 1)
+        metadata = metadata.decode("ascii")
+        path = raw_path.decode("utf-8")
         require(metadata.split()[1] == "blob", "DEPENDENCY_INPUT_NOT_BLOB:" + path)
         blobs[path] = metadata.split()[2]
         modes[path] = metadata.split()[0]

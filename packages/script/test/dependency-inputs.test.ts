@@ -57,6 +57,8 @@ for (const variant of ["literal-names", "module-symlink", "domain-symlink"] as c
         [`${module}/package.json`]: '{"name":"@orchestra/script"}',
         [`${native}/Cargo.toml`]: "[workspace]\n",
         "domains/atlas/package.json": '{"name":"atlas"}',
+        "domains/atlas/control\rname.ts": "CR input",
+        "domains/atlas/control\nname.ts": "LF input",
         "bun.lock": "fixture",
         "nix/node_modules.nix": "fixture",
       }
