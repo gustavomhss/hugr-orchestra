@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": "../..",
-    "paths": { "@orchestra/script/*": ["packages/script/src/*.ts"] }
+    "paths": {
+      "@orchestra/script/*": ["packages/script/src/*.ts"],
+      "@orchestra/core/*": ["packages/core/src/*.ts"]
+    }
   }
 }
