@@ -2,7 +2,18 @@
 
 Baseline: `615b2602ea`. Qualification versions: `1.18.27` and `1.18.28`, built separately from the same source snapshot. These are test builds, not release/publication records.
 
-Stack composition subsequently adopted `dev` at `6dbb3546fc`, including its bundled ripgrep and generic CLI test selector. Qualification of the complete refreshed tree is pending `distribution-bundle.yml`; its exact SHA and hosted result will be recorded in the final bundle PR. The table below remains historical evidence for the linked snapshots, not a claim that those runs tested the newer baseline. See `STACK.md` for the review and landing order.
+The original stack adopted `dev` at `6dbb3546fc`, then qualified its integration with `6a9b7c5e21` in [38475939037](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38475939037) and landed at `5c87f7826e`. The historical table below retains each linked snapshot's reach. Native Windows and AUR closure follows in the next section.
+
+## Native Windows and AUR closure
+
+[38494570524](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38494570524) passed all eight jobs at runtime snapshot `21de9ed50eb98b84f55085a8b4a2e35cd38b893f`, based on `5c87f7826e`. Windows and both AUR qualification rows passed; retained logs were independently checked for their named runtime tests, zero failures and nonce-bound actual omni controls. Documentation-only follow-up does not alter that runtime snapshot.
+
+- **Windows x64:** two actual `windows-x64-baseline` builds, real npm registry install/update/exact downgrade, public `.cmd` launcher, PE executable/addon/supervisor checks, TS/Python parsers, independent exact installed-companion spawn, authenticated service/catalog and complete skill/reference bytes. Native PID, image and creation-time queries corroborate each daemon; the fixture adopts its Windows job until authenticated stop, independent exit observation and job release. Forced-reader/deadline controls prove the query broker closes its own PowerShell child.
+- **AUR x64 / ARM64:** actual nonroot `makepkg`, final archive after tidy, native `pacman` v1 install/v2 update/original retained-v1 downgrade, public `/usr/bin/orchestra`, all runtime and skill-byte oracles above, wrong-download checksum refusal before extraction/install, retained-source/cache preservation and owned guest/host fixture teardown.
+- The x64 guest uses official `archlinux:base` manifest `sha256:363129b67b2bc6c5a634f8fb4961a7e2eba213a2ec075d159127b1260290a722`. ARM64 uses third-party Menci ArchLinuxARM manifest `sha256:e677d448765dbaefc52293ae7d43680a760ef0653d941fcb778d3456a0a7206a`. Actual host and guest kernel CPUs are checked; neither lane uses QEMU.
+- On the ARM runner, repository bootstrap encounters Landlock EPERM. Only that observed bootstrap failure permits a recorded `pacman --disable-sandbox` retry inside the owned guest; repository signatures remain enabled. Application install/update/downgrade uses ordinary `pacman -U`. This does not qualify Landlock itself.
+- The final-package oracle plants byte, executable/non-executable mode, missing/extra file, empty-directory, wrong-link, missing-metadata and wrong-recipe-hash defects; each is rejected and restored baseline reaccepted. `.BUILDINFO` records global makepkg.conf defaults, not recipe-local options; exact recipe provenance plus final archive hashes/modes establish preservation.
+- Earlier runs [38484961389](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38484961389), [38487199630](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38487199630), [38488316964](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38488316964), [38490177704](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38490177704), [38491412686](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38491412686) and [38493459818](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38493459818) exposed real harness/platform failures. They are not green qualification records.
 
 ## Measured hosted checks
 
@@ -46,8 +57,8 @@ Mutation worktrees were restored after snapshot capture. These deliberately fail
 ## Scope boundaries
 
 - Case-alias filesystem checks execute on macOS and Windows. Linux's case-sensitive volume reports that specific test as blocked; other Linux checks execute normally.
-- Windows skips the Unix executable-bit/filename cases by name. Windows payload/wrapper publication is structurally tested; real Windows CLI runtime installation is not qualified here.
+- Windows skips Unix executable-bit/filename cases by name; native Windows x64 npm runtime closure is measured separately above. Windows ARM64 is not a declared target of this proof.
 - The installed-companion peer independently exercises the shipped supervisor. It does not claim that the public CLI performed a model/tool turn through omni.
-- AUR has generated recipe and executor checks only. Additional Arch sandbox infrastructure was removed from the active workstream; native AUR qualification is not claimed.
+- Native AUR x64/ARM64 closure is measured above in pinned owned guests; public AUR publication remains a release operation.
 - Public registries/taps, provider execution, musl runtime, signing/notarization and release publication are not established by these tests.
 - Node addon compatibility is measured separately above; Deno addon compatibility is not established here.
