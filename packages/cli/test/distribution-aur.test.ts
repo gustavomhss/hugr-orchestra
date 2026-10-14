@@ -303,7 +303,35 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     if (member.sha256 !== sha256 || member.size !== bytes.length)
       throw new Error("AUR_DENO_ARCHIVE_EXECUTABLE_BINDING_MISMATCH")
     const version = await successful([source, "--version"], box)
-    if (version.split("\n")[0] !== `deno ${distributionDenoVersion}`) throw new Error("AUR_DENO_NATIVE_VERSION_PIN_MISMATCH")
+    const versionMetadata = parseDenoVersion(version, triple)
+    // Hosted controls mutate the actual executable's first line, then readmit
+    // that real output through the same parser used for source admission.
+    const firstLine = version.split("\n")[0]
+    const versionParseControls = await Promise.all([
+      { name: "version-token-prefix", output: firstLine.replace(`deno ${distributionDenoVersion} `, `deno ${distributionDenoVersion}0 `),
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+      { name: "bare-version-without-release-metadata", output: `deno ${distributionDenoVersion}`,
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+      { name: "nonstable-channel", output: firstLine.replace("(stable,", "(canary,"),
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+      { name: "nonrelease-build", output: firstLine.replace(", release,", ", debug,"),
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+      { name: "foreign-native-triple", output: firstLine.replace(triple,
+        process.arch === "x64" ? "aarch64-unknown-linux-gnu" : "x86_64-unknown-linux-gnu"),
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+      { name: "trailing-first-line-text", output: `${firstLine} unexpected`,
+        expected: "AUR_DENO_NATIVE_VERSION_PIN_MISMATCH" },
+    ].map(async (control) => {
+      if (control.output === firstLine) throw new Error(`AUR_DENO_VERSION_PARSE_CONTROL_DID_NOT_MUTATE: ${control.name}`)
+      const error = await Promise.resolve().then(() => parseDenoVersion(control.output, triple))
+        .then(() => undefined, (cause: unknown) => cause)
+      if (!(error instanceof Error) || error.message !== control.expected)
+        throw new Error(`AUR_DENO_VERSION_PARSE_CONTROL_WRONG_CAUSE: ${control.name}`, { cause: error })
+      if (!isDeepStrictEqual(parseDenoVersion(version, triple), versionMetadata))
+        throw new Error(`AUR_DENO_VERSION_PARSE_BASELINE_READMISSION_FAILED: ${control.name}`)
+      return { name: control.name, output: control.output, expected: control.expected, observed: error.message,
+        restored: "actual-executable-version-output-readmitted" }
+    }))
     const destination = join(directory, "deno")
     await copyFile(source, destination, constants.COPYFILE_EXCL)
     await chmod(destination, 0o755)
@@ -315,11 +343,19 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
       throw new Error("AUR_DENO_HOST_SOURCE_CHANGED_DURING_COPY")
     return { officialDownload: { file: receiptFile, sha256: createHash("sha256").update(receiptBytes).digest("hex"), receipt },
       archive: { file: archive, identity: archiveIdentity, sha256: receipt.sha256, member },
-      source: { file: source, identity, sha256, header: { format: "ELF64", cpu: process.arch }, version },
+      source: { file: source, identity, sha256, header: { format: "ELF64", cpu: process.arch },
+        version, versionMetadata, versionParseControls },
       destination: { file: destination, guestFile: "/proof/deno", identity: fileIdentity(await lstat(destination)),
         sha256: createHash("sha256").update(copied).digest("hex"), fullBytesEqual: true },
     }
   })().finally(() => handle.close())
+}
+
+function parseDenoVersion(output: string, triple: string) {
+  const parsed = /^deno ([^\s]+) \((stable), (release), ([a-z0-9_-]+)\)$/.exec(output.split("\n")[0])
+  if (!parsed || parsed[1] !== distributionDenoVersion || parsed[4] !== triple)
+    throw new Error("AUR_DENO_NATIVE_VERSION_PIN_MISMATCH")
+  return { version: parsed[1], channel: parsed[2], profile: parsed[3], triple: parsed[4] }
 }
 
 function fileIdentity(stat: Stats) {
