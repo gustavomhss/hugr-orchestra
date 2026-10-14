@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Publishes packages/omni to its read-only mirror (github.com/gustavomhss/hugr-omni) as a linear replay of dev.
+# Publishes Omni to its read-only mirror (github.com/gustavomhss/hugr-omni) as a linear replay of dev.
+# Historical commits resolve packages/omni or native/omni at that commit, independently of current placement.
 #
 #   script/omni-mirror.sh <commit> <mirror-url> [--push]          # dev: replay up to <commit>
 #   script/omni-mirror.sh <commit> <mirror-url> --tag <name>      # tag: point <name> at <commit>'s mirror commit
 #
 # The mirror's main up to 415038b is omni's own history (the split recorded by the subtree import). After it, every
-# first-parent commit of dev that changes packages/omni becomes one mirror commit: that tree, the original author,
+# first-parent commit of dev that changes the Omni tree becomes one mirror commit: that tree, the original author,
 # committer, dates and message, plus an `Orchestra-Commit: <sha>` trailer. The commit is fully determined by its
 # source, so a re-run makes the same SHAs and a push is always a fast-forward of what the last run pushed.
 # `git subtree split` did the same job, but on dev's history it overflows dash's recursion limit and runs past an hour.

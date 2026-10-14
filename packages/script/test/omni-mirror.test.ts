@@ -65,7 +65,11 @@ test("pre-move replay keeps the legacy deterministic mirror SHA", async () => {
 test("relocation is tree-neutral, new-prefix replay resumes, reruns, and tags both layouts", async () => {
   const fixtureState = await fixture()
   try {
-    const oldMirrorCommit = replay(fixtureState.source, fixtureState.mirror, baseline)
+    await Bun.write(join(fixtureState.source, "packages/omni/fixture-tag.txt"), "old tag\n")
+    git(fixtureState.source, "add", "--", "packages/omni/fixture-tag.txt")
+    git(fixtureState.source, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-m", "old tag source")
+    const oldTarget = git(fixtureState.source, "rev-parse", "HEAD")
+    const oldMirrorCommit = replay(fixtureState.source, fixtureState.mirror, oldTarget)
     await mkdir(join(fixtureState.source, "native"))
     git(fixtureState.source, "mv", "packages/omni", "native/omni")
     git(fixtureState.source, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-m", "move Omni")
@@ -81,9 +85,9 @@ test("relocation is tree-neutral, new-prefix replay resumes, reruns, and tags bo
       .toBe(git(fixtureState.source, "rev-parse", `${changed}:native/omni`))
     expect(replay(fixtureState.source, fixtureState.mirror, moved)).toBe(newMirrorCommit)
     expect(replay(fixtureState.source, fixtureState.mirror, changed)).toBe(newMirrorCommit)
-    for (const [name, target, expected] of [["old", baseline, oldMirrorCommit], ["new", changed, newMirrorCommit]]) {
+    for (const [name, target, expected] of [["old", oldTarget, oldMirrorCommit], ["new", changed, newMirrorCommit]] as const) {
       const result = run(fixtureState.source, fixtureState.mirror, target, script, "--tag", `fixture-${name}`)
-      expect(result.exitCode).toBe(0)
+      expect(result.exitCode, result.stderr.toString()).toBe(0)
       expect(git(fixtureState.source, "--git-dir", fixtureState.mirror, "rev-parse", `refs/tags/fixture-${name}`)).toBe(expected)
     }
   } finally {
@@ -114,11 +118,13 @@ test("malformed and ambiguous source placements fail instead of being skipped", 
     const foreignTree = git(fixtureState.source, "--git-dir", fixtureState.mirror, "rev-parse", `${split}:crates`)
     const foreign = Bun.spawnSync(["git", "-C", fixtureState.source, "--git-dir", fixtureState.mirror,
       "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit-tree", foreignTree, "-p", main], {
-      input: `Orchestra-Commit: ${baseline}\n`, stdout: "pipe", stderr: "pipe",
+      stdin: Buffer.from(`foreign mirror commit\n\nOrchestra-Commit: ${baseline}\n`), stdout: "pipe", stderr: "pipe",
     })
     if (foreign.exitCode !== 0) throw new Error(foreign.stderr.toString())
     git(fixtureState.source, "--git-dir", fixtureState.mirror, "update-ref", "refs/heads/main", foreign.stdout.toString().trim())
-    expect(run(fixtureState.source, fixtureState.mirror, baseline, script, "--push").exitCode).not.toBe(0)
+    const refused = run(fixtureState.source, fixtureState.mirror, baseline, script, "--push")
+    expect(refused.exitCode).not.toBe(0)
+    expect(refused.stderr.toString()).toContain("does not match packages/omni")
   } finally {
     await rm(fixtureState.directory, { recursive: true, force: true })
   }
