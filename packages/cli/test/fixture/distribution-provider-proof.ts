@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { Database } from "bun:sqlite"
 import { randomBytes } from "node:crypto"
 import { chmod, lstat, mkdir, readFile, realpath, writeFile } from "node:fs/promises"
-import { join, resolve, sep } from "node:path"
+import { basename, join, resolve, sep } from "node:path"
 import { DateTime, Schema } from "effect"
 import { Config } from "@orchestra/core/config"
 import { Session } from "../../../schema/src/session"
@@ -63,7 +63,7 @@ export async function qualifyProvider(input: {
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
       expect((await lstat(workdir)).isDirectory()).toBe(true)
-      const shell = `printf '%s' '${nonce}' > '${file}' && sleep 3 && cat '${file}'`
+      const shell = `printf '%s' '${nonce}' > '${basename(file)}' && sleep 3 && cat '${basename(file)}'`
       expect(await absent(file)).toBe(true)
       const config = {
         model: `distribution/${model}`, default_agent: "distribution-proof", snapshots: false, autoupdate: false,
@@ -79,7 +79,7 @@ export async function qualifyProvider(input: {
         } },
         agents: { "distribution-proof": {
           mode: "primary", model: `distribution/${model}`, steps: 3,
-          system: "Use bash exactly once with the command and workdir supplied by the user, verbatim. Wait for the actual tool result. Then report the nonce from its output. On tool failure, report failure; do not claim success. /no_think",
+          system: `Your first response must be a real tool call using the model's tool framing: <tool_call>${JSON.stringify({ name: "bash", arguments: { command: shell, workdir, timeout: 10000 } })}</tool_call>. Emit no other text before the tool result. Do not narrate or invent an invocation or its result. After the actual tool result, do not call another tool: report the nonce from its output, or report failure if the tool failed.`,
           permissions: [
             { action: "bash", resource: shell, effect: "allow" as const },
             { action: "external_directory", resource: `${workdir}/*`, effect: "allow" as const },
