@@ -62,7 +62,7 @@ export async function qualifyProvider(input: {
       const file = join(box.directory, "outside", `${randomBytes(12).toString("hex")}.nonce`)
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
-      await mkdir(workdir)
+      expect((await lstat(workdir)).isDirectory()).toBe(true)
       const shell = `printf '%s\\n' '${nonce}' > '${file}' && sleep 3 && cat '${file}'`
       expect(await absent(file)).toBe(true)
       const config = {

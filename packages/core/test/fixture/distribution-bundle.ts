@@ -40,7 +40,7 @@ export const run = shell("Run tests")
 export const control = shell("Require nonce-bound positive control", true)
 
 export const boundaries = ["Install native Deno", "Extract native Deno", "Prove native Windows Job handle closure",
-  "Prove source ABI producers", "Prove Desktop ABI consumer", "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles"].map((name) => ({ name, run: shell(name),
+  "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer", "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles"].map((name) => ({ name, run: shell(name),
     cwd: workflow.jobs.qualification.steps.find((step) => step.name === name)?.["working-directory"] ?? "." }))
 
 // Git Bash PATH entries use /c/...; ordinary command arguments retain native paths for Bun/Node.
