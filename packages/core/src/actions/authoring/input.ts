@@ -3,6 +3,7 @@ import { Option, Schema } from "effect"
 import { ActionsContract } from "../contract"
 import { ActionsError } from "../error"
 import { GitHubNative } from "../github/native"
+import { ActionsGitLabNative } from "../gitlab/native"
 import { limits } from "../source/document"
 
 export type Services = { readonly transport: ActionsContract.Transport; readonly reader: ActionsContract.ReadAdapter }
@@ -44,6 +45,19 @@ export function branch(binding: Actions.Binding, value: string) {
   if (value.startsWith("refs/") || Option.isSome(Schema.decodeUnknownOption(GitHubNative.SHA)(value)))
     throw error(binding, "invalid_input", "Source mutations require a short branch name, not an immutable object or qualified ref")
   return value
+}
+
+export function sourcePath(binding: Actions.Binding, value: string | undefined) {
+  if (!value || value.length > 4096 || !value.isWellFormed())
+    throw error(binding, "invalid_input", "Source commands require an exact admitted repository path")
+  if (binding.provider.kind === "gitlab") {
+    if (!ActionsGitLabNative.localPath(value))
+      throw error(binding, "source_unresolved", "GitLab source proposals require an exact local repository path")
+    return value
+  }
+  GitHubNative.path(binding, value)
+  if (!/^\.github\/workflows\/[^/]+\.ya?ml$/i.test(value))
+    throw error(binding, "source_unresolved", "GitHub source proposals require a native workflow YAML path")
   return value
 }
 
@@ -72,7 +86,7 @@ export function capture(binding: Actions.Binding, intent: Actions.OperationInten
     throw error(binding, "invalid_input", "Source commands require an admitted branch and immutable expected commit")
   branch(binding, value.intent.target.ref)
   decode(binding, GitHubNative.SHA, value.intent.expected.commit)
-  if (value.intent.target.path !== undefined) GitHubNative.path(binding, value.intent.target.path)
+  sourcePath(binding, value.intent.target.path)
   if (value.intent.expected.sourceVersion !== undefined) {
     if (!value.intent.target.path) throw error(binding, "invalid_input", "Source version requires an admitted path")
     version(binding, value.intent.expected.sourceVersion)

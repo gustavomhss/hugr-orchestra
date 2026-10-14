@@ -3,9 +3,9 @@ import { Effect, Schema } from "effect"
 import { ActionsContract } from "../contract"
 import { GitHubCommandCommon } from "../github/commands/common"
 import { GitHubNative } from "../github/native"
-import { Branch, Write, Review, branch, bytes, decode, error, native } from "./input"
+import { Branch, Write, Review, branch, bytes, decode, error, native, sourcePath } from "./input"
 import type { Services } from "./input"
-import { blob, current, get, guard, reviewURL, written } from "./remote"
+import { absent, blob, current, get, guard, reviewURL, written } from "./remote"
 import type { Plan } from "./remote"
 
 const Ref = Schema.Struct({ ref: Schema.NonEmptyString, object: Schema.Struct({ type: Schema.Literal("commit"), sha: GitHubNative.SHA }) })
@@ -30,6 +30,7 @@ export const plan = Effect.fn("ActionsAuthoring.github")(function* (
     if ("text" in value) bytes(value.text)
     return value
   })
+  const path = yield* guard(binding, () => sourcePath(binding, intent.target.path))
   const repo = yield* GitHubCommandCommon.authority(services, binding)
   const ref = yield* head(services, binding, repo.root, intent.target.ref ?? "")
   if (ref.toLowerCase() !== intent.expected?.commit?.toLowerCase())
@@ -39,6 +40,8 @@ export const plan = Effect.fn("ActionsAuthoring.github")(function* (
   if ("branch" in command) {
     if (command.branch !== intent.target.resourceID)
       return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${repo.root}/contents/${GitHubNative.path(binding, path)}`, ref)
     return {
       request: { method: "POST", path: `${repo.root}/git/refs`, body: { ref: `refs/heads/${command.branch}`, sha: ref } }, status: 201,
       acknowledge: (response) => guard(binding, () => {
@@ -50,9 +53,6 @@ export const plan = Effect.fn("ActionsAuthoring.github")(function* (
     }
   }
   if ("mode" in command) {
-    const path = intent.target.path ?? ""
-    if (!path.startsWith(".github/workflows/") || path.split("/").length !== 3 || !/\.ya?ml$/i.test(path))
-      return yield* error(binding, "source_unresolved", "GitHub workflow writes require a native workflow YAML path")
     if (command.mode === "update" && !intent.expected?.sourceVersion || command.mode === "create" && intent.expected?.sourceVersion !== undefined)
       return yield* error(binding, "invalid_input", "Source create/update mode conflicts with its blob precondition")
     const previous = command.mode === "update" ? yield* current(services, binding, intent) : undefined

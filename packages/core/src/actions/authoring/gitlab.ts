@@ -2,9 +2,9 @@ import { Actions } from "@orchestra/schema/actions"
 import { Effect, Schema } from "effect"
 import { ActionsContract } from "../contract"
 import { ActionsGitLabNative } from "../gitlab/native"
-import { Branch, Review, Version, Write, branch, bytes, decode, error, native } from "./input"
+import { Branch, Review, Version, Write, branch, bytes, decode, error, native, sourcePath } from "./input"
 import type { Services } from "./input"
-import { actor, before, current, get, guard, reviewURL, written } from "./remote"
+import { absent, actor, before, current, get, guard, reviewURL, written } from "./remote"
 import type { Plan } from "./remote"
 
 const Ref = Schema.Struct({ name: Schema.NonEmptyString, commit: Schema.Struct({ id: ActionsGitLabNative.SHA }) })
@@ -26,17 +26,14 @@ export const plan = Effect.fn("ActionsAuthoring.gitlab")(function* (
     if ("text" in value) bytes(value.text)
     return value
   })
+  const path = yield* guard(binding, () => sourcePath(binding, intent.target.path))
   const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
   const project = yield* before(binding, ActionsGitLabNative.make(services.transport).project(binding))
   yield* actor(services, binding)
   if (project.archived === true || project.repository_access_level === "disabled")
     return yield* error(binding, "permission_denied", "GitLab project metadata denies source writes")
   // Missing role/scope evidence remains unknown; native authorization decides this explicit write.
-  const path = ActionsGitLabNative.configPath(project)
-  if (!path || !ActionsGitLabNative.localPath(path))
-    return yield* error(binding, "source_unresolved", "GitLab CI configuration is external, project-qualified or unobserved")
-  if (intent.target.path !== undefined && intent.target.path !== path)
-    return yield* error(binding, "source_conflict", "GitLab source path differs from its native CI configuration")
+  // This is an explicit repository-file proposal, not a change to the project's CI config slot.
   const ref = yield* head(services, binding, root, intent.target.ref ?? "")
   if (ref.toLowerCase() !== intent.expected?.commit?.toLowerCase())
     return yield* error(binding, "source_conflict", "GitLab source branch moved after admission")
@@ -44,6 +41,8 @@ export const plan = Effect.fn("ActionsAuthoring.gitlab")(function* (
   if ("branch" in command) {
     if (command.branch !== intent.target.resourceID)
       return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${root}/repository/files/${encodeURIComponent(path)}`, ref)
     return {
       request: { method: "POST", path: `${root}/repository/branches`, body: { branch: command.branch, ref } }, status: 201,
       acknowledge: (response) => guard(binding, () => {

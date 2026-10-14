@@ -2,7 +2,8 @@ import { For, Show } from "solid-js"
 import type { Actions } from "@orchestra/schema/actions"
 import type { Dialog, ViewProps } from "./contract"
 import { canRequest } from "./request-policy"
-import { canEditSource } from "./requests"
+import { canEditSource, sourceProposalPath } from "./requests"
+import { sourceDraftDirty } from "./source-draft-ui"
 
 type JsonValue = null | string | number | boolean | readonly JsonValue[] | { readonly [key: string]: JsonValue }
 
@@ -96,11 +97,14 @@ export function Input(props: { definition: Actions.InputDefinition; t: ViewProps
 
 export function SourceFields(props: { value: Dialog; view: ViewProps; form: { provider: Actions.ProviderKind } }) {
   const t = props.view.t
-  if (props.value.kind === "create-workflow") return <fieldset class="ad-group"><legend>{t("orchestra.actions.template")}</legend><div class="ad-group-body">
-    <label class="mx-field"><span>{t("orchestra.actions.name")}</span><input name="name" autofocus required /></label>
-    <label class="mx-field"><span>{t("orchestra.actions.path")}</span><input name="path" required dir="ltr" value={props.form.provider === "github" ? ".github/workflows/build.yml" : ".gitlab/ci/build.yml"} /></label>
-    <label class="mx-field"><span>{t("orchestra.actions.template")}</span><select name="template"><option value="build-test">{t("orchestra.actions.createConfiguration")}</option><option value="release">{t("orchestra.actions.default")}</option><option value="blank">{t("orchestra.actions.source")}</option></select></label>
-  </div></fieldset>
+  if (props.value.kind === "create-workflow") return <>
+    <fieldset class="ad-group"><legend>{t("orchestra.actions.sourceConfiguration")}</legend><div class="ad-group-body">
+      <label class="mx-field"><span>{t("orchestra.actions.name")}</span><input name="name" autofocus required placeholder={t("orchestra.actions.sourceNamePlaceholder")} /></label>
+      <label class="mx-field"><span>{t("orchestra.actions.path")}</span><input name="path" required dir="ltr" maxlength={2048} value={props.form.provider === "github" ? ".github/workflows/build.yml" : ".gitlab/ci/build.yml"} /><small>{t(props.form.provider === "github" ? "orchestra.actions.sourcePathHint.github" : "orchestra.actions.sourcePathHint.gitlab")}</small></label>
+      <label class="mx-field"><span>{t("orchestra.actions.template")}</span><select name="template"><option value="build-test">{t("orchestra.actions.templateBuildTest")}</option><option value="release">{t("orchestra.actions.templateRelease")}</option><option value="blank">{t("orchestra.actions.templateBlank")}</option></select></label>
+    </div></fieldset>
+    <p class="ad-note"><strong>{t("orchestra.actions.sourceDraftFirst")}</strong> {t(props.form.provider === "github" ? "orchestra.actions.sourceDraftFirst.github" : "orchestra.actions.sourceDraftFirst.gitlab")}</p>
+  </>
   if (props.value.kind === "approval") return <>
     <RunContext value={props.value} view={props.view} />
     <fieldset class="ad-group"><legend>{t("orchestra.actions.reviewDeployment")}</legend><div class="ad-group-body">
@@ -111,10 +115,11 @@ export function SourceFields(props: { value: Dialog; view: ViewProps; form: { pr
   if (props.value.kind === "review-source") return <>
     <SourceContext view={props.view} />
     <fieldset class="ad-group"><legend>{t("orchestra.actions.reviewSource")}</legend><div class="ad-group-body">
-      <label class="mx-field"><span>{t("orchestra.actions.branch")}</span><input name="branch" autofocus required dir="ltr" /></label>
-      <label class="mx-field"><span>{t("orchestra.actions.message")}</span><input name="message" required /></label>
-      <label class="mx-field"><span>{t("orchestra.actions.reviewTitle")}</span><input name="title" required /></label>
+      <label class="mx-field"><span>{t("orchestra.actions.branch")}</span><input name="branch" autofocus required dir="ltr" value="actions-update-ci" /></label>
+      <label class="mx-field"><span>{t("orchestra.actions.message")}</span><input name="message" required value={t("orchestra.actions.sourceCommitDefault")} /></label>
+      <label class="mx-field"><span>{t("orchestra.actions.reviewTitle")}</span><input name="title" required value={t("orchestra.actions.sourceReviewTitleDefault")} /></label>
     </div></fieldset>
+    <p class="ad-note"><strong>{t("orchestra.actions.sourceIdentityNote")}</strong> {t(props.form.provider === "github" ? "orchestra.actions.sourceIdentityNote.github" : "orchestra.actions.sourceIdentityNote.gitlab")}</p>
   </>
   const policy = policyResource(props.view.model.state.resources.value?.items, props.view.model.state.binding?.id)
   return <fieldset class="ad-group"><legend>{t("orchestra.actions.projectSettings")}</legend><div class="ad-group-body">
@@ -163,6 +168,7 @@ export function sourcePayload(value: Dialog, view: ViewProps, data: FormData) {
     const name = String(data.get("name") ?? "").trim()
     const path = String(data.get("path") ?? "").trim()
     if (!name || !path) return { error: "required" as const }
+    if (!sourceProposalPath(provider, path)) return { error: "invalid" as const }
     const template = templateValue(data.get("template"))
     return { payload: { provider, name, path, template, content: workflowTemplate(provider, template, name) } }
   }
@@ -206,7 +212,10 @@ function SourceContext(props: { view: ViewProps }) {
     const candidate = props.view.model.state.draftBase ?? props.view.model.state.source.value
     return candidate?.bindingID === bindingID ? candidate : undefined
   }
-  return <div class="ad-review-context"><dl class="wf-kv"><dt>{props.view.t("orchestra.actions.path")}</dt><dd dir="ltr"><bdi>{props.view.model.state.route.path ?? props.view.model.state.source.value?.path ?? props.view.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.view.t("orchestra.actions.ref")}</dt><dd dir="ltr"><bdi>{source()?.ref ?? props.view.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.view.t("orchestra.actions.commit")}</dt><dd dir="ltr">{source()?.commit ?? props.view.t("orchestra.actions.unknown")}</dd></dl></div>
+  return <div class="ad-review-context">
+    <p>{props.view.t(sourceDraftDirty(props.view.model.state) ? "orchestra.actions.sourceProposed" : "orchestra.actions.sourceSaved")}</p>
+    <dl class="wf-kv"><dt>{props.view.t("orchestra.actions.path")}</dt><dd dir="ltr"><bdi>{source() ? props.view.model.state.route.path ?? props.view.model.state.source.value?.path : props.view.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.view.t("orchestra.actions.sourceBase")}</dt><dd dir="ltr"><bdi>{source()?.ref ?? props.view.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.view.t("orchestra.actions.commit")}</dt><dd><code dir="ltr">{source()?.commit ?? props.view.t("orchestra.actions.unknown")}</code></dd></dl>
+  </div>
 }
 
 function templateValue(value: FormDataEntryValue | null): "build-test" | "release" | "blank" { return value === "release" || value === "blank" ? value : "build-test" }
