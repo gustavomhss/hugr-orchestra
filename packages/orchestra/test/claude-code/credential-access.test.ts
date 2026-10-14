@@ -18,7 +18,11 @@ import ts from "typescript"
 // Claude Code signs in from its own store; Orchestra learns status from the SDK (specs/claude-code-engine.md, "Auth").
 
 const ROOT = path.resolve(import.meta.dir, "../../../..")
-const SCOPE = "{packages/*,modules/*,modules/*/*}/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}"
+const SCOPE = [
+  "packages/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
+  "modules/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
+  "modules/*/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
+]
 const READS = [/find-(generic|internet)-password/, /\.credentials\.json/, /Claude Code-credentials/, /claudeAiOauth/]
 
 function hits(file: string, text: string) {
@@ -179,7 +183,7 @@ test("comments, strings and policy fixtures mentioning credentials are not reads
 })
 
 async function inventory(root: string) {
-  const files = await Array.fromAsync(new Bun.Glob(SCOPE).scan({ cwd: root }))
+  const files = (await Promise.all(SCOPE.map((pattern) => Array.fromAsync(new Bun.Glob(pattern).scan({ cwd: root }))))).flat()
   return files.map((file) => file.replaceAll("\\", "/")).filter((file) => !file.split("/").includes("node_modules"))
 }
 
