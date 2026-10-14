@@ -1,8 +1,11 @@
 import type { Configuration } from "electron-builder"
 import base from "./electron-builder.config"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+import path from "node:path"
 
 const resources = base.extraResources ?? []
 const unpack = base.asarUnpack ?? []
+const workspace = WorkspacePaths.make(import.meta.dirname)
 
 export default {
   ...base,
@@ -16,7 +19,7 @@ export default {
   },
   extraResources: [
     ...(Array.isArray(resources) ? resources : [resources]),
-    { from: "../orchestra/dist/node/licenses", to: "licenses" },
+    { from: path.join(workspace.module("orchestra"), "dist/node/licenses"), to: "licenses" },
   ],
   asarUnpack: [
     ...(Array.isArray(unpack) ? unpack : [unpack]),
