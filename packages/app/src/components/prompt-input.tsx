@@ -901,14 +901,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
           ? { ...saved.source, text: { value: content, start: position, end: position + content.length } }
           : file.dataset.sourceType === "resource" && file.dataset.sourceClientName && file.dataset.sourceUri
             ? {
-              type: "resource" as const,
-              text: {
-                value: content,
-                start: position,
-                end: position + content.length,
-              },
-              clientName: file.dataset.sourceClientName,
-              uri: file.dataset.sourceUri,
+                type: "resource" as const,
+                text: {
+                  value: content,
+                  start: position,
+                  end: position + content.length,
+                },
+                clientName: file.dataset.sourceClientName,
+                uri: file.dataset.sourceUri,
               }
             : undefined
       parts.push({
