@@ -4,8 +4,10 @@ import {
   mergeSessionManagementInfo,
   type AppSession,
   type SessionManagementInfo,
+  type SessionManagementEvent,
 } from "@/utils/session"
 import { pathKey } from "@/utils/path-key"
+import type { ServerSession } from "./server-session"
 
 export const SESSION_MANAGEMENT_FENCE_LIMIT = 2_048
 // Server ownership keeps metadata across directory-store eviction without retaining the server itself.
@@ -22,6 +24,7 @@ export function sessionManagementFences(owner: object, directory: string) {
       subagentModels: info.subagentModels,
       subagentModelsChangedAt: info.subagentModelsChangedAt,
       subagentModelsRevision: info.subagentModelsRevision,
+      subagentModelsReadReceipt: info.subagentModelsReadReceipt,
       archiveChangedAt: info.archiveChangedAt,
       archiveRevision: info.archiveRevision,
       time: { updated: info.time.updated, archived: info.time.archived },
@@ -78,7 +81,7 @@ export function projectSessionManagementEvent(
   event: Parameters<typeof applySessionManagementEvent>[1],
   sessionID: string | undefined,
   sessions: Readonly<Record<string, AppSession | undefined>>,
-  remember: (info: AppSession) => unknown,
+  remember: (info: AppSession) => AppSession,
   resolve: (sessionID: string) => Promise<AppSession>,
   valid: () => boolean,
 ) {
@@ -88,10 +91,37 @@ export function projectSessionManagementEvent(
   const update = (info: AppSession) => {
     if (!valid()) return
     const next = applySessionManagementEvent(sessions[sessionID] ?? info, decoded)
-    if (next) remember(next)
+    if (next) return remember(next)
   }
   const info = sessions[sessionID]
   if (info) update(info)
   // Use the identity captured by the caller before awaiting snapshot recovery.
-  if (!info) return resolve(sessionID).then(update).catch(() => {})
+  if (!info) return resolve(sessionID).then((info) => {
+    const next = update(info)
+    return next ? [next] : []
+  }).catch(() => [])
+}
+
+/** Publish every recovered row only into the server/directory owners captured before admitting its event. */
+export function applySessionPolicyEvent(input: {
+  event: SessionManagementEvent
+  session: Pick<ServerSession, "apply" | "get">
+  children: Readonly<Record<string, object | undefined>>
+  disposed: () => boolean
+  indexSession: (info: AppSession) => void
+}) {
+  const session = input.session
+  const owners = { ...input.children }
+  const recovery = session.apply(input.event)
+  if (!recovery) return
+  return recovery.then((rows) => {
+    if (input.disposed() || input.session !== session) return
+    rows.forEach((row) => {
+      const key = pathKey(row.directory)
+      const owner = owners[key]
+      if (!owner || input.children[key] !== owner) return
+      const current = session.get(row.id)
+      if (current && pathKey(current.directory) === key) input.indexSession(current)
+    })
+  })
 }
