@@ -4,6 +4,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { batch, createComputed, createMemo, onCleanup, startTransition, type Accessor } from "solid-js"
+import { createStore } from "solid-js/store"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
@@ -55,7 +56,12 @@ type Admission = {
   promoted?: boolean
 }
 type PromptDispatch = (send: (request: AdmissionRequest) => Promise<unknown>) => Promise<boolean>
-const admissions = new WeakMap<PromptTarget, Map<string, { busy: boolean; selections: Map<string, Admission> }>>()
+type AdmissionSource = {
+  state: { busy: boolean }
+  setBusy: (busy: boolean) => void
+  selections: Map<string, Admission>
+}
+const admissions = new WeakMap<PromptTarget, Map<string, AdmissionSource>>()
 
 /** Each edit, including restoring inheritance, needs its own durable receipt. */
 export async function acknowledgeDraftPolicy(input: {
@@ -1022,26 +1028,36 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     await promote()
   }
 
+  const sourceAdmission = (target = prompt.capture()) => {
+    const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
+    const scoped = admissions.get(target) ?? new Map<string, AdmissionSource>()
+    admissions.set(target, scoped)
+    const existing = scoped.get(key)
+    if (existing) return { key, scoped, source: existing }
+    // Materialize before the first accessor read so its store subscription survives composer remounts.
+    const [state, setState] = createStore({ busy: false })
+    const source = { state, setBusy: (busy: boolean) => setState("busy", busy), selections: new Map<string, Admission>() }
+    scoped.set(key, source)
+    return { key, scoped, source }
+  }
+
   return {
     abort,
+    submitting: () => !params.id && sourceAdmission().source.state.busy,
     handleSubmit(event: Event) {
       event.preventDefault()
       if (ownership.disposed) return Promise.resolve()
       const target = prompt.capture()
       if (params.id) return submit(target, { selection: input.newSessionWorktree?.() || "main" })
-      const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
-      const scoped = admissions.get(target) ?? new Map<string, { busy: boolean; selections: Map<string, Admission> }>()
-      admissions.set(target, scoped)
-      const source = scoped.get(key) ?? { busy: false, selections: new Map<string, Admission>() }
-      if (source.busy) return Promise.resolve()
-      scoped.set(key, source)
+      const current = sourceAdmission(target)
+      if (current.source.state.busy) return Promise.resolve()
       const selection = input.newSessionWorktree?.() || "main"
-      const admission = source.selections.get(selection) ?? { selection }
-      source.selections.set(selection, admission)
-      source.busy = true
+      const admission = current.source.selections.get(selection) ?? { selection }
+      current.source.selections.set(selection, admission)
+      current.source.setBusy(true)
       return submit(target, admission).finally(() => {
-        source.busy = false
-        if (admission.session && params.id === admission.session.id) scoped.delete(key)
+        current.source.setBusy(false)
+        if (admission.session && params.id === admission.session.id) current.scoped.delete(current.key)
       })
     },
   }
