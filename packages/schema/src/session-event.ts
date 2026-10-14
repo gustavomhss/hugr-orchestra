@@ -13,6 +13,7 @@ import { Location } from "./location"
 import { SessionMessage } from "./session-message"
 import { Revert } from "./revert"
 import { PromptContext } from "./prompt-context"
+import { SessionSubagentModels } from "./session-subagent-models"
 
 export { FileAttachment }
 
@@ -74,6 +75,13 @@ export const ModelSwitched = Event.define({
   },
 })
 export type ModelSwitched = typeof ModelSwitched.Type
+
+export const SubagentModelsChanged = Event.define({
+  type: "session.next.subagent.models.changed",
+  ...options,
+  schema: { ...Base, policy: SessionSubagentModels.Policy },
+})
+export type SubagentModelsChanged = typeof SubagentModelsChanged.Type
 
 export const Moved = Event.define({
   type: "session.next.moved",
@@ -452,6 +460,7 @@ export namespace RevertEvent {
 export const DurableDefinitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
+  SubagentModelsChanged,
   Moved,
   Prompted,
   PromptAdmitted,
@@ -483,6 +492,7 @@ export const DurableDefinitions = Event.inventory(
 export const Definitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
+  SubagentModelsChanged,
   Moved,
   Prompted,
   PromptAdmitted,

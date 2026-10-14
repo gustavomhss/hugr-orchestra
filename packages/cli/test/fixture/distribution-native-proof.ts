@@ -10,13 +10,15 @@ import { PackagedSkills } from "@orchestra/core/packaged-skills"
 import { assertVersion, command, successful, snapshot, skillIdentity } from "./distribution-native"
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
+import type { WindowsIdentity } from "./distribution-windows-process"
+import type { Omni } from "@orchestra/core/omni"
 
 const Registration = Schema.Struct({
   id: Schema.String.check(Schema.isPattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)),
   pid: Schema.Int.check(Schema.isGreaterThan(0)), version: Schema.String, url: Schema.String,
 })
 type Receipt = typeof Registration.Type
-type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; failure?: Error }
+type Lease = { launcher: string; executable: string; box: Sandbox; version: string; attempted: boolean; receipt?: Receipt; identity?: WindowsIdentity; tree?: Omni.Child; failure?: Error }
 const leases = new Set<Lease>()
 
 export async function stopServices() {
@@ -49,7 +51,9 @@ export function emergencyStop() {
     // launcher was canonicalized and confined to this host-owned isolated box.
     // Best effort only: success does not prove exit and cannot release the lease.
     Effect.runSync(Effect.try({
-      try: () => Bun.spawnSync([lease.launcher, "service", "stop"], {
+      // Windows sync fallback uses the owned installed PE, since CMD shims need
+      // async AppProcess shell handling. This cannot qualify cleanup or exit.
+      try: () => Bun.spawnSync([process.platform === "win32" ? lease.executable : lease.launcher, "service", "stop"], {
         cwd: lease.box.cwd, env: lease.box.env, stdout: "ignore", stderr: "ignore", timeout: 20_000,
       }),
       catch: () => new Error("NATIVE_DAEMON_EMERGENCY_STOP_FAILED"),
@@ -61,8 +65,20 @@ async function stop(lease: Lease) {
   // A later status/cleanup retry must not erase a prior unproved detached start
   // or surviving PID and allow afterAll to delete the diagnostic fixture.
   if (lease.failure) throw lease.failure
-  return stopOwned(lease).catch((error: unknown) => {
+  return stopOwned(lease).catch(async (error: unknown) => {
     lease.failure = error instanceof Error ? error : new Error("NATIVE_DAEMON_CLEANUP_UNKNOWN_FAILURE")
+    // Failure recovery stops only this fixture's retained native Job, never a
+    // bare registration PID. It cannot satisfy public-stop/exit qualification;
+    // keep the failure, lease and diagnostic files even after owned-tree cleanup.
+    const tree = lease.tree
+    if (tree) {
+      await tree.stop({ graceMs: 2_000 }).then(async () => {
+        if ((await tree.processes()).length !== 0) throw new Error("NATIVE_DAEMON_RECOVERY_TREE_NOT_EMPTY")
+        console.error(`NATIVE_DAEMON_TREE_RECOVERY ${JSON.stringify({ rootPID: tree.pid, empty: true })}`)
+      }).catch((failure: unknown) => {
+        lease.failure = new AggregateError([lease.failure, failure], "NATIVE_DAEMON_OWNED_TREE_CLEANUP_FAILED")
+      })
+    }
     throw lease.failure
   })
 }
@@ -76,13 +92,27 @@ async function stopOwned(lease: Lease) {
   const receipt = lease.receipt
   const current = await registration(lease.box)
   if (current && !sameReceipt(current, receipt)) throw new Error("NATIVE_DAEMON_REGISTRATION_CHANGED_BEFORE_STOP")
+  if (process.platform === "win32") {
+    const identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
+    if (!identity || !lease.identity || identity.startTime !== lease.identity.startTime)
+      throw new Error(`NATIVE_DAEMON_IDENTITY_CHANGED_BEFORE_STOP: ${JSON.stringify({ pid: receipt.pid,
+        expected: lease.identity ?? null, observed: identity ?? null })}`)
+  }
   const result = await command([lease.launcher, "service", "stop"], lease.box, 20_000)
     .then((value) => ({ value }), () => ({ value: undefined }))
   // Even a failed/no-op stop must prove the captured PID exited. Never signal a
   // raw PID here: only the authenticated public service command may stop it.
-  await exited(receipt.pid)
+  await exited(receipt.pid, lease.identity)
   if (!result.value || result.value.code !== 0) throw new Error("NATIVE_DAEMON_STOP_COMMAND_FAILED")
   expect(await successful([lease.launcher, "service", "status"], lease.box, 15_000)).toBe("stopped")
+  if (lease.tree) {
+    // Public stop already proved the exact daemon exited. Stop the retained tree
+    // and prove empty membership before retiring the fixture lease. Native Job
+    // handle finalization belongs to the binding and is not observed here.
+    await lease.tree.stop({ graceMs: 2_000 })
+    expect(await lease.tree.processes()).toEqual([])
+    console.error(`NATIVE_DAEMON_TREE_STOPPED_EMPTY ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid })}`)
+  }
   leases.delete(lease)
 }
 
@@ -124,7 +154,19 @@ async function captureReceipt(lease: Lease) {
       if (receipt.version !== lease.version) throw new Error("NATIVE_DAEMON_REGISTRATION_VERSION_MISMATCH")
       if (lease.receipt && !sameReceipt(receipt, lease.receipt))
         throw new Error("NATIVE_DAEMON_REGISTRATION_CHANGED")
-      if (!lease.receipt) await corroborateProcess(receipt.pid, lease.executable, lease.box)
+      if (!lease.receipt) {
+        lease.identity = await corroborateProcess(receipt.pid, lease.executable, lease.box)
+        if (process.platform === "win32") {
+          if (!lease.tree) throw new Error("NATIVE_DAEMON_START_TREE_NOT_ADOPTED")
+          const members = await lease.tree.processes()
+          const rootExit = await lease.tree.wait()
+          console.error(`NATIVE_DAEMON_OWNED_TREE ${JSON.stringify({ rootPID: lease.tree.pid, daemonPID: receipt.pid,
+            creationTime: lease.identity?.startTime, rootExit, members })}`)
+          expect(rootExit.exitCode).toBe(0)
+          if (!members.some((member) => member.pid === receipt.pid))
+            throw new Error("NATIVE_DAEMON_PID_OUTSIDE_OWNED_START_TREE")
+        }
+      }
       lease.receipt = receipt
       return
     }
@@ -133,9 +175,21 @@ async function captureReceipt(lease: Lease) {
   } while (Date.now() <= deadline)
 }
 
-async function exited(pid: number) {
+async function exited(pid: number, identity?: WindowsIdentity) {
   const deadline = Date.now() + 15_000
   do {
+    if (process.platform === "win32") {
+      if (!identity) throw new Error("NATIVE_DAEMON_WINDOWS_IDENTITY_MISSING")
+      const { windowsIdentity } = await import("./distribution-windows-process")
+      const current = await windowsIdentity(pid)
+      console.error(`NATIVE_DAEMON_EXIT_OBSERVATION ${JSON.stringify({ pid, expected: identity, observed: current ?? null })}`)
+      if (!current || current.startTime !== identity.startTime) return
+      if (current.executable.toLowerCase() !== identity.executable.toLowerCase())
+        throw new Error("NATIVE_DAEMON_WINDOWS_EXECUTABLE_CHANGED")
+      if (Date.now() >= deadline) throw new Error(`NATIVE_DAEMON_PID_SURVIVED_STOP: pid=${pid}`)
+      await Bun.sleep(100)
+      continue
+    }
     const running = await Promise.resolve().then(() => { process.kill(pid, 0); return true })
       .catch((error: unknown) => {
         if (error && typeof error === "object" && "code" in error && error.code === "ESRCH") return false
@@ -176,11 +230,12 @@ async function companionFailures(launcher: string, payload: string, box: Sandbox
     } finally { await writeFile(addon, original); await chmod(addon, addonMode) }
     await assertVersion(launcher, version, box)
   }
-  const supervisor = join(payload, "bin/hugr-omni-supervisor")
+  const supervisor = join(payload, `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`)
   const supervisorBytes = await readFile(supervisor)
   const supervisorMode = (await lstat(supervisor)).mode & 0o777
   await companionSuccess(payload, box)
-  for (const kind of ["missing", "corrupt", "non-executable"] as const) {
+  // NTFS executable permission is PE/loader-based, not Unix chmod bits.
+  for (const kind of (process.platform === "win32" ? ["missing", "corrupt"] as const : ["missing", "corrupt", "non-executable"] as const)) {
     try {
       if (kind === "missing") await rm(supervisor)
       if (kind === "corrupt") await writeFile(supervisor, "not an executable supervisor")
@@ -204,7 +259,9 @@ async function companionFailures(launcher: string, payload: string, box: Sandbox
       const result = JSON.parse(await successful([launcher, "debug", "symbols", join(box.cwd, "sample.ts")], box))
       expect(result).toMatchObject({ symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } })
       expect(result.coverage.detail).toStartWith("native symbol extraction unavailable: ")
-      expect(result.coverage.detail).toContain("tree-sitter")
+      if (process.platform === "win32" && kind === "corrupt")
+        expect(result.coverage.detail).toMatch(/^native symbol extraction unavailable: LoadLibrary failed:/)
+      if (process.platform !== "win32" || kind !== "corrupt") expect(result.coverage.detail).toContain("tree-sitter")
       expect(result.coverage.detail).not.toContain("parser-worker")
     } finally { await writeFile(parser, binding); await chmod(parser, parserMode) }
     await symbols(launcher, box)
@@ -218,7 +275,7 @@ async function companionSuccess(payload: string, box: Sandbox) {
   expect(receipt).toMatchObject({ oracle: "installed-companion", exitCode: 7, stdout: "installed-companion-child\n" })
   expect(receipt.paths).toEqual({
     addon: join(await realpath(payload), "bin/hugr_omni.node"),
-    supervisor: join(await realpath(payload), "bin/hugr-omni-supervisor"),
+    supervisor: join(await realpath(payload), `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`),
   })
   expect(receipt.counters.spawns).toBeGreaterThan(0)
   expect(receipt.counters.delegations).toBe(0)
@@ -230,7 +287,12 @@ export async function qualify(input: {
   const launcher = await realpath(input.launcher)
   if (!launcher.startsWith((await realpath(input.box.directory)) + sep))
     throw new Error("NATIVE_DAEMON_LAUNCHER_OUTSIDE_OWNED_BOX")
-  const lease: Lease = { launcher, executable: join(input.payload, "bin/orchestra"), box: input.box, version: input.version, attempted: false }
+  const lease: Lease = { launcher, executable: join(input.payload, `bin/orchestra${process.platform === "win32" ? ".exe" : ""}`), box: input.box, version: input.version, attempted: false }
+  if (process.platform === "win32") {
+    lease.executable = await realpath(lease.executable)
+    if (!lease.executable.toLowerCase().startsWith((await realpath(input.box.directory)).toLowerCase() + sep))
+      throw new Error("NATIVE_DAEMON_EXECUTABLE_OUTSIDE_OWNED_BOX")
+  }
   leases.add(lease) // Register before start: failures/timeouts must still stop.
   try {
     const before = await snapshot(input.box.namespace)
@@ -242,7 +304,21 @@ export async function qualify(input: {
     if (!input.negative) await companionSuccess(input.payload, input.box)
     await symbols(input.launcher, input.box)
     lease.attempted = true
-    const started = await successful([input.launcher, "service", "start"], input.box, 30_000)
+    const started = await (process.platform === "win32"
+      ? command([input.launcher, "service", "start"], input.box, 30_000, {
+        register: (tree) => Effect.gen(function* () {
+          if (lease.tree) {
+            yield* Effect.promise(() => tree.stop({ graceMs: 2_000 }))
+            return yield* Effect.die(new Error("NATIVE_DAEMON_START_TREE_ALREADY_ADOPTED"))
+          }
+          lease.tree = tree
+          console.error(`NATIVE_DAEMON_START_TREE_ADOPTED ${JSON.stringify({ rootPID: tree.pid, version: lease.version })}`)
+        }),
+      }).then((result) => {
+        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}`)
+        return result.stdout.trim()
+      })
+      : successful([input.launcher, "service", "start"], input.box, 30_000))
       .finally(() => captureReceipt(lease))
     if (!lease.receipt) throw new Error("NATIVE_DAEMON_RECEIPT_MISSING_AFTER_START")
     if (started !== lease.receipt.url) throw new Error("NATIVE_DAEMON_START_RECEIPT_ENDPOINT_MISMATCH")
