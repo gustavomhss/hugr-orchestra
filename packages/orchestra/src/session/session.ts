@@ -4,6 +4,7 @@ import { Slug } from "@orchestra/core/util/slug"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import { PromptHost } from "./prompt-host"
+import { SessionLifecycle } from "./lifecycle"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import path from "path"
 import { BackgroundJob } from "@/background/job"
@@ -487,12 +488,13 @@ export type Patch = Omit<Partial<Info>, "time" | "summary" | "revert" | "permiss
 const layer: Layer.Layer<
   Service,
   never,
-  BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service | ResearchSessionCleanup.Requirements
+  SessionLifecycle.Service | BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service | ResearchSessionCleanup.Requirements
 > = Layer.effect(
   Service,
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const database = yield* Database.Service
+    const lifecycle = yield* SessionLifecycle.Service
     const removeResearch = yield* ResearchSessionCleanup.make
     const background = yield* BackgroundJob.Service
     const events = yield* EventV2Bridge.Service
@@ -622,6 +624,7 @@ const layer: Layer.Layer<
 
     const remove: Interface["remove"] = Effect.fnUntraced(function* (sessionID: SessionID) {
       const session = yield* get(sessionID)
+      yield* lifecycle.remove(sessionID)
       try {
         // `remove` needs to work in all cases, such as broken sessions that
         // run cleanup without instance state.
@@ -740,36 +743,26 @@ const layer: Layer.Layer<
     const fork = Effect.fn("Session.fork")(function* (input: { sessionID: SessionID; messageID?: MessageID }) {
       const ctx = yield* InstanceState.context
       const original = yield* get(input.sessionID)
-      const title = getForkedTitle(original.title)
-      const session = yield* createNext({
-        directory: ctx.directory,
-        path: sessionPath(ctx.worktree, ctx.directory),
-        workspaceID: original.workspaceID,
-        title,
-        metadata: structuredClone(original.metadata),
-      })
       const msgs = yield* messages({ sessionID: input.sessionID })
-      const idMap = new Map<string, MessageID>()
       const target = input.messageID ? msgs.findIndex((msg) => msg.info.id === input.messageID) : msgs.length
-
-      for (const msg of msgs.slice(0, target < 0 ? msgs.length : target)) {
-        const newID = MessageID.ascending()
-        idMap.set(msg.info.id, newID)
-
+      if (original.revert?.partID) return yield* Effect.die(new Error("SESSION_FORK_PARTIAL_REVERT_UNSUPPORTED"))
+      const reverted = original.revert ? msgs.findIndex((msg) => msg.info.id === original.revert?.messageID) : msgs.length
+      if (reverted < 0) return yield* Effect.die(new Error("SESSION_FORK_REVERT_BOUNDARY_UNAVAILABLE"))
+      const cut = Math.min(target < 0 ? msgs.length : target, reverted)
+      const kept = msgs.slice(0, cut)
+      const idMap = new Map(kept.map((msg) => [msg.info.id, MessageID.ascending()]))
+      // The clone map and execution owner's exclusive cursor must describe the same visible prefix.
+      const metadata = yield* lifecycle.fork({ source: original,
+        messageID: original.revert ? msgs[cut].info.id : input.messageID, ids: idMap })
+      const session = yield* createNext({ directory: ctx.directory, path: sessionPath(ctx.worktree, ctx.directory),
+        workspaceID: original.workspaceID, title: getForkedTitle(original.title), metadata })
+      for (const msg of kept) {
+        const newID = idMap.get(msg.info.id)!
         const parentID = msg.info.role === "assistant" && msg.info.parentID ? idMap.get(msg.info.parentID) : undefined
-        const cloned = yield* updateMessage({
-          ...msg.info,
-          sessionID: session.id,
-          id: newID,
-          ...(parentID && { parentID }),
-        })
-
+        const cloned = yield* updateMessage({ ...msg.info, sessionID: session.id, id: newID, ...(parentID && { parentID }) })
         for (const part of msg.parts) {
           const p: SessionV1.Part = {
-            ...part,
-            id: PartID.ascending(),
-            messageID: cloned.id,
-            sessionID: session.id,
+            ...part, id: PartID.ascending(), messageID: cloned.id, sessionID: session.id,
           }
           if (p.type === "compaction" && p.tail_start_id) {
             p.tail_start_id = idMap.get(p.tail_start_id)
@@ -1079,7 +1072,7 @@ const _pluginNode: LayerNode.Node<unknown, unknown, any> = new Proxy({} as Layer
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, ResearchSessionCleanup.dependency, _pluginNode] as never,
+  deps: [SessionLifecycle.node, BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, ResearchSessionCleanup.dependency, _pluginNode] as never,
 })
 
 export * as Session from "./session"
