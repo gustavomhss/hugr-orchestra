@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readdir, realpath, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import { planReadingSlices } from "../src/onboard/plan.ts";
 import { parseNote } from "../src/onboard/note.ts";
 import { mergeNotes } from "../src/onboard/absorb.ts";
 import moveIn from "../src/tools/move-in.ts";
+import { parserElf } from "./parser-elf.fixture.ts";
 
 test("real tree parser extracts TS and Python; partial and unsupported parse trigger fallback", async () => {
   const f = await fixture({ "good.ts": "export const A = 1", "bad.ts": "export function broken( {", "unknown.rs": "fn main() {}" });
@@ -50,6 +51,42 @@ console.log(JSON.stringify(await extractSymbols("a.ts", "export const a = 1", co
     expect(result.coverage.detail).toStartWith("native symbol extraction unavailable: ");
     expect(result.coverage.detail).toContain(join(basename(dir), "tree-sitter", "tree-sitter"));
     expect(result.coverage.detail).not.toContain("parser-worker");
+    if (process.platform === "linux") {
+      // Compile a separate declared-libc probe. The package JS marker is an
+      // inert ordering witness: no fixture .node is ever loaded as N-API.
+      const declared = await Bun.build({ entrypoints: [join(dir, "entry.ts")], target: "bun",
+        compile: { outfile: binary }, define: { ORCHESTRA_LIBC: JSON.stringify("musl") } });
+      expect(declared.success, declared.logs.map((log) => log.message).join("\n")).toBe(true);
+      const marker = join(dir, "package-load-reached");
+      const names = ["tree-sitter", "tree-sitter-typescript", "tree-sitter-python"];
+      const bindings = await Promise.all(names.map(async (name) => {
+        const packageRoot = join(dir, "tree-sitter", name);
+        const file = join(packageRoot, "prebuilds", `linux-${process.arch}`, `${name}.node`);
+        await mkdir(join(packageRoot, "prebuilds", `linux-${process.arch}`), { recursive: true });
+        await Bun.write(file, parserElf("musl", process.arch === "x64" ? 62 : 183));
+        await Bun.write(join(packageRoot, "package.json"), JSON.stringify({ main: "index.js" }));
+        await Bun.write(join(packageRoot, "index.js"), `require("node:fs").writeFileSync(${JSON.stringify(marker)}, "reached"); throw new Error("STRUCTURAL_PACKAGE_LOAD_REACHED");`);
+        return file;
+      }));
+      const admitted = Bun.spawnSync([binary], { cwd: dir });
+      expect(admitted.exitCode, admitted.stderr.toString()).toBe(0);
+      expect(await Bun.file(marker).text()).toBe("reached");
+      expect(JSON.parse(admitted.stdout.toString()).coverage.detail).toContain("STRUCTURAL_PACKAGE_LOAD_REACHED");
+      await rm(marker);
+      for (const file of bindings) {
+        try {
+          await Bun.write(file, parserElf("glibc", process.arch === "x64" ? 62 : 183));
+          const refused = Bun.spawnSync([binary], { cwd: dir });
+          expect(refused.exitCode, refused.stderr.toString()).toBe(0);
+          expect(JSON.parse(refused.stdout.toString())).toMatchObject({ symbols: [], imports: [], coverage: { complete: false, reason: "parser-unavailable" } });
+          expect(JSON.parse(refused.stdout.toString()).coverage.detail).toContain(`ELF_LIBC_MISMATCH: ${file}`);
+          expect((await readdir(dir)).includes("package-load-reached")).toBe(false);
+        } finally { await Bun.write(file, parserElf("musl", process.arch === "x64" ? 62 : 183)); }
+      }
+      const restored = Bun.spawnSync([binary], { cwd: dir });
+      expect(restored.exitCode, restored.stderr.toString()).toBe(0);
+      expect(await Bun.file(marker).text()).toBe("reached");
+    }
   } finally { await rm(dir, { recursive: true, force: true }); }
 }, 120_000);
 
