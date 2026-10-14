@@ -6,11 +6,12 @@ import { sandbox, sha256, successful, command } from "./distribution-native"
 import { pullOllamaModel } from "./distribution-provider/model-pull"
 
 // Linux amd64 manifest, not a mutable tag or a multi-architecture index.
-// Source: Docker Hub ollama/ollama:0.9.6 and Ollama registry qwen3:0.6b.
+// Source: Docker Hub ollama/ollama:0.9.6; https://registry.ollama.ai/v2/library/qwen2.5/manifests/1.5b.
+// CPU fixture: Q4_K_M, 986048512-byte weights; official template renders Tools/ToolCalls/tool_response.
 export const image = "ollama/ollama@sha256:41cac4de8913952adc161777b5a241eaed84d49f2663e0f280ed960198beb099"
-export const model = "qwen3:0.6b"
-export const modelDigest = "sha256:7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435"
-const weightsDigest = "sha256:7f4030143c1c477224c5434f8272c662a8b042079a0a584f0a27a1684fe2e1fa"
+export const model = "qwen2.5:1.5b"
+export const modelDigest = "sha256:65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b"
+const weightsDigest = "sha256:183715c435899236895da3869489cc30ac241476b4971a20285b1a462818a5b4"
 const label = "org.orchestra.distribution-provider.owner"
 
 function requireModelDigest(value: unknown) {
@@ -119,7 +120,7 @@ export async function ownedOllama(directory: string, evidence: string) {
       expect(tags.models[0].name).toBe(model)
       requireModelDigest(tags.models[0].digest)
       const manifest = await successful(["docker", "exec", state.id!, "cat",
-        "/root/.ollama/models/manifests/registry.ollama.ai/library/qwen3/0.6b"], box)
+        `/root/.ollama/models/manifests/registry.ollama.ai/library/${model.replace(":", "/")}`], box)
       expect(`sha256:${sha256(manifest)}`).toBe(modelDigest)
       const parsed = JSON.parse(manifest)
       expect(parsed.layers.find((layer: { mediaType: string }) => layer.mediaType === "application/vnd.ollama.image.model").digest)
