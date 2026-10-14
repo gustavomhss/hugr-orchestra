@@ -1,5 +1,16 @@
+import { YAML } from "bun"
 import { expect, test } from "bun:test"
-import { benchmarkEnvironment, controlVerdict, omniControlScope, parseOptions, preloadsControl, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
+import { benchmarkEnvironment, controlVerdict, omniControlScope, parseOptions, preloadsControl, playwrightArgs, reportLines, requireTestJobs, systems, validateRequest, validateSelection } from "../../../script/test-ci-request"
+
+const workflow = YAML.parse(await Bun.file(new URL("../../../.github/workflows/test-ci.yml", import.meta.url)).text()) as {
+  jobs: { test: {
+    "runs-on": string
+    "continue-on-error"?: boolean
+    strategy: { matrix: { host: string } }
+    defaults: { run: { shell: string } }
+    steps: { name: string; if?: string; run?: string; "continue-on-error"?: boolean }[]
+  } }
+}
 
 const config = "e2e/playwright.production.config.ts"
 const spec = "e2e/regression/session-research-result.spec.ts"
@@ -29,8 +40,93 @@ test("legacy runner inference, explicit pytest, defaults and added OS choices st
   expect(validateRequest({ package: "relay", args: ["tests/test_authoring.py", "-k", "author"] }, isFile).runner).toBe("pytest")
   expect(validateRequest({ package: "relay", runner: "pytest", args: [] }, isFile).runner).toBe("pytest")
   expect(parseOptions(["app"]).options.os).toBe("linux")
-  for (const os of ["linux", "windows", "both", "macos", "macos-intel", "all"])
+  for (const os of Object.keys(systems))
     expect(parseOptions(["app", "--os", os]).options.os).toBe(os)
+})
+
+test("Linux ARM64 extension accepts only its exact selector and requires its exact report host", () => {
+  const parsed = parseOptions(["app", "--os", "linux-arm64"])
+  expect(parsed.options.os).toBe("linux-arm64")
+  expect(systems["linux-arm64"]).toEqual(["ubuntu-24.04-arm"])
+  const jobs = systems["linux-arm64"].map((host) => ({ name: `test (${host})` }))
+  expect(requireTestJobs(parsed.options.os, [...jobs, { name: "cleanup" }])).toEqual(jobs)
+  expect(() => requireTestJobs(parsed.options.os, [])).toThrow("test (ubuntu-24.04-arm): missing or repeated matrix job")
+  expect(() => requireTestJobs(parsed.options.os, [...jobs, ...jobs])).toThrow("test (ubuntu-24.04-arm): missing or repeated matrix job")
+  expect(() => requireTestJobs(parsed.options.os, [{ name: "test (ubuntu-latest)" }])).toThrow("test (ubuntu-24.04-arm): missing or repeated matrix job")
+  expect(() => requireTestJobs(parsed.options.os, [...jobs, { name: "test (ubuntu-latest)" }])).toThrow("test (ubuntu-latest): unexpected matrix job for linux-arm64")
+  for (const os of ["linux-arm", "linux-aarch64", "linux-arm64x", "linux-arm64-", "Linux-arm64", "ubuntu-24.04-arm", "__proto__", "constructor"]) {
+    expect(() => parseOptions(["app", "--os", os])).toThrow("--os must be one of")
+    expect(() => requireTestJobs(os, jobs)).toThrow(`test-ci: unknown OS ${os}`)
+  }
+})
+
+test("parsed workflow matrix agrees with every actual request/report selector", () => {
+  const expression = workflow.jobs.test.strategy.matrix.host
+  expect(expression).toBeString()
+  expect(expression.startsWith("${{ ")).toBe(true)
+  expect(expression.endsWith(" }}")).toBe(true)
+  // This matrix expression uses the shared JS/GitHub subset (calls, strings, && and ||).
+  // Evaluate the parsed YAML's actual expression; no second selector-to-host table.
+  const select = new Function("github", "startsWith", "fromJSON", `"use strict"; return (${expression.slice(4, -3)})`)
+  expect(Object.keys(systems).length).toBeGreaterThan(0)
+  expect(workflow.jobs.test["runs-on"]).toBe("${{ matrix.host }}")
+  // Taking every false branch exposes all explicit prefixes, including a workflow-only selector.
+  const prefixes: string[] = []
+  const fallback = select({ ref_name: "ci-run-linux-qualification" }, (_value: string, prefix: string) => {
+    prefixes.push(prefix)
+    return false
+  }, JSON.parse)
+  expect(fallback).toEqual(systems.linux)
+  expect(prefixes.length).toBeGreaterThan(0)
+  const selectors = prefixes.map((prefix) => {
+    expect(prefix.startsWith("ci-run-")).toBe(true)
+    expect(prefix.endsWith("-")).toBe(true)
+    return prefix.slice("ci-run-".length, -1)
+  })
+  expect(selectors.toSorted()).toEqual(Object.keys(systems).filter((os) => os !== "linux").toSorted())
+  for (const [os, hosts] of Object.entries(systems)) {
+    const parsed = parseOptions(["app", "--os", os])
+    const selected = select({ ref_name: `ci-run-${parsed.options.os}-qualification` },
+      (value: string, prefix: string) => value.startsWith(prefix), JSON.parse)
+    expect(selected, os).toEqual(hosts)
+    expect(hosts.length, os).toBeGreaterThan(0)
+    const jobs = hosts.map((host) => ({ name: `test (${host})` }))
+    expect(requireTestJobs(parsed.options.os, jobs)).toEqual(jobs)
+  }
+})
+
+test("Linux ARM64 workflow CPU assertion fails closed before any provisioning or tests", () => {
+  const steps = workflow.jobs.test.steps
+  const assertions = steps.filter((step) => step.name === "Assert Linux ARM64")
+  expect(assertions).toHaveLength(1)
+  const assertion = assertions[0]!
+  expect(assertion.if).toBe("startsWith(github.ref_name, 'ci-run-linux-arm64-')")
+  expect(assertion["continue-on-error"]).toBeUndefined()
+  expect(workflow.jobs.test["continue-on-error"]).toBeUndefined()
+  expect(workflow.jobs.test.defaults.run.shell).toBe("bash")
+  expect(assertion.run?.trim().split("\n").map((line) => line.trim())).toEqual([
+    "set -euo pipefail",
+    'if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != aarch64 ]; then',
+    'echo "::error::${{ matrix.host }} must provide native Linux ARM64 (RUNNER_ARCH=ARM64, uname -m=aarch64)"',
+    "exit 2",
+    "fi",
+  ])
+  const provisioning = steps.findIndex((step) => step.name === "Setup request validator Node")
+  const tests = steps.findIndex((step) => step.name === "Run tests")
+  expect(provisioning).toBeGreaterThan(-1)
+  expect(tests).toBeGreaterThan(provisioning)
+  expect(steps.slice(0, provisioning).map((step) => step.name)).toEqual([
+    "Checkout repository", "Assert Linux ARM64", "Assert macOS arm64",
+  ])
+  const macos = steps.find((step) => step.name === "Assert macOS arm64")!
+  expect(macos.if).toBe("runner.os == 'macOS' && matrix.host != 'macos-15-intel'")
+  expect(macos["continue-on-error"]).toBeUndefined()
+  expect(macos.run?.trim().split("\n").map((line) => line.trim())).toEqual([
+    'if [ "$RUNNER_ARCH" != ARM64 ] || [ "$(uname -m)" != arm64 ]; then',
+    'echo "::error::${{ matrix.host }} must provide native arm64"',
+    "exit 2",
+    "fi",
+  ])
 })
 
 test("bun, node and env requests survive validation; unlisted or malformed env fails by name", () => {
