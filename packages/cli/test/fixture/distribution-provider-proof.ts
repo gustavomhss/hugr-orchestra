@@ -76,7 +76,7 @@ export async function qualifyProvider(input: {
           name: "Owned CPU Ollama",
           // Omit env: an empty env Integration would hide this credential-free
           // provider in Catalog.available. Native route resolves to Auth.none.
-          api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url },
+          api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url, settings: { generation: { temperature: 0 } } },
           models: { [model]: { name: model, capabilities: { tools: true, input: ["text"], output: ["text"] },
             limit: { context: 8192, output: 1024 } } },
         } },
