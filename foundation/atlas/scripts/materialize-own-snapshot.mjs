@@ -92,7 +92,7 @@ function containsAtlasDirectory(path) {
 }
 
 function git(args) {
-  return execFileSync("git", ["-C", ROOT, ...args], {
+  return execFileSync("git", ["--no-replace-objects", "-C", ROOT, ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   })
