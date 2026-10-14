@@ -35,9 +35,10 @@ import { sourceModule } from "./workspace-config.ts"
   "packaged-pty-fixture-restored": null
 }
 CONTROL_LEDGER_END */
-const ledgerRegion = (await Bun.file(import.meta.path).text()).split("/* CONTROL_LEDGER_BEGIN\n")[1]?.split("\nCONTROL_LEDGER_END */")[0]
-if (!ledgerRegion) throw new Error("NIX_DISTRIBUTION_FAILURE:CONTROL_LEDGER_MISSING")
-const ledger: Readonly<Record<string, string | null>> = Object.freeze(JSON.parse(ledgerRegion))
+const ledgerRegion = (await Bun.file(import.meta.path).text()).split("/* CONTROL_LEDGER_BEGIN")[1]?.split("CONTROL_LEDGER_END */")
+if (!ledgerRegion || ledgerRegion.length !== 2 || !ledgerRegion[0]?.trim())
+  throw new Error("NIX_DISTRIBUTION_FAILURE:CONTROL_LEDGER_MISSING")
+const ledger: Readonly<Record<string, string | null>> = Object.freeze(JSON.parse(ledgerRegion[0]))
 if (!Object.keys(ledger).length) throw new Error("NIX_DISTRIBUTION_FAILURE:CONTROL_LEDGER_EMPTY")
 
 const values = parseArgs({

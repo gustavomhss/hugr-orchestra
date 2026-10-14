@@ -66,13 +66,15 @@ for (const variant of ["literal-names", "module-symlink", "domain-symlink"] as c
       for (const [index, [file, content]] of Object.entries(files).entries()) {
         await Bun.write(path.join(root, `payload-${index}`), content)
         const blob = await run(root, ["git", "hash-object", "-w", `payload-${index}`])
-        await run(root, ["git", "update-index", "--add", "--cacheinfo", "100644", blob, file])
+        // Immutable index entries only: Git for Windows otherwise rejects names
+        // which are valid in a source tree but cannot be checked out on NTFS.
+        await run(root, ["git", "-c", "core.protectNTFS=false", "update-index", "--add", "--cacheinfo", "100644", blob, file])
       }
       const manifest = variant === "module-symlink" ? `${module}/package.json` : `${native}/Cargo.toml`
       if (variant !== "literal-names") {
         await Bun.write(path.join(root, "link-target"), "../../missing-manifest")
         const blob = await run(root, ["git", "hash-object", "-w", "link-target"])
-        await run(root, ["git", "update-index", "--cacheinfo", "120000", blob, manifest])
+        await run(root, ["git", "-c", "core.protectNTFS=false", "update-index", "--cacheinfo", "120000", blob, manifest])
       }
       await run(root, ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"])
       const code = `import json,runpy; print(json.dumps(runpy.run_path(${JSON.stringify(path.resolve(import.meta.dir, "../../../nix/scripts/dependency_measurement.py"))})["fingerprint"]("HEAD")))`
