@@ -304,19 +304,144 @@ it.live("HTTP Orchestra auth remains distinct from flat provider authentication/
   }),
 )
 
-it.live("HTTP resource/transfer placeholders are absent from assembled contract and focused router", () =>
+it.live("HTTP public Actions contract pins selected typed routes while focused router omits resource/transfer", () =>
   Effect.gen(function* () {
     const f = yield* httpFixture()
     const created = yield* Effect.promise(() => f.client.actionsBindings.create(create))
-    const paths = Object.keys(OpenApi.fromApi(Api).paths ?? {})
-    expect(paths).toContain("/api/actions/binding")
+    const spec = OpenApi.fromApi(Api)
+    expect(spec.paths["/api/actions/binding"]?.get).toBeDefined()
+    // Representative routes cover all public Actions groups, not every endpoint or live handler.
+    ;([
+      ["get", "/api/actions/binding/{bindingID}", "Actions.Binding"],
+      ["get", "/api/actions/operation/{bindingID}/{operationID}", "Actions.Operation"],
+      ["get", "/api/actions/workflow/{bindingID}/source", "Actions.Source"],
+      ["get", "/api/actions/run/{bindingID}/{runID}", "Actions.Run"],
+      ["post", "/api/actions/job/{bindingID}/{jobID}/retry", "Actions.CommandExecution"],
+      ["post", "/api/actions/pipeline/{bindingID}/trigger", "Actions.CommandExecution"],
+      ["get", "/api/actions/resource/{bindingID}", "Actions.ResourcePage"],
+      ["post", "/api/actions/resource/{bindingID}/{resourceKind}/{action}", "Actions.CommandExecution"],
+      ["get", "/api/actions/source/{bindingID}/base", "Actions.SourceBase"],
+      ["post", "/api/actions/source/{bindingID}/validate-draft", "Actions.Graph"],
+      ["post", "/api/actions/source/{bindingID}/validate", "Actions.Graph"],
+      ["post", "/api/actions/source/{bindingID}/{action}", "Actions.CommandExecution"],
+      ["get", "/api/actions/transfer/{bindingID}/info", "Actions.TransferInfo"],
+      // Raw read stays public even though Client generation omits it for the streaming adapter.
+      ["get", "/api/actions/transfer/{bindingID}", "binary"],
+    ] as const).forEach((route) => {
+      const endpoint = spec.paths[route[1]]?.[route[0]]
+      expect(
+        endpoint?.responses[200].content?.[route[2] === "binary" ? "application/octet-stream" : "application/json"]?.schema,
+        route[1],
+      ).toMatchObject(
+        route[2] === "binary"
+          ? { type: "string", format: "binary" }
+          : {
+              type: "object",
+              required: ["location", "data"],
+              properties: {
+                location: { $ref: "#/components/schemas/Location.Info" },
+                data: { $ref: `#/components/schemas/${route[2]}` },
+              },
+            },
+      )
+      expect(endpoint?.responses[400].content?.["application/json"]?.schema, route[1]).toMatchObject({
+        anyOf: expect.arrayContaining([{ $ref: "#/components/schemas/ActionsError" }]),
+      })
+      if (route[2] !== "binary") expect(spec.components.schemas[route[2]], route[2]).toBeDefined()
+    })
+    expect(spec.components.schemas["Actions.ResourcePage"]).toMatchObject({
+      required: ["items", "capturedAt"],
+      properties: { items: { type: "array", items: { $ref: "#/components/schemas/Actions.Resource" } } },
+    })
+    expect(spec.components.schemas["Actions.Resource"]).toMatchObject({
+      required: ["id", "bindingID", "kind", "name", "data"],
+      properties: { kind: { $ref: "#/components/schemas/Actions.ResourceKind" }, name: { type: "string" } },
+    })
+    expect(spec.components.schemas["Actions.SourceBase"]).toMatchObject({
+      required: ["bindingID", "ref", "commit"],
+      properties: { ref: { type: "string" }, commit: { type: "string" } },
+    })
+    expect(spec.components.schemas["Actions.Source"]).toMatchObject({
+      required: ["bindingID", "path", "ref", "version", "text", "editable"],
+      properties: { text: { type: "string" }, editable: { type: "boolean" } },
+    })
+    expect(spec.components.schemas["Actions.Graph"]).toMatchObject({
+      required: ["source", "state", "jobs", "diagnostics"],
+      properties: {
+        source: { $ref: "#/components/schemas/Actions.Source" },
+        state: { enum: ["complete", "partial", "unresolved"] },
+        jobs: { type: "array", items: { $ref: "#/components/schemas/Actions.GraphJob" } },
+      },
+    })
+    expect(spec.components.schemas["Actions.SourceValidation"]).toMatchObject({
+      required: ["source", "draft"],
+      properties: { source: { $ref: "#/components/schemas/Actions.Source" }, draft: { type: "string" } },
+    })
+    expect(spec.components.schemas["Actions.DraftValidation"]).toMatchObject({
+      required: ["base", "path", "draft"],
+      properties: { base: { $ref: "#/components/schemas/Actions.SourceBase" }, draft: { type: "string" } },
+    })
+    ;([
+      ["/api/actions/source/{bindingID}/validate", "Actions.SourceValidation"],
+      ["/api/actions/source/{bindingID}/validate-draft", "Actions.DraftValidation"],
+      ["/api/actions/source/{bindingID}/{action}", "Actions.ResourceCommand"],
+      ["/api/actions/resource/{bindingID}/{resourceKind}/{action}", "Actions.ResourceCommand"],
+    ] as const).forEach((route) => {
+      expect(spec.paths[route[0]]?.post?.requestBody?.content["application/json"].schema, route[0]).toEqual({
+        $ref: `#/components/schemas/${route[1]}`,
+      })
+    })
+    // Schema.Number's current JSON representation also admits non-finite string literals.
+    const number = {
+      anyOf: [
+        { type: "number" },
+        { type: "string", enum: ["NaN"] },
+        { type: "string", enum: ["Infinity"] },
+        { type: "string", enum: ["-Infinity"] },
+      ],
+    }
+    expect(spec.components.schemas["Actions.TransferInfo"]).toMatchObject({
+      required: ["filename", "contentType"],
+      properties: { filename: { type: "string" }, contentType: { type: "string" }, size: number },
+    })
+    expect(spec.components.schemas.ActionsError).toMatchObject({
+      required: expect.arrayContaining(["_tag", "kind", "message"]),
+      properties: {
+        _tag: { enum: ["ActionsError"] },
+        kind: { $ref: "#/components/schemas/Actions.ErrorKind" },
+        message: { type: "string" },
+        operationID: { $ref: "#/components/schemas/Actions.OperationID" },
+      },
+    })
+    expect(spec.components.schemas["Actions.CommandExecution"]).toMatchObject({
+      required: ["operation"],
+      properties: { operation: { $ref: "#/components/schemas/Actions.Operation" } },
+    })
+    expect(spec.components.schemas["Actions.Operation"]).toMatchObject({
+      required: ["id", "bindingID", "clientID", "kind", "state", "target", "createdAt", "expiresAt", "updatedAt"],
+      properties: {
+        id: { $ref: "#/components/schemas/Actions.OperationID" },
+        bindingID: { $ref: "#/components/schemas/Actions.BindingID" },
+        kind: { $ref: "#/components/schemas/Actions.OperationKind" },
+        state: { enum: ["prepared", "sending", "accepted", "confirmed", "rejected", "outcome_unknown", "expired"] },
+        target: { $ref: "#/components/schemas/Actions.OperationTarget" },
+        createdAt: number,
+        expiresAt: number,
+        updatedAt: number,
+        result: { $ref: "#/components/schemas/Actions.OperationAcknowledgement" },
+      },
+    })
+    expect(spec.paths["/api/actions/not-mounted"]).toBeUndefined()
+    // Default fixture mounts binding/operation/workflow/run only; its 404s do not describe production Api.
     expect(
-      paths.some((path) => path.startsWith("/api/actions/resource") || path.startsWith("/api/actions/transfer")),
-    ).toBe(false)
+      (yield* Effect.promise(() => f.client.actionsBindings.get({ bindingID: created.data.id, revision: 1 }))).data,
+    ).toEqual(created.data)
     yield* Effect.forEach(
       [
-        `/api/actions/resource/${created.data.id}?revision=1`,
+        `/api/actions/resource/${created.data.id}?revision=1&kind=artifacts`,
         `/api/actions/transfer/${created.data.id}?revision=1&kind=artifact&id=42`,
+        `/api/actions/transfer/${created.data.id}/info?revision=1&kind=artifact&id=42`,
+        "/api/actions/not-mounted",
       ],
       (path) =>
         Effect.gen(function* () {
