@@ -188,7 +188,7 @@ async function handedArtifacts() {
   const omni = path.join(home, "omni-artifacts")
   const treeSitter = path.join(home, "tree-sitter-artifacts")
   const python = path.dirname(
-    createRequire(path.resolve(root, "../maestro-arsenal/package.json")).resolve("tree-sitter-python/package.json"),
+    createRequire(path.resolve(root, "../../modules/maestro/arsenal/package.json")).resolve("tree-sitter-python/package.json"),
   )
   await Promise.all(
     Object.values(omniTargets)

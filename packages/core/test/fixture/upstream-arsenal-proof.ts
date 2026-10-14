@@ -8,7 +8,7 @@ export async function upstreamDriftProof(mode: "missing" | "nonpure", boundary: 
     [
       path.join(root, "src/tool/maestro-arsenal.ts"),
       path.join(root, "src/tool/upstream-arsenal.ts"),
-      path.resolve(root, "../maestro-arsenal/src/registry.ts"),
+      path.resolve(root, "../../modules/maestro/arsenal/src/registry.ts"),
     ].map(async (file) => ({ file, bytes: await Bun.file(file).text() })),
   )
   // Package-local artifacts preserve dependency resolution on isolated Linux and hoisted Windows installs.

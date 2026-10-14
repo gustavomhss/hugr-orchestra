@@ -10,14 +10,14 @@ async function conformance(scenario: "allow" | "deny" | "inputs" | "brief") {
   const f = await fixture({ "target.ts": "export const Target = 1" });
   try {
     await git(f.context.directory, "init", "-b", "dev");
-    const root = process.env.MAESTRO_CONFORMANCE_ROOT ?? resolve(import.meta.dir, "../../..");
+    const root = process.env.MAESTRO_CONFORMANCE_ROOT ?? resolve(import.meta.dir, "../../../..");
     const hostSource = join(root, "packages/core/src/tool/maestro-arsenal.ts");
     if (!await Bun.file(hostSource).exists()) throw new Error(`CONFORMANCE_SOURCE_MISSING: ${hostSource}`);
     const assembly = join(f.base, "assembled-arsenal");
     if (scenario === "brief" || scenario === "inputs") {
       // Actual A registry/validator and assembled handlers, copied without edits.
       // Overlay only this WP's two changed modules; native E stays read-only.
-      const source = join(root, "packages/maestro-arsenal");
+      const source = join(root, "modules/maestro/arsenal");
       for await (const file of new Bun.Glob("src/**/*.ts").scan({ cwd: source })) {
         await mkdir(dirname(join(assembly, file)), { recursive: true });
         await writeFile(join(assembly, file), await Bun.file(join(source, file)).bytes());

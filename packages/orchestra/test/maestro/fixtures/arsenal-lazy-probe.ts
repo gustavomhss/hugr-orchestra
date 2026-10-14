@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { plugin } from "bun"
 
 const loaded: string[] = []
-const filter = /[\\/]maestro-arsenal[\\/]src[\\/]index\.ts$/
+const filter = /[\\/]modules[\\/]maestro[\\/]arsenal[\\/]src[\\/]index\.ts$/
 plugin({
   name: "arsenal-lazy-positive-control",
   setup(build) {
@@ -14,9 +14,10 @@ plugin({
 })
 
 test("fresh native boot and selected acquisition", async () => {
-  expect(filter.test("/workspace/packages/maestro-arsenal/src/index.ts")).toBe(true)
-  expect(filter.test("C:\\workspace\\packages\\maestro-arsenal\\src\\index.ts")).toBe(true)
-  expect(filter.test("/workspace/packages/not-maestro-arsenal/src/index.ts")).toBe(false)
+  expect(filter.test("/workspace/modules/maestro/arsenal/src/index.ts")).toBe(true)
+  expect(filter.test("C:\\workspace\\modules\\maestro\\arsenal\\src\\index.ts")).toBe(true)
+  expect(filter.test("/workspace/modules/maestro/not-arsenal/src/index.ts")).toBe(false)
+  expect(filter.test("C:\\workspace\\modules\\maestro\\not-arsenal\\src\\index.ts")).toBe(false)
   const { AppRuntime } = await import("@/effect/app-runtime")
   const { Effect } = await import("effect")
   await AppRuntime.runPromise(Effect.void)
