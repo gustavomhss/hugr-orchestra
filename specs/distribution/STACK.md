@@ -29,15 +29,15 @@ The owner requested small stacked GitHub PRs with one qualification run on the c
 | 21 | `dist-brew-payload` | Homebrew checksum/install/upgrade, exact activation and retained-keg rollback |
 | 22 | `distribution-bundle` | Native Homebrew entrypoint, generic suite ledger and bundle wiring guard |
 
-Each PR targets the previous branch; the first targets `dev`. The final branch contains the complete delivery. Its `distribution-bundle` workflow runs static gates and seven package/host qualification rows, with native process controls and retained logs. Intermediate PRs do not trigger duplicate qualification runs. The bundle PR records the exact tested SHA and workflow URL.
+Each PR targeted the previous branch; the first targeted `dev`. The final branch contained the complete delivery. Its historical `distribution-bundle` workflow ran static gates and seven package/host qualification rows, with native process controls and retained logs. Intermediate PRs did not trigger duplicate qualification runs. The bundle PR recorded the exact tested SHA and workflow URL.
 
 Review each delta independently and land bottom-up. Preserve commit ancestry when merging this stack into `dev`, then retarget the next PR to `dev`; deleting a parent before retargeting is not part of the landing procedure. An ancestry-rewriting landing requires rebuilding descendants and qualifying the new bundle.
 
 The preparation includes the newer baseline's bundled ripgrep alongside omni and tree-sitter. Native proofs capture and compare the entire built `bin/` tree, including those files. Public registry/tap publication and release signing remain separate release operations.
 
-## Native Windows and AUR closure stack
+## Historical native Windows and AUR closure stack (landed)
 
-Composition baseline: `318fce61458e8201827fcc3a379053d56ccf03ef`. Runtime qualification on the preceding baseline is recorded in `EVIDENCE.md`; landing requires a fresh complete-bundle run after this integration.
+Composition baseline: `318fce61458e8201827fcc3a379053d56ccf03ef`. Fresh complete-bundle CI [38501502021](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38501502021) qualified source `779dc29bd16dcc38c96ba8c194d6168bb6fd69a5`. Closure completed on `dev` at `45133cd0d205e87556e991d7ecd231926a8da1c9`, with exact source/landing tree `90819934b66df0603bd2f0ea4a7feeff0409fa05`; see `EVIDENCE.md` for historical reach.
 
 | Order | Branch | Review scope |
 | --- | --- | --- |
@@ -47,4 +47,10 @@ Composition baseline: `318fce61458e8201827fcc3a379053d56ccf03ef`. Runtime qualif
 | 4 | `aur-guest-proof` | Nonroot makepkg and native pacman install/update/downgrade inside the owned guest |
 | 5 | `distribution-bundle` | Native host/guest orchestration, cleanup receipts, exact workflow coverage and measured documentation |
 
-Each delta stays within 400 changed lines. The first PR targets `dev`; each successor targets its predecessor. Only `distribution-bundle` runs qualification. Merge bottom-up while preserving ancestry, retarget each successor to `dev`, and compare the final tree with the exact qualified bundle tree before deleting owned branches.
+The historical stack procedure bounded each delta to 400 changed lines, targeted the first PR at `dev` and each successor at its predecessor, and reserved qualification for `distribution-bundle`. It required bottom-up ancestry-preserving landing, successor retargeting and final-tree comparison before branch deletion. The recorded final landing tree matched the qualified bundle tree.
+
+## Extension overview (composition forthcoming)
+
+Current `dev` composition baseline: `e87fd95799cba0220abf5c86b203bc8d82b29732`. Documentation inspection baseline: `ba41a3015c9c359cec797d23bf6bb074b1a766b1`. The extension covers full native musl x64/ARM64 runtime, Windows ARM64 and production Job closure, official pinned Deno 2.9.7 on six GNU/Darwin/Windows targets (no official musl target), installed public CLI Session V2 provider/tool execution, and AUR signed-repository/seccomp/NNP/Landlock enforcement without bypass.
+
+The lead will compose the exact branch/PR partition separately; no extension stack rows are asserted here. Implemented oracles and the declared 13 qualification rows plus static job are mapped in `EVIDENCE.md`; final qualification is pending. Intermediate pushes do not run the bundle. Run one complete qualification after final composition, record its exact tested SHA/tree and retained evidence, and require landing-tree equality before declaring closure. Partial CI `38558321941` is non-green and does not discharge this obligation. Test versions `1.18.27`/`1.18.28` do not establish publication.
