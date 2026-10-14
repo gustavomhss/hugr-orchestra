@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { clearPending, pendingRules, togglePending } from "../draft-subagent-models"
+import { clearPending, pendingPolicy, pendingRules, togglePending } from "../draft-subagent-models"
+import { createRoot } from "solid-js"
+import { isServer } from "solid-js/web"
+import { ServerScope } from "@/utils/server-scope"
+import { ServerConnection } from "@/context/server"
+import { draftSessionKey } from "./draft-session"
 import { createPromptState } from "@/context/prompt-state"
 import {
   createPromptSubmit,
@@ -18,7 +23,151 @@ import {
   storedSessions,
   submitInput,
   syncedDirectories,
+  policyFixture, serverFor, sdkFor, setReactiveOwner,
 } from "./submit-harness"
+
+const deferred = () => Promise.withResolvers<void>()
+
+// Complete frozen e6c39ff72d cases, bound to the shared submission harness.
+test.skipIf(isServer)("reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session", async () => {
+  expect(isServer).toBe(false)
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const source = { server: policyFixture.server, sdk: policyFixture.sdk }
+  const otherServer = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+  const other = { server: otherServer, sdk: sdkFor("/repo/main", otherServer) }
+  setReactiveOwner("read", () => () => source)
+  const entered = deferred()
+  const gate = deferred()
+  togglePending(key, "provider", "model", true)
+  state.policyWrite = async () => { entered.resolve(); await gate.promise }
+  const root = createRoot((dispose) => {
+    const real = createPromptState({ prompt: "source draft" })
+    real.context.add({ type: "file", path: "/repo/main/file", comment: "retain context" })
+    return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key }) }
+  })
+  const contents = root.real.current()
+  const context = root.real.context.items()
+  const sending = root.submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  setReactiveOwner("read", () => () => other)
+  await Promise.resolve()
+  setReactiveOwner("read", () => () => source)
+  gate.resolve()
+  await sending
+  expect(root.real.current()).toBe(contents)
+  expect(root.real.context.items()).toBe(context)
+  expect(pendingPolicy(key).mode).toBe("allowlist")
+  expect(createdSessions).toHaveLength(1)
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  state.policyWrite = async () => {}
+  await root.submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toHaveLength(1)
+  expect(promoted).toHaveLength(1)
+  expect(promptInputs).toHaveLength(1)
+  root.dispose()
+})
+
+test.skipIf(isServer)("reactive owner disposal during ACK expires attempt without consuming draft", async () => {
+  expect(isServer).toBe(false)
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const entered = deferred()
+  const gate = deferred()
+  togglePending(key, "provider", "model", true)
+  state.policyWrite = async () => { entered.resolve(); await gate.promise }
+  const root = createRoot((dispose) => {
+    const real = createPromptState({ prompt: "retained on disposal" })
+    return { dispose, real, submit: createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key }) }
+  })
+  const contents = root.real.current()
+  const sending = root.submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  root.dispose()
+  gate.resolve()
+  await sending
+  expect(root.real.current()).toBe(contents)
+  expect(pendingPolicy(key).mode).toBe("allowlist")
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+})
+
+test("failed policy ACK retains draft/context/worktree/session; retry adopts same admission", async () => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const real = createPromptState({ prompt: "ls" })
+  real.context.add({ type: "file", path: "/repo/main/file", comment: "keep me" })
+  const contents = real.current()
+  const context = real.context.items()
+  togglePending(key, "provider", "model", true)
+  const failure = new Error("policy write failed")
+  state.policyWrite = async () => { throw failure }
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: real, info: () => undefined, mode: () => "shell", pendingKey: () => key,
+    newSessionWorktree: () => "create", onNewSessionWorktreeReset: () => { state.worktreeResets++ },
+  })
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(real.current()).toBe(contents)
+  expect(real.context.items()).toBe(context)
+  expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model" }] })
+  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(promoted).toEqual([])
+  expect(sentShell).toEqual([])
+  expect(state.worktreeResets).toBe(0)
+  state.policyWrite = async () => {}
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(sentShell).toHaveLength(1)
+  expect(sentShell[0]?.sessionID).toBe("session-1")
+  expect(promoted).toEqual([{ directory: "/repo/main/new", sessionID: "session-1" }])
+  expect(state.worktreeResets).toBe(1)
+  expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+})
+
+test("double-click while ACK waits admits one Session and one prompt", async () => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const entered = deferred()
+  const gate = deferred()
+  togglePending(key, "provider", "model", true)
+  state.policyWrite = async () => { entered.resolve(); await gate.promise }
+  const real = createPromptState({ prompt: "send once" })
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+  const first = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toHaveLength(1)
+  expect(promptInputs).toEqual([])
+  gate.resolve()
+  await first
+  expect(createdSessions).toHaveLength(1)
+  expect(promptInputs).toHaveLength(1)
+})
+
+test("owner switch during ACK keeps source draft and admitted Session for retry", async () => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const source = policyFixture.server
+  const entered = deferred()
+  const gate = deferred()
+  togglePending(key, "provider", "model", true)
+  state.policyWrite = async () => { entered.resolve(); await gate.promise }
+  const real = createPromptState({ prompt: "source draft" })
+  const contents = real.current()
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  policyFixture.server = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("server-b")))
+  policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
+  gate.resolve()
+  await sending
+  expect(real.current()).toBe(contents)
+  expect(pendingPolicy(key).mode).toBe("allowlist")
+  expect(promoted).toEqual([])
+  expect(promptInputs).toEqual([])
+  policyFixture.server = source
+  policyFixture.sdk = sdkFor("/repo/main", source)
+  state.policyWrite = async () => {}
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toHaveLength(1)
+  expect(promptInputs).toHaveLength(1)
+})
 
 describe("prompt admission and worktree selection", () => {
   test("saves the first restriction selected while session creation is pending", async () => {
@@ -134,7 +283,7 @@ describe("prompt admission and worktree selection", () => {
         { permission: "task", pattern: "*/*", action: "deny" },
         { permission: "task", pattern: "provider/allowed", action: "allow" },
       ],
-      [{ permission: "task", pattern: "*/*", action: "allow" }],
+      [{ permission: "task", pattern: "*/*", action: "deny" }],
     ])
     expect(promptInputs).toHaveLength(1)
     clearPending(key)
@@ -164,6 +313,9 @@ describe("prompt admission and worktree selection", () => {
     const event = { preventDefault: () => undefined } as unknown as Event
 
     await submit.handleSubmit(event)
+    state.params.id = undefined
+    state.sdkOverride = undefined
+    policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
     state.selected = "/repo/worktree-b"
     await submit.handleSubmit(event)
 

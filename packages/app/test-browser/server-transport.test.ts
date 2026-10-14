@@ -7,12 +7,12 @@ import { ServerScope } from "../src/utils/server-scope"
 
 test("cold review: V2 client combines caller/context abort and rejects retained old credentials before transport", async () => {
   const requests: Request[] = []
-  const started = Promise.withResolvers<void>()
+  const started = [Promise.withResolvers<void>(), Promise.withResolvers<void>()]
   const transport = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
     const request = new Request(input, init)
     requests.push(request)
     if (new URL(request.url).pathname.endsWith("/command")) {
-      started.resolve()
+      started[requests.filter((request) => new URL(request.url).pathname.endsWith("/command")).length - 1]?.resolve()
       return new Promise<Response>((_resolve, reject) => {
         if (request.signal.aborted) return reject(request.signal.reason)
         request.signal.addEventListener("abort", () => reject(request.signal.reason), { once: true })
@@ -32,7 +32,7 @@ test("cold review: V2 client combines caller/context abort and rejects retained 
   try {
     const old = state.current()
     const pending = old.currentApi.command.list({ location: { directory: "/repo" } }, { signal: caller.signal }).catch((error: unknown) => error)
-    await started.promise
+    await started[0].promise
     const outgoing = requests.find((request) => new URL(request.url).pathname === "/api/command")!
     expect(outgoing.headers.get("authorization")).toBe(`Basic ${btoa("user:old")}`)
     state.setServers([{ ...first, http: { ...first.http, password: "new" } }])
@@ -44,7 +44,8 @@ test("cold review: V2 client combines caller/context abort and rejects retained 
     expect(requests.length).toBe(before)
     const nextCaller = new AbortController()
     const next = state.current().currentApi.command.list({ location: { directory: "/repo" } }, { signal: nextCaller.signal }).catch((error: unknown) => error)
-    const latest = requests.at(-1)!
+    await started[1].promise
+    const latest = requests.findLast((request) => new URL(request.url).pathname === "/api/command")!
     expect(latest.headers.get("authorization")).toBe(`Basic ${btoa("user:new")}`)
     expect(latest.signal.aborted).toBe(false)
     nextCaller.abort()

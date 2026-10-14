@@ -14,11 +14,13 @@ export function createSessionManagementForServer(input: {
   fetch: typeof globalThis.fetch
   protocol: Promise<ServerProtocol>
   legacy: Pick<OrchestraClient, "session">
+  signal?: AbortSignal
 }) {
   const http = { ...input.server }
   const fetcher = input.fetch
   const protocol = input.protocol
   const legacy = input.legacy
+  const lifetime = input.signal
   const client = Orchestra.make({
     baseUrl: http.url,
     // Declared 404s can be decoded to domain errors without their HTTP status. Classify at the transport boundary.
@@ -41,48 +43,111 @@ export function createSessionManagementForServer(input: {
       ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
       : undefined,
   })
+  const writes = new Map<string, Promise<SubagentModelPolicy>>()
+  lifetime?.addEventListener("abort", () => writes.clear(), { once: true })
   return {
-    async listArchived(directory: string) {
-      if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
-      const sessions: AppSession[] = []
-      let cursor: string | undefined
-      while (true) {
-        const page = await client.sessions.list({ directory, includeArchived: true, order: "desc", limit: 100, cursor })
-        sessions.push(...page.data.map(normalizeSessionInfo))
-        if (!page.data.length || !page.cursor.next) break
-        cursor = page.cursor.next
-      }
-      return sessions.filter((session) =>
-        session.time.archived !== undefined && directoryKey(session.directory) === directoryKey(directory),
-      )
+    listArchived(directory: string) {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        lifetime?.throwIfAborted()
+        const sessions: AppSession[] = []
+        let cursor: string | undefined
+        while (true) {
+          const page = await client.sessions.list({ directory, includeArchived: true, order: "desc", limit: 100, cursor })
+          lifetime?.throwIfAborted()
+          sessions.push(...page.data.map(normalizeSessionInfo))
+          if (!page.data.length || !page.cursor.next) break
+          cursor = page.cursor.next
+        }
+        return sessions.filter((session) =>
+          session.time.archived !== undefined && directoryKey(session.directory) === directoryKey(directory),
+        )
+      })
     },
-    async getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
-      if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
-      return await client.sessions.getSubagentModels({ sessionID })
+    getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        lifetime?.throwIfAborted()
+        const policy = await client.sessions.getSubagentModels({ sessionID })
+        lifetime?.throwIfAborted()
+        return policy
+      })
     },
-    async readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
-      if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
-      // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
-      const snapshot = await client.sessions.get({ sessionID })
-      return { policy: snapshot.subagentModels ?? { mode: "inherit" }, timestamp: snapshot.time.updated }
+    readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        lifetime?.throwIfAborted()
+        // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
+        const snapshot = await client.sessions.get({ sessionID })
+        lifetime?.throwIfAborted()
+        return { policy: snapshot.subagentModels ?? { mode: "inherit" }, timestamp: snapshot.time.updated }
+      })
     },
-    async setSubagentModels(sessionID: string, policy: SubagentModelPolicy): Promise<SubagentModelPolicy> {
-      if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
-      return await client.sessions.setSubagentModels({ sessionID, policy })
+    setSubagentModels(sessionID: string, policy: SubagentModelPolicy): Promise<SubagentModelPolicy> {
+      if (lifetime?.aborted) return Promise.reject(lifetime.reason)
+      const previous = writes.get(sessionID)
+      const write = runSessionManagementOperation(lifetime, async () => {
+        // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
+        await (previous ? previous.catch(() => undefined) : Promise.resolve())
+        lifetime?.throwIfAborted()
+        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        lifetime?.throwIfAborted()
+        const acknowledged = await client.sessions.setSubagentModels({ sessionID, policy })
+        lifetime?.throwIfAborted()
+        if (writes.get(sessionID) === write) writes.delete(sessionID)
+        return acknowledged
+      })
+      writes.set(sessionID, write)
+      void write.catch(() => {})
+      return write
     },
-    async archive(sessionID: string, archived: boolean, directory: string) {
-      if ((await protocol) === "v1") {
-        if (!archived) throw new SessionManagementUnsupported()
-        await legacy.session.update({
-          sessionID,
-          directory,
-          time: { archived: Date.now() },
-        })
-        return
-      }
-      await client.sessions.archive({ sessionID, archived })
+    waitSubagentModels(id: string): Promise<void> {
+      // Capture the barrier before lifecycle cleanup can clear the map; a disposed lifetime still rejects the wait.
+      const current = writes.get(id)
+      return runSessionManagementOperation(lifetime, async () => {
+        if (current) await current
+        lifetime?.throwIfAborted()
+        while (true) {
+          const write = writes.get(id)
+          if (!write || write === current) return
+          await write
+          lifetime?.throwIfAborted()
+          if (writes.get(id) === write) return
+        }
+      })
+    },
+    archive(sessionID: string, archived: boolean, directory: string) {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) === "v1") {
+          lifetime?.throwIfAborted()
+          if (!archived) throw new SessionManagementUnsupported()
+          await legacy.session.update({ sessionID, directory, time: { archived: Date.now() } })
+          return
+        }
+        lifetime?.throwIfAborted()
+        await client.sessions.archive({ sessionID, archived })
+      })
     },
   }
 }
 
 export type SessionManagement = ReturnType<typeof createSessionManagementForServer>
+
+/** Race the complete generated operation, including protocol selection and response body decoding. */
+async function runSessionManagementOperation<T>(lifetime: AbortSignal | undefined, load: () => Promise<T>): Promise<T> {
+  lifetime?.throwIfAborted()
+  if (!lifetime) return load()
+  const cancelled = Promise.withResolvers<never>()
+  const onAbort = () => cancelled.reject(lifetime.reason)
+  lifetime.addEventListener("abort", onAbort, { once: true })
+  const operation = Promise.resolve().then(() => {
+    lifetime.throwIfAborted()
+    return load()
+  })
+  return Promise.race([operation, cancelled.promise])
+    .then((value) => {
+      lifetime.throwIfAborted()
+      return value
+    })
+    .finally(() => lifetime.removeEventListener("abort", onAbort))
+}

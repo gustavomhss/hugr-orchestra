@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import { createSdkForServer } from "@/utils/server"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import { createSessionManagementForServer } from "@/utils/session-management"
+import { createScopedFetch } from "@/utils/scoped-fetch"
+import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 
 // These exercise the generated Promise runtime at the HTTP boundary. They require the lead's client regeneration.
 test("canonical policy read uses generated Session.Info as the timestamp fence", async () => {
@@ -70,4 +73,230 @@ test("V1 archive still uses the real legacy update SDK; V1 restore is explicitly
   const error = await management.archive("ses_legacy", false, "/repo").catch((error: unknown) => error)
   expect(sessionManagementUnsupported(error)).toBe(true)
   expect(requests).toHaveLength(1)
+})
+
+const policy: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "full/slash/model" }] }
+const incomplete = Symbol("operation did not settle")
+
+function management(fetcher: typeof fetch, input: Partial<Pick<Parameters<typeof createSessionManagementForServer>[0], "server" | "protocol" | "signal">> = {}) {
+  const server = input.server ?? { url: "https://synthetic-origin.invalid" }
+  return createSessionManagementForServer({
+    server, fetch: fetcher, protocol: input.protocol ?? Promise.resolve("v2"), signal: input.signal,
+    legacy: createSdkForServer({ server, fetch: fetcher, throwOnError: true }),
+  })
+}
+
+function result<T>(pending: Promise<T>) {
+  return Promise.race([
+    pending.then((value) => value, (error: unknown) => error),
+    Bun.sleep(200).then(() => incomplete),
+  ])
+}
+
+function snapshot(id: string, directory = "/repo", archived?: number) {
+  return {
+    id, projectID: "project", title: "Synthetic", location: { directory },
+    cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    time: { created: 1, updated: 20, archived }, subagentModels: policy,
+  }
+}
+
+test("typed SessionNotFound404 remains a domain failure, not an unsupported route", async () => {
+  const fetcher = Object.assign(async () => Response.json({
+    _tag: "SessionNotFoundError", sessionID: "ses_missing", message: "Session not found: ses_missing",
+  }, { status: 404 }), { preconnect: fetch.preconnect })
+  const error = await result(management(fetcher).getSubagentModels("ses_missing"))
+  expect(error).toBeDefined()
+  expect(error).not.toBe(incomplete)
+  expect(sessionManagementUnsupported(error)).toBe(false)
+})
+
+test("archive listing paginates and isolates the requested directory and archived catalog", async () => {
+  const queries: URL[] = []
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(new Request(input, init).url)
+    queries.push(url)
+    return Response.json(url.searchParams.has("cursor")
+      ? { data: [snapshot("ses_last", "/repo", 4)], cursor: {} }
+      : { data: [snapshot("ses_archived", "/repo", 3), snapshot("ses_active"), snapshot("ses_other", "/other", 3)], cursor: { next: "synthetic-cursor" } })
+  }, { preconnect: fetch.preconnect })
+  expect((await management(fetcher).listArchived("/repo")).map((session) => session.id)).toEqual(["ses_archived", "ses_last"])
+  expect(queries).toHaveLength(2)
+  expect(queries.every((url) => url.searchParams.get("directory") === "/repo" && url.searchParams.get("includeArchived") === "true")).toBe(true)
+  expect(queries[1].searchParams.get("cursor")).toBe("synthetic-cursor")
+})
+
+test("serialized writes return canonical ACKs; dispatch waits follow latest failure until explicit retry", async () => {
+  const firstStarted = Promise.withResolvers<void>()
+  const firstAck = Promise.withResolvers<Response>()
+  const retryStarted = Promise.withResolvers<void>()
+  const retryAck = Promise.withResolvers<Response>()
+  const bodies: unknown[] = []
+  const canonical: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "canonical/model" }] }
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    bodies.push(await new Request(input, init).json())
+    if (bodies.length === 1) { firstStarted.resolve(); return firstAck.promise }
+    if (bodies.length === 2) return Response.json({ message: "synthetic offline" }, { status: 500 })
+    retryStarted.resolve()
+    return retryAck.promise
+  }, { preconnect: fetch.preconnect })
+  const port = management(fetcher)
+  const first = port.setSubagentModels("ses_origin", policy)
+  try {
+    await firstStarted.promise
+    const waiting = result(port.waitSubagentModels("ses_origin"))
+    await Bun.sleep(0)
+    const second = result(port.setSubagentModels("ses_origin", { mode: "allowlist", models: [] }))
+    expect(bodies).toEqual([{ policy }])
+    firstAck.resolve(Response.json({ data: canonical }))
+    expect(await first).toEqual(canonical)
+    const failed = await second
+    expect(failed).toBeInstanceOf(Error)
+    expect(await waiting).toBe(failed)
+    expect(await result(port.waitSubagentModels("ses_origin"))).toBe(failed)
+    const retry = port.setSubagentModels("ses_origin", { mode: "allowlist", models: [] })
+    await retryStarted.promise
+    const state = { dispatched: false }
+    const dispatch = port.waitSubagentModels("ses_origin").then(() => { state.dispatched = true })
+    await Bun.sleep(0)
+    expect(state.dispatched).toBe(false)
+    retryAck.resolve(Response.json({ data: { mode: "allowlist", models: [] } }))
+    expect(await retry).toEqual({ mode: "allowlist", models: [] })
+    await dispatch
+    expect(state.dispatched).toBe(true)
+    expect(bodies).toEqual([{ policy }, { policy: { mode: "allowlist", models: [] } }, { policy: { mode: "allowlist", models: [] } }])
+    await port.waitSubagentModels("ses_origin")
+  } finally {
+    firstAck.resolve(Response.json({ data: canonical }))
+    retryAck.resolve(Response.json({ data: { mode: "allowlist", models: [] } }))
+  }
+})
+
+test("different Sessions and captured server instances have independent policy barriers", async () => {
+  const started = Promise.withResolvers<void>()
+  const ack = Promise.withResolvers<Response>()
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(new Request(input, init).url)
+    if (url.hostname === "synthetic-origin.invalid" && url.pathname.includes("/ses_first/")) {
+      started.resolve()
+      return ack.promise
+    }
+    return Response.json({ data: { mode: "inherit" } })
+  }, { preconnect: fetch.preconnect })
+  const origin = management(fetcher)
+  const other = management(fetcher, { server: { url: "https://synthetic-other.invalid" } })
+  const pending = origin.setSubagentModels("ses_first", policy)
+  try {
+    await started.promise
+    expect(await result(origin.setSubagentModels("ses_second", { mode: "inherit" }))).toEqual({ mode: "inherit" })
+    expect(await result(other.setSubagentModels("ses_first", { mode: "inherit" }))).toEqual({ mode: "inherit" })
+    expect(await result(other.waitSubagentModels("ses_first"))).toBeUndefined()
+    ack.resolve(Response.json({ data: policy }))
+    expect(await pending).toEqual(policy)
+  } finally { ack.resolve(Response.json({ data: policy })) }
+})
+
+test("owner disposal rejects signal-ignoring ACKs and already captured dispatch barriers", async () => {
+  const lifetime = new AbortController()
+  const started = Promise.withResolvers<void>()
+  const ack = Promise.withResolvers<Response>()
+  const fetcher = Object.assign(async () => { started.resolve(); return ack.promise }, { preconnect: fetch.preconnect })
+  const port = management(createScopedFetch(fetcher, lifetime.signal), { signal: lifetime.signal })
+  const pending = result(port.setSubagentModels("ses_origin", policy))
+  const waiting = result(port.waitSubagentModels("ses_origin"))
+  try {
+    await started.promise
+    const reason = new Error("synthetic owner disposed before ACK")
+    lifetime.abort(reason)
+    expect(await pending).toBe(reason)
+    expect(await waiting).toBe(reason)
+    expect(await result(port.waitSubagentModels("ses_origin"))).toBe(reason)
+    expect(await result(port.setSubagentModels("ses_origin", policy))).toBe(reason)
+  } finally { ack.resolve(Response.json({ data: policy })) }
+})
+
+test.each(["get", "read", "post", "list"] as const)("generated %s rejects stalled JSON without claiming unsupported stream cancellation", async (operation) => {
+  const lifetime = new AbortController()
+  const reading = Promise.withResolvers<void>()
+  const body = Promise.withResolvers<ReadableStreamDefaultController<Uint8Array>>()
+  const state = { cancelled: false }
+  const response = new Response(new ReadableStream<Uint8Array>({
+    start(controller) { body.resolve(controller) },
+    pull() { reading.resolve() },
+    cancel() { state.cancelled = true },
+  }, { highWaterMark: 0 }), { headers: { "content-type": "application/json" } })
+  const requests: Request[] = []
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    requests.push(new Request(input, init))
+    return response
+  }, { preconnect: fetch.preconnect })
+  const port = management(createScopedFetch(fetcher, lifetime.signal), { signal: lifetime.signal })
+  const operations = {
+    get: () => port.getSubagentModels("ses_origin"), read: () => port.readSubagentModels("ses_origin"),
+    post: () => port.setSubagentModels("ses_origin", policy), list: () => port.listArchived("/repo"),
+  }
+  const pending = result(operations[operation]())
+  const waiting = operation === "post" ? result(port.waitSubagentModels("ses_origin")) : undefined
+  try {
+    await reading.promise
+    expect(response.bodyUsed).toBe(true)
+    expect(requests).toHaveLength(1)
+    const reason = new Error("synthetic owner disposed during JSON decoding")
+    lifetime.abort(reason)
+    expect(await pending).toBe(reason)
+    if (operation === "post") expect(await waiting).toBe(reason)
+    expect(state.cancelled).toBe(false)
+    expect(await result(port.waitSubagentModels("ses_origin"))).toBe(reason)
+  } finally {
+    const controller = await body.promise
+    controller.enqueue(new TextEncoder().encode(JSON.stringify(operation === "list"
+      ? { data: [snapshot("ses_origin", "/repo", 3)], cursor: {} }
+      : { data: operation === "read" ? snapshot("ses_origin") : policy })))
+    controller.close()
+  }
+})
+
+test.each(["get", "read", "post", "archive", "list"] as const)("generated %s aborts pending protocol and rejects a late request", async (operation) => {
+  const lifetime = new AbortController()
+  const protocol = Promise.withResolvers<"v2">()
+  const requests: Request[] = []
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    requests.push(new Request(input, init))
+    return Response.json({ data: policy })
+  }, { preconnect: fetch.preconnect })
+  const port = management(fetcher, { protocol: protocol.promise, signal: lifetime.signal })
+  const operations = {
+    get: () => port.getSubagentModels("ses_origin"), read: () => port.readSubagentModels("ses_origin"),
+    post: () => port.setSubagentModels("ses_origin", policy), archive: () => port.archive("ses_origin", true, "/repo"),
+    list: () => port.listArchived("/repo"),
+  }
+  const pending = result(operations[operation]())
+  try {
+    await Bun.sleep(0)
+    const reason = new Error("synthetic owner disposed during protocol discovery")
+    lifetime.abort(reason)
+    expect(await pending).toBe(reason)
+    protocol.resolve("v2")
+    await Bun.sleep(0)
+    expect(requests).toEqual([])
+  } finally { protocol.resolve("v2") }
+})
+
+test("disposed instance cannot launch reads, archives, dispatch waits or fresh retry barriers", async () => {
+  const lifetime = new AbortController()
+  const requests: Request[] = []
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    requests.push(new Request(input, init))
+    return Response.json({ data: policy })
+  }, { preconnect: fetch.preconnect })
+  const port = management(fetcher, { signal: lifetime.signal })
+  const reason = new Error("synthetic owner already disposed")
+  lifetime.abort(reason)
+  expect(await result(port.getSubagentModels("ses_origin"))).toBe(reason)
+  expect(await result(port.readSubagentModels("ses_origin"))).toBe(reason)
+  expect(await result(port.archive("ses_origin", true, "/repo"))).toBe(reason)
+  expect(await result(port.listArchived("/repo"))).toBe(reason)
+  expect(await result(port.waitSubagentModels("ses_origin"))).toBe(reason)
+  expect(await result(port.setSubagentModels("ses_origin", policy))).toBe(reason)
+  expect(requests).toEqual([])
 })
