@@ -1,11 +1,12 @@
 import { For, Show } from "solid-js"
 import type { Actions } from "@orchestra/schema/actions"
 import type { Dialog, ViewProps } from "./contract"
+import { isJson, isJsonObject, isPrimitive, isRecord, type JsonValue } from "./input-definitions"
 import { canRequest } from "./request-policy"
 import { canEditSource, sourceProposalPath } from "./requests"
 import { sourceDraftDirty } from "./source-draft-ui"
 
-type JsonValue = null | string | number | boolean | readonly JsonValue[] | { readonly [key: string]: JsonValue }
+export { githubDefinitions, headerDefinitions } from "./input-definitions"
 
 export function isResourceDialog(value: Dialog | undefined) {
   return value !== undefined && ["create-variable", "edit-variable", "delete-variable", "create-environment", "edit-environment", "delete-environment", "create-runner", "edit-runner", "delete-runner", "create-schedule", "edit-schedule", "delete-schedule", "delete-artifact", "delete-cache", "clear-caches"].includes(value.kind)
@@ -13,27 +14,6 @@ export function isResourceDialog(value: Dialog | undefined) {
 
 export function isSourceDialog(value: Dialog) {
   return value.kind === "create-workflow" || value.kind === "approval" || value.kind === "review-source" || value.kind === "project-settings"
-}
-
-export function headerDefinitions(header: unknown): readonly Actions.InputDefinition[] | undefined {
-  if (!isRecord(header) || !isRecord(header.spec) || "include" in header.spec || !isRecord(header.spec.inputs)) return undefined
-  const definitions = Object.entries(header.spec.inputs).map(([name, value]) => inputDefinition(name, value))
-  return definitions.every((value): value is Actions.InputDefinition => value !== undefined) ? definitions : undefined
-}
-
-export function githubDefinitions(triggers: unknown): readonly Actions.InputDefinition[] | undefined {
-  if (triggers === "workflow_dispatch") return []
-  if (Array.isArray(triggers)) return triggers.includes("workflow_dispatch") ? [] : undefined
-  if (!isRecord(triggers)) return undefined
-  const dispatch = triggers.workflow_dispatch
-  if (dispatch === undefined) return undefined
-  if (dispatch === null) return []
-  if (!isRecord(dispatch)) return undefined
-  const inputs = dispatch.inputs
-  if (inputs === undefined) return []
-  if (!isRecord(inputs)) return undefined
-  const definitions = Object.entries(inputs).map(([name, value]) => inputDefinition(name, value))
-  return definitions.every((value): value is Actions.InputDefinition => value !== undefined) ? definitions : undefined
 }
 
 export function parseInputs(raw: string, definitions: readonly Actions.InputDefinition[] | undefined, provider: Actions.ProviderKind, data: FormData) {
@@ -238,18 +218,3 @@ export function policyResource(items: readonly Actions.Resource[] | undefined, b
   const owner = item.owner
   return retentionDays === undefined && execution === undefined && !scope && !owner && !inherited && !readOnly ? undefined : { retentionDays, execution, scope, owner, inherited, readOnly }
 }
-
-function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value) }
-function isJsonObject(value: unknown): value is Record<string, JsonValue> { return isRecord(value) && Object.values(value).every(isJson) }
-function inputDefinition(name: string, value: unknown): Actions.InputDefinition | undefined {
-  if (!isRecord(value)) return undefined
-  const type = value.type === undefined ? "string" : value.type
-  if (type !== "string" && type !== "boolean" && type !== "number" && type !== "choice" && type !== "environment" && type !== "file" && type !== "array") return undefined
-  if (value.required !== undefined && typeof value.required !== "boolean") return undefined
-  if (value.description !== undefined && typeof value.description !== "string") return undefined
-  if (value.default !== undefined && !isJson(value.default)) return undefined
-  if (value.options !== undefined && (!Array.isArray(value.options) || value.options.some((option) => !isPrimitive(option)))) return undefined
-  return { name, type, required: value.required ?? false, ...(typeof value.description === "string" ? { description: value.description } : {}), ...(value.default !== undefined ? { default: value.default } : {}), ...(Array.isArray(value.options) ? { options: value.options } : {}) }
-}
-function isPrimitive(value: unknown): value is string | number | boolean { return typeof value === "string" || typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value)) }
-function isJson(value: unknown): value is JsonValue { if (value === null || isPrimitive(value)) return true; if (Array.isArray(value)) return value.every(isJson); if (isRecord(value)) return Object.values(value).every(isJson); return false }
