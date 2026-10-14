@@ -16,6 +16,7 @@ async function setup(page: Page, scheme = "dark") {
     { id: "env-project", name: "Env A", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } },
     { id: "env-second", name: "Env A2", worktree: "/env-second", sandboxes: [], time: { created: 1, updated: 1 } },
   ]
+  const remoteProjects = [{ ...projects[0], id: "env-b", name: "Env B" }]
   page.on("request", (request) =>
     requests.push(JSON.stringify({ url: request.url(), headers: request.headers(), body: request.postData() })),
   )
@@ -38,7 +39,7 @@ async function setup(page: Page, scheme = "dark") {
       path === "/global/health"
         ? { healthy: true }
         : path === "/project"
-          ? [{ id: "env-b", name: "Env B", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } }]
+          ? remoteProjects
           : path === "/provider"
             ? { all: [], connected: [], default: {} }
             : ["/session", "/agent", "/skill", "/command", "/permission", "/question", "/lsp", "/formatter"].includes(
@@ -53,10 +54,9 @@ async function setup(page: Page, scheme = "dark") {
     const url = new URL(route.request().url())
     if (![serverA, serverB].includes(url.origin) || !["/path", "/project/current"].includes(url.pathname))
       return route.fallback()
-    const project =
-      url.origin === serverB
-        ? { ...projects[0], id: "env-b", name: "Env B" }
-        : projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? directory))
+    const project = (url.origin === serverB ? remoteProjects : projects).find(
+      (item) => item.worktree === (url.searchParams.get("directory") ?? directory),
+    )
     if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
     return route.fulfill({
       json:
@@ -305,6 +305,17 @@ test("both directory and server switches start empty; switching back and reloadi
   await page.reload()
   await expect(page.locator('[data-env-key="TOKEN"]')).toHaveCount(0)
   await privateValues(page, requests)
+  // Env A2 belongs only to server A; server B must not silently substitute its own project.
+  for (const input of [
+    { origin: serverA, directory: "/env-unknown" },
+    { origin: serverB, directory: "/env-second" },
+  ]) {
+    for (const path of ["/path", "/project/current"]) {
+      const response = await page.goto(`${input.origin}${path}?directory=${encodeURIComponent(input.directory)}`)
+      expect(response?.status()).toBe(404)
+      expect(await response?.json()).toEqual({ name: "NotFound" })
+    }
+  }
 })
 
 test("invalid UTF-8 import reports an error and preserves the current document", async ({ page }) => {
