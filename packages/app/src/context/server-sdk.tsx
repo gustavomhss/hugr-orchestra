@@ -451,7 +451,7 @@ function createServerSdkContextBase(
   const sdk = createSdkForServer({
     signal: abort.signal,
     server: http,
-    fetch: platform.fetch,
+    fetch: scopedFetch(),
     throwOnError: true,
   })
   const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
@@ -460,7 +460,7 @@ function createServerSdkContextBase(
     createSdkForServer({
       signal: abort.signal,
       server: http,
-      fetch: platform.fetch,
+      fetch: scopedFetch(),
       throwOnError: true,
       directory,
     })
@@ -485,7 +485,7 @@ function createServerSdkContextBase(
       return createSdkForServer({
         signal: abort.signal,
         server: http,
-        fetch: platform.fetch,
+        fetch: scopedFetch(),
         ...opts,
       })
     },
