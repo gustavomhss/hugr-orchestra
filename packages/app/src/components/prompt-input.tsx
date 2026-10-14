@@ -50,7 +50,7 @@ import { useCommand } from "@/context/command"
 import { usePermission } from "@/context/permission"
 import { useLanguage } from "@/context/language"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingPolicy, pendingSelection } from "@/components/draft-subagent-models"
+import { draftVersion, pendingPolicy } from "@/components/draft-subagent-models"
 import { useServerProtocol } from "@/context/server-sdk"
 import { useDraftSessionKey } from "./prompt-input/draft-session"
 import { useProviders } from "@/hooks/use-providers"
@@ -1199,6 +1199,12 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   // Check provider variants directly: `variants` also includes the UI-only default option.
   const showVariantControl = createMemo(() => props.controls.model.selection.variant.list().length > 0)
   const pendingKey = useDraftSessionKey()
+  const subagentLife = { active: true }
+  onCleanup(() => { subagentLife.active = false })
+  const subagentSource = createMemo(() => {
+    const source = sdk()
+    return { source, directory: source.directory, sessionID: props.controls.session.id, pendingKey: pendingKey() }
+  })
   const subagentProtocol = useServerProtocol()
   const providers = useProviders(() => sdk().directory)
   const subagentRules = createMemo(() => {
@@ -1216,8 +1222,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     }
     if (!props.controls.session.id) {
       draftVersion()
-      const n = pendingSelection(pendingKey()).size
-      return n > 0 ? `${n}` : language.t("session.tasks.models.all")
+      const policy = pendingPolicy(pendingKey())
+      return policy.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${policy.models.length}`
     }
     if (!hasModelScope(subagentRules())) return language.t("session.tasks.models.all")
     const allowed = providers
@@ -1229,13 +1235,12 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       ).length
     return `${allowed}`
   })
-  const openSubagentModels = () => {
-    const directory = sdk().directory
-    if (!directory) return
-    const selection = { sessionID: props.controls.session.id, directory, pendingKey: pendingKey() }
-    void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => <x.DialogSubagentModels {...selection} />)
-    })
+  const openSubagentModels = async () => {
+    const selection = subagentSource()
+    if (!selection.directory || !subagentLife.active) return
+    const { DialogSubagentModels } = await import("@/components/dialog-subagent-models")
+    if (!subagentLife.active || subagentSource() !== selection) return
+    dialog.show(() => <DialogSubagentModels sessionID={selection.sessionID} directory={selection.directory} pendingKey={selection.pendingKey} />)
   }
   const accepting = createMemo(() => {
     const id = props.controls.session.id

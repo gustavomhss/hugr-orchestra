@@ -11,6 +11,7 @@ export const SESSION_RECOVERY_COPY = {
   "session.archived.empty": "No archived sessions in this directory.",
   "session.archived.loadFailed": "Could not load archived sessions.",
   "session.subagentModels.loadFailed": "Could not load subagent models.",
+  "session.subagentModels.confirmFailed": "Model permissions could not be confirmed. Try again.",
   "session.subagentModels.unsupported": "Subagent models unavailable on this server",
   "session.subagentModels.denyAll": "No models allowed. Subagent delegation is disabled.",
   "session.review.detailFailed": "Could not load changes for {{file}}.",

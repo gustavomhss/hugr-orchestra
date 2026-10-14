@@ -67,8 +67,9 @@ export function SubagentModelPicker(props: {
 
   const inherited = () => {
     draftVersion()
+    if (!props.sessionID) return pendingPolicy(pendingKey()).mode === "inherit"
     if (props.protocol === "v2") return policy().mode === "inherit"
-    return props.sessionID ? !hasModelScope(editor.rules()) : pendingSelection(pendingKey()).size === 0
+    return !hasModelScope(editor.rules())
   }
   const unavailable = createMemo(
     () => {
@@ -139,8 +140,9 @@ export function SubagentModelPicker(props: {
     await editor.set(providerID, modelID, allow)
   }
   const canChange = () => props.supported && props.status === "success" && props.rulesReady && !saving()
+  const canInherit = () => props.supported && props.rulesReady && !saving()
   const inherit = () => {
-    if (!canChange()) return
+    if (!canInherit()) return
     if (!props.sessionID) return clearPending(pendingKey())
     if (props.protocol === "v2") return policyEditor.inherit()
   }
@@ -157,7 +159,7 @@ export function SubagentModelPicker(props: {
       </Show>
       <Show when={props.protocol === "v2" ? policyEditor.state.failed : editor.state.failed}>
         <p class="text-12-regular text-text-weak px-3" role="alert">
-          {language.t("dialog.subagentModels.saveFailed")}
+          {language.t("session.subagentModels.confirmFailed")}
         </p>
         <Show when={props.protocol === "v2"}>
           <button
@@ -172,7 +174,7 @@ export function SubagentModelPicker(props: {
         <p class="text-12-regular text-text-weak px-3" role="alert">
           {language.t("session.subagentModels.loadFailed")}
         </p>
-        <button type="button" class="text-12-regular text-text-weak px-3" onClick={props.onRetry}>
+        <button type="button" class="text-12-regular text-text-weak px-3" disabled={props.supported === false} onClick={props.onRetry}>
           {language.t("common.retry")}
         </button>
       </Show>
@@ -191,17 +193,17 @@ export function SubagentModelPicker(props: {
           props.rulesReady &&
           props.status === "success" &&
           !inherited() &&
-          (props.protocol === "v2"
+          (!props.sessionID || props.protocol === "v2"
             ? denyAll()
             : models().length > 0 && models().every((model) => !isAllowed(model.provider.id, model.id)))
         }
       >
         <p class="text-12-regular text-text-weak px-3" role="status" data-status="none-allowed">
-          {language.t(props.protocol === "v2" ? "session.subagentModels.denyAll" : "dialog.subagentModels.noneAllowed")}
+          {language.t(!props.sessionID || props.protocol === "v2" ? "session.subagentModels.denyAll" : "dialog.subagentModels.noneAllowed")}
         </p>
       </Show>
       <Show when={(!props.sessionID || props.protocol === "v2") && !inherited()}>
-        <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canChange()} onClick={() => void inherit()}>
+        <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canInherit()} onClick={() => void inherit()}>
           {language.t("orchestra.agents.choice.inherit")}
         </button>
       </Show>
@@ -210,7 +212,7 @@ export function SubagentModelPicker(props: {
           {language.t(props.status === "error" ? "orchestra.agents.models.error" : "orchestra.agents.models.loading")}
         </p>
         <Show when={props.status === "error"}>
-          <button type="button" class="text-12-regular text-text-weak px-3" onClick={props.onRetry}>
+          <button type="button" class="text-12-regular text-text-weak px-3" disabled={props.supported === false} onClick={props.onRetry}>
             {language.t("orchestra.agents.retry")}
           </button>
         </Show>
@@ -225,6 +227,15 @@ export function SubagentModelPicker(props: {
           key={(x) => `${x?.provider?.id}:${x?.id}`}
           items={choices()}
           onSelect={(item) => item && void setAllowed(item.provider.id, item.id, !isAllowed(item.provider.id, item.id))}
+          onKeyEvent={(event) => {
+            if (event.key !== "Enter" || event.isComposing) return
+            if (!(event.target instanceof HTMLButtonElement) || !event.target.matches('[data-slot="list-item"][data-key]')) return
+            const key = event.target.getAttribute("data-key")
+            const item = choices().find((choice) => `${choice.provider.id}:${choice.id}` === key)
+            if (!item) return
+            event.preventDefault()
+            void setAllowed(item.provider.id, item.id, !isAllowed(item.provider.id, item.id))
+          }}
           filterKeys={["provider.name", "name", "id"]}
           sortBy={(a, b) => a.name.localeCompare(b.name)}
           groupBy={(x) => x.provider.id}
@@ -257,6 +268,7 @@ export function SubagentModelPicker(props: {
                   readOnly={saving()}
                   aria-disabled={saving() || undefined}
                   aria-busy={saving() || undefined}
+                  onClick={(event: MouseEvent) => event.stopPropagation()}
                   onChange={(checked) => void setAllowed(item.provider.id, item.id, checked)}
                   hideLabel
                 >
