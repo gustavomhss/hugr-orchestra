@@ -276,7 +276,7 @@ test("all explicit targets produce correct executable format/architecture and pr
   await Bun.write(sentinel, "preserve these bytes")
   // Local --single fallback is exercised from a copied producer module, never
   // by replacing the runner's genuine release companions. Fixtures are structural.
-  const local = path.join(home, "local-producer")
+  const local = path.join(home, "local-producer source")
   const producer = path.join(local, "packages/script/src")
   await Promise.all(["omni.ts", "tree-sitter-prebuilds.ts", "workspace-paths.ts", "module-catalog.ts", "module-resolver.ts"]
     .map((file) => Bun.write(path.join(producer, file), Bun.file(path.resolve(root, "../script/src", file)))))
@@ -285,7 +285,7 @@ test("all explicit targets produce correct executable format/architecture and pr
     { alias: "maestro-arsenal", kind: "bun", scope: ".", name: "@orchestra/maestro-arsenal", path: "tools/arsenal" },
   ]
   const domains = {
-    omni: { path: "native/omni", manifest: "Cargo.toml" },
+    omni: { path: "native/omni source", manifest: "Cargo.toml" },
     atlas: { path: "domains/atlas", manifest: "package.json" },
   }
   await Bun.write(path.join(local, "package.json"), JSON.stringify({ name: "local-producer", private: true, type: "module" }))
