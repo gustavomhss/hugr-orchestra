@@ -21,4 +21,9 @@ test("prompt admission ownership with the actual PromptProvider", async () => {
     Bun.readableStreamToText(child.stderr),
   ])
   expect(code, stdout + stderr).toBe(0)
+  ;[
+    ...["create", "rules", "draft-before-sdk"].map((phase) => `real PromptProvider preserves A's unsent draft on owner change during ${phase}`),
+    "real PromptProvider fresh A admission promotes coherently and sends once",
+    "real PromptProvider owner ABA permanently holds old attempt until deliberate retry",
+  ].forEach((name) => expect(stdout + stderr).toContain(`(pass) ${name}`))
 }, 125_000)
