@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { mkdirSync, symlinkSync } from "node:fs"
+import { lstatSync, mkdirSync, renameSync, symlinkSync } from "node:fs"
 import { chmod, lstat, mkdir, mkdtemp, readdir, rm, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRecoveryBundle, restoreRecoveryBundle } from "../../../script/recovery-bundle.ts"
@@ -185,7 +185,7 @@ test("concurrent disjoint restores publish exactly one complete bundle", async (
   }
 })
 
-test.each(["symlink", "empty-present", "empty-absent"] as const)("destination %s injection cannot replace private restore publication", async (variant) => {
+test.each(["symlink", "empty-present", "empty-absent", "pre-claim-symlink"] as const)("destination %s injection cannot replace private restore publication", async (variant) => {
   const fixture = await makeFixture()
   const external = path.join(fixture.root, "external-destination")
   try {
@@ -207,6 +207,13 @@ test.each(["symlink", "empty-present", "empty-absent"] as const)("destination %s
     while (!observed.swapped && !observed.settled && Date.now() < deadline) {
       const scratch = (await readdir(fixture.root)).find((name) => name.startsWith(".orchestra-recovery-"))
       if (!scratch) continue
+      if (variant === "pre-claim-symlink") {
+        if (!lstatSync(fixture.restored, { throwIfNoEntry: false })?.isDirectory()) continue
+        renameSync(fixture.restored, path.join(fixture.root, "moved-slot"))
+        symlinkSync(path.join(fixture.root, "moved-slot"), fixture.restored, "junction")
+        observed.swapped = true
+        continue
+      }
       const claimed = await lstat(path.join(fixture.root, scratch, variant === "empty-absent" ? "snapshot" : "previous-slot"))
         .catch(() => undefined)
       if (!claimed?.isDirectory()) continue
@@ -223,7 +230,16 @@ test.each(["symlink", "empty-present", "empty-absent"] as const)("destination %s
     expect(observed.swapped).toBe(true)
     expect(result.status).toBe("rejected")
     if (result.status !== "rejected") throw new Error("FIXTURE_RESTORE_ACCEPTED_CHANGED_DESTINATION")
-    expect(String(result.error)).toContain("RECOVERY_DESTINATION_PUBLISH_FAILED")
+    expect(String(result.error)).toContain(variant === "pre-claim-symlink" ? "RECOVERY_DESTINATION_CHANGED" : "RECOVERY_DESTINATION_PUBLISH_FAILED")
+    if (variant === "pre-claim-symlink") {
+      if (!original) throw new Error("FIXTURE_ORIGINAL_SLOT_MISSING")
+      expect((await lstat(fixture.restored)).isSymbolicLink()).toBe(true)
+      const moved = await lstat(path.join(fixture.root, "moved-slot"))
+      expect(moved.dev).toBe(original.dev)
+      expect(moved.ino).toBe(original.ino)
+      expect(await readdir(path.join(fixture.root, "moved-slot"))).toEqual([])
+      return
+    }
     const current = await lstat(fixture.restored)
     expect(identities).toHaveLength(1)
     const identity = identities[0]

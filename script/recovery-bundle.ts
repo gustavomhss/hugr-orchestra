@@ -171,7 +171,7 @@ async function emptyDestination(destination: string, excluded: string[], rejectR
   if (info && (!info.isDirectory() || info.isSymbolicLink() || (process.getuid && info.uid !== process.getuid()))) throw new Error(`RECOVERY_DESTINATION_INVALID:${destination}`)
   // Resolve existing parents physically; symlink aliases cannot bypass overlap checks.
   const parent = await realpath(path.dirname(requested))
-  const target = info ? await realpath(requested) : path.join(parent, path.basename(requested))
+  const target = path.join(parent, path.basename(requested))
   if (excluded.some((directory) => overlaps(target, directory))) throw new Error(`RECOVERY_DESTINATION_OVERLAP:${destination}`)
   if (rejectRepository) {
     // The portable manifest has no source-machine path. Reject checkout destinations
