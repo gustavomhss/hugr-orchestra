@@ -11,6 +11,7 @@ import { requireArtifactHost } from "../script/artifact-native"
 import { artifactNative } from "../script/artifact-fs"
 
 requireDistributionHost()
+if (process.platform === "win32") await import("./fixture/artifact-native-windows-controls")
 
 const roots: string[] = []
 afterEach(async () => {
@@ -69,7 +70,8 @@ if (process.platform === "win32") test("native Windows producer handles preserve
     pins.push(stage)
     const occupied = native.directory(parent, "occupied", { create: true, exclusive: true, removable: true })
     pins.push(occupied)
-    const bytes = Buffer.concat([Buffer.from("é漢😀\0"), Buffer.alloc(192 * 1024, 0xff)])
+    const bytes = Buffer.from(Array.from({ length: 3 * 65536 + 137 }, (_, offset) =>
+      (Math.floor(offset / 65536) * 67 + offset * 29 + Math.floor(offset / 251)) & 255))
     native.write(stage, "é漢😀.bin", bytes, false)
     expect(native.list(stage)).toEqual(["é漢😀.bin"])
     expect(native.read(stage, "é漢😀.bin").bytes).toEqual(bytes)
