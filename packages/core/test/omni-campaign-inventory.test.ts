@@ -381,7 +381,7 @@ function replace(source: string, before: string, after: string) {
 
 async function instrumentCopy(home: string, lib = (source: string) => source, windows = (source: string) => source) {
   await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "native/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
-    .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
+    .replaceAll('"../../../packages/core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
   await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "native/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
   for (const name of ["delivery-fixtures.ts", "fake-llm.ts", "isolated-user.ts", "process-rows.ts", "server-client.ts", "wait.ts"])
     await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "native/omni/campaign", name)).text())
