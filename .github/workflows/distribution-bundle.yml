@@ -32,7 +32,7 @@ jobs:
   qualification:
     name: qualification (${{ matrix.package }}, ${{ matrix.host }})
     runs-on: ${{ matrix.host }}
-    timeout-minutes: 120
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -64,12 +64,12 @@ jobs:
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - package: core
             host: windows-latest
             cpu: X64
             platform: win32
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/distribution-bundle-boundaries.test.ts, ./test/distribution-bundle-deno.test.ts, ./test/effect/cross-spawn-spawner.test.ts, ./test/ripgrep-binary.test.ts, ./test/ripgrep-bundle.test.ts]
           - package: cli
             host: macos-14
             cpu: ARM64
@@ -88,18 +88,6 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
-      - name: Install native Deno
-        if: matrix.package == 'cli'
-        run: |
-          set -euo pipefail
-          bun script/distribution-deno.ts
-      - name: Extract native Deno
-        if: matrix.package == 'cli'
-        run: |
-          set -euo pipefail
-          unzip -q "$DISTRIBUTION_DENO_DIRECTORY/deno.zip" -d "$DISTRIBUTION_DENO_DIRECTORY"
-          [ "$RUNNER_OS" = Windows ] || chmod +x "$ORCHESTRA_DISTRIBUTION_DENO"
-          "$ORCHESTRA_DISTRIBUTION_DENO" --version
       - name: Prepare native Windows Rust
         if: matrix.platform == 'win32'
         run: |
@@ -137,6 +125,21 @@ jobs:
           // bundle-program:end
           BUN
           )"
+      - name: Install native Deno
+        if: matrix.package == 'cli'
+        run: |
+          set -euo pipefail
+          bun script/distribution-deno.ts --admit
+          mkdir -p distribution-logs
+          bun script/distribution-deno.ts 2>&1 | tee distribution-logs/deno-download.log
+      - name: Extract native Deno
+        if: matrix.package == 'cli'
+        run: |
+          set -euo pipefail
+          unzip -q "$DISTRIBUTION_DENO_DIRECTORY/deno.zip" -d "$DISTRIBUTION_DENO_DIRECTORY" 2>&1 | tee distribution-logs/deno-extract.log
+          if [ "$RUNNER_OS" != Windows ]; then chmod +x "$ORCHESTRA_DISTRIBUTION_DENO" 2>&1 | tee -a distribution-logs/deno-extract.log; fi
+          "$ORCHESTRA_DISTRIBUTION_DENO" --version 2>&1 | tee distribution-logs/deno-version.log
+          bun script/distribution-deno.ts --verify-version distribution-logs/deno-version.log
       - uses: ./.github/actions/ripgrep
       - uses: ./.github/actions/omni-binaries
       - name: Prove native Windows Job handle closure
@@ -145,14 +148,22 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
-          cargo test --release -p omni-supervisor windows::tests -- --nocapture 2>&1 | tee ../../distribution-logs/windows-native-job.log
+          cargo test --release -p omni-supervisor windows::tests -- --nocapture --test-threads=1 2>&1 | tee ../../distribution-logs/windows-native-job.log
+          bun ../core/test/distribution-bundle-gates.ts ../../distribution-logs/windows-native-job.log
       - name: Prove source ABI producers
         if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
         working-directory: packages/script
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/tree-sitter-prebuilds.test.ts ../desktop/src/main/cli-artifacts.test.ts 2>&1 | tee ../../distribution-logs/source-abi.log
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/tree-sitter-prebuilds.test.ts 2>&1 | tee ../../distribution-logs/source-abi.log
+      - name: Prove Desktop ABI consumer
+        if: matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
+        working-directory: packages/desktop
+        run: |
+          set -euo pipefail
+          mkdir -p ../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/main/cli-artifacts.test.ts 2>&1 | tee ../../distribution-logs/desktop-abi.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |
@@ -162,11 +173,18 @@ jobs:
           while IFS= read -r file; do args+=("$file"); done < ../../.distribution-files
           preload=()
           if [ "$PACKAGE" = cli ]; then preload=(--preload ../../script/test-omni-control.ts); fi
+          timeout=30000
+          # Native compiler/model/guest work remains bounded by the 90-minute job.
+          if [ "$PACKAGE" = cli ] && [ "$RUNNER_OS" = Linux ]; then
+            for file in "${args[@]}"; do
+              case "$file" in ./test/distribution-provider.test.ts|./test/distribution-musl.test.ts) timeout=4800000 ;; esac
+            done
+          fi
           nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
           # Append nonce declaration after Bun exits; no pre-test nonce declaration in readable log.
           status=0
           # Preserve Bun's failure when both commands fail; tee alone must also fail the step.
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout 30000 "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || {
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test "${preload[@]}" --timeout "$timeout" "${args[@]}" 2>&1 | tee ../../distribution-logs/run.log || {
             codes=("${PIPESTATUS[@]}")
             status=${codes[0]}
             if [ "$status" -eq 0 ]; then status=${codes[1]}; fi
