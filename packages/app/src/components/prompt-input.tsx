@@ -50,9 +50,8 @@ import { useCommand } from "@/context/command"
 import { usePermission } from "@/context/permission"
 import { useLanguage } from "@/context/language"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { draftVersion, pendingPolicy } from "@/components/draft-subagent-models"
 import { useServerProtocol } from "@/context/server-sdk"
-import { useDraftSessionKey } from "./prompt-input/draft-session"
+import { createDraftSessionState } from "./prompt-input/draft-session"
 import { useProviders } from "@/hooks/use-providers"
 import { usePlatform } from "@/context/platform"
 import { createSessionTabs } from "@/pages/session/helpers"
@@ -1198,7 +1197,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const variants = createMemo(() => ["default", ...props.controls.model.selection.variant.list()])
   // Check provider variants directly: `variants` also includes the UI-only default option.
   const showVariantControl = createMemo(() => props.controls.model.selection.variant.list().length > 0)
-  const pendingKey = useDraftSessionKey()
+  const draftSession = createDraftSessionState({ sessionID: () => props.controls.session.id })
+  const pendingKey = draftSession.pendingKey
   const subagentLife = { active: true }
   onCleanup(() => { subagentLife.active = false })
   const subagentSource = createMemo(() => {
@@ -1206,6 +1206,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return { source, directory: source.directory, sessionID: props.controls.session.id, pendingKey: pendingKey() }
   })
   const subagentProtocol = useServerProtocol()
+  const subagentUnresolved = () => !!props.controls.session.id && (
+    subagentProtocol() === undefined || (subagentProtocol() === "v2" &&
+      (draftSession.loading() || !!draftSession.error() || !draftSession.policy()))
+  )
   const providers = useProviders(() => sdk().directory)
   const subagentRules = createMemo(() => {
     const id = props.controls.session.id
@@ -1214,15 +1218,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return Array.isArray(permission) ? permission : []
   })
   const subagentLabel = createMemo(() => {
-    draftVersion()
-    if (subagentProtocol() === "v2") {
-      const id = props.controls.session.id
-      const policy = id ? sync().session.get(id)?.subagentModels : pendingPolicy(pendingKey())
-      return policy?.mode === "allowlist" ? `${policy.models.length}` : language.t("session.tasks.models.all")
-    }
-    if (!props.controls.session.id) {
-      draftVersion()
-      const policy = pendingPolicy(pendingKey())
+    if (props.controls.session.id && subagentProtocol() === undefined) return language.t("common.loading")
+    if (!props.controls.session.id || subagentProtocol() === "v2") {
+      const policy = draftSession.policy()
+      if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
+      if (draftSession.loading() || !policy) return language.t("common.loading")
       return policy.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${policy.models.length}`
     }
     if (!hasModelScope(subagentRules())) return language.t("session.tasks.models.all")
@@ -1237,9 +1237,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   })
   const openSubagentModels = async () => {
     const selection = subagentSource()
-    if (!selection.directory || !subagentLife.active) return
+    if (!selection.directory || !subagentLife.active || subagentUnresolved()) return
     const { DialogSubagentModels } = await import("@/components/dialog-subagent-models")
-    if (!subagentLife.active || subagentSource() !== selection) return
+    if (!subagentLife.active || subagentSource() !== selection || subagentUnresolved()) return
     dialog.show(() => <DialogSubagentModels sessionID={selection.sessionID} directory={selection.directory} pendingKey={selection.pendingKey} />)
   }
   const accepting = createMemo(() => {
@@ -1809,6 +1809,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         class="min-w-0 max-w-[220px] text-13-regular text-text-base group"
                         data-action="prompt-subagent-models"
                         onClick={openSubagentModels}
+                        disabled={subagentUnresolved()}
+                        aria-busy={!!props.controls.session.id && (subagentProtocol() === undefined || draftSession.loading()) || undefined}
                       >
                         <span class="truncate">
                           {language.t("session.tasks.models.label", { count: subagentLabel() })}

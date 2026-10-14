@@ -5,6 +5,8 @@ import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
 import type { Provider } from "@orchestra/sdk/v2/client"
 import type { ModelPolicySnapshot, ModelRule, SubagentModelPolicy } from "@/components/subagent-model-rules"
+import { subagentModels } from "@/i18n/frontend-recovery/subagent-models"
+import { DESKTOP_NATIVE_LOCALES } from "@/i18n/desktop-native"
 import { solidDom } from "./solid-dom"
 
 const picker: typeof import("@/components/subagent-model-picker") = await import(solidDom("@/components/subagent-model-picker", import.meta.dir))
@@ -236,6 +238,112 @@ test("real picker disables unresolved policy/catalog state and retries catalog f
   expect(retries.count).toBe(1)
   dispose()
   host.remove()
+})
+
+test("canonical read loading and rejection disable Inherit until a successful fresh retry", async () => {
+  const first: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: model.id }] }
+  const blocked = Promise.withResolvers<ModelPolicySnapshot>()
+  const started = Promise.withResolvers<void>()
+  const recovered = Promise.withResolvers<void>()
+  const writes: SubagentModelPolicy[] = []
+  const fixture: { canonical: ModelPolicySnapshot; gate?: Promise<ModelPolicySnapshot> } = { canonical: { policy: first, timestamp: 1 } }
+  const holder: { policy?: ReturnType<typeof policies.createSessionModelPolicy> } = {}
+  const host = document.createElement("div")
+  document.body.append(host)
+  const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
+    return createComponent(() => {
+      const policy = policies.createSessionModelPolicy({
+        sessionID: "ses_canonical_loading", readEvent: () => undefined,
+        management: {
+          getSubagentModels: async () => first,
+          readSubagentModels: async () => {
+            if (fixture.gate) { started.resolve(); return fixture.gate }
+            if (fixture.canonical.policy.mode === "inherit") recovered.resolve()
+            return fixture.canonical
+          },
+          setSubagentModels: async (_id, next) => { writes.push(next); return next },
+        },
+      })
+      holder.policy = policy
+      return createComponent(Root, { open: true, get children() {
+        return createComponent(picker.SubagentModelPicker, {
+          sessionID: "ses_canonical_loading", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+          get supported() { return policy.state.refreshing || policy.state.error ? undefined : true },
+          get rulesReady() { return !!policy.state.snapshot && !policy.state.refreshing && !policy.state.error },
+          get loadFailed() { return !!policy.state.error },
+          readRules: () => [], writeRules: async () => [], policy: { read: policy.read, write: policy.write },
+          onRetry: () => { void policy.load().catch(() => {}) },
+        })
+      } })
+    }, {})
+  } }), host)
+  if (!holder.policy) throw new Error("Missing canonical policy controller")
+  await holder.policy.load()
+  await settle()
+  expect(buttonFor(host, "Inherit").disabled).toBe(false)
+  fixture.gate = blocked.promise
+  const loading = holder.policy.load().catch((error: unknown) => error)
+  await started.promise
+  await settle()
+  expect(buttonFor(host, "Inherit").disabled).toBe(true)
+  buttonFor(host, "Inherit").dispatchEvent(new MouseEvent("click", { bubbles: true }))
+  expect(writes).toEqual([])
+  const failure = new Error("canonical GET rejected")
+  blocked.reject(failure)
+  expect(await loading).toBe(failure)
+  await settle()
+  expect(holder.policy.state.error).toBe(failure)
+  expect(host.querySelector('[role="alert"]')).not.toBeNull()
+  expect(buttonFor(host, "Inherit").disabled).toBe(true)
+  buttonFor(host, "Inherit").dispatchEvent(new MouseEvent("click", { bubbles: true }))
+  expect(writes).toEqual([])
+  fixture.gate = undefined
+  fixture.canonical = { policy: { mode: "inherit" }, timestamp: 2 }
+  buttonFor(host, "Retry").click()
+  await recovered.promise
+  await settle()
+  expect(holder.policy.read().policy).toEqual({ mode: "inherit" })
+  expect(holder.policy.state.error).toBeUndefined()
+  expect(host.querySelector('[data-status="inherited"]')).not.toBeNull()
+  expect(switchFor(host, model.name).disabled).toBe(false)
+  expect(writes).toEqual([])
+  dispose()
+})
+
+test("confirmation failure proof covers all 61 configured non-English locale overlays", () => {
+  expect(DESKTOP_NATIVE_LOCALES).toHaveLength(62)
+  expect(Object.keys(subagentModels).sort()).toEqual(DESKTOP_NATIVE_LOCALES.filter((locale) => locale !== "en").sort())
+  Object.values(subagentModels).forEach((copy) => {
+    expect(Object.keys(copy).sort()).toEqual([
+      "dialog.subagentModels.inherited", "dialog.subagentModels.noneAllowed",
+      "dialog.subagentModels.saveFailed", "dialog.subagentModels.unsupported",
+    ])
+    expect(copy["dialog.subagentModels.saveFailed"].trim().length).toBeGreaterThan(0)
+  })
+})
+
+test.each(Object.entries(subagentModels))("picker confirmation failure uses localized existing copy (%s)", async (locale, copy) => {
+  const tag = language.normalizeLocale(locale)
+  expect(locale).toBe(tag)
+  await language.loadLocaleDict(tag)
+  const host = document.createElement("div")
+  document.body.append(host)
+  const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: tag, get children() {
+    language.useLanguage().setLocale(tag)
+    return createComponent(Root, { open: true, get children() {
+      return createComponent(picker.SubagentModelPicker, {
+        sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        policy: { read: () => ({ policy: { mode: "inherit" } }), write: async () => { throw new Error("confirmation GET failed after ACK") } },
+      })
+    } })
+  } }), host)
+  await settle()
+  switchFor(host, model.name).click()
+  await settle()
+  expect(host.querySelector('[role="alert"]')?.textContent).toBe(copy["dialog.subagentModels.saveFailed"])
+  expect(copy["dialog.subagentModels.saveFailed"]).not.toBe("Model permissions could not be confirmed. Try again.")
+  dispose()
 })
 
 test("real V1 session picker leaves last-matching ask unchecked and other allowed models checked", async () => {

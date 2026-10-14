@@ -159,7 +159,7 @@ export function SubagentModelPicker(props: {
       </Show>
       <Show when={props.protocol === "v2" ? policyEditor.state.failed : editor.state.failed}>
         <p class="text-12-regular text-text-weak px-3" role="alert">
-          {language.t("session.subagentModels.confirmFailed")}
+          {language.t("dialog.subagentModels.saveFailed")}
         </p>
         <Show when={props.protocol === "v2"}>
           <button
