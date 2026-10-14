@@ -1,4 +1,4 @@
-// Shared harness for the WP10 validation campaign (packages/omni/docs/orchestra-integration.md §4 WP10).
+// Shared harness for the WP10 validation campaign (native/omni/docs/orchestra-integration.md §4 WP10).
 //
 // Every scenario runs the real product (the compiled CLI by default) against an isolated HOME / XDG tree and a
 // throwaway git project. Trees use the shared nonce fixture (packages/core/test/fixture/process-tree.ts), while
@@ -11,7 +11,7 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { tree } from "../../core/test/fixture/process-tree.ts"
+import { tree } from "../../../packages/core/test/fixture/process-tree.ts"
 import { fakeLLM, provider } from "./fake-llm.ts"
 import { isolated } from "./isolated-user.ts"
 import { birth, decodeUnixTable, hasNonce, matches, type Identity, type Row } from "./process-rows.ts"
@@ -19,7 +19,7 @@ import { client } from "./server-client.ts"
 import { sleep, until } from "./wait.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
-export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
+export { alive, gone, reap, sweep, tree } from "../../../packages/core/test/fixture/process-tree.ts"
 export type { ToolCall } from "./fake-llm.ts"
 export type { Identity, Row } from "./process-rows.ts"
 

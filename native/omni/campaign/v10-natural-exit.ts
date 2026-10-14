@@ -43,7 +43,7 @@ import { AppNodeBuilderV1 } from ${source("packages/orchestra/src/effect/app-nod
 import { Omni } from ${source("packages/core/src/omni.ts")}
 import { LSP } from ${source("packages/orchestra/src/lsp/lsp.ts")}
 import { MCP } from ${source("packages/orchestra/src/mcp/index.ts")}
-import { naturalHost } from ${source("packages/omni/campaign/natural-host.ts")}
+import { naturalHost } from ${source("native/omni/campaign/natural-host.ts")}
 
 // Retain completed native objects/output through host lifetime. Neither GC nor unref is part of disposal.
 const retained = []
@@ -83,7 +83,7 @@ await naturalHost({
   },
 })
 `)
-  const { seatSkillsFiles } = await import("../../orchestra/script/seat-skills.ts")
+  const { seatSkillsFiles } = await import("../../../packages/orchestra/script/seat-skills.ts")
   const skills = await seatSkillsFiles()
   const inputs: Record<string, string> = {}
   Object.entries(skills).forEach(([file, text]) => { inputs[file] = createHash("sha256").update(text).digest("hex") })
@@ -112,7 +112,7 @@ await naturalHost({
     if (/["'][\w./-]+\.gen\.ts["']/.test(text)) throw new Error("Unresolved generated module in natural bundle")
     return { target, file: bundle.path, sha256: createHash("sha256").update(text).digest("hex") }
   }))
-  const boundary = ["packages/orchestra/script/build-node.ts", "packages/orchestra/script/seat-skills.ts", "packages/orchestra/src/node.ts", "packages/omni/campaign/natural-host.ts"]
+  const boundary = ["packages/orchestra/script/build-node.ts", "packages/orchestra/script/seat-skills.ts", "packages/orchestra/src/node.ts", "native/omni/campaign/natural-host.ts"]
   boundary.forEach((file) => { inputs[file] = createHash("sha256").update(readFileSync(path.join(ROOT, file))).digest("hex") })
   const publicEntry = readFileSync(path.join(ORCHESTRA, "src/node.ts"), "utf8")
   if (/export.*AppRuntime/.test(publicEntry)) throw new Error("Public Node exports changed: reassess fixture necessity")
