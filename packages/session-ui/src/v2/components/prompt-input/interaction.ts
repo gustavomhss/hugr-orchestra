@@ -397,7 +397,9 @@ export function createPromptInputV2Controller(input: {
       event.preventDefault()
       // Insert the clipboard's literal text; execCommand may fold CR or create line-box DOM.
       const target = event.currentTarget
-      if (target instanceof HTMLElement) insertPromptEditorText(target, text, "insertFromPaste")
+      if (target instanceof HTMLElement && insertPromptEditorText(target, text, "insertFromPaste")) {
+        draft.setCursor(promptEditorCursor(target))
+      }
     },
     onDragEnter(event: DragEvent) {
       event.preventDefault()

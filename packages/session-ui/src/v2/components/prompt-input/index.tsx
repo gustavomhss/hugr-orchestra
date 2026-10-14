@@ -172,12 +172,8 @@ export function PromptInputV2(props: PromptInputV2Props) {
               const controller = props.controller
               const prompt = parsePromptInputV2Editor(input)
               const images = controller.parts().filter((part) => part.type === "image")
-              // Native insertHTML emits input before its final selection is installed.
-              queueMicrotask(() => {
-                if (editor !== input) return
-                localInput = true
-                controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], promptInputV2Cursor(input))
-              })
+              localInput = true
+              controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], promptInputV2Cursor(input))
             }}
             onKeyDown={(event) => {
               const composing = composition.active || event.isComposing || event.keyCode === 229
@@ -185,7 +181,9 @@ export function PromptInputV2(props: PromptInputV2Props) {
               if (composing) return
               if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
-                insertPromptEditorText(event.currentTarget, "\n", "insertLineBreak")
+                if (insertPromptEditorText(event.currentTarget, "\n", "insertLineBreak")) {
+                  props.controller.onCursor(promptEditorCursor(event.currentTarget))
+                }
                 return
               }
               if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
