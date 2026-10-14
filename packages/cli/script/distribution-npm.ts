@@ -104,7 +104,12 @@ export async function prepareNpmDistribution(input: { payloads: string[]; out: s
     expected.set("cli", null)
     expected.set("cli/bin", null)
     // This generated wrapper uses producer-host modes; NTFS has no Unix executable bit.
-    expected.set("cli/bin/orchestra.cjs", { bytes: launcher.get("orchestra.cjs")!.bytes, executable: process.platform !== "win32" })
+    // npm bin linking normalizes a CRLF shebang. Emit that canonical first line
+    // before packing so installation preserves the generated wrapper bytes.
+    expected.set("cli/bin/orchestra.cjs", {
+      bytes: Buffer.from(launcher.get("orchestra.cjs")!.bytes.toString("utf8").replace(/^#!([^\r\n]*)\r\n/, "#!$1\n")),
+      executable: process.platform !== "win32",
+    })
     expected.set("cli/package.json", { bytes: Buffer.from(JSON.stringify({
       name: "@orchestra/cli", version, type: "module", license: "MIT", repository: repository(),
       bin: { orchestra: "./bin/orchestra.cjs" }, files: ["bin/orchestra.cjs"], engines: { node: ">=22" },

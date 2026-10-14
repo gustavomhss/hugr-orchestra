@@ -36,32 +36,33 @@ jobs:
       max-parallel: 3
       matrix:
         include:
-          - package: core
-            host: ubuntu-latest
-            cpu: X64
-            platform: linux
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
-          - package: core
-            host: windows-latest
-            cpu: X64
-            platform: win32
-            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+          # New closure lanes first for earlier feedback; every regression row stays present.
           - package: cli
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/distribution-aur.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: windows-latest
             cpu: X64
             platform: win32
-            # Payload/launcher/process wiring only; Windows native runtime remains unqualified.
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            # Includes actual Windows PE/npm/service/parser/embedded-skill lifecycle.
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-windows.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - package: cli
             host: ubuntu-24.04-arm
             cpu: ARM64
             platform: linux
-            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-native.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-aur.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+          - package: core
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
+          - package: core
+            host: windows-latest
+            cpu: X64
+            platform: win32
+            files: [./test/packaged-skills.test.ts, ./test/packaged-skills-corruption.test.ts, ./test/setup-bun-cache.test.ts, ./test/test-ci-request.test.ts, ./test/distribution-bundle-workflow.test.ts, ./test/distribution-bundle-execution.test.ts, ./test/effect/cross-spawn-spawner.test.ts]
           - package: cli
             host: macos-14
             cpu: ARM64
