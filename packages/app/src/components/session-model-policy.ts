@@ -8,6 +8,7 @@ export function createSessionModelPolicy(input: {
   sessionID: string
   management: Pick<SessionManagement, "getSubagentModels" | "readSubagentModels" | "setSubagentModels">
   readEvent: () => ModelPolicySnapshot | undefined
+  owns?: () => boolean
 }) {
   const [state, setState] = createStore({
     snapshot: undefined as ModelPolicySnapshot | undefined,
@@ -19,18 +20,20 @@ export function createSessionModelPolicy(input: {
   onCleanup(() => {
     life.active = false
   })
+  const owns = () => life.active && (input.owns?.() ?? true)
   const observation = () => {
     const event = input.readEvent()
     return JSON.stringify(event && [event.timestamp, event.revision, event.policy])
   }
   const refresh = () => {
+    if (!owns()) return Promise.reject(new DOMException("", "AbortError"))
     if (life.pending) return life.pending
     setState({ refreshing: true, error: undefined })
     const pending = (async () => {
-      while (life.active) {
+      while (owns()) {
         const before = observation()
         const current = await input.management.readSubagentModels(input.sessionID)
-        if (!life.active) throw new DOMException("", "AbortError")
+        if (!owns()) throw new DOMException("", "AbortError")
         // If an event arrived during the read, get again after that observation; neither source carries an ACK sequence.
         if (before !== observation()) continue
         const snapshot = { policy: current.policy, timestamp: current.timestamp, readVersion: ++life.read }
@@ -40,12 +43,12 @@ export function createSessionModelPolicy(input: {
       throw new DOMException("", "AbortError")
     })()
       .catch((error: unknown) => {
-        if (life.active) setState("error", error)
+        if (owns()) setState("error", error)
         throw error
       })
       .finally(() => {
         life.pending = undefined
-        if (life.active) setState("refreshing", false)
+        if (owns()) setState("refreshing", false)
       })
     life.pending = pending
     return pending
@@ -67,13 +70,15 @@ export function createSessionModelPolicy(input: {
       return state.snapshot
     },
     async load() {
+      if (!owns()) throw new DOMException("", "AbortError")
       await input.management.getSubagentModels(input.sessionID)
       return refresh()
     },
     async write(policy: SubagentModelPolicy) {
+      if (!owns()) throw new DOMException("", "AbortError")
       await input.management.setSubagentModels(input.sessionID, policy)
       // A previous read may predate the write. Finish it, then read after the ACK.
-      if (life.pending) await life.pending
+      if (life.pending) await life.pending.catch(() => {})
       return refresh()
     },
   }
