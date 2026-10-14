@@ -5,6 +5,7 @@ import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, createSdkForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { clearPending, pendingRules, togglePending } from "../draft-subagent-models"
+import type { FollowupDraft } from "./submit"
 import {
   clientFor,
   commands,
@@ -20,7 +21,88 @@ import {
   statusWrites,
   storedSessions,
   submitInput,
+  sentCommands, sentShell, toasts,
 } from "./submit-harness"
+
+const deferred = () => Promise.withResolvers<void>()
+
+test("non-string nested policy errors use the localized fallback and retain input", async () => {
+  state.params.id = "session-1"
+  state.policyWait = async () => { throw { data: { message: 42 } } }
+  const real = createPromptState({ prompt: "keep draft" })
+  expect(await createPromptSubmit({ ...submitInput(), prompt: real }).handleSubmit(new Event("submit"))).toBe(false)
+  expect(real.current()[0]).toMatchObject({ content: "keep draft" })
+  expect(toasts.at(-1)?.description).toBe("common.requestFailed")
+  expect(promptInputs).toEqual([])
+})
+
+// Complete frozen e6c39ff72d cases, bound to the shared submission harness.
+test("distinct existing Session steer and queue submissions both reach pending policy barrier", async () => {
+  state.params.id = "session-1"
+  const entered = deferred()
+  const gate = deferred()
+  const waits: string[] = []
+  state.policyWait = async () => { waits.push("policy"); entered.resolve(); await gate.promise }
+  const real = createPromptState({ prompt: "first steer" })
+  let delivery: "steer" | "queue" = "steer"
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, delivery: () => delivery, working: () => true })
+  const first = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  real.set([{ type: "text", content: "second queue", start: 0, end: 12 }])
+  delivery = "queue"
+  const second = submit.handleSubmit(new Event("submit"))
+  await Bun.sleep(0)
+  expect(waits).toHaveLength(2)
+  expect(promptInputs).toEqual([])
+  gate.resolve()
+  await Promise.all([first, second])
+  expect(promptInputs).toHaveLength(2)
+  expect(promptInputs).toEqual(expect.arrayContaining([
+    expect.objectContaining({ text: "first steer", delivery: "steer" }),
+    expect.objectContaining({ text: "second queue", delivery: "queue" }),
+  ]))
+})
+
+test("empty existing Session submit interrupts while another submission awaits policy", async () => {
+  state.params.id = "session-1"
+  const entered = deferred()
+  const gate = deferred()
+  state.policyWait = async () => { entered.resolve(); await gate.promise }
+  const real = createPromptState({ prompt: "pending send" })
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, working: () => true })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  real.reset()
+  await submit.handleSubmit(new Event("submit"))
+  expect(interrupts).toEqual(["session-1"])
+  expect(promptInputs).toEqual([])
+  gate.resolve()
+  await sending
+  expect(promptInputs).toEqual([])
+})
+
+test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences failed writes without clearing", async (pathway) => {
+  state.params.id = "session-1"
+  commands.push({ name: "review" })
+  const real = createPromptState({ prompt: pathway === "command" ? "/review changes" : "keep input" })
+  real.context.add({ type: "file", path: "/repo/main/file", comment: "keep comment" })
+  const contents = real.current()
+  const context = real.context.items()
+  const failure = new Error("latest write failed")
+  state.policyWait = async () => { throw failure }
+  const queued: FollowupDraft[] = []
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: real, mode: () => pathway === "shell" ? "shell" : "normal",
+    shouldQueue: () => pathway === "handoff", onQueue: (draft) => { queued.push(draft) },
+  })
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(real.current()).toBe(contents)
+  expect(real.context.items()).toBe(context)
+  expect(promptInputs).toEqual([])
+  expect(sentCommands).toEqual([])
+  expect(sentShell).toEqual([])
+  expect(queued).toEqual([])
+})
 
 describe("prompt dispatch and cancellation", () => {
   test.each(["prompt_async", "shell", "command"] as const)(
@@ -95,7 +177,7 @@ describe("prompt dispatch and cancellation", () => {
       const destination = createPromptState()
       const submit = createPromptSubmit({
         ...submitInput(),
-        prompt: { ...source, capture: (scope) => (scope ? destination : source) },
+        prompt: { ...source, capture: (scope) => (scope || state.params.id ? destination : source) },
         info: () => undefined,
         mode: () => (operation === "shell" ? "shell" : "normal"),
         newSessionWorktree: () => "/repo/worktree-a",
@@ -185,7 +267,7 @@ describe("prompt dispatch and cancellation", () => {
     const untouched = destination.current().slice()
     const submit = createPromptSubmit({
       ...submitInput(),
-      prompt: { ...source, capture: (scope) => (scope ? destination : source) }, info: () => undefined,
+      prompt: { ...source, capture: (scope) => (scope || state.params.id ? destination : source) }, info: () => undefined,
       pendingKey: () => key, newSessionWorktree: () => "/repo/worktree-a",
     })
     const event = { preventDefault: () => undefined } as Event
@@ -205,7 +287,7 @@ describe("prompt dispatch and cancellation", () => {
     expect(source.current()[0]).toMatchObject({ content: "held A input" })
     expect(destination.current()).toEqual(untouched)
     expect(pendingRules(key)).toEqual(rules)
-    expect(storedSessions["/repo/worktree-a"]?.map((session) => session.id)).toEqual([info.id])
+    expect(storedSessions["/repo/worktree-a"]?.map((session) => session.id)).toEqual([])
     state.serverOverride = original
     state.sdkOverride = directorySDK
     await submit.handleSubmit(event)
@@ -216,6 +298,7 @@ describe("prompt dispatch and cancellation", () => {
     expect(requests.filter((request) => new URL(request.url).pathname === "/session")).toHaveLength(1)
     expect(await requests[1].json()).toMatchObject({ permission: rules })
     expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: info.id }])
+    expect(storedSessions["/repo/worktree-a"]?.map((session) => session.id)).toEqual([info.id])
     expect(pendingRules(key)).toEqual([])
     clearPending(key)
   })
