@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { chmod, lstat, mkdir, readdir, readlink, rm } from "node:fs/promises"
 import path from "node:path"
-import { command, expectClean, expectLauncher, fixture, install, installedTree, isolated, modeZeroArchive, repack, rollback, snapshotTree, target } from "../distribution/test/fixture"
+import { command, cpu, expectClean, expectLauncher, fixture, install, installedTree, isolated, modeZeroArchive, os, repack, rollback, snapshotTree, target } from "../distribution/test/fixture"
 
 if (!process.env.RUNNER_OS) throw new Error("Distribution installer fixture tests require an isolated CI runner")
 const posix = (name: string, run: () => Promise<void>, timeout = 120_000) => test.skipIf(process.platform === "win32")(
@@ -10,7 +10,7 @@ const posix = (name: string, run: () => Promise<void>, timeout = 120_000) => tes
 posix("real mode000 archive parents restore top-down; malformed payload cleans stage/lock and permits next install", () => isolated(async (root, prefix) => {
   expect(process.getuid!()).not.toBe(0) // Root would hide the traversal/removal defect.
   const directories = ["bin", "bin/tree-sitter", "bin/tree-sitter/tree-sitter", "bin/tree-sitter/tree-sitter/prebuilds",
-    `bin/tree-sitter/tree-sitter/prebuilds/${target}`]
+    `bin/tree-sitter/tree-sitter/prebuilds/${os}-${cpu}`]
   const v1 = await modeZeroArchive(await fixture(root, "1.0.0"), directories)
   const expected1 = await installedTree(v1)
   // Calibrate against actual host tar: every selected parent really becomes 000.
