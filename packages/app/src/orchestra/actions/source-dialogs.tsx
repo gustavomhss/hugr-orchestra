@@ -1,12 +1,13 @@
 import { For, Show } from "solid-js"
 import type { Actions } from "@orchestra/schema/actions"
 import type { Dialog, ViewProps } from "./contract"
-import { isJson, isJsonObject, isPrimitive, isRecord, type JsonValue } from "./input-definitions"
+import { isRecord, parseInputs } from "./input-definitions"
 import { canRequest } from "./request-policy"
 import { canEditSource, sourceProposalPath } from "./requests"
 import { sourceDraftDirty } from "./source-draft-ui"
 
 export { githubDefinitions, headerDefinitions } from "./input-definitions"
+export { parseInputs }
 
 export function isResourceDialog(value: Dialog | undefined) {
   return value !== undefined && ["create-variable", "edit-variable", "delete-variable", "create-environment", "edit-environment", "delete-environment", "create-runner", "edit-runner", "delete-runner", "create-schedule", "edit-schedule", "delete-schedule", "delete-artifact", "delete-cache", "clear-caches"].includes(value.kind)
@@ -14,55 +15,6 @@ export function isResourceDialog(value: Dialog | undefined) {
 
 export function isSourceDialog(value: Dialog) {
   return value.kind === "create-workflow" || value.kind === "approval" || value.kind === "review-source" || value.kind === "project-settings"
-}
-
-export function parseInputs(raw: string, definitions: readonly Actions.InputDefinition[] | undefined, provider: Actions.ProviderKind, data: FormData) {
-  if (definitions) {
-    let invalid: "required" | "invalid" | undefined
-    const values = definitions.flatMap<readonly [string, JsonValue]>((item): readonly [string, JsonValue][] => {
-      const rawValue = data.get(`input:${item.name}`)
-      if (item.type === "boolean") return [[item.name, data.has(`input:${item.name}`)]]
-      if (rawValue === null || String(rawValue) === "") {
-        if (item.required) invalid = "required"
-        if (item.type === "string" || item.type === "file" || item.type === "environment") return [[item.name, ""]]
-        return []
-      }
-      const text = String(rawValue)
-      if (item.type === "number") {
-        const number = Number(text)
-        if (!Number.isFinite(number)) { invalid = "invalid"; return [] }
-        return [[item.name, number]]
-      }
-      if (item.type === "array") {
-        try {
-          const value: unknown = JSON.parse(text)
-          if (Array.isArray(value) && isJson(value)) return [[item.name, value]]
-        } catch {
-          invalid = "invalid"
-          return []
-        }
-        invalid = "invalid"
-        return []
-      }
-      if ((item.type === "choice" || item.type === "environment") && item.options) {
-        const index = Number(text)
-        if (Number.isInteger(index) && index >= 0 && index < item.options.length) return [[item.name, item.options[index]]]
-        invalid = "invalid"
-        return []
-      }
-      return [[item.name, text]]
-    })
-    return invalid ? { error: invalid } : { value: Object.fromEntries(values) }
-  }
-  if (!raw.trim()) return { value: {} }
-  try {
-    const value: unknown = JSON.parse(raw)
-    if (!isJsonObject(value)) return { error: true }
-    if (provider === "github" && Object.values(value).some((item) => !isPrimitive(item))) return { error: true }
-    return { value }
-  } catch {
-    return { error: true }
-  }
 }
 
 export function Input(props: { definition: Actions.InputDefinition; t: ViewProps["t"] }) {
