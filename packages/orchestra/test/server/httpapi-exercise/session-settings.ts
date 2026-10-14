@@ -331,9 +331,9 @@ function seed(ctx: ScenarioContext) {
     Effect.gen(function* () {
       check(ctx.directory !== undefined, "Session settings fixture needs an isolated Git project")
       const location = { directory: AbsolutePath.make(ctx.directory) }
-      const parent = yield* sessions.create({ id: Session.ID.make("ses_settings_1"), location })
+      const parent = yield* sessions.create({ id: Session.ID.create(), location })
       yield* models.set(parent.id, parentPolicy)
-      const child = yield* sessions.create({ id: Session.ID.make("ses_settings_2"), location, parentID: parent.id })
+      const child = yield* sessions.create({ id: Session.ID.create(), location, parentID: parent.id })
       check(child.parentID === parent.id, "Core creation should persist the parent chain")
       check(
         stable(yield* models.forSession(child.id)) === stable([parentPolicy]),
