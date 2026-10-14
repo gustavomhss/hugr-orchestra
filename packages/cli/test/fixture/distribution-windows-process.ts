@@ -10,6 +10,25 @@ const Identity = Schema.Struct({
 })
 export type WindowsIdentity = typeof Identity.Type
 
+// nodeExecutable resolves a candidate; only a fresh real Node process can prove
+// its CPU. An x64 Node under ARM64 emulation must not qualify the native lane.
+export async function nativeNodeCPU() {
+  const output = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
+    arch: Schema.String, executable: Schema.String, version: Schema.String,
+  }))))(await WindowsProcessQuery.invoke(`
+if (process.versions.bun || process.release.name !== 'node' || process.platform !== 'win32')
+  throw Error('WINDOWS_NATIVE_NODE_RUNTIME_INVALID');
+console.log(JSON.stringify({arch:process.arch,executable:process.execPath,version:process.versions.node}));
+`, "", { nonce: "native-node-cpu" }, 15_000))
+  if (!["x64", "arm64"].includes(process.arch) || output.arch !== process.arch)
+    throw new Error(`WINDOWS_NATIVE_NODE_CPU_MISMATCH: expected=${process.arch} observed=${output.arch}`)
+  if ((await realpath(output.executable)).toLowerCase() !== (await realpath(WindowsProcessQuery.nodeExecutable())).toLowerCase())
+    throw new Error("WINDOWS_NATIVE_NODE_EXECUTABLE_MISMATCH")
+  await assertWindowsPE(output.executable, false)
+  console.error(`NATIVE_WINDOWS_NODE_CPU ${JSON.stringify(output)}`)
+  return output.arch
+}
+
 // Existing native-Node broker owns query admission, deadline, OS and pipe close.
 // Existing CIM decoder decides inventory completeness and exact FileTime strings.
 // Add ExecutablePath to its closed projection; never duplicate identity decoding.
@@ -61,12 +80,16 @@ export async function windowsIdentity(pid: number): Promise<WindowsIdentity | un
 }
 
 export async function assertWindowsPE(file: string, dll: boolean) {
+  if (process.platform !== "win32" || !["x64", "arm64"].includes(process.arch))
+    throw new Error("WINDOWS_PE_NATIVE_HOST_REQUIRED")
+  const machine = process.arch === "arm64" ? 0xaa64 : 0x8664
   const bytes = Buffer.from(await Bun.file(file).arrayBuffer())
   if (bytes.length < 64 || bytes.readUInt16LE(0) !== 0x5a4d) throw new Error(`WINDOWS_PE_MISSING: ${file}`)
   const offset = bytes.readUInt32LE(60)
   if (offset < 64 || offset > 1_048_576 || offset + 26 > bytes.length ||
-      bytes.readUInt32LE(offset) !== 0x4550 || bytes.readUInt16LE(offset + 4) !== 0x8664 ||
+      bytes.readUInt32LE(offset) !== 0x4550 || bytes.readUInt16LE(offset + 4) !== machine ||
+      bytes.readUInt16LE(offset + 20) < 112 || offset + 24 + bytes.readUInt16LE(offset + 20) > bytes.length ||
       bytes.readUInt16LE(offset + 24) !== 0x20b || !(bytes.readUInt16LE(offset + 22) & 2) ||
       Boolean(bytes.readUInt16LE(offset + 22) & 0x2000) !== dll)
-    throw new Error(`WINDOWS_PE_X64_FLAGS_INVALID: ${file}`)
+    throw new Error(`WINDOWS_PE_${process.arch.toUpperCase()}_FLAGS_INVALID: ${file}`)
 }

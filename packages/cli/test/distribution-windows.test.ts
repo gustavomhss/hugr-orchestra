@@ -6,13 +6,13 @@ import { assertVersion, buildVersions, captureOracle, cli, snapshot, target } fr
 import type { Built } from "./fixture/distribution-native"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { emergencyStop, stopServices } from "./fixture/distribution-native-proof"
-import { assertWindowsPE, windowsIdentity } from "./fixture/distribution-windows-process"
+import { assertWindowsPE, nativeNodeCPU, windowsIdentity } from "./fixture/distribution-windows-process"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { namedTargets } from "../script/targets"
 import { WindowsProcessQuery } from "../../core/test/fixture/windows-process-query"
 import { Schema } from "effect"
 
-// Native windows-latest x64 only, matching windows-x64-baseline builder row.
+// Native hosted Windows x64-baseline and ARM64, matching their builder rows.
 // Requires Bun 1.3.14, native Node >=22.13 (stripTypeScriptTypes), PowerShell 7,
 // tar.exe, frozen workspace dependencies incl. native tree-sitter, and real
 // release omni DLL/supervisor from omni-binaries action. No unavailable skips.
@@ -22,12 +22,17 @@ const state: { directory?: string; built?: Built } = {}
 const interrupt = () => { void stopServices().then(() => process.exit(1), () => process.exit(1)) }
 
 beforeAll(async () => {
-  if (process.platform !== "win32" || process.arch !== "x64" || process.env.RUNNER_OS !== "Windows" ||
-      process.env.RUNNER_ENVIRONMENT !== "github-hosted")
-    throw new Error("NATIVE_WINDOWS_HOST_REQUIRED: hosted windows-latest x64")
+  if (process.platform !== "win32" || !["x64", "arm64"].includes(process.arch) || process.env.RUNNER_OS !== "Windows" ||
+       process.env.RUNNER_ENVIRONMENT !== "github-hosted")
+    throw new Error("NATIVE_WINDOWS_HOST_REQUIRED: hosted Windows x64 or ARM64")
+  expect(process.env.RUNNER_ARCH).toBe(process.arch === "arm64" ? "ARM64" : "X64")
   if (process.versions.bun !== "1.3.14") throw new Error("BUN_VERSION_MISMATCH: require 1.3.14")
-  expect(target).toBe("windows-x64-baseline")
-  expect(namedTargets.find((item) => item.target === target)).toMatchObject({ os: "win32", arch: "x64", avx2: false })
+  expect(target).toBe(process.arch === "arm64" ? "windows-arm64" : "windows-x64-baseline")
+  expect(namedTargets.find((item) => item.target === target)).toEqual(process.arch === "arm64"
+    ? { target, os: "win32", arch: "arm64" }
+    : { target, os: "win32", arch: "x64", avx2: false })
+  expect(await nativeNodeCPU()).toBe(process.arch)
+  await assertWindowsPE(process.execPath, false)
   // Query must see this live PE before it may prove detached daemon absence.
   expect((await windowsIdentity(process.pid))?.pid).toBe(process.pid)
   state.directory = await mkdtemp(join(await realpath(tmpdir()), "nw-"))
@@ -67,6 +72,42 @@ test("native Windows npm install, update and exact downgrade qualify PE closure,
   for (const payload of state.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
   expect((await captureOracle()).trees).toEqual(state.built.oracle.trees)
 }, 900_000)
+
+test("native Windows PE admission rejects wrong machine, PE32 and executable/DLL flag corruption before restored real images pass", async () => {
+  if (!state.directory || !state.built) throw new Error("NATIVE_WINDOWS_BUILD_FIXTURE_MISSING")
+  for (const image of [
+    { path: "bin/orchestra.exe", dll: false },
+    { path: "bin/hugr-omni-supervisor.exe", dll: false },
+    { path: "bin/hugr_omni.node", dll: true },
+  ]) {
+    // Mutate copies of actual compiled payload images, never fabricated PE bytes.
+    const original = Buffer.from(await Bun.file(join(state.built.payloads[0].payload, image.path)).arrayBuffer())
+    const file = join(state.directory, `pe-control-${image.path.slice(4)}`)
+    const offset = original.readUInt32LE(60)
+    await Bun.write(file, original)
+    await assertWindowsPE(file, image.dll)
+    for (const mutation of [
+      { name: "wrong-machine", offset: offset + 4, value: process.arch === "arm64" ? 0x8664 : 0xaa64 },
+      { name: "pe32", offset: offset + 24, value: 0x10b },
+      { name: "short-optional-header", offset: offset + 20, value: 2 },
+      { name: "not-executable", offset: offset + 22, value: original.readUInt16LE(offset + 22) & ~2 },
+      { name: "wrong-dll-flag", offset: offset + 22, value: original.readUInt16LE(offset + 22) ^ 0x2000 },
+    ]) {
+      const corrupt = Buffer.from(original)
+      corrupt.writeUInt16LE(mutation.value, mutation.offset)
+      try {
+        await Bun.write(file, corrupt)
+        await expect(assertWindowsPE(file, image.dll)).rejects.toThrow(`WINDOWS_PE_${process.arch.toUpperCase()}_FLAGS_INVALID:`)
+      } finally { await Bun.write(file, original) }
+      await assertWindowsPE(file, image.dll)
+      expect(Buffer.from(await Bun.file(file).arrayBuffer())).toEqual(original)
+      console.error(`NATIVE_WINDOWS_PE_CONTROL ${JSON.stringify({ arch: process.arch, image: image.path,
+        mutation: mutation.name, rejected: true, restored: true })}`)
+    }
+    await rm(file)
+  }
+  for (const payload of state.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
+}, 60_000)
 
 test("native Windows broker closes owned pwsh after forced reader death and absolute timeout", async () => {
   const identity = Schema.Struct({ pid: Schema.Int, startTime: Schema.String })
