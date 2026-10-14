@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import { ActionsEnvironmentReviewers } from "../../src/actions/resources/config-environment-reviewers"
 import { ActionsEnvironmentSchema } from "../../src/actions/resources/config-environment-schema"
 import { ActionsError } from "../../src/actions/error"
@@ -97,9 +97,10 @@ it.effect("distinguishes empty exact policy, absent exact policy, and empty poli
     { policies: [{ ...noRules, required_approval_count: 1 }], expected: { reviewersReadOnly: true } },
     { policies: [], expected: { reviewersReadOnly: true } },
   ]
+  const decode = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))
   yield* Effect.forEach(cases, (selected) => Effect.gen(function* () {
     const fixture = F.recorded(binding)
-    expect(yield* ActionsEnvironmentReviewers.read(fixture.services, binding, selected.policies, "production")).toEqual(selected.expected)
+    expect(decode(yield* ActionsEnvironmentReviewers.read(fixture.services, binding, selected.policies, "production"))).toEqual(decode(selected.expected))
     expect(fixture.calls).toEqual([])
   }), { concurrency: 1 })
 }))
