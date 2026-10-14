@@ -1636,6 +1636,8 @@ export default function Page() {
       const state = serverSync()
       const sessionID = params.id
       const credentials = JSON.stringify(server.server.http)
+      const current = () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
+        sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
 
@@ -1652,14 +1654,14 @@ export default function Page() {
         currentSource: {
           serverScopeKey: directorySDK.scope, directory: directorySDK.directory, sessionID,
           protocol: server.protocol, management: server.sessionManagement,
-          current: () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
-            sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials,
+          current,
         },
       }).catch((err) => {
-        setFollowup("failed", input.sessionID, input.id)
+        if (current()) setFollowup("failed", input.sessionID, input.id)
         fail(err)
         return false
       })
+      if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
       if (item.source) queuedPromptSources.release(item.source)
