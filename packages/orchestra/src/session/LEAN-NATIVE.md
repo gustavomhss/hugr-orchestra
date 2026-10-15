@@ -38,6 +38,12 @@ families (Cargo, Go, …), `Other shell commands` (compound or unattributed comm
 `Read`, `Web fetch`, `Glob` and `Grep`. Unknown config, unreadable preferences, wrong
 owners, plugin mutations or budget refusal preserve the approved result.
 
+The profile page's "Summarized when large" badge also applies to command families
+without an item-specific filter, such as Bun and npm. With Lean enabled, their native
+shell output still passes through the 4 KiB summary stage. Jest and Vitest may also
+normalize terminal SGR formatting before that stage. Failure blocks from failed
+commands stay in full; `lean_recall` recovers the complete stored original byte for byte.
+
 ## Persistence and metrics
 
 SessionProcessor persists the selected output once; the next provider request and replay
