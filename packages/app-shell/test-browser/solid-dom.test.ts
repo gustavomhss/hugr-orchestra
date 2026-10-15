@@ -13,7 +13,7 @@ test("workspace packages resolve to their sources and are rewritten; node_module
     `export { useLanguage } from "@/context/language"`,
     `import { createSignal } from "solid-js"`,
   ].join("\n")
-  const rewritten = rewriteImports(code, path.join(packages, "app/src/context/platform.tsx"))
+  const rewritten = rewriteImports(code, path.join(packages, "app-shell/src/context/platform.tsx"))
   expect(rewritten).toContain(`from ${compiled("ui", "src", "context", "dialog.tsx")}`)
   expect(rewritten).toContain(`from ${compiled("schema", "src", "lean-dashboard.ts")}`)
   expect(rewritten).toContain(`from ${compiled("session-ui", "src", "components", "message-part.tsx")}`)

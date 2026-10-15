@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Writes Orchestra's palette stylesheets (src/orchestra/palette/generated) from its own stylesheets and the
-// palette definitions. Run from packages/app after changing Orchestra's CSS colors or a palette:
+// palette definitions. Run from packages/app-shell after changing Orchestra's CSS colors or a palette:
 //   bun run script/orchestra-palettes.ts
 import path from "node:path"
 import { PALETTE_DEFINITIONS } from "../src/orchestra/palette/definitions"

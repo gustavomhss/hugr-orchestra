@@ -1,3 +1,4 @@
+import path from "node:path"
 import config from "../../playwright.config"
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000)
@@ -14,6 +15,7 @@ export default {
   reporter: [["html", { outputFolder: "../playwright-report/performance", open: "never" }], ["line"]],
   webServer: {
     ...config.webServer,
+    cwd: path.resolve(import.meta.dirname, "../../../../apps/web"),
     // Imported base config captures its port before this module sets the mock server port.
     env: {
       VITE_ORCHESTRA_SERVER_HOST: process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1",
