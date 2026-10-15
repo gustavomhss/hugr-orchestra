@@ -1,13 +1,14 @@
 // The omni positive control (script/test-omni-control.ts) as Bun runs it: each case is a real `bun test` over a
 // throwaway directory whose bunfig preloads only the control. Omni.count() stands in for a spawn, so no case needs the
-// addon. Also pins where the control's scope may be set: only test-ci.yml's Run tests step (from the request) and
-// turbo.json's cache key mention the variable, so every test.yml lane keeps expecting a spawn.
+// addon. Also inventories literal scope-variable mentions and pins the reviewed request/bundle/guest settings.
+// test.yml leaves the scope unset (suite); new mention sites and count drift fail this closed inventory.
 import { expect, test } from "bun:test"
 import { YAML } from "bun"
 import { mkdtemp, rm } from "node:fs/promises"
 import { readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { omniControlScope } from "../../../script/test-ci-request"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const omni = JSON.stringify(path.join(root, "packages/core/src/omni.ts"))
@@ -84,8 +85,8 @@ test("declared: a delegation without any omni spawn fails even when nothing is d
   expect(run.code).not.toBe(0)
 }, 60_000)
 
-test("suite (unset, as in test.yml and whole-package test:ci): a run that made no omni spawn fails", async () => {
-  const run = await control({ "plain.test.ts": plain }, {})
+test.each([undefined, "suite"])("suite (%s): a run that made no omni spawn fails", async (scope) => {
+  const run = await control({ "plain.test.ts": plain }, { ORCHESTRA_OMNI_CONTROL: scope })
   expect(run.output).toContain("omni positive control: FAIL (suite: every run must spawn through omni)")
   expect(run.code).not.toBe(0)
 }, 60_000)
@@ -130,15 +131,33 @@ test("legacy rollback checks nothing and says so", async () => {
 // Raw bytes, not a parser: a mention in a comment is a false alarm cleared by reading it, never a miss. Spelling the
 // name in pieces (string concatenation, a computed key) is not detected; that would be deliberate, not an accident.
 const scopeVariable = /ORCHESTRA_OMNI_CONTROL(?![A-Z0-9_])/g
-const mentions: Record<string, string> = {
-  "script/test-omni-control.ts": "the control reads its scope",
-  ".github/workflows/test-ci.yml": "the Run tests step sets the scope from the request (pinned below)",
-  "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
-  "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
-  "AGENTS.md": "documents the control",
+// Baseline authorization: owner-requested inventory repair at 0a7347a0ce30814c42876e4a045a3b61c8a97d99.
+// Its AGENTS.md defines suite/default versus declared/narrow semantics. These distribution sites predate Actions:
+// 0dc5524285 adds bundle suite, 40a7e00127 pins it, 38a13f2226 adds the single-file declared guest.
+// These are exact existing sites, not permission for new assignments or entries in the spawn exception ledger.
+const mentions: Record<string, { count: number; reason: string }> = {
+  "script/test-omni-control.ts": { count: 3, reason: "the control reads, documents and validates its scope" },
+  ".github/workflows/test-ci.yml": { count: 1, reason: "the Run tests step sets the scope from the request (pinned below)" },
+  "turbo.json": { count: 1, reason: "globalEnv keys cached turbo results by the scope (pinned below)" },
+  "packages/core/test/test-omni-control.test.ts": { count: 12, reason: "this guard and its fixtures" },
+  "AGENTS.md": { count: 1, reason: "documents the control" },
+  ".github/workflows/distribution-bundle.yml": { count: 1, reason: "qualification explicitly keeps suite (pinned below)" },
+  "packages/core/test/distribution-bundle-workflow.test.ts": { count: 1, reason: "BUNDLE_MATRIX_WIRING asserts bundle suite" },
+  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": { count: 1, reason: "declared for one guest test that calls expectSpawn (command pinned below)" },
 }
 
-test("only the ledgered files mention the control's scope variable, and test-ci.yml sets it only from the request", () => {
+function scopeVariableSites(found: Record<string, number>) {
+  Object.keys(found).forEach((file) => {
+    if (!Object.hasOwn(mentions, file)) throw new Error(`scopeVariableSite: unexpected ${file}`)
+  })
+  Object.entries(mentions).forEach(([file, site]) => {
+    if (!Object.hasOwn(found, file)) throw new Error(`scopeVariableSite: missing ${file}`)
+    if (found[file] !== site.count)
+      throw new Error(`scopeVariableCount: ${file}: expected ${site.count}, found ${found[file]}`)
+  })
+}
+
+test("only inventoried files mention the control's scope variable, with exact counts and reviewed settings", () => {
   const listing = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root })
   expect(listing.exitCode).toBe(0)
   const tracked = listing.stdout.toString().split("\0").filter(Boolean)
@@ -150,9 +169,7 @@ test("only the ledgered files mention the control's scope variable, and test-ci.
     const count = text.match(scopeVariable)?.length ?? 0
     return count > 0 ? [[file, count]] : []
   }))
-  expect(Object.keys(found).toSorted()).toEqual(Object.keys(mentions).toSorted())
-  expect(found[".github/workflows/test-ci.yml"]).toBe(1)
-  expect(found["turbo.json"]).toBe(1)
+  scopeVariableSites(found)
   expect(readFileSync(path.join(root, "turbo.json"), "utf8")).toMatch(/"globalEnv":\s*\[[^\]]*"ORCHESTRA_OMNI_CONTROL"[^\]]*\]/)
   const workflow = YAML.parse(readFileSync(path.join(root, ".github/workflows/test-ci.yml"), "utf8")) as {
     env?: Record<string, string>
@@ -167,4 +184,34 @@ test("only the ledgered files mention the control's scope variable, and test-ci.
   expect(nonce).toBeLessThan(run)
   expect(steps[nonce]?.run).toContain('echo "omni control nonce: $nonce"')
   expect(steps[nonce]?.run).toContain('echo "ORCHESTRA_OMNI_CONTROL_NONCE=$nonce" >> "$GITHUB_ENV"')
+  const bundle = YAML.parse(readFileSync(path.join(root, ".github/workflows/distribution-bundle.yml"), "utf8")) as typeof workflow
+  expect(bundle.jobs.qualification?.env?.ORCHESTRA_OMNI_CONTROL).toBe("suite")
+  // Pin the reviewed final exec lines across LF/CRLF checkouts, not general shell behavior. Only this file is selected.
+  const command = [
+    "cd /repo/packages/cli",
+    "exec /usr/bin/env CI=true PATH=/usr/local/sbin:/usr/local/bin:/usr/bin ORCHESTRA_AUR_GUEST=owned \\",
+    '  ORCHESTRA_AUR_BOOTSTRAP_SANDBOX="$bootstrap_sandbox" \\',
+    "  ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict ORCHESTRA_OMNI_CONTROL=declared \\",
+    "  /proof/bun test --preload /repo/script/test-omni-control.ts --timeout 1800000 \\",
+    "  ./test/fixture/distribution-aur-guest.test.ts",
+    "",
+  ]
+  expect(readFileSync(path.join(root, "packages/cli/test/fixture/distribution-aur/bootstrap.sh"), "utf8")
+    .split(/\r?\n/).slice(-command.length)).toEqual(command)
+  expect(omniControlScope({ runner: "bun", args: ["./test/fixture/distribution-aur-guest.test.ts"] })).toBe("declared")
+})
+
+test("scope inventory rejects unknown sites, missing sites, empty extraction and count drift", () => {
+  const baseline = Object.fromEntries(Object.entries(mentions).map(([file, site]) => [file, site.count]))
+  scopeVariableSites(baseline)
+  expect(() => scopeVariableSites({})).toThrow("scopeVariableSite: missing script/test-omni-control.ts")
+  for (const file of [".github/workflows/unknown-scope.yml", "script/unknown-scope.ts", "packages/core/test/unknown-scope.test.ts"])
+    expect(() => scopeVariableSites({ ...baseline, [file]: 1 })).toThrow(`scopeVariableSite: unexpected ${file}`)
+  Object.entries(mentions).forEach(([file, site]) => {
+    const missing = { ...baseline }
+    delete missing[file]
+    expect(() => scopeVariableSites(missing)).toThrow(`scopeVariableSite: missing ${file}`)
+    for (const count of [site.count - 1, site.count + 1])
+      expect(() => scopeVariableSites({ ...baseline, [file]: count })).toThrow(`scopeVariableCount: ${file}:`)
+  })
 })
