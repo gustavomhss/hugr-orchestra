@@ -12,7 +12,7 @@ export default defineConfig({
   reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"]],
   webServer: {
     ...config.webServer,
-    cwd: path.resolve(import.meta.dirname, ".."),
+    cwd: path.resolve(import.meta.dirname, "../../../apps/web"),
     command: `bun run build && bun run serve -- --host 0.0.0.0 --port ${port} --strictPort`,
     reuseExistingServer: false,
   },

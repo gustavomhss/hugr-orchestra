@@ -1,6 +1,6 @@
 # Timeline Layout Continuity
 
-Run from `packages/app`:
+Run from `packages/app-shell`:
 
 ```sh
 bun run test:stability

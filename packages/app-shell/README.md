@@ -1,17 +1,17 @@
 # Orchestra App
 
-`@orchestra/app` is both the shared Solid application library and the web
-bootstrap for Orchestra. Desktop imports the shared application from this
-package; the planned `apps/web` split has not occurred.
+`@orchestra/app` is the shared Solid application library for Orchestra.
+Desktop imports the shared application from this package; the private
+`@orchestra/web` package owns the browser bootstrap and web build.
 
 ## Responsibilities
 
 - Own browser-safe application UI, routing, shared providers, server state,
   settings, commands, localization, and platform-neutral UI behavior.
 - Keep host behavior behind the `Platform` contract and providers. The web
-  entrypoint (`src/entry.tsx`) supplies browser storage, notifications,
-  navigation, and server URL behavior; Desktop supplies native integrations
-  through its renderer and preload API.
+  entrypoint in `apps/web` supplies browser storage, notifications, navigation,
+  and server URL behavior; Desktop supplies native integrations through its
+  renderer and preload API.
 - Keep Electron main-process APIs, Node-only adapters, IPC implementation,
   and packaging in `packages/desktop`. Shared UI must not import those host
   implementation details.
@@ -33,12 +33,12 @@ do not make consumers depend on them.
 
 When adding a shared capability, decide whether it belongs in the root or an
 explicit package subpath and update `exports` accordingly. Keep browser-only
-startup in `src/entry.tsx`; the reusable application surface is composed from
+startup in `apps/web`; the reusable application surface is composed from
 `AppBaseProviders`, `PlatformProvider`, and `AppInterface`.
 
 ## Web development
 
-Run commands from `packages/app`:
+Run web commands from `apps/web`:
 
 ```bash
 bun dev
@@ -47,14 +47,15 @@ bun run serve
 ```
 
 Vite serves the web bootstrap on port `3000` by default. The production build
-uses `dist/`; `serve` previews that build. Configure the backend with
+uses `apps/web/dist/`; `serve` previews that build. Configure the backend with
 `VITE_ORCHESTRA_SERVER_HOST` and `VITE_ORCHESTRA_SERVER_PORT` when needed.
-The resulting `dist/` contains the static web deployment assets.
+The resulting `apps/web/dist/` contains the static web deployment assets.
 
 ## Browser end-to-end tests
 
-The declared Playwright commands run from `packages/app`; its config starts
-the Vite dev server and passes the backend address through to the app:
+Run the declared Playwright commands from `packages/app-shell`; its config
+starts the Vite dev server from `apps/web` and passes the backend address
+through to the app:
 
 ```bash
 bunx playwright install chromium

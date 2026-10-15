@@ -1,6 +1,6 @@
 # Integrated Orchestra verification
 
-Run from `packages/app`, holding the shared machine E2E lock when applicable:
+Run from `packages/app-shell`, holding the shared machine E2E lock when applicable:
 
 ```sh
 PLAYWRIGHT_PORT=5030 bunx playwright test --config e2e/orchestra/integration.config.ts
@@ -38,7 +38,7 @@ Recorded screenshots and benchmark receipts must name their tested source/bundle
 
 `e2e/orchestra-screenshots` captures a screenshot matrix for owner review. It is not a
 gate: its `.visual.ts` file is outside the default and integration runners. Run it from
-`packages/app` with an output directory outside the repository:
+`packages/app-shell` with an output directory outside the repository:
 
 ```sh
 ORCHESTRA_VISUAL_OUT=/tmp/orchestra-visual-pack PLAYWRIGHT_PORT=5121 \

@@ -1,3 +1,4 @@
+import path from "node:path"
 import { defineConfig, devices } from "@playwright/test"
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000)
@@ -22,6 +23,7 @@ export default defineConfig({
   reporter: [["html", { outputFolder: "e2e/playwright-report", open: "never" }], ["line"]],
   webServer: {
     command,
+    cwd: path.resolve(import.meta.dirname, "../../apps/web"),
     url: baseURL,
     reuseExistingServer: reuse,
     timeout: 120_000,

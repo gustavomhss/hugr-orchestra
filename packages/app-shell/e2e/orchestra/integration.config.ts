@@ -1,3 +1,4 @@
+import path from "node:path"
 import { defineConfig } from "@playwright/test"
 import config from "../../playwright.config"
 
@@ -24,6 +25,7 @@ export default defineConfig({
   use: { ...config.use, baseURL },
   webServer: {
     command: `bun run build && bun run serve -- --host 127.0.0.1 --port ${port} --strictPort`,
+    cwd: path.resolve(import.meta.dirname, "../../../../apps/web"),
     url: baseURL,
     reuseExistingServer: false,
     timeout: 600_000,
