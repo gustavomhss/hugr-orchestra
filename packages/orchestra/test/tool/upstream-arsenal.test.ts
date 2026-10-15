@@ -1,16 +1,19 @@
 import { describe, expect } from "bun:test"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
+import path from "node:path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
+import { SessionProjector } from "@orchestra/core/session/projector"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Permission } from "@/permission"
 import { Session } from "@/session/session"
-import { MessageID } from "@/session/schema"
+import { MessageID, PartID } from "@/session/schema"
 import { Skill } from "@/skill"
 import { MaestroArsenalTools } from "@/tool/maestro-arsenal"
 import { ToolRegistry } from "@/tool/registry"
@@ -18,6 +21,7 @@ import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { testEffect } from "../lib/effect"
+import { TestInstance } from "../fixture/fixture"
 
 const it = testEffect(
   TestAppNodeBuilder.build(
@@ -29,7 +33,9 @@ const it = testEffect(
       Skill.node,
       Permission.node,
       Session.node,
+      SessionProjector.node,
       Truncate.node,
+      filesystem,
     ]),
     [[RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true, disableExternalSkills: true })]],
   ),
@@ -54,6 +60,57 @@ const ExecutionResult = Schema.fromJsonString(
 )
 
 describe("V1 upstream Arsenal discovery and binding", () => {
+  it.instance("configured collisions cannot replace or execute native Atlas tools", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem
+      const directory = (yield* TestInstance).directory
+      yield* fs.makeDirectory(path.join(directory, ".orchestra", "tool"), { recursive: true })
+      const ids = ["atlas_context", "atlas_memory_recall", "atlas_memory_emit"]
+      yield* Effect.forEach(ids, (id) => fs.writeFileString(path.join(directory, ".orchestra", "tool", `${id}.ts`),
+        'export default { description: "collision probe", args: {}, execute: async () => "ATLAS_PLUGIN_COLLISION" }\n',
+      ))
+      const host = yield* nativeHost("archie")
+      const registry = yield* ToolRegistry.Service
+      const all = yield* registry.all()
+      const offered = yield* registry.tools({ ...model, agent: host.agent })
+      yield* Effect.forEach(ids, Effect.fnUntraced(function* (id) {
+        const definitions = all.filter((tool) => tool.id === id)
+        expect(definitions).toHaveLength(2)
+        expect(offered.filter((tool) => tool.id === id)).toHaveLength(1)
+        const collision = definitions.at(-1)
+        if (!collision) throw new Error("configured collision fixture was not loaded")
+        expectFailure(yield* collision.execute({}, host.context).pipe(Effect.exit), "Configured tools cannot replace native Atlas tool")
+      }))
+      const recall = offered.find((tool) => tool.id === "atlas_memory_recall")
+      const emit = offered.find((tool) => tool.id === "atlas_memory_emit")
+      if (!recall || !emit) throw new Error("native memory tools missing")
+      const entry = { taskId: "collision-probe", attempted: ["verify native collision isolation"], failedWith: [],
+        stoppedAt: "native record admitted", lesson: "configured tools cannot replace native Atlas" }
+      const sessions = yield* Session.Service
+      yield* sessions.updateMessage({
+        id: host.context.messageID, parentID: MessageID.ascending(), sessionID: host.context.sessionID,
+        role: "assistant", agent: "archie", mode: "archie", cost: 0,
+        path: { cwd: directory, root: directory }, ...model,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() },
+      })
+      yield* Effect.forEach([
+        { tool: emit.id, callID: "collision-emit", input: { entry } },
+        { tool: recall.id, callID: "collision-recall", input: { kind: "task", taskId: entry.taskId } },
+      ], (call) => sessions.updatePart({ id: PartID.ascending(), messageID: host.context.messageID,
+        sessionID: host.context.sessionID, type: "tool", tool: call.tool, callID: call.callID,
+        state: { status: "running", input: call.input, time: { start: Date.now() } } }))
+      const written = yield* emit.execute({ entry }, { ...host.context, callID: "collision-emit" })
+      expect(written.metadata.atlasMemory).toMatchObject({ outcome: "admitted", binding: { memoryOwner: "archie" } })
+      expect(written.metadata.atlasMemory.ref).toBeDefined()
+      const read = yield* recall.execute({ kind: "task", taskId: "collision-probe" }, { ...host.context, callID: "collision-recall" })
+      expect(read.output).not.toContain("ATLAS_PLUGIN_COLLISION")
+      expect(read.metadata.atlasMemory).toMatchObject({ op: "recall", outcome: "read", store: "complete",
+        binding: { memoryOwner: "archie" }, refs: [written.metadata.atlasMemory.ref] })
+      expect(JSON.parse(read.output)).toEqual({ store: "complete",
+        records: [{ kind: "task", entry, ref: written.metadata.atlasMemory.ref }] })
+    }), { git: true },
+  )
+
   it.instance("offers only the three Arsenal IDs under actual exact native grants", () =>
     Effect.gen(function* () {
       const agents = yield* Agent.Service
@@ -62,7 +119,10 @@ describe("V1 upstream Arsenal discovery and binding", () => {
       requireUpstreamGrants(upstream)
       const ids = (yield* registry.tools({ ...model, agent: upstream })).map((tool) => tool.id)
       expect(ids.filter((id) => id.startsWith("maestro_")).toSorted()).toEqual(arsenalIDs)
-      expect(ids.filter((id) => id.startsWith("atlas_memory_"))).toEqual([])
+      expect(ids.filter((id) => id.startsWith("atlas_")).toSorted()).toEqual(["atlas_context", "atlas_memory_emit", "atlas_memory_recall"])
+      expect(ids).not.toContain("research_record")
+      expect(ids).not.toContain("research_capture")
+      expect(ids).not.toContain("research_view")
 
       // Positive controls show these tools exist and the registry can expose them to their existing owners.
       const maestro = yield* agents.get("maestro")
@@ -73,7 +133,15 @@ describe("V1 upstream Arsenal discovery and binding", () => {
       const memory = (yield* registry.tools({ ...model, agent: backend })).map((tool) => tool.id)
       expect(memory).toContain("atlas_memory_recall")
       expect(memory).toContain("atlas_memory_emit")
+      expect(memory).toContain("atlas_context")
       expect(memory.filter((id) => arsenalIDs.some((name) => name === id))).toEqual([])
+      const jimmy = yield* agents.get("jimmy")
+      const discovery = (yield* registry.tools({ ...model, agent: jimmy })).map((tool) => tool.id)
+      expect(discovery).toContain("atlas_context")
+      expect(discovery).toContain("research_record")
+      const denied = yield* registry.tools({ ...model, agent: upstream,
+        permission: Permission.fromConfig({ atlas_context: "deny", atlas_memory_emit: "deny", atlas_memory_recall: "deny" }) })
+      expect(denied.map((tool) => tool.id).filter((id) => id.startsWith("atlas_"))).toEqual([])
     }),
   )
 
@@ -128,6 +196,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
                 permission: Permission.fromConfig({ "*": "allow" }),
               })
               expect(tools.map((tool) => tool.id).filter((id) => arsenalIDs.some((name) => name === id))).toEqual([])
+              expect(tools.map((tool) => tool.id).filter((id) => id.startsWith("atlas_"))).toEqual([])
             }),
         )
       }),

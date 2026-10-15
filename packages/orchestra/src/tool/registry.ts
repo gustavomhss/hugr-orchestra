@@ -18,6 +18,8 @@ import { LeanRecallTool } from "./lean-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
+import { AtlasContextTool, boundOutput } from "./atlas-context"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ResearchRegistry } from "./research-registry"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
@@ -92,6 +94,7 @@ export function webSearchEnabled(flags = { exa: false, parallel: false }) {
 
 type TaskDef = Tool.InferDef<typeof TaskTool>
 type ReadDef = Tool.InferDef<typeof ReadTool>
+const nativeAtlasTools = new Set<string>([AtlasContextTool.id, AtlasMemoryRecallTool.id, AtlasMemoryEmitTool.id])
 
 type PluginDef = Tool.Def & {
   executeWithSafety: (
@@ -467,12 +470,19 @@ const layer = Layer.effect(
                   () => context.abort.aborted,
                 )),
               )
-              .pipe(Effect.orDie),
+              .pipe(
+                Effect.flatMap((result) => definition.id === AtlasContextTool.id
+                  ? truncate.limits().pipe(Effect.map((limits) => boundOutput(result, limits)))
+                  : Effect.succeed(result)),
+                Effect.orDie,
+              ),
         })),
         ...s.custom.map((definition) => ({
           ...definition,
           execute: (args: unknown, context: Tool.Context) =>
-            context.agentID === "jimmy"
+            nativeAtlasTools.has(definition.id)
+              ? Effect.die(new Error(`Configured tools cannot replace native Atlas tool ${definition.id}`))
+              : context.agentID === "jimmy"
               ? Effect.die(new Error("Discovery cannot execute configured plugin tools"))
               : definition.executeWithSafety(args, context, durableSafety, requiredBinding),
         })),
@@ -532,6 +542,7 @@ const layer = Layer.effect(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool, index) => {
+        if (index >= s.builtin.length && nativeAtlasTools.has(tool.id)) return false
         if (tool.id === MaestroRecordResultDecisionTool.id && (input.agent.id !== "maestro" || input.agent.native !== true)) return false
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
@@ -551,7 +562,7 @@ const layer = Layer.effect(
             input.agent.id !== "maestro") ||
           (tool.id === MaestroRecordReviewTool.id && input.agent.id !== "lucy") ||
           (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro") ||
-          // Bound to the backend seat's Memory owner: a configured agent that merely reuses the id gets neither.
+          // A configured agent that merely reuses a supported seat id gets no native Memory tools.
           ((tool.id === AtlasMemoryRecallTool.id || tool.id === AtlasMemoryEmitTool.id) &&
             !AtlasMemory.supports(input.agent))
         ) {
@@ -562,7 +573,9 @@ const layer = Layer.effect(
           "webfetch"].some((id) => !Permission.disabled([id], Permission.merge(input.agent.permission, input.permission ?? [])).has(id))
         if (
           // Builtins are listed first: a later index is a configured plugin tool.
-          ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length) ||
+          (tool.id === AtlasContextTool.id && index < s.builtin.length
+            ? !AtlasMemory.supports(input.agent)
+            : ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length)) ||
           Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
           Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
@@ -765,6 +778,7 @@ export const node = LayerNode.make({
     CrossSpawnSpawner.node,
     Format.node,
     Truncate.node,
+    AtlasKnowledge.node,
     RuntimeFlags.node,
     MCP.node,
     Database.node,

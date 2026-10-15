@@ -34,6 +34,7 @@ import { Permission } from "@/permission"
 import { ResearchExecution } from "@/research/allowance"
 import { Session } from "@/session/session"
 import { SessionStatus } from "@/session/status"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { Todo } from "@/session/todo"
 import { Snapshot } from "@/snapshot"
 import { MessageID, PartID } from "@/session/schema"
@@ -46,7 +47,7 @@ export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   ClaudeHost.node, ToolRegistry.node, Agent.node, Config.node, Session.node, SessionProjector.node, SessionSubagentModels.node,
   ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, Database.node, EventV2Bridge.node,
   Permission.node, FSUtil.node, AppProcess.node, Git.node, ArsenalObservations.node, LocationServiceMap.node,
-  Snapshot.node, Todo.node, SessionStatus.node, filesystem,
+   Snapshot.node, Todo.node, SessionStatus.node, AtlasKnowledge.node, filesystem,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true, experimentalEventSystem: true })]]))
 
 export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" } satisfies BaseHookInput

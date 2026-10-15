@@ -38,6 +38,15 @@ and screens to App. The lead owns shared catalogs. The Python authoring launch p
 - Public document checks return 403 `maestro-execution-required`. Maestro owns executable checks.
 - Native hook installs pin the published snapshot through `RelayHookInstall`; export alone does not install.
 - Missing native profile tools remain unavailable; standalone Python tools are separately owned.
+- Native start `relayKnowledge` and step `knowledge` select JSON arrays of Atlas references, unique
+  per list and at most eight distinct across the workflow. Sprint `knowledge` is global; WP `knowledge`
+  is local. Projection preserves selections; omission retains them, explicit `[]` clears them, and
+  empty compiled fields stay absent for legacy byte stability.
+- Native execution binds only selected anchors from the observed upstream Archie author Session,
+  with verified source/receipt/body identity and a combined 128 KiB body cap. Binding retains optional
+  `RelayArm.WorkflowDefinition.knowledge`; current-step context reveals only global/current packets,
+  labelled untrusted source data. No selection needs no resolver. Anchoring is not approval or dispatch;
+  shell/Python drivers do not implement this native resolution contract.
 
 ## Retained regression contracts
 

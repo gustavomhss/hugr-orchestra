@@ -83,9 +83,28 @@ function catalog(skills: Input["skills"]): AuthoringGraph.SkillResolver | undefi
         )
 }
 
-// W7-1: the Python hook catalog plus the additive relay.hook.v1 vocabulary, and nothing else.
+// Native additions to the frozen Python catalog: relay.hook.v1 actions and Atlas selection parameters.
 function additive(expected: unknown) {
-  const catalogs = expected as { workflow: unknown; hook: RelayAuthoring.NodeTypeDescriptor[] }
+  const catalogs = expected as {
+    workflow: RelayAuthoring.NodeTypeDescriptor[]
+    hook: RelayAuthoring.NodeTypeDescriptor[]
+  }
+  const workflow = catalogs.workflow.map((descriptor) => ({
+    ...descriptor,
+    parameters: descriptor.parameters.flatMap((parameter) => [
+      parameter,
+      ...(parameter.name === "relayRetryBudget" || parameter.name === "checklist"
+        ? [
+            {
+              name: parameter.name === "relayRetryBudget" ? "relayKnowledge" : "knowledge",
+              label: "Atlas knowledge references",
+              type: "json",
+              default: "[]",
+            },
+          ]
+        : []),
+    ]),
+  }))
   const operations = [
     { value: "tool", label: "Any tool" },
     { value: "session-start", label: "Session start" },
@@ -109,7 +128,7 @@ function additive(expected: unknown) {
     outputs: ["main"],
     parameters: [{ name: "message", label: "Note", type: "text", default: "" }],
   }
-  return { workflow: catalogs.workflow, hook: [...hook, allow] }
+  return { workflow, hook: [...hook, allow] }
 }
 
 describe("authoring goldens", () => {

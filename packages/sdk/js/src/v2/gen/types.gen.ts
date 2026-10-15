@@ -35,6 +35,7 @@ export type Event =
   | EventMessagePartRemoved
   | EventSessionNextAgentSwitched
   | EventSessionNextModelSwitched
+  | EventSessionNextSubagentModelsChanged
   | EventSessionNextMoved
   | EventSessionNextPrompted
   | EventSessionNextPromptAdmitted
@@ -908,6 +909,15 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           model: ModelRef
+        }
+      }
+    | {
+        id: string
+        type: "session.next.subagent.models.changed"
+        properties: {
+          timestamp: number
+          sessionID: string
+          policy: SessionSubagentModelsPolicy
         }
       }
     | {
@@ -2087,6 +2097,7 @@ export type GlobalEvent = {
     | SyncEventMessagePartRemoved
     | SyncEventSessionNextAgentSwitched
     | SyncEventSessionNextModelSwitched
+    | SyncEventSessionNextSubagentModelsChanged
     | SyncEventSessionNextMoved
     | SyncEventSessionNextPrompted
     | SyncEventSessionNextPromptAdmitted
@@ -3587,6 +3598,7 @@ export type MessageNotFoundError = {
 export type SessionDurableEvent =
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
+  | SessionNextSubagentModelsChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -3715,6 +3727,7 @@ export type V2Event =
   | MessagePartRemoved
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
+  | SessionNextSubagentModelsChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -4124,6 +4137,15 @@ export type ModelRef = {
   variant?: string
 }
 
+export type SessionSubagentModelsPolicy =
+  | {
+      mode: "inherit"
+    }
+  | {
+      mode: "allowlist"
+      models: Array<ModelRef>
+    }
+
 export type LocationRef = {
   directory: string
   workspaceID?: string
@@ -4224,6 +4246,37 @@ export type RelayAuthoringSkillBinding = {
   content: string
 }
 
+export type AtlasKnowledgeReference = string
+
+export type AtlasKnowledgeUnitId = string
+
+export type AtlasKnowledgeTarget = {
+  kind: "assignment" | "work-package"
+  id: AtlasKnowledgeUnitId
+}
+
+export type AtlasKnowledgeUnit = {
+  unit: AtlasKnowledgeUnitId
+  name: string
+  sourceIdentity: AtlasKnowledgeReference
+  sourceRevision: string
+  contentHash: AtlasKnowledgeReference
+  receiptHash: AtlasKnowledgeReference
+  bodyHash: AtlasKnowledgeReference
+  content: string
+}
+
+export type AtlasKnowledgeAnchor = {
+  reference: AtlasKnowledgeReference
+  projectID: string
+  authorSessionID: string
+  assistantMessageID: string
+  callID: string
+  memberID: "archie"
+  target: AtlasKnowledgeTarget
+  units: Array<AtlasKnowledgeUnit>
+}
+
 export type RelayArmWorkflowDefinition = {
   publication: RelayArmPublication
   materialization: RelayArmMaterialization
@@ -4232,6 +4285,7 @@ export type RelayArmWorkflowDefinition = {
     [key: string]: string
   }
   writePaths: Array<string>
+  knowledge?: Array<AtlasKnowledgeAnchor>
 }
 
 export type MaestroUpstreamAttributionV1 = {
@@ -4558,6 +4612,22 @@ export type SyncEventSessionNextModelSwitched = {
       sessionID: string
       messageID: string
       model: ModelRef
+    }
+  }
+}
+
+export type SyncEventSessionNextSubagentModelsChanged = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "session.next.subagent.models.changed.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      timestamp: number
+      sessionID: string
+      policy: SessionSubagentModelsPolicy
     }
   }
 }
@@ -5681,6 +5751,7 @@ export type SessionV2Info = {
   projectID: string
   agent?: string
   model?: ModelRef
+  subagentModels?: SessionSubagentModelsPolicy
   cost: number
   tokens: {
     input: number
@@ -5974,6 +6045,25 @@ export type SessionNextModelSwitched = {
     sessionID: string
     messageID: string
     model: ModelRef
+  }
+}
+
+export type SessionNextSubagentModelsChanged = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "session.next.subagent.models.changed"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    timestamp: number
+    sessionID: string
+    policy: SessionSubagentModelsPolicy
   }
 }
 
@@ -8570,6 +8660,7 @@ export type RelaySprintWorkPackage = {
   kind?: "execute" | "gate" | "review" | "inject" | "human"
   instructions?: string
   self_check?: Array<string>
+  knowledge?: Array<AtlasKnowledgeReference>
   checklist?: Array<RelaySprintControl>
   dod?: Array<RelaySprintDod>
   file?: string
@@ -8581,6 +8672,7 @@ export type RelaySprintSprint = {
   gen?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
   retry_budget?: number
   macros?: Array<RelaySprintMacro>
+  knowledge?: Array<AtlasKnowledgeReference>
   work_packages: Array<RelaySprintWorkPackage>
 }
 
@@ -9028,6 +9120,16 @@ export type EventSessionNextModelSwitched = {
     sessionID: string
     messageID: string
     model: ModelRef
+  }
+}
+
+export type EventSessionNextSubagentModelsChanged = {
+  id: string
+  type: "session.next.subagent.models.changed"
+  properties: {
+    timestamp: number
+    sessionID: string
+    policy: SessionSubagentModelsPolicy
   }
 }
 
@@ -15102,6 +15204,92 @@ export type V2SessionGetResponses = {
 }
 
 export type V2SessionGetResponse = V2SessionGetResponses[keyof V2SessionGetResponses]
+
+export type V2SessionGetSubagentModelsData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/subagent-models"
+}
+
+export type V2SessionGetSubagentModelsErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2SessionGetSubagentModelsError = V2SessionGetSubagentModelsErrors[keyof V2SessionGetSubagentModelsErrors]
+
+export type V2SessionGetSubagentModelsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: SessionSubagentModelsPolicy
+  }
+}
+
+export type V2SessionGetSubagentModelsResponse =
+  V2SessionGetSubagentModelsResponses[keyof V2SessionGetSubagentModelsResponses]
+
+export type V2SessionSetSubagentModelsData = {
+  body: {
+    policy: SessionSubagentModelsPolicy
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/subagent-models"
+}
+
+export type V2SessionSetSubagentModelsErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2SessionSetSubagentModelsError = V2SessionSetSubagentModelsErrors[keyof V2SessionSetSubagentModelsErrors]
+
+export type V2SessionSetSubagentModelsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: SessionSubagentModelsPolicy
+  }
+}
+
+export type V2SessionSetSubagentModelsResponse =
+  V2SessionSetSubagentModelsResponses[keyof V2SessionSetSubagentModelsResponses]
 
 export type V2SessionSwitchAgentData = {
   body: {

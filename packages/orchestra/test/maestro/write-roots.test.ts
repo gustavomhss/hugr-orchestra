@@ -3,6 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { WriteRoots } from "@/maestro/write-roots"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceStore } from "@/project/instance-store"
@@ -98,7 +99,7 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
             )))).pipe(Effect.exit),
         })
       }).pipe(Effect.provideService(InstanceRef, instance))
-    }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node, filesystem]))))))
+    }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node, AtlasKnowledge.node, filesystem]))))))
   })
 
 const exists = (file: string) => Effect.promise(() => fs.access(file).then(() => true, () => false))
