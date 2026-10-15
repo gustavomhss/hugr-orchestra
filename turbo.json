@@ -73,7 +73,8 @@
       "env": ["PSModuleAnalysisCachePath"]
     },
     "@orchestra/app#test": {
-      "dependsOn": ["transit", "^build"],
+      // Extension: the shell-owned E2E harness consumes the separate web entry.
+      "dependsOn": ["transit", "^build", "@orchestra/web#transit"],
       "outputs": []
     },
     "@orchestra/ui#test": {
