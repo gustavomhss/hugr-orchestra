@@ -37,9 +37,7 @@ const binary = Effect.fnUntraced(function* (
 const leftovers = (directory: string) =>
   Effect.promise(() => fs.readdir(directory).catch(() => [] as string[])).pipe(
     Effect.map((names) =>
-      names.filter(
-        (name) => name === executable || name.startsWith("ripgrep-") || name.startsWith(".ripgrep-staged-"),
-      ),
+      names.filter((name) => name === executable || name.startsWith("ripgrep-") || name.startsWith(".ripgrep-staged-")),
     ),
   )
 
@@ -353,6 +351,7 @@ describe("RipgrepBinary", () => {
       expect([...RipgrepBinary.keys()].sort()).toEqual([
         "arm64-darwin",
         "arm64-linux",
+        "arm64-linux-musl",
         "arm64-win32",
         "x64-darwin",
         "x64-linux",
@@ -365,9 +364,11 @@ describe("RipgrepBinary", () => {
           `https://github.com/BurntSushi/ripgrep/releases/download/${RipgrepBinary.VERSION}/${release?.root}.${release?.extension}`,
         )
       }
-      // Upstream's arm64 Linux build links glibc, so musl gets no release; its x64 build is static musl.
+      // arm64 has distinct glibc and musl releases; x64's static musl build serves both.
       expect(RipgrepBinary.key({ arch: "arm64", platform: "linux", musl: true })).toBe("arm64-linux-musl")
-      expect(RipgrepBinary.release("arm64-linux-musl")).toBeUndefined()
+      expect(RipgrepBinary.release("arm64-linux-musl")?.root).toBe(
+        `ripgrep-${RipgrepBinary.VERSION}-aarch64-unknown-linux-musl`,
+      )
       expect(RipgrepBinary.key({ arch: "x64", platform: "linux", musl: true })).toBe("x64-linux")
       expect(RipgrepBinary.key({ arch: "arm64", platform: "linux", musl: false })).toBe("arm64-linux")
       expect(RipgrepBinary.key({ arch: "arm64", platform: "darwin", musl: false })).toBe("arm64-darwin")
@@ -377,9 +378,9 @@ describe("RipgrepBinary", () => {
 
   it.live("the CI action pins the same version and archives as RipgrepBinary", () =>
     Effect.promise(async () => {
-      const action = YAML.parse(
-        await Bun.file(path.join(repository, ".github/actions/ripgrep/action.yml")).text(),
-      ) as { runs: { steps: { name: string; run?: string }[] } }
+      const action = YAML.parse(await Bun.file(path.join(repository, ".github/actions/ripgrep/action.yml")).text()) as {
+        runs: { steps: { name: string; run?: string }[] }
+      }
       const script = action.runs.steps.find((step) => step.name === "Select ripgrep release")?.run ?? ""
       expect(script).toContain(`version=${RipgrepBinary.VERSION}\n`)
       const runner: Record<string, string> = {
@@ -390,8 +391,11 @@ describe("RipgrepBinary", () => {
         "Windows-X64": "x64-win32",
         "Windows-ARM64": "arm64-win32",
       }
-      const rows = [...script.matchAll(/^\s*([A-Za-z]+-[A-Z0-9]+)\) platform=([^;]+); ext=([^;]+); sha=([0-9a-f]+) ;;$/gm)]
-      expect(rows.map((row) => runner[row[1]!]).sort()).toEqual([...RipgrepBinary.keys()].sort())
+      const rows = [
+        ...script.matchAll(/^\s*([A-Za-z]+-[A-Z0-9]+)\) platform=([^;]+); ext=([^;]+); sha=([0-9a-f]+) ;;$/gm),
+      ]
+      // GitHub runner OS/CPU keys select glibc on arm64 Linux; musl is a separate packaged CLI target.
+      expect(rows.map((row) => row[1]).sort()).toEqual(Object.keys(runner).sort())
       for (const row of rows) {
         const release = RipgrepBinary.release(runner[row[1]!])
         expect({ root: `ripgrep-${RipgrepBinary.VERSION}-${row[2]}`, extension: row[3], sha256: row[4] }).toEqual<
@@ -408,7 +412,12 @@ describe("RipgrepBinary", () => {
   it.live("the Linux sandbox runtime installs RipgrepBinary's archive, or uses rg on PATH when downloads are off", () =>
     Effect.sync(() => {
       const release = RipgrepBinary.release("arm64-linux")!
-      const downloading = ToolSafetySandboxRuntime.source({ arch: "arm64", platform: "linux", download: true, ripgrep: release })
+      const downloading = ToolSafetySandboxRuntime.source({
+        arch: "arm64",
+        platform: "linux",
+        download: true,
+        ripgrep: release,
+      })
       expect(downloading?.artifacts.filter((artifact) => artifact.target === "ripgrep")).toEqual([
         {
           url: release.url,
@@ -429,8 +438,9 @@ describe("RipgrepBinary", () => {
         expect(source?.dependencies).toContain("rg")
         expect(source?.directory).not.toBe(downloading?.directory)
       }
-      expect(ToolSafetySandboxRuntime.source({ arch: "arm64", platform: "darwin", download: true, ripgrep: release }))
-        .toBeUndefined()
+      expect(
+        ToolSafetySandboxRuntime.source({ arch: "arm64", platform: "darwin", download: true, ripgrep: release }),
+      ).toBeUndefined()
     }),
   )
 })

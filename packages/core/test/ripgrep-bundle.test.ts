@@ -89,9 +89,10 @@ async function archived(dir: string, extension: "tar.gz" | "zip", bytes: Uint8Ar
 describe("RipgrepBundle", () => {
   for (const { key, extension, executable } of [
     { key: "arm64-darwin", extension: "tar.gz" as const, executable: "rg" },
+    { key: "arm64-linux-musl", extension: "tar.gz" as const, executable: "rg" },
     { key: "x64-win32", extension: "zip" as const, executable: "rg.exe" },
   ])
-    test(`stages ${executable} and the license texts from a ${extension} archive, and nothing else`, async () => {
+    test(`stages ${key}'s ${executable} and license texts from a ${extension} archive, and nothing else`, async () => {
       await using tmp = await tmpdir()
       const files = members(executable)
       const source = await archived(
@@ -266,11 +267,12 @@ describe("RipgrepBundle", () => {
     await expect(verify()).rejects.toThrow("is not executable")
   })
 
-  test("every CLI build target maps to the pinned archive for its own OS and CPU, except arm64 musl", () => {
+  test("every CLI build target maps to the pinned archive for its own OS, CPU and ABI", () => {
     const triples = {
       "arm64-darwin": "aarch64-apple-darwin",
       "x64-darwin": "x86_64-apple-darwin",
       "arm64-linux": "aarch64-unknown-linux-gnu",
+      "arm64-linux-musl": "aarch64-unknown-linux-musl",
       "x64-linux": "x86_64-unknown-linux-musl",
       "arm64-win32": "aarch64-pc-windows-msvc",
       "x64-win32": "x86_64-pc-windows-msvc",
@@ -279,11 +281,7 @@ describe("RipgrepBundle", () => {
       for (const arch of ["arm64", "x64"])
         for (const abi of os === "linux" ? [undefined, "musl"] : [undefined]) {
           const key = RipgrepBundle.key({ os, arch, abi })
-          if (os === "linux" && arch === "arm64" && abi === "musl") {
-            expect(key).toBeUndefined()
-            continue
-          }
-          expect(key).toBe(`${arch}-${os}`)
+          expect(key).toBe(os === "linux" && arch === "arm64" && abi === "musl" ? "arm64-linux-musl" : `${arch}-${os}`)
           expect(RipgrepRelease.archive(key)?.root).toBe(
             `ripgrep-${RipgrepRelease.VERSION}-${triples[key as keyof typeof triples]}`,
           )
@@ -294,7 +292,7 @@ describe("RipgrepBundle", () => {
     for (const pin of executables) expect(pin).toMatch(/^[0-9a-f]{64}$/)
     expect(new Set(executables).size).toBe(RipgrepRelease.keys().length)
     // The runtime reads the same pins: one table, no second copy.
-    expect(RipgrepBinary.release("x64-linux")).toEqual(RipgrepRelease.archive("x64-linux"))
+    for (const key of RipgrepRelease.keys()) expect(RipgrepBinary.release(key)).toEqual(RipgrepRelease.archive(key))
     expect(RipgrepBinary.VERSION).toBe(RipgrepRelease.VERSION)
   })
 
