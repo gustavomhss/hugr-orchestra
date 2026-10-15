@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -45,7 +46,7 @@ afterEach(async () => {
 })
 
 const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node, SessionProjector.node,
+  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node, SessionProjector.node, SessionSubagentModels.node,
     EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Snapshot.node, SessionStatus.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
