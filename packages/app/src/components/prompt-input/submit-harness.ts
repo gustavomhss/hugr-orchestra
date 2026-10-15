@@ -9,6 +9,7 @@ import { createApiForServer, type ServerApi } from "@/utils/server"
 import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
 import { clearPending, pendingSnapshot } from "../draft-subagent-models"
+import type { Part } from "@orchestra/sdk/v2/client"
 
 export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
@@ -65,11 +66,15 @@ export const optimistic: Array<{
   directory?: string
   sessionID?: string
   message: {
+    id: string
     agent: string
     model: { providerID: string; modelID: string }
     variant?: string
   }
+  parts: Part[]
 }> = []
+export const optimisticRemovals: { messageID: string }[] = []
+export const statusUpdates: unknown[][] = []
 export const optimisticSeeded: boolean[] = []
 export const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 export const promoted: Array<{ directory: string; sessionID: string }> = []
@@ -117,6 +122,12 @@ export const state = {
   worktreeResets: 0,
   promoteStarted: Promise.withResolvers<void>(),
   promoteProbe: undefined as VoidFunction | undefined,
+  promoteDraftHook: () => {},
+  sendHook: async (_input: unknown) => {},
+  behaviorHook: async () => {},
+  statusObserved: (_args: unknown[]) => {},
+  modelID: "model",
+  agentID: "backend",
 }
 
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -191,13 +202,16 @@ export const clientFor = (directory: string) => {
       prompt: async (input: unknown) => {
         sentPrompts.push(directory)
         promptInputs.push(input)
+        await state.sendHook(input)
         return { data: undefined }
       },
       command: async (input: unknown) => {
         sentCommands.push(input)
+        await state.sendHook(input)
       },
       shell: async (input: { sessionID: string; id?: string; command: string }) => {
         sentShell.push(input)
+        await state.sendHook(input)
       },
       interrupt: async (input: { sessionID: string }) => {
         interrupts.push(input.sessionID)
@@ -315,6 +329,7 @@ beforeAll(async () => {
     resolveBehaviorSystem: async (input: { scope: string; directory: string; projects: unknown }) => {
       events.push("resolve behaviors")
       behaviorReads.push({ scope: input.scope, directory: input.directory, projects: input.projects })
+      await state.behaviorHook()
       const preparation = preparations.shift()
       if (preparation) await preparation.promise
       if (behaviors.fail) throw new Error("storage unavailable")
@@ -325,12 +340,12 @@ beforeAll(async () => {
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       model: {
-        current: () => ({ id: "model", provider: { id: "provider" } }),
+        current: () => ({ id: state.modelID, provider: { id: "provider" } }),
         variant: { current: () => state.variant },
       },
       agent: {
         // A seat renamed from its default label: payloads must carry the stable id, never the label.
-        current: () => ({ id: "backend", name: "Pikachu" }),
+        current: () => ({ id: state.agentID, name: "Pikachu" }),
       },
       session: {
         promote(directory: string, sessionID: string, selection: { agent?: string }) {
@@ -363,6 +378,7 @@ beforeAll(async () => {
       promoteDraft: (draftID: string, session: { server: string; sessionId: string }) => {
         promotedDrafts.push({ draftID, ...session })
         promoteRoute(promoted.at(-1)?.directory ?? "/repo/main", session.sessionId)
+        state.promoteDraftHook()
       },
     }),
   }))
@@ -402,11 +418,7 @@ beforeAll(async () => {
       data: { command: commands },
       session: {
         optimistic: {
-          add: (value: {
-            directory?: string
-            sessionID?: string
-            message: { agent: string; model: { providerID: string; modelID: string; variant?: string } }
-          }) => {
+          add: (value: (typeof optimistic)[number]) => {
             optimistic.push(value)
             optimisticSeeded.push(
               !!value.directory &&
@@ -414,10 +426,12 @@ beforeAll(async () => {
                 !!storedSessions[value.directory]?.find((item) => item.id === value.sessionID)?.title,
             )
           },
-          remove: () => undefined,
+          remove: (value: { messageID: string }) => { optimisticRemovals.push(value) },
         },
       },
       set: (field: string, _id: string, status: { type: string }) => {
+        if (field === "session_status") statusUpdates.push([field, _id, status])
+        state.statusObserved([field, _id, status])
         if (field === "session_status" && status.type === "busy" && ++state.waiting === 2)
           state.waitersReady.resolve()
       },
@@ -431,6 +445,8 @@ beforeAll(async () => {
         remember: () => undefined,
         set: (field: string, sessionID: string, status: { type: string }) => {
           if (field === "session_status") statusWrites.push({ sessionID, type: status.type })
+          if (field === "session_status") statusUpdates.push([field, sessionID, status])
+          state.statusObserved([field, sessionID, status])
         },
         sync: async () => {
           state.serverSessionSyncs++
@@ -506,6 +522,8 @@ beforeEach(() => {
   sessionCreateInputs.length = 0
   enabledAutoAccept.length = 0
   optimistic.length = 0
+  optimisticRemovals.length = 0
+  statusUpdates.length = 0
   optimisticSeeded.length = 0
   promoted.length = 0
   promotedAgents.length = 0
@@ -550,6 +568,12 @@ beforeEach(() => {
   state.worktreeResets = 0
   state.promoteStarted = Promise.withResolvers<void>()
   state.promoteProbe = undefined
+  state.promoteDraftHook = () => {}
+  state.sendHook = async () => {}
+  state.behaviorHook = async () => {}
+  state.statusObserved = () => {}
+  state.modelID = "model"
+  state.agentID = "backend"
   policyWrites.length = 0
   toasts.length = 0
   legacyBaseline.length = 0
