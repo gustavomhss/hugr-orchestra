@@ -51,6 +51,7 @@ export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "sub
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
   readonly pendingKey: () => string
+  readonly submitting: () => boolean
 }
 
 export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
@@ -76,7 +77,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
       : props.controller
 
   return (
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3" data-prompt-admitting={String(props.controller.submitting())}>
       <PromptInputV2
         controller={controller()}
         borderUnderlay={props.borderUnderlay}
@@ -436,7 +437,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       },
     },
   })
-  const composer = Object.assign(controller, { model: props.controls.model, pendingKey })
+  const composer = Object.assign(controller, { model: props.controls.model, pendingKey, submitting: submission.submitting })
   Object.defineProperty(composer, "model", { get: () => props.controls.model })
 
   command.register("prompt-input", () => [
