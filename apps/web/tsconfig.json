@@ -1,0 +1,8 @@
+{
+  "extends": "../../packages/app-shell/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "node_modules/.ts-dist"
+  },
+  "include": ["src", "package.json"],
+  "exclude": ["dist", "node_modules"]
+}

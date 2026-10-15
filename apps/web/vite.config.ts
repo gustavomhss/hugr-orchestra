@@ -1,6 +1,7 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "vite"
-import desktopPlugin from "./vite"
+import desktopPlugin from "@orchestra/app/vite"
+import { fileURLToPath } from "node:url"
 
 const sentry =
   process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
@@ -20,6 +21,7 @@ const sentry =
     : false
 
 export default defineConfig({
+  publicDir: fileURLToPath(new URL("../../packages/app-shell/public", import.meta.url)),
   plugins: [desktopPlugin, sentry] as any,
   server: {
     host: "0.0.0.0",

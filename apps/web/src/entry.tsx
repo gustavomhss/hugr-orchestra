@@ -2,15 +2,9 @@
 
 import * as Sentry from "@sentry/solid"
 import { render } from "solid-js/web"
-import { AppBaseProviders, AppInterface } from "@/app"
-import { loadInitialLocale } from "@/context/language"
-import { type Platform, PlatformProvider } from "@/context/platform"
-import { createBrowserDraftStore } from "@/utils/draft-store"
-import { dict as en } from "@/i18n/en"
-import { dict as zh } from "@/i18n/zh"
-import { authFromToken } from "@/utils/server"
+import { AppBaseProviders, AppInterface, type Platform, PlatformProvider, ServerConnection } from "@orchestra/app"
+import { loadInitialLocale, createBrowserDraftStore, en, zh, authFromToken } from "@orchestra/app/web"
 import pkg from "../package.json"
-import { ServerConnection } from "./context/server"
 
 const DEFAULT_SERVER_URL_KEY = "orchestra.settings.dat:defaultServerUrl"
 

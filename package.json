@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "bun run --cwd packages/orchestra src/index.ts",
     "dev:desktop": "bun --cwd packages/desktop dev",
-    "dev:web": "bun --cwd packages/app dev",
+    "dev:web": "bun --cwd apps/web dev",
     "dev:storybook": "bun --cwd packages/storybook storybook",
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
@@ -27,6 +27,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "apps/web",
       "modules/relay",
       "modules/capability-assets",
       "modules/maestro/arsenal",

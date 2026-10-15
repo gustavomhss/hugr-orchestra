@@ -2,7 +2,7 @@
   "format": 1,
   "modules": [
     { "alias": "atlas-boundary", "kind": "bun", "scope": ".", "name": "@orchestra/atlas-boundary", "path": "modules/atlas/boundary" },
-    { "alias": "app", "kind": "bun", "scope": ".", "name": "@orchestra/app", "path": "packages/app" },
+    { "alias": "app", "kind": "bun", "scope": ".", "name": "@orchestra/app", "path": "packages/app-shell" },
     { "alias": "capability-assets", "kind": "bun", "scope": ".", "name": "@orchestra/capability-assets", "path": "modules/capability-assets" },
     { "alias": "cli", "kind": "bun", "scope": ".", "name": "@orchestra/cli", "path": "packages/cli" },
     { "alias": "client", "kind": "bun", "scope": ".", "name": "@orchestra/client", "path": "packages/client" },
@@ -28,6 +28,7 @@
     { "alias": "session-ui", "kind": "bun", "scope": ".", "name": "@orchestra/session-ui", "path": "packages/session-ui" },
     { "alias": "storybook", "kind": "bun", "scope": ".", "name": "@orchestra/storybook", "path": "packages/storybook" },
     { "alias": "tui", "kind": "bun", "scope": ".", "name": "@orchestra/tui", "path": "packages/tui" },
-    { "alias": "ui", "kind": "bun", "scope": ".", "name": "@orchestra/ui", "path": "packages/ui" }
+    { "alias": "ui", "kind": "bun", "scope": ".", "name": "@orchestra/ui", "path": "packages/ui" },
+    { "alias": "web", "kind": "bun", "scope": ".", "name": "@orchestra/web", "path": "apps/web" }
   ]
 }
