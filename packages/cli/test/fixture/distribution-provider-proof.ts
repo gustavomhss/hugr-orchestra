@@ -79,7 +79,11 @@ export async function qualifyProvider(input: {
           // so no key is written to config, projections or evidence.
           api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url, settings: { generation: { temperature: 0 } } },
           models: { [model]: { name: model, capabilities: { tools: true, input: ["text"], output: ["text"] },
-            limit: { context: 8192, output: 1024 } } },
+            limit: { context: 8192, output: 1024 },
+            // With hosted reasoning enabled, this model narrates its plan and
+            // occasionally emits the same native call twice in one turn (it
+            // ignores parallel_tool_calls). The oracle requires exactly one call.
+            request: { body: { reasoning: { enabled: false } } } } },
         } },
         agents: { "distribution-proof": {
           mode: "primary", model: `distribution/${model}`, steps: 3,
@@ -169,7 +173,7 @@ export async function qualifyProvider(input: {
         expect(records.length).toBeGreaterThanOrEqual(2)
         expect(records.length).toBeLessThanOrEqual(3)
         records.forEach((record) => {
-          Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({ temperature: Schema.Literal(0) }))))(record.requestJSON)
+          Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({ temperature: Schema.Literal(0), reasoning: Schema.Struct({ enabled: Schema.Literal(false) }) }))))(record.requestJSON)
           expect(record.status).toBe(200)
           expect(record.request.model).toBe(model)
           expect((record.request.tools ?? []).map((item) => item.function.name).filter((name) => name !== "bash")).toEqual([])
