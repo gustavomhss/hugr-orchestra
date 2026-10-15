@@ -5,7 +5,7 @@ import { Schema } from "effect"
 // against a hosted model, so this module owns the credential and upstream
 // identity evidence instead of a container-local weight digest.
 export const host = "https://openrouter.ai"
-export const model = "nvidia/nemotron-3.5-lightning:free"
+export const model = "nvidia/nemotron-3-super-120b-a12b:free"
 // The capture proxy appends the incoming "/v1/..." path verbatim, so this base
 // must stay the API root without its own version segment.
 export const baseURL = `${host}/api`
