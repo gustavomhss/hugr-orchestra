@@ -7,6 +7,7 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Actions } from "@orchestra/schema/actions"
 import { Location } from "@orchestra/schema/location"
 import { Effect, Schema } from "effect"
+import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { github, httpFixture, it, runID, workspaceID } from "./actions-http-fixture"
 
 const create = { remote: "origin", provider: github, projectPath: "acme/widgets" }
@@ -42,6 +43,7 @@ const page = (response: Response) =>
 
 it.live("HTTP artifact list omits absent optional keys before strict Core selection", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const response = yield* Effect.promise(() => f.raw(
       `/api/actions/resource/${f.binding.data.id}?revision=1&kind=artifacts&runID=${runID}`,
@@ -63,6 +65,7 @@ it.live("HTTP artifact list omits absent optional keys before strict Core select
 
 it.live("HTTP project artifact list omits absent runID too", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const response = yield* Effect.promise(() => f.raw(
       `/api/actions/resource/${f.binding.data.id}?revision=1&kind=artifacts`,
@@ -84,6 +87,7 @@ Array.of(
 ).forEach((extra) => {
   it.live(`HTTP artifact list rejects present unsupported filter ${extra.key}=${extra.value} with typed 400`, () =>
     Effect.gen(function* () {
+      expectSpawn(import.meta.path)
       const f = yield* resourceFixture()
       const query = new URLSearchParams({ revision: "1", kind: "artifacts", runID, [extra.key]: extra.value })
       const response = yield* Effect.promise(() => f.raw(`/api/actions/resource/${f.binding.data.id}?${query}`))
@@ -108,6 +112,7 @@ Array.of(
 
 it.live("HTTP artifact list retains present name, cursor and numeric limit", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const query = new URLSearchParams({
       revision: "1", kind: "artifacts", runID, query: "build + linux", cursor: "opaque:page/2", limit: "7",
@@ -126,6 +131,7 @@ it.live("HTTP artifact list retains present name, cursor and numeric limit", () 
 
 it.live("HTTP artifact list retains empty present query and cursor", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const response = yield* Effect.promise(() => f.raw(
       `/api/actions/resource/${f.binding.data.id}?revision=1&kind=artifacts&query=&cursor=`,
@@ -141,6 +147,7 @@ it.live("HTTP artifact list retains empty present query and cursor", () =>
 
 it.live("HTTP environment list retains exact native scope and resourceID", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const response = yield* Effect.promise(() => f.raw(
       `/api/actions/resource/${f.binding.data.id}?revision=1&kind=environments&scope=Repository&resourceID=production`,
@@ -156,6 +163,7 @@ it.live("HTTP environment list retains exact native scope and resourceID", () =>
 
 it.live("HTTP resource list keeps binding revision and Location outside ResourceListInput", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* resourceFixture()
     const location = { directory: f.clone, workspace: workspaceID }
     const binding = yield* Effect.promise(() => f.client.actionsBindings.create({ ...create, location }))

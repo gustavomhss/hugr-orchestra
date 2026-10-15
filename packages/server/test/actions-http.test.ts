@@ -9,6 +9,7 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { intent } from "../../core/test/actions/assembly-fixture"
+import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { Api } from "../src/api"
 import { ServerAuth } from "../src/auth"
 import {
@@ -27,6 +28,7 @@ const create = { remote: "origin", provider: github, projectPath: "acme/widgets"
 
 it.live("HTTP binding CRUD shares one Location and policy CAS has one winner", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     expect((yield* Effect.promise(() => f.client.actionsBindings.list())).data).toEqual([])
     const created = yield* Effect.promise(() => f.client.actionsBindings.create(create))
@@ -73,6 +75,7 @@ it.live("HTTP binding CRUD shares one Location and policy CAS has one winner", (
 
 it.live("HTTP update rejects conflicting body/query expected revision before provider resolver", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     const created = yield* Effect.promise(() => f.client.actionsBindings.create(create))
     const ref = { bindingID: created.data.id, revision: 1 }
@@ -94,6 +97,7 @@ it.live("HTTP update rejects conflicting body/query expected revision before pro
 
 it.live("HTTP Location query overrides connection headers and isolates binding/operation access", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     const first = yield* Effect.promise(() => f.client.actionsBindings.create(create))
     const other = { directory: f.clone, workspace: workspaceID }
@@ -129,6 +133,7 @@ it.live("HTTP Location query overrides connection headers and isolates binding/o
 Array.of(github, gitlab).forEach((provider) => {
   it.live(`HTTP ${provider.kind} reader serializes nullable metadata, native IDs and pinned source graph`, () =>
     Effect.gen(function* () {
+      expectSpawn(import.meta.path)
       const f = yield* httpFixture()
       const binding = yield* Effect.promise(() =>
         f.client.actionsBindings.create({
@@ -194,6 +199,7 @@ Array.of(github, gitlab).forEach((provider) => {
 
 it.live("HTTP admission/readback uses durable identity and stale input fails before provider I/O", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     const created = yield* Effect.promise(() => f.client.actionsBindings.create(create))
     const binding = Schema.decodeUnknownSync(Actions.Binding)(created.data)
@@ -248,6 +254,7 @@ it.live("HTTP admission/readback uses durable identity and stale input fails bef
 
 it.live("HTTP Orchestra auth remains distinct from flat provider authentication/permission failures", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     const unauthenticated = f.connect({ "x-orchestra-directory": encodeURIComponent(f.core.directory) })
     const error: unknown = yield* Effect.promise(() =>
@@ -306,6 +313,7 @@ it.live("HTTP Orchestra auth remains distinct from flat provider authentication/
 
 it.live("HTTP resource/transfer placeholders are absent from assembled contract and focused router", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* httpFixture()
     const created = yield* Effect.promise(() => f.client.actionsBindings.create(create))
     const paths = Object.keys(OpenApi.fromApi(Api).paths ?? {})
