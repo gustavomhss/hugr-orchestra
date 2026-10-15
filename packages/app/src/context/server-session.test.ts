@@ -3,6 +3,7 @@ import type { retry } from "@orchestra/core/util/retry"
 import type { OpenCodeEvent, SessionApi } from "@opencode-ai/client/promise"
 import type { Message, OrchestraClient, Part, Session } from "@orchestra/sdk/v2/client"
 import { createServerSession } from "./server-session"
+import { rethrow } from "../testing/rejection"
 import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
@@ -684,7 +685,7 @@ describe("server session", () => {
     const secondResponse = deferredResponse()
     const message = userMessage("message")
     const store = createServerSession(messageClient(firstResponse.promise, secondResponse.promise))
-    const first = expect(store.sync("child")).rejects.toThrow("Session not found: child")
+    const first = rethrow(store.sync("child"))
 
     store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
     store.apply({
@@ -694,7 +695,7 @@ describe("server session", () => {
     const second = store.sync("child")
 
     firstResponse.resolve(response())
-    await first
+    expect(await first).toThrow("Session not found: child")
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
 
@@ -706,7 +707,7 @@ describe("server session", () => {
     const secondResponse = deferredResponse()
     const message = userMessage("message")
     const store = createServerSession(messageClient(firstResponse.promise, secondResponse.promise))
-    const first = expect(store.sync("child")).rejects.toThrow("Session not found: child")
+    const first = rethrow(store.sync("child"))
     store.apply({
       type: "session.deleted",
       properties: { sessionID: "child", info: session("child", "root") },
@@ -715,7 +716,7 @@ describe("server session", () => {
 
     store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
     firstResponse.resolve(response())
-    await first
+    expect(await first).toThrow("Session not found: child")
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
 
