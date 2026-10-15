@@ -55,7 +55,7 @@ const bindings = {
   "packages/core/src/session/execution/local.ts": "d874c40832a3571297e78e912c2ae137fb7acc12",
   "packages/core/src/location-services.ts": "aa917b5a6092053b253890ec979c4f34bee9829b",
   "packages/core/src/session/runner/llm.ts": "c12fb0c16eba526d27f5552b07d3952b2d430f73",
-  "packages/core/src/session/runner/model.ts": "fcc56b6d0368e1e6e0392466a00e13b14f3ba961",
+  "packages/core/src/session/runner/model.ts": "6292fbc5d89963c7f6d7ba47ccbe8850bf31a3c3",
   "packages/core/src/tool/bash.ts": "8618850dc6a0c215902f278f1338170d2b1d745a",
 }
 
