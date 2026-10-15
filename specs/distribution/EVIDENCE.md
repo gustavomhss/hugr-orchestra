@@ -74,32 +74,41 @@ Inspection baseline: `ba41a3015c9c359cec797d23bf6bb074b1a766b1`. The following p
 | Full native musl x64/ARM64 | `packages/cli/test/distribution-musl.test.ts`, `packages/cli/test/fixture/distribution-musl-guest.test.ts`, `packages/cli/test/fixture/distribution-musl/abi.ts` | Matching pinned Alpine guest, real curl/npm lifecycles, complete runtime/ABI controls, source/payload preservation and guest/host cleanup |
 | Windows ARM64 and production Job closure | `packages/cli/test/distribution-windows.test.ts`, `packages/omni/crates/omni-supervisor/src/windows/tree.rs`, `packages/omni/crates/omni-supervisor/src/windows/tests/job_lifetime.rs`, `packages/core/test/distribution-bundle-gates.ts` | Native x64/ARM64 lifecycle plus real OS-handle closure before `Stopped`/`Release`; stop/natural/descendant/unknown and retained-handle mutation receipts |
 | Official pinned Deno 2.9.7 | `script/distribution-deno.ts`, `packages/cli/test/fixture/distribution-native-deno.ts`, `packages/cli/test/fixture/distribution-native-proof.ts` | SHA-256-pinned official runtime on six GNU/Darwin/Windows CPU targets; exact installed companions, real child, identity and corruption/restoration controls; no official Deno musl qualification |
-| Installed public CLI Session V2 provider/tool | `packages/cli/test/distribution-provider.test.ts`, `packages/cli/test/fixture/distribution-provider-proof.ts`, provider sourcegraph/process/capture/tool-result fixtures | Real inference and successful wire tool-result continuation at v1/v2/v1, compiler/binary and installed process provenance, durable history, fault/restoration and cleanup; complete proof pending |
+| Installed public CLI Session V2 provider/tool | `packages/cli/test/distribution-provider.test.ts`, `packages/cli/test/fixture/distribution-provider-proof.ts`, provider sourcegraph/process/capture/tool-result fixtures | Real inference and successful wire tool-result continuation at v1/v2/v1, compiler/binary and installed process provenance, durable history, fault/restoration and cleanup; qualified in [38817052900](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38817052900) |
 | AUR enforcement x64/ARM64 | `packages/cli/test/distribution-aur.test.ts`, `packages/cli/test/fixture/distribution-aur/{bootstrap.sh,sandbox-profile.ts,sandbox-probe.c,sandbox-evidence.ts}` | Signed/trusted repository policy, `DownloadUser=alpm`, pinned Moby v28.0.4 default policy, `Seccomp=2`, `NoNewPrivs=1`, real Landlock allow/deny and pacman restriction receipts; no bypass |
 
 The AUR fixture diagnoses the daemon's original filter first, then applies the upstream default policy without rule additions (canonical JSON has its own digest). Signed repository bootstrap and ordinary local `pacman -U` lifecycle are distinct; this is not local package-signing evidence.
 
-### Final bundle declaration (not a green record)
+### Final bundle declaration
 
 Current `.github/workflows/distribution-bundle.yml` declares 13 qualification rows plus one static job. Run only the final composed bundle; retain exact source SHA/tree and all logs/receipts. The push trigger names only `distribution-bundle` (manual dispatch also exists), so intermediate stack/docs pushes do not duplicate qualification.
 
 | Lane | Package | Native host | Final status |
 | --- | --- | --- | --- |
-| regression | cli | ubuntu-latest (GNU x64) | Pending |
-| regression | cli | windows-latest (x64) | Pending |
-| regression | cli | ubuntu-24.04-arm (GNU ARM64) | Pending |
-| regression | cli | windows-11-arm (ARM64) | Pending |
-| regression | core | ubuntu-latest (x64) | Pending |
-| regression | core | windows-latest (x64) | Pending |
-| regression | cli | macos-14 (ARM64) | Pending |
-| regression | cli | macos-15-intel (x64) | Pending |
-| aur | cli | ubuntu-latest → native Arch x64 guest | Pending |
-| aur | cli | ubuntu-24.04-arm → native ArchLinuxARM guest | Pending |
-| musl | cli | ubuntu-latest → native Alpine x64 guest | Pending |
-| musl | cli | ubuntu-24.04-arm → native Alpine ARM64 guest | Pending |
-| provider | cli | ubuntu-latest (x64) | Pending |
-| static | — | ubuntu-latest | Pending |
+| regression | cli | ubuntu-latest (GNU x64) | Passed in 38817052900 |
+| regression | cli | windows-latest (x64) | Passed in 38817052900 |
+| regression | cli | ubuntu-24.04-arm (GNU ARM64) | Passed in 38817052900 |
+| regression | cli | windows-11-arm (ARM64) | Passed in 38817052900 |
+| regression | core | ubuntu-latest (x64) | Passed in 38817052900 |
+| regression | core | windows-latest (x64) | Passed in 38817052900 |
+| regression | cli | macos-14 (ARM64) | Passed in 38817052900 |
+| regression | cli | macos-15-intel (x64) | Passed in 38817052900 |
+| aur | cli | ubuntu-latest → native Arch x64 guest | Passed in 38817052900 |
+| aur | cli | ubuntu-24.04-arm → native ArchLinuxARM guest | Passed in 38817052900 |
+| musl | cli | ubuntu-latest → native Alpine x64 guest | Passed in 38817052900 |
+| musl | cli | ubuntu-24.04-arm → native Alpine ARM64 guest | Passed in 38817052900 |
+| provider | cli | ubuntu-latest (x64) | Passed in 38817052900 |
+| static | — | ubuntu-latest | Passed in 38817052900 |
 
 Static declares CLI/Core/Script/Schema/Maestro Arsenal package typechecks, spawn-import and size gates, and diff whitespace checks. Windows rows additionally require native Rust Job receipts; GNU x64 CLI regression also declares source/Desktop/Schema/parser ABI and localized oracle proofs. All qualification rows require nonce-bound omni controls and retained logs. These are workflow obligations, not newly measured results.
 
-Partial [38558321941](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38558321941), source `0baef01fe0b1d3ad36c2df3205c40223fb5190f5`, completed with conclusion `failure` (read-only `gh run view`). Its successful jobs do not establish the current 13-row bundle or a complete installed provider/tool proof. Final qualification remains pending; versions `1.18.27`/`1.18.28` are test builds only. Public registry/tap/AUR publication, release signing/notarization and release creation remain separate owner-controlled operations.
+Partial [38558321941](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38558321941), source `0baef01fe0b1d3ad36c2df3205c40223fb5190f5`, completed with conclusion `failure` (read-only `gh run view`). Its successful jobs do not establish the current 13-row bundle or a complete installed provider/tool proof; the green record is below.
+
+## Final bundle qualification (green)
+
+[38817052900](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38817052900) completed with conclusion `success` for all 14 jobs (13 qualification rows plus static) at source `5bf4144ef4bbc556ebc7c6b9f7d7934406f4aa55`, tree `19a1d0f878e71c79f17102404e2c36fb7337d318`, based on `dev` at `297b88f58294bda0313601a1cbcb67ce125efd4d`. Conclusion and head SHA were read through `gh run view`.
+
+- **Provider model:** OpenRouter `nvidia/nemotron-3-super-120b-a12b:free`, served upstream by Nvidia, with `temperature: 0` and `reasoning: { enabled: false }` in the model request body. Every captured request is checked for both fields. The oracle is unchanged: exactly one real native `bash` call, an opaque nonce absent from the first request, a continuation that carries the real tool result, fault/restoration controls at install, update and downgrade, and fail-closed handling without a credential. The credential lives only in the capture proxy; it is not written to config, projections or evidence.
+- **Why this model:** a CI probe over the hosted free catalog found that `nemotron-3.5-lightning:free` and `nemotron-3-ultra-550b-a55b:free` return empty continuations. With reasoning enabled, `nemotron-3-super` sometimes emitted two identical `bash` calls in one turn and ignored `parallel_tool_calls: false`; run [38815153267](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38815153267) failed this way, and every other lane in that run passed. With reasoning disabled, the probe passed 13 of 13 call/continuation trials, fault results included.
+- **Earlier `dev` failures at `297b88f58294`:** [38779654919](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38779654919), [38783566848](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38783566848) and [38786713107](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38786713107) failed the provider lane because the model gave no tool call. The other failures in those runs were a one-off macOS Intel `service start` failure, an upstream Deno HTTP 504 on musl x64 and a Windows ARM64 supervisor spawn timeout. None of them recurred in the two runs above. Deno remains pinned to `2.9.7`; the `2.9.6` strings are deliberate wrong-version controls.
+- Versions `1.18.27`/`1.18.28` remain test builds. Public registry/tap/AUR publication, release signing/notarization and release creation remain separate owner-controlled operations.
