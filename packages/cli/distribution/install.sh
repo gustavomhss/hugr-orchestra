@@ -3,6 +3,90 @@ set -eu
 LC_ALL=C; export LC_ALL
 umask 077
 fail() { printf '%s\n' "installer: $*" >&2; exit 1; }
+linux_host_libc() {
+  runtime_cpu=$1; runtime_pid=$2
+  runtime_size=$(stat -Lc '%s' "/proc/$runtime_pid/exe") || fail 'cannot stat Linux host runtime ELF'
+  runtime_header=$(od -An -v -tu1 -N64 "/proc/$runtime_pid/exe") || fail 'cannot read Linux host runtime ELF'
+  # Check the producer separately: valid-looking bytes with nonzero od exit
+  # cannot become successful admission through a pipeline's final awk status.
+  runtime_layout=$(printf '%s\n' "$runtime_header" | awk -v cpu="$runtime_cpu" -v size="$runtime_size" '
+    function le(p,w, i,v,m) { v=0; m=1; for(i=0;i<w;i++) { if(i>=4 && b[p+i]!=0) exit 1; v+=b[p+i]*m; m*=256 } return v }
+    { for(i=1;i<=NF;i++) { if($i!~/^[0-9]+$/ || $i>255) exit 1; b[++n]=$i } }
+    END { if(n!=64 || size!~/^[0-9]+$/ || size<64 || size>2147483647 ||
+      b[1]!=127 || b[2]!=69 || b[3]!=76 || b[4]!=70 || b[5]!=2 || b[6]!=1 || b[7]!=1 ||
+      (le(17,2)!=2 && le(17,2)!=3) || le(19,2)!=(cpu=="x64" ? 62 : 183) || le(21,4)!=1 || le(53,2)!=64 || le(55,2)!=56) exit 1
+      start=le(33,8); count=le(57,2); extent=count*56
+      if(!count || start<64 || start>2147483647 || start+extent>size) exit 1
+      printf "%.0f %.0f\n",start,extent }
+  ') || fail 'cannot inspect Linux host runtime ELF'
+  set -- $runtime_layout
+  [ "$#" = 2 ] || fail 'invalid Linux host program header layout'
+  runtime_programs=$(od -An -v -tu1 -j "$1" -N "$2" "/proc/$runtime_pid/exe") || fail 'cannot read Linux host program headers'
+  runtime_interp_range=$(printf '%s\n' "$runtime_programs" | awk -v expected="$2" -v size="$runtime_size" '
+    function le(p,w, i,v,m) { v=0; m=1; for(i=0;i<w;i++) { if(i>=4 && b[p+i]!=0) exit 1; v+=b[p+i]*m; m*=256 } return v }
+    { for(i=1;i<=NF;i++) { if($i!~/^[0-9]+$/ || $i>255) exit 1; b[++n]=$i } }
+    END { if(n!=expected) exit 1
+      for(h=1;h<=n;h+=56) if(le(h,4)==3) {
+        found++; start=le(h+8,8); extent=le(h+32,8); memory=le(h+40,8)
+        if(extent<2 || extent>4096 || memory<extent || start>2147483647 || start+extent>size) exit 1
+      }
+      if(found!=1) exit 1
+      printf "%.0f %.0f\n",start,extent }
+  ') || fail 'Linux host PT_INTERP missing or invalid'
+  set -- $runtime_interp_range
+  [ "$#" = 2 ] || fail 'invalid Linux host interpreter range'
+  runtime_interp_bytes=$(od -An -v -tu1 -j "$1" -N "$2" "/proc/$runtime_pid/exe") || fail 'cannot read Linux host interpreter'
+  runtime_interpreter=$(printf '%s\n' "$runtime_interp_bytes" | awk -v expected="$2" '
+    { for(i=1;i<=NF;i++) { if($i!~/^[0-9]+$/ || $i>255) exit 1; b[++n]=$i } }
+    END { if(n!=expected || b[n]!=0 || b[1]!=47) exit 1
+      for(i=1;i<n;i++) { c=sprintf("%c",b[i]); if(c!~/^[A-Za-z0-9\/_.+-]$/) exit 1; text=text c }
+      print text }
+  ') || fail 'invalid Linux host PT_INTERP string'
+  case "$runtime_cpu:${runtime_interpreter##*/}" in
+    x64:ld-musl-x86_64.so.1|arm64:ld-musl-aarch64.so.1) runtime_loader_libc=musl ;;
+    x64:ld-linux-x86-64.so.2|arm64:ld-linux-aarch64.so.1) runtime_loader_libc=glibc ;;
+    *) fail 'unknown Linux host interpreter' ;;
+  esac
+  runtime_loader=$(readlink -f -- "$runtime_interpreter") || fail 'cannot resolve Linux host interpreter'
+  case "$runtime_loader" in /*) ;; *) fail 'invalid Linux host interpreter path' ;; esac
+  [ -f "$runtime_loader" ] && [ ! -L "$runtime_loader" ] || fail 'Linux host interpreter is not a physical regular file'
+  runtime_identity=$(stat -Lc '%D %i' -- "$runtime_loader") || fail 'cannot stat Linux host interpreter identity'
+  set -- $runtime_identity
+  [ "$#" = 2 ] || fail 'invalid Linux host interpreter identity'
+  runtime_loaded_libc=$(awk -v cpu="$runtime_cpu" -v loader="$runtime_loader" -v device="$1" -v inode="$2" '
+    function hex(s) { sub(/^0+/,"",s); return s=="" ? "0" : s }
+    BEGIN {
+      if(device!~/^[0-9a-f]+$/ || length(device)>16 || inode!~/^[0-9]+$/ || inode==0) bad=1
+      while(length(device)<16) device="0" device
+      major=hex(substr(device,1,5) substr(device,12,3)); minor=hex(substr(device,6,6) substr(device,15,2))
+    }
+    { lines++
+      if(NF<5 || $1!~/^[0-9a-f]+-[0-9a-f]+$/ || $2!~/^[rwxps-]+$/ || length($2)!=4 ||
+         $3!~/^[0-9a-f]+$/ || $4!~/^[0-9a-f]+:[0-9a-f]+$/ || $5!~/^[0-9]+$/) bad=1
+      if($6==loader) {
+        split($4,dev,":")
+        if(NF!=6 || ("i" $5)!=("i" inode) || ("d" hex(dev[1]))!=("d" major) || ("d" hex(dev[2]))!=("d" minor)) bad=1
+        if($2~/x/) mapped=1
+      }
+      name=$6; sub(/^.*\//,"",name)
+      if(name ~ /qemu|gcompat/) bad=1
+      g=(name=="libc.so.6" || name~/^libc-[0-9]+\.[0-9]+\.so$/)
+      m=(name==(cpu=="x64" ? "libc.musl-x86_64.so.1" : "libc.musl-aarch64.so.1") ||
+         name==(cpu=="x64" ? "ld-musl-x86_64.so.1" : "ld-musl-aarch64.so.1"))
+      if(g || m) {
+        if(NF!=6 || $6!~/^\// || $5==0) bad=1
+        if(g) glibc=1
+        if(m) musl=1
+        if($2 ~ /x/) { if(g) gx=1; if(m) mx=1 }
+      }
+    }
+    END { if(!lines || bad || !mapped || glibc==musl || (glibc && !gx) || (musl && !mx)) exit 1
+      print musl ? "musl" : "glibc" }
+  ' "/proc/$runtime_pid/maps") || fail 'cannot determine Linux host libc from loaded process'
+  case "$runtime_loaded_libc" in glibc|musl) ;; *) fail 'cannot determine Linux host libc from loaded process' ;; esac
+  [ "$runtime_loaded_libc" = "$runtime_loader_libc" ] || fail 'Linux host interpreter does not match loaded libc'
+  printf '%s\n' "$runtime_loaded_libc"
+}
 prefix= version= target= archive= digest= rollback=
 while [ "$#" -gt 0 ]; do
   [ "$#" -ge 2 ] || fail 'every option requires a value'
@@ -30,8 +114,7 @@ else
 fi
 case "$version" in ''|[!0-9A-Za-z]*|*[!0-9A-Za-z._+-]*|*..*) fail 'unsafe version' ;; esac
 case "$target" in
-  linux-arm64|linux-x64|linux-x64-baseline|darwin-arm64|darwin-x64|darwin-x64-baseline) ;;
-  *musl*) fail 'musl unsupported in POSIX preparation' ;;
+  linux-arm64|linux-x64|linux-x64-baseline|linux-arm64-musl|linux-x64-musl|linux-x64-baseline-musl|darwin-arm64|darwin-x64|darwin-x64-baseline) ;;
   *) fail 'unsupported POSIX target' ;;
 esac
 os=${target%%-*}; cpu=${target#*-}; cpu=${cpu%%-*}
@@ -39,6 +122,15 @@ host=$(uname -s)
 case "$host" in Linux) host_os=linux ;; Darwin) host_os=darwin ;; *) fail 'unsupported host' ;; esac
 case "$(uname -m)" in x86_64|amd64) host_cpu=x64 ;; arm64|aarch64) host_cpu=arm64 ;; *) fail 'unsupported host CPU' ;; esac
 [ "$os-$cpu" = "$host_os-$host_cpu" ] || fail 'target does not match host OS/CPU'
+# Inspect this running shell, not an ldd command's exit status or a loader merely
+# present on disk. A static shell, unreadable/unknown maps, compatibility libc or
+# mixed libc cannot establish an ABI. No prefix or lock has been touched here.
+if [ "$os" = linux ]; then
+  host_libc=$(linux_host_libc "$cpu" "$$") || exit 1
+  case "$host_libc" in glibc|musl) ;; *) fail 'cannot determine Linux host libc from loaded process' ;; esac
+  case "$target" in *-musl) target_libc=musl ;; *) target_libc=glibc ;; esac
+  [ "$host_libc" = "$target_libc" ] || fail 'target does not match host libc'
+fi
 if command -v sha256sum >/dev/null 2>&1; then hash() { sha256sum "$1" | cut -d ' ' -f 1; }
 elif command -v shasum >/dev/null 2>&1; then hash() { shasum -a 256 "$1" | cut -d ' ' -f 1; }
 else fail 'sha256sum or shasum required'; fi
