@@ -47,7 +47,113 @@ const snapshotText = JSON.stringify({
   ],
 })
 
+const reviewed = parseOwnSnapshot(snapshotText)!
+const auxiliary = {
+  ...reviewed.units[0]!,
+  unit: {
+    ...reviewed.units[0]!.unit,
+    id: "packages/genesis/src/index.ts",
+    grounding: "0123456789abcdef".repeat(4),
+  },
+  pack: {
+    ...reviewed.units[0]!.pack,
+    unit: "packages/genesis/src/index.ts",
+    invariants: [],
+    advisory: [],
+    gotchas: [],
+    shape: { ...reviewed.units[0]!.pack.shape, contents: [] },
+  },
+}
+
 describe("static Own snapshot", () => {
+  it("accepts source-bound auxiliary files, directories, and childless symbols beside real facts", () => {
+    const units = [
+      ...reviewed.units,
+      auxiliary,
+      { ...auxiliary, unit: { ...auxiliary.unit, id: "packages/genesis/src" } },
+      {
+        ...auxiliary,
+        unit: { ...auxiliary.unit, id: "packages/genesis/src/index.ts::function_declaration:0:bootstrap" },
+      },
+    ]
+    const snapshot = exportOwnSnapshot({ ...reviewed, units })
+    expect(parseOwnSnapshot(JSON.stringify(snapshot))).toEqual(snapshot)
+    const output = materializeStaticOwnSnapshot(snapshot)
+    expect(output.skills).toHaveLength(units.length)
+    expect(
+      verifyStaticOwnSnapshot(snapshot, [...output.skills, output.coverage], (path) => auxiliary.sourceBlobs[path]),
+    ).toEqual({ status: "READY" })
+  })
+
+  it("rejects an all-empty snapshot even when every unit has structural and source witnesses", () => {
+    const input = { ...reviewed, units: [auxiliary] }
+    expect(parseOwnSnapshot(JSON.stringify(input))).toBeUndefined()
+    expect(() => exportOwnSnapshot(input)).toThrow(
+      "Own snapshot export requires non-empty, unique units with fresh packs and source blobs",
+    )
+  })
+
+  it.each([null, undefined, "", "not-a-structural-hash"])("rejects auxiliary grounding %s", (grounding) => {
+    const input = { ...reviewed, units: [...reviewed.units, { ...auxiliary, unit: { ...auxiliary.unit, grounding } }] }
+    expect(parseOwnSnapshot(JSON.stringify(input))).toBeUndefined()
+    expect(() => exportOwnSnapshot(input)).toThrow()
+  })
+
+  it.each(["manifest", "goal"] as const)("rejects factual-empty %s grounding", (source) => {
+    expect(
+      parseOwnSnapshot(
+        JSON.stringify({
+          ...reviewed,
+          units: [...reviewed.units, { ...auxiliary, pack: { ...auxiliary.pack, grounding: { source } } }],
+        }),
+      ),
+    ).toBeUndefined()
+  })
+
+  it.each(["", " "])("rejects auxiliary empty briefing %j", (unit) => {
+    expect(
+      parseOwnSnapshot(
+        JSON.stringify({
+          ...reviewed,
+          units: [...reviewed.units, { ...auxiliary, pack: { ...auxiliary.pack, unit } }],
+        }),
+      ),
+    ).toBeUndefined()
+  })
+
+  it.each(["outside.ts", "../outside.ts", "packages/genesis/src/index.ts/other", "outside.ts::symbol"])(
+    "rejects auxiliary unit without its own source witness: %s",
+    (id) => {
+      expect(
+        parseOwnSnapshot(
+          JSON.stringify({
+            ...reviewed,
+            units: [...reviewed.units, { ...auxiliary, unit: { ...auxiliary.unit, id } }],
+          }),
+        ),
+      ).toBeUndefined()
+    },
+  )
+
+  it.each([
+    { contents: [] },
+    { contents: ["packages/genesis/src/index.ts::function_declaration:0:bootstrap"] },
+  ])("allows only source-bound auxiliary contents: %j", (shape) => {
+    const entry = { ...auxiliary, pack: { ...auxiliary.pack, shape: { ...auxiliary.pack.shape, ...shape } } }
+    expect(parseOwnSnapshot(JSON.stringify({ ...reviewed, units: [...reviewed.units, entry] }))).toBeDefined()
+    expect(
+      parseOwnSnapshot(
+        JSON.stringify({
+          ...reviewed,
+          units: [
+            ...reviewed.units,
+            { ...entry, pack: { ...entry.pack, shape: { ...entry.pack.shape, contents: ["outside.ts"] } } },
+          ],
+        }),
+      ),
+    ).toBeUndefined()
+  })
+
   it("recomposes skills, coverage, and source freshness from Genesis snapshot", () => {
     const snapshot = parseOwnSnapshot(snapshotText)
     expect(snapshot).toBeDefined()
