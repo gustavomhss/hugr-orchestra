@@ -6,6 +6,7 @@ import {
   directory,
   mockPty,
   openChapter,
+  openLocalPipelines,
   openSource,
   serverA,
   serverB,
@@ -135,12 +136,15 @@ test("profiles on different servers keep separate inventories and discard a late
 })
 
 test("the pressed WIP item opens no tooltip that would take a dialog's Escape", async ({ page }) => {
+  await page.clock.install()
   await setup(page)
-  // Clicks the CI/CD item and leaves the pointer on it.
   await openChapter(page)
-  // A timer queued now fires after the 400ms tooltip open delay that the hover started before the click.
-  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 450)))
+  // Actions is no longer WIP; MCP still exercises cancellation of the pending hover tooltip.
+  await page.locator(".orchestra-nav").getByRole("button", { name: "MCP", exact: true }).click()
+  await page.clock.fastForward(450)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await openLocalPipelines(page, serverA)
   const source = await openSource(page, ".github/workflows/ci.yml")
   await page.keyboard.press("Escape")
   await expect(source).toHaveCount(0)
