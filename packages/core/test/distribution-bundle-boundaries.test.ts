@@ -40,7 +40,7 @@ function expected(box: Box, name: string) {
   if (name === "Prove localized proof oracles") return [["bun", "test", "--timeout", "30000",
     "./test/fixture/distribution-aur/sandbox-evidence.test.ts",
     "./test/fixture/distribution-aur/bootstrap-config.test.ts",
-    ...["compiler-edge", "tool-result", "capture-bytes", "provenance", "model-pull"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]]
+    ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]]
   return [["bun", "test", "--timeout", "120000", name === "Prove source ABI producers" ? "./src/tree-sitter-prebuilds.test.ts" : "./src/main/cli-artifacts.test.ts"]]
 }
 

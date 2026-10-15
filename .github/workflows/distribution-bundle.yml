@@ -127,6 +127,9 @@ jobs:
       PACKAGE: ${{ matrix.package }}
       ORCHESTRA_OMNI_CONTROL: suite
       ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ matrix.platform == 'win32' && 'true' || 'false' }}
+      # Fail closed: the provider lane runs real hosted inference and must never
+      # fall back to a local, credential-free or scripted provider.
+      OPENROUTER_API_KEY: ${{ matrix.lane == 'provider' && secrets.OPENROUTER_API_KEY || '' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
@@ -238,7 +241,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-aur/bootstrap-config.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts ./test/fixture/distribution-provider/model-pull.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-aur/bootstrap-config.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
         working-directory: packages/${{ matrix.package }}
         run: |

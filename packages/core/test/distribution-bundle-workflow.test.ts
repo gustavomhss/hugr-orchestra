@@ -30,7 +30,7 @@ const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ 
 const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
 const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
 const localized = ["./test/fixture/distribution-aur/sandbox-evidence.test.ts", "./test/fixture/distribution-aur/bootstrap-config.test.ts",
-  ...["compiler-edge", "tool-result", "capture-bytes", "provenance", "model-pull"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]
+  ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]
 
 test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
   inspect(source)

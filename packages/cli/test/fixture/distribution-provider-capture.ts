@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import { model } from "./distribution-provider-ollama"
+import { model } from "./distribution-provider-openrouter"
 import { WireRequest, decodeCaptureRequest } from "./distribution-provider-wire"
 import { captureByteCap, readCaptureBytes, requireCaptureLength } from "./distribution-provider-bytes"
 export { WireCall, WireRequest, streamedCompletion } from "./distribution-provider-wire"
@@ -34,8 +34,16 @@ export function captureInference(endpoint: string, evidence: string) {
       }, null, 2) + "\n")
       const controller = new AbortController()
       controllers.add(controller)
+      // Forward provider credentials verbatim (for example Authorization to a
+      // hosted endpoint). Header values are never captured or logged.
+      const headers = new Headers()
+      request.headers.forEach((value, name) => {
+        if (["host", "connection", "content-length", "transfer-encoding"].includes(name.toLowerCase())) return
+        headers.set(name, value)
+      })
+      if (!headers.has("content-type")) headers.set("content-type", "application/json")
       const upstream = await fetch(endpoint + route.pathname, {
-        method: "POST", headers: { "content-type": "application/json" }, body: payload,
+        method: "POST", headers, body: payload,
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(240_000)]), redirect: "error",
       }).catch((error: unknown) => {
         controllers.delete(controller)

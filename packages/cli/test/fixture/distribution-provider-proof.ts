@@ -14,8 +14,8 @@ import { Agent } from "../../../schema/src/agent"
 import { Location } from "../../../schema/src/location"
 import { sandbox, sha256 } from "./distribution-native"
 import type { Sandbox } from "./distribution-native"
-import { model } from "./distribution-provider-ollama"
-import type { OwnedOllama } from "./distribution-provider-ollama"
+import { apiKey, model } from "./distribution-provider-openrouter"
+import type { OwnedOpenRouter } from "./distribution-provider-openrouter"
 import { captureInference, streamedCompletion } from "./distribution-provider-capture"
 import { observeInstalledTool } from "./distribution-provider-process"
 import { providerDaemon } from "./distribution-provider-daemon"
@@ -31,7 +31,7 @@ const HistoryResponse = Schema.Struct({ data: Schema.Array(SessionEvent.Durable)
 // Actual Bun --compile receipt/source pins bind dispatch and selected composition
 // to this binary; public V2 admission/projections below establish the live path.
 export async function qualifyProvider(input: {
-  payload: string; version: string; box: Sandbox; stage: string; evidence: string; ollama: OwnedOllama
+  payload: string; version: string; box: Sandbox; stage: string; evidence: string; remote: OwnedOpenRouter
   compiler: CompilerReceipts[number]
 }) {
   const modules = resolve(input.payload, "../..")
@@ -47,7 +47,7 @@ export async function qualifyProvider(input: {
   const supervisor = join(payload, "bin/hugr-omni-supervisor")
   const original = await readFile(supervisor)
   const mode = (await lstat(supervisor)).mode & 0o777
-  const proxy = captureInference(input.ollama.endpoint(), stage)
+  const proxy = captureInference(input.remote.endpoint(), stage)
   await withProviderCleanup(async () => {
     for (const kind of ["positive", "fault", "restored"] as const) {
       const evidence = join(stage, kind)
@@ -73,10 +73,11 @@ export async function qualifyProvider(input: {
         shell: "/bin/sh", plugins: [], compaction: { auto: false, prune: false },
         permissions: [{ action: "*", resource: "*", effect: "deny" as const }],
         providers: { distribution: {
-          name: "Owned CPU Ollama",
+          name: "Hosted Nemotron",
           // Omit env: an empty env Integration would hide this credential-free
           // provider in Catalog.available. Native route resolves to Auth.none.
           api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url, settings: { generation: { temperature: 0 } } },
+          request: { headers: { Authorization: `Bearer ${apiKey()}` } },
           models: { [model]: { name: model, capabilities: { tools: true, input: ["text"], output: ["text"] },
             limit: { context: 8192, output: 1024 } } },
         } },
@@ -94,7 +95,13 @@ export async function qualifyProvider(input: {
       }
       Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })(config)
       await Bun.write(join(box.cwd, "orchestra.json"), JSON.stringify(config, null, 2))
-      await Bun.write(join(evidence, "location-config.json"), JSON.stringify(config, null, 2))
+      // Evidence keeps the exact proven configuration except the disposable
+      // hosted credential, which must never reach an uploaded artifact.
+      await Bun.write(join(evidence, "location-config.json"), JSON.stringify({
+        ...config,
+        providers: { distribution: { ...config.providers.distribution,
+          request: { headers: { Authorization: "Bearer [redacted]" } } } },
+      }, null, 2))
       const prompt = `Call bash exactly once with this JSON input, verbatim: ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}\nThe tool stdout defines x. What is the value of x? Answer with its value only, after the actual tool result. If the tool fails, report failure.`
       proxy.arm(kind)
       const daemon = providerDaemon(launcher, payload, input.version, { ...box, env }, evidence)
@@ -165,7 +172,6 @@ export async function qualifyProvider(input: {
         expect(tool.state.input).toMatchObject({ command: shell, workdir })
         expect(tool.state.status).toBe(kind === "fault" ? "error" : "completed")
         const records = await proxy.drain()
-        await input.ollama.cpu()
         expect(records.length).toBeGreaterThanOrEqual(2)
         expect(records.length).toBeLessThanOrEqual(3)
         records.forEach((record) => {

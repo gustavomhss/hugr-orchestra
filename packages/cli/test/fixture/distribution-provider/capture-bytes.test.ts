@@ -7,7 +7,7 @@ import { decodeCaptureRequest, streamedCompletion } from "../distribution-provid
 
 test("forwarding proxy survives slow SSE inference beyond Bun default idle timeout", async () => {
   const { captureInference } = await import("../distribution-provider-capture")
-  const { model } = await import("../distribution-provider-ollama")
+  const { model } = await import("../distribution-provider-openrouter")
   const directory = await mkdtemp(join(tmpdir(), "provider-prefill-"))
   const payload = JSON.stringify({ model, messages: [{ role: "user", content: "prefill boundary" }], stream: true })
   const first = 'data: {"choices":[{"delta":{"role":"assistant","content":""},"finish_reason":null}]}\n\n'
