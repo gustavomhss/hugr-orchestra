@@ -21,6 +21,7 @@ import { observeInstalledTool } from "./distribution-provider-process"
 import { providerDaemon } from "./distribution-provider-daemon"
 import { calibrateSuccessfulBashResult, requireSuccessfulBashResult } from "./distribution-provider-tool-result"
 import type { CompilerReceipts } from "./distribution-provider-sourcegraph"
+import { withProviderCleanup } from "./distribution-provider-provenance"
 
 const ContextResponse = Schema.Struct({ data: Schema.Array(SessionMessage.Message) })
 const ActiveResponse = Schema.Struct({ data: Schema.Record(Schema.String, Schema.Struct({ type: Schema.Literal("running") })) })
@@ -47,7 +48,7 @@ export async function qualifyProvider(input: {
   const original = await readFile(supervisor)
   const mode = (await lstat(supervisor)).mode & 0o777
   const proxy = captureInference(input.ollama.endpoint(), stage)
-  try {
+  await withProviderCleanup(async () => {
     for (const kind of ["positive", "fault", "restored"] as const) {
       const evidence = join(stage, kind)
       await mkdir(evidence)
@@ -61,6 +62,7 @@ export async function qualifyProvider(input: {
       const file = join(box.directory, "outside", `${randomBytes(12).toString("hex")}.nonce`)
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
+      await mkdir(workdir)
       const shell = `printf '%s\\n' '${nonce}' > '${file}' && sleep 3 && cat '${file}'`
       expect(await absent(file)).toBe(true)
       const config = {
@@ -72,7 +74,6 @@ export async function qualifyProvider(input: {
           // Omit env: an empty env Integration would hide this credential-free
           // provider in Catalog.available. Native route resolves to Auth.none.
           api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url },
-          request: { body: { temperature: 0, max_tokens: 1024 } },
           models: { [model]: { name: model, capabilities: { tools: true, input: ["text"], output: ["text"] },
             limit: { context: 8192, output: 1024 } } },
         } },
@@ -92,7 +93,7 @@ export async function qualifyProvider(input: {
       proxy.arm(kind)
       const daemon = providerDaemon(launcher, payload, input.version, { ...box, env }, evidence)
       const state: { monitor?: Awaited<ReturnType<typeof observeInstalledTool>> } = {}
-      try {
+      await withProviderCleanup(async () => {
         if (kind === "fault") {
           // Keep discoverable executable path, but refuse every attempted native
           // supervisor start. This marker is fault evidence, never a completion.
@@ -145,6 +146,8 @@ export async function qualifyProvider(input: {
         expect(users).toHaveLength(1)
         expect(users[0]).toMatchObject({ id: admitted.id, text: prompt })
         const assistants = context.data.filter((message) => message.type === "assistant")
+        const failure = assistants.find((message) => message.error)?.error
+        if (failure) throw new Error(`PROVIDER_DURABLE_ASSISTANT_FAILED: ${failure.message}`)
         expect(assistants.length).toBeGreaterThanOrEqual(2)
         expect(assistants.every((message) => message.agent === "distribution-proof" && message.model.id === model && message.model.providerID === "distribution")).toBe(true)
         const tools = assistants.flatMap((message) => message.content.filter((part) => part.type === "tool"))
@@ -246,24 +249,20 @@ export async function qualifyProvider(input: {
           nonce, file, kind, sessionID: created.id, admissionID: admitted.id, callID: tool.id, turns: records.length,
           terminalCompletedAt: final.time.completed === undefined ? undefined : DateTime.toEpochMillis(final.time.completed),
           fileCreated: kind !== "fault", strict: true }, null, 2))
-      } finally {
-        await (async () => {
+      }, [
+        async () => {
           if (!state.monitor) return
           const chain = await state.monitor.stop(false)
           daemon.capture(chain.flatMap((row) => [row.native, row.supervisor, row.shell]))
-        })().finally(async () => {
-          await daemon.stop().finally(async () => {
-            await writeFile(supervisor, original)
-            await chmod(supervisor, mode)
-          })
-        })
-      }
+        },
+        () => daemon.stop(),
+        () => writeFile(supervisor, original),
+        () => chmod(supervisor, mode),
+      ])
       expect(sha256(await readFile(supervisor))).toBe(sha256(original))
       console.error(`DISTRIBUTION_PROVIDER_CONTROL ${JSON.stringify({ stage: input.stage, kind, version: input.version, evidence })}`)
     }
-  } finally {
-    await proxy.stop().finally(async () => { await writeFile(supervisor, original); await chmod(supervisor, mode) })
-  }
+  }, [() => proxy.stop(), () => writeFile(supervisor, original), () => chmod(supervisor, mode)])
 }
 
 async function absent(file: string) {
