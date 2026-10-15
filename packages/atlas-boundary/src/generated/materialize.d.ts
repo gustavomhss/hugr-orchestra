@@ -332,7 +332,7 @@ export type OwnSnapshotVerification = {
 	readonly status: "HOLD";
 	readonly issues: readonly string[];
 };
-/** Parse persisted Genesis oracle. Empty or ambiguous coverage never becomes a valid snapshot. */
+/** Parse persisted Genesis oracle. Empty/ambiguous coverage or a fact-free snapshot is invalid. */
 export declare function parseOwnSnapshot(content: string): OwnSnapshot | undefined;
 /** Build persisted oracle only from already-reviewed, freshly composed Own packs. Candidate staging is not input. */
 export declare function exportOwnSnapshot(input: OwnSnapshotExport): OwnSnapshot;
