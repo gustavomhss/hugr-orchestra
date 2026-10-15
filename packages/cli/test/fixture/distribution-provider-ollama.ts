@@ -6,12 +6,12 @@ import { sandbox, sha256, successful, command } from "./distribution-native"
 import { pullOllamaModel } from "./distribution-provider/model-pull"
 
 // Linux amd64 manifest, not a mutable tag or a multi-architecture index.
-// Source: Docker Hub ollama/ollama:0.9.6; https://registry.ollama.ai/v2/library/qwen2.5/manifests/1.5b.
-// CPU fixture: Q4_K_M, 986048512-byte weights; official template renders Tools/ToolCalls/tool_response.
+// Source: Docker Hub ollama/ollama:0.9.6; https://registry.ollama.ai/v2/library/qwen2.5/manifests/3b.
+// CPU fixture: Q4_K_M, 1929903008-byte weights; official template renders Tools/ToolCalls/tool_response.
 export const image = "ollama/ollama@sha256:41cac4de8913952adc161777b5a241eaed84d49f2663e0f280ed960198beb099"
-export const model = "qwen2.5:1.5b"
-export const modelDigest = "sha256:65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b"
-const weightsDigest = "sha256:183715c435899236895da3869489cc30ac241476b4971a20285b1a462818a5b4"
+export const model = "qwen2.5:3b"
+export const modelDigest = "sha256:357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b"
+const weightsDigest = "sha256:5ee4f07cdb9beadbbb293e85803c569b01bd37ed059d2715faa7bb405f31caa6"
 const label = "org.orchestra.distribution-provider.owner"
 
 function requireModelDigest(value: unknown) {
