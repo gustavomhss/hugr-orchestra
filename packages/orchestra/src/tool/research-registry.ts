@@ -43,11 +43,13 @@ export function discovery(agent: Agent.Info) {
 }
 
 /**
- * The discovery tools belong to the native discovery seat only. Discovery never sees a configured plugin tool, nor a
+ * Research tools belong to native discovery; the native upstream author also holds the read-only Atlas context door.
+ * Discovery never sees a configured plugin tool, nor a
  * tool its immutable native floor denies: a path-scoped skill-root edit deny can mask the wildcard discovery deny in its
  * ordinary permissions.
  */
 export function hidden(agent: Agent.Info, id: string, plugin: boolean) {
+  if (!plugin && id === AtlasContextTool.id && agent.native === true && agent.id === "archie") return false
   if (plugin && agent.id === "jimmy") return true
   if (!discovery(agent)) return IDS.includes(id)
   return Permission.disabled([id], Permission.fromConfig(nativeProfiles.jimmy)).has(id)
