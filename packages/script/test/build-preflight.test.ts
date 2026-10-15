@@ -39,8 +39,16 @@ test("packaged admission modules import without a source workspace", async () =>
     await Promise.all(["tree-sitter-prebuilds.ts", "workspace-paths.ts", "module-catalog.ts", "module-resolver.ts"].map(async (file) => {
       await Bun.write(path.join(directory, file), await Bun.file(path.resolve(import.meta.dir, "../src", file)).arrayBuffer())
     }))
-    const result = await run(["-e", `const module = await import(${JSON.stringify(pathToFileURL(path.join(directory, "tree-sitter-prebuilds.ts")).href)}); if (typeof module.requireTreeSitterBundle !== "function") throw new Error("ADMISSION_MISSING"); console.log("ADMISSION_IMPORT_OK")`], {}, directory)
-    expect(result.status).toBe(0)
+    const schema = path.join(directory, "node_modules/@orchestra/schema")
+    await Bun.write(path.join(schema, "package.json"), JSON.stringify({ name: "@orchestra/schema", type: "module", exports: { "./elf": "./elf.ts" } }))
+    await Bun.write(path.join(schema, "elf.ts"), await Bun.file(path.resolve(import.meta.dir, "../../schema/src/elf.ts")).arrayBuffer())
+    await Bun.write(path.join(directory, "empty.node"), new Uint8Array())
+    const result = await run(["-e", `import assert from "node:assert/strict";
+      const module = await import(${JSON.stringify(pathToFileURL(path.join(directory, "tree-sitter-prebuilds.ts")).href)});
+      assert.equal(typeof module.requireTreeSitterBundle, "function");
+      assert.throws(() => module.inspectElf("./empty.node"), /ELF_TRUNCATED/);
+      console.log("ADMISSION_IMPORT_OK")`], {}, directory)
+    expect(result.status, result.error).toBe(0)
     expect(result.output.trim()).toBe("ADMISSION_IMPORT_OK")
   } finally {
     await rm(directory, { recursive: true, force: true })
