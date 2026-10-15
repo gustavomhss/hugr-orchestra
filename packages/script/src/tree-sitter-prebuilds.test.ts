@@ -15,6 +15,8 @@ import {
 import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
+import { copyWorkspace } from "../test/fixture/workspace.ts"
+import { WorkspacePaths } from "./workspace-paths.ts"
 import {
   NATIVE_MACHINES,
   copyTreeSitter,
@@ -27,7 +29,8 @@ import {
   treeSitterBundle,
 } from "./tree-sitter-prebuilds"
 
-const root = path.resolve(import.meta.dir, "../../..")
+const workspace = WorkspacePaths.make(import.meta.dir)
+const root = workspace.root
 const host = `${process.platform}-${process.arch}`
 const fixtures: string[] = []
 
@@ -63,6 +66,7 @@ test.each(["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64"
 test("an install without the grammars or the core package is a named failure, not a pass", () => {
   const empty = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-empty-"))
   fixtures.push(empty)
+  copyWorkspace(empty)
   expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow(
     "TREE_SITTER_PREBUILDS_MISSING: linux-x64: tree-sitter, tree-sitter-javascript, tree-sitter-python, tree-sitter-typescript",
   )
@@ -129,7 +133,7 @@ test("a mislabeled host prebuild is rebuilt from source and loads", () => {
   })
 }, 600_000)
 
-const resolve = createRequire(path.join(root, "packages", "maestro-arsenal", "package.json")).resolve
+const resolve = createRequire(path.join(workspace.module("maestro-arsenal"), "package.json")).resolve
 const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.json")))
 
 // A real tree-sitter-python beside host-CPU javascript/typescript stubs. The core package is either a stub with a
@@ -138,6 +142,7 @@ function grammarFixture(core: "stub" | "source") {
   // gyp computes relative paths from the real cwd; macOS tmpdir is behind the /var -> /private/var link.
   const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), "tree-sitter-rebuild-")))
   fixtures.push(fixture)
+  copyWorkspace(fixture)
   const modules = path.join(fixture, "node_modules")
   const gyp = lockfileNodeGyp(root)!
   const source = realpathSync(path.dirname(resolve("tree-sitter/package.json")))

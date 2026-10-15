@@ -1,19 +1,18 @@
 import { expect, test } from "bun:test"
-import { mkdir, mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, rm } from "node:fs/promises"
 import path from "node:path"
 import semver from "semver"
 import pkg from "../../orchestra/package.json" with { type: "json" }
+import { copyWorkspace } from "../test/fixture/workspace.ts"
 
 async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean } = {}) {
   // A copied module reads a real isolated owned manifest, including SemVer boundary fixtures.
   const fixture = options.source === undefined ? undefined : await mkdtemp(path.join(import.meta.dir, "../.version-"))
   try {
     if (fixture) {
-      await mkdir(path.join(fixture, "packages/script/src"), { recursive: true })
-      await Bun.write(path.join(fixture, "packages/script/src/index.ts"), Bun.file(path.join(import.meta.dir, "index.ts")))
-      await Bun.write(path.join(fixture, "packages/orchestra/package.json"), JSON.stringify({ version: options.source }))
-      await Bun.write(path.join(fixture, "package.json"), Bun.file(path.join(import.meta.dir, "../../../package.json")))
-      await Bun.write(path.join(fixture, ".github/TEAM_MEMBERS"), Bun.file(path.join(import.meta.dir, "../../../.github/TEAM_MEMBERS")))
+      const workspace = copyWorkspace(fixture)
+      const manifest = path.join(workspace.module("orchestra"), "package.json")
+      await Bun.write(manifest, JSON.stringify({ ...await Bun.file(manifest).json(), version: options.source }))
     }
     const child = Bun.spawn([process.execPath, "--eval", `
       // The import has no network seam; guard fetch in this child only, never in the test process.
