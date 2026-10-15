@@ -9,7 +9,7 @@ export { WireCall, WireRequest, streamedCompletion } from "./distribution-provid
 // credential lives here and is injected per request; header values are never
 // captured, persisted or logged.
 export function captureInference(endpoint: string, evidence: string) {
-  const records: Array<{ request: typeof WireRequest.Type; requestJSON: string; response: string; status: number }> = []
+  const records: Array<{ request: typeof WireRequest.Type; requestJSON: string; response: string; status: number; upstreamProvider?: string }> = []
   const pending = new Set<Promise<void>>()
   const controllers = new Set<AbortController>()
   const failures: unknown[] = []
@@ -57,7 +57,7 @@ export function captureInference(endpoint: string, evidence: string) {
         throw new Error("PROVIDER_CAPTURE_UPSTREAM_BODY_MISSING")
       }
       const [client, capture] = upstream.body.tee()
-      const record = { request: decoded, requestJSON: json, response: "", status: upstream.status }
+      const record: (typeof records)[number] = { request: decoded, requestJSON: json, response: "", status: upstream.status }
       records.push(record)
       const task = (async () => {
         record.response = (await readCaptureBytes(capture, { failure: "PROVIDER_CAPTURE_RESPONSE_TOO_LARGE", controller,
@@ -66,11 +66,11 @@ export function captureInference(endpoint: string, evidence: string) {
             console.error(`${error.message} ${JSON.stringify({ stage, turn, bytes, cap: captureByteCap })}`)
           },
         })).toString("utf8")
+        // Upstream identity is visible evidence that the pinned model id was
+        // actually served, so an id-to-backend swap cannot pass unnoticed.
+        record.upstreamProvider = /"provider":"([^"]+)"/.exec(record.response)?.[1]
         await Bun.write(join(evidence, `${stage}-turn-${turn}.json`), JSON.stringify({
           upstream: endpoint, method: "POST", path: route.pathname, ...record,
-          // Upstream identity is visible evidence that the pinned model id was
-          // actually served, so an id-to-backend swap cannot pass unnoticed.
-          upstreamProvider: /"provider":"([^"]+)"/.exec(record.response)?.[1],
         }, null, 2) + "\n")
       })().catch((error: unknown) => { failures.push(error) }).finally(() => {
         controllers.delete(controller)

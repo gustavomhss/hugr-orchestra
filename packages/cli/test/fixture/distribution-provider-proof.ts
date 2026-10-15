@@ -179,8 +179,8 @@ export async function qualifyProvider(input: {
         expect(JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(first.requestJSON)).includes(nonce)).toBe(false)
         expect(first.request.tools?.map((item) => item.function.name)).toEqual(["bash"])
         // Hosted identity plus a real native tool call is the proof that the
-        // pinned model actually executed the advertised bash tool.
-        expect(JSON.parse(await Bun.file(join(evidence, `${kind}-turn-1.json`)).text()).upstreamProvider?.length).toBeGreaterThan(0)
+        // pinned model actually served this request and executed the tool.
+        expect(first.upstreamProvider?.length).toBeGreaterThan(0)
         const inferred = streamedCompletion(first.response)
         expect(inferred.calls).toHaveLength(1)
         expect(inferred.calls[0]).toMatchObject({ id: tool.id, name: "bash" })
