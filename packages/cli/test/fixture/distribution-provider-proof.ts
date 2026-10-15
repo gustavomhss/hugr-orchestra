@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { Database } from "bun:sqlite"
 import { randomBytes } from "node:crypto"
 import { chmod, lstat, mkdir, readFile, realpath, writeFile } from "node:fs/promises"
-import { basename, join, resolve, sep } from "node:path"
+import { join, resolve, sep } from "node:path"
 import { DateTime, Schema } from "effect"
 import { Config } from "@orchestra/core/config"
 import { Session } from "../../../schema/src/session"
@@ -63,7 +63,10 @@ export async function qualifyProvider(input: {
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
       expect((await lstat(workdir)).isDirectory()).toBe(true)
-      const shell = `printf '%s' '${nonce}' > '${basename(file)}' && sleep 3 && cat '${basename(file)}'`
+      const shell = join(workdir, `${randomBytes(12).toString("hex")}.sh`)
+      await writeFile(shell, `#!/bin/sh\nset -eu\nprintf '%s' '${nonce}' > '${file}'\nsleep 3\ncat '${file}'\n`)
+      await chmod(shell, 0o700)
+      const scriptDigest = sha256(await readFile(shell))
       expect(await absent(file)).toBe(true)
       const config = {
         model: `distribution/${model}`, default_agent: "distribution-proof", snapshots: false, autoupdate: false,
@@ -168,7 +171,8 @@ export async function qualifyProvider(input: {
           expect((record.request.tools ?? []).map((item) => item.function.name).filter((name) => name !== "bash")).toEqual([])
         })
         const first = records[0]
-        expect(first.request.messages.some((message) => message.role === "user" && JSON.stringify(message.content)?.includes(nonce))).toBe(true)
+        expect(first.request.messages.some((message) => message.role === "user" && JSON.stringify(message.content)?.includes(shell))).toBe(true)
+        expect(JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(first.requestJSON)).includes(nonce)).toBe(false)
         expect(first.request.tools?.map((item) => item.function.name)).toEqual(["bash"])
         const inferred = streamedCompletion(first.response)
         expect(inferred.calls).toHaveLength(1)
@@ -235,6 +239,7 @@ export async function qualifyProvider(input: {
           expect(stdout).toBe(nonce)
           const info = await lstat(file)
           expect(info.isFile() && !info.isSymbolicLink() && info.nlink === 1).toBe(true)
+          expect(sha256(await readFile(shell))).toBe(scriptDigest)
           // File, DB projection and serving-daemon ancestry are genuine and stay
           // fixed while the copied request's tool-result view alone is mutated.
           records.slice(1).forEach((record) => requireSuccessfulBashResult(record.request, tool, stdout))
@@ -246,7 +251,7 @@ export async function qualifyProvider(input: {
         await Bun.write(join(evidence, "oracle.json"), JSON.stringify({ version: input.version, launcher, publicPath, payload,
           native: join(payload, "bin/orchestra"), supervisor, supervisorSHA256: sha256(original), serving, chain,
           compiler: input.compiler,
-          nonce, file, kind, sessionID: created.id, admissionID: admitted.id, callID: tool.id, turns: records.length,
+          nonce, file, command: shell, scriptDigest, kind, sessionID: created.id, admissionID: admitted.id, callID: tool.id, turns: records.length,
           terminalCompletedAt: final.time.completed === undefined ? undefined : DateTime.toEpochMillis(final.time.completed),
           fileCreated: kind !== "fault", strict: true }, null, 2))
       }, [
