@@ -89,11 +89,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: packages/relay/requirements-dev.txt
+          cache-dependency-path: modules/relay/requirements-dev.txt
 
       - name: Warm Relay pip cache
         if: runner.os == 'Linux'
-        run: python -m pip install -r packages/relay/requirements-dev.txt
+        run: python -m pip install -r modules/relay/requirements-dev.txt
 
       - name: Warm typecheck
         if: runner.os == 'Linux'

@@ -100,7 +100,7 @@ function view(document: Json, activeVersion: Json | null, runnable: boolean): Js
 
 // AuthoringGraph.project: steps 224 apart, phases two per row 672 apart, a "Workflow start" node in front.
 function profile(name: string, now: number) {
-  const source = read<Sprint>(`../../../relay/profiles/${name}.sprint.json`)
+  const source = read<Sprint>(`../../../../modules/relay/profiles/${name}.sprint.json`)
   const seed = data.profiles[name]
   const wps = source.work_packages
   const phases = [...new Set(wps.map((wp) => String(wp.macro ?? "")))]

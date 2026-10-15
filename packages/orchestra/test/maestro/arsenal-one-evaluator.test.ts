@@ -14,7 +14,7 @@ const scope = [
   "packages/maestro-arsenal/src",
   "packages/maestro-arsenal/test",
   "packages/core/src",
-  "packages/relay/src",
+  "modules/relay/src",
   "specs/hugr-maestro",
 ]
 
@@ -31,6 +31,7 @@ test("no source, test or doc names the removed Arsenal evaluator", () => {
     "packages/maestro-arsenal/src/index.ts",
     "packages/maestro-arsenal/src/governance/completion.ts",
     "packages/maestro-arsenal/src/tools/relay-arm.ts",
+    "modules/relay/src/arm/evaluate.ts",
     "packages/maestro-arsenal/src/governance/HOST-BINDINGS.md",
     "specs/hugr-maestro/arsenal-port.md",
   ])

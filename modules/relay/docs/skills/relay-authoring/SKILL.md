@@ -70,7 +70,7 @@ The following describe only the directly imported Python test service, not insta
 
 ## Checks
 
-Run tests from the Orchestra root through CI; structural commands run from `packages/relay`:
+Run tests from the Orchestra root through CI; structural commands run from `modules/relay`:
 
 ```sh
 bun run test:ci relay tests/test_docs.py tests/test_authoring.py tests/test_authoring_hooks.py --os both

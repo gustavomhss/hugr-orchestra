@@ -82,5 +82,5 @@ Structural docs guard checks links and source partition, not native route semant
 authoring routing test checks the documented handler/source table against actual native exports
 and registration and rejects retired launcher advertisements in current authoring pages.
 Run docs and retained authoring regression files through `bun run test:ci relay` with `--os both`;
-run supported index generation/check and structural guard from `packages/relay`. Cold review of
+run supported index generation/check and structural guard from `modules/relay`. Cold review of
 the frozen commits remains required before landing.
