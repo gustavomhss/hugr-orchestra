@@ -74,7 +74,7 @@ for (const channel of channels) {
     else process.env.ORCHESTRA_CHANNEL = previous
 
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
-    expect(config.extraResources).toContainEqual({ from: "../orchestra/playbooks", to: "playbooks" })
+    expect(config.extraResources).toContainEqual({ from: path.resolve(import.meta.dirname, "../orchestra/playbooks"), to: "playbooks" })
     expect(
       await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists(),
     ).toBe(true)

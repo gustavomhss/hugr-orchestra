@@ -684,7 +684,7 @@ describe("server session", () => {
     const secondResponse = deferredResponse()
     const message = userMessage("message")
     const store = createServerSession(messageClient(firstResponse.promise, secondResponse.promise))
-    const first = store.sync("child")
+    const first = expect(store.sync("child")).rejects.toThrow("Session not found: child")
 
     store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
     store.apply({
@@ -706,7 +706,7 @@ describe("server session", () => {
     const secondResponse = deferredResponse()
     const message = userMessage("message")
     const store = createServerSession(messageClient(firstResponse.promise, secondResponse.promise))
-    const first = store.sync("child")
+    const first = expect(store.sync("child")).rejects.toThrow("Session not found: child")
     store.apply({
       type: "session.deleted",
       properties: { sessionID: "child", info: session("child", "root") },

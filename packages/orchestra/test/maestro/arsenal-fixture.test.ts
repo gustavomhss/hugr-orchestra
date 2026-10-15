@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { mkdir, realpath, symlink } from "node:fs/promises"
+import { mkdir, realpath, symlink, unlink } from "node:fs/promises"
 import { prepareArsenalSDK } from "./arsenal-fixture"
 import { tmpdir } from "../fixture/fixture"
 import { rethrow } from "../lib/rejection"
@@ -49,9 +49,14 @@ test("SDK fixture refuses workspace aliases at modules root and scoped parent", 
   for (const scoped of [false, true]) {
     await using tmp = await tmpdir()
     const target = path.join(tmp.path, ".orchestra", "node_modules")
+    const alias = scoped ? path.join(target, "@orchestra") : target
     await mkdir(scoped ? target : path.dirname(target), { recursive: true })
-    await symlink(scoped ? scope : modules,
-      scoped ? path.join(target, "@orchestra") : target, process.platform === "win32" ? "junction" : "dir")
-    expect(await rethrow(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))).toThrow("modules parent outside fixture ownership")
+    await symlink(scoped ? scope : modules, alias, process.platform === "win32" ? "junction" : "dir")
+    try {
+      expect(await rethrow(prepareArsenalSDK(tmp.path, path.join(tmp.path, "config")))).toThrow("modules parent outside fixture ownership")
+    } finally {
+      // Remove the external junction itself before Bun recursively removes the fixture root on Windows.
+      await unlink(alias)
+    }
   }
 })
