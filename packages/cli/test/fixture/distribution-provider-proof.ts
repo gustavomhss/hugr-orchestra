@@ -142,8 +142,10 @@ export async function qualifyProvider(input: {
         const polls: Array<{ active: boolean; context: typeof ContextResponse.Type }> = []
         const deadline = Date.now() + 240_000
         while (true) {
-          const context = Schema.decodeUnknownSync(ContextResponse)(await daemon.api("GET", `/api/session/${created.id}/context`))
+          // Observe inactivity before the context snapshot: reading context first
+          // lets a drain finish between the two calls and leaves a stale history.
           const active = Schema.decodeUnknownSync(ActiveResponse)(await daemon.api("GET", "/api/session/active"))
+          const context = Schema.decodeUnknownSync(ContextResponse)(await daemon.api("GET", `/api/session/${created.id}/context`))
           polls.push({ active: active.data[created.id] !== undefined, context })
           const terminal = context.data.filter((message) => message.type === "assistant").at(-1)
           if (!active.data[created.id] && terminal?.time.completed !== undefined) break
