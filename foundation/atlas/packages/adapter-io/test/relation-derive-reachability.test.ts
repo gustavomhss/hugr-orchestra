@@ -17,7 +17,11 @@ import { describe, it, expect, afterEach } from "vitest"
 import { mkdirSync, writeFileSync, copyFileSync } from "node:fs"
 import { join } from "node:path"
 import { relationKey } from "@atlas/knowledge"
+import { exportOwnSnapshot, materializeStaticOwnSnapshot } from "@atlas/retrieval"
+import { publishTerritoryCatalog, verifyHostContext } from "../../retrieval/src/host-context.js"
 import { composeRuntime } from "../src/compose.js"
+import { initAst } from "../src/ast.js"
+import { runGit } from "../src/run-git.js"
 import { makeFixRepo } from "./harness/fix-repo.js"
 import { makeFixScip } from "./harness/fix-scip.js"
 
@@ -76,6 +80,74 @@ afterEach(() => {
 })
 
 describe("AR-13 — the shipped derive-relations leg PROVES + PERSISTS + reads back a proven relation", () => {
+  it("exports actual Own drill closure through materialization to the canonical host boundary", async () => {
+    await initAst()
+    const repo = makeIndexedRepo()
+    cleanups.push(repo.cleanup)
+    const run = withActor(() => composeRuntime(repo.repoPath).deriveRelations())
+    expect(run.persisted).toBe(1)
+
+    const runtime = composeRuntime(repo.repoPath)
+    const anchors = runtime.anchors(".")
+    expect(anchors.units.some((unit) => unit.qualifiedPath.includes("::"))).toBe(true)
+    const sourceBlobs = Object.fromEntries(
+      [A, B].map((file) => [file, runGit(repo.repoPath, ["hash-object", "--no-filters", "--", file]).trim()]),
+    )
+    const units = anchors.units
+      .filter((anchor) => anchor.qualifiedPath === SCOPE || anchor.path.startsWith(`${SCOPE}/`))
+      .map((anchor) => ({
+        unit: { level: "module" as const, id: anchor.qualifiedPath, grounding: anchor.subtreeHash },
+        sourceBlobs,
+        pack: runtime.own(anchor.qualifiedPath).pack,
+      }))
+    expect(units.some((entry) => entry.unit.id === SCOPE)).toBe(true)
+    expect(units.some((entry) => entry.unit.id === B && entry.pack.advisory.length === 0)).toBe(true)
+    expect(
+      units.some(
+        (entry) =>
+          entry.unit.id.includes("::") &&
+          entry.pack.shape.contents.length === 0 &&
+          entry.pack.invariants.length + entry.pack.advisory.length + entry.pack.gotchas.length === 0,
+      ),
+    ).toBe(true)
+    expect(units.find((entry) => entry.unit.id === A)?.pack.advisory).toContainEqual({
+      nodeId: relationKey(A, "depends-on", B),
+      tier: "T2",
+      claim: `${A}\0depends-on\0${B}`,
+      freshness: "FRESH",
+    })
+
+    const snapshot = exportOwnSnapshot({ snapshot: "actual-scip-drill-closure", sourceRevision: anchors.rev, units })
+    const output = materializeStaticOwnSnapshot(snapshot)
+    const input = {
+      projectId: "own-conformance",
+      catalog: publishTerritoryCatalog("own-conformance", [{ name: SCOPE, owner: ACTOR, tier: "T1", globs: ["src/**"] }]),
+      snapshotContent: JSON.stringify(snapshot),
+      files: [...output.skills, output.coverage],
+      currentBlobs: sourceBlobs,
+    }
+    const result = verifyHostContext(input)
+    expect(result.status).toBe("READY")
+    if (result.status !== "READY") throw new Error(JSON.stringify(result))
+    expect(result.context.units.map((entry) => entry.unit)).toEqual(units.map((entry) => entry.unit.id))
+    expect(result.context.units.flatMap((entry) => entry.receipt.drillUnits)).toContain(B)
+
+    // Removing a real advertised auxiliary leaves exact artifacts but an open drill reference.
+    const incomplete = exportOwnSnapshot({ ...snapshot, units: units.filter((entry) => entry.unit.id !== B) })
+    const partial = materializeStaticOwnSnapshot(incomplete)
+    expect(
+      verifyHostContext({
+        ...input,
+        snapshotContent: JSON.stringify(incomplete),
+        files: [...partial.skills, partial.coverage],
+      }),
+    ).toEqual({ status: "HOLD", reason: "boundary-invalid", evidence: [`unavailable drill unit: ${SCOPE}`] })
+    expect(verifyHostContext({ ...input, currentBlobs: { ...sourceBlobs, [B]: "0".repeat(40) } })).toMatchObject({
+      status: "HOLD",
+      reason: "artifacts-invalid",
+    })
+  })
+
   it("composeRuntime(repo).deriveRelations() lands src/app.ts --depends-on--> src/util.ts, sealed proven", () => {
     const { repoPath, cleanup } = makeIndexedRepo()
     cleanups.push(cleanup)
