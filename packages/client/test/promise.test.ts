@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { ClientApi, groupNames } from "../src/contract"
 import {
   isConflictError,
   isInvalidRequestError,
@@ -13,7 +14,7 @@ import {
 test("exposes every standard HTTP API group", () => {
   const client = Orchestra.make({ baseUrl: "http://localhost:3000" })
 
-  expect(Object.keys(client)).toEqual([
+  const groups = [
     "health",
     "location",
     "agents",
@@ -39,7 +40,23 @@ test("exposes every standard HTTP API group", () => {
     "relayHooks",
     "pullRequests",
     "schedules",
-  ])
+    "actionsBindings",
+    "actionsOperations",
+    "actionsWorkflows",
+    "actionsRuns",
+    "actionsJobs",
+    "actionsPipelines",
+    "actionsResources",
+    "actionsSource",
+    "actionsTransfers",
+  ]
+  expect(Object.keys(client)).toEqual(groups)
+  expect(
+    Object.values(ClientApi.groups)
+      .map((group) => groupNames[group.identifier])
+      .sort(),
+  ).toEqual([...groups].sort())
+  expect(Object.keys({ ...client, unknown: {} })).not.toEqual(groups)
   expect(Object.keys(client.research)).toEqual(["artifact"])
   expect(client.sessions).not.toHaveProperty("research")
   expect(Object.keys(client.messages)).toEqual(["list"])

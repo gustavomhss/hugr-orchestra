@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { FileSystem, Integration, MaestroEvent, Permission, Project, Reference, Session, Workspace } from "../src"
+import { Event } from "../src/event"
 import { EventManifest } from "../src/event-manifest"
 import { IdeEvent } from "../src/ide-event"
 import { RelayHook } from "../src/relay-hook"
@@ -11,8 +12,8 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(86)
-    expect(EventManifest.Definitions.length).toBe(116)
+    expect(EventManifest.ServerDefinitions.length).toBe(87)
+    expect(EventManifest.Definitions.length).toBe(117)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -26,8 +27,44 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(107)
-    expect(EventManifest.Durable.size).toBe(70)
+    expect(EventManifest.Latest.size).toBe(108)
+    expect(EventManifest.Durable.size).toBe(71)
+    const identities = EventManifest.Definitions.map(
+      (definition) => `${definition.type}.${definition.durable?.version ?? "live"}`,
+    )
+    expect(new Set(identities).size).toBe(identities.length)
+  })
+
+  test("includes the canonical subagent model policy event exactly once", () => {
+    const definition = SessionEvent.SubagentModelsChanged
+    const surfaces = [
+      SessionEvent.Definitions,
+      SessionEvent.DurableDefinitions,
+      EventManifest.ServerDefinitions,
+      EventManifest.Definitions,
+    ]
+    surfaces.forEach((definitions) => {
+      expect(definitions.filter((event) => event.type === definition.type)).toEqual([definition])
+    })
+    expect(definition.type).toBe("session.next.subagent.models.changed")
+    expect(definition.durable).toEqual({ aggregate: "sessionID", version: 1 })
+    expect(EventManifest.Latest.get("session.next.subagent.models.changed")).toBe(definition)
+    expect(EventManifest.Durable.get("session.next.subagent.models.changed.1")).toBe(definition)
+  })
+
+  test("rejects conflicting latest and duplicate durable registrations", () => {
+    const definition = SessionEvent.SubagentModelsChanged
+    const duplicate = Event.define({
+      type: definition.type,
+      durable: definition.durable,
+      schema: definition.data.fields,
+    })
+    expect(() => Event.latest([...EventManifest.Definitions, duplicate])).toThrow(
+      "Duplicate latest event definition for session.next.subagent.models.changed",
+    )
+    expect(() => Event.durable([...EventManifest.Durable.values(), definition])).toThrow(
+      "Duplicate durable event definition for session.next.subagent.models.changed.1",
+    )
   })
 
   test("owns canonical research definitions only on the durable surface", () => {
