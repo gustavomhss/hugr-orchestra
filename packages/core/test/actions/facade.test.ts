@@ -6,11 +6,13 @@ import type { Interface } from "../../src/actions"
 import type { ActionsError } from "../../src/actions/error"
 import { ActionsOperationTable } from "../../src/actions/operations/sql"
 import { Omni } from "../../src/omni"
+import { expectSpawn } from "../fixture/omni-expect"
 import { fault } from "./operations-fixture"
 import { fixture, github, githubPath, gitlab, intent, it, jobID, runID } from "./assembly-fixture"
 
 it.live("non-Git Actions constructor boots without Git or provider CLI; requested methods fail by name", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* fixture({ git: false })
     const before = Omni.snapshot().spawns
     const defaults = yield* f.open({ transport: undefined })
@@ -41,6 +43,7 @@ it.live("non-Git Actions constructor boots without Git or provider CLI; requeste
 
 it.live("facade binding CRUD persists actual store and requires expected revision before resolver I/O", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* fixture()
     expect(yield* f.api.bindings.list()).toEqual([])
     const binding = yield* f.create()
@@ -87,6 +90,7 @@ it.live(
   "constructor snapshots Directory, Project, workspace, data root and transport; native clone cannot retarget it",
   () =>
     Effect.gen(function* () {
+      expectSpawn(import.meta.path)
       const f = yield* fixture()
       const clone = yield* f.clone()
       const otherData = path.join(f.root, "other-data")
@@ -137,6 +141,7 @@ it.live(
 
 it.live("stale revisions and foreign Locations fail reads/get/prepare/reconcile before provider I/O or admission", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const f = yield* fixture()
     const binding = yield* f.create()
     const command = intent(binding, f.commit)
@@ -181,6 +186,7 @@ it.live("stale revisions and foreign Locations fail reads/get/prepare/reconcile 
 Array.of(github, gitlab).forEach((provider) => {
   it.live(`facade selects ${provider.kind} readers and preserves native nullable metadata and large string IDs`, () =>
     Effect.gen(function* () {
+      expectSpawn(import.meta.path)
       const f = yield* fixture()
       const binding = yield* f.create(provider)
       const workflows = yield* f.api.workflows(binding, {})
@@ -244,6 +250,7 @@ Array.of(github, gitlab).forEach((provider) => {
 
 it.live("facade graph passes authoritative source through actual bounded YAML parser", () =>
   Effect.gen(function* () {
+    expectSpawn(import.meta.path)
     const text = `on: workflow_dispatch\nanchor: &x {}\naliases: [${Array.from({ length: 101 }, () => "*x").join(", ")}]\njobs: {build: {runs-on: ubuntu-latest, steps: []}}\n`
     const f = yield* fixture({ githubText: text })
     const binding = yield* f.create()

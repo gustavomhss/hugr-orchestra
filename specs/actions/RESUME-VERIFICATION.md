@@ -11,8 +11,8 @@ browser screenshot, historical run, or another checkout's HEAD.
 
 ## Exact artifact references
 
-All TEMP names below resolve under this exact root:
-`/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode`.
+All TEMP names below resolve under `$TEMP_ROOT`, the original reserved temporary
+root for this capture. Set `TEMP_ROOT` to that capture root; filenames are unchanged.
 
 | Key | Exact TEMP filename | Source / verdict |
 | --- | --- | --- |
@@ -67,10 +67,6 @@ Credentials, CLI config contents, raw secret values and user-data dumps are omit
   and denied POST. Actual shell `GET /api/relay/run` 404 remains a diagnostic;
   controls do not erase it. J now covers the requested read-only journey, not an
   overall-green run. The recorded relay source is shell-owned, outside Actions scope.
-
-Owner-reported source-review stage: **COMPLETED**; `Role_No_Output`, `Context_Value`,
-`Root_Metadata`, `Copy_Key`: **FIXED**. No actor/gate-wide `any` exemption is implied.
-These review statuses do not supply fixture-CI results or final-bundle qualification.
 
 ## L: descriptive performance/retention, NOISY
 
@@ -139,8 +135,7 @@ batch. All precede C's review corrections; none establishes final-candidate clos
   `0433b0af72d8fc37616b55d361d8241f80c9f5e4`, reserved-overlay tree
   `fcaead16648fcf84074a2b3256f897188f5fa5ab`, matches frozen C. Root integration
   `6d88f1f978` merged latest dev's four prompt changes; final bundle must retain that
-  ancestry. Closing PR, final tree/dependencies and CI remain PENDING. Owner-reported
-  source review is COMPLETED; this does not complete final-bundle evidence binding.
+  ancestry. Closing PR, final tree/dependencies and CI remain PENDING.
 
 Current owner cadence: automated tests/heavy validation run only in final-bundle CI;
 no intermediate focused CI. Manual UI and performance measurement are distinct from
