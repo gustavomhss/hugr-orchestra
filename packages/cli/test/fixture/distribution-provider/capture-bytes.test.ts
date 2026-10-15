@@ -1,6 +1,51 @@
 import { expect, test } from "bun:test"
+import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { captureByteCap, readCaptureBytes, requireCaptureLength } from "../distribution-provider-bytes"
 import { decodeCaptureRequest, streamedCompletion } from "../distribution-provider-wire"
+
+test("forwarding proxy survives slow SSE inference beyond Bun default idle timeout", async () => {
+  const { captureInference } = await import("../distribution-provider-capture")
+  const { model } = await import("../distribution-provider-ollama")
+  const directory = await mkdtemp(join(tmpdir(), "provider-prefill-"))
+  const payload = JSON.stringify({ model, messages: [{ role: "user", content: "prefill boundary" }], stream: true })
+  const first = 'data: {"choices":[{"delta":{"role":"assistant","content":""},"finish_reason":null}]}\n\n'
+  const last = 'data: {"choices":[{"delta":{"content":"upstream bytes"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'
+  const body = first + last
+  const timers = new Set<ReturnType<typeof setTimeout>>()
+  const upstream = Bun.serve({ hostname: "127.0.0.1", port: 0, idleTimeout: 0, async fetch(request) {
+    expect(await request.text()).toBe(payload)
+    return new Response(new ReadableStream<Uint8Array>({ start(controller) {
+      controller.enqueue(new TextEncoder().encode(first))
+      const timer = setTimeout(() => {
+        timers.delete(timer)
+        controller.enqueue(new TextEncoder().encode(last))
+        controller.close()
+      }, 17_000)
+      timers.add(timer)
+    }, cancel() { timers.forEach(clearTimeout); timers.clear() } }),
+      { status: 200, headers: { "content-type": "text/event-stream" } })
+  } })
+  const capture = captureInference(upstream.url.origin, directory)
+  capture.arm("prefill")
+  try {
+    const response = await fetch(`${capture.url}/chat/completions`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: payload, signal: AbortSignal.timeout(20_000),
+    })
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe(body)
+    const records = await capture.drain()
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({ requestJSON: payload, response: body, status: 200 })
+    expect(JSON.parse(await readFile(join(directory, "prefill-turn-1.json"), "utf8"))).toMatchObject({ requestJSON: payload, response: body, status: 200 })
+  } finally {
+    await capture.stop()
+    timers.forEach(clearTimeout)
+    await upstream.stop(true)
+    await rm(directory, { recursive: true, force: true })
+  }
+}, 25_000)
 
 test("header cap accepts exact boundary and rejects malformed or oversized lengths", () => {
   for (const length of [null, "0", String(captureByteCap)]) expect(() => requireCaptureLength(length)).not.toThrow()

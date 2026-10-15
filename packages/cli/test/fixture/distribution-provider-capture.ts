@@ -12,8 +12,10 @@ export function captureInference(endpoint: string, evidence: string) {
   const controllers = new Set<AbortController>()
   const failures: unknown[] = []
   const state = { stage: "unarmed", turns: 0 }
+  // CPU inference can pause SSE beyond Bun's 10-second idle default; the request
+  // retains its explicit 240-second deadline and owned teardown aborts it.
   const server = Bun.serve({
-    hostname: "127.0.0.1", port: 0, maxRequestBodySize: captureByteCap,
+    hostname: "127.0.0.1", port: 0, maxRequestBodySize: captureByteCap, idleTimeout: 0,
     async fetch(request) {
       const route = new URL(request.url)
       if (state.stage === "unarmed" || request.method !== "POST" || route.pathname !== "/v1/chat/completions" || route.search)
