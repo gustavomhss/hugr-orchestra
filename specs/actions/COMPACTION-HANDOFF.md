@@ -185,7 +185,8 @@ Verification-owned processes; do not restart or stop existing app/server process
   Otherwise production entry seeds app-origin as another server and subscribes to
   HTML `/api/event`. Default selection alone does not exclude subscriptions.
 
-TEMP root: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode`.
+Artifact root: `$TEMP_ROOT`, the original reserved temporary root for this capture.
+Set `TEMP_ROOT` to that capture root before resolving the unchanged filenames below.
 
 - `actions-first-view-20261014.ts` now targets4101 and outputs
   `actions-current-browser-20261014.*`.

@@ -7,26 +7,27 @@ import { mockOrchestraServer } from "../utils/mock-server"
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 const directory = "C:/Orchestra/PromptBytesRegression"
 const projectID = "proj_prompt_bytes"
-const provider = {
-  all: [{
-    id: "opencode", name: "Orchestra", source: "config", env: [], options: {},
-    models: {
-      "claude-opus-4-6": {
-        id: "claude-opus-4-6", providerID: "opencode", name: "Claude Opus 4.6",
-        api: { id: "claude-opus-4-6", url: "https://provider.invalid", npm: "@ai-sdk/anthropic" },
-        capabilities: {
-          temperature: true, reasoning: true, attachment: true, toolcall: true, interleaved: false,
-          input: { text: true, audio: false, image: true, video: false, pdf: true },
-          output: { text: true, audio: false, image: false, video: false, pdf: false },
-        },
-        cost: { input: 0, output: 0, cache: { read: 0, write: 0 } },
-        limit: { context: 200_000, output: 8_000 },
-        status: "active", options: {}, headers: {}, release_date: "2026-01-01", variants: {},
+const fixtureProvider = {
+  id: "opencode", name: "Orchestra", source: "config", env: [], options: {},
+  models: {
+    "claude-opus-4-6": {
+      id: "claude-opus-4-6", providerID: "opencode", name: "Claude Opus 4.6",
+      api: { id: "claude-opus-4-6", url: "https://provider.invalid", npm: "@ai-sdk/anthropic" },
+      capabilities: {
+        temperature: true, reasoning: true, attachment: true, toolcall: true, interleaved: false,
+        input: { text: true, audio: false, image: true, video: false, pdf: true },
+        output: { text: true, audio: false, image: false, video: false, pdf: false },
       },
+      cost: { input: 0, output: 0, cache: { read: 0, write: 0 } },
+      limit: { context: 200_000, output: 8_000 },
+      status: "active", options: {}, headers: {}, release_date: "2026-01-01", variants: {},
     },
-  }],
-  connected: ["opencode"],
-  default: { opencode: "claude-opus-4-6" },
+  },
+} satisfies ProviderListResponse["all"][number]
+const provider = {
+  all: [fixtureProvider],
+  connected: [fixtureProvider.id],
+  default: { [fixtureProvider.id]: "claude-opus-4-6" },
 } satisfies ProviderListResponse
 const sample = "\n```owner-demand\né — 😀\u200B\n\n``` \n\n"
 const rawClipboard = "\r\n```owner-demand\ré — 😀\u200B\r\n\r\n```\n"

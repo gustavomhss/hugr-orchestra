@@ -22,6 +22,10 @@ const submit = '[data-component="prompt-input-v2"] [data-action="prompt-submit"]
 const promptPath = `/session/${sessionID}/prompt_async`
 const userCard = '[data-component="user-message"]'
 const userText = `${userCard} [data-slot="user-message-text"]`
+const fixtureProvider = {
+  id: "opencode", name: "Orchestra",
+  models: { "draft-model": { id: "draft-model", name: "Draft Model", limit: { context: 200000 }, variants: {} } },
+}
 
 test("fresh Send admits exactly one first turn before route/tab remount", async ({ page }) => {
   const fixture = await setup(page)
@@ -251,8 +255,8 @@ async function setup(page: Page) {
     directory,
     project: { id: session.projectID, worktree: directory, vcs: "git", name: "draft-handoff", time: session.time, sandboxes: [] },
     provider: {
-      all: [{ id: "opencode", name: "Orchestra", models: { "draft-model": { id: "draft-model", name: "Draft Model", limit: { context: 200000 }, variants: {} } } }],
-      connected: ["opencode"], default: { opencode: "draft-model" },
+      all: [fixtureProvider],
+      connected: [fixtureProvider.id], default: { [fixtureProvider.id]: "draft-model" },
     },
     sessions,
     pageMessages: (id) => ({ items: id === sessionID ? fixture.messages : [] }),
