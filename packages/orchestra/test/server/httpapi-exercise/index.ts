@@ -25,7 +25,6 @@ import { array, boolean, check, data, isRecord, locationData, message, object, s
 import { controlledPtyInput, cursor, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
-  exerciseConfigDirectory,
   exerciseDataDirectory,
   exerciseDatabasePath,
   exerciseGlobalRoot,
@@ -48,54 +47,22 @@ import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
 import { sessionInitScenarios } from "./session-init"
 import { researchArtifactScenarios } from "./research-artifact"
+import { actionsBindingScenarios } from "./actions-binding"
+import { actionsReadScenarios } from "./actions-read"
+import { actionsOperationScenarios } from "./actions-operation"
+import { actionsCommandScenarios } from "./actions-command"
+import { actionsProviderBoundaryScenarios } from "./actions-provider-boundary"
+import { actionsSourceScenarios } from "./actions-source"
+import { actionsResourceScenarios } from "./actions-resource"
+import { actionsTransferScenarios } from "./actions-transfer"
+import { actionsSubagentModelsScenarios } from "./actions-subagent-models"
+import { actionsFailureScenarios } from "./actions-failures"
+import { globalHealthScenarios } from "./global-health"
+import { globalConfigScenarios } from "./global-config"
 
 const scenarios: Scenario[] = [
-  http.protected
-    .get("/global/health", "global.health")
-    .global()
-    .json(200, (body) => {
-      object(body)
-      check(body.healthy === true, "server should report healthy")
-    }),
-  http.protected
-    .get("/global/event", "global.event")
-    .global()
-    .stream()
-    .status(
-      200,
-      (_ctx, result) =>
-        Effect.sync(() => {
-          check(result.contentType.includes("text/event-stream"), "global event should be an SSE stream")
-          check(result.text.includes("server.connected"), "global event should emit initial connection event")
-        }),
-      "status",
-    ),
-  http.protected.get("/global/config", "global.config.get").global().json(),
-  http.protected
-    .patch("/global/config", "global.config.update")
-    .global()
-    .seeded(() =>
-      Effect.promise(() =>
-        Bun.write(
-          path.join(exerciseConfigDirectory, "orchestra.jsonc"),
-          JSON.stringify({ username: "httpapi-global" }, null, 2),
-        ),
-      ),
-    )
-    .at(() => ({ path: "/global/config", body: { username: "httpapi-global" } }))
-    .jsonEffect(
-      200,
-      (body) =>
-        Effect.gen(function* () {
-          object(body)
-          check(body.username === "httpapi-global", "global config update should return patched config")
-          const text = yield* Effect.promise(() =>
-            Bun.file(path.join(exerciseConfigDirectory, "orchestra.jsonc")).text(),
-          )
-          check(text.includes('"username": "httpapi-global"'), "global config update should write isolated config file")
-        }),
-      "status",
-    ),
+  ...globalHealthScenarios,
+  ...globalConfigScenarios,
   http.protected
     .post("/global/dispose", "global.dispose")
     .global()
@@ -119,6 +86,16 @@ const scenarios: Scenario[] = [
   ...relayScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
+  ...actionsBindingScenarios,
+  ...actionsReadScenarios,
+  ...actionsOperationScenarios,
+  ...actionsCommandScenarios,
+  ...actionsProviderBoundaryScenarios,
+  ...actionsSourceScenarios,
+  ...actionsResourceScenarios,
+  ...actionsTransferScenarios,
+  ...actionsSubagentModelsScenarios,
+  ...actionsFailureScenarios,
   ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
