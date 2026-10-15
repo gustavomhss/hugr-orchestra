@@ -6,7 +6,8 @@ import path from "node:path"
 import { check, stable } from "./assertions"
 import { call } from "./backend"
 import { http, route } from "./dsl"
-import { bindingInput, NativeCall, nativeReplies, Reply, Replies, workflowPath, workflowText } from "./actions-native-data"
+import { bindingInput, nativeReplies, Reply, Replies, workflowPath, workflowText } from "./actions-native-data"
+import { RunnerConfig, ScopedNativeCall } from "./actions-native-scope"
 import type { Method, ScenarioContext } from "./types"
 
 export function seedActions(ctx: ScenarioContext, state = "completed") {
@@ -18,24 +19,36 @@ export function seedActions(ctx: ScenarioContext, state = "completed") {
     check(Option.isSome(scope), "ActionsFixtureError:runner-scope-missing")
     const directory = ctx.directory
     const bin = path.join(directory, ".httpapi-actions")
-    yield* Effect.promise(() => mkdir(bin, { recursive: true }))
-    const environment = Object.entries(process.env).filter(([key]) => /^(PATH|GH_TOKEN|GITHUB_TOKEN|GH_CONFIG_DIR)$/i.test(key))
+    const config = path.join(bin, "config")
+    yield* Effect.promise(() => mkdir(config, { recursive: true, mode: 0o700 }))
+    // Ledger owns only CLI discovery/config placement. Ambient tokens are never cleared or copied to disk.
+    const owned = /^(PATH|GH_CONFIG_DIR)$/i
+    const environment = Object.entries(process.env).filter(([key]) => owned.test(key))
     yield* Scope.addFinalizer(scope.value, Effect.sync(() => {
-      Object.keys(process.env).filter((key) => /^(PATH|GH_TOKEN|GITHUB_TOKEN|GH_CONFIG_DIR)$/i.test(key))
+      Object.keys(process.env).filter((key) => owned.test(key))
         .forEach((key) => delete process.env[key])
       environment.forEach(([key, value]) => { process.env[key] = value })
     }))
+    yield* Effect.promise(() => Bun.write(path.join(config, "hosts.yml"),
+      "github.com:\n  user: fixture-actor\n  oauth_token: fixture-only-never-sent\n  git_protocol: https\n"))
+    // The expectation comes from fixture ownership, never the owner's ambient config or a child observation.
+    const runnerConfig = RunnerConfig.make({
+      directory,
+      environment: { GH_CONFIG_DIR: config },
+      credentialSelection: "config",
+    })
+    yield* Effect.promise(() => Bun.write(path.join(bin, "runner-config.json"), JSON.stringify(runnerConfig)))
     const cli = path.join(import.meta.dirname, "actions-native-cli.ts")
     yield* Effect.forEach(["gh", "glab"], (name) => Effect.promise(async () => {
       const executable = path.join(bin, process.platform === "win32" ? `${name}.cmd` : name)
-      const invocation = `"${process.execPath}" "${cli}" "${bin}"`
+      const invocation = `"${process.execPath}" "${cli}" "${bin}" "${name}"`
       await Bun.write(executable, process.platform === "win32" ? `@${invocation} %*\r\n` : `#!/bin/sh\nexec ${invocation} "$@"\n`)
       if (process.platform !== "win32") await chmod(executable, 0o755)
     }))
-    process.env.PATH = bin + path.delimiter + (process.env.PATH ?? process.env.Path ?? "")
-    process.env.GH_TOKEN = ""
-    process.env.GITHUB_TOKEN = ""
-    process.env.GH_CONFIG_DIR = bin
+    const search = process.env.PATH ?? process.env.Path ?? ""
+    Object.keys(process.env).filter((key) => owned.test(key)).forEach((key) => delete process.env[key])
+    process.env.PATH = bin + path.delimiter + search
+    process.env.GH_CONFIG_DIR = config
     yield* ctx.file(workflowPath, workflowText)
     yield* actionsGit(directory, ["add", workflowPath])
     yield* actionsGit(directory, ["-c", "user.name=Actions Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "Actions HTTP sources"])
@@ -46,7 +59,7 @@ export function seedActions(ctx: ScenarioContext, state = "completed") {
     yield* Effect.promise(() => Bun.write(path.join(bin, "calls.jsonl"), ""))
     yield* Effect.promise(() => Bun.write(path.join(bin, "fixture-errors.jsonl"), ""))
     const project = yield* ctx.project()
-    return { bin, commit, blob, directory, projectID: project.id }
+    return { bin, commit, blob, directory, projectID: project.id, runnerConfig }
   }))
 }
 
@@ -83,7 +96,7 @@ export function nativeCalls(native: { bin: string }) {
   return Effect.promise(async () => {
     check((await Bun.file(path.join(native.bin, "fixture-errors.jsonl")).text()) === "", "ActionsFixtureError:unrecorded-or-unsupported-call")
     return (await Bun.file(path.join(native.bin, "calls.jsonl")).text()).split("\n").filter(Boolean)
-      .map((line) => Schema.decodeUnknownSync(Schema.fromJsonString(NativeCall))(line))
+      .map((line) => Schema.decodeUnknownSync(Schema.fromJsonString(ScopedNativeCall), { onExcessProperty: "error" })(line))
   })
 }
 
@@ -110,9 +123,17 @@ export function setNativeReply(native: { bin: string }, key: string, reply: type
 
 export function actionsGit(directory: string, args: string[]) {
   return Effect.promise(async () => {
-    const process = Bun.spawn(["git", ...args], { cwd: directory, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
-    const [code, stdout, stderr] = await Promise.all([process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()])
-    check(code === 0, `ActionsFixtureError:git:${stderr}`)
-    return stdout.trim()
+    const { AppProcess } = await import("@orchestra/core/process")
+    const { LayerNode } = await import("@orchestra/core/effect/layer-node")
+    const { ChildProcess } = await import("effect/unstable/process")
+    const result = await Effect.runPromise(AppProcess.Service.use((proc) => proc.run(ChildProcess.make("git", args, {
+      cwd: directory, stdin: "ignore", stdout: "pipe", stderr: "pipe", extendEnv: false,
+      env: Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key))),
+    }), { maxOutputBytes: 64 * 1024, maxErrorBytes: 4 * 1024, timeout: "10 seconds" })).pipe(
+      Effect.provide(LayerNode.compile(AppProcess.node)), Effect.scoped,
+    ))
+    check(!result.stdoutTruncated && !result.stderrTruncated, "ActionsFixtureError:git-output-truncated")
+    check(result.exitCode === 0, "ActionsFixtureError:git-failed")
+    return result.stdout.toString("utf8").trim()
   })
 }
