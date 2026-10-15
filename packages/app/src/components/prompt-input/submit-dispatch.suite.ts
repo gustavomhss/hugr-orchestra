@@ -106,7 +106,7 @@ test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences
 
 describe("prompt dispatch and cancellation", () => {
   test.each(["prompt_async", "shell", "command"] as const)(
-    "real V1 adapter keeps %s bound to A after promotion while transport preparation waits",
+    "real V1 adapter keeps %s bound to A before receipt while transport preparation waits",
     async (operation) => {
       const requests: Request[] = []
       const admitted = Promise.withResolvers<void>()
@@ -186,7 +186,7 @@ describe("prompt dispatch and cancellation", () => {
       await admitted.promise
       release.resolve()
       await prepared.promise
-      expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: "created-v1" }])
+      expect(promoted).toEqual([])
       expect(sdkReads.some((read) => read.scope === "origin" && read.directory === "/repo/main")).toBe(true)
       expect(requests.map((request) => new URL(request.url).pathname)).toEqual(["/session"])
       const otherServer = { url: "http://other.invalid" }
@@ -217,6 +217,9 @@ describe("prompt dispatch and cancellation", () => {
         "%2Frepo%2Fworktree-a",
       ])
       expect(new URL(requests[1].url).pathname).toBe(`/session/created-v1/${operation}`)
+      expect(promoted).toEqual([])
+      expect(source.current()[0]).toMatchObject({ content: operation === "command" ? "/custom args" : "first" })
+      expect(destination.current()[0]).toMatchObject({ content: "" })
     },
   )
 
