@@ -11,7 +11,7 @@ import type { ImageAttachmentPart } from "@/context/prompt"
 import { Identifier } from "@/utils/id"
 import { blobDataUrl } from "@/utils/draft-store"
 import { buildRequestParts } from "./build-request-parts"
-import type { FollowupSendInput } from "./submit"
+import type { AdmissionRequest, FollowupSendInput } from "./submission-types"
 
 export type FailedPolicyWrite = { cause: unknown; version?: number }
 type SubmissionManagement = Pick<SessionManagement, "setSubagentModels" | "readSubagentModels"> & {
@@ -201,6 +201,7 @@ export async function waitForSubmissionWorktree(input: {
 export async function sendFollowupRequest(input: FollowupSendInput) {
   const current = () => !input.signal?.aborted && input.runtime?.current() !== false
   if (!current()) return false
+  if (input.request?.admitted) return true
   const text = input.draft.prompt.map((part) => ("content" in part ? part.content : "")).join("")
   const images = input.draft.prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
   const setBusy = () => {
@@ -223,9 +224,9 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && input.sync.data.command.find((item) => item.name === cmd)) {
+  if (cmd && !input.request?.preparation && (input.request?.command || input.sync.data.command.find((item) => item.name === cmd))) {
     if (!(await wait())) return false
-    const files = await Promise.all(images.map(async (attachment) => ({
+    const files = input.request?.command?.files ?? await Promise.all(images.map(async (attachment) => ({
       uri: await blobDataUrl(attachment.blob, attachment.mime), name: attachment.filename,
     })))
     try {
@@ -233,12 +234,11 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         setIdle()
         return false
       }
-      setBusy()
-      const messageID = Identifier.ascending("message")
-      await input.api.command(
-        {
+      const messageID = input.request?.id ?? input.messageID ?? Identifier.ascending("message")
+      const send = (request = input.request) => {
+        const command = request?.command ?? {
           sessionID: input.draft.sessionID,
-          id: messageID,
+          id: request?.id ?? messageID,
           command: cmd,
           arguments: tail.join(" "),
           agent: input.draft.agent,
@@ -249,9 +249,13 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           },
           delivery: input.draft.delivery,
           files,
-        },
-        { signal: input.signal },
-      )
+        }
+        if (request) request.command = command
+        setBusy()
+        return input.api.command(command, { signal: input.signal })
+      }
+      if (input.dispatch) return await input.dispatch(send)
+      await send()
       return true
     } catch (err) {
       setIdle()
@@ -259,24 +263,29 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     }
   }
 
-  const messageID = input.messageID ?? Identifier.ascending("message")
+  const messageID = input.request?.id ?? input.messageID ?? Identifier.ascending("message")
   if (!(await wait())) return false
-  const encodedImages = await Promise.all(
+  const encodedImages = input.request?.preparation ? [] : await Promise.all(
     images.map(async (attachment) => ({
       ...attachment,
       dataUrl: await blobDataUrl(attachment.blob, attachment.mime),
     })),
   )
   if (!(await wait())) return false
-  const { requestParts, optimisticParts } = buildRequestParts({
-    prompt: input.draft.prompt,
-    context: input.draft.context,
-    images: encodedImages,
-    text,
-    sessionID: input.draft.sessionID,
-    messageID,
-    sessionDirectory: input.draft.sessionDirectory,
-  })
+  const preparation = input.request?.preparation ?? {
+    ...buildRequestParts({
+      prompt: input.draft.prompt,
+      context: input.draft.context,
+      images: encodedImages,
+      text,
+      sessionID: input.draft.sessionID,
+      messageID,
+      sessionDirectory: input.draft.sessionDirectory,
+    }),
+    system: input.draft.system,
+  }
+  if (input.request) input.request.preparation = preparation
+  const prepared = { request: input.request, value: preparation }
 
   const message: Message = {
     id: messageID,
@@ -291,19 +300,19 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     input.sync.session.optimistic.add({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      message,
-      parts: optimisticParts,
+      message: { ...message, id: prepared.request?.id ?? messageID },
+      parts: prepared.value.optimisticParts,
     })
 
   const remove = () =>
     input.sync.session.optimistic.remove({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      messageID,
+      messageID: prepared.request?.id ?? messageID,
     })
 
   batch(() => {
-    if (input.pending) return
+    if (input.pending || input.dispatch) return
     setBusy()
     add()
   })
@@ -312,19 +321,38 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     if (!(await wait())) {
       batch(() => {
         setIdle()
-        remove()
+        if (current()) remove()
       })
       return false
     }
 
-    await input.api.prompt(
-      {
+    const send = (request?: AdmissionRequest) => {
+      if (request) {
+        if (!request.preparation) {
+          // A new policy revision is a new action; request and optimistic part IDs move together.
+          const requestParts = prepared.value.requestParts.map((part) => ({ ...part, id: Identifier.ascending("part") }))
+          request.preparation = {
+            requestParts,
+            optimisticParts: prepared.value.optimisticParts.map((part, index) => ({ ...part, id: requestParts[index].id, messageID: request.id })),
+            system: prepared.value.system,
+          }
+        }
+        prepared.request = request
+        prepared.value = request.preparation
+        batch(() => {
+          if (input.pending) return
+          setBusy()
+          add()
+        })
+      }
+      const requestParts = prepared.value.requestParts
+      return input.api.prompt({
         sessionID: input.draft.sessionID,
-        id: messageID,
+        id: request?.id ?? messageID,
         agent: input.draft.agent,
         model: input.draft.model,
         variant: input.draft.variant,
-        system: input.draft.system,
+        system: prepared.value.system,
         delivery: input.draft.delivery,
         legacyParts: requestParts,
         text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
@@ -351,14 +379,19 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
               ]
             : [],
         ),
-      },
-      { signal: input.signal },
-    )
+      }, { signal: input.signal })
+    }
+    if (input.dispatch) {
+      const sent = await input.dispatch(send)
+      if (!sent && current()) batch(() => { setIdle(); remove() })
+      return sent
+    }
+    await send(input.request)
     return true
   } catch (err) {
     batch(() => {
       setIdle()
-      remove()
+      if (current()) remove()
     })
     throw err
   }

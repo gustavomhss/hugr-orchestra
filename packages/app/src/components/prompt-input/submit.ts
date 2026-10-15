@@ -11,7 +11,7 @@ import { useLayout } from "@/context/layout"
 import { useLocal, type ModelSelection } from "@/context/local"
 import { agentKey } from "@/context/agent-identity"
 import { usePermission } from "@/context/permission"
-import { type ContextItem, type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
+import { type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
@@ -20,7 +20,7 @@ import { clearPending } from "@/components/draft-subagent-models"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
-import { useSync, type DirectorySync } from "@/context/sync"
+import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
 import { setCursorPosition } from "./editor-dom"
@@ -33,7 +33,9 @@ import { blobDataUrl } from "@/utils/draft-store"
 import { draftSessionKey } from "./draft-session"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubagentPolicy, waitForSubmissionWorktree, type FailedPolicyWrite } from "./submission-policy"
-import { queuedPromptSources, type QueuedPromptSource, type QueuedPromptRuntime } from "./queued-prompt"
+import { queuedPromptSources } from "./queued-prompt"
+import type { AdmissionRequest, FollowupDraft, FollowupSendInput, PromptDispatch } from "./submission-types"
+export type { FollowupDraft, FollowupSendInput } from "./submission-types"
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
@@ -64,44 +66,6 @@ type PendingPrompt = {
 }
 
 const pending = new Map<string, Set<PendingPrompt>>()
-
-export type FollowupDraft = {
-  sessionID: string
-  sessionDirectory: string
-  prompt: Prompt
-  context: (ContextItem & { key: string })[]
-  agent: string
-  model: { providerID: string; modelID: string }
-  variant?: string
-  // Profile LLM behaviors (Orchestra Plugins), resolved when the message is sent; never stored when queued.
-  system?: string
-  // An explicit V2 delivery mode; omitted, the server steers.
-  delivery?: "steer" | "queue"
-  source?: QueuedPromptSource
-}
-
-export type FollowupSendInput = {
-  api: DirectorySDK["api"]["session"]
-  serverSync: ServerSync
-  sync: DirectorySync
-  draft: FollowupDraft
-  messageID?: string
-  optimisticBusy?: boolean
-  // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
-  pending?: boolean
-  signal?: AbortSignal
-  before?: () => Promise<boolean> | boolean
-  runtime?: QueuedPromptRuntime
-  deliberate?: boolean
-  currentSource?: {
-    serverScopeKey: ServerScope
-    directory: string
-    sessionID: string | undefined
-    protocol: Parameters<typeof createSubmissionPolicy>[0]["protocol"]
-    management: Parameters<typeof createSubmissionPolicy>[0]["management"]
-    current: () => boolean
-  }
-}
 
 // Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
 export function followupSystem(platform: Platform, scope: ServerScope, serverSync: ServerSync, directory: string) {
@@ -140,7 +104,7 @@ export function createFollowupSender(sources = queuedPromptSources) {
   }
 }
 
-// Shared by the composer and evidence replay: every shell run gets a new event ID, and
+// Shared by the composer and evidence replay: exact draft retries retain their event ID, and
 // the request carries no workdir, so callers must only replay in the session directory.
 export async function submitShellCommand(input: {
   api: DirectorySDK["api"]["session"]
@@ -151,16 +115,25 @@ export async function submitShellCommand(input: {
   signal?: AbortSignal
   before?: () => Promise<boolean> | boolean
   current?: () => boolean
+  request?: AdmissionRequest
+  dispatch?: PromptDispatch
 }) {
   if (input.signal?.aborted || input.current?.() === false) return false
   if ((await input.before?.()) === false || input.signal?.aborted || input.current?.() === false) return false
-  return input.api.shell({
-    sessionID: input.sessionID,
-    id: Event.ID.create(),
-    command: input.command,
-    agent: input.agent,
-    model: input.model,
-  }, { signal: input.signal })
+  const send = (request = input.request) => {
+    const shell = request?.shell ?? {
+      sessionID: input.sessionID,
+      id: request ? Event.ID.make(request.id) : Event.ID.create(),
+      command: input.command,
+      agent: input.agent,
+      model: input.model,
+    }
+    if (request) request.shell = shell
+    return input.api.shell(shell, { signal: input.signal })
+  }
+  if (input.dispatch) return input.dispatch(send)
+  if (input.request?.admitted) return true
+  return send()
 }
 
 type PromptSubmitInput = {
