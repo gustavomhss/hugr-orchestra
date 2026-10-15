@@ -90,6 +90,10 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
     ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", (step) => ({ ...step, if: "matrix.lane == 'regression' && matrix.package == 'cli'" }))],
     ["BUNDLE_NATIVE_JOB", (value) => patchStep(value, "Prove native Windows Job handle closure", () => undefined)],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", () => undefined)],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, if: "matrix.platform == 'linux'" }))],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, run: step.run?.replace("-t POSIX", "-t unobserved") }))],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, run: step.run?.replace("export ORCHESTRA_ARTIFACT_DARWIN_SDK", "export UNOBSERVED_SDK") }))],
     ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", () => undefined)],
     ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", (step) => ({ ...step, if: "matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" }))],
     ["BUNDLE_DESKTOP_ABI", (value) => patchStep(value, "Prove Desktop ABI consumer", () => undefined)],
@@ -147,6 +151,7 @@ function inspect(input: unknown, discovered = distribution) {
   const run = requireStep(job.steps, "Run tests", "BUNDLE_RUN")
   const deno = requireStep(job.steps, "Install native Deno", "BUNDLE_DENO")
   const nativeJob = requireStep(job.steps, "Prove native Windows Job handle closure", "BUNDLE_NATIVE_JOB")
+  const posix = requireStep(job.steps, "Prove native POSIX ABI", "BUNDLE_NATIVE_POSIX")
   const abi = requireStep(job.steps, "Prove source ABI producers", "BUNDLE_SOURCE_ABI")
   const denoExtract = requireStep(job.steps, "Extract native Deno", "BUNDLE_DENO")
   const desktop = requireStep(job.steps, "Prove Desktop ABI consumer", "BUNDLE_DESKTOP_ABI")
@@ -162,6 +167,8 @@ function inspect(input: unknown, discovered = distribution) {
   check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
   check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
   check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
+  check(posix.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.platform != 'win32'" && posix["working-directory"] === "packages/cli" && job.steps.indexOf(posix) < job.steps.indexOf(run), "BUNDLE_NATIVE_POSIX")
+  check(posix.run === 'set -euo pipefail\nmkdir -p ../../distribution-logs\nif [ "$RUNNER_OS" = macOS ]; then\n  sdk=$(xcrun --sdk macosx --show-sdk-path)\n  export ORCHESTRA_ARTIFACT_DARWIN_SDK="$sdk"\nfi\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/artifact-abi.test.ts -t POSIX 2>&1 | tee ../../distribution-logs/native-posix-abi.log\n', "BUNDLE_NATIVE_POSIX")
   check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "packages/${{ matrix.package }}", "BUNDLE_EXECUTION")
   check(job.steps.indexOf(admission) < job.steps.indexOf(run) && job.steps.indexOf(run) < job.steps.indexOf(control), "BUNDLE_ORDER")
   check(discovered.length > 0, "BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
