@@ -1,0 +1,20 @@
+{
+  "op": "validate",
+  "document": {
+    "name": "Chain",
+    "nodes": {},
+    "connections": {
+      "a": {
+        "main": [
+          [
+            {
+              "node": "b",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

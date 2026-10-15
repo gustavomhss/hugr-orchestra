@@ -1,0 +1,36 @@
+{
+  "name": "pass2",
+  "transport": "file",
+  "boundary": 62,
+  "head": [
+    0,
+    48
+  ],
+  "tailStart": 49,
+  "crossed": true,
+  "contextTokens": 40801,
+  "retried": true,
+  "ops": [],
+  "size": 0,
+  "ceiling": 15338,
+  "check": "C8",
+  "applied": false,
+  "calls": [
+    {
+      "label": "v4/pass2",
+      "estimate": 35204,
+      "usage": {
+        "inputTokens": 35204,
+        "outputTokens": 2175
+      }
+    },
+    {
+      "label": "v4/pass2-retry",
+      "estimate": 37448,
+      "usage": {
+        "inputTokens": 37448,
+        "outputTokens": 2179
+      }
+    }
+  ]
+}

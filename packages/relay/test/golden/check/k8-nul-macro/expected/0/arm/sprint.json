@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"current","instructions":"do current","checklist":[{"id":"SIDE-EFFECT","cmd":"touch ran"}],"macro":"bad\u0000macro"}]}

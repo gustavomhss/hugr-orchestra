@@ -1,0 +1,25 @@
+{
+  "sprint": {
+    "retry_budget": 5,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {},
+    {},
+    {}
+  ]
+}

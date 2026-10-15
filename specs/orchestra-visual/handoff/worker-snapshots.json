@@ -1,0 +1,182 @@
+{
+  "capturedAt": "2026-10-01T23:09:20.607Z",
+  "workers": [
+    {
+      "name": "identity-brand",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "native-titlebar",
+      "files": 8,
+      "archive": {
+        "path": "archives/identity-brand.tar.gz",
+        "bytes": 20487,
+        "sha256": "525320545cb1d210e0fb05b696e18bb2aea2f7aa3300a387e7dcb7e03dfc5fde"
+      },
+      "manifest": "archives/identity-brand.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-chat",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "fix-composer",
+      "files": 3,
+      "archive": {
+        "path": "archives/identity-chat.tar.gz",
+        "bytes": 4908,
+        "sha256": "f90561f00d28711d4a9e16b22b89c688ac8afbb3a946b6290b6cc32ee63fa592"
+      },
+      "manifest": "archives/identity-chat.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-review",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "visual-evidence",
+      "files": 2,
+      "archive": {
+        "path": "archives/identity-review.tar.gz",
+        "bytes": 10431,
+        "sha256": "f8101d5b113856308d8339b2303132e53592835fd92b057c6dfc93c5d4203eeb"
+      },
+      "manifest": "archives/identity-review.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-shell",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "perf-gpu",
+      "files": 0,
+      "manifest": "archives/identity-shell.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-surfaces",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "fix-review",
+      "files": 9,
+      "archive": {
+        "path": "archives/identity-surfaces.tar.gz",
+        "bytes": 20484,
+        "sha256": "26b3305ac62447db9a115be53dd84e30e4040e11525a61d7988e7aa621b06f36"
+      },
+      "manifest": "archives/identity-surfaces.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-verify",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "HEAD",
+      "files": 5,
+      "archive": {
+        "path": "archives/identity-verify.tar.gz",
+        "bytes": 27116,
+        "sha256": "d860a2a1655828042cac61b7f9670b9f8b99eed297b5fc51ded49b1b8dc4ed86"
+      },
+      "manifest": "archives/identity-verify.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "fix-glass",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "fix-frame-details",
+      "files": 4,
+      "archive": {
+        "path": "archives/fix-glass.tar.gz",
+        "bytes": 12957,
+        "sha256": "eccb7a068c0147038925675d692c8ab77bfd006ebe8571b0b972c3b0d997292e"
+      },
+      "manifest": "archives/fix-glass.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "fix-locales",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "fix-locales",
+      "files": 64,
+      "archive": {
+        "path": "archives/fix-locales.tar.gz",
+        "bytes": 1196960,
+        "sha256": "43ab8205ca89428fbdf10abe5971381287f1753f7ca9ca2979379a1986964049"
+      },
+      "manifest": "archives/fix-locales.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "fix-profile-races",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "fix-profile-races",
+      "files": 2,
+      "archive": {
+        "path": "archives/fix-profile-races.tar.gz",
+        "bytes": 10496,
+        "sha256": "cf23d95268f1d0a7685584942ad91cd86397aa7f2e8d40b4d7c5847391274e6b"
+      },
+      "manifest": "archives/fix-profile-races.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "fix-test-runtime",
+      "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+      "branch": "native-frame",
+      "files": 10,
+      "archive": {
+        "path": "archives/fix-test-runtime.tar.gz",
+        "bytes": 22835,
+        "sha256": "83ab6bcaa88c0a3ad0ede00a7095e48d125f2a96b86947275c0b4761eb257909"
+      },
+      "manifest": "archives/fix-test-runtime.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-tab-limit",
+      "head": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+      "branch": "identity-tab-limit",
+      "files": 3,
+      "archive": {
+        "path": "archives/identity-tab-limit.tar.gz",
+        "bytes": 12694,
+        "sha256": "c31db7a8da960a66539745def5b5419780a625280cbd63f5094c075b1d17153d"
+      },
+      "manifest": "archives/identity-tab-limit.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-panel-limit",
+      "head": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+      "branch": "identity-panel-limit",
+      "files": 4,
+      "archive": {
+        "path": "archives/identity-panel-limit.tar.gz",
+        "bytes": 23139,
+        "sha256": "12f17c821a77e99f68e2fa0c10a5e1680bdf78e95b8c2b09755a99028acdc6bf"
+      },
+      "manifest": "archives/identity-panel-limit.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-dock-limit",
+      "head": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+      "branch": "identity-dock-limit",
+      "files": 3,
+      "archive": {
+        "path": "archives/identity-dock-limit.tar.gz",
+        "bytes": 10955,
+        "sha256": "e3c790248448bd4e136256fc8972958676c1844b41d2eaf686d37aa340387c7e"
+      },
+      "manifest": "archives/identity-dock-limit.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    },
+    {
+      "name": "identity-rail-limit",
+      "head": "da2b75aff12e21c9974ebc5be41ae138302de40b",
+      "branch": "identity-rail-limit",
+      "files": 2,
+      "archive": {
+        "path": "archives/identity-rail-limit.tar.gz",
+        "bytes": 8920,
+        "sha256": "048cad43280007133f500620d573249b61d489cd1f25c16b749117217d78fffe"
+      },
+      "manifest": "archives/identity-rail-limit.json",
+      "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+    }
+  ]
+}

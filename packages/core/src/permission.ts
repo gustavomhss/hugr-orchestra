@@ -2,7 +2,7 @@ export * as PermissionV2 from "./permission"
 
 import { makeLocationNode } from "./effect/app-node"
 import { Context, Deferred, Effect as EffectRuntime, Layer, Schema } from "effect"
-import { Permission } from "@opencode-ai/schema/permission"
+import { Permission } from "@orchestra/schema/permission"
 import { EventV2 } from "./event"
 import { Location } from "./location"
 import { AgentV2 } from "./agent"
@@ -11,7 +11,7 @@ import { SessionStore } from "./session/store"
 import { Wildcard } from "./util/wildcard"
 import { PermissionSaved } from "./permission/saved"
 
-export { Effect, Rule, Ruleset } from "@opencode-ai/schema/permission"
+export { Effect, Rule, Ruleset } from "@orchestra/schema/permission"
 const missingAgentPermissions: Permission.Ruleset = [{ action: "*", resource: "*", effect: "deny" }]
 
 export const ID = Permission.ID
@@ -90,20 +90,27 @@ export function merge(...rulesets: Permission.Ruleset[]): Permission.Ruleset {
 }
 
 export interface Interface {
+  /** Read-only current policy assessment; never queues, publishes, or grants approval. */
+  readonly evaluate: (input: AssertInput) => EffectRuntime.Effect<Permission.Effect, SessionV2.NotFoundError>
   readonly ask: (input: AssertInput) => EffectRuntime.Effect<AskResult, SessionV2.NotFoundError>
   readonly assert: (input: AssertInput) => EffectRuntime.Effect<void, Error | SessionV2.NotFoundError>
+  /** Ordinary authorization with typed rejection; legacy assert retains rejection as a defect. */
+  readonly authorize: (input: AssertInput) => EffectRuntime.Effect<void, Error | DeclinedError | SessionV2.NotFoundError>
+  /** Native host intent check. Configured deny wins; agent/saved allow cannot replace a live reply. */
+  readonly askExplicit: (input: AssertInput) => EffectRuntime.Effect<void, Error | DeclinedError | SessionV2.NotFoundError>
   readonly reply: (input: ReplyInput) => EffectRuntime.Effect<void, NotFoundError>
   readonly get: (id: ID) => EffectRuntime.Effect<Request | undefined>
   readonly forSession: (sessionID: SessionV2.ID) => EffectRuntime.Effect<ReadonlyArray<Request>>
   readonly list: () => EffectRuntime.Effect<ReadonlyArray<Request>>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Permission") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Permission") {}
 
 interface Pending {
   readonly request: Request
   readonly agent?: AgentV2.ID
   readonly deferred: Deferred.Deferred<void, DeclinedError | CorrectedError>
+  readonly explicit: boolean
 }
 
 const layer = Layer.effect(
@@ -161,23 +168,23 @@ const layer = Layer.effect(
       return { effect, rules: all }
     })
 
-    function request(input: AssertInput): Request {
+    function request(input: AssertInput, explicit = false): Request {
       return {
         id: input.id ?? ID.create(),
         sessionID: input.sessionID,
         action: input.action,
         resources: input.resources,
-        save: input.save,
-        metadata: input.metadata,
-        source: input.source,
+        ...(explicit || input.save === undefined ? {} : { save: input.save }),
+        ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
+        ...(input.source === undefined ? {} : { source: input.source }),
       }
     }
 
-    const create = (request: Request, agent?: AgentV2.ID) =>
+    const create = (request: Request, agent?: AgentV2.ID, explicit = false) =>
       EffectRuntime.uninterruptible(
         EffectRuntime.gen(function* () {
           const deferred = yield* Deferred.make<void, DeclinedError | CorrectedError>()
-          const item = { request, agent, deferred }
+          const item = { request, agent, deferred, explicit }
           if (pending.has(request.id)) return yield* EffectRuntime.die(`Duplicate pending permission ID: ${request.id}`)
           pending.set(request.id, item)
           yield* events
@@ -194,7 +201,7 @@ const layer = Layer.effect(
       return { id: value.id, effect: result.effect }
     })
 
-    const assert = EffectRuntime.fn("PermissionV2.assert")((input: AssertInput) =>
+    const authorize = EffectRuntime.fn("PermissionV2.authorize")((input: AssertInput) =>
       EffectRuntime.uninterruptibleMask((restore) =>
         EffectRuntime.gen(function* () {
           const result = yield* evaluateInput(input)
@@ -206,12 +213,28 @@ const layer = Layer.effect(
           if (result.effect === "allow") return
           const item = yield* create(request(input), input.agent)
           return yield* restore(Deferred.await(item.deferred)).pipe(
-            EffectRuntime.catchTag("PermissionV2.DeclinedError", (error) => EffectRuntime.die(error)),
             EffectRuntime.ensuring(
               EffectRuntime.sync(() => {
                 pending.delete(item.request.id)
               }),
             ),
+          )
+        }),
+      ),
+    )
+
+    const assert = EffectRuntime.fn("PermissionV2.assert")((input: AssertInput) =>
+      authorize(input).pipe(EffectRuntime.catchTag("PermissionV2.DeclinedError", (error) => EffectRuntime.die(error))),
+    )
+
+    const askExplicit = EffectRuntime.fn("PermissionV2.askExplicit")((input: AssertInput) =>
+      EffectRuntime.uninterruptibleMask((restore) =>
+        EffectRuntime.gen(function* () {
+          const rules = yield* configured(input.sessionID, input.agent)
+          if (denied(input, rules)) return yield* new BlockedError({ rules: relevant(input, rules) })
+          const item = yield* create(request(input, true), input.agent, true)
+          return yield* restore(Deferred.await(item.deferred)).pipe(
+            EffectRuntime.ensuring(EffectRuntime.sync(() => pending.delete(item.request.id))),
           )
         }),
       ),
@@ -260,6 +283,7 @@ const layer = Layer.effect(
 
           const rememberedRules = yield* savedRules()
           for (const [id, item] of pending) {
+            if (item.explicit) continue
             const input = { ...item.request }
             const rules = yield* configured(item.request.sessionID, item.agent).pipe(
               EffectRuntime.catchTag("Session.NotFoundError", () => EffectRuntime.succeed(undefined)),
@@ -297,7 +321,12 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.request).filter((request) => request.sessionID === sessionID)
     })
 
-    return Service.of({ ask, assert, reply, get, forSession, list })
+    return Service.of({
+      evaluate: EffectRuntime.fn("PermissionV2.evaluate")((input: AssertInput) =>
+        evaluateInput(input).pipe(EffectRuntime.map((result) => result.effect)),
+      ),
+      ask, assert, authorize, askExplicit, reply, get, forSession, list,
+    })
   }),
 )
 

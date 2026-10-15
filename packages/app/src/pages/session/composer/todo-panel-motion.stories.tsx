@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createEffect, createMemo, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Todo } from "@opencode-ai/sdk/v2"
+import type { Todo } from "@orchestra/sdk/v2"
 import { useServerSync } from "@/context/global-sync"
 import { PromptInput } from "@/components/prompt-input"
 import { usePrompt } from "@/context/prompt"
@@ -57,7 +57,7 @@ const btn = (accent?: boolean) =>
   }) as const
 
 const controls = {
-  agents: { available: [], options: ["build"], current: "build", loading: false, visible: true, select: () => {} },
+  agents: { available: [] },
   model: {
     selection: {
       current: () => ({ id: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet", provider: { id: "anthropic" } }),

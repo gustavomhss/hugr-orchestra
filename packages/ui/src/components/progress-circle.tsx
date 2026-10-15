@@ -1,7 +1,8 @@
 import { type ComponentProps, createMemo, splitProps } from "solid-js"
 
 export interface ProgressCircleProps extends Pick<ComponentProps<"svg">, "class" | "classList" | "style"> {
-  percentage: number
+  // Undefined marks an unknown value; its track is dashed so it cannot be mistaken for 0%.
+  percentage: number | undefined
   size?: number
   strokeWidth?: number
 }
@@ -22,6 +23,7 @@ export function ProgressCircle(props: ProgressCircleProps) {
     const progress = clampedPercentage / 100
     return circumference() * (1 - progress)
   })
+  const trackDash = () => (split.percentage === undefined ? (circumference() / 16).toString() : undefined)
 
   return (
     <svg
@@ -42,6 +44,7 @@ export function ProgressCircle(props: ProgressCircleProps) {
         r={radius()}
         data-slot="progress-circle-background"
         stroke-width={strokeWidth()}
+        stroke-dasharray={trackDash()}
       />
       <circle
         cx={center}
@@ -49,6 +52,7 @@ export function ProgressCircle(props: ProgressCircleProps) {
         r={radius()}
         data-slot="progress-circle-background-overlay"
         stroke-width={strokeWidth()}
+        stroke-dasharray={trackDash()}
       />
       <circle
         cx={center}

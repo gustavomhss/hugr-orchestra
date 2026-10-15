@@ -25,3 +25,7 @@ const sdk = {
 export function useSDK() {
   return () => sdk
 }
+
+export function SDKProvider(props: { children?: unknown }) {
+  return props.children
+}

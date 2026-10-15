@@ -1,11 +1,11 @@
-import { ImagePreview } from "@opencode-ai/ui/image-preview"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { Icon } from "@opencode-ai/ui/v2/icon"
-import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
-import type { ReferenceInfo } from "@opencode-ai/sdk/v2/client"
+import { ImagePreview } from "@orchestra/ui/image-preview"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { Icon } from "@orchestra/ui/v2/icon"
+import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
+import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
+import type { ReferenceInfo } from "@orchestra/sdk/v2/client"
 import { createEffect, createMemo, on, Show } from "solid-js"
 import { ModelSelectorPopoverV2 } from "@/components/dialog-select-model"
 import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpaid-v2"
@@ -28,13 +28,16 @@ import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
 import { draftVersion, pendingSelection } from "@/components/draft-subagent-models"
 import { createSessionTabs } from "@/pages/session/helpers"
+import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
+import { useSessionDelivery } from "@/pages/session/composer/delivery"
 import { showToast } from "@/utils/toast"
-import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
+import { PromptInputV2, type PromptInputV2Suggestion } from "@orchestra/session-ui/v2/prompt-input"
+import { agentKey, agentMention } from "@/context/agent-identity"
 import {
   createPromptInputV2Controller,
   createPromptInputV2State,
   type PromptInputV2Interaction,
-} from "@opencode-ai/session-ui/v2/prompt-input/interaction"
+} from "@orchestra/session-ui/v2/prompt-input/interaction"
 
 export type PromptInputV2ComposerProps = {
   class?: string
@@ -52,17 +55,41 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
   const dialog = useDialog()
   const command = useCommand()
   const language = useLanguage()
+  // The session composer reads "Message Orchestra…" in normal mode; Home and Janitor keep their copy.
+  // The view inherits from the controller's own, so its reactive getters stay live.
+  const view = Object.create(props.controller.view, {
+    placeholder: {
+      value: () =>
+        props.controller.state.mode === "normal"
+          ? language.t("orchestra.chat.placeholder")
+          : props.controller.view.placeholder?.(),
+    },
+    // The Orchestra tools carry the session's one Stop, so send stays send while a run works, as in the
+    // approved mock; a second control named Stop would only repeat it.
+    submit: { value: Object.create(props.controller.view.submit, { stopping: { value: () => false } }) },
+  })
+  const controller = () =>
+    props.sessionID
+      ? (Object.create(props.controller, { view: { value: view } }) as PromptInputV2ComposerController)
+      : props.controller
 
   return (
     <div class="flex flex-col gap-3">
       <PromptInputV2
-        controller={props.controller}
+        controller={controller()}
         borderUnderlay={props.borderUnderlay}
         class={props.class}
         variantControlVisible={!props.controller.model.loading}
         attachKeybind={command.keybindParts("file.attach")}
         attachShortcut={command.keybind("file.attach")}
-        subagentModelsControl={<PromptInputV2SubagentModelsControl sessionID={props.sessionID} />}
+        subagentModelsControl={
+          <>
+            <Show when={props.sessionID}>
+              {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
+            </Show>
+            <PromptInputV2SubagentModelsControl sessionID={props.sessionID} />
+          </>
+        }
         modelControl={
           <PromptInputV2ModelControl
             loading={props.controller.model.loading}
@@ -73,9 +100,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
             providerID={props.controller.model.selection.current()?.provider?.id}
             modelName={props.controller.model.selection.current()?.name ?? language.t("dialog.model.select.title")}
             onClose={props.controller.restoreFocus}
-            onUnpaidClick={() =>
-              dialog.show(() => <DialogSelectModelUnpaidV2 model={props.controller.model.selection} />)
-            }
+            onUnpaidClick={() => dialog.show(() => <DialogSelectModelUnpaidV2 />)}
           />
         }
       />
@@ -224,6 +249,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     onAbort: props.onAbort,
     onSubmit: props.onSubmit,
     model: props.controls.model.selection,
+    delivery: useSessionDelivery(() => props.controls.session.id).delivery,
   })
 
   const referenceDescription = (reference: ReferenceInfo) =>
@@ -279,10 +305,10 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     ...props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
       .map((agent) => ({
-        id: `agent:${agent.name}`,
+        id: `agent:${agentKey(agent)}`,
         kind: "agent" as const,
         label: `@${agent.name}`,
-        mention: { type: "agent" as const, name: agent.name, content: `@${agent.name}`, start: 0, end: 0 },
+        mention: agentMention(agent),
       })),
     ...resources(),
     ...recent().map((path) => ({
@@ -295,7 +321,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     })),
   ])
   const slashCommands = createMemo(() => [
-    ...sync().data.command.map((item) => ({
+    ...(sync().data.command ?? []).map((item) => ({
       id: `custom.${item.name}`,
       trigger: item.name,
       title: item.name,
@@ -389,16 +415,6 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     },
     view: {
       placeholder: designPlaceholder,
-      get agent() {
-        return props.controls.agents.visible && props.controls.agents.options.length > 0
-          ? {
-              options: () => props.controls.agents.options.map((name) => ({ id: name, label: name })),
-              current: () => props.controls.agents.current,
-              onSelect: (value: string) => props.controls.agents.select(value),
-              keybind: () => command.keybindParts("agent.cycle"),
-            }
-          : undefined
-      },
       variant: {
         options: () => variants().map((value) => ({ id: value, label: value })),
         current: () => props.controls.model.selection.variant.current() ?? "default",
@@ -495,21 +511,15 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
     }
     const scoped = hasModelScope(rules())
     if (!scoped) return language.t("session.tasks.models.all")
-    const models = local.model
-      .list()
-      .filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
-    const allowed = models.filter(
-      (m) => effectiveModelState(rules(), m.provider.id, m.id) === "allow",
-    ).length
+    const models = local.model.list().filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
+    const allowed = models.filter((m) => effectiveModelState(rules(), m.provider.id, m.id) === "allow").length
     return `${allowed}`
   }
   const open = () => {
     const directory = sdk().directory
     if (!directory) return
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => (
-        <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />
-      ))
+      dialog.show(() => <x.DialogSubagentModels sessionID={props.sessionID} directory={directory} />)
     })
   }
 
@@ -525,7 +535,11 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string }) {
         onClick={open}
       >
         <span class="truncate leading-4">
-          {language.t("session.tasks.models.label", { count: label() })}
+          {props.sessionID
+            ? hasModelScope(rules())
+              ? language.t("orchestra.chat.models.count", { count: label() })
+              : language.t("orchestra.chat.models.all")
+            : language.t("session.tasks.models.label", { count: label() })}
         </span>
         <span class="-ml-0.5 -mr-1 flex shrink-0">
           <Icon name="chevron-down" />

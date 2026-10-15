@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"alpha","instructions":"do alpha","checklist":[{"id":"SEES-WP-ID","cmd":"test \"$wp_id\" = alpha"},{"id":"SEES-SPRINT","cmd":"test -f \"$SPRINT\""},{"id":"SEES-MODE","cmd":"test \"$MODE\" = check"}]}]}

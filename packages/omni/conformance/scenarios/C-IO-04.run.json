@@ -1,0 +1,7 @@
+{
+  "id": "C-IO-04.run",
+  "steps": [
+    {"run": ["${FIXTURE}", "bytes=stdout:1048576", "exit=0"], "expect": {"exitCode": 0, "stdout": {"length": 1048576}}},
+    {"run": ["${FIXTURE}", "out=ROOT\\n", "hold=60000", "exit=0"], "options": {"graceMs": 500}, "expect": {"exitCode": 0, "reason": "exit", "stdout": "ROOT\n", "elapsedMs": {"gte": 490, "lt": 1500}}}
+  ]
+}

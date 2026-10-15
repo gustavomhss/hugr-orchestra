@@ -67,14 +67,6 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.retry.geminiHot": "Gemini häzir aşa ýüklenen",
   "ui.sessionTurn.error.freeUsageExceeded": "Mugt ulanyşdan geçdi",
   "ui.sessionTurn.error.addCredits": "Karz goşuň",
-  "dialog.usageExceeded.freeTier.title": "Mugt çäk ýetdi",
-  "dialog.usageExceeded.freeTier.description":
-    "Iň oňat açyk çeşme modellerine ygtybarly girmek üçin aýda 10 $ töläp, OpenCode Go-a ýazylyň.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Abuna ýazylyň",
-  "dialog.usageExceeded.accountRateLimit.title": "Çäklendirildi",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Ulanyş çägine ýetdi. Indi bu modeli ulanmagy dowam etdirmek üçin, bar bolan balansyňyzdan peýdalanmagy üpjün ediň",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Sazlamalary açyň",
   "ui.sessionTurn.status.delegating": "Iş tabşyrmak",
   "ui.sessionTurn.status.planning": "Indiki ädimleri meýilleşdirmek",
   "ui.sessionTurn.status.gatheringContext": "Gözleg",
@@ -121,7 +113,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Suratlar we faýllar",
   "ui.promptInput.context": "Kontekst",
   "ui.promptInput.shell": "Shell buýrugy",
-  "ui.promptInput.chooseAgent": "Agent saýlaň",
   "ui.promptInput.chooseModel": "Model saýlaň",
   "ui.promptInput.chooseVariant": "Model görnüşini saýlaň",
   "ui.promptInput.send": "Iber",

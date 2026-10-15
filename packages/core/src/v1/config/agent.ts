@@ -36,6 +36,9 @@ const AgentSchema = Schema.StructWithRest(
     }),
     maxSteps: Schema.optional(PositiveInt).annotate({ description: "@deprecated Use 'steps' field instead." }),
     permission: Schema.optional(ConfigPermissionV1.Info),
+    engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])).annotate({
+      description: "Harness that runs the agent's turns: Orchestra's own loop (default) or Claude Code",
+    }),
   }),
   [Schema.Record(Schema.String, Schema.Any)],
 )
@@ -57,6 +60,7 @@ const KNOWN_KEYS = new Set([
   "permission",
   "disable",
   "tools",
+  "engine",
 ])
 
 const normalize = (agent: Schema.Schema.Type<typeof AgentSchema>): Schema.Schema.Type<typeof AgentSchema> => {

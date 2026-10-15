@@ -1,0 +1,25 @@
+{
+  "ledger": "test/golden/audit/problems-plan-defects/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "cap-risk",
+      "wp": null,
+      "cause": "the session's hook block cap is lower than this chain needs"
+    },
+    {
+      "category": "inject-missing",
+      "wp": "wp1",
+      "cause": "a state must inject a file that does not exist"
+    },
+    {
+      "category": "position-lost",
+      "wp": "wp2",
+      "cause": "the chain stands on a work package the plan no longer contains"
+    },
+    {
+      "category": "unknown-kind",
+      "wp": "wp3",
+      "cause": "a state declares a kind this engine does not implement"
+    }
+  ]
+}

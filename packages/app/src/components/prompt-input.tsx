@@ -1,5 +1,5 @@
-import { useFilteredList } from "@opencode-ai/ui/hooks"
-import { useSpring } from "@opencode-ai/ui/motion-spring"
+import { useFilteredList } from "@orchestra/ui/hooks"
+import { useSpring } from "@orchestra/ui/motion-spring"
 import {
   createEffect,
   on,
@@ -29,20 +29,20 @@ import { useLayout } from "@/context/layout"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { useComments } from "@/context/comments"
-import { Button } from "@opencode-ai/ui/button"
-import { DockShellForm, DockTray } from "@opencode-ai/ui/dock-surface"
-import { Icon } from "@opencode-ai/ui/icon"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { Tooltip, TooltipKeybind } from "@opencode-ai/ui/tooltip"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
-import { MenuV2 } from "@opencode-ai/ui/v2/menu-v2"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Select } from "@opencode-ai/ui/select"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { Button } from "@orchestra/ui/button"
+import { DockShellForm, DockTray } from "@orchestra/ui/dock-surface"
+import { Icon } from "@orchestra/ui/icon"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { Tooltip, TooltipKeybind } from "@orchestra/ui/tooltip"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
+import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
+import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
+import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
+import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { Select } from "@orchestra/ui/select"
+import { useDialog } from "@orchestra/ui/context/dialog"
 import { ModelSelectorPopover, ModelSelectorPopoverV2 } from "@/components/dialog-select-model"
 import { DialogSelectModelUnpaid } from "@/components/dialog-select-model-unpaid"
 import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpaid-v2"
@@ -83,8 +83,9 @@ import { PromptDragOverlay } from "./prompt-input/drag-overlay"
 import { promptPlaceholder } from "./prompt-input/placeholder"
 import { createPromptInputTransientState } from "./prompt-input/transient-state"
 import { showToast } from "@/utils/toast"
-import { ImagePreview } from "@opencode-ai/ui/image-preview"
-import type { ReferenceInfo } from "@opencode-ai/sdk/v2/client"
+import { ImagePreview } from "@orchestra/ui/image-preview"
+import type { ReferenceInfo } from "@orchestra/sdk/v2/client"
+import { agentKey } from "@/context/agent-identity"
 
 export { createPromptInputHistory }
 export type { PromptInputControls, PromptInputHistory, PromptInputProps, PromptInputState, PromptInputSubmission }
@@ -585,7 +586,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const agentList = createMemo(() =>
     props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
-      .map((agent): AtOption => ({ type: "agent", name: agent.name, display: agent.name })),
+      .map((agent): AtOption => ({ type: "agent", name: agentKey(agent), display: agent.name })),
   )
 
   const mcpResourceList = createMemo(() =>
@@ -605,7 +606,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const handleAtSelect = (option: AtOption | undefined) => {
     if (!option) return
     if (option.type === "agent") {
-      addPart({ type: "agent", name: option.name, content: "@" + option.name, start: 0, end: 0 })
+      addPart({ type: "agent", name: option.name, content: "@" + option.display, start: 0, end: 0 })
       return
     }
     if (option.type === "reference") {
@@ -1219,9 +1220,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     const directory = sdk().directory
     if (!directory) return
     void import("@/components/dialog-subagent-models").then((x) => {
-      dialog.show(() => (
-        <x.DialogSubagentModels sessionID={props.controls.session.id} directory={directory} />
-      ))
+      dialog.show(() => <x.DialogSubagentModels sessionID={props.controls.session.id} directory={directory} />)
     })
   }
   const accepting = createMemo(() => {
@@ -1449,8 +1448,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     event.preventDefault()
   }
 
-  const agentsLoading = () => props.controls.agents.loading
-  const agentsShouldFadeIn = createMemo<boolean>((prev) => prev ?? agentsLoading())
   const providersLoading = () => props.controls.model.loading
   const providersShouldFadeIn = createMemo<boolean>((prev) => prev ?? providersLoading())
 
@@ -1678,34 +1675,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 </Button>
               </div>
               <div class="flex items-center gap-1.5 min-w-0 flex-1 h-7">
-                <Show when={!agentsLoading()}>
-                  <div
-                    data-component="prompt-agent-control"
-                    classList={{ "animate-in fade-in duration-300": agentsShouldFadeIn() }}
-                  >
-                    <TooltipKeybind
-                      placement="top"
-                      gutter={4}
-                      title={language.t("command.agent.cycle")}
-                      keybind={command.keybind("agent.cycle")}
-                    >
-                      <Select
-                        size="normal"
-                        options={props.controls.agents.options}
-                        current={props.controls.agents.current}
-                        onSelect={(value) => {
-                          props.controls.agents.select(value)
-                          restoreFocus()
-                        }}
-                        class="capitalize max-w-[160px] text-text-base"
-                        valueClass="truncate text-13-regular text-text-base"
-                        triggerStyle={control()}
-                        triggerProps={{ "data-action": "prompt-agent" }}
-                        variant="ghost"
-                      />
-                    </TooltipKeybind>
-                  </div>
-                </Show>
                 <Show when={!providersLoading()}>
                   <Show when={store.mode !== "shell"}>
                     <div
@@ -1729,7 +1698,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                               class="min-w-0 max-w-[320px] text-13-regular text-text-base group"
                               style={control()}
                               onClick={() => {
-                                dialog.show(() => <DialogSelectModelUnpaid model={props.controls.model.selection} />)
+                                dialog.show(() => <DialogSelectModelUnpaid />)
                               }}
                             >
                               <Show when={props.controls.model.selection.current()?.provider?.id}>
@@ -1813,10 +1782,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         </TooltipKeybind>
                       </div>
                     </Show>
-                    <Tooltip
-                      placement="top"
-                      value={language.t("dialog.subagentModels.title")}
-                    >
+                    <Tooltip placement="top" value={language.t("dialog.subagentModels.title")}>
                       <Button
                         variant="ghost"
                         size="normal"

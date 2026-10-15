@@ -1,5 +1,5 @@
 import fs from "fs/promises"
-import { Flock } from "@opencode-ai/core/util/flock"
+import { Flock } from "@orchestra/core/util/flock"
 
 type Msg = {
   key: string

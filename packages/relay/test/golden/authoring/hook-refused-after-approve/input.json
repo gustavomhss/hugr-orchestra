@@ -1,0 +1,46 @@
+{
+  "op": "hook",
+  "document": {
+    "name": "Actions",
+    "nodes": [
+      {
+        "id": "event",
+        "name": "Before edit",
+        "type": "relay.hookEventTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "operation": "command",
+          "timing": "after"
+        }
+      },
+      {
+        "id": "approve",
+        "name": "Approve",
+        "type": "relay.hookApprove",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "message": "Ask."
+        }
+      }
+    ],
+    "connections": {
+      "Before edit": {
+        "main": [
+          [
+            {
+              "node": "Approve",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

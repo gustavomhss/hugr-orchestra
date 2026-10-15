@@ -1,16 +1,16 @@
-import { Binary } from "@opencode-ai/core/util/binary"
-import { retry } from "@opencode-ai/core/util/retry"
+import { Binary } from "@orchestra/core/util/binary"
+import { retry } from "@orchestra/core/util/retry"
 import type { OpenCodeEvent, SessionApi, SessionMessageInfo } from "@opencode-ai/client/promise"
 import type {
   Message,
-  OpencodeClient,
+  OrchestraClient,
   Part,
   PermissionRequest,
   QuestionRequest,
   Session,
   SessionStatus,
   Todo,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import type { FileDiffInfo } from "@opencode-ai/client/promise"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
@@ -186,7 +186,7 @@ function reconcileFetched<T extends { id: string }>(
 type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2"> }
 
 export function createServerSession(
-  client: OpencodeClient,
+  client: OrchestraClient,
   sessionApiOrOptions?: SessionApi | ServerSessionOptions,
   messageApi?: MessageApi,
   currentOptions?: ServerSessionOptions,
@@ -1393,11 +1393,9 @@ export function createServerSession(
       })
     },
     history: {
+      loaded: (sessionID: string) => meta.limit[sessionID] !== undefined && !meta.loading[sessionID],
       more: (sessionID: string) =>
-        data.message[sessionID] !== undefined &&
-        meta.limit[sessionID] !== undefined &&
-        !meta.complete[sessionID] &&
-        !!meta.cursor[sessionID],
+        meta.limit[sessionID] !== undefined && !meta.complete[sessionID] && !!meta.cursor[sessionID],
       loading: (sessionID: string) => meta.loading[sessionID] ?? false,
       async loadMore(sessionID: string, count = historyMessagePageSize) {
         touch(sessionID)

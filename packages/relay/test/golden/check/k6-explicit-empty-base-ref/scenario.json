@@ -1,0 +1,65 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "DIFF",
+            "judge": "inspect change",
+            "diff": true,
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "counter": "99",
+    "position": "target",
+    "retry_0": "2",
+    "ledger.jsonl": "",
+    "base_ref": {
+      "commit": 0
+    }
+  },
+  "commits": [
+    {
+      "message": "seed",
+      "files": {
+        "seed.txt": "seed\n"
+      }
+    }
+  ],
+  "tree": {
+    "result.txt": "RELAY_JUDGE_OK\n"
+  },
+  "fires": [
+    {
+      "check": {
+        "position": "target"
+      }
+    },
+    {
+      "check": {
+        "position": "target",
+        "baseRef": ""
+      }
+    },
+    {
+      "check": {
+        "position": "target",
+        "baseRef": {
+          "commit": 0
+        }
+      }
+    },
+    {
+      "check": {
+        "position": "target",
+        "baseRef": "not-a-commit"
+      }
+    }
+  ]
+}

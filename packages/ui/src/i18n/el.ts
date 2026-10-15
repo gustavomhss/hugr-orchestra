@@ -67,14 +67,6 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.retry.geminiHot": "Το Gemini είναι υπερφορτωμένο αυτήν τη στιγμή",
   "ui.sessionTurn.error.freeUsageExceeded": "Υπέρβαση της δωρεάν χρήσης",
   "ui.sessionTurn.error.addCredits": "Προσθήκη πιστώσεων",
-  "dialog.usageExceeded.freeTier.title": "Συμπληρώθηκε το δωρεάν όριο",
-  "dialog.usageExceeded.freeTier.description":
-    "Εγγραφείτε στο OpenCode Go για 10 $/μήνα και αποκτήστε αξιόπιστη πρόσβαση στα καλύτερα μοντέλα ανοιχτού κώδικα.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Εγγραφή",
-  "dialog.usageExceeded.accountRateLimit.title": "Συμπληρώθηκε το όριο μετάβασης",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Συμπληρώθηκε το όριο χρήσης. Για να συνεχίσετε να χρησιμοποιείτε αυτό το μοντέλο τώρα, ενεργοποιήστε τη χρήση από το διαθέσιμο υπόλοιπό σας",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Άνοιγμα ρυθμίσεων",
   "ui.sessionTurn.status.delegating": "Ανάθεση εργασίας",
   "ui.sessionTurn.status.planning": "Σχεδιασμός επόμενων βημάτων",
   "ui.sessionTurn.status.gatheringContext": "Εξερεύνηση",
@@ -121,7 +113,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Εικόνες και αρχεία",
   "ui.promptInput.context": "Πλαίσιο",
   "ui.promptInput.shell": "εντολή Shell",
-  "ui.promptInput.chooseAgent": "Επιλογή πράκτορα",
   "ui.promptInput.chooseModel": "Επιλογή μοντέλου",
   "ui.promptInput.chooseVariant": "Επιλογή παραλλαγής μοντέλου",
   "ui.promptInput.send": "Αποστολή",

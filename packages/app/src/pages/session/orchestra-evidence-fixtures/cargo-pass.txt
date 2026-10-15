@@ -1,0 +1,25 @@
+   Compiling approval v0.1.0 (/repo)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.42s
+     Running unittests src/lib.rs (target/debug/deps/approval-b75e01314268f070)
+
+running 3 tests
+test tests::slow ... ignored
+test tests::adds ... ok
+test tests::rejects_empty ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/it.rs (target/debug/deps/it-4e63750089bce014)
+
+running 1 test
+test integration_ok ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests approval
+
+running 1 test
+test src/lib.rs - add (line 3) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+

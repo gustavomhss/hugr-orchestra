@@ -1,0 +1,1 @@
+{"verdict": "fail", "reason": "stub: RELAY_JUDGE_OK marker absent in diff.patch", "backend": "stub", "available": true}

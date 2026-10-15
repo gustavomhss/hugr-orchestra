@@ -1,0 +1,27 @@
+{
+  "generator": "test/golden/generate/judge.py",
+  "oracle": {
+    "benchmark/judge.py": "bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75"
+  },
+  "tools": {
+    "jq": "jq-1.8.1",
+    "python3": "3.14.5",
+    "bash": "5.3.3(1)-release",
+    "git": "git version 2.51.0",
+    "openssl": "LibreSSL 3.3.6",
+    "sqlite": "3.53.1"
+  },
+  "cwd": "packages/relay",
+  "env": {
+    "PATH": "<tmp>/bin (fake date, links to the tools above), /usr/bin, /bin",
+    "HOME": "<tmp>/home",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUTF8": "1"
+  },
+  "epoch": 1700000000,
+  "keys": {
+    "keyed": "relay-golden-ledger-key",
+    "wrong-key": "relay-golden-wrong-key"
+  }
+}

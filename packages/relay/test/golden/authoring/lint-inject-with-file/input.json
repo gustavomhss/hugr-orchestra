@@ -1,0 +1,27 @@
+{
+  "op": "lint",
+  "sprint": {
+    "brief": "x",
+    "work_packages": [
+      {
+        "id": "load",
+        "instructions": "do load",
+        "checklist": [],
+        "kind": "inject",
+        "file": "protocol.md"
+      },
+      {
+        "id": "b",
+        "instructions": "do b",
+        "checklist": [
+          {
+            "id": "c1",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      }
+    ]
+  },
+  "allowUngated": false
+}

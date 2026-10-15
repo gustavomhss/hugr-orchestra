@@ -1,0 +1,26 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "seed",
+        "kind": "inject"
+      },
+      {
+        "id": "wp2",
+        "instructions": "do wp2",
+        "checklist": [
+          {
+            "id": "wp2-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {}
+  ]
+}

@@ -1,13 +1,14 @@
 export * as SkillTool from "./skill"
 
 import path from "path"
-import { ToolFailure } from "@opencode-ai/llm"
+import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, Schema } from "effect"
 import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { SkillV2 } from "../skill"
 import { PermissionV2 } from "../permission"
 import { ToolRegistry } from "./registry"
+import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
 
@@ -24,13 +25,7 @@ export const Output = Schema.Struct({
   output: Schema.String,
 })
 
-export const description = [
-  "Load a specialized skill when the task at hand matches one of the available skills in the system context.",
-  "",
-  "Use this tool to inject the skill's instructions and resources into the current conversation. The output may contain detailed workflow guidance as well as references to scripts, files, etc. in the same directory as the skill.",
-  "",
-  "The skill name must match one of the available skills in the system context.",
-].join("\n")
+export const description = ToolText.skill
 
 export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>) => {
   const directory = path.dirname(skill.location)

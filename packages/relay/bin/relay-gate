@@ -1,0 +1,325 @@
+#!/usr/bin/env bash
+# relay-gate — the model-agnostic gate surface (Relay Roadmap #7).
+#
+# This CLI evaluates one gate step with ZERO knowledge of Claude Code or any specific agent harness.
+# Any loop driver (LangGraph, AutoGen, custom shell scripts, CI pipelines, etc.) can call it and act
+# on the JSON outcome + exit code. The Claude hooks (bin/relay-arm-hook.sh, benchmark/relay_hook.sh)
+# remain as-is; this is the vendor-neutral integration point described in PRODUCT.md §7.4 / §8.8.
+#
+# Subcommand:
+#   relay-gate eval --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]
+#   relay-gate check <same paths> [--position <position>] [--base-ref <commit>]
+#
+# Output: one JSON object on stdout, exit code indicates disposition:
+#   exit 0  + {"outcome":"advance",...}   — gate passed; counter already incremented
+#   exit 0  + {"outcome":"complete",...}  — sprint done; counter incremented past last WP
+#   exit 1  + {"outcome":"gate-fail",...} — failing controls; retry budget not yet exhausted
+#   exit 2  + {"outcome":"escalate",...}  — retry budget spent; surface to human
+#
+# The caller translates this to its own continue/stop convention — no {"decision":"block"} here.
+set -euo pipefail
+
+GATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JUDGE="${RELAY_JUDGE:-$GATE_DIR/../benchmark/judge.py}"
+. "$GATE_DIR/../lib/relay-gate.sh"   # relay_chain_append + relay_run_checklist
+
+driver_fatal() {
+  local status="$1"; shift
+  printf 'relay-gate: %s\n' "$*" >&2
+  exit "$status"
+}
+
+# ---- Subcommand dispatch -----------------------------------------------------------------------
+
+usage() {
+  printf 'Usage: relay-gate <eval|check> --sprint <sprint.json> --workdir <dir> --state <state-dir> [--ledger <path>]\n' >&2
+  printf '       check only: [--position <position>] [--base-ref <commit>]\n' >&2
+  exit 1
+}
+
+# `check` is EVAL WITHOUT CONSEQUENCE: it runs the current WP's checklist and reports what is
+# failing, without advancing the position, charging a retry, or writing a verdict to the ledger.
+#
+# It exists for the wait channel (V10 — docs/enforcement-model.md §6c), which must refuse to serve an
+# agent whose gate is already satisfied and must establish that from the checklist rather than from
+# the agent's claim. Deliberately unrecorded: this is a PRECONDITION test, not a grading. Writing a
+# verdict here would put a second evaluation of the same state on the chain, by a path that never
+# decides anything — two gradings where the design promises one.
+MODE="${1:-}"
+case "$MODE" in eval|check) shift ;; *) usage ;; esac
+
+SPRINT="" WORKDIR="" STATE_DIR="" LEDGER_OPT="" POSITION_OPT="" BASE_REF_OPT=""
+POSITION_SET=0 BASE_REF_SET=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --sprint|--workdir|--state|--ledger|--position|--base-ref)
+      [ $# -ge 2 ] || usage
+      # An explicit empty check base ref means unavailable, not state-file fallback.
+      case "$1" in --base-ref) ;; *) [ -n "$2" ] || usage ;; esac
+      case "$2" in --*) usage ;; esac
+      case "$1" in
+        --sprint) SPRINT="$2" ;;
+        --workdir) WORKDIR="$2" ;;
+        --state) STATE_DIR="$2" ;;
+        --ledger) LEDGER_OPT="$2" ;;
+        --position) [ "$MODE" = check ] || usage; POSITION_OPT="$2"; POSITION_SET=1 ;;
+        --base-ref) [ "$MODE" = check ] || usage; BASE_REF_OPT="$2"; BASE_REF_SET=1 ;;
+      esac
+      shift 2 ;;
+    *) usage ;;
+  esac
+done
+
+[ -n "$SPRINT" ] && [ -n "$WORKDIR" ] && [ -n "$STATE_DIR" ] || usage
+[ -f "$SPRINT" ]  || { printf 'relay-gate: sprint file not found: %s\n' "$SPRINT" >&2; exit 1; }
+[ -d "$WORKDIR" ] || { printf 'relay-gate: workdir not found: %s\n' "$WORKDIR" >&2; exit 1; }
+
+mkdir -p "$STATE_DIR"
+
+# One evaluation at a time per state dir. The chain lock in relay_chain_append protects the LEDGER;
+# this protects the COUNTER, which is the other half of the same live-run failure: two evaluations
+# read the same `i`, both graded the same state, and the position advanced twice for one state's work.
+# A busy state dir is reported as busy (exit 3) rather than queued, because a harness that fired twice
+# by mistake wants to know, and one that meant it can retry — a silent queue would turn an
+# orchestration bug into an invisible double-grade.
+RUN_LOCK="$STATE_DIR/.run.lock"
+if ! mkdir "$RUN_LOCK" 2>/dev/null; then
+  # A crashed evaluation leaves the directory behind. Rather than pick a staleness timeout that is
+  # wrong for a judge-bearing gate, say what is holding it and let the operator decide.
+  printf 'relay-gate: another evaluation holds %s\n' "$RUN_LOCK" >&2
+  printf 'relay-gate: if no evaluation is running, remove that directory and retry.\n' >&2
+  exit 3
+fi
+trap 'rmdir "$RUN_LOCK" 2>/dev/null || true' EXIT
+
+# ---- State resolution --------------------------------------------------------------------------
+
+RUN_DIR="$WORKDIR"
+LEDGER="${LEDGER_OPT:-$STATE_DIR/ledger.jsonl}"
+fails="" reg=""
+
+nwp=$(jq '.work_packages | length' "$SPRINT")
+rb=$(jq -r '.retry_budget // 3' "$SPRINT")
+wp_id=""
+
+# Named check positions override the compatibility counter, including parked/past-end counters.
+# The shared resolver prefers the whole ID, then the suffix after the first dot.
+if [ "$POSITION_SET" = 1 ]; then
+  if ! i=$(relay_position_index "$POSITION_OPT"); then
+    jq -n --arg p "$POSITION_OPT" \
+      '{outcome:"error", error:"unknown-position", position:$p}'
+    exit 2
+  fi
+else
+  i=$(cat "$STATE_DIR/counter" 2>/dev/null || echo 0)
+  # Already complete? A named check deliberately bypasses this observation.
+  if [ "$i" -ge "$nwp" ]; then
+    jq -n --argjson i "$i" '{"outcome":"complete","i":$i}'
+    exit 0
+  fi
+fi
+
+wp_id_json=$(jq -c ".work_packages[$i].id" "$SPRINT") || driver_fatal "$?" "WP id lookup failed"
+if ! relay_json_string wp_id "$wp_id_json" || [ -z "$wp_id" ]; then
+  driver_fatal 1 "WP id must be a nonempty NUL-free string"
+fi
+# The position is two coordinates when the sprint declares macros (V1 — docs/relay-v2.md §2.2).
+# `macro` is emitted in the outcome and written into the ledger body ONLY when the WP declares one,
+# so a v1 sprint's bytes — and benchmark/relay_hook.sh's historical hashes — are unchanged.
+wp_macro_json=$(jq -c ".work_packages[$i].macro" "$SPRINT") || driver_fatal "$?" "WP macro lookup failed"
+relay_json_string wp_macro "$wp_macro_json" || driver_fatal "$?" "WP macro must be a NUL-free string or null"
+
+# Validate identities needed by eval before command or ledger side effects. Check
+# needs only its selected WP, so malformed future identities remain outside its scope.
+nid=""
+if [ "$MODE" = eval ] && [ "$((i+1))" -lt "$nwp" ]; then
+  nid_json=$(jq -c ".work_packages[$((i+1))].id" "$SPRINT") || driver_fatal "$?" "next WP id lookup failed"
+  if ! relay_json_string nid "$nid_json" || [ -z "$nid" ]; then
+    driver_fatal 1 "next WP id must be a nonempty NUL-free string"
+  fi
+fi
+# The base ref a `diff: true` judge control is graded against (V5). The arm hook stamps this when it
+# advances INTO a state; this CLI has no such moment, so it reads whatever the driving harness
+# recorded — check's explicit --base-ref or $STATE_DIR/base_ref — and leaves it empty otherwise.
+# Empty means the control fails
+# closed, which is the same answer the arm path gives when no base ref exists: a discursive control
+# graded against a guessed artifact is worse than one that admits it could not run.
+if [ "$BASE_REF_SET" = 1 ]; then BASE_REF="$BASE_REF_OPT"
+else BASE_REF=$(cat "$STATE_DIR/base_ref" 2>/dev/null || true); fi
+add_macro() { if [ -n "${wp_macro:-}" ]; then jq -c --arg m "$wp_macro" '. + {macro:$m}'; else cat; fi; }
+
+# ---- Ledger helpers (single-runner envelope — no `arm` field, matching benchmark/relay_hook.sh) --
+ledger() {  # $1=event  $2=retry(optional)
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "$1" --arg retry "${2:-0}" \
+         --arg fails "$fails" --arg reg "$reg" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,retry:($retry|tonumber),fails:$fails,reg:$reg}' | add_macro)"
+}
+
+ledger_item() {  # $1=id $2=assert $3=verdict $4=graded_by $5=oracle-sha $6=origin $7=scope(optional) $8=artifact-sha(optional)
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "checklist-item" \
+         --arg id "$1" --arg as "$2" --arg v "$3" --arg gb "$4" \
+         --arg orc "${5:-}" --arg org "${6:-sprint}" --arg scope "${7:-}" --arg art "${8:-}" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,assert:$as,verdict:$v,graded_by:$gb,oracle:$orc,origin:$org}
+     | if $scope == "" then . else . + {scope:$scope} end
+     | if $art == "" then . else . + {artifact:$art} end' | add_macro)"
+}
+
+# A regression re-run is a verdict and belongs on the chain (see bin/relay-arm-hook.sh for the full
+# reasoning). Recorded under its own event so the "final verdict per control" readers are unaffected.
+# NOTE: this CLI deliberately keeps its own regression loop rather than sharing the arm hook's. The
+# two filter differently on purpose — the arm hook re-runs only controls with a recorded pass (R6
+# keep-best), this one re-runs every earlier control — and unifying them would silently change what
+# the measurement harness enforces. Only the RECORDING is made common, via relay_oracle_sha.
+ledger_reg_item() {  # $1=id $2=verdict $3=oracle-sha $4=origin
+  relay_chain_append "$(jq -nc --arg ts "$(date +%s)" --arg wp "${wp_id:-?}" \
+         --argjson i "${i:-0}" --arg ev "regression-item" --arg id "$1" --arg v "$2" \
+         --arg orc "${3:-}" --arg org "${4:-sprint}" \
+    '{ts:($ts|tonumber),wp:$wp,i:$i,event:$ev,item:$id,verdict:$v,graded_by:"deterministic",oracle:$orc,origin:$org}' | add_macro)"
+}
+
+# ---- Gate evaluation ---------------------------------------------------------------------------
+
+if [ "$MODE" = check ]; then
+  ledger_item() { :; }            # a precondition test records nothing
+  ledger() { :; }
+  fails="$(relay_run_checklist)" || { rc=$?; exit "$rc"; }
+  jq -n --arg wp "$wp_id" --argjson i "$i" --arg f "${fails#; }" \
+    '{outcome:"check", i:$i, wp:$wp,
+      failing: ($f | if . == "" then [] else split("; ") end)}' | add_macro
+  [ -z "$fails" ] && exit 0 || exit 1
+fi
+
+# 1. Checklist (shared core from lib/relay-gate.sh — logs each verdict via ledger_item above)
+fails="$(relay_run_checklist)" || { rc=$?; exit "$rc"; }
+
+# 2. dod[] commands (the sprint-level DoD array, separate from named checklist controls)
+run_dods() {  # $1 = jq filter selecting WPs; emits a JSON failure string, nonzero on extraction failure
+  local out="" records record cmd label value
+  # Only compact JSON objects cross the line reader. Missing/null/empty DoD is optional;
+  # malformed collections and required commands are named failures, never empty passes.
+  records=$(jq -c "$1 | . as \$wp |
+    if .dod == null then empty
+    elif (.dod | type) != \"array\" then {wp:\$wp.id, invalid:true}
+    else .dod | to_entries[] | {wp:\$wp.id, index:.key, control:.value} end" "$SPRINT") || return 1
+  while IFS= read -r record; do
+    [ -n "$record" ] || continue
+    value=$(printf '%s' "$record" | jq -c '
+      if .invalid then "dod:\(.wp):invalid-array"
+      elif (.control | type) == "object" and (.control.id | type) == "string" and .control.id != ""
+      then .control.id else "dod:\(.wp):\(.index):invalid-command" end') || return 1
+    relay_json_string label "$value" || return 1
+    if [ "$(printf '%s' "$record" | jq -r '.invalid // false')" = true ]; then
+      out="$out; $label"; continue
+    fi
+    value=$(printf '%s' "$record" | jq -c '
+      if (.control | type) == "object" then .control.cmd else null end') || return 1
+    if ! relay_json_string cmd "$value" || [ -z "$cmd" ]; then
+      out="$out; $label"; continue
+    fi
+    # Give commands EOF, not the JSONL reader's remaining records.
+    ( cd "$RUN_DIR" && eval "$cmd" </dev/null >/dev/null 2>&1 ) || out="$out; ${cmd##*::}"
+  done <<< "$records"
+  jq -nc --arg out "$out" '$out'
+}
+dod_result="$(run_dods ".work_packages[$i]")" || { rc=$?; exit "$rc"; }
+relay_json_string dod_fails "$dod_result"
+[ -n "$dod_fails" ] && fails="${fails}${dod_fails}"
+
+# 3. Regression guard: re-run earlier WPs' deterministic checklist cmds
+if [ "$i" -gt 0 ]; then
+  regression_records=$(jq -c ".work_packages[range(0;$i)] | . as \$wp |
+    if .checklist == null then empty
+    elif (.checklist | type) != \"array\" then {wp:\$wp.id, invalid:true}
+    else .checklist | to_entries[] | {wp:\$wp.id, index:.key, control:.value} end" "$SPRINT")
+  while IFS= read -r record; do
+    [ -n "$record" ] || continue
+    rvalue=$(printf '%s' "$record" | jq -c '
+      if .invalid then "checklist:\(.wp):invalid-array"
+      elif (.control | type) == "object" and (.control.id | type) == "string" and .control.id != ""
+      then .control.id else "checklist:\(.wp):\(.index):invalid-command" end')
+    relay_json_string rid "$rvalue"
+    rvalue=$(printf '%s' "$record" | jq -c '
+      if (.control | type) == "object" then .control.cmd else null end')
+    roracle=""
+    if [ "$(printf '%s' "$record" | jq -r '.invalid // false')" = true ] || ! relay_json_string rcmd "$rvalue"; then
+      rverd=fail
+    elif [ -z "$rcmd" ]; then
+      # Valid judge-only controls are outside deterministic regression scope.
+      if printf '%s' "$record" | jq -e '
+        (.control.judge | type) == "string" and (.control.judge | length) > 0' >/dev/null; then continue; fi
+      rverd=fail
+    else
+      roracle=$(relay_oracle_sha "$rcmd")
+      # An oracle must not consume the regression reader's remaining records.
+      if ( cd "$RUN_DIR" && eval "$rcmd" </dev/null >/dev/null 2>&1 ); then rverd=pass; else rverd=fail; fi
+    fi
+    [ "$rverd" = fail ] && reg="$reg; $rid"
+    ledger_reg_item "$rid" "$rverd" "$roracle" "regression" \
+      || driver_fatal "$?" "regression verdict record failed"
+  done <<< "$regression_records"
+  # also regression-guard dod[] cmds from earlier WPs
+  dod_result="$(run_dods ".work_packages[range(0;$i)]")" || { rc=$?; exit "$rc"; }
+  relay_json_string reg_dod "$dod_result"
+  [ -n "$reg_dod" ] && reg="${reg}${reg_dod}"
+fi
+
+# ---- Outcome ------------------------------------------------------------------------------------
+
+_advance() {
+  local ni=$((i+1))
+  if [ "$ni" -ge "$nwp" ]; then
+    # Required evidence precedes state publication. A later state write can still fail.
+    ledger sprint-complete || driver_fatal "$?" "sprint-complete record failed"
+    printf '%s\n' "$ni" > "$STATE_DIR/counter" || driver_fatal "$?" "counter write failed"
+    jq -n --arg wp "$wp_id" --argjson i "$i" \
+      '{"outcome":"complete","i":$i,"wp":$wp}' | add_macro
+    exit 0
+  fi
+  ledger advance-reveal || driver_fatal "$?" "advance-reveal record failed"
+  printf '%s\n' "$ni" > "$STATE_DIR/counter" || driver_fatal "$?" "counter write failed"
+  jq -n --arg wp "$wp_id" --argjson i "$i" --arg next "$nid" \
+    '{"outcome":"advance","i":$i,"wp":$wp,"next":$next}' | add_macro
+  exit 0
+}
+
+if [ -z "$fails" ] && [ -z "$reg" ]; then
+  _advance
+fi
+
+# Something failed — check retry budget
+r=$(cat "$STATE_DIR/retry_$i" 2>/dev/null || echo 0)
+
+# Build a clean array of failing ids (strip leading '; ' separators)
+_failing_ids() {
+  local raw="$1"
+  # strip leading '; ' and split on '; ' to produce a JSON array
+  printf '%s' "$raw" | sed 's/^; //' | python3 -c "
+import sys, json
+raw = sys.stdin.read().strip()
+if not raw:
+    print('[]')
+else:
+    ids = [x.strip() for x in raw.split(';') if x.strip()]
+    print(json.dumps(ids))
+"
+}
+
+failing_json="$(_failing_ids "${fails}${reg}")"
+
+if [ "$r" -ge "$rb" ]; then
+  ledger escalate "$rb" || driver_fatal "$?" "escalate record failed"
+  jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" \
+    '{"outcome":"escalate","i":$i,"wp":$wp,"failing":$failing}' | add_macro
+  exit 2
+fi
+
+ledger gate-fail "$((r+1))" || driver_fatal "$?" "gate-fail record failed"
+printf '%s\n' "$((r+1))" > "$STATE_DIR/retry_$i" || driver_fatal "$?" "retry write failed"
+
+reason="gate '${wp_id}' is NOT satisfied. Still failing:${fails:- (none)}${reg:+ ; regressions:${reg}}"
+jq -n --argjson i "$i" --arg wp "$wp_id" --argjson failing "$failing_json" --arg reason "$reason" \
+  '{"outcome":"gate-fail","i":$i,"wp":$wp,"failing":$failing,"reason":$reason}' | add_macro
+exit 1

@@ -1,0 +1,6 @@
+{
+  "ledger": "test/fixtures/tdd-feature-live.ledger.jsonl",
+  "keys": {
+    "keyed": "relay-golden-ledger-key"
+  }
+}

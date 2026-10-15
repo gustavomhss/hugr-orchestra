@@ -1,0 +1,143 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "instructions": "do B",
+        "checklist": [
+          {
+            "id": "B-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "C",
+        "instructions": "do C",
+        "checklist": [
+          {
+            "id": "C-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 20,
+              "cache_read_input_tokens": 500,
+              "cache_creation_input_tokens": 300
+            }
+          }
+        },
+        {
+          "usage": {
+            "input_tokens": 5,
+            "output_tokens": 1
+          }
+        }
+      ]
+    },
+    {
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 20,
+              "cache_read_input_tokens": 500,
+              "cache_creation_input_tokens": 300
+            }
+          }
+        },
+        {
+          "usage": {
+            "input_tokens": 5,
+            "output_tokens": 1
+          }
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 7,
+              "output_tokens": 3,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 100,
+              "output_tokens": 20,
+              "cache_read_input_tokens": 500,
+              "cache_creation_input_tokens": 300
+            }
+          }
+        },
+        {
+          "usage": {
+            "input_tokens": 5,
+            "output_tokens": 1
+          }
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 7,
+              "output_tokens": 3,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "user",
+          "content": "no usage here"
+        }
+      ]
+    }
+  ]
+}

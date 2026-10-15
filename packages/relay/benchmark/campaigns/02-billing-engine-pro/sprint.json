@@ -1,0 +1,92 @@
+{
+  "brief": "Implement repo/billing/core.py (classes Engine, BillingError) — an advanced usage->billing engine. Public API names are fixed. Each work package gives the exact rules for its requirements; precedence and interaction matter.",
+  "retry_budget": 3,
+  "work_packages": [
+    {
+      "id": "wp1-ingest",
+      "title": "Ingest, dedup, metering, isolation, audit",
+      "instructions": "Implement Engine(), register_tenant(tenant_id, region='US', loyalty_years=0, is_b2b=False, coupon=None), ingest(tenant_id,request_id,metric,quantity,timestamp), usage_for(tenant_id)->list of event dicts, metered(tenant_id,metric)->int, and audit_log (property)->immutable tuple. Dedup by (tenant_id,request_id) with the FIRST event winning (later same-key = no-op). On each accepted ingest append {'type':'usage.ingested','tenant_id':...,'request_id':...} to audit_log. usage_for/metered are tenant-isolated. (R1,R2,R7,R8,R10)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R1_ingest -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R2_dedup_first_wins -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R7_metered_sum -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R8_tenant_isolation -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R10_audit_append_only -q"}
+      ]
+    },
+    {
+      "id": "wp2-validation",
+      "title": "Ingest validation (strict)",
+      "instructions": "In ingest, raise BillingError for: a negative quantity; a metric not in {api,storage,egress,compute}; a non-integer (float) quantity; and a boolean quantity (bool is not a valid int quantity). (R3,R4,R5,R6)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R3_reject_negative -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R4_reject_unknown_metric -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R5_reject_float_qty -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R6_reject_bool_qty -q"}
+      ]
+    },
+    {
+      "id": "wp3-pricing",
+      "title": "Tiered pricing & line subtotal",
+      "instructions": "Build invoice lines in issue_invoice (only metrics with metered qty>0; omit zero-usage metrics). Tiered pricing, INCLUSIVE boundary (first N units at rate1, remainder at rate2): api first 1000 @0.01 then 0.008; storage first 500 @0.05 then 0.04; egress first 2000 @0.02 then 0.015; compute first 100 @0.10 then 0.08. All money rounds HALF-UP to 2 decimals. line amount = round(tiered subtotal). Invoice subtotal = round(SUM of the per-line ROUNDED amounts) — not round of the unrounded sum. Each line is {qty, amount}. (R9,R11,R12,R13,R14)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R9_zero_usage_omitted -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R11_tiered_api -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R12_tier_boundary_inclusive -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R13_tiered_compute -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R14_sum_of_rounded_lines -q"}
+      ]
+    },
+    {
+      "id": "wp4-volume-discount",
+      "title": "Per-line volume discount",
+      "instructions": "Apply a per-line volume discount: if a metric's metered qty >= its threshold {api:5000,storage:1000,egress:10000,compute:500}, multiply that line's subtotal by 0.90 BEFORE rounding (discount-before-rounding). Below threshold, no discount. (R15,R16)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R15_volume_discount_applied -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R16_volume_discount_below_threshold -q"}
+      ]
+    },
+    {
+      "id": "wp5-account-discount",
+      "title": "Coupon + loyalty (exact stacking order)",
+      "instructions": "Apply account discounts to the invoice subtotal in EXACTLY this order, then round half-up -> discounted: (1) coupon 'SAVE20' = 20% off, but ONLY if subtotal >= 50.00, else ignored; unknown coupon ignored. (2) loyalty = multiply by (1 - min(loyalty_years,5)/100). Order matters: coupon then loyalty. (R17,R18,R19,R20)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R17_coupon_applied_ge50 -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R18_coupon_ignored_lt50 -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R19_loyalty_after_coupon -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R20_loyalty_capped_5pct -q"}
+      ]
+    },
+    {
+      "id": "wp6-tax",
+      "title": "Regional tax + B2B reverse-charge",
+      "instructions": "Tax applies to the DISCOUNTED total. Rate by region: US 0, EU 0.20, UK 0.20, BR 0.17. tax = round(discounted*rate). B2B reverse-charge: if is_b2b AND region in {EU,UK} then tax = 0 and the invoice has reverse_charge=True (otherwise reverse_charge=False). total = round(discounted + tax). (R21,R22,R23,R30)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R21_tax_eu -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R22_tax_br -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R23_reverse_charge_flag -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R30_us_zero_tax -q"}
+      ]
+    },
+    {
+      "id": "wp7-finalize",
+      "title": "Minimum floor, idempotent issuance, id/seq, audit",
+      "instructions": "Minimum floor: if the invoice is NOT reverse_charge and total < 5.00, set total = 5.00; reverse-charge invoices are EXEMPT from the floor. issue_invoice is idempotent (freeze on first issue; re-issue returns the same dict). id = 'INV-<tenant>-<seq>' with seq monotonic per tenant from 1. On issuance append {'type':'invoice.issued','tenant_id':...,'invoice_id':...} to audit_log. Invoice dict shape: {id, tenant_id, lines:{metric:{qty,amount}}, subtotal, discounted, tax, reverse_charge, total}. (R24,R25,R26,R27,R28)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R24_reverse_charge_exempt_floor -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R25_minimum_floor -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R26_idempotent_issue -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R27_invoice_id_seq -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R28_audit_on_issue -q"}
+      ]
+    },
+    {
+      "id": "wp8-reconcile",
+      "title": "Reconciliation",
+      "instructions": "Implement reconcile(tenant): the sum over the issued invoice's lines of abs(line.qty - metered(tenant,metric)); 0.0 if there is no invoice or it is consistent. (R29)",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_engine.py::test_R29_reconcile_zero -q"}
+      ]
+    }
+  ]
+}

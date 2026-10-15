@@ -1,0 +1,42 @@
+{
+  "sprint": {
+    "gen": 9,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "instructions": "do B",
+        "checklist": [
+          {
+            "id": "B-file",
+            "cmd": "test -f b.txt"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "env": {
+    "RELAY_LEDGER_KEY": "golden-ledger-key"
+  },
+  "fires": [
+    {},
+    {},
+    {
+      "tree": {
+        "b.txt": "b\n"
+      }
+    }
+  ]
+}

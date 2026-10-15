@@ -1,0 +1,10 @@
+{
+  "id": "py-package-skeleton",
+  "title": "Scaffold a well-formed Python package",
+  "description": "Reusable sprint that gates a new Python package into a known-good shape: a package directory with __init__.py, importable from the project root, and a passing smoke test. Parameterized on the package name and the directory it lives in.",
+  "version": "1.0.0",
+  "params": [
+    {"name": "pkg", "description": "Python package name (a valid identifier, e.g. mylib) — the importable module."},
+    {"name": "root", "description": "Project root that is on sys.path when importing the package.", "default": "."}
+  ]
+}

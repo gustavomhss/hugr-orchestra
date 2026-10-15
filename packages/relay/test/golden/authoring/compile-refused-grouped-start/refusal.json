@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "The workflow start stays outside every phase"
+}

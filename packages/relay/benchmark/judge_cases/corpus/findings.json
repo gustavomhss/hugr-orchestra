@@ -1,0 +1,107 @@
+[
+  {
+    "id": "F-1",
+    "claim": "relay's gate regression guard re-runs every earlier work package's deterministic checklist commands on each gate fire, not only the current gate's controls.",
+    "evidence": {
+      "kind": "file",
+      "source": "S-4",
+      "quote": "re-run earlier WPs' deterministic checklist cmds"
+    },
+    "credibility": 3,
+    "falsifier": "A gate fire whose ledger records regression-item events for zero earlier controls, or gate code that filters the regression loop to the current WP only.",
+    "found_at": "2026-08-24T12:33:38Z"
+  },
+  {
+    "id": "F-2",
+    "claim": "At a late gate (contest.gate) a single fire re-evaluates 26 earlier controls as regression guards, measured from a real dense ledger.",
+    "evidence": {
+      "kind": "command",
+      "cmd": "grep '\"wp\":\"contest.gate\"' docs/fixtures/research-v2-live-escalated.ledger.jsonl | grep -c regression-item",
+      "output": "26"
+    },
+    "credibility": 2,
+    "falsifier": "The command returns a small constant (e.g. <5) independent of gate depth.",
+    "found_at": "2026-08-24T12:34:06Z",
+    "relates_to": [
+      {
+        "finding": "F-1",
+        "relation": "supports"
+      }
+    ]
+  },
+  {
+    "id": "F-3",
+    "claim": "The per-fire regression count rises from 6 at survey.gate to 26 at the deeper contest.gate, measured in the same run.",
+    "evidence": {
+      "kind": "command",
+      "cmd": "printf '%s %s' \"$(grep '\"wp\":\"survey.gate\"' docs/fixtures/research-v2-live-escalated.ledger.jsonl | grep -c regression-item)\" \"$(grep '\"wp\":\"contest.gate\"' docs/fixtures/research-v2-live-escalated.ledger.jsonl | grep -c regression-item)\"",
+      "output": "6 26"
+    },
+    "credibility": 2,
+    "falsifier": "The two counts are equal, or survey.gate's count meets or exceeds contest.gate's \u2014 i.e. per-fire cost does not rise with depth.",
+    "found_at": "2026-08-24T12:34:06Z",
+    "relates_to": [
+      {
+        "finding": "F-2",
+        "relation": "refines"
+      }
+    ]
+  },
+  {
+    "id": "F-4",
+    "claim": "Across the whole sprint the ledger records 239 regression re-run verdicts.",
+    "evidence": {
+      "kind": "command",
+      "cmd": "grep -c regression-item docs/fixtures/research-v2-live-escalated.ledger.jsonl",
+      "output": "239"
+    },
+    "credibility": 2,
+    "falsifier": "The ledger contains no regression-item verdicts, or a count materially different from 239.",
+    "found_at": "2026-08-24T12:34:06Z",
+    "relates_to": [
+      {
+        "finding": "F-2",
+        "relation": "supports"
+      }
+    ],
+    "corroborated_by": [
+      "S-3"
+    ]
+  },
+  {
+    "id": "F-5",
+    "claim": "The regression loop re-runs every earlier control unconditionally, not only those with a recorded pass, so the re-run set is the full cumulative history of prior controls.",
+    "evidence": {
+      "kind": "file",
+      "source": "S-4",
+      "quote": "this one re-runs every earlier control"
+    },
+    "credibility": 3,
+    "falsifier": "The loop filters earlier controls by recorded pass/keep-best, so failed or superseded controls are not re-run.",
+    "found_at": "2026-08-24T12:34:06Z",
+    "relates_to": [
+      {
+        "finding": "F-1",
+        "relation": "refines"
+      }
+    ]
+  },
+  {
+    "id": "F-6",
+    "claim": "Regression re-runs are the dominant share of grading: the ledger holds 239 regression-item verdicts against only 43 primary checklist-item verdicts.",
+    "evidence": {
+      "kind": "command",
+      "cmd": "printf '%s %s' \"$(grep -c '\"event\":\"checklist-item\"' docs/fixtures/research-v2-live-escalated.ledger.jsonl)\" \"$(grep -c '\"event\":\"regression-item\"' docs/fixtures/research-v2-live-escalated.ledger.jsonl)\"",
+      "output": "43 239"
+    },
+    "credibility": 2,
+    "falsifier": "checklist-item verdicts equal or outnumber regression-item verdicts in the ledger.",
+    "found_at": "2026-08-24T12:39:58Z",
+    "relates_to": [
+      {
+        "finding": "F-4",
+        "relation": "refines"
+      }
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "id": "C-IO-02.paused",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "ready", "cat", "bytes=stdout:52428800", "exit=0"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"read": "c", "until": {"match": "^READY$"}},
+    {"write": "c"},
+    {"wait": "c", "expect": {"exitCode": 0, "reason": "exit"}},
+    {"read": "c", "until": "end", "expect": {"lostBefore": {"gte": 35389440, "lte": 36700160}, "droppedBytes": {"stdout": {"gte": 35389440, "lte": 36700160}, "stderr": 0}}},
+    {"spawn": ["${FIXTURE}", "ready", "cat", "bytes=stdout:52428800", "pidlog=${TMP}/d.done", "hang"], "options": {"stdin": "pipe"}, "as": "d"},
+    {"read": "d", "until": {"match": "^READY$"}},
+    {"write": "d"},
+    {"spawn": ["${FIXTURE}", "watch=stdout:1:${TMP}/d.done"], "as": "w"},
+    {"read": "w", "until": "end"},
+    {"stop": "d", "graceMs": 5000, "expect": {"reason": "killed", "elapsedMs": {"lt": 1000}}}
+  ]
+}

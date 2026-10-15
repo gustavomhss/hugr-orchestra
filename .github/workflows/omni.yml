@@ -1,0 +1,80 @@
+name: omni
+
+# hugr-omni's own gate (packages/omni/scripts/ci.mjs) on Linux, Windows and macOS. It runs on pushes to dev that touch
+# packages/omni, on pull requests that touch packages/omni (and when the epic label is added to one), and by hand. Orchestra's
+# test guard does not apply to it.
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "packages/omni/**"
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - "packages/omni/**"
+      - ".github/workflows/omni.yml"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag or commit to run the gate on (default: the dispatched ref)"
+        type: string
+        default: ""
+      test_filter:
+        description: "Passed to cargo test (rerun one suspect test)"
+        type: string
+        default: ""
+
+concurrency:
+  # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
+  group: ${{ (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    if: github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic'
+    name: gate (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: "0"
+      TEST_FILTER: ${{ inputs.test_filter }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: packages/omni
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref || '' }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Rust toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+
+      # One cache per OS and lockfile; only dev saves it, so other refs read a warm cache without filling the quota.
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/omni -> target
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+
+      - name: Linux PID-reuse test needs unprivileged user namespaces
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Gate
+        run: node scripts/ci.mjs

@@ -1,0 +1,1 @@
+Relay gate 'A' is NOT satisfied. Still failing:; c1. Address these, then finish.

@@ -1,0 +1,30 @@
+{
+  "_note": "Verdicts from the A1 subject-test: one fresh sonnet sub-agent (Agent tool) per fixture, fed the frozen renderPrompt(fixtures.mjs) verbatim, one pass each, model-in-loop = sub-agents (never claude -p). Ground truth is the fixture label; scoring is a deterministic string-compare (subject-score.mjs). Run 2026-08-16.",
+  "subject": "claude-sonnet-5 (Agent tool, fresh context, 1 pass/fixture)",
+  "model_snapshot": "claude-sonnet-5",
+  "model_snapshot_source": "sub-agent transcript usage block (exact snapshot recorded per call)",
+  "run_date": "2026-08-16",
+  "fixtures_sha256_16": "01c7bc130eb7f384",
+  "verdicts": {
+    "T01": "GROUNDED_TRUE",
+    "T02": "GROUNDED_TRUE",
+    "T03": "GROUNDED_TRUE",
+    "T04": "GROUNDED_TRUE",
+    "T05": "GROUNDED_TRUE",
+    "T06": "GROUNDED_TRUE",
+    "T07": "GROUNDED_TRUE",
+    "T08": "GROUNDED_TRUE",
+    "T09": "GROUNDED_TRUE",
+    "T10": "GROUNDED_TRUE",
+    "F01": "HALLUCINATED",
+    "F02": "HALLUCINATED",
+    "F03": "GROUNDED_TRUE",
+    "F04": "HALLUCINATED",
+    "F05": "HALLUCINATED",
+    "F06": "HALLUCINATED",
+    "F07": "HALLUCINATED",
+    "F08": "HALLUCINATED",
+    "F09": "HALLUCINATED",
+    "F10": "HALLUCINATED"
+  }
+}

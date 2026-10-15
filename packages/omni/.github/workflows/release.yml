@@ -1,0 +1,83 @@
+# Release: builds the eight platform packages, each on its own OS and CPU (scripts/build-artifacts.mjs, which Orchestra's
+# omni-artifacts workflow also calls), packs each with the main package and proves a clean install with npm, Bun and
+# Deno (K9; on musl, npm and Bun under Alpine: Deno has no musl build). The tarballs are the artifacts; publishing is
+# the lead's, by hand, with the owner's yes (platform packages first, hugr-omni last). Started by hand.
+name: release
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        # build: zig (glibc 2.17 floor), alpine (musl, inside rust:alpine) or native; the triples are in
+        # scripts/build-artifacts.mjs. runtimes: what verify.mjs proves.
+        include:
+          - { id: linux-x64-gnu, os: ubuntu-24.04, build: zig, runtimes: node bun deno }
+          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, build: zig, runtimes: node bun deno }
+          - { id: linux-x64-musl, os: ubuntu-24.04, build: alpine, runtimes: node bun }
+          - { id: linux-arm64-musl, os: ubuntu-24.04-arm, build: alpine, runtimes: node bun }
+          - { id: darwin-arm64, os: macos-14, build: native, runtimes: node bun deno }
+          - { id: darwin-x64, os: macos-15-intel, build: native, runtimes: node bun deno }
+          - { id: win32-x64-msvc, os: windows-2022, build: native, runtimes: node bun deno }
+          - { id: win32-arm64-msvc, os: windows-11-arm, build: native, runtimes: node bun deno }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CARGO_TERM_COLOR: always
+      HUGR_BUN: npx -y bun@1
+      HUGR_DENO: npx -y deno@2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      # The musl rows build inside rust:alpine (scripts/build-artifacts.mjs), with the toolchain rust-toolchain.toml names.
+      # An image without rustup (windows-11-arm may be one) gets it here; build-artifacts.mjs installs the toolchain.
+      - name: rustup (Windows images without it)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          if ! command -v rustup >/dev/null; then
+            host=$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64-pc-windows-msvc || echo x86_64-pc-windows-msvc)
+            curl -sSfL -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/$host/rustup-init.exe"
+            "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
+            printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
+          fi
+      - if: matrix.build != 'alpine'
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.id }}
+          save-if: false
+      # glibc Linux builds with zig and cargo-zigbuild.
+      - if: matrix.build == 'zig'
+        uses: mlugg/setup-zig@v2
+      - if: matrix.build == 'zig'
+        uses: taiki-e/install-action@v2
+        with: { tool: cargo-zigbuild }
+      # The addon and the supervisor, with the checks of each build (glibc floor, musl linking, static C runtime).
+      - name: Build (${{ matrix.build }})
+        shell: bash
+        run: node scripts/build-artifacts.mjs ${{ matrix.id }}
+      - name: Pack
+        shell: bash
+        run: node bindings/node/npm/pack.mjs dist ${{ matrix.id }}
+      - name: Clean install and run (${{ matrix.runtimes }})
+        if: matrix.build != 'alpine'
+        shell: bash
+        run: for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/tarballs $rt; done
+      # musl: the proof runs under Alpine (node:22-alpine), with npm and Bun's musl build; Deno has no musl build.
+      - name: Clean install and run on Alpine (${{ matrix.runtimes }})
+        if: matrix.build == 'alpine'
+        run: |
+          docker run --rm -v "$PWD":/w -w /w -e HUGR_BUN node:22-alpine sh -euc '
+            apk add --no-cache git tar >/dev/null
+            for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/tarballs $rt; done'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.id }}
+          path: dist/tarballs/*.tgz
+          if-no-files-found: error

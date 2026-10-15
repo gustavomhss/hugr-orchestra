@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/unsigned-keyed-escaped-event/input/ledger.jsonl",
+  "verify": [],
+  "key": "relay-golden-ledger-key",
+  "chmod": {}
+}

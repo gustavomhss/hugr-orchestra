@@ -1,1 +1,17 @@
-../../ui/src/assets/favicon/site.webmanifest
+{
+  "name": "HuGR Orchestra",
+  "short_name": "Orchestra",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/orchestra/hugr-symbol-primary.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#080c11",
+  "background_color": "#080c11",
+  "display": "standalone"
+}

@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "Retained ID must be non-empty text without NUL"
+}

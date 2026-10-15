@@ -1,0 +1,77 @@
+{
+  "findings": [
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w0",
+      "detail": "control 'c0' runs 'true', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w0",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w1",
+      "detail": "control 'c1' runs 'exit 0', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w1",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w2",
+      "detail": "control 'c2' runs 'test -e .', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w2",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w3",
+      "detail": "control 'c3' runs ' : ', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w3",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w4",
+      "detail": "control 'c4' runs '/bin/true', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w4",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "trivial-control",
+      "severity": "error",
+      "wp": "w5",
+      "detail": "control 'c5' runs 'echo', which cannot fail — the state reads as covered, which is worse than an admitted gap"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "w5",
+      "detail": "no deterministic control: this state advances on nothing"
+    }
+  ],
+  "exit": 1
+}

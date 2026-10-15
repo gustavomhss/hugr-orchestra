@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/raw-empty-object.ledger.jsonl",
+  "keys": {}
+}

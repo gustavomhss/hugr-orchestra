@@ -40,5 +40,17 @@ export const migrations = (
     import("./migration/20260622142730_simplify_session_context_epoch"),
     import("./migration/20260622170816_reset_v2_session_state"),
     import("./migration/20260622202450_simplify_session_input"),
+    import("./migration/20261002195730_event_seals"),
+    import("./migration/20261006153404_scheduled_task"),
+    import("./migration/20261008025417_prompt_context"),
+    import("./migration/20261008133630_v1_prompt_admission"),
+    import("./migration/20261008180046_capability_storage"),
+    import("./migration/20261008192938_capability_lifecycle"),
+    import("./migration/20261008233008_capability_request_identity"),
+    import("./migration/20261009154042_capability_children"),
+    import("./migration/20261009225521_capability_operator_requests"),
+    import("./migration/20261010044121_capability_connection_labels"),
+    import("./migration/20261010135215_project_checkpoints"),
+    import("./migration/20261011160517_scheduled_task_capability"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

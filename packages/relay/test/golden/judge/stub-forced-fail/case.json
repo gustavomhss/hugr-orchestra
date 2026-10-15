@@ -1,0 +1,15 @@
+{
+  "criterion": "is it reviewed?",
+  "files": [
+    {
+      "name": "review.md",
+      "text": "a review RELAY_JUDGE_OK\n"
+    }
+  ],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "stub",
+    "RELAY_JUDGE_STUB": "fail"
+  },
+  "status": 200,
+  "replies": []
+}

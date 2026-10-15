@@ -1,0 +1,13 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "4993"[0m
+
+
+Running 7 tests using 1 worker
+
+[1A[2K[1/7] [chromium] › e2e/orchestra/governance.spec.ts:20:3 › dark: shows the session's real Maestro records read-only and returns with Escape
+[1A[2K[2/7] [chromium] › e2e/orchestra/governance.spec.ts:20:3 › light: shows the session's real Maestro records read-only and returns with Escape
+[1A[2K[3/7] [chromium] › e2e/orchestra/governance.spec.ts:87:1 › Show in chat moves to the record's turn through the existing message hash
+[1A[2K[4/7] [chromium] › e2e/orchestra/governance.spec.ts:153:1 › a server without Maestro is unavailable, and a pending question is not an approval
+[1A[2K[5/7] [chromium] › e2e/orchestra/governance.spec.ts:189:3 › en: RTL preserves mixed IDs, scroll bounds, keyboard focus and ordinary draft
+[1A[2K[6/7] [chromium] › e2e/orchestra/governance.spec.ts:189:3 › ar: RTL preserves mixed IDs, scroll bounds, keyboard focus and ordinary draft
+[1A[2K[7/7] [chromium] › e2e/orchestra/governance.spec.ts:228:1 › without an open session the entry explains how to reach governance
+[1A[2K  7 passed (50.6s)

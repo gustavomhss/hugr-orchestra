@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { fixture, pageMessages } from "./session-timeline.fixture"
 import { trackPageErrors, expectNoSmokeErrors } from "../utils/errors"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { APP_READY_TIMEOUT, expectAppVisible, expectSessionTitle } from "../utils/waits"
 
 const forbiddenText = ["Load details", "Show earlier steps"]
@@ -32,13 +32,17 @@ test.describe("smoke: session timeline", () => {
 
   test("keeps the visible message fixed while prepending history", async ({ page }) => {
     const requests: { before?: string; phase: "start" | "end"; at: number }[] = []
-    await mockOpenCodeServer(page, {
+    // The history page is held until the visible rows are measured instead of racing the 3s delay: frame speed
+    // varies (headless glass repaints are slow), and the oracle needs the prepend to land after the measurement.
+    const history = Promise.withResolvers<void>()
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
       project: fixture.project,
       pageMessages,
       messageDelay: 3_000,
+      beforeMessagesResponse: (request) => (request.before ? history.promise : Promise.resolve()),
       onMessages: (input) => requests.push({ before: input.before, phase: input.phase, at: performance.now() }),
     })
     await configureSmokePage(page, fixture.directory)
@@ -83,6 +87,7 @@ test.describe("smoke: session timeline", () => {
       }, keys)
     const before = await positions()
     expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
+    history.resolve()
 
     await expect.poll(() => requests.some((request) => request.before && request.phase === "end")).toBe(true)
     await waitForTimelineStable(page)
@@ -90,7 +95,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("preserves the timeline gap above the composer", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -116,7 +121,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("paints cached session tabs at the latest message", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -127,7 +132,7 @@ test.describe("smoke: session timeline", () => {
     await page.addInitScript(
       ({ dirBase64, sourceID, targetID }) => {
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
@@ -242,7 +247,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("paints a cold session tab at the latest message", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -253,7 +258,7 @@ test.describe("smoke: session timeline", () => {
     await page.addInitScript(
       ({ dirBase64, sourceID, targetID }) => {
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
@@ -321,7 +326,7 @@ test.describe("smoke: session timeline", () => {
 
   test("renders seeded timeline in order while paging through history", async ({ page }) => {
     const errors = trackPageErrors(page)
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -369,7 +374,7 @@ async function configureSmokePage(page: Page, directory: string) {
 
   await page.addInitScript((directory) => {
     localStorage.setItem(
-      "opencode.global.dat:server",
+      "orchestra.global.dat:server",
       JSON.stringify({
         projects: {
           local: [{ worktree: directory, expanded: true }],
@@ -712,13 +717,15 @@ function expectCompleteScroll(
 
 async function selectHomeProject(page: Page, projectName: string) {
   await page.goto("/")
-  const row = page
-    .locator('[data-component="home-project-row"]')
-    .filter({ hasText: new RegExp(projectName, "i") })
-    .first()
-  await expectAppVisible(row)
-  await row.click()
-  await expect(row).toHaveAttribute("data-selected", "", { timeout: APP_READY_TIMEOUT })
+  const profile = page.locator('[data-slot="orchestra-profile"]')
+  await expectAppVisible(profile)
+  await profile.click()
+  const project = page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name: projectName, exact: true })
+  await expectAppVisible(project)
+  await project.click()
+  await expect(page.locator("#orchestra-profile-name")).toHaveText(projectName, { timeout: APP_READY_TIMEOUT })
   await expect(page).toHaveURL(/\/$/)
 }
 

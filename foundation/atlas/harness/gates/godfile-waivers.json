@@ -1,0 +1,14 @@
+{
+  "packages/adapter-io/src/reverify-store.ts": {
+    "maxLines": 705,
+    "reason": "Owner-authorized 2026-09-25: existing cohesive module; refactor deferred."
+  },
+  "packages/cli/src/cli.ts": {
+    "maxLines": 625,
+    "reason": "Owner-authorized 2026-09-25: existing CLI entrypoint; refactor deferred."
+  },
+  "packages/genesis/src/admit-harness.ts": {
+    "maxLines": 660,
+    "reason": "Owner-authorized 2026-09-25: existing admission harness; refactor deferred."
+  }
+}

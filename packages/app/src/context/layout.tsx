@@ -1,13 +1,13 @@
 import { createStore, produce, reconcile } from "solid-js/store"
 import { batch, createEffect, createMemo, onCleanup, onMount, type Accessor } from "solid-js"
 import { useLocation } from "@solidjs/router"
-import { createSimpleContext } from "@opencode-ai/ui/context"
+import { createSimpleContext } from "@orchestra/ui/context"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { useServerSync } from "./server-sync"
 import { useServerSDK } from "./server-sdk"
 import { RECENTLY_CLOSED_DISPLAY_LIMIT, ServerConnection, useServer } from "./server"
 import { usePlatform } from "./platform"
-import { Project } from "@opencode-ai/sdk/v2"
+import { Project } from "@orchestra/sdk/v2"
 import { normalizeProjectInfo } from "./global-sync/utils"
 import { Persist, persisted, removePersisted } from "@/utils/persist"
 import { pathKey } from "@/utils/path-key"
@@ -15,11 +15,11 @@ import { decode64 } from "@/utils/base64"
 import { same } from "@/utils/same"
 import { createScrollPersistence, type SessionScroll } from "./layout-scroll"
 import { createPathHelpers } from "./file/path"
-import type { ProjectAvatarVariant } from "@opencode-ai/ui/v2/project-avatar-v2"
+import type { ProjectAvatarVariant } from "@orchestra/ui/v2/project-avatar-v2"
 import { migrateLegacySessionStateKeys, ServerScope, SessionStateKey } from "@/utils/server-scope"
 import { createSessionKeyReader, ensureSessionKey, pruneSessionKeys } from "./layout-helpers"
-import { requireServerKey } from "@/utils/session-route"
 import { type DraftTab, useTabs } from "./tabs"
+import { currentRoute } from "./layout-route"
 import { closeSessionTab, openSessionTab, previewSessionTab, type SessionTabs } from "./layout-tabs"
 
 export { createSessionKeyReader, ensureSessionKey, pruneSessionKeys }
@@ -88,12 +88,7 @@ export type HomeProjectSelection = { server: ServerConnection.Key; directory?: s
 export type ReviewDiffStyle = "unified" | "split"
 export type ReviewChangeMode = "git" | "branch" | "turn"
 export type ReviewPanelSource = "context-button" | "other"
-
-export type LayoutRoute =
-  | { type: "home" }
-  | { type: "draft"; draftID: string; server?: ServerConnection.Key }
-  | { type: "dir-new-sesssion"; dir: string; dirBase64: string; server?: ServerConnection.Key }
-  | { type: "session"; sessionId: string; server?: ServerConnection.Key }
+export type { LayoutRoute } from "./layout-route"
 
 const sessionPath = (key: string) => {
   const dir = SessionStateKey.route(key).split("/")[0]
@@ -127,35 +122,6 @@ const normalizeStoredSessionTabs = (key: string, tabs: SessionTabs) => {
   }
 }
 
-export const currentRoute = (pathname: string, search: string): LayoutRoute => {
-  const parts = pathname.split("/").filter(Boolean)
-  if (parts.length === 0) return { type: "home" }
-
-  if (parts[0] === "new-session") {
-    const draftID = new URLSearchParams(search).get("draftId")
-    if (!draftID) return { type: "home" }
-    return { type: "draft", draftID }
-  }
-
-  if (parts[0] === "server" && parts[2] === "session" && parts[3]) {
-    return {
-      type: "session",
-      sessionId: parts[3],
-      server: requireServerKey(parts[1]),
-    }
-  }
-
-  const dirBase64 = parts[0]
-  const dir = decode64(dirBase64)
-  if (!dir) return { type: "home" }
-
-  if (parts[1] !== "session") return { type: "home" }
-
-  const id = parts[2]
-  if (id) return { type: "session", sessionId: id }
-  return { type: "dir-new-sesssion", dir, dirBase64 }
-}
-
 export const { use: useLayout, provider: LayoutProvider } = createSimpleContext({
   name: "Layout",
   gate: false,
@@ -168,7 +134,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
     const location = useLocation()
     const route = createMemo(() => {
       const value = currentRoute(location.pathname, location.search)
-      if (value.type === "home") return value
+      if (value.type === "home" || value.type === "chapter") return value
       if (value.server) return value
       if (value.type === "draft") {
         const draft = tabs.store.find((tab): tab is DraftTab => tab.type === "draft" && tab.draftID === value.draftID)

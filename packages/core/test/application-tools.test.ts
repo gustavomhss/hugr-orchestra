@@ -1,15 +1,15 @@
 import { describe, expect } from "bun:test"
-import { Tool } from "@opencode-ai/core/tool/tool"
-import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SessionMessage } from "@opencode-ai/core/session/message"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
+import { Tool } from "@orchestra/core/tool/tool"
+import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { AgentV2 } from "@orchestra/core/agent"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { executeTool, settleTool, toolDefinitions } from "./lib/tool"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
-import { Tools } from "@opencode-ai/core/tool/tools"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { Tools } from "@orchestra/core/tool/tools"
 import { Deferred, Effect, Exit, Fiber, Schema, Scope } from "effect"
 import { testEffect } from "./lib/effect"
 
@@ -20,7 +20,7 @@ const it = testEffect(
 )
 
 const sessionID = SessionV2.ID.make("ses_application_tool")
-const agent = AgentV2.ID.make("build")
+const agent = AgentV2.ID.make("maestro")
 const assistantMessageID = SessionMessage.ID.make("msg_application_tool")
 const contextual = (contexts: Tool.Context[]) =>
   Tool.make({

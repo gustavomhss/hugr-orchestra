@@ -31,3 +31,25 @@ export function appDockZoom(value: number) {
   if (!Number.isFinite(value)) throw new Error("Invalid App Dock zoom")
   return Math.min(3, Math.max(0.5, value))
 }
+
+// Resize and Hide name the tab they were sent for. Only the tab attached to the window now, at that
+// generation, takes one: anything else was sent before another tab, a recovery or a new owner took
+// the window's place, and must not move or hide the view shown now.
+export function appDockAttached<T extends { generation: number }>(
+  tabs: ReadonlyMap<string, T> | undefined,
+  active: string | undefined,
+  tab: Readonly<{ tabID: string; generation: number }>,
+) {
+  const record = tabs?.get(tab.tabID)
+  return active === tab.tabID && record?.generation === tab.generation ? record : undefined
+}
+
+// Show may attach any open tab, except an earlier generation of one recovered in place under its ID.
+export function appDockShown<T extends { generation: number }>(
+  tabs: ReadonlyMap<string, T> | undefined,
+  tab: Readonly<{ tabID: string; generation: number }>,
+) {
+  const record = tabs?.get(tab.tabID)
+  if (!record) throw new Error("Unknown App Dock tab")
+  return record.generation === tab.generation ? record : undefined
+}

@@ -27,6 +27,7 @@ export {
   ResourceSource,
   RetryPart,
   SessionInfo,
+  SessionRevert,
   SnapshotPart,
   StepFinishPart,
   StepStartPart,
@@ -43,7 +44,7 @@ export {
   ToolStateRunning,
   User,
   WithParts,
-} from "@opencode-ai/schema/session-v1"
+} from "@orchestra/schema/session-v1"
 
 export const OutputLengthError = NamedError.create("MessageOutputLengthError", {})
 export const AuthError = NamedError.create("ProviderAuthError", { providerID: Schema.String, message: Schema.String })

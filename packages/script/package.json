@@ -1,15 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "@opencode-ai/script",
+  "name": "@orchestra/script",
   "license": "MIT",
+  "scripts": {
+    "typecheck": "tsgo --noEmit"
+  },
   "dependencies": {
     "semver": "^7.6.3"
   },
   "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@typescript/native-preview": "catalog:",
     "@types/bun": "catalog:",
     "@types/semver": "^7.5.8"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./omni": "./src/omni.ts",
+    "./tree-sitter-prebuilds": "./src/tree-sitter-prebuilds.ts"
   }
 }

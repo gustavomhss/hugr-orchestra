@@ -3,11 +3,16 @@
 import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
 import type {
+  AgentFileInput,
   AgentPartInput,
   AppAgentsErrors,
   AppAgentsResponses,
   AppLogErrors,
   AppLogResponses,
+  AppSkillRemoveErrors,
+  AppSkillRemoveResponses,
+  AppSkillSaveErrors,
+  AppSkillSaveResponses,
   AppSkillsErrors,
   AppSkillsResponses,
   Auth as Auth3,
@@ -15,9 +20,18 @@ import type {
   AuthRemoveResponses,
   AuthSetErrors,
   AuthSetResponses,
+  BehaviorSetInput,
+  CapabilityArtifactId,
+  CapabilityArtifactManagementArtifactCursor,
+  CapabilityConnectionId,
+  CapabilityConnectionRef,
+  CapabilityManagementTargetCursor,
+  CapabilitySetupInput,
+  CapabilityTargetId,
+  CapabilityTargetRef,
   CommandListErrors,
   CommandListResponses,
-  Config as Config3,
+  Config as Config4,
   ConfigGetErrors,
   ConfigGetResponses,
   ConfigProvidersErrors,
@@ -90,6 +104,7 @@ import type {
   GlobalUpgradeResponses,
   InstanceDisposeErrors,
   InstanceDisposeResponses,
+  LeanProfileUpdate,
   LocationRef,
   LspStatusErrors,
   LspStatusResponses,
@@ -103,6 +118,12 @@ import type {
   McpAuthRemoveResponses,
   McpAuthStartErrors,
   McpAuthStartResponses,
+  McpConfigListErrors,
+  McpConfigListResponses,
+  McpConfigRemoveErrors,
+  McpConfigRemoveResponses,
+  McpConfigUpdateErrors,
+  McpConfigUpdateResponses,
   McpConnectErrors,
   McpConnectResponses,
   McpDisconnectErrors,
@@ -111,6 +132,8 @@ import type {
   McpRemoteConfig,
   McpStatusErrors,
   McpStatusResponses,
+  McpToolsErrors,
+  McpToolsResponses,
   ModelRef,
   MoveSessionDestination,
   OutputFormat,
@@ -138,6 +161,12 @@ import type {
   ProjectIcon,
   ProjectInitGitErrors,
   ProjectInitGitResponses,
+  ProjectLeanErrors,
+  ProjectLeanHistoryErrors,
+  ProjectLeanHistoryResponses,
+  ProjectLeanResponses,
+  ProjectLeanUpdateErrors,
+  ProjectLeanUpdateResponses,
   ProjectListErrors,
   ProjectListResponses,
   ProjectUpdateErrors,
@@ -167,6 +196,7 @@ import type {
   PtyShellsResponses,
   PtyUpdateErrors,
   PtyUpdateResponses,
+  PullRequestCreateInput,
   QuestionAnswer,
   QuestionListErrors,
   QuestionListResponses,
@@ -175,8 +205,60 @@ import type {
   QuestionReplyErrors,
   QuestionReplyResponses,
   QuestionV2Reply,
+  RelayCheckInput,
+  RelayDocumentCreate,
+  RelayDocumentUpdate,
+  RelayHookInstallInput,
+  RelayHookOrderInput,
+  RelayHookRepairInput,
+  RelayHookUpdateInput,
+  RelayPublishInput,
+  RelayScopeInput,
+  RelayUnpublishInput,
+  ScheduledTaskCreateInput,
+  ScheduledTaskUpdateInput,
+  ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+  ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+  ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+  ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+  ServerCapabilityArtifactsCapabilityArtifactListErrors,
+  ServerCapabilityArtifactsCapabilityArtifactListResponses,
+  ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+  ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+  ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+  ServerCapabilityArtifactsCapabilityArtifactShareResponses,
+  ServerCapabilityConnectionsCapabilityBindingListErrors,
+  ServerCapabilityConnectionsCapabilityBindingListResponses,
+  ServerCapabilityConnectionsCapabilityBindingPutErrors,
+  ServerCapabilityConnectionsCapabilityBindingPutResponses,
+  ServerCapabilityConnectionsCapabilityBindingRemoveErrors,
+  ServerCapabilityConnectionsCapabilityBindingRemoveResponses,
+  ServerCapabilityConnectionsCapabilityConnectionConnectErrors,
+  ServerCapabilityConnectionsCapabilityConnectionConnectResponses,
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors,
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses,
+  ServerCapabilityConnectionsCapabilityConnectionGetErrors,
+  ServerCapabilityConnectionsCapabilityConnectionGetResponses,
+  ServerCapabilityConnectionsCapabilityConnectionListErrors,
+  ServerCapabilityConnectionsCapabilityConnectionListResponses,
+  ServerCapabilityConnectionsCapabilityConnectionTargetsErrors,
+  ServerCapabilityConnectionsCapabilityConnectionTargetsResponses,
+  ServerCapabilityConnectionsCapabilityTargetCreateErrors,
+  ServerCapabilityConnectionsCapabilityTargetCreateResponses,
+  ServerCapabilityConnectionsCapabilityTargetGetErrors,
+  ServerCapabilityConnectionsCapabilityTargetGetResponses,
+  ServerCapabilityConnectionsCapabilityTargetRemoveErrors,
+  ServerCapabilityConnectionsCapabilityTargetRemoveResponses,
+  ServerCapabilityConnectionsCapabilityTargetRetargetErrors,
+  ServerCapabilityConnectionsCapabilityTargetRetargetResponses,
+  ServerCapabilityOperatorCapabilityOperatorInspectErrors,
+  ServerCapabilityOperatorCapabilityOperatorInspectResponses,
   SessionAbortErrors,
   SessionAbortResponses,
+  SessionActivityErrors,
+  SessionActivityResponses,
   SessionChildrenErrors,
   SessionChildrenResponses,
   SessionCommandErrors,
@@ -201,14 +283,16 @@ import type {
   SessionMessageResponses,
   SessionMessagesErrors,
   SessionMessagesResponses,
+  SessionProcessesErrors,
+  SessionProcessesResponses,
+  SessionProcessStopErrors,
+  SessionProcessStopResponses,
   SessionPromptAsyncErrors,
   SessionPromptAsyncResponses,
   SessionPromptErrors,
   SessionPromptResponses,
   SessionRevertErrors,
   SessionRevertResponses,
-  SessionShareErrors,
-  SessionShareResponses,
   SessionShellErrors,
   SessionShellResponses,
   SessionStatusErrors,
@@ -219,10 +303,10 @@ import type {
   SessionTodoResponses,
   SessionUnrevertErrors,
   SessionUnrevertResponses,
-  SessionUnshareErrors,
-  SessionUnshareResponses,
   SessionUpdateErrors,
   SessionUpdateResponses,
+  SkillSaveInput,
+  SkillV2SaveInput,
   SubtaskPartInput,
   SyncHistoryListErrors,
   SyncHistoryListResponses,
@@ -263,8 +347,14 @@ import type {
   TuiShowToastResponses,
   TuiSubmitPromptErrors,
   TuiSubmitPromptResponses,
+  V2AgentFileGetErrors,
+  V2AgentFileGetResponses,
+  V2AgentFileUpdateErrors,
+  V2AgentFileUpdateResponses,
   V2AgentListErrors,
   V2AgentListResponses,
+  V2BehaviorSetErrors,
+  V2BehaviorSetResponses,
   V2CommandListErrors,
   V2CommandListResponses,
   V2CredentialRemoveErrors,
@@ -329,10 +419,76 @@ import type {
   V2PtyRemoveResponses,
   V2PtyUpdateErrors,
   V2PtyUpdateResponses,
+  V2PullRequestCreateErrors,
+  V2PullRequestCreateResponses,
+  V2PullRequestListErrors,
+  V2PullRequestListResponses,
   V2QuestionRequestListErrors,
   V2QuestionRequestListResponses,
   V2ReferenceListErrors,
   V2ReferenceListResponses,
+  V2RelayDocumentCheckErrors,
+  V2RelayDocumentCheckResponses,
+  V2RelayDocumentCreateErrors,
+  V2RelayDocumentCreateResponses,
+  V2RelayDocumentExportErrors,
+  V2RelayDocumentExportResponses,
+  V2RelayDocumentGetErrors,
+  V2RelayDocumentGetResponses,
+  V2RelayDocumentListErrors,
+  V2RelayDocumentListResponses,
+  V2RelayDocumentNodeTypesErrors,
+  V2RelayDocumentNodeTypesResponses,
+  V2RelayDocumentRemoveErrors,
+  V2RelayDocumentRemoveResponses,
+  V2RelayDocumentSprintErrors,
+  V2RelayDocumentSprintResponses,
+  V2RelayDocumentUpdateErrors,
+  V2RelayDocumentUpdateResponses,
+  V2RelayDocumentVersionErrors,
+  V2RelayDocumentVersionResponses,
+  V2RelayDocumentVersionsErrors,
+  V2RelayDocumentVersionsResponses,
+  V2RelayHookDecisionsErrors,
+  V2RelayHookDecisionsResponses,
+  V2RelayHookDisableErrors,
+  V2RelayHookDisableResponses,
+  V2RelayHookEnableErrors,
+  V2RelayHookEnableResponses,
+  V2RelayHookInstallErrors,
+  V2RelayHookInstallResponses,
+  V2RelayHookListErrors,
+  V2RelayHookListResponses,
+  V2RelayHookOrderErrors,
+  V2RelayHookOrderResponses,
+  V2RelayHookRepairErrors,
+  V2RelayHookRepairResponses,
+  V2RelayHookUninstallErrors,
+  V2RelayHookUninstallResponses,
+  V2RelayHookUpdateErrors,
+  V2RelayHookUpdateResponses,
+  V2RelayPublishPublishErrors,
+  V2RelayPublishPublishResponses,
+  V2RelayPublishUnpublishErrors,
+  V2RelayPublishUnpublishResponses,
+  V2RelayScopeCreateErrors,
+  V2RelayScopeCreateResponses,
+  V2RelayScopeListErrors,
+  V2RelayScopeListResponses,
+  V2RelayScopeRemoveErrors,
+  V2RelayScopeRemoveResponses,
+  V2RelayScopeUpdateErrors,
+  V2RelayScopeUpdateResponses,
+  V2ScheduleCreateErrors,
+  V2ScheduleCreateResponses,
+  V2ScheduleListErrors,
+  V2ScheduleListResponses,
+  V2ScheduleRemoveErrors,
+  V2ScheduleRemoveResponses,
+  V2ScheduleRunErrors,
+  V2ScheduleRunResponses,
+  V2ScheduleUpdateErrors,
+  V2ScheduleUpdateResponses,
   V2SessionActiveErrors,
   V2SessionActiveResponses,
   V2SessionCompactErrors,
@@ -385,6 +541,12 @@ import type {
   V2SessionWaitResponses,
   V2SkillListErrors,
   V2SkillListResponses,
+  V2SkillRemoveErrors,
+  V2SkillRemoveResponses,
+  V2SkillSaveErrors,
+  V2SkillSaveResponses,
+  VcsActivityErrors,
+  VcsActivityResponses,
   VcsApplyErrors,
   VcsApplyResponses,
   VcsDiffErrors,
@@ -441,7 +603,7 @@ class HeyApiRegistry<T> {
   get(key?: string): T {
     const instance = this.instances.get(key ?? this.defaultKey)
     if (!instance) {
-      throw new Error(`No SDK client found. Create one with "new OpencodeClient()" to fix this error.`)
+      throw new Error(`No SDK client found. Create one with "new OrchestraClient()" to fix this error.`)
     }
     return instance
   }
@@ -556,7 +718,7 @@ export class App extends HeyApiClient {
   /**
    * List agents
    *
-   * Get a list of all available AI agents in the OpenCode system.
+   * Get a list of all available AI agents in the Orchestra system.
    */
   public agents<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -584,9 +746,41 @@ export class App extends HeyApiClient {
   }
 
   /**
+   * Remove skill
+   *
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
+   */
+  public skillRemove<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<AppSkillRemoveResponses, AppSkillRemoveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
-   * Get a list of all available skills in the OpenCode system.
+   * Get a list of all available skills in the Orchestra system.
    */
   public skills<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -610,6 +804,43 @@ export class App extends HeyApiClient {
       url: "/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .orchestra/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   */
+  public skillSave<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      skillSaveInput?: SkillSaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "skillSaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<AppSkillSaveResponses, AppSkillSaveErrors, ThrowOnError>({
+      url: "/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -661,7 +892,7 @@ export class Capabilities extends HeyApiClient {
   /**
    * Get experimental capabilities
    *
-   * Get experimental features enabled on the OpenCode server.
+   * Get experimental features enabled on the Orchestra server.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -765,7 +996,7 @@ export class Console extends HeyApiClient {
   /**
    * Switch active Console org
    *
-   * Persist a new active Console account/org selection for the current local OpenCode state.
+   * Persist a new active Console account/org selection for the current local Orchestra state.
    */
   public switchOrg<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -806,7 +1037,7 @@ export class Session extends HeyApiClient {
   /**
    * List sessions
    *
-   * Get a list of all OpenCode sessions across projects, sorted by most recently updated. Archived sessions are excluded by default.
+   * Get a list of all Orchestra sessions across projects, sorted by most recently updated. Archived sessions are excluded by default.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1281,7 +1512,7 @@ export class Config extends HeyApiClient {
   /**
    * Get global configuration
    *
-   * Retrieve the current global OpenCode configuration settings and preferences.
+   * Retrieve the current global Orchestra configuration settings and preferences.
    */
   public get<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<GlobalConfigGetResponses, GlobalConfigGetErrors, ThrowOnError>({
@@ -1293,11 +1524,11 @@ export class Config extends HeyApiClient {
   /**
    * Update global configuration
    *
-   * Update global OpenCode configuration settings and preferences.
+   * Update global Orchestra configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1319,7 +1550,7 @@ export class Global extends HeyApiClient {
   /**
    * Get health
    *
-   * Get health information about the OpenCode server.
+   * Get health information about the Orchestra server.
    */
   public health<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<GlobalHealthResponses, GlobalHealthErrors, ThrowOnError>({
@@ -1331,7 +1562,7 @@ export class Global extends HeyApiClient {
   /**
    * Get global events
    *
-   * Subscribe to global events from the OpenCode system using server-sent events.
+   * Subscribe to global events from the Orchestra system using server-sent events.
    */
   public event<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).sse.get<GlobalEventResponses, GlobalEventErrors, ThrowOnError>({
@@ -1343,7 +1574,7 @@ export class Global extends HeyApiClient {
   /**
    * Dispose instance
    *
-   * Clean up and dispose all OpenCode instances, releasing all resources.
+   * Clean up and dispose all Orchestra instances, releasing all resources.
    */
   public dispose<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).post<GlobalDisposeResponses, GlobalDisposeErrors, ThrowOnError>({
@@ -1353,9 +1584,9 @@ export class Global extends HeyApiClient {
   }
 
   /**
-   * Upgrade opencode
+   * Upgrade orchestra
    *
-   * Upgrade opencode to the specified version.
+   * Upgrade orchestra to the specified version.
    */
   public upgrade<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1418,7 +1649,7 @@ export class Config2 extends HeyApiClient {
   /**
    * Get configuration
    *
-   * Retrieve the current OpenCode configuration settings and preferences.
+   * Retrieve the current Orchestra configuration settings and preferences.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1448,13 +1679,13 @@ export class Config2 extends HeyApiClient {
   /**
    * Update configuration
    *
-   * Update OpenCode configuration settings and preferences.
+   * Update Orchestra configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
       directory?: string
       workspace?: string
-      config?: Config3
+      config?: Config4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1926,7 +2157,7 @@ export class Instance extends HeyApiClient {
   /**
    * Dispose instance
    *
-   * Clean up and dispose the current OpenCode instance, releasing all resources.
+   * Clean up and dispose the current Orchestra instance, releasing all resources.
    */
   public dispose<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1958,7 +2189,7 @@ export class Path extends HeyApiClient {
   /**
    * Get paths
    *
-   * Retrieve the current working directory and related path information for the OpenCode instance.
+   * Retrieve the current working directory and related path information for the Orchestra instance.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2150,6 +2381,40 @@ export class Vcs extends HeyApiClient {
     })
   }
 
+  /**
+   * Get VCS activity
+   *
+   * Aggregate commit activity on the current branch between since and until (epoch ms; until defaults to now; the window is clamped to 366 days). Merge commits are counted separately and excluded from line and path totals, which come from a time-budgeted scan and may be partial.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      since: number
+      until?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "since" },
+            { in: "query", key: "until" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<VcsActivityResponses, VcsActivityErrors, ThrowOnError>({
+      url: "/vcs/activity",
+      ...options,
+      ...params,
+    })
+  }
+
   private _diff?: Diff
   get diff2(): Diff {
     return (this._diff ??= new Diff({ client: this.client }))
@@ -2160,7 +2425,7 @@ export class Command extends HeyApiClient {
   /**
    * List commands
    *
-   * Get a list of all available commands in the OpenCode system.
+   * Get a list of all available commands in the Orchestra system.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2248,6 +2513,109 @@ export class Formatter extends HeyApiClient {
       url: "/formatter",
       ...options,
       ...params,
+    })
+  }
+}
+
+export class Config3 extends HeyApiClient {
+  /**
+   * List project MCP server config
+   *
+   * List the type, command and URL of each MCP server the project's own config files define, as written (variables are not resolved).
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpConfigListResponses, McpConfigListErrors, ThrowOnError>({
+      url: "/mcp/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Remove MCP server config
+   *
+   * Remove an MCP server from the project's own config files.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<McpConfigRemoveResponses, McpConfigRemoveErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save MCP server config
+   *
+   * Create or update an MCP server in the project's own config file. Fields that are not sent keep their existing values.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+      config?: McpLocalConfig | McpRemoteConfig
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "config" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<McpConfigUpdateResponses, McpConfigUpdateErrors, ThrowOnError>({
+      url: "/mcp/{name}/config",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -2462,6 +2830,36 @@ export class Mcp extends HeyApiClient {
   }
 
   /**
+   * List MCP tools
+   *
+   * List the tool names each connected Model Context Protocol (MCP) server reports.
+   */
+  public tools<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<McpToolsResponses, McpToolsErrors, ThrowOnError>({
+      url: "/mcp/tools",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Connect an MCP server.
    */
   public connect<ThrowOnError extends boolean = false>(
@@ -2521,6 +2919,11 @@ export class Mcp extends HeyApiClient {
     })
   }
 
+  private _config?: Config3
+  get config(): Config3 {
+    return (this._config ??= new Config3({ client: this.client }))
+  }
+
   private _auth?: Auth2
   get auth(): Auth2 {
     return (this._auth ??= new Auth2({ client: this.client }))
@@ -2529,9 +2932,140 @@ export class Mcp extends HeyApiClient {
 
 export class Project extends HeyApiClient {
   /**
+   * Get selected-profile Lean dashboard
+   *
+   * Saved instrumented history for the native project and selected canonical directory.
+   */
+  public lean<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<ProjectLeanResponses, ProjectLeanErrors, ThrowOnError>({
+      url: "/project/lean",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update selected-profile Lean preferences
+   *
+   * Persist independent profile master or item preferences without deleting earned savings.
+   */
+  public leanUpdate<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      leanProfileUpdate?: LeanProfileUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "leanProfileUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<ProjectLeanUpdateResponses, ProjectLeanUpdateErrors, ThrowOnError>({
+      url: "/project/lean",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Get selected-profile Lean item history
+   *
+   * Latest 50 durable instrumented executions; complete is false when bounded.
+   */
+  public leanHistory<ThrowOnError extends boolean = false>(
+    parameters: {
+      itemID:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "itemID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<ProjectLeanHistoryResponses, ProjectLeanHistoryErrors, ThrowOnError>({
+      url: "/project/lean/history/{itemID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List all projects
    *
-   * Get a list of projects that have been opened with OpenCode.
+   * Get a list of projects that have been opened with Orchestra.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2561,7 +3095,7 @@ export class Project extends HeyApiClient {
   /**
    * Get current project
    *
-   * Retrieve the currently active project that OpenCode is working with.
+   * Retrieve the currently active project that Orchestra is working with.
    */
   public current<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2728,7 +3262,7 @@ export class Pty extends HeyApiClient {
   /**
    * List PTY sessions
    *
-   * Get a list of all active pseudo-terminal (PTY) sessions managed by OpenCode.
+   * Get a list of all active pseudo-terminal (PTY) sessions managed by Orchestra.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2771,6 +3305,8 @@ export class Pty extends HeyApiClient {
       env?: {
         [key: string]: string
       }
+      cols?: number
+      rows?: number
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2786,6 +3322,8 @@ export class Pty extends HeyApiClient {
             { in: "body", key: "cwd" },
             { in: "body", key: "title" },
             { in: "body", key: "env" },
+            { in: "body", key: "cols" },
+            { in: "body", key: "rows" },
           ],
         },
       ],
@@ -3363,7 +3901,7 @@ export class Session2 extends HeyApiClient {
   /**
    * List sessions
    *
-   * Get a list of all OpenCode sessions, sorted by most recently updated.
+   * Get a list of all Orchestra sessions, sorted by most recently updated.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3405,7 +3943,7 @@ export class Session2 extends HeyApiClient {
   /**
    * Create session
    *
-   * Create a new OpenCode session for interacting with AI assistants and managing conversations.
+   * Create a new Orchestra session for interacting with AI assistants and managing conversations.
    */
   public create<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3488,6 +4026,38 @@ export class Session2 extends HeyApiClient {
   }
 
   /**
+   * Get session activity
+   *
+   * Aggregate the user and assistant messages of this project's sessions for a period into one fact per bucket, session and model, plus the wall clock of root-session assistant turns per bucket. Buckets are server-local days; a fixed period has the equal window before it as bucket 0.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      period: "7d" | "30d" | "90d" | "all"
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "period" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionActivityResponses, SessionActivityErrors, ThrowOnError>({
+      url: "/session/activity",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Delete session
    *
    * Delete a session and permanently remove all associated data, including messages and history.
@@ -3522,7 +4092,7 @@ export class Session2 extends HeyApiClient {
   /**
    * Get session
    *
-   * Retrieve detailed information about a specific OpenCode session.
+   * Retrieve detailed information about a specific Orchestra session.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters: {
@@ -3981,70 +4551,6 @@ export class Session2 extends HeyApiClient {
   }
 
   /**
-   * Unshare session
-   *
-   * Remove the shareable link for a session, making it private again.
-   */
-  public unshare<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).delete<SessionUnshareResponses, SessionUnshareErrors, ThrowOnError>({
-      url: "/session/{sessionID}/share",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Share session
-   *
-   * Create a shareable link for a session, allowing others to view the conversation.
-   */
-  public share<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<SessionShareResponses, SessionShareErrors, ThrowOnError>({
-      url: "/session/{sessionID}/share",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
    * Summarize session
    *
    * Generate a concise summary of the session using AI compaction to preserve key information.
@@ -4321,6 +4827,74 @@ export class Session2 extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<SessionUnrevertResponses, SessionUnrevertErrors, ThrowOnError>({
       url: "/session/{sessionID}/unrevert",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List background processes
+   *
+   * List the process trees a session's shell tool left running, each with its live processes and the tail of its output.
+   */
+  public processes<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      directory?: string
+      workspace?: string
+      tail?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "tail" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionProcessesResponses, SessionProcessesErrors, ThrowOnError>({
+      url: "/session/{sessionID}/processes",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Stop background process
+   *
+   * Stop one background process tree of a session, with every process it started.
+   */
+  public processStop<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      processID: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "processID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<SessionProcessStopResponses, SessionProcessStopErrors, ThrowOnError>({
+      url: "/session/{sessionID}/processes/{processID}/stop",
       ...options,
       ...params,
     })
@@ -5059,6 +5633,81 @@ export class Location extends HeyApiClient {
   }
 }
 
+export class File2 extends HeyApiClient {
+  /**
+   * Get agent file
+   *
+   * Read the agent definition stored in this location's .orchestra/agent directory.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2AgentFileGetResponses, V2AgentFileGetErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update agent file
+   *
+   * Write the agent definition to this location's .orchestra/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      agentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      agentFileInput: AgentFileInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "agentID" },
+            { in: "query", key: "location" },
+            { key: "agentFileInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2AgentFileUpdateResponses, V2AgentFileUpdateErrors, ThrowOnError>({
+      url: "/api/agent/{agentID}/file",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Agent extends HeyApiClient {
   /**
    * List agents
@@ -5080,6 +5729,11 @@ export class Agent extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _file?: File2
+  get file(): File2 {
+    return (this._file ??= new File2({ client: this.client }))
   }
 }
 
@@ -5508,7 +6162,7 @@ export class Session3 extends HeyApiClient {
   /**
    * List active sessions
    *
-   * Retrieve foreground Session drains currently owned by this OpenCode process. Sessions absent from the result are inactive.
+   * Retrieve foreground Session drains currently owned by this Orchestra process. Sessions absent from the result are inactive.
    */
   public active<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<V2SessionActiveResponses, V2SessionActiveErrors, ThrowOnError>({
@@ -5777,7 +6431,7 @@ export class Session3 extends HeyApiClient {
   /**
    * Interrupt session execution
    *
-   * Interrupt active execution owned by this OpenCode process. Idle interruption is a no-op.
+   * Interrupt active execution owned by this Orchestra process. Idle interruption is a no-op.
    */
   public interrupt<ThrowOnError extends boolean = false>(
     parameters: {
@@ -6524,6 +7178,39 @@ export class Command2 extends HeyApiClient {
 
 export class Skill extends HeyApiClient {
   /**
+   * Remove skill
+   *
+   * Delete a registered project skill file given its path, and its folder when that is left empty.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      path: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2SkillRemoveResponses, V2SkillRemoveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * List skills
    *
    * Retrieve currently registered skills.
@@ -6542,6 +7229,84 @@ export class Skill extends HeyApiClient {
       url: "/api/skill",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Save skill
+   *
+   * Create a project skill under .orchestra/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   */
+  public save<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      skillV2SaveInput: SkillV2SaveInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "skillV2SaveInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2SkillSaveResponses, V2SkillSaveErrors, ThrowOnError>({
+      url: "/api/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Behavior extends HeyApiClient {
+  /**
+   * Set behaviors
+   *
+   * Replace the behaviors of the requested location's project and return the stored set. Every session of the project receives them as system context from its next provider turn; removed behaviors leave the next turn's request.
+   */
+  public set<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      behaviorSetInput: BehaviorSetInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "behaviorSetInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2BehaviorSetResponses, V2BehaviorSetErrors, ThrowOnError>({
+      url: "/api/behavior",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -6601,6 +7366,8 @@ export class Pty2 extends HeyApiClient {
       env?: {
         [key: string]: string
       }
+      cols?: number
+      rows?: number
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -6615,6 +7382,8 @@ export class Pty2 extends HeyApiClient {
             { in: "body", key: "cwd" },
             { in: "body", key: "title" },
             { in: "body", key: "env" },
+            { in: "body", key: "cols" },
+            { in: "body", key: "rows" },
           ],
         },
       ],
@@ -6987,6 +7756,1205 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class Document extends HeyApiClient {
+  /**
+   * List Relay documents
+   *
+   * The project's workflow and hook documents, newest first. The shipped profiles are seeded once per server.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayDocumentListResponses, V2RelayDocumentListErrors, ThrowOnError>({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay document
+   *
+   * Create a document. A draft that does not compile yet is saved with its diagnostics.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentCreate: RelayDocumentCreate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayDocumentCreate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCreateResponses,
+      V2RelayDocumentCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay document
+   *
+   * Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayDocumentRemoveResponses,
+      V2RelayDocumentRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get Relay document
+   *
+   * One document with its checksum and published version.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayDocumentGetResponses, V2RelayDocumentGetErrors, ThrowOnError>({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save Relay document
+   *
+   * Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentUpdate: RelayDocumentUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayDocumentUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<
+      V2RelayDocumentUpdateResponses,
+      V2RelayDocumentUpdateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List document versions
+   *
+   * A document's saved versions, newest first.
+   */
+  public versions<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionsResponses,
+      V2RelayDocumentVersionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get document version
+   *
+   * One saved version of a document.
+   */
+  public version<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      versionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "path", key: "versionID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionResponses,
+      V2RelayDocumentVersionErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version/{versionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Compile workflow
+   *
+   * Compile a workflow document to its sprint and the skill bindings resolved from the skill catalog.
+   */
+  public sprint<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentSprintResponses,
+      V2RelayDocumentSprintErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/sprint",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Export Relay document
+   *
+   * A hook document as its relay.hook.v1 export, a workflow document as its compiled sprint.
+   */
+  public export<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentExportResponses,
+      V2RelayDocumentExportErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/export",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Check workflow step
+   *
+   * Public authoring cannot execute workflow checks. This endpoint returns 403 maestro-execution-required; executable workflow checks are owned by Maestro through its approved native binding.
+   */
+  public check<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayCheckInput: RelayCheckInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayCheckInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCheckResponses,
+      V2RelayDocumentCheckErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/check",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List Relay node types
+   *
+   * The workflow and hook node catalogs.
+   */
+  public nodeTypes<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentNodeTypesResponses,
+      V2RelayDocumentNodeTypesErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/node-types",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Scope extends HeyApiClient {
+  /**
+   * List Relay scopes
+   *
+   * The project's document scopes.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayScopeListResponses, V2RelayScopeListErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay scope
+   *
+   * Create a scope. A name equal to another scope's under case folding is a 409 duplicate-scope.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayScopeCreateResponses, V2RelayScopeCreateErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay scope
+   *
+   * Delete a scope and remove it from every document's tags.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2RelayScopeRemoveResponses, V2RelayScopeRemoveErrors, ThrowOnError>(
+      {
+        url: "/api/relay/scope/{scopeID}",
+        ...options,
+        ...params,
+      },
+    )
+  }
+
+  /**
+   * Update Relay scope
+   *
+   * Rename or describe a scope.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayScopeUpdateResponses, V2RelayScopeUpdateErrors, ThrowOnError>({
+      url: "/api/relay/scope/{scopeID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Publish extends HeyApiClient {
+  /**
+   * Publish Relay document
+   *
+   * Publish the document's current version once it compiles. The signed-in principal is recorded as publishedBy.
+   */
+  public publish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayPublishInput: RelayPublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayPublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishPublishResponses,
+      V2RelayPublishPublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/publish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Unpublish Relay document
+   *
+   * Withdraw the published version. The signed-in principal is recorded as unpublishedBy.
+   */
+  public unpublish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayUnpublishInput: RelayUnpublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayUnpublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishUnpublishResponses,
+      V2RelayPublishUnpublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/unpublish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Hook extends HeyApiClient {
+  /**
+   * List installed hooks
+   *
+   * The project's installed hooks in evaluation order. A corrupt hooks.json is a 409 profile-invalid.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayHookListResponses, V2RelayHookListErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Install hook
+   *
+   * Pin the published version of a hook document for every session of the project, recording the signed-in principal.
+   */
+  public install<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookInstallInput: RelayHookInstallInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookInstallInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookInstallResponses, V2RelayHookInstallErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Update installed hook
+   *
+   * Repin an install to its document's published version, keeping its ID, order and enabled state.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookUpdateInput: RelayHookUpdateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+            { key: "relayHookUpdateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookUpdateResponses, V2RelayHookUpdateErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/update",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Enable installed hook
+   *
+   * Enable an install; recorded.
+   */
+  public enable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookEnableResponses, V2RelayHookEnableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/enable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Disable installed hook
+   *
+   * Disable an install; recorded.
+   */
+  public disable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookDisableResponses, V2RelayHookDisableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/disable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Reorder installed hooks
+   *
+   * Set the evaluation order. The list must name every install exactly once, else 409 order-mismatch.
+   */
+  public order<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookOrderInput: RelayHookOrderInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookOrderInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayHookOrderResponses, V2RelayHookOrderErrors, ThrowOnError>({
+      url: "/api/relay/hook/order",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Uninstall hook
+   *
+   * Remove an install; recorded. Its ledger is kept.
+   */
+  public uninstall<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayHookUninstallResponses,
+      V2RelayHookUninstallErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List hook decisions
+   *
+   * The most recent 500 decisions in the install's ledger, oldest first.
+   */
+  public decisions<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayHookDecisionsResponses,
+      V2RelayHookDecisionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}/decisions",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Repair hooks.json
+   *
+   * Only on this explicit request: a corrupt hooks.json (a regular file that does not decode or verify, or is over the size cap) is moved aside to a backup and replaced by an empty install list. A valid file, a symlink, a non-file or an unreadable file is never touched and answers 409.
+   */
+  public repair<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookRepairInput: RelayHookRepairInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookRepairInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookRepairResponses, V2RelayHookRepairErrors, ThrowOnError>({
+      url: "/api/relay/hook/repair",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Relay extends HeyApiClient {
+  private _document?: Document
+  get document(): Document {
+    return (this._document ??= new Document({ client: this.client }))
+  }
+
+  private _scope?: Scope
+  get scope(): Scope {
+    return (this._scope ??= new Scope({ client: this.client }))
+  }
+
+  private _publish?: Publish
+  get publish(): Publish {
+    return (this._publish ??= new Publish({ client: this.client }))
+  }
+
+  private _hook?: Hook
+  get hook(): Hook {
+    return (this._hook ??= new Hook({ client: this.client }))
+  }
+}
+
+export class PullRequest extends HeyApiClient {
+  /**
+   * List open pull requests
+   *
+   * List open pull requests on the location's github.com or gitlab.com remote through the gh or glab CLI signed in on the server.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2PullRequestListResponses, V2PullRequestListErrors, ThrowOnError>({
+      url: "/api/pull-request",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create pull request
+   *
+   * Open a pull request from a pushed branch of the location's repository through the gh or glab CLI signed in on the server.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      pullRequestCreateInput: PullRequestCreateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "pullRequestCreateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2PullRequestCreateResponses, V2PullRequestCreateErrors, ThrowOnError>(
+      {
+        url: "/api/pull-request",
+        ...options,
+        ...params,
+        headers: {
+          "Content-Type": "application/json",
+          ...options?.headers,
+          ...params.headers,
+        },
+      },
+    )
+  }
+}
+
+export class Schedule extends HeyApiClient {
+  /**
+   * List scheduled tasks
+   *
+   * List the location's scheduled tasks with the outcome of each task's latest run.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2ScheduleListResponses, V2ScheduleListErrors, ThrowOnError>({
+      url: "/api/schedule",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create scheduled task
+   *
+   * Schedule a prompt for the location. The server runs due slots itself; creating with an ID the location already has returns that task unchanged.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      scheduledTaskCreateInput: ScheduledTaskCreateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "scheduledTaskCreateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2ScheduleCreateResponses, V2ScheduleCreateErrors, ThrowOnError>({
+      url: "/api/schedule",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Remove scheduled task
+   *
+   * Remove a scheduled task and its run history.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2ScheduleRemoveResponses, V2ScheduleRemoveErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update scheduled task
+   *
+   * Edit, pause or resume a scheduled task.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      scheduledTaskUpdateInput: ScheduledTaskUpdateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+            { key: "scheduledTaskUpdateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2ScheduleUpdateResponses, V2ScheduleUpdateErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Run scheduled task now
+   *
+   * Admit the task's prompt into a Session now. Serves the due slot when no run holds it, otherwise starts an extra run. A failed run is not recorded.
+   */
+  public run<ThrowOnError extends boolean = false>(
+    parameters: {
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2ScheduleRunResponses, V2ScheduleRunErrors, ThrowOnError>({
+      url: "/api/schedule/{scheduleID}/run",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class V2 extends HeyApiClient {
   private _health?: Health
   get health(): Health {
@@ -7048,6 +9016,11 @@ export class V2 extends HeyApiClient {
     return (this._skill ??= new Skill({ client: this.client }))
   }
 
+  private _behavior?: Behavior
+  get behavior(): Behavior {
+    return (this._behavior ??= new Behavior({ client: this.client }))
+  }
+
   private _event?: Event2
   get event(): Event2 {
     return (this._event ??= new Event2({ client: this.client }))
@@ -7072,14 +9045,840 @@ export class V2 extends HeyApiClient {
   get projectCopy(): ProjectCopy2 {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
   }
+
+  private _relay?: Relay
+  get relay(): Relay {
+    return (this._relay ??= new Relay({ client: this.client }))
+  }
+
+  private _pullRequest?: PullRequest
+  get pullRequest(): PullRequest {
+    return (this._pullRequest ??= new PullRequest({ client: this.client }))
+  }
+
+  private _schedule?: Schedule
+  get schedule(): Schedule {
+    return (this._schedule ??= new Schedule({ client: this.client }))
+  }
 }
 
-export class OpencodeClient extends HeyApiClient {
-  public static readonly __registry = new HeyApiRegistry<OpencodeClient>()
+export class Operator extends HeyApiClient {
+  public inspect<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      ServerCapabilityOperatorCapabilityOperatorInspectResponses,
+      ServerCapabilityOperatorCapabilityOperatorInspectErrors,
+      ThrowOnError
+    >({
+      querySerializer: { parameters: { location: { object: { style: "form" } } } },
+      url: "/api/capability/operator",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Capability extends HeyApiClient {
+  private _operator?: Operator
+  get operator(): Operator {
+    return (this._operator ??= new Operator({ client: this.client }))
+  }
+}
+
+export class Operator2 extends HeyApiClient {
+  private _capability?: Capability
+  get capability(): Capability {
+    return (this._capability ??= new Capability({ client: this.client }))
+  }
+}
+
+export class Connection extends HeyApiClient {
+  public connect<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      capabilitySetupInput: CapabilitySetupInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { key: "capabilitySetupInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityConnectionConnectResponses,
+      ServerCapabilityConnectionsCapabilityConnectionConnectErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/connect",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityConnectionId
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionListResponses,
+      ServerCapabilityConnectionsCapabilityConnectionListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      connectionID: CapabilityConnectionId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "connectionID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionGetResponses,
+      ServerCapabilityConnectionsCapabilityConnectionGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/{connectionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public targets<ThrowOnError extends boolean = false>(
+    parameters: {
+      connectionID: CapabilityConnectionId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityManagementTargetCursor
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "connectionID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionTargetsResponses,
+      ServerCapabilityConnectionsCapabilityConnectionTargetsErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/{connectionID}/targets",
+      ...options,
+      ...params,
+    })
+  }
+
+  public disconnect<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      connection?: CapabilityConnectionRef
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "connection" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses,
+      ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/disconnect",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Target extends HeyApiClient {
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      targetID: CapabilityTargetId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "targetID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityTargetGetResponses,
+      ServerCapabilityConnectionsCapabilityTargetGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/{targetID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      connection?: CapabilityConnectionRef
+      input?: {
+        environment: string
+        resource: unknown
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "connection" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetCreateResponses,
+      ServerCapabilityConnectionsCapabilityTargetCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public retarget<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      input?: {
+        environment: string
+        resource: unknown
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetRetargetResponses,
+      ServerCapabilityConnectionsCapabilityTargetRetargetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/retarget",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetRemoveResponses,
+      ServerCapabilityConnectionsCapabilityTargetRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/remove",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Binding extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      targetID: CapabilityTargetId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: string
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "targetID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityBindingListResponses,
+      ServerCapabilityConnectionsCapabilityBindingListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/{targetID}/bindings",
+      ...options,
+      ...params,
+    })
+  }
+
+  public put<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      input?: {
+        sessionID: string
+        actions: Array<string>
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityBindingPutResponses,
+      ServerCapabilityConnectionsCapabilityBindingPutErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/bindings",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      sessionID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "sessionID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityBindingRemoveResponses,
+      ServerCapabilityConnectionsCapabilityBindingRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/bindings/remove",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Capability2 extends HeyApiClient {
+  private _connection?: Connection
+  get connection(): Connection {
+    return (this._connection ??= new Connection({ client: this.client }))
+  }
+
+  private _target?: Target
+  get target(): Target {
+    return (this._target ??= new Target({ client: this.client }))
+  }
+
+  private _binding?: Binding
+  get binding(): Binding {
+    return (this._binding ??= new Binding({ client: this.client }))
+  }
+}
+
+export class Connections extends HeyApiClient {
+  private _capability?: Capability2
+  get capability(): Capability2 {
+    return (this._capability ??= new Capability2({ client: this.client }))
+  }
+}
+
+export class Artifact extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityArtifactManagementArtifactCursor
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactListResponses,
+      ServerCapabilityArtifactsCapabilityArtifactListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts",
+      ...options,
+      ...params,
+    })
+  }
+
+  public removeReference<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+      ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Read artifact bytes
+   *
+   * Verified artifact bytes with attachment, sandbox and no-store headers. Supports one `bytes=` Range.
+   */
+  public content<ThrowOnError extends boolean = false>(
+    parameters: {
+      range?: string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "range" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+      ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content",
+      ...options,
+      ...params,
+    })
+  }
+
+  public share<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      targetSessionID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "targetSessionID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityArtifactsCapabilityArtifactShareResponses,
+      ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/share",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public pin<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      pinned?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "pinned" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+      ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/pin",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Capability3 extends HeyApiClient {
+  private _artifact?: Artifact
+  get artifact(): Artifact {
+    return (this._artifact ??= new Artifact({ client: this.client }))
+  }
+}
+
+export class Artifacts extends HeyApiClient {
+  private _capability?: Capability3
+  get capability(): Capability3 {
+    return (this._capability ??= new Capability3({ client: this.client }))
+  }
+}
+
+export class Capability4 extends HeyApiClient {
+  private _operator?: Operator2
+  get operator(): Operator2 {
+    return (this._operator ??= new Operator2({ client: this.client }))
+  }
+
+  private _connections?: Connections
+  get connections(): Connections {
+    return (this._connections ??= new Connections({ client: this.client }))
+  }
+
+  private _artifacts?: Artifacts
+  get artifacts(): Artifacts {
+    return (this._artifacts ??= new Artifacts({ client: this.client }))
+  }
+}
+
+export class Server extends HeyApiClient {
+  private _capability?: Capability4
+  get capability(): Capability4 {
+    return (this._capability ??= new Capability4({ client: this.client }))
+  }
+}
+
+export class OrchestraClient extends HeyApiClient {
+  public static readonly __registry = new HeyApiRegistry<OrchestraClient>()
 
   constructor(args?: { client?: Client; key?: string }) {
     super(args)
-    OpencodeClient.__registry.set(this, args?.key)
+    OrchestraClient.__registry.set(this, args?.key)
   }
 
   private _auth?: Auth
@@ -7215,5 +10014,10 @@ export class OpencodeClient extends HeyApiClient {
   private _v2?: V2
   get v2(): V2 {
     return (this._v2 ??= new V2({ client: this.client }))
+  }
+
+  private _server?: Server
+  get server(): Server {
+    return (this._server ??= new Server({ client: this.client }))
   }
 }

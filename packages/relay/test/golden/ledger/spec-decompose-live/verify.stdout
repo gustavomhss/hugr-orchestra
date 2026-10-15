@@ -1,0 +1,3 @@
+LEDGER INTACT — 276 chained entries [PLAIN (SHA-256)], chain head 350e194d5910…
+  (36 checklist-item verdicts on the chain)
+  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.

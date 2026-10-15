@@ -1,0 +1,34 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree
+[1A[2K  1) [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+    Call Log:
+    - Timeout 10000ms exceeded while waiting on the predicate
+
+      114 |       await expect(project).toBeFocused()
+      115 |       await expect(project).toHaveAttribute("aria-checked", "true")
+    > 116 |       await expect.poll(profileAligned).toBe(true)
+          |       ^
+      117 |       await page.keyboard.press("Escape")
+      118 |       await expect(menu).toBeHidden()
+      119 |       await expect(profile).toBeFocused()
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-compact-nav/packages/app/e2e/orchestra/compact-navigation-direction.spec.ts:116:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-provider-mutation/orchestra-compact-navigati-f4dc2-ps-and-profile-portal-agree-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../../../var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/compact-nav-provider-mutation/orchestra-compact-navigati-f4dc2-ps-and-profile-portal-agree-chromium/error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree

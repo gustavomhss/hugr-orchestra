@@ -1,0 +1,67 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "EXIT-BLOCKING",
+            "judge": "exit-7",
+            "blocking": true
+          },
+          {
+            "id": "EXIT-ADVISORY",
+            "judge": "exit-7"
+          },
+          {
+            "id": "BROKEN",
+            "judge": "broken",
+            "blocking": true
+          },
+          {
+            "id": "ADVISORY-VERDICT",
+            "judge": "advisory-verdict",
+            "blocking": true
+          },
+          {
+            "id": "TWO-OBJECTS",
+            "judge": "two-objects",
+            "blocking": true
+          },
+          {
+            "id": "NUMERIC-BACKEND",
+            "judge": "numeric-backend",
+            "blocking": true
+          },
+          {
+            "id": "API-PASS",
+            "judge": "api-pass",
+            "blocking": true
+          },
+          {
+            "id": "API-FAIL-ADVISORY",
+            "judge": "api-fail"
+          },
+          {
+            "id": "EMPTY-BACKEND",
+            "judge": "empty-backend",
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "judge.py": "import sys\ncriterion = sys.argv[sys.argv.index(\"--criterion\") + 1]\nreplies = {\n    \"exit-7\": '{\"verdict\":\"pass\",\"backend\":\"stub\"}',\n    \"broken\": \"{broken\",\n    \"advisory-verdict\": '{\"verdict\":\"advisory\",\"backend\":\"stub\"}',\n    \"two-objects\": '{\"verdict\":\"pass\",\"backend\":\"stub\"}\\n{\"verdict\":\"pass\"}',\n    \"numeric-backend\": '{\"verdict\":\"pass\",\"backend\":17}',\n    \"api-pass\": '{\"verdict\":\"pass\",\"reason\":\"ok\",\"backend\":\"api\"}',\n    \"api-fail\": '{\"verdict\":\"fail\",\"reason\":\"no\",\"backend\":\"api\"}',\n    \"empty-backend\": '{\"verdict\":\"pass\",\"backend\":\"\"}',\n}\nsys.stdout.write(replies[criterion])\nraise SystemExit(7 if criterion == \"exit-7\" else 0)\n"
+  },
+  "env": {
+    "RELAY_JUDGE": "judge.py"
+  },
+  "fires": [
+    {}
+  ]
+}

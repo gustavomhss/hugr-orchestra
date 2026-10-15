@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"target\r","instructions":"do target\r","checklist":[{"id":"actual","cmd":"false"}]},{"id":"target","instructions":"do target","checklist":[{"id":"target-ok","cmd":"true"}]}]}

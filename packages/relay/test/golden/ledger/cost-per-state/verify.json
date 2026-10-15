@@ -1,0 +1,174 @@
+{
+  "ledger": "test/fixtures/cost-per-state.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 196 chained entries [PLAIN (SHA-256)], chain head 92ef712f1b3e…\n  (28 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "bind-artifact-written",
+      "assert": "this state wrote wp/bind.json",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "wp_card_restated",
+      "assert": "wp_card_restated",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "acceptance_scenarios_listed",
+      "assert": "acceptance_scenarios_listed",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "surface_declared",
+      "assert": "surface_declared",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "red-changed-the-tests",
+      "assert": "this state changed the test file",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "tests_written_first",
+      "assert": "tests_written_first",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "failing_output_captured",
+      "assert": "failing_output_captured",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "tests_map_to_scenarios",
+      "assert": "tests_map_to_scenarios",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "green-changed-the-source",
+      "assert": "this state changed the source file",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "tests_pass",
+      "assert": "tests_pass",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "passing_output_captured",
+      "assert": "passing_output_captured",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "surface_respected",
+      "assert": "surface_respected",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "refactor-decision-written",
+      "assert": "this state recorded a decision, refactor or honest skip",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "refactor_decision_recorded",
+      "assert": "refactor_decision_recorded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "tests_still_pass",
+      "assert": "tests_still_pass",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "verify-evidence-written",
+      "assert": "this state captured the full-suite evidence",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "review-is-substantive",
+      "assert": "the review carries at least 40 words",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "review-engages-with-the-diff",
+      "assert": "review-engages-with-the-diff",
+      "verdict": "pass",
+      "graded_by": "judge:stub(non-independent)"
+    },
+    {
+      "id": "full_suite_green",
+      "assert": "full_suite_green",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "lints_clean",
+      "assert": "lints_clean",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "acceptance_walked_per_scenario",
+      "assert": "acceptance_walked_per_scenario",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "seal-written",
+      "assert": "this state assembled the seal record",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "outputs_recorded",
+      "assert": "outputs_recorded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "provenance_recorded",
+      "assert": "provenance_recorded",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "acceptance_results_complete",
+      "assert": "acceptance_results_complete",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 24,
+  "deterministic_passed": 24,
+  "advisory": 1,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "PASS",
+  "exit": 0
+}

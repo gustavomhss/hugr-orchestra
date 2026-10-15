@@ -1,0 +1,148 @@
+{
+  "capturedAt": "2026-10-01T23:09:20.607Z",
+  "source": "/Users/gustavoschneiter/Downloads/orchestra-replica-static",
+  "archive": {
+    "path": "archives/approved-mock.tar.gz",
+    "bytes": 1710045,
+    "sha256": "25d6dc34f5f51cf09ba1cfdd60973557d791029d1dd15b07d378b3ad73c0d290",
+    "members": [
+      "CHAPTERS.md",
+      "CORPUS.md",
+      "MOCK-GUIDE.md",
+      "app.html",
+      "browser-motion-probe.mjs",
+      "check.mjs",
+      "home.html",
+      "hugr-horizontal-compact-inverse.svg",
+      "hugr-horizontal-compact-primary.svg",
+      "index.html",
+      "mock-features.js",
+      "mtn-clean.png",
+      "mtn-mid.png",
+      "mtn-r14.png",
+      "mtn-sidebar-clean.png",
+      "mtn-sidebar-full.png",
+      "mtn-sidebar-full@2x.png",
+      "mtn-sidebar.png",
+      "mtn-src.jpg",
+      "seed.css",
+      "trace.mjs",
+      "v2.html",
+      "v3.html",
+      "v4.html",
+      "v5.html",
+      "v6.html",
+      "v7.html"
+    ]
+  },
+  "files": [
+    {
+      "path": "CHAPTERS.md",
+      "sha256": "38fa6c6a05abb780fd182c3cc5ddf782bb8ae397ceaa9b9e0a82ff691a673304"
+    },
+    {
+      "path": "CORPUS.md",
+      "sha256": "cfd646c44c7e6f41b50a9aca197b90606b28e582385496c6da4ed39da8bcdc56"
+    },
+    {
+      "path": "MOCK-GUIDE.md",
+      "sha256": "2922159454fe1603c9af0094df6c7eea882ac481693ae0716c0193dca6448ee7"
+    },
+    {
+      "path": "app.html",
+      "sha256": "f115098eab37cec6f03f5e8b5aa8dce7bc4d44f1818ef859dc94fb1513f818cb"
+    },
+    {
+      "path": "browser-motion-probe.mjs",
+      "sha256": "d81c082b4e68b57fb5b67bbe23ca6020851eb7433b0f1d3cc4ba3f526dfce23c"
+    },
+    {
+      "path": "check.mjs",
+      "sha256": "c86fedc418f71b1fee563e50a3826cad5a67c9ce8b52aef50c7661caac908723"
+    },
+    {
+      "path": "home.html",
+      "sha256": "385e5479670977f84064047192a936ce8e5102f593edfbf010bb811d5ec2aea7"
+    },
+    {
+      "path": "hugr-horizontal-compact-inverse.svg",
+      "sha256": "c236a1b9b198be20efb76ea1cc10044288036af5783f6a0c84b661437a9a9251"
+    },
+    {
+      "path": "hugr-horizontal-compact-primary.svg",
+      "sha256": "4efd3719f8f2e0bbfb9604f05f996bc8fdec950d7364bcda6415b4fd2c433810"
+    },
+    {
+      "path": "index.html",
+      "sha256": "7cdfabc345a610ff45d4662499e94973b7fa83d60f920d0574756418d8b9f551"
+    },
+    {
+      "path": "mock-features.js",
+      "sha256": "46c0480dbe882871a5a8aad2d3cc6dfa85862b21dbbda735a7a366375ed08c96"
+    },
+    {
+      "path": "mtn-clean.png",
+      "sha256": "6915150e32dc1d4bd04b8356fad1472d9ec20b7fc50869625bff7337b44c52db"
+    },
+    {
+      "path": "mtn-mid.png",
+      "sha256": "11c0ea774f61591cdc95716e492b28e9e3213551502bd9a20d4e7e3f42aabefb"
+    },
+    {
+      "path": "mtn-r14.png",
+      "sha256": "72ec1067d0e54047b0c5572b1df5c881d5e55145a7c4d76417cab607407542d7"
+    },
+    {
+      "path": "mtn-sidebar-clean.png",
+      "sha256": "1bc61598801c40c31dc51e2dd1d8b8cd1c2a09234d3a66808ab2ccf53d2e44bf"
+    },
+    {
+      "path": "mtn-sidebar-full.png",
+      "sha256": "2a9d3c0b63fb47a8f0cc5293d817fcdcc6e3607b868914de6ad2e9eea5acbf7e"
+    },
+    {
+      "path": "mtn-sidebar-full@2x.png",
+      "sha256": "376cc2c849eb8518dd6f5f78c02c060cbb9382f4deab4feb3d9eb692f1f785ed"
+    },
+    {
+      "path": "mtn-sidebar.png",
+      "sha256": "4461b49042f951763e5f9387bbfc5565e0edb11bc43fedce42b6f74abf25ce80"
+    },
+    {
+      "path": "mtn-src.jpg",
+      "sha256": "757674475d2ace543feacc04f136f267996691413f6349944b5ec66c2bd86c08"
+    },
+    {
+      "path": "seed.css",
+      "sha256": "49d3666dc8f0a7dc7842c4040cce219775012e118bf79970cf7bb4abddf1abd1"
+    },
+    {
+      "path": "trace.mjs",
+      "sha256": "a5e22f8e197cb567d18c6dd659e4be4e76cc6680eb4cfb0d68075553cfa468ec"
+    },
+    {
+      "path": "v2.html",
+      "sha256": "164d27a01e6145d8bff4f5bccfa72d2d7475f6bf85ab66906716c18528270581"
+    },
+    {
+      "path": "v3.html",
+      "sha256": "d94ab74fcaf6b2ca3bd25520e4f76bf4811a94bbc29000c36466a38d8171941f"
+    },
+    {
+      "path": "v4.html",
+      "sha256": "e359464463a171efcb945a715e57d0db81f0f418b2954215ea8a516436e1203a"
+    },
+    {
+      "path": "v5.html",
+      "sha256": "3ef27e8d43e418c18e770e94fd07dd9a9862a0fcac2ae810719833edf1541541"
+    },
+    {
+      "path": "v6.html",
+      "sha256": "570db8e3f26aa24f11ddee4d17c063b96c58b1211e41b7cb6a1558b7d7766f66"
+    },
+    {
+      "path": "v7.html",
+      "sha256": "d16b9b84f1d176dca1c946d11b495d848bf2cea267ad385c608ea16cafb4186d"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "ledger": "test/fixtures/spec-decompose-live.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "invariants.register",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "invariants.cold_review",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "invariants.gate",
+      "macro": "invariants",
+      "elapsed_s": null
+    },
+    {
+      "wp": "requirements.derive",
+      "macro": "requirements",
+      "elapsed_s": null
+    },
+    {
+      "wp": "requirements.cold_review",
+      "macro": "requirements",
+      "elapsed_s": null
+    },
+    {
+      "wp": "requirements.gate",
+      "macro": "requirements",
+      "elapsed_s": null
+    },
+    {
+      "wp": "spec.specify",
+      "macro": "spec",
+      "elapsed_s": null
+    },
+    {
+      "wp": "spec.cold_review",
+      "macro": "spec",
+      "elapsed_s": null
+    },
+    {
+      "wp": "spec.gate",
+      "macro": "spec",
+      "elapsed_s": null
+    },
+    {
+      "wp": "goldens.write_scenarios",
+      "macro": "goldens",
+      "elapsed_s": null
+    },
+    {
+      "wp": "goldens.cold_review",
+      "macro": "goldens",
+      "elapsed_s": null
+    },
+    {
+      "wp": "goldens.gate",
+      "macro": "goldens",
+      "elapsed_s": null
+    },
+    {
+      "wp": "work_packages.decompose",
+      "macro": "work_packages",
+      "elapsed_s": null
+    },
+    {
+      "wp": "work_packages.cold_review",
+      "macro": "work_packages",
+      "elapsed_s": null
+    },
+    {
+      "wp": "work_packages.gate",
+      "macro": "work_packages",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

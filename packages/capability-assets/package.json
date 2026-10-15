@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/capability-assets",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./catalog": "./src/catalog.ts",
+    "./sources": "./src/sources.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test --timeout 30000 --only-failures"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

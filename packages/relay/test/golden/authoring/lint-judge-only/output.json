@@ -1,0 +1,17 @@
+{
+  "findings": [
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "a",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "advisory-only",
+      "severity": "warn",
+      "wp": "a",
+      "detail": "control 'j1' is a non-blocking judge: it is recorded and it never stops anything"
+    }
+  ],
+  "exit": 1
+}

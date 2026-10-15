@@ -2,16 +2,16 @@ import { describe, expect } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { Effect, Schema } from "effect"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { Config } from "@opencode-ai/core/config"
-import { ConfigAgentPlugin } from "@opencode-ai/core/config/plugin/agent"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Global } from "@opencode-ai/core/global"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { ConfigMigrateV1 } from "@opencode-ai/core/v1/config/migrate"
+import { AgentV2 } from "@orchestra/core/agent"
+import { Config } from "@orchestra/core/config"
+import { ConfigAgentPlugin } from "@orchestra/core/config/plugin/agent"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 import { agentHost, host } from "../plugin/host"
@@ -23,7 +23,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("matches POSIX paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("/home/test")
-      expect(PermissionV2.evaluate("external_directory", "/home/test/p/opencode/src/*", permissions).effect).toBe(
+      expect(PermissionV2.evaluate("external_directory", "/home/test/p/orchestra/src/*", permissions).effect).toBe(
         "allow",
       )
       expect(PermissionV2.evaluate("external_directory", "/home/test/cache/files/*", permissions).effect).toBe("deny")
@@ -37,7 +37,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("C:\\Users\\test")
       expect(
-        PermissionV2.evaluate("external_directory", "C:\\Users\\test\\p\\opencode\\src\\*", permissions).effect,
+        PermissionV2.evaluate("external_directory", "C:\\Users\\test\\p\\orchestra\\src\\*", permissions).effect,
       ).toBe("allow")
       expect(PermissionV2.evaluate("external_directory", "C:\\Users\\test\\cache\\files\\*", permissions).effect).toBe(
         "deny",
@@ -48,9 +48,9 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("applies all global permissions before agent-specific permissions", () =>
     Effect.gen(function* () {
       const agents = yield* AgentV2.Service
-      const build = AgentV2.ID.make("build")
+      const maestro = AgentV2.ID.make("maestro")
       yield* agents.transform((editor) =>
-        editor.update(build, (agent) => {
+        editor.update(maestro, (agent) => {
           agent.mode = "primary"
           agent.permissions.push({ action: "bash", resource: "*", effect: "allow" })
         }),
@@ -64,7 +64,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
               info: decode({
                 permissions: [{ action: "bash", resource: "*", effect: "ask" }],
                 agents: {
-                  build: {
+                  maestro: {
                     permissions: [{ action: "bash", resource: "git *", effect: "allow" }],
                   },
                   reviewer: {
@@ -100,16 +100,16 @@ describe("ConfigAgentPlugin.Plugin", () => {
         Effect.provideService(Config.Service, config),
       )
 
-      const buildAgent = yield* agents.get(build)
-      if (!buildAgent) throw new Error("expected configured build agent")
-      expect(buildAgent.permissions).toEqual([
+      const maestroAgent = yield* agents.get(maestro)
+      if (!maestroAgent) throw new Error("expected configured maestro agent")
+      expect(maestroAgent.permissions).toEqual([
         { action: "bash", resource: "*", effect: "allow" },
         { action: "bash", resource: "*", effect: "ask" },
         { action: "read", resource: "*", effect: "allow" },
         { action: "bash", resource: "git *", effect: "allow" },
       ])
-      expect(PermissionV2.evaluate("bash", "git status", buildAgent.permissions).effect).toBe("allow")
-      expect(PermissionV2.evaluate("bash", "bun test", buildAgent.permissions).effect).toBe("ask")
+      expect(PermissionV2.evaluate("bash", "git status", maestroAgent.permissions).effect).toBe("allow")
+      expect(PermissionV2.evaluate("bash", "bun test", maestroAgent.permissions).effect).toBe("ask")
 
       const reviewer = yield* agents.get(AgentV2.ID.make("reviewer"))
       if (!reviewer) throw new Error("expected configured reviewer agent")
@@ -202,15 +202,15 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("removes a built-in agent disabled by configuration", () =>
     Effect.gen(function* () {
       const agents = yield* AgentV2.Service
-      const build = AgentV2.ID.make("build")
-      yield* agents.transform((editor) => editor.update(build, () => {}))
+      const general = AgentV2.ID.make("general")
+      yield* agents.transform((editor) => editor.update(general, () => {}))
 
       const config = Config.Service.of({
         entries: () =>
           Effect.succeed([
             new Config.Document({
               type: "document",
-              info: decode({ agents: { build: { disabled: true } } }),
+              info: decode({ agents: { general: { disabled: true } } }),
             }),
           ]),
       })
@@ -219,7 +219,40 @@ describe("ConfigAgentPlugin.Plugin", () => {
         Effect.provideService(Config.Service, config),
       )
 
-      expect(yield* agents.get(build)).toBeUndefined()
+      expect(yield* agents.get(general)).toBeUndefined()
+    }),
+  )
+
+  it.effect("configuration can neither disable Maestro nor take it out of primary mode", () =>
+    Effect.gen(function* () {
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((editor) =>
+        editor.update(AgentV2.defaultID, (agent) => {
+          agent.mode = "primary"
+        }),
+      )
+
+      const config = Config.Service.of({
+        entries: () =>
+          Effect.succeed([
+            new Config.Document({
+              type: "document",
+              info: decode({
+                agents: { maestro: { disabled: true, mode: "subagent", description: "Conducts the team" } },
+              }),
+            }),
+          ]),
+      })
+
+      yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+        Effect.provideService(Config.Service, config),
+      )
+
+      expect(yield* agents.get(AgentV2.defaultID)).toMatchObject({
+        id: "maestro",
+        mode: "primary",
+        description: "Conducts the team",
+      })
     }),
   )
 
@@ -298,13 +331,60 @@ Use native v2 fields.`,
       ),
     ),
   )
+
+  it.live("an agent file can neither disable Maestro nor take it out of primary mode", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(async () => {
+            for (const folder of ["agent", "agents", "mode"])
+              await fs.mkdir(path.join(tmp.path, folder), { recursive: true })
+            // The editor's legacy keys, the native keys and a legacy mode file all name Maestro.
+            await fs.writeFile(
+              path.join(tmp.path, "agent", "maestro.md"),
+              "---\ndescription: Hand edited\nmode: all\ndisable: true\n---\n",
+            )
+            await fs.writeFile(
+              path.join(tmp.path, "agents", "maestro.md"),
+              "---\nmode: subagent\ndisabled: true\n---\n",
+            )
+            await fs.writeFile(path.join(tmp.path, "mode", "maestro.md"), "---\ndisable: true\n---\n")
+            // Other agents keep both keys.
+            await fs.writeFile(path.join(tmp.path, "agents", "helper.md"), "---\nmode: primary\n---\nHelp.")
+            await fs.writeFile(path.join(tmp.path, "agents", "gone.md"), "---\ndisabled: true\n---\nGone.")
+          })
+          const agents = yield* AgentV2.Service
+          yield* agents.transform((editor) =>
+            editor.update(AgentV2.defaultID, (agent) => {
+              agent.mode = "primary"
+            }),
+          )
+          const config = Config.Service.of({
+            entries: () =>
+              Effect.succeed([new Config.Directory({ type: "directory", path: AbsolutePath.make(tmp.path) })]),
+          })
+
+          yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+            Effect.provideService(Config.Service, config),
+          )
+
+          expect(yield* agents.get(AgentV2.defaultID)).toMatchObject({ description: "Hand edited", mode: "primary" })
+          expect(yield* agents.get(AgentV2.ID.make("helper"))).toMatchObject({ mode: "primary" })
+          expect(yield* agents.get(AgentV2.ID.make("gone"))).toBeUndefined()
+        }),
+      ),
+    ),
+  )
 })
 
 function loadHomePermissions(home: string) {
   return Effect.gen(function* () {
     const agents = yield* AgentV2.Service
-    const build = AgentV2.ID.make("build")
-    yield* agents.transform((editor) => editor.update(build, () => {}))
+    const maestro = AgentV2.ID.make("maestro")
+    yield* agents.transform((editor) => editor.update(maestro, () => {}))
     const config = Config.Service.of({
       entries: () =>
         Effect.succeed([
@@ -323,7 +403,7 @@ function loadHomePermissions(home: string) {
                   },
                 },
                 agent: {
-                  build: {
+                  maestro: {
                     permission: {
                       external_directory: {
                         "$HOME/cache/**": "deny",
@@ -342,8 +422,8 @@ function loadHomePermissions(home: string) {
       Effect.provideService(Global.Service, Global.Service.of({ ...Global.make(), home })),
     )
 
-    const agent = yield* agents.get(build)
-    if (!agent) throw new Error("expected configured build agent")
+    const agent = yield* agents.get(maestro)
+    if (!agent) throw new Error("expected configured maestro agent")
     return agent.permissions
   })
 }

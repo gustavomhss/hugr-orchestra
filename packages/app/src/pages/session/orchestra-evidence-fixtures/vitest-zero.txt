@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /repo
+
+No test files found, exiting with code 1
+
+filter: nomatch
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/.git/**
+

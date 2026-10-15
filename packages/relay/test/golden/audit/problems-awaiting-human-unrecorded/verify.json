@@ -1,0 +1,30 @@
+{
+  "ledger": "test/golden/audit/problems-awaiting-human-unrecorded/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 2 chained entries [PLAIN (SHA-256)], chain head 9410b837332f…\n  (1 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "C1",
+      "assert": "real control",
+      "verdict": "fail",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 1,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": "escalate",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": true,
+  "result": "CONTROL-FAIL",
+  "exit": 2
+}

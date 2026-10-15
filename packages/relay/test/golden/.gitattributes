@@ -1,0 +1,2 @@
+# Goldens are compared byte for byte: no line-ending conversion on any checkout.
+* -text

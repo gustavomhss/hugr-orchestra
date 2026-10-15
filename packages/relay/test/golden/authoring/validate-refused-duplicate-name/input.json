@@ -1,0 +1,41 @@
+{
+  "op": "validate",
+  "document": {
+    "name": "Chain",
+    "nodes": [
+      {
+        "id": "a",
+        "name": "b",
+        "type": "relay.execute",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "relay.execute",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {}
+      }
+    ],
+    "connections": {
+      "a": {
+        "main": [
+          [
+            {
+              "node": "b",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

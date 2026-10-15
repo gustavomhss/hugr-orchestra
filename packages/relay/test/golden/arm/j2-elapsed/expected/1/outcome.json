@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'B' passed. Next gate: C. do C"
+  },
+  "stderr": ""
+}

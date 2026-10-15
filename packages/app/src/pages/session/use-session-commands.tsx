@@ -1,7 +1,7 @@
-import { useNavigate } from "@solidjs/router"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { useCommand, type CommandOption } from "@/context/command"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { previewSelectedLines } from "@opencode-ai/session-ui/pierre/selection-bridge"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { previewSelectedLines } from "@orchestra/session-ui/pierre/selection-bridge"
 import { useFile, selectionFromLines, type FileSelection, type SelectedLineRange } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
@@ -13,14 +13,15 @@ import { useSync } from "@/context/sync"
 import { useTerminal } from "@/context/terminal"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
-import { findLast } from "@opencode-ai/core/util/array"
-import { createSessionTabs } from "@/pages/session/helpers"
+import { findLast } from "@orchestra/core/util/array"
+import { createSidePanelTabs } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
-import { Message, Part, UserMessage } from "@opencode-ai/sdk/v2"
+import { Message, Part, UserMessage } from "@orchestra/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { createSessionOwnership } from "./session-ownership"
 import { useLocal } from "@/context/local"
+import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
 
 export type SessionCommandContext = {
   navigateMessageByOffset: (offset: number) => void
@@ -51,6 +52,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const layout = useLayout()
   const local = useLocal()
   const navigate = useNavigate()
+  const location = useLocation()
   const { params, sessionKey, tabs, view } = useSessionLayout()
   const sessionOwnership = createSessionOwnership(sessionKey)
   const sessionArchive = useSessionArchive()
@@ -81,13 +83,15 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (!tab.startsWith("file://")) return tab
     return file.tab(tab)
   }
-  const tabState = createSessionTabs({
+  const tabState = createSidePanelTabs({
     tabs,
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: actions.review,
     hasReview,
     fileBrowser: actions.fileBrowser,
+    cockpit: () => false,
+    permanent: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
@@ -147,94 +151,6 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (sessionID) return permission.isAutoAccepting(sessionID, sdk().directory)
     return permission.isAutoAcceptingDirectory(sdk().directory)
   }
-  const write = async (value: string) => {
-    const body = typeof document === "undefined" ? undefined : document.body
-    if (body) {
-      const textarea = document.createElement("textarea")
-      textarea.value = value
-      textarea.setAttribute("readonly", "")
-      textarea.style.position = "fixed"
-      textarea.style.opacity = "0"
-      textarea.style.pointerEvents = "none"
-      body.appendChild(textarea)
-      textarea.select()
-      const copied = document.execCommand("copy")
-      body.removeChild(textarea)
-      if (copied) return true
-    }
-
-    const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard
-    if (!clipboard?.writeText) return false
-    return clipboard.writeText(value).then(
-      () => true,
-      () => false,
-    )
-  }
-
-  const copyShare = async (url: string, existing: boolean) => {
-    if (!(await write(url))) {
-      showToast({
-        title: language.t("toast.session.share.copyFailed.title"),
-        variant: "error",
-      })
-      return
-    }
-
-    showToast({
-      title: existing ? language.t("session.share.copy.copied") : language.t("toast.session.share.success.title"),
-      description: language.t("toast.session.share.success.description"),
-      variant: "success",
-    })
-  }
-
-  const share = async () => {
-    const sessionID = params.id
-    if (!sessionID) return
-
-    const existing = info()?.share?.url
-    if (existing) {
-      await copyShare(existing, true)
-      return
-    }
-
-    const url = await sdk()
-      .client.session.share({ sessionID })
-      .then((res) => res.data?.share?.url)
-      .catch(() => undefined)
-    if (!url) {
-      showToast({
-        title: language.t("toast.session.share.failed.title"),
-        description: language.t("toast.session.share.failed.description"),
-        variant: "error",
-      })
-      return
-    }
-
-    await copyShare(url, false)
-  }
-
-  const unshare = async () => {
-    const sessionID = params.id
-    if (!sessionID) return
-
-    await sdk()
-      .client.session.unshare({ sessionID })
-      .then(() =>
-        showToast({
-          title: language.t("toast.session.unshare.success.title"),
-          description: language.t("toast.session.unshare.success.description"),
-          variant: "success",
-        }),
-      )
-      .catch(() =>
-        showToast({
-          title: language.t("toast.session.unshare.failed.title"),
-          description: language.t("toast.session.unshare.failed.description"),
-          variant: "error",
-        }),
-      )
-  }
-
   const exportSession = async () => {
     const sessionID = params.id
     if (!sessionID) return
@@ -421,28 +337,27 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     )
   }
 
-  const shareCmds = () => {
-    if (sync().data.config.share === "disabled") return []
-    return [
-      sessionCommand({
-        id: "session.share",
-        title: info()?.share?.url ? language.t("session.share.copy.copyLink") : language.t("command.session.share"),
-        description: info()?.share?.url
-          ? language.t("toast.session.share.success.description")
-          : language.t("command.session.share.description"),
-        slash: "share",
-        disabled: !params.id,
-        onSelect: share,
-      }),
-      sessionCommand({
-        id: "session.unshare",
-        title: language.t("command.session.unshare"),
-        description: language.t("command.session.unshare.description"),
-        slash: "unshare",
-        disabled: !params.id || !info()?.share?.url,
-        onSelect: unshare,
-      }),
-    ]
+  // Read-only S20 destination; "Show in chat" reuses the existing #message-<id> navigation.
+  const openGovernance = () => {
+    const sessionID = params.id
+    if (!sessionID) return
+    const owner = sessionOwnership.capture()
+    const route = `${location.pathname}${location.search}`
+    void openDialog(
+      () => import("./orchestra-governance"),
+      (x) =>
+        dialog.showOwned((dispose) => (
+          <x.DialogOrchestraGovernance
+            sessionID={sessionID}
+            current={owner.current}
+            dispose={dispose}
+            onShowMessage={(id) => {
+              dispose()
+              owner.run(() => navigate(`${route}#message-${id}`, { replace: true }))
+            }}
+          />
+        )),
+    )
   }
 
   const sessionCmds = () => [
@@ -498,6 +413,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       slash: "export",
       disabled: !params.id,
       onSelect: exportSession,
+    }),
+    sessionCommand({
+      id: "maestro.governance",
+      title: language.t("orchestra.governance.command"),
+      description: language.t("orchestra.governance.command.description"),
+      disabled: !params.id,
+      onSelect: openGovernance,
     }),
     sessionCommand({
       id: "session.archive",
@@ -569,6 +491,15 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       id: "tasks.toggle",
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
+        // Orchestra's rail keeps a permanent Tasks tab: reveal it and toggle the Tasks detail.
+        if (settings.general.newLayoutDesigns()) {
+          const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
+          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+          view().reviewPanel.open()
+          tabs().open("tasks")
+          tabs().setActive("tasks")
+          return
+        }
         if (tabs().active() === "tasks") {
           tabs().close("tasks")
           return
@@ -671,7 +602,6 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
 
   command.register("session", () => [
     ...sessionCmds(),
-    ...shareCmds(),
     ...fileCmds(),
     ...contextCmds(),
     ...viewCmds(),

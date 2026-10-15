@@ -1,0 +1,17 @@
+name: omni-artifacts-proof
+
+# Opt-in PR proof; the reusable artifact workflow never interprets its caller's event.
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    if: github.event.label.name == 'omni-artifacts'
+    uses: ./.github/workflows/omni-artifacts.yml
+    with:
+      pack: true
+      ref: ${{ github.event.pull_request.head.sha }}

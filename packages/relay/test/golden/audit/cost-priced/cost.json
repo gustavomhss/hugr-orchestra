@@ -1,0 +1,82 @@
+{
+  "ledger": "test/golden/audit/cost-priced/input/ledger.jsonl",
+  "total": {
+    "in": 307,
+    "out": 80,
+    "cache_read": 2000,
+    "cache_write": 1200,
+    "turns": 6,
+    "elapsed_s": 47
+  },
+  "states": [
+    {
+      "wp": "a",
+      "macro": "m1",
+      "elapsed_s": null,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    },
+    {
+      "wp": "b",
+      "macro": "m1",
+      "elapsed_s": 30,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 3
+    },
+    {
+      "wp": "c",
+      "macro": null,
+      "elapsed_s": 12,
+      "in": 7,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    },
+    {
+      "wp": "d",
+      "macro": "m2",
+      "elapsed_s": 5,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    }
+  ],
+  "macros": [
+    {
+      "macro": "m1",
+      "elapsed_s": 30,
+      "in": 200,
+      "out": 40,
+      "cache_read": 1000,
+      "cache_write": 600,
+      "turns": 4
+    },
+    {
+      "macro": "_",
+      "elapsed_s": 12,
+      "in": 7,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    },
+    {
+      "macro": "m2",
+      "elapsed_s": 5,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+[
+ {"id":"P01","category":"recall","question":"Quote verbatim what the user said in their very first request about the dark mode toggle: what Maestro should do and what it should not do."},
+ {"id":"P02","category":"recall","question":"List every standing rule or restriction the user has given in this session, each with its scope (which step, tool or delegate it applies to)."},
+ {"id":"P03","category":"recall","question":"Did the user approve the Lucy review whose receipt is evt_maestro_review_909befec9c33667ab523b98505f87e24beb7a17e2f6eec888b21ce8d22b27cb6? Who produced that APPROVE?"},
+ {"id":"P04","category":"recall","question":"Was the user's first 'approve' reply recorded as approval of the plan? What exactly did the approval tool return then, and when was the plan actually approved?"},
+ {"id":"P05","category":"recall","question":"What did the user correct about how Maestro was calling the validation and review tools?"},
+ {"id":"P06","category":"artifact","question":"Which files did Maestro edit or create in this session?"},
+ {"id":"P07","category":"artifact","question":"What exact shell command did Maestro run to check the working tree, and what did it show?"},
+ {"id":"P08","category":"artifact","question":"What are the exact context record ID and the exact context hash recorded by maestro_record_context?"},
+ {"id":"P09","category":"artifact","question":"What is the exact review receipt ID returned when Lucy's review was finally persisted?"},
+ {"id":"P10","category":"artifact","question":"What exact error did the first maestro_record_validation call return, and what did the next two attempts return?"},
+ {"id":"P11","category":"artifact","question":"List, in order, the distinct failure results that maestro_request_review (or the Lucy delegation) returned before the review finally succeeded."},
+ {"id":"P12","category":"continuation","question":"What should Maestro do next, and why?"},
+ {"id":"P13","category":"continuation","question":"Which team members were delegated work in this session, and what is the final state of each delegation?"},
+ {"id":"P14","category":"continuation","question":"Should Maestro request Lucy's review again before continuing? Answer yes or no, and why."},
+ {"id":"P15","category":"decision","question":"Why did Maestro scope the dark mode work around the existing color-scheme selector instead of a new toggle or theme engine, and who made that call: the user or Maestro?"},
+ {"id":"P16","category":"decision","question":"In the review attempt where Lucy returned FIX_FIRST, what exactly was the verdict and the finding?"},
+ {"id":"P17","category":"user","question":"What did Maestro tell the user to reply in order to approve or decline the plan?"}
+]

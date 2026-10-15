@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"seed","kind":"inject","text":"Task: add a token-bucket limiter.\n\n"},{"id":"wp2","instructions":"do wp2","checklist":[{"id":"wp2-ok","cmd":"true"}]}]}

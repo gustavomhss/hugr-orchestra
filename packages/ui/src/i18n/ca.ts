@@ -68,14 +68,6 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.retry.geminiHot": "Gemini està massa saturat ara mateix",
   "ui.sessionTurn.error.freeUsageExceeded": "S'ha superat l'ús gratuït",
   "ui.sessionTurn.error.addCredits": "Afegeix crèdits",
-  "dialog.usageExceeded.freeTier.title": "S'ha arribat al límit gratuït",
-  "dialog.usageExceeded.freeTier.description":
-    "Subscriviu-vos a OpenCode Go per 10 dòlars al mes i obteniu accés fiable als millors models de codi obert.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Subscriu-te",
-  "dialog.usageExceeded.accountRateLimit.title": "S'ha assolit el límit de Go",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "S'ha arribat al límit d'ús. Per continuar utilitzant aquest model ara, activeu l'ús des del vostre saldo disponible",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Obre la configuració",
   "ui.sessionTurn.status.delegating": "Delegació de feina",
   "ui.sessionTurn.status.planning": "Planificant els propers passos",
   "ui.sessionTurn.status.gatheringContext": "Explorant",
@@ -125,7 +117,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Imatges i fitxers",
   "ui.promptInput.context": "Context",
   "ui.promptInput.shell": "Ordre de l'intèrpret d'ordres",
-  "ui.promptInput.chooseAgent": "Trieu un agent",
   "ui.promptInput.chooseModel": "Tria el model",
   "ui.promptInput.chooseVariant": "Trieu la variant del model",
   "ui.promptInput.send": "Enviar",

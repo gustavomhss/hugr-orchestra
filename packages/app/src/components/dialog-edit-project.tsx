@@ -1,10 +1,10 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { TextField } from "@opencode-ai/ui/text-field"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Button } from "@orchestra/ui/button"
+import { Dialog } from "@orchestra/ui/dialog"
+import { TextField } from "@orchestra/ui/text-field"
+import { Icon } from "@orchestra/ui/icon"
 import { For, Show } from "solid-js"
 import { type LocalProject, getAvatarColors } from "@/context/layout"
-import { Avatar } from "@opencode-ai/ui/avatar"
+import { Avatar } from "@orchestra/ui/avatar"
 import { useLanguage } from "@/context/language"
 import { getProjectAvatarSource } from "@/pages/layout/helpers"
 import { ServerConnection } from "@/context/server"
@@ -50,7 +50,7 @@ export function DialogEditProject(props: { project: LocalProject; server: Server
                   onClick={model.iconClick}
                 >
                   <Show
-                    when={getProjectAvatarSource(props.project.id, {
+                    when={getProjectAvatarSource({
                       color: model.store.color,
                       url: props.project.icon?.url,
                       override: model.store.iconOverride,

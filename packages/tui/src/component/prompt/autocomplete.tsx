@@ -20,9 +20,10 @@ import { useTerminalDimensions } from "@opentui/solid"
 import { Locale } from "../../util/locale"
 import type { PromptInfo } from "../../prompt/history"
 import { useFrecency } from "../../prompt/frecency"
-import { useBindings, useCommandSlashes, useOpencodeModeStack } from "../../keymap"
+import { useBindings, useCommandSlashes, useOrchestraModeStack } from "../../keymap"
 import { displayCharAt, mentionTriggerIndex } from "../../prompt/display"
-import type { FileSystemEntry } from "@opencode-ai/sdk/v2"
+import type { FileSystemEntry } from "@orchestra/sdk/v2"
+import { agentMention } from "../../util/agent"
 
 function removeLineRange(input: string) {
   const hashIndex = input.lastIndexOf("#")
@@ -90,7 +91,7 @@ export function Autocomplete(props: {
   const data = useData()
   const project = useProject()
   const slashes = useCommandSlashes()
-  const modeStack = useOpencodeModeStack()
+  const modeStack = useOrchestraModeStack()
   const { theme } = useTheme()
   const dimensions = useTerminalDimensions()
   const frecency = useFrecency()
@@ -406,15 +407,8 @@ export function Autocomplete(props: {
         (agent): AutocompleteOption => ({
           display: "@" + agent.name,
           onSelect: () => {
-            insertPart(agent.name, {
-              type: "agent",
-              name: agent.name,
-              source: {
-                start: 0,
-                end: 0,
-                value: "",
-              },
-            })
+            const mention = agentMention(agent)
+            insertPart(mention.text, mention.part)
           },
         }),
       )

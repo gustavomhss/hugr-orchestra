@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"beta","instructions":"do beta","checklist":[{"id":"SUFFIX","cmd":"true"}]},{"id":"build.beta","instructions":"do build.beta","checklist":[{"id":"WHOLE","cmd":"false"}]}]}

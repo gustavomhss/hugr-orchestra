@@ -1,0 +1,1370 @@
+{
+  "name": "Relay · design",
+  "nodes": [
+    {
+      "id": "relay-start",
+      "name": "Workflow start",
+      "type": "relay.startTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "parameters": {
+        "relayBrief": "design v1.0.0 — DESIGN — raw idea → ratified product design (6 macros, EDD family)",
+        "relayRetryBudget": 5
+      }
+    },
+    {
+      "id": "intake.unbroken_story",
+      "name": "Unbroken Story",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "title": "Unbroken Story",
+        "macro": "intake",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"narrative_captured\",\n    \"assert\": \"narrative_captured\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake narrative_captured --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "intake.deep_vein",
+      "name": "Deep Vein",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "parameters": {
+        "title": "Deep Vein",
+        "macro": "intake",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"episodes_anchored\",\n    \"assert\": \"episodes_anchored\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake episodes_anchored --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"question_log_clean\",\n    \"assert\": \"question_log_clean\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake question_log_clean --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"provenance_complete\",\n    \"assert\": \"provenance_complete\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake provenance_complete --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "intake.assay",
+      "name": "Assay",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        688,
+        240
+      ],
+      "parameters": {
+        "title": "Assay",
+        "macro": "intake",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"map_consolidated\",\n    \"assert\": \"map_consolidated\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake map_consolidated --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"tensions_swept\",\n    \"assert\": \"tensions_swept\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake tensions_swept --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"saturation_reached\",\n    \"assert\": \"saturation_reached\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check intake saturation_reached --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "intake.checklist",
+      "name": "Clean Hands Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "Clean Hands Gate",
+        "macro": "intake",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"intake_phase_validates\",\n    \"assert\": \"intake_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase intake --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "mirror.front_page",
+      "name": "Front Page",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "Front Page",
+        "macro": "mirror",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"front_page_written\",\n    \"assert\": \"front_page_written\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check mirror front_page_written --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "mirror.read_back",
+      "name": "Read Back",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        240
+      ],
+      "parameters": {
+        "title": "Read Back",
+        "macro": "mirror",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"every_chunk_confirmed\",\n    \"assert\": \"every_chunk_confirmed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check mirror every_chunk_confirmed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"corrections_folded\",\n    \"assert\": \"corrections_folded\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check mirror corrections_folded --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"disagreements_recorded\",\n    \"assert\": \"disagreements_recorded\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check mirror disagreements_recorded --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "mirror.checklist",
+      "name": "No Distortion Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        240
+      ],
+      "parameters": {
+        "title": "No Distortion Gate",
+        "macro": "mirror",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"mirror_phase_validates\",\n    \"assert\": \"mirror_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase mirror --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "concept.three_doors",
+      "name": "Three Doors",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        528
+      ],
+      "parameters": {
+        "title": "Three Doors",
+        "macro": "concept",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"doors_reviewed\",\n    \"assert\": \"doors_reviewed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check concept doors_reviewed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "concept.distinctness",
+      "name": "Distinctness",
+      "type": "relay.review",
+      "typeVersion": 1,
+      "position": [
+        464,
+        528
+      ],
+      "parameters": {
+        "title": "Distinctness",
+        "macro": "concept",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"distinctness-verdict\",\n    \"assert\": \"the reviewer returned APPROVE\",\n    \"cmd\": \"test \\\"$(jq -r .verdict ${design_dir}/verdict-distinctness.json)\\\" = APPROVE\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"distinctness-is-substantive\",\n    \"assert\": \"the review carries at least 200 characters\",\n    \"cmd\": \"test \\\"$(jq -r '.findings // \\\"\\\" | length' ${design_dir}/verdict-distinctness.json)\\\" -ge 200\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"distinctness-engages-with-the-diff\",\n    \"paths\": [\n      \"${design_dir}/doors.json\"\n    ],\n    \"context\": [\n      \"${design_dir}/verdict-distinctness.json\"\n    ],\n    \"judge\": \"Does this review judge whether the doors in the diff are genuinely DIFFERENT approaches rather than one approach in three costumes, naming each door and what distinguishes it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "concept.chosen_door",
+      "name": "Chosen Door",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        688,
+        528
+      ],
+      "parameters": {
+        "title": "Chosen Door",
+        "macro": "concept",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"choice_rationale_logged\",\n    \"assert\": \"choice_rationale_logged\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check concept choice_rationale_logged --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"rejected_doors_recorded\",\n    \"assert\": \"rejected_doors_recorded\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check concept rejected_doors_recorded --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"choice_traces_to_problem\",\n    \"assert\": \"choice_traces_to_problem\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check concept choice_traces_to_problem --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "concept.checklist",
+      "name": "Committed Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        528
+      ],
+      "parameters": {
+        "title": "Committed Gate",
+        "macro": "concept",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"concept_phase_validates\",\n    \"assert\": \"concept_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase concept --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "shape.walking_skeleton",
+      "name": "Walking Skeleton",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        528
+      ],
+      "parameters": {
+        "title": "Walking Skeleton",
+        "macro": "shape",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"skeleton_walks_end_to_end\",\n    \"assert\": \"skeleton_walks_end_to_end\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape skeleton_walks_end_to_end --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "shape.touchpoints",
+      "name": "Touchpoints",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        528
+      ],
+      "parameters": {
+        "title": "Touchpoints",
+        "macro": "shape",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"touchpoints_per_vertebra\",\n    \"assert\": \"touchpoints_per_vertebra\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape touchpoints_per_vertebra --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"nouns_named\",\n    \"assert\": \"nouns_named\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape nouns_named --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "shape.table_read",
+      "name": "Table Read",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        528
+      ],
+      "parameters": {
+        "title": "Table Read",
+        "macro": "shape",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"scenes_reviewed\",\n    \"assert\": \"scenes_reviewed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape scenes_reviewed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"non_goals_explicit\",\n    \"assert\": \"non_goals_explicit\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape non_goals_explicit --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"boundary_scenes_present\",\n    \"assert\": \"boundary_scenes_present\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check shape boundary_scenes_present --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "shape.dress_rehearsal",
+      "name": "Dress Rehearsal",
+      "type": "relay.review",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        528
+      ],
+      "parameters": {
+        "title": "Dress Rehearsal",
+        "macro": "shape",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"dress_rehearsal-verdict\",\n    \"assert\": \"the reviewer returned APPROVE\",\n    \"cmd\": \"test \\\"$(jq -r .verdict ${design_dir}/verdict-dress_rehearsal.json)\\\" = APPROVE\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"dress_rehearsal-is-substantive\",\n    \"assert\": \"the review carries at least 200 characters\",\n    \"cmd\": \"test \\\"$(jq -r '.findings // \\\"\\\" | length' ${design_dir}/verdict-dress_rehearsal.json)\\\" -ge 200\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"dress_rehearsal-engages-with-the-diff\",\n    \"paths\": [\n      \"${design_dir}/skeleton.json\"\n    ],\n    \"context\": [\n      \"${design_dir}/verdict-dress_rehearsal.json\"\n    ],\n    \"judge\": \"Does this review walk the skeleton in the diff as a rehearsal — naming the steps, where it would break, and what it does not yet cover? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "shape.checklist",
+      "name": "End to End Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        528
+      ],
+      "parameters": {
+        "title": "End to End Gate",
+        "macro": "shape",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"shape_phase_validates\",\n    \"assert\": \"shape_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase shape --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "risks.obituary",
+      "name": "Obituary",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        816
+      ],
+      "parameters": {
+        "title": "Obituary",
+        "macro": "risks",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"four_axes_ranked\",\n    \"assert\": \"four_axes_ranked\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks four_axes_ranked --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "risks.minefield",
+      "name": "Minefield",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        816
+      ],
+      "parameters": {
+        "title": "Minefield",
+        "macro": "risks",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"assumptions_plotted\",\n    \"assert\": \"assumptions_plotted\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks assumptions_plotted --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"critical_assumptions_have_probes\",\n    \"assert\": \"critical_assumptions_have_probes\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks critical_assumptions_have_probes --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"kill_criteria_sealed_before_probes\",\n    \"assert\": \"kill_criteria_sealed_before_probes\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks kill_criteria_sealed_before_probes --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"v1_still_delivers_front_page\",\n    \"assert\": \"v1_still_delivers_front_page\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks v1_still_delivers_front_page --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "risks.no_flinching",
+      "name": "No Flinching",
+      "type": "relay.review",
+      "typeVersion": 1,
+      "position": [
+        688,
+        816
+      ],
+      "parameters": {
+        "title": "No Flinching",
+        "macro": "risks",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"anti_optimism_reviewed\",\n    \"assert\": \"anti_optimism_reviewed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check risks anti_optimism_reviewed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"no_flinching-verdict\",\n    \"assert\": \"the reviewer returned APPROVE\",\n    \"cmd\": \"test \\\"$(jq -r .verdict ${design_dir}/verdict-no_flinching.json)\\\" = APPROVE\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"no_flinching-is-substantive\",\n    \"assert\": \"the review carries at least 200 characters\",\n    \"cmd\": \"test \\\"$(jq -r '.findings // \\\"\\\" | length' ${design_dir}/verdict-no_flinching.json)\\\" -ge 200\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"no_flinching-engages-with-the-diff\",\n    \"paths\": [\n      \"${design_dir}/risks.json\"\n    ],\n    \"context\": [\n      \"${design_dir}/verdict-no_flinching.json\"\n    ],\n    \"judge\": \"Does this review confront the risks in the diff without flinching — naming each one and whether the response is a mitigation or a hope? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "risks.checklist",
+      "name": "Sealed Bar Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        816
+      ],
+      "parameters": {
+        "title": "Sealed Bar Gate",
+        "macro": "risks",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"risks_phase_validates\",\n    \"assert\": \"risks_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase risks --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "ratify.for_the_record",
+      "name": "For The Record",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        816
+      ],
+      "parameters": {
+        "title": "For The Record",
+        "macro": "ratify",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"memo_written\",\n    \"assert\": \"memo_written\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check ratify memo_written --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"dissent_solicited\",\n    \"assert\": \"dissent_solicited\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check ratify dissent_solicited --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  },\n  {\n    \"id\": \"assumption_ledger_closed\",\n    \"assert\": \"assumption_ledger_closed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check ratify assumption_ledger_closed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "ratify.wet_ink",
+      "name": "Wet Ink",
+      "type": "relay.human",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        816
+      ],
+      "parameters": {
+        "title": "Wet Ink",
+        "macro": "ratify",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"owner_signed\",\n    \"assert\": \"owner_signed\",\n    \"cmd\": \"${design_tools}/../criterion ${design_tools}/design-check ratify owner_signed --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "ratify.checklist",
+      "name": "Case Closed Gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        816
+      ],
+      "parameters": {
+        "title": "Case Closed Gate",
+        "macro": "ratify",
+        "instructions": "",
+        "checklist": "[\n  {\n    \"id\": \"ratify_phase_validates\",\n    \"assert\": \"ratify_phase_validates\",\n    \"cmd\": \"${design_tools}/design-check --phase ratify --design-dir ${design_dir}\",\n    \"origin\": \"pe-profile:design@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    }
+  ],
+  "connections": {
+    "Unbroken Story": {
+      "main": [
+        [
+          {
+            "node": "Deep Vein",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deep Vein": {
+      "main": [
+        [
+          {
+            "node": "Assay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assay": {
+      "main": [
+        [
+          {
+            "node": "Clean Hands Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Hands Gate": {
+      "main": [
+        [
+          {
+            "node": "Front Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Front Page": {
+      "main": [
+        [
+          {
+            "node": "Read Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Back": {
+      "main": [
+        [
+          {
+            "node": "No Distortion Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Distortion Gate": {
+      "main": [
+        [
+          {
+            "node": "Three Doors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Three Doors": {
+      "main": [
+        [
+          {
+            "node": "Distinctness",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Distinctness": {
+      "main": [
+        [
+          {
+            "node": "Chosen Door",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chosen Door": {
+      "main": [
+        [
+          {
+            "node": "Committed Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Committed Gate": {
+      "main": [
+        [
+          {
+            "node": "Walking Skeleton",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Walking Skeleton": {
+      "main": [
+        [
+          {
+            "node": "Touchpoints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Touchpoints": {
+      "main": [
+        [
+          {
+            "node": "Table Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Table Read": {
+      "main": [
+        [
+          {
+            "node": "Dress Rehearsal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dress Rehearsal": {
+      "main": [
+        [
+          {
+            "node": "End to End Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End to End Gate": {
+      "main": [
+        [
+          {
+            "node": "Obituary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obituary": {
+      "main": [
+        [
+          {
+            "node": "Minefield",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minefield": {
+      "main": [
+        [
+          {
+            "node": "No Flinching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Flinching": {
+      "main": [
+        [
+          {
+            "node": "Sealed Bar Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sealed Bar Gate": {
+      "main": [
+        [
+          {
+            "node": "For The Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For The Record": {
+      "main": [
+        [
+          {
+            "node": "Wet Ink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wet Ink": {
+      "main": [
+        [
+          {
+            "node": "Case Closed Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow start": {
+      "main": [
+        [
+          {
+            "node": "Unbroken Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [
+    {
+      "id": "intake",
+      "name": "INTAKE — mine the intent",
+      "description": "",
+      "nodeIds": [
+        "intake.unbroken_story",
+        "intake.deep_vein",
+        "intake.assay",
+        "intake.checklist"
+      ]
+    },
+    {
+      "id": "mirror",
+      "name": "MIRROR — confirm the image",
+      "description": "",
+      "nodeIds": [
+        "mirror.front_page",
+        "mirror.read_back",
+        "mirror.checklist"
+      ]
+    },
+    {
+      "id": "concept",
+      "name": "CONCEPT — choose solution",
+      "description": "",
+      "nodeIds": [
+        "concept.three_doors",
+        "concept.distinctness",
+        "concept.chosen_door",
+        "concept.checklist"
+      ]
+    },
+    {
+      "id": "shape",
+      "name": "SHAPE — give it a body",
+      "description": "",
+      "nodeIds": [
+        "shape.walking_skeleton",
+        "shape.touchpoints",
+        "shape.table_read",
+        "shape.dress_rehearsal",
+        "shape.checklist"
+      ]
+    },
+    {
+      "id": "risks",
+      "name": "RISKS — find how it dies",
+      "description": "",
+      "nodeIds": [
+        "risks.obituary",
+        "risks.minefield",
+        "risks.no_flinching",
+        "risks.checklist"
+      ]
+    },
+    {
+      "id": "ratify",
+      "name": "RATIFY — sign it",
+      "description": "",
+      "nodeIds": [
+        "ratify.for_the_record",
+        "ratify.wet_ink",
+        "ratify.checklist"
+      ]
+    }
+  ],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "brief": "design v1.0.0 — DESIGN — raw idea → ratified product design (6 macros, EDD family)",
+        "gen": 0,
+        "retry_budget": 5,
+        "macros": [
+          {
+            "id": "intake",
+            "title": "INTAKE — mine the intent"
+          },
+          {
+            "id": "mirror",
+            "title": "MIRROR — confirm the image"
+          },
+          {
+            "id": "concept",
+            "title": "CONCEPT — choose solution"
+          },
+          {
+            "id": "shape",
+            "title": "SHAPE — give it a body"
+          },
+          {
+            "id": "risks",
+            "title": "RISKS — find how it dies"
+          },
+          {
+            "id": "ratify",
+            "title": "RATIFY — sign it"
+          }
+        ],
+        "work_packages": [
+          {
+            "id": "intake.unbroken_story",
+            "macro": "intake",
+            "kind": "execute",
+            "title": "Unbroken Story",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "narrative_captured",
+                "assert": "narrative_captured",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake narrative_captured --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "intake.deep_vein",
+            "macro": "intake",
+            "kind": "execute",
+            "title": "Deep Vein",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "episodes_anchored",
+                "assert": "episodes_anchored",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake episodes_anchored --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "question_log_clean",
+                "assert": "question_log_clean",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake question_log_clean --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "provenance_complete",
+                "assert": "provenance_complete",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake provenance_complete --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "intake.assay",
+            "macro": "intake",
+            "kind": "execute",
+            "title": "Assay",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "map_consolidated",
+                "assert": "map_consolidated",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake map_consolidated --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "tensions_swept",
+                "assert": "tensions_swept",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake tensions_swept --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "saturation_reached",
+                "assert": "saturation_reached",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check intake saturation_reached --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "intake.checklist",
+            "macro": "intake",
+            "kind": "gate",
+            "title": "Clean Hands Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "intake_phase_validates",
+                "assert": "intake_phase_validates",
+                "cmd": "${design_tools}/design-check --phase intake --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "mirror.front_page",
+            "macro": "mirror",
+            "kind": "execute",
+            "title": "Front Page",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "front_page_written",
+                "assert": "front_page_written",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check mirror front_page_written --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "mirror.read_back",
+            "macro": "mirror",
+            "kind": "execute",
+            "title": "Read Back",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "every_chunk_confirmed",
+                "assert": "every_chunk_confirmed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check mirror every_chunk_confirmed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "corrections_folded",
+                "assert": "corrections_folded",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check mirror corrections_folded --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "disagreements_recorded",
+                "assert": "disagreements_recorded",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check mirror disagreements_recorded --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "mirror.checklist",
+            "macro": "mirror",
+            "kind": "gate",
+            "title": "No Distortion Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "mirror_phase_validates",
+                "assert": "mirror_phase_validates",
+                "cmd": "${design_tools}/design-check --phase mirror --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "concept.three_doors",
+            "macro": "concept",
+            "kind": "execute",
+            "title": "Three Doors",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "doors_reviewed",
+                "assert": "doors_reviewed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check concept doors_reviewed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "concept.distinctness",
+            "macro": "concept",
+            "kind": "review",
+            "title": "Distinctness",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "distinctness-verdict",
+                "assert": "the reviewer returned APPROVE",
+                "cmd": "test \"$(jq -r .verdict ${design_dir}/verdict-distinctness.json)\" = APPROVE",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "distinctness-is-substantive",
+                "assert": "the review carries at least 200 characters",
+                "cmd": "test \"$(jq -r '.findings // \"\" | length' ${design_dir}/verdict-distinctness.json)\" -ge 200",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "distinctness-engages-with-the-diff",
+                "paths": [
+                  "${design_dir}/doors.json"
+                ],
+                "context": [
+                  "${design_dir}/verdict-distinctness.json"
+                ],
+                "judge": "Does this review judge whether the doors in the diff are genuinely DIFFERENT approaches rather than one approach in three costumes, naming each door and what distinguishes it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                "diff": true,
+                "blocking": true,
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "concept.chosen_door",
+            "macro": "concept",
+            "kind": "execute",
+            "title": "Chosen Door",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "choice_rationale_logged",
+                "assert": "choice_rationale_logged",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check concept choice_rationale_logged --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "rejected_doors_recorded",
+                "assert": "rejected_doors_recorded",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check concept rejected_doors_recorded --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "choice_traces_to_problem",
+                "assert": "choice_traces_to_problem",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check concept choice_traces_to_problem --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "concept.checklist",
+            "macro": "concept",
+            "kind": "gate",
+            "title": "Committed Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "concept_phase_validates",
+                "assert": "concept_phase_validates",
+                "cmd": "${design_tools}/design-check --phase concept --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "shape.walking_skeleton",
+            "macro": "shape",
+            "kind": "execute",
+            "title": "Walking Skeleton",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "skeleton_walks_end_to_end",
+                "assert": "skeleton_walks_end_to_end",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape skeleton_walks_end_to_end --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "shape.touchpoints",
+            "macro": "shape",
+            "kind": "execute",
+            "title": "Touchpoints",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "touchpoints_per_vertebra",
+                "assert": "touchpoints_per_vertebra",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape touchpoints_per_vertebra --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "nouns_named",
+                "assert": "nouns_named",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape nouns_named --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "shape.table_read",
+            "macro": "shape",
+            "kind": "execute",
+            "title": "Table Read",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "scenes_reviewed",
+                "assert": "scenes_reviewed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape scenes_reviewed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "non_goals_explicit",
+                "assert": "non_goals_explicit",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape non_goals_explicit --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "boundary_scenes_present",
+                "assert": "boundary_scenes_present",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check shape boundary_scenes_present --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "shape.dress_rehearsal",
+            "macro": "shape",
+            "kind": "review",
+            "title": "Dress Rehearsal",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "dress_rehearsal-verdict",
+                "assert": "the reviewer returned APPROVE",
+                "cmd": "test \"$(jq -r .verdict ${design_dir}/verdict-dress_rehearsal.json)\" = APPROVE",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "dress_rehearsal-is-substantive",
+                "assert": "the review carries at least 200 characters",
+                "cmd": "test \"$(jq -r '.findings // \"\" | length' ${design_dir}/verdict-dress_rehearsal.json)\" -ge 200",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "dress_rehearsal-engages-with-the-diff",
+                "paths": [
+                  "${design_dir}/skeleton.json"
+                ],
+                "context": [
+                  "${design_dir}/verdict-dress_rehearsal.json"
+                ],
+                "judge": "Does this review walk the skeleton in the diff as a rehearsal — naming the steps, where it would break, and what it does not yet cover? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                "diff": true,
+                "blocking": true,
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "shape.checklist",
+            "macro": "shape",
+            "kind": "gate",
+            "title": "End to End Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "shape_phase_validates",
+                "assert": "shape_phase_validates",
+                "cmd": "${design_tools}/design-check --phase shape --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "risks.obituary",
+            "macro": "risks",
+            "kind": "execute",
+            "title": "Obituary",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "four_axes_ranked",
+                "assert": "four_axes_ranked",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks four_axes_ranked --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "risks.minefield",
+            "macro": "risks",
+            "kind": "execute",
+            "title": "Minefield",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "assumptions_plotted",
+                "assert": "assumptions_plotted",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks assumptions_plotted --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "critical_assumptions_have_probes",
+                "assert": "critical_assumptions_have_probes",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks critical_assumptions_have_probes --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "kill_criteria_sealed_before_probes",
+                "assert": "kill_criteria_sealed_before_probes",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks kill_criteria_sealed_before_probes --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "v1_still_delivers_front_page",
+                "assert": "v1_still_delivers_front_page",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks v1_still_delivers_front_page --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "risks.no_flinching",
+            "macro": "risks",
+            "kind": "review",
+            "title": "No Flinching",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "anti_optimism_reviewed",
+                "assert": "anti_optimism_reviewed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check risks anti_optimism_reviewed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "no_flinching-verdict",
+                "assert": "the reviewer returned APPROVE",
+                "cmd": "test \"$(jq -r .verdict ${design_dir}/verdict-no_flinching.json)\" = APPROVE",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "no_flinching-is-substantive",
+                "assert": "the review carries at least 200 characters",
+                "cmd": "test \"$(jq -r '.findings // \"\" | length' ${design_dir}/verdict-no_flinching.json)\" -ge 200",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "no_flinching-engages-with-the-diff",
+                "paths": [
+                  "${design_dir}/risks.json"
+                ],
+                "context": [
+                  "${design_dir}/verdict-no_flinching.json"
+                ],
+                "judge": "Does this review confront the risks in the diff without flinching — naming each one and whether the response is a mitigation or a hope? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                "diff": true,
+                "blocking": true,
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "risks.checklist",
+            "macro": "risks",
+            "kind": "gate",
+            "title": "Sealed Bar Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "risks_phase_validates",
+                "assert": "risks_phase_validates",
+                "cmd": "${design_tools}/design-check --phase risks --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "ratify.for_the_record",
+            "macro": "ratify",
+            "kind": "execute",
+            "title": "For The Record",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "memo_written",
+                "assert": "memo_written",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check ratify memo_written --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "dissent_solicited",
+                "assert": "dissent_solicited",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check ratify dissent_solicited --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              },
+              {
+                "id": "assumption_ledger_closed",
+                "assert": "assumption_ledger_closed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check ratify assumption_ledger_closed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "ratify.wet_ink",
+            "macro": "ratify",
+            "kind": "human",
+            "title": "Wet Ink",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "owner_signed",
+                "assert": "owner_signed",
+                "cmd": "${design_tools}/../criterion ${design_tools}/design-check ratify owner_signed --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "ratify.checklist",
+            "macro": "ratify",
+            "kind": "gate",
+            "title": "Case Closed Gate",
+            "instructions": "",
+            "checklist": [
+              {
+                "id": "ratify_phase_validates",
+                "assert": "ratify_phase_validates",
+                "cmd": "${design_tools}/design-check --phase ratify --design-dir ${design_dir}",
+                "origin": "pe-profile:design@1.0.0"
+              }
+            ]
+          }
+        ]
+      },
+      "names": {
+        "intake.unbroken_story": "Unbroken Story",
+        "intake.deep_vein": "Deep Vein",
+        "intake.assay": "Assay",
+        "intake.checklist": "Clean Hands Gate",
+        "mirror.front_page": "Front Page",
+        "mirror.read_back": "Read Back",
+        "mirror.checklist": "No Distortion Gate",
+        "concept.three_doors": "Three Doors",
+        "concept.distinctness": "Distinctness",
+        "concept.chosen_door": "Chosen Door",
+        "concept.checklist": "Committed Gate",
+        "shape.walking_skeleton": "Walking Skeleton",
+        "shape.touchpoints": "Touchpoints",
+        "shape.table_read": "Table Read",
+        "shape.dress_rehearsal": "Dress Rehearsal",
+        "shape.checklist": "End to End Gate",
+        "risks.obituary": "Obituary",
+        "risks.minefield": "Minefield",
+        "risks.no_flinching": "No Flinching",
+        "risks.checklist": "Sealed Bar Gate",
+        "ratify.for_the_record": "For The Record",
+        "ratify.wet_ink": "Wet Ink",
+        "ratify.checklist": "Case Closed Gate"
+      }
+    }
+  }
+}

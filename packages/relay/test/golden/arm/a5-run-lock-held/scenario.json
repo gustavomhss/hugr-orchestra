@@ -1,0 +1,45 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "create done",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    ".run.lock/owner": "another evaluator"
+  },
+  "fires": [
+    {
+      "agentID": "worker-1",
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        },
+        {
+          "type": "assistant",
+          "message": {
+            "usage": {
+              "input_tokens": 5,
+              "output_tokens": 1,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

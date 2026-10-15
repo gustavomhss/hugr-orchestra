@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "a",
+      "detail": "no deterministic control: this state advances on nothing"
+    }
+  ],
+  "exit": 1
+}

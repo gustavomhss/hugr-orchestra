@@ -12,9 +12,9 @@ import type {
   SessionStatus,
   Todo,
   VcsInfo,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import type { FileDiffInfo } from "@opencode-ai/client/promise"
-import { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
+import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "@opencode-ai/client/promise"
 import type { Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
@@ -32,6 +32,14 @@ export type ProjectMeta = {
 
 export type State = {
   status: "loading" | "partial" | "complete"
+  // "ready" once a bootstrap read of the resource succeeded, since a failed read leaves that data in place;
+  // "failed" when the latest run's read failed and none has succeeded. `status` only completes once every
+  // read succeeds.
+  load: {
+    agent: "pending" | "ready" | "failed"
+    config: "pending" | "ready" | "failed"
+    session_status: "pending" | "ready" | "failed"
+  }
   agent: Agent[]
   command: CommandInfo[]
   reference: ReferenceInfo[]

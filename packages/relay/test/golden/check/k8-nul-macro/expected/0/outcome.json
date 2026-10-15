@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "stdout": null,
+  "stderr": "jq: error (at <stdin>:0): relay_json_string: NUL is not supported\nrelay-gate: WP macro must be a NUL-free string or null\n"
+}

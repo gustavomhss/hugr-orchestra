@@ -73,15 +73,6 @@ export const dict = {
   "ui.sessionTurn.error.freeUsageExceeded": "Limite d'utilisation gratuite dépassée",
   "ui.sessionTurn.error.addCredits": "Ajouter des crédits",
 
-  "dialog.usageExceeded.freeTier.title": "Limite gratuite atteinte",
-  "dialog.usageExceeded.freeTier.description":
-    "Abonnez-vous à OpenCode Go pour 10 $ US par mois et accédez de manière fiable aux meilleurs modèles à code source ouvert.",
-  "dialog.usageExceeded.freeTier.actionLabel": "S'abonner",
-  "dialog.usageExceeded.accountRateLimit.title": "Limite Go atteinte",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Limite d'utilisation atteinte. Pour continuer à utiliser ce modèle maintenant, activez l'utilisation de votre solde disponible.",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Ouvrir les paramètres",
-
   "ui.sessionTurn.status.delegating": "Délégation du travail",
   "ui.sessionTurn.status.planning": "Planification des prochaines étapes",
   "ui.sessionTurn.status.gatheringContext": "Exploration",
@@ -132,7 +123,6 @@ export const dict = {
   "ui.promptInput.attachments": "Images et fichiers",
   "ui.promptInput.context": "Contexte",
   "ui.promptInput.shell": "Commande shell",
-  "ui.promptInput.chooseAgent": "Choisir l'agent",
   "ui.promptInput.chooseModel": "Choisir le modèle",
   "ui.promptInput.chooseVariant": "Choisir la variante du modèle",
   "ui.promptInput.send": "Envoyer",

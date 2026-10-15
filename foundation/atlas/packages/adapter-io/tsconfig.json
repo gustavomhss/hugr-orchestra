@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src", "test"],
+  "exclude": ["test/fixtures/neg-collapsed-local/repo"],
+  "references": [
+    { "path": "../contracts" },
+    { "path": "../kernel" },
+    { "path": "../index" },
+    { "path": "../grounding" },
+    { "path": "../knowledge" },
+    { "path": "../persist" },
+    { "path": "../retrieval" },
+    { "path": "../genesis" },
+    { "path": "../tools" }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/invalid-utf8.ledger.jsonl",
+  "keys": {}
+}

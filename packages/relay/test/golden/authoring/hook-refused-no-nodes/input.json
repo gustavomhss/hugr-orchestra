@@ -1,0 +1,8 @@
+{
+  "op": "hook",
+  "document": {
+    "name": "Protect generated files",
+    "nodes": [],
+    "connections": {}
+  }
+}

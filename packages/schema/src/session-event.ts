@@ -12,6 +12,7 @@ import { SessionID } from "./session-id"
 import { Location } from "./location"
 import { SessionMessage } from "./session-message"
 import { Revert } from "./revert"
+import { PromptContext } from "./prompt-context"
 
 export { FileAttachment }
 
@@ -32,6 +33,7 @@ const PromptFields = {
   ...Base,
   messageID: SessionMessage.ID,
   prompt: Prompt,
+  promptContext: PromptContext.Info.pipe(optional),
   delivery: Delivery,
 }
 
@@ -167,6 +169,8 @@ export namespace Step {
       assistantMessageID: SessionMessage.ID,
       finish: Schema.String,
       cost: Schema.Finite,
+      /** Absent in historical events: billing availability was not captured. */
+      usageKnown: Schema.Boolean.pipe(optional),
       tokens: Schema.Struct({
         input: Schema.Finite,
         output: Schema.Finite,
@@ -175,7 +179,7 @@ export namespace Step {
           read: Schema.Finite,
           write: Schema.Finite,
         }),
-      }),
+      }).annotate({ identifier: "SessionStepTokens" }),
       snapshot: Schema.String.pipe(optional),
       files: Schema.Array(RelativePath).pipe(optional),
     },

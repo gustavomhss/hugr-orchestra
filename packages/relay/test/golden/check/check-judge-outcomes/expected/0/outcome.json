@@ -1,0 +1,15 @@
+{
+  "exit": 1,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "judged",
+    "failing": [
+      "BLOCKING-FAIL",
+      "NO-CONTEXT",
+      "INVALID-CRITERION",
+      "INVALID-SCOPE"
+    ]
+  },
+  "stderr": "relay: checklist INVALID-CRITERION has no valid oracle (expected a command or nonempty NUL-free judge criterion)\njq: error (at <root>/arms/tok/sprint.json:0): relay: paths must be an array of strings\nrelay: checklist INVALID-SCOPE has an invalid judge scope (expected NUL-free paths)\n"
+}

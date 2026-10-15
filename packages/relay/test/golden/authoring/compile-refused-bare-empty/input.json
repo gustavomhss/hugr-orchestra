@@ -1,0 +1,8 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Chain",
+    "nodes": [],
+    "connections": {}
+  }
+}

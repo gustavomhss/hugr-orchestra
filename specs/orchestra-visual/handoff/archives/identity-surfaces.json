@@ -1,0 +1,93 @@
+{
+  "name": "identity-surfaces",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-surfaces",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "fix-review",
+  "staged": [],
+  "untracked": [
+    "packages/app/e2e/regression/apps-panel-resize.proof.ts",
+    "packages/app/e2e/regression/apps-panel-resize.proof.tsconfig.json",
+    "packages/app/src/orchestra/review.css",
+    "packages/app/src/orchestra/review.tsx",
+    "packages/app/src/orchestra/session-backdrop.d.ts",
+    "packages/app/src/orchestra/session-backdrop.ts",
+    "packages/app/src/orchestra/session.css",
+    "packages/app/src/orchestra/theme.css",
+    "perf/backdrop-prototype.md"
+  ],
+  "missingTrackedPaths": [
+    "packages/app/src/pages/new-session.tsx",
+    "packages/app/src/pages/session.tsx",
+    "packages/app/src/pages/session/apps-panel.tsx",
+    "packages/app/src/pages/session/composer/session-composer-region.tsx",
+    "packages/app/src/pages/session/session-side-panel.tsx",
+    "packages/app/src/pages/session/tasks-panel.tsx"
+  ],
+  "sparseSandboxWarning": "Raw index/status includes missing checkout files from --no-checkout. Their paths are recorded, but they are NOT intended product deletions and are excluded from scoped patches. Reconstruct from HEAD, then apply scoped patches and archived payload.",
+  "files": [
+    {
+      "path": "packages/app/e2e/regression/apps-panel-resize.proof.ts",
+      "bytes": 9755,
+      "sha256": "91c8a5704874b4ed0f26d8cddc1143c8189281c0bde22653218436e3293b73d3"
+    },
+    {
+      "path": "packages/app/e2e/regression/apps-panel-resize.proof.tsconfig.json",
+      "bytes": 265,
+      "sha256": "f7f4e0ae13843bf2ffd2c705a95bf7a92c5106b6f425dcb703206e22732400c8"
+    },
+    {
+      "path": "packages/app/src/orchestra/review.css",
+      "bytes": 2384,
+      "sha256": "c2bee3aa5b1fadbb1ff5970f5faa893cd0c4c272bd2b65e699c89b0f057c34d7"
+    },
+    {
+      "path": "packages/app/src/orchestra/review.tsx",
+      "bytes": 2274,
+      "sha256": "ee9c6daf29b834c92fb0412ee3fe2a62ec6b48466a42ddcaff24bd488c8e5704"
+    },
+    {
+      "path": "packages/app/src/orchestra/session-backdrop.d.ts",
+      "bytes": 719,
+      "sha256": "9f857937780e3db96bb42a0f5baeaea6e51498233bf93c92f0ad5ad5e999528f"
+    },
+    {
+      "path": "packages/app/src/orchestra/session-backdrop.ts",
+      "bytes": 11481,
+      "sha256": "43e90d6ee8ed101b538af596274d1aa53352b2cbbecbc98365f362ac110fdbd2"
+    },
+    {
+      "path": "packages/app/src/orchestra/session.css",
+      "bytes": 35945,
+      "sha256": "939f972a553af26823fceec1635f151eb7dfea423331caf5ed357dddd5900a2c"
+    },
+    {
+      "path": "packages/app/src/orchestra/theme.css",
+      "bytes": 19810,
+      "sha256": "7fb59974eb1c6a874233276e652ad86167329d1f17c812f8402da9cb40100181"
+    },
+    {
+      "path": "perf/backdrop-prototype.md",
+      "bytes": 2288,
+      "sha256": "eed1b98794132e9549f3e1e43082488032338268022ae09a311d718a90ffb87d"
+    }
+  ],
+  "archive": {
+    "path": "archives/identity-surfaces.tar.gz",
+    "bytes": 20484,
+    "sha256": "26b3305ac62447db9a115be53dd84e30e4040e11525a61d7988e7aa621b06f36",
+    "members": [
+      "packages/app/e2e/regression/apps-panel-resize.proof.ts",
+      "packages/app/e2e/regression/apps-panel-resize.proof.tsconfig.json",
+      "packages/app/src/orchestra/review.css",
+      "packages/app/src/orchestra/review.tsx",
+      "packages/app/src/orchestra/session-backdrop.d.ts",
+      "packages/app/src/orchestra/session-backdrop.ts",
+      "packages/app/src/orchestra/session.css",
+      "packages/app/src/orchestra/theme.css",
+      "perf/backdrop-prototype.md"
+    ]
+  },
+  "stagedPatch": "archives/identity-surfaces.staged.patch",
+  "unstagedPatch": "archives/identity-surfaces.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

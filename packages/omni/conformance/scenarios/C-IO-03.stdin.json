@@ -1,0 +1,22 @@
+{
+  "id": "C-IO-03.stdin",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "cat"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"write": "c", "data": "one\n"},
+    {"write": "c", "data": "two\n"},
+    {"write": "c", "data": {"hex": "c3a9"}},
+    {"write": "c", "close": true},
+    {"write": "c", "close": true},
+    {"write": "c", "data": "late", "expect": {"error": "CLOSED"}},
+    {"read": "c", "until": "end", "expect": {"stdout": "one\ntwo\né"}},
+    {"wait": "c", "expect": {"exitCode": 0}},
+    {"spawn": ["${FIXTURE}", "read-line"], "as": "d"},
+    {"write": "d", "data": "x\n", "expect": {"error": "INVALID_ARGUMENT", "message": ["stdin"]}},
+    {"read": "d", "until": "end", "expect": {"stdout": "GOT \n"}},
+    {"spawn": ["${FIXTURE}", "close-stdin", "ready", "hang"], "options": {"stdin": "pipe"}, "as": "e"},
+    {"read": "e", "until": {"match": "^READY$"}},
+    {"write": "e", "data": "x", "expect": {"error": "CLOSED"}},
+    {"stop": "e", "expect": {"reason": "killed"}},
+    {"write": "e", "data": "x", "expect": {"error": "CLOSED"}}
+  ]
+}

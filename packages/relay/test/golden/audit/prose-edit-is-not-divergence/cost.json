@@ -1,0 +1,13 @@
+{
+  "ledger": "test/golden/audit/prose-edit-is-not-divergence/input/run/.relay-state/ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "wp1",
+      "macro": null,
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

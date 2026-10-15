@@ -1,0 +1,17 @@
+{
+  "id": "C-TMO-02.abort",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "tree=2", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|PID \\d \\d+)$", "count": 3}, "capture": {"d": "^PID \\d (\\d+)$"}},
+    {"run": ["${FIXTURE}", "ignore-term", "pidlog=${TMP}/r.pids", "out=PART\\n", "hold=60000", "hang"], "options": {"graceMs": 1000}, "await": false, "as": "r"},
+    {"spawn": ["${FIXTURE}", "watch=stdout:2:${TMP}/r.pids"], "as": "w"},
+    {"read": "w", "until": "end", "capture": {"rp": "^LOGGED (\\d+)$"}},
+    {"abort": "c"},
+    {"wait": "c", "expect": {"reason": "aborted", "success": false}},
+    {"os": "dead", "pids": ["${c.pid}", "${d}"], "withinMs": 1000},
+    {"wait": "r", "expect": {"error": "ABORTED", "result": {"reason": "aborted", "stdout": "PART\n"}}},
+    {"os": "dead", "pids": "${rp}"},
+    {"spawn": ["${FIXTURE}", "out=X"], "expect": {"error": "ABORTED"}},
+    {"run": ["${FIXTURE}", "out=X"], "expect": {"error": "ABORTED"}}
+  ]
+}

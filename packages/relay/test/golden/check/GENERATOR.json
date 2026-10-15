@@ -1,0 +1,99 @@
+{
+  "generator": "test/golden/generate/check.py",
+  "oracle": {
+    "bin/relay-arm-hook.sh": "3ac92ae05e25d6fe2ac32754b18127a5c0a6dec3d8ff5063300b21b3c41bb264",
+    "bin/relay-gate": "c57aabbff29c47683988948145dd71cd1d33e2cf5accd457750241cc66c008f8",
+    "lib/relay-gate.sh": "06b731c1378130e55acb324c3e8e10c8818cd446530ba017cbc64cbe56494247",
+    "benchmark/judge.py": "bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75"
+  },
+  "tools": {
+    "jq": "jq-1.8.1",
+    "bash": "5.3.3(1)-release",
+    "git": "git version 2.51.0",
+    "python3": "3.14.5"
+  },
+  "token": "tok",
+  "layout": {
+    "arm": "<root>/arms/tok",
+    "workdir": "<root>/work",
+    "home": "<root>/home",
+    "transcript": "<root>/transcript.jsonl",
+    "cwd": "<root>/work"
+  },
+  "env": {
+    "GIT_AUTHOR_NAME": "Relay Golden",
+    "GIT_AUTHOR_EMAIL": "golden@relay.invalid",
+    "GIT_AUTHOR_DATE": "1700000000 +0000",
+    "GIT_COMMITTER_NAME": "Relay Golden",
+    "GIT_COMMITTER_EMAIL": "golden@relay.invalid",
+    "GIT_COMMITTER_DATE": "1700000000 +0000",
+    "RELAY_ARMS_DIR": "<root>/arms",
+    "RELAY_CORPUS_DIR": "<root>/corpus",
+    "RELAY_ARM_TOKEN": "tok",
+    "RELAY_JUDGE_BACKEND": "stub",
+    "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP": "0"
+  },
+  "epoch": {
+    "base": 1700000000,
+    "step": 60
+  },
+  "git": [
+    "git init",
+    "per commit: write files",
+    "git add -A",
+    "git commit --allow-empty -m <message>"
+  ],
+  "coverage": {
+    "K1": [
+      "k1-all-pass",
+      "k1-macro",
+      "k2-counter-selects-wp",
+      "check-next-identity-out-of-scope",
+      "check-hook-variables-visible",
+      "check-params",
+      "check-judge-forced",
+      "check-records-nothing"
+    ],
+    "K2": [
+      "k2-failing-in-order",
+      "k2-counter-selects-wp",
+      "check-current-scope-only",
+      "check-command-transport",
+      "check-params",
+      "check-judge-outcomes"
+    ],
+    "K3": [
+      "k3-unknown-position"
+    ],
+    "K4": [
+      "k4-counter-at-end"
+    ],
+    "K5": [
+      "k5-position-overrides-counter",
+      "k5-position-overrides-parked",
+      "k5-whole-id-before-suffix",
+      "k5-newline-sibling"
+    ],
+    "K6": [
+      "k6-explicit-empty-base-ref",
+      "k6-base-ref-overrides-state",
+      "k6-no-git-workdir"
+    ],
+    "K7": [
+      "k7-lock-held"
+    ],
+    "K8": [
+      "k8-nonstring-id",
+      "k8-nul-id",
+      "k8-null-id",
+      "k8-empty-id",
+      "k8-nonstring-macro",
+      "k8-nul-macro",
+      "k8-checklist-object",
+      "k8-checklist-string",
+      "k8-checklist-number",
+      "k8-invalid-control-identity",
+      "k8-invalid-assertion"
+    ]
+  }
+}

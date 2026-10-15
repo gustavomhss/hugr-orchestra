@@ -1,2 +1,2 @@
-export * from "@opencode-ai/schema/session-event"
-export * as SessionEvent from "@opencode-ai/schema/session-event"
+export * from "@orchestra/schema/session-event"
+export * as SessionEvent from "@orchestra/schema/session-event"

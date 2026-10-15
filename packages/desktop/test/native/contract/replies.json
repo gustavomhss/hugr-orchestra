@@ -1,0 +1,5 @@
+[
+  {"v":1,"id":"hello","ok":true,"value":{"backend":"linux-atspi","helperEpoch":"golden","sessionID":"session","limits":{"frameBytes":262144,"pending":32,"timeoutMs":10000},"operations":["bind","read","action","type","key","unbind","cancel","shutdown"]}},
+  {"v":1,"id":"golden:1","ok":true,"value":{"value":"café 🧪 漢字 é"}},
+  {"v":1,"id":"golden:2","ok":false,"error":{"code":"cancelled","message":"No automatic retry","outcome":"unknown"}}
+]

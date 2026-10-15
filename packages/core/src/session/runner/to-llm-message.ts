@@ -6,7 +6,7 @@ import {
   type ContentPart,
   type Model,
   type ProviderMetadata,
-} from "@opencode-ai/llm"
+} from "@orchestra/llm"
 import { SessionMessage } from "../message"
 import type { FileAttachment } from "../prompt"
 
@@ -122,7 +122,14 @@ function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] 
         Message.make({
           id: message.id,
           role: "user",
-          content: [{ type: "text", text: message.text }, ...(message.files ?? []).map(media)],
+          content: [
+            { type: "text", text: message.text },
+            ...(message.files ?? []).map(media),
+            ...(message.promptContext?.reminders ?? []).map((note) => ({
+              type: "text" as const,
+              text: `Hook reminder:\n${note}`,
+            })),
+          ],
           metadata: {
             ...message.metadata,
             ...(message.agents?.length ? { agents: message.agents } : {}),
@@ -166,6 +173,6 @@ ${message.recent}
   }
 }
 
-/** Translate projected V2 Session history into canonical @opencode-ai/llm context. */
+/** Translate projected V2 Session history into canonical @orchestra/llm context. */
 export const toLLMMessages = (messages: readonly SessionMessage.Message[], model: Model) =>
   messages.flatMap((message) => toLLMMessage(message, model))

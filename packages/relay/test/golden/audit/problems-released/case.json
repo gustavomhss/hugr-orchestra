@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/problems-released/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

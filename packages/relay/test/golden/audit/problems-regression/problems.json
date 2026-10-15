@@ -1,0 +1,10 @@
+{
+  "ledger": "test/golden/audit/problems-regression/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "regression",
+      "wp": "wp1",
+      "cause": "earlier accepted controls have backslid: C0"
+    }
+  ]
+}

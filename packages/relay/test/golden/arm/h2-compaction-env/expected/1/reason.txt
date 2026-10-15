@@ -1,0 +1,1 @@
+Relay gate 'B' passed. Next gate: C. do C (checkpoint: 2 gates cleared — summarize progress and drop now-stale detail before continuing)

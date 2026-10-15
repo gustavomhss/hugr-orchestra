@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { CodeMode, OpenAPI, Tool } from "../src/index.js"
 import { inputTypeScript, outputTypeScript } from "../src/tool-schema.js"
+import { rethrow } from "./rejection.js"
 
 const baseUrl = "http://localhost:4096"
 type Document = OpenAPI.Document
@@ -14,7 +15,7 @@ type Recorded = {
   readonly body: unknown
 }
 
-const opencodeSpec = async (): Promise<Document> => {
+const orchestraSpec = async (): Promise<Document> => {
   return Bun.file(new URL("./fixtures/opencode-v2-openapi.json", import.meta.url)).json() as Promise<Document>
 }
 
@@ -173,8 +174,8 @@ describe("OpenAPI.fromSpec", () => {
     expect(client.requests[3]!.headers.authorization).toBe("Bearer bearer-secret")
   })
 
-  test("converts representative opencode operations into the expected tool shape", async () => {
-    const spec = await opencodeSpec()
+  test("converts representative orchestra operations into the expected tool shape", async () => {
+    const spec = await orchestraSpec()
     const result = OpenAPI.fromSpec({ spec, baseUrl })
 
     expect(result.skipped).toHaveLength(5)
@@ -355,8 +356,8 @@ describe("OpenAPI.fromSpec", () => {
     expect(tool.output.$defs).toMatchObject({ Local: { type: "string" }, Global: { type: "number" } })
   })
 
-  test("documents that the opencode fixture is unauthenticated", async () => {
-    const spec = await opencodeSpec()
+  test("documents that the orchestra fixture is unauthenticated", async () => {
+    const spec = await orchestraSpec()
     const components = isRecord(spec.components) ? spec.components : {}
     const result = OpenAPI.fromSpec({ spec, baseUrl })
 
@@ -369,16 +370,16 @@ describe("OpenAPI.fromSpec", () => {
     expect(Object.keys(isRecord(input.properties) ? input.properties : {})).toStrictEqual([])
   })
 
-  test("exposes real opencode operations through CodeMode discovery", async () => {
+  test("exposes real orchestra operations through CodeMode discovery", async () => {
     const { layer } = recordingClient(() => json({}))
     const runtime = CodeMode.make({
-      tools: { opencode: OpenAPI.fromSpec({ spec: await opencodeSpec(), baseUrl }).tools },
+      tools: { orchestra: OpenAPI.fromSpec({ spec: await orchestraSpec(), baseUrl }).tools },
     })
     const result = await Effect.runPromise(
       runtime
         .execute(
           `
-        return await tools.$codemode.search({ query: "global health", namespace: "opencode", limit: 1 })
+        return await tools.$codemode.search({ query: "global health", namespace: "orchestra", limit: 1 })
       `,
         )
         .pipe(Effect.provide(layer)),
@@ -389,7 +390,7 @@ describe("OpenAPI.fromSpec", () => {
     expect(result.value).toMatchObject({
       items: [
         {
-          path: "tools.opencode.v2.health.get",
+          path: "tools.orchestra.v2.health.get",
           description: "Check whether the API server is ready to accept requests.",
         },
       ],
@@ -397,21 +398,21 @@ describe("OpenAPI.fromSpec", () => {
     expect(JSON.stringify(result.value)).toContain("healthy: true")
   })
 
-  test("invokes real opencode path parameters and JSON request bodies", async () => {
+  test("invokes real orchestra path parameters and JSON request bodies", async () => {
     const { requests, layer } = recordingClient((request) => {
       if (request.method === "GET") return json({ id: "ses_123" })
       return json({ id: "ses_456" })
     })
     const runtime = CodeMode.make({
-      tools: { opencode: OpenAPI.fromSpec({ spec: await opencodeSpec(), baseUrl }).tools },
+      tools: { orchestra: OpenAPI.fromSpec({ spec: await orchestraSpec(), baseUrl }).tools },
     })
 
     const result = await Effect.runPromise(
       runtime
         .execute(
           `
-          const existing = await tools.opencode.v2.session.get({ sessionID: "ses_123" })
-          const created = await tools.opencode.v2.session.create({ id: "ses_456" })
+          const existing = await tools.orchestra.v2.session.get({ sessionID: "ses_123" })
+          const created = await tools.orchestra.v2.session.create({ id: "ses_456" })
           return { existing, created }
         `,
         )
@@ -429,9 +430,9 @@ describe("OpenAPI.fromSpec", () => {
     })
   })
 
-  test("serializes deep-object query parameters from the opencode fixture", async () => {
+  test("serializes deep-object query parameters from the orchestra fixture", async () => {
     const client = recordingClient(() => json({ directory: "/tmp" }))
-    const location = toolAt(OpenAPI.fromSpec({ spec: await opencodeSpec(), baseUrl }).tools, "v2.location.get")
+    const location = toolAt(OpenAPI.fromSpec({ spec: await orchestraSpec(), baseUrl }).tools, "v2.location.get")
     if (!Tool.isDefinition(location)) throw new Error("v2.location.get was not generated")
 
     await Effect.runPromise(
@@ -491,9 +492,9 @@ describe("OpenAPI.fromSpec", () => {
     expect(url.searchParams.get("nullable")).toBe("null")
     expect(url.searchParams.get("constructor")).toBe("safe")
     expect(client.requests[0]!.headers.meta).toBe("a=b,c=d")
-    await expect(Effect.runPromise(tool.run({ keys: [undefined] }).pipe(Effect.provide(client.layer)))).rejects.toThrow(
-      "unsupported nested value",
-    )
+    expect(
+      await rethrow(Effect.runPromise(tool.run({ keys: [undefined] }).pipe(Effect.provide(client.layer)))),
+    ).toThrow("unsupported nested value")
   })
 
   test("skips unsupported parameter encodings and malformed security", () => {
@@ -621,7 +622,7 @@ describe("OpenAPI.fromSpec", () => {
       "test",
     )
     if (!Tool.isDefinition(duplicate)) throw new Error("duplicate auth tool was not generated")
-    await expect(Effect.runPromise(duplicate.run({}).pipe(Effect.provide(client.layer)))).rejects.toThrow(
+    expect(await rethrow(Effect.runPromise(duplicate.run({}).pipe(Effect.provide(client.layer))))).toThrow(
       "multiple credentials",
     )
 
@@ -733,9 +734,9 @@ describe("OpenAPI.fromSpec", () => {
     )
     if (!Tool.isDefinition(tool)) throw new Error("test was not generated")
 
-    await expect(
-      Effect.runPromise(tool.run({ filter: { value: undefined } }).pipe(Effect.provide(client.layer))),
-    ).rejects.toThrow("unsupported nested value")
+    expect(
+      await rethrow(Effect.runPromise(tool.run({ filter: { value: undefined } }).pipe(Effect.provide(client.layer)))),
+    ).toThrow("unsupported nested value")
     expect(resolutions).toEqual([])
     expect(client.requests).toEqual([])
   })
@@ -763,7 +764,7 @@ describe("OpenAPI.fromSpec", () => {
     expect(client.requests[0]!.headers["content-type"]).toBe("application/merge-patch+json")
     const cyclic: Record<string, unknown> = {}
     cyclic.self = cyclic
-    await expect(Effect.runPromise(tool.run({ body: cyclic }).pipe(Effect.provide(client.layer)))).rejects.toThrow(
+    expect(await rethrow(Effect.runPromise(tool.run({ body: cyclic }).pipe(Effect.provide(client.layer))))).toThrow(
       "Invalid JSON body",
     )
   })
@@ -777,15 +778,10 @@ describe("OpenAPI.fromSpec", () => {
     const malformed = recordingClient(() => new Response("{", { headers: { "content-type": "application/json" } }))
     const chunked = recordingClient(() => new Response(new Uint8Array(50 * 1024 * 1024 + 1)))
 
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(oversized.layer)))).rejects.toThrow(
-      "response exceeds 50 MiB",
-    )
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(malformed.layer)))).rejects.toThrow(
-      "returned malformed JSON",
-    )
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(chunked.layer)))).rejects.toThrow(
-      "response exceeds 50 MiB",
-    )
+    const run = (client: typeof oversized) => Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))
+    expect(await rethrow(run(oversized))).toThrow("response exceeds 50 MiB")
+    expect(await rethrow(run(malformed))).toThrow("returned malformed JSON")
+    expect(await rethrow(run(chunked))).toThrow("response exceeds 50 MiB")
   })
 
   test("keeps non-JSON responses raw and unions every success output", async () => {
@@ -800,17 +796,17 @@ describe("OpenAPI.fromSpec", () => {
     const client = recordingClient(() => new Response("123", { headers: { "content-type": "text/plain" } }))
 
     expect(outputTypeScript(tool)).toBe("string | null")
-    await expect(Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))).resolves.toBe("123")
+    expect(await Effect.runPromise(tool.run({}).pipe(Effect.provide(client.layer)))).toBe("123")
   })
 
   test("fails missing required parameters before auth and network", async () => {
     const { requests, layer } = recordingClient(() => json({}))
     const runtime = CodeMode.make({
-      tools: { opencode: OpenAPI.fromSpec({ spec: await opencodeSpec(), baseUrl }).tools },
+      tools: { orchestra: OpenAPI.fromSpec({ spec: await orchestraSpec(), baseUrl }).tools },
     })
 
     const result = await Effect.runPromise(
-      runtime.execute("return await tools.opencode.v2.session.get({})").pipe(Effect.provide(layer)),
+      runtime.execute("return await tools.orchestra.v2.session.get({})").pipe(Effect.provide(layer)),
     )
 
     expect(result).toMatchObject({ ok: false })

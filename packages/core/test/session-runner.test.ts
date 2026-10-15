@@ -8,56 +8,57 @@ import {
   InvalidRequestReason,
   type LLMClientShape,
   type LLMRequest,
-} from "@opencode-ai/llm"
-import * as OpenAIChat from "@opencode-ai/llm/protocols/openai-chat"
-import { Database } from "@opencode-ai/core/database/database"
-import { makeLocationNode } from "@opencode-ai/core/effect/app-node"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNodePlatform } from "@opencode-ai/core/effect/app-node-platform"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { EventTable } from "@opencode-ai/core/event/sql"
-import { Project } from "@opencode-ai/core/project"
-import { ProjectTable } from "@opencode-ai/core/project/sql"
-import { QuestionV2 } from "@opencode-ai/core/question"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { Snapshot } from "@opencode-ai/core/snapshot"
-import { ContextSnapshotDecodeError } from "@opencode-ai/core/session/error"
-import { SessionEvent } from "@opencode-ai/core/session/event"
-import { SessionInput } from "@opencode-ai/core/session/input"
-import { SessionMessage } from "@opencode-ai/core/session/message"
-import { Prompt } from "@opencode-ai/core/session/prompt"
-import { SessionProjector } from "@opencode-ai/core/session/projector"
-import { SessionExecution } from "@opencode-ai/core/session/execution"
-import { SessionRunCoordinator } from "@opencode-ai/core/session/run-coordinator"
-import { SessionRunner } from "@opencode-ai/core/session/runner"
-import * as SessionRunnerLLM from "@opencode-ai/core/session/runner/llm"
-import { SessionRunnerModel } from "@opencode-ai/core/session/runner/model"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
-import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { Config } from "@opencode-ai/core/config"
-import { ConfigCompaction } from "@opencode-ai/core/config/compaction"
-import { Tool } from "@opencode-ai/core/tool/tool"
+} from "@orchestra/llm"
+import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
+import { Database } from "@orchestra/core/database/database"
+import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { EventTable } from "@orchestra/core/event/sql"
+import { Project } from "@orchestra/core/project"
+import { ProjectTable } from "@orchestra/core/project/sql"
+import { QuestionV2 } from "@orchestra/core/question"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionV2 } from "@orchestra/core/session"
+import { Snapshot } from "@orchestra/core/snapshot"
+import { ContextSnapshotDecodeError } from "@orchestra/core/session/error"
+import { SessionEvent } from "@orchestra/core/session/event"
+import { SessionInput } from "@orchestra/core/session/input"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { Prompt } from "@orchestra/core/session/prompt"
+import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
+import { SessionRunner } from "@orchestra/core/session/runner"
+import * as SessionRunnerLLM from "@orchestra/core/session/runner/llm"
+import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { AgentV2 } from "@orchestra/core/agent"
+import { Config } from "@orchestra/core/config"
+import { ConfigCompaction } from "@orchestra/core/config/compaction"
+import { Tool } from "@orchestra/core/tool/tool"
 import {
   SessionContextEpochTable,
   SessionInputTable,
   SessionMessageTable,
   SessionTable,
-} from "@opencode-ai/core/session/sql"
-import { SessionStore } from "@opencode-ai/core/session/store"
-import { SystemContext } from "@opencode-ai/core/system-context"
-import { SystemContextRegistry } from "@opencode-ai/core/system-context/registry"
-import { SkillGuidance } from "@opencode-ai/core/skill/guidance"
-import { ReferenceGuidance } from "@opencode-ai/core/reference/guidance"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { Location } from "@opencode-ai/core/location"
-import { ProviderV2 } from "@opencode-ai/core/provider"
+} from "@orchestra/core/session/sql"
+import { SessionStore } from "@orchestra/core/session/store"
+import { SystemContext } from "@orchestra/core/system-context"
+import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
+import { SkillGuidance } from "@orchestra/core/skill/guidance"
+import { ReferenceGuidance } from "@orchestra/core/reference/guidance"
+import { ModelV2 } from "@orchestra/core/model"
+import { Location } from "@orchestra/core/location"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { Cause, DateTime, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
+import { PermissionFixture } from "./permission-fixture"
 
 const requests: LLMRequest[] = []
 let response: LLMEvent[] = []
@@ -110,17 +111,6 @@ const recoveryModel = Model.make({
 })
 const authorizations: Tool.Context[] = []
 const executions: string[] = []
-const permission = Layer.succeed(
-  PermissionV2.Service,
-  PermissionV2.Service.of({
-    assert: () => Effect.die("unused"),
-    ask: () => Effect.die("unused"),
-    reply: () => Effect.die("unused"),
-    get: () => Effect.die("unused"),
-    forSession: () => Effect.die("unused"),
-    list: () => Effect.die("unused"),
-  }),
-)
 const echo = Layer.effectDiscard(
   ToolRegistry.Service.use((registry) =>
     registry.register({
@@ -233,7 +223,7 @@ const runnerLayer = AppNodeBuilder.build(SessionRunnerLLM.node, [
   [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
   [SkillGuidance.node, skillGuidance],
   [ReferenceGuidance.node, referenceGuidance],
-  [PermissionV2.node, permission],
+  [PermissionV2.node, PermissionFixture.normalLayer],
   [Config.node, config],
 ])
 const execution = Layer.effect(
@@ -276,7 +266,7 @@ const it = testEffect(
     ]),
     [
       [LayerNodePlatform.llmClient, client],
-      [PermissionV2.node, permission],
+      [PermissionV2.node, PermissionFixture.normalLayer],
       [SessionRunnerModel.node, models],
       [SystemContextRegistry.node, systemContext],
       [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
@@ -590,7 +580,7 @@ describe("SessionRunnerLLM", () => {
       expect(contexts).toEqual([
         {
           sessionID,
-          agent: AgentV2.ID.make("build"),
+          agent: AgentV2.ID.make("maestro"),
           assistantMessageID: expect.stringMatching(/^msg_/),
           toolCallID: "call-application",
         },
@@ -777,8 +767,8 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const agent = yield* AgentV2.Service
       yield* agent.transform((editor) =>
-        editor.update(AgentV2.ID.make("build"), (agent) => {
-          agent.system = "Build agent instructions"
+        editor.update(AgentV2.ID.make("maestro"), (agent) => {
+          agent.system = "Maestro instructions"
           agent.mode = "primary"
         }),
       )
@@ -786,10 +776,10 @@ describe("SessionRunnerLLM", () => {
       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "First" }), resume: false })
 
       requests.length = 0
-      response = fragmentFixture("text", "text-build", ["Done"]).completeEvents
+      response = fragmentFixture("text", "text-default", ["Done"]).completeEvents
       yield* session.resume(sessionID)
 
-      expect(requests.at(-1)?.system.map((part) => part.text)).toEqual(["Build agent instructions", "Initial context"])
+      expect(requests.at(-1)?.system.map((part) => part.text)).toEqual(["Maestro instructions", "Initial context"])
     }),
   )
 
@@ -798,8 +788,8 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const agent = yield* AgentV2.Service
       yield* agent.transform((editor) => {
-        editor.update(AgentV2.ID.make("build"), (agent) => {
-          agent.system = "Build agent instructions"
+        editor.update(AgentV2.ID.make("maestro"), (agent) => {
+          agent.system = "Maestro instructions"
           agent.mode = "primary"
         })
         editor.update(AgentV2.ID.make("reviewer"), (agent) => {
@@ -820,7 +810,7 @@ describe("SessionRunnerLLM", () => {
     }),
   )
 
-  it.effect("uses an explicitly selected non-build agent system", () =>
+  it.effect("uses an explicitly selected non-default agent system", () =>
     Effect.gen(function* () {
       yield* setup
       const { db } = yield* Database.Service
@@ -854,7 +844,7 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const session = yield* SessionV2.Service
       const events = yield* EventV2.Service
-      skillBaselines.set(AgentV2.ID.make("build"), "Build skills")
+      skillBaselines.set(AgentV2.ID.make("maestro"), "Maestro skills")
       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "First" }), resume: false })
 
       requests.length = 0
@@ -871,8 +861,8 @@ describe("SessionRunnerLLM", () => {
       yield* session.resume(sessionID)
 
       expect(requests.map((request) => request.system.map((part) => part.text))).toEqual([
-        ["Initial context\n\nBuild skills"],
-        ["Initial context\n\nBuild skills"],
+        ["Initial context\n\nMaestro skills"],
+        ["Initial context\n\nMaestro skills"],
       ])
       expect(systemTexts(requests[1]!)).toContainEqual(expect.stringContaining("Reviewer skills"))
     }),
@@ -883,7 +873,7 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const session = yield* SessionV2.Service
       const events = yield* EventV2.Service
-      skillBaselines.set(AgentV2.ID.make("build"), "Build skills")
+      skillBaselines.set(AgentV2.ID.make("maestro"), "Maestro skills")
       skillBaselines.set(AgentV2.ID.make("reviewer"), "Reviewer skills")
       let switched = false
       systemLoadHook = Effect.suspend(() => {
@@ -905,7 +895,7 @@ describe("SessionRunnerLLM", () => {
       yield* session.resume(sessionID)
 
       expect(requests.map((request) => request.system.map((part) => part.text))).toEqual([
-        ["Initial context\n\nBuild skills"],
+        ["Initial context\n\nMaestro skills"],
       ])
     }),
   )
@@ -2271,7 +2261,7 @@ describe("SessionRunnerLLM", () => {
         sessionID,
         assistantMessageID,
         timestamp: yield* DateTime.now,
-        agent: "build",
+        agent: "maestro",
         model: { id: ModelV2.ID.make("fake-model"), providerID: ProviderV2.ID.make("fake") },
       })
       yield* events.publish(SessionEvent.Tool.Input.Started, {
@@ -2335,7 +2325,7 @@ describe("SessionRunnerLLM", () => {
         sessionID,
         assistantMessageID,
         timestamp: yield* DateTime.now,
-        agent: "build",
+        agent: "maestro",
         model: { id: ModelV2.ID.make("fake-model"), providerID: ProviderV2.ID.make("fake") },
       })
       yield* events.publish(SessionEvent.Tool.Input.Started, {
@@ -2395,7 +2385,7 @@ describe("SessionRunnerLLM", () => {
         sessionID,
         assistantMessageID,
         timestamp: yield* DateTime.now,
-        agent: "build",
+        agent: "maestro",
         model: { id: ModelV2.ID.make("fake-model"), providerID: ProviderV2.ID.make("fake") },
       })
       yield* events.publish(SessionEvent.Tool.Input.Started, {
@@ -3057,7 +3047,7 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const agents = yield* AgentV2.Service
       yield* agents.transform((editor) =>
-        editor.update(AgentV2.ID.make("build"), (agent) => {
+        editor.update(AgentV2.ID.make("maestro"), (agent) => {
           agent.steps = 2
         }),
       )
@@ -3105,7 +3095,7 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const agents = yield* AgentV2.Service
       yield* agents.transform((editor) =>
-        editor.update(AgentV2.ID.make("build"), (agent) => {
+        editor.update(AgentV2.ID.make("maestro"), (agent) => {
           agent.steps = 2
         }),
       )

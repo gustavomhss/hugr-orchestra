@@ -1,0 +1,544 @@
+#!/usr/bin/env python3
+"""
+plan-graph — generator counterpart to plan-check for the EDD planning
+protocol's CARVE and SEQUENCE macros.
+
+Authority: docs/edd/planning-protocol.md — Implementation package ("plan-graph
+(order, conflict pairs, parallel sets)"); CARVE row ("From the pinned
+allow-lists, `plan-graph --conflict` derives the conflict pairs and marks the
+hotspots"); SEQUENCE row (order, parallel sets, contract-freeze ordering).
+
+This tool COMPUTES a suggestion and prints it to stdout. It never writes a
+file — the executor pastes/merges the output into packages.json or
+sequence.json by hand, same as the protocol's own worked examples do.
+
+stdlib only. No pip installs, no network access (git is a local subprocess,
+already required by the protocol's own hotspot definition: "from git, no new
+instrumentation").
+
+Usage:
+    plan-graph --conflict --plan-dir DIR [--repo-root DIR] [--json]
+    plan-graph --order    --plan-dir DIR [--json]
+
+Exit codes: 0 computed cleanly · 2 usage/IO error, OR a dependency cycle
+(--order) that makes no valid order/parallel-set output possible — a cycle
+is a carving defect the protocol says should never reach scheduling
+(planning-protocol.md law 11's own framing: "cycles are carving defects,
+never scheduling inputs"), so this tool refuses to guess one, the same
+posture as a usage error: nothing valid to print.
+
+NOTE on code duplication: `load_json`, `g` (safe nested getter) and
+`nonempty_str` are duplicated here from plan-check rather than imported —
+plan-check has no .py extension and both tools must stay independently
+runnable/distributable as single files (see docs/edd/tools/README.md).
+"""
+
+import argparse
+import json
+import math
+import os
+import re
+import subprocess
+import sys
+from collections import Counter, deque
+from pathlib import Path
+
+# --------------------------------------------------------------------------
+# Duplicated from plan-check (kept intentionally small — see module docstring)
+# --------------------------------------------------------------------------
+
+def load_json(path):
+    """Returns (data, error_string). Never raises."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f), None
+    except FileNotFoundError:
+        return None, f"file not found: {path}"
+    except json.JSONDecodeError as e:
+        return None, f"invalid JSON in {path}: {e}"
+    except OSError as e:
+        return None, f"cannot read {path}: {e}"
+
+
+def g(d, *path, default=None):
+    """Safe nested getter: g(d, 'a', 'b', default=[]) ~= d.get('a',{}).get('b',[])."""
+    cur = d
+    for p in path:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(p, None)
+        if cur is None:
+            return default
+    return cur if cur is not None else default
+
+
+def nonempty_str(v):
+    return isinstance(v, str) and v.strip() != ""
+
+
+def git_toplevel(start="."):
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if out.returncode == 0:
+            return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+# --------------------------------------------------------------------------
+# Shared: packages.json access
+# --------------------------------------------------------------------------
+
+def load_packages(plan_dir):
+    data, err = load_json(Path(plan_dir) / "packages.json")
+    if data is None:
+        return None, err
+    pkgs = g(data, "packages", default=None)
+    if not isinstance(pkgs, list) or not pkgs:
+        return None, "packages.json packages[] missing or empty"
+    for p in pkgs:
+        if not isinstance(p, dict) or not nonempty_str(p.get("id")):
+            return None, f"malformed package entry: {p!r}"
+    return pkgs, None
+
+
+def allow_paths(pkg):
+    return {e.get("path") for e in (pkg.get("allow_list") or [])
+            if isinstance(e, dict) and nonempty_str(e.get("path"))}
+
+
+def compute_conflict_pairs(pkgs):
+    """Exact path-equality intersection of every pair's allow-list — the same
+    computation plan-check's conflict_pairs_computed check recomputes and
+    diffs against the declared list; this is that computation's generator
+    side."""
+    allow = {p["id"]: allow_paths(p) for p in pkgs}
+    ids = sorted(allow)
+    pairs = []
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            a, b = ids[i], ids[j]
+            shared = allow[a] & allow[b]
+            if shared:
+                pairs.append({"a": a, "b": b, "shared": sorted(shared)})
+    return pairs
+
+
+def compute_structural_hotspots(pkgs):
+    """"structurally, any file appearing in more than one package's
+    allow-list" (planning-protocol.md, Hotspot definition)."""
+    counts = Counter()
+    for p in pkgs:
+        for path in allow_paths(p):
+            counts[path] += 1
+    return {path for path, c in counts.items() if c > 1}, counts
+
+
+def compute_historical_hotspots(repo_root, candidate_paths):
+    """"historically, any file in the top decile of change frequency among
+    files changed in that window over the trailing 90 days (from git, no new
+    instrumentation) — the decile computed repo-wide, but recorded only where
+    it intersects an allow-list: a hotspot no package touches serializes
+    nothing and is noise in the record" (planning-protocol.md, Hotspot
+    definition; the repo-wide-decile / allow-list-scoped-record split was a
+    ruling, doc sha cc458f984138 — `candidate_paths` here is exactly that
+    recording scope, the decile computation itself runs over the full git
+    log first).
+
+    Returns (hotspot_subset_of_candidate_paths, all_counts, note). `note` is
+    non-None only when historical computation could not run (no git repo, no
+    git binary, etc.) — the caller degrades to structural-only and says so.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "--since=90 days ago",
+             "--name-only", "--pretty=format:"],
+            capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        return set(), {}, f"git log failed to run: {e}"
+    if out.returncode != 0:
+        stderr = (out.stderr or "").strip().splitlines()
+        reason = stderr[-1] if stderr else f"git exited {out.returncode}"
+        return set(), {}, f"git log failed ({reason}) — is {repo_root} a git repository?"
+
+    files = [line.strip() for line in out.stdout.splitlines() if line.strip()]
+    counts = Counter(files)
+    if not counts:
+        return set(), {}, "no files changed in the trailing 90 days per git log"
+
+    n = len(counts)
+    cutoff_rank = max(1, math.ceil(n * 0.1))  # top decile by distinct-file rank
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    threshold_count = ranked[cutoff_rank - 1][1]
+    # include ties at the boundary rather than splitting an arbitrary tie
+    top_decile = {path for path, c in counts.items() if c >= threshold_count}
+    return (top_decile & candidate_paths), counts, None
+
+
+def hotspot_basis_line(path, structural, historical_hotspots, historical_counts, historical_total):
+    parts = []
+    if path in structural:
+        parts.append("structural (shared by >1 package's allow-list)")
+    if path in historical_hotspots:
+        c = historical_counts.get(path, 0)
+        parts.append(f"historical ({c} changes in trailing 90 days, top decile of {historical_total} distinct files touched)")
+    return " AND ".join(parts) if parts else "unknown"
+
+
+def cmd_conflict(args):
+    pkgs, err = load_packages(args.plan_dir)
+    if err:
+        print(f"plan-graph: error: {err}", file=sys.stderr)
+        return 2
+
+    conflict_pairs = compute_conflict_pairs(pkgs)
+    structural, all_alloc_counts = compute_structural_hotspots(pkgs)
+    all_paths = set(all_alloc_counts.keys())
+
+    repo_root = args.repo_root
+    if repo_root is None:
+        top = git_toplevel(".")
+        repo_root = Path(top) if top else None
+    else:
+        repo_root = Path(repo_root)
+        if not repo_root.is_dir():
+            print(f"plan-graph: error: --repo-root {repo_root} is not a directory", file=sys.stderr)
+            return 2
+
+    historical = set()
+    historical_counts = {}
+    historical_total = 0
+    degrade_note = None
+    if repo_root is None:
+        degrade_note = "no --repo-root given and no git toplevel resolved from cwd — historical hotspot analysis skipped, structural only"
+    else:
+        historical, historical_counts, note = compute_historical_hotspots(repo_root, all_paths)
+        if note:
+            degrade_note = f"historical hotspot analysis skipped ({note}) — structural only"
+        else:
+            historical_total = len(historical_counts)
+
+    hotspots = sorted(structural | historical)
+    hotspot_basis = {
+        path: hotspot_basis_line(path, structural, historical, historical_counts, historical_total)
+        for path in hotspots
+    }
+
+    result = {
+        "conflict_pairs": conflict_pairs,
+        "hotspots": hotspots,
+        "hotspot_basis": hotspot_basis,
+        "historical_hotspots_computed": degrade_note is None,
+    }
+    if degrade_note:
+        result["historical_hotspots_note"] = degrade_note
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return 0
+
+    print(f"# plan-graph --conflict — {args.plan_dir}")
+    print(f"# {len(pkgs)} packages, repo-root: {repo_root or '(none — structural hotspots only)'}")
+    if degrade_note:
+        print(f"# NOTE: {degrade_note}")
+    print()
+    print("## conflict_pairs (allow-list path intersections, exact equality)")
+    if conflict_pairs:
+        for c in conflict_pairs:
+            print(f"  {c['a']} <-> {c['b']}: {', '.join(c['shared'])}")
+    else:
+        print("  (none — every package's allow-list is disjoint from every other's)")
+    print()
+    print("## hotspots")
+    if hotspots:
+        for path in hotspots:
+            print(f"  {path}: {hotspot_basis[path]}")
+    else:
+        print("  (none)")
+    print()
+    print("## paste into packages.json:")
+    print(json.dumps({"conflict_pairs": conflict_pairs, "hotspots": hotspots}, indent=2))
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --order
+# --------------------------------------------------------------------------
+
+def toposort(pkgs):
+    """Kahn's algorithm, deterministic (alphabetical tie-break). Returns
+    (order_list_of_ids, cycle_path_or_None). order_list is None if a cycle
+    exists; cycle_path is None if the sort succeeded."""
+    ids = {p["id"] for p in pkgs}
+    deps = {p["id"]: [d for d in (p.get("deps") or []) if isinstance(d, str)] for p in pkgs}
+    unknown = {(pid, d) for pid, ds in deps.items() for d in ds if d not in ids}
+
+    successors = {pid: [] for pid in ids}
+    in_degree = {pid: 0 for pid in ids}
+    for pid, ds in deps.items():
+        for d in ds:
+            if d in ids:
+                successors[d].append(pid)
+                in_degree[pid] += 1
+
+    ready = sorted([pid for pid in ids if in_degree[pid] == 0])
+    ready = deque(ready)
+    order = []
+    while ready:
+        pid = ready.popleft()
+        order.append(pid)
+        newly_ready = []
+        for succ in successors[pid]:
+            in_degree[succ] -= 1
+            if in_degree[succ] == 0:
+                newly_ready.append(succ)
+        ready.extend(sorted(newly_ready))
+        ready = deque(sorted(ready))
+
+    if len(order) == len(ids):
+        return order, None, unknown
+
+    remaining = ids - set(order)
+    cycle = _find_cycle(remaining, deps)
+    return None, cycle, unknown
+
+
+def _find_cycle(remaining, deps):
+    """DFS to extract one concrete cycle among the leftover (unresolved) node
+    set, for a human-readable error."""
+    graph = {pid: [d for d in deps.get(pid, []) if d in remaining] for pid in remaining}
+    color = {pid: 0 for pid in remaining}  # 0 white, 1 gray, 2 black
+    path = []
+
+    def dfs(u):
+        color[u] = 1
+        path.append(u)
+        for v in graph[u]:
+            if color[v] == 1:
+                i = path.index(v)
+                return path[i:] + [v]
+            if color[v] == 0:
+                found = dfs(v)
+                if found:
+                    return found
+        path.pop()
+        color[u] = 2
+        return None
+
+    for node in sorted(remaining):
+        if color[node] == 0:
+            found = dfs(node)
+            if found:
+                return found
+    return sorted(remaining)  # fallback: shouldn't happen if remaining is non-empty and cyclic
+
+
+def transitive_related(pkgs_by_id):
+    """For every package, its full set of transitive deps AND transitive
+    dependents (either direction counts as 'related' — two packages on the
+    same dependency chain cannot share a wave even without a file conflict)."""
+    ids = list(pkgs_by_id)
+    deps_of = {pid: set(pkgs_by_id[pid].get("deps") or []) & set(ids) for pid in ids}
+    dependents_of = {pid: set() for pid in ids}
+    for pid, ds in deps_of.items():
+        for d in ds:
+            dependents_of[d].add(pid)
+
+    def closure(start_map, pid):
+        seen = set()
+        stack = list(start_map.get(pid, ()))
+        while stack:
+            n = stack.pop()
+            if n not in seen:
+                seen.add(n)
+                stack.extend(start_map.get(n, ()))
+        return seen
+
+    related = {}
+    for pid in ids:
+        related[pid] = closure(deps_of, pid) | closure(dependents_of, pid)
+    return related
+
+
+def build_parallel_sets(order, pkgs_by_id, conflict_pairs):
+    conflicts = set()
+    for c in conflict_pairs:
+        conflicts.add(frozenset((c["a"], c["b"])))
+    related = transitive_related(pkgs_by_id)
+
+    def conflicts_with(a, b):
+        return frozenset((a, b)) in conflicts
+
+    open_sets = []
+    for pid in order:
+        tier = pkgs_by_id[pid].get("scope_tier")
+        placed = False
+        if tier != "T3":
+            for s in open_sets:
+                if any(pkgs_by_id[m].get("scope_tier") == "T3" for m in s):
+                    continue
+                if all(not conflicts_with(pid, m) and m not in related[pid] for m in s):
+                    s.append(pid)
+                    placed = True
+                    break
+        if not placed:
+            open_sets.append([pid])
+    return open_sets
+
+
+def contract_freeze_notes(pkgs_by_id, positions, contract_freezes):
+    notes = []
+    for entry in contract_freezes or []:
+        if not isinstance(entry, dict):
+            continue
+        contract = entry.get("contract", "?")
+        for dep_pkg in entry.get("frozen_before") or []:
+            p = pkgs_by_id.get(dep_pkg)
+            if p is None:
+                notes.append(f"contract_freezes names unknown package {dep_pkg!r} in frozen_before")
+                continue
+            deps = p.get("deps") or []
+            dep_pos = positions.get(dep_pkg)
+            producer_ok = any(
+                positions.get(d) is not None and dep_pos is not None and positions[d] < dep_pos
+                for d in deps
+            )
+            short = (contract[:60] + "…") if len(contract) > 60 else contract
+            if producer_ok:
+                producers = [d for d in deps if positions.get(d) is not None and positions[d] < dep_pos]
+                notes.append(f"'{short}' frozen_before {dep_pkg} (position {dep_pos}): "
+                              f"justified by deps[] on {', '.join(producers)}")
+            else:
+                notes.append(f"'{short}' frozen_before {dep_pkg} (position {dep_pos}): "
+                              f"no deps[] edge justifies this — add one if the freeze should "
+                              f"actually constrain order, otherwise this is advisory only")
+    return notes
+
+
+def cmd_order(args):
+    pkgs, err = load_packages(args.plan_dir)
+    if err:
+        print(f"plan-graph: error: {err}", file=sys.stderr)
+        return 2
+    pkgs_by_id = {p["id"]: p for p in pkgs}
+
+    order, cycle, unknown_deps = toposort(pkgs)
+    if unknown_deps:
+        names = ", ".join(f"{pid} -> {d}" for pid, d in sorted(unknown_deps))
+        print(f"plan-graph: error: deps[] reference unknown package id(s): {names}", file=sys.stderr)
+        return 2
+
+    if cycle is not None:
+        cyc = " -> ".join(cycle)
+        if args.json:
+            print(json.dumps({"error": "cycle", "cycle": cycle}, indent=2))
+        else:
+            print(f"plan-graph: error: dependency cycle, no valid order exists: {cyc}", file=sys.stderr)
+        return 2
+
+    conflict_pairs = compute_conflict_pairs(pkgs)
+    positions = {pid: i + 1 for i, pid in enumerate(order)}
+
+    order_out = []
+    for pid in order:
+        pos = positions[pid]
+        p = pkgs_by_id[pid]
+        # dependency wins when both a deps[] edge and a conflict/hotspot/T3
+        # cause apply — forced_serial is for work serialized *despite* no
+        # edge (ruling, doc sha cc458f984138; planning-protocol.md sequence
+        # schema comment on `order[].rationale`).
+        deps = p.get("deps") or []
+        if deps:
+            rationale = "dependency"
+        else:
+            forced = any(
+                (frozenset((pid, other)) in {frozenset((c["a"], c["b"])) for c in conflict_pairs})
+                and positions[other] < pos
+                for other in order if other != pid
+            )
+            rationale = "forced_serial" if forced else "unconstrained"
+        order_out.append({"package": pid, "position": pos, "rationale": rationale})
+
+    parallel_sets = build_parallel_sets(order, pkgs_by_id, conflict_pairs)
+
+    sequence, _seq_err = load_json(Path(args.plan_dir) / "sequence.json")
+    cf_notes = []
+    if isinstance(sequence, dict):
+        cf_notes = contract_freeze_notes(pkgs_by_id, positions, sequence.get("contract_freezes"))
+
+    result = {
+        "order": order_out,
+        "parallel_sets": parallel_sets,
+        "contract_freeze_notes": cf_notes,
+        "cycle": None,
+    }
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return 0
+
+    print(f"# plan-graph --order — {args.plan_dir}")
+    print(f"# {len(pkgs)} packages")
+    print()
+    print("## order (rationale = 'dependency'/'forced_serial' is computed; "
+          "'unconstrained' positions still need a human rationale from "
+          "{skeleton|repro|risk|cost_of_delay|opens_window})")
+    for o in order_out:
+        print(f"  {o['position']}. {o['package']} — {o['rationale']}")
+    print()
+    print("## parallel_sets (maximal pairwise-disjoint waves: no shared allow-list "
+          "path, no T3-only package grouped, no dependency relation within a set — "
+          "greedy first-fit in topological order, not a uniqueness claim)")
+    for s in parallel_sets:
+        print(f"  {s}")
+    print()
+    if cf_notes:
+        print("## contract_freeze notes (from sequence.json, advisory only)")
+        for n in cf_notes:
+            print(f"  - {n}")
+        print()
+    print("## paste into sequence.json (order + parallel_sets fields):")
+    print(json.dumps({"order": order_out, "parallel_sets": parallel_sets}, indent=2))
+    return 0
+
+
+# --------------------------------------------------------------------------
+# CLI
+# --------------------------------------------------------------------------
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="plan-graph",
+        description="Generator counterpart to plan-check: computes conflict_pairs/hotspots "
+                    "(--conflict) or order/parallel_sets (--order) for the EDD planning protocol.",
+    )
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--conflict", action="store_true")
+    mode.add_argument("--order", action="store_true")
+    parser.add_argument("--plan-dir", default=".")
+    parser.add_argument("--repo-root", default=None, help="--conflict only: needed for historical hotspot analysis")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+
+    plan_dir = Path(args.plan_dir)
+    if not plan_dir.is_dir():
+        print(f"plan-graph: error: --plan-dir {plan_dir} is not a directory", file=sys.stderr)
+        return 2
+    args.plan_dir = plan_dir
+
+    if args.order and args.repo_root:
+        print("plan-graph: error: --repo-root is only meaningful with --conflict", file=sys.stderr)
+        return 2
+
+    if args.conflict:
+        return cmd_conflict(args)
+    return cmd_order(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

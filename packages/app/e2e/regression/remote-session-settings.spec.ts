@@ -1,4 +1,4 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { installSseTransport } from "../utils/sse-transport"
 import { currentSession } from "../utils/mock-server"
@@ -73,7 +73,11 @@ test("auto-accept responds for an unfocused server session", async ({ page }) =>
     .toBe(true)
   await page.keyboard.press("Escape")
 
-  await page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`).click()
+  await page.locator('[data-slot="orchestra-profile"]').click()
+  await page
+    .locator('[data-component="orchestra-profile-picker"]')
+    .getByRole("menuitemradio", { name: "server-b", exact: true })
+    .click()
   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
   await expect(page.getByText(sessionB.title).first()).toBeVisible()
   await transport.waitForConnection()
@@ -152,12 +156,20 @@ type PermissionResponse = {
 
 async function configureServers(page: Page, tabs: { type: "session"; server: string; sessionId: string }[] = []) {
   await page.addInitScript(
-    ({ serverB, tabs }) => {
+    ({ serverB, tabs, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
-      localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify(tabs))
+      localStorage.setItem(
+        "orchestra.global.dat:server",
+        JSON.stringify({
+          list: [serverB],
+          projects: tabs.some((tab) => tab.server === serverB)
+            ? { [serverB]: [{ worktree: directoryB, expanded: true }] }
+            : undefined,
+        }),
+      )
+      localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify(tabs))
     },
-    { serverB, tabs },
+    { serverB, tabs, directoryB },
   )
 }
 

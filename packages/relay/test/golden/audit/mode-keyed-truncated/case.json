@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/mode-keyed-truncated/input/ledger.jsonl",
+  "verify": [],
+  "key": "relay-golden-ledger-key",
+  "chmod": {}
+}

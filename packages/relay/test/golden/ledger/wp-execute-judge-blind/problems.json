@@ -1,0 +1,10 @@
+{
+  "ledger": "test/fixtures/wp-execute-judge-blind.ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "gate.cold_review",
+      "cause": "retry 2: review-engages-with-the-diff"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "forced",
+        "instructions": "do forced",
+        "checklist": [
+          {
+            "id": "FORCED",
+            "judge": "anything",
+            "context": "bad.txt",
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "tree": {
+    "bad.txt": "no marker\n"
+  },
+  "env": {
+    "RELAY_JUDGE_STUB": "pass"
+  },
+  "fires": [
+    {
+      "check": {}
+    }
+  ]
+}

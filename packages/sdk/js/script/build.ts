@@ -8,10 +8,11 @@ import { $ } from "bun"
 import path from "path"
 
 import { createClient } from "@hey-api/openapi-ts"
+import { splitTypes } from "./split-types"
 
-const opencode = path.resolve(dir, "../../opencode")
+const orchestra = path.resolve(dir, "../../orchestra")
 
-await $`bun dev generate > ${dir}/openapi.json`.cwd(opencode)
+await $`bun dev generate > ${dir}/openapi.json`.cwd(orchestra)
 
 const document = (await Bun.file("./openapi.json").json()) as {
   components?: { schemas?: Record<string, unknown> }
@@ -58,7 +59,7 @@ await createClient({
     },
     {
       name: "@hey-api/sdk",
-      instance: "OpencodeClient",
+      instance: "OrchestraClient",
       exportFromIndex: false,
       auth: false,
       paramsStructure: "flat",
@@ -82,7 +83,16 @@ const historyTypesPatched = generatedTypes.replace(
 if (historyTypesPatched === generatedTypes) {
   throw new Error("Session history numeric query patch did not apply")
 }
-await Bun.write("./src/v2/gen/types.gen.ts", historyTypesPatched)
+const partition = splitTypes(historyTypesPatched, [
+  "MaestroWorkResultDecided",
+  "SyncEventMaestroWorkResultDecided",
+  "EventMaestroWorkResultDecided",
+  "MaestroTaskBound",
+  "SyncEventMaestroTaskBound",
+  "EventMaestroTaskBound",
+])
+await Bun.write("./src/v2/gen/types.gen.ts", partition.main)
+await Bun.write("./src/v2/gen/maestro-events.gen.ts", partition.partition)
 
 const generatedSdk = await Bun.file("./src/v2/gen/sdk.gen.ts").text()
 const historySdkPatched = generatedSdk.replace(

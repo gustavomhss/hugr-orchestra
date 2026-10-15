@@ -1,0 +1,26 @@
+{
+  "op": "lint",
+  "sprint": {
+    "brief": "x",
+    "macros": [
+      {
+        "id": "frame"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "a",
+        "instructions": "do a",
+        "checklist": [
+          {
+            "id": "c1",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ],
+        "macro": "carve"
+      }
+    ]
+  },
+  "allowUngated": false
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": "../../..",
+    "paths": {
+      "@atlas/*": ["foundation/atlas/packages/*/src/index.ts"],
+      "@noble/hashes/*": ["packages/atlas-boundary/node_modules/@noble/hashes/*"]
+    },
+    "types": ["node"],
+    "typeRoots": ["../node_modules/@types"]
+  },
+  "files": ["../../../foundation/atlas/packages/retrieval/src/host-context.ts"]
+}

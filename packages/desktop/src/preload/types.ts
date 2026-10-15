@@ -1,20 +1,21 @@
-import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
-import type { WslServersPlatform } from "@opencode-ai/app/wsl/types"
-import type { UpdaterState } from "@opencode-ai/app/updater"
-import type { DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
+import type { DesktopMenuAction } from "@orchestra/app/desktop-menu"
+import type { WslServersPlatform } from "@orchestra/app/wsl/types"
+import type { UpdaterState } from "@orchestra/app/updater"
+import type { DesktopNativeBundle } from "@orchestra/app/i18n/desktop-native"
+import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
   WslJob,
   WslOnlineDistro,
-  WslOpencodeCheck,
+  WslOrchestraCheck,
   WslRuntimeCheck,
   WslServerConfig,
   WslServerItem,
   WslServerRuntime,
   WslServersEvent,
   WslServersState,
-} from "@opencode-ai/app/wsl/types"
+} from "@orchestra/app/wsl/types"
 
 export type ServerReadyData = {
   url: string
@@ -42,6 +43,14 @@ export type FatalRendererError = {
   os?: string
 }
 
+export type JanitorAPI = {
+  getReport: () => Promise<{ report: string; source: string | null } | null>
+  publish: (report: string, notify?: boolean, source?: string | null) => Promise<boolean>
+  snooze: (minutes: number, source?: string | null) => Promise<boolean>
+  dismiss: (source?: string | null) => Promise<boolean>
+  onReport: (cb: (event: { report: string; notify: boolean; source: string | null }) => void) => () => void
+}
+
 export type AppDockEvent =
   | {
       type: "state"
@@ -53,9 +62,11 @@ export type AppDockEvent =
         favicon?: string
         loading: boolean
         audible: boolean
+        canGoBack: boolean
+        canGoForward: boolean
       }
     }
-  | { type: "tab-opened"; payload: { tabID: string; generation: number; url: string } }
+  | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
   | { type: "tab-selected"; payload: { tabID: string; generation: number } }
   | {
       type: "tab-crashed"
@@ -96,7 +107,7 @@ export type AppDockManifest = {
 
 export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
 
-export type ElectronAPI = {
+export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAPI & {
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },
@@ -104,13 +115,21 @@ export type ElectronAPI = {
   ) => Promise<{ tabID: string; generation: number; url: string }>
   appDockList: () => Promise<Array<{ tabID: string; generation: number; url: string; active: boolean }>>
   appDockDeleteProfile: (profileID: string) => Promise<void>
-  appDockResize: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
-  appDockHide: () => Promise<void>
+  // Resize, Hide and Select name the tab and generation they target; the desktop ignores stale ones.
+  appDockResize: (
+    tab: { tabID: string; generation: number },
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => Promise<void>
+  appDockHide: (tab: { tabID: string; generation: number }) => Promise<void>
+  appDockOcclude: (occluded: boolean) => Promise<void>
   appDockClose: () => Promise<void>
   appDockCloseTab: (tabID: string) => Promise<void>
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
   appDockCloseTabs: (tabID: string, scope: "others" | "right", order?: string[]) => Promise<void>
-  appDockSelect: (tabID: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
+  appDockSelect: (
+    tab: { tabID: string; generation: number },
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => Promise<void>
   appDockNavigate: (tabID: string, url: string) => Promise<void>
   appDockCommand: (tabID: string, command: "back" | "forward" | "reload") => Promise<void>
   appDockEvent: (callback: (event: AppDockEvent) => void) => () => void
@@ -158,6 +177,7 @@ export type ElectronAPI = {
   draftDelete: (key: string) => Promise<void>
   draftBlobPut: (data: ArrayBuffer) => Promise<string>
   draftBlobGet: (id: string) => Promise<ArrayBuffer | null>
+  janitor: JanitorAPI
 
   getWindowID: () => Promise<string>
   onMenuCommand: (cb: (id: string) => void) => () => void
@@ -196,6 +216,7 @@ export type ElectronAPI = {
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void
   onZoomFactorChanged: (cb: (factor: number) => void) => () => void
   setTitlebar: (theme: TitlebarTheme) => Promise<void>
+  setTitlebarFrame: (frame?: NativeTitlebarFrame) => Promise<void>
   runDesktopMenuAction: (action: DesktopMenuAction) => Promise<void>
   setBackgroundColor: (color: string) => Promise<void>
   exportDebugLogs: () => Promise<string>

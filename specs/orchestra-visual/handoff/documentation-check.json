@@ -1,0 +1,47 @@
+{
+  "checkedAt": "2026-10-01T23:51:30.668Z",
+  "relativeLinks": [
+    {
+      "document": "HANDOFF.md",
+      "link": "VERIFICATION.md"
+    },
+    {
+      "document": "HANDOFF.md",
+      "link": "DELIVERY.md"
+    },
+    {
+      "document": "HANDOFF.md",
+      "link": "screenshots/README.md"
+    },
+    {
+      "document": "HANDOFF.md",
+      "link": "handoff/pr-239.json"
+    },
+    {
+      "document": "HANDOFF.md",
+      "link": "handoff/README.md"
+    },
+    {
+      "document": "DELIVERY.md",
+      "link": "HANDOFF.md"
+    },
+    {
+      "document": "DELIVERY.md",
+      "link": "screenshots/README.md"
+    },
+    {
+      "document": "VERIFICATION.md",
+      "link": "HANDOFF.md"
+    },
+    {
+      "document": "VERIFICATION.md",
+      "link": "screenshots/README.md"
+    },
+    {
+      "document": "handoff/README.md",
+      "link": "../HANDOFF.md"
+    }
+  ],
+  "control": "Known HANDOFF -> VERIFICATION and DELIVERY -> HANDOFF links resolved",
+  "externalLinks": "GH issue/PR state captured separately"
+}

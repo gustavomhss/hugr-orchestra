@@ -16,7 +16,7 @@ import {
 import { Dialog as Kobalte } from "@kobalte/core/dialog"
 import { makeEventListener } from "@solid-primitives/event-listener"
 
-type DialogElement = () => JSX.Element
+type DialogElement = (dispose: () => void) => JSX.Element
 
 type Active = {
   id: string
@@ -24,6 +24,7 @@ type Active = {
   dispose: () => void
   owner: Owner
   onClose?: () => void
+  closing: () => boolean
   setClosing: (closing: boolean) => void
 }
 
@@ -39,6 +40,13 @@ function init() {
     clearTimeout(timer.current)
     timer.current = undefined
   })
+
+  const remove = (id: string) => {
+    const current = stack().find((item) => item.id === id)
+    if (!current) return
+    current.dispose()
+    setStack((items) => items.filter((item) => item.id !== id))
+  }
 
   const close = (id?: string) => {
     const items = stack()
@@ -56,8 +64,7 @@ function init() {
 
     timer.current = setTimeout(() => {
       timer.current = undefined
-      current.dispose()
-      setStack((items) => items.filter((item) => item.id !== closed))
+      remove(closed)
       lock.value = false
     }, 100)
   }
@@ -79,17 +86,19 @@ function init() {
     const id = Math.random().toString(36).slice(2)
     const zIndex = 50 + layer * 10
     let dispose: (() => void) | undefined
+    let closing: (() => boolean) | undefined
     let setClosing: ((closing: boolean) => void) | undefined
 
     const node = runWithOwner(owner, () =>
       createRoot((d: () => void) => {
         dispose = d
-        const [closing, setClosingSignal] = createSignal(false)
+        const [isClosing, setClosingSignal] = createSignal(false)
+        closing = isClosing
         setClosing = setClosingSignal
         return (
           <Kobalte
             modal={stack().at(-1)?.id === id}
-            open={!closing()}
+            open={!isClosing()}
             onOpenChange={(open: boolean) => {
               if (open || stack().at(-1)?.id !== id) return
               close(id)
@@ -113,7 +122,7 @@ function init() {
                   "pointer-events": "none",
                 }}
               >
-                {element()}
+                {element(() => remove(id))}
               </div>
             </Kobalte.Portal>
           </Kobalte>
@@ -121,10 +130,11 @@ function init() {
       }),
     )
 
-    if (!dispose || !setClosing) return
+    if (!dispose || !closing || !setClosing) return
 
-    const active: Active = { id, node, dispose, owner, onClose, setClosing }
+    const active: Active = { id, node, dispose, owner, onClose, closing, setClosing }
     setStack((items) => [...items, active])
+    return id
   }
 
   const push = (element: DialogElement, owner: Owner, onClose?: () => void) => {
@@ -144,12 +154,13 @@ function init() {
       timer.current = undefined
     }
     lock.value = false
-    mount(element, owner, onClose, 0)
+    return mount(element, owner, onClose, 0)
   }
 
   return {
     stack,
     close,
+    remove,
     show,
     push,
   }
@@ -178,13 +189,30 @@ export function useDialog() {
     throw new Error("useDialog must be used within a DialogProvider")
   }
 
+  const owned = { id: undefined as string | undefined, disposed: false }
+  onCleanup(() => {
+    owned.disposed = true
+    if (owned.id) ctx.remove(owned.id)
+  })
+
   return {
     get active() {
       return ctx.stack().at(-1)
     },
+    // A closed dialog stays on the stack until its exit animation ends, but it no longer owns the keyboard.
+    get open() {
+      return ctx.stack().some((item) => !item.closing())
+    },
     show(element: DialogElement, onClose?: () => void) {
       const base = ctx.stack().at(-1)?.owner ?? owner
       return startTransition(() => ctx.show(element, base, onClose))
+    },
+    // Dialog roots are detached. Opt in to the calling owner's lifetime, never the active stack owner.
+    showOwned(element: DialogElement, onClose?: () => void) {
+      return startTransition(() => {
+        if (owned.disposed) return
+        owned.id = ctx.show(element, owner, onClose)
+      })
     },
     push(element: DialogElement, onClose?: () => void) {
       const base = ctx.stack().at(-1)?.owner ?? owner

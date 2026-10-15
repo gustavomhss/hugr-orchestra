@@ -1,0 +1,9 @@
+{
+  "op": "store",
+  "database": "test/fixtures/authoring.sqlite3",
+  "workspaces": [
+    "workspace-a",
+    "workspace-b",
+    "workspace-absent"
+  ]
+}

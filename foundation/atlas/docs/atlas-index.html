@@ -1,0 +1,746 @@
+<title>The Atlas — the hashed index (attached to commits & PRs)</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+    --score-paper: #eae5d8;
+    --score-line: #b9b09a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141210;
+      --paper-2: #1b1812;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #2c2820;
+      --line-soft: #241f18;
+      --accent: #d8a94b;
+      --accent-2: #e4be68;
+      --panel: #1b1812;
+      --code-bg: #0e0c09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141210;
+    --paper-2: #1b1812;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #2c2820;
+    --line-soft: #241f18;
+    --accent: #d8a94b;
+    --accent-2: #e4be68;
+    --panel: #1b1812;
+    --code-bg: #0e0c09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #9a6e28;
+    --accent-2: #b98f3e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 19px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(46px, 8vw, 84px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    line-height: 1.03;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.12rem, 2.5vw, 1.5rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 28ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(36px, 6vw, 54px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  h2 .q {
+    display: block;
+    font-size: 0.58em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 7px;
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 66ch;
+  }
+  .big1 {
+    font-size: clamp(1.4rem, 3.2vw, 2rem);
+    font-weight: 600;
+    line-height: 1.28;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .big1 .hl {
+    color: var(--accent);
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  @media (max-width: 640px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .box {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 19px;
+  }
+  .box.a {
+    border-top: 3px solid var(--block);
+  }
+  .box.b {
+    border-top: 3px solid var(--seal);
+  }
+  .box .h {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  .box.a .h {
+    color: var(--block);
+  }
+  .box.b .h {
+    color: var(--seal);
+  }
+  .box p {
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .box b {
+    color: var(--ink);
+  }
+
+  .score {
+    background: var(--score-paper);
+    border: 1px solid var(--score-line);
+    border-radius: 12px;
+    padding: 24px 16px;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+  .score pre.mermaid {
+    margin: 0;
+    text-align: center;
+    min-width: 500px;
+  }
+  .score-cap {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: #6a6350;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .props {
+    display: grid;
+    gap: 11px;
+    margin-top: 8px;
+  }
+  .pr {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 15px 18px;
+  }
+  .pr .k {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    flex: none;
+    min-width: 8.5em;
+  }
+  .pr .v {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .pr .v b {
+    color: var(--ink);
+  }
+
+  pre.code {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-top: 8px;
+    color: var(--ink);
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  pre.code .c {
+    color: var(--muted);
+  }
+  pre.code .k {
+    color: var(--accent);
+  }
+  pre.code .s {
+    color: var(--seal);
+  }
+
+  .oneline {
+    background: color-mix(in srgb, var(--accent) 9%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 8px;
+    font-size: 1.08rem;
+    font-weight: 600;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .oneline .hl {
+    color: var(--accent);
+  }
+
+  footer {
+    padding: 36px 0 62px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .axcard {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 14px;
+  }
+  .axcard .ah {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .axcard .an {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.98rem;
+  }
+  .axcard .ag {
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .axcard .row {
+    display: grid;
+    grid-template-columns: 6.5em 1fr;
+    gap: 6px 14px;
+    padding: 7px 0;
+    border-top: 1px solid var(--line-soft);
+    font-size: 0.92rem;
+  }
+  .axcard .row:first-of-type {
+    border-top: 0;
+  }
+  .axcard .rk {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    padding-top: 2px;
+  }
+  .axcard .rv {
+    color: var(--ink-soft);
+  }
+  .axcard .rv b {
+    color: var(--ink);
+  }
+  .km {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 560px) {
+    .km {
+      grid-template-columns: 1fr;
+    }
+    .axcard .row {
+      grid-template-columns: 1fr;
+      gap: 3px;
+    }
+  }
+  .km .kk {
+    border-left: 3px solid var(--seal);
+    padding-left: 10px;
+  }
+  .km .km2 {
+    border-left: 3px solid var(--accent-2);
+    padding-left: 10px;
+  }
+  .km .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .km .kk .tag {
+    color: var(--seal);
+  }
+  .km .km2 .tag {
+    color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span><span class="label">Atlas · piece (A) · the hashed index</span>
+    </div>
+    <h1 class="wordmark">O índice <span class="set">hasheado</span></h1>
+    <p class="punch">O que anexa num commit ou PR são <span class="hl">ponteiros</span>, não blobs. Igual o git.</p>
+  </div>
+</header>
+
+<!-- 1 the one idea -->
+<section>
+  <div class="wrap">
+    <p class="big1">
+      O conteúdo (knowledge + memory) mora num <span class="hl">CAS</span> — chaveado por hash. O que viaja anexado ao
+      commit/PR é o <span class="hl">índice</span>: um mapa de <span class="hl">ponteiros</span> pra esse conteúdo.
+    </p>
+    <div class="two">
+      <div class="box b">
+        <div class="h">CAS — onde o conteúdo mora</div>
+        <p>
+          Todo objeto (nó estrutural, fato de knowledge, entrada de memory) é chaveado pelo seu <b>hash BLAKE3</b>. O
+          store é <code>hash → objeto</code>. Content-addressed: mesmo conteúdo = mesmo hash (dedup + integridade
+          grátis).
+        </p>
+      </div>
+      <div class="box a">
+        <div class="h">Índice — o que anexa</div>
+        <p>
+          Um mapa de <b>ponteiros</b> (hashes) organizados na árvore merkle (<code>repo→crate→…→bloco</code>). Pequeno.
+          É <b>ele</b> que gruda no commit/PR — <b>não</b> os blobs. Igual um commit git aponta pra uma tree de hashes.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 1.5 axes + hash everything -->
+<section>
+  <div class="wrap">
+    <h2>
+      Não é uma árvore — são eixos<span class="q"
+        >o que vem DENTRO de cada eixo · dual Merkle rollup · e TUDO é hasheado</span
+      >
+    </h2>
+    <p class="lead">
+      É o subsistema mais duro do atlas. Não é UM caminho — são <b>3 eixos</b>, cada um uma hierarquia própria sobre o
+      <b>mesmo</b> objeto (guardado 1× no CAS, cruzado nos 3). Cada eixo responde uma pergunta diferente sobre o mesmo
+      hash:
+    </p>
+
+    <div class="axcard">
+      <div class="ah">
+        <span class="an">1 · spatial</span><span class="ag">a árvore estrutural — o eixo da granularidade</span>
+      </div>
+      <div class="row">
+        <span class="rk">Níveis</span
+        ><span class="rv"
+          ><code>repo→crate→módulo→file→item→bloco</code>. <b>item</b>=decl de topo (fn/struct/trait/class);
+          <b>bloco</b>=unidade sub-item com <code>subtreeHash</code> próprio (corpo de método, match-arm, closure) — a
+          âncora mais fina de um <code>StructRef</code>.</span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Deriva de</span
+        ><span class="rv"
+          >file tree + parse AST; o <code>subtreeHash</code> é o hash do <b>trecho de código cru</b> da unidade
+          (comentário e whitespace <b>não</b> são removidos — não existe normalizador). <b>$0-LLM</b>,
+          determinístico.</span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Pendura</span
+        ><span class="rv"
+          ><div class="km">
+            <div class="kk">
+              <span class="tag">Knowledge</span>fatos aterrados por <code>StructRef</code> nesse nó — a superfície
+              primária de grounding ("essa fn TEM que valer X").
+            </div>
+            <div class="km2">
+              <span class="tag">Memory</span>task/pr do membro, cruzada pelas unidades que ele tocou ("o que aprendi da
+              última vez em <code>cas.ts</code>").
+            </div>
+          </div></span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Responde</span
+        ><span class="rv"
+          ><b>scope</b> (modo 1) — "tô nesse path, o que se sabe aqui e acima". O <b>poke</b> dispara ao entrar num
+          escopo spatial.</span
+        >
+      </div>
+    </div>
+
+    <div class="axcard">
+      <div class="ah">
+        <span class="an">2 · território</span><span class="ag">posse + criticidade — NÃO é a file tree</span>
+      </div>
+      <div class="row">
+        <span class="rk">Níveis</span
+        ><span class="rv"
+          ><code>projeto→território (owner·tier)→região</code>. <b>território</b>=unidade atômica de governança
+          <code>{owner:seat, tier:T0|T1|T2, members:StructRef[]}</code>, pode cruzar files/crates;
+          <b>região</b>=sub-zona nomeada dentro dele. Cada unidade pertence a exatamente 1 território (posse é
+          partição).</span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Deriva de</span
+        ><span class="rv"
+          >manifesto <code>territories</code> (globs→owner·tier) reconciliado com a árvore real — path sem território =
+          flag; T0 default nega. Dado, não LLM.</span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Pendura</span
+        ><span class="rv"
+          ><div class="km">
+            <div class="kk">
+              <span class="tag">Knowledge</span>regras por tier, sem símbolo ("T0: nada de alloc sem bound"); o tier de
+              ratificação (T0=só humano).
+            </div>
+            <div class="km2">
+              <span class="tag">Memory</span>quem é owner → de quem é a memória que escopa aqui; Rules de projeto com
+              <code>scope=território</code> surgem ao entrar; logbook cruzado por território tocado.
+            </div>
+          </div></span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Responde</span
+        ><span class="rv"
+          ><b>governança/trigger</b> — roteia review pro owner, aperta gate por tier, prioriza injeção (T0 injeta
+          primeiro no teto), "me dá tudo que é T0".</span
+        >
+      </div>
+    </div>
+
+    <div class="axcard">
+      <div class="ah">
+        <span class="an">3 · dependência</span><span class="ag">blast radius — um DAG, não uma árvore</span>
+      </div>
+      <div class="row">
+        <span class="rk">Estrutura</span
+        ><span class="rv"
+          >nós=unidades; arestas=<code>depends-on</code> (import/call/type-ref). Fecho <b>forward</b> (o que preciso) +
+          fecho <b>reverso</b> (quem precisa de mim = <b>blast radius</b>). Rollup aqui é alcançabilidade, não cadeia de
+          pai.</span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Deriva de</span
+        ><span class="rv">o grafo de import/call (tree-sitter / language-server). <b>$0-LLM</b>, determinístico.</span>
+      </div>
+      <div class="row">
+        <span class="rk">Pendura</span
+        ><span class="rv"
+          ><div class="km">
+            <div class="kk">
+              <span class="tag">Knowledge</span>fatos de contrato/interface que propagam pela aresta — mudou a
+              assinatura, a premissa de todo dependente fica suspeita.
+            </div>
+            <div class="km2">
+              <span class="tag">Memory</span>memória de "da última vez que essa API mudou, N callers quebraram" surge
+              quando o fecho reverso é grande.
+            </div>
+          </div></span
+        >
+      </div>
+      <div class="row">
+        <span class="rk">Responde</span
+        ><span class="rv"
+          ><b>dependência</b> (modo 2) — editar X mostra fatos/memória ancorados em todo o fecho reverso de X; limita
+          re-check ao fecho, nunca a <code>N</code>. É o eixo que pega drift <b>transitivo</b>: se um dep meu driftou,
+          meu <code>rState</code> vira mesmo sem eu mudar 1 byte.</span
+        >
+      </div>
+    </div>
+
+    <p class="lead" style="margin-top: 18px">
+      <b>Dual rollup:</b> cada nó carrega <code>rId</code> (estrutura) + <code>rState</code> (status+freshness). Um
+      <code>Delta</code> diz se mudou a <em>forma</em> ou o <em>estado</em>, e onde — re-check só nos buckets afetados,
+      nunca no store inteiro. O mesmo objeto é cruzado nos 3 eixos, nunca duplicado.
+    </p>
+    <div class="box b" style="margin-top: 16px">
+      <div class="h">tudo é hasheado — inclusive os docs</div>
+      <p>
+        Todo objeto vira CAS por BLAKE3:
+        <b>código · fatos · memória · proveniência · transcript · e os próprios docs</b>. Os docs são objetos do atlas —
+        aterrados, drift-checked (rosie). O atlas indexa a própria documentação. <b>Dogfood literal.</b>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 the DAG -->
+<section>
+  <div class="wrap">
+    <h2>
+      Como se liga<span class="q">objeto → hash → CAS · commit/PR carrega o índice · query passa pelo índice</span>
+    </h2>
+    <div class="score">
+      <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'background':'#EAE5D8','primaryColor':'#EAE5D8','primaryTextColor':'#201D15','primaryBorderColor':'#9A6E28','lineColor':'#8f846a','fontFamily':'ui-monospace, Menlo, monospace','fontSize':'12px'}}}%%
+flowchart LR
+  O["objeto<br/>nó · fato · memória"] -->|"BLAKE3"| CAS[("CAS<br/>hash → objeto")]
+  COMMIT["commit<br/>git notes + trailers"] --> IDX["índice hasheado<br/>ponteiros · árvore merkle"]
+  PR["PR<br/>host adapter (GitHub/GitLab)"] --> IDX
+  IDX -->|"resolve ponteiro"| CAS
+  Q["query por path / escopo"] --> IDX
+</pre>
+    </div>
+    <div class="score-cap">
+      O índice é anexado (git-native); o conteúdo mora no CAS. A fonte é git-native — o PR é uma projeção.
+    </div>
+  </div>
+</section>
+
+<!-- 3 attachment -->
+<section>
+  <div class="wrap">
+    <h2>Onde gruda<span class="q">nos objetos nativos do host</span></h2>
+    <div class="two">
+      <div class="box">
+        <div class="h">No commit</div>
+        <p>
+          <b>git notes</b> (<code>refs/notes/orchestra</code>) + <b>trailers</b> — carregam o índice + proveniência
+          (WP/model/verdict/transcript-SHA). Git puro, viaja com o objeto, vem em qualquer clone.
+        </p>
+      </div>
+      <div class="box">
+        <div class="h">No PR</div>
+        <p>
+          Via <b>host adapter</b> (GitHub/GitLab/…): o índice do knowledge-delta do PR gruda no PR de verdade. É uma
+          <b>projeção</b> — a fonte de verdade fica git-native (re-spawnável de um clone).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 three properties -->
+<section>
+  <div class="wrap">
+    <h2>Três propriedades que caem de graça</h2>
+    <div class="props">
+      <div class="pr">
+        <span class="k">content-addressed</span
+        ><span class="v"
+          ><b>dedup + integridade.</b> O hash É o endereço; adulterou, o hash muda. Zero formato proprietário (estilo
+          bazel).</span
+        >
+      </div>
+      <div class="pr">
+        <span class="k">git-native</span
+        ><span class="v"
+          ><b>viaja e re-spawna.</b> Índice + proveniência vivem no git (notes/trailers) → em qualquer clone, máquina,
+          fork. Nada preso em nuvem de terceiro.</span
+        >
+      </div>
+      <div class="pr">
+        <span class="k">é o oráculo de drift</span
+        ><span class="v"
+          ><b>um índice, dois trabalhos.</b> Chaveia por <code>subtree-hash</code> → uma entrada stale aparece na hora
+          da query. Mesmo índice serve retrieval <em>e</em> drift. Sem RAG.</span
+        >
+      </div>
+    </div>
+    <div class="oneline" style="margin-top: 22px">
+      Anexa o <span class="hl">mapa</span> (ponteiros), guarda o <span class="hl">conteúdo</span> no CAS. É o git
+      aplicado a knowledge + memory.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      Atlas · peça (A) de 4 — o índice hasheado. Fecha o conjunto A/B/C/D. Spec:
+      <code>reference/atlas-kernel.md</code> (CAS) · <code>reference/atlas-index.md</code> (índice) ·
+      <code>reference/atlas-persist.md</code> (anexo a commits/PRs).
+    </p>
+  </div>
+</footer>

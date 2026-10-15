@@ -1,0 +1,5 @@
+{
+  "verify": "no ledger at test/golden/audit/missing-dir-ledger/input/run/.relay-state/ledger.jsonl\n",
+  "problems": "no ledger at test/golden/audit/missing-dir-ledger/input/run/.relay-state/ledger.jsonl\n",
+  "cost": "no ledger at test/golden/audit/missing-dir-ledger/input/run/.relay-state/ledger.jsonl\n"
+}

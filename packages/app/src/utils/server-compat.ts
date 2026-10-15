@@ -1,6 +1,6 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
-import type { AgentPartInput, FilePartInput, OpencodeClient, Session, TextPartInput } from "@opencode-ai/sdk/v2/client"
+import type { AgentPartInput, FilePartInput, OrchestraClient, Session, TextPartInput } from "@orchestra/sdk/v2/client"
 import type {
   Project,
   ProjectCurrent,
@@ -16,7 +16,7 @@ import type {
   SessionShellOutput,
 } from "@opencode-ai/client/promise"
 
-type LegacyClient = OpencodeClient
+type LegacyClient = OrchestraClient
 type LegacyFor = (directory?: string) => LegacyClient
 type CompatibleSessionApi = Omit<
   SessionApi,
@@ -43,6 +43,8 @@ type LegacyPrompt = {
   agent?: string
   model?: { providerID: string; modelID: string }
   variant?: string
+  // Per-message system instructions; only the V1 prompt contract accepts them.
+  system?: string
   legacyParts?: (TextPartInput | FilePartInput | AgentPartInput)[]
 }
 type LegacyLocation = { directory?: string }
@@ -58,7 +60,7 @@ function mime(uri: string) {
   return match?.[1] ?? "application/octet-stream"
 }
 
-function sessionInfo(session: Session): SessionInfo {
+function sessionInfo(session: Session): SessionInfo & { costAvailable: boolean } {
   return {
     id: session.id,
     parentID: session.parentID,
@@ -70,6 +72,7 @@ function sessionInfo(session: Session): SessionInfo {
       variant: session.model.variant,
     },
     cost: session.cost ?? 0,
+    costAvailable: session.cost !== undefined,
     tokens: session.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
     time: session.time,
     title: session.title,
@@ -204,6 +207,7 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
           agent: value.agent,
           model: value.model,
           variant: value.variant,
+          system: value.system,
           parts: value.legacyParts ?? [
             { type: "text", text: value.text },
             ...(value.files ?? []).map((file) => ({
@@ -524,6 +528,7 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
 }
 
 function isMissingRoute(error: unknown) {
-  const status = error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
+  const status =
+    error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
   return status === 404 || status === 405
 }

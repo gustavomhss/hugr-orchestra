@@ -1,0 +1,45 @@
+{
+  "audience": "agents",
+  "status": "review-record",
+  "baseline": "684456d571e8deb5f435d39e789e1b1258453d85",
+  "scope_review_index_root": "8fee850572abf25f8b9e8500731cb39cc2d9799c5ac4785b460c5ea42d1896b4",
+  "scope": "Agent documentation and skills, ownership catalog, structural checker, index generator and documentation tests.",
+  "interpretation": "Summarizes independent reviewer responses. Approvals bind their scoped artifact hashes, not all files in an evolving checkout. The scope-review root predates the routing link to this record; it is a historical freeze, not the current generated index root. This record is not a cryptographic signature or runtime enforcement of review.",
+  "runtime_scope": "Installed Relay drivers, profiles, policy/template data, benchmark examples and recorded fixture inputs were not changed. Documentation tooling is executable and was independently tested and mutation-probed.",
+  "checks": {
+    "structural": "python3 bin/check-docs.py",
+    "hash_freshness": "python3 bin/gen-doc-index.py --check",
+    "doc_regressions": "python3 -m pytest tests/test_docs.py -q",
+    "doc_regression_result": "32 passed",
+    "whitespace": "git diff --check",
+    "limits": "These checks do not decide semantic prose freshness. Historical model runs were not reproduced; approval of their documentation preserves bounded historical claims. Runtime checks were selected by individual reviewers, not represented as a full-suite pass."
+  },
+  "reviews": [
+    {"reviewer":"R1","task":"ses_f0af3cc9effedWkYpOqB8sCn6y","verdict":"APPROVE","scope":["AGENTS.md","relay-ownership","relay-maintenance","relay-blast-radius"]},
+    {"reviewer":"R2","task":"ses_f0af3cc73ffe3dmHM0RdNpuIyE","verdict":"APPROVE","scope":["relay-gate-core","relay-arm-hook","relay-gate-cli"]},
+    {"reviewer":"R3","task":"ses_f0af3cc17ffeBiL6tGt2KOCKOy","verdict":"APPROVE","scope":["relay-audit","relay-daemon","relay-judge","docs/daemon.md"]},
+    {"reviewer":"R4","task":"ses_f0af3ca47ffeT2XlYzqgJqFK1E","verdict":"APPROVE","scope":["relay-profiles","relay-planning","relay-specification","docs/profiles.md current contracts"]},
+    {"reviewer":"R5","task":"ses_f0af3cb55ffeSTYImYsSivzOqx","verdict":"APPROVE","scope":["relay-design","relay-research","docs/gates.md"]},
+    {"reviewer":"R6","task":"ses_f0af3c979ffeu1Qj8H0Cmydyad","verdict":"APPROVE","scope":["relay-integration","relay-spec-library","relay-policies"]},
+    {"reviewer":"R7","task":"ses_f0ac8385affeq4CQHUpdBRaIsv","verdict":"APPROVE","scope":["relay-autodecompose","relay-telemetry","relay-doc-tooling","docs/skills.json"]},
+    {"reviewer":"R8","task":"ses_f0ac83843ffewemqjit4jU9uZm","verdict":"APPROVE","scope":["relay-benchmark","relay-examples","docs/spec-library.md","docs/auto-decompose.md","examples/fleet-chain/README.md"]},
+    {"reviewer":"R9","task":"ses_f0ac8382fffe3XNJnutwjQ38BY","verdict":"APPROVE","scope":["bin/check-docs.py","bin/gen-doc-index.py","requirements-dev.txt"]},
+    {"reviewer":"R10","task":"ses_f0ac83817ffe9eg1YfnO4fQS0h","verdict":"APPROVE","scope":["SPEC.md","docs/concepts.md"]},
+    {"reviewer":"R11","task":"ses_f0ac83802ffe0A2mzcxRdNBKq5","verdict":"APPROVE","scope":["docs/architecture.md","docs/authoring-sprints.md","docs/compaction.md"]},
+    {"reviewer":"R12","task":"ses_f0ac837eeffeynwpT1MLL41ZD4","verdict":"APPROVE","scope":["docs/configuration.md","docs/getting-started.md","docs/per-agent-arms.md"]},
+    {"reviewer":"R13","task":"ses_f0aa1a946ffe5NDLIya7OOynwC","verdict":"APPROVE","scope":["README.md","CONTRIBUTING.md","docs/faq.md","docs/sdk.md"]},
+    {"reviewer":"R14","task":"ses_f0aa1a8c0ffeZYRsHwAUYyC0cE","verdict":"APPROVE","scope":["PRODUCT.md","WHITEPAPER.md"]},
+    {"reviewer":"R15","task":"ses_f0aa1a8a8ffe19tkB4JovZTS9L","verdict":"APPROVE","scope":["benchmark/DESIGN.md","benchmark/GOALS.md","benchmark/KPIS.md","benchmark/METHODOLOGY.md","benchmark/RESULTS.md","benchmark/campaigns README files"]},
+    {"reviewer":"R16","task":"ses_f0aa1a88dffesC6bSFZfqXGGbU","verdict":"APPROVE","scope":["docs/roadmaps Markdown","docs/FINDING-self-graded-review-verdicts.md","docs/enforcement-model.md historical header","docs/fixtures/enforcement-model/README.md historical header","CHANGELOG.md new entry/header/footer","docs/profiles.md historical references"]},
+    {"reviewer":"R17","task":"ses_f0aa1a87dffenurLRMPHfU9JQC","verdict":"APPROVE","scope":["tests/test_docs.py","docs/skills.json","docs/README.md","requirements-dev.txt"]},
+    {"reviewer":"R18","task":"ses_f0a822791ffe4H4cJPQ6f5cCOO","verdict":"APPROVE","scope":["docs/control-plane.md","docs/relay-v2.md","docs/telemetry.md","docs/trace-corpus.md","docs/guardrails.md"]}
+  ],
+  "meaningful_rejection_controls": [
+    "Missing cold-review H2, invalid skill metadata, broken parsed Markdown links, empty/malformed inventories, missing or overlapping source ownership.",
+    "Physically external source/test symlink targets, test-path traversal, nested PermissionError and FileNotFoundError inventories.",
+    "FileNotFoundError after scandir acquisition/entry yield must reject instead of producing a partial green inventory.",
+    "Removing the actual arm-hook catalog row must name bin/relay-arm-hook.sh as unowned.",
+    "Changing actual nested skill bytes without regenerating must make index --check fail.",
+    "Independent scratch mutations of duplicate-owner detection and post-open inventory handling produced PASS -> FAIL -> PASS after restoration."
+  ]
+}

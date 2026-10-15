@@ -1,0 +1,35 @@
+--- a/svc/session.py
++++ b/svc/session.py
+@@ -12,7 +12,7 @@ from .store import Store
+ 
+ class Session:
+-    TTL = 3600
++    TTL = 900
+ 
+     def __init__(self, store: Store, sid: str):
+         self.store = store
+@@ -21,18 +21,27 @@ class Session:
+ 
+     def load(self):
+         raw = self.store.get(self.sid)
+-        if raw is None:
+-            return {}
+-        return json.loads(raw)
++        if raw is None:
++            return {}
++        try:
++            return json.loads(raw)
++        except json.JSONDecodeError:
++            log.warning("corrupt session blob for %s, dropping", self.sid)
++            self.store.delete(self.sid)
++            return {}
+ 
+     def save(self, data):
+-        self.store.set(self.sid, json.dumps(data), ttl=self.TTL)
++        blob = json.dumps(data)
++        if len(blob) > MAX_BLOB:
++            raise SessionTooLarge(f"{len(blob)} > {MAX_BLOB}")
++        self.store.set(self.sid, blob, ttl=self.TTL)
+ 
+     def touch(self):
+         self.store.expire(self.sid, self.TTL)

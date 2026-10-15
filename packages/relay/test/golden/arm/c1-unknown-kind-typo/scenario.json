@@ -1,0 +1,37 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "wp1",
+        "instructions": "do wp1",
+        "checklist": [
+          {
+            "id": "wp1-ok",
+            "cmd": "true"
+          }
+        ],
+        "kind": "excute",
+        "macro": "m"
+      },
+      {
+        "id": "wp2",
+        "instructions": "do wp2",
+        "checklist": [
+          {
+            "id": "wp2-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "position": "m.wp1"
+  },
+  "fires": [
+    {}
+  ]
+}

@@ -1,0 +1,10 @@
+bun test v1.3.14 (0d9b296a)
+
+test-browser/orchestra-compact-navigation.test.ts:
+(pass) window navigation presentation > remembers an explicit choice without sharing it with another window [10.24ms]
+(pass) window navigation presentation > a narrow window cannot overwrite the expanded preference [0.65ms]
+
+ 2 pass
+ 0 fail
+ 9 expect() calls
+Ran 2 tests across 1 file. [591.00ms]

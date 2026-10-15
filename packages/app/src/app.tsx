@@ -1,12 +1,13 @@
 import "@/index.css"
 import * as Sentry from "@sentry/solid"
-import { I18nProvider } from "@opencode-ai/ui/context"
-import { DialogProvider } from "@opencode-ai/ui/context/dialog"
-import { FileComponentProvider } from "@opencode-ai/ui/context/file"
-import { File } from "@opencode-ai/session-ui/file"
-import { Font } from "@opencode-ai/ui/font"
-import { Splash } from "@opencode-ai/ui/logo"
-import { ThemeProvider } from "@opencode-ai/ui/theme/context"
+import { I18nProvider } from "@orchestra/ui/context"
+import { DialogProvider } from "@orchestra/ui/context/dialog"
+import { FileComponentProvider } from "@orchestra/ui/context/file"
+import { File } from "@orchestra/session-ui/file"
+import { Font } from "@orchestra/ui/font"
+import { HugrSplash } from "@/orchestra/brand"
+import { ThemeProvider, syncThemeBackground } from "@orchestra/ui/theme/context"
+import { OrchestraPaletteProvider } from "@/orchestra/palette/context"
 import { MetaProvider } from "@solidjs/meta"
 import {
   type BaseRouterProps,
@@ -20,7 +21,7 @@ import {
 } from "@solidjs/router"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { Effect } from "effect"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import {
   type Component,
   createEffect,
@@ -44,7 +45,6 @@ import { FileProvider } from "@/context/file"
 import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider, useServerSync } from "@/context/server-sync"
 import { GlobalProvider, useGlobal } from "@/context/global"
-import { HighlightsProvider } from "@/context/highlights"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
 import { LayoutProvider } from "@/context/layout"
 import { ModelsProvider } from "@/context/models"
@@ -53,6 +53,8 @@ import { PermissionProvider } from "@/context/permission"
 import { usePlatform } from "@/context/platform"
 import { PromptProvider } from "@/context/prompt"
 import { ServerConnection, ServerProvider, serverName, useServer } from "@/context/server"
+import { JanitorProvider } from "@/context/janitor"
+import { JanitorWidget } from "@/components/janitor-widget"
 import { SettingsProvider, useSettings } from "@/context/settings"
 import { TabsProvider, useTabs, type DraftTab } from "@/context/tabs"
 import { SDKProvider, useSDK } from "@/context/sdk"
@@ -67,6 +69,7 @@ import { createSessionLineage } from "@/pages/session/session-lineage"
 
 import { SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent } from "@/pages/session"
 import { NewHome } from "@/pages/home"
+import { OrchestraChapterRoute } from "@/orchestra/chapter-route"
 import { LegacyHome } from "@/pages/home/legacy-home"
 
 const NewSession = lazy(() => import("@/pages/new-session"))
@@ -268,21 +271,28 @@ function LayoutCompatibility(props: ParentProps) {
 
 declare global {
   interface Window {
-    __OPENCODE__?: {
+    __ORCHESTRA__?: {
       deepLinks?: string[]
     }
-    api?: {
+    api?: Partial<import("./app-dock-linux").AppDockLinuxAPI> & {
       appDockOpen?: (
         url: string,
         bounds: { x: number; y: number; width: number; height: number },
         profile?: string,
       ) => Promise<{ id: string; tabID: string; generation: number; url: string }>
       appDockDeleteProfile?: (profileID: string) => Promise<void>
-      appDockResize?: (bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
-      appDockHide?: () => Promise<void>
+      appDockResize?: (
+        tab: { tabID: string; generation: number },
+        bounds: { x: number; y: number; width: number; height: number },
+      ) => Promise<void>
+      appDockHide?: (tab: { tabID: string; generation: number }) => Promise<void>
+      appDockOcclude?: (occluded: boolean) => Promise<void>
       appDockClose?: () => Promise<void>
       appDockCloseTab?: (id: string) => Promise<void>
-      appDockSelect?: (id: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
+      appDockSelect?: (
+        tab: { tabID: string; generation: number },
+        bounds: { x: number; y: number; width: number; height: number },
+      ) => Promise<void>
       appDockNavigate?: (id: string, url: string) => Promise<void>
       appDockCommand?: (id: string, command: "back" | "forward" | "reload") => Promise<void>
       appDockEvent?: (
@@ -336,6 +346,13 @@ declare global {
       appDockFullscreen?: (id: string, enabled: boolean) => Promise<void>
       setTitlebar?: (theme: { mode: "light" | "dark"; scheme?: "system" | "light" | "dark" }) => Promise<void>
       exportDebugLogs?: () => Promise<string>
+      janitor?: {
+        getReport: () => Promise<{ report: string; source: string | null } | null>
+        publish: (report: string, notify?: boolean, source?: string | null) => Promise<boolean>
+        snooze: (minutes: number, source?: string | null) => Promise<boolean>
+        dismiss: (source?: string | null) => Promise<boolean>
+        onReport: (cb: (event: { report: string; notify: boolean; source: string | null }) => void) => () => void
+      }
     }
   }
 }
@@ -360,7 +377,9 @@ function BodyDesignClass() {
     if (typeof document === "undefined") return
 
     const enabled = settings.general.newLayoutDesigns()
+    document.documentElement.toggleAttribute("data-new-layout", enabled)
     document.body.toggleAttribute("data-new-layout", enabled)
+    syncThemeBackground()
     document.body.classList.toggle("text-12-regular", !enabled)
     document.body.classList.toggle("font-(family-name:--font-family-text)", enabled)
     document.body.classList.toggle("text-[13px]", enabled)
@@ -378,7 +397,7 @@ function SharedProviders(props: ParentProps) {
       <BodyDesignClass />
       <CommandProvider>
         <DesktopCommands />
-        <HighlightsProvider>{props.children}</HighlightsProvider>
+        {props.children}
       </CommandProvider>
     </>
   )
@@ -466,24 +485,26 @@ export function AppBaseProviders(
           void window.api?.setTitlebar?.({ mode, scheme })
         }}
       >
-        <LanguageProvider locale={props.locale} onNativeTranslations={props.onNativeTranslations}>
-          <UiI18nBridge>
-            <ErrorBoundary
-              fallback={(error) => {
-                Sentry.captureException(error)
-                return <ErrorPage error={error} />
-              }}
-            >
-              <QueryProvider>
-                <WslServersProvider>
-                  <DialogProvider>
-                    <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
-                  </DialogProvider>
-                </WslServersProvider>
-              </QueryProvider>
-            </ErrorBoundary>
-          </UiI18nBridge>
-        </LanguageProvider>
+        <OrchestraPaletteProvider>
+          <LanguageProvider locale={props.locale} onNativeTranslations={props.onNativeTranslations}>
+            <UiI18nBridge>
+              <ErrorBoundary
+                fallback={(error) => {
+                  Sentry.captureException(error)
+                  return <ErrorPage error={error} />
+                }}
+              >
+                <QueryProvider>
+                  <WslServersProvider>
+                    <DialogProvider>
+                      <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
+                    </DialogProvider>
+                  </WslServersProvider>
+                </QueryProvider>
+              </ErrorBoundary>
+            </UiI18nBridge>
+          </LanguageProvider>
+        </OrchestraPaletteProvider>
       </ThemeProvider>
     </MetaProvider>
   )
@@ -553,7 +574,7 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
       </Show>
       <Show when={loading()}>
         <div class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background-base">
-          <Splash class="w-16 h-20 opacity-50 animate-pulse" />
+          <HugrSplash />
         </div>
       </Show>
     </>
@@ -574,7 +595,7 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
   return (
     <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base gap-6 p-6">
       <div class="flex flex-col items-center max-w-md text-center">
-        <Splash class="w-12 h-15 mb-4" />
+        <HugrSplash class="mb-4" />
         <p class="text-14-regular text-text-base">
           {unreachable()[0]}
           <span class="text-text-strong font-medium">{name()}</span>
@@ -632,8 +653,11 @@ export function AppInterface(props: {
   const ServerShell = (shellProps: ParentProps) => (
     <QueryProvider>
       <SharedProviders>
-        {props.children}
-        {shellProps.children}
+        <JanitorProvider>
+          {props.children}
+          {shellProps.children}
+          <JanitorWidget />
+        </JanitorProvider>
       </SharedProviders>
     </QueryProvider>
   )
@@ -701,6 +725,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         <Route path="/" component={NewHome} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
+        <Route path="/orchestra/:chapter/*rest" component={OrchestraChapterRoute} />
       </Show>
       <Route path="/new-session" component={DraftRoute} />
     </>

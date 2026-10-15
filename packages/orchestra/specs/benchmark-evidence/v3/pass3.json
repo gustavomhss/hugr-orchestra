@@ -1,0 +1,26 @@
+{
+  "name": "pass3",
+  "transport": "file",
+  "boundary": 89,
+  "head": [
+    55,
+    80
+  ],
+  "tailStart": 81,
+  "crossed": true,
+  "contextTokens": 45211,
+  "applied": true,
+  "retried": false,
+  "items": 18,
+  "memoryTokens": 8760,
+  "calls": [
+    {
+      "label": "v3/pass3",
+      "estimate": 33413,
+      "usage": {
+        "inputTokens": 33413,
+        "outputTokens": 1551
+      }
+    }
+  ]
+}

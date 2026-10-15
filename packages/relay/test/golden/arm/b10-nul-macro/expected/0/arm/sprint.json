@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"bad","cmd":"printf bad >> executed"}],"macro":"scope\u0000"}]}

@@ -1,0 +1,6 @@
+{
+  "ledger": "test/fixtures/mutants/sealed-nested-h.ledger.jsonl",
+  "keys": {
+    "keyed": "relay-golden-ledger-key"
+  }
+}

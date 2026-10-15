@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""design-check — mechanical verifier for the DESIGN protocol's six gates.
+
+The design protocol names its own verify hooks and says who runs them: *"Verify hooks (run by the
+harness, not claimed by the agent): clean-hands-lint over the question log; intake-reconcile over the
+map (100% provenance, quote-is-substring-of-utterance, unique ids, valid kinds, last two rounds
+recorded)"*, and at the end *"design-reconcile — no entry left ASSUMED/open, all trace fields
+present, ids unique, manifest complete"*. Those three are folded in here, phase by phase.
+
+THE HONESTY NOTE IS THE PROTOCOL'S OWN, AND IT IS LOAD-BEARING: *"The lint is a floor, not a
+ceiling: pattern checks catch overt leading, stacked questions, hypotheticals, and solution verbs;
+subtle steering is caught downstream — by the MIRROR (the owner corrects a distorted image) and by
+cold review. Claiming more for the lint than it does would be exactly the false comfort this method
+exists to kill."*
+
+So the split is deliberate and it is the protocol's, not an invention here. What is computable is
+computed; what is judgment is left to the three `review` states the protocol already defines
+(`distinctness`, `dress_rehearsal`, `no_flinching`) and graded by a verdict plus a judge against the
+diff. A checker that claimed to know whether three doors are *genuinely different approaches* would
+be the false comfort the protocol warns about.
+
+The one check worth naming on its own is **quote-is-substring-of-utterance**: every fact in the
+intent map quotes the owner, and that quote must literally appear in a stored utterance. It is the
+anti-fabrication control of the whole protocol, and it is exact.
+
+Artifacts, all under --design-dir. Usage:
+    design-check --phase intake|mirror|concept|shape|risks|ratify [--design-dir DIR] [--json]
+Exit: 0 clean · 1 one or more FAIL · 2 usage/IO error. stdlib only.
+"""
+import argparse
+import json
+import os
+import re
+import sys
+
+PASS, FAIL = "PASS", "FAIL"
+AXES = {"value", "usability", "feasibility", "viability"}
+MAP_KINDS = {"fact", "term", "tension", "assumption", "episode", "our_reading"}
+# The lint is a FLOOR. These patterns catch overt leading, stacked questions, hypotheticals and
+# solution verbs — nothing subtler, and the protocol says so out loud.
+LEADING = re.compile(r"\b(?:don'?t you (?:think|agree)|wouldn'?t it|isn'?t it|right\?|surely)\b", re.I)
+HYPOTHETICAL = re.compile(r"\b(?:if you could|imagine if|what if you|would you ever|suppose)\b", re.I)
+SOLUTION_VERB = re.compile(r"\b(?:should we (?:build|add|use)|have you considered|why not just|"
+                           r"we could (?:build|add)|what about using)\b", re.I)
+
+
+def load(d, name):
+    try:
+        with open(os.path.join(d, name)) as f:
+            return json.load(f), None
+    except OSError:
+        return None, f"file not found: {name}"
+    except ValueError as e:
+        return None, f"{name} is not valid JSON: {e}"
+
+
+def text_of(d, name):
+    try:
+        with open(os.path.join(d, name)) as f:
+            return f.read(), None
+    except OSError:
+        return None, f"file not found: {name}"
+
+
+def all_fail(names, why):
+    return [(n, FAIL, why) for n in names]
+
+
+def check_intake(d):
+    names = ("narrative_captured", "episodes_anchored", "map_consolidated", "tensions_swept",
+             "saturation_reached", "question_log_clean", "provenance_complete")
+    tr, e1 = load(d, "transcript.json")
+    mp, e2 = load(d, "map.json")
+    if e1:
+        return all_fail(names, e1)
+    if e2:
+        return all_fail(names, e2)
+    utts = tr.get("utterances") or []
+    entries = mp.get("entries") or []
+    out = []
+
+    out.append(("narrative_captured",
+                PASS if utts and tr.get("contract_presented") else FAIL,
+                f"{len(utts)} utterances, listening contract presented={bool(tr.get('contract_presented'))}"))
+
+    # Fluff — would/usually/always — enters no register as fact. An entry claiming to be an episode
+    # must point at a specific past one, which here means naming the utterance it came from.
+    eps = [e for e in entries if e.get("kind") == "episode"]
+    floating = [e.get("id") for e in eps if not e.get("utterance_id")]
+    out.append(("episodes_anchored", PASS if eps and not floating else FAIL,
+                f"{len(eps)} episodes anchored" if eps and not floating
+                else f"unanchored: {floating or 'no episodes recorded'}"))
+
+    ids = [e.get("id") for e in entries]
+    dupes = sorted({i for i in ids if ids.count(i) > 1})
+    bad_kind = sorted({e.get("kind") for e in entries if e.get("kind") not in MAP_KINDS})
+    out.append(("map_consolidated", PASS if entries and not dupes and not bad_kind else FAIL,
+                f"{len(entries)} entries, ids unique, kinds valid" if entries and not dupes and not bad_kind
+                else f"duplicate ids: {dupes}; invalid kinds: {bad_kind}" if entries else "map is empty"))
+
+    # A tension is a recorded disagreement. Sweeping it means every one is linked and dispositioned —
+    # never silently dropped, which is what "closed at for_the_record by the signer" depends on.
+    tens = [e for e in entries if e.get("kind") == "tension"]
+    unswept = [t.get("id") for t in tens if not (t.get("linked_to") and t.get("disposition"))]
+    out.append(("tensions_swept", PASS if not unswept else FAIL,
+                f"{len(tens)} tensions, each linked and dispositioned" if not unswept
+                else f"unswept: {unswept}"))
+
+    # The saturation signal is a rate over the LAST TWO rounds — the protocol is explicit that both
+    # new-topic and new-nuance must have fallen, and that two rounds must be on record.
+    rounds = mp.get("rounds") or []
+    if len(rounds) < 2:
+        out.append(("saturation_reached", FAIL, f"only {len(rounds)} round(s) recorded; two are required"))
+    else:
+        a, b = rounds[-2], rounds[-1]
+        fell = (b.get("new_topic_rate", 1) <= a.get("new_topic_rate", 1)
+                and b.get("new_nuance_rate", 1) <= a.get("new_nuance_rate", 1))
+        out.append(("saturation_reached", PASS if fell else FAIL,
+                    f"topic {a.get('new_topic_rate')}->{b.get('new_topic_rate')}, "
+                    f"nuance {a.get('new_nuance_rate')}->{b.get('new_nuance_rate')}"))
+
+    ql, e3 = load(d, "question-log.json")
+    if e3:
+        out.append(("question_log_clean", FAIL, e3))
+    else:
+        qs = ql.get("questions") or []
+        viol = []
+        for q in qs:
+            t = str(q.get("text", ""))
+            if LEADING.search(t):
+                viol.append((t[:50], "leading"))
+            elif HYPOTHETICAL.search(t):
+                viol.append((t[:50], "hypothetical"))
+            elif SOLUTION_VERB.search(t):
+                viol.append((t[:50], "solution-pitching"))
+            elif t.count("?") > 1:
+                viol.append((t[:50], "stacked"))
+        out.append(("question_log_clean", PASS if qs and not viol else FAIL,
+                    f"{len(qs)} questions, no overt violation (a floor, not a ceiling)" if qs and not viol
+                    else f"{viol}" if qs else "no questions recorded"))
+
+    # THE anti-fabrication control: every fact quotes the owner, and the quote must literally appear
+    # in a stored utterance. A paraphrase presented as a quote fails here, which is the point.
+    by_id = {u.get("id"): str(u.get("text", "")) for u in utts}
+    facts = [e for e in entries if e.get("kind") in ("fact", "term", "episode")]
+    noprov = [e.get("id") for e in facts if not e.get("utterance_id") or not e.get("quote")]
+    unquoted = [e.get("id") for e in facts
+                if e.get("utterance_id") and e.get("quote")
+                and str(e["quote"]).strip() not in by_id.get(e["utterance_id"], "")]
+    ok = bool(facts) and not noprov and not unquoted
+    out.append(("provenance_complete", PASS if ok else FAIL,
+                f"{len(facts)} facts, every quote found verbatim in its utterance" if ok
+                else f"no provenance: {noprov}; quote not in the cited utterance: {unquoted}"
+                if facts else "no facts recorded"))
+    return out
+
+
+def check_mirror(d):
+    names = ("front_page_written", "every_chunk_confirmed", "corrections_folded",
+             "disagreements_recorded")
+    page, e1 = text_of(d, "front-page.md")
+    rb, e2 = load(d, "readback.json")
+    if e1:
+        return all_fail(names, e1)
+    if e2:
+        return all_fail(names, e2)
+    chunks = rb.get("chunks") or []
+    out = []
+    # The page must state what it does NOT do and how it could fail — written to seek truth, not sell.
+    has_not = re.search(r"^##+\s*.*\b(not|non-goal)", page, re.M | re.I)
+    has_fail = re.search(r"^##+\s*.*\b(fail|risk)", page, re.M | re.I)
+    out.append(("front_page_written", PASS if page.strip() and has_not and has_fail else FAIL,
+                "page states what it does not do and how it could fail" if has_not and has_fail
+                else f"missing sections — does-not-do={bool(has_not)}, could-fail={bool(has_fail)}"))
+    # Silence is not confirmation: every chunk carries an explicit, verbatim response.
+    silent = [c.get("id") for c in chunks
+              if c.get("response") not in ("confirm", "correct", "disagree") or not str(c.get("verbatim", "")).strip()]
+    out.append(("every_chunk_confirmed", PASS if chunks and not silent else FAIL,
+                f"{len(chunks)} chunks, each explicitly answered in the owner's words" if chunks and not silent
+                else f"no explicit verbatim response: {silent or 'no chunks presented'}"))
+    corr = [c for c in chunks if c.get("response") == "correct"]
+    unfolded = [c.get("id") for c in corr if not c.get("map_update")]
+    out.append(("corrections_folded", PASS if not unfolded else FAIL,
+                f"{len(corr)} corrections, each folded into the map" if not unfolded
+                else f"not folded: {unfolded}"))
+    # A disagreement is recorded, never overwritten — so it must survive as its own entry.
+    dis = [c for c in chunks if c.get("response") == "disagree"]
+    lost = [c.get("id") for c in dis if not c.get("recorded_as")]
+    out.append(("disagreements_recorded", PASS if not lost else FAIL,
+                f"{len(dis)} disagreements, each still visible" if not lost else f"overwritten: {lost}"))
+    return out
+
+
+def check_concept(d):
+    names = ("doors_reviewed", "choice_rationale_logged", "rejected_doors_recorded",
+             "choice_traces_to_problem")
+    doors, e1 = load(d, "doors.json")
+    if e1:
+        return all_fail(names, e1)
+    ds = doors.get("doors") or []
+    out = []
+    # The gate cannot judge whether the doors are genuinely different — that is `distinctness`, a
+    # review state, and it returns a verdict object. What the gate checks is that the verdict exists
+    # and approved, and that the shape the protocol demands is there: 2-3 doors, tradeoffs, and which
+    # of the four risk axes each aggravates.
+    v, e2 = load(d, "verdict-distinctness.json")
+    shape_bad = [x.get("id") for x in ds
+                 if not (x.get("paragraph") and x.get("tradeoffs")
+                         and set(x.get("aggravates") or []) <= AXES and x.get("aggravates"))]
+    ok = 2 <= len(ds) <= 3 and not shape_bad and not e2 and (v or {}).get("verdict") == "APPROVE"
+    out.append(("doors_reviewed", PASS if ok else FAIL,
+                f"{len(ds)} doors, distinctness APPROVE" if ok
+                else f"doors={len(ds)} (need 2-3); malformed: {shape_bad}; "
+                     f"distinctness={(v or {}).get('verdict', e2)}"))
+    chosen = doors.get("chosen")
+    out.append(("choice_rationale_logged",
+                PASS if chosen in {x.get("id") for x in ds} and str(doors.get("rationale", "")).strip() else FAIL,
+                f"chose {chosen} with a logged rationale" if chosen and doors.get("rationale")
+                else f"chosen={chosen!r}, rationale={'present' if doors.get('rationale') else 'missing'}"))
+    # The doors not taken are recorded WITH THE REASON — this is what makes the later decision memo
+    # honest rather than retrofitted.
+    rejected = {r.get("id"): r for r in (doors.get("rejected") or [])}
+    expected = {x.get("id") for x in ds} - {chosen}
+    missing = sorted(expected - set(rejected))
+    reasonless = sorted(i for i, r in rejected.items() if not str(r.get("reason", "")).strip())
+    out.append(("rejected_doors_recorded", PASS if expected and not missing and not reasonless else FAIL,
+                f"{len(expected)} rejected doors, each with its reason" if expected and not missing and not reasonless
+                else f"unrecorded: {missing}; no reason given: {reasonless}"))
+    traces = doors.get("traces_to") or []
+    mp, _ = load(d, "map.json")
+    map_ids = {e.get("id") for e in ((mp or {}).get("entries") or [])}
+    dangling = sorted(set(traces) - map_ids)
+    out.append(("choice_traces_to_problem", PASS if traces and not dangling else FAIL,
+                f"choice traces to {len(traces)} confirmed map entries" if traces and not dangling
+                else f"traces={traces or 'none'}; not in the map: {dangling}"))
+    return out
+
+
+def check_shape(d):
+    names = ("skeleton_walks_end_to_end", "touchpoints_per_vertebra", "nouns_named",
+             "scenes_reviewed", "non_goals_explicit", "boundary_scenes_present")
+    sk, e1 = load(d, "skeleton.json")
+    if e1:
+        return all_fail(names, e1)
+    verts = sk.get("vertebrae") or []
+    scenes = sk.get("scenes") or []
+    out = []
+    # End to end means the chain actually chains: each vertebra after the first consumes what the
+    # previous one produced. A vertebra that assumes a step nobody wrote breaks here.
+    broken = [v.get("id") for i, v in enumerate(verts)
+              if i and v.get("consumes") != verts[i - 1].get("produces")]
+    out.append(("skeleton_walks_end_to_end", PASS if len(verts) >= 2 and not broken else FAIL,
+                f"{len(verts)} vertebrae, each consuming what the last produced" if verts and not broken
+                else f"gap before: {broken}" if verts else "no skeleton laid"))
+    bare = [v.get("id") for v in verts if not (v.get("touchpoints") or [])]
+    out.append(("touchpoints_per_vertebra", PASS if verts and not bare else FAIL,
+                "every vertebra has something the owner sees or touches" if verts and not bare
+                else f"nothing at: {bare or 'no vertebrae'}"))
+    nouns = {n for v in verts for n in (v.get("nouns") or [])}
+    out.append(("nouns_named", PASS if nouns else FAIL,
+                f"{len(nouns)} domain nouns named at the point of contact" if nouns else "no nouns named"))
+    # "A scene that cannot fail is decoration and is rejected." That is computable: the scene must
+    # name the observable outcome that would make it fail.
+    v, e2 = load(d, "verdict-dress_rehearsal.json")
+    toothless = [s.get("id") for s in scenes if not str(s.get("observable_failure", "")).strip()]
+    ok = scenes and not toothless and not e2 and (v or {}).get("verdict") == "APPROVE"
+    out.append(("scenes_reviewed", PASS if ok else FAIL,
+                f"{len(scenes)} scenes, each able to fail, dress rehearsal APPROVE" if ok
+                else f"cannot fail: {toothless}; rehearsal={(v or {}).get('verdict', e2)}"))
+    # A real non-goal names something someone would plausibly expect — so it carries who expected it.
+    ngs = sk.get("non_goals") or []
+    straw = [n.get("text", "")[:40] for n in ngs if not str(n.get("plausibly_expected_by", "")).strip()]
+    out.append(("non_goals_explicit", PASS if ngs and not straw else FAIL,
+                f"{len(ngs)} non-goals, each something someone would have expected" if ngs and not straw
+                else f"straw refusals: {straw or 'no non-goals stated'}"))
+    kinds = {s.get("kind") for s in scenes}
+    out.append(("boundary_scenes_present", PASS if {"first_use", "failure"} <= kinds else FAIL,
+                "first-use and failure scenes present" if {"first_use", "failure"} <= kinds
+                else f"missing: {sorted({'first_use', 'failure'} - kinds)}"))
+    return out
+
+
+def check_risks(d):
+    names = ("four_axes_ranked", "assumptions_plotted", "critical_assumptions_have_probes",
+             "kill_criteria_sealed_before_probes", "anti_optimism_reviewed",
+             "v1_still_delivers_front_page")
+    rk, e1 = load(d, "risks.json")
+    if e1:
+        return all_fail(names, e1)
+    obits = rk.get("obituaries") or []
+    assums = rk.get("assumptions") or []
+    out = []
+    covered = {o.get("axis") for o in obits}
+    ranked = {o.get("axis"): o.get("rank") for o in obits if o.get("rank") is not None}
+    ok = AXES <= covered and len(ranked) == len(AXES) and len(set(ranked.values())) == len(AXES)
+    out.append(("four_axes_ranked", PASS if ok else FAIL,
+                "all four axes have an obituary and a distinct rank" if ok
+                else f"axes covered: {sorted(covered)}; distinct ranks: {sorted(set(ranked.values()))}"))
+    unplotted = [a.get("id") for a in assums
+                 if a.get("importance") is None or a.get("evidence") is None]
+    out.append(("assumptions_plotted", PASS if assums and not unplotted else FAIL,
+                f"{len(assums)} assumptions on importance x evidence" if assums and not unplotted
+                else f"unplotted: {unplotted or 'no assumptions extracted'}"))
+    # The dangerous quadrant: high importance, low evidence. Those get the cheapest probe that could
+    # INVALIDATE the assumption — a test of belief, not a mini-product.
+    crit = [a for a in assums if (a.get("importance") or 0) >= 4 and (a.get("evidence") or 0) <= 2]
+    unprobed = [a.get("id") for a in crit if not str(a.get("probe", "")).strip()]
+    out.append(("critical_assumptions_have_probes", PASS if not unprobed else FAIL,
+                f"{len(crit)} critical assumptions, each probed" if not unprobed
+                else f"unprobed: {unprobed}"))
+    # The ordering IS the control: a kill criterion written after the probe ran is a result narrated
+    # into a threshold. Sealed first, or it proves nothing.
+    late = [a.get("id") for a in crit
+            if not a.get("kill_sealed_at")
+            or (a.get("probe_ran_at") and a["kill_sealed_at"] >= a["probe_ran_at"])]
+    out.append(("kill_criteria_sealed_before_probes", PASS if crit and not late else FAIL,
+                "every kill criterion sealed before its probe ran" if crit and not late
+                else f"sealed late or not at all: {late or 'no critical assumptions'}"))
+    v, e2 = load(d, "verdict-no_flinching.json")
+    out.append(("anti_optimism_reviewed",
+                PASS if not e2 and (v or {}).get("verdict") == "APPROVE" else FAIL,
+                f"no_flinching={(v or {}).get('verdict', e2)}"))
+    # Scope-cutting must not quietly break the promise the owner confirmed, so v1 has to still cover
+    # every outcome the front page named.
+    promised = set(rk.get("front_page_promises") or [])
+    delivered = set(rk.get("v1_delivers") or [])
+    broken = sorted(promised - delivered)
+    out.append(("v1_still_delivers_front_page", PASS if promised and not broken else FAIL,
+                f"v1 still delivers all {len(promised)} confirmed promises" if promised and not broken
+                else f"promises v1 no longer covers: {broken or 'no promises recorded'}"))
+    return out
+
+
+def check_ratify(d):
+    names = ("memo_written", "dissent_solicited", "assumption_ledger_closed", "owner_signed")
+    memo, e1 = text_of(d, "memo.md")
+    rat, e2 = load(d, "ratify.json")
+    if e1:
+        return all_fail(names, e1)
+    if e2:
+        return all_fail(names, e2)
+    out = []
+    need = ("context", "options", "decision", "consequences")
+    have = [s for s in need if re.search(rf"^##+\s*{s}", memo, re.M | re.I)]
+    out.append(("memo_written", PASS if len(have) == len(need) else FAIL,
+                "memo has context, options, decision, consequences" if len(have) == len(need)
+                else f"missing sections: {sorted(set(need) - set(have))}"))
+    # Solicited EXPLICITLY before signing — so "none" is a recorded answer, not an absent field.
+    dis = rat.get("dissent")
+    out.append(("dissent_solicited", PASS if dis is not None else FAIL,
+                f"{len(dis)} dissent(s) recorded" if isinstance(dis, list)
+                else "dissent was never solicited" if dis is None else "recorded"))
+    # design-reconcile: no entry left ASSUMED or open.
+    ledger = rat.get("ledger") or []
+    open_items = [x.get("id") for x in ledger if x.get("status") in ("ASSUMED", "open", None)]
+    out.append(("assumption_ledger_closed", PASS if ledger and not open_items else FAIL,
+                f"{len(ledger)} entries, none left ASSUMED or open" if ledger and not open_items
+                else f"still open: {open_items or 'ledger is empty'}"))
+    sig = rat.get("signature") or {}
+    covers = set(sig.get("covers") or [])
+    need_cover = {"v1_scope", "accepted_risks", "confirmed_assumptions"}
+    ok = sig.get("signer") and sig.get("signature") and need_cover <= covers
+    out.append(("owner_signed", PASS if ok else FAIL,
+                f"signed by {sig.get('signer')}, covering scope, risks and assumptions" if ok
+                else f"signer={sig.get('signer')!r}; covers missing: {sorted(need_cover - covers)}"))
+    return out
+
+
+PHASES = {"intake": check_intake, "mirror": check_mirror, "concept": check_concept,
+          "shape": check_shape, "risks": check_risks, "ratify": check_ratify}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Mechanical verifier for the DESIGN protocol's gates.")
+    ap.add_argument("--phase", required=True, choices=sorted(PHASES))
+    ap.add_argument("--design-dir", default="design")
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+    if not os.path.isdir(a.design_dir):
+        print(f"design-check: --design-dir {a.design_dir} is not a directory", file=sys.stderr)
+        return 2
+    results = PHASES[a.phase](a.design_dir)
+    if a.as_json:
+        print(json.dumps([{"criterion": c, "status": s, "evidence": e} for c, s, e in results], indent=2))
+    else:
+        for c, s, e in results:
+            print(f"{s} {c} — {e}")
+    return 1 if any(s == FAIL for _, s, _ in results) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

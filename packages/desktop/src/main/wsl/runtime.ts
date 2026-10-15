@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import * as pty from "@lydell/node-pty"
 import type { WslDistroProbe, WslInstalledDistro, WslOnlineDistro, WslRuntimeCheck } from "../../preload/types"
 import { wslTerminalArgs } from "./policy"
 import { nativeT } from "../native-translations"
+import { DesktopOmni } from "../omni-process"
 
 export type WslCommandLine = {
   stream: "stdout" | "stderr"
@@ -50,13 +50,17 @@ function runPowerShell(command: string, opts: RunWslOptions = {}) {
   )
 }
 
-function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
+// Exported for its test: wsl.exe writes UTF-16LE, and every command runs through here.
+export function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   return new Promise<WslCommandResult>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true,
-      signal: opts.signal,
-    })
+    // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER through omni: bytes, decoded below exactly as before.
+    const child: Pick<DesktopOmni.Spawned, "stdout" | "stderr" | "kill" | "once"> = DesktopOmni.enabled()
+      ? DesktopOmni.spawn(command, args, { stdin: "closed", signal: opts.signal })
+      : spawn(command, args, {
+          stdio: ["ignore", "pipe", "pipe"],
+          windowsHide: true,
+          signal: opts.signal,
+        })
 
     // Guard every wsl.exe invocation with a timeout. When the distro or
     // the LXSS service is wedged (Ubuntu first-run state, Windows update
@@ -113,17 +117,19 @@ function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   })
 }
 
-function runInteractiveCommand(command: string, args: string[], opts: RunWslOptions = {}, defaultTimeoutMs: number) {
+async function runInteractiveCommand(
+  command: string,
+  args: string[],
+  opts: RunWslOptions = {},
+  defaultTimeoutMs: number,
+) {
+  // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the terminal is omni's (ConPTY on Windows).
+  const terminal = { name: "xterm-color", cols: 80, rows: 24, cwd: process.cwd() }
+  const legacy = DesktopOmni.enabled() ? undefined : await import("@lydell/node-pty")
+  const child: DesktopOmni.Terminal = legacy
+    ? legacy.spawn(command, args, { ...terminal, env: process.env, useConpty: true })
+    : await DesktopOmni.terminal(command, args, terminal)
   return new Promise<WslCommandResult>((resolve, reject) => {
-    const child = pty.spawn(command, args, {
-      name: "xterm-color",
-      cols: 80,
-      rows: 24,
-      cwd: process.cwd(),
-      env: process.env,
-      useConpty: true,
-    })
-
     let settled = false
     let stdout = ""
 
@@ -264,18 +270,6 @@ export async function installWslDistro(name: string, opts?: RunWslOptions) {
   )
 }
 
-export async function installWslOpencode(version: string, distro: string, opts?: RunWslOptions) {
-  return runInteractiveCommand(
-    resolveSystem32Command("wsl.exe"),
-    wslArgs(
-      ["bash", "-lc", `curl -fsSL https://opencode.ai/install | bash -s -- --version ${shellEscape(version)}`],
-      distro,
-    ),
-    withTimeout(opts, DEFAULT_WSL_INSTALL_TIMEOUT_MS),
-    DEFAULT_WSL_INSTALL_TIMEOUT_MS,
-  )
-}
-
 export async function probeWslDistro(name: string, opts?: RunWslOptions): Promise<WslDistroProbe> {
   const executable = await runWslInDistro(["/bin/true"], name, opts).catch((error) => ({
     code: 1,
@@ -288,30 +282,25 @@ export async function probeWslDistro(name: string, opts?: RunWslOptions): Promis
       name,
       canExecute: false,
       hasBash: false,
-      hasCurl: false,
       error: summarize(executable.stderr || executable.stdout) || nativeT("desktop.wsl.error.executeDistro"),
     }
   }
 
-  const [bash, curl] = await Promise.all([
-    runWslSh("command -v bash >/dev/null && printf yes || printf no", name, opts),
-    runWslSh("command -v curl >/dev/null && printf yes || printf no", name, opts),
-  ])
+  const bash = await runWslSh("command -v bash >/dev/null && printf yes || printf no", name, opts)
 
   return {
     name,
     canExecute: true,
     hasBash: bash.code === 0 && summarize(bash.stdout) === "yes",
-    hasCurl: curl.code === 0 && summarize(curl.stdout) === "yes",
     error: null,
   }
 }
 
-export async function resolveWslOpencode(distro: string, opts?: RunWslOptions) {
+export async function resolveWslOrchestra(distro: string, opts?: RunWslOptions) {
   return firstLine(
     (
       await runWslSh(
-        'if [ -x "$HOME/.opencode/bin/opencode" ]; then printf "%s\\n" "$HOME/.opencode/bin/opencode"; fi',
+        'if [ -x "$HOME/.orchestra/bin/orchestra" ]; then printf "%s\\n" "$HOME/.orchestra/bin/orchestra"; fi',
         distro,
         opts,
       )
@@ -320,8 +309,12 @@ export async function resolveWslOpencode(distro: string, opts?: RunWslOptions) {
 }
 
 export async function readWslCommandVersion(command: string, distro: string, opts?: RunWslOptions) {
-  const result = await runWslSh(`${shellEscape(command)} --version 2>/dev/null || true`, distro, opts)
-  return firstLine(result.stdout)
+  const { verifyWslGuestArtifact } = await import("./artifact")
+  return normalizeWslCommandVersion((await verifyWslGuestArtifact(distro, command, opts)) ?? "")
+}
+
+export function normalizeWslCommandVersion(output: string) {
+  return /^orchestra v([^\s]+)\r?\n?$/.exec(output)?.[1] ?? null
 }
 
 export function openWslTerminal(distro?: string | null) {

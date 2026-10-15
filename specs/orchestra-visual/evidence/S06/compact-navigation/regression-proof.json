@@ -1,0 +1,29 @@
+{
+  "unit": {
+    "command": [
+      "bun",
+      "test",
+      "--conditions=browser",
+      "--preload",
+      "./happydom.ts",
+      "./test-browser/orchestra-compact-navigation.test.ts"
+    ],
+    "exit_code": 1
+  },
+  "e2e": {
+    "command": [
+      "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh",
+      "env",
+      "PLAYWRIGHT_PORT=4994",
+      "bunx",
+      "playwright",
+      "test",
+      "e2e/orchestra/compact-navigation.spec.ts",
+      "--grep",
+      "responsive compact",
+      "--reporter=line"
+    ],
+    "exit_code": 1
+  },
+  "restored_exactly": true
+}

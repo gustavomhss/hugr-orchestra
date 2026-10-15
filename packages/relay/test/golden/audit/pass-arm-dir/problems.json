@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/pass-arm-dir/input/arm/ledger.jsonl",
+  "problems": []
+}

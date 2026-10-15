@@ -22,8 +22,23 @@ export function metaFrame(cursor: number) {
 
 export function chunks(data: string) {
   const out: string[] = []
-  for (let i = 0; i < data.length; i += REPLAY_CHUNK) out.push(data.slice(i, i + REPLAY_CHUNK))
+  for (let i = 0; i < data.length; ) {
+    const end = Math.min(data.length, i + REPLAY_CHUNK)
+    const safe = cut(data, end)
+    const next = safe > i ? safe : end
+    out.push(data.slice(i, next))
+    i = next
+  }
   return out
+}
+
+// A split point that does not separate a surrogate pair: one unit earlier when `index` falls between a high and a
+// low surrogate, so the pair stays together on the far side of the split.
+export function cut(data: string, index: number) {
+  if (index <= 0 || index >= data.length) return index
+  const high = data.charCodeAt(index - 1)
+  const low = data.charCodeAt(index)
+  return high >= 0xd800 && high <= 0xdbff && low >= 0xdc00 && low <= 0xdfff ? index - 1 : index
 }
 
 // Inbound client frames are UTF-8 text or binary; invalid UTF-8 input is dropped.

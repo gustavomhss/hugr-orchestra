@@ -1,0 +1,5 @@
+Ask the owner one or more questions and wait for the answers.
+
+- Each question has a short `header`, the full `question` and the `options` to pick from. Put the option you recommend first and end its label with "(Recommended)".
+- The owner can always type their own answer instead, so do not add an "Other" option. Set `multiple: true` to allow picking several options.
+- Answers come back in question order, as the picked labels or the typed text.

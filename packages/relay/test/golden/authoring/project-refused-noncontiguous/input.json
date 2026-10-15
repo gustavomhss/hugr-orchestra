@@ -1,0 +1,28 @@
+{
+  "op": "project",
+  "name": "Interleaved",
+  "sprint": {
+    "macros": [
+      {
+        "id": "A"
+      },
+      {
+        "id": "B"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "a1",
+        "macro": "A"
+      },
+      {
+        "id": "b",
+        "macro": "B"
+      },
+      {
+        "id": "a2",
+        "macro": "A"
+      }
+    ]
+  }
+}

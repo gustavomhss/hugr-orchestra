@@ -5,12 +5,12 @@ import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
 import { AutoScroller, Feedback, PointerActivationConstraints } from "@dnd-kit/dom"
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers"
 import { RestrictToElement } from "@dnd-kit/dom/modifiers"
-import { ScrollView } from "@opencode-ai/ui/scroll-view"
-import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { MenuV2 } from "@opencode-ai/ui/v2/menu-v2"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
+import { ScrollView } from "@orchestra/ui/scroll-view"
+import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
+import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
+import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
+import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
+import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
 import { getProjectAvatarVariant, type HomeProjectSelection, type LocalProject } from "@/context/layout"
 import { ServerConnection } from "@/context/server"
 import { useLanguage } from "@/context/language"
@@ -57,7 +57,6 @@ export type HomeProjectsViewProps = {
   onClearNotifications: (server: ServerConnection.Any, project: LocalProject) => void
   onCloseProject: (server: ServerConnection.Any, directory: string) => void
   onOpenSettings: () => void
-  onOpenHelp: () => void
 }
 
 export function HomeProjectsView(props: HomeProjectsViewProps) {
@@ -147,7 +146,6 @@ export function HomeProjectsView(props: HomeProjectsViewProps) {
       <HomeUtilityNav
         class="mb-8 mt-4 hidden shrink-0 lg:flex"
         onOpenSettings={props.onOpenSettings}
-        onOpenHelp={props.onOpenHelp}
         language={props.language}
       />
     </aside>
@@ -157,7 +155,6 @@ export function HomeProjectsView(props: HomeProjectsViewProps) {
 export function HomeUtilityNav(props: {
   class?: string
   onOpenSettings: () => void
-  onOpenHelp: () => void
   language: ReturnType<typeof useLanguage>
 }) {
   return (
@@ -169,14 +166,6 @@ export function HomeUtilityNav(props: {
       >
         <IconV2 name="settings-gear" size="small" />
         <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t("sidebar.settings")}</span>
-      </HomeProjectNavButton>
-      <HomeProjectNavButton
-        type="button"
-        class="text-v2-text-text-faint [&>[data-slot=icon-svg]]:text-v2-icon-icon-muted"
-        onClick={props.onOpenHelp}
-      >
-        <IconV2 name="help" size="small" />
-        <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t("sidebar.help")}</span>
       </HomeProjectNavButton>
     </div>
   )
@@ -612,7 +601,7 @@ function HomeProjectAvatar(props: { project: LocalProject; outline?: boolean }) 
   return (
     <ProjectAvatar
       fallback={name()}
-      src={props.outline ? undefined : getProjectAvatarSource(props.project.id, props.project.icon)}
+      src={props.outline ? undefined : getProjectAvatarSource(props.project.icon)}
       variant={props.outline ? "outline" : getProjectAvatarVariant(props.project.icon?.color)}
     />
   )

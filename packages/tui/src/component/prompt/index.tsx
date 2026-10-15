@@ -10,11 +10,11 @@ import {
 } from "@opentui/core"
 import type { CommandContext } from "@opentui/keymap"
 import { createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
-import { registerOpencodeSpinner } from "../register-spinner"
+import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
 import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
-import { Flag } from "@opencode-ai/core/flag/flag"
+import { Flag } from "@orchestra/core/flag/flag"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
@@ -37,7 +37,7 @@ import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
 import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
-import type { AssistantMessage, FilePart, UserMessage } from "@opencode-ai/sdk/v2"
+import type { AssistantMessage, FilePart, UserMessage } from "@orchestra/sdk/v2"
 import { Locale } from "../../util/locale"
 import { errorMessage } from "../../util/error"
 import { formatDuration } from "../../util/format"
@@ -51,14 +51,15 @@ import { createFadeIn } from "../../util/signal"
 import { DialogSkill } from "../dialog-skill"
 import { DialogWorkspaceUnavailable } from "../dialog-workspace-unavailable"
 import { useArgs } from "../../context/args"
-import { OPENCODE_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useOpencodeKeymap } from "../../keymap"
+import { ORCHESTRA_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useOrchestraKeymap } from "../../keymap"
 import { useTuiConfig } from "../../config"
 import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
+import { agentKey, findAgent } from "../../util/agent"
 
-registerOpencodeSpinner()
+registerOrchestraSpinner()
 
 export type PromptProps = {
   sessionID?: string
@@ -163,7 +164,7 @@ export function Prompt(props: PromptProps) {
   const status = createMemo(() => sync.data.session_status?.[props.sessionID ?? ""] ?? { type: "idle" })
   const history = usePromptHistory()
   const stash = usePromptStash()
-  const keymap = useOpencodeKeymap()
+  const keymap = useOrchestraKeymap()
   const agentShortcut = useCommandShortcut("agent.cycle")
   const paletteShortcut = useCommandShortcut("command.palette.show")
   const renderer = useRenderer()
@@ -320,7 +321,7 @@ export function Prompt(props: PromptProps) {
       syncedSessionID = sessionID
 
       // Only set agent if it's a primary agent (not a subagent)
-      const isPrimaryAgent = local.agent.list().some((x) => x.name === msg.agent)
+      const isPrimaryAgent = local.agent.list().some((x) => agentKey(x) === msg.agent)
       if (msg.agent && isPrimaryAgent) {
         // Keep command line --agent if specified.
         if (!args.agent) local.agent.set(msg.agent)
@@ -537,7 +538,7 @@ export function Prompt(props: PromptProps) {
         desc: "Change the workspace for the session",
         name: "workspace.set",
         category: "Session",
-        enabled: Flag.OPENCODE_EXPERIMENTAL_WORKSPACES,
+        enabled: Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES,
         slashName: "warp",
         run: () => {
           workspace.open()
@@ -564,7 +565,7 @@ export function Prompt(props: PromptProps) {
   }))
 
   useBindings(() => ({
-    mode: OPENCODE_BASE_MODE,
+    mode: ORCHESTRA_BASE_MODE,
     bindings: tuiConfig.keybinds.gather("prompt.palette", [
       "prompt.submit",
       "prompt.editor",
@@ -1000,7 +1001,7 @@ export function Prompt(props: PromptProps) {
       const res = await sdk.client.session.create({
         directory,
         workspace: workspaceID,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: {
           providerID: selectedModel.providerID,
           id: selectedModel.modelID,
@@ -1060,7 +1061,7 @@ export function Prompt(props: PromptProps) {
       move.startSubmit()
       void sdk.client.session.shell({
         sessionID,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: {
           providerID: selectedModel.providerID,
           modelID: selectedModel.modelID,
@@ -1084,7 +1085,7 @@ export function Prompt(props: PromptProps) {
         sessionID,
         command: command.slice(1),
         arguments: args,
-        agent: agent.name,
+        agent: agentKey(agent),
         model: `${selectedModel.providerID}/${selectedModel.modelID}`,
         variant,
         parts: nonTextParts.filter((x) => x.type === "file"),
@@ -1096,7 +1097,7 @@ export function Prompt(props: PromptProps) {
           {
             sessionID,
             ...selectedModel,
-            agent: agent.name,
+            agent: agentKey(agent),
             model: selectedModel,
             variant,
             parts: [
@@ -1290,7 +1291,7 @@ export function Prompt(props: PromptProps) {
     if (store.mode === "shell") return theme.primary
     const agent = local.agent.current()
     if (!agent) return theme.border
-    return local.agent.color(agent.name)
+    return local.agent.color(agentKey(agent))
   })
 
   const showVariant = createMemo(() => {
@@ -1320,11 +1321,9 @@ export function Prompt(props: PromptProps) {
   })
 
   const spinnerDef = createMemo(() => {
-    const agent =
-      status().type !== "idle"
-        ? (local.agent.list().find((a) => a.name === lastUserMessage()?.agent) ?? local.agent.current())
-        : local.agent.current()
-    const color = agent ? local.agent.color(agent.name) : theme.border
+    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastUserMessage()?.agent) : undefined
+    const agent = active ?? local.agent.current()
+    const color = agent ? local.agent.color(agentKey(agent)) : theme.border
     return {
       frames: createFrames({
         color,

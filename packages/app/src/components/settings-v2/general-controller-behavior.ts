@@ -1,9 +1,13 @@
+import { Option, Schema } from "effect"
 import { onCleanup } from "solid-js"
 
-export type ShellOption = {
-  path: string
-  name: string
-  acceptable: boolean
+const ShellOption = Schema.Struct({ path: Schema.String, name: Schema.String, acceptable: Schema.Boolean })
+export type ShellOption = typeof ShellOption.Type
+const decodeShells = Schema.decodeUnknownOption(Schema.Array(ShellOption))
+
+// The server's shell list is untrusted: a malformed reply fails this read instead of the render that maps it.
+export function readShells(value: unknown) {
+  return Option.getOrThrowWith(decodeShells(value), () => new Error("The server returned a malformed shell list."))
 }
 
 export type ShellSelectOption = {
@@ -13,7 +17,7 @@ export type ShellSelectOption = {
   terminalOnly: boolean
 }
 
-export function createShellOptions(input: { shells: ShellOption[]; current: string | undefined }) {
+export function createShellOptions(input: { shells: readonly ShellOption[]; current: string | undefined }) {
   const counts = input.shells.reduce((result, shell) => {
     result.set(shell.name, (result.get(shell.name) ?? 0) + 1)
     return result

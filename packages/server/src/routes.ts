@@ -1,16 +1,19 @@
-import { Database } from "@opencode-ai/core/database/database"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Credential } from "@opencode-ai/core/credential"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
-import { PtyTicket } from "@opencode-ai/core/pty/ticket"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SessionExecution } from "@opencode-ai/core/session/execution"
-import { LocationServiceMap } from "@opencode-ai/core/location-service-map"
-import { SessionExecutionLocal } from "@opencode-ai/core/session/execution/local"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
+import { Database } from "@orchestra/core/database/database"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { httpClient } from "@orchestra/core/effect/app-node-platform"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { EventV2 } from "@orchestra/core/event"
+import { Credential } from "@orchestra/core/credential"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { PermissionSaved } from "@orchestra/core/permission/saved"
+import { PtyTicket } from "@orchestra/core/pty/ticket"
+import { ScheduledTask } from "@orchestra/core/scheduled-task"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Layer, Option } from "effect"
@@ -22,6 +25,11 @@ import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "./pty-environment"
 import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
+import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
+import { ServerOperator } from "./operator"
+import { ServerCapabilityVerification } from "./capability-verification"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
+import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
 
 const applicationServices = LayerNode.group([
   Database.node,
@@ -29,26 +37,35 @@ const applicationServices = LayerNode.group([
   httpClient,
   ToolOutputStore.cleanupNode,
   SessionV2.node,
+  ScheduledTask.node,
+  ScheduledTask.daemonNode,
   PermissionSaved.node,
   PtyTicket.node,
   Credential.node,
   PtyEnvironment.node,
   LocationServiceMap.node,
+  FSUtil.node,
+  Global.node,
 ])
 
-export function createRoutes(password?: string) {
+export function createRoutes(password?: string, operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier) {
   return makeRoutes(
     password
-      ? ServerAuth.Config.configLayer({ username: "opencode", password: Option.some(password) })
+      ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(password) })
       : ServerAuth.Config.layer,
+    operator,
+    verifier,
   )
 }
 
-export function createEmbeddedRoutes() {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "opencode", password: Option.none() }))
+export function createEmbeddedRoutes(operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier) {
+  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), operator, verifier)
 }
 
-function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>) {
+function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
+  operator?: CapabilityOperatorContract.Interface, verifier?: CapabilityConnectionSetupContract.Verifier) {
   const serviceLayer = AppNodeBuilder.build(applicationServices, [[SessionExecution.node, SessionExecutionLocal.node]])
 
   return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
@@ -56,8 +73,11 @@ function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),
+    Layer.provide(capabilityAuthorizationLayer),
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
+    Layer.provide(operator ? Layer.succeed(ServerOperator.Service, operator) : ServerOperator.layer),
+    Layer.provide(verifier ? Layer.succeed(ServerCapabilityVerification.Service, verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
   )
 }

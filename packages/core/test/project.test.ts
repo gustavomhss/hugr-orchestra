@@ -3,10 +3,10 @@ import { $ } from "bun"
 import fs from "fs/promises"
 import path from "path"
 import { Effect, Schema } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { ProjectV2 } from "@opencode-ai/core/project"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { Hash } from "@opencode-ai/core/util/hash"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { ProjectV2 } from "@orchestra/core/project"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { Hash } from "@orchestra/core/util/hash"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -28,7 +28,7 @@ async function initRepo(dir: string, opts?: { commit?: boolean; remote?: string 
   await $`git init`.cwd(dir).quiet()
   await $`git config core.fsmonitor false`.cwd(dir).quiet()
   await $`git config commit.gpgsign false`.cwd(dir).quiet()
-  await $`git config user.email test@opencode.test`.cwd(dir).quiet()
+  await $`git config user.email test@orchestra.test`.cwd(dir).quiet()
   await $`git config user.name Test`.cwd(dir).quiet()
   if (opts?.commit) await $`git commit --allow-empty -m root`.cwd(dir).quiet()
   if (opts?.remote) await $`git remote add origin ${opts.remote}`.cwd(dir).quiet()
@@ -154,7 +154,7 @@ describe("ProjectV2.resolve", () => {
         (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
       )
       yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
-      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
+      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "orchestra"), "old-id"))
       const project = yield* ProjectV2.Service
 
       const result = yield* project.resolve(abs(tmp.path))
@@ -175,7 +175,7 @@ describe("ProjectV2.resolve", () => {
 
       yield* project.resolve(abs(tmp.path))
 
-      expect(yield* Effect.promise(() => Bun.file(path.join(tmp.path, ".git", "opencode")).exists())).toBe(false)
+      expect(yield* Effect.promise(() => Bun.file(path.join(tmp.path, ".git", "orchestra")).exists())).toBe(false)
     }),
   )
 
@@ -195,27 +195,31 @@ describe("ProjectV2.resolve", () => {
     }),
   )
 
-  it.live("linked worktree returns opened worktree directory and previous from common dir", () =>
-    Effect.gen(function* () {
-      const tmp = yield* Effect.acquireRelease(
-        Effect.promise(() => tmpdir()),
-        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-      )
-      const worktree = `${tmp.path}-worktree`
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(() => $`rm -rf ${worktree}`.quiet().nothrow()).pipe(Effect.ignore),
-      )
-      yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
-      yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "opencode"), "old-id"))
-      yield* Effect.promise(() => $`git worktree add ${worktree} -b test-${Date.now()}`.cwd(tmp.path).quiet())
-      const project = yield* ProjectV2.Service
+  // Real Git worktree setup and teardown can exceed Bun's 5s default on Windows runners.
+  it.live(
+    "linked worktree returns opened worktree directory and previous from common dir",
+    () =>
+      Effect.gen(function* () {
+        const tmp = yield* Effect.acquireRelease(
+          Effect.promise(() => tmpdir()),
+          (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+        )
+        const worktree = `${tmp.path}-worktree`
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => $`rm -rf ${worktree}`.quiet().nothrow()).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => initRepo(tmp.path, { commit: true, remote: "git@github.com:owner/repo.git" }))
+        yield* Effect.promise(() => Bun.write(path.join(tmp.path, ".git", "orchestra"), "old-id"))
+        yield* Effect.promise(() => $`git worktree add ${worktree} -b test-${Date.now()}`.cwd(tmp.path).quiet())
+        const project = yield* ProjectV2.Service
 
-      const result = yield* project.resolve(abs(worktree))
+        const result = yield* project.resolve(abs(worktree))
 
-      expect(result.directory).toBe(yield* real(worktree))
-      expect(result.previous).toBe(ProjectV2.ID.make("old-id"))
-      expect(result.id).toBe(remoteID("github.com/owner/repo"))
-      expect(result.vcs?.type).toBe("git")
-    }),
+        expect(result.directory).toBe(yield* real(worktree))
+        expect(result.previous).toBe(ProjectV2.ID.make("old-id"))
+        expect(result.id).toBe(remoteID("github.com/owner/repo"))
+        expect(result.vcs?.type).toBe("git")
+      }),
+    30_000,
   )
 })

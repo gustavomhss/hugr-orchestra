@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'A' is NOT satisfied. Still failing:; NO-ORACLE; EMPTY-BOTH; BAD-SCOPE; NUL-SCOPE; NO-DIFF-BLOCKING. Address these, then finish. Instructions: do A"
+  },
+  "stderr": "relay: checklist NO-ORACLE has no valid oracle (expected a command or nonempty NUL-free judge criterion)\nrelay: checklist EMPTY-BOTH has no valid oracle (expected a command or nonempty NUL-free judge criterion)\njq: error (at <root>/arms/tok/sprint.json:0): relay: paths must be an array of strings\nrelay: checklist BAD-SCOPE has an invalid judge scope (expected NUL-free paths)\njq: error (at <stdin>:0): relay_json_string: NUL is not supported\nrelay: checklist NUL-SCOPE has an invalid judge scope (expected NUL-free paths)\n"
+}

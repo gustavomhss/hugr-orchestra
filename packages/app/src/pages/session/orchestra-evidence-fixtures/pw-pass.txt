@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 a.spec.ts:7:5 › works (8ms)
+
+  1 passed (980ms)

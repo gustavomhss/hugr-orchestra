@@ -1,0 +1,34 @@
+{
+  "ledger": "test/golden/audit/cost-gate-events-ignored/input/ledger.jsonl",
+  "total": {
+    "in": 200,
+    "out": 40,
+    "cache_read": 1000,
+    "cache_write": 600,
+    "turns": 2,
+    "elapsed_s": 0
+  },
+  "states": [
+    {
+      "wp": "a",
+      "macro": null,
+      "elapsed_s": null,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    }
+  ],
+  "macros": [
+    {
+      "macro": "_",
+      "elapsed_s": 0,
+      "in": 100,
+      "out": 20,
+      "cache_read": 500,
+      "cache_write": 300,
+      "turns": 1
+    }
+  ]
+}

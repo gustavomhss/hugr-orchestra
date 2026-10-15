@@ -1,0 +1,21 @@
+=== RUN   TestAdds
+--- PASS: TestAdds (0.00s)
+=== RUN   TestRejectsEmpty
+    a_test.go:4: expected one item
+--- FAIL: TestRejectsEmpty (0.00s)
+=== RUN   TestSkip
+    a_test.go:5: later
+--- SKIP: TestSkip (0.00s)
+=== RUN   TestSub
+=== RUN   TestSub/inner
+    a_test.go:6: inner broke
+--- FAIL: TestSub (0.00s)
+    --- FAIL: TestSub/inner (0.00s)
+FAIL
+FAIL	example.com/approval/a	0.440s
+=== RUN   TestOk
+--- PASS: TestOk (0.00s)
+PASS
+ok  	example.com/approval/b	0.874s
+?   	example.com/approval/c	[no test files]
+FAIL

@@ -1,10 +1,14 @@
 import type { Page, Route } from "@playwright/test"
+import { railDefaulted } from "./review-rail"
 
-const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff"])
+const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff", "/pty/shells"])
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {
   protocol?: "v1" | "v2"
+  // Orchestra opens the review rail once per app storage. Mocked pages start after that default unless a
+  // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
+  freshRail?: boolean
   provider: unknown | (() => unknown)
   integrationMethods?: Record<string, unknown[]>
   onConnectKey?: (input: { integrationID: string; body: unknown }) => void
@@ -19,6 +23,7 @@ export interface MockServerConfig {
   onMessages?: (input: { sessionID: string; before?: string; phase: "start" | "end" }) => void
   message?: (sessionID: string, messageID: string) => unknown
   onMessage?: (input: { sessionID: string; messageID: string }) => void
+  onPrompt?: (input: { sessionID: string; body: unknown }) => void
   events?: () => unknown[]
   eventRetry?: number
   todos?: (sessionID: string) => unknown[]
@@ -28,9 +33,18 @@ export interface MockServerConfig {
   fileContent?: (path: string) => unknown | Promise<unknown>
   findFiles?: (input: { query: string; dirs?: string; limit?: number }) => unknown | Promise<unknown>
   sessionStatus?: Record<string, unknown> | (() => Record<string, unknown>)
+  activity?: (period: string) => unknown
+  // The host pull request routes; a reply is the HTTP status and JSON body the server would send.
+  pullRequests?: {
+    list?: (url: URL) => PullRequestReply | Promise<PullRequestReply>
+    create?: (input: { url: URL; body: unknown }) => PullRequestReply | Promise<PullRequestReply>
+  }
 }
 
-export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
+export type PullRequestReply = { status: number; body: unknown }
+
+export async function mockOrchestraServer(page: Page, config: MockServerConfig) {
+  if (!config.freshRail) await page.addInitScript(railDefaulted)
   const cursors = new Map<string, string>()
   let nextCursor = 0
   const staticRoutes: Record<string, unknown> = {
@@ -39,11 +53,12 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
       config: config.directory,
       worktree: config.directory,
       directory: config.directory,
-      home: "C:/OpenCode",
+      home: "C:/Orchestra",
     },
     "/project": [config.project],
     "/project/current": config.project,
-    "/agent": [{ name: "build", mode: "primary" }],
+    // Orchestra runs every session on its native maestro agent.
+    "/agent": [{ name: "maestro", mode: "primary" }],
     "/vcs": { branch: "main", default_branch: "main" },
     "/session": config.sessions,
   }
@@ -125,8 +140,8 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         location: location(config),
         data: [
           {
-            id: "build",
-            name: "Build",
+            id: "maestro",
+            name: "Maestro",
             mode: "primary",
             hidden: false,
             request: { settings: {}, headers: {}, body: {} },
@@ -159,7 +174,7 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         config: config.directory,
         worktree: config.directory,
         directory: config.directory,
-        home: "C:/OpenCode",
+        home: "C:/Orchestra",
       })
     if (path === "/api/permission/request")
       return json(route, {
@@ -173,6 +188,16 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         location: location(config),
         data: typeof config.questions === "function" ? config.questions() : (config.questions ?? []),
       })
+    if (path === "/api/pull-request" && config.pullRequests) {
+      const request = route.request()
+      const reply =
+        request.method() === "POST"
+          ? await config.pullRequests.create?.({ url, body: request.postDataJSON() })
+          : request.method() === "GET"
+            ? await config.pullRequests.list?.(url)
+            : undefined
+      if (reply) return json(route, reply.body, undefined, reply.status)
+    }
     if (path === "/api/vcs")
       return json(route, { location: location(config), data: { branch: "main", defaultBranch: "main" } })
     if (path === "/api/vcs/status") return json(route, { location: location(config), data: [] })
@@ -220,6 +245,26 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     if (/^\/api\/session\/[^/]+\/shell$/.test(path) && route.request().method() === "POST") {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
+    const promptMatch = path.match(/^\/api\/session\/([^/]+)\/prompt$/)
+    if (promptMatch && route.request().method() === "POST") {
+      const body = route.request().postDataJSON()
+      config.onPrompt?.({ sessionID: promptMatch[1]!, body })
+      return json(route, {
+        data: {
+          admittedSeq: 1,
+          id: body?.id ?? "msg_mock_admitted",
+          sessionID: promptMatch[1],
+          prompt: body?.prompt ?? { parts: [] },
+          delivery: body?.delivery ?? "steer",
+          timeCreated: Date.now(),
+        },
+      })
+    }
+    const promptAsyncMatch = path.match(/^\/session\/([^/]+)\/prompt_async$/)
+    if (promptAsyncMatch && route.request().method() === "POST") {
+      config.onPrompt?.({ sessionID: promptAsyncMatch[1]!, body: route.request().postDataJSON() })
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+    }
     if (/^\/api\/session\/[^/]+\/question\/[^/]+\/(reply|reject)$/.test(path) && route.request().method() === "POST") {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
@@ -242,6 +287,24 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
     if (path in staticRoutes) return json(route, staticRoutes[path])
+    // Home's KPI reads; "activity" is a route, not a session ID.
+    if (path === "/session/activity") {
+      const period = url.searchParams.get("period") ?? "30d"
+      return json(route, config.activity?.(period) ?? sessionActivity(config.sessions, period))
+    }
+    if (path === "/vcs/activity")
+      return json(route, {
+        repository: true,
+        since: Number(url.searchParams.get("since") ?? 0),
+        until: Number(url.searchParams.get("until") ?? Date.now()),
+        totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
+        days: [],
+        topPaths: [],
+        recent: [],
+        ahead: null,
+        behind: null,
+        truncated: false,
+      })
 
     const currentSessionMatch = path.match(/^\/api\/session\/([^/]+)$/)
     if (currentSessionMatch) {
@@ -294,6 +357,10 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
 
     const messagesMatch = path.match(/^\/session\/([^/]+)\/message$/)
     if (messagesMatch) {
+      if (route.request().method() === "POST") {
+        config.onPrompt?.({ sessionID: messagesMatch[1]!, body: route.request().postDataJSON() })
+        return json(route, { info: {}, parts: [] })
+      }
       const token = url.searchParams.get("before") ?? undefined
       const before = token ? cursors.get(token) : undefined
       if (token && !before) return json(route, { error: "Invalid cursor" }, undefined, 400)
@@ -312,6 +379,47 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     if (url.port === targetPort && targetPort !== appPort) return json(route, {})
     return route.fallback()
   })
+}
+
+// Every root session has one user message on the last day of the period, in UTC days.
+export function sessionActivity(sessions: MockServerConfig["sessions"], period: string) {
+  const day = 86_400_000
+  const end = Math.floor(Date.now() / day) * day + day
+  const length = ({ "7d": 7, "30d": 30, "90d": 90 } as Record<string, number>)[period] ?? 1
+  const count = Math.min(8, length)
+  const start = end - length * day
+  const bars = Array.from({ length: count + 1 }, (_, index) => start + Math.floor((index * length) / count) * day)
+  const edges = period === "all" ? bars : [start - length * day, ...bars]
+  const roots = sessions.filter((session) => !session.parentID)
+  const time = (session: (typeof sessions)[number]) => (session.time ?? {}) as { created?: number; updated?: number }
+  return {
+    period,
+    edges,
+    days: edges.map((edge) => new Date(edge).toISOString().slice(0, 10)),
+    previous: period !== "all",
+    activeMs: edges.slice(1).map(() => 0),
+    truncated: false,
+    sessions: roots.map((session) => ({
+      id: session.id,
+      title: String(session.title ?? ""),
+      parentID: null,
+      created: time(session).created ?? 0,
+      updated: time(session).updated ?? time(session).created ?? 0,
+      additions: null,
+      deletions: null,
+      files: null,
+    })),
+    facts: roots.map((session) => ({
+      bucket: edges.length - 2,
+      sessionID: session.id,
+      providerID: null,
+      modelID: null,
+      user: 1,
+      assistant: 0,
+      failed: 0,
+      tokens: 0,
+    })),
+  }
 }
 
 function location(config: MockServerConfig) {

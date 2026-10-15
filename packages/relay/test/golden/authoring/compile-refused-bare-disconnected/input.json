@@ -1,0 +1,29 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Chain",
+    "nodes": [
+      {
+        "id": "a",
+        "name": "a",
+        "type": "relay.execute",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "b",
+        "name": "b",
+        "type": "relay.execute",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      }
+    ],
+    "connections": {}
+  }
+}

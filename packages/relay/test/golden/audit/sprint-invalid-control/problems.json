@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/sprint-invalid-control/input/ledger.jsonl",
+  "problems": []
+}

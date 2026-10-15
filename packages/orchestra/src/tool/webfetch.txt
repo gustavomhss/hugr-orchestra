@@ -1,0 +1,6 @@
+Fetch a public web page or file and return it as Markdown (the default), plain text or raw HTML.
+
+- The request is a plain GET without cookies, login or JavaScript, so a page that needs a signed-in session or renders in the browser comes back empty or as a sign-in page.
+- The URL must start with `http://` or `https://` and is fetched as given. Error statuses and responses over 5 MB fail; images come back as attachments.
+- `timeout` is in seconds: 30 by default, 120 at most.
+- A long result is cut short, and the full text is saved to a file the result names.

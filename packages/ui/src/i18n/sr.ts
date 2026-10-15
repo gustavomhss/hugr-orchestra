@@ -69,14 +69,6 @@ export const dict = {
   "ui.sessionTurn.retry.geminiHot": "Gemini је тренутно преоптерећен",
   "ui.sessionTurn.error.freeUsageExceeded": "Прекорачена је бесплатна употреба",
   "ui.sessionTurn.error.addCredits": "Додајте кредите",
-  "dialog.usageExceeded.freeTier.title": "Достигнуто је ограничење бесплатног",
-  "dialog.usageExceeded.freeTier.description":
-    "Претплатите се на OpenCode Go за 10 УСД месечно и остварите поуздан приступ најбољим моделима отвореног кода.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Претплатите се",
-  "dialog.usageExceeded.accountRateLimit.title": "Достигнуто је ограничење Го",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Достигнуто је ограничење употребе. Да бисте сада наставили да користите овај модел, омогућите коришћење са свог доступног стања",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Отворите подешавања",
   "ui.sessionTurn.status.delegating": "Делегирање посла",
   "ui.sessionTurn.status.planning": "Планирање следећих корака",
   "ui.sessionTurn.status.gatheringContext": "Истраживање",
@@ -126,7 +118,6 @@ export const dict = {
   "ui.promptInput.attachments": "слике и датотеке",
   "ui.promptInput.context": "Контекст",
   "ui.promptInput.shell": "команда Shell",
-  "ui.promptInput.chooseAgent": "Изаберите агента",
   "ui.promptInput.chooseModel": "Изаберите модел",
   "ui.promptInput.chooseVariant": "Изаберите варијанту модела",
   "ui.promptInput.send": "Пошаљи",

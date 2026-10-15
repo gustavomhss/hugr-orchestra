@@ -1,10 +1,10 @@
-import { createOpencodeClient } from "@opencode-ai/sdk/v2/client"
+import { createOrchestraClient } from "@orchestra/sdk/v2/client"
 import { OpenCode, type OpenCodeClient } from "@opencode-ai/client/promise"
 import type { ServerConnection } from "@/context/server"
 import { decode64 } from "@/utils/base64"
 
 export function authTokenFromCredentials(input: { username?: string; password: string }) {
-  return btoa(`${input.username ?? "opencode"}:${input.password}`)
+  return btoa(`${input.username ?? "orchestra"}:${input.password}`)
 }
 
 export function authFromToken(token: string | null) {
@@ -13,7 +13,7 @@ export function authFromToken(token: string | null) {
   const separator = decoded.indexOf(":")
   if (separator === -1) return
   return {
-    username: decoded.slice(0, separator) || "opencode",
+    username: decoded.slice(0, separator) || "orchestra",
     password: decoded.slice(separator + 1),
   }
 }
@@ -21,7 +21,7 @@ export function authFromToken(token: string | null) {
 export function createSdkForServer({
   server,
   ...config
-}: Omit<NonNullable<Parameters<typeof createOpencodeClient>[0]>, "baseUrl"> & {
+}: Omit<NonNullable<Parameters<typeof createOrchestraClient>[0]>, "baseUrl"> & {
   server: ServerConnection.HttpBase
 }) {
   const auth = (() => {
@@ -31,7 +31,7 @@ export function createSdkForServer({
     }
   })()
 
-  return createOpencodeClient({
+  return createOrchestraClient({
     ...config,
     headers: {
       ...(config.headers instanceof Headers ? Object.fromEntries(config.headers.entries()) : config.headers),

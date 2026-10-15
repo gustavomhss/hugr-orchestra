@@ -1,0 +1,3 @@
+$ bun run script/godfile.ts
+/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor
+Godfile: 3552 source files, 301 warnings, 0 errors.

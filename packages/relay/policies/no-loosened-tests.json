@@ -1,0 +1,7 @@
+[
+  {
+    "id": "ORG-NO-LOOSENED-TESTS",
+    "assert": "no test was loosened/disabled (.skip / xfail / @pytest.mark.skip / # type: ignore) in tracked source",
+    "cmd": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 1; if (set +e; git grep -nE '\\.skip\\(|\\.only\\(|xfail|pytest\\.mark\\.skip|# *type: *ignore|@ *unittest\\.skip' -- 'test*' 'tests' 'spec*' ':(exclude)*relay*' >/dev/null 2>&1); then false; else test \"$?\" -eq 1; fi"
+  }
+]

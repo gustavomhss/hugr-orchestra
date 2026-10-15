@@ -1,13 +1,126 @@
-import { castDraft, produce, type WritableDraft } from "immer"
-import { Effect } from "effect"
+import { castDraft, current, produce, type WritableDraft } from "immer"
+import { isDeepStrictEqual } from "node:util"
+import { Effect, Option, Schema } from "effect"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
+import { SessionSchema } from "./schema"
+
+// Private host receipt on the existing Task tool metadata, not an attribution DTO or a worker claim.
+export const UpstreamSettlement = Schema.Struct({
+  parentMessageID: Schema.NonEmptyString,
+  parentCallID: Schema.NonEmptyString,
+  workResult: Schema.Record(Schema.String, Schema.Unknown),
+  deliveryMessageID: Schema.NonEmptyString,
+  deliveryPartID: Schema.optional(Schema.NonEmptyString),
+})
+export type UpstreamSettlement = typeof UpstreamSettlement.Type
+export interface TaskOwner {
+  readonly sessionID: string
+  readonly messageID: string
+  readonly callID: string
+  readonly tool: string
+  readonly input: unknown
+}
+
+export function upstreamSettlement(metadata: Record<string, unknown>, owner: TaskOwner) {
+  const receipt = Schema.decodeUnknownOption(UpstreamSettlement)(metadata.upstreamSettlement, { onExcessProperty: "error" })
+  const input = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String, task_id: Schema.optional(Schema.String) }))(owner.input)
+  if (Option.isNone(receipt) || Option.isNone(input) || owner.tool !== "task" || input.value.subagent_type !== "archie" ||
+    receipt.value.parentMessageID !== owner.messageID || receipt.value.parentCallID !== owner.callID ||
+    metadata.parentSessionId !== owner.sessionID) return
+  const result = Schema.decodeUnknownOption(Schema.Struct({
+    taskId: Schema.NonEmptyString,
+    card: Schema.Struct({ messageID: Schema.NonEmptyString }),
+    author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
+  }))(receipt.value.workResult)
+  // The private host port validates this exact logical binding; resume may name it or its execution child.
+  if (Option.isNone(result) || result.value.author.executionSessionID !== metadata.sessionId ||
+    result.value.card.messageID !== result.value.author.messageID ||
+    (input.value.task_id !== undefined && input.value.task_id !== result.value.author.executionSessionID &&
+      input.value.task_id !== result.value.taskId)) return
+  return receipt.value
+}
+
+export function taskMetadata(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
+  const { upstreamSettlement: ignored, ...metadata } = next
+  const receipt = upstreamSettlement(previous, owner)
+  return receipt ? { ...previous, ...metadata, parentSessionId: previous.parentSessionId, sessionId: previous.sessionId,
+    workResult: receipt.workResult, upstreamSettlement: receipt,
+    ...(previous.background === true ? { background: true } : {}),
+    ...(previous.interrupted === true ? { interrupted: true } : {}) } : metadata
+}
+
+function taskStructured(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
+  const before = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(previous.metadata))
+  const after = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(next.metadata))
+  if (!before && !after) return next
+  return { ...(before && upstreamSettlement(before, owner) ? previous : {}),
+    ...next, metadata: taskMetadata(before ?? {}, after ?? {}, owner) }
+}
+
+// A completed background Task cannot use generic streaming progress. This narrow host observation records only an
+// unfavorable returned result, before admission; author and placement come from stored rows, never caller metadata.
+const taskObservation = (adapter: Adapter, assistant: SessionMessage.Assistant, event: SessionEvent.Tool.Progress) => Effect.gen(function* () {
+  const calls = assistant.content.filter((part) => part.type === "tool" && part.id === event.data.callID)
+  const call = calls[0]
+  if (assistant.id !== event.data.assistantMessageID || calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed ||
+    call.state.status !== "completed" || assistant.agent !== "maestro") return
+  const record = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
+  const previous = Option.getOrUndefined(record(call.state.structured.metadata))
+  const metadata = Option.getOrUndefined(record(event.data.structured.metadata))
+  const value = metadata ? Option.getOrUndefined(record(metadata.workResult)) : undefined
+  const before = previous ? Option.getOrUndefined(record(previous.workResult)) : undefined
+  if (!previous || !metadata || !value || !before || previous.upstreamSettlement !== undefined ||
+    metadata.upstreamSettlement !== undefined || previous.parentSessionId !== event.data.sessionID ||
+    metadata.parentSessionId !== previous.parentSessionId || metadata.sessionId !== previous.sessionId ||
+    value.taskId !== before.taskId || typeof value.taskId !== "string" || value.taskId === "" ||
+    typeof value.schema !== "string" || value.schema === "" || value.schema !== before.schema) return
+  const result = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
+    card: Schema.Struct({ messageID: SessionMessage.ID }),
+    author: Schema.Struct({ memberId: Schema.NonEmptyString, executionSessionID: SessionSchema.ID, messageID: SessionMessage.ID }),
+    terminal: Schema.Struct({ reason: Schema.Literals(["failed", "interrupted"]), hostDetail: Schema.optional(Schema.NonEmptyString) }),
+  }))(value))
+  const selection = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
+    subagent_type: Schema.NonEmptyString, task_id: Schema.optional(Schema.NonEmptyString),
+  }))(call.state.input))
+  if (!result || !selection || result.card.messageID !== result.author.messageID ||
+    result.author.executionSessionID !== previous.sessionId || selection.subagent_type !== result.author.memberId ||
+    selection.task_id !== undefined && selection.task_id !== result.author.executionSessionID &&
+      selection.task_id !== value.taskId) return
+  const oldAuthor = before.author === undefined ? undefined : Option.getOrUndefined(record(before.author))
+  const oldCard = Option.getOrUndefined(record(before.card))
+  const oldTerminal = Option.getOrUndefined(record(before.terminal))
+  if (!oldCard || !oldTerminal || before.author !== undefined && (!oldAuthor || !isDeepStrictEqual(oldAuthor, value.author)) ||
+    oldCard.messageID !== undefined && oldCard.messageID !== result.author.messageID) return
+  if ((oldCard.messageID !== undefined || ["failed", "interrupted"].includes(String(oldTerminal.reason))) && !isDeepStrictEqual(
+    Object.fromEntries(Object.entries(before).filter(([key]) => key !== "terminal")),
+    Object.fromEntries(Object.entries(value).filter(([key]) => key !== "terminal")),
+  )) return
+  if (["failed", "interrupted"].includes(String(oldTerminal.reason)) && !isDeepStrictEqual({
+    ...oldTerminal,
+    ...(oldTerminal.hostDetail === undefined && result.terminal.hostDetail !== undefined ? { hostDetail: result.terminal.hostDetail } : {}),
+  }, value.terminal)) return
+  if (!adapter.validateTaskObservation || !(yield* adapter.validateTaskObservation({ sessionID: event.data.sessionID,
+    assistant, call, childSessionID: result.author.executionSessionID, authorMessageID: result.author.messageID,
+    memberID: result.author.memberId, location: event.location }))) return
+  return { input: call.state.input, previous: previous.workResult, workResult: value, childSessionID: result.author.executionSessionID }
+})
 
 export type MemoryState = {
   messages: SessionMessage.Message[]
 }
 
 export interface Adapter {
+  // Session projector supplies captured DB facts and internal commit origin; an unbacked adapter has no authority.
+  readonly validateTaskObservation?: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly assistant: SessionMessage.Assistant
+    readonly call: SessionMessage.AssistantTool
+    readonly childSessionID: SessionSchema.ID
+    readonly authorMessageID: SessionMessage.ID
+    readonly memberID: string
+    readonly location: SessionEvent.Tool.Progress["location"]
+  }) => Effect.Effect<boolean>
   readonly getCurrentAssistant: () => Effect.Effect<SessionMessage.Assistant | undefined>
   readonly getAssistant: (messageID: SessionMessage.ID) => Effect.Effect<SessionMessage.Assistant | undefined>
   readonly getCurrentShell: (callID: string) => Effect.Effect<SessionMessage.Shell | undefined>
@@ -132,6 +245,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
             text: event.data.prompt.text,
             files: event.data.prompt.files,
             agents: event.data.prompt.agents,
+            promptContext: event.data.promptContext,
             time: { created: event.data.timestamp },
           }),
         )
@@ -272,6 +386,11 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
           if (match) {
+            if ("structured" in match.state) {
+              const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata))
+              if (metadata && upstreamSettlement(metadata, { sessionID: event.data.sessionID,
+                messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input })) return
+            }
             match.provider = event.data.provider
             match.time.ran = event.data.timestamp
             match.state = castDraft(
@@ -286,18 +405,58 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
         })
       },
       "session.next.tool.progress": (event) => {
-        return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
-          const match = latestTool(draft, event.data.callID)
-          if (match && match.state.status === "running") {
-            match.state.structured = event.data.structured
-            match.state.content = [...event.data.content]
-          }
+        return Effect.gen(function* () {
+          const assistant = yield* adapter.getAssistant(event.data.assistantMessageID)
+          const observation = assistant ? yield* taskObservation(adapter, assistant, event) : undefined
+          return yield* updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+            const match = latestTool(draft, event.data.callID)
+            if (match && "structured" in match.state) {
+              // Bun's strict comparator distinguishes draft proxies from the validated plain JSON snapshots.
+              const snapshot = current(match.state)
+              const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: snapshot.input }
+              const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(snapshot.structured.metadata)) ?? {}
+              const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
+              // The private host validates author/delivery before publishing Progress; also require retained Task anchors.
+              const receipt = metadata && draft.agent === "maestro" && !match.provider?.executed &&
+                previous.parentSessionId === event.data.sessionID && previous.sessionId === metadata.sessionId
+                ? upstreamSettlement(metadata, owner) : undefined
+              const stored = upstreamSettlement(previous, owner)
+              if (observation && match.name === "task" && !match.provider?.executed && draft.agent === "maestro" &&
+                match.state.status === "completed" && previous.upstreamSettlement === undefined &&
+                previous.parentSessionId === event.data.sessionID && previous.sessionId === observation.childSessionID &&
+                isDeepStrictEqual(snapshot.input, observation.input) && isDeepStrictEqual(previous.workResult, observation.previous)) {
+                match.state.structured = castDraft({ ...snapshot.structured,
+                  metadata: { ...previous, workResult: observation.workResult } })
+                return
+              }
+              const priorResult = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(previous.workResult))
+              const terminal = priorResult ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(priorResult.terminal)) : undefined
+              if (receipt && !stored && terminal && ["failed", "interrupted"].includes(String(terminal.reason)) &&
+                !isDeepStrictEqual(receipt.workResult, previous.workResult)) return
+              if (match.state.status !== "running" && !receipt && !stored) return
+              const structured = taskStructured(match.state.structured, event.data.structured, owner)
+              const carriedMetadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(structured.metadata)) ?? {}
+              const carried = upstreamSettlement(carriedMetadata, owner)
+              match.state.structured = castDraft(carried ? structured : receipt ? { ...match.state.structured, ...structured,
+                metadata: { ...previous, ...carriedMetadata, upstreamSettlement: receipt,
+                  workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId,
+                  ...(previous.interrupted === true ? { interrupted: true } : {}) } } : structured)
+              if (match.state.status === "running" && !stored) match.state.content = [...event.data.content]
+            }
+          })
         })
       },
       "session.next.tool.success": (event) => {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
-          if (match && match.state.status === "running") {
+          if (match && "structured" in match.state) {
+            const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
+            const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
+            const receipt = upstreamSettlement(metadata, owner)
+            if (match.state.status !== "running" || (receipt && metadata.interrupted === true)) {
+              if (receipt) match.state.structured = castDraft(taskStructured(match.state.structured, event.data.structured, owner))
+              return
+            }
             match.provider = {
               executed: event.data.provider.executed || match.provider?.executed === true,
               metadata: match.provider?.metadata,
@@ -308,7 +467,9 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
               SessionMessage.ToolStateCompleted.make({
                 status: "completed",
                 input: match.state.input,
-                structured: event.data.structured,
+                structured: taskStructured(match.state.structured, event.data.structured, {
+                  sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input,
+                }),
                 content: [...event.data.content],
                 outputPaths: event.data.outputPaths ? [...event.data.outputPaths] : [],
                 result: event.data.result,
@@ -320,7 +481,12 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
       "session.next.tool.failed": (event) => {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
-          if (match && (match.state.status === "pending" || match.state.status === "running")) {
+          const metadata = match && "structured" in match.state
+            ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) : undefined
+          const receipt = match && metadata ? upstreamSettlement(metadata, { sessionID: event.data.sessionID,
+            messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }) : undefined
+          if (match && (match.state.status === "pending" || match.state.status === "running" ||
+            (match.state.status === "completed" && receipt))) {
             match.provider = {
               executed: event.data.provider.executed || match.provider?.executed === true,
               metadata: match.provider?.metadata,
@@ -332,8 +498,8 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 status: "error",
                 error: event.data.error,
                 input: typeof match.state.input === "string" ? {} : match.state.input,
-                structured: match.state.status === "running" ? match.state.structured : {},
-                content: match.state.status === "running" ? match.state.content : [],
+                structured: "structured" in match.state ? match.state.structured : {},
+                content: "content" in match.state ? match.state.content : [],
                 result: event.data.result,
               }),
             )

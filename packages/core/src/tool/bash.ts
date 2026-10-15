@@ -1,19 +1,24 @@
 export * as BashTool from "./bash"
 
 import path from "path"
-import { ToolFailure } from "@opencode-ai/llm"
+import { ToolFailure } from "@orchestra/llm"
 import { Duration, Effect, Layer, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Config } from "../config"
 import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
+import { Location } from "../location"
 import { AppProcess } from "../process"
 import { PermissionV2 } from "../permission"
 import { PositiveInt } from "../schema"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { ToolSafety } from "../tool-safety"
+import { ToolSafetySandbox } from "../tool-safety-sandbox"
+import { ToolSafetyGit } from "../tool-safety-git"
+import { OutputInspector } from "../output-inspector"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -21,9 +26,9 @@ export const MAX_TIMEOUT_MS = 10 * 60 * 1_000
 export const MAX_CAPTURE_BYTES = 1024 * 1024
 
 export const Input = Schema.Struct({
-  command: Schema.String.annotate({ description: "Shell command string to execute" }),
+  command: Schema.String.annotate({ description: "The command to execute" }),
   workdir: Schema.String.pipe(Schema.optional).annotate({
-    description: "Working directory. Defaults to the active Location; relative paths resolve from that Location.",
+    description: "The directory to run the command in, relative to the working directory, which is the default",
   }),
   timeout: PositiveInt.check(Schema.isLessThanOrEqualTo(MAX_TIMEOUT_MS))
     .pipe(Schema.optional)
@@ -47,6 +52,9 @@ const Output = Schema.Struct({
 type Output = typeof Output.Type
 
 const defaultShell = () => (process.platform === "win32" ? (process.env.COMSPEC ?? "cmd.exe") : "/bin/sh")
+// cmd.exe, the default shell on Windows, does not treat single quotes as quoting.
+const commitExample =
+  process.platform === "win32" ? `git commit -m "subject" -m "body"` : "git commit -m 'subject' -m 'body'"
 
 const modelOutput = (output: Output) => {
   const warnings = output.warnings?.length
@@ -102,11 +110,27 @@ const layer = Layer.effectDiscard(
     const appProcess = yield* AppProcess.Service
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
+    const location = yield* Location.Service
 
     yield* tools
       .register({
         [name]: Tool.make({
-          description: `Execute one shell command string with the host user's filesystem, process, and network authority. The active Location is the default working directory. Relative workdir values resolve from that Location. External workdir values require external_directory approval; best-effort command-argument path warnings are advisory only. Timeout values are milliseconds (default: ${DEFAULT_TIMEOUT_MS}; maximum: ${MAX_TIMEOUT_MS}). Uses the configured shell when set; otherwise uses /bin/sh on POSIX and COMSPEC or cmd.exe on Windows.`,
+          description: `Run a command in a fresh, non-interactive process, with the configured shell or else \`/bin/sh\` (\`cmd.exe\` on Windows).
+
+- \`cd\`, variables and other shell state do not carry over between calls. Commands run in the working directory; to run one elsewhere, set \`workdir\` rather than starting with \`cd\`. A \`workdir\` outside the working directory asks the owner first.
+- Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as \`-m\` for \`git commit\`. Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
+- Read files and edit their contents with the file tools rather than shell commands.
+- \`timeout\` is in milliseconds: ${DEFAULT_TIMEOUT_MS} by default, ${MAX_TIMEOUT_MS} at most.
+
+# Results
+- The result is the combined stdout and stderr, then the exit code, or a note that the command timed out. Only the first ${MAX_CAPTURE_BYTES / 1024 / 1024} MB of output is kept.
+- A long result keeps its start and end, and the full output is saved to a file the result names, so there is no need to cut it yourself.
+
+# Git and GitHub
+- Commit, push or open a pull request only when asked. Before committing, check \`git status\` and \`git diff\`, and stage the files you changed by path.
+- Give each paragraph of a commit message its own \`-m\`: \`${commitExample}\`. A safety guard refuses \`git add\` and \`git commit\` commands that contain \`$\`, backticks, heredocs or redirects, or options such as \`-am\`, \`--no-edit\`, \`-F\` and \`--author\`. It also refuses skipping hooks, force-pushing without \`--force-with-lease\` and \`git reset --hard\`.
+- If a hook rejects a commit, fix the cause and commit again rather than amending the previous commit, and leave git config unchanged.
+- Use \`gh\` for pull requests, issues, checks and releases. Before opening a pull request, review every commit it includes against the base branch, and return its URL.`,
           input: Input,
           output: Output,
           structured: StructuredOutput,
@@ -119,6 +143,18 @@ const layer = Layer.effectDiscard(
             { type: "text", text: output.output },
             { type: "text", text: modelOutput(output) },
           ],
+          modelCapture: ({ input, output }) => ({
+            textIndex: 0,
+            observation: {
+              source: "shell",
+              command: input.command,
+              output: output.output,
+              termination: output.timeout ? { kind: "timed_out" }
+                : typeof output.exit === "number" ? { kind: "exited", code: output.exit } : { kind: "unknown" },
+              completeness: output.timeout ? "unknown" : output.truncated ? "truncated" : "complete",
+              presentation: "unknown",
+            },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               const source = {
@@ -163,15 +199,31 @@ const layer = Layer.effectDiscard(
                 forceKillAfter: Duration.seconds(3),
               })
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
-              const result = yield* appProcess
-                .run(command, {
+              const profile = yield* ToolSafety.RuntimeProfile
+              yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
+                projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+                cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
+                neverTouch: profile?.neverTouch,
+              }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
+              const result = yield* Effect.scoped(Effect.gen(function* () {
+                const inspector = OutputInspector.make()
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
+                const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
                   maxOutputBytes: MAX_CAPTURE_BYTES,
+                  inspect: (chunk) => {
+                    const reason = inspector.push(chunk)
+                    if (reason) throw new ToolSafety.Denied({ reason })
+                  },
                 })
-                .pipe(
-                  Effect.catchTag("AppProcessError", (error) =>
-                    isTimeout(error) ? Effect.succeed(undefined) : Effect.fail(error),
+                const reason = inspector.finish()
+                if (reason) return yield* new ToolSafety.Denied({ reason })
+                return captured
+              })).pipe(
+                  Effect.catchTag("AppProcessError", (error): Effect.Effect<AppProcess.RunResult | undefined, AppProcess.AppProcessError | ToolSafety.Denied> =>
+                    error.cause instanceof ToolSafety.Denied ? Effect.fail(error.cause)
+                      : isTimeout(error) ? Effect.succeed(undefined) : Effect.fail(error),
                   ),
                 )
               if (!result) {
@@ -193,7 +245,11 @@ const layer = Layer.effectDiscard(
                 truncated: result.outputTruncated === true,
                 ...(warnings.length ? { warnings } : {}),
               }
-            }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to execute command: ${input.command}` }))),
+               }).pipe(Effect.provideService(ToolSafety.NativeContext, { directory: location.directory, projectID: location.project.id }),
+                 Effect.mapError((error) => new ToolFailure({ message: error instanceof ToolSafety.Denied
+                ? error.message : `Unable to execute command: ${input.command}`,
+                ...(error instanceof ToolSafety.Denied ? { error } : {}),
+              }))),
         }),
       })
       .pipe(Effect.orDie)
@@ -203,5 +259,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/bash",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
 })

@@ -1,6 +1,6 @@
 export * as ReadTool from "./read"
 
-import { ToolFailure } from "@opencode-ai/llm"
+import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, Schema } from "effect"
 import { makeLocationNode } from "../effect/app-node"
 import { FileSystem } from "../filesystem"
@@ -12,6 +12,7 @@ import { ReadToolFileSystem } from "./read-filesystem"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { ToolSafety } from "../tool-safety"
 
 export const name = "read"
 const SUPPORTED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"])
@@ -38,8 +39,12 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description:
-            "Read a text file or supported image, page through a large UTF-8 text file by line offset, or list a directory page. Relative paths resolve from the current location; absolute paths inside it are accepted, while external absolute paths require external_directory approval.",
+          description: `Read a file, or list a directory.
+
+- A relative \`path\` resolves from the working directory; a path outside it asks the owner first.
+- A text file up to 50 KB comes back whole as \`content\`, without line numbers. A larger file, or a read with \`offset\` or \`limit\`, comes back as a page of at most 2000 lines and 50 KB starting at line \`offset\`, counted from 1, with lines longer than 2000 characters cut. When more remains, \`truncated\` is true and \`next\` is the offset to continue from.
+- A directory lists one level as \`entries\`, directories first and ending in a path separator; \`offset\` and \`limit\` page the entries.
+- JPEG, PNG, GIF and WebP images up to 20 MB come back as attachments. PDFs, archives, Office files, other binary files and text that is not UTF-8 are refused.`,
           input: Input,
           output: Output,
           toModelOutput: ({ input, output }) => {
@@ -95,12 +100,13 @@ const layer = Layer.effectDiscard(
               Effect.mapError((error) => {
                 const message =
                   error instanceof ReadToolFileSystem.BinaryFileError ||
+                  error instanceof ToolSafety.Denied ||
                   error instanceof ReadToolFileSystem.MediaIngestLimitError ||
                   error instanceof Image.DecodeError ||
                   error instanceof Image.SizeError
                     ? error.message
                     : `Unable to read ${input.path}`
-                return new ToolFailure({ message })
+                return new ToolFailure({ message, ...(error instanceof ToolSafety.Denied ? { error } : {}) })
               }),
             )
           },

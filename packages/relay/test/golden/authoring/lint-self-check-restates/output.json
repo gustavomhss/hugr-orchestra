@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "self-check-restates-control",
+      "severity": "warn",
+      "wp": "a",
+      "detail": "self-check 'The suite is green.' asks what control 'c1' already measures; a self-check must probe the protocol's steps"
+    }
+  ],
+  "exit": 0
+}

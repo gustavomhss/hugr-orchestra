@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { OpencodeClient } from "@opencode-ai/sdk/v2/client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type {
   McpListInput,
   McpResourceCatalogInput,
@@ -14,6 +14,7 @@ import { loadActiveSessionsQuery, loadMcpQuery, loadMcpResourcesQuery, seedActiv
 import { ServerScope } from "@/utils/server-scope"
 import { createServerSession } from "./server-session"
 import type { ServerApi } from "@/utils/server"
+import { rethrow } from "../testing/rejection"
 
 type McpApi = ServerApi["mcp"]
 
@@ -84,7 +85,7 @@ describe("active session query", () => {
   })
 
   test("does not overwrite statuses already written by events", () => {
-    const session = createServerSession({} as OpencodeClient)
+    const session = createServerSession({} as OrchestraClient)
     session.set("session_status", "ses_retry", { type: "retry", attempt: 2, message: "retrying", next: 10 })
 
     seedActiveSessionStatuses(session, {
@@ -145,18 +146,20 @@ describe("loadRootSessions", () => {
     expect(calls).toEqual([{ directory: "dir", parentID: null, limit: 10, order: "desc" }])
   })
 
-  test("propagates list failures", () => {
+  test("propagates list failures", async () => {
     expect(
-      loadRootSessions({
-        api: {
-          list: async () => {
-            throw new Error("failed")
-          },
-        } satisfies Pick<SessionApi, "list">,
-        directory: "dir",
-        limit: 25,
-      }),
-    ).rejects.toThrow("failed")
+      await rethrow(
+        loadRootSessions({
+          api: {
+            list: async () => {
+              throw new Error("failed")
+            },
+          } satisfies Pick<SessionApi, "list">,
+          directory: "dir",
+          limit: 25,
+        }),
+      ),
+    ).toThrow("failed")
   })
 })
 

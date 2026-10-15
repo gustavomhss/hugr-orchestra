@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'load' is NOT satisfied. Still failing:; c1. Address these, then finish."
+  },
+  "stderr": ""
+}

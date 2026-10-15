@@ -1,6 +1,6 @@
 export * as SessionCompaction from "./compaction"
 
-import { LLM, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@opencode-ai/llm"
+import { LLM, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
 import { DateTime, Effect, Stream } from "effect"
 import type { Config } from "../config"
 import type { EventV2 } from "../event"
@@ -95,7 +95,8 @@ export const serializeToolContent = (content: SessionMessage.ToolStateCompleted[
 const serialize = (message: SessionMessage.Message) => {
   if (message.type === "user") {
     const files = message.files?.map((file) => `[Attached ${file.mime}: ${file.name ?? file.uri}]`) ?? []
-    return [`[User]: ${message.text}`, ...files].join("\n")
+    const reminders = message.promptContext?.reminders.map((note) => `[Hook reminder]: ${note}`) ?? []
+    return [`[User]: ${message.text}`, ...files, ...reminders].join("\n")
   }
   if (message.type === "assistant") {
     return message.content

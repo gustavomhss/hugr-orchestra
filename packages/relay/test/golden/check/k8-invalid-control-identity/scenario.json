@@ -1,0 +1,25 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "current",
+        "instructions": "do current",
+        "checklist": [
+          {
+            "id": "FIRST",
+            "cmd": "touch first-ran"
+          },
+          {
+            "id": 17,
+            "cmd": "touch ran"
+          }
+        ]
+      }
+    ]
+  },
+  "fires": [
+    {
+      "check": {}
+    }
+  ]
+}

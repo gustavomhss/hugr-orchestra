@@ -1,0 +1,1 @@
+{"verdict": "fail", "reason": "no VERDICT line in 43 chars of reply (truncated at max_tokens?): VERDICT: FAIL (previous PASS was incorrect)", "backend": "llm:test-model(no-verdict)", "available": false}

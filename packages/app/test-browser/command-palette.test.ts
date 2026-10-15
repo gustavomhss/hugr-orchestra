@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { Project } from "@opencode-ai/sdk/v2/client"
+import type { Project } from "@orchestra/sdk/v2/client"
 import type { SessionInfo } from "@opencode-ai/client/promise"
 import { createRoot } from "solid-js"
 import { createServerSessionEntries } from "@/components/command-palette"
@@ -67,7 +67,7 @@ describe("command palette sessions", () => {
 
     expect(searches).toEqual(["palette session"])
     expect(result).toHaveLength(1)
-    expect(getProjectAvatarSource(result[0]?.project?.id, result[0]?.project?.icon)).toBe("home-project-avatar")
+    expect(getProjectAvatarSource(result[0]?.project?.icon)).toBe("home-project-avatar")
     expect(result[0]).toMatchObject({
       server,
       sessionID: session.id,

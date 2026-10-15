@@ -1,0 +1,456 @@
+{
+  "workflow": [
+    {
+      "type": "relay.startTrigger",
+      "label": "Workflow start",
+      "inputs": 0,
+      "outputs": [
+        "main"
+      ],
+      "maximum": 1,
+      "parameters": [
+        {
+          "name": "relayBrief",
+          "label": "Workflow objective",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "relayRetryBudget",
+          "label": "Fixes allowed per step",
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "maximum": 99
+        }
+      ]
+    },
+    {
+      "type": "relay.execute",
+      "label": "Run task",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "instructions",
+          "label": "Instructions",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "default": ""
+        },
+        {
+          "name": "skillMode",
+          "label": "How to use the skill",
+          "type": "options",
+          "default": "combine",
+          "options": [
+            {
+              "value": "combine",
+              "label": "Skill plus instructions"
+            },
+            {
+              "value": "replace",
+              "label": "Skill replaces instructions"
+            }
+          ]
+        },
+        {
+          "name": "checklist",
+          "label": "Criteria to advance",
+          "type": "json",
+          "default": "[]"
+        }
+      ]
+    },
+    {
+      "type": "relay.gate",
+      "label": "Check criteria",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "instructions",
+          "label": "Instructions",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "default": ""
+        },
+        {
+          "name": "skillMode",
+          "label": "How to use the skill",
+          "type": "options",
+          "default": "combine",
+          "options": [
+            {
+              "value": "combine",
+              "label": "Skill plus instructions"
+            },
+            {
+              "value": "replace",
+              "label": "Skill replaces instructions"
+            }
+          ]
+        },
+        {
+          "name": "checklist",
+          "label": "Criteria to advance",
+          "type": "json",
+          "default": "[]"
+        }
+      ]
+    },
+    {
+      "type": "relay.review",
+      "label": "Review change",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "instructions",
+          "label": "Instructions",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "default": ""
+        },
+        {
+          "name": "skillMode",
+          "label": "How to use the skill",
+          "type": "options",
+          "default": "combine",
+          "options": [
+            {
+              "value": "combine",
+              "label": "Skill plus instructions"
+            },
+            {
+              "value": "replace",
+              "label": "Skill replaces instructions"
+            }
+          ]
+        },
+        {
+          "name": "checklist",
+          "label": "Criteria to advance",
+          "type": "json",
+          "default": "[]"
+        }
+      ]
+    },
+    {
+      "type": "relay.inject",
+      "label": "Provide context",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "instructions",
+          "label": "Instructions",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "default": ""
+        },
+        {
+          "name": "skillMode",
+          "label": "How to use the skill",
+          "type": "options",
+          "default": "combine",
+          "options": [
+            {
+              "value": "combine",
+              "label": "Skill plus instructions"
+            },
+            {
+              "value": "replace",
+              "label": "Skill replaces instructions"
+            }
+          ]
+        },
+        {
+          "name": "checklist",
+          "label": "Criteria to advance",
+          "type": "json",
+          "default": "[]"
+        },
+        {
+          "name": "text",
+          "label": "Context",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "file",
+          "label": "Context file",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.human",
+      "label": "Human approval",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "instructions",
+          "label": "Instructions",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "default": ""
+        },
+        {
+          "name": "skillMode",
+          "label": "How to use the skill",
+          "type": "options",
+          "default": "combine",
+          "options": [
+            {
+              "value": "combine",
+              "label": "Skill plus instructions"
+            },
+            {
+              "value": "replace",
+              "label": "Skill replaces instructions"
+            }
+          ]
+        },
+        {
+          "name": "checklist",
+          "label": "Criteria to advance",
+          "type": "json",
+          "default": "[]"
+        }
+      ]
+    }
+  ],
+  "hook": [
+    {
+      "type": "relay.hookEventTrigger",
+      "label": "Agent event",
+      "inputs": 0,
+      "outputs": [
+        "main"
+      ],
+      "maximum": 1,
+      "parameters": [
+        {
+          "name": "operation",
+          "label": "Operation",
+          "type": "options",
+          "default": "edit",
+          "options": [
+            {
+              "value": "read",
+              "label": "Read file"
+            },
+            {
+              "value": "edit",
+              "label": "Edit file"
+            },
+            {
+              "value": "write",
+              "label": "Create file"
+            },
+            {
+              "value": "command",
+              "label": "Run command"
+            }
+          ]
+        },
+        {
+          "name": "timing",
+          "label": "Timing",
+          "type": "options",
+          "default": "before",
+          "options": [
+            {
+              "value": "before",
+              "label": "Before the operation"
+            },
+            {
+              "value": "after",
+              "label": "After the operation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "relay.hookCondition",
+      "label": "Hook condition",
+      "inputs": 1,
+      "outputs": [
+        "Yes",
+        "No"
+      ],
+      "parameters": [
+        {
+          "name": "field",
+          "label": "Field",
+          "type": "options",
+          "default": "path",
+          "options": [
+            {
+              "value": "path",
+              "label": "File path"
+            },
+            {
+              "value": "tool",
+              "label": "Tool"
+            },
+            {
+              "value": "command",
+              "label": "Command"
+            },
+            {
+              "value": "event",
+              "label": "Event"
+            }
+          ]
+        },
+        {
+          "name": "pattern",
+          "label": "Matches pattern",
+          "type": "string",
+          "default": "",
+          "placeholder": "src/generated/**"
+        }
+      ]
+    },
+    {
+      "type": "relay.hookRemind",
+      "label": "Send reminder",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.hookBlock",
+      "label": "Block",
+      "inputs": 1,
+      "outputs": [],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.hookApprove",
+      "label": "Ask for approval",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.hookVerify",
+      "label": "Run check",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "check",
+          "label": "Check command",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.hookRepair",
+      "label": "Require repair",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "relay.hookRecord",
+      "label": "Record only",
+      "inputs": 1,
+      "outputs": [
+        "main"
+      ],
+      "parameters": [
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    }
+  ]
+}

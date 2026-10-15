@@ -1,0 +1,1 @@
+Relay gate 'B' passed. Next gate: C. do C

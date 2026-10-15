@@ -9,10 +9,10 @@ import {
   type ComponentProps,
 } from "solid-js"
 import { createStore } from "solid-js/store"
-import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
+import { DropdownMenu } from "@orchestra/ui/dropdown-menu"
+import { Icon } from "@orchestra/ui/icon"
+import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
+import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { getProjectAvatarVariant } from "@/context/layout"
 import { useLanguage } from "@/context/language"
 import { displayName, getProjectAvatarSource } from "@/pages/layout/helpers"
@@ -487,7 +487,7 @@ function ProjectTrigger(props: ComponentProps<"button"> & { controller: PromptPr
         {(item) => (
           <ProjectAvatar
             fallback={displayName(item())}
-            src={getProjectAvatarSource(item().id, item().icon)}
+            src={getProjectAvatarSource(item().icon)}
             variant={getProjectAvatarVariant(item().icon?.color)}
           />
         )}
@@ -531,7 +531,7 @@ function ProjectItem(props: {
     >
       <ProjectAvatar
         fallback={displayName(props.project)}
-        src={getProjectAvatarSource(props.project.id, props.project.icon)}
+        src={getProjectAvatarSource(props.project.icon)}
         variant={getProjectAvatarVariant(props.project.icon?.color)}
       />
       <DropdownMenu.ItemLabel class="min-w-0 truncate leading-5">{displayName(props.project)}</DropdownMenu.ItemLabel>

@@ -1,0 +1,15 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "current",
+        "checklist": "test -f x"
+      }
+    ]
+  },
+  "fires": [
+    {
+      "check": {}
+    }
+  ]
+}

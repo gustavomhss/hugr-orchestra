@@ -1,10 +1,10 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/RequestDocks"
+const directory = "C:/Orchestra/RequestDocks"
 const projectID = "proj_request_docks"
 const sessionID = "ses_request_docks"
 const title = "Request dock regression"
@@ -33,6 +33,7 @@ test("shows a pending question dock", async ({ page }) => {
   await expectSessionTitle(page, title)
 
   const question = page.locator('[data-component="dock-prompt"][data-kind="question"]')
+  await expect(question).toHaveCount(1)
   await expect(question).toBeVisible()
   await expect(question.getByText("Which implementation should be used?")).toBeVisible()
   await expect(question.getByRole("radio", { name: /Minimal/ })).toBeVisible()
@@ -46,7 +47,9 @@ test("shows a pending question dock", async ({ page }) => {
       rejectRequests.push(request.url())
   })
 
-  await question.locator('[data-component="icon-button"][data-icon="chevron-down"]').click()
+  const minimize = question.getByRole("button", { name: "Minimize question", exact: true })
+  await expect(minimize).toHaveCount(1)
+  await minimize.click()
   await expect(question).toBeVisible()
   await expect(question.getByText("Which implementation should be used?")).toBeVisible()
   await expect(question.getByText("Select one answer")).toBeHidden()
@@ -57,7 +60,9 @@ test("shows a pending question dock", async ({ page }) => {
   await expect(page.locator('[data-component="question-minimized-dock"]')).toHaveCount(0)
   expect(rejectRequests).toEqual([])
 
-  await question.locator('[data-component="icon-button"][data-icon="chevron-down"]').click()
+  const restore = question.getByRole("button", { name: "Restore question", exact: true })
+  await expect(restore).toHaveCount(1)
+  await restore.click()
   await expect(question).toBeVisible()
   await expect(question.getByText("Which implementation should be used?")).toBeVisible()
   await expect(question.getByRole("radio", { name: /Minimal/ })).toBeVisible()
@@ -172,7 +177,7 @@ async function mockServer(
     questions?: unknown[] | (() => unknown[])
   },
 ) {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: "v2",
     directory,
     project: {
@@ -187,7 +192,7 @@ async function mockServer(
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: {
             "claude-opus-4-6": {
               id: "claude-opus-4-6",
@@ -216,6 +221,9 @@ async function mockServer(
     questions: requests.questions,
   })
   await page.addInitScript(() => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+    localStorage.setItem(
+      "settings.v3",
+      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
+    )
   })
 }

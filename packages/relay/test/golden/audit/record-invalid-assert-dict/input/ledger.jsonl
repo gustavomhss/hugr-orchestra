@@ -1,0 +1,2 @@
+{"wp":"wp1","i":0,"event":"checklist-item","item":"C1","assert":{},"verdict":"pass","graded_by":"deterministic","oracle":"b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b","origin":"sprint","gen":0,"prev":"GENESIS","seq":0,"mac":"sha256","h":"bef95cb3882210921903890b3ae7f7e5cc2036a02eb6c4086f76507adb669a97"}
+{"wp":"wp1","i":0,"event":"sprint-complete","retry":0,"fails":"","reg":"","gen":0,"prev":"bef95cb3882210921903890b3ae7f7e5cc2036a02eb6c4086f76507adb669a97","seq":1,"mac":"sha256","h":"7251f817f265fa00897cbb51294b5c2131f5d1cb723957247f4dc2621de9bdb1"}

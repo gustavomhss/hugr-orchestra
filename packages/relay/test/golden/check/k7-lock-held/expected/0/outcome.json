@@ -1,0 +1,5 @@
+{
+  "exit": 3,
+  "stdout": null,
+  "stderr": "relay-gate: another evaluation holds <root>/arms/tok/.run.lock\nrelay-gate: if no evaluation is running, remove that directory and retry.\n"
+}

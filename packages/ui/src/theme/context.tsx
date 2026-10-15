@@ -12,10 +12,10 @@ import type { DesktopTheme } from "./types"
 export type ColorScheme = "light" | "dark" | "system"
 
 const STORAGE_KEYS = {
-  THEME_ID: "opencode-theme-id",
-  COLOR_SCHEME: "opencode-color-scheme",
-  THEME_CSS_LIGHT: "opencode-theme-css-light",
-  THEME_CSS_DARK: "opencode-theme-css-dark",
+  THEME_ID: "orchestra-theme-id",
+  COLOR_SCHEME: "orchestra-color-scheme",
+  THEME_CSS_LIGHT: "orchestra-theme-css-light",
+  THEME_CSS_DARK: "orchestra-theme-css-dark",
 } as const
 
 const THEME_STYLE_ID = "oc-theme"
@@ -69,7 +69,7 @@ const names: Record<string, string> = {
   nord: "Nord",
   "one-dark": "One Dark",
   onedarkpro: "One Dark Pro",
-  opencode: "OpenCode",
+  orchestra: "Orchestra",
   orng: "Orng",
   "osaka-jade": "Osaka Jade",
   palenight: "Palenight",
@@ -130,6 +130,20 @@ function getSystemMode(): "light" | "dark" {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
+/** Refresh the root and browser chrome from the active app or theme background tokens. */
+export function syncThemeBackground() {
+  const root = document.documentElement
+  root.style.colorScheme = root.dataset.colorScheme ?? "light"
+  const style = getComputedStyle(root)
+  // Orchestra's own Dark and Light backgrounds, for the moment before its skin sets --app-background.
+  const fallback = root.dataset.colorScheme === "dark" ? "#080c11" : "#dfe3e8"
+  root.style.backgroundColor =
+    style.getPropertyValue("--app-background").trim() ||
+    style.getPropertyValue("--v2-background-bg-deep").trim() ||
+    fallback
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", getComputedStyle(root).backgroundColor)
+}
+
 function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "dark") {
   const isDark = mode === "dark"
   const variant = isDark ? theme.dark : theme.light
@@ -152,11 +166,7 @@ function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "da
   ensureThemeStyleElement().textContent = fullCss
   document.documentElement.dataset.theme = themeId
   document.documentElement.dataset.colorScheme = mode
-  document.documentElement.style.backgroundColor = isDark ? "#080808" : "#fafafa"
-
-  // Update theme-color meta tag to match light/dark mode
-  const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute("content", isDark ? "#080808" : "#fafafa")
+  syncThemeBackground()
 }
 
 function cacheThemeVariants(theme: DesktopTheme, themeId: string) {

@@ -1,0 +1,27 @@
+{
+  "name": "@atlas/mcp-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "bin": {
+    "atlas-mcp": "./dist/src/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "dependencies": {
+    "@atlas/adapter-io": "*",
+    "@atlas/memory": "*",
+    "@atlas/tools": "*",
+    "@modelcontextprotocol/sdk": "1.29.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  }
+}

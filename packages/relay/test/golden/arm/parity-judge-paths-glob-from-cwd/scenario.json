@@ -1,0 +1,42 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "GLOB",
+            "judge": "docs",
+            "context": "a.md",
+            "paths": [
+              "*.md"
+            ]
+          },
+          {
+            "id": "PARAM",
+            "judge": "docs",
+            "context": "${wp_dir}/x.md",
+            "paths": [
+              "${wp_dir}/x.md"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "a.md": "RELAY_JUDGE_OK a\n",
+    "b.md": "b\n",
+    "docs/x.md": "RELAY_JUDGE_OK x\n"
+  },
+  "env": {
+    "wp_dir": "docs"
+  },
+  "fires": [
+    {}
+  ]
+}

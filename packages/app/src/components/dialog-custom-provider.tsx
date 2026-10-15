@@ -1,14 +1,13 @@
-import { Button } from "@opencode-ai/ui/button"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
+import { Button } from "@orchestra/ui/button"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { Dialog } from "@orchestra/ui/dialog"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { useMutation } from "@tanstack/solid-query"
-import { TextField } from "@opencode-ai/ui/text-field"
+import { TextField } from "@orchestra/ui/text-field"
 import { showToast } from "@/utils/toast"
 import { batch, For } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
@@ -183,13 +182,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
       </div>
 
       <form onSubmit={save} class="px-2.5 pb-6 flex flex-col gap-6">
-        <p class="text-14-regular text-text-base">
-          {language.t("provider.custom.description.prefix")}
-          <ExternalLink href="https://opencode.ai/docs/providers/#custom-provider" tabIndex={-1}>
-            {language.t("provider.custom.description.link")}
-          </ExternalLink>
-          {language.t("provider.custom.description.suffix")}
-        </p>
+        <p class="text-14-regular text-text-base">{language.t("provider.custom.description")}</p>
 
         <div class="flex flex-col gap-4">
           <TextField
@@ -219,6 +212,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
             error={form.err.baseURL}
           />
           <TextField
+            type="password"
             label={language.t("provider.custom.field.apiKey.label")}
             placeholder={language.t("provider.custom.field.apiKey.placeholder")}
             description={language.t("provider.custom.field.apiKey.description")}

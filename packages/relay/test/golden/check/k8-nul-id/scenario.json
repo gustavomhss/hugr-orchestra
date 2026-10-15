@@ -1,0 +1,24 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "bad\u0000id",
+        "instructions": "do current",
+        "checklist": [
+          {
+            "id": "SIDE-EFFECT",
+            "cmd": "touch ran"
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "counter": "0"
+  },
+  "fires": [
+    {
+      "check": {}
+    }
+  ]
+}

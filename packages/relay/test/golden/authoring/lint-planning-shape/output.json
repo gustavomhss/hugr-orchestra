@@ -1,0 +1,77 @@
+{
+  "findings": [
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "intake",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "bearings",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "terms",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "carve",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "size",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "waits",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "order",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "forecast",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "policy",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "packets",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "ungated",
+      "severity": "error",
+      "wp": "tripwires",
+      "detail": "no deterministic control: this state advances on nothing"
+    },
+    {
+      "category": "chain-exceeds-default-cap",
+      "severity": "warn",
+      "wp": null,
+      "detail": "this chain needs at least 17 hook blocks and the documented default cap is 8; set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0. This lint cannot see the live value — the hook's preflight reads it at run time"
+    }
+  ],
+  "exit": 1
+}

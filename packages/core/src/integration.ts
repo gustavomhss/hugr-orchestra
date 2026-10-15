@@ -15,7 +15,7 @@ import {
   SynchronizedRef,
   Types,
 } from "effect"
-import { Integration } from "@opencode-ai/schema/integration"
+import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "./credential"
 import { State } from "./state"
 import { EventV2 } from "./event"
@@ -149,7 +149,7 @@ export interface Interface extends State.Transformable<Draft> {
     /** Resolves a connection into usable credential material. */
     readonly resolve: (
       connection: IntegrationConnection.Info,
-    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError>
+    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError | Credential.InheritedError>
     /** Runs a key method and stores the resulting credential. */
     readonly key: (input: {
       /** Integration receiving the credential. */
@@ -170,13 +170,13 @@ export interface Interface extends State.Transformable<Draft> {
       /** User-facing label for the credential created on completion. */
       readonly label?: string
     }) => Effect.Effect<Attempt, AuthorizationError>
-    /** Updates a stored credential exposed as a connection. */
+    /** Updates a stored credential exposed as a connection. Inherited credentials are read-only. */
     readonly update: (
       credentialID: Credential.ID,
       updates: Partial<Pick<Credential.Info, "label">>,
-    ) => Effect.Effect<void>
-    /** Removes a stored credential connection. */
-    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void>
+    ) => Effect.Effect<void, Credential.InheritedError>
+    /** Removes a stored credential connection. Inherited credentials are read-only. */
+    readonly remove: (credentialID: Credential.ID) => Effect.Effect<void, Credential.InheritedError>
   }
   readonly attempt: {
     /** Returns the current state of an OAuth attempt. */
@@ -193,7 +193,7 @@ export interface Interface extends State.Transformable<Draft> {
   }
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Integration") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Integration") {}
 
 const attemptLifetime = Duration.toMillis(Duration.minutes(10))
 const terminalRetention = Duration.toMillis(Duration.minutes(1))
@@ -397,6 +397,10 @@ export const locationLayer = Layer.effect(
           if (!implementation?.refresh) return credential.value
           const now = yield* Clock.currentTimeMillis
           if (credential.value.expires > now + Duration.toMillis(Duration.minutes(5))) return credential.value
+          const source = yield* credentials.inheritedFrom(credential.id)
+          if (source) {
+            return yield* new Credential.InheritedError({ credentialID: credential.id, source, reason: "refresh" })
+          }
           const value = yield* authorize(implementation.refresh(credential.value))
           yield* credentials.update(credential.id, { value })
           return value

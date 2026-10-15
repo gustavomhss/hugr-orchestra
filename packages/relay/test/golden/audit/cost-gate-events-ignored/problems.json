@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/cost-gate-events-ignored/input/ledger.jsonl",
+  "problems": []
+}

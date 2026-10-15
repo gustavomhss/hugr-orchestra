@@ -34,6 +34,14 @@ describe("electron renderer html", () => {
         }
       })
 
+      test("the window icon is the HuGR symbol shipped in the public directory", async () => {
+        const content = await html(name)
+        const icons = [...content.matchAll(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]*>/g)].map((m) => m[0])
+        expect(icons).toEqual(['<link rel="icon" type="image/svg+xml" href="./orchestra/hugr-symbol-primary.svg" />'])
+        expect(existsSync(join(root, "../app/public/orchestra/hugr-symbol-primary.svg"))).toBe(true)
+        expect(content).not.toContain("social-share")
+      })
+
       test("no web manifest link (not applicable in Electron)", async () => {
         const content = await html(name)
         expect(content).not.toContain('rel="manifest"')

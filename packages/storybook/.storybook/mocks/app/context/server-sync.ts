@@ -1,4 +1,4 @@
-import type { ProviderAuthMethod } from "@opencode-ai/sdk/v2/client"
+import type { ProviderAuthMethod } from "@orchestra/sdk/v2/client"
 
 const data = {
   provider: {
@@ -30,4 +30,12 @@ export function useServerSync() {
     },
     updateConfig: async () => {},
   })
+}
+
+export function onJanitorReport(_listener: (event: { report: string; notify: boolean; source: string }) => void) {
+  return () => {}
+}
+
+export function ServerSyncProvider(props: { children?: unknown }) {
+  return props.children
 }

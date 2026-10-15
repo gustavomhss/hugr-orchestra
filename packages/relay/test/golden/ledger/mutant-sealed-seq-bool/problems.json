@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/sealed-seq-bool.ledger.jsonl",
+  "problems": []
+}

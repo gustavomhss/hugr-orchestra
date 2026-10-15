@@ -1,8 +1,8 @@
-import { SessionV2 } from "@opencode-ai/core/session"
+import { SessionV2 } from "@orchestra/core/session"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { SessionsCursor } from "@opencode-ai/protocol/groups/session"
+import { SessionsCursor } from "@orchestra/protocol/groups/session"
 import {
   ConflictError,
   InvalidCursorError,
@@ -10,8 +10,8 @@ import {
   ServiceUnavailableError,
   SessionNotFoundError,
   UnknownError,
-} from "@opencode-ai/protocol/errors"
-import { AbsolutePath } from "@opencode-ai/core/schema"
+} from "@orchestra/protocol/errors"
+import { AbsolutePath } from "@orchestra/core/schema"
 
 const DefaultSessionsLimit = 50
 const DefaultSessionHistoryLimit = 50
@@ -164,6 +164,10 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
                       resource: error.messageID,
                     }),
                   ),
+                ),
+                // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
+                Effect.catchTag("Session.PromptBlockedError", (error) =>
+                  Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
                 ),
               ),
           }

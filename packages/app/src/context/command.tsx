@@ -1,5 +1,5 @@
-import { createSimpleContext } from "@opencode-ai/ui/context"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { createSimpleContext } from "@orchestra/ui/context"
+import { useDialog } from "@orchestra/ui/context/dialog"
 import { type Accessor, createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
@@ -395,7 +395,7 @@ export const { use: useCommand, provider: CommandProvider } = createSimpleContex
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (suspended() || dialog.active) return
+      if (suspended() || dialog.open) return
 
       const sig = signatureFromEvent(event)
       const isPalette = palette().has(sig)

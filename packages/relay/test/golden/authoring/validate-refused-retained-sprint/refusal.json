@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "The retained sprint must hold lists of steps and phases"
+}

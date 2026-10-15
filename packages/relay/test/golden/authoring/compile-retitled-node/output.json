@@ -1,0 +1,61 @@
+{
+  "sprint": {
+    "brief": "Exact author intent\n",
+    "gen": 7,
+    "retry_budget": 2,
+    "extra": {
+      "retained": true
+    },
+    "macros": [
+      {
+        "id": "phase",
+        "title": "Phase",
+        "instructions": "Context\n",
+        "extra": 3
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "first\n",
+        "title": "Same name",
+        "macro": "phase",
+        "instructions": "Do it\n\n",
+        "self_check": [
+          "Evidence?"
+        ],
+        "checklist": [
+          {
+            "id": "check\r\n",
+            "assert": "Keep\tbytes\n",
+            "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+            "context": [
+              "a.md"
+            ],
+            "origin": "test"
+          }
+        ],
+        "dod": [
+          {
+            "cmd": "test -s evidence.txt"
+          }
+        ],
+        "kind": "execute"
+      },
+      {
+        "id": "second",
+        "title": "Edited title",
+        "macro": "phase",
+        "kind": "review",
+        "instructions": "Review",
+        "checklist": [
+          {
+            "id": "review",
+            "judge": "Keep exact\n",
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "bindings": []
+}

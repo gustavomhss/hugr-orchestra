@@ -1,7 +1,7 @@
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { List } from "@opencode-ai/ui/list"
-import { Switch } from "@opencode-ai/ui/switch"
-import { Tooltip } from "@opencode-ai/ui/tooltip"
+import { Dialog } from "@orchestra/ui/dialog"
+import { List } from "@orchestra/ui/list"
+import { Switch } from "@orchestra/ui/switch"
+import { Tooltip } from "@orchestra/ui/tooltip"
 import { Show, type Component } from "solid-js"
 import { useLocal } from "@/context/local"
 import { useLanguage } from "@/context/language"
@@ -57,9 +57,7 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
         search={{ placeholder: language.t("dialog.model.search.placeholder"), autofocus: true }}
         emptyMessage={language.t("dialog.model.empty")}
         key={(x) => `${x?.provider?.id}:${x?.id}`}
-        items={local.model
-          .list()
-          .filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))}
+        items={local.model.list().filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))}
         filterKeys={["provider.name", "name", "id"]}
         sortBy={(a, b) => a.name.localeCompare(b.name)}
         groupBy={(x) => x.provider.name}
@@ -90,9 +88,7 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
           </div>
         )}
       </List>
-      <div class="text-12-regular text-text-weak px-3 pb-1">
-        {language.t("dialog.subagentModels.hint")}
-      </div>
+      <div class="text-12-regular text-text-weak px-3 pb-1">{language.t("dialog.subagentModels.hint")}</div>
     </Dialog>
   )
 }

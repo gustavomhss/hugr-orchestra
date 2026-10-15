@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "--- protocol.md ---\nMUST: every claim carries its evidence.\nMUST: no silent caps.\n--- end protocol.md ---\n\nRelay gate 'load' passed. Next gate: wp2. M-RULES\ndo wp2"
+  },
+  "stderr": ""
+}

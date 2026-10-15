@@ -1,0 +1,42 @@
+{
+  "ledger": "test/golden/audit/diverged-judge-paths/input/run/.relay-state/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 3 chained entries [PLAIN (SHA-256)], chain head f5eeb1a69f4d…\n  (2 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "C1",
+      "assert": "real control",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "J1",
+      "assert": "the review engages with the diff",
+      "verdict": "pass",
+      "graded_by": "judge:stub(non-independent)"
+    }
+  ],
+  "deterministic_total": 1,
+  "deterministic_passed": 1,
+  "advisory": 1,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "diverged",
+    "items": [
+      {
+        "id": "J1",
+        "kind": "changed",
+        "recorded": "05e41e960007",
+        "current": "ffbb71d8dfd8"
+      }
+    ]
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "SPRINT-DIVERGED",
+  "exit": 2
+}

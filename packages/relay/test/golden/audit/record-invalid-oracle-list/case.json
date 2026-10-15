@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/record-invalid-oracle-list/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

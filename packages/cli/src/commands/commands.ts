@@ -1,10 +1,10 @@
 import { Argument, Flag } from "effect/unstable/cli"
 import { Spec } from "../framework/spec"
 
-declare const OPENCODE_CLI_NAME: string | undefined
+declare const ORCHESTRA_CLI_NAME: string | undefined
 
-export const Commands = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME : "opencode", {
-  description: "OpenCode 2.0 preview command line interface",
+export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
+  description: "Orchestra 2.0 preview command line interface",
   commands: [
     Spec.make("api", {
       description: "Make a request to the running server",
@@ -24,7 +24,13 @@ export const Commands = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCO
     }),
     Spec.make("debug", {
       description: "Debugging and troubleshooting tools",
-      commands: [Spec.make("agents", { description: "List all agents" })],
+      commands: [
+        Spec.make("agents", { description: "List all agents" }),
+        Spec.make("symbols", {
+          description: "Extract a file's top-level symbols with Maestro's native parser",
+          params: { file: Argument.string("file") },
+        }),
+      ],
     }),
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {

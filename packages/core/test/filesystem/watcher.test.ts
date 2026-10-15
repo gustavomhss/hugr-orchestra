@@ -1,25 +1,59 @@
 import { $ } from "bun"
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { ConfigProvider, Deferred, Duration, Effect, Fiber, Layer, Option, Stream } from "effect"
-import { Config } from "@opencode-ai/core/config"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Watcher } from "@opencode-ai/core/filesystem/watcher"
-import { Location } from "@opencode-ai/core/location"
-import { AbsolutePath } from "@opencode-ai/core/schema"
+import { Config } from "@orchestra/core/config"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Watcher } from "@orchestra/core/filesystem/watcher"
+import { Location } from "@orchestra/core/location"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { location } from "../fixture/location"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 
-const describeWatcher = Watcher.hasNativeBinding() && !process.env.CI ? describe : describe.skip
+const describeWatcher = Watcher.hasNativeBinding() ? describe : describe.skip
 
 type WatcherEvent = { file: string; event: "add" | "change" | "unlink" }
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([FSUtil.node, EventV2.node])))
+
+test("closes pending watcher subscriptions after they resolve", async () => {
+  let resolve: (subscription: { unsubscribe: () => Promise<void> }) => void = () => {}
+  let unsubscribed = false
+  const pending = new Promise<{ unsubscribe: () => Promise<void> }>((next) => {
+    resolve = next
+  })
+  const cleanup = Watcher.closeSubscriptions(new Set([pending]), 100)
+  resolve({ unsubscribe: async () => void (unsubscribed = true) })
+  await cleanup
+  expect(unsubscribed).toBe(true)
+})
+
+test("finishes resolved watcher cleanup before its deadline", async () => {
+  const pending = Promise.resolve({ unsubscribe: async () => {} })
+  let cleared = false
+  await Watcher.closeSubscriptions(new Set([pending]), 1_000, {
+    set: (callback, delay) => setTimeout(callback, delay),
+    clear: (timer) => {
+      cleared = true
+      clearTimeout(timer)
+    },
+  })
+  expect(cleared).toBe(true)
+})
+
+test("bounds watcher subscription teardown when native request never resolves", async () => {
+  const pending = new Promise<{ unsubscribe: () => Promise<void> }>(() => {})
+  const result = await Promise.race([
+    Watcher.closeSubscriptions(new Set([pending]), 10).then(() => "closed"),
+    new Promise((resolve) => setTimeout(() => resolve("hung"), 100)),
+  ])
+  expect(result).toBe("closed")
+})
 
 const configLayer = Layer.succeed(
   Config.Service,
@@ -30,8 +64,8 @@ const configLayer = Layer.succeed(
 
 const flagsLayer = ConfigProvider.layer(
   ConfigProvider.fromUnknown({
-    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
-    OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "false",
+    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "false",
   }),
 )
 
@@ -59,7 +93,7 @@ function withTmp<A, E, R>(
       await $`git init`.cwd(tmp.path).quiet()
       await $`git config core.fsmonitor false`.cwd(tmp.path).quiet()
       await $`git config commit.gpgsign false`.cwd(tmp.path).quiet()
-      await $`git config user.email test@opencode.test`.cwd(tmp.path).quiet()
+      await $`git config user.email test@orchestra.test`.cwd(tmp.path).quiet()
       await $`git config user.name Test`.cwd(tmp.path).quiet()
       await $`git commit --allow-empty -m root`.cwd(tmp.path).quiet()
       await options.init?.(tmp.path)

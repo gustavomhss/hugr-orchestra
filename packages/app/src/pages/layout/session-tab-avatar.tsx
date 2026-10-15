@@ -3,8 +3,8 @@ import { getProjectAvatarVariant } from "@/context/layout"
 import type { ServerConnection } from "@/context/server"
 import { displayName, getProjectAvatarSource } from "@/pages/layout/helpers"
 import { useSessionTabAvatarState } from "@/pages/layout/project-avatar-state"
-import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
-import { SessionProgressIndicatorV2 } from "@opencode-ai/session-ui/v2/session-progress-indicator-v2"
+import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
+import { SessionProgressIndicatorV2 } from "@orchestra/session-ui/v2/session-progress-indicator-v2"
 import { Show } from "solid-js"
 
 export function SessionTabAvatar(props: {
@@ -40,7 +40,7 @@ export function SessionTabAvatarView(props: {
   const projectAvatar = () => (
     <ProjectAvatar
       fallback={displayName(props.project ?? { worktree: props.directory })}
-      src={getProjectAvatarSource(props.project?.id, props.project?.icon)}
+      src={getProjectAvatarSource(props.project?.icon)}
       variant={getProjectAvatarVariant(props.project?.icon?.color)}
       unread={props.unread}
     />

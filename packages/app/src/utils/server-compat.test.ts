@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
+import { normalizeSessionInfo } from "./session"
+import { rethrow } from "../testing/rejection"
 
 function setup(
   protocol: "v1" | "v2" | Promise<"v1" | "v2">,
@@ -56,6 +58,25 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
+  test("keeps missing legacy session cost unavailable after normalization", async () => {
+    const session = {
+      id: "ses_1",
+      slug: "ses_1",
+      projectID: "project",
+      directory: "/repo",
+      title: "Session",
+      version: "1",
+      time: { created: 1, updated: 1 },
+    }
+    const fetcher = Object.assign(async () => Response.json(session), { preconnect: fetch.preconnect })
+    const server = { url: "http://localhost:4096" }
+    const api = createCompatibleApi({
+      protocol: Promise.resolve("v1"),
+      current: createApiForServer({ server, fetch: fetcher }),
+      legacy: () => createSdkForServer({ server, fetch: fetcher, throwOnError: true }),
+    })
+    expect(normalizeSessionInfo(await api.session.get({ sessionID: session.id })).cost).toBeUndefined()
+  })
   /*
   test("routes V1 archive through the legacy session update", async () => {
     const { api, requests } = setup("v1")
@@ -63,7 +84,7 @@ describe("createCompatibleApi", () => {
 
     const url = new URL(requests[0]!.url)
     expect(url.pathname).toBe("/session/ses_1")
-    expect(requests[0]!.headers.get("x-opencode-directory")).toBe("%2Frepo")
+    expect(requests[0]!.headers.get("x-orchestra-directory")).toBe("%2Frepo")
     expect(requests[0]!.method).toBe("PATCH")
     expect(await requests[0]!.json()).toMatchObject({ time: { archived: expect.any(Number) } })
   })
@@ -130,6 +151,22 @@ describe("createCompatibleApi", () => {
       { id: "prt_text", type: "text", text: "look" },
       { id: "prt_image", type: "file", mime: "image/png", url: "data:image/png;base64,AAAA", filename: "image.png" },
     ])
+  })
+
+  test("sends profile behavior instructions as the V1 per-message system prompt only", async () => {
+    const system = "LLM behaviors active for this profile.\n\n## Caveman (intensity: lite)"
+    const legacy = setup("v1")
+    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
+    expect(new URL(legacy.requests[0]!.url).pathname).toBe("/session/ses_1/prompt_async")
+    expect((await legacy.requests[0]!.json()).system).toBe(system)
+
+    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_2", text: "hello" })
+    expect(await legacy.requests[1]!.json()).not.toHaveProperty("system")
+
+    const current = setup("v2")
+    await current.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
+    expect(new URL(current.requests[0]!.url).pathname).toBe("/api/session/ses_1/prompt")
+    expect(JSON.stringify(await current.requests[0]!.json())).not.toContain("Caveman")
   })
 
   test("resolves protocol detection once across implementation methods", async () => {
@@ -215,8 +252,8 @@ describe("createCompatibleApi", () => {
       "/instance/dispose",
       "/instance/dispose",
     ])
-    expect(requests[2]!.headers.get("x-opencode-directory")).toBe("%2Frepo")
-    expect(requests[3]!.headers.get("x-opencode-directory")).toBeNull()
+    expect(requests[2]!.headers.get("x-orchestra-directory")).toBe("%2Frepo")
+    expect(requests[3]!.headers.get("x-orchestra-directory")).toBeNull()
   })
 
   test("disposes the V1 instance after completing provider OAuth", async () => {
@@ -234,35 +271,37 @@ describe("createCompatibleApi", () => {
       "/instance/dispose",
       "/instance/dispose",
     ])
-    expect(requests[1]!.headers.get("x-opencode-directory")).toBe("%2Frepo")
-    expect(requests[2]!.headers.get("x-opencode-directory")).toBeNull()
+    expect(requests[1]!.headers.get("x-orchestra-directory")).toBe("%2Frepo")
+    expect(requests[2]!.headers.get("x-orchestra-directory")).toBeNull()
   })
 
   test("rethrows non-missing-route failures from connect.key", async () => {
-    await expect(
-      (async () => {
-        const requests: Request[] = []
-        const fetcher = Object.assign(
-          async (input: string | URL | Request, init?: RequestInit) => {
-            const request = new Request(input, init)
-            requests.push(request)
-            return new Response("bad key", { status: 400 })
-          },
-          { preconnect: globalThis.fetch.preconnect },
-        )
-        const server = { url: "http://localhost:4096" }
-        const api = createCompatibleApi({
-          protocol: Promise.resolve("v2"),
-          current: createApiForServer({ server, fetch: fetcher }),
-          legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
-          directory: "/repo",
-        })
-        await api.integration.connect.key({
-          integrationID: "openrouter",
-          key: "bad",
-          location: { directory: "/repo" },
-        })
-      })(),
-    ).rejects.toThrow()
+    expect(
+      await rethrow(
+        (async () => {
+          const requests: Request[] = []
+          const fetcher = Object.assign(
+            async (input: string | URL | Request, init?: RequestInit) => {
+              const request = new Request(input, init)
+              requests.push(request)
+              return new Response("bad key", { status: 400 })
+            },
+            { preconnect: globalThis.fetch.preconnect },
+          )
+          const server = { url: "http://localhost:4096" }
+          const api = createCompatibleApi({
+            protocol: Promise.resolve("v2"),
+            current: createApiForServer({ server, fetch: fetcher }),
+            legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
+            directory: "/repo",
+          })
+          await api.integration.connect.key({
+            integrationID: "openrouter",
+            key: "bad",
+            location: { directory: "/repo" },
+          })
+        })(),
+      ),
+    ).toThrow()
   })
 })

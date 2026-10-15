@@ -1,7 +1,12 @@
 import { DateTime } from "luxon"
 
 export function createSessionContextFormatter(locale: string) {
+  const usd = new Intl.NumberFormat(locale, { style: "currency", currency: "USD" })
   return {
+    currency(value: number | null | undefined) {
+      if (value === undefined || value === null) return "—"
+      return usd.format(value)
+    },
     number(value: number | null | undefined) {
       if (value === undefined) return "—"
       if (value === null) return "—"

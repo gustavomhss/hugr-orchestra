@@ -1,0 +1,1637 @@
+/* App-local session skin from the approved app.html. The shell owns outer
+ * gutters and the session strip; virtual rows keep their measured positioning.
+ * Layout wrappers above the timeline use data-session-layout, not data-slot or
+ * data-component: those names on a virtual row's ancestors let shared generic sibling
+ * and :has() rules pass Chromium's ancestor filter, so every row insertion restyled
+ * whole rows and the layout ancestors. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-session-background: linear-gradient(
+      180deg,
+      rgba(20, 28, 37, 0.9) 0%,
+      rgba(14, 20, 28, 0.93) 50%,
+      rgba(12, 17, 24, 0.95) 100%
+    );
+    --orchestra-session-border: rgba(160, 179, 197, 0.14);
+    --orchestra-session-shadow:
+      inset 0 1px 0 rgba(214, 231, 247, 0.075), inset 0 -1px 0 rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.42),
+      0 4px 12px rgba(0, 0, 0, 0.22);
+    --orchestra-session-heading: #e9eef3;
+    --orchestra-session-body: #c2ccd6;
+    --orchestra-session-secondary: #93a2b2;
+    --orchestra-session-meta: #7a8b9d;
+    --orchestra-session-rule: rgba(160, 181, 200, 0.1);
+    --orchestra-session-message-rule: rgba(160, 181, 200, 0.09);
+    --orchestra-evidence-background: linear-gradient(180deg, rgba(26, 36, 47, 0.66), rgba(19, 27, 36, 0.62));
+    --orchestra-evidence-solid: #131b24;
+    --orchestra-evidence-highlight: inset 0 1px 0 rgba(214, 231, 247, 0.05);
+    --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(0, 0, 0, 0.2);
+    --orchestra-evidence-heading: #9fadbc;
+    --orchestra-evidence-add: #8fbf9b;
+    --orchestra-evidence-delete: #c98a84;
+    --orchestra-evidence-number: #5b6e82;
+    --orchestra-file-text: #a3b1c0;
+    --orchestra-file-add: #72b797;
+    --orchestra-file-delete: #c8757b;
+    --orchestra-file-active: linear-gradient(90deg, #212e3c, #1e2a37);
+    --orchestra-file-active-border: rgba(126, 151, 174, 0.12);
+    --orchestra-file-active-accent: #71869a;
+    --orchestra-inline-highlight: 2px;
+    --orchestra-composer-background: linear-gradient(180deg, rgba(30, 40, 52, 0.82), rgba(20, 28, 37, 0.86));
+    --orchestra-composer-border: rgba(163, 184, 203, 0.18);
+    --orchestra-composer-shadow: inset 0 1px 0 rgba(214, 231, 247, 0.06), 0 8px 22px rgba(0, 0, 0, 0.28);
+    --orchestra-composer-text: #dbe3ea;
+    --orchestra-composer-placeholder: #78889a;
+    --orchestra-composer-control: #aab7c4;
+    --orchestra-send-background: linear-gradient(180deg, #3f7fc4, #2f66a8);
+    --orchestra-rail-tab-text: #8b9bab;
+    --orchestra-rail-tab-hover: #cfd8e0;
+    --orchestra-rail-tab-hover-background: rgba(255, 255, 255, 0.05);
+    --orchestra-context-background: rgba(19, 27, 36, 0.42);
+    --orchestra-context-border: rgba(160, 181, 200, 0.12);
+    --orchestra-rail-tab-active: rgba(46, 58, 72, 0.9);
+    --orchestra-rail-tab-active-text: #e8eef4;
+    --orchestra-rail-tab-highlight: rgba(255, 255, 255, 0.05);
+    --orchestra-rail-badge-background: rgba(255, 255, 255, 0.07);
+    --orchestra-rail-badge-text: #9fb0c0;
+    --orchestra-rail-badge-active-background: rgba(126, 165, 204, 0.22);
+    --orchestra-rail-badge-active-text: #bcd4ea;
+    --orchestra-card-background: linear-gradient(180deg, rgba(26, 36, 47, 0.7), rgba(19, 27, 36, 0.66));
+    --orchestra-task-mark-background: #1a2530;
+    --orchestra-task-mark-border: rgba(154, 176, 196, 0.18);
+    --orchestra-task-mark-text: #93a6b8;
+    --orchestra-task-title: #d6dde4;
+    --orchestra-task-meta: #7a8a9c;
+    --orchestra-task-rule: rgba(160, 181, 200, 0.08);
+    --orchestra-permission-background: linear-gradient(180deg, rgba(48, 42, 32, 0.72), rgba(30, 28, 25, 0.8));
+    --orchestra-permission-border: rgba(201, 183, 143, 0.3);
+    --orchestra-permission-rule: rgba(201, 183, 143, 0.16);
+    --orchestra-permission-shadow: inset 0 1px 0 rgba(255, 240, 214, 0.07), 0 10px 26px rgba(0, 0, 0, 0.26);
+    --orchestra-permission-title: #f0e4cc;
+    --orchestra-permission-hint: #c3c9d1;
+    --orchestra-permission-pattern: #dcc9a6;
+    --orchestra-permission-pattern-border: rgba(201, 183, 143, 0.24);
+    --orchestra-permission-pattern-background: rgba(0, 0, 0, 0.22);
+    --orchestra-permission-footer: rgba(0, 0, 0, 0.16);
+    --orchestra-permission-icon: #d8bd8d;
+    --orchestra-permission-deny: #a7b0ba;
+    --orchestra-permission-always-background: rgba(38, 50, 63, 0.8);
+    --orchestra-permission-always-border: rgba(163, 184, 203, 0.24);
+    --orchestra-permission-always-text: #cbd5de;
+    min-inline-size: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--orchestra-body);
+  }
+
+  /* A native browser view cannot follow an unobserved position-only CSS transition.
+   * Anchor :has() on the conversation panel and reach only the sibling column's side
+   * panel: a :has() on the whole surface turns every timeline mutation into a full
+   * surface style recalc. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-layout="conversation-panel"]:has(
+      ~ [data-session-layout="secondary-column"] > div > [data-active-tab="apps"]
+    ) {
+    transition: none;
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-rail-tab-hover-background: rgba(40, 56, 74, 0.06);
+    --orchestra-context-background: rgba(255, 255, 255, 0.55);
+    --orchestra-context-border: rgba(70, 84, 98, 0.12);
+    --orchestra-session-background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(250, 251, 253, 0.95) 50%,
+      rgba(245, 248, 250, 0.96) 100%
+    );
+    --orchestra-session-border: rgba(70, 84, 98, 0.15);
+    --orchestra-session-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(120, 136, 152, 0.12), 0 1px 2px rgba(38, 50, 64, 0.13),
+      0 4px 12px rgba(38, 50, 64, 0.08);
+    --orchestra-session-heading: #141920;
+    --orchestra-session-body: #3f4854;
+    --orchestra-session-secondary: #68717c;
+    --orchestra-session-meta: #666e79;
+    --orchestra-session-rule: rgba(70, 84, 98, 0.12);
+    --orchestra-session-message-rule: rgba(70, 84, 98, 0.1);
+    --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 249, 251, 0.7));
+    --orchestra-evidence-solid: #f7f9fb;
+    --orchestra-evidence-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(40, 50, 62, 0.08);
+    --orchestra-evidence-heading: #4d5661;
+    --orchestra-evidence-add: #3f7a4c;
+    --orchestra-evidence-delete: #9c4a42;
+    --orchestra-evidence-number: #8a929c;
+    --orchestra-file-text: #4d5661;
+    --orchestra-file-add: #2f7a4c;
+    --orchestra-file-delete: #9c4a42;
+    --orchestra-file-active: linear-gradient(90deg, #dde5ed, #e7ecf2);
+    --orchestra-file-active-border: rgba(70, 84, 98, 0.12);
+    --orchestra-file-active-accent: #4d6b85;
+    --orchestra-composer-background: rgba(255, 255, 255, 0.7);
+    --orchestra-composer-border: rgba(70, 84, 98, 0.18);
+    --orchestra-composer-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 20px rgba(40, 50, 62, 0.08);
+    --orchestra-composer-text: #1a1f26;
+    --orchestra-composer-placeholder: #8b939d;
+    --orchestra-composer-control: #4d5661;
+    --orchestra-send-background: linear-gradient(180deg, #4a86d6, #3a6fba);
+    --orchestra-rail-tab-text: #66707b;
+    --orchestra-rail-tab-hover: #1f2833;
+    --orchestra-rail-tab-active: rgba(96, 138, 180, 0.22);
+    --orchestra-rail-tab-active-text: #141a21;
+    --orchestra-rail-tab-highlight: rgba(255, 255, 255, 0.6);
+    --orchestra-rail-badge-background: rgba(0, 0, 0, 0.06);
+    --orchestra-rail-badge-text: #5d6672;
+    --orchestra-rail-badge-active-background: rgba(88, 134, 196, 0.16);
+    --orchestra-rail-badge-active-text: #2f6bbf;
+    --orchestra-card-background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 249, 251, 0.84));
+    --orchestra-task-mark-background: #eef2f6;
+    --orchestra-task-mark-border: rgba(70, 84, 98, 0.16);
+    --orchestra-task-mark-text: #5d6672;
+    --orchestra-task-title: #20262e;
+    --orchestra-task-meta: #67707b;
+    --orchestra-task-rule: rgba(70, 84, 98, 0.1);
+    --orchestra-permission-background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 247, 240, 0.94));
+    --orchestra-permission-border: rgba(160, 130, 80, 0.34);
+    --orchestra-permission-rule: rgba(160, 130, 80, 0.18);
+    --orchestra-permission-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 10px 26px rgba(60, 50, 30, 0.1);
+    --orchestra-permission-title: #4a3a1c;
+    --orchestra-permission-hint: #3f4854;
+    --orchestra-permission-pattern: #6b5628;
+    --orchestra-permission-pattern-border: rgba(160, 130, 80, 0.3);
+    --orchestra-permission-pattern-background: rgba(160, 130, 80, 0.08);
+    --orchestra-permission-footer: rgba(160, 130, 80, 0.05);
+    --orchestra-permission-icon: #9a7d3f;
+    --orchestra-permission-deny: #4d5661;
+    --orchestra-permission-always-background: rgba(255, 255, 255, 0.8);
+    --orchestra-permission-always-border: rgba(70, 84, 98, 0.24);
+    --orchestra-permission-always-text: #3a434e;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"]:dir(rtl) {
+    --orchestra-inline-highlight: -2px;
+    --orchestra-file-active: linear-gradient(270deg, #212e3c, #1e2a37);
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"]:dir(rtl) {
+    --orchestra-file-active: linear-gradient(270deg, #dde5ed, #e7ecf2);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-layout="panel-row"] {
+    gap: 6px;
+    padding: 0;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is([data-session-layout="body"], [data-component="session-side-panel"], [data-component="session-new-design"]) {
+    position: relative;
+    border-radius: 9px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Paint glass in a separate layer: a filter on the Apps ancestor would create
+   * a containing block for its fixed menu and cannot clip a native WebContentsView. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-session-layout="body"],
+      [data-component="session-side-panel"],
+      [data-component="session-new-design"]
+    )::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border: 1px solid var(--orchestra-session-border);
+    border-radius: inherit;
+    background: var(--orchestra-session-background);
+    box-shadow: var(--orchestra-session-shadow);
+    pointer-events: none;
+  }
+
+  /* The panels' blur is painted in the shell's glass layer (layout-new.tsx), under the tint above.
+   * A backdrop-filter is redrawn over its whole box whenever anything inside that box paints
+   * (streaming, scrolling, spinners), which starves software-rendered windows such as headless CI.
+   * Instead each stand-in is clipped to its panel and holds a blurred copy of the workspace
+   * backdrop, and the layer is its own compositor layer, so the blur is reused until a panel moves.
+   * Without its panel an anchor() inset is invalid and the stand-in collapses to nothing. */
+  body[data-new-layout] .orchestra-workspace {
+    anchor-name: --orchestra-workspace;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-layout="body"] {
+    anchor-name: --orchestra-session-body;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-side-panel"] {
+    anchor-name: --orchestra-session-side-panel;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-new-design"] {
+    anchor-name: --orchestra-session-new-design;
+  }
+
+  body[data-new-layout] .orchestra-glass-layer {
+    --orchestra-session-filter: blur(16px) brightness(0.58) saturate(0.86);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    will-change: opacity;
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] .orchestra-glass-layer {
+    --orchestra-session-filter: blur(18px) brightness(1.02) saturate(0.98);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] {
+    position: fixed;
+    clip-path: inset(0 round 9px);
+  }
+
+  /* The workspace's box. Chromium repaints an anchor-positioned box whenever layout runs elsewhere in
+   * the shell (the dev debug bar's counters are enough), even when it does not move. So this box paints
+   * nothing and its child holds the blurred copy: the copy keeps its raster instead of being redrawn
+   * over the whole workspace, which also made every backdrop blur on top of it redraw. */
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div {
+    position: fixed;
+    top: anchor(--orchestra-workspace top);
+    right: anchor(--orchestra-workspace right);
+    bottom: anchor(--orchestra-workspace bottom);
+    left: anchor(--orchestra-workspace left);
+  }
+
+  /* The workspace's photograph and overlay (theme.css), laid over the same box. */
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div > div {
+    position: absolute;
+    inset: 0;
+    background:
+      var(--orchestra-workspace-overlay),
+      url("/orchestra/mtn-src.jpg") center / cover no-repeat;
+    filter: var(--orchestra-session-filter);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-body"] {
+    top: anchor(--orchestra-session-body top);
+    right: anchor(--orchestra-session-body right);
+    bottom: anchor(--orchestra-session-body bottom);
+    left: anchor(--orchestra-session-body left);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-side-panel"] {
+    top: anchor(--orchestra-session-side-panel top);
+    right: anchor(--orchestra-session-side-panel right);
+    bottom: anchor(--orchestra-session-side-panel bottom);
+    left: anchor(--orchestra-session-side-panel left);
+  }
+
+  body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass="session-new-design"] {
+    top: anchor(--orchestra-session-new-design top);
+    right: anchor(--orchestra-session-new-design right);
+    bottom: anchor(--orchestra-session-new-design bottom);
+    left: anchor(--orchestra-session-new-design left);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-session-layout="timeline-region"],
+      [data-component="session-prompt-dock"],
+      [data-slot="session-side-panel-content"]
+    ) {
+    position: relative;
+    z-index: 1;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
+    margin: 0;
+    padding: 0;
+    color: var(--orchestra-session-heading);
+    font-family: var(--orchestra-chat-font);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: -0.03em;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is([data-slot="session-title-parent"], [data-slot="session-title-separator"]) {
+    color: var(--orchestra-session-secondary);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-title]
+    :is([data-component="button-v2"], [data-component="icon-button-v2"]) {
+    min-block-size: 32px;
+    block-size: 32px;
+    border: 1px solid var(--orchestra-border);
+    border-radius: 7px;
+    background: var(--orchestra-surface);
+    color: var(--orchestra-body);
+    font-size: 12px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-title]
+    :is([data-component="button-v2"], [data-component="icon-button-v2"]):hover {
+    background: var(--orchestra-surface-hover);
+    border-color: var(--orchestra-border-strong);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="icon"]:has(use[href="#orchestra-icon-branch"])
+    + span {
+    color: var(--orchestra-branch-color);
+    font-family: var(--orchestra-branch-font-family);
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-timeline-row]
+    [data-slot="session-turn-message-container"] {
+    padding-inline: 30px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="user-message"] {
+    align-items: flex-start;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is([data-slot="user-message-body"], [data-slot="user-message-attachments"]) {
+    margin-inline-start: 0;
+    max-inline-size: 100%;
+    align-items: flex-start;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="user-message-text"] {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--orchestra-session-body);
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is([data-component="text-part"], [data-component="reasoning-part"])
+    [data-component="markdown"] {
+    color: var(--orchestra-session-body);
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is([data-slot="user-message-meta"], [data-slot="user-message-meta-tail"], [data-slot="text-part-meta"]) {
+    color: var(--orchestra-session-meta);
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-layout="timeline-region"]
+    .scroll-view__thumb::after {
+    background-color: rgba(140, 160, 180, 0.3);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-component="tool-output"],
+      [data-component="bash-output"],
+      [data-slot="session-turn-diffs"],
+      [data-component="card"][data-variant="error"]
+    ) {
+    border: 1px solid var(--orchestra-border-muted);
+    border-radius: 9px;
+    background: var(--orchestra-evidence-background);
+    color: var(--orchestra-session-body);
+    box-shadow: var(--orchestra-evidence-shadow);
+  }
+
+  /* Virtual rows clip 0.5px past their measured height, which would cut an outer
+   * drop shadow flat at the row edge; evidence in a row keeps only its inset highlight. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-timeline-key]
+    :is(
+      [data-component="tool-output"],
+      [data-component="bash-output"],
+      [data-slot="session-turn-diffs"],
+      [data-component="card"][data-variant="error"]
+    ) {
+    box-shadow: var(--orchestra-evidence-highlight);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="card"][data-variant="error"] {
+    --card-accent: var(--orchestra-evidence-delete);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-turn-diffs-header"] {
+    padding-inline: 13px;
+    border-block-end: 1px solid var(--orchestra-session-rule);
+    background: var(--orchestra-evidence-solid);
+    color: var(--orchestra-evidence-heading);
+    font-size: 12px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="file"],
+  body[data-new-layout] [data-session-layout="surface"] [data-component="file"] diffs-container {
+    --orchestra-diffs-bg: var(--orchestra-evidence-solid);
+    --diffs-fg-number-override: var(--orchestra-evidence-number);
+    --diffs-added-light: #2f7a4c;
+    --diffs-added-dark: #72b797;
+    --diffs-deleted-light: #9c4a42;
+    --diffs-deleted-dark: #c8757b;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="diff-changes-additions"] {
+    color: var(--orchestra-file-add);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="diff-changes-deletions"] {
+    color: var(--orchestra-file-delete);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-prompt-dock"] {
+    padding-block-end: 16px;
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-composer-container"] {
+    padding-inline: 30px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"] {
+    --dock-shell-visual-shadow: var(--orchestra-composer-shadow);
+    --dock-shell-border-underlay-background: var(--orchestra-evidence-solid);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 54px;
+    padding-inline: 14px 8px;
+    border: 1px solid var(--orchestra-composer-border);
+    border-radius: 10px;
+    background: var(--orchestra-composer-background);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > [data-component="prompt-input-v2-attachments"] {
+    flex-basis: 100%;
+    min-inline-size: 0;
+  }
+
+  /* Match the shared editor's slots rather than Tailwind class spellings or a
+   * per-div :has() probe; keep multiline/attachments. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > div[data-slot="prompt-input-v2-editor"] {
+    flex: 1 1 64px;
+    min-inline-size: 0;
+    min-block-size: 36px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input"] {
+    min-block-size: 36px;
+    padding-block: 8px;
+    padding-inline: 0;
+    color: var(--orchestra-composer-text);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input"]
+    + div {
+    padding-block-start: 8px;
+    padding-inline: 0;
+    color: var(--orchestra-composer-placeholder);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="prompt-input-v2"]
+    > div:last-child {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    /* Reserve the editor's 64px basis and 8px gap before flex line breaking. */
+    max-inline-size: calc(100% - 72px);
+    block-size: 52px;
+    padding-inline: 0;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="tooltip-v2-trigger"] {
+    min-inline-size: 0;
+    flex-shrink: 1;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="tooltip-v2-trigger"]:has(> [data-action="prompt-attach"]) {
+    flex-shrink: 0;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="tooltip-v2-trigger"]
+    > [data-component="button-v2"] {
+    max-inline-size: 100%;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="button-v2"] {
+    /* Model controls carry an inline 28px height and an important 440 weight. */
+    block-size: 32px !important;
+    border: 0;
+    border-radius: 7px;
+    padding-inline: 9px;
+    background: transparent;
+    color: var(--orchestra-composer-control);
+    font-size: 12px;
+    font-weight: 500 !important;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="tooltip-v2-trigger"]:has([data-action="prompt-model"]) {
+    max-inline-size: 160px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-component="button-v2"]:hover {
+    background: var(--orchestra-overlay-hover);
+    color: var(--orchestra-text);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"] {
+    flex-shrink: 0;
+    inline-size: 34px;
+    block-size: 34px;
+    border: 0;
+    border-radius: 8px;
+    background-image: var(--orchestra-send-background) !important;
+    color: white;
+    box-shadow:
+      0 2px 8px rgba(47, 102, 168, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-child-prompt"] {
+    border-color: var(--orchestra-composer-border);
+    border-radius: 10px;
+    background: var(--orchestra-composer-background);
+    color: var(--orchestra-muted);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="dock-prompt"][data-kind="permission"] {
+    border: 1px solid var(--orchestra-permission-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--orchestra-permission-background);
+    box-shadow: var(--orchestra-permission-shadow);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-body"] {
+    gap: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-header"] {
+    padding: 10px 15px;
+    border-block-end: 1px solid var(--orchestra-permission-rule);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-content"] {
+    gap: 0;
+    padding: 0 15px 11px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-content"] [data-slot="permission-row"] {
+    padding-block-start: 9px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-row"] {
+    grid-template-columns: 15px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-icon"] [data-component="icon"] {
+    inline-size: 15px;
+    block-size: 15px;
+    color: var(--orchestra-permission-icon);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-header-title"] {
+    color: var(--orchestra-permission-title);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-hint"] {
+    color: var(--orchestra-permission-hint);
+    font-size: 12.5px;
+    line-height: 17px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-patterns"] {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-patterns"] code {
+    padding: 1px 6px;
+    border: 1px solid var(--orchestra-permission-pattern-border);
+    border-radius: 5px;
+    background: var(--orchestra-permission-pattern-background);
+    color: var(--orchestra-permission-pattern);
+    font: 11px / 15px var(--font-family-mono);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer"] {
+    margin-block-start: 0;
+    padding: 9px 15px;
+    border: 0;
+    border-block-start: 1px solid var(--orchestra-permission-rule);
+    border-radius: 0;
+    background: var(--orchestra-permission-footer);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer-actions"] {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="permission-footer-actions"]
+    [data-component="button"] {
+    block-size: 30px;
+    border-radius: 7px;
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="permission-footer-actions"] [data-variant="ghost"] {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--orchestra-permission-deny);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="permission-footer-actions"]
+    [data-variant="secondary"] {
+    border: 1px solid var(--orchestra-permission-always-border);
+    background: var(--orchestra-permission-always-background);
+    color: var(--orchestra-permission-always-text);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="permission-footer-actions"]
+    [data-variant="primary"] {
+    border: 1px solid rgba(88, 134, 196, 0.5);
+    background: linear-gradient(180deg, #3d7cc2, #2f66a8);
+    color: white;
+    box-shadow:
+      0 2px 8px rgba(47, 102, 168, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-slot="session-side-panel-main"],
+      [data-slot="session-side-panel-shell"],
+      [data-component="tabs"][data-scope="session-side-panel"],
+      [data-component="session-review-v2"]
+    ) {
+    background: transparent;
+  }
+
+  /* Every rail tab, the Apps cockpit included, gets the reference's 16px inset and
+   * 38px tab bar; the cockpit's Dock card measures its native browser host itself. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-component="tabs"][data-scope="session-side-panel"] {
+    padding: 16px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="session-side-panel-tab-bar"] {
+    min-block-size: 38px;
+    block-size: 38px;
+    /* The shared bar is width: 100%; the mock's rule runs 6px past both padding edges. */
+    inline-size: calc(100% + 12px);
+    margin-block: -4px 8px;
+    margin-inline: -6px;
+    gap: 2px;
+    border-block-end: 1px solid var(--orchestra-session-rule);
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-scope="session-side-panel"]
+    > [data-slot="session-side-panel-tab-bar"]
+    > [data-slot="tabs-list"] {
+    block-size: 38px;
+    padding-inline: 8px;
+    gap: 2px;
+    border: 0;
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-scope="session-side-panel"]
+    [data-slot="tabs-trigger-wrapper"] {
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--orchestra-rail-tab-text);
+    box-shadow: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-trigger-wrapper"] {
+    block-size: 26px;
+    padding-inline: 9px;
+    gap: 6px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-scope="session-side-panel"]
+    [data-slot="tabs-trigger-wrapper"]::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-scope="session-side-panel"]
+    [data-slot="tabs-trigger-wrapper"]:hover {
+    background: var(--orchestra-rail-tab-hover-background);
+    color: var(--orchestra-rail-tab-hover);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-scope="session-side-panel"]
+    [data-slot="tabs-trigger-wrapper"]:has([data-selected]) {
+    background: var(--orchestra-rail-tab-active);
+    color: var(--orchestra-rail-tab-active-text);
+    box-shadow: inset 0 1px 0 var(--orchestra-rail-tab-highlight);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-scope="session-side-panel"] [data-slot="tabs-trigger"] {
+    color: inherit;
+    font-size: 11.5px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-scope="session-side-panel"] [data-slot="tabs-trigger-wrapper"][data-value^="file://"]
+  {
+    max-inline-size: 150px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-tab-count"] {
+    display: inline-grid;
+    min-inline-size: 16px;
+    block-size: 16px;
+    padding-inline: 4px;
+    place-items: center;
+    border-radius: 4px;
+    background: var(--orchestra-rail-badge-background);
+    color: var(--orchestra-rail-badge-text);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="tabs-trigger"][data-selected]
+    [data-slot="session-side-panel-tab-count"] {
+    background: var(--orchestra-rail-badge-active-background);
+    color: var(--orchestra-rail-badge-active-text);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab] {
+    min-block-size: 0;
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-slot="session-review-v2-toolbar"],
+      [data-slot="session-review-v2-file-header"],
+      [data-slot="session-review-v2-sidebar"]
+    ) {
+    border-color: var(--orchestra-session-rule);
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"] {
+    color: var(--orchestra-file-text);
+    font-family: var(--font-family-mono);
+    font-size: 12px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"] span {
+    font-family: inherit;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-row"][data-selected] {
+    background: var(--orchestra-file-active);
+    box-shadow:
+      inset 0 0 0 1px var(--orchestra-file-active-border),
+      inset var(--orchestra-inline-highlight) 0 0 var(--orchestra-file-active-accent);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-change"][data-change="added"] {
+    color: var(--orchestra-file-add);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="file-tree-v2-change"][data-change="deleted"] {
+    color: var(--orchestra-file-delete);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .scroll-view__viewport > div {
+    padding: 10px 2px;
+    gap: 10px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .scroll-view__viewport
+    > div
+    > .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid > div {
+    padding: 7px 9px;
+    border: 1px solid var(--orchestra-context-border);
+    border-radius: 7px;
+    background: var(--orchestra-context-background);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="tasks-panel"] {
+    --v2-state-fg-danger: var(--orchestra-evidence-delete);
+    border: 1px solid var(--orchestra-border-muted);
+    border-radius: 10px;
+    background: var(--orchestra-card-background);
+    overflow: hidden;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-scroll"] {
+    gap: 0;
+    padding: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-section"] {
+    padding: 9px 11px;
+    color: var(--orchestra-task-meta);
+    font-size: 10.5px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"] {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 11px;
+    align-items: center;
+    padding: 11px;
+    border: 0;
+    border-block-end: 1px solid var(--orchestra-task-rule);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"]:last-child {
+    border-block-end: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-row"]:hover {
+    background: var(--orchestra-overlay-hover);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-mark"] {
+    display: grid;
+    inline-size: 30px;
+    block-size: 30px;
+    margin: 0;
+    place-items: center;
+    border: 1px solid var(--orchestra-task-mark-border);
+    border-radius: 8px;
+    background: var(--orchestra-task-mark-background);
+    color: var(--orchestra-task-mark-text);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-title"] {
+    color: var(--orchestra-task-title);
+    font-family: var(--mx-emphasis, "Mx Inter Medium", var(--orchestra-font-family-sans));
+    font-weight: 600 !important;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-meta"] {
+    color: var(--orchestra-task-meta);
+    font: 11.5px / 16px var(--font-family-mono);
+  }
+
+  /* A finished row reads as secondary through its mark and title. The shared panel dims the whole
+   * row instead, which takes its time and stats below WCAG AA contrast. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"]) {
+    opacity: 1;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-mark"] {
+    opacity: 0.75;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"]:not([data-state="running"], [data-state="needs-input"], :hover)
+    [data-slot="task-title"] {
+    color: color-mix(in srgb, var(--orchestra-task-title) 75%, transparent);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"][data-state="needs-input"]
+    [data-slot="task-mark"] {
+    color: var(--orchestra-warm);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="task-row"][data-state="error"]
+    [data-slot="task-mark"] {
+    color: var(--orchestra-evidence-delete);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-stats"] {
+    border-color: var(--orchestra-task-rule);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    :is(
+      [data-slot="task-row"],
+      [data-scope="session-side-panel"] [data-slot="tabs-trigger"],
+      [data-slot="permission-footer-actions"] [data-component="button"]
+    ):focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="permission-footer-actions"]
+    [data-variant="primary"] {
+    background: linear-gradient(180deg, #4a86d6, #3a6fba);
+  }
+
+  /* Native Apps chrome is paint-only. Keep Zen spacing, sizing, scale, host
+   * bounds, observer, and native view lifecycle in their existing owner. */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="apps"] .zen-browser-shell {
+    background-color: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="apps"]
+    :is(.zen-browser-sidebar, .zen-urlbar) {
+    background: rgba(19, 27, 36, 0.55);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="apps"] .zen-browser-host {
+    background: rgba(19, 27, 36, 0.42);
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="apps"]
+    :is(.zen-browser-sidebar, .zen-urlbar) {
+    background: rgba(255, 255, 255, 0.62);
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="apps"]
+    .zen-browser-host {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+@layer components {
+  @media (min-width: 768px) {
+    body[data-new-layout]
+      [data-session-layout="surface"]
+      [data-component="session-prompt-dock"]
+      [data-component="button-v2"] {
+      font-weight: 500 !important;
+    }
+  }
+}
+
+/* Conversation header and transcript entries of the approved session view (.conv-head, .msg). */
+@media (min-width: 768px) {
+  /* The mock's views inherit the system 16px/normal/400 type; every control sets its own size.
+   * "Mx Inter" picks the static Inter faces the mock renders with (kit.css); no optical sizes. */
+  body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-font: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-family: var(--orchestra-chat-font);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    --orchestra-chat-who: #7ea5cc;
+    --orchestra-chat-button-border: rgba(163, 184, 203, 0.2);
+    --orchestra-chat-button-background: rgba(32, 43, 55, 0.7);
+    --orchestra-chat-button-text: #c7d2dc;
+    --orchestra-chat-button-hover-border: rgba(170, 192, 212, 0.34);
+    --orchestra-chat-button-hover-background: rgba(44, 58, 73, 0.8);
+  }
+
+  html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
+    --orchestra-chat-who: #3f6f9f;
+    --orchestra-chat-button-border: rgba(70, 84, 98, 0.2);
+    --orchestra-chat-button-background: rgba(255, 255, 255, 0.6);
+    --orchestra-chat-button-text: #3a434e;
+    --orchestra-chat-button-hover-border: rgba(70, 84, 98, 0.32);
+    --orchestra-chat-button-hover-background: rgba(255, 255, 255, 0.85);
+  }
+
+  /* The header height is measured for the virtualizer's scroll margin. Like the mock's .conv-head it is
+   * transparent over the pane's glass; the timeline masks rows out beneath it (.scroll's 18px fade). */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
+    padding: 24px 30px 18px;
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-virtual-content] {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 18px);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-row"] {
+    block-size: auto;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-main"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-child"] {
+    padding: 0;
+    border-radius: 6px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] h1[data-slot="session-title-child"]:hover {
+    background: transparent;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-brief"] {
+    max-inline-size: 450px;
+    display: -webkit-box;
+    margin: 5px 0 0;
+    overflow: hidden;
+    color: var(--orchestra-session-secondary);
+    font-size: 14px;
+    line-height: 17px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-title-actions"] {
+    gap: 8px;
+    padding-block-start: 2px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]) {
+    display: inline-flex;
+    min-inline-size: 48px;
+    block-size: 32px;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 13px;
+    border: 1px solid var(--orchestra-chat-button-border);
+    border-radius: 7px;
+    background: var(--orchestra-chat-button-background);
+    color: var(--orchestra-chat-button-text);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):is(:hover, [aria-expanded="true"]) {
+    border-color: var(--orchestra-chat-button-hover-border);
+    background: var(--orchestra-chat-button-hover-background);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    :is([data-slot="orchestra-head-action"], [data-component="icon-button-v2"]):focus-visible {
+    outline: 2px solid var(--orchestra-accent);
+    outline-offset: -2px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-timeline-row="TurnGap"] {
+    block-size: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"] {
+    display: grid;
+    inline-size: 100%;
+    align-self: stretch;
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-head] {
+    padding-block-start: 14px;
+    border-block-start: 1px solid var(--orchestra-session-message-rule);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"][data-role="user"] {
+    padding-block-end: 14px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-component="orchestra-turn"]:not([data-head]) > * {
+    grid-column: 2;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] {
+    display: grid;
+    inline-size: 30px;
+    block-size: 30px;
+    place-items: center;
+    border: 1px solid var(--orchestra-task-mark-border);
+    border-radius: 8px;
+    background: var(--orchestra-task-mark-background);
+    color: var(--orchestra-task-mark-text);
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-mark"] svg {
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-body"] {
+    min-inline-size: 0;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-meta"] {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-block-end: 4px;
+    line-height: 16px;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-who"] {
+    color: var(--orchestra-chat-who);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="orchestra-turn-when"] {
+    color: var(--orchestra-session-meta);
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  /* Tool and tool-group rows read as the mock's .tool-trigger: 13px title, 12px monospace argument. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-component="tool-trigger"], [data-component="context-tool-group-trigger"]) {
+    min-block-size: 32px;
+    gap: 8px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #c8d2dc;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-subtitle"], [data-slot="shell-submessage-value"]) {
+    color: #8b9bab;
+    font: 12px / 16px var(--font-family-mono);
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    [data-slot="context-tool-group-summary"] {
+    color: #8b9bab;
+    font-size: 12px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
+    color: #3f4854;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="orchestra-turn-body"]
+    :is(
+      [data-slot="basic-tool-tool-subtitle"],
+      [data-slot="shell-submessage-value"],
+      [data-slot="context-tool-group-summary"]
+    ) {
+    color: #6b7480;
+  }
+
+  /* The send control keeps the mock's blue even before a prompt is written. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-prompt-dock"]
+    [data-action="prompt-submit"]:disabled {
+    opacity: 1;
+  }
+}
+
+/* The approved rail tab bar: Review, Context, Tasks, Apps, file tabs, then the open-file "+". */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-open-in-app-slot:empty {
+    display: none;
+  }
+
+  /* The file-list toggle stays a real control; it reads as one more 24px rail glyph before Review. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot {
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::before,
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot::after {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    button {
+    inline-size: 24px;
+    min-inline-size: 24px;
+    block-size: 24px;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: none;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-open-file"] {
+    margin-inline-start: 2px;
+    background: transparent;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"] {
+    background: transparent;
+    box-shadow: none;
+    inline-size: 24px;
+    block-size: 24px;
+    min-inline-size: 24px;
+    border-radius: 6px;
+    color: #7f8d9d;
+  }
+
+  /* The shared tabs skin draws an opaque, pointer-transparent mask after a sticky "+" to cover tabs
+   * scrolling beneath it. Here the "+" sits static at the rail's end, so its ::after is only the shared
+   * transparent 24×24 hit box: unpainted, so the glyph shows, and taking the pointer. */
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::after {
+    background: none;
+    pointer-events: auto;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]:hover {
+    background: var(--orchestra-rail-tab-hover-background);
+    color: var(--orchestra-rail-tab-hover);
+  }
+}
+
+/* Context tab as the mock's .ctx: 10.5px labels over 12.5px monospace values, uppercase section titles. */
+@media (min-width: 768px) {
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-12-regular.text-text-weak {
+    margin-block-start: 4px;
+    color: #7c8b9b;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid > div {
+    gap: 3px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-regular.text-text-weak {
+    margin: 0;
+    color: #7f8fa0;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-medium {
+    color: #cdd6df;
+    font: 500 12.5px var(--font-family-mono);
+    overflow-wrap: anywhere;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-11-regular {
+    color: #8c9daf;
+    font-size: 11.5px;
+  }
+
+  /* The breakdown note says these are approximate window tokens, apart from cumulative cost. */
+  body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .hidden.text-11-regular {
+    display: block;
+    color: #65768a;
+    font-size: 10.5px;
+    line-height: 15px;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-12-regular.text-text-weak {
+    color: #6b7480;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .grid
+    .text-12-medium {
+    color: #2b3440;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-session-tab="context"]
+    .text-11-regular {
+    color: #5f6874;
+  }
+}
+
+/* Session "•••" menu as the mock's .mx-menu (portaled, so not under the surface). */
+body[data-new-layout] [data-orchestra-menu="session"] {
+  min-inline-size: 180px;
+  padding: 5px;
+  border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+  border-radius: 9px;
+  background: var(--mx-modal, #111922);
+  box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, 0.24));
+}
+
+/* menu-v2.css sizes the item at 28px and types its inner content slot, so both are overridden here. */
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"] {
+  block-size: auto;
+  min-block-size: 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-slot="menu-v2-item-content"] {
+  color: var(--mx-strong, #e1e9f0);
+  font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+  font-optical-sizing: none;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: normal;
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"]:is(:hover, [data-highlighted]) {
+  background: var(--mx-soft, rgba(170, 196, 220, 0.055));
+}
+
+body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="menu-v2-item-content"] {
+  color: var(--mx-bad, #d99a94);
+}
+
+/* Header "•••": the mock writes three bullets in the 12px button text rather than a light glyph. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]
+    > :is(svg, [data-component="icon"], span) {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-title-actions"]
+    [data-component="icon-button-v2"]::before {
+    content: "•••";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 12px;
+    line-height: 1;
+  }
+}
+
+/* Rail controls without a mock counterpart sit at the far end, quiet: the file-list toggle, then the
+ * mock's "+" in its 15px glyph. Both keep a 24×24 box; the shared transparent hit box squares off
+ * the "+"'s rounded corners so its whole 24×24 target takes the pointer. */
+@media (min-width: 768px) {
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > .session-review-v2-sidebar-toggle-slot {
+    position: static;
+    order: 1;
+    margin-inline-start: auto;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    [data-slot="tabs-list"]
+    > [data-slot="session-side-panel-open-file"] {
+    position: static;
+    order: 2;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    :is(.session-review-v2-sidebar-toggle-slot, [data-slot="session-side-panel-open-file"])
+    [data-component="icon-button-v2"] {
+    inline-size: 24px;
+    min-inline-size: 24px;
+    block-size: 24px;
+    color: #7f8d9d;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-component="session-side-panel"]
+    .session-review-v2-sidebar-toggle-slot
+    [data-component="icon-button-v2"]
+    svg {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]
+    > * {
+    display: none;
+  }
+
+  body[data-new-layout]
+    [data-session-layout="surface"]
+    [data-slot="session-side-panel-open-file"]
+    [data-component="icon-button-v2"]::before {
+    content: "+";
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  /* The change-mode selector reads like the rail's other quiet controls. */
+  body[data-new-layout] [data-slot="orchestra-review-mode"] [data-slot="select-v2-value-text"] {
+    color: #8b9bab;
+    font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
+    font-optical-sizing: none;
+    font-size: 11.5px;
+    font-weight: 400;
+  }
+
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    [data-slot="orchestra-review-mode"]
+    [data-slot="select-v2-value-text"] {
+    color: #5f6874;
+  }
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "C-1",
+    "statement": "The per-fire regression cost is not a small constant: at the densest late gate (contest.gate) a single fire re-evaluates 26 earlier controls, and the count rises with the gate's depth in the sprint (6 at survey.gate). This is measured from a real dense ledger, not estimated.",
+    "cites": [
+      "F-2",
+      "F-3"
+    ],
+    "answers": [
+      "A-1"
+    ],
+    "hypothesis": "H-2",
+    "starting_level": "high",
+    "downgrades": [
+      {
+        "domain": "imprecision",
+        "why": "a single dense ledger; the exact counts vary with a sprint's control density and with review retries that inflate late fires."
+      }
+    ],
+    "calibration": "moderate",
+    "would_change": "Ledgers from several profiles showing the late-gate regression count staying a small constant regardless of depth."
+  },
+  {
+    "id": "C-2",
+    "statement": "Total regression work grows superlinearly (quadratically) in the number of gates, not linearly: the loop re-runs every earlier control unconditionally, so the aggregate is a triangular sum over gates. In the measured run 239 regression verdicts dominate all grading. The prior belief that re-runs are 'cheap and negligible' is refuted; H-1 and H-3 (bounded per-fire) do not survive, H-2 does.",
+    "cites": [
+      "F-1",
+      "F-2",
+      "F-3",
+      "F-4",
+      "F-5",
+      "F-6"
+    ],
+    "answers": [
+      "A-2"
+    ],
+    "hypothesis": "H-2",
+    "starting_level": "high",
+    "downgrades": [
+      {
+        "domain": "indirectness",
+        "why": "the quadratic aggregate is derived from per-gate measurements plus the code's unconditional re-run, not read off a single recorded total-work metric."
+      }
+    ],
+    "calibration": "moderate",
+    "would_change": "Gate code that filtered the regression set (keep-best or current-macro only), which would break the triangular sum and make the aggregate linear."
+  }
+]

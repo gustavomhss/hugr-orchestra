@@ -1,0 +1,4 @@
+{
+  "extends": "./delivery-tsconfig.json",
+  "include": ["./*.ts"]
+}

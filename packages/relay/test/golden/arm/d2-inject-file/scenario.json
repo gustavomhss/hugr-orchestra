@@ -1,0 +1,38 @@
+{
+  "sprint": {
+    "macros": [
+      {
+        "id": "m",
+        "instructions": "M-RULES"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "load",
+        "kind": "inject",
+        "file": "protocol.md",
+        "text": "INLINE-MARKER"
+      },
+      {
+        "id": "wp2",
+        "instructions": "do wp2",
+        "checklist": [
+          {
+            "id": "wp2-ok",
+            "cmd": "true"
+          }
+        ],
+        "macro": "m"
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "protocol.md": "MUST: every claim carries its evidence.\nMUST: no silent caps.\n\n"
+  },
+  "fires": [
+    {}
+  ]
+}

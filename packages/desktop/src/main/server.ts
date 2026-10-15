@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
 import { getLogger } from "./logging"
+import { OmniHost } from "./omni-host"
+import { OmniSmoke } from "./omni-smoke"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
@@ -17,7 +19,8 @@ type SidecarMessage =
 
 export type SidecarListener = { stop: () => Promise<void> }
 
-const SIDECAR_SERVICE_NAME = "opencode server"
+// Shown as the utility process name in the OS task manager.
+const SIDECAR_SERVICE_NAME = "Orchestra server"
 // 20s is sufficient for sidecar boot + health on all supported platforms.
 // 60s masked slow-start regressions; 20s fails fast on CI while leaving
 // headroom for cold starts (observed p99 ~8s on macOS, ~12s on Linux).
@@ -63,9 +66,9 @@ export function preferAppEnv(userDataPath: string) {
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
     ...shellEnv,
-    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
-    OPENCODE_CLIENT: "desktop",
+    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    ORCHESTRA_CLIENT: "desktop",
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
   })
   return shellEnv
@@ -83,7 +86,16 @@ export async function spawnLocalServer(
   await access(sidecar)
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
-    env: createSidecarEnv(),
+    env: {
+      ...createSidecarEnv(),
+      ...OmniHost.sidecarEnv(),
+      ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
+      // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
+      // repository copy, since the bundled server cannot locate it from its own path.
+      ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
+        ? join(process.resourcesPath, "playbooks")
+        : resolve(outDir, "../../../orchestra/playbooks"),
+    },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
   })
@@ -97,6 +109,7 @@ export async function spawnLocalServer(
 
   app.on("child-process-gone", onProcessGone)
   child.once("exit", (code) => {
+    OmniSmoke.event("utility-exit", { utilityPID: child.pid, code })
     exited = true
     app.off("child-process-gone", onProcessGone)
     options.onExit?.(code)
@@ -105,6 +118,7 @@ export async function spawnLocalServer(
   child.on("error", (error) => options.onStderr?.(`utility process error: ${serializeError(error).message}`))
 
   child.on("message", (message) => {
+    if (message?.type === "stopped") OmniSmoke.event("utility-stopped")
     if (!options.onMessage) return
     if (!exited) options.onMessage(message, (reply) => child.postMessage(reply))
   })
@@ -195,6 +209,7 @@ export async function spawnLocalServer(
   })()
 
   let stopping: Promise<void> | undefined
+  OmniSmoke.utilityStarted(child.pid)
 
   return {
     listener: {
@@ -205,7 +220,10 @@ export async function spawnLocalServer(
         stopping = Promise.race([
           exit.promise.then(() => undefined),
           delay(SIDECAR_STOP_TIMEOUT).then(() => {
-            if (!exited) child.kill()
+            if (!exited) {
+              OmniSmoke.event("utility-watchdog")
+              child.kill()
+            }
           }),
         ])
         return stopping
@@ -225,7 +243,7 @@ export async function checkHealth(url: string, password?: string | null): Promis
 
   const headers = new Headers()
   if (password) {
-    const auth = Buffer.from(`opencode:${password}`).toString("base64")
+    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
     headers.set("authorization", `Basic ${auth}`)
   }
 

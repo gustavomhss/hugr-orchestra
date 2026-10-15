@@ -21,6 +21,10 @@ type TabsInput = {
   hasReview?: Accessor<boolean>
   fileBrowser?: Accessor<boolean>
   apps?: Accessor<boolean>
+  /** Orchestra's Apps tab is the cockpit, so a persisted Tasks tab resolves to it. */
+  cockpit?: Accessor<boolean>
+  /** Orchestra's rail keeps Context and Tasks as permanent tabs, so tab commands never close them. */
+  permanent?: Accessor<boolean>
 }
 
 export const getSessionKey = (dir: string | undefined, id: string | undefined) => `${dir ?? ""}${id ? `/${id}` : ""}`
@@ -34,6 +38,7 @@ export const createSessionTabs = (input: TabsInput) => {
   const hasReview = input.hasReview ?? (() => false)
   const fileBrowser = input.fileBrowser ?? (() => false)
   const apps = input.apps ?? (() => false)
+  const tasksTab = () => (input.cockpit?.() && apps() ? "apps" : "tasks")
   const contextOpen = createMemo(() => input.tabs().active() === "context" || input.tabs().all().includes("context"))
   const tasksOpen = createMemo(() => input.tabs().active() === "tasks" || input.tabs().all().includes("tasks"))
   const openFileOpen = createMemo(
@@ -65,7 +70,7 @@ export const createSessionTabs = (input: TabsInput) => {
   const activeTab = createMemo(() => {
     const active = input.tabs().active()
     if (active === "context") return active
-    if (active === "tasks" && tasksOpen()) return active
+    if (active === "tasks" && tasksOpen()) return tasksTab()
     if (active === "apps" && apps()) return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active
     if (active === "review" && review()) return active
@@ -74,7 +79,7 @@ export const createSessionTabs = (input: TabsInput) => {
     const first = openedTabs()[0]
     if (first) return first
     if (contextOpen()) return "context"
-    if (tasksOpen()) return "tasks"
+    if (tasksOpen()) return tasksTab()
     if (review() && hasReview()) return "review"
     return "empty"
   })
@@ -85,6 +90,7 @@ export const createSessionTabs = (input: TabsInput) => {
   })
   const closableTab = createMemo(() => {
     const active = activeTab()
+    if ((active === "context" || active === "tasks") && input.permanent?.()) return
     if (active === "context") return active
     if (active === "tasks") return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active
@@ -103,6 +109,11 @@ export const createSessionTabs = (input: TabsInput) => {
     closableTab,
   }
 }
+
+// The side panel always offers Apps. Commands acting on its tabs must resolve them
+// the same way, or Mod+W closes a Tasks tab or file tab the panel shows as Apps.
+export const createSidePanelTabs = (input: Omit<TabsInput, "apps"> & { cockpit: Accessor<boolean> }) =>
+  createSessionTabs({ ...input, apps: () => true })
 
 export const focusTerminalById = (id: string) => {
   const wrapper = document.getElementById(`terminal-wrapper-${id}`)
@@ -164,6 +175,15 @@ export const createOpenSessionFileTab = (input: {
     input.loadFile(path)
     input.openReviewPanel()
     input.setActive(next)
+  }
+}
+
+// App Dock views only stay attached while Apps is the active tab, so the Tasks
+// tab joins the strip without taking focus from an active Apps tab.
+export function planTasksTab(input: { active: string | undefined; all: readonly string[] }) {
+  return {
+    all: input.all.includes("tasks") ? [...input.all] : [...input.all, "tasks"],
+    activate: input.active !== "apps",
   }
 }
 

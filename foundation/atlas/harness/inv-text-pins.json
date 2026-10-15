@@ -1,0 +1,370 @@
+{
+  "docs/reference/atlas-genesis.md#gen-11@carrier2": {
+    "digest": "92f816f3739d758b308ccb137b8d5755",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-12@carrier2": {
+    "digest": "23342e2d0e8b5f65a82d9cab15e4aaa1",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-12@carrier3": {
+    "digest": "da6b8a88e135e68244e39db9dc0538e2",
+    "why": "Carrier 3 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-13@carrier2": {
+    "digest": "158a59613fb50bfea24e86630e5cc238",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-14@carrier2": {
+    "digest": "7e10316a5ea983a5f63940533a44c543",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-15@carrier2": {
+    "digest": "3c9402c6f7e87c44b2b5299b83dc2ea4",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-09-26: Maestro current-base ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-16@carrier2": {
+    "digest": "2e92f779fdef4d7c3f44d7afe062be85",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-1@carrier2": {
+    "digest": "46809cc26cac2a778476994e172ef25a",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-2@carrier2": {
+    "digest": "536d5243ddbe5af73a7f59325ca15e17",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-3@carrier2": {
+    "digest": "4687f17f107d057686e843e56525994c",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-4@carrier2": {
+    "digest": "389dc1a3b3684bbacc23d7ba098f2926",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-5@carrier2": {
+    "digest": "1e07b1ea79e1da34b7875df5a3e4c9e4",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-6@carrier2": {
+    "digest": "5ee1ef58024c07ca319962f127a1908b",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-7@carrier2": {
+    "digest": "fb245052d003e42027456099e4a0373e",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-8@carrier2": {
+    "digest": "8cf8204ab3492057eaae5eaba90bf0ad",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-genesis.md#gen-9@carrier2": {
+    "digest": "0f9d6782d193615b9f556b56540c424f",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-10@carrier2": {
+    "digest": "76b5424db873167c4b1e53a2ebb14007",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-11@carrier2": {
+    "digest": "b90c6a2d4c56d22dab517612a252660c",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-12@carrier2": {
+    "digest": "672185b582096a02fdcea75961bc8e9e",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-13@carrier2": {
+    "digest": "61e87aa8cca81582dbbe80872b16d59f",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-1@carrier2": {
+    "digest": "d2da1ac768659df341ee582d9d3945ec",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-2@carrier2": {
+    "digest": "c4895ff890bf988bb35f2ebe585be85c",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-3@carrier2": {
+    "digest": "18e2a4e8dc3a33c8c67605fa6a12ea47",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-4@carrier2": {
+    "digest": "f9d1197a8eb754479bc0375b328b920d",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-7@carrier1": {
+    "digest": "3aef61ac9f28bcd1a274ab0778363881",
+    "why": "Pinned by WP-GOV-1 (issue #199): every REQ citing this anchor is a ledgered waiver, so no live quote holds it. Re-keyed to carrier 1 by WP-GOV-4 (issue #208), which moved the pinned unit from the invariant to the CARRIER; this anchor is carried more than once. Records what is IN THE TREE at master 0a4c99d, not an owner ratification — only the owner can give that. Re-pin only together with a ratified amendment, and name the ratifier here when you do."
+  },
+  "docs/reference/atlas-grounding.md#ground-7@carrier2": {
+    "digest": "2415312df19e7f8649e89c604a30f595",
+    "why": "Pinned by WP-GOV-1 (issue #199): every REQ citing this anchor is a ledgered waiver, so no live quote holds it. Re-keyed to carrier 2 by WP-GOV-4 (issue #208), which moved the pinned unit from the invariant to the CARRIER; this anchor is carried more than once. Records what is IN THE TREE at master 0a4c99d, not an owner ratification — only the owner can give that. Re-pin only together with a ratified amendment, and name the ratifier here when you do. RE-PINNED 2026-09-26: Maestro current-base ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-8@carrier2": {
+    "digest": "78f57af9f6ce3415e6d85dcd474b23ac",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-grounding.md#ground-9@carrier2": {
+    "digest": "99cfbdf2bb3728f8dff9dc8f8caba9d7",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-11@carrier2": {
+    "digest": "619e69e8eafa49d3335bc7f3bdb3c9cb",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-13@carrier2": {
+    "digest": "9bff1ea5d29d84885eb018a868761032",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-14@carrier2": {
+    "digest": "7c9d8f1a17dafa2f1878aa7721f2e518",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-15@carrier2": {
+    "digest": "379934f49871c618031bbc0dd17bee92",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-09-26: Maestro current-base ratifier."
+  },
+  "docs/reference/atlas-index.md#index-16@carrier2": {
+    "digest": "544d61f1a2ac68a1190a26c3eb5af415",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-17@carrier2": {
+    "digest": "8d63f81317df0ddc56c9b3e701d8f1ab",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-1@carrier2": {
+    "digest": "03c36ab897d10197f570cc0f15b73269",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-2@carrier2": {
+    "digest": "1ade3d5cf967640ab9444635dc228f3b",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-3@carrier2": {
+    "digest": "c660acec48ccae95490c1e7357aadb96",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-4@carrier2": {
+    "digest": "8cc6c4c0ba47c4852684a7e1e83a2513",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-6@carrier2": {
+    "digest": "e1321c422841b2a6a4fd872e64dce62a",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-7@carrier2": {
+    "digest": "a6cfb87c660f3b7928569d5eace652b4",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-index.md#index-9@carrier2": {
+    "digest": "0cb5ec320ac5e04158c3997fdd05aced",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-10@carrier2": {
+    "digest": "4bfda59478798bd06b6028b94d68c3c8",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-09-26: Maestro current-base ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-11@carrier2": {
+    "digest": "53f8990cff5a2d3b5684668aa793da20",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-12@carrier2": {
+    "digest": "7b9cbb101b21ba83365bebd00dc33e8c",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-1@carrier2": {
+    "digest": "0775fc48ca12a2a0244ce7be1d05f3fe",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-2@carrier2": {
+    "digest": "53b8d8ab76d35838e2ef24579831cc65",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-3@carrier2": {
+    "digest": "638953c7b4b3b06fa44c0cf7fc743553",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-4@carrier2": {
+    "digest": "4dc9c173eba8bad4591f07765eb507a3",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-5@carrier2": {
+    "digest": "fd8f2a5e63a3efa674b88ea45c7eb5da",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-6@carrier2": {
+    "digest": "8e121c8c6461054329fbd65214539620",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-7@carrier2": {
+    "digest": "27f568bc912899bbec5d34111ba99f3e",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-8@carrier2": {
+    "digest": "571425ce6e0f3122ceca3bd49f1b7155",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-kernel.md#kernel-9@carrier2": {
+    "digest": "6b5e7dad1e16920f2c222972bb59a3d6",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-10@carrier2": {
+    "digest": "489aae871da2555672207c53a8020c9a",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-11@carrier2": {
+    "digest": "634163857ea405fc30f0d12e2ff1b287",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-12@carrier2": {
+    "digest": "26ff0888f7117bb6fe134bb05a8b6aae",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-13@carrier2": {
+    "digest": "bb1a932fc7d828489255e548d57b633b",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-1@carrier2": {
+    "digest": "eddf427a4e2c6db519a609457a62da75",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-2@carrier2": {
+    "digest": "a912a520b49cd2189442c0cdadb06317",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-3@carrier2": {
+    "digest": "ccc573bcc4e48aeadd11dabd08fd505a",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-4@carrier2": {
+    "digest": "4a38e81a29c14450bc475e1e2912e50e",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-5@carrier2": {
+    "digest": "1ec42dba46d0ca2a09be17c5ed07e4a3",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-6@carrier2": {
+    "digest": "29e597c28c7020d98489ef972d8a850f",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-7@carrier2": {
+    "digest": "d5edf9aceaef610b913c95f313bb2bbd",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-8@carrier2": {
+    "digest": "146017b9e719440b460c0e78b6597569",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-persist.md#persist-9@carrier2": {
+    "digest": "14de88cc91593c10eab70b4dad5dc6a4",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-10@carrier2": {
+    "digest": "09023c31a830da72727366a6fde639f7",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-11@carrier2": {
+    "digest": "780a6a6435299c7de169d97ad9327bda",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-13@carrier2": {
+    "digest": "7f82aca9ca54113c0086866527cfacc8",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-1@carrier2": {
+    "digest": "d9b7179021d370d33062564d6be39b84",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-2@carrier2": {
+    "digest": "0e7c41a687f70ccfa8e2683045f30112",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-3@carrier2": {
+    "digest": "2c869cedf096fe5adfbfd9b0790151db",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-4@carrier2": {
+    "digest": "03c5233df8d639cbbace7aabbcf31448",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-5@carrier2": {
+    "digest": "e74caa2d96f4f25227a9cb96fbc4c024",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-6@carrier2": {
+    "digest": "213c8e0bf4c0e459c3a2d6ea384b7803",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-7@carrier2": {
+    "digest": "d2bb02510dde467bb751735b792491fd",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-8@carrier2": {
+    "digest": "288b1ca0dcb84dda88ebe5a75383f57b",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-retrieval.md#retr-9@carrier2": {
+    "digest": "13c4f7c644593e5276b370082ba76ca6",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-10@carrier2": {
+    "digest": "5a06a455d189742c218e829a817b5a21",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-11@carrier2": {
+    "digest": "50ddf76756f9b95851e360244f63bea2",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-11a@carrier2": {
+    "digest": "e89fd0b7343c49f91a8f13bf0e531a58",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-12@carrier2": {
+    "digest": "0fc079a1d8fab5772dccb454135a7d58",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-09-03 (req/lucy-1-derived-surface): carrier text amended to the derived six/three surface (ADR-0006 Decision 2); ratified by the owner in the same commit."
+  },
+  "docs/reference/atlas-tools.md#tools-14@carrier2": {
+    "digest": "f00b20e257d0464f7c25ea7ad8b7ad19",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-15@carrier2": {
+    "digest": "088b9375be6a5261ed344305471235ee",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-1@carrier2": {
+    "digest": "f0709288d8082dafa8a05a60f3e8dc8a",
+    "why": "Pinned by WP-GOV-1 (issue #199): every REQ citing this anchor is a ledgered waiver, so no live quote holds it. Re-keyed to carrier 2 by WP-GOV-4 (issue #208), which moved the pinned unit from the invariant to the CARRIER; this anchor is carried more than once. Records what is IN THE TREE at master 0a4c99d, not an owner ratification — only the owner can give that. Re-pin only together with a ratified amendment, and name the ratifier here when you do. RE-PINNED 2026-09-03 (req/lucy-1-derived-surface): carrier text amended to the derived six/three surface (ADR-0006 Decision 2); ratified by the owner in the same commit."
+  },
+  "docs/reference/atlas-tools.md#tools-2@carrier2": {
+    "digest": "61c70c9f3cda2b1532381efdfe73bdbc",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-4@carrier2": {
+    "digest": "c006d71986adc6f204417fe3183b06df",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-5@carrier2": {
+    "digest": "e2ff5d029c6b7a989fb2452c21179494",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-6@carrier2": {
+    "digest": "a58555889d69b6bc7137745d11f7027f",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-7@carrier2": {
+    "digest": "072583e0e3f2369b3705b0f2de8bcda0",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-8@carrier2": {
+    "digest": "1f9420a88596fb2f6d5ba368362ecc51",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  },
+  "docs/reference/atlas-tools.md#tools-9@carrier2": {
+    "digest": "e7133e9afb2ad7fd412087a73f2b7ac9",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+  }
+}

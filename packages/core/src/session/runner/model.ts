@@ -1,16 +1,17 @@
 export * as SessionRunnerModel from "./model"
 
 import { makeLocationNode } from "../../effect/app-node"
-import { type Model } from "@opencode-ai/llm"
-import * as AnthropicMessages from "@opencode-ai/llm/protocols/anthropic-messages"
-import * as OpenAICompatibleChat from "@opencode-ai/llm/protocols/openai-compatible-chat"
-import * as OpenAIResponses from "@opencode-ai/llm/protocols/openai-responses"
-import { Auth, type AnyRoute } from "@opencode-ai/llm/route"
+import { type Model } from "@orchestra/llm"
+import * as AnthropicMessages from "@orchestra/llm/protocols/anthropic-messages"
+import * as OpenAICompatibleChat from "@orchestra/llm/protocols/openai-compatible-chat"
+import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
+import { Auth, type AnyRoute } from "@orchestra/llm/route"
 import { Context, Effect, Layer, Schema } from "effect"
 import { produce } from "immer"
 import { Catalog } from "../../catalog"
 import { Credential } from "../../credential"
 import { Integration } from "../../integration"
+import { InstallationHeaders } from "../../installation/headers"
 import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import { SessionSchema } from "../schema"
@@ -71,12 +72,13 @@ export type Error =
   | VariantUnavailableError
   | UnsupportedApiError
   | Integration.AuthorizationError
+  | Credential.InheritedError
 
 export interface Interface {
   readonly resolve: (session: SessionSchema.Info) => Effect.Effect<Model, Error>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/SessionRunnerModel") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionRunnerModel") {}
 
 /** Test or embedding seam for supplying a model resolver directly. */
 export const layerWith = (resolve: Interface["resolve"]) => Layer.succeed(Service, Service.of({ resolve }))
@@ -96,7 +98,7 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute) => {
   return route.with({
     provider: model.providerID,
     endpoint: model.api.url === undefined ? undefined : { baseURL: model.api.url },
-    headers: model.request.headers,
+    headers: InstallationHeaders.forFreeModel(model.providerID, model.cost, model.request.headers),
     http: { body: httpBody },
     limits: { context: model.limit.context, output: model.limit.output },
   })
@@ -218,8 +220,7 @@ export const locationLayer = Layer.effect(
               cause: `credential ${virtual.credentialID} not found`,
             })
         }
-        connection =
-          connection ?? (yield* integrations.connection.active(fallback))
+        connection = connection ?? (yield* integrations.connection.active(fallback))
         return yield* resolve(
           session,
           selected,

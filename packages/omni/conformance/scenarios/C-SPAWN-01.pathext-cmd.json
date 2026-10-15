@@ -1,0 +1,8 @@
+{
+  "id": "C-SPAWN-01.pathext-cmd",
+  "os": ["windows"],
+  "files": {"bin\\tool.cmd": "@echo off\r\necho CMD-TOOL %~1\r\n"},
+  "steps": [
+    {"run": ["tool", "arg"], "options": {"env": {"PATH": "${TMP}\\bin"}}, "expect": {"exitCode": 0, "stdout": "CMD-TOOL arg\r\n"}}
+  ]
+}

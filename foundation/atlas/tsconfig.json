@@ -1,0 +1,50 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/contracts"
+    },
+    {
+      "path": "packages/kernel"
+    },
+    {
+      "path": "packages/persist"
+    },
+    {
+      "path": "packages/index"
+    },
+    {
+      "path": "packages/grounding"
+    },
+    {
+      "path": "packages/knowledge"
+    },
+    {
+      "path": "packages/retrieval"
+    },
+    {
+      "path": "packages/memory"
+    },
+    {
+      "path": "packages/tools"
+    },
+    {
+      "path": "packages/genesis"
+    },
+    {
+      "path": "packages/e2e"
+    },
+    {
+      "path": "packages/adapter-io"
+    },
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/mcp-server"
+    },
+    {
+      "path": "packages/e2e-blackbox"
+    }
+  ]
+}

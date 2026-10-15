@@ -1,0 +1,44 @@
+{
+  "name": "atlas",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Layer 0 — a shared, grounded, git-native knowledge layer for a codebase (no embeddings, no RAG).",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "godfile-guard": "node harness/gates/godfile-guard.mjs",
+    "postinstall": "node scripts/fix-scip-types.mjs",
+    "spec-conformance-guard": "node harness/gates/spec-conformance-guard.mjs",
+    "layer-guard": "node harness/gates/layer-guard.mjs",
+    "reference-model-guard": "node harness/gates/reference-model-guard.mjs",
+    "id-integrity": "node harness/gates/id-integrity.mjs",
+    "command-doc-guard": "node harness/gates/command-doc-guard.mjs",
+    "wiring-guard": "node harness/gates/wiring-guard.mjs",
+    "adr-citation-guard": "node harness/gates/adr-citation-guard.mjs",
+    "req-clause-guard": "node harness/gates/req-clause-guard.mjs",
+    "ears-coamend-guard": "node harness/gates/ears-coamend-guard.mjs",
+    "doc-transcript-guard": "node harness/gates/doc-transcript-guard.mjs",
+    "service-gate-guard": "node harness/gates/service-gate-guard.mjs",
+    "own-snapshot-guard": "node harness/gates/own-snapshot-guard.mjs",
+    "own-snapshot-materialize": "node scripts/materialize-own-snapshot.mjs",
+    "wp-audit": "node scripts/wp-audit.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@bufbuild/protobuf": "^2.12.1",
+    "@types/node": "^26.1.1",
+    "fast-check": "^3.23.2",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.8.0"
+  }
+}

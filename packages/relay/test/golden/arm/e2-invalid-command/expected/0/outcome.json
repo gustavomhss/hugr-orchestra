@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'A' is NOT satisfied. Still failing:; NUM; NUL; OBJ. Address these, then finish. Instructions: do A"
+  },
+  "stderr": "jq: error (at <stdin>:0): relay_json_string: expected string or null\nrelay: checklist NUM has an invalid command (expected a NUL-free string)\njq: error (at <stdin>:0): relay_json_string: NUL is not supported\nrelay: checklist NUL has an invalid command (expected a NUL-free string)\njq: error (at <stdin>:0): relay_json_string: expected string or null\nrelay: checklist OBJ has an invalid command (expected a NUL-free string)\n"
+}

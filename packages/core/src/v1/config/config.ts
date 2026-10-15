@@ -1,9 +1,11 @@
 export * as ConfigV1 from "./config"
 
 import { Schema } from "effect"
+import { ConfigMaestro } from "@orchestra/schema/config-maestro"
 import { NonNegativeInt, PositiveInt, type DeepMutable } from "../../schema"
 import { ConfigExperimental } from "../../config/experimental"
 import { ConfigReference } from "../../config/reference"
+import { ConfigRelay } from "../../config/relay"
 import { ConfigAgentV1 } from "./agent"
 import { ConfigAttachmentV1 } from "./attachment"
 import { ConfigCommandV1 } from "./command"
@@ -36,12 +38,15 @@ export const Info = Schema.Struct({
   shell: Schema.optional(Schema.String).annotate({ description: "Default shell to use for terminal and bash tool" }),
   logLevel: Schema.optional(LogLevelRef).annotate({ description: "Log level" }),
   server: Schema.optional(ConfigServerV1.Server).annotate({
-    description: "Server configuration for opencode serve and web commands",
+    description: "Server configuration for orchestra serve and web commands",
   }),
   command: Schema.optional(Schema.Record(Schema.String, ConfigCommandV1.Info)).annotate({
     description: "Command configuration, see https://opencode.ai/docs/commands",
   }),
   skills: Schema.optional(ConfigSkillsV1.Info).annotate({ description: "Additional skill folder paths" }),
+  maestro: Schema.optional(ConfigMaestro.Info).annotate({
+    description: "Project-bound static Atlas/Own context for governed Maestro work",
+  }),
   references: Schema.optional(ConfigReference.Info).annotate({
     description: "Named git or local directory references",
   }),
@@ -54,13 +59,6 @@ export const Info = Schema.Struct({
       "Enable or disable snapshot tracking. When false, filesystem snapshots are not recorded and undoing or reverting will not undo/redo file changes. Defaults to true.",
   }),
   plugin: Schema.optional(Schema.mutable(Schema.Array(ConfigPluginV1.Spec))),
-  share: Schema.optional(Schema.Literals(["manual", "auto", "disabled"])).annotate({
-    description:
-      "Control sharing behavior:'manual' allows manual sharing via commands, 'auto' enables automatic sharing, 'disabled' disables all sharing",
-  }),
-  autoshare: Schema.optional(Schema.Boolean).annotate({
-    description: "@deprecated Use 'share' field instead. Share newly created sessions automatically",
-  }),
   autoupdate: Schema.optional(Schema.Union([Schema.Boolean, Schema.Literal("notify")])).annotate({
     description:
       "Automatically update to the latest version. Set to true to auto-update, false to disable, or 'notify' to show update notifications",
@@ -79,7 +77,7 @@ export const Info = Schema.Struct({
   }),
   default_agent: Schema.optional(Schema.String).annotate({
     description:
-      "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",
+      "Default agent to use when none is specified. Must be a primary agent. Falls back to 'maestro' if not set or if the specified agent is invalid.",
   }),
   subagent_depth: Schema.optional(NonNegativeInt).annotate({
     description: "Maximum subagent nesting depth. Defaults to 1, which prevents subagents from launching subagents.",
@@ -87,17 +85,13 @@ export const Info = Schema.Struct({
   username: Schema.optional(Schema.String).annotate({
     description: "Custom username to display in conversations instead of system username",
   }),
-  mode: Schema.optional(
-    Schema.StructWithRest(
-      Schema.Struct({ build: Schema.optional(ConfigAgentV1.Info), plan: Schema.optional(ConfigAgentV1.Info) }),
-      [Schema.Record(Schema.String, ConfigAgentV1.Info)],
-    ),
-  ).annotate({ description: "@deprecated Use `agent` field instead." }),
+  mode: Schema.optional(Schema.Record(Schema.String, ConfigAgentV1.Info)).annotate({
+    description: "@deprecated Use `agent` field instead.",
+  }),
   agent: Schema.optional(
     Schema.StructWithRest(
       Schema.Struct({
-        plan: Schema.optional(ConfigAgentV1.Info),
-        build: Schema.optional(ConfigAgentV1.Info),
+        maestro: Schema.optional(ConfigAgentV1.Info),
         general: Schema.optional(ConfigAgentV1.Info),
         explore: Schema.optional(ConfigAgentV1.Info),
         title: Schema.optional(ConfigAgentV1.Info),
@@ -130,9 +124,6 @@ export const Info = Schema.Struct({
   attachment: Schema.optional(ConfigAttachmentV1.Info).annotate({
     description: "Attachment processing configuration, including image size limits and resizing behavior",
   }),
-  enterprise: Schema.optional(
-    Schema.Struct({ url: Schema.optional(Schema.String).annotate({ description: "Enterprise URL" }) }),
-  ),
   tool_output: Schema.optional(
     Schema.Struct({
       max_lines: Schema.optional(PositiveInt).annotate({
@@ -141,6 +132,7 @@ export const Info = Schema.Struct({
       max_bytes: Schema.optional(PositiveInt).annotate({
         description: "Maximum bytes of tool output before it is truncated and saved to disk (default: 51200)",
       }),
+      lean: Schema.optional(Schema.Struct({ enabled: Schema.optional(Schema.Boolean) })),
     }),
   ).annotate({
     description:
@@ -166,6 +158,18 @@ export const Info = Schema.Struct({
       }),
     }),
   ),
+  continuity: Schema.optional(
+    Schema.Struct({
+      enabled: Schema.optional(Schema.Boolean).annotate({
+        description: "Keep long sessions under the context limit with background working memory (default: true)",
+      }),
+      trigger: Schema.optional(Schema.Finite).annotate({
+        description:
+          "Fraction of the model context window at which background maintenance runs, between 0 and 1 (default: 0.7)",
+      }),
+    }),
+  ),
+  relay: Schema.optional(ConfigRelay.Info).annotate({ description: "Relay workflow and hook engine settings" }),
   experimental: Schema.optional(
     Schema.Struct({
       disable_paste_summary: Schema.optional(Schema.Boolean),

@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/legacy-added/input/ledger.jsonl",
+  "problems": []
+}

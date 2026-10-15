@@ -6,7 +6,8 @@ import {
   autoProbePlan,
   createProbeFailureGate,
   runAddableProbePlan,
-  wslOpencodeAction,
+  wslDistroReady,
+  wslOrchestraAction,
   wslRuntimeRetryable,
 } from "./settings-model"
 import type { WslServersState } from "./types"
@@ -19,7 +20,7 @@ function readyState(input: Partial<WslServersState> = {}): WslServersState {
     installed: [],
     online: [],
     distroProbes: {},
-    opencodeChecks: {},
+    orchestraChecks: {},
     pendingRestart: false,
     servers: [],
     job: null,
@@ -37,10 +38,26 @@ describe("WSL server settings presentation", () => {
     expect(wslRuntimeRetryable({ kind: "stopped" })).toBe(true)
   })
 
-  test("offers install and update only when OpenCode needs attention", () => {
-    expect(wslOpencodeAction(undefined)).toBeUndefined()
+  // curl was needed only to fetch the upstream installer, which is no longer run.
+  test("a WSL 2 distro that runs commands and has bash is ready", () => {
+    const state = readyState({
+      installed: [
+        { name: "Debian", version: 2, isDefault: true },
+        { name: "Alpine", version: 2, isDefault: false },
+      ],
+      distroProbes: {
+        Debian: { name: "Debian", canExecute: true, hasBash: true, error: null },
+        Alpine: { name: "Alpine", canExecute: true, hasBash: false, error: null },
+      },
+    })
+    expect(wslDistroReady(state, "Debian")).toBe(true)
+    expect(wslDistroReady(state, "Alpine")).toBe(false)
+  })
+
+  test("offers install and update only when the server needs attention", () => {
+    expect(wslOrchestraAction(undefined)).toBeUndefined()
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
         resolvedPath: null,
         version: null,
@@ -48,21 +65,21 @@ describe("WSL server settings presentation", () => {
         matchesDesktop: null,
         error: null,
       }),
-    ).toBe("wsl.onboarding.installOpencode")
+    ).toBe("wsl.onboarding.installServer")
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
-        resolvedPath: "/usr/local/bin/opencode",
+        resolvedPath: "/usr/local/bin/orchestra",
         version: "1.2.2",
         expectedVersion: "1.2.3",
         matchesDesktop: false,
         error: null,
       }),
-    ).toBe("wsl.onboarding.updateOpencode")
+    ).toBe("wsl.onboarding.updateServer")
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
-        resolvedPath: "/usr/local/bin/opencode",
+        resolvedPath: "/usr/local/bin/orchestra",
         version: "1.2.3",
         expectedVersion: "1.2.3",
         matchesDesktop: true,
@@ -148,7 +165,7 @@ describe("WSL server settings presentation", () => {
         ],
         online: [{ name: "Alpine", label: "Alpine Linux" }],
         distroProbes: {
-          Ubuntu: { name: "Ubuntu", canExecute: true, hasBash: true, hasCurl: true, error: null },
+          Ubuntu: { name: "Ubuntu", canExecute: true, hasBash: true, error: null },
         },
       },
       view: "main",
@@ -179,23 +196,23 @@ describe("WSL server settings presentation", () => {
     expect(model.busy).toBe(true)
   })
 
-  test("does not report ready when OpenCode is present but cannot run", () => {
+  test("does not report ready when the server is present but cannot run", () => {
     const model = addServerViewModel({
       state: {
         ...readyWslState,
         installed: [{ name: "Debian", version: 2, isDefault: true }],
         online: [{ name: "Ubuntu", label: "Ubuntu" }],
         distroProbes: {
-          Debian: { name: "Debian", canExecute: true, hasBash: true, hasCurl: true, error: null },
+          Debian: { name: "Debian", canExecute: true, hasBash: true, error: null },
         },
-        opencodeChecks: {
+        orchestraChecks: {
           Debian: {
             distro: "Debian",
-            resolvedPath: "/home/me/.opencode/bin/opencode",
+            resolvedPath: "/home/me/.orchestra/bin/orchestra",
             version: null,
             expectedVersion: "1.2.3",
             matchesDesktop: null,
-            error: "opencode is installed but could not run",
+            error: "The server is installed but could not run",
           },
         },
       },
@@ -208,10 +225,10 @@ describe("WSL server settings presentation", () => {
     })
 
     expect(model.distroStatuses.Debian).toEqual({
-      label: { key: "wsl.onboarding.installOpencode" },
+      label: { key: "wsl.onboarding.installServer" },
       tone: "warning",
     })
-    expect(model.primaryButton.action).toBe("install-opencode")
+    expect(model.primaryButton.action).toBe("install-server")
   })
 
   test("delegates addable probe plans to one batch command", async () => {

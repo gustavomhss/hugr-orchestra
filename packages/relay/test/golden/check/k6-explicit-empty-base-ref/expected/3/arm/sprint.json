@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"target","instructions":"do target","checklist":[{"id":"DIFF","judge":"inspect change","diff":true,"blocking":true}]}]}

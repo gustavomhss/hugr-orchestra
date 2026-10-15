@@ -1,7 +1,7 @@
 export * as ConfigExternalPlugin from "./external"
 
-import type { Plugin as EffectPlugin } from "@opencode-ai/plugin/v2/effect"
-import type { Plugin as PromisePlugin } from "@opencode-ai/plugin/v2/promise"
+import type { Plugin as EffectPlugin } from "@orchestra/plugin/v2/effect"
+import type { Plugin as PromisePlugin } from "@orchestra/plugin/v2/promise"
 import { Effect, Schema } from "effect"
 import path from "path"
 import { fileURLToPath, pathToFileURL } from "url"
@@ -11,6 +11,7 @@ import { Location } from "../../location"
 import { Npm } from "../../npm"
 import { define } from "../../plugin/internal"
 import { PluginPromise } from "../../plugin/promise"
+import { PluginSdkRuntime } from "../../plugin/sdk-runtime"
 
 const PluginModule = Schema.Struct({
   default: Schema.Union([
@@ -28,6 +29,13 @@ const PluginModule = Schema.Struct({
     }),
   ]),
 })
+
+// The same admission/import boundary is used by directory and npm config plugins.
+export async function loadExternalPlugin(entrypoint: string, sourceRoot?: string) {
+  await PluginSdkRuntime.prepareExternalImport(entrypoint, sourceRoot)
+  await PluginSdkRuntime.install()
+  return Schema.decodeUnknownSync(PluginModule)(await import(entrypoint)).default
+}
 
 export const Plugin = define({
   id: "config-plugin",
@@ -77,14 +85,13 @@ export const Plugin = define({
             : (yield* npm.add(ref.package)).entrypoint
           if (!entrypoint) return
 
-          const mod = yield* Effect.promise(() => import(entrypoint))
-          const value = (yield* Schema.decodeUnknownEffect(PluginModule)(mod)).default
+          const value = yield* Effect.promise(() => loadExternalPlugin(entrypoint, path.isAbsolute(ref.package) ? path.dirname(ref.package) : undefined))
           const plugin = "effect" in value ? value : PluginPromise.fromPromise(value)
           yield* ctx.plugin.add({
             id: plugin.id,
             effect: (host) => plugin.effect({ ...host, options: ref.options ?? {} }),
           })
-        }).pipe(Effect.ignoreCause)
+        }).pipe(Effect.catchCause((cause) => Effect.logError("External plugin setup blocked", cause)))
       }
     }).pipe(Effect.forkScoped({ startImmediately: true }))
   }),

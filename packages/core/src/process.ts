@@ -4,6 +4,9 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { CrossSpawnSpawner } from "./cross-spawn-spawner"
 import { makeGlobalNode } from "./effect/app-node"
+import { Flag } from "./flag/flag"
+import { Omni } from "./omni"
+import { OmniSpawner } from "./omni-spawner"
 
 export class AppProcessError extends Schema.TaggedErrorClass<AppProcessError>()("AppProcessError", {
   command: Schema.String,
@@ -20,6 +23,8 @@ export class AppProcessError extends Schema.TaggedErrorClass<AppProcessError>()(
 }
 
 export interface RunOptions {
+  /** Optional producer-owned hook; runs on raw chunks before capture limits. */
+  readonly inspect?: (chunk: Uint8Array) => void
   readonly combineOutput?: boolean
   readonly maxOutputBytes?: number
   readonly maxErrorBytes?: number
@@ -54,7 +59,7 @@ export type Interface = ChildProcessSpawner["Service"] & {
   ) => Stream.Stream<string, AppProcessError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/AppProcess") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/AppProcess") {}
 
 export const requireSuccess = (result: RunResult): Effect.Effect<RunResult, AppProcessError> =>
   result.exitCode === 0
@@ -118,7 +123,7 @@ const normalizeStdin = (
       ? Stream.make(input)
       : input
 
-export const collectStream = (stream: Stream.Stream<Uint8Array, PlatformError>, maxOutputBytes: number | undefined) =>
+export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutputBytes: number | undefined) =>
   Stream.runFold(
     stream,
     () => ({ chunks: [] as Uint8Array[], bytes: 0, truncated: false }),
@@ -136,19 +141,29 @@ export const collectStream = (stream: Stream.Stream<Uint8Array, PlatformError>, 
     },
   ).pipe(Effect.map((x) => ({ buffer: Buffer.concat(x.chunks), truncated: x.truncated })))
 
-const layer = Layer.effect(
+/**
+ * AppProcess over the spawner in context, for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: with omni on, run()
+ * collects through omni itself where it can (R2-1).
+ */
+export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) => Layer.effect(
   Service,
   Effect.gen(function* () {
     const spawner = yield* ChildProcessSpawner
+    const omni = mode === "off" ? undefined : yield* Effect.promise(() => Omni.load())
 
     const runCommand = (command: ChildProcess.Command, options?: RunOptions) => {
       const description = describeCommand(command)
+      const inspected = (stream: Stream.Stream<Uint8Array, PlatformError>) => options?.inspect
+        ? stream.pipe(Stream.tap((chunk) => Effect.try({
+            try: () => options.inspect?.(chunk),
+            catch: (cause) => wrapError(description, cause),
+          }))) : stream
       const collect = Effect.scoped(
         Effect.gen(function* () {
           const handle = yield* spawner.spawn(command)
           if (options?.combineOutput) {
             const [output, exitCode] = yield* Effect.all(
-              [collectStream(handle.all, options.maxOutputBytes), handle.exitCode],
+              [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],
               { concurrency: "unbounded" },
             )
             return {
@@ -164,8 +179,8 @@ const layer = Layer.effect(
           }
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [
-              collectStream(handle.stdout, options?.maxOutputBytes),
-              collectStream(handle.stderr, options?.maxErrorBytes),
+              collectStream(inspected(handle.stdout), options?.maxOutputBytes),
+              collectStream(inspected(handle.stderr), options?.maxErrorBytes),
               handle.exitCode,
             ],
             { concurrency: "unbounded" },
@@ -196,7 +211,44 @@ const layer = Layer.effect(
       return aborted.pipe(Effect.catch((cause) => Effect.fail(wrapError(description, cause))))
     }
 
+    const collect = (omni: OmniSpawner.Binding, command: ChildProcess.StandardCommand, options?: RunOptions) => {
+      const description = describeCommand(command)
+      const stdin = options?.stdin
+      return OmniSpawner.collect(omni, command, {
+        combineOutput: options?.combineOutput,
+        signal: options?.signal,
+        timeout: options?.timeout,
+        stdin: typeof stdin === "string" || stdin instanceof Uint8Array ? stdin : undefined,
+      }).pipe(
+        Effect.map((result) =>
+          options?.combineOutput
+            ? ({
+                command: description,
+                exitCode: result.exitCode,
+                output: result.stdout,
+                stdout: Buffer.alloc(0),
+                stderr: Buffer.alloc(0),
+                outputTruncated: false,
+                stdoutTruncated: false,
+                stderrTruncated: false,
+              } satisfies RunResult)
+            : ({
+                command: description,
+                exitCode: result.exitCode,
+                stdout: result.stdout,
+                stderr: result.stderr,
+                stdoutTruncated: false,
+                stderrTruncated: false,
+              } satisfies RunResult),
+        ),
+        Effect.catch((cause) =>
+          Effect.fail(wrapError(description, options?.signal?.aborted ? abortError(options.signal) : cause)),
+        ),
+      )
+    }
+
     const run = Effect.fn("AppProcess.run")(function* (command: ChildProcess.Command, options?: RunOptions) {
+      if (omni && OmniSpawner.collectable(command, options)) return yield* collect(omni, command, options)
       if (options?.stdin === undefined) return yield* runCommand(command, options)
       if (command._tag !== "StandardCommand") {
         return yield* new AppProcessError({
@@ -255,6 +307,9 @@ const layer = Layer.effect(
     return Service.of({ ...spawner, run, runStream })
   }),
 )
+
+// The flag is read once, when the layer is built.
+const layer = Layer.unwrap(Effect.sync(() => layerWith(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)))
 
 export const node = makeGlobalNode({ service: Service, layer: layer, deps: [CrossSpawnSpawner.node] })
 

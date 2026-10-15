@@ -1,8 +1,8 @@
 export * as PermissionV1 from "./permission"
 
 import { Schema } from "effect"
-export * from "@opencode-ai/schema/permission-v1"
-import { ID } from "@opencode-ai/schema/permission-v1"
+export * from "@orchestra/schema/permission-v1"
+import { ID } from "@orchestra/schema/permission-v1"
 
 export class RejectedError extends Schema.TaggedErrorClass<RejectedError>()("PermissionRejectedError", {}) {
   override get message() {
@@ -20,9 +20,11 @@ export class CorrectedError extends Schema.TaggedErrorClass<CorrectedError>()("P
 
 export class DeniedError extends Schema.TaggedErrorClass<DeniedError>()("PermissionDeniedError", {
   ruleset: Schema.Any,
+  reason: Schema.optional(Schema.String),
 }) {
   override get message() {
-    return `The user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules ${JSON.stringify(this.ruleset)}`
+    if (this.reason) return this.reason
+    return `The owner has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules ${JSON.stringify(this.ruleset)}`
   }
 }
 

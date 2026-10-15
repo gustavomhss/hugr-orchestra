@@ -10,6 +10,7 @@ import { Integration } from "./integration"
 import { LegacyEvent } from "./legacy-event"
 import { LspEvent } from "./lsp-event"
 import { McpEvent } from "./mcp-event"
+import { MaestroEvent } from "./maestro-event"
 import { ModelsDev } from "./models-dev"
 import { Permission } from "./permission"
 import { PermissionV1 } from "./permission-v1"
@@ -20,6 +21,7 @@ import { Pty } from "./pty"
 import { Question } from "./question"
 import { QuestionV1 } from "./question-v1"
 import { Reference } from "./reference"
+import { RelayHook } from "./relay-hook"
 import { ServerEvent } from "./server-event"
 import { SessionCompactionEvent } from "./session-compaction-event"
 import { SessionEvent } from "./session-event"
@@ -34,7 +36,11 @@ import { WorktreeEvent } from "./worktree-event"
 const sessionV1DurableDefinitions = SessionV1.Event.Definitions.filter((definition) => definition.durable !== undefined)
 const sessionV1LiveDefinitions = SessionV1.Event.Definitions.filter((definition) => definition.durable === undefined)
 
-const coreDefinitions = Event.inventory(...sessionV1DurableDefinitions, ...SessionEvent.Definitions)
+const coreDefinitions = Event.inventory(
+  ...sessionV1DurableDefinitions,
+  ...SessionEvent.Definitions,
+  ...MaestroEvent.Definitions,
+)
 
 const foundationDefinitions = Event.inventory(
   ...ModelsDev.Event.Definitions,
@@ -52,6 +58,7 @@ const featureDefinitions = Event.inventory(
   ...FileSystemWatcher.Event.Definitions,
   ...Pty.Event.Definitions,
   ...Question.Event.Definitions,
+  ...RelayHook.Definitions,
 )
 
 export const ServerDefinitions = Event.inventory(

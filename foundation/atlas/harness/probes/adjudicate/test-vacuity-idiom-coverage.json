@@ -1,0 +1,41 @@
+{
+  "what": "Which of the cross-repo shape census's four TEST-VACUITY idioms the two shipped proven shapes actually cover — and why the two unshipped ones are NOT going to be built as test-vacuity shapes.",
+  "measured_utc": "2026-08-30",
+  "rev": "e370994 (master, after the no-assertion-in-test shape landed)",
+  "source_census": "harness/probes/adjudicate/xrepo-zod-shape-census.{json,tsv} — 'The TEST-VACUITY family is ~9 of the 21 NEW_SHAPE claims: no-assertion-in-test (3), assertion-only-in-catch (2), unasserted-parse-call (2), commented-out-tests (2).'",
+  "method": "For each idiom, the census claim TEXT was read from xrepo-zod-a1-verdicts.tsv, a FAITHFUL REPRODUCTION of the body it describes was built, and the SHIPPED oracle (packages/adapter-io/dist/src/test-vacuity.js) was run over it. This tests the IDIOM as the claim describes it. It is NOT a re-run against zod's real files — that would need the zod checkout and is not claimed here.",
+  "per_idiom": {
+    "assertion-only-in-catch": {
+      "claims": 2,
+      "status": "SHIPPED",
+      "note": "the original shape (#95)."
+    },
+    "no-assertion-in-test": {
+      "claims": 3,
+      "status": "SHIPPED",
+      "note": "landed at e370994 (PR #270)."
+    },
+    "unasserted-parse-call": {
+      "claims": 2,
+      "status": "COVERED BY no-assertion-in-test — NOT a separate shape",
+      "evidence": "`test(\"parse\", () => { crazySchema.parse(obj); });` — a faithful reproduction of claim e2eab6b4's body — is PROVEN `no-assertion-in-test` by the shipped oracle. A discarded call with no wrapping assertion IS the no-check property; there is nothing left for a separate shape to prove.",
+      "why_not_its_own_shape": "The claims themselves say the test DOES check something: 'it only checks that parsing does not throw rather than verifying any output.' A shape asserting VACUITY over a body with an implicit throw-check would publish a false characterisation. The honest content of this idiom is a RATIONALE nuance — no result is verified — and it now lives in the shape's own documentation, not in a second shape."
+    },
+    "commented-out-tests": {
+      "claims": 2,
+      "status": "PARTIALLY COVERED — the remainder is out of the family's model",
+      "evidence": "Claim c1a77ee9 names the one executing test as `test(\"test\", () => { z; })`; the shipped oracle PROVES exactly that body as `no-assertion-in-test`. So the executing half is already covered.",
+      "why_the_rest_is_out_of_model": "The 'every substantive test is commented out' half is a UNIT-level property, and a commented-out test has NO node in the AST — so it cannot anchor to the family's `(unitKey, testName)` identity (test-vacuity-types.ts). Expressing it would need either a synthetic test name (fabricating identity) or a different node family. Neither is a `cv` bump, so neither rides under ADR-0015 D5's additive-only clause."
+    },
+    "assertion-never-invoked": {
+      "claims": 1,
+      "status": "SHIPPED as the third shape",
+      "note": "Not part of the census's test-vacuity cluster label — it was classified as its own NEW_SHAPE ('matcher member access without a call (toBeNull; not toBeNull()) is an AST shape'). It IS vacuity, and it fits the family's identity and door exactly, so it landed as a cv bump rather than a separate family.",
+      "why_it_needed_its_own_predicate": "It was uncovered: the shipped oracle returned [] on the idiom. `no-assertion-in-test` abstains (the chain is check-shaped) and `assertion-only-in-catch` abstains (no catch-assertion), so the defect fell through both.",
+      "the_soundness_rail_that_decides_it": "A chai getter (`x.should.be.ok;`) is syntactically identical in shape but asserts ON ACCESS — chai defines ok/true/empty as getters with side effects. Flagging it would be a FALSE ADMIT. The rail is that the chain must contain an `expect(` CALL: that family's matchers are function-valued and therefore dead when un-invoked."
+    }
+  },
+  "headline": "Three shapes now ship. Of the census's four test-vacuity idioms, two ship, one is subsumed and one is half-subsumed/half-out-of-model; a fifth idiom classified separately by the census (assertion-never-invoked) turned out to be genuine vacuity, was uncovered by the first two, and shipped as the third shape.",
+  "honesty": "Coverage is asserted over faithful REPRODUCTIONS of the claim bodies, run through the shipped oracle. It is not a re-run of the zod corpus, and the census's own classification was a single-classifier estimate. What is measured here is that the reproduced idiom yields the fact; what is NOT measured is per-claim agreement against zod's actual source.",
+  "repo_measurement": "All three shapes yield 0 facts across this repo's 470 test files / 3392 test-call sites — the expected result for a repo whose vacuous tests #114 already fixed."
+}

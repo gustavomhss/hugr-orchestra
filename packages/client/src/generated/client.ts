@@ -4,6 +4,10 @@ import type {
   LocationGetOutput,
   AgentsListInput,
   AgentsListOutput,
+  AgentsGetFileInput,
+  AgentsGetFileOutput,
+  AgentsUpdateFileInput,
+  AgentsUpdateFileOutput,
   SessionsListInput,
   SessionsListOutput,
   SessionsCreateInput,
@@ -85,6 +89,12 @@ import type {
   CommandsListOutput,
   SkillsListInput,
   SkillsListOutput,
+  SkillsSaveInput,
+  SkillsSaveOutput,
+  SkillsRemoveInput,
+  SkillsRemoveOutput,
+  BehaviorsSetInput,
+  BehaviorsSetOutput,
   EventsSubscribeOutput,
   PtysListInput,
   PtysListOutput,
@@ -112,6 +122,108 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  RelayDocumentsListInput,
+  RelayDocumentsListOutput,
+  RelayDocumentsCreateInput,
+  RelayDocumentsCreateOutput,
+  RelayDocumentsGetInput,
+  RelayDocumentsGetOutput,
+  RelayDocumentsUpdateInput,
+  RelayDocumentsUpdateOutput,
+  RelayDocumentsRemoveInput,
+  RelayDocumentsRemoveOutput,
+  RelayDocumentsVersionsInput,
+  RelayDocumentsVersionsOutput,
+  RelayDocumentsVersionInput,
+  RelayDocumentsVersionOutput,
+  RelayDocumentsSprintInput,
+  RelayDocumentsSprintOutput,
+  RelayDocumentsDefinitionInput,
+  RelayDocumentsDefinitionOutput,
+  RelayDocumentsCheckInput,
+  RelayDocumentsCheckOutput,
+  RelayDocumentsNodeTypesInput,
+  RelayDocumentsNodeTypesOutput,
+  RelayDocumentsListScopesInput,
+  RelayDocumentsListScopesOutput,
+  RelayDocumentsCreateScopeInput,
+  RelayDocumentsCreateScopeOutput,
+  RelayDocumentsUpdateScopeInput,
+  RelayDocumentsUpdateScopeOutput,
+  RelayDocumentsRemoveScopeInput,
+  RelayDocumentsRemoveScopeOutput,
+  RelayPublishPublishInput,
+  RelayPublishPublishOutput,
+  RelayPublishUnpublishInput,
+  RelayPublishUnpublishOutput,
+  RelayHooksListInput,
+  RelayHooksListOutput,
+  RelayHooksInstallInput,
+  RelayHooksInstallOutput,
+  RelayHooksUpdateInput,
+  RelayHooksUpdateOutput,
+  RelayHooksEnableInput,
+  RelayHooksEnableOutput,
+  RelayHooksDisableInput,
+  RelayHooksDisableOutput,
+  RelayHooksOrderInput,
+  RelayHooksOrderOutput,
+  RelayHooksUninstallInput,
+  RelayHooksUninstallOutput,
+  RelayHooksDecisionsInput,
+  RelayHooksDecisionsOutput,
+  RelayHooksRepairInput,
+  RelayHooksRepairOutput,
+  PullRequestsListInput,
+  PullRequestsListOutput,
+  PullRequestsCreateInput,
+  PullRequestsCreateOutput,
+  SchedulesListInput,
+  SchedulesListOutput,
+  SchedulesCreateInput,
+  SchedulesCreateOutput,
+  SchedulesUpdateInput,
+  SchedulesUpdateOutput,
+  SchedulesRemoveInput,
+  SchedulesRemoveOutput,
+  SchedulesRunInput,
+  SchedulesRunOutput,
+  OperatorInspectInput,
+  OperatorInspectOutput,
+  ConnectionsConnectInput,
+  ConnectionsConnectOutput,
+  ConnectionsGetTargetInput,
+  ConnectionsGetTargetOutput,
+  ConnectionsBindingsInput,
+  ConnectionsBindingsOutput,
+  ConnectionsListInput,
+  ConnectionsListOutput,
+  ConnectionsGetInput,
+  ConnectionsGetOutput,
+  ConnectionsTargetsInput,
+  ConnectionsTargetsOutput,
+  ConnectionsDisconnectInput,
+  ConnectionsDisconnectOutput,
+  ConnectionsCreateTargetInput,
+  ConnectionsCreateTargetOutput,
+  ConnectionsRetargetTargetInput,
+  ConnectionsRetargetTargetOutput,
+  ConnectionsRemoveTargetInput,
+  ConnectionsRemoveTargetOutput,
+  ConnectionsBindInput,
+  ConnectionsBindOutput,
+  ConnectionsUnbindInput,
+  ConnectionsUnbindOutput,
+  ArtifactsListInput,
+  ArtifactsListOutput,
+  ArtifactsGetInput,
+  ArtifactsGetOutput,
+  ArtifactsShareInput,
+  ArtifactsShareOutput,
+  ArtifactsPinInput,
+  ArtifactsPinOutput,
+  ArtifactsRemoveReferenceInput,
+  ArtifactsRemoveReferenceOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -277,6 +389,40 @@ export function make(options: ClientOptions) {
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      getFile: (input: AgentsGetFileInput, requestOptions?: RequestOptions) =>
+        request<AgentsGetFileOutput>(
+          {
+            method: "GET",
+            path: `/api/agent/${encodeURIComponent(input.agentID)}/file`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      updateFile: (input: AgentsUpdateFileInput, requestOptions?: RequestOptions) =>
+        request<AgentsUpdateFileOutput>(
+          {
+            method: "PUT",
+            path: `/api/agent/${encodeURIComponent(input.agentID)}/file`,
+            query: { location: input["location"] },
+            body: {
+              description: input["description"],
+              mode: input["mode"],
+              model: input["model"],
+              steps: input["steps"],
+              system: input["system"],
+              permission: input["permission"],
+              disable: input["disable"],
+              revision: input["revision"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401],
             empty: false,
           },
           requestOptions,
@@ -645,7 +791,7 @@ export function make(options: ClientOptions) {
             query: { location: input["location"] },
             body: { label: input["label"] },
             successStatus: 204,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [409, 401, 400],
             empty: true,
           },
           requestOptions,
@@ -657,7 +803,7 @@ export function make(options: ClientOptions) {
             path: `/api/credential/${encodeURIComponent(input.credentialID)}`,
             query: { location: input["location"] },
             successStatus: 204,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [409, 401, 400],
             empty: true,
           },
           requestOptions,
@@ -807,6 +953,52 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      save: (input: SkillsSaveInput, requestOptions?: RequestOptions) =>
+        request<SkillsSaveOutput>(
+          {
+            method: "PUT",
+            path: `/api/skill`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              description: input["description"],
+              content: input["content"],
+              path: input["path"],
+              mtime: input["mtime"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: SkillsRemoveInput, requestOptions?: RequestOptions) =>
+        request<SkillsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/skill`,
+            query: { location: input["location"], path: input["path"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    behaviors: {
+      set: (input: BehaviorsSetInput, requestOptions?: RequestOptions) =>
+        request<BehaviorsSetOutput>(
+          {
+            method: "PUT",
+            path: `/api/behavior`,
+            query: { location: input["location"] },
+            body: { behaviors: input["behaviors"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     events: {
       subscribe: (requestOptions?: RequestOptions): AsyncIterable<EventsSubscribeOutput> =>
@@ -840,6 +1032,8 @@ export function make(options: ClientOptions) {
               cwd: input?.["cwd"],
               title: input?.["title"],
               env: input?.["env"],
+              cols: input?.["cols"],
+              rows: input?.["rows"],
             },
             successStatus: 200,
             declaredStatuses: [401, 400],
@@ -983,6 +1177,710 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    relayDocuments: {
+      list: (input?: RelayDocumentsListInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsListOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input?: RelayDocumentsCreateInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document`,
+            query: { location: input?.["location"] },
+            body: {
+              name: input?.["name"],
+              description: input?.["description"],
+              nodes: input?.["nodes"],
+              connections: input?.["connections"],
+              nodeGroups: input?.["nodeGroups"],
+              tags: input?.["tags"],
+              meta: input?.["meta"],
+              isArchived: input?.["isArchived"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: RelayDocumentsGetInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: RelayDocumentsUpdateInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              description: input["description"],
+              nodes: input["nodes"],
+              connections: input["connections"],
+              nodeGroups: input["nodeGroups"],
+              tags: input["tags"],
+              meta: input["meta"],
+              isArchived: input["isArchived"],
+              versionId: input["versionId"],
+              expectedChecksum: input["expectedChecksum"],
+              force: input["force"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: RelayDocumentsRemoveInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      versions: (input: RelayDocumentsVersionsInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsVersionsOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/version`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      version: (input: RelayDocumentsVersionInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsVersionOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/version/${encodeURIComponent(input.versionID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      sprint: (input: RelayDocumentsSprintInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsSprintOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/sprint`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      definition: (input: RelayDocumentsDefinitionInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsDefinitionOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/export`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      check: (input: RelayDocumentsCheckInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCheckOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/check`,
+            query: { location: input["location"] },
+            body: {
+              position: input["position"],
+              counter: input["counter"],
+              baseRef: input["baseRef"],
+              params: input["params"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 403, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      nodeTypes: (input?: RelayDocumentsNodeTypesInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsNodeTypesOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/node-types`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      listScopes: (input?: RelayDocumentsListScopesInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsListScopesOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/scope`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      createScope: (input: RelayDocumentsCreateScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCreateScopeOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/scope`,
+            query: { location: input["location"] },
+            body: { name: input["name"], description: input["description"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      updateScope: (input: RelayDocumentsUpdateScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsUpdateScopeOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/scope/${encodeURIComponent(input.scopeID)}`,
+            query: { location: input["location"] },
+            body: { name: input["name"], description: input["description"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeScope: (input: RelayDocumentsRemoveScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsRemoveScopeOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/scope/${encodeURIComponent(input.scopeID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    relayPublish: {
+      publish: (input: RelayPublishPublishInput, requestOptions?: RequestOptions) =>
+        request<RelayPublishPublishOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/publish`,
+            query: { location: input["location"] },
+            body: { versionId: input["versionId"], expectedChecksum: input["expectedChecksum"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      unpublish: (input: RelayPublishUnpublishInput, requestOptions?: RequestOptions) =>
+        request<RelayPublishUnpublishOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/unpublish`,
+            query: { location: input["location"] },
+            body: { expectedChecksum: input["expectedChecksum"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    relayHooks: {
+      list: (input?: RelayHooksListInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksListOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/hook`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      install: (input: RelayHooksInstallInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksInstallOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook`,
+            query: { location: input["location"] },
+            body: { document: input["document"], version: input["version"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: RelayHooksUpdateInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksUpdateOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/update`,
+            query: { location: input["location"] },
+            body: { version: input["version"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      enable: (input: RelayHooksEnableInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksEnableOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/enable`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      disable: (input: RelayHooksDisableInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksDisableOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/disable`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      order: (input: RelayHooksOrderInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksOrderOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/hook/order`,
+            query: { location: input["location"] },
+            body: { installIDs: input["installIDs"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      uninstall: (input: RelayHooksUninstallInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksUninstallOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      decisions: (input: RelayHooksDecisionsInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksDecisionsOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/decisions`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      repair: (input: RelayHooksRepairInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksRepairOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/repair`,
+            query: { location: input["location"] },
+            body: { confirm: input["confirm"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    pullRequests: {
+      list: (input?: PullRequestsListInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsListOutput>(
+          {
+            method: "GET",
+            path: `/api/pull-request`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: PullRequestsCreateInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/pull-request`,
+            query: { location: input["location"] },
+            body: { title: input["title"], body: input["body"], base: input["base"], head: input["head"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    schedules: {
+      list: (input?: SchedulesListInput, requestOptions?: RequestOptions) =>
+        request<SchedulesListOutput>(
+          {
+            method: "GET",
+            path: `/api/schedule`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: SchedulesCreateInput, requestOptions?: RequestOptions) =>
+        request<SchedulesCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/schedule`,
+            query: { location: input["location"] },
+            body: {
+              id: input["id"],
+              name: input["name"],
+              prompt: input["prompt"],
+              cadence: input["cadence"],
+              next: input["next"],
+              timezone: input["timezone"],
+              minute: input["minute"],
+              enabled: input["enabled"],
+              history: input["history"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: SchedulesUpdateInput, requestOptions?: RequestOptions) =>
+        request<SchedulesUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              prompt: input["prompt"],
+              cadence: input["cadence"],
+              next: input["next"],
+              timezone: input["timezone"],
+              enabled: input["enabled"],
+            },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: SchedulesRemoveInput, requestOptions?: RequestOptions) =>
+        request<SchedulesRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 401, 400],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      run: (input: SchedulesRunInput, requestOptions?: RequestOptions) =>
+        request<SchedulesRunOutput>(
+          {
+            method: "POST",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}/run`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    operator: {
+      inspect: (input?: OperatorInspectInput, requestOptions?: RequestOptions) =>
+        request<OperatorInspectOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/operator`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    connections: {
+      connect: (input: ConnectionsConnectInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsConnectOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/connections/connect`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { provider: input["provider"], key: input["key"], label: input["label"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      getTarget: (input: ConnectionsGetTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsGetTargetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/targets/${encodeURIComponent(input.targetID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bindings: (input: ConnectionsBindingsInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsBindingsOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/targets/${encodeURIComponent(input.targetID)}/bindings`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      list: (input?: ConnectionsListInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsListOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections`,
+            query: { location: input?.["location"], after: input?.["after"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ConnectionsGetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections/${encodeURIComponent(input.connectionID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      targets: (input: ConnectionsTargetsInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsTargetsOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections/${encodeURIComponent(input.connectionID)}/targets`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      disconnect: (input: ConnectionsDisconnectInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsDisconnectOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/connections/disconnect`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { connection: input["connection"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      createTarget: (input: ConnectionsCreateTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsCreateTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { connection: input["connection"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      retargetTarget: (input: ConnectionsRetargetTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsRetargetTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets/retarget`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeTarget: (input: ConnectionsRemoveTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsRemoveTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets/remove`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bind: (input: ConnectionsBindInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsBindOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/bindings`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      unbind: (input: ConnectionsUnbindInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsUnbindOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/bindings/remove`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], sessionID: input["sessionID"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    artifacts: {
+      list: (input: ArtifactsListInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsListOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ArtifactsGetInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      share: (input: ArtifactsShareInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsShareOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}/share`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { targetSessionID: input["targetSessionID"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pin: (input: ArtifactsPinInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsPinOutput>(
+          {
+            method: "PUT",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}/pin`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { pinned: input["pinned"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeReference: (input: ArtifactsRemoveReferenceInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsRemoveReferenceOutput>(
+          {
+            method: "DELETE",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
           },
           requestOptions,
         ),

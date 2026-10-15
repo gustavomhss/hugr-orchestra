@@ -31,6 +31,7 @@ export function SessionComposerRegion(props: {
       }}
     >
       <div
+        data-slot="session-composer-container"
         classList={{
           "w-full px-3 pointer-events-auto": true,
           "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": controller.centered(),
@@ -38,7 +39,7 @@ export function SessionComposerRegion(props: {
       >
         <Show when={controller.state.questionRequest()} keyed>
           {(request) => (
-            <div>
+            <div data-slot="session-question-region">
               <SessionQuestionDock request={request} onSubmit={controller.onResponseSubmit} />
             </div>
           )}
@@ -46,7 +47,7 @@ export function SessionComposerRegion(props: {
 
         <Show when={controller.state.permissionRequest()} keyed>
           {(request) => (
-            <div>
+            <div data-slot="session-permission-region">
               <SessionPermissionDock
                 request={request}
                 responding={controller.state.permissionResponding()}
@@ -62,6 +63,7 @@ export function SessionComposerRegion(props: {
         <Show when={controller.showComposer()}>
           <Show when={controller.dock()}>
             <div
+              data-slot="session-todo-region"
               classList={{
                 "overflow-hidden": true,
                 "pointer-events-none": controller.dockProgress() < 0.98,
@@ -124,6 +126,7 @@ export function SessionComposerRegion(props: {
               )}
             </Show>
             <div
+              data-slot="session-composer-input"
               classList={{
                 "relative z-[70]": true,
               }}
@@ -145,6 +148,7 @@ export function SessionComposerRegion(props: {
               >
                 <div
                   ref={controller.setPromptRef}
+                  data-slot="session-child-prompt"
                   class="w-full rounded-[12px] border border-border-weak-base bg-background-base p-3 text-16-regular text-text-weak"
                 >
                   <span>{language.t("session.child.promptDisabled")} </span>

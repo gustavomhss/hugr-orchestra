@@ -1,0 +1,8 @@
+/* The mock's dedicated Dock view (`#viewDock > .dock-host`): the browser fills the page with no
+   heading, inset by the host's 6px before the browser's own 6px padding. */
+.orchestra-dock {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  padding: 6px;
+}

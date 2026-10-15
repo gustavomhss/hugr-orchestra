@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "unknown-kind",
+      "severity": "error",
+      "wp": "a",
+      "detail": "kind 'excute' is not one of ['execute', 'gate', 'human', 'inject', 'review']"
+    }
+  ],
+  "exit": 1
+}

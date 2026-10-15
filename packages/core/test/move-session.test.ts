@@ -4,19 +4,19 @@ import fs from "fs/promises"
 import path from "path"
 import { eq } from "drizzle-orm"
 import { Effect } from "effect"
-import { MoveSession } from "@opencode-ai/core/control-plane/move-session"
-import { Database } from "@opencode-ai/core/database/database"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Project } from "@opencode-ai/core/project"
-import { ProjectTable } from "@opencode-ai/core/project/sql"
-import { ProjectDirectories } from "@opencode-ai/core/project/directories"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SessionProjector } from "@opencode-ai/core/session/projector"
-import { SessionTable } from "@opencode-ai/core/session/sql"
-import { SessionStore } from "@opencode-ai/core/session/store"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { Database } from "@orchestra/core/database/database"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { Project } from "@orchestra/core/project"
+import { ProjectTable } from "@orchestra/core/project/sql"
+import { ProjectDirectories } from "@orchestra/core/project/directories"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionStore } from "@orchestra/core/session/store"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -43,7 +43,7 @@ async function initRepo(directory: string) {
   await $`git config core.autocrlf false`.cwd(directory).quiet()
   await $`git config core.fsmonitor false`.cwd(directory).quiet()
   await $`git config commit.gpgsign false`.cwd(directory).quiet()
-  await $`git config user.email test@opencode.test`.cwd(directory).quiet()
+  await $`git config user.email test@orchestra.test`.cwd(directory).quiet()
   await $`git config user.name Test`.cwd(directory).quiet()
   await fs.writeFile(path.join(directory, "tracked.txt"), "initial\n")
   await $`git add tracked.txt`.cwd(directory).quiet()
@@ -51,6 +51,7 @@ async function initRepo(directory: string) {
 }
 
 describe("MoveSession", () => {
+  // Windows Git setup, transfer and cleanup can exceed Bun's default five-second fixture budget.
   it.live("moves session changes to another project directory", () =>
     Effect.gen(function* () {
       const root = yield* Effect.acquireRelease(
@@ -107,6 +108,7 @@ describe("MoveSession", () => {
           .get(),
       ).toEqual({ directory: moved, path: "" })
     }),
+    process.platform === "win32" ? 30_000 : 5_000,
   )
 
   it.live("moves within a checkout without transferring existing changes", () =>
@@ -159,6 +161,7 @@ describe("MoveSession", () => {
           .get(),
       ).toEqual({ directory: destination, path: "packages" })
     }),
+    process.platform === "win32" ? 30_000 : 5_000,
   )
 
   it.live("moves nested session changes without cleaning unrelated files", () =>
@@ -231,5 +234,6 @@ describe("MoveSession", () => {
       expect(yield* Effect.promise(() => fs.readFile(path.join(source, "tracked.txt"), "utf8"))).toBe("unrelated\n")
       expect(yield* Effect.promise(() => fs.readFile(path.join(source, "untracked.txt"), "utf8"))).toBe("unrelated\n")
     }),
+    process.platform === "win32" ? 30_000 : 5_000,
   )
 })

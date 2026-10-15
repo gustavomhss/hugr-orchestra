@@ -1,0 +1,9 @@
+{"rubric":"gold.md (unchanged since seed 1); deterministic parts in deterministic.json; judged parts noted",
+ "A":{"P01":1,"P02":0.857,"P03":1,"P04":1,"P05":1,"P06":1,"P07":1,"P08":1,"P09":1,"P10":1,"P11":1,"P12":1,"P13":1,"P14":1,"P15":1,"P16":1,"P17":1},
+ "B":{"P01":1,"P02":0.814,"P03":1,"P04":1,"P05":1,"P06":1,"P07":1,"P08":1,"P09":1,"P10":0.5,"P11":1,"P12":1,"P13":1,"P14":1,"P15":1,"P16":1,"P17":1},
+ "notes":{
+  "parse":"One answer set was first mis-split by the harness (an answer number alone on its line); re-parsed from probe-reply.txt with the fixed parser before scoring.",
+  "P02":"A: recall 6/8 (G1,G2,G3,G5,G7,G8; misses G4, G6), all traceable, F1 0.857. B: recall 6/8 (G1,G3,G5,G6,G7,G8; misses G2, G4); 8 of 9 items traceable ('Retry rule: do not retry the review without a user instruction' is not a user rule), F1 0.814.",
+  "P10":"B: 'The exact error strings are not in the context.'",
+  "P14":"B's reason cites an invented 'standing instruction not to retry the review without a user instruction'; the answer (no, review persisted) is correct.",
+  "P05":"Both 2/2.","P12":"Both 2/2.","P15":"Both 3/3."}}

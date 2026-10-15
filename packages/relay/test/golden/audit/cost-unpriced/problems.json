@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/cost-unpriced/input/ledger.jsonl",
+  "problems": []
+}

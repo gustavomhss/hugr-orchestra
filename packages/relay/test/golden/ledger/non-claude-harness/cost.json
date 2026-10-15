@@ -1,0 +1,28 @@
+{
+  "ledger": "test/fixtures/non-claude-harness.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "wp1-module",
+      "macro": null,
+      "elapsed_s": null
+    },
+    {
+      "wp": "wp2-test",
+      "macro": null,
+      "elapsed_s": null
+    },
+    {
+      "wp": "wp3-green",
+      "macro": null,
+      "elapsed_s": null
+    },
+    {
+      "wp": "wp4-readme",
+      "macro": null,
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

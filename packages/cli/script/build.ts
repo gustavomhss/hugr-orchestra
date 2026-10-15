@@ -3,67 +3,69 @@
 import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
-import { Script } from "@opencode-ai/script"
-import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
-import pkg from "../package.json"
-import { modelsData } from "./generate"
+import { namedTargets } from "./targets"
 
 const dir = path.resolve(import.meta.dirname, "..")
-const binary = "lildax"
-process.chdir(dir)
-
-await rm("dist", { recursive: true, force: true })
+const binary = "orchestra"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
 const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
+
+const targetArgs = process.argv.slice(2).flatMap((arg, index, args) =>
+  arg === "--target" ? [args[index + 1] ?? ""] : arg.startsWith("--target=") ? [arg.slice(9)] : [],
+)
+if (targetArgs.length > 1 || (targetArgs.length === 1 && !namedTargets.some((item) => item.target === targetArgs[0])))
+  throw new Error(
+    `Invalid --target: ${targetArgs.join(", ") || "missing value"}. Expected one of: ${namedTargets.map((item) => item.target).join(", ")}`,
+  )
+
+const targets = targetArgs.length
+  ? namedTargets.filter((item) => item.target === targetArgs[0])
+  : singleFlag
+    ? namedTargets.filter((item) => {
+        if (item.os !== process.platform || item.arch !== process.arch) return false
+        if (item.avx2 === false) return baselineFlag
+        return item.abi === undefined
+      })
+    : namedTargets
+
+// Validate before loading build-time snapshots/dependencies or replacing any artifact.
+process.chdir(dir)
+const { Script } = await import("@orchestra/script")
+const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
+const { modelsData } = await import("./generate")
+const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
+const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
 const plugin = createSolidTransformPlugin()
+if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
-const allTargets: {
-  os: string
-  arch: "arm64" | "x64"
-  abi?: "musl"
-  avx2?: false
-}[] = [
-  { os: "linux", arch: "arm64" },
-  { os: "linux", arch: "x64" },
-  { os: "linux", arch: "x64", avx2: false },
-  { os: "linux", arch: "arm64", abi: "musl" },
-  { os: "linux", arch: "x64", abi: "musl" },
-  { os: "linux", arch: "x64", abi: "musl", avx2: false },
-  { os: "darwin", arch: "arm64" },
-  { os: "darwin", arch: "x64" },
-  { os: "darwin", arch: "x64", avx2: false },
-  { os: "win32", arch: "arm64" },
-  { os: "win32", arch: "x64" },
-  { os: "win32", arch: "x64", avx2: false },
-]
+// Resolved before anything is built, so a release build with a missing omni artifact fails at once.
+const builds = targets.map((item) => {
+  const name = `cli-${item.target}`
+  return { item, name, ...resolveOmni({ name, target: item.target, os: item.os, single: singleFlag }) }
+})
 
-const targets = singleFlag
-  ? allTargets.filter((item) => {
-      if (item.os !== process.platform || item.arch !== process.arch) return false
-      if (item.avx2 === false) return baselineFlag
-      return item.abi === undefined
-    })
-  : allTargets
+if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
-if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
+// After the install, which owns node_modules, and before any build: a target whose bindings this host cannot provide
+// stops here with the named error.
+const prepared = builds.map((build) => ({
+  ...build,
+  treeSitter: resolveTreeSitter({
+    root: path.resolve(dir, "../.."),
+    artifacts: process.env.TREE_SITTER_ARTIFACTS,
+    ...build.item,
+  }),
+}))
 
-for (const item of targets) {
-  const target = [
-    binary,
-    item.os === "win32" ? "windows" : item.os,
-    item.arch,
-    item.avx2 === false ? "baseline" : undefined,
-    item.abi,
-  ]
-    .filter(Boolean)
-    .join("-")
-  const name = target.replace(binary, "cli")
-  console.log(`building ${name}`)
+for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
+  console.log(`building ${name} (omni ${omni.enabled ? omni.id : "off"})`)
+  if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
   const result = await Bun.build({
-    entrypoints: ["./src/index.ts"],
+    // The omni preflight runs first and imports ./src/index.ts.
+    entrypoints: ["./src/omni-entry.ts"],
     tsconfig: "./tsconfig.json",
     plugins: [plugin],
     external: ["node-gyp"],
@@ -76,17 +78,18 @@ for (const item of targets) {
       autoloadDotenv: false,
       autoloadTsconfig: true,
       autoloadPackageJson: true,
-      target: target.replace(binary, "bun") as Bun.Build.CompileTarget,
-      outfile: `./dist/${name}/bin/${binary}`,
+      target: `bun-${item.target}` as Bun.Build.CompileTarget,
+      outfile: `./dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`,
       execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
       windows: {},
     },
     define: {
-      OPENCODE_VERSION: `'${Script.version}'`,
-      OPENCODE_CLI_NAME: `'${binary}'`,
-      OPENCODE_MODELS_DEV: modelsData,
-      OPENCODE_CHANNEL: `'${Script.channel}'`,
-      OPENCODE_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
+      ORCHESTRA_VERSION: JSON.stringify(Script.version),
+      ORCHESTRA_CLI_NAME: JSON.stringify(binary),
+      ORCHESTRA_MODELS_DEV: modelsData,
+      ORCHESTRA_CHANNEL: `'${Script.channel}'`,
+      OMNI_ENABLED: JSON.stringify(omni.enabled),
+      ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
       // FFF_LIBC selects the fff native lib variant: "musl" or "gnu".
       FFF_LIBC: item.os === "linux" ? `'${item.abi ?? "gnu"}'` : "undefined",
       ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
@@ -98,14 +101,17 @@ for (const item of targets) {
     process.exit(1)
   }
 
+  copyOmni(omniFiles, `dist/${name}/bin`)
+  copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
+
   await Bun.write(
     `./dist/${name}/package.json`,
     JSON.stringify(
       {
-        name: `@opencode-ai/${name}`,
+        name: `@orchestra/${name}`,
         version: Script.version,
         license: "MIT",
-        repository: { type: "git", url: "git+https://github.com/anomalyco/opencode.git" },
+        repository: { type: "git", url: "git+https://github.com/gustavomhss/hugr-orchestra.git" },
         os: [item.os],
         cpu: [item.arch],
       },

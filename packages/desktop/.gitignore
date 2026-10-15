@@ -25,7 +25,11 @@ dist-ssr
 out/
 native/build/
 
-resources/opencode-cli*
+resources/orchestra-cli*
+resources/cli/
 resources/icons
 resources/*.metainfo.xml
 artifacts/
+
+# hugr-omni addon and supervisor, staged by scripts/stage-omni.ts
+resources/omni/

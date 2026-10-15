@@ -1,0 +1,9 @@
+{
+  "target": "test/golden/audit/sprint-invalid-missing/input/ledger.jsonl",
+  "verify": [
+    "--sprint",
+    "test/golden/audit/sprint-invalid-missing/input/absent-sprint.json"
+  ],
+  "key": null,
+  "chmod": {}
+}

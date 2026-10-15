@@ -75,7 +75,7 @@ test.describe("session timeline projection", () => {
           id: "prt_comment",
           synthetic: true,
           metadata: {
-            opencodeComment: {
+            orchestraComment: {
               path: "src/a.ts",
               selection: { startLine: 4, startChar: 0, endLine: 8, endChar: 0 },
               comment: "Keep this stable",
@@ -128,14 +128,14 @@ test.describe("session timeline projection", () => {
     await expect(page.locator('[data-timeline-row="TurnGap"]')).toBeVisible()
   })
 
-  test("renders comment strips and historical diff summary overflow", async ({ page }) => {
+  test("renders inline comments and historical diff summary overflow", async ({ page }) => {
     const user = userMessage(
       [
         userText("The user made the following comment regarding lines 4 through 8 of src/a.ts: Keep this stable", {
           id: "prt_comment_only",
           synthetic: true,
           metadata: {
-            opencodeComment: {
+            orchestraComment: {
               path: "src/a.ts",
               selection: { startLine: 4, startChar: 0, endLine: 8, endChar: 0 },
               comment: "Keep this stable",
@@ -154,12 +154,11 @@ test.describe("session timeline projection", () => {
     })
     await setupTimeline(page, {
       messages: [user, assistantMessage(), nextUser, nextAssistant],
-      settings: { newLayoutDesigns: false },
+      settings: { newLayoutDesigns: true },
     })
     const scroller = page.locator(".scroll-view__viewport", { has: page.locator("[data-timeline-row]") })
     await scroller.evaluate((element) => (element.scrollTop = 0))
 
-    await expect(page.locator('[data-timeline-row="CommentStrip"]')).toBeVisible()
     await expect(page.getByText("Keep this stable", { exact: true })).toBeVisible()
     await expect(page.locator('[data-timeline-row="DiffSummary"]')).toBeVisible()
     await expect(page.getByText(/show all/i)).toBeVisible()

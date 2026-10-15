@@ -1,0 +1,50 @@
+{
+  "criterion": "crit",
+  "files": [],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "api",
+    "RELAY_JUDGE_BASE_URL": "{server}",
+    "RELAY_JUDGE_API_KEY": "local",
+    "RELAY_JUDGE_MODEL": "test-model",
+    "RELAY_JUDGE_VOTES": "3"
+  },
+  "status": 200,
+  "replies": [
+    {
+      "content": [
+        {
+          "type": "tool_use",
+          "name": "submit_verdict",
+          "input": {
+            "verdict": "pass",
+            "reason": "because"
+          }
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "tool_use",
+          "name": "submit_verdict",
+          "input": {
+            "verdict": "fail",
+            "reason": "because"
+          }
+        }
+      ]
+    },
+    {
+      "content": [
+        {
+          "type": "tool_use",
+          "name": "submit_verdict",
+          "input": {
+            "verdict": "pass",
+            "reason": "because"
+          }
+        }
+      ]
+    }
+  ]
+}

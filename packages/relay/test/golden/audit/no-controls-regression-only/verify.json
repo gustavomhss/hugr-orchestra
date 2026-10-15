@@ -1,0 +1,23 @@
+{
+  "ledger": "test/golden/audit/no-controls-regression-only/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 2 chained entries [PLAIN (SHA-256)], chain head 3c3bfea39896…\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [],
+  "deterministic_total": 0,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": true,
+  "escalated": false,
+  "result": "NO-CONTROLS",
+  "exit": 2
+}

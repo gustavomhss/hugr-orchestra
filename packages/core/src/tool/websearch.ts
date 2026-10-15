@@ -1,6 +1,6 @@
 export * as WebSearchTool from "./websearch"
 
-import { ToolFailure } from "@opencode-ai/llm"
+import { ToolFailure } from "@orchestra/llm"
 import { Context, Duration, Effect, Layer, Schema } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { makeLocationNode } from "../effect/app-node"
@@ -14,6 +14,7 @@ import { Tools } from "./tools"
 import { collectBoundedResponseBody } from "./http-body"
 import { checksum } from "../util/encode"
 import { ToolRegistry } from "./registry"
+import { ToolText } from "./text"
 
 export const name = "websearch"
 export const NO_RESULTS = "No search results found. Please try a different query."
@@ -29,13 +30,7 @@ export const MAX_RESPONSE_BYTES = 256 * 1024
  * from provider-hosted web search tools, which remain route-owned and execute
  * at the model provider. Ownership of this compromise can be revisited later.
  */
-export const description = `Search the web using the session's local web search provider. Use this for current information beyond knowledge cutoff.
-
-This is a provider-independent local tool backed by Exa or Parallel. Provider-hosted web search tools are separate and execute at the model provider.
-
-Optional controls support result count, live crawling ('fallback' or 'preferred'), search type ('auto', 'fast', or 'deep'), and maximum context characters.
-
-The current year is ${new Date().getFullYear()}. Use this year when searching for recent information or current events.`
+export const description = ToolText.websearch(new Date().getFullYear())
 
 export const Input = Schema.Struct({
   query: Schema.String.annotate({ description: "Websearch query" }),
@@ -67,17 +62,17 @@ export interface Config {
   readonly parallelApiKey?: string
 }
 
-export class ConfigService extends Context.Service<ConfigService, Config>()("@opencode/v2/WebSearchConfig") {}
+export class ConfigService extends Context.Service<ConfigService, Config>()("@orchestra/v2/WebSearchConfig") {}
 
 /** Isolates the retained product environment contract from the generic tool implementation. */
 export const defaultConfigLayer = Layer.sync(ConfigService, () =>
   ConfigService.of({
     provider:
-      process.env.OPENCODE_WEBSEARCH_PROVIDER === "exa" || process.env.OPENCODE_WEBSEARCH_PROVIDER === "parallel"
-        ? process.env.OPENCODE_WEBSEARCH_PROVIDER
+      process.env.ORCHESTRA_WEBSEARCH_PROVIDER === "exa" || process.env.ORCHESTRA_WEBSEARCH_PROVIDER === "parallel"
+        ? process.env.ORCHESTRA_WEBSEARCH_PROVIDER
         : undefined,
-    enableExa: truthy("OPENCODE_EXPERIMENTAL") || truthy("OPENCODE_ENABLE_EXA") || truthy("OPENCODE_EXPERIMENTAL_EXA"),
-    enableParallel: truthy("OPENCODE_ENABLE_PARALLEL") || truthy("OPENCODE_EXPERIMENTAL_PARALLEL"),
+    enableExa: truthy("ORCHESTRA_EXPERIMENTAL") || truthy("ORCHESTRA_ENABLE_EXA") || truthy("ORCHESTRA_EXPERIMENTAL_EXA"),
+    enableParallel: truthy("ORCHESTRA_ENABLE_PARALLEL") || truthy("ORCHESTRA_EXPERIMENTAL_PARALLEL"),
     exaApiKey: process.env.EXA_API_KEY,
     parallelApiKey: process.env.PARALLEL_API_KEY,
   }),
@@ -237,7 +232,7 @@ const layer = Layer.effectDiscard(
                         // V2 invocation context does not safely expose the model yet.
                       },
                       {
-                        "User-Agent": `opencode/${InstallationVersion}`,
+                        "User-Agent": `orchestra/${InstallationVersion}`,
                         ...(config.parallelApiKey ? { Authorization: `Bearer ${config.parallelApiKey}` } : {}),
                       },
                     )

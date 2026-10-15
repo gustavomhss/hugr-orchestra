@@ -1,0 +1,7 @@
+[
+  {
+    "id": "ORG-NO-DEBUG-PRINTS",
+    "assert": "no leftover debug print statements (console.log / print( / dbg!) in tracked source",
+    "cmd": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 1; if (set +e; git grep -nE 'console\\.log\\(|print\\(|dbg!\\(' -- ':(exclude)*test*' ':(exclude)*spec*' ':(exclude)*.md' >/dev/null 2>&1); then false; else test \"$?\" -eq 1; fi"
+  }
+]

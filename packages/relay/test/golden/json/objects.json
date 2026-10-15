@@ -1,0 +1,19 @@
+[
+{"input": "{}", "output": "{}"},
+{"input": "[]", "output": "[]"},
+{"input": "null", "output": "null"},
+{"input": "true", "output": "true"},
+{"input": "false", "output": "false"},
+{"input": "\"s\"", "output": "\"s\""},
+{"input": "{\"b\":1,\"a\":2}", "output": "{\"b\":1,\"a\":2}"},
+{"input": "{\"2\":\"two\",\"1\":\"one\",\"10\":\"ten\",\"a\":\"a\"}", "output": "{\"2\":\"two\",\"1\":\"one\",\"10\":\"ten\",\"a\":\"a\"}"},
+{"input": "{\"a\":1,\"a\":2}", "output": "{\"a\":2}"},
+{"input": "{\"a\":1,\"b\":2,\"a\":3}", "output": "{\"a\":3,\"b\":2}"},
+{"input": "{\"\\u0068\":1}", "output": "{\"h\":1}"},
+{"input": "{\"\\u00e9\":\"key\",\"\\ud83d\\ude00\":\"astral\"}", "output": "{\"\u00e9\":\"key\",\"\ud83d\ude00\":\"astral\"}"},
+{"input": "{ \"a\" : [ 1 , { \"b\" : null } ] , \"c\" : \"d\" }", "output": "{\"a\":[1,{\"b\":null}],\"c\":\"d\"}"},
+{"input": "[1,[2,[3,[]]],{}]", "output": "[1,[2,[3,[]]],{}]"},
+{"input": "{\"nested\":{\"h\":\"x\",\"rows\":[{\"h\":\"y\"}]}}", "output": "{\"nested\":{\"h\":\"x\",\"rows\":[{\"h\":\"y\"}]}}"},
+{"input": "{\"\":\"empty key\"}", "output": "{\"\":\"empty key\"}"},
+{"input": "{\"a\":\"\\u007f\",\"b\":\"\\u2028\"}", "output": "{\"a\":\"\\u007f\",\"b\":\"\u2028\"}"}
+]

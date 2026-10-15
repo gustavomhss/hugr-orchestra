@@ -7,6 +7,7 @@ import { PermissionHandler } from "./handlers/permission"
 import { FileSystemHandler } from "./handlers/fs"
 import { CommandHandler } from "./handlers/command"
 import { SkillHandler } from "./handlers/skill"
+import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
 import { AgentHandler } from "./handlers/agent"
 import { HealthHandler } from "./handlers/health"
@@ -17,6 +18,13 @@ import { LocationHandler } from "./handlers/location"
 import { IntegrationHandler } from "./handlers/integration"
 import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
+import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
+import { RelayHookHandler } from "./handlers/relay-hook"
+import { PullRequestHandler } from "./handlers/pull-request"
+import { ScheduleHandler } from "./handlers/schedule"
+import { CapabilityOperatorHandler } from "./handlers/capability-operator"
+import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
+import { CapabilityArtifactsHandler } from "./handlers/capability-artifacts"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -32,9 +40,18 @@ export const handlers = Layer.mergeAll(
   FileSystemHandler,
   CommandHandler,
   SkillHandler,
+  BehaviorHandler,
   EventHandler,
   PtyHandler,
   QuestionHandler,
   ReferenceHandler,
   ProjectCopyHandler,
+  RelayDocumentHandler,
+  RelayPublishHandler,
+  RelayHookHandler,
+  PullRequestHandler,
+  ScheduleHandler,
+  CapabilityOperatorHandler,
+  CapabilityConnectionsHandler,
+  CapabilityArtifactsHandler,
 )

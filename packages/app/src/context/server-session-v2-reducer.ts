@@ -293,7 +293,8 @@ export function createV2SessionReducer() {
             state: {
               status: "completed",
               input: tool.state.input,
-              // structured: event.data.structured,
+              // Keep native output even when the bundled client only types legacy metadata.
+              ...("structured" in event.data ? { structured: event.data.structured } : {}),
               metadata: event.data.metadata,
               content: event.data.content,
               // result: event.data.result,

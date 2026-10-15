@@ -1,0 +1,25 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": 17,
+        "checklist": [
+          {
+            "id": "bad",
+            "cmd": "printf bad >> executed"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "counter": "0\n",
+    "state": "active"
+  },
+  "fires": [
+    {}
+  ]
+}

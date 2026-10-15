@@ -1,0 +1,57 @@
+/* Shortcuts screen additions to the shared kit: a row may carry several key combinations, the
+   mock's `.ic` close glyph, and the mock dialog inside the app's dialog layer (the dialog-v2
+   container defaults would otherwise win on size and paint). */
+.shortcuts-keys {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+}
+
+.shortcuts-ic {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-component="dialog-v2"] [data-slot="dialog-container"].shortcuts-dialog {
+  align-items: stretch;
+  inline-size: min(680px, calc(100vw - 48px));
+  max-block-size: calc(100vh - 64px);
+  border: 1px solid var(--mx-line);
+  border-radius: 14px;
+  background: var(--mx-modal);
+  box-shadow: var(--mx-shadow);
+}
+
+[data-component="dialog-v2"] [data-slot="dialog-container"].shortcuts-dialog [data-slot="dialog-content"] {
+  overflow: hidden;
+}
+
+.shortcuts-dialog form {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  min-block-size: 0;
+  max-block-size: calc(100vh - 66px);
+  margin: 0;
+}
+
+.shortcuts-dialog .shortcuts-close {
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: -2px;
+  margin-inline-end: -2px;
+  border-radius: 4px;
+}
+
+body:has(.shortcuts-dialog) [data-component="dialog-overlay"] {
+  background: var(--mx-backdrop);
+  backdrop-filter: blur(5px);
+}

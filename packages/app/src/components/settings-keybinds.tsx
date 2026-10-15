@@ -1,13 +1,13 @@
 import { Component, For, Show, createMemo, lazy, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { TextField } from "@opencode-ai/ui/text-field"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
+import { Button } from "@orchestra/ui/button"
+import { Icon } from "@orchestra/ui/icon"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { TextField } from "@orchestra/ui/text-field"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
+import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
 import { showToast } from "@/utils/toast"
 import fuzzysort from "fuzzysort"
 import { DEFAULT_PALETTE_KEYBIND, formatKeybind, parseKeybind, useCommand } from "@/context/command"
@@ -16,12 +16,12 @@ import { useSettings } from "@/context/settings"
 import { SettingsList } from "./settings-list"
 import { SettingsListV2 } from "./settings-v2/parts/list"
 
-const IconV2 = lazy(() => import("@opencode-ai/ui/v2/icon").then((module) => ({ default: module.Icon })))
+const IconV2 = lazy(() => import("@orchestra/ui/v2/icon").then((module) => ({ default: module.Icon })))
 
 const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform)
 const PALETTE_ID = "command.palette"
 
-type KeybindGroup = "General" | "Session" | "Navigation" | "Model and agent" | "Terminal" | "Prompt"
+type KeybindGroup = "General" | "Session" | "Navigation" | "Model and MCP" | "Terminal" | "Prompt"
 
 type KeybindMeta = {
   title: string
@@ -33,13 +33,13 @@ type CommandContext = ReturnType<typeof useCommand>
 type LanguageContext = ReturnType<typeof useLanguage>
 type SettingsContext = ReturnType<typeof useSettings>
 
-const GROUPS: KeybindGroup[] = ["General", "Session", "Navigation", "Model and agent", "Terminal", "Prompt"]
+const GROUPS: KeybindGroup[] = ["General", "Session", "Navigation", "Model and MCP", "Terminal", "Prompt"]
 
 type GroupKey =
   | "settings.shortcuts.group.general"
   | "settings.shortcuts.group.session"
   | "settings.shortcuts.group.navigation"
-  | "settings.shortcuts.group.modelAndAgent"
+  | "settings.shortcuts.group.modelAndMcp"
   | "settings.shortcuts.group.terminal"
   | "settings.shortcuts.group.prompt"
 
@@ -47,7 +47,7 @@ const groupKey: Record<KeybindGroup, GroupKey> = {
   General: "settings.shortcuts.group.general",
   Session: "settings.shortcuts.group.session",
   Navigation: "settings.shortcuts.group.navigation",
-  "Model and agent": "settings.shortcuts.group.modelAndAgent",
+  "Model and MCP": "settings.shortcuts.group.modelAndMcp",
   Terminal: "settings.shortcuts.group.terminal",
   Prompt: "settings.shortcuts.group.prompt",
 }
@@ -55,7 +55,7 @@ const groupKey: Record<KeybindGroup, GroupKey> = {
 function groupFor(id: string): KeybindGroup {
   if (id === PALETTE_ID) return "General"
   if (id.startsWith("terminal.")) return "Terminal"
-  if (id.startsWith("model.") || id.startsWith("agent.") || id.startsWith("mcp.")) return "Model and agent"
+  if (id.startsWith("model.") || id.startsWith("mcp.")) return "Model and MCP"
   if (id.startsWith("file.") || id.startsWith("fileTree.")) return "Navigation"
   if (id.startsWith("prompt.")) return "Prompt"
   if (

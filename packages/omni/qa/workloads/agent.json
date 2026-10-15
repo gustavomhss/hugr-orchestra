@@ -1,0 +1,20 @@
+{
+  "about": "QA-E: an agent's loop. Command i is commands[i % n], run with `run()` (std: the runner's std equivalent) in the pinned checkouts (`cwd`; `@tmp` is a fresh empty project), `concurrency` at a time, each with `timeoutMs`. Every `cancelEvery`-th command (i % cancelEvery == cancelEvery - 1) is cancelled ((i * 2654435761) % 2^32 % cancelWithinMs) ms after it starts, wherever that lands. A command that is not cancelled must succeed.",
+  "concurrency": 10,
+  "timeoutMs": 60000,
+  "cancelEvery": 4,
+  "cancelWithinMs": 500,
+  "commands": [
+    { "name": "git-status", "cwd": "semver", "program": "git", "args": ["status", "--short"] },
+    { "name": "git-log", "cwd": "semver", "program": "git", "args": ["log", "-n", "3", "--oneline"] },
+    { "name": "git-grep", "cwd": "semver", "program": "git", "args": ["grep", "-n", "pub fn", "--", "src"] },
+    { "name": "cargo-build", "cwd": "semver", "program": "cargo", "args": ["build", "--offline", "--locked", "-q"] },
+    { "name": "git-ls-files", "cwd": "commander", "program": "git", "args": ["ls-files"] },
+    { "name": "node-check", "cwd": "commander", "program": "node", "args": ["--check", "lib/command.js"] },
+    { "name": "cargo-test", "cwd": "semver", "program": "cargo", "args": ["test", "--offline", "--locked", "-q", "--lib"] },
+    { "name": "git-show", "cwd": "commander", "program": "git", "args": ["show", "--stat", "HEAD"] },
+    { "name": "npm-ls", "cwd": "vite", "program": "npm", "args": ["ls", "--depth=0"] },
+    { "name": "npm-install", "cwd": "@tmp", "program": "npm", "args": ["install", "--no-save", "--no-package-lock", "picocolors@1.1.1"] },
+    { "name": "node-print", "cwd": "@tmp", "program": "node", "args": ["-e", "process.stdout.write('x'.repeat(1000000))"] }
+  ]
+}

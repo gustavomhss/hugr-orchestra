@@ -1,0 +1,8 @@
+{
+  "id": "C-EXIT-01.windows-codes",
+  "os": ["windows"],
+  "steps": [
+    {"run": ["${FIXTURE}", "exit=3221225786"], "expect": {"exitCode": 3221225786, "signal": null, "reason": "exit", "success": false}},
+    {"run": ["${FIXTURE}", "exit=4294967295"], "expect": {"exitCode": 4294967295, "signal": null, "reason": "exit", "success": false}}
+  ]
+}

@@ -1,0 +1,31 @@
+bun test v1.3.14 (0d9b296a)
+
+fail.test.ts:
+1 | import { describe, expect, test } from "bun:test"
+2 | describe("approval", () => {
+3 |   test("rejects empty", () => { expect([]).toHaveLength(1) })
+                                               ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 1
+Received length: 0
+
+      at <anonymous> (/repo/fail.test.ts:3:44)
+(fail) approval > rejects empty [9.91ms]
+1 | import { describe, expect, test } from "bun:test"
+2 | describe("approval", () => {
+3 |   test("rejects empty", () => { expect([]).toHaveLength(1) })
+4 |   test("accepts value", () => { expect(1).toBe(1) })
+5 | })
+6 | test("top level failure", () => { throw new Error("boom") })
+                                                            ^
+error: boom
+      at <anonymous> (/repo/fail.test.ts:6:57)
+(fail) top level failure [0.15ms]
+
+ 5 pass
+ 1 skip
+ 1 todo
+ 2 fail
+ 6 expect() calls
+Ran 9 tests across 3 files. [50.00ms]

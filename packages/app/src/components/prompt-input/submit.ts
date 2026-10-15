@@ -1,7 +1,7 @@
-import type { Message, Session } from "@opencode-ai/sdk/v2/client"
+import type { Message, Session } from "@orchestra/sdk/v2/client"
 import { showToast } from "@/utils/toast"
-import { base64Encode } from "@opencode-ai/core/util/encode"
-import { Binary } from "@opencode-ai/core/util/binary"
+import { base64Encode } from "@orchestra/core/util/encode"
+import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { batch, startTransition, type Accessor } from "solid-js"
 import { useTabs } from "@/context/tabs"
@@ -9,10 +9,13 @@ import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { useLocal, type ModelSelection } from "@/context/local"
+import { agentKey } from "@/context/agent-identity"
 import { usePermission } from "@/context/permission"
 import { type ContextItem, type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform, type Platform } from "@/context/platform"
+import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
 import { clearPending, pendingRules } from "@/components/draft-subagent-models"
 import { useSync, type DirectorySync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
@@ -20,10 +23,10 @@ import { Worktree as WorktreeState } from "@/utils/worktree"
 import { buildRequestParts } from "./build-request-parts"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError } from "@/utils/server-errors"
-import { ScopedKey } from "@/utils/server-scope"
+import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
-import { Event } from "@opencode-ai/schema/event"
+import { Event } from "@orchestra/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 
 type PendingPrompt = {
@@ -41,6 +44,10 @@ export type FollowupDraft = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
+  // Profile LLM behaviors (Orchestra Plugins), resolved when the message is sent; never stored when queued.
+  system?: string
+  // An explicit V2 delivery mode; omitted, the server steers.
+  delivery?: "steer" | "queue"
 }
 
 type FollowupSendInput = {
@@ -50,7 +57,14 @@ type FollowupSendInput = {
   draft: FollowupDraft
   messageID?: string
   optimisticBusy?: boolean
+  // A queued prompt waits server-side until running work would stop; it gets no optimistic sent turn.
+  pending?: boolean
   before?: () => Promise<boolean> | boolean
+}
+
+// Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
+export function followupSystem(platform: Platform, scope: ServerScope, serverSync: ServerSync, directory: string) {
+  return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
 }
 
 const draftText = (prompt: Prompt) => prompt.map((part) => ("content" in part ? part.content : "")).join("")
@@ -98,6 +112,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
           providerID: input.draft.model.providerID,
           variant: input.draft.variant,
         },
+        delivery: input.draft.delivery,
         files: await Promise.all(
           images.map(async (attachment) => ({
             uri: await blobDataUrl(attachment.blob, attachment.mime),
@@ -154,6 +169,7 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
     })
 
   batch(() => {
+    if (input.pending) return
     setBusy()
     add()
   })
@@ -173,6 +189,8 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
       agent: input.draft.agent,
       model: input.draft.model,
       variant: input.draft.variant,
+      system: input.draft.system,
+      delivery: input.draft.delivery,
       legacyParts: requestParts,
       text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
       files: requestParts.flatMap((part) => {
@@ -209,6 +227,24 @@ export async function sendFollowupDraft(input: FollowupSendInput) {
   }
 }
 
+// Shared by the composer and evidence replay: every shell run gets a new event ID, and
+// the request carries no workdir, so callers must only replay in the session directory.
+export function submitShellCommand(input: {
+  api: DirectorySDK["api"]["session"]
+  sessionID: string
+  command: string
+  agent: string
+  model: { providerID: string; modelID: string }
+}) {
+  return input.api.shell({
+    sessionID: input.sessionID,
+    id: Event.ID.create(),
+    command: input.command,
+    agent: input.agent,
+    model: input.model,
+  })
+}
+
 type PromptSubmitInput = {
   prompt: ReturnType<typeof usePrompt>
   info: Accessor<{ id: string } | undefined>
@@ -231,6 +267,7 @@ type PromptSubmitInput = {
   onAbort?: () => void
   onSubmit?: () => void
   model?: ModelSelection
+  delivery?: Accessor<"steer" | "queue" | undefined>
 }
 
 export function createPromptSubmit(input: PromptSubmitInput) {
@@ -240,6 +277,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
   const local = useLocal()
+  const platform = usePlatform()
   const permission = usePermission()
   const prompt = input.prompt
   const layout = useLayout()
@@ -344,8 +382,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const variant = modelSelection.variant.current()
     if (!currentModel || !currentAgent) {
       showToast({
-        title: language.t("prompt.toast.modelAgentRequired.title"),
-        description: language.t("prompt.toast.modelAgentRequired.description"),
+        title: language.t("prompt.toast.modelRequired.title"),
+        description: language.t("prompt.toast.modelRequired.description"),
       })
       return
     }
@@ -405,7 +443,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     if (!session && isNewSession) {
       const created = await sdk()
         .api.session.create({
-          agent: currentAgent.name,
+          agent: agentKey(currentAgent),
           model: { id: currentModel.id, providerID: currentModel.provider.id, variant },
           location: { directory: sessionDirectory },
         })
@@ -427,18 +465,20 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         if (draftRules.length > 0) {
           clearPending(sessionDirectory)
           if ((await serverSDK().protocol) === "v1") {
-            await serverSDK().client.session.update({
-              sessionID: created.id,
-              directory: sessionDirectory,
-              permission: draftRules,
-            }).catch((err) => console.error("[tasks] draft rules flush failed", err))
+            await serverSDK()
+              .client.session.update({
+                sessionID: created.id,
+                directory: sessionDirectory,
+                permission: draftRules,
+              })
+              .catch((err) => console.error("[tasks] draft rules flush failed", err))
           }
         }
         await startTransition(() => {
           if (!session) return
           if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
           local.session.promote(sessionDirectory, session.id, {
-            agent: currentAgent.name,
+            agent: agentKey(currentAgent),
             model: { providerID: currentModel.provider.id, modelID: currentModel.id },
             variant: variant ?? null,
           })
@@ -462,7 +502,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       modelID: currentModel.id,
       providerID: currentModel.provider.id,
     }
-    const agent = currentAgent.name
+    const agent = agentKey(currentAgent)
     const draft: FollowupDraft = {
       sessionID: session.id,
       sessionDirectory,
@@ -471,6 +511,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       agent,
       model,
       variant,
+      delivery: isNewSession ? undefined : input.delivery?.(),
     }
 
     const clearInput = () => {
@@ -507,22 +548,15 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (mode === "shell") {
       clearInput()
-      const eventID = Event.ID.create()
-      sdk()
-        .api.session.shell({
-          sessionID: session.id,
-          id: eventID,
-          command: text,
-          agent,
-          model,
-        })
-        .catch((err) => {
+      submitShellCommand({ api: sdk().api.session, sessionID: session.id, command: text, agent, model }).catch(
+        (err) => {
           showToast({
             title: language.t("prompt.toast.shellSendFailed.title"),
             description: errorMessage(err),
           })
           restoreInput()
-        })
+        },
+      )
       return
     }
 
@@ -542,6 +576,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             arguments: args.join(" "),
             agent,
             model: { id: model.modelID, providerID: model.providerID, variant },
+            delivery: draft.delivery,
             files: await Promise.all(
               images.map(async (attachment) => ({
                 uri: await blobDataUrl(attachment.blob, attachment.mime),
@@ -633,26 +668,33 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return true
     }
 
+    const queued = draft.delivery === "queue" && input.working()
+    // The input is already cleared, so waiting on the profile's behaviors cannot resend this message.
     void sendFollowupDraft({
       api: sdk().api.session,
       sync: sync(),
       serverSync: serverSync(),
-      draft,
+      draft: { ...draft, system: await followupSystem(platform, sdk().scope, serverSync(), projectDirectory) },
       messageID,
       optimisticBusy: sessionDirectory === projectDirectory,
+      pending: queued,
       before: waitForWorktree,
-    }).catch((err) => {
-      pending.delete(pendingKey(session.id))
-      if (sessionDirectory === projectDirectory) {
-        sync().set("session_status", session.id, { type: "idle" })
-      }
-      showToast({
-        title: language.t("prompt.toast.promptSendFailed.title"),
-        description: errorMessage(err),
-      })
-      removeOptimisticMessage()
-      if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
     })
+      .then((sent) => {
+        if (sent && queued) showToast({ title: language.t("orchestra.chat.delivery.queued") })
+      })
+      .catch((err) => {
+        pending.delete(pendingKey(session.id))
+        if (sessionDirectory === projectDirectory && !queued) {
+          sync().set("session_status", session.id, { type: "idle" })
+        }
+        showToast({
+          title: language.t("prompt.toast.promptSendFailed.title"),
+          description: errorMessage(err),
+        })
+        removeOptimisticMessage()
+        if (restoreInput()) restoreCommentItems(submission.target(), commentItems)
+      })
   }
 
   return {

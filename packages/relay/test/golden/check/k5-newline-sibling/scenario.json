@@ -1,0 +1,42 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "plain-pass",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "target\n",
+        "instructions": "do target\n",
+        "checklist": [
+          {
+            "id": "actual-fail",
+            "cmd": "false"
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "counter": "99",
+    "position": "target\n"
+  },
+  "fires": [
+    {
+      "check": {
+        "position": "target"
+      }
+    },
+    {
+      "check": {
+        "position": "target\n"
+      }
+    }
+  ]
+}

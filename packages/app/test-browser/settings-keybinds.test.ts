@@ -16,6 +16,9 @@ function setup(overrides: Record<string, string> = {}) {
           catalog: [
             { id: "session.alpha", title: "Alpha", keybind: "mod+a" },
             { id: "session.beta", title: "Beta", keybind: "mod+b" },
+            { id: "model.choose", title: "Choose model", keybind: "mod+'" },
+            { id: "mcp.toggle", title: "Toggle MCPs", keybind: "mod+;" },
+            { id: "agent.legacy", title: "Legacy agent command" },
           ],
           options: [],
           keybinds: (enabled) => suppression.push(enabled),
@@ -70,6 +73,15 @@ describe("keybind settings controller", () => {
     expect(state.controller.catalog.keybind("session.beta")).toBe("Alt+K")
     expect(state.controller.catalog.filtered("alt k").get("Session")).toEqual(["session.beta"])
     expect(state.controller.settings.hasOverrides()).toBe(true)
+
+    state.dispose()
+  })
+
+  test("groups model and MCP shortcuts together and no longer files agent commands there", () => {
+    const state = setup()
+
+    expect(state.controller.catalog.filtered("").get("Model and MCP")).toEqual(["model.choose", "mcp.toggle"])
+    expect(state.controller.catalog.filtered("").get("General")).toContain("agent.legacy")
 
     state.dispose()
   })

@@ -1,0 +1,10 @@
+{
+  "ledger": "test/golden/audit/oracle-drift/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "oracle-drift",
+      "wp": null,
+      "cause": "graded under more than one oracle: C1"
+    }
+  ]
+}

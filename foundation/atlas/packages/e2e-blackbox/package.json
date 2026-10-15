@@ -1,0 +1,24 @@
+{
+  "name": "@atlas/e2e-blackbox",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Black-box, user-simulating E2E harness — drives the REAL `atlas` CLI binary as a subprocess and the REAL `atlas-mcp` server over real MCP stdio, against real temp git repos. Spawns built `dist` bins only; imports NO @atlas/* product code (highest user fidelity). Test-only.",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.12.1",
+    "@c4312/scip": "^0.1.0",
+    "@modelcontextprotocol/sdk": "1.29.0"
+  },
+  "devDependencies": {
+    "@atlas/adapter-io": "*",
+    "@atlas/cli": "*",
+    "@atlas/contracts": "*",
+    "@atlas/index": "*",
+    "@atlas/kernel": "*",
+    "@atlas/knowledge": "*"
+  }
+}

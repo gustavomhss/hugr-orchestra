@@ -1,0 +1,30 @@
+{
+  "name": "identity-review",
+  "directory": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/identity-review",
+  "head": "5e4bea3b519c04cebfb787e98dfa171f5771d25c",
+  "branch": "visual-evidence",
+  "staged": [],
+  "untracked": ["specs/orchestra-visual/DELIVERY.md", "specs/orchestra-visual/VERIFICATION.md"],
+  "missingTrackedPaths": [],
+  "files": [
+    {
+      "path": "specs/orchestra-visual/DELIVERY.md",
+      "bytes": 2419,
+      "sha256": "5b6bbb6ae8cc77c665f7b18a97204c61fbe25a658e13e3d4a05992f1bb29dbb3"
+    },
+    {
+      "path": "specs/orchestra-visual/VERIFICATION.md",
+      "bytes": 23097,
+      "sha256": "9fe478b0fc3f7ffb1271f7502770ba5d7c9354ac4c9cb3fe8b014302c5eeb44c"
+    }
+  ],
+  "archive": {
+    "path": "archives/identity-review.tar.gz",
+    "bytes": 10431,
+    "sha256": "f8101d5b113856308d8339b2303132e53592835fd92b057c6dfc93c5d4203eeb",
+    "members": ["specs/orchestra-visual/DELIVERY.md", "specs/orchestra-visual/VERIFICATION.md"]
+  },
+  "stagedPatch": "archives/identity-review.staged.patch",
+  "unstagedPatch": "archives/identity-review.unstaged.patch",
+  "disposition": "Historical WIP/reference. Integrated code lives at PR #239; do not merge archived workers as product."
+}

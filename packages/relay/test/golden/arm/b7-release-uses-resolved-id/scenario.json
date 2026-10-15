@@ -1,0 +1,43 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "actual",
+            "cmd": "false"
+          }
+        ],
+        "macro": "scope"
+      },
+      {
+        "id": "sibling",
+        "instructions": "do sibling",
+        "checklist": [
+          {
+            "id": "sibling-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "state": "awaiting-human",
+    "position": "scope.target",
+    "counter": "2\n",
+    "retry_target": "3\n",
+    "retry_0": "3\n",
+    "base_target": "kept-base"
+  },
+  "fires": [
+    {
+      "release": "owner: retry"
+    }
+  ]
+}

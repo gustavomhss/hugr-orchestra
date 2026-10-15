@@ -1,0 +1,13 @@
+{
+  "id": "C-SPAWN-02.verbatim",
+  "os": ["windows"],
+  "files": {"tool.cmd": "@echo off\r\necho CMD-TOOL\r\n"},
+  "steps": [
+    {"run": ["cmd.exe"], "options": {"windowsVerbatimArgs": "/d /s /c \"echo a&echo b\""}, "expect": {"exitCode": 0, "stdout": "a\r\nb\r\n"}},
+    {"run": ["${FIXTURE}"], "options": {"windowsVerbatimArgs": "argv \"a b\" c\\\"d %PATH% x&y"}, "expect": {"exitCode": 0, "stdout": "[\"a b\",\"c\\\"d\",\"%PATH%\",\"x&y\"]\n"}},
+    {"run": ["cmd.exe", "/c"], "options": {"windowsVerbatimArgs": "echo a"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["windowsVerbatimArgs", "args"]}},
+    {"spawn": ["cmd.exe"], "options": {"windowsVerbatimArgs": "/c echo a\u0000b"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["windowsVerbatimArgs", "NUL"]}},
+    {"run": ["${TMP}\\tool.cmd"], "options": {"windowsVerbatimArgs": "x"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["batch file", "cmd.exe"]}},
+    {"run": ["tool"], "options": {"env": {"PATH": "${TMP}"}, "windowsVerbatimArgs": "x"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["batch file", "tool.cmd"]}}
+  ]
+}

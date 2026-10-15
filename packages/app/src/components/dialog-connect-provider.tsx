@@ -1,17 +1,18 @@
 import type { IntegrationMethod, IntegrationOauthConnectOutput } from "@opencode-ai/client/promise"
-import { Button } from "@opencode-ai/ui/button"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { List, type ListRef } from "@opencode-ai/ui/list"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { Tag } from "@opencode-ai/ui/tag"
-import { TextField } from "@opencode-ai/ui/text-field"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
-import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
+import { Button } from "@orchestra/ui/button"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { Dialog } from "@orchestra/ui/dialog"
+import { Icon } from "@orchestra/ui/icon"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { List, type ListRef } from "@orchestra/ui/list"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { Spinner } from "@orchestra/ui/spinner"
+import { Tag } from "@orchestra/ui/tag"
+import { TextField } from "@orchestra/ui/text-field"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
+import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
+import { SecretInputV2 } from "@/components/secret-input-v2"
 import { showToast } from "@/utils/toast"
 import {
   type Accessor,
@@ -167,7 +168,6 @@ function ProviderPicker(props: {
     if (id === "anthropic") return language.t("dialog.provider.anthropic.note")
     if (id === "openai") return language.t("dialog.provider.openai.note")
     if (id.startsWith("github-copilot")) return language.t("dialog.provider.copilot.note")
-    if (id === "opencode-go") return language.t("dialog.provider.opencodeGo.tagline")
     return undefined
   }
 
@@ -206,19 +206,10 @@ function ProviderPicker(props: {
         <div class="px-1.25 w-full flex items-center gap-x-3">
           <ProviderIcon data-slot="list-item-extra-icon" id={i.id} />
           <span>{i.name}</span>
-          <Show when={i.id === "opencode"}>
-            <div class="text-14-regular text-text-weak">{language.t("dialog.provider.opencode.tagline")}</div>
-          </Show>
           <Show when={i.id === CUSTOM_ID}>
             <Tag>{language.t("settings.providers.tag.custom")}</Tag>
           </Show>
-          <Show when={i.id === "opencode"}>
-            <Tag>{language.t("dialog.provider.tag.recommended")}</Tag>
-          </Show>
           <Show when={note(i.id)}>{(value) => <div class="text-14-regular text-text-weak">{value()}</div>}</Show>
-          <Show when={i.id === "opencode-go"}>
-            <Tag>{language.t("dialog.provider.tag.recommended")}</Tag>
-          </Show>
         </div>
       )}
     </List>
@@ -237,7 +228,7 @@ function ProviderPickerV2(props: {
     active: undefined as string | undefined,
     connecting: undefined as string | undefined,
   })
-  const featured = ["opencode", "opencode-go", "anthropic", "openai", "google", "openrouter", "vercel"]
+  const featured = ["anthropic", "openai", "google", "openrouter", "vercel"]
   const custom = () => ({ id: CUSTOM_ID, name: language.t("dialog.provider.custom.label") })
   const all = createMemo(() => {
     language.locale()
@@ -334,18 +325,6 @@ function ProviderPickerV2(props: {
                       >
                         <ProviderIcon id={provider.id} class="size-4 shrink-0 text-v2-icon-icon-base" />
                         <span class="min-w-0 truncate font-[530] text-v2-text-text-base">{provider.name}</span>
-                        <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
-                          <span class="min-w-0 truncate font-[440] text-v2-text-text-muted">
-                            {language.t(
-                              provider.id === "opencode"
-                                ? "dialog.provider.opencode.tagline"
-                                : "dialog.provider.opencodeGo.tagline",
-                            )}
-                          </span>
-                          <span class="flex h-4 shrink-0 items-center rounded-xs border-[0.5px] border-v2-border-border-base bg-v2-background-bg-layer-03 px-1 text-[11px] font-[530] leading-none tracking-[0.05px] text-v2-text-text-muted">
-                            {language.t("dialog.provider.tag.recommended")}
-                          </span>
-                        </Show>
                         <Show when={provider.id === CUSTOM_ID}>
                           <span class="flex h-4 shrink-0 items-center rounded-xs border-[0.5px] border-v2-border-border-base bg-v2-background-bg-layer-03 px-1 text-[11px] font-[530] leading-none tracking-[0.05px] text-v2-text-text-muted">
                             {language.t("settings.providers.tag.custom")}
@@ -843,42 +822,21 @@ function ProviderConnection(props: {
     if (newLayout())
       return (
         <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
-          <Show
-            when={provider().id === "opencode"}
-            fallback={language.t("provider.connect.apiKey.description", { provider: provider().name })}
-          >
-            <div class="flex flex-col gap-5">
-              <div>{language.t("provider.connect.opencodeZen.line1")}</div>
-              <div>{language.t("provider.connect.opencodeZen.line2")}</div>
-              <div>
-                {language.t("provider.connect.opencodeZen.visit.prefix")}
-                <ExternalLink
-                  href="https://opencode.ai/zen"
-                  class="text-v2-text-text-base focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-v2-border-border-focus"
-                >
-                  {language.t("provider.connect.opencodeZen.visit.link")}
-                </ExternalLink>
-                {language.t("provider.connect.opencodeZen.visit.suffix")}
-              </div>
-            </div>
-          </Show>
+          {language.t("provider.connect.apiKey.description", { provider: provider().name })}
           <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
-            <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
-              {language.t("provider.connect.apiKey.label", { provider: provider().name })}
-              <TextInputV2
-                ref={apiKey}
-                class="!w-full"
-                name="apiKey"
-                data-input="provider-api-key"
-                placeholder={language.t("provider.connect.apiKey.placeholder")}
-                value={formStore.value}
-                invalid={formStore.error !== undefined}
-                aria-describedby={formStore.error ? errorID : undefined}
-                autocomplete="off"
-                spellcheck={false}
-                onInput={(event) => setFormStore("value", event.currentTarget.value)}
-              />
-            </label>
+            <SecretInputV2
+              ref={apiKey}
+              label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
+              name="apiKey"
+              data-input="provider-api-key"
+              placeholder={language.t("provider.connect.apiKey.placeholder")}
+              value={formStore.value}
+              invalid={formStore.error !== undefined}
+              aria-describedby={formStore.error ? errorID : undefined}
+              autocomplete="off"
+              spellcheck={false}
+              onInput={(event) => setFormStore("value", event.currentTarget.value)}
+            />
             <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
               {language.t("provider.connect.apiKey.labelOptional")}
               <TextInputV2
@@ -906,31 +864,14 @@ function ProviderConnection(props: {
 
     return (
       <div class="flex flex-col gap-6">
-        <Switch>
-          <Match when={provider().id === "opencode"}>
-            <div class="flex flex-col gap-4">
-              <div class="text-14-regular text-text-base">{language.t("provider.connect.opencodeZen.line1")}</div>
-              <div class="text-14-regular text-text-base">{language.t("provider.connect.opencodeZen.line2")}</div>
-              <div class="text-14-regular text-text-base">
-                {language.t("provider.connect.opencodeZen.visit.prefix")}
-                <ExternalLink href="https://opencode.ai/zen" tabIndex={-1}>
-                  {language.t("provider.connect.opencodeZen.visit.link")}
-                </ExternalLink>
-                {language.t("provider.connect.opencodeZen.visit.suffix")}
-              </div>
-            </div>
-          </Match>
-          <Match when={true}>
-            <div class="text-14-regular text-text-base">
-              {language.t("provider.connect.apiKey.description", { provider: provider().name })}
-            </div>
-          </Match>
-        </Switch>
+        <div class="text-14-regular text-text-base">
+          {language.t("provider.connect.apiKey.description", { provider: provider().name })}
+        </div>
         <form onSubmit={handleSubmit} class="flex flex-col items-start gap-4">
           <TextField
             autofocus={!newLayout()}
             ref={apiKey}
-            type="text"
+            type="password"
             label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
             placeholder={language.t("provider.connect.apiKey.placeholder")}
             name="apiKey"

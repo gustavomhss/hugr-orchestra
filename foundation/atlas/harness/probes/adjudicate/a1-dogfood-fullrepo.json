@@ -1,0 +1,72 @@
+{
+  "measured_utc": "2026-08-23",
+  "axis": "A1-dogfood (advisory precision on the whole repo, LLM-panel-judged)",
+  "proposer": "claude-sonnet-5 (effort medium), frozen v3 propose prompt, capture/replay",
+  "judge": "3x claude-sonnet-5 blind, majority-of-3, full grid 657x3 (no gaps)",
+  "sites_total": 677,
+  "facts_emitted": 657,
+  "no_fact_abstentions": 20,
+  "verdicts": {
+    "TRUE_GROUNDED": 616,
+    "FALSE": 9,
+    "NOT_GROUNDED": 31,
+    "UNSURE": 1
+  },
+  "A1_precision": 0.9375951293759512,
+  "A1_pct": 93.8,
+  "wilson95": [91.6, 95.4],
+  "unanimous_3of3": 604,
+  "per_judge_alone_TG_pct": {
+    "judge1": 93.2,
+    "judge2": 93.6,
+    "judge3": 93.3
+  },
+  "false_items": [
+    {
+      "sha": "0ac9804736f25e0d",
+      "path": "packages/genesis/src/admit-proposals.ts",
+      "votes": "FALSE,TRUE_GROUNDED,FALSE"
+    },
+    {
+      "sha": "2fb1fd9d8df74a5f",
+      "path": "packages/retrieval/src/types.ts",
+      "votes": "FALSE,TRUE_GROUNDED,FALSE"
+    },
+    {
+      "sha": "34e3ef3d1b13c6b0",
+      "path": "packages/adapter-io/src/fs.ts",
+      "votes": "FALSE,FALSE,FALSE"
+    },
+    {
+      "sha": "36e919c9170fae16",
+      "path": "packages/knowledge/test/negations-fold.test.ts",
+      "votes": "FALSE,FALSE,FALSE"
+    },
+    {
+      "sha": "4db8f3b7ac2b39e5",
+      "path": "packages/e2e/test/s06-retrieval-budget.e2e.test.ts",
+      "votes": "FALSE,FALSE,FALSE"
+    },
+    {
+      "sha": "8401ea0669bd7d07",
+      "path": "packages/persist/test/reinvoke.test.ts",
+      "votes": "FALSE,FALSE,NOT_GROUNDED"
+    },
+    {
+      "sha": "9ce164c4a11834d9",
+      "path": "packages/e2e-blackbox/test/s26-query-description.blackbox.test.ts",
+      "votes": "FALSE,FALSE,FALSE"
+    },
+    {
+      "sha": "c6e634778db78169",
+      "path": "packages/index/test/ownership.test.ts",
+      "votes": "TRUE_GROUNDED,FALSE,FALSE"
+    },
+    {
+      "sha": "e084d7db8c24b631",
+      "path": "packages/cli/test/reverify-cli.test.ts",
+      "votes": "FALSE,TRUE_GROUNDED,FALSE"
+    }
+  ],
+  "not_grounded_count": 31
+}

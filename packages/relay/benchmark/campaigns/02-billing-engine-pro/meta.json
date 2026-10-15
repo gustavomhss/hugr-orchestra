@@ -1,0 +1,18 @@
+{
+  "id": "02-billing-engine-pro",
+  "size_N": 30,
+  "type": "coupled-deep-interacting",
+  "k": 5,
+  "retry_budget": 3,
+  "domain": "advanced billing engine (tiered pricing, stacked discounts, regional tax, reverse-charge, precedence-heavy)",
+  "provenance": "original, self-contained; no CoreLink or other-project artifacts",
+  "dag_depth": 9,
+  "wp_count": 8,
+  "difficulty_notes": "precedence/interaction traps: discount-before-rounding, sum-of-rounded-lines (!=round-of-sum), exact discount stacking order, tax-on-discounted, B2B reverse-charge exempt from the minimum floor, inclusive tier boundaries, strict int-only quantity (bool rejected).",
+  "calibration": {
+    "status": "SATURATED",
+    "arm_M_rsr": 1.0,
+    "arm_M_turns": 6,
+    "note": "Sonnet aces all 30 interacting requirements monolithically (6 turns, $0.29). No headroom at N=30. CONFIRMS: intricacy of a complete spec is NOT a difficulty lever — only SCALE is (IFScale: frontier models hold ~97% to N~100, drop to ~62-68% at N=500). Keep as a low-N / overhead-regime point in the size sweep; real headroom requires a high-N (150-500 requirement) generator."
+  }
+}

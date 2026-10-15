@@ -1,0 +1,38 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "load",
+        "kind": "inject",
+        "file": "p.md",
+        "instructions": "",
+        "checklist": [
+          {
+            "id": "c1",
+            "cmd": "test -f done",
+            "assert": "done exists"
+          }
+        ]
+      },
+      {
+        "id": "wp2",
+        "instructions": "do wp2",
+        "checklist": [
+          {
+            "id": "wp2-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "p.md": "x\n"
+  },
+  "fires": [
+    {}
+  ]
+}

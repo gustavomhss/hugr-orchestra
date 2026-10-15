@@ -1,0 +1,63 @@
+export * as DocumentWork from "./work"
+
+import { Worker } from "node:worker_threads"
+import { Capability } from "@orchestra/schema/capability"
+import { Effect, Option, Schema, Semaphore } from "effect"
+
+export const limits = Object.freeze({ bytes: 8 * 1024 * 1024, pages: 100, cells: 10000, sheets: 20,
+  input: 64 * 1024, metadata: 48 * 1024, text: 16000, pixels: 1000000, inflated: 32 * 1024 * 1024, millis: 15000, heapMB: 128 })
+export const File = Schema.Struct({ data: Schema.Uint8Array, mime: Schema.String, metadata: Schema.Json })
+export const Success = Schema.Struct({ status: Schema.Literal("ok"), files: Schema.Array(File),
+  metadata: Schema.Json, incomplete: Schema.Array(Schema.String) })
+export type Success = typeof Success.Type
+export const Reply = Schema.Union([Success, Schema.Struct({ status: Schema.Literal("error"), code: Capability.ErrorCode })])
+// One compute heap, at most four byte-bounded admitted requests. Admission is process-local, not a durable Job.
+const compute = Semaphore.makeUnsafe(1)
+const admitted = { count: 0 }
+export function failure(code: Capability.ErrorCode = "unsupported_operation") {
+  return new Capability.Failure({ code, message: code === "quota_exceeded" ? "Native document work budget exceeded"
+    : "Native document operation is unavailable or unsupported" })
+}
+
+/** Shared worker-egress and parent-defense budget, including every per-file metadata object and result string. */
+export function requireReply(result: Success) {
+  if (result.files.length > 20 || result.files.reduce((n, file) => n + file.data.byteLength, 0) > limits.bytes ||
+    new TextEncoder().encode(JSON.stringify({ ...result,
+      files: result.files.map((file) => ({ mime: file.mime, metadata: file.metadata })),
+    })).byteLength > limits.metadata) throw failure("quota_exceeded")
+  return result
+}
+
+/** Private byte-only worker boundary. No artifact storage, policy, paths, network inputs or tool contexts cross it. */
+export function run(kind: "pdf" | "sheet", input: unknown, data: readonly Uint8Array[]) {
+  if (data.reduce((n, bytes) => n + bytes.byteLength, 0) > limits.bytes) return Effect.fail(failure("quota_exceeded"))
+  if (new TextEncoder().encode(JSON.stringify(input)).byteLength > limits.input) return Effect.fail(failure("quota_exceeded"))
+  const work = Effect.acquireUseRelease(
+    Effect.try({ try: () => new Worker(new URL("./worker.ts", import.meta.url), {
+      workerData: { kind, input, data }, resourceLimits: { maxOldGenerationSizeMb: limits.heapMB, maxYoungGenerationSizeMb: 16 },
+    }), catch: () => failure("acquisition_failed") }),
+    (worker) => Effect.callback<Success, Capability.Failure>((resume) => {
+      worker.once("message", (value: unknown) => {
+        const reply = Schema.decodeUnknownOption(Reply)(value)
+        if (Option.isNone(reply)) return resume(Effect.fail(failure("outcome_unknown")))
+        if (reply.value.status === "error") return resume(Effect.fail(failure(reply.value.code)))
+        const result = reply.value
+        resume(Effect.try({ try: () => requireReply(result), catch: () => failure("quota_exceeded") }))
+      })
+      worker.once("error", () => resume(Effect.fail(failure("acquisition_failed"))))
+      worker.once("exit", () => resume(Effect.fail(failure("outcome_unknown"))))
+    }),
+    (worker) => Effect.promise(() => worker.terminate()).pipe(Effect.asVoid),
+  )
+  return Effect.acquireUseRelease(
+    Effect.suspend(() => {
+      if (admitted.count >= 4) return Effect.fail(failure("quota_exceeded"))
+      admitted.count++
+      return Effect.void
+    }),
+    () => Effect.raceFirst(compute.withPermit(work), Effect.sleep(`${limits.millis} millis`).pipe(
+      Effect.andThen(Effect.fail(failure("quota_exceeded"))),
+    )),
+    () => Effect.sync(() => { admitted.count-- }),
+  )
+}

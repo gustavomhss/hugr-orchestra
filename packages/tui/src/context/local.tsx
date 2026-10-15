@@ -13,6 +13,7 @@ import { useTheme } from "./theme"
 import { useToast } from "../ui/toast"
 import { useRoute } from "./route"
 import { usePermission } from "./permission"
+import { agentKey } from "../util/agent"
 
 export type LocalTheme = {
   secondary: RGBA
@@ -94,10 +95,10 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return agents()
         },
         current() {
-          return agents().find((x) => x.name === agentStore.current) ?? agents().at(0)
+          return agents().find((x) => agentKey(x) === agentStore.current) ?? agents().at(0)
         },
         set(name: string) {
-          if (!agents().some((x) => x.name === name))
+          if (!agents().some((x) => agentKey(x) === name))
             return toast.show({
               variant: "warning",
               message: `Agent not found: ${name}`,
@@ -109,15 +110,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           batch(() => {
             const current = this.current()
             if (!current) return
-            let next = agents().findIndex((x) => x.name === current.name) + direction
+            let next = agents().findIndex((x) => agentKey(x) === agentKey(current)) + direction
             if (next < 0) next = agents().length - 1
             if (next >= agents().length) next = 0
             const value = agents()[next]
-            setAgentStore("current", value.name)
+            setAgentStore("current", agentKey(value))
           })
         },
         color(name: string) {
-          const index = visibleAgents().findIndex((x) => x.name === name)
+          const index = visibleAgents().findIndex((x) => agentKey(x) === name)
           if (index === -1) return colors()[0]
           const agent = visibleAgents()[index]
 
@@ -237,7 +238,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         const a = agent.current()
         return (
           getFirstValidModel(
-            () => a && modelStore.model[a.name],
+            () => a && modelStore.model[agentKey(a)],
             () => a && a.model,
             fallbackModel,
           ) ?? undefined
@@ -285,7 +286,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           if (!val) return
           const a = agent.current()
           if (!a) return
-          setModelStore("model", a.name, { ...val })
+          setModelStore("model", agentKey(a), { ...val })
         },
         cycleFavorite(direction: 1 | -1) {
           const favorites = modelStore.favorite.filter((item) => isModelValid(item))
@@ -313,7 +314,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           if (!next) return
           const a = agent.current()
           if (!a) return
-          setModelStore("model", a.name, { ...next })
+          setModelStore("model", agentKey(a), { ...next })
           setModelStore("recent", recentModels(next, modelStore.recent))
           save()
         },
@@ -329,7 +330,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
             }
             const a = agent.current()
             if (!a) return
-            setModelStore("model", a.name, model)
+            setModelStore("model", agentKey(a), model)
             if (options?.recent) {
               setModelStore("recent", recentModels(model, modelStore.recent))
               save()

@@ -1,0 +1,22 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "5004"[0m
+
+
+Running 16 tests using 1 worker
+
+[1A[2K[1/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR dark: navigation, tooltips and profile portal agree
+[1A[2K[2/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English LTR light: navigation, tooltips and profile portal agree
+[1A[2K[3/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL dark: navigation, tooltips and profile portal agree
+[1A[2K[4/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › English forced RTL light: navigation, tooltips and profile portal agree
+[1A[2K[5/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › Arabic RTL dark: navigation, tooltips and profile portal agree
+[1A[2K[6/16] [chromium] › e2e/orchestra/compact-navigation-direction.spec.ts:15:5 › Arabic RTL light: navigation, tooltips and profile portal agree
+[1A[2K[7/16] [chromium] › e2e/orchestra/compact-navigation.spec.ts:6:1 › collapse preserves names, focus, routes, profile and titlebar geometry across reload
+[1A[2K[8/16] [chromium] › e2e/orchestra/compact-navigation.spec.ts:86:1 › responsive compact mode restores the choice and leaves mobile navigation available
+[1A[2K[9/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:78:1 › reports real header bounds and coalesces header, shell and window changes
+[1A[2K[10/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:96:1 › reactive zoom reads settled CSS geometry without converting to native points
+[1A[2K[11/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:109:1 › clears and restores frames for fullscreen, legacy and the 768px desktop boundary
+[1A[2K[12/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:129:1 › keeps physical coordinates in RTL and skips frame machinery on unsupported platforms
+[1A[2K[13/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › navigation child remains no-drag and outside physical macOS controls in both directions
+[1A[2K[14/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:181:1 › chat text streaming does not request geometry; unchanged window geometry does not resend
+[1A[2K[15/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:196:1 › cleanup cancels pending RAF, disconnects observers and blocks late IPC
+[1A[2K[16/16] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:210:1 › hidden connected header clears native frame and restores measured placement
+[1A[2K  16 passed (3.0m)

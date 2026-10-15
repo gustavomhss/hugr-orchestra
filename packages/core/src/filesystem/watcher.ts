@@ -5,7 +5,7 @@ import { createWrapper } from "@parcel/watcher/wrapper"
 import type ParcelWatcher from "@parcel/watcher"
 import { makeLocationNode } from "../effect/app-node"
 import { Cause, Context, Effect, Layer } from "effect"
-import { FileSystemWatcher } from "@opencode-ai/schema/filesystem-watcher"
+import { FileSystemWatcher } from "@orchestra/schema/filesystem-watcher"
 import path from "path"
 import { Config } from "../config"
 import { EventV2 } from "../event"
@@ -17,15 +17,20 @@ import { lazy } from "../util/lazy"
 import { Ignore } from "./ignore"
 import { Protected } from "./protected"
 
-declare const OPENCODE_LIBC: string | undefined
+declare const ORCHESTRA_LIBC: string | undefined
 
 const SUBSCRIBE_TIMEOUT_MS = 10_000
+type Timer = ReturnType<typeof setTimeout>
+type TimerApi = {
+  set: (callback: () => void, delay: number) => Timer
+  clear: (timer: Timer) => void
+}
 
 export const Event = FileSystemWatcher.Event
 
 const watcher = lazy((): typeof import("@parcel/watcher") | undefined => {
   try {
-    const libc = typeof OPENCODE_LIBC === "undefined" ? undefined : OPENCODE_LIBC
+    const libc = typeof ORCHESTRA_LIBC === "undefined" ? undefined : ORCHESTRA_LIBC
     const binding = require(
       `@parcel/watcher-${process.platform}-${process.arch}${process.platform === "linux" ? `-${libc || "glibc"}` : ""}`,
     )
@@ -50,14 +55,41 @@ function protecteds(dir: string) {
 
 export const hasNativeBinding = () => !!watcher()
 
+export function closeSubscriptions(
+  pendingSubscriptions: Iterable<Promise<{ unsubscribe: () => Promise<void> }>>,
+  timeoutMs = SUBSCRIBE_TIMEOUT_MS,
+  timerApi: TimerApi = { set: setTimeout, clear: clearTimeout },
+) {
+  const cleanup = [...pendingSubscriptions].map((pending) =>
+    pending.then(
+      (subscription) => subscription.unsubscribe(),
+      () => undefined,
+    ),
+  )
+  return new Promise<void>((resolve) => {
+    let settled = false
+    const timer = timerApi.set(() => {
+      if (settled) return
+      settled = true
+      resolve()
+    }, timeoutMs)
+    Promise.allSettled(cleanup).then(() => {
+      if (settled) return
+      settled = true
+      timerApi.clear(timer)
+      resolve()
+    })
+  })
+}
+
 export interface Interface {}
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/FileWatcher") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileWatcher") {}
 
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
-    if (yield* Flag.OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER) return Service.of({})
+    if (yield* Flag.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER) return Service.of({})
 
     const backend = getBackend()
     const location = yield* Location.Service
@@ -78,10 +110,8 @@ const layer = Layer.effect(
     const git = yield* Git.Service
     const context = yield* Effect.context()
     const runFork = Effect.runForkWith(context)
-    const subscriptions: ParcelWatcher.AsyncSubscription[] = []
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(() => Promise.allSettled(subscriptions.map((subscription) => subscription.unsubscribe()))),
-    )
+    const pendingSubscriptions = new Set<Promise<ParcelWatcher.AsyncSubscription>>()
+    yield* Effect.addFinalizer(() => Effect.promise(() => closeSubscriptions(pendingSubscriptions)))
 
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
       for (const update of updates) {
@@ -93,11 +123,10 @@ const layer = Layer.effect(
 
     const subscribe = (directory: string, ignore: string[]) => {
       const pending = w.subscribe(directory, callback, { ignore, backend })
+      pendingSubscriptions.add(pending)
       return Effect.promise(() => pending).pipe(
-        Effect.tap((subscription) => Effect.sync(() => subscriptions.push(subscription))),
         Effect.timeout(SUBSCRIBE_TIMEOUT_MS),
         Effect.catchCause((cause) => {
-          pending.then((subscription) => subscription.unsubscribe()).catch(() => {})
           return Effect.logError("failed to subscribe", { directory, cause: Cause.pretty(cause) })
         }),
       )
@@ -106,7 +135,7 @@ const layer = Layer.effect(
     const config = (yield* (yield* Config.Service).entries())
       .filter((entry): entry is Config.Document => entry.type === "document")
       .flatMap((item) => item.info.watcher?.ignore ?? [])
-    if (location.vcs && (yield* Flag.OPENCODE_EXPERIMENTAL_FILEWATCHER)) {
+    if (location.vcs && (yield* Flag.ORCHESTRA_EXPERIMENTAL_FILEWATCHER)) {
       yield* Effect.forkScoped(
         subscribe(location.directory, [...Ignore.PATTERNS, ...config, ...protecteds(location.directory)]),
       )

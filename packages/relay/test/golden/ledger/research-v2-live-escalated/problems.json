@@ -1,0 +1,10 @@
+{
+  "ledger": "test/fixtures/research-v2-live-escalated.ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "synthesis.cold_review",
+      "cause": "retry 3: synthesis-review-engages-with-the-diff"
+    }
+  ]
+}

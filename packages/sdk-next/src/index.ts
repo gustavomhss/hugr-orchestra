@@ -1,7 +1,7 @@
-export * as OpenCode from "./opencode"
+export * as Orchestra from "./orchestra"
 export * as Tool from "./tool"
 
-export { ClientError } from "@opencode-ai/client/effect"
+export { ClientError } from "@orchestra/client/effect"
 export {
   AbsolutePath,
   Agent,
@@ -13,5 +13,5 @@ export {
   Session,
   SessionInput,
   SessionMessage,
-} from "@opencode-ai/client/effect"
-export type { OpenCodeEvent } from "@opencode-ai/client/effect"
+} from "@orchestra/client/effect"
+export type { OrchestraEvent } from "@orchestra/client/effect"

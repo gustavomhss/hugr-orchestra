@@ -1,0 +1,166 @@
+{
+  "capturedAt": "2026-10-01T23:09:20.607Z",
+  "response": [
+    {
+      "baseRefName": "dev",
+      "headRefName": "identity-integration",
+      "number": 239,
+      "title": "feat(app): migrate Orchestra visual identity",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/239"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "maestro-native",
+      "number": 238,
+      "title": "fix(maestro): enforce native foundation contracts",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/238"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "context-continuity-v3",
+      "number": 236,
+      "title": "feat(opencode): add background context continuity",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/236"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "maestro/issue-206-conflict-map",
+      "number": 233,
+      "title": "docs(maestro): freeze M0.4 conflict map",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/233"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "visual-migration-plan",
+      "number": 232,
+      "title": "docs(app): publish Orchestra visual contracts and executor design inputs",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/232"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "atlas-own-ledger",
+      "number": 129,
+      "title": "docs(maestro): add Atlas Own remediation ledger",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/129"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "maestro-state-update",
+      "number": 128,
+      "title": "docs(maestro): record current integration evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/128"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "agent/issue-110-admission-trigger",
+      "number": 116,
+      "title": "feat(maestro): automatic admission at persisted-message boundary",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/116"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "agent/issue-25-approval-redisplay",
+      "number": 115,
+      "title": "fix(opencode): bind maestro approval redisplay to current attempt",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/115"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "ci-baseline-fixes",
+      "number": 89,
+      "title": "fix(ci): repair baseline test gates",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/89"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "fix-own-literal",
+      "number": 88,
+      "title": "fix(opencode): preserve literal skill commands",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/88"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "skill-cache-fix",
+      "number": 87,
+      "title": "fix(core): invalidate replaced skill cache",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/87"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-identity-boundaries",
+      "number": 73,
+      "title": "docs(audit): record Atlas and Maestro identity-boundary evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/73"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-reconcile-proof",
+      "number": 64,
+      "title": "docs: document Atlas reconciliation and Maestro runtime audit",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/64"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-context-boundaries",
+      "number": 63,
+      "title": "docs(audit): record Atlas and Maestro context-boundary evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/63"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-own-evidence",
+      "number": 53,
+      "title": "docs: deepen Atlas Own evidence and Maestro audit controls",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/53"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-graph-boundaries",
+      "number": 52,
+      "title": "docs(audit): preserve Atlas graph and Maestro dispatch boundary evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/52"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit-memory-lifecycle",
+      "number": 44,
+      "title": "docs(atlas): add lifecycle and Maestro continuity audit evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/44"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit/atlas-maestro-round2-2026-09-17",
+      "number": 43,
+      "title": "docs(audit): Atlas/Maestro round 2 — six new issues and original-runtime evidence",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/43"
+    },
+    {
+      "baseRefName": "maestro/rebuild-fork-dev-clean",
+      "headRefName": "audit/atlas-maestro-2026-09-17",
+      "number": 14,
+      "title": "docs(audit): Atlas/Maestro runtime evidence and Genesis findings",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/14"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "fix/ci-godfile-splits-dev",
+      "number": 13,
+      "title": "fix(ci): stabilize Windows install and HTTP auth checks",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/13"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "feat/app-dock-chromium",
+      "number": 12,
+      "title": "feat(desktop): add secure persistent App Dock",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/12"
+    },
+    {
+      "baseRefName": "dev",
+      "headRefName": "docs-subagent-models-clean",
+      "number": 5,
+      "title": "docs: subagent model allowlist spec and decision record",
+      "url": "https://github.com/gmhelmold/HuGR-Orchestra/pull/5"
+    }
+  ]
+}

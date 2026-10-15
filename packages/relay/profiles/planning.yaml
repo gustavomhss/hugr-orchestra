@@ -1,0 +1,262 @@
+name: planning
+version: 1.0.0
+description: "EDD PLANNING \u2014 a frozen upstream artifact becomes an enforced, buildable plan: FRAME\
+  \ \u2192 CARVE \u2192 SEQUENCE \u2192 DISPATCH."
+protected: false
+settings:
+  oscillation_detection_threshold: 3
+  auto_loop_on_checklist_failure: true
+pipeline:
+- state_id: frame
+  name: FRAME
+  description: "Bind the upstream, take the ground truth, and settle what done means \u2014 before any\
+    \ cutting."
+  system_prompt: "## Macro FRAME \u2014 EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d`\
+    \ (the FRAME rows and the\nDefinitions it depends on) and `docs/edd/doctrine.md` (the evidence ladder,\
+    \ the\nstakes procedure, the independence rules). Their MUST clauses bind; do NOT restate\nthem here\
+    \ \u2014 this prompt only routes.\n\nThe frozen upstream artifact (or, standalone, the raw task) arrives\
+    \ as\n`initial_context`. Read it in full before writing anything.\n\nSub-states run in order: intake\
+    \ \u2192 bearings \u2192 terms \u2192 framed (gate). For the current\nsub-state, load and follow its\
+    \ dispatch prompt and invoke its skill:\n  - intake:   docs/edd/prompts/planning/01-intake.md    \xB7\
+    \ skill plan-frame\n  - bearings: docs/edd/prompts/planning/02-bearings.md  \xB7 skill plan-bearings\n\
+    \  - terms:    docs/edd/prompts/planning/03-terms.md     \xB7 skill plan-terms\nEach emits its owned\
+    \ fields of `plan/frame.json` against\n`docs/edd/templates/planning/frame.tmpl.json`.\n\nThe `framed`\
+    \ gate is mechanical: run `docs/edd/tools/plan-check --phase frame` and\nsubmit each criterion below\
+    \ as evidence only when its PASS line is present. A gate is\nnot a formality \u2014 a criterion you\
+    \ cannot make pass is a FRAME defect, not a checkbox\nto assert.\n"
+  enabled: true
+  max_iterations: 3
+  icon: "\U0001F9ED"
+  sub_states:
+  - id: intake
+    type: execute
+    name: Intake
+    description: Classify every input by provenance, declare authority and the two decision rights, bind
+      upstream, answer the campaign question.
+    enabled: true
+    criteria:
+    - upstream_bound
+    - inputs_classified
+    - authority_declared
+    - decision_rights_named
+    - campaign_call_made
+  - id: bearings
+    type: execute
+    name: Bearings
+    description: The repo's enforced gates, the honest baseline, tiered blast-radius impact with depth,
+      defect reproduction state, characterization pinning.
+    enabled: true
+    criteria:
+    - baseline_captured
+    - impact_depth_declared
+    - repro_state_recorded
+    - pinning_decided
+  - id: terms
+    type: execute
+    name: Terms
+    description: Source-quoted requirements, acceptance that resolves to commands, full stories with rung
+      and enactment, dated questions, the read-back.
+    enabled: true
+    criteria:
+    - requirements_quote_span
+    - acceptance_resolves_to_commands
+    - stories_full_with_enactment
+    - rung_requests_separated
+    - questions_dated
+    - readback_emitted
+  - id: framed
+    type: checklist
+    name: FRAMED gate
+    description: 'plan-check --phase frame: the FRAME artifact validates and its evidence is present.'
+    enabled: true
+    criteria:
+    - frame_phase_validates
+- state_id: carve
+  name: CARVE
+  description: Cut the work into the smallest independently mergeable packages, each with an exact allow-list,
+    tiers, undo, and its merge rung.
+  system_prompt: "## Macro CARVE \u2014 EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d`\
+    \ (the CARVE rows, the\nScope-tiers and Hotspot definitions). MUST clauses bind; do not restate.\n\
+    \nConsume `plan/frame.json` (frozen by FRAME). Sub-states run in order:\ncarve \u2192 size \u2192\
+    \ carved (gate). For the current sub-state, load its dispatch prompt and\nskill:\n  - carve: docs/edd/prompts/planning/05-carve.md\
+    \ \xB7 skill plan-carve\n  - size:  docs/edd/prompts/planning/06-size.md  \xB7 skill plan-size\nThey\
+    \ emit `plan/packages.json` against `docs/edd/templates/planning/packages.tmpl.json`.\nconflict_pairs\
+    \ and hotspots are COMPUTED at the carve transition (run\n`docs/edd/tools/plan-graph --conflict`),\
+    \ never asserted.\n\nThe `carved` gate is mechanical: `docs/edd/tools/plan-check --phase carve`.\n"
+  enabled: true
+  max_iterations: 3
+  icon: "\U0001F52A"
+  sub_states:
+  - id: carve
+    type: execute
+    name: Carve
+    description: Partition requirements over closers into smallest-mergeable packages; pin allow-lists
+      with tiers and undo; derive conflict_pairs and hotspots.
+    enabled: true
+    criteria:
+    - requirements_partition_over_closers
+    - upstream_binding_carried
+    - packages_cut
+    - splits_cited
+    - scopes_are_allow_lists
+    - tiers_carried
+    - discovery_bounded
+    - undo_named_where_needed
+    - merge_rungs_set
+    - conflict_pairs_computed
+  - id: size
+    type: execute
+    name: Size
+    description: Grade each package against the session-horizon and branch-age constants; split oversized
+      ones; record each sizing claim as a falsifiable prediction.
+    enabled: true
+    criteria:
+    - sizing_claims_recorded
+  - id: carved
+    type: checklist
+    name: CARVED gate
+    description: 'plan-check --phase carve: packages partition the requirements, scopes resolve, conflict
+      pairs computed from intersections.'
+    enabled: true
+    criteria:
+    - carve_phase_validates
+- state_id: sequence
+  name: SEQUENCE
+  description: Order the packages, register the waits, walk each rung to its enabler or downgrade, and
+    forecast with a basis and a wait share.
+  system_prompt: "## Macro SEQUENCE \u2014 EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d`\
+    \ (the SEQUENCE rows, the\nenablement table, the Constants table). MUST clauses bind; do not restate.\
+    \ This macro\nruns only when there is more than one package; a single-package plan renders the short\n\
+    form and its sub-states collapse to the wait register.\n\nConsume `plan/packages.json`. Sub-states\
+    \ run in order: waits \u2192 order \u2192 forecast \u2192\nsequenced (gate). Load each sub-state's\
+    \ dispatch prompt and skill:\n  - waits:    docs/edd/prompts/planning/08-waits.md    \xB7 skill plan-waits\n\
+    \  - order:    docs/edd/prompts/planning/09-order.md    \xB7 skill plan-order\n  - forecast: docs/edd/prompts/planning/10-forecast.md\
+    \ \xB7 skill plan-forecast\nThey emit `plan/sequence.json` against `docs/edd/templates/planning/sequence.tmpl.json`\n\
+    (order via `docs/edd/tools/plan-graph --order`).\n\nThe `sequenced` gate is mechanical: `docs/edd/tools/plan-check\
+    \ --phase sequence`.\n"
+  enabled: true
+  max_iterations: 3
+  icon: "\U0001F517"
+  sub_states:
+  - id: waits
+    type: execute
+    name: Waits
+    description: Every wait with owner, duration, basis and escalation; each rung walked through enablement
+      into enablers or downgrades; obligations that outlive merge.
+    enabled: true
+    criteria:
+    - waits_owned_and_escalatable
+    - rungs_enabled_or_downgraded
+    - windows_batched_or_justified
+    - obligations_owned_dated_and_gating
+    - downgrades_authorized_or_blocking
+  - id: order
+    type: execute
+    name: Order
+    description: Dependency edges, contracts frozen before dependents, parallel sets bounded by disjointness
+      with hotspots and T3 floor serialized.
+    enabled: true
+    criteria:
+    - contracts_frozen_before_dependents
+    - order_acyclic_and_justified
+    - parallel_sets_disjoint
+    - risk_phase_capped
+  - id: forecast
+    type: execute
+    name: Forecast
+    description: most_likely and range with each duration's basis, the wait share, assumptions wired to
+      questions or tripwires, commitment_type within authority.
+    enabled: true
+    criteria:
+    - forecast_has_basis_and_wait_share
+    - commitment_within_authority
+  - id: sequenced
+    type: checklist
+    name: SEQUENCED gate
+    description: 'plan-check --phase sequence: order acyclic and justified, rungs enabled or downgraded,
+      waits owned, forecast has basis and wait share.'
+    enabled: true
+    criteria:
+    - sequence_phase_validates
+- state_id: dispatch
+  name: DISPATCH
+  description: Assemble self-contained packets, hold out the grading checks, take a cold hostile read,
+    arm the tripwires, and freeze the plan.
+  system_prompt: "## Macro DISPATCH \u2014 EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d`\
+    \ (the DISPATCH rows) and\n`docs/edd/doctrine.md` (holdout, independence). MUST clauses bind; do not\
+    \ restate.\n\nConsume `plan/frame.json`, `plan/packages.json`, `plan/sequence.json`. Sub-states run\n\
+    in order: policy \u2192 packets \u2192 hostile_read \u2192 tripwires \u2192 frozen (gate). Load each\n\
+    sub-state's dispatch prompt and skill:\n  - policy:       docs/edd/prompts/planning/12-policy.md \
+    \       \xB7 skill plan-policy\n  - packets:      docs/edd/prompts/planning/13-packets.md       \xB7\
+    \ skill plan-packet\n  - hostile_read: docs/edd/prompts/planning/14-hostile-read.md  \xB7 skill plan-hostile-read\n\
+    \  - tripwires:    docs/edd/prompts/planning/15-tripwires.md     \xB7 skill plan-tripwires\nThey emit\
+    \ `plan/manifest.json` (policy, packets, holdout, tripwires) and the\nhostile-read verdict object.\n\
+    \nhostile_read runs in a COLD context: a fresh session or a second agent holding only the\nfrozen\
+    \ artifacts, never the context that wrote the plan. If you produced this plan in\nthis context you\
+    \ are disqualified from reviewing it \u2014 spawn a fresh one. A FIXES-NEEDED\nverdict loops DISPATCH;\
+    \ it does not pass. Solo, record `reviewer: operator`.\n\nThe `frozen` gate is mechanical: `docs/edd/tools/plan-check\
+    \ --phase dispatch`. It\nfreezes the plan \u2014 what BUILD consumes.\n"
+  enabled: true
+  max_iterations: 3
+  icon: "\u2744\uFE0F"
+  sub_states:
+  - id: policy
+    type: execute
+    name: Policy
+    description: Repair/no-progress/escalation/branch-age/check-tier constants become every builder's
+      operating rules; this work's ambiguity defaults from the frame's questions.
+    enabled: true
+    criteria:
+    - policy_complete
+    - ambiguity_defaults_inlined
+  - id: packets
+    type: execute
+    name: Packets
+    description: 'One self-contained work order per package: stories inlined with enactments, red-first,
+      anchors verified against the repo, acceptance split from ledger-held checks.'
+    enabled: true
+    criteria:
+    - packets_self_contained
+    - stories_inlined_with_enactments
+    - red_first_instructed
+    - acceptance_builder_runnable
+    - holdout_separated
+    - holdout_covers_merge_gating_stories
+    - anchors_present
+    - characterization_pinned_where_behavior_exists
+    - undo_present_where_system_changes
+    - downpath_or_irreversible_for_schema_and_data
+  - id: hostile_read
+    type: review
+    name: Hostile read
+    description: A cold reviewer works the refute-first question set against the frozen artifacts; routes
+      no-requirement discoveries per law 11; lists residual doubts. Emits the verdict object.
+    enabled: true
+    criteria:
+    - hostile_read_approved
+    - residual_doubts_listed
+  - id: tripwires
+    type: execute
+    name: Tripwires
+    description: Arm the six standard falsification wires plus any claim-specific ones from signals the
+      repo and ledger already emit; wire every frame assumption to its reopen consequence.
+    enabled: true
+    criteria:
+    - tripwires_armed
+  - id: frozen
+    type: checklist
+    name: FROZEN gate
+    description: 'plan-check --phase dispatch: packets self-contained, holdout separated and covering,
+      hostile_read APPROVE, tripwires armed. Freezes the plan.'
+    enabled: true
+    criteria:
+    - dispatch_phase_validates
+criteria_map:
+  default: ${edd_tools}/plan-criterion {macro} {criterion} --plan-dir ${plan_dir} --repo-root ${repo_root}
+  per_criterion:
+    frame_phase_validates: ${edd_tools}/plan-check --phase frame --plan-dir ${plan_dir} --repo-root ${repo_root}
+    carve_phase_validates: ${edd_tools}/plan-check --phase carve --plan-dir ${plan_dir} --repo-root ${repo_root}
+    sequence_phase_validates: ${edd_tools}/plan-check --phase sequence --plan-dir ${plan_dir} --repo-root
+      ${repo_root}
+    dispatch_phase_validates: ${edd_tools}/plan-check --phase dispatch --plan-dir ${plan_dir} --repo-root
+      ${repo_root}

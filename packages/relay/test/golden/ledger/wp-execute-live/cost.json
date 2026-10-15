@@ -1,0 +1,73 @@
+{
+  "ledger": "test/fixtures/wp-execute-live.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "bind.bind_scope",
+      "macro": "bind",
+      "elapsed_s": null
+    },
+    {
+      "wp": "bind.gate",
+      "macro": "bind",
+      "elapsed_s": null
+    },
+    {
+      "wp": "red.write_failing_tests",
+      "macro": "red",
+      "elapsed_s": null
+    },
+    {
+      "wp": "red.gate",
+      "macro": "red",
+      "elapsed_s": null
+    },
+    {
+      "wp": "green.implement",
+      "macro": "green",
+      "elapsed_s": null
+    },
+    {
+      "wp": "green.gate",
+      "macro": "green",
+      "elapsed_s": null
+    },
+    {
+      "wp": "refactor.refactor_or_skip",
+      "macro": "refactor",
+      "elapsed_s": null
+    },
+    {
+      "wp": "refactor.gate",
+      "macro": "refactor",
+      "elapsed_s": null
+    },
+    {
+      "wp": "gate.verify_all",
+      "macro": "gate",
+      "elapsed_s": null
+    },
+    {
+      "wp": "gate.cold_review",
+      "macro": "gate",
+      "elapsed_s": null
+    },
+    {
+      "wp": "gate.gate",
+      "macro": "gate",
+      "elapsed_s": null
+    },
+    {
+      "wp": "seal.assemble_seal",
+      "macro": "seal",
+      "elapsed_s": null
+    },
+    {
+      "wp": "seal.gate",
+      "macro": "seal",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

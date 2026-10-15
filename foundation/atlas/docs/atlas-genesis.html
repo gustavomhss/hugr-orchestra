@@ -1,0 +1,737 @@
+<title>The Atlas — Genesis (semear sobre um repo que já existe)</title>
+
+<style>
+  :root {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #4e7a46;
+    --accent-2: #6b9a5e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+    --score-paper: #eae5d8;
+    --score-line: #b9b09a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #101210;
+      --paper-2: #171b15;
+      --ink: #ece7db;
+      --ink-soft: #b7b1a1;
+      --muted: #8c8674;
+      --line: #232820;
+      --line-soft: #1b2018;
+      --accent: #7fb86e;
+      --accent-2: #98ce85;
+      --panel: #171b15;
+      --code-bg: #0c0e09;
+      --seal: #6fa97e;
+      --hold: #d3a64f;
+      --block: #d67256;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101210;
+    --paper-2: #171b15;
+    --ink: #ece7db;
+    --ink-soft: #b7b1a1;
+    --muted: #8c8674;
+    --line: #232820;
+    --line-soft: #1b2018;
+    --accent: #7fb86e;
+    --accent-2: #98ce85;
+    --panel: #171b15;
+    --code-bg: #0c0e09;
+    --seal: #6fa97e;
+    --hold: #d3a64f;
+    --block: #d67256;
+  }
+  :root[data-theme="light"] {
+    --paper: #eeeae0;
+    --paper-2: #e7e1d4;
+    --ink: #17150f;
+    --ink-soft: #4a463c;
+    --muted: #8a8477;
+    --line: #d9d3c4;
+    --line-soft: #e3decf;
+    --accent: #4e7a46;
+    --accent-2: #6b9a5e;
+    --panel: #e7e1d4;
+    --code-bg: #e4ddcc;
+    --seal: #3f6e4c;
+    --hold: #8f6a1c;
+    --block: #9a3f2c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 19px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 26px;
+  }
+  .mono,
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82em;
+  }
+  .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding: clamp(46px, 8vw, 84px) 0 clamp(30px, 5vw, 48px);
+    position: relative;
+    overflow: hidden;
+  }
+  .staff {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 13px,
+      color-mix(in srgb, var(--muted) 26%, transparent) 14px,
+      transparent 14px,
+      transparent 27px
+    );
+    mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 45%, transparent 80%);
+  }
+  .masthead .wrap {
+    position: relative;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 20px;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .wordmark {
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    line-height: 1.03;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .wordmark .set {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .punch {
+    font-size: clamp(1.12rem, 2.5vw, 1.5rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 30ch;
+    margin: 0;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .punch .hl {
+    color: var(--accent);
+  }
+
+  section {
+    padding: clamp(36px, 6vw, 54px) 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  h2 .q {
+    display: block;
+    font-size: 0.58em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 7px;
+  }
+  p {
+    margin: 0 0 14px;
+  }
+  p.lead {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 66ch;
+  }
+  .big1 {
+    font-size: clamp(1.4rem, 3.2vw, 2rem);
+    font-weight: 600;
+    line-height: 1.28;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .big1 .hl {
+    color: var(--accent);
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  @media (max-width: 640px) {
+    .two {
+      grid-template-columns: 1fr;
+    }
+  }
+  .box {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 19px;
+  }
+  .box.a {
+    border-top: 3px solid var(--block);
+  }
+  .box.b {
+    border-top: 3px solid var(--seal);
+  }
+  .box .h {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  .box.a .h {
+    color: var(--block);
+  }
+  .box.b .h {
+    color: var(--seal);
+  }
+  .box p {
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .box b {
+    color: var(--ink);
+  }
+
+  .score {
+    background: var(--score-paper);
+    border: 1px solid var(--score-line);
+    border-radius: 12px;
+    padding: 24px 16px;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+  .score pre.mermaid {
+    margin: 0;
+    text-align: center;
+    min-width: 560px;
+  }
+  .score-cap {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: #6a6350;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 3.4em 1fr;
+    gap: 4px 16px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 12px;
+  }
+  .stage .s {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.05rem;
+  }
+  .stage .cost {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    align-self: center;
+  }
+  .stage .t {
+    grid-column: 2;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .stage .t b {
+    color: var(--ink);
+  }
+  .stage.llm {
+    border-left: 3px solid var(--hold);
+  }
+  .stage.free {
+    border-left: 3px solid var(--seal);
+  }
+  .stage.human {
+    border-left: 3px solid var(--accent);
+  }
+
+  table.sig {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.92rem;
+  }
+  table.sig th,
+  table.sig td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  table.sig th {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  table.sig td:first-child {
+    font-family: ui-monospace, Menlo, monospace;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  table.sig td b {
+    color: var(--ink);
+  }
+  table.sig {
+    color: var(--ink-soft);
+  }
+
+  .props {
+    display: grid;
+    gap: 11px;
+    margin-top: 8px;
+  }
+  .pr {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 15px 18px;
+  }
+  .pr .k {
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700;
+    color: var(--accent);
+    flex: none;
+    min-width: 9.5em;
+  }
+  .pr .v {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .pr .v b {
+    color: var(--ink);
+  }
+
+  .oneline {
+    background: color-mix(in srgb, var(--accent) 10%, var(--paper-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 8px;
+    font-size: 1.08rem;
+    font-weight: 600;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .oneline .hl {
+    color: var(--accent);
+  }
+
+  footer {
+    padding: 36px 0 62px;
+  }
+  .fnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<header class="masthead">
+  <div class="staff" aria-hidden="true"></div>
+  <div class="wrap rise">
+    <div class="eyebrow">
+      <span class="dot" aria-hidden="true"></span
+      ><span class="label">Atlas · Genesis · bootstrap sobre repo existente</span>
+    </div>
+    <h1 class="wordmark">Semear o atlas num repo <span class="set">que já existe</span></h1>
+    <p class="punch">
+      Esqueleto <span class="hl">determinístico</span>, inteligência <span class="hl">racionada</span>. Custo escala com
+      a <span class="hl">importância</span>, não com o tamanho.
+    </p>
+  </div>
+</header>
+
+<!-- 1 the one idea -->
+<section>
+  <div class="wrap">
+    <p class="big1">
+      ~90% é build mecânico <span class="hl">$0-LLM</span>. LLM só gasta na <span class="hl">fronteira ranqueada</span>.
+      Git-history é o seed grátis. O humano ratifica só o <span class="hl">contestado</span>.
+    </p>
+    <div class="two">
+      <div class="box b">
+        <div class="h">estrutural, não embeddings (a escolha SOTA)</div>
+        <p>
+          Existem 2 famílias. A rejeitada: <b>GraphRAG / vetores</b> (VoyageCode2 + vector store) — similaridade ANN,
+          probabilístico, custo ∝ tamanho, saída = vetor opaco. A escolhida: <b>estrutural explícito</b> —
+          <b>SCIP/stack-graphs</b>, <b>Glean/Kythe</b>, <b>CodeQL/Semgrep</b>, <b>SZZ</b>, <b>Aider repo-map</b>.
+          Determinístico, e a saída é um <b>fato verificável</b>.
+        </p>
+      </div>
+      <div class="box a">
+        <div class="h">a propriedade que carrega</div>
+        <p>
+          Nº de calls de LLM = função da <b>fronteira ranqueada</b> (<code>hotspot × SZZ × blast</code>), <b>não</b> de
+          linhas. Dobrar código morto/sem-churn <b>não</b> aumenta o gasto. Custo ∝ <b>superfície de importância</b>.
+          Zero vector store.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 pipeline DAG -->
+<section>
+  <div class="wrap">
+    <h2>O pipeline<span class="q">cheapest-first · LLM por último e racionado · termina em handoff</span></h2>
+    <div class="score">
+      <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'background':'#EAE5D8','primaryColor':'#EAE5D8','primaryTextColor':'#201D15','primaryBorderColor':'#4E7A46','lineColor':'#8f846a','fontFamily':'ui-monospace, Menlo, monospace','fontSize':'12px'}}}%%
+flowchart LR
+  S0["S0 · scan<br/>$0 · estrutural<br/>3 eixos + CAS"] --> S1["S1 · mine<br/>$0 · git-history<br/>sites RANQUEADOS"]
+  S1 --> S2["S2 · extract<br/>LLM racionado<br/>1 call/site · porta da verdade + score"]
+  S2 --> S3["S3 · interview<br/>humano · batched<br/>owner/tier/contestado"]
+  S3 --> S4["S4 · handoff<br/>born-from-work<br/>assume daqui"]
+  S2 -.->|"barra parou de passar"| S4
+</pre>
+    </div>
+    <div class="score-cap">
+      S0/S1 puros e reproduzíveis · S2 é a única despesa de LLM · S3 só o que não deu pra resolver sozinho.
+    </div>
+  </div>
+</section>
+
+<!-- 3 stages detail -->
+<section>
+  <div class="wrap">
+    <h2>Fase por fase</h2>
+    <div class="stage free">
+      <span class="s">S0</span><span class="cost">$0 · no LLM</span
+      ><span class="t"
+        ><b>scan — esqueleto estrutural.</b> AST + tags def/ref via <b>tree-sitter</b>; resolução precisa
+        cross-file/língua via <b>SCIP</b> ou <b>stack-graphs</b> (tree-sitter é parser, não resolvedor). Content-address
+        de todo nó (CAS). <b>Zero fatos</b> — T2/advisory, T0 só flagado.</span
+      >
+    </div>
+    <div class="stage free">
+      <span class="s">S1</span><span class="cost">$0 · mecânico</span
+      ><span class="t"
+        ><b>mine — o git-history vira ranking.</b> Sinais MSR nomeados (SZZ, hotspots, coupling, ownership) alimentam um
+        <b>PageRank personalizado</b> sobre o grafo def→ref → <b>sites ranqueados</b>, nunca fatos (tabela
+        abaixo).</span
+      >
+    </div>
+    <div class="stage llm">
+      <span class="s">S2</span><span class="cost">LLM · racionado</span
+      ><span class="t"
+        ><b>extract — a única despesa de LLM.</b> Anda do maior-PPR pro menor; <b>1 call bounded por site</b>. Fato
+        aterrado por <code>subtreeHash</code>, pela <b>porta da verdade</b>; obviedade
+        <b>vira score armazenado, nunca veto</b> (ADR-0012). Quando é checável, o <code>check</code> vira query
+        <b>CodeQL/Semgrep</b> determinística (= o avaliador do KNOW-16). Budget-capped.</span
+      >
+    </div>
+    <div class="stage human">
+      <span class="s">S3</span><span class="cost">humano · batched</span
+      ><span class="t"
+        ><b>interview — a porta de desambiguação.</b> Owner/tier de território, T0, invariante contestado,
+        <em>intencional-ou-bug</em> → entrevista <b>curta e ranqueada</b> (T0/alto-blast primeiro, <b>nunca 1-a-1</b>).
+        Resposta vira fato <code>human-ratified</code>.</span
+      >
+    </div>
+    <div class="stage">
+      <span class="s">S4</span><span class="cost">handoff</span
+      ><span class="t"
+        ><b>handoff — vira self-hosting.</b> Genesis é seeding <b>único</b>: acabou, entrega pro loop born-from-work
+        (init → enrich-by-blast → wave-close). <b>Nunca</b> fica varrendo em background.</span
+      >
+    </div>
+  </div>
+</section>
+
+<!-- 4 git history signals -->
+<section>
+  <div class="wrap">
+    <h2>
+      Git-history = o seed grátis<span class="q">cada sinal é uma técnica NOMEADA (MSR) · não heurística caseira</span>
+    </h2>
+    <table class="sig">
+      <thead>
+        <tr>
+          <th>sinal</th>
+          <th>técnica / OSS</th>
+          <th>semeia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>hotspots</td>
+          <td>change-freq × complexidade — <b>CodeScene</b> / Tornhill</td>
+          <td>candidato a <b>tier</b></td>
+        </tr>
+        <tr>
+          <td>fragilidade</td>
+          <td>
+            <b>SZZ</b> (Śliwerski-Zimmermann-Zeller '05) · <b>SZZUnleashed</b> — blame do fix → commit que introduziu
+          </td>
+          <td><b>invariantes frágeis</b> (maior valor)</td>
+        </tr>
+        <tr>
+          <td>coupling</td>
+          <td>association-rule sobre commits (temporal/logical coupling)</td>
+          <td>deps ocultas + fronteiras de <b>território</b></td>
+        </tr>
+        <tr>
+          <td>ownership</td>
+          <td>blame por linha — knowledge map / bus-factor (<b>CodeScene</b>)</td>
+          <td>candidato a <b>owner</b> + risco (tier)</td>
+        </tr>
+        <tr>
+          <td><b>rank</b></td>
+          <td>
+            <b>PageRank personalizado</b> sobre o grafo def→ref (técnica do <b>Aider repo-map</b>; sem embeddings)
+          </td>
+          <td>a ordem em que o LLM visita</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="oneline" style="margin-top: 20px">
+      Sinal minerado <span class="hl">aponta</span> — só vira fato depois de
+      <span class="hl">aterrado + ratificado</span>. SZZ é heurística → <b>rank</b>, não verdade.
+    </div>
+  </div>
+</section>
+
+<!-- 4.5 the S2 reasoning loop -->
+<section>
+  <div class="wrap">
+    <h2>
+      S2 — o raciocínio do LLM, no arnês<span class="q"
+        >propositor, nunca oráculo · o análogo estático+LLM do Daikon</span
+      >
+    </h2>
+    <p class="lead">
+      O LLM <b>não é oráculo</b> — é um <b>propositor dentro de um arnês de verificação</b>. O núcleo elegante:
+      <b>um fato só entra se o <code>check</code> que o próprio modelo sintetizou passar no código real.</b> Ele não
+      consegue mentir — a asserção dele é executável e é executada.
+    </p>
+    <div class="score">
+      <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'background':'#EAE5D8','primaryColor':'#EAE5D8','primaryTextColor':'#201D15','primaryBorderColor':'#4E7A46','lineColor':'#8f846a','fontFamily':'ui-monospace, Menlo, monospace','fontSize':'12px'}}}%%
+flowchart LR
+  P["PROPOSE<br/>candidato tipado<br/>(bug-primed via SZZ)"] --> V{"VERIFY<br/>ground · check · SCORE obviedade"}
+  V -->|"check falha = contraexemplo"| R["REFINE ≤K<br/>CEGIS"]
+  R --> V
+  V -->|"passa"| C{"incerto ou T1+?"}
+  C -->|"sim"| CO["CORROBORATE<br/>self-consistency / refuter"]
+  C -->|"não"| A["ADMIT"]
+  CO --> A
+  V -->|"nada limpa a barra"| AB["ABSTAIN<br/>why-not aterrado"]
+</pre>
+    </div>
+    <div class="score-cap">
+      CoT é rascunho (descartado); só o candidato tipado persiste. Abstenção é saída de 1ª classe — o modelo é premiado
+      pelo silêncio.
+    </div>
+    <div class="two">
+      <div class="box b">
+        <div class="h">o contexto (determinístico, sem embeddings)</div>
+        <p>
+          Por site: <code>source@sha</code> + <code>StructRef</code> + o <b>RelationSet</b> (enclosing/deps/blast, do
+          índice) + a <b>cicatriz do git</b> — os commits <b>SZZ</b> que introduziram bug ali. Minerar os bugs pra achar
+          o invariante frágil.
+        </p>
+      </div>
+      <div class="box a">
+        <div class="h">o limite honesto</div>
+        <p>
+          Um <code>check</code> que passa prova a propriedade <b>no código atual</b> + re-checa no drift — <b>não</b> é
+          prova pra todo input futuro (isso é theorem prover, fora de escopo). São
+          <b>invariantes prováveis machine-checked</b> (como os "likely invariants" do Daikon), não provas — e dizem
+          isso.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4.7 cost / sweet spot -->
+<section>
+  <div class="wrap">
+    <h2>Custo & o sweet spot<span class="q">barato por default · escala por valor · não vira monstro</span></h2>
+    <p class="lead">
+      O loop é poderoso, logo é perigoso. A regra: os mecanismos caros ficam <b>dormentes</b> e ligam só quando um sinal
+      barato diz que o candidato é <b>alto-valor E incerto</b>. O caminho comum é <b>1 call + 2 gates</b>; o caro é a
+      exceção rara.
+    </p>
+    <table class="sig">
+      <thead>
+        <tr>
+          <th>mecanismo</th>
+          <th>default (barato)</th>
+          <th>escala só quando</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>família do fato</td>
+          <td><b>advisory</b> (sem check)</td>
+          <td>checável <b>e</b> tier≥T1 → predicate</td>
+        </tr>
+        <tr>
+          <td>CEGIS refine</td>
+          <td>K=1</td>
+          <td>nunca além de K — abstém rápido</td>
+        </tr>
+        <tr>
+          <td>corroborate</td>
+          <td><b>OFF</b> (1 sample)</td>
+          <td>T0-cand / alto-blast <b>e</b> incerto</td>
+        </tr>
+        <tr>
+          <td>refuter</td>
+          <td><b>OFF</b></td>
+          <td>só T0-cand, modelo pequeno</td>
+        </tr>
+        <tr>
+          <td>engine do check</td>
+          <td><b>Semgrep</b> (AST barato)</td>
+          <td>CodeQL só se precisar dataflow (DB 1×)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="oneline" style="margin-top: 20px">
+      A maior alavanca: <span class="hl">você não semeia o repo inteiro</span>. Só a fronteira quente — o rabo frio o
+      <b>born-from-work</b> cobre de graça. Código que ninguém mexe <b>nunca</b> paga.
+    </div>
+  </div>
+</section>
+
+<!-- 5 determinism boundary -->
+<section>
+  <div class="wrap">
+    <h2>A fronteira de determinismo<span class="q">honesto: não é determinístico ponta-a-ponta</span></h2>
+    <p class="lead">
+      O que decide <em>o que entra no store</em> é determinístico; só o <em>rascunho</em> de um candidato é do modelo —
+      e sempre passa pela grade.
+    </p>
+    <div class="props">
+      <div class="pr">
+        <span class="k">S0 + S1</span
+        ><span class="v"
+          ><b>puros e reproduzíveis.</b> Mesmo repo@rev → esqueleto + ranking byte-idênticos. Sem modelo no
+          caminho.</span
+        >
+      </div>
+      <div class="pr">
+        <span class="k">S2</span
+        ><span class="v"
+          >é LLM (conteúdo não-determinístico), mas a <b>seleção</b> (quais sites, em que ordem) é determinística e
+          <b>todo output é gated por grounding</b> — seed sem âncora nunca entra.</span
+        >
+      </div>
+      <div class="pr">
+        <span class="k">S3</span
+        ><span class="v"
+          >humano — o <b>conjunto de perguntas</b> é derivado mecanicamente; só as <b>respostas</b> são do humano.</span
+        >
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="fnote">
+      Atlas · Genesis — bootstrap sobre repo existente. Spec: <code>reference/atlas-genesis.md</code> (GEN-1..8).
+      Estende <code>atlas-init</code> (S0) · entrega ao born-from-work (S4, KNOW-13) · toda seed passa a porta da
+      verdade (KNOW-2/10) e carrega um score de obviedade (ADR-0012).
+    </p>
+  </div>
+</footer>

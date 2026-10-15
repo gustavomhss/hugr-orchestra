@@ -1,0 +1,4 @@
+LEDGER INTACT — 21 chained entries [PLAIN (SHA-256)], chain head f9f07b595354…
+  (7 checklist-item verdicts on the chain)
+  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.
+  NOTE: trace ends on 'regression-item', not a terminal event — possible tail-truncation; only an out-of-band anchor of the head can rule it out.

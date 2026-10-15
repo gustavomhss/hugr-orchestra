@@ -1,0 +1,42 @@
+name: "Previous pass"
+description: "Look up a pass recorded for the same test inputs, so a re-run of an unchanged shard can skip"
+inputs:
+  task:
+    description: "Turbo task whose hash covers the tests' inputs: the package's files plus its workspace dependencies"
+    required: true
+  name:
+    description: "Identity of the shard within the workflow"
+    required: true
+outputs:
+  hit:
+    description: "'true' when the same inputs already passed"
+    value: ${{ steps.lookup.outputs.cache-hit }}
+  key:
+    description: "Cache key to save after a pass; empty when the inputs could not be hashed"
+    value: ${{ steps.key.outputs.key }}
+runs:
+  using: "composite"
+  steps:
+    # Turbo hashes from package.json files and the lockfile, so it needs no install (same hash measured
+    # with and without node_modules). Root files and the workflow itself are outside every package hash.
+    - name: Hash test inputs
+      id: key
+      shell: bash
+      env:
+        TASK: ${{ inputs.task }}
+      run: |
+        version=$(node -p "require('./package.json').devDependencies.turbo")
+        if ! hash=$(npx --yes "turbo@$version" run test --filter="${TASK%#*}" --dry=json | node -e 'let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => console.log(JSON.parse(s).tasks.find((t) => t.taskId === process.env.TASK).hash))'); then
+          echo "::warning::Could not hash the inputs of $TASK; running the tests"
+          exit 0
+        fi
+        echo "key=tests-passed-v1-${{ runner.os }}-${{ inputs.name }}-$hash-${{ hashFiles('package.json', 'bun.lock', 'bunfig.toml', 'tsconfig.json', 'turbo.json', 'patches/**', '.github/workflows/test.yml', '.github/actions/**') }}" >> "$GITHUB_OUTPUT"
+
+    - name: Look up a previous pass
+      id: lookup
+      if: steps.key.outputs.key != ''
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: .tests-passed
+        key: ${{ steps.key.outputs.key }}
+        lookup-only: true

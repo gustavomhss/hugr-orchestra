@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/control-advisory-verdict/input/ledger.jsonl",
+  "problems": []
+}

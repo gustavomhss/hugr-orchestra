@@ -1,0 +1,7 @@
+--- protocol.md ---
+MUST: every claim carries its evidence.
+MUST: no silent caps.
+--- end protocol.md ---
+
+Relay gate 'load' passed. Next gate: wp2. M-RULES
+do wp2

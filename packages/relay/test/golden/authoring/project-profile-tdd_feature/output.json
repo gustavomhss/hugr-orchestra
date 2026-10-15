@@ -1,0 +1,320 @@
+{
+  "name": "Relay · tdd_feature",
+  "nodes": [
+    {
+      "id": "relay-start",
+      "name": "Workflow start",
+      "type": "relay.startTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "parameters": {
+        "relayBrief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+        "relayRetryBudget": 3
+      }
+    },
+    {
+      "id": "implement.inject_context",
+      "name": "Inject context",
+      "type": "relay.inject",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "title": "Inject context",
+        "macro": "implement",
+        "instructions": "Seed the task context",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "Task: add a token-bucket rate limiter to the gateway.",
+        "file": ""
+      }
+    },
+    {
+      "id": "implement.write",
+      "name": "Write code (TDD)",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "parameters": {
+        "title": "Write code (TDD)",
+        "macro": "implement",
+        "instructions": "Implement using the TDD skill",
+        "checklist": "[\n  {\n    \"id\": \"write-produced-a-change\",\n    \"assert\": \"this state changed something under the declared source or test paths\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "implement.checklist",
+      "name": "Implement gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        688,
+        240
+      ],
+      "parameters": {
+        "title": "Implement gate",
+        "macro": "implement",
+        "instructions": "Exit criteria for implementation",
+        "checklist": "[\n  {\n    \"id\": \"tests_written\",\n    \"assert\": \"tests_written\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"implementation_done\",\n    \"assert\": \"implementation_done\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"suite_green\",\n    \"assert\": \"suite_green\",\n    \"cmd\": \"${test_cmd}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "review.self_review",
+      "name": "Self review",
+      "type": "relay.review",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "Self review",
+        "macro": "review",
+        "instructions": "Review using the code-review protocol",
+        "checklist": "[\n  {\n    \"id\": \"review-is-substantive\",\n    \"assert\": \"the review artifact carries at least 50 words\",\n    \"cmd\": \"test \\\"$(wc -w < ${review_artifact})\\\" -ge 50\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"review-engages-with-the-diff\",\n    \"context\": [\n      \"${review_artifact}\"\n    ],\n    \"judge\": \"Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "review.checklist",
+      "name": "Review gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        240
+      ],
+      "parameters": {
+        "title": "Review gate",
+        "macro": "review",
+        "instructions": "Exit criteria for review",
+        "checklist": "[\n  {\n    \"id\": \"review_done\",\n    \"assert\": \"review_done\",\n    \"cmd\": \"test -s ${review_artifact}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    }
+  ],
+  "connections": {
+    "Inject context": {
+      "main": [
+        [
+          {
+            "node": "Write code (TDD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write code (TDD)": {
+      "main": [
+        [
+          {
+            "node": "Implement gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Implement gate": {
+      "main": [
+        [
+          {
+            "node": "Self review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Self review": {
+      "main": [
+        [
+          {
+            "node": "Review gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow start": {
+      "main": [
+        [
+          {
+            "node": "Inject context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [
+    {
+      "id": "implement",
+      "name": "Implement (TDD)",
+      "description": "",
+      "nodeIds": [
+        "implement.inject_context",
+        "implement.write",
+        "implement.checklist"
+      ]
+    },
+    {
+      "id": "review",
+      "name": "Review",
+      "description": "",
+      "nodeIds": [
+        "review.self_review",
+        "review.checklist"
+      ]
+    }
+  ],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "brief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+        "gen": 0,
+        "retry_budget": 3,
+        "macros": [
+          {
+            "id": "implement",
+            "title": "Implement (TDD)"
+          },
+          {
+            "id": "review",
+            "title": "Review"
+          }
+        ],
+        "work_packages": [
+          {
+            "id": "implement.inject_context",
+            "macro": "implement",
+            "kind": "inject",
+            "title": "Inject context",
+            "instructions": "Seed the task context",
+            "file": "",
+            "text": "Task: add a token-bucket rate limiter to the gateway.",
+            "checklist": []
+          },
+          {
+            "id": "implement.write",
+            "macro": "implement",
+            "kind": "execute",
+            "title": "Write code (TDD)",
+            "instructions": "Implement using the TDD skill",
+            "checklist": [
+              {
+                "id": "write-produced-a-change",
+                "assert": "this state changed something under the declared source or test paths",
+                "cmd": "git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "implement.checklist",
+            "macro": "implement",
+            "kind": "gate",
+            "title": "Implement gate",
+            "instructions": "Exit criteria for implementation",
+            "checklist": [
+              {
+                "id": "tests_written",
+                "assert": "tests_written",
+                "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              },
+              {
+                "id": "implementation_done",
+                "assert": "implementation_done",
+                "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              },
+              {
+                "id": "suite_green",
+                "assert": "suite_green",
+                "cmd": "${test_cmd}",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "review.self_review",
+            "macro": "review",
+            "kind": "review",
+            "title": "Self review",
+            "instructions": "Review using the code-review protocol",
+            "checklist": [
+              {
+                "id": "review-is-substantive",
+                "assert": "the review artifact carries at least 50 words",
+                "cmd": "test \"$(wc -w < ${review_artifact})\" -ge 50",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              },
+              {
+                "id": "review-engages-with-the-diff",
+                "context": [
+                  "${review_artifact}"
+                ],
+                "judge": "Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                "diff": true,
+                "blocking": true,
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "review.checklist",
+            "macro": "review",
+            "kind": "gate",
+            "title": "Review gate",
+            "instructions": "Exit criteria for review",
+            "checklist": [
+              {
+                "id": "review_done",
+                "assert": "review_done",
+                "cmd": "test -s ${review_artifact}",
+                "origin": "pe-profile:tdd_feature@1.0.0"
+              }
+            ]
+          }
+        ]
+      },
+      "names": {
+        "implement.inject_context": "Inject context",
+        "implement.write": "Write code (TDD)",
+        "implement.checklist": "Implement gate",
+        "review.self_review": "Self review",
+        "review.checklist": "Review gate"
+      }
+    }
+  }
+}

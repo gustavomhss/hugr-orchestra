@@ -1,0 +1,1221 @@
+e2e (linux)	Run app e2e tests	﻿2026-10-01T22:00:36.9131855Z ##[group]Run bun --cwd packages/app test:e2e:local
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9132355Z bun --cwd packages/app test:e2e:local
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9190630Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9190935Z env:
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9191133Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9191537Z   PLAYWRIGHT_BROWSERS_PATH: /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/.playwright-browsers
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9191914Z   CI: true
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9192087Z ##[endgroup]
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:36.9286073Z $ playwright test
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:38.0309961Z [WebServer] $ vite --host "0.0.0.0" --port "3000"
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:38.0312793Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:41.7738290Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:41.7739378Z Running 124 tests using 1 worker
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:41.7739959Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:42.8474159Z [1/124] [chromium] › e2e/orchestra/identity.spec.ts:59:5 › dark en: frozen glass, 230/45/6 geometry, and upward profile portal
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:51.0147215Z [2/124] [chromium] › e2e/orchestra/identity.spec.ts:59:5 › dark ar: frozen glass, 230/45/6 geometry, and upward profile portal
+e2e (linux)	Run app e2e tests	2026-10-01T22:00:58.4795585Z [3/124] [chromium] › e2e/orchestra/identity.spec.ts:164:5 › dark: model running/waiting/idle motion, reduced=false
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:01.1015322Z [4/124] [chromium] › e2e/orchestra/identity.spec.ts:164:5 › dark: model running/waiting/idle motion, reduced=true
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:03.6218487Z [5/124] [chromium] › e2e/orchestra/identity.spec.ts:59:5 › light en: frozen glass, 230/45/6 geometry, and upward profile portal
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:06.0670188Z [6/124] [chromium] › e2e/orchestra/identity.spec.ts:59:5 › light ar: frozen glass, 230/45/6 geometry, and upward profile portal
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:08.7015681Z [7/124] [chromium] › e2e/orchestra/identity.spec.ts:164:5 › light: model running/waiting/idle motion, reduced=false
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:11.7214876Z [8/124] [chromium] › e2e/orchestra/identity.spec.ts:164:5 › light: model running/waiting/idle motion, reduced=true
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:14.6348176Z [9/124] [chromium] › e2e/orchestra/identity.spec.ts:256:1 › oracle calibration: real production toolbar rejects geometry and glass mutations
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:16.7444980Z [10/124] [chromium] › e2e/orchestra/identity.spec.ts:293:1 › fixture calibration: pending permission traverses the real reducer and dock
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:19.4623830Z [11/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:78:1 › reports real header bounds and coalesces header, shell and window changes
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:20.1499940Z [12/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:96:1 › reactive zoom reads settled CSS geometry without converting to native points
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:20.5587448Z [13/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:109:1 › clears and restores frames for fullscreen, legacy and the 768px desktop boundary
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:20.9846822Z [14/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:129:1 › keeps physical coordinates in RTL and skips frame machinery on unsupported platforms
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:21.4319251Z [15/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:142:1 › chat text streaming does not request geometry; unchanged window geometry does not resend
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:21.7373457Z [16/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:157:1 › cleanup cancels pending RAF, disconnects observers and blocks late IPC
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:21.9874770Z [17/124] [chromium] › e2e/orchestra/titlebar-native-frame.spec.ts:171:1 › hidden connected header clears native frame and restores measured placement
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:22.3124669Z [18/124] [chromium] › e2e/regression/cross-server-tab-close.spec.ts:10:1 › closing the active server's last tab opens the remaining server tab
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:34.8049261Z [19/124] (retries) [chromium] › e2e/regression/cross-server-tab-close.spec.ts:10:1 › closing the active server's last tab opens the remaining server tab (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:01:48.8549918Z [20/124] (retries) [chromium] › e2e/regression/cross-server-tab-close.spec.ts:10:1 › closing the active server's last tab opens the remaining server tab (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2436682Z   1) [chromium] › e2e/regression/cross-server-tab-close.spec.ts:10:1 › closing the active server's last tab opens the remaining server tab
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2437381Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2438074Z     Error: expect(page).toHaveURL(expected) failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2438481Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2438947Z     Expected pattern: /\/server\/aHR0cDovLzEyNy4wLjAuMTo0MDk3\/session\/ses_server_b$/
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2439663Z     Received string:  "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2440056Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2440239Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2440704Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2441093Z       - Expect "toHaveURL" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2441980Z         2 × unexpected value "http://127.0.0.1:3000/server/aHR0cDovLzEyNy4wLjAuMTo0MDk2/session/ses_server_a"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2442866Z         12 × unexpected value "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2443151Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2443211Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2443490Z       34 |   await tabA.locator('[data-slot="tab-close"] button').click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2443895Z       35 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2444512Z     > 36 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2445215Z          |                      ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2446172Z       37 |   await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2447141Z       38 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2447793Z       39 |   const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2448599Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/cross-server-tab-close.spec.ts:36:22
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2449106Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2449607Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2450359Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2451148Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2451504Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2451936Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2453089Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2454302Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2454709Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2455324Z     Error Context: e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2455889Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2456428Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2456835Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2457586Z     Error: expect(page).toHaveURL(expected) failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2457901Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2458244Z     Expected pattern: /\/server\/aHR0cDovLzEyNy4wLjAuMTo0MDk3\/session\/ses_server_b$/
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2458783Z     Received string:  "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2459068Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2459197Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2459296Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2459618Z       - Expect "toHaveURL" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2460561Z         2 × unexpected value "http://127.0.0.1:3000/server/aHR0cDovLzEyNy4wLjAuMTo0MDk2/session/ses_server_a"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2461289Z         12 × unexpected value "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2461513Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2461518Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2461705Z       34 |   await tabA.locator('[data-slot="tab-close"] button').click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2461998Z       35 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2462365Z     > 36 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2463067Z          |                      ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2463552Z       37 |   await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2464301Z       38 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2464820Z       39 |   const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2465483Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/cross-server-tab-close.spec.ts:36:22
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2465864Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2466211Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2466860Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2467535Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2467764Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2468069Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2468664Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2469311Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2469555Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2469961Z     Error Context: e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2470397Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2470719Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2471329Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2471769Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2471869Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2472295Z         npx playwright show-trace e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2473074Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2473554Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2473927Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2474379Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2474949Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2475434Z     Error: expect(page).toHaveURL(expected) failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2475754Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2476094Z     Expected pattern: /\/server\/aHR0cDovLzEyNy4wLjAuMTo0MDk3\/session\/ses_server_b$/
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2476584Z     Received string:  "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2476857Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2476978Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2477053Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2477330Z       - Expect "toHaveURL" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2477889Z         2 × unexpected value "http://127.0.0.1:3000/server/aHR0cDovLzEyNy4wLjAuMTo0MDk2/session/ses_server_a"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2478413Z         12 × unexpected value "http://127.0.0.1:3000/"
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2478611Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2478616Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2478794Z       34 |   await tabA.locator('[data-slot="tab-close"] button').click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2479091Z       35 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2479440Z     > 36 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2479867Z          |                      ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2480355Z       37 |   await expect.poll(() => requests.some((url) => url.startsWith(`${serverB}/api/session/${sessionB.id}`))).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2480883Z       38 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2481379Z       39 |   const sessionBRequests = requests.filter((url) => url.includes(`/session/${sessionB.id}`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2482016Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/cross-server-tab-close.spec.ts:36:22
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2482381Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2483013Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2483659Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2484360Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2484586Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2484902Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2485500Z     e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2486133Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2486361Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2486771Z     Error Context: e2e/test-results/regression-cross-server-ta-4f296-ns-the-remaining-server-tab-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2487194Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.2487199Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:01.7246045Z [21/124] [chromium] › e2e/regression/cross-server-tab-close.spec.ts:49:1 › legacy session routes preserve an existing tab's server
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:04.1813007Z [22/124] [chromium] › e2e/regression/file-browser-sidebar-tab-switch.spec.ts:19:1 › keeps the file-browser sidebar mounted when switching file tabs
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:09.2124324Z [23/124] [chromium] › e2e/regression/file-browser-sidebar-tab-switch.spec.ts:63:1 › keeps previous file search results visible while the next search loads
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:12.3996891Z [24/124] [chromium] › e2e/regression/janitor-pocket.spec.ts:24:1 › keeps Janitor chat session, sends prompt, and opens it in session view
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:16.3525920Z [25/124] [chromium] › e2e/regression/legacy-new-session.spec.ts:8:1 › opens a persisted draft at its new-session route
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:18.2764900Z [26/124] [chromium] › e2e/regression/new-session-panel-corner.spec.ts:14:1 › matches the rounded panel corners to the dark new-session background
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:20.7455396Z [27/124] (retries) [chromium] › e2e/regression/new-session-panel-corner.spec.ts:14:1 › matches the rounded panel corners to the dark new-session background (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:24.2813066Z [28/124] (retries) [chromium] › e2e/regression/new-session-panel-corner.spec.ts:14:1 › matches the rounded panel corners to the dark new-session background (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4961908Z   2) [chromium] › e2e/regression/new-session-panel-corner.spec.ts:14:1 › matches the rounded panel corners to the dark new-session background
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4962924Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4963597Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4964135Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4964322Z     Expected: true
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4964695Z     Received: false
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4964910Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4965031Z       80 |   )
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4965293Z       81 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4965973Z     > 82 |   expect(corners.every(([red, green, blue, alpha]) => red <= 8 && green <= 8 && blue <= 8 && alpha === 255)).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4966982Z          |                                                                                                              ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4967454Z       83 | })
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4967706Z       84 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4968433Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/new-session-panel-corner.spec.ts:82:110
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4969002Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4969637Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4970690Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4971820Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4972207Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4972926Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4973931Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4975412Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4975785Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4976370Z     Error Context: e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4976992Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4977419Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4977765Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4978320Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4978792Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4978945Z     Expected: true
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4979285Z     Received: false
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4979480Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4979589Z       80 |   )
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4980047Z       81 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4980631Z     > 82 |   expect(corners.every(([red, green, blue, alpha]) => red <= 8 && green <= 8 && blue <= 8 && alpha === 255)).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4981447Z          |                                                                                                              ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4981926Z       83 | })
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4982174Z       84 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4983182Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/new-session-panel-corner.spec.ts:82:110
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4983793Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4984319Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4985375Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4986580Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4986985Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4987530Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4988534Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4989667Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4990054Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4990805Z     Error Context: e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4991552Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4992109Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4993362Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4994145Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4994289Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4994988Z         npx playwright show-trace e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4997372Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4997908Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4998360Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4998833Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4999208Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.4999751Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5000209Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5000380Z     Expected: true
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5000733Z     Received: false
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5000932Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5001034Z       80 |   )
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5001265Z       81 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5001856Z     > 82 |   expect(corners.every(([red, green, blue, alpha]) => red <= 8 && green <= 8 && blue <= 8 && alpha === 255)).toBe(true)
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5002834Z          |                                                                                                              ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5003333Z       83 | })
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5003586Z       84 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5004345Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/new-session-panel-corner.spec.ts:82:110
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5004927Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5005299Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5005983Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5006669Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5006898Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5007212Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5007841Z     e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5008494Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5008722Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5009127Z     Error Context: e2e/test-results/regression-new-session-pan-721a6-dark-new-session-background-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5009541Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.5009546Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:26.9640737Z [29/124] [chromium] › e2e/regression/open-file-expand-folder.spec.ts:14:1 › expands a folder whose path has a trailing Windows separator
+e2e (linux)	Run app e2e tests	2026-10-01T22:02:30.4027129Z [30/124] [chromium] › e2e/regression/project-picker-recent-search.spec.ts:46:1 › searches every recent project, not just the five most recent
+e2e (linux)	Run app e2e tests	2026-10-01T22:03:03.3076608Z [31/124] (retries) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:46:1 › searches every recent project, not just the five most recent (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:03:36.9857361Z [32/124] (retries) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:46:1 › searches every recent project, not just the five most recent (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5955133Z   3) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:46:1 › searches every recent project, not just the five most recent
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5955981Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5956489Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5956924Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5957210Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5957663Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5957953Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5958235Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5958427Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5958525Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5958948Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5959614Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5959959Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5959973Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5960081Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5960253Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5960351Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5960722Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5961280Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5961797Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5962119Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5962358Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5963071Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5963989Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5965038Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5966012Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:47:18
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5966640Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5967195Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5967838Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5968900Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5969245Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5969680Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5970536Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5971469Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5971828Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5972614Z     Error Context: e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5973232Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5973649Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5973981Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5974441Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5974882Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5975149Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5975606Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5975878Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5976161Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5976350Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5976445Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5976896Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5977588Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5978503Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5978511Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5978667Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5978873Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5978967Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5979443Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5980121Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5980647Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5980936Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5981215Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5981685Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5982832Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5984143Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5985515Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:47:18
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5986186Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5986736Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5987856Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5989064Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5989444Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5989972Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5990974Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5992326Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5992805Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5993306Z     Error Context: e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5993804Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5994158Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5994785Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5995234Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5995334Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5995764Z         npx playwright show-trace e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5996207Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5996497Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5996726Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5997012Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5997433Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5997833Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5998098Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5998274Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5998569Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5998767Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5998985Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5999121Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5999199Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5999489Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.5999927Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000179Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000184Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000273Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000394Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000471Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6000760Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6001183Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6001526Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6001739Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6001904Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6002211Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6002945Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6003735Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6004531Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:47:18
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6004920Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6005251Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6005911Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6006608Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6006835Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6007136Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6007732Z     e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6008370Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6008590Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6008997Z     Error Context: e2e/test-results/regression-project-picker--4bddb-t-just-the-five-most-recent-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6009417Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:09.6009421Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:10.0789232Z [33/124] [chromium] › e2e/regression/project-picker-recent-search.spec.ts:55:1 › still caps the idle recent list at five projects
+e2e (linux)	Run app e2e tests	2026-10-01T22:04:42.8124362Z [34/124] (retries) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:55:1 › still caps the idle recent list at five projects (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:15.8016018Z [35/124] (retries) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:55:1 › still caps the idle recent list at five projects (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2726988Z   4) [chromium] › e2e/regression/project-picker-recent-search.spec.ts:55:1 › still caps the idle recent list at five projects
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2733106Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2733698Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2734027Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2734351Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2734855Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2735193Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2785358Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2785629Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2785749Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2786258Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2786909Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2787277Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2787285Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2787418Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2787615Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2787727Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2788149Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2788806Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2789315Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2789639Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2789879Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2790350Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2791273Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2792721Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2794086Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:56:3
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2794728Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2795331Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2796421Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2797524Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2797900Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2798411Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2799366Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2800441Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2800806Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2801451Z     Error Context: e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2802131Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2803480Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2803871Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2804338Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2804758Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2805020Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2805322Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2805521Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2805750Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2805892Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2806336Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2806776Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807230Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807483Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807489Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807583Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807713Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2807792Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2808071Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2808481Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2808807Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2809026Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2809192Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2809496Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2810059Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2810839Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2811628Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:56:3
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2812023Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2812352Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2813202Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2813893Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2814126Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2814435Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2815043Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2815725Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2815958Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2816377Z     Error Context: e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2816834Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2817156Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2817775Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2818229Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2818333Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2818776Z         npx playwright show-trace e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2819229Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2819514Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2819973Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2820257Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2820486Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2820776Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2821041Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2821218Z     Locator: getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2821503Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2821700Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2821908Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2822045Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2822118Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2822414Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823029Z       - waiting for getByRole('button', { name: 'Add project' }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823270Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823276Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823364Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823499Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823578Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2823854Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2824249Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2824571Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2824776Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2824942Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2825234Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2825797Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2826560Z         at openProjectDialog (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:40:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2827362Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/project-picker-recent-search.spec.ts:56:3
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2827749Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2828070Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2828764Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2829452Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2829687Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2829988Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2830583Z     e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2831222Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2831441Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2831845Z     Error Context: e2e/test-results/regression-project-picker--4cd3c-ecent-list-at-five-projects-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2832395Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.2832650Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:48.7399650Z [36/124] [chromium] › e2e/regression/prompt-input-v2-command-draft.spec.ts:10:1 › preserves the draft when a populated command menu triggers a built-in
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:51.2773249Z [37/124] [chromium] › e2e/regression/prompt-thinking-level.spec.ts:10:1 › shows the V2 thinking level control while relevant
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:53.8952207Z [38/124] [chromium] › e2e/regression/remote-session-settings.spec.ts:14:1 › session settings use the remote server context
+e2e (linux)	Run app e2e tests	2026-10-01T22:05:57.7504754Z [39/124] [chromium] › e2e/regression/remote-session-settings.spec.ts:46:1 › auto-accept responds for an unfocused server session
+e2e (linux)	Run app e2e tests	2026-10-01T22:06:58.5451423Z [40/124] (retries) [chromium] › e2e/regression/remote-session-settings.spec.ts:46:1 › auto-accept responds for an unfocused server session (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:08:03.7568237Z [41/124] (retries) [chromium] › e2e/regression/remote-session-settings.spec.ts:46:1 › auto-accept responds for an unfocused server session (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1883016Z   5) [chromium] › e2e/regression/remote-session-settings.spec.ts:46:1 › auto-accept responds for an unfocused server session
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1883528Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1883720Z     Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1883911Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1884080Z     Error: locator.click: Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1884433Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1885298Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1885893Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1885910Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1886106Z       74 |   await page.keyboard.press("Escape")
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1886456Z       75 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1886983Z     > 76 |   await page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`).click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1887624Z          |                                                                          ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1888400Z       77 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1889166Z       78 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1889715Z       79 |   await transport.waitForConnection()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1890577Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-session-settings.spec.ts:76:74
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1891178Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1891691Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1893109Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1894165Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1894519Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1895411Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1896549Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1897527Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1897874Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1898502Z     Error Context: e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1899112Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1899539Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1899893Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1900115Z     Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1900359Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1900578Z     Error: locator.click: Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1900966Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1901791Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1902432Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1902631Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1902820Z       74 |   await page.keyboard.press("Escape")
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1903154Z       75 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1903614Z     > 76 |   await page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`).click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1904269Z          |                                                                          ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1904995Z       77 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1905777Z       78 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1906302Z       79 |   await transport.waitForConnection()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1907076Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-session-settings.spec.ts:76:74
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1907801Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1908407Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1909509Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1910650Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1911021Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1911520Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1912658Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1913745Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1914092Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1914823Z     Error Context: e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1915914Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1916423Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1917481Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1918237Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1918377Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1919091Z         npx playwright show-trace e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1919858Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1920390Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1920655Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1920949Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1921184Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1921360Z     Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1921532Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1921710Z     Error: locator.click: Test timeout of 60000ms exceeded.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1921996Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1922859Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1923587Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1923596Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1923797Z       74 |   await page.keyboard.press("Escape")
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1924220Z       75 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1924721Z     > 76 |   await page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`).click()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1925537Z          |                                                                          ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1926304Z       77 |   await expect(page).toHaveURL(new RegExp(`${hrefB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1927040Z       78 |   await expect(page.getByText(sessionB.title).first()).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1927583Z       79 |   await transport.waitForConnection()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1928412Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-session-settings.spec.ts:76:74
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1928996Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1929513Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1930516Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1931561Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1931901Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1932359Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1933451Z     e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1934455Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1934999Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1935863Z     Error Context: e2e/test-results/regression-remote-session--b7b39-an-unfocused-server-session-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1936657Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.1936665Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:04.6654660Z [42/124] [chromium] › e2e/regression/remote-tab-busy.spec.ts:10:1 › tab busy indicator reflects the tab server's own session status
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:17.4096704Z [43/124] (retries) [chromium] › e2e/regression/remote-tab-busy.spec.ts:10:1 › tab busy indicator reflects the tab server's own session status (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:31.5186629Z [44/124] (retries) [chromium] › e2e/regression/remote-tab-busy.spec.ts:10:1 › tab busy indicator reflects the tab server's own session status (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7281932Z   6) [chromium] › e2e/regression/remote-tab-busy.spec.ts:10:1 › tab busy indicator reflects the tab server's own session status
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7282795Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7283336Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7283782Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7284659Z     Locator: locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7285621Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7285919Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7286207Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7286353Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7286433Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7286764Z       - Expect "toBeVisible" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7287630Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7288354Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7288363Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7288750Z       33 |   // busy indicator must come from the tab server's status, not the active server's.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7289502Z       34 |   const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7290051Z     > 35 |   await expect(tabB.locator('[data-component="session-progress-indicator-v2"]')).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7290594Z          |                                                                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7291008Z       36 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7291324Z       37 |   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7291814Z       38 |   await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7292412Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-tab-busy.spec.ts:35:82
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7293028Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7293409Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7294048Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7294706Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7294942Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7295297Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7296175Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7297148Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7297521Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7298141Z     Error Context: e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7298764Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7299189Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7299897Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7300497Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7300885Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7301704Z     Locator: locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7302776Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7303065Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7303368Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7303555Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7303661Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7304111Z       - Expect "toBeVisible" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7305514Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7306400Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7306409Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7306800Z       33 |   // busy indicator must come from the tab server's status, not the active server's.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7307596Z       34 |   const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7308529Z     > 35 |   await expect(tabB.locator('[data-component="session-progress-indicator-v2"]')).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7309322Z          |                                                                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7309756Z       36 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7310253Z       37 |   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7311105Z       38 |   await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7312115Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-tab-busy.spec.ts:35:82
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7313167Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7313718Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7314821Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7315977Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7316375Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7316895Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7317886Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7318872Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7319275Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7319943Z     Error Context: e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7320533Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7320939Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7321957Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7322414Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7322760Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7323198Z         npx playwright show-trace e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7323659Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7323959Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7324190Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7324477Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7324707Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7324998Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7325265Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7325796Z     Locator: locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7326435Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7326639Z     Timeout: 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7326859Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7327001Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7327076Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7327371Z       - Expect "toBeVisible" with timeout 10000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7328235Z       - waiting for locator('[data-titlebar-tab-slot]:has(a[href="/server/aHR0cDovLzEyNy4wLjAuMTo0MDk3/session/ses_server_b"])').locator('[data-component="session-progress-indicator-v2"]')
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7328777Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7328783Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7329024Z       33 |   // busy indicator must come from the tab server's status, not the active server's.
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7329513Z       34 |   const tabB = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefB}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7330046Z     > 35 |   await expect(tabB.locator('[data-component="session-progress-indicator-v2"]')).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7330511Z          |                                                                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7330778Z       36 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7331087Z       37 |   const tabA = page.locator(`[data-titlebar-tab-slot]:has(a[href="${hrefA}"])`)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7331570Z       38 |   await expect(tabA.locator("[data-titlebar-tab-title]")).toHaveText(sessionA.title)
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7332168Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/remote-tab-busy.spec.ts:35:82
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7332733Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7333088Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7333734Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7334403Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7334919Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7335223Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7335810Z     e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7336446Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7336665Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7337069Z     Error Context: e2e/test-results/regression-remote-tab-busy-354e5-server-s-own-session-status-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7337488Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:43.7337493Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:44.2118227Z [45/124] [chromium] › e2e/regression/review-image-flash.spec.ts:11:1 › clicking an image file in the v2 review pane does not blank the panel
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:47.3271288Z [46/124] [chromium] › e2e/regression/review-line-comment.spec.ts:14:1 › opens the comment editor when code is clicked
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:50.2174025Z [47/124] [chromium] › e2e/regression/review-line-comment.spec.ts:24:1 › opens the comment editor when a line number is clicked
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:52.9649398Z [48/124] [chromium] › e2e/regression/review-line-comment.spec.ts:34:1 › opens the comment editor for a line number range
+e2e (linux)	Run app e2e tests	2026-10-01T22:09:55.4341240Z [49/124] [chromium] › e2e/regression/review-line-comment.spec.ts:47:1 › shows a comment button when a line number is hovered
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:08.1926252Z [50/124] (retries) [chromium] › e2e/regression/review-line-comment.spec.ts:47:1 › shows a comment button when a line number is hovered (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1056216Z   7) [chromium] › e2e/regression/review-line-comment.spec.ts:47:1 › shows a comment button when a line number is hovered
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1056985Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1057298Z     Error: Timeout 10000ms exceeded while waiting on the predicate
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1057703Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1057815Z       58 |     await comment.focus()
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1058126Z       59 |     await expect(comment).toBeFocused()
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1058408Z     > 60 |   }).toPass({ timeout: 10_000 })
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1058648Z          |      ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1058877Z       61 |   await comment.press("Enter")
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1059215Z       62 |   await expect(review.getByRole("textbox")).toBeVisible()
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1059961Z       63 |   await expect(review.locator('[data-slot="line-comment-editor-label"]')).toHaveText("Commenting on line 1")
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1060681Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/review-line-comment.spec.ts:60:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1061244Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1061619Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1062240Z     e2e/test-results/regression-review-line-com-c2366-en-a-line-number-is-hovered-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1063368Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1063754Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1064073Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1064666Z     e2e/test-results/regression-review-line-com-c2366-en-a-line-number-is-hovered-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1065291Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1065523Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1065902Z     Error Context: e2e/test-results/regression-review-line-com-c2366-en-a-line-number-is-hovered-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1066310Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1066315Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:12.1066837Z [51/124] [chromium] › e2e/regression/review-line-comment.spec.ts:66:1 › stages a submitted line comment in the prompt context
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:15.2252101Z [52/124] [chromium] › e2e/regression/review-open-file.spec.ts:14:1 › opens and searches project files inline
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:20.5354881Z [53/124] [chromium] › e2e/regression/review-state-persistence.spec.ts:16:1 › restores review mode and selected file per session
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:27.5415369Z [54/124] [chromium] › e2e/regression/review-tab-switch.spec.ts:24:1 › keeps the v2 review pane mounted when switching session tabs in a workspace
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:31.1543344Z [55/124] [chromium] › e2e/regression/review-terminal-stacked.spec.ts:20:1 › keeps the review tree and terminal sized when both panels are open
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:41.8545026Z [56/124] [chromium] › e2e/regression/session-list-path-loading.spec.ts:6:1 › shows loaded sessions before the directory path request resolves
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:43.5513686Z [57/124] [chromium] › e2e/regression/session-rename.spec.ts:46:3 › saves the session heading on Enter
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:47.3688832Z [58/124] [chromium] › e2e/regression/session-rename.spec.ts:46:3 › saves the session heading on blur
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:51.2809423Z [59/124] [chromium] › e2e/regression/session-rename.spec.ts:46:3 › saves the session heading on click outside
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:55.1541599Z [60/124] [chromium] › e2e/regression/session-rename.spec.ts:61:1 › cancels the session heading with Escape
+e2e (linux)	Run app e2e tests	2026-10-01T22:10:58.8490373Z [61/124] [chromium] › e2e/regression/session-rename.spec.ts:71:1 › keeps the draft when saving the session heading fails
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:01.1965569Z [62/124] [chromium] › e2e/regression/session-rename.spec.ts:88:1 › does not save an empty session heading
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:04.7496254Z [63/124] [chromium] › e2e/regression/session-rename.spec.ts:98:1 › renames and closes the session tab from its context menu
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:09.4140614Z [64/124] [chromium] › e2e/regression/session-rename.spec.ts:124:1 › renames an inactive tab without switching sessions
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:13.8694207Z [65/124] [chromium] › e2e/regression/session-request-docks.spec.ts:12:1 › shows a pending question dock
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:17.2520711Z [66/124] [chromium] › e2e/regression/session-request-docks.spec.ts:81:1 › shows a pending permission dock
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:19.2516483Z [67/124] [chromium] › e2e/regression/session-request-docks.spec.ts:112:1 › restores the draft caret before typing after a request dock closes
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:21.6129806Z [68/124] [chromium] › e2e/regression/session-timeline-accessibility.spec.ts:4:1 › space activates a focused timeline button instead of scrolling
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:23.7223150Z [69/124] [chromium] › e2e/regression/session-timeline-collapse-state.spec.ts:104:3 › regression: session timeline local row state › keeps a manually collapsed tool collapsed when later assistant content streams
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:26.3364214Z [70/124] [chromium] › e2e/regression/session-timeline-collapse-state.spec.ts:139:3 › regression: session timeline local row state › does not remount an edit diff when sibling parts or diff counts update
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:29.7064045Z [71/124] [chromium] › e2e/regression/session-timeline-collapse-state.spec.ts:195:3 › regression: session timeline local row state › keeps a sticky edit header aligned with a multi-hunk diff
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:32.5627763Z [72/124] [chromium] › e2e/regression/session-timeline-context-resize.spec.ts:28:3 › regression: session timeline context group resize › remeasures a recent explored context group before the next paint
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:35.3998652Z [73/124] [chromium] › e2e/regression/session-timeline-context-resize.spec.ts:47:3 › regression: session timeline context group resize › paints a stable exploring to explored transition
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:40.1373000Z [74/124] [chromium] › e2e/regression/session-timeline-context-state.spec.ts:10:1 › preserves a collapsed context group through count and status updates
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:42.6321219Z [75/124] [chromium] › e2e/regression/session-timeline-file-projection.spec.ts:4:1 › renders completed write content
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:44.9614790Z [76/124] [chromium] › e2e/regression/session-timeline-file-projection.spec.ts:19:1 › renders a completed single-file patch
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:48.0025207Z [77/124] [chromium] › e2e/regression/session-timeline-file-state.spec.ts:10:1 › updates edit diagnostics without resetting manual collapse state
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:51.0630874Z [78/124] [chromium] › e2e/regression/session-timeline-file-state.spec.ts:29:1 › preserves nested patch file state through outer collapse and reopen
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:54.5965037Z [79/124] [chromium] › e2e/regression/session-timeline-history-root.spec.ts:51:3 › keeps visible timeline content visible through completion
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:56.6618351Z [80/124] [chromium] › e2e/regression/session-timeline-history-root.spec.ts:51:3 › keeps visible timeline content visible through interruption
+e2e (linux)	Run app e2e tests	2026-10-01T22:11:58.6867345Z [81/124] [chromium] › e2e/regression/session-timeline-lifecycle-state.spec.ts:16:3 › preserves shell user intent from a collapsed default
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:01.6108244Z [82/124] [chromium] › e2e/regression/session-timeline-lifecycle-state.spec.ts:16:3 › preserves shell user intent from a expanded default
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:04.4975185Z [83/124] [chromium] › e2e/regression/session-timeline-lifecycle-state.spec.ts:35:1 › shows and expands a running shell command without shimmering it
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:06.7505112Z [84/124] [chromium] › e2e/regression/session-timeline-lifecycle-state.spec.ts:52:1 › transitions thinking and hidden reasoning through busy to idle
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:09.9031661Z [85/124] [chromium] › e2e/regression/session-timeline-lifecycle-state.spec.ts:74:1 › moves busy through retry and recovery to final idle content
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:13.0808769Z [86/124] [chromium] › e2e/regression/session-timeline-locale-projection.spec.ts:8:3 › projects translated context status in de
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:15.2307202Z [87/124] [chromium] › e2e/regression/session-timeline-locale-projection.spec.ts:8:3 › projects translated context status in ar
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:17.2783134Z [88/124] [chromium] › e2e/regression/session-timeline-projection.spec.ts:13:3 › session timeline projection › renders every admitted tool family and hides timeline-only exclusions
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:19.3677645Z [89/124] [chromium] › e2e/regression/session-timeline-projection.spec.ts:71:3 › session timeline projection › projects gaps, dividers, assistant parts, and errors together
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:21.8056743Z [90/124] [chromium] › e2e/regression/session-timeline-projection.spec.ts:131:3 › session timeline projection › renders inline comments and historical diff summary overflow
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:23.9870524Z [91/124] [chromium] › e2e/regression/session-timeline-projection.spec.ts:167:3 › session timeline projection › renders interruption independently when the turn is not compacted
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:26.1319510Z [92/124] [chromium] › e2e/regression/session-timeline-projection.spec.ts:186:3 › session timeline projection › renders user image, file attachment, file reference, and agent reference
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:28.2286981Z [93/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries off no reasoning
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:30.4714950Z [94/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries off reasoning heading
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:32.6202586Z [95/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries off with visible tool
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:34.7680224Z [96/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries on no content
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:37.0764887Z [97/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries on blank reasoning
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:39.2504057Z [98/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries on visible reasoning
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:41.4544002Z [99/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:58:3 › projects busy reasoning profile summaries on visible tool no reasoning
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:43.6846770Z [100/124] [chromium] › e2e/regression/session-timeline-reasoning-projection.spec.ts:80:1 › does not infer reasoning visibility from provider identity
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:45.8606111Z [101/124] [chromium] › e2e/regression/session-timeline-reducer-projection.spec.ts:15:1 › groups singleton and separated context operations at correct boundaries
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:48.0170214Z [102/124] [chromium] › e2e/regression/session-timeline-reducer-projection.spec.ts:32:1 › reducer-hardening: converges when idle arrives before final part and message completion
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:50.5572312Z [103/124] [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.25x
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:54.2509529Z [104/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.25x (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:12:58.8652699Z [105/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.25x (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1671448Z   8) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.25x
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1672267Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1673056Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1673531Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1673803Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1674338Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1674603Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1674888Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1675554Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1676194Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1676669Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1677115Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1677596Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1678122Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1679007Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1680115Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1680641Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1681570Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1682757Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1683097Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1683559Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1684471Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1685505Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1685839Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1686463Z     Error Context: e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1687133Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1687584Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1687938Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1688455Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1688903Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1689139Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1689634Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1689885Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1690173Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1690799Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1691383Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1691859Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1692252Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1693235Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1693746Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1694707Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1695352Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1695861Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1696815Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1697926Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1698304Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1698833Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1699889Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1701347Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1701717Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1702407Z     Error Context: e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1703254Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1703800Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1704877Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1705604Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1705778Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1706493Z         npx playwright show-trace e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1707313Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1707758Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1708154Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1708658Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1709033Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1709630Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1710183Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1710456Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1711009Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1711284Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1711587Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1712270Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1712970Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1713319Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1713664Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1714048Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1714410Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1715158Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1715563Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1715921Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1716582Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1717270Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1717509Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1717842Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1718621Z     e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1719381Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1719600Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1720011Z     Error Context: e2e/test-results/regression-session-timelin-777fa--short-virtual-row-at-1-25x-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1720437Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.1720442Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:02.9813901Z [106/124] [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.5x
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:06.9496629Z [107/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.5x (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:11.4712435Z [108/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.5x (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5773692Z   9) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.5x
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5774617Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5775290Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5775834Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5776122Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5776678Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5776969Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5777286Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5777970Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5778602Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5779125Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5779590Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5780083Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5780602Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5781550Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5782207Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5783029Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5784051Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5784848Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5785069Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5785384Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5786372Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5786992Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5787219Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5787595Z     Error Context: e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5787982Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5788262Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5788489Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5788856Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5789248Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5789502Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5790044Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5790295Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5790493Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5790910Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5791531Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5804855Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5805339Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5805782Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5806159Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5806797Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5807215Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5807649Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5808395Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5809119Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5809349Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5809690Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5810474Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5811469Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5811880Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5812571Z     Error Context: e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5813150Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5813790Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5815305Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5816014Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5816153Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5816823Z         npx playwright show-trace e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5817512Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5817959Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5818306Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5818727Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5819080Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5819645Z     Error: expect(received).toBe(expected) // Object.is equality
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5820125Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5820414Z     Expected: "rgb(255, 0, 255)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5820952Z     Received: "rgba(70, 84, 98, 0.14)"
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5821229Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5821504Z       56 |     expect(edges.box.width).toBeCloseTo(geometry.outputWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5822142Z       57 |     expect(edges.box.height).toBeCloseTo(geometry.outputHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5822909Z     > 58 |     expect(geometry.borderColor).toBe("rgb(255, 0, 255)")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5823376Z          |                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5823787Z       59 |     expect(geometry.boxShadow).toBe("none")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5824250Z       60 |     expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5824726Z       61 |     expect(edges.magenta.top).toBeGreaterThan(0.75)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5825704Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:58:34
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5826426Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5826910Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5827892Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5828918Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5829259Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5829749Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5830682Z     e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5831733Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5832050Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5832817Z     Error Context: e2e/test-results/regression-session-timelin-cd274-y-short-virtual-row-at-1-5x-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5833482Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:14.5833490Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:15.3366156Z [109/124] [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:67:1 › keeps the patch card inside a fractionally short virtual row
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:19.4984547Z [110/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:67:1 › keeps the patch card inside a fractionally short virtual row (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:24.7441672Z [111/124] (retries) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:67:1 › keeps the patch card inside a fractionally short virtual row (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3269013Z   10) [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:67:1 › keeps the patch card inside a fractionally short virtual row
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3269864Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3270555Z     Error: expect(received).toBeCloseTo(expected, precision)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3271115Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3271305Z     Expected: 33
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3271724Z     Received: 81
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3271938Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3272071Z     Expected precision:    2
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3272704Z     Expected difference: < 0.005
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3273191Z     Received difference:   48
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3273435Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3273709Z       114 |   const edges = await captureCardEdges(page, card)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3274338Z       115 |   expect(edges.box.width).toBeCloseTo(geometry.cardWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3274926Z     > 116 |   expect(edges.box.height).toBeCloseTo(geometry.cardHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3275427Z           |                            ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3275870Z       117 |   expect(edges.luminance.top).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3276395Z       118 |   expect(edges.luminance.bottom).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3277045Z       119 |   expect(Math.abs(edges.luminance.bottom - edges.luminance.top)).toBeLessThan(10)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3278137Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:116:28
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3278833Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3279433Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3280149Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3280827Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3281059Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3281365Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3281935Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3282912Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3283146Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3283836Z     Error Context: e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3284406Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3284700Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3284933Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3285325Z     Error: expect(received).toBeCloseTo(expected, precision)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3285662Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3285779Z     Expected: 33
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286017Z     Received: 81
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286139Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286233Z     Expected precision:    2
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286512Z     Expected difference: < 0.005
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286812Z     Received difference:   48
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3286970Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3287130Z       114 |   const edges = await captureCardEdges(page, card)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3287545Z       115 |   expect(edges.box.width).toBeCloseTo(geometry.cardWidth, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3287999Z     > 116 |   expect(edges.box.height).toBeCloseTo(geometry.cardHeight, 2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3288356Z           |                            ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3288650Z       117 |   expect(edges.luminance.top).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3289011Z       118 |   expect(edges.luminance.bottom).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3289438Z       119 |   expect(Math.abs(edges.luminance.bottom - edges.luminance.top)).toBeLessThan(10)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3290101Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:116:28
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3290521Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3290853Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3291531Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3292305Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3292726Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3293064Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3293711Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3294384Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3294634Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3295041Z     Error Context: e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3295500Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3295817Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3296461Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3297063Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3297167Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3297738Z         npx playwright show-trace e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3298200Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3298487Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3298738Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3299025Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3299277Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3299655Z     Error: expect(received).toBeLessThan(expected)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3299940Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3300074Z     Expected: < 10
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3300367Z     Received:   14.999999999999261
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3300545Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3300703Z       117 |   expect(edges.luminance.top).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3301199Z       118 |   expect(edges.luminance.bottom).toBeLessThan(245)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3301683Z     > 119 |   expect(Math.abs(edges.luminance.bottom - edges.luminance.top)).toBeLessThan(10)
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3302227Z           |                                                                  ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3302838Z       120 |   expect(geometry.clipMargin).toBe("0.5px")
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3303222Z       121 | })
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3303401Z       122 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3303983Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/regression/session-timeline-shell-outline.spec.ts:119:66
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3304708Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3305280Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3306278Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3307063Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3307425Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3307731Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3308323Z     e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3308965Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3309187Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3309587Z     Error Context: e2e/test-results/regression-session-timelin-4b35a-ctionally-short-virtual-row-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3310012Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:28.3310017Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:29.0972975Z [112/124] [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:123:1 › allows paint rounding for every framed row but not fixed turn gaps
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:31.6246597Z [113/124] [chromium] › e2e/regression/session-timeline-tool-projection.spec.ts:10:1 › renders every tool error outcome without leaking hidden tools
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:33.6944376Z [114/124] [chromium] › e2e/regression/session-timeline-tool-projection.spec.ts:32:1 › transitions shell and question through running error outcomes
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:36.5006947Z [115/124] [chromium] › e2e/regression/session-timeline-tool-projection.spec.ts:67:1 › labels all web search provider variants
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:38.5297174Z [116/124] [chromium] › e2e/regression/session-timeline-tool-state.spec.ts:10:1 › updates expanded web search links without resetting expansion
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:40.9986957Z [117/124] [chromium] › e2e/regression/session-timeline-tool-state.spec.ts:35:1 › preserves an expanded tool error card across duplicate delivery
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:43.4557079Z [118/124] [chromium] › e2e/regression/session-timeline-tool-state.spec.ts:49:1 › renders multiple question answers and preserves open state on answer updates
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:45.7044287Z [119/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:10:1 › keeps one connection open while delivering multiple events
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:47.7487763Z [120/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:23:1 › delivers a burst from one stream chunk
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:49.7775050Z [121/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:36:1 › parses split JSON and a split multibyte code point
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:51.9146809Z [122/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:52:1 › delivers server heartbeat without mutating the timeline
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:54.1748154Z [123/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:73:1 › reconnects after a clean close
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:56.4184901Z [124/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:86:1 › reconnects after a stream error
+e2e (linux)	Run app e2e tests	2026-10-01T22:13:58.4914820Z [125/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:100:1 › does not request replay when reconnecting the volatile V2 event stream
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:00.7484930Z [126/124] [chromium] › e2e/regression/session-timeline-transport.spec.ts:114:1 › passes through non-event fetches
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:02.8270832Z [127/124] [chromium] › e2e/regression/session-todo-dock-navigation.spec.ts:26:1 › animates todo lifecycle without replaying it across session tabs
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:09.6585586Z [128/124] [chromium] › e2e/regression/subagent-child-navigation.spec.ts:19:1 › navigates to a subagent child session missing from the session list
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:11.9385864Z [129/124] [chromium] › e2e/regression/subagent-child-navigation.spec.ts:30:1 › shows the not found fallback when the viewed session is deleted
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:14.3220796Z [130/124] [chromium] › e2e/regression/tab-navigate-mousedown.spec.ts:11:1 › pressing mouse down on a tab navigates before mouse up
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:16.2733124Z [131/124] [chromium] › e2e/regression/tab-navigate-mousedown.spec.ts:45:1 › keyboard navigation follows the visible tab order
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:18.2135485Z [132/124] [chromium] › e2e/regression/terminal-composer-focus.spec.ts:79:1 › routes typing to the composer unless the open terminal is focused
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:20.7136183Z [133/124] [chromium] › e2e/regression/terminal-composer-focus.spec.ts:100:1 › keeps composer focus when a cached terminal finishes mounting
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:23.5856040Z [134/124] [chromium] › e2e/regression/terminal-composer-focus.spec.ts:136:1 › keeps newer composer focus while an explicit terminal open finishes
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:25.8897651Z [135/124] [chromium] › e2e/regression/terminal-composer-focus.spec.ts:162:1 › focuses a terminal created from the new-terminal button
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:28.4954808Z [136/124] [chromium] › e2e/regression/terminal-hidden.spec.ts:10:1 › unmounts the terminal panel while it is hidden
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:30.6625362Z [137/124] [chromium] › e2e/regression/terminal-tab-switch.spec.ts:22:1 › keeps the terminal session alive when switching session tabs in a workspace
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:33.2536434Z [138/124] [chromium] › e2e/smoke/session-timeline.spec.ts:33:3 › smoke: session timeline › keeps the visible message fixed while prepending history
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:50.0918455Z [139/124] [chromium] › e2e/smoke/session-timeline.spec.ts:92:3 › smoke: session timeline › preserves the timeline gap above the composer
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:52.3624327Z [140/124] [chromium] › e2e/smoke/session-timeline.spec.ts:118:3 › smoke: session timeline › paints cached session tabs at the latest message
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:55.0737902Z [141/124] [chromium] › e2e/smoke/session-timeline.spec.ts:244:3 › smoke: session timeline › paints a cold session tab at the latest message
+e2e (linux)	Run app e2e tests	2026-10-01T22:14:57.4867475Z [142/124] [chromium] › e2e/smoke/session-timeline.spec.ts:322:3 › smoke: session timeline › renders seeded timeline in order while paging through history
+e2e (linux)	Run app e2e tests	2026-10-01T22:15:29.5540635Z [143/124] (retries) [chromium] › e2e/smoke/session-timeline.spec.ts:322:3 › smoke: session timeline › renders seeded timeline in order while paging through history (retry #1)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:05.1178635Z [144/124] (retries) [chromium] › e2e/smoke/session-timeline.spec.ts:322:3 › smoke: session timeline › renders seeded timeline in order while paging through history (retry #2)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5663223Z   11) [chromium] › e2e/smoke/session-timeline.spec.ts:322:3 › smoke: session timeline › renders seeded timeline in order while paging through history
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5664095Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5664671Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5665118Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5665609Z     Locator: locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5666251Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5666554Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5666934Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5667184Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5667291Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5667789Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5668691Z       - waiting for locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5669256Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5669264Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5669397Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5669593Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5669706Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5670133Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5670747Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5671277Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5671598Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5671855Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5672341Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5673474Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5674636Z         at selectHomeProject (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:719:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5675773Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:333:5
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5676303Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5676848Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5677752Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5678718Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5679066Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5679524Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5680718Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5681928Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5682312Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5683101Z     Error Context: e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5683719Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5684216Z     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5684570Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5685038Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5685471Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5685977Z     Locator: locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5686648Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5686959Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5687328Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5687596Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5687709Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5688172Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5689117Z       - waiting for locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5689672Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5689680Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5689807Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5690013Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5690155Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5690579Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5691223Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5691741Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5692041Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5692340Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5692936Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5693859Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5695085Z         at selectHomeProject (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:719:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5696243Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:333:5
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5696786Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5697364Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5698491Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry1/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5699335Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5699662Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5699976Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5700767Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry1/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5701531Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5701757Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5702164Z     Error Context: e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry1/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5702834Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5703159Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5703757Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5704196Z     Usage:
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5704300Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5704716Z         npx playwright show-trace e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry1/trace.zip
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5705160Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5705440Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5705687Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5705967Z     Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5706188Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5706477Z     Error: expect(locator).toBeVisible() failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5706738Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5707028Z     Locator: locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5707410Z     Expected: visible
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5707613Z     Timeout: 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5707820Z     Error: element(s) not found
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5707959Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5708037Z     Call log:
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5708325Z       - Expect "toBeVisible" with timeout 30000ms
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5708888Z       - waiting for locator('[data-component="home-project-row"]').filter({ hasText: /smoke-project/i }).first()
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709253Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709258Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709348Z        at utils/waits.ts:6
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709473Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709549Z       4 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5709816Z       5 | export async function expectAppVisible(locator: Locator) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5710219Z     > 6 |   await expect(locator).toBeVisible({ timeout: APP_READY_TIMEOUT })
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5710540Z         |                         ^
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5710754Z       7 | }
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5710925Z       8 |
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5711227Z       9 | export async function expectSessionTitle(page: Page, title: string) {
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5711787Z         at expectAppVisible (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/utils/waits.ts:6:25)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5712635Z         at selectHomeProject (/home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:719:9)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5713465Z         at /home/runner/work/HuGR-Orchestra/HuGR-Orchestra/packages/app/e2e/smoke/session-timeline.spec.ts:333:5
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5713928Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5714253Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5714892Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry2/test-failed-1.png
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5715562Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5715777Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5716078Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5716661Z     e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry2/video.webm
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5717286Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5717503Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5717921Z     Error Context: e2e/test-results/smoke-session-timeline-smo-ab872-hile-paging-through-history-chromium-retry2/error-context.md
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5718350Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:37.5718354Z
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:38.0326032Z [145/124] [chromium] › e2e/user-story/model-selection-flow.spec.ts:7:1 › creates a session in a new project, connects OpenCode Go, and selects its model
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3347989Z   10 failed
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3348870Z     [chromium] › e2e/regression/cross-server-tab-close.spec.ts:10:1 › closing the active server's last tab opens the remaining server tab
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3349935Z     [chromium] › e2e/regression/new-session-panel-corner.spec.ts:14:1 › matches the rounded panel corners to the dark new-session background
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3350819Z     [chromium] › e2e/regression/project-picker-recent-search.spec.ts:46:1 › searches every recent project, not just the five most recent
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3351631Z     [chromium] › e2e/regression/project-picker-recent-search.spec.ts:55:1 › still caps the idle recent list at five projects
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3352687Z     [chromium] › e2e/regression/remote-session-settings.spec.ts:46:1 › auto-accept responds for an unfocused server session
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3353515Z     [chromium] › e2e/regression/remote-tab-busy.spec.ts:10:1 › tab busy indicator reflects the tab server's own session status
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3354377Z     [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.25x
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3355290Z     [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:12:3 › keeps the shell outline inside a fractionally short virtual row at 1.5x
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3356160Z     [chromium] › e2e/regression/session-timeline-shell-outline.spec.ts:67:1 › keeps the patch card inside a fractionally short virtual row
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3357038Z     [chromium] › e2e/smoke/session-timeline.spec.ts:322:3 › smoke: session timeline › renders seeded timeline in order while paging through history
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3357554Z   1 flaky
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3358044Z     [chromium] › e2e/regression/review-line-comment.spec.ts:47:1 › shows a comment button when a line number is hovered
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3358483Z   113 passed (16.1m)
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3589319Z error: script "test:e2e:local" exited with code 1
+e2e (linux)	Run app e2e tests	2026-10-01T22:16:43.3606864Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,11 @@
+{
+  "sprint": {
+    "gen": 7,
+    "work_packages": []
+  },
+  "key": null,
+  "bodies": [
+    "{\"event\":\"note\",\"wp\":\"wp1\"}",
+    "{\"event\":\"sprint-complete\",\"wp\":\"wp1\"}"
+  ]
+}

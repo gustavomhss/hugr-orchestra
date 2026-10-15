@@ -1,0 +1,6 @@
+{
+  "id": "C-RUN-01.timeout-after-exit",
+  "steps": [
+    {"run": ["${FIXTURE}", "out=ROOT\\n", "hold=60000", "exit=0"], "options": {"timeoutMs": 2000, "graceMs": 8000}, "expect": {"reason": "timeout", "success": false, "exitCode": 0, "stdout": "ROOT\n", "elapsedMs": {"gte": 1995, "lt": 3000}}}
+  ]
+}

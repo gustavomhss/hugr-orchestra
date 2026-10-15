@@ -1,0 +1,12 @@
+{
+  "extends": "../../core/tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "typeRoots": ["../../core/node_modules/@types"],
+    "paths": {
+      "effect": ["../../core/node_modules/effect/dist/index.d.ts"],
+      "effect/unstable/process": ["../../core/node_modules/effect/dist/unstable/process/index.d.ts"]
+    }
+  },
+  "include": ["delivery-fixtures.ts", "v7-overhead.ts", "v8-windows.ts", "v9-broken-artifacts.ts"]
+}

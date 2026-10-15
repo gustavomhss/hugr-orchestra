@@ -1,0 +1,52 @@
+{
+  "brief": "Scaffold the Python package '${pkg}' under ${root} into a well-formed, importable shape with a passing smoke test.",
+  "retry_budget": 3,
+  "work_packages": [
+    {
+      "id": "wp1-layout",
+      "title": "Package layout exists",
+      "instructions": "Create the package directory '${pkg}' under ${root} with an __init__.py so it is a real Python package. The package name '${pkg}' must be a valid Python identifier. Do not put code in __init__.py beyond what a clean package needs.",
+      "checklist": [
+        {
+          "id": "C-PKG-DIR",
+          "assert": "${pkg}/ is a directory",
+          "cmd": "test -d ${root}/${pkg}"
+        },
+        {
+          "id": "C-INIT-PY",
+          "assert": "${pkg}/__init__.py exists",
+          "cmd": "test -f ${root}/${pkg}/__init__.py"
+        }
+      ]
+    },
+    {
+      "id": "wp2-importable",
+      "title": "Package imports cleanly",
+      "instructions": "Make 'import ${pkg}' succeed from the project root ${root} with no import-time errors. Resolve missing dependencies and broken imports inside the package.",
+      "checklist": [
+        {
+          "id": "C-IMPORTABLE",
+          "assert": "import ${pkg} succeeds from ${root}",
+          "cmd": "cd ${root} && python3 -c \"import ${pkg}\""
+        }
+      ]
+    },
+    {
+      "id": "wp3-smoke",
+      "title": "Smoke test passes",
+      "instructions": "Add a smoke test at ${root}/tests/test_${pkg}_smoke.py that imports ${pkg} and asserts at least one basic property (e.g. that it imports and exposes a __name__). Make it pass under pytest.",
+      "checklist": [
+        {
+          "id": "C-SMOKE-EXISTS",
+          "assert": "a smoke test file for ${pkg} exists",
+          "cmd": "test -f ${root}/tests/test_${pkg}_smoke.py"
+        },
+        {
+          "id": "C-SMOKE-GREEN",
+          "assert": "the ${pkg} smoke test passes",
+          "cmd": "cd ${root} && python3 -m pytest tests/test_${pkg}_smoke.py -q"
+        }
+      ]
+    }
+  ]
+}

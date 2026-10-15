@@ -5,9 +5,9 @@ import type {
   PermissionV2Request,
   ProviderListOutput,
 } from "@opencode-ai/client/promise"
-import type { Agent, PermissionRequest, Project, Provider, ProviderListResponse } from "@opencode-ai/sdk/v2/client"
+import type { Agent, PermissionRequest, Project, Provider, ProviderListResponse } from "@orchestra/sdk/v2/client"
 import type { Project as CurrentProject } from "@opencode-ai/client/promise"
-import { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
+import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 export { pathKey as directoryKey, type PathKey as DirectoryKey } from "@/utils/path-key"
 
 export const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
@@ -15,13 +15,13 @@ export const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Agent[] {
   if (input.every((agent) => !("request" in agent))) return input as Agent[]
   return (input as AgentListOutput["data"]).map((agent) => ({
+    id: agent.id,
     name: agent.id,
     description: agent.description,
     mode: agent.mode,
     hidden: agent.hidden,
-    temperature:
-      typeof agent.request.settings.temperature === "number" ? agent.request.settings.temperature : undefined,
-    topP: typeof agent.request.settings.topP === "number" ? agent.request.settings.topP : undefined,
+    temperature: numeric(settings(agent).temperature),
+    topP: numeric(settings(agent).topP),
     color: agent.color,
     permission: agent.permissions.map((rule) => ({
       permission: rule.action,
@@ -31,9 +31,18 @@ export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Ag
     model: agent.model && { providerID: agent.model.providerID, modelID: agent.model.id },
     variant: agent.model?.variant,
     prompt: agent.system,
-    options: agent.request.settings,
+    options: settings(agent),
     steps: agent.steps,
   }))
+}
+
+// This fork's server sends `request: { headers, body }` without `settings`; a missing value must not throw.
+function settings(agent: AgentListOutput["data"][number]): Record<string, unknown> {
+  return agent.request.settings ?? {}
+}
+
+function numeric(value: unknown) {
+  return typeof value === "number" ? value : undefined
 }
 
 export function normalizePermissionRequest(input: PermissionV2Request | PermissionRequest): PermissionRequest {
@@ -127,6 +136,8 @@ export function normalizeProviderList(
           write: cost?.cache.write ?? 0,
         },
       },
+      // Keep missing pricing distinguishable from explicit free pricing in Context metrics.
+      ...{ costAvailable: cost !== undefined },
       limit: model.limit,
       status: model.status,
       options: model.settings ?? {},

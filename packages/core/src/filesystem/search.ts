@@ -2,7 +2,7 @@ export * as FileSystemSearch from "./search"
 
 import { makeLocationNode } from "../effect/app-node"
 import path from "path"
-import { Context, Effect, Layer, Scope } from "effect"
+import { Context, Effect, Layer } from "effect"
 import { Fff } from "#fff"
 import fuzzysort from "fuzzysort"
 import { FileSystem } from "../filesystem"
@@ -18,7 +18,7 @@ export interface Interface {
   readonly grep: (input: FileSystem.GrepInput) => Effect.Effect<readonly FileSystem.Match[]>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/FileSystem/Search") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileSystem/Search") {}
 
 export const ripgrepLayer = Layer.effect(
   Service,
@@ -26,7 +26,6 @@ export const ripgrepLayer = Layer.effect(
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
     const ripgrep = yield* Ripgrep.Service
-    const scope = yield* Scope.Scope
     const state = {
       files: [] as string[],
       directories: [] as string[],
@@ -45,7 +44,7 @@ export const ripgrepLayer = Layer.effect(
             state.directories = Array.from(directories)
           }),
       })
-      .pipe(Effect.orDie, Effect.asVoid, Effect.forkIn(scope))
+      .pipe(Effect.orDie, Effect.asVoid)
     return Service.of({
       glob: (input) =>
         Effect.gen(function* () {
@@ -232,7 +231,7 @@ export const fffLayer = Layer.effect(
   }),
 )
 
-const layer = Layer.unwrap(Effect.sync(() => (Flag.OPENCODE_DISABLE_FFF || !Fff.available() ? ripgrepLayer : fffLayer)))
+const layer = Layer.unwrap(Effect.sync(() => (Flag.ORCHESTRA_DISABLE_FFF || !Fff.available() ? ripgrepLayer : fffLayer)))
 
 export const locationLayer = layer
 

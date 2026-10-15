@@ -1,0 +1,44 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "4993"[0m
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/orchestra/governance.spec.ts:87:1 › Show in chat moves to the record's turn through the existing message hash
+[1A[2K  1) [chromium] › e2e/orchestra/governance.spec.ts:87:1 › Show in chat moves to the record's turn through the existing message hash
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: getByRole('dialog', { name: 'Maestro governance' }).locator('[data-kind="validation"]')
+    Expected substring: [32m"[7mevt_current_validati[27mon"[39m
+    Received string:    [31m"[7mValidation recordOn holdThe result could not be read, so it counts for nothing.Source messagemsg_maestro_1Oct 9, 2025, 5:53 AMInspect the reas[27mon"[39m
+    Timeout: 10000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('dialog', { name: 'Maestro governance' }).locator('[data-kind="validation"]')[22m
+    [2m    14 × locator resolved to <li data-state="hold" data-kind="validation" class="orchestra-governance-record">…</li>[22m
+    [2m       - unexpected value "Validation recordOn holdThe result could not be read, so it counts for nothing.Source messagemsg_maestro_1Oct 9, 2025, 5:53 AMInspect the reason"[22m
+
+
+      141 |     "Not reported by this server",
+      142 |   )
+    > 143 |   await expect(dialog.locator('[data-kind="validation"]')).toContainText("evt_current_validation")
+          |                                                            ^
+      144 |   await expect(dialog.locator('[data-kind="validation"]')).toHaveAttribute("data-state", "recorded")
+      145 |   await expect(dialog.locator('[data-kind="presentation"]')).toContainText("Time not reported")
+      146 |   await expect(dialog).not.toContainText("evt_proposed")
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/e2e/orchestra/governance.spec.ts:143:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-Show--36f34-h-the-existing-message-hash-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-Show--36f34-h-the-existing-message-hash-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-governance-Show--36f34-h-the-existing-message-hash-chromium/error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › e2e/orchestra/governance.spec.ts:87:1 › Show in chat moves to the record's turn through the existing message hash

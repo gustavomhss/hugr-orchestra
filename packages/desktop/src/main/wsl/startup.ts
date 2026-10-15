@@ -1,21 +1,20 @@
-import { nativeT } from "../native-translations"
-
 export function wslServerIdsToStartOnInitialize(servers: { id: string }[]) {
   return servers.map((server) => server.id)
 }
 
-export function expectOpencodeVersion(installed: string | null, expected: string, distro = "Debian") {
-  if (installed === expected) return
-  throw new Error(
-    nativeT("desktop.wsl.error.updateVersion", {
-      distro,
-      installed: installed ?? nativeT("desktop.wsl.error.noVersion"),
-      expected,
-    }),
-  )
-}
-
 export const pendingRestartAfterWslInstall = (runtime: { available: boolean }) => !runtime.available
+
+export async function checkWslAuthentication(url: string, password: string, signal?: AbortSignal) {
+  const request = (value: string) =>
+    fetch(new URL("/api/health", url), {
+      headers: { authorization: `Basic ${Buffer.from(`orchestra:${value}`).toString("base64")}` },
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(3000)]) : AbortSignal.timeout(3000),
+    })
+  const allowed = await request(password)
+  const denied = await request(`${password}-invalid`)
+  const healthy: unknown = allowed.ok ? await allowed.json() : null
+  return !!healthy && typeof healthy === "object" && "healthy" in healthy && healthy.healthy === true && denied.status === 401
+}
 
 export async function pollWslHealth(check: () => Promise<boolean>, signal: AbortSignal, interval = 100) {
   while (!signal.aborted) {

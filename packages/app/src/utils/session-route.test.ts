@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { ServerConnection } from "@/context/server"
 import { legacySessionHref, legacySessionServer, requireServerKey, rootSession, sessionHref } from "./session-route"
+import { rethrow } from "../testing/rejection"
 
 describe("session routes", () => {
   test("uses the unique persisted server for a legacy session route", () => {
@@ -66,6 +67,8 @@ describe("session routes", () => {
       parent: { id: "parent", parentID: "child" },
     }
 
-    expect(rootSession(sessions.child, async (id) => sessions[id]!)).rejects.toThrow("Session parent cycle: child")
+    expect(await rethrow(rootSession(sessions.child, async (id) => sessions[id]!))).toThrow(
+      "Session parent cycle: child",
+    )
   })
 })

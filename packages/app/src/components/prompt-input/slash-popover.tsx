@@ -1,9 +1,9 @@
 import { Component, For, Match, Show, Switch } from "solid-js"
-import { FileIcon } from "@opencode-ai/ui/file-icon"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Tag } from "@opencode-ai/ui/v2/badge-v2"
-import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
-import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
+import { FileIcon } from "@orchestra/ui/file-icon"
+import { Icon } from "@orchestra/ui/icon"
+import { Tag } from "@orchestra/ui/v2/badge-v2"
+import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
+import { getDirectory, getFilename } from "@orchestra/core/util/path"
 
 export type AtOption =
   | { type: "agent"; name: string; display: string }
@@ -111,7 +111,8 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                             "text-text-strong": !props.newLayoutDesigns,
                           }}
                         >
-                          @{item.name}
+                          {/* `name` is the agent's stable id; `display` is its label. */}
+                          @{item.display}
                         </span>
                       </button>
                     )

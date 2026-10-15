@@ -1,0 +1,95 @@
+{
+  "name": "drift2",
+  "transport": "file",
+  "boundary": 89,
+  "head": [
+    69,
+    80
+  ],
+  "tailStart": 81,
+  "crossed": true,
+  "contextTokens": 45211,
+  "retried": false,
+  "ceiling": 10953,
+  "size": 6014,
+  "dropped": 0,
+  "ops": [
+    {
+      "op": "update",
+      "id": "m27"
+    },
+    {
+      "op": "retire",
+      "id": "m32"
+    },
+    {
+      "op": "retire",
+      "id": "m33"
+    },
+    {
+      "op": "retire",
+      "id": "m39"
+    },
+    {
+      "op": "update",
+      "id": "m41"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "plan"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    }
+  ],
+  "applied": true,
+  "items": 48,
+  "memoryTokens": 6014,
+  "calls": [
+    {
+      "label": "v4/drift2",
+      "estimate": 9982,
+      "usage": {
+        "inputTokens": 9982,
+        "outputTokens": 1236
+      }
+    }
+  ]
+}

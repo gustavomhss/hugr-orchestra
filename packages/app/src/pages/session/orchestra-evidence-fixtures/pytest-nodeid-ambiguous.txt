@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_label[hello - world] ___________________________
+pytest_nodeid_case.py:6: in test_label
+    assert label == "expected"
+E   AssertionError: assert 'hello - world' == 'expected'
+E
+E     - expected
+E     + hello - world
+=========================== short test summary info ============================
+FAILED pytest_nodeid_case.py::test_label[hello - world] - AssertionError: ass...
+1 failed in 0.07s

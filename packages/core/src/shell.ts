@@ -122,7 +122,7 @@ function select(file: string | undefined, opts?: { acceptable?: boolean }) {
 
 export function gitbash() {
   if (process.platform !== "win32") return
-  if (Flag.OPENCODE_GIT_BASH_PATH) return Flag.OPENCODE_GIT_BASH_PATH
+  if (Flag.ORCHESTRA_GIT_BASH_PATH) return Flag.ORCHESTRA_GIT_BASH_PATH
   const git = which("git")
   if (!git) return
   const file = path.join(git, "..", "..", "bin", "bash.exe")
@@ -176,7 +176,7 @@ export function args(file: string, command: string, cwd: string) {
         cd -- "$1"
         eval ${JSON.stringify(command)}
       `,
-      "opencode",
+      "orchestra",
       cwd,
     ]
   }
@@ -190,13 +190,35 @@ export function args(file: string, command: string, cwd: string) {
         cd -- "$1"
         eval ${JSON.stringify(command)}
       `,
-      "opencode",
+      "orchestra",
       cwd,
     ]
   }
   if (n === "cmd") return ["/c", command]
   if (ps(file)) return ["-NoProfile", "-Command", command]
   return ["-c", command]
+}
+
+/**
+ * The explicit program and arguments for a `shell: true | string` spawn option, the way Node joins them: the command
+ * and its arguments joined by single spaces, unquoted, handed to the shell's command flag. `true` means /bin/sh on
+ * Unix. PowerShell gets `-NoProfile -Command`, every other shell `-c`. It never adds Shell.args' login and rc-file
+ * wrapping. cmd.exe (and `true` on Windows, which means cmd.exe) gives undefined: its quoting rules differ, and the
+ * caller delegates that spawn.
+ */
+export function invocation(
+  shell: true | string,
+  command: string,
+  args: readonly string[],
+): { file: string; args: string[] } | undefined {
+  const joined = [command, ...args].join(" ")
+  if (shell === true) {
+    if (process.platform === "win32") return
+    return { file: "/bin/sh", args: ["-c", joined] }
+  }
+  if (name(shell) === "cmd") return
+  if (ps(shell)) return { file: shell, args: ["-NoProfile", "-Command", joined] }
+  return { file: shell, args: ["-c", joined] }
 }
 
 let defaultPreferred: string | undefined

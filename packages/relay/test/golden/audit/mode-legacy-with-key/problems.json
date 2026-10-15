@@ -1,0 +1,4 @@
+{
+  "ledger": "test/golden/audit/mode-legacy-with-key/input/ledger.jsonl",
+  "problems": []
+}

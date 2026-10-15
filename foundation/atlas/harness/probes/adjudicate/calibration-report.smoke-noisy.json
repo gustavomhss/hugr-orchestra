@@ -1,0 +1,182 @@
+{
+  "generatedBy": "harness/probes/adjudicate/run-calibration.mjs",
+  "mode": "fake:noisy",
+  "judgeModel": null,
+  "passes": 5,
+  "kappa": -0.019385026737968096,
+  "pBar": 0.3899999999999999,
+  "pE": 0.4016,
+  "degenerate": false,
+  "catch": {
+    "caught": 9,
+    "total": 10,
+    "rate": 0.9
+  },
+  "falseAlarm": {
+    "alarmed": 0,
+    "total": 10,
+    "rate": 0
+  },
+  "perItem": [
+    {
+      "id": "T01",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "GROUNDED_TRUE", "GROUNDED_TRUE", "HALLUCINATED", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T02",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "GROUNDED_TRUE", "HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T03",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE", "ABSTAIN"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T04",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE", "ABSTAIN", "HALLUCINATED"],
+      "majority": "ABSTAIN",
+      "correct": false
+    },
+    {
+      "id": "T05",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "GROUNDED_TRUE", "ABSTAIN", "HALLUCINATED", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T06",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "ABSTAIN", "HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T07",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["ABSTAIN", "HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T08",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["HALLUCINATED", "GROUNDED_TRUE", "GROUNDED_TRUE", "GROUNDED_TRUE", "HALLUCINATED"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T09",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "GROUNDED_TRUE", "GROUNDED_TRUE", "HALLUCINATED", "GROUNDED_TRUE"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "T10",
+      "label": "true",
+      "falseKind": null,
+      "verdicts": ["GROUNDED_TRUE", "GROUNDED_TRUE", "HALLUCINATED", "GROUNDED_TRUE", "ABSTAIN"],
+      "majority": "GROUNDED_TRUE",
+      "correct": true
+    },
+    {
+      "id": "F01",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdicts": ["HALLUCINATED", "HALLUCINATED", "HALLUCINATED", "GROUNDED_TRUE", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F02",
+      "label": "false",
+      "falseKind": "negated-condition",
+      "verdicts": ["HALLUCINATED", "HALLUCINATED", "GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F03",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdicts": ["HALLUCINATED", "GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED", "ABSTAIN"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F04",
+      "label": "false",
+      "falseKind": "wrong-callee",
+      "verdicts": ["GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED", "ABSTAIN", "GROUNDED_TRUE"],
+      "majority": "ABSTAIN",
+      "correct": false
+    },
+    {
+      "id": "F05",
+      "label": "false",
+      "falseKind": "wrong-default",
+      "verdicts": ["HALLUCINATED", "HALLUCINATED", "ABSTAIN", "GROUNDED_TRUE", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F06",
+      "label": "false",
+      "falseKind": "past-comment-as-present",
+      "verdicts": ["HALLUCINATED", "ABSTAIN", "GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F07",
+      "label": "false",
+      "falseKind": "fabricated-behavior",
+      "verdicts": ["ABSTAIN", "GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F08",
+      "label": "false",
+      "falseKind": "fabricated-behavior",
+      "verdicts": ["GROUNDED_TRUE", "HALLUCINATED", "HALLUCINATED", "HALLUCINATED", "GROUNDED_TRUE"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F09",
+      "label": "false",
+      "falseKind": "wrong-callee",
+      "verdicts": ["HALLUCINATED", "HALLUCINATED", "HALLUCINATED", "GROUNDED_TRUE", "HALLUCINATED"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    },
+    {
+      "id": "F10",
+      "label": "false",
+      "falseKind": "wrong-constant",
+      "verdicts": ["HALLUCINATED", "HALLUCINATED", "GROUNDED_TRUE", "HALLUCINATED", "ABSTAIN"],
+      "majority": "HALLUCINATED",
+      "correct": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Orchestra
+Exec=/opt/Orchestra/ai.hugr.orchestra %U
+Terminal=false
+Type=Application
+Icon=ai.hugr.orchestra
+StartupWMClass=ai.hugr.orchestra
+NoDisplay=true
+Comment=Open source AI coding agent
+Categories=Development;

@@ -1,9 +1,9 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/TerminalComposerFocus"
+const directory = "C:/Orchestra/TerminalComposerFocus"
 const projectID = "proj_terminal_composer_focus"
 const sessionID = "ses_terminal_composer_focus"
 const ptyID = "pty_terminal_composer_focus"
@@ -12,7 +12,7 @@ const newPtyID = "pty_terminal_composer_focus_new"
 test.use({ viewport: { width: 1440, height: 900 } })
 
 test.beforeEach(async ({ page }) => {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: "v2",
     directory,
     project: {
@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -205,7 +205,7 @@ test("focuses a terminal created from the new-terminal button", async ({ page })
 function seedCachedTerminal(page: Page) {
   return page.addInitScript(
     ({ terminalKey, ptyID }) => {
-      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ terminal: { height: 320, opened: true } }))
+      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ terminal: { height: 320, opened: true } }))
       localStorage.setItem(
         terminalKey,
         JSON.stringify({

@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test"
+import path from "node:path"
 import { testRender } from "@opentui/solid"
 import { abbreviateHome } from "../src/runtime"
 import { TuiPathsProvider, useTuiPaths } from "../src/context/runtime"
 
+// abbreviateHome keeps the platform's own separator, so the abbreviated Windows form is "~\project".
 test("abbreviates paths within home boundaries", () => {
   expect(abbreviateHome("/home/test", "/home/test")).toBe("~")
-  expect(abbreviateHome("/home/test/project", "/home/test")).toBe("~/project")
+  expect(abbreviateHome(path.join("/home/test", "project"), "/home/test")).toBe("~" + path.sep + "project")
   expect(abbreviateHome("/home/tester/project", "/home/test")).toBe("/home/tester/project")
   expect(abbreviateHome("/tmp/project", "/home/test")).toBe("/tmp/project")
 })

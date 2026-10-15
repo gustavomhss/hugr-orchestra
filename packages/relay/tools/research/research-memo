@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""research-memo — append a dated analytic memo.
+
+Memoing is grounded theory's bridge between data and theory: the running notes where a hunch about how
+things connect, a doubt about a coding decision, or a comparison between two findings gets written
+down while it is still live. It is also the audit trail that makes the work dependable — the record of
+HOW the conclusions were reached, which no artifact of the conclusions themselves can supply.
+
+The protocol's control on this is about ORDER, not volume: at least one memo must predate the last
+finding. A memo written after the work is a write-up, and a write-up records what the author
+remembers deciding rather than what they decided. So this stamps the time itself.
+
+    research-memo --into research/ --note "H-2 is looking thin: both sources trace to one press release"
+    research-memo --into research/ --about F-3 H-2 --note "..."
+
+Usage: research-memo --into DIR --note TEXT [--about ID ...] [--at ISO8601] [--json]
+Exit:  0 recorded · 2 usage/IO error
+"""
+import argparse
+import datetime
+import json
+import os
+import sys
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Append a dated analytic memo.")
+    ap.add_argument("--into", required=True)
+    ap.add_argument("--note", required=True)
+    ap.add_argument("--about", nargs="*", default=[], metavar="ID")
+    ap.add_argument("--at")
+    ap.add_argument("--json", action="store_true", dest="as_json")
+    a = ap.parse_args()
+
+    if len(a.note.strip()) < 40:
+        # A one-line memo is a label. The threshold is low and deliberate: it stops the field from
+        # being satisfied by "looked at this" without pretending length is thought.
+        print("research-memo: a memo under 40 characters records nothing worth auditing",
+              file=sys.stderr)
+        return 2
+
+    os.makedirs(a.into, exist_ok=True)
+    path = os.path.join(a.into, "memos.json")
+    try:
+        with open(path) as f:
+            memos = json.load(f)
+    except OSError:
+        memos = []
+    except ValueError as e:
+        print(f"research-memo: {path} is not valid JSON: {e}", file=sys.stderr)
+        return 2
+
+    entry = {"at": a.at or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+             "note": a.note.strip()}
+    if a.about:
+        entry["about"] = list(a.about)
+    memos.append(entry)
+    with open(path, "w") as f:
+        json.dump(memos, f, indent=1)
+        f.write("\n")
+
+    if a.as_json:
+        print(json.dumps(entry, indent=2))
+    else:
+        print(f"memo {len(memos)} at {entry['at']}"
+              + (f" about {' '.join(a.about)}" if a.about else ""))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

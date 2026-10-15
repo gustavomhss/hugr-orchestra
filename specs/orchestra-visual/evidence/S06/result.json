@@ -1,0 +1,190 @@
+{
+  "scope": "S06 compact desktop navigation only",
+  "follow_up": {
+    "receipt": "rtl-proof/result.json",
+    "supersedes": "Arabic locale navigation and provider-driven English RTL now have follow-up evidence, superseding the DOM-only RTL scope below. Linguistic translation quality, Hebrew coverage and other historical limits remain unclaimed."
+  },
+  "contract_items": [
+    "S06-W1-T1 (compact navigation slice)",
+    "S06-W1-T2 (compact navigation proof slice)",
+    "A02",
+    "A07",
+    "A08",
+    "DS20",
+    "DS21",
+    "WK23 (navigation entry points only)"
+  ],
+  "base_commit_sha": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+  "verified_source_tree_sha": "a9707a38a3347a4c4268e4798707b35b89917b0c",
+  "source_tree_note": "Git tree before evidence files were staged; includes the exact source and tests verified. The containing commit can be obtained with git log -- specs/orchestra-visual/evidence/S06/result.json.",
+  "contract_ref": {
+    "ref": "fork/visual-migration-plan",
+    "sha": "e5b5bf9c446ed0ae3eddb841e38c7ebdb06f957a"
+  },
+  "approved_mock_and_coverage_ref": {
+    "ref": "fork/dev",
+    "sha": "76015a9dcd5b0c77164a3f1bee49b0060a4d37f0"
+  },
+  "design_decisions": [
+    "Preserve current approved Orchestra glass/photo identity over synthetic state renders.",
+    "Use exact official HuGR symbol assets, 32px symbol, 30px avatar, 40x34px rail controls, 20px glyphs and logical 2px selection marker.",
+    "Use 230px / 208px / 56px widths at the contract breakpoints; below 1024px expose the rail on demand from a non-draggable titlebar control; retain existing mobile below 768px.",
+    "Persist explicit choice through existing desktop window storage, with sessionStorage for browser windows. Responsive constraints do not overwrite the choice.",
+    "Compose existing Kobalte tooltip and dropdown primitives with the actual keyboard target. English typed copy, no new translations.",
+    "Reuse existing route, profile and session APIs; no provider-tree remount, new backend, scheduler, or fake runtime controls."
+  ],
+  "source_sha256": {
+    "packages/app/e2e/orchestra/compact-navigation.spec.ts": "6bc242cf6488778ac9c7036e03fda91944c868de7a1d954247fbeef64864484e",
+    "packages/app/public/orchestra/hugr-symbol-inverse.svg": "82cff13b0a868deb16ad7fb1b14689a2be3aa39331fd255ecff35ddb626534ca",
+    "packages/app/public/orchestra/hugr-symbol-primary.svg": "3fb348a7f238f30adca97bce64361b3a966873898006990a8e5463b22f6812f1",
+    "packages/app/src/components/titlebar.tsx": "b4d13750ffd78f3ba3a334b7a96bfd122168dcf9167537710cd59788ab511f67",
+    "packages/app/src/i18n/orchestra.ts": "51b2cd322f2d506968d854dc7e7000a4b26919f3f3b41cc26aec06cfc2be4fb7",
+    "packages/app/src/orchestra/brand.tsx": "a1a29d51175f3452f6d27d974c8bdecdbae0db50ef3982428cda4311e008ebec",
+    "packages/app/src/orchestra/compact-navigation.ts": "379f1e89eccedea52a3393aab31b0af99b4e67a2b76b267eae1b93dbad1d1901",
+    "packages/app/src/orchestra/navigation-toggle.tsx": "a0e5408a42f324129614db51e0aab7b5ac4f753f02f3ffab92327534f6f3b485",
+    "packages/app/src/orchestra/navigation-tooltip.tsx": "e738afdf28995e9cc21cfad3f86fe0d36bf4181547fd3a664e2a1de9eec1c15e",
+    "packages/app/src/orchestra/shell.css": "645482a4648d0ce316173ae049ca875b9090f323c2e90d46be0e1ead28d2ada8",
+    "packages/app/src/orchestra/sidebar.tsx": "3d1ebef6590602735fe980abca5517e6476cd17a129cd493aa58366475d4a598",
+    "packages/app/src/orchestra/theme.css": "76fd26b588beb40295ffa3fecde1da1b0553cf379084d81276da846774bbd85c",
+    "packages/app/src/pages/layout-new.tsx": "e3b888b3ccc892e6b1f4ee6b1c66168b68282f1f151de7ef2b67c7574965a13b",
+    "packages/app/test-browser/orchestra-compact-navigation.test.ts": "032321763e368eafb7c5209eb1f14774cdb74465582a04799682c6cefabccf2e"
+  },
+  "verification": [
+    {
+      "cwd": "packages/app",
+      "command": "bun test --conditions=browser --preload ./happydom.ts ./test-browser/orchestra-compact-navigation.test.ts",
+      "exit_code": 0,
+      "result": "2 passed, 9 assertions",
+      "log": "compact-navigation/final-unit.log"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "/Users/gustavoschneiter/Documents/HuGR/_worktrees/e2e-lock.sh env PLAYWRIGHT_PORT=4994 bunx playwright test e2e/orchestra/compact-navigation.spec.ts e2e/orchestra/titlebar-native-frame.spec.ts --reporter=line",
+      "exit_code": 0,
+      "result": "9 passed (1.5m), no retries",
+      "log": "compact-navigation/final-e2e.log",
+      "coverage": [
+        "keyboard and pointer activation; hover, focus and Escape tooltips; profile menu restoration",
+        "route, draft and collapse focus preserved; reload restores choice; another window remains independent",
+        "230/208/56 widths; constrained explanation; 900px on-demand rail; existing mobile at 767px",
+        "dark, light, RTL; symbol/avatar/glyph/hitbox dimensions",
+        "existing native-frame geometry tests: zoom, RTL, fullscreen, breakpoint, IPC coalescing and cleanup"
+      ]
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun typecheck",
+      "exit_code": 0,
+      "log": "compact-navigation/final-typecheck.log"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun run typecheck:e2e",
+      "exit_code": 0,
+      "log": "compact-navigation/final-e2e-typecheck.log"
+    },
+    {
+      "cwd": ".",
+      "command": "GODFILE_BASE_REF=fork/dev bun run check:godfile",
+      "exit_code": 0,
+      "result": "3552 source files, 301 warnings, 0 errors",
+      "log": "compact-navigation/godfile-summary.log"
+    },
+    {
+      "cwd": ".",
+      "command": "git diff --cached --name-only | rg '\\.(tsx?|css)$' | xargs bunx prettier --check",
+      "exit_code": 0,
+      "result": "All matched files use Prettier code style; official SVGs kept intact."
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bunx oxlint -c ../../.oxlintrc.json src/orchestra/compact-navigation.ts src/orchestra/navigation-toggle.tsx src/orchestra/navigation-tooltip.tsx src/orchestra/sidebar.tsx src/orchestra/brand.tsx src/pages/layout-new.tsx src/i18n/orchestra.ts src/components/titlebar.tsx test-browser/orchestra-compact-navigation.test.ts e2e/orchestra/compact-navigation.spec.ts",
+      "exit_code": 0,
+      "result": "21 warnings, 0 errors; two new strict boolean comparisons guard persisted values, remaining warnings are in existing code.",
+      "log": "compact-navigation/final-lint.log"
+    },
+    {
+      "cwd": "packages/app",
+      "command": "bun run build",
+      "exit_code": 0,
+      "result": "Vite production build passed in 1m 56s; existing mixed static/dynamic import and chunk-size warnings.",
+      "log": "compact-navigation/build-summary.log"
+    }
+  ],
+  "regression_proof": {
+    "receipt": "compact-navigation/regression-proof.json",
+    "baseline_commit": "5582b99a8e0097e67866a7713f41bf0beef1d973",
+    "method": "Restore seven pre-change tracked source files; remove the new model setter to test missing behavior. Run the unit suite and responsive E2E; restore every byte in finally.",
+    "unit": "exit 1; 0 passed, 2 failed at actual toggle behavior",
+    "e2e": "exit 1; expected responsive 208px, baseline returned 230px",
+    "restored_exactly": true,
+    "logs": ["compact-navigation/reverted-unit.log", "compact-navigation/reverted-e2e.log"]
+  },
+  "cold_reviews": [
+    {
+      "reviewer": "/root/behavior_review",
+      "independence": "Read-only cold packet covering model, layout, titlebar, copy, primitives and tests; no implementation history.",
+      "verdict": "APPROVE",
+      "findings": [],
+      "summary": "Final actual-button tooltip composition leaves focus, hover and Escape with Kobalte. Staged whitespace checks pass.",
+      "limits": ["Full browser suite was not independently rerun."]
+    },
+    {
+      "reviewer": "/root/visual_review",
+      "independence": "Read-only cold packet covering rail CSS, sidebar, brand and official assets; bounded screenshot-only follow-up.",
+      "verdict": "APPROVE",
+      "findings": [],
+      "summary": "No concrete defects in six final PNGs: official branding, profile alignment, RTL selection/tooltip and 900px titlebar toggle remain coherent with current approved identity.",
+      "limits": [
+        "208px width checked by E2E, no 208px screenshot.",
+        "Keyboard, clipped-item scrolling and native controls cannot be proved by stills.",
+        "Reviewer did not independently rerun tests or verify capture provenance."
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "compact-navigation/compact-1152.png",
+      "sha256": "efb50f077e9c90ee86822759c629e2e84e62fdeb999bf6b35c15ca3f974b0fa0",
+      "viewport": "1152x768",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    },
+    {
+      "path": "compact-navigation/compact-900-on-demand.png",
+      "sha256": "5756a5a66b24625f874c0a9a755ac1e4d99f4762d1f8a05b0ca8a6b9e1c673be",
+      "viewport": "900x768",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    },
+    {
+      "path": "compact-navigation/compact-dark.png",
+      "sha256": "b8a3575710508e98a4071a3b98020d1246707d8cd7303673cafe1d140f98471f",
+      "viewport": "1672x941",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    },
+    {
+      "path": "compact-navigation/compact-light.png",
+      "sha256": "b4647d5e38e6f9d662729521c738143b0cf93fef5c9dd6f84f9cdfe2436e524d",
+      "viewport": "1672x941",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    },
+    {
+      "path": "compact-navigation/compact-rtl-light.png",
+      "sha256": "901a772bfd4c5c8060dee777da29830804cbc14c5a46268cf8daa5ed9c2b4bf5",
+      "viewport": "1672x941",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    },
+    {
+      "path": "compact-navigation/expanded-rtl-light.png",
+      "sha256": "a998842d502eb5dd2357891e7f1995e5196e7883c1767e9f865b4ab4ce0c2b3a",
+      "viewport": "1672x941",
+      "source": "Mocked existing OpenCode APIs in Playwright; synthetic project/draft is test-only."
+    }
+  ],
+  "not_claimed": [
+    "Full cockpit W04/W09 or domain-level W08 capabilities, outside the user compact-navigation scope.",
+    "Live Electron or OS-native click verification; browser tests use existing mocked platform IPC.",
+    "Arabic/Hebrew translation proof; RTL captures change geometry direction and retain English developer content.",
+    "Session tab/provider/PTY-wide integration beyond draft and route preservation, unchanged by this slice."
+  ],
+  "known_navigation_failures": []
+}

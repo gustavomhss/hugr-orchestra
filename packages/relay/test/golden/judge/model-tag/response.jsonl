@@ -1,0 +1,1 @@
+{"verdict": "pass", "reason": "because", "backend": "llm:some-other-model", "available": true}

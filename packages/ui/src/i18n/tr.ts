@@ -77,15 +77,6 @@ export const dict = {
   "ui.sessionTurn.error.freeUsageExceeded": "Ücretsiz kullanım aşıldı",
   "ui.sessionTurn.error.addCredits": "Kredi ekle",
 
-  "dialog.usageExceeded.freeTier.title": "Ücretsiz sınıra ulaşıldı",
-  "dialog.usageExceeded.freeTier.description":
-    "En iyi açık kaynaklı modellere güvenilir erişim için aylık $10 karşılığında OpenCode Go'ya abone olun.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Abone ol",
-  "dialog.usageExceeded.accountRateLimit.title": "Go sınırına ulaşıldı",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Kullanım sınırına ulaşıldı. Bu modeli şimdi kullanmaya devam etmek için mevcut bakiyenizden kullanımı etkinleştirin.",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Ayarları aç",
-
   "ui.sessionTurn.status.delegating": "Görev devrediliyor",
   "ui.sessionTurn.status.planning": "Sonraki adımlar planlanıyor",
   "ui.sessionTurn.status.gatheringContext": "Keşfediliyor",
@@ -132,7 +123,6 @@ export const dict = {
   "ui.promptInput.attachments": "Görseller ve dosyalar",
   "ui.promptInput.context": "Bağlam",
   "ui.promptInput.shell": "Kabuk komutu",
-  "ui.promptInput.chooseAgent": "Ajan seç",
   "ui.promptInput.chooseModel": "Model seç",
   "ui.promptInput.chooseVariant": "Model varyantı seç",
   "ui.promptInput.send": "Gönder",

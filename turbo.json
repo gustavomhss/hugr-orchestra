@@ -1,35 +1,103 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
-  "globalPassThroughEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
+  "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
+  "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"],
+  "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
     "typecheck": {},
     "build": {
       "dependsOn": [],
       "outputs": ["dist/**"]
     },
-    "opencode#test": {
-      "dependsOn": ["^build"],
+    // A test task hashes only its own package unless it depends on its workspace dependencies. Most of them
+    // have no build script, so ^build alone left a cached pass in place after a dependency changed;
+    // ^transit puts every workspace dependency's files into each test hash without running anything.
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "hugr-omni#transit": {
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/omni/crates/**",
+        "$TURBO_ROOT$/packages/omni/Cargo.toml",
+        "$TURBO_ROOT$/packages/omni/Cargo.lock",
+        "$TURBO_ROOT$/packages/omni/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/omni/.cargo/**"
+      ]
+    },
+    "orchestra#test": {
+      "dependsOn": ["transit", "^build"],
       "outputs": [],
       "passThroughEnv": ["*"]
     },
-    "@opencode-ai/core#test": {
-      "dependsOn": ["^build"],
+    "@orchestra/core#test": {
+      "dependsOn": ["transit", "^build"],
+      // Core's inventory tests execute these out-of-package observation helpers.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/omni/campaign/**/*.ts"],
+      "outputs": [],
+      // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
+      // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.
+      "env": ["PSModuleAnalysisCachePath"]
+    },
+    "@orchestra/app#test": {
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/function#test": {
+    "@orchestra/ui#test": {
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/app#test": {
-      "dependsOn": ["^build"],
+    "@orchestra/session-ui#test": {
+      "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/ui#test": {
-      "dependsOn": ["^build"],
+    "@orchestra/codemode#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/session-ui#test": {
-      "dependsOn": ["^build"],
+    "@orchestra/effect-drizzle-sqlite#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/http-recorder#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/httpapi-codegen#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/llm#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/maestro-arsenal#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/relay#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/client#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/atlas-boundary#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/sdk-next#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/tui#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/desktop#test": {
+      "dependsOn": ["transit"],
       "outputs": []
     }
   }

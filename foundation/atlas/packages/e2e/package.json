@@ -1,0 +1,23 @@
+{
+  "name": "@atlas/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Story-driven end-to-end suite — the top-of-DAG consumer. Composes the REAL wired runtime of every @atlas/* package to prove observable behaviour, security, and efficiency across package seams. Test-only: no product code imports @atlas/e2e.",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@atlas/contracts": "*",
+    "@atlas/kernel": "*",
+    "@atlas/index": "*",
+    "@atlas/persist": "*",
+    "@atlas/grounding": "*",
+    "@atlas/knowledge": "*",
+    "@atlas/retrieval": "*",
+    "@atlas/memory": "*",
+    "@atlas/tools": "*",
+    "@atlas/genesis": "*"
+  }
+}

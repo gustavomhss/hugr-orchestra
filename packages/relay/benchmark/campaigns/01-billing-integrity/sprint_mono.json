@@ -1,0 +1,25 @@
+{
+  "brief": "Implement repo/billing/core.py (classes Billing, BillingError) so the usage->billing path is lossless, tenant-isolated, correctly priced, and auditable. The public API names are fixed. Satisfy ALL requirements at once.",
+  "retry_budget": 10,
+  "work_packages": [
+    {
+      "id": "wp-all",
+      "title": "Implement the full billing module",
+      "instructions": "Implement billing/core.py to satisfy ALL of: R1 ingest(tenant_id,request_id,metric,quantity,timestamp) records an event and usage_for(tenant) lists it; R2 dedup a repeated (tenant_id,request_id) as a no-op; R3 append a 'usage.ingested' audit entry per ingest and expose audit_log as an immutable tuple; R4 usage_for/metered are tenant-isolated; R5 metered(tenant,metric) sums deduped quantity; R6 tiered pricing (first 1000 units @ $0.01, remainder @ $0.008); R7 $5.00 minimum invoice total; R8 round all money to 2 decimals; R9 issue_invoice is idempotent and returns {id,tenant_id,lines:{metric:{qty,amount}},total}; R10 reconcile(tenant) returns drift (0.0 when consistent); R11 append an 'invoice.issued' audit entry on issuance; R12 reject negative quantity with BillingError.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R1_ingest -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R2_dedup -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R3_audit_append_only -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R4_tenant_isolation -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R5_metered_aggregate -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R6_tiered_pricing -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R7_minimum_charge -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R8_rounding -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R9_invoice_idempotent -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R10_reconcile_zero_drift -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R11_audit_on_issue -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R12_reject_negative -q"}
+      ]
+    }
+  ]
+}

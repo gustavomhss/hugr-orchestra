@@ -1,0 +1,2 @@
+# Fixture ledgers are hashed byte for byte (and some mutants are CRLF on purpose): no line-ending conversion.
+* -text

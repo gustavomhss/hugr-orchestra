@@ -23,7 +23,20 @@ export const Info = Schema.Struct({
   slash: Schema.Boolean.pipe(optional),
   location: AbsolutePath,
   content: Schema.String,
+  /** Last modification time (ms) of the skill file, for optimistic concurrency on save. */
+  mtime: Schema.Finite.pipe(optional),
 }).annotate({ identifier: "SkillV2.Info" })
+
+export interface SaveInput extends Schema.Schema.Type<typeof SaveInput> {}
+export const SaveInput = Schema.Struct({
+  name: Schema.String,
+  description: Schema.String,
+  content: Schema.String,
+  /** Location of the registered skill to rewrite. Omit to create a project skill. */
+  path: AbsolutePath.pipe(optional),
+  /** The `mtime` read from the catalog; a save fails with a conflict when the file changed since. */
+  mtime: Schema.Finite.pipe(optional),
+}).annotate({ identifier: "SkillV2.SaveInput" })
 
 export interface EmbeddedSource extends Schema.Schema.Type<typeof EmbeddedSource> {}
 export const EmbeddedSource = Schema.Struct({

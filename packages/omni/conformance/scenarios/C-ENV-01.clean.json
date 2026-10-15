@@ -1,0 +1,7 @@
+{
+  "id": "C-ENV-01.clean",
+  "os": ["linux", "macos"],
+  "steps": [
+    {"run": ["${FIXTURE}", "env"], "options": {"inheritEnv": false, "env": {"OMNI_ONLY": "1", "OMNI_U": "ü"}}, "expect": {"exitCode": 0, "stdout": "{\"OMNI_ONLY\":\"1\",\"OMNI_U\":\"\\u00fc\"}\n"}}
+  ]
+}

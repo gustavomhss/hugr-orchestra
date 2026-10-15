@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { Message, Model } from "@opencode-ai/llm"
-import * as OpenAIChat from "@opencode-ai/llm/protocols/openai-chat"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { SessionMessage } from "@opencode-ai/core/session/message"
-import { AgentAttachment, FileAttachment } from "@opencode-ai/core/session/prompt"
-import { toLLMMessages } from "@opencode-ai/core/session/runner/to-llm-message"
-import { SessionV2 } from "@opencode-ai/core/session"
+import { Message, Model } from "@orchestra/llm"
+import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { AgentAttachment, FileAttachment } from "@orchestra/core/session/prompt"
+import { toLLMMessages } from "@orchestra/core/session/runner/to-llm-message"
+import { SessionV2 } from "@orchestra/core/session"
 import { DateTime } from "effect"
 
 const created = DateTime.makeUnsafe(0)
@@ -19,7 +19,7 @@ describe("toLLMMessages", () => {
       SessionMessage.Assistant.make({
         id: id(value),
         type: "assistant",
-        agent: "build",
+        agent: "maestro",
         model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
         content,
         time: { created, completed: created },
@@ -54,7 +54,7 @@ describe("toLLMMessages", () => {
         SessionMessage.AgentSwitched.make({
           id: id("agent"),
           type: "agent-switched",
-          agent: "build",
+          agent: "maestro",
           time: { created },
         }),
         SessionMessage.ModelSwitched.make({
@@ -74,7 +74,7 @@ describe("toLLMMessages", () => {
           type: "user",
           text: "Inspect this image",
           files: [file],
-          agents: [AgentAttachment.make({ name: "build" })],
+          agents: [AgentAttachment.make({ name: "explore" })],
           time: { created },
         }),
         SessionMessage.Synthetic.make({
@@ -114,7 +114,7 @@ describe("toLLMMessages", () => {
           { type: "text", text: "Inspect this image" },
           { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
         ],
-        metadata: { agents: [{ name: "build" }] },
+        metadata: { agents: [{ name: "explore" }] },
       }),
     )
     expect(messages.slice(2).map((message) => message.content)).toEqual([
@@ -145,7 +145,7 @@ Recent work
         SessionMessage.Assistant.make({
           id: id("assistant"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
           content: [
             SessionMessage.AssistantText.make({ type: "text", id: "text-1", text: "Checking" }),
@@ -302,7 +302,7 @@ Recent work
         SessionMessage.Assistant.make({
           id: id("assistant-openai-reasoning"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
           content: [
             SessionMessage.AssistantReasoning.make({
@@ -333,7 +333,7 @@ Recent work
         SessionMessage.Assistant.make({
           id: id("assistant-failed"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
           content: [
             SessionMessage.AssistantReasoning.make({
@@ -405,7 +405,7 @@ Recent work
         SessionMessage.Assistant.make({
           id: id("assistant-old-model"),
           type: "assistant",
-          agent: "build",
+          agent: "maestro",
           model: { id: ModelV2.ID.make("old-model"), providerID: ProviderV2.ID.make("provider") },
           content: [
             SessionMessage.AssistantReasoning.make({

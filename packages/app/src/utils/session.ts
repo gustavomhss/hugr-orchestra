@@ -1,5 +1,5 @@
 import type { SessionApi, SessionInfo, SessionListInput } from "@opencode-ai/client/promise"
-import type { Session } from "@opencode-ai/sdk/v2/client"
+import type { Session } from "@orchestra/sdk/v2/client"
 import { withTimestampedFallback } from "./session-title"
 
 export function normalizeSessionInfo(input: SessionInfo | Session): Session {
@@ -12,7 +12,7 @@ export function normalizeSessionInfo(input: SessionInfo | Session): Session {
     directory: input.location.directory,
     path: input.subpath,
     parentID: input.parentID,
-    cost: input.cost,
+    cost: "costAvailable" in input && input.costAvailable === false ? undefined : input.cost,
     tokens: input.tokens,
     title: withTimestampedFallback(input),
     agent: input.agent,

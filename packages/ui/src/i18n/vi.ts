@@ -67,14 +67,6 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.retry.geminiHot": "gemini dạo này đang hot quá",
   "ui.sessionTurn.error.freeUsageExceeded": "Đã vượt quá mức sử dụng miễn phí",
   "ui.sessionTurn.error.addCredits": "Thêm số dư",
-  "dialog.usageExceeded.freeTier.title": "Đã đạt đến giới hạn miễn phí",
-  "dialog.usageExceeded.freeTier.description":
-    "Đăng ký OpenCode Go với giá $10/tháng để có quyền truy cập đáng tin cậy vào các mô hình nguồn mở tốt nhất.",
-  "dialog.usageExceeded.freeTier.actionLabel": "Đăng ký",
-  "dialog.usageExceeded.accountRateLimit.title": "Đã đạt giới hạn Go",
-  "dialog.usageExceeded.accountRateLimit.description":
-    "Đã đạt đến giới hạn sử dụng. Để tiếp tục sử dụng mô hình này ngay bây giờ, hãy cho phép sử dụng từ số dư khả dụng của bạn",
-  "dialog.usageExceeded.accountRateLimit.actionLabel": "Mở cài đặt",
   "ui.sessionTurn.status.delegating": "Phân công công việc",
   "ui.sessionTurn.status.planning": "Lập kế hoạch các bước tiếp theo",
   "ui.sessionTurn.status.gatheringContext": "Khám phá",
@@ -121,7 +113,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Hình ảnh và tệp",
   "ui.promptInput.context": "Ngữ cảnh",
   "ui.promptInput.shell": "Lệnh shell",
-  "ui.promptInput.chooseAgent": "Chọn tác nhân",
   "ui.promptInput.chooseModel": "Chọn mô hình",
   "ui.promptInput.chooseVariant": "Chọn biến thể mô hình",
   "ui.promptInput.send": "Gửi",

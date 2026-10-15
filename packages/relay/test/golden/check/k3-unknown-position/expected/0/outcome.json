@@ -1,0 +1,9 @@
+{
+  "exit": 2,
+  "stdout": {
+    "outcome": "error",
+    "error": "unknown-position",
+    "position": "lost.wp"
+  },
+  "stderr": ""
+}

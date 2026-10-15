@@ -6,7 +6,7 @@ import {
   parseDeepLink,
   parseNewSessionDeepLink,
 } from "./deep-links"
-import { type Session } from "@opencode-ai/sdk/v2/client"
+import { type Session } from "@orchestra/sdk/v2/client"
 import {
   childSessionOnPath,
   closeHomeProject,
@@ -19,6 +19,8 @@ import {
   homeProjectDirectories,
   homeSessionServerStatus,
   latestRootSession,
+  projectForDirectory,
+  projectForSession,
   sortedRootSessions,
   toggleHomeProjectSelection,
 } from "./helpers"
@@ -40,24 +42,24 @@ const session = (input: Partial<Session> & Pick<Session, "id" | "directory">) =>
 
 describe("layout deep links", () => {
   test("parses open-project deep links", () => {
-    expect(parseDeepLink("opencode://open-project?directory=/tmp/demo")).toBe("/tmp/demo")
+    expect(parseDeepLink("orchestra://open-project?directory=/tmp/demo")).toBe("/tmp/demo")
   })
 
   test("ignores non-project deep links", () => {
-    expect(parseDeepLink("opencode://other?directory=/tmp/demo")).toBeUndefined()
+    expect(parseDeepLink("orchestra://other?directory=/tmp/demo")).toBeUndefined()
     expect(parseDeepLink("https://example.com")).toBeUndefined()
   })
 
   test("ignores malformed deep links safely", () => {
-    expect(() => parseDeepLink("opencode://open-project/%E0%A4%A%")).not.toThrow()
-    expect(parseDeepLink("opencode://open-project/%E0%A4%A%")).toBeUndefined()
+    expect(() => parseDeepLink("orchestra://open-project/%E0%A4%A%")).not.toThrow()
+    expect(parseDeepLink("orchestra://open-project/%E0%A4%A%")).toBeUndefined()
   })
 
   test("parses links when URL.canParse is unavailable", () => {
     const original = Object.getOwnPropertyDescriptor(URL, "canParse")
     Object.defineProperty(URL, "canParse", { configurable: true, value: undefined })
     try {
-      expect(parseDeepLink("opencode://open-project?directory=/tmp/demo")).toBe("/tmp/demo")
+      expect(parseDeepLink("orchestra://open-project?directory=/tmp/demo")).toBe("/tmp/demo")
     } finally {
       if (original) Object.defineProperty(URL, "canParse", original)
       if (!original) Reflect.deleteProperty(URL, "canParse")
@@ -65,49 +67,49 @@ describe("layout deep links", () => {
   })
 
   test("ignores open-project deep links without directory", () => {
-    expect(parseDeepLink("opencode://open-project")).toBeUndefined()
-    expect(parseDeepLink("opencode://open-project?directory=")).toBeUndefined()
+    expect(parseDeepLink("orchestra://open-project")).toBeUndefined()
+    expect(parseDeepLink("orchestra://open-project?directory=")).toBeUndefined()
   })
 
   test("collects only valid open-project directories", () => {
     const result = collectOpenProjectDeepLinks([
-      "opencode://open-project?directory=/a",
-      "opencode://other?directory=/b",
-      "opencode://open-project?directory=/c",
+      "orchestra://open-project?directory=/a",
+      "orchestra://other?directory=/b",
+      "orchestra://open-project?directory=/c",
     ])
     expect(result).toEqual(["/a", "/c"])
   })
 
   test("parses new-session deep links with optional prompt", () => {
-    expect(parseNewSessionDeepLink("opencode://new-session?directory=/tmp/demo")).toEqual({ directory: "/tmp/demo" })
-    expect(parseNewSessionDeepLink("opencode://new-session?directory=/tmp/demo&prompt=hello%20world")).toEqual({
+    expect(parseNewSessionDeepLink("orchestra://new-session?directory=/tmp/demo")).toEqual({ directory: "/tmp/demo" })
+    expect(parseNewSessionDeepLink("orchestra://new-session?directory=/tmp/demo&prompt=hello%20world")).toEqual({
       directory: "/tmp/demo",
       prompt: "hello world",
     })
   })
 
   test("ignores new-session deep links without directory", () => {
-    expect(parseNewSessionDeepLink("opencode://new-session")).toBeUndefined()
-    expect(parseNewSessionDeepLink("opencode://new-session?directory=")).toBeUndefined()
+    expect(parseNewSessionDeepLink("orchestra://new-session")).toBeUndefined()
+    expect(parseNewSessionDeepLink("orchestra://new-session?directory=")).toBeUndefined()
   })
 
   test("collects only valid new-session deep links", () => {
     const result = collectNewSessionDeepLinks([
-      "opencode://new-session?directory=/a",
-      "opencode://open-project?directory=/b",
-      "opencode://new-session?directory=/c&prompt=ship%20it",
+      "orchestra://new-session?directory=/a",
+      "orchestra://open-project?directory=/b",
+      "orchestra://new-session?directory=/c&prompt=ship%20it",
     ])
     expect(result).toEqual([{ directory: "/a" }, { directory: "/c", prompt: "ship it" }])
   })
 
   test("drains global deep links once", () => {
     const target = {
-      __OPENCODE__: {
-        deepLinks: ["opencode://open-project?directory=/a"],
+      __ORCHESTRA__: {
+        deepLinks: ["orchestra://open-project?directory=/a"],
       },
-    } as unknown as Window & { __OPENCODE__?: { deepLinks?: string[] } }
+    } as unknown as Window & { __ORCHESTRA__?: { deepLinks?: string[] } }
 
-    expect(drainPendingDeepLinks(target)).toEqual(["opencode://open-project?directory=/a"])
+    expect(drainPendingDeepLinks(target)).toEqual(["orchestra://open-project?directory=/a"])
     expect(drainPendingDeepLinks(target)).toEqual([])
   })
 })
@@ -343,5 +345,32 @@ describe("layout workspace helpers", () => {
     expect(errorMessage({ data: { message: "boom" } }, "fallback")).toBe("boom")
     expect(errorMessage(new Error("broken"), "fallback")).toBe("broken")
     expect(errorMessage("unknown", "fallback")).toBe("fallback")
+  })
+
+  test("resolves a directory to the project it is the root or a sandbox of, without asking for an owner", () => {
+    const repo = { id: "repo", worktree: "/repos/orchestra", sandboxes: ["/sandboxes/one"] }
+    const windows = { id: "win", worktree: "C:\\repos\\app", sandboxes: ["D:\\copies\\app"] }
+    const owner = () => {
+      throw new Error("owner read on a listed directory")
+    }
+    expect(projectForDirectory("/repos/orchestra/", [repo], owner)).toBe(repo)
+    expect(projectForDirectory("/sandboxes/one", [repo], owner)).toBe(repo)
+    expect(projectForDirectory("C:/repos/app", [repo, windows], owner)).toBe(windows)
+    expect(projectForDirectory("D:/copies/app/", [repo, windows], owner)).toBe(windows)
+  })
+
+  test("resolves a V2 copy, absent from sandboxes, through the project its server reported", () => {
+    const projects = [
+      { id: "other", worktree: "/repos/other" },
+      { id: "repo", worktree: "/repos/orchestra", sandboxes: [] },
+    ]
+    expect(projectForDirectory("/repos/orchestra-workspaces/feature-a", projects, () => "repo")).toBe(projects[1])
+    expect(projectForDirectory("/repos/orchestra-workspaces/feature-a", projects)).toBeUndefined()
+    expect(projectForDirectory("/tmp/scratch", projects, () => "global")).toBeUndefined()
+    expect(projectForDirectory("/tmp/scratch", projects, () => "closed")).toBeUndefined()
+    expect(projectForSession(session({ id: "s", directory: "/repos/orchestra" }), projects)).toBe(projects[1])
+    expect(projectForSession(session({ id: "s", directory: "/elsewhere", projectID: "other" }), projects)).toBe(
+      projects[0],
+    )
   })
 })

@@ -1,0 +1,18 @@
+{
+  "ledger": "test/golden/audit/cost-unpriced/input/ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "a",
+      "macro": "m1",
+      "elapsed_s": null
+    },
+    {
+      "wp": "b",
+      "macro": "m1",
+      "elapsed_s": 9
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

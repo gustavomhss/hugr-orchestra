@@ -1,0 +1,424 @@
+{
+  "capturedAt": "2026-10-01T23:09:20.607Z",
+  "source": "/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical",
+  "archive": {
+    "path": "archives/ancillary-assets.tar.gz",
+    "bytes": 3617651,
+    "sha256": "4759ddf552f979c11d5f70f892828952a906bd4c9f664e63c8a4ee0f38edd8b5",
+    "members": [
+      "artifacts/hugr-figure/preview.html",
+      "artifacts/hugr-figure/preview.png",
+      "artifacts/hugr-figure/README.md",
+      "artifacts/hugr-figure/mascote.svg",
+      "artifacts/hugr-figure/build.mjs",
+      "artifacts/hugr-figure/exports/abraco-h-animado.svg",
+      "artifacts/hugr-figure/exports/bonequinho-animado.svg",
+      "artifacts/hugr-figure/exports/bonequinho.png",
+      "artifacts/hugr-figure/exports/abraco-h.svg",
+      "artifacts/hugr-figure/exports/abraco-h.png",
+      "artifacts/hugr-figure/exports/bonequinho.svg",
+      "artifacts/janitor-fiapo-hugr/preview.html",
+      "artifacts/janitor-fiapo-hugr/README.md",
+      "artifacts/janitor-fiapo-hugr/fiapo-hugr.svg",
+      "artifacts/janitor-fiapo-hugr/concept-board-dark.png",
+      "artifacts/janitor-fiapo-hugr/build.mjs",
+      "artifacts/janitor-fiapo-hugr/concept-board-light.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done-animated.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan-animated.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle-animated.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-avatar.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops-animated.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-icon.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-icon.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake-animated.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-avatar.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle.svg",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake.png",
+      "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops.png",
+      "artifacts/janitor-fiapo/preview.html",
+      "artifacts/janitor-fiapo/fiapo.svg",
+      "artifacts/janitor-fiapo/README.md",
+      "artifacts/janitor-fiapo/concept-board-dark.png",
+      "artifacts/janitor-fiapo/build.mjs",
+      "artifacts/janitor-fiapo/concept-board-light.png",
+      "artifacts/janitor-fiapo/exports/fiapo-done.png",
+      "artifacts/janitor-fiapo/exports/fiapo-scan.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-shake.png",
+      "artifacts/janitor-fiapo/exports/fiapo-shake-animated.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-idle-animated.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-scan-animated.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-done-animated.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-scan.png",
+      "artifacts/janitor-fiapo/exports/fiapo-shake.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-done.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-icon.png",
+      "artifacts/janitor-fiapo/exports/fiapo-idle.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-oops.png",
+      "artifacts/janitor-fiapo/exports/fiapo-oops-animated.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-oops.svg",
+      "artifacts/janitor-fiapo/exports/fiapo-idle.png",
+      "artifacts/janitor-fiapo/exports/fiapo-icon.svg",
+      "artifacts/janitor-mascot/preview.html",
+      "artifacts/janitor-mascot/zelo.svg",
+      "artifacts/janitor-mascot/README.md",
+      "artifacts/janitor-mascot/concept-board-dark.png",
+      "artifacts/janitor-mascot/build.mjs",
+      "artifacts/janitor-mascot/concept-board-light.png",
+      "artifacts/janitor-mascot/exports/zelo-attention.svg",
+      "artifacts/janitor-mascot/exports/zelo-idle.png",
+      "artifacts/janitor-mascot/exports/zelo-sweep-animated.svg",
+      "artifacts/janitor-mascot/exports/zelo-idle.svg",
+      "artifacts/janitor-mascot/exports/zelo-attention.png",
+      "artifacts/janitor-mascot/exports/zelo-sweep.svg",
+      "artifacts/janitor-mascot/exports/zelo-done.svg",
+      "artifacts/janitor-mascot/exports/zelo-done-animated.svg",
+      "artifacts/janitor-mascot/exports/zelo-scan.png",
+      "artifacts/janitor-mascot/exports/zelo-avatar.svg",
+      "artifacts/janitor-mascot/exports/zelo-scan-animated.svg",
+      "artifacts/janitor-mascot/exports/zelo-idle-animated.svg",
+      "artifacts/janitor-mascot/exports/zelo-avatar.png",
+      "artifacts/janitor-mascot/exports/zelo-attention-animated.svg",
+      "artifacts/janitor-mascot/exports/zelo-scan.svg",
+      "artifacts/janitor-mascot/exports/zelo-done.png",
+      "artifacts/janitor-mascot/exports/zelo-sweep.png"
+    ]
+  },
+  "disposition": "Copied for recovery only. Original user assets remain in canonical; not approved replacement branding and not product implementation.",
+  "files": [
+    {
+      "path": "artifacts/hugr-figure/preview.html",
+      "sha256": "0dcd273812237a69cf256f2bcbf0f772f4d6674ef6ee41d24c936d78f88e03f3"
+    },
+    {
+      "path": "artifacts/hugr-figure/preview.png",
+      "sha256": "36f9d8f42274a275ecfca9026177a8e0a657a8ccdddf53afc596018b7c2dbeda"
+    },
+    {
+      "path": "artifacts/hugr-figure/README.md",
+      "sha256": "4a0368ac80b23adf06276dab9ace846d3ca9eaa5927a1847a23942b609833342"
+    },
+    {
+      "path": "artifacts/hugr-figure/mascote.svg",
+      "sha256": "b7324c960007a48ac80f3aad2d01322f09fd7a53f241752ce864df510c831aed"
+    },
+    {
+      "path": "artifacts/hugr-figure/build.mjs",
+      "sha256": "e671a2c8d6fd927a0e9af4a028294dfae04ff20db23dae9e75ba8379f4e75adb"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/abraco-h-animado.svg",
+      "sha256": "e88137b1f53b3cb8b860a18cef67f8c6a1a8cc754cea441f93276b67e5199a4f"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/bonequinho-animado.svg",
+      "sha256": "5a9f65ca062866334f6b27c8435ef41bb7a84ac32f3b46a8b4c9ac45915abc8b"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/bonequinho.png",
+      "sha256": "045897941a9b21c01978a4f3ad2db69382fe6ba2f4aa4bd6f028ccf95f129f28"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/abraco-h.svg",
+      "sha256": "a644d7d4029c2bf4a4940c63c733bc5784c26fee441a2fd3838fd375e079cfe4"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/abraco-h.png",
+      "sha256": "d3b6b7a3fcb59b1bb75bb89d697c37aa4b29d00ee948860359cc916bb4edc2e3"
+    },
+    {
+      "path": "artifacts/hugr-figure/exports/bonequinho.svg",
+      "sha256": "ca90ce33e54d485416f713cfea8b5a38aa01320247fc8a7c6776b1df84628536"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/preview.html",
+      "sha256": "ce9456b19e3d31c2db42de239cb71a6337f3ec50e262631e1494656c916405e1"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/README.md",
+      "sha256": "e1cc41b087a046400663420a72209dd54526bd96a9f75dce08f94b17a83e5182"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/fiapo-hugr.svg",
+      "sha256": "7a291387f40165fac5ba530b957e1ce59e7b0bcf517df54a913788c3fbeaf17c"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/concept-board-dark.png",
+      "sha256": "3649a1ab2a8cd46715074136283d5b52c44792a2ce0ace4125a1bfa4cb16b72a"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/build.mjs",
+      "sha256": "27da9ee041b2203d0ceb98ee397539e5c33f732f5d38c844b2bb490f750073aa"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/concept-board-light.png",
+      "sha256": "59024051cd82ea0ab501b2e74b4bf44f5979d9f6962be291c407677cd68e6a80"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done-animated.svg",
+      "sha256": "3fad5822f657cd0bab29f1e514b4e85c5f7e30257b8e2f344f8b99e398156ac2"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan.png",
+      "sha256": "ad97c02201c5dff437cdcab6a12c6d0c965ffefa1e21c448b88e744221d19d43"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done.svg",
+      "sha256": "aa555aa92e4c36709efda5b9ac3166afe574537ad7c424440f58eb5bf06a664b"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan-animated.svg",
+      "sha256": "64cf1775cb721c520e45cca7a1d40db2ee6f2745ae3b8c588f429029d52abfb4"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-done.png",
+      "sha256": "3770257707714eaabef0bf8902e1d063ad4fe9bbaaf59fdc8dec91d5d14fb239"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle-animated.svg",
+      "sha256": "125924dddbc391570fb59b1d62ebc303888a2637772b50c275bdf3ee2a06355a"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-scan.svg",
+      "sha256": "3f91cc03796cf08d354787bd90c3291c6fcc91a2edb8e2787545f0d89ff1697f"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops.svg",
+      "sha256": "992e151c5be43ab32bae5bf87fe84b80e5f8b0ed152ed3da24aef2e34f563779"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake.svg",
+      "sha256": "f467a35780419441f1f18de0183b976abb536ac7d583588afedbc68b4dc704fa"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-avatar.svg",
+      "sha256": "cccd158c19adfd6033b5142c39ad2ea46b1b800bf6403e5f1b1add6377003998"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle.png",
+      "sha256": "8f936a1fcaaa2f53a37fedc0ca4263d0c460cc9731c842f721439561e72d48d4"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops-animated.svg",
+      "sha256": "bf92b30b28fa843f5e50e2605198d02071f0b118a4a4cbc2c46329c3b4a8e50d"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-icon.svg",
+      "sha256": "6084880638899f7586a8c9769426bd8291dd6584d46f1ad465a434adff821dfe"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-icon.png",
+      "sha256": "f6981f6147d51dd8dbdc321c19be9fb95f87439b9a4658a3b9f16bf04a4e0024"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake-animated.svg",
+      "sha256": "44d2cc9b3b6a03104fbfa785e41a52ae200bf599a485e149c15fe429bc6f0033"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-avatar.png",
+      "sha256": "6f9689890a946b714e51de36a91d99689314a9cc64d4d250920296097169b734"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-idle.svg",
+      "sha256": "eea8dfb4c373c295fa102b94d47212d0de810582a940853feaf428c5523121a2"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-shake.png",
+      "sha256": "655ebb5e0da099ced9a4b437df0e6fa907551091d0f676927496450ff520ab50"
+    },
+    {
+      "path": "artifacts/janitor-fiapo-hugr/exports/fiapo-hugr-oops.png",
+      "sha256": "7aefca3e28814773ad61c5202ce32efd8728813f7dc172d0ebf7059d69adf6b7"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/preview.html",
+      "sha256": "d880a9e13d594325a4ef18710d03467250cc3d3d23d3c96db094182ca1c0af56"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/fiapo.svg",
+      "sha256": "e3631e6a4be7cb445d977ab77e9bcd3af16737408b432dbfffcc1c5be5811258"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/README.md",
+      "sha256": "7ade9c0cc15892dc47c9e209456f84700244e9269801d1af1ce42876e29156d2"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/concept-board-dark.png",
+      "sha256": "f116be6cc16bf532de0ec8d923d4c2a45b5ac14f5fcdb4ee2e1cdcbe796e62d2"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/build.mjs",
+      "sha256": "eaf2a576b35651525464ae1dee43f4ee74a9123ffdbd2b578c8ba53d2dd32af0"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/concept-board-light.png",
+      "sha256": "98449db738572215975a50b5411d7d3bc6b86f22f0b6180525e5afa002fbdc55"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-done.png",
+      "sha256": "bae4056f1a4369dfdcd692b896ef18f1414859bdde261838964556a83cbc9b3d"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-scan.svg",
+      "sha256": "c102b7f0d9a615c10a214debf3bce742dbc41bfc1a90609eb3956203ed983a6f"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-shake.png",
+      "sha256": "f4b1e7b205494146d899f0d1128cd2800d9257c021ac8feeb5777164a8d5b473"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-shake-animated.svg",
+      "sha256": "78572b787f1c19d1f0a659e5e26ff473ae262a174c482364ff0ef983976c31da"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-idle-animated.svg",
+      "sha256": "aed4d582db7c6c1c4fe3b125f0f5ee58ae2e760cc2793d79c417799950344ff0"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-scan-animated.svg",
+      "sha256": "af83b11e8967f9211c84b59cf1d97bdccb25691a080be155bed44b6a2f903dfc"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-done-animated.svg",
+      "sha256": "8afe4ea755b73fafd0d3a724059328fbc07c9e82e11057ede62d277aa8216ec1"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-scan.png",
+      "sha256": "e16adba42eb772adec789006ef908ef850d304a1551670b9fbd0f63b964021c3"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-shake.svg",
+      "sha256": "eea806b477ff7934cb28ef705b099363e915c63c11c87d2e2bde7ba28e3c217f"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-done.svg",
+      "sha256": "21a3dcaed3b91eca1324b9b317aa5566b6633e6190522204a44845ed157fbabf"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-icon.png",
+      "sha256": "825bf8240dba1e8ed09eaa326af46253f9390507e708faca33571bc644d737b1"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-idle.svg",
+      "sha256": "2277dfc05a173cb2feb712b33f8d33ecdfe73336c666bffa4d7a0a66372794bb"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-oops.png",
+      "sha256": "38343b96c76560609d56b363e919d1d4246b49aa308743c7c796875b6cd43518"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-oops-animated.svg",
+      "sha256": "37eff2206a5c30628961d658f196f1a8f3a55dfbc425a8e6529f9078ac610244"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-oops.svg",
+      "sha256": "a0bec187da6371ba7985d048c079a67bcfa5290940b54638ba39dc59f9cc4ecf"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-idle.png",
+      "sha256": "9507032f0ecf748688dd9633fee6b5a47ab4b598fc2b9011bdcfe3079993d287"
+    },
+    {
+      "path": "artifacts/janitor-fiapo/exports/fiapo-icon.svg",
+      "sha256": "31c6d1f157e1d0232ac0a6765614c2b15ad6a3cad3c88566bb3b88de58073dea"
+    },
+    {
+      "path": "artifacts/janitor-mascot/preview.html",
+      "sha256": "27be8ceecbc8855cdbafd1c98ed0bdcef46d25b471acae805260a5903d4c095e"
+    },
+    {
+      "path": "artifacts/janitor-mascot/zelo.svg",
+      "sha256": "ef9eec3273962139ff92bad7055affee87d270eae5c0afb2935186c8e4095c63"
+    },
+    {
+      "path": "artifacts/janitor-mascot/README.md",
+      "sha256": "8216c086439b41fb01d7ebd390ebf46ba3a7b30ddada688ed13c05ea67155458"
+    },
+    {
+      "path": "artifacts/janitor-mascot/concept-board-dark.png",
+      "sha256": "2ef954b5074c4cdb284a754afd409d31951302984f5f01abe60cffa7debd1e20"
+    },
+    {
+      "path": "artifacts/janitor-mascot/build.mjs",
+      "sha256": "f5b308695ced98c94589f38ce1383d50e0182135059419cacc99931bf9b4c089"
+    },
+    {
+      "path": "artifacts/janitor-mascot/concept-board-light.png",
+      "sha256": "9e5fa19fd1a646572ef55f46d1767e3471261b8cd8a827439e8961bf6409cea7"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-attention.svg",
+      "sha256": "b29f17e1c2082e9d10a0b9f55e2e774ea62625e4449c8e2527ee25b2a006cbcb"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-idle.png",
+      "sha256": "389ade03e97ba78028846a6693605b1a3d67ae1fcd4e048edf4d781f4fe63103"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-sweep-animated.svg",
+      "sha256": "2cf65a1abc829625012f96b43caeb204b0bdc4f8f495f9abd8577d49a05cc5e0"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-idle.svg",
+      "sha256": "0c9325ced9a5e421c5617567a517b8c41c78d358a8d16142c9fae2fa1baaa81d"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-attention.png",
+      "sha256": "56db93f155071523e86c68f76572cb8078586926132c4823f78898fdd507bf7c"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-sweep.svg",
+      "sha256": "98e3b4cbe77754fbe0affc76743ea8ad05f06903ad0bcd7f68e3088dc6fb8e5a"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-done.svg",
+      "sha256": "a8c86da7ab99f68fa57e3dc17e9d0c9e604ed83542716f2b9a52b6d2671a2f9d"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-done-animated.svg",
+      "sha256": "e4e7d22242a6e3227e88dcf23c3701b60fdd0fbadbfcebd7cb097be5190a17f3"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-scan.png",
+      "sha256": "e9c05a45271387487c4e55fe26276847c24945e64885c1d2738549c9734ed857"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-avatar.svg",
+      "sha256": "64b68174d41d0696d15fffbb5b6cfd29716c3ceb027eae583ffa3152f08d86ca"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-scan-animated.svg",
+      "sha256": "4da3e91fdcb062f1cf3ad362b082c1e9bc0d7018b22d980f39a8258ce4f20ca9"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-idle-animated.svg",
+      "sha256": "de7feea3ccef005bac9acf3550112a8b6420d4c8d35a16448712075ca1e119bd"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-avatar.png",
+      "sha256": "7875d2617a7dfb470fbe678569216c7347c695a0ffdb37b03328328cb38a27ea"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-attention-animated.svg",
+      "sha256": "fd17dba82c9fd21b0687e980649a40a87010c15747379e8f92edc40eb6b6925a"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-scan.svg",
+      "sha256": "22641789e620ce024bae773422db95f609f9b8eb800522ce55ee1f99b474a5fc"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-done.png",
+      "sha256": "a6ba8776265257b9b87da7c24608044655facaac53e130a649dea07646221437"
+    },
+    {
+      "path": "artifacts/janitor-mascot/exports/zelo-sweep.png",
+      "sha256": "c9f9566ca4352796e605441ca914b29a875ad89cb8ca56bf3776dc3ccaae8187"
+    }
+  ]
+}

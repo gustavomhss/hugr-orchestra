@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/sealed-duplicate-key-escaped-h.ledger.jsonl",
+  "keys": {}
+}

@@ -45,3 +45,7 @@ export function useFile() {
     },
   }
 }
+
+export function FileProvider(props: { children?: unknown }) {
+  return props.children
+}

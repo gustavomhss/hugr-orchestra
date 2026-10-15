@@ -1,0 +1,75 @@
+/* CI/CD extras on top of the shared mock kit (kit.css). Values ported from mock-features.js. */
+.mx-page[data-mx-page="cicd"] {
+  --cicd-accent: #7ea5cc;
+}
+html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
+  --cicd-accent: #3f6f9f;
+}
+
+/* Mock `.ic`: 16-unit stroke icons. */
+.cicd-ic {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The kit gives `.mx-dialog` a flex display, which would override the closed native dialog. */
+.mx-dialog.cicd-dialog:not([open]) {
+  display: none;
+}
+/* The app's reset zeroes margins; restore the native modal centering the mock relies on. */
+.mx-dialog.cicd-dialog {
+  margin: auto;
+}
+.cicd-dialog::backdrop {
+  background: var(--mx-backdrop, rgba(3, 9, 16, 0.55));
+  backdrop-filter: blur(5px);
+}
+.cicd-dialog-form {
+  display: flex;
+  min-block-size: 0;
+  max-block-size: calc(100vh - 66px);
+  flex-direction: column;
+  margin: 0;
+}
+
+/* Mock `.mx-choice`. */
+.cicd-choice {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--mx-line);
+  border-radius: 7px;
+  color: var(--mx-strong);
+  font-size: 12px;
+  background: var(--mx-soft);
+  cursor: pointer;
+}
+/* The app's reset zeroes input margins; the mock keeps the native checkbox margin. */
+.cicd-choice input {
+  margin: 3px 3px 3px 4px;
+  accent-color: var(--cicd-accent);
+}
+
+.mx-page[data-mx-page="cicd"] .mx-card h3,
+.mx-page[data-mx-page="cicd"] .mx-card p,
+.mx-page[data-mx-page="cicd"] .mx-row strong {
+  overflow-wrap: anywhere;
+}
+.mx-page[data-mx-page="cicd"] .mx-search::placeholder {
+  color: var(--mx-dim);
+}
+.cicd-dialog .mx-log {
+  overflow-wrap: anywhere;
+}
+.cicd-dialog .mx-log:focus-visible,
+.mx-page[data-mx-page="cicd"] .mx-search:focus-visible {
+  outline: 1px solid var(--mx-blue);
+  outline-offset: 1px;
+}

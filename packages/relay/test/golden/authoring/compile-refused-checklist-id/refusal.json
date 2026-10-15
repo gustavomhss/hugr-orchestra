@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "Criterion ID must be non-empty text without NUL"
+}

@@ -1,0 +1,36 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "create done",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "state": "awaiting-human",
+    "position": "A",
+    "counter": "1\n",
+    "retry_A": "3\n",
+    "round_A": "old-round",
+    "repeat_A": "2",
+    "blocked_A": "old-claim",
+    "reg_retry": "1\n"
+  },
+  "fires": [
+    {
+      "release": "  owner:\r\n retry after fixture fix  \n"
+    },
+    {}
+  ]
+}

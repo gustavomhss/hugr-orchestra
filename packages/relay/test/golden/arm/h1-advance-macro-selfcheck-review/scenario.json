@@ -1,0 +1,66 @@
+{
+  "sprint": {
+    "macros": [
+      {
+        "id": "m",
+        "instructions": "M-PROTOCOL"
+      }
+    ],
+    "gen": 2,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "instructions": "do B",
+        "checklist": [
+          {
+            "id": "B-ok",
+            "cmd": "true"
+          }
+        ],
+        "macro": "m",
+        "kind": "review",
+        "self_check": [
+          "Did you read the frozen artifact?",
+          "Is each verdict evidenced?"
+        ]
+      },
+      {
+        "id": "C",
+        "instructions": "do C",
+        "checklist": [
+          {
+            "id": "C-ok",
+            "cmd": "true"
+          }
+        ],
+        "macro": "m"
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "commits": [
+    {
+      "message": "seed",
+      "files": {
+        "seed.txt": "seed\n"
+      }
+    }
+  ],
+  "fires": [
+    {},
+    {},
+    {}
+  ]
+}

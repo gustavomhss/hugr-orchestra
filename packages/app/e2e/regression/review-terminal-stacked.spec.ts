@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/ReviewTerminalStacked"
+const directory = "C:/Orchestra/ReviewTerminalStacked"
 const projectID = "proj_review_terminal_stacked"
 const sessionID = "ses_review_terminal_stacked"
 const title = "Review terminal stacked"
@@ -24,7 +24,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
   let detailVersion = 1
   let detailFailures = 1
   await page.setViewportSize({ width: 1400, height: 900 })
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: "v1",
     directory,
     project: {
@@ -39,7 +39,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -141,7 +141,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
     localStorage.setItem(
-      "opencode.global.dat:layout",
+      "orchestra.global.dat:layout",
       JSON.stringify({ review: { diffStyle: "split", panelOpened: true } }),
     )
   })
@@ -149,10 +149,16 @@ test("keeps the review tree and terminal sized when both panels are open", async
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
   await expect(page.locator("#review-panel")).toBeVisible()
+  await page.getByRole("tab", { name: /^Review/ }).click()
   await expectTree(page, 8, "git-0.ts")
 
   await selectMode(page, "Git changes", "Branch changes")
-  await expect(page.locator("#session-side-panel-review-tab")).toHaveText("Files Changed 2740")
+  await expect(page.locator('#session-side-panel-review-tab [data-slot="session-side-panel-tab-count"]')).toHaveText(
+    "2740",
+  )
+  await expect(page.locator('[data-slot="orchestra-review-views"] [aria-current="page"]')).toHaveText(
+    "Files Changed 2740",
+  )
   await page.keyboard.press("Control+Backquote")
   await expect(page.locator("#terminal-panel")).toBeVisible()
   await expectTree(page, 2_773, "action.yml")

@@ -1,15 +1,15 @@
 import { createEffect, createMemo, For, Show, type Accessor, type JSX } from "solid-js"
-import { FileIcon } from "@opencode-ai/ui/file-icon"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
-import { useI18n } from "@opencode-ai/ui/context/i18n"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
-import { MenuV2 } from "@opencode-ai/ui/v2/menu-v2"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
+import { FileIcon } from "@orchestra/ui/file-icon"
+import { Icon } from "@orchestra/ui/icon"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { useI18n } from "@orchestra/ui/context/i18n"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
+import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
+import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
+import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
+import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
 import { AttachmentCardV2 } from "../attachment-card-v2"
 import { CommentCardV2 } from "../comment-card-v2"
 import { typeLabel } from "../../../components/message-file"
@@ -144,7 +144,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
           />
         </Show>
 
-        <div class="relative min-h-[60px]">
+        <div data-slot="prompt-input-v2-editor" class="relative min-h-[60px]">
           <div
             ref={(element) => {
               editor = element
@@ -196,8 +196,9 @@ export function PromptInputV2(props: PromptInputV2Props) {
           </Show>
         </div>
 
-        <div class="flex h-11 items-center px-2">
+        <div data-slot="prompt-input-v2-toolbar" class="flex h-11 items-center px-2">
           <div
+            data-slot="prompt-input-v2-controls"
             class="flex min-w-0 flex-1 items-center gap-1"
             aria-hidden={state.mode === "shell"}
             inert={state.mode === "shell" ? true : undefined}
@@ -217,15 +218,6 @@ export function PromptInputV2(props: PromptInputV2Props) {
               onContext={props.controller.openContext}
               onShell={props.controller.openShell}
             />
-            <Show when={view.agent} keyed>
-              {(control) => (
-                <PromptInputV2ConfiguredSelect
-                  title={i18n.t("ui.promptInput.chooseAgent")}
-                  keybind={["Mod", "."]}
-                  control={control}
-                />
-              )}
-            </Show>
             <Show
               when={props.modelControl}
               fallback={

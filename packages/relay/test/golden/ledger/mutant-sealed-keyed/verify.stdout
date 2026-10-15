@@ -1,0 +1,1 @@
+REFUSED line 1: this is a KEYED chain (mac=hmac-sha256) — set RELAY_LEDGER_KEY to verify it. Validating it as plain would accept a forgery.

@@ -1,0 +1,6 @@
+Replace this session's task list, which the owner sees with its progress while you work.
+
+- Use it for work with several steps or several requests; skip it for a single step or a question.
+- Send the whole list on every call: items you leave out are removed.
+- Statuses are `pending`, `in_progress`, `completed` and `cancelled`. Keep one item `in_progress` while work remains, and update the list as you go rather than in batches.
+- Mark an item `completed` only when its work, including any check it needs, is done. A blocked item stays `in_progress`, with a new item that names the blocker.

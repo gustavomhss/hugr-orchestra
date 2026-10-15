@@ -8,6 +8,7 @@ import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { createRequire } from "node:module"
 import type { DockRPCReply } from "./app-dock-rpc"
+import { requireRPCProof } from "./app-dock-rpc-proof"
 
 type Case = { id: string; status: "pass"; detail: string }
 const required = ["R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09", "R10", "R11", "R12", "R13", "M01"]
@@ -224,6 +225,7 @@ async function parent() {
     const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
     await access(electron)
     const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: root, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
+    await mkdir(dirname(artifact), { recursive: true })
     await rm(artifact, { force: true })
     const child = spawn(electron, [entry, "--app-dock-rpc-child"], { stdio: ["ignore", "pipe", "pipe"], env })
     let stderr = ""
@@ -234,13 +236,7 @@ async function parent() {
     })
     if (exitResult.code !== 0) throw new Error(`child failed (${exitResult.code}): ${stderr}`)
     const report = JSON.parse(await readFile(artifact, "utf8"))
-    check(
-      report.version === 1 &&
-        Array.isArray(report.cases) &&
-        report.cases.length === required.length &&
-        required.every((id) => report.cases.some((item: Case) => item.id === id && item.status === "pass")),
-      "invalid app-dock-rpc artifact",
-    )
+    requireRPCProof(report, required)
   } finally {
     await rm(buildDir, { recursive: true, force: true })
   }

@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "stdout": null,
+  "stderr": "relay: work_packages[0] has invalid id (expected a nonempty NUL-free string)\n"
+}

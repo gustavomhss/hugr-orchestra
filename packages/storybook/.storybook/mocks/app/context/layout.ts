@@ -39,3 +39,7 @@ export function useLayout() {
     },
   }
 }
+
+export function LayoutProvider(props: { children?: unknown }) {
+  return props.children
+}

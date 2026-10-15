@@ -1,13 +1,14 @@
 import { describe, expect } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Layer, Queue } from "effect"
-import { Config } from "@opencode-ai/core/config"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Location } from "@opencode-ai/core/location"
-import { Pty } from "@opencode-ai/core/pty"
-import type { PtyID } from "@opencode-ai/core/pty/schema"
-import { AbsolutePath } from "@opencode-ai/core/schema"
+import { Config } from "@orchestra/core/config"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { omniSpawner } from "@orchestra/core/flag/flag"
+import { Location } from "@orchestra/core/location"
+import { Pty } from "@orchestra/core/pty"
+import type { PtyID } from "@orchestra/core/pty/schema"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { location } from "../fixture/location"
 import { testEffect } from "../lib/effect"
 
@@ -25,6 +26,9 @@ const it = testEffect(
   ]),
 )
 const ptyTest = process.platform === "win32" ? it.live.skip : it.live
+// Tests that hold the legacy backend's first read (bun-pty/node-pty) only mean something when that backend runs;
+// omni's terminal claims its output at spawn (test/pty/omni.test.ts covers that race for it).
+const legacyPtyTest = omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) === "off" ? ptyTest : it.live.skip
 
 const subscribePtyEvents = Effect.fn("PtySessionTest.subscribePtyEvents")(function* () {
   const source = yield* EventV2.Service
@@ -45,7 +49,7 @@ const subscribePtyEvents = Effect.fn("PtySessionTest.subscribePtyEvents")(functi
 const createPty = Effect.fn("PtySessionTest.createPty")(function* (command: string, args: string[] = []) {
   const pty = yield* Pty.Service
   return yield* Effect.acquireRelease(
-    pty.create({ command, args, cwd: "/tmp", env: { TERM: "xterm-256color", OPENCODE_TERMINAL: "1" } }),
+    pty.create({ command, args, cwd: "/tmp", env: { TERM: "xterm-256color", ORCHESTRA_TERMINAL: "1" } }),
     (info) => pty.remove(info.id).pipe(Effect.ignore),
   )
 })
@@ -60,7 +64,7 @@ const waitForEvents = (events: Queue.Queue<PtyEvent>, id: PtyID, count: number) 
     return picked
   }).pipe(
     Effect.timeoutOrElse({
-      duration: "5 seconds",
+      duration: "15 seconds",
       orElse: () => Effect.fail(new Error("timeout waiting for pty events")),
     }),
   )
@@ -90,6 +94,44 @@ const waitForOutput = (output: Queue.Queue<string>, text: string) =>
     }),
   )
 
+// Holds bun-pty's first read of a new PTY until its command has exited, the way a GC pause or a loaded CI runner can
+// stall the main thread between spawn and that read. Patching the dependency is the only way to make this race
+// deterministic. `held` lists the PTYs whose first read really waited for the exit, so a test can prove the hold
+// applied instead of passing vacuously after a bun-pty refactor.
+const holdFirstReadUntilExit = Effect.acquireRelease(
+  Effect.promise(async () => {
+    const { Terminal } = await import("bun-pty")
+    const terminal = Terminal.prototype as unknown as { _startReadLoop: (this: { pid: number }) => Promise<void> }
+    const start = terminal._startReadLoop
+    if (typeof start !== "function") throw new Error("bun-pty no longer has Terminal.prototype._startReadLoop")
+    const held: number[] = []
+    terminal._startReadLoop = function () {
+      const deadline = Date.now() + 5_000
+      while (Date.now() < deadline && alive(this.pid)) Bun.sleepSync(5)
+      if (!alive(this.pid)) held.push(this.pid)
+      // bun-pty's wait thread queues the exit just after it reaps the child; let it finish so the first read sees it.
+      Bun.sleepSync(50)
+      return start.call(this)
+    }
+    return {
+      held,
+      restore: () => {
+        terminal._startReadLoop = start
+      },
+    }
+  }),
+  (hold) => Effect.sync(hold.restore),
+)
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
+
 describe("pty", () => {
   it.live("returns typed not found errors for missing sessions", () =>
     Effect.gen(function* () {
@@ -110,21 +152,37 @@ describe("pty", () => {
     }),
   )
 
-  ptyTest("retains exited sessions until removed", () =>
+  ptyTest(
+    "retains exited sessions until removed",
+    () =>
+      Effect.gen(function* () {
+        const pty = yield* Pty.Service
+        const events = yield* subscribePtyEvents()
+        const info = yield* createPty("/usr/bin/env", ["sh", "-c", "exit 3"])
+
+        expect(yield* waitForEvents(events, info.id, 2)).toEqual(["created", "exited"])
+        const exited = yield* pty.get(info.id)
+        expect(exited.status).toBe("exited")
+        expect(exited.exitCode).toBe(3)
+
+        yield* pty.remove(info.id)
+        expect(yield* waitForEvents(events, info.id, 1)).toEqual(["deleted"])
+        const missing = yield* pty.get(info.id).pipe(Effect.exit)
+        expect(Exit.isFailure(missing)).toBe(true)
+      }),
+    30000,
+  )
+
+  legacyPtyTest("reports the exit of a command that ends before its PTY is first read", () =>
     Effect.gen(function* () {
+      const hold = yield* holdFirstReadUntilExit
       const pty = yield* Pty.Service
       const events = yield* subscribePtyEvents()
       const info = yield* createPty("/usr/bin/env", ["sh", "-c", "exit 3"])
 
       expect(yield* waitForEvents(events, info.id, 2)).toEqual(["created", "exited"])
-      const exited = yield* pty.get(info.id)
-      expect(exited.status).toBe("exited")
-      expect(exited.exitCode).toBe(3)
-
-      yield* pty.remove(info.id)
-      expect(yield* waitForEvents(events, info.id, 1)).toEqual(["deleted"])
-      const missing = yield* pty.get(info.id).pipe(Effect.exit)
-      expect(Exit.isFailure(missing)).toBe(true)
+      expect(hold.held).toEqual([info.pid])
+      expect((yield* pty.get(info.id)).exitCode).toBe(3)
     }),
   )
 

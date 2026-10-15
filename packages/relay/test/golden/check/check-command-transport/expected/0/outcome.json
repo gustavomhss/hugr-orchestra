@@ -1,0 +1,14 @@
+{
+  "exit": 1,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "transport",
+    "failing": [
+      "MULTILINE-FAIL",
+      "PIPEFAIL",
+      "NOUNSET"
+    ]
+  },
+  "stderr": ""
+}

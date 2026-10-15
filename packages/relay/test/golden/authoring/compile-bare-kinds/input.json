@@ -1,0 +1,88 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Chain",
+    "nodes": [
+      {
+        "id": "load",
+        "name": "load",
+        "type": "relay.inject",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "text": "Rules\n",
+          "file": "rules.md"
+        }
+      },
+      {
+        "id": "gate",
+        "name": "gate",
+        "type": "relay.gate",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "checklist": "[{\"id\":\"g\",\"cmd\":\"true\"}]"
+        }
+      },
+      {
+        "id": "approve",
+        "name": "approve",
+        "type": "relay.human",
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "look",
+        "name": "look",
+        "type": "relay.review",
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {}
+      }
+    ],
+    "connections": {
+      "load": {
+        "main": [
+          [
+            {
+              "node": "gate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gate": {
+        "main": [
+          [
+            {
+              "node": "approve",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "approve": {
+        "main": [
+          [
+            {
+              "node": "look",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

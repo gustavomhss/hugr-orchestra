@@ -1,0 +1,30 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "J",
+            "judge": "ok",
+            "context": "ok.md",
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "ok.md": "RELAY_JUDGE_OK\n"
+  },
+  "env": {
+    "RELAY_JUDGE_STUB": "fail"
+  },
+  "fires": [
+    {}
+  ]
+}

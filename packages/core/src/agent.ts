@@ -2,12 +2,13 @@ export * as AgentV2 from "./agent"
 
 import { makeLocationNode } from "./effect/app-node"
 import { Array, Context, Effect, Layer, Types } from "effect"
-import { Agent } from "@opencode-ai/schema/agent"
+import { Agent } from "@orchestra/schema/agent"
+import type { Permission } from "@orchestra/schema/permission"
 import { State } from "./state"
 
 export const ID = Agent.ID
 export type ID = typeof ID.Type
-export const defaultID = ID.make("build")
+export const defaultID = ID.make("maestro")
 
 export const Color = Agent.Color
 
@@ -38,9 +39,10 @@ export interface Interface extends State.Transformable<Draft> {
   readonly resolve: (id?: ID | string) => Effect.Effect<Info | undefined>
   readonly select: (id?: ID | string) => Effect.Effect<Selection>
   readonly all: () => Effect.Effect<Info[]>
+  readonly withPermissions: <A, E, R>(id: ID, use: (rules: Permission.Ruleset) => Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Agent") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Agent") {}
 
 const layer = Layer.effect(
   Service,
@@ -66,21 +68,20 @@ const layer = Layer.effect(
     })
     const selectable = (agent: Info | undefined) =>
       agent && agent.mode !== "subagent" && !agent.hidden ? agent : undefined
+    // Maestro is the default unless configuration names another selectable agent. No other agent becomes the
+    // default implicitly, so without Maestro an omitted-agent Session resolves to no agent.
     const selectedDefault = () => {
       const data = state.get()
       const configured = data.default ? selectable(data.agents.get(data.default)) : undefined
-      if (configured) return configured
-      const build = selectable(data.agents.get(ID.make("build")))
-      if (build) return build
-      for (const agent of data.agents.values()) {
-        const fallback = selectable(agent)
-        if (fallback) return fallback
-      }
+      return configured ?? selectable(data.agents.get(defaultID))
     }
 
     return Service.of({
       transform: state.transform,
       reload: state.reload,
+      withPermissions: (id, use) => state.withRead((data) => use(
+        data.agents.get(id)?.permissions ?? [{ action: "*", resource: "*", effect: "deny" }],
+      )),
       get: Effect.fn("AgentV2.get")(function* (id) {
         return state.get().agents.get(id)
       }),

@@ -1,0 +1,17 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "relay-start",
+        "title": "Workflow start",
+        "checklist": [],
+        "kind": "execute",
+        "instructions": ""
+      }
+    ],
+    "brief": "",
+    "retry_budget": 3,
+    "macros": []
+  },
+  "bindings": []
+}

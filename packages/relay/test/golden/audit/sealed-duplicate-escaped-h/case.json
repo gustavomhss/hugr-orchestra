@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/sealed-duplicate-escaped-h/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

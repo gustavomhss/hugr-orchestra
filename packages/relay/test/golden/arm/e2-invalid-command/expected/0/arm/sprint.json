@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"NUM","cmd":17},{"id":"NUL","cmd":"true\u0000false"},{"id":"OBJ","cmd":{"cmd":"true"}},{"id":"OK","cmd":"true"}]}]}

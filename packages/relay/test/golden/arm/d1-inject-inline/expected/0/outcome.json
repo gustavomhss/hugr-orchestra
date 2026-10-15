@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Task: add a token-bucket limiter.\n\nRelay gate 'seed' passed. Next gate: wp2. do wp2"
+  },
+  "stderr": ""
+}

@@ -1,0 +1,419 @@
+import { Effect, Exit, Fiber, Scope, Stream } from "effect"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
+import { ToolSafetyGit } from "@orchestra/core/tool-safety-git"
+import { OutputInspector } from "@orchestra/core/output-inspector"
+import { AppProcess } from "@orchestra/core/process"
+import { OmniSpawner } from "@orchestra/core/omni-spawner"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { createWriteStream } from "node:fs"
+import { Tool } from "./tool"
+import { InstanceState } from "@/effect/instance-state"
+
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Config } from "@/config/config"
+import { RuntimeFlags } from "@/effect/runtime-flags"
+import { Shell } from "@orchestra/core/shell"
+import { ShellID } from "./shell/id"
+import { ShellScan } from "./shell/scan"
+
+import { Truncate } from "./truncate"
+import { Plugin } from "@/plugin"
+import { ChildProcess } from "effect/unstable/process"
+import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
+import { ShellPrompt, type Parameters } from "./shell/prompt"
+import { preview, tail } from "./shell/output"
+import { BackgroundProcess } from "@/background/process"
+import { Agent } from "@/agent/agent"
+import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
+import path from "path"
+import { Seats, type Seat } from "@/maestro/seats"
+import { LegacyLeanCapture } from "./lean-capture"
+import { nativeProfiles } from "@/maestro/roster"
+import { TRUNCATION_DIR } from "./truncation-dir"
+import type { InstanceContext } from "@/project/instance-context"
+
+export { Parameters } from "./shell/prompt"
+
+type Chunk = {
+  text: string
+  size: number
+}
+
+function cmd(shell: string, command: string, cwd: string, env: NodeJS.ProcessEnv) {
+  if (process.platform === "win32" && Shell.ps(shell)) {
+    return ChildProcess.make(shell, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
+      cwd,
+      env,
+      stdin: "ignore",
+      detached: false,
+    })
+  }
+
+  return ChildProcess.make(command, [], {
+    shell,
+    cwd,
+    env,
+    stdin: "ignore",
+    detached: process.platform !== "win32",
+  })
+}
+/**
+ * A native seat cannot ask the owner, so on macOS and Linux its commands run in the OS sandbox with reads confined to its
+ * worktree (and the git directories a linked worktree keeps outside it), saved tool output, the external directories its
+ * native profile grants, the backend toolkit for the toolkit seat, and the host toolchain (ToolSafetySandbox.toolchain).
+ * A host without a sandbox refuses the command. Maestro and other agents keep argument checks and asks only; Windows has
+ * no read sandbox, so seats there keep only the argument checks (ShellScan).
+ */
+const seatProfile = Effect.fn("ShellTool.seatProfile")(function* (
+  fs: FSUtil.Interface,
+  profile: ToolSafety.Profile | undefined,
+  seat: Seat,
+  instance: InstanceContext,
+) {
+  const worktree = instance.worktree === "/" ? instance.directory : instance.worktree
+  const external = nativeProfiles[seat.id]?.external_directory
+  const granted = typeof external === "object"
+    ? Object.entries(external).filter((rule) => rule[1] === "allow" && rule[0] !== "*").map((rule) => rule[0].replace(/[\\/]\*$/, ""))
+    : []
+  // A linked worktree's `.git` file names its git directory, whose `commondir` names the repository's shared one.
+  const text = (file: string) => fs.readFileStringSafe(file).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  const gitdir = (yield* text(path.join(worktree, ".git")))?.match(/^gitdir: (.+)$/m)?.[1].trim()
+  const gitdirs = gitdir ? [path.resolve(worktree, gitdir)] : []
+  const common = gitdirs.length ? (yield* text(path.join(gitdirs[0], "commondir")))?.trim() : undefined
+  return {
+    ...profile,
+    requireSandbox: true,
+    writeRoots: profile?.writeRoots ?? [worktree],
+    sandbox: {
+      ...profile?.sandbox,
+      enabled: true,
+      scratch: true,
+      readRoots: [
+        worktree, instance.directory, ...gitdirs, ...(common ? [path.resolve(gitdirs[0], common)] : []), TRUNCATION_DIR, ...granted,
+        ...(seat.toolkit ? [yield* BackendToolkit.Root] : []),
+      ],
+    },
+  } satisfies ToolSafety.Profile
+})
+
+export const ShellTool = Tool.define(
+  ShellID.ToolID,
+  Effect.gen(function* () {
+    const config = yield* Config.Service
+    const spawner = yield* ChildProcessSpawner
+    const adoptable = yield* BackgroundProcess.adoptable
+    const fs = yield* FSUtil.Service
+    const trunc = yield* Truncate.Service
+    const plugin = yield* Plugin.Service
+    const flags = yield* RuntimeFlags.Service
+    const agents = yield* Agent.Service
+    const defaultTimeoutMs = flags.bashDefaultTimeoutMs ?? 2 * 60 * 1000
+    // The scan runs inside execute, whose environment is empty: give it the services captured here.
+    const scanned = <A, E>(effect: Effect.Effect<A, E, FSUtil.Service | ChildProcessSpawner>) =>
+      effect.pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner))
+
+    const shellEnv = Effect.fn("ShellTool.shellEnv")(function* (ctx: Tool.Context, cwd: string) {
+      const extra = yield* plugin.trigger(
+        "shell.env",
+        { cwd, sessionID: ctx.sessionID, callID: ctx.callID },
+        { env: {} },
+      )
+      return {
+        ...process.env,
+        ...extra.env,
+      }
+    })
+
+    const run = Effect.fn("ShellTool.run")(function* (
+      input: {
+        shell: string
+        command: string
+        cwd: string
+        env: NodeJS.ProcessEnv
+        timeout: number
+        prepareParents: boolean
+      },
+      ctx: Tool.Context,
+    ) {
+      const limits = yield* trunc.limits()
+      const profile = yield* ToolSafety.RuntimeProfile
+      const instance = yield* InstanceState.context
+      const seat = Seats.find(ctx.agentID)
+      const sandboxed = seat && (process.platform === "darwin" || process.platform === "linux")
+        ? yield* seatProfile(fs, profile, seat, instance)
+        : profile
+      const env = ToolSafetySandbox.environment(input.env)
+      yield* ToolSafetyGit.before({ command: input.command, directory: instance.directory,
+        projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
+        cwd: input.cwd, env, managedPaths: profile?.managedPaths, neverTouch: profile?.neverTouch,
+      }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provide(LayerNode.compile(AppProcess.node)), Effect.orDie)
+      const keep = limits.maxBytes * 2
+      let full = ""
+      let last = ""
+      const list: Chunk[] = []
+      let used = 0
+      let file = ""
+      let sink: ReturnType<typeof createWriteStream> | undefined
+      let cut = false
+      let expired = false
+      let aborted = false
+
+      const closeSink = Effect.fnUntraced(function* () {
+        const stream = sink
+        if (!stream) return
+        sink = undefined
+        if (stream.destroyed || stream.closed) return
+        yield* Effect.promise(
+          () =>
+            new Promise<void>((resolve) => {
+              let settled = false
+              const done = () => {
+                if (settled) return
+                settled = true
+                stream.off("close", done)
+                stream.off("error", done)
+                stream.off("finish", done)
+                resolve()
+              }
+              stream.once("close", done)
+              stream.once("error", done)
+              stream.once("finish", done)
+              stream.end(done)
+            }),
+        ).pipe(Effect.catch(() => Effect.void))
+      })
+
+      yield* ctx.metadata({
+        metadata: {
+          output: "",
+        },
+      })
+
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const resources = yield* Scope.make()
+          const ownership = { retained: false }
+          // Registered before spawn: child release transfers ownership before foreground cleanup runs.
+          yield* Effect.addFinalizer(() => ownership.retained ? Effect.void : Scope.close(resources, Exit.void))
+          yield* Effect.addFinalizer(closeSink)
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
+            Effect.provideService(ToolSafety.RuntimeProfile, sandboxed),
+            Scope.provide(resources),
+          )
+          // The tool keeps only the tail, so a gap is a visible marker rather than a failed run (R2-2).
+          const handle = yield* spawner.spawn(wrapped).pipe(
+            Effect.provideService(OmniSpawner.GapPolicy, "marker"),
+            adoptable(ctx.sessionID, {
+              onAdopt: Effect.sync(() => { ownership.retained = true }),
+              finalize: Scope.close(resources, Exit.void),
+            }),
+          )
+          const inspection = OutputInspector.quarantine()
+
+          const retain = (chunk: string) =>
+            Effect.suspend(() => {
+              if (!chunk) return ctx.metadata({ metadata: { output: last } })
+              const size = Buffer.byteLength(chunk, "utf-8")
+              list.push({ text: chunk, size })
+              used += size
+              while (used > keep && list.length > 1) {
+                const item = list.shift()
+                if (!item) break
+                used -= item.size
+                cut = true
+              }
+
+              last = preview(last + chunk)
+
+              if (file) {
+                sink?.write(chunk)
+              } else {
+                full += chunk
+                if (Buffer.byteLength(full, "utf-8") > limits.maxBytes) {
+                  return trunc.write(full).pipe(
+                    Effect.andThen((next) =>
+                      Effect.sync(() => {
+                        file = next
+                        cut = true
+                        sink = createWriteStream(next, { flags: "a" })
+                        full = ""
+                      }),
+                    ),
+                    Effect.andThen(
+                      ctx.metadata({
+                        metadata: {
+                          output: last,
+                        },
+                      }),
+                    ),
+                  )
+                }
+              }
+
+              return ctx.metadata({
+                metadata: {
+                  output: last,
+                },
+              })
+            })
+          const reader = yield* Effect.forkScoped(
+            Stream.runForEach(Stream.decodeText(handle.all), (chunk) =>
+              Effect.suspend(() => {
+                const inspected = inspection.push(chunk)
+                return inspected.reason
+                  ? Effect.die(new ToolSafety.Denied({ reason: inspected.reason }))
+                  : retain(inspected.text)
+              }),
+            ).pipe(
+              Effect.andThen(Effect.suspend(() => {
+                const inspected = inspection.finish()
+                return inspected.reason
+                  ? Effect.die(new ToolSafety.Denied({ reason: inspected.reason }))
+                  : retain(inspected.text)
+              })),
+            ),
+          )
+
+          const abort = Effect.callback<void>((resume) => {
+            if (ctx.abort.aborted) return resume(Effect.void)
+            const handler = () => resume(Effect.void)
+            ctx.abort.addEventListener("abort", handler, { once: true })
+            return Effect.sync(() => ctx.abort.removeEventListener("abort", handler))
+          })
+
+          const timeout = Effect.sleep(`${input.timeout + 100} millis`)
+
+          const exit = yield* Effect.raceAll([
+            handle.exitCode.pipe(Effect.map((code) => ({ kind: "exit" as const, code }))),
+            abort.pipe(Effect.map(() => ({ kind: "abort" as const, code: null }))),
+            timeout.pipe(Effect.map(() => ({ kind: "timeout" as const, code: null }))),
+            Fiber.join(reader).pipe(Effect.andThen(Effect.never)),
+          ])
+
+          if (exit.kind === "abort") {
+            aborted = true
+            yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
+          }
+          if (exit.kind === "timeout") {
+            expired = true
+            yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
+          }
+
+          if (exit.kind === "exit") yield* Fiber.join(reader)
+          const code: number | null = exit.kind === "exit" ? exit.code : null
+          // A nonzero root is a normal tool result, but its surviving descendants must never be adopted.
+          if (code !== null && code !== 0) yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
+
+          const meta: string[] = []
+          if (expired) {
+            meta.push(
+              `shell tool terminated command after exceeding timeout ${input.timeout} ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.`,
+            )
+          }
+          if (aborted) meta.push("User aborted the command")
+          const raw = list.map((item) => item.text).join("")
+          const end = tail(raw, limits.maxLines, limits.maxBytes)
+          if (end.cut) cut = true
+          if (!file && end.cut) {
+            file = yield* trunc.write(raw)
+          }
+
+          let output = end.text
+          if (!output) output = "(no output)"
+
+          // Timeout and abort already explain themselves below. This note goes first because the app's
+          // test evidence cards parse the end of the output, where runners print their summaries.
+          if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
+
+          if (cut && file) {
+            output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
+          }
+
+          if (meta.length > 0) {
+            output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
+          }
+          yield* closeSink()
+          const result = {
+            title: input.command,
+            metadata: {
+              output: last || preview(output),
+              exit: code,
+              timeout: expired,
+              aborted,
+              truncated: cut,
+              ...(cut && file ? { outputPath: file } : {}),
+            },
+            output,
+          }
+          if (ctx.callID && code === 0 && !cut && !expired && !aborted && raw === output && raw.length > 0) {
+            LegacyLeanCapture.record(result, {
+              source: "shell", command: input.command, output: raw,
+              termination: { kind: "exited", code }, completeness: "complete", presentation: "unknown",
+            }, { sessionID: ctx.sessionID, callID: ctx.callID })
+          }
+          return result
+        }).pipe(Effect.ensuring(closeSink())),
+      ).pipe(Effect.orDie)
+    })
+
+    return () =>
+      Effect.gen(function* () {
+        const cfg = yield* config.get()
+        const shell = Shell.acceptable(cfg.shell)
+        const name = Shell.name(shell)
+        const limits = yield* trunc.limits()
+        const prompt = ShellPrompt.render(name, process.platform, limits, defaultTimeoutMs)
+        yield* Effect.logInfo("shell tool using shell", { shell })
+
+        return {
+          description: prompt.description,
+          parameters: prompt.parameters,
+          execute: (params: Parameters, ctx: Tool.Context) =>
+            Effect.gen(function* () {
+              const instanceCtx = yield* InstanceState.context
+              const cwd = params.workdir
+                ? yield* scanned(ShellScan.resolvePath(params.workdir, instanceCtx.directory, shell))
+                : instanceCtx.directory
+              if (params.timeout !== undefined && params.timeout < 0) {
+                throw new Error(`Invalid timeout value: ${params.timeout}. Timeout must be a positive number.`)
+              }
+              const timeout = params.timeout ?? defaultTimeoutMs
+              const prepareParents = yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
+
+              // Only the native backend seat gets its toolkit engines fetched; a blocked engine is the tool's output.
+              const seat = Seats.find(ctx.agentID)?.toolkit ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
+              const blocked = seat?.native === true ? yield* Effect.gen(function* () {
+                const root = yield* BackendToolkit.Root
+                const owned = yield* ShellScan.ownedToolArgv({ command: params.command, shell, toolkitBin: path.join(root, "bin") })
+                if (owned.blocked) return owned.blocked
+                yield* Effect.forEach(owned.calls ?? [], (call) => BackendToolkitProject.checkProjectVersion({
+                  ...call, cwd, projectDirectory: instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree,
+                }), { discard: true })
+                // Literal owned paths need not use toolkit variables; ensure the parsed engine, then reuse its cache.
+                if (owned.calls?.length) yield* BackendToolkit.ensure("openapi-generator")
+              }).pipe(Effect.catch((error) => Effect.succeed(error.reason))) : undefined
+              if (blocked)
+                return { title: params.command, output: blocked, metadata: { output: blocked, exit: null, timeout: false, aborted: false, truncated: false } }
+              const toolkit = seat?.native === true ? yield* BackendToolkit.prepare(params.command) : undefined
+              if (toolkit?.blocked)
+                return { title: params.command, output: toolkit.blocked, metadata: { output: toolkit.blocked, exit: null, timeout: false, aborted: false, truncated: false } }
+              return yield* run(
+                {
+                  shell,
+                  command: params.command,
+                  cwd,
+                  env: { ...(yield* shellEnv(ctx, cwd)), ...toolkit?.env },
+                  timeout,
+                  prepareParents,
+                },
+                ctx,
+              )
+            }),
+        }
+      })
+  }),
+)

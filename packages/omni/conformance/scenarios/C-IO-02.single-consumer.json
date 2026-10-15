@@ -1,0 +1,12 @@
+{
+  "id": "C-IO-02.single-consumer",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "out=ONE\\n", "read-line", "out=TWO\\n"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"read": "c", "until": {"match": "^ONE$"}},
+    {"read": "c", "lines": true, "until": "end", "expect": {"error": "INVALID_ARGUMENT"}},
+    {"write": "c", "data": "go\n"},
+    {"read": "c", "until": {"match": "^TWO$"}, "detach": true, "expect": {"stdout": "GOT go\nTWO\n"}},
+    {"read": "c", "until": "end", "expect": {"error": "INVALID_ARGUMENT"}},
+    {"wait": "c", "expect": {"exitCode": 0, "reason": "exit"}}
+  ]
+}

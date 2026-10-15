@@ -1,0 +1,10 @@
+{
+  "ledger": "test/golden/audit/problems-gate-failing/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "wp1",
+      "cause": "retry 1: C1"
+    }
+  ]
+}

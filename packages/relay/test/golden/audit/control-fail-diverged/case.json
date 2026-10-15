@@ -1,0 +1,9 @@
+{
+  "target": "test/golden/audit/control-fail-diverged/input/ledger.jsonl",
+  "verify": [
+    "--sprint",
+    "test/golden/audit/control-fail-diverged/input/sprint.json"
+  ],
+  "key": null,
+  "chmod": {}
+}

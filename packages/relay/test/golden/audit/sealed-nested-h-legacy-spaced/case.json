@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/sealed-nested-h-legacy-spaced/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

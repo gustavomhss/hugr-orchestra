@@ -1,0 +1,48 @@
+# Atlas code ownership. GitHub requires a matching CODEOWNERS entry + branch protection
+# ("Require review from Code Owners") for these paths to be admin-gated on every PR.
+# See docs/governance/policy-lock.md.
+#
+# ── WHY THIS FILE OWNS ITSELF ────────────────────────────────────────────────────────────────────────
+# Owning only `/.atlas/policy.json` is a lock with the key taped to the door. An author who wants to
+# widen the policy does not need to touch it: PR 1 deletes the rule from THIS file (unowned, so no admin
+# review is requested), PR 2 then edits `policy.json` freely. The same hole exists for CI — a workflow
+# that runs the gates is as load-bearing as the policy the gates enforce, and rewriting `ci.yml` disables
+# every mechanical check without touching a single governed path.
+#
+# So four paths are owned, and the set is closed under "what could be used to remove an owner":
+#   1. the policy itself,
+#   2. this file (the ownership map),
+#   3. the workflows (the enforcement's SCHEDULE),
+#   4. the gate scripts (the enforcement's BODY).
+#
+# 4 was missed on the first cut and found by a cold review. Owning `/.github/workflows/` alone protects
+# only the line that INVOKES a gate, not what the gate does: an author who rewrites `layer-guard.mjs` to
+# `process.exit(0)` touches no owned path, and CI dutifully runs the neutered check and reports green. The
+# workflow and the script it runs are one control, so they are owned together.
+#
+# ── WHAT MAKES IT ACTUALLY IN FORCE ──────────────────────────────────────────────────────────────────
+# A CODEOWNERS rule is INERT on its own. All three must hold, and each is verifiable:
+#   - the team exists and is VISIBLE with write access
+#       => `gh api repos/HuGR-Labs/atlas/codeowners/errors --jq '.errors'` is `[]`
+#   - branch protection requires code-owner review on `master`
+#   - the protection APPLIES TO ADMINS, or the one person it is meant to bind can bypass it
+#       => `gh api repos/HuGR-Labs/atlas/branches/master/protection --jq '.enforce_admins.enabled'` is `true`
+# Note the `codeowners/errors` endpoint reads the DEFAULT BRANCH, so it only reflects this file once
+# merged to `master`, and it reports "Unknown owner" until the team exists.
+
+# The governance policy: the ratified rules themselves.
+/.atlas/policy.json @HuGR-Labs/atlas-admins
+
+# The ownership map: without this line, the rule above is removable by an ordinary PR.
+/CODEOWNERS @HuGR-Labs/atlas-admins
+
+# The enforcement, all THREE halves: the workflow that SCHEDULES each gate, the script that IS the gate,
+# and the library the gate DELEGATES to. Owning any one alone leaves the others as an unowned way to
+# disable the check. `/harness/lib/` is owned for exactly the reason `/harness/gates/` is: the comment
+# stripper in `harness/lib/lexing.mjs` is what layer-guard's whole import scan stands on — rewrite it to
+# `() => ''` and the gate sees zero edges and prints OK. Before harness/lib/ existed that code sat inside
+# the owned gates directory; the extraction that gave layer-guard its LOC headroom would have moved it OUT
+# of the lock had this line not moved with it.
+/.github/workflows/ @HuGR-Labs/atlas-admins
+/harness/gates/ @HuGR-Labs/atlas-admins
+/harness/lib/ @HuGR-Labs/atlas-admins

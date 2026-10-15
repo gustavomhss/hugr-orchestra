@@ -1,0 +1,12 @@
+{
+  "exit": 1,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "only",
+    "failing": [
+      "F-3"
+    ]
+  },
+  "stderr": ""
+}

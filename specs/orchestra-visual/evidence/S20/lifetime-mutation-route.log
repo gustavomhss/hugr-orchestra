@@ -1,0 +1,82 @@
+[1A[2K[WebServer] [0m[2m[35m$[0m [2m[1mvite --host "0.0.0.0" --port "4993"[0m
+
+
+Running 2 tests using 1 worker
+
+[1A[2K[1/2] [chromium] › e2e/orchestra/governance.spec.ts:243:1 › route disposal closes governance when the session leaves for Home
+[1A[2K  1) [chromium] › e2e/orchestra/governance.spec.ts:243:1 › route disposal closes governance when the session leaves for Home
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  getByRole('dialog', { name: 'Maestro governance' })
+    Expected: [32m0[39m
+    Received: [31m1[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('dialog', { name: 'Maestro governance' })[22m
+    [2m    14 × locator resolved to 1 element[22m
+    [2m       - unexpected value "1"[22m
+
+
+      262 |   })
+      263 |   await expect(page).toHaveURL(/\/$/)
+    > 264 |   await expect(dialog).toHaveCount(0)
+          |                        ^
+      265 |   await expect(page.locator('[data-component="dialog-overlay"]')).toHaveCount(0)
+      266 |   await expect(
+      267 |     page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }),
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/e2e/orchestra/governance.spec.ts:264:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-route-47ac5-the-session-leaves-for-Home-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-route-47ac5-the-session-leaves-for-Home-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-governance-route-47ac5-the-session-leaves-for-Home-chromium/error-context.md
+
+
+[1A[2K[2/2] [chromium] › e2e/orchestra/governance.spec.ts:277:1 › cross-server remount closes old governance even when the session ID is reused
+[1A[2K  2) [chromium] › e2e/orchestra/governance.spec.ts:277:1 › cross-server remount closes old governance even when the session ID is reused
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  getByRole('dialog', { name: 'Maestro governance' })
+    Expected: [32m0[39m
+    Received: [31m1[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('dialog', { name: 'Maestro governance' })[22m
+    [2m    13 × locator resolved to 1 element[22m
+    [2m       - unexpected value "1"[22m
+
+
+      305 |   }, destination)
+      306 |   await expect(page).toHaveURL(new RegExp(`${destination}$`))
+    > 307 |   await expect(dialog).toHaveCount(0)
+          |                        ^
+      308 |   await expectSessionTitle(page, title)
+      309 |   await expect
+      310 |     .poll(() =>
+        at /Users/gustavoschneiter/Documents/HuGR/_worktrees/orchestra-governance/packages/app/e2e/orchestra/governance.spec.ts:307:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-cross-afbe7-en-the-session-ID-is-reused-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/test-results/orchestra-governance-cross-afbe7-en-the-session-ID-is-reused-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/test-results/orchestra-governance-cross-afbe7-en-the-session-ID-is-reused-chromium/error-context.md
+
+
+[1A[2K  2 failed
+    [chromium] › e2e/orchestra/governance.spec.ts:243:1 › route disposal closes governance when the session leaves for Home
+    [chromium] › e2e/orchestra/governance.spec.ts:277:1 › cross-server remount closes old governance even when the session ID is reused

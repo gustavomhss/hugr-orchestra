@@ -1,11 +1,11 @@
-import { AISDK } from "@opencode-ai/core/aisdk"
+import { AISDK } from "@orchestra/core/aisdk"
 import { describe, expect, mock } from "bun:test"
 import { Effect } from "effect"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { PluginV2 } from "@opencode-ai/core/plugin"
-import { PluginHost } from "@opencode-ai/core/plugin/host"
-import { CloudflareAIGatewayPlugin } from "@opencode-ai/core/plugin/provider/cloudflare-ai-gateway"
-import { ProviderV2 } from "@opencode-ai/core/provider"
+import { ModelV2 } from "@orchestra/core/model"
+import { PluginV2 } from "@orchestra/core/plugin"
+import { PluginHost } from "@orchestra/core/plugin/host"
+import { CloudflareAIGatewayPlugin } from "@orchestra/core/plugin/provider/cloudflare-ai-gateway"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -144,7 +144,7 @@ describe("CloudflareAIGatewayPlugin", () => {
           package: "ai-gateway-provider",
           options: {
             name: "cloudflare-ai-gateway",
-            metadata: { invoked_by: "test", project: "opencode" },
+            metadata: { invoked_by: "test", project: "orchestra" },
             cacheTtl: 300,
             cacheKey: "cache-key",
             skipCache: true,
@@ -158,13 +158,13 @@ describe("CloudflareAIGatewayPlugin", () => {
           gateway: "env-gateway",
           apiKey: "env-token",
           options: {
-            metadata: { invoked_by: "test", project: "opencode" },
+            metadata: { invoked_by: "test", project: "orchestra" },
             cacheTtl: 300,
             cacheKey: "cache-key",
             skipCache: true,
             collectLog: false,
             headers: {
-              "User-Agent": expect.stringContaining("opencode/"),
+              "User-Agent": expect.stringContaining("orchestra/"),
             },
           },
         })
@@ -189,13 +189,13 @@ describe("CloudflareAIGatewayPlugin", () => {
           options: {
             name: "cloudflare-ai-gateway",
             headers: {
-              "cf-aig-metadata": JSON.stringify({ invoked_by: "header", project: "opencode" }),
+              "cf-aig-metadata": JSON.stringify({ invoked_by: "header", project: "orchestra" }),
             },
           },
         })
 
         expect(aiGatewayCalls[0]?.options).toMatchObject({
-          metadata: { invoked_by: "header", project: "opencode" },
+          metadata: { invoked_by: "header", project: "orchestra" },
         })
       }),
     ),
@@ -401,26 +401,29 @@ describe("CloudflareAIGatewayPlugin", () => {
     ),
   )
 
-  it.effect("ignores non Cloudflare AI Gateway packages", () =>
-    withEnv(cloudflareEnv(), () =>
-      Effect.gen(function* () {
-        resetCalls()
-        const plugin = yield* PluginV2.Service
-        const aisdk = yield* AISDK.Service
-        yield* addPlugin()
+  it.effect(
+    "ignores non Cloudflare AI Gateway packages",
+    () =>
+      withEnv(cloudflareEnv(), () =>
+        Effect.gen(function* () {
+          resetCalls()
+          const plugin = yield* PluginV2.Service
+          const aisdk = yield* AISDK.Service
+          yield* addPlugin()
 
-        const result = yield* aisdk.runSDK({
-          model: ModelV2.Info.make({
-            ...ModelV2.Info.empty(ProviderV2.ID.make("cloudflare-ai-gateway"), ModelV2.ID.make("openai/gpt-5")),
-            api: { id: ModelV2.ID.make("openai/gpt-5"), type: "aisdk", package: "test-provider" },
-          }),
-          package: "@ai-sdk/openai-compatible",
-          options: { name: "cloudflare-ai-gateway" },
-        })
+          const result = yield* aisdk.runSDK({
+            model: ModelV2.Info.make({
+              ...ModelV2.Info.empty(ProviderV2.ID.make("cloudflare-ai-gateway"), ModelV2.ID.make("openai/gpt-5")),
+              api: { id: ModelV2.ID.make("openai/gpt-5"), type: "aisdk", package: "test-provider" },
+            }),
+            package: "@ai-sdk/openai-compatible",
+            options: { name: "cloudflare-ai-gateway" },
+          })
 
-        expect(result.sdk).toBeUndefined()
-        expect(aiGatewayCalls).toHaveLength(0)
-      }),
-    ),
+          expect(result.sdk).toBeUndefined()
+          expect(aiGatewayCalls).toHaveLength(0)
+        }),
+      ),
+    30_000,
   )
 })

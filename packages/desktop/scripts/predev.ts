@@ -1,9 +1,12 @@
 import { $ } from "bun"
-import { downloadCliToResources } from "./utils"
+import { stageOmni } from "./stage-omni"
+import { buildCliToResources } from "./utils"
+import { installElectron } from "./install-electron"
 
-await $`bun run install-electron`
+await installElectron()
 
-await $`bun ./scripts/copy-icons.ts ${process.env.OPENCODE_CHANNEL ?? "dev"}`
+await $`bun ./scripts/copy-icons.ts ${process.env.ORCHESTRA_CHANNEL ?? "dev"}`
 
-await $`cd ../opencode && bun script/build-node.ts`
-await downloadCliToResources()
+await $`cd ../orchestra && bun script/build-node.ts`
+await stageOmni("dev")
+await buildCliToResources()

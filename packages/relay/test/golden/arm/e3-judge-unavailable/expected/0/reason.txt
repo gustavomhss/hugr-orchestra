@@ -1,0 +1,1 @@
+Relay gate 'A' is NOT satisfied. Still failing:; NO-ORACLE; EMPTY-BOTH; BAD-SCOPE; NUL-SCOPE; NO-DIFF-BLOCKING. Address these, then finish. Instructions: do A

@@ -1,15 +1,15 @@
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
 import { HttpClient, HttpClientResponse } from "effect/unstable/http"
-import { Catalog } from "@opencode-ai/core/catalog"
-import { Credential } from "@opencode-ai/core/credential"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Integration } from "@opencode-ai/core/integration"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { PluginV2 } from "@opencode-ai/core/plugin"
-import { PluginHost } from "@opencode-ai/core/plugin/host"
-import { OpencodePlugin } from "@opencode-ai/core/plugin/provider/opencode"
-import { ProviderV2 } from "@opencode-ai/core/provider"
+import { Catalog } from "@orchestra/core/catalog"
+import { Credential } from "@orchestra/core/credential"
+import { EventV2 } from "@orchestra/core/event"
+import { Integration } from "@orchestra/core/integration"
+import { ModelV2 } from "@orchestra/core/model"
+import { PluginV2 } from "@orchestra/core/plugin"
+import { PluginHost } from "@orchestra/core/plugin/host"
+import { OpencodePlugin } from "@orchestra/core/plugin/provider/opencode"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -158,7 +158,6 @@ describe("OpencodePlugin", () => {
               const origin = new URL(request.url).origin
               return Response.json({
                 config: {
-                  enterprise: { url: origin },
                   provider: {
                     remote: {
                       name: "Remote",
@@ -257,7 +256,7 @@ describe("OpencodePlugin", () => {
     ),
   )
 
-  it.effect("uses a public key and disables paid models without credentials", () =>
+  it.effect("leaves Zen unavailable without credentials, like any other provider", () =>
     withEnv({ OPENCODE_API_KEY: undefined }, () =>
       Effect.gen(function* () {
         const catalog = yield* Catalog.Service
@@ -266,72 +265,24 @@ describe("OpencodePlugin", () => {
             ...ProviderV2.Info.empty(ProviderV2.ID.opencode),
             api: { type: "aisdk", package: "test-provider" },
           })
-          const model = ModelV2.Info.make({
-            ...ModelV2.Info.empty(provider.id, ModelV2.ID.make("paid")),
-            api: { id: ModelV2.ID.make("paid"), type: "aisdk", package: "test-provider" },
-            cost: cost(1),
-          })
           catalog.provider.update(provider.id, () => {})
-          catalog.model.update(provider.id, model.id, (draft) => {
-            draft.cost = [...model.cost]
-          })
+          for (const [id, price] of [
+            ["free", cost(0)],
+            ["paid", cost(1)],
+          ] as const) {
+            catalog.model.update(provider.id, ModelV2.ID.make(id), (draft) => {
+              draft.api = { id: ModelV2.ID.make(id), type: "aisdk", package: "test-provider" }
+              draft.cost = [...price]
+            })
+          }
         })
         yield* addPlugin()
-        expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBe("public")
-        expect(required(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("paid"))).enabled).toBe(false)
-      }),
-    ),
-  )
-
-  it.effect("keeps free models without credentials", () =>
-    withEnv({ OPENCODE_API_KEY: undefined }, () =>
-      Effect.gen(function* () {
-        const catalog = yield* Catalog.Service
-        yield* catalog.transform((catalog) => {
-          const provider = ProviderV2.Info.make({
-            ...ProviderV2.Info.empty(ProviderV2.ID.opencode),
-            api: { type: "aisdk", package: "test-provider" },
-          })
-          const model = ModelV2.Info.make({
-            ...ModelV2.Info.empty(provider.id, ModelV2.ID.make("free")),
-            api: { id: ModelV2.ID.make("free"), type: "aisdk", package: "test-provider" },
-            cost: cost(0),
-          })
-          catalog.provider.update(provider.id, () => {})
-          catalog.model.update(provider.id, model.id, (draft) => {
-            draft.cost = [...model.cost]
-          })
-        })
-        yield* addPlugin()
-        expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBe("public")
-        expect(required(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free"))).enabled).toBe(true)
-      }),
-    ),
-  )
-
-  it.effect("treats output-only cost as free without credentials", () =>
-    withEnv({ OPENCODE_API_KEY: undefined }, () =>
-      Effect.gen(function* () {
-        const catalog = yield* Catalog.Service
-        yield* catalog.transform((catalog) => {
-          const provider = ProviderV2.Info.make({
-            ...ProviderV2.Info.empty(ProviderV2.ID.opencode),
-            api: { type: "aisdk", package: "test-provider" },
-          })
-          const model = ModelV2.Info.make({
-            ...ModelV2.Info.empty(provider.id, ModelV2.ID.make("output-only")),
-            api: { id: ModelV2.ID.make("output-only"), type: "aisdk", package: "test-provider" },
-            cost: cost(0, 1),
-          })
-          catalog.provider.update(provider.id, () => {})
-          catalog.model.update(provider.id, model.id, (draft) => {
-            draft.cost = [...model.cost]
-          })
-        })
-        yield* addPlugin()
-        expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBe("public")
-        expect(required(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("output-only"))).enabled).toBe(
-          true,
+        expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBeUndefined()
+        expect((yield* catalog.provider.available()).map((provider) => provider.id)).not.toContain(
+          ProviderV2.ID.opencode,
+        )
+        expect((yield* catalog.model.available()).map((model) => model.providerID)).not.toContain(
+          ProviderV2.ID.opencode,
         )
       }),
     ),

@@ -1,6 +1,6 @@
 import { createStore, reconcile } from "solid-js/store"
-import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
-import { createSimpleContext } from "@opencode-ai/ui/context"
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js"
+import { createSimpleContext } from "@orchestra/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
 
@@ -22,7 +22,6 @@ export interface SoundSettings {
 export interface Settings {
   general: {
     autoSave: boolean
-    releaseNotes: boolean
     followup: "queue" | "steer"
     showFileTree: boolean
     showNavigation: boolean
@@ -32,11 +31,9 @@ export interface Settings {
     showReasoningSummaries: boolean
     shellToolPartsExpanded: boolean
     editToolPartsExpanded: boolean
-    showCustomAgents: boolean
     mobileTitlebarPosition: "top" | "bottom"
     newLayoutDesigns?: boolean
     layoutTransitionEligible?: boolean
-    agentVisibilityInitialized?: boolean
     newInterfaceNoticeDismissed?: boolean
     shouldDisplayTabsToast?: boolean
   }
@@ -57,7 +54,7 @@ export interface Settings {
 export const monoDefault = "System Mono"
 export const sansDefault = "System Sans"
 export const terminalDefault = "JetBrainsMono Nerd Font Mono"
-const legacyNewLayoutDesignsDefault = import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"
+const legacyNewLayoutDesignsDefault = import.meta.env.VITE_ORCHESTRA_CHANNEL !== "prod"
 export const newLayoutDesignsDefault = true
 // Existing users can switch layouts until local midnight on this date. Set new Date(YYYY, M-1, D) to show.
 export const oldInterfaceSunset = new Date(2026, 8, 14)
@@ -92,11 +89,6 @@ export function shouldDisplayTabsToast(
 
 export function hasExistingWebState(settings: Promise<string> | string | null, previousVersion: string | undefined) {
   return settings !== null || previousVersion !== undefined
-}
-
-export function initialAgentVisibility(initialized: boolean | undefined, existing: boolean, previousVersion?: string) {
-  if (initialized === true) return
-  return existing || previousVersion !== undefined
 }
 
 export function shouldEnableNewLayout(previous: string | undefined, current: string | undefined) {
@@ -183,7 +175,6 @@ export function terminalFontFamily(font: string | undefined) {
 const defaultSettings: Settings = {
   general: {
     autoSave: true,
-    releaseNotes: true,
     followup: "steer",
     showFileTree: false,
     showNavigation: false,
@@ -193,7 +184,6 @@ const defaultSettings: Settings = {
     showReasoningSummaries: false,
     shellToolPartsExpanded: false,
     editToolPartsExpanded: false,
-    showCustomAgents: false,
     mobileTitlebarPosition: "top",
   },
   appearance: {
@@ -243,10 +233,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     const showFileTree = withFallback(() => store.general?.showFileTree, defaultSettings.general.showFileTree)
     const showSearch = withFallback(() => store.general?.showSearch, defaultSettings.general.showSearch)
     const showStatus = withFallback(() => store.general?.showStatus, defaultSettings.general.showStatus)
-    const showCustomAgents = withFallback(
-      () => store.general?.showCustomAgents,
-      defaultSettings.general.showCustomAgents,
-    )
     const sunset = oldInterfaceSunset
     const [oldInterfaceRetired, setOldInterfaceRetired] = createSignal(sunset ? Date.now() >= sunset.getTime() : false)
     const layoutTransitionClassified = createMemo(() => typeof store.general?.layoutTransitionEligible === "boolean")
@@ -277,14 +263,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       )
     })
     const visible = (preference: () => boolean) => createMemo(() => !newLayoutDesigns() || preference())
-    const initializeAgentVisibility = (existing: boolean) => {
-      const initial = initialAgentVisibility(store.general?.agentVisibilityInitialized, existing, launchState.previous)
-      if (initial === undefined) return
-      batch(() => {
-        setStore("general", "showCustomAgents", initial)
-        setStore("general", "agentVisibilityInitialized", true)
-      })
-    }
 
     if (sunset && !oldInterfaceRetired()) {
       const timeout = { current: undefined as ReturnType<typeof setTimeout> | undefined }
@@ -313,9 +291,8 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
 
     createEffect(() => {
       if (!ready() || !launchState.classified || platform.platform !== "web") return
-      const existing = hasExistingWebState(settingsInit, launchState.previous)
-      if (!layoutTransitionClassified()) setStore("general", "layoutTransitionEligible", existing)
-      initializeAgentVisibility(existing)
+      if (layoutTransitionClassified()) return
+      setStore("general", "layoutTransitionEligible", hasExistingWebState(settingsInit, launchState.previous))
     })
 
     createEffect(() => {
@@ -365,10 +342,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setAutoSave(value: boolean) {
           setStore("general", "autoSave", value)
         },
-        releaseNotes: withFallback(() => store.general?.releaseNotes, defaultSettings.general.releaseNotes),
-        setReleaseNotes(value: boolean) {
-          setStore("general", "releaseNotes", value)
-        },
         followup: withFallback(
           () => (store.general?.followup === "queue" ? "steer" : store.general?.followup),
           defaultSettings.general.followup,
@@ -417,10 +390,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setEditToolPartsExpanded(value: boolean) {
           setStore("general", "editToolPartsExpanded", value)
         },
-        showCustomAgents,
-        setShowCustomAgents(value: boolean) {
-          setStore("general", "showCustomAgents", value)
-        },
         mobileTitlebarPosition: withFallback(
           () => store.general?.mobileTitlebarPosition,
           defaultSettings.general.mobileTitlebarPosition,
@@ -441,7 +410,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
           if (typeof current === "boolean") return
           setStore("general", "layoutTransitionEligible", eligible)
         },
-        initializeAgentVisibility,
         layoutTransitionAvailable: createMemo(() => ready() && layoutTransition().available),
         newInterfaceNoticeVisible: createMemo(() => ready() && layoutTransition().notice),
         dismissNewInterfaceNotice() {
@@ -456,7 +424,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         fileTree: visible(showFileTree),
         search: visible(showSearch),
         status: visible(showStatus),
-        customAgents: visible(showCustomAgents),
       },
       appearance: {
         fontSize: withFallback(() => store.appearance?.fontSize, defaultSettings.appearance.fontSize),
@@ -482,12 +449,11 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
           setStore("keybinds", action, keybind)
         },
         reset(action: string) {
-          setStore("keybinds", (current) => {
-            if (!Object.prototype.hasOwnProperty.call(current, action)) return current
-            const next = { ...current }
-            delete next[action]
-            return next
-          })
+          // A new object set on a store path is merged and would keep the removed key; reconcile replaces the map.
+          setStore(
+            "keybinds",
+            reconcile(Object.fromEntries(Object.entries(store.keybinds ?? {}).filter(([key]) => key !== action))),
+          )
         },
         resetAll() {
           setStore("keybinds", reconcile({}))

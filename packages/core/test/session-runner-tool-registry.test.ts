@@ -1,13 +1,13 @@
 import { describe, expect } from "bun:test"
-import { Tool } from "@opencode-ai/core/tool/tool"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SessionMessage } from "@opencode-ai/core/session/message"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
+import { Tool } from "@orchestra/core/tool/tool"
+import { AgentV2 } from "@orchestra/core/agent"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { executeTool, settleTool, toolDefinitions } from "./lib/tool"
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, SchemaGetter, SchemaIssue, Scope } from "effect"
 import { testEffect } from "./lib/effect"
@@ -15,6 +15,7 @@ import { testEffect } from "./lib/effect"
 const bounds: ToolOutputStore.BoundInput[] = []
 const retentionFailure = new ToolOutputStore.StorageError({ operation: "write", cause: new Error("disk full") })
 const outputStore = Layer.mock(ToolOutputStore.Service, {
+  limits: () => Effect.succeed({ maxBytes: 50_000, maxLines: 2_000 }),
   bound: (input) => {
     if (input.toolCallID === "call-retention-failure") return Effect.fail(retentionFailure)
     return Effect.sync(() => bounds.push(input)).pipe(
@@ -37,7 +38,7 @@ const integrated = testEffect(
   ]),
 )
 const identity = {
-  agent: AgentV2.ID.make("build"),
+  agent: AgentV2.ID.make("maestro"),
   assistantMessageID: SessionMessage.ID.make("msg_registry"),
 }
 const sessionID = SessionV2.ID.make("ses_registry")
@@ -252,17 +253,24 @@ describe("ToolRegistry", () => {
       bounds.length = 0
       const service = yield* ToolRegistry.Service
       yield* service.register({ bounded: make() })
-      expect(
-        yield* settleTool(service, {
-          sessionID,
-          ...identity,
-          call: { type: "tool-call", id: "call-bounded", name: "bounded", input: { text: "complete" } },
-        }),
-      ).toEqual({
-        result: { type: "text", value: "bounded reference" },
-        output: { structured: {}, content: [{ type: "text", text: "bounded reference" }] },
+      const settlement = yield* settleTool(service, {
+        sessionID,
+        ...identity,
+        call: { type: "tool-call", id: "call-bounded", name: "bounded", input: { text: "complete" } },
+      })
+      expect(settlement).toMatchObject({
+        result: { type: "text" },
+        output: { structured: {}, content: [{ type: "text" }] },
         outputPaths: ["/managed/generic"],
       })
+      if (settlement.result.type !== "text") throw new Error("Expected bounded text settlement")
+      const value = settlement.result.value
+      if (typeof value !== "string") throw new Error("Expected bounded text value")
+      expect(value).toContain("bounded reference")
+      expect(value).toContain("/managed/generic")
+      expect(value).toContain("Context pressure:")
+      expect(Buffer.byteLength(value)).toBeLessThanOrEqual(50_000)
+      expect(settlement.output?.content[0]).toEqual({ type: "text", text: value })
       expect(bounds).toHaveLength(1)
     }),
   )

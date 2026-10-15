@@ -1,0 +1,1097 @@
+{
+  "name": "Relay · planning",
+  "nodes": [
+    {
+      "id": "relay-start",
+      "name": "Workflow start",
+      "type": "relay.startTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "parameters": {
+        "relayBrief": "planning v1.0.0 — EDD PLANNING — a frozen upstream artifact becomes an enforced, buildable plan: FRAME → CARVE → SEQUENCE → DISPATCH.",
+        "relayRetryBudget": 3
+      }
+    },
+    {
+      "id": "intake",
+      "name": "Intake",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "title": "Intake",
+        "macro": "frame",
+        "instructions": "Classify every input by provenance, declare authority and the two decision rights, bind upstream, answer the campaign question.",
+        "checklist": "[\n  {\n    \"id\": \"upstream_bound\",\n    \"assert\": \"upstream_bound\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame upstream_bound --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"inputs_classified\",\n    \"assert\": \"inputs_classified\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame inputs_classified --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"authority_declared\",\n    \"assert\": \"authority_declared\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame authority_declared --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"decision_rights_named\",\n    \"assert\": \"decision_rights_named\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame decision_rights_named --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"campaign_call_made\",\n    \"assert\": \"campaign_call_made\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame campaign_call_made --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "bearings",
+      "name": "Bearings",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "parameters": {
+        "title": "Bearings",
+        "macro": "frame",
+        "instructions": "The repo's enforced gates, the honest baseline, tiered blast-radius impact with depth, defect reproduction state, characterization pinning.",
+        "checklist": "[\n  {\n    \"id\": \"baseline_captured\",\n    \"assert\": \"baseline_captured\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame baseline_captured --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"impact_depth_declared\",\n    \"assert\": \"impact_depth_declared\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame impact_depth_declared --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"repro_state_recorded\",\n    \"assert\": \"repro_state_recorded\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame repro_state_recorded --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"pinning_decided\",\n    \"assert\": \"pinning_decided\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame pinning_decided --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "terms",
+      "name": "Terms",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        688,
+        240
+      ],
+      "parameters": {
+        "title": "Terms",
+        "macro": "frame",
+        "instructions": "Source-quoted requirements, acceptance that resolves to commands, full stories with rung and enactment, dated questions, the read-back.",
+        "checklist": "[\n  {\n    \"id\": \"requirements_quote_span\",\n    \"assert\": \"requirements_quote_span\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame requirements_quote_span --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"acceptance_resolves_to_commands\",\n    \"assert\": \"acceptance_resolves_to_commands\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame acceptance_resolves_to_commands --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"stories_full_with_enactment\",\n    \"assert\": \"stories_full_with_enactment\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame stories_full_with_enactment --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"rung_requests_separated\",\n    \"assert\": \"rung_requests_separated\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame rung_requests_separated --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"questions_dated\",\n    \"assert\": \"questions_dated\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame questions_dated --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"readback_emitted\",\n    \"assert\": \"readback_emitted\",\n    \"cmd\": \"${edd_tools}/plan-criterion frame readback_emitted --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "framed",
+      "name": "FRAMED gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "FRAMED gate",
+        "macro": "frame",
+        "instructions": "plan-check --phase frame: the FRAME artifact validates and its evidence is present.",
+        "checklist": "[\n  {\n    \"id\": \"frame_phase_validates\",\n    \"assert\": \"frame_phase_validates\",\n    \"cmd\": \"${edd_tools}/plan-check --phase frame --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "carve",
+      "name": "Carve",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "Carve",
+        "macro": "carve",
+        "instructions": "Partition requirements over closers into smallest-mergeable packages; pin allow-lists with tiers and undo; derive conflict_pairs and hotspots.",
+        "checklist": "[\n  {\n    \"id\": \"requirements_partition_over_closers\",\n    \"assert\": \"requirements_partition_over_closers\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve requirements_partition_over_closers --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"upstream_binding_carried\",\n    \"assert\": \"upstream_binding_carried\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve upstream_binding_carried --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"packages_cut\",\n    \"assert\": \"packages_cut\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve packages_cut --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"splits_cited\",\n    \"assert\": \"splits_cited\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve splits_cited --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"scopes_are_allow_lists\",\n    \"assert\": \"scopes_are_allow_lists\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve scopes_are_allow_lists --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"tiers_carried\",\n    \"assert\": \"tiers_carried\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve tiers_carried --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"discovery_bounded\",\n    \"assert\": \"discovery_bounded\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve discovery_bounded --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"undo_named_where_needed\",\n    \"assert\": \"undo_named_where_needed\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve undo_named_where_needed --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"merge_rungs_set\",\n    \"assert\": \"merge_rungs_set\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve merge_rungs_set --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"conflict_pairs_computed\",\n    \"assert\": \"conflict_pairs_computed\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve conflict_pairs_computed --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "size",
+      "name": "Size",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        240
+      ],
+      "parameters": {
+        "title": "Size",
+        "macro": "carve",
+        "instructions": "Grade each package against the session-horizon and branch-age constants; split oversized ones; record each sizing claim as a falsifiable prediction.",
+        "checklist": "[\n  {\n    \"id\": \"sizing_claims_recorded\",\n    \"assert\": \"sizing_claims_recorded\",\n    \"cmd\": \"${edd_tools}/plan-criterion carve sizing_claims_recorded --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "carved",
+      "name": "CARVED gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        240
+      ],
+      "parameters": {
+        "title": "CARVED gate",
+        "macro": "carve",
+        "instructions": "plan-check --phase carve: packages partition the requirements, scopes resolve, conflict pairs computed from intersections.",
+        "checklist": "[\n  {\n    \"id\": \"carve_phase_validates\",\n    \"assert\": \"carve_phase_validates\",\n    \"cmd\": \"${edd_tools}/plan-check --phase carve --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "waits",
+      "name": "Waits",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        528
+      ],
+      "parameters": {
+        "title": "Waits",
+        "macro": "sequence",
+        "instructions": "Every wait with owner, duration, basis and escalation; each rung walked through enablement into enablers or downgrades; obligations that outlive merge.",
+        "checklist": "[\n  {\n    \"id\": \"waits_owned_and_escalatable\",\n    \"assert\": \"waits_owned_and_escalatable\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence waits_owned_and_escalatable --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"rungs_enabled_or_downgraded\",\n    \"assert\": \"rungs_enabled_or_downgraded\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence rungs_enabled_or_downgraded --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"windows_batched_or_justified\",\n    \"assert\": \"windows_batched_or_justified\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence windows_batched_or_justified --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"obligations_owned_dated_and_gating\",\n    \"assert\": \"obligations_owned_dated_and_gating\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence obligations_owned_dated_and_gating --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"downgrades_authorized_or_blocking\",\n    \"assert\": \"downgrades_authorized_or_blocking\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence downgrades_authorized_or_blocking --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "order",
+      "name": "Order",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        464,
+        528
+      ],
+      "parameters": {
+        "title": "Order",
+        "macro": "sequence",
+        "instructions": "Dependency edges, contracts frozen before dependents, parallel sets bounded by disjointness with hotspots and T3 floor serialized.",
+        "checklist": "[\n  {\n    \"id\": \"contracts_frozen_before_dependents\",\n    \"assert\": \"contracts_frozen_before_dependents\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence contracts_frozen_before_dependents --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"order_acyclic_and_justified\",\n    \"assert\": \"order_acyclic_and_justified\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence order_acyclic_and_justified --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"parallel_sets_disjoint\",\n    \"assert\": \"parallel_sets_disjoint\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence parallel_sets_disjoint --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"risk_phase_capped\",\n    \"assert\": \"risk_phase_capped\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence risk_phase_capped --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "forecast",
+      "name": "Forecast",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        688,
+        528
+      ],
+      "parameters": {
+        "title": "Forecast",
+        "macro": "sequence",
+        "instructions": "most_likely and range with each duration's basis, the wait share, assumptions wired to questions or tripwires, commitment_type within authority.",
+        "checklist": "[\n  {\n    \"id\": \"forecast_has_basis_and_wait_share\",\n    \"assert\": \"forecast_has_basis_and_wait_share\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence forecast_has_basis_and_wait_share --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"commitment_within_authority\",\n    \"assert\": \"commitment_within_authority\",\n    \"cmd\": \"${edd_tools}/plan-criterion sequence commitment_within_authority --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "sequenced",
+      "name": "SEQUENCED gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        912,
+        528
+      ],
+      "parameters": {
+        "title": "SEQUENCED gate",
+        "macro": "sequence",
+        "instructions": "plan-check --phase sequence: order acyclic and justified, rungs enabled or downgraded, waits owned, forecast has basis and wait share.",
+        "checklist": "[\n  {\n    \"id\": \"sequence_phase_validates\",\n    \"assert\": \"sequence_phase_validates\",\n    \"cmd\": \"${edd_tools}/plan-check --phase sequence --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "policy",
+      "name": "Policy",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        528
+      ],
+      "parameters": {
+        "title": "Policy",
+        "macro": "dispatch",
+        "instructions": "Repair/no-progress/escalation/branch-age/check-tier constants become every builder's operating rules; this work's ambiguity defaults from the frame's questions.",
+        "checklist": "[\n  {\n    \"id\": \"policy_complete\",\n    \"assert\": \"policy_complete\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch policy_complete --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"ambiguity_defaults_inlined\",\n    \"assert\": \"ambiguity_defaults_inlined\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch ambiguity_defaults_inlined --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "packets",
+      "name": "Packets",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        528
+      ],
+      "parameters": {
+        "title": "Packets",
+        "macro": "dispatch",
+        "instructions": "One self-contained work order per package: stories inlined with enactments, red-first, anchors verified against the repo, acceptance split from ledger-held checks.",
+        "checklist": "[\n  {\n    \"id\": \"packets_self_contained\",\n    \"assert\": \"packets_self_contained\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch packets_self_contained --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"stories_inlined_with_enactments\",\n    \"assert\": \"stories_inlined_with_enactments\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch stories_inlined_with_enactments --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"red_first_instructed\",\n    \"assert\": \"red_first_instructed\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch red_first_instructed --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"acceptance_builder_runnable\",\n    \"assert\": \"acceptance_builder_runnable\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch acceptance_builder_runnable --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"holdout_separated\",\n    \"assert\": \"holdout_separated\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch holdout_separated --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"holdout_covers_merge_gating_stories\",\n    \"assert\": \"holdout_covers_merge_gating_stories\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch holdout_covers_merge_gating_stories --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"anchors_present\",\n    \"assert\": \"anchors_present\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch anchors_present --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"characterization_pinned_where_behavior_exists\",\n    \"assert\": \"characterization_pinned_where_behavior_exists\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch characterization_pinned_where_behavior_exists --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"undo_present_where_system_changes\",\n    \"assert\": \"undo_present_where_system_changes\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch undo_present_where_system_changes --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"downpath_or_irreversible_for_schema_and_data\",\n    \"assert\": \"downpath_or_irreversible_for_schema_and_data\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch downpath_or_irreversible_for_schema_and_data --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "hostile_read",
+      "name": "Hostile read",
+      "type": "relay.review",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        528
+      ],
+      "parameters": {
+        "title": "Hostile read",
+        "macro": "dispatch",
+        "instructions": "A cold reviewer works the refute-first question set against the frozen artifacts; routes no-requirement discoveries per law 11; lists residual doubts. Emits the verdict object.",
+        "checklist": "[\n  {\n    \"id\": \"hostile_read_approved\",\n    \"assert\": \"hostile_read_approved\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch hostile_read_approved --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  },\n  {\n    \"id\": \"residual_doubts_listed\",\n    \"assert\": \"residual_doubts_listed\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch residual_doubts_listed --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "tripwires",
+      "name": "Tripwires",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        528
+      ],
+      "parameters": {
+        "title": "Tripwires",
+        "macro": "dispatch",
+        "instructions": "Arm the six standard falsification wires plus any claim-specific ones from signals the repo and ledger already emit; wire every frame assumption to its reopen consequence.",
+        "checklist": "[\n  {\n    \"id\": \"tripwires_armed\",\n    \"assert\": \"tripwires_armed\",\n    \"cmd\": \"${edd_tools}/plan-criterion dispatch tripwires_armed --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "frozen",
+      "name": "FROZEN gate",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        528
+      ],
+      "parameters": {
+        "title": "FROZEN gate",
+        "macro": "dispatch",
+        "instructions": "plan-check --phase dispatch: packets self-contained, holdout separated and covering, hostile_read APPROVE, tripwires armed. Freezes the plan.",
+        "checklist": "[\n  {\n    \"id\": \"dispatch_phase_validates\",\n    \"assert\": \"dispatch_phase_validates\",\n    \"cmd\": \"${edd_tools}/plan-check --phase dispatch --plan-dir ${plan_dir} --repo-root ${repo_root}\",\n    \"origin\": \"pe-profile:planning@1.0.0\"\n  }\n]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    }
+  ],
+  "connections": {
+    "Intake": {
+      "main": [
+        [
+          {
+            "node": "Bearings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bearings": {
+      "main": [
+        [
+          {
+            "node": "Terms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Terms": {
+      "main": [
+        [
+          {
+            "node": "FRAMED gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FRAMED gate": {
+      "main": [
+        [
+          {
+            "node": "Carve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carve": {
+      "main": [
+        [
+          {
+            "node": "Size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Size": {
+      "main": [
+        [
+          {
+            "node": "CARVED gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARVED gate": {
+      "main": [
+        [
+          {
+            "node": "Waits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Waits": {
+      "main": [
+        [
+          {
+            "node": "Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order": {
+      "main": [
+        [
+          {
+            "node": "Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forecast": {
+      "main": [
+        [
+          {
+            "node": "SEQUENCED gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEQUENCED gate": {
+      "main": [
+        [
+          {
+            "node": "Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Policy": {
+      "main": [
+        [
+          {
+            "node": "Packets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Packets": {
+      "main": [
+        [
+          {
+            "node": "Hostile read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hostile read": {
+      "main": [
+        [
+          {
+            "node": "Tripwires",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tripwires": {
+      "main": [
+        [
+          {
+            "node": "FROZEN gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow start": {
+      "main": [
+        [
+          {
+            "node": "Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [
+    {
+      "id": "frame",
+      "name": "FRAME",
+      "description": "## Macro FRAME — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the FRAME rows and the\nDefinitions it depends on) and `docs/edd/doctrine.md` (the evidence ladder, the\nstakes procedure, the independence rules). Their MUST clauses bind; do NOT restate\nthem here — this prompt only routes.\n\nThe frozen upstream artifact (or, standalone, the raw task) arrives as\n`initial_context`. Read it in full before writing anything.\n\nSub-states run in order: intake → bearings → terms → framed (gate). For the current\nsub-state, load and follow its dispatch prompt and invoke its skill:\n  - intake:   docs/edd/prompts/planning/01-intake.md    · skill plan-frame\n  - bearings: docs/edd/prompts/planning/02-bearings.md  · skill plan-bearings\n  - terms:    docs/edd/prompts/planning/03-terms.md     · skill plan-terms\nEach emits its owned fields of `plan/frame.json` against\n`docs/edd/templates/planning/frame.tmpl.json`.\n\nThe `framed` gate is mechanical: run `docs/edd/tools/plan-check --phase frame` and\nsubmit each criterion below as evidence only when its PASS line is present. A gate is\nnot a formality — a criterion you cannot make pass is a FRAME defect, not a checkbox\nto assert.",
+      "nodeIds": [
+        "intake",
+        "bearings",
+        "terms",
+        "framed"
+      ]
+    },
+    {
+      "id": "carve",
+      "name": "CARVE",
+      "description": "## Macro CARVE — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the CARVE rows, the\nScope-tiers and Hotspot definitions). MUST clauses bind; do not restate.\n\nConsume `plan/frame.json` (frozen by FRAME). Sub-states run in order:\ncarve → size → carved (gate). For the current sub-state, load its dispatch prompt and\nskill:\n  - carve: docs/edd/prompts/planning/05-carve.md · skill plan-carve\n  - size:  docs/edd/prompts/planning/06-size.md  · skill plan-size\nThey emit `plan/packages.json` against `docs/edd/templates/planning/packages.tmpl.json`.\nconflict_pairs and hotspots are COMPUTED at the carve transition (run\n`docs/edd/tools/plan-graph --conflict`), never asserted.\n\nThe `carved` gate is mechanical: `docs/edd/tools/plan-check --phase carve`.",
+      "nodeIds": [
+        "carve",
+        "size",
+        "carved"
+      ]
+    },
+    {
+      "id": "sequence",
+      "name": "SEQUENCE",
+      "description": "## Macro SEQUENCE — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the SEQUENCE rows, the\nenablement table, the Constants table). MUST clauses bind; do not restate. This macro\nruns only when there is more than one package; a single-package plan renders the short\nform and its sub-states collapse to the wait register.\n\nConsume `plan/packages.json`. Sub-states run in order: waits → order → forecast →\nsequenced (gate). Load each sub-state's dispatch prompt and skill:\n  - waits:    docs/edd/prompts/planning/08-waits.md    · skill plan-waits\n  - order:    docs/edd/prompts/planning/09-order.md    · skill plan-order\n  - forecast: docs/edd/prompts/planning/10-forecast.md · skill plan-forecast\nThey emit `plan/sequence.json` against `docs/edd/templates/planning/sequence.tmpl.json`\n(order via `docs/edd/tools/plan-graph --order`).\n\nThe `sequenced` gate is mechanical: `docs/edd/tools/plan-check --phase sequence`.",
+      "nodeIds": [
+        "waits",
+        "order",
+        "forecast",
+        "sequenced"
+      ]
+    },
+    {
+      "id": "dispatch",
+      "name": "DISPATCH",
+      "description": "## Macro DISPATCH — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the DISPATCH rows) and\n`docs/edd/doctrine.md` (holdout, independence). MUST clauses bind; do not restate.\n\nConsume `plan/frame.json`, `plan/packages.json`, `plan/sequence.json`. Sub-states run\nin order: policy → packets → hostile_read → tripwires → frozen (gate). Load each\nsub-state's dispatch prompt and skill:\n  - policy:       docs/edd/prompts/planning/12-policy.md        · skill plan-policy\n  - packets:      docs/edd/prompts/planning/13-packets.md       · skill plan-packet\n  - hostile_read: docs/edd/prompts/planning/14-hostile-read.md  · skill plan-hostile-read\n  - tripwires:    docs/edd/prompts/planning/15-tripwires.md     · skill plan-tripwires\nThey emit `plan/manifest.json` (policy, packets, holdout, tripwires) and the\nhostile-read verdict object.\n\nhostile_read runs in a COLD context: a fresh session or a second agent holding only the\nfrozen artifacts, never the context that wrote the plan. If you produced this plan in\nthis context you are disqualified from reviewing it — spawn a fresh one. A FIXES-NEEDED\nverdict loops DISPATCH; it does not pass. Solo, record `reviewer: operator`.\n\nThe `frozen` gate is mechanical: `docs/edd/tools/plan-check --phase dispatch`. It\nfreezes the plan — what BUILD consumes.",
+      "nodeIds": [
+        "policy",
+        "packets",
+        "hostile_read",
+        "tripwires",
+        "frozen"
+      ]
+    }
+  ],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "brief": "planning v1.0.0 — EDD PLANNING — a frozen upstream artifact becomes an enforced, buildable plan: FRAME → CARVE → SEQUENCE → DISPATCH.",
+        "gen": 0,
+        "retry_budget": 3,
+        "macros": [
+          {
+            "id": "frame",
+            "title": "FRAME",
+            "instructions": "## Macro FRAME — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the FRAME rows and the\nDefinitions it depends on) and `docs/edd/doctrine.md` (the evidence ladder, the\nstakes procedure, the independence rules). Their MUST clauses bind; do NOT restate\nthem here — this prompt only routes.\n\nThe frozen upstream artifact (or, standalone, the raw task) arrives as\n`initial_context`. Read it in full before writing anything.\n\nSub-states run in order: intake → bearings → terms → framed (gate). For the current\nsub-state, load and follow its dispatch prompt and invoke its skill:\n  - intake:   docs/edd/prompts/planning/01-intake.md    · skill plan-frame\n  - bearings: docs/edd/prompts/planning/02-bearings.md  · skill plan-bearings\n  - terms:    docs/edd/prompts/planning/03-terms.md     · skill plan-terms\nEach emits its owned fields of `plan/frame.json` against\n`docs/edd/templates/planning/frame.tmpl.json`.\n\nThe `framed` gate is mechanical: run `docs/edd/tools/plan-check --phase frame` and\nsubmit each criterion below as evidence only when its PASS line is present. A gate is\nnot a formality — a criterion you cannot make pass is a FRAME defect, not a checkbox\nto assert."
+          },
+          {
+            "id": "carve",
+            "title": "CARVE",
+            "instructions": "## Macro CARVE — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the CARVE rows, the\nScope-tiers and Hotspot definitions). MUST clauses bind; do not restate.\n\nConsume `plan/frame.json` (frozen by FRAME). Sub-states run in order:\ncarve → size → carved (gate). For the current sub-state, load its dispatch prompt and\nskill:\n  - carve: docs/edd/prompts/planning/05-carve.md · skill plan-carve\n  - size:  docs/edd/prompts/planning/06-size.md  · skill plan-size\nThey emit `plan/packages.json` against `docs/edd/templates/planning/packages.tmpl.json`.\nconflict_pairs and hotspots are COMPUTED at the carve transition (run\n`docs/edd/tools/plan-graph --conflict`), never asserted.\n\nThe `carved` gate is mechanical: `docs/edd/tools/plan-check --phase carve`."
+          },
+          {
+            "id": "sequence",
+            "title": "SEQUENCE",
+            "instructions": "## Macro SEQUENCE — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the SEQUENCE rows, the\nenablement table, the Constants table). MUST clauses bind; do not restate. This macro\nruns only when there is more than one package; a single-package plan renders the short\nform and its sub-states collapse to the wait register.\n\nConsume `plan/packages.json`. Sub-states run in order: waits → order → forecast →\nsequenced (gate). Load each sub-state's dispatch prompt and skill:\n  - waits:    docs/edd/prompts/planning/08-waits.md    · skill plan-waits\n  - order:    docs/edd/prompts/planning/09-order.md    · skill plan-order\n  - forecast: docs/edd/prompts/planning/10-forecast.md · skill plan-forecast\nThey emit `plan/sequence.json` against `docs/edd/templates/planning/sequence.tmpl.json`\n(order via `docs/edd/tools/plan-graph --order`).\n\nThe `sequenced` gate is mechanical: `docs/edd/tools/plan-check --phase sequence`."
+          },
+          {
+            "id": "dispatch",
+            "title": "DISPATCH",
+            "instructions": "## Macro DISPATCH — EDD planning protocol\n\nLoad `docs/edd/planning-protocol.md@sha256:41808c99e71d` (the DISPATCH rows) and\n`docs/edd/doctrine.md` (holdout, independence). MUST clauses bind; do not restate.\n\nConsume `plan/frame.json`, `plan/packages.json`, `plan/sequence.json`. Sub-states run\nin order: policy → packets → hostile_read → tripwires → frozen (gate). Load each\nsub-state's dispatch prompt and skill:\n  - policy:       docs/edd/prompts/planning/12-policy.md        · skill plan-policy\n  - packets:      docs/edd/prompts/planning/13-packets.md       · skill plan-packet\n  - hostile_read: docs/edd/prompts/planning/14-hostile-read.md  · skill plan-hostile-read\n  - tripwires:    docs/edd/prompts/planning/15-tripwires.md     · skill plan-tripwires\nThey emit `plan/manifest.json` (policy, packets, holdout, tripwires) and the\nhostile-read verdict object.\n\nhostile_read runs in a COLD context: a fresh session or a second agent holding only the\nfrozen artifacts, never the context that wrote the plan. If you produced this plan in\nthis context you are disqualified from reviewing it — spawn a fresh one. A FIXES-NEEDED\nverdict loops DISPATCH; it does not pass. Solo, record `reviewer: operator`.\n\nThe `frozen` gate is mechanical: `docs/edd/tools/plan-check --phase dispatch`. It\nfreezes the plan — what BUILD consumes."
+          }
+        ],
+        "work_packages": [
+          {
+            "id": "intake",
+            "macro": "frame",
+            "kind": "execute",
+            "title": "Intake",
+            "instructions": "Classify every input by provenance, declare authority and the two decision rights, bind upstream, answer the campaign question.",
+            "checklist": [
+              {
+                "id": "upstream_bound",
+                "assert": "upstream_bound",
+                "cmd": "${edd_tools}/plan-criterion frame upstream_bound --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "inputs_classified",
+                "assert": "inputs_classified",
+                "cmd": "${edd_tools}/plan-criterion frame inputs_classified --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "authority_declared",
+                "assert": "authority_declared",
+                "cmd": "${edd_tools}/plan-criterion frame authority_declared --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "decision_rights_named",
+                "assert": "decision_rights_named",
+                "cmd": "${edd_tools}/plan-criterion frame decision_rights_named --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "campaign_call_made",
+                "assert": "campaign_call_made",
+                "cmd": "${edd_tools}/plan-criterion frame campaign_call_made --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "bearings",
+            "macro": "frame",
+            "kind": "execute",
+            "title": "Bearings",
+            "instructions": "The repo's enforced gates, the honest baseline, tiered blast-radius impact with depth, defect reproduction state, characterization pinning.",
+            "checklist": [
+              {
+                "id": "baseline_captured",
+                "assert": "baseline_captured",
+                "cmd": "${edd_tools}/plan-criterion frame baseline_captured --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "impact_depth_declared",
+                "assert": "impact_depth_declared",
+                "cmd": "${edd_tools}/plan-criterion frame impact_depth_declared --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "repro_state_recorded",
+                "assert": "repro_state_recorded",
+                "cmd": "${edd_tools}/plan-criterion frame repro_state_recorded --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "pinning_decided",
+                "assert": "pinning_decided",
+                "cmd": "${edd_tools}/plan-criterion frame pinning_decided --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "terms",
+            "macro": "frame",
+            "kind": "execute",
+            "title": "Terms",
+            "instructions": "Source-quoted requirements, acceptance that resolves to commands, full stories with rung and enactment, dated questions, the read-back.",
+            "checklist": [
+              {
+                "id": "requirements_quote_span",
+                "assert": "requirements_quote_span",
+                "cmd": "${edd_tools}/plan-criterion frame requirements_quote_span --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "acceptance_resolves_to_commands",
+                "assert": "acceptance_resolves_to_commands",
+                "cmd": "${edd_tools}/plan-criterion frame acceptance_resolves_to_commands --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "stories_full_with_enactment",
+                "assert": "stories_full_with_enactment",
+                "cmd": "${edd_tools}/plan-criterion frame stories_full_with_enactment --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "rung_requests_separated",
+                "assert": "rung_requests_separated",
+                "cmd": "${edd_tools}/plan-criterion frame rung_requests_separated --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "questions_dated",
+                "assert": "questions_dated",
+                "cmd": "${edd_tools}/plan-criterion frame questions_dated --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "readback_emitted",
+                "assert": "readback_emitted",
+                "cmd": "${edd_tools}/plan-criterion frame readback_emitted --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "framed",
+            "macro": "frame",
+            "kind": "gate",
+            "title": "FRAMED gate",
+            "instructions": "plan-check --phase frame: the FRAME artifact validates and its evidence is present.",
+            "checklist": [
+              {
+                "id": "frame_phase_validates",
+                "assert": "frame_phase_validates",
+                "cmd": "${edd_tools}/plan-check --phase frame --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "carve",
+            "macro": "carve",
+            "kind": "execute",
+            "title": "Carve",
+            "instructions": "Partition requirements over closers into smallest-mergeable packages; pin allow-lists with tiers and undo; derive conflict_pairs and hotspots.",
+            "checklist": [
+              {
+                "id": "requirements_partition_over_closers",
+                "assert": "requirements_partition_over_closers",
+                "cmd": "${edd_tools}/plan-criterion carve requirements_partition_over_closers --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "upstream_binding_carried",
+                "assert": "upstream_binding_carried",
+                "cmd": "${edd_tools}/plan-criterion carve upstream_binding_carried --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "packages_cut",
+                "assert": "packages_cut",
+                "cmd": "${edd_tools}/plan-criterion carve packages_cut --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "splits_cited",
+                "assert": "splits_cited",
+                "cmd": "${edd_tools}/plan-criterion carve splits_cited --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "scopes_are_allow_lists",
+                "assert": "scopes_are_allow_lists",
+                "cmd": "${edd_tools}/plan-criterion carve scopes_are_allow_lists --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "tiers_carried",
+                "assert": "tiers_carried",
+                "cmd": "${edd_tools}/plan-criterion carve tiers_carried --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "discovery_bounded",
+                "assert": "discovery_bounded",
+                "cmd": "${edd_tools}/plan-criterion carve discovery_bounded --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "undo_named_where_needed",
+                "assert": "undo_named_where_needed",
+                "cmd": "${edd_tools}/plan-criterion carve undo_named_where_needed --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "merge_rungs_set",
+                "assert": "merge_rungs_set",
+                "cmd": "${edd_tools}/plan-criterion carve merge_rungs_set --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "conflict_pairs_computed",
+                "assert": "conflict_pairs_computed",
+                "cmd": "${edd_tools}/plan-criterion carve conflict_pairs_computed --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "size",
+            "macro": "carve",
+            "kind": "execute",
+            "title": "Size",
+            "instructions": "Grade each package against the session-horizon and branch-age constants; split oversized ones; record each sizing claim as a falsifiable prediction.",
+            "checklist": [
+              {
+                "id": "sizing_claims_recorded",
+                "assert": "sizing_claims_recorded",
+                "cmd": "${edd_tools}/plan-criterion carve sizing_claims_recorded --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "carved",
+            "macro": "carve",
+            "kind": "gate",
+            "title": "CARVED gate",
+            "instructions": "plan-check --phase carve: packages partition the requirements, scopes resolve, conflict pairs computed from intersections.",
+            "checklist": [
+              {
+                "id": "carve_phase_validates",
+                "assert": "carve_phase_validates",
+                "cmd": "${edd_tools}/plan-check --phase carve --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "waits",
+            "macro": "sequence",
+            "kind": "execute",
+            "title": "Waits",
+            "instructions": "Every wait with owner, duration, basis and escalation; each rung walked through enablement into enablers or downgrades; obligations that outlive merge.",
+            "checklist": [
+              {
+                "id": "waits_owned_and_escalatable",
+                "assert": "waits_owned_and_escalatable",
+                "cmd": "${edd_tools}/plan-criterion sequence waits_owned_and_escalatable --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "rungs_enabled_or_downgraded",
+                "assert": "rungs_enabled_or_downgraded",
+                "cmd": "${edd_tools}/plan-criterion sequence rungs_enabled_or_downgraded --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "windows_batched_or_justified",
+                "assert": "windows_batched_or_justified",
+                "cmd": "${edd_tools}/plan-criterion sequence windows_batched_or_justified --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "obligations_owned_dated_and_gating",
+                "assert": "obligations_owned_dated_and_gating",
+                "cmd": "${edd_tools}/plan-criterion sequence obligations_owned_dated_and_gating --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "downgrades_authorized_or_blocking",
+                "assert": "downgrades_authorized_or_blocking",
+                "cmd": "${edd_tools}/plan-criterion sequence downgrades_authorized_or_blocking --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "order",
+            "macro": "sequence",
+            "kind": "execute",
+            "title": "Order",
+            "instructions": "Dependency edges, contracts frozen before dependents, parallel sets bounded by disjointness with hotspots and T3 floor serialized.",
+            "checklist": [
+              {
+                "id": "contracts_frozen_before_dependents",
+                "assert": "contracts_frozen_before_dependents",
+                "cmd": "${edd_tools}/plan-criterion sequence contracts_frozen_before_dependents --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "order_acyclic_and_justified",
+                "assert": "order_acyclic_and_justified",
+                "cmd": "${edd_tools}/plan-criterion sequence order_acyclic_and_justified --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "parallel_sets_disjoint",
+                "assert": "parallel_sets_disjoint",
+                "cmd": "${edd_tools}/plan-criterion sequence parallel_sets_disjoint --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "risk_phase_capped",
+                "assert": "risk_phase_capped",
+                "cmd": "${edd_tools}/plan-criterion sequence risk_phase_capped --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "forecast",
+            "macro": "sequence",
+            "kind": "execute",
+            "title": "Forecast",
+            "instructions": "most_likely and range with each duration's basis, the wait share, assumptions wired to questions or tripwires, commitment_type within authority.",
+            "checklist": [
+              {
+                "id": "forecast_has_basis_and_wait_share",
+                "assert": "forecast_has_basis_and_wait_share",
+                "cmd": "${edd_tools}/plan-criterion sequence forecast_has_basis_and_wait_share --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "commitment_within_authority",
+                "assert": "commitment_within_authority",
+                "cmd": "${edd_tools}/plan-criterion sequence commitment_within_authority --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "sequenced",
+            "macro": "sequence",
+            "kind": "gate",
+            "title": "SEQUENCED gate",
+            "instructions": "plan-check --phase sequence: order acyclic and justified, rungs enabled or downgraded, waits owned, forecast has basis and wait share.",
+            "checklist": [
+              {
+                "id": "sequence_phase_validates",
+                "assert": "sequence_phase_validates",
+                "cmd": "${edd_tools}/plan-check --phase sequence --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "policy",
+            "macro": "dispatch",
+            "kind": "execute",
+            "title": "Policy",
+            "instructions": "Repair/no-progress/escalation/branch-age/check-tier constants become every builder's operating rules; this work's ambiguity defaults from the frame's questions.",
+            "checklist": [
+              {
+                "id": "policy_complete",
+                "assert": "policy_complete",
+                "cmd": "${edd_tools}/plan-criterion dispatch policy_complete --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "ambiguity_defaults_inlined",
+                "assert": "ambiguity_defaults_inlined",
+                "cmd": "${edd_tools}/plan-criterion dispatch ambiguity_defaults_inlined --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "packets",
+            "macro": "dispatch",
+            "kind": "execute",
+            "title": "Packets",
+            "instructions": "One self-contained work order per package: stories inlined with enactments, red-first, anchors verified against the repo, acceptance split from ledger-held checks.",
+            "checklist": [
+              {
+                "id": "packets_self_contained",
+                "assert": "packets_self_contained",
+                "cmd": "${edd_tools}/plan-criterion dispatch packets_self_contained --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "stories_inlined_with_enactments",
+                "assert": "stories_inlined_with_enactments",
+                "cmd": "${edd_tools}/plan-criterion dispatch stories_inlined_with_enactments --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "red_first_instructed",
+                "assert": "red_first_instructed",
+                "cmd": "${edd_tools}/plan-criterion dispatch red_first_instructed --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "acceptance_builder_runnable",
+                "assert": "acceptance_builder_runnable",
+                "cmd": "${edd_tools}/plan-criterion dispatch acceptance_builder_runnable --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "holdout_separated",
+                "assert": "holdout_separated",
+                "cmd": "${edd_tools}/plan-criterion dispatch holdout_separated --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "holdout_covers_merge_gating_stories",
+                "assert": "holdout_covers_merge_gating_stories",
+                "cmd": "${edd_tools}/plan-criterion dispatch holdout_covers_merge_gating_stories --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "anchors_present",
+                "assert": "anchors_present",
+                "cmd": "${edd_tools}/plan-criterion dispatch anchors_present --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "characterization_pinned_where_behavior_exists",
+                "assert": "characterization_pinned_where_behavior_exists",
+                "cmd": "${edd_tools}/plan-criterion dispatch characterization_pinned_where_behavior_exists --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "undo_present_where_system_changes",
+                "assert": "undo_present_where_system_changes",
+                "cmd": "${edd_tools}/plan-criterion dispatch undo_present_where_system_changes --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "downpath_or_irreversible_for_schema_and_data",
+                "assert": "downpath_or_irreversible_for_schema_and_data",
+                "cmd": "${edd_tools}/plan-criterion dispatch downpath_or_irreversible_for_schema_and_data --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "hostile_read",
+            "macro": "dispatch",
+            "kind": "review",
+            "title": "Hostile read",
+            "instructions": "A cold reviewer works the refute-first question set against the frozen artifacts; routes no-requirement discoveries per law 11; lists residual doubts. Emits the verdict object.",
+            "checklist": [
+              {
+                "id": "hostile_read_approved",
+                "assert": "hostile_read_approved",
+                "cmd": "${edd_tools}/plan-criterion dispatch hostile_read_approved --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              },
+              {
+                "id": "residual_doubts_listed",
+                "assert": "residual_doubts_listed",
+                "cmd": "${edd_tools}/plan-criterion dispatch residual_doubts_listed --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "tripwires",
+            "macro": "dispatch",
+            "kind": "execute",
+            "title": "Tripwires",
+            "instructions": "Arm the six standard falsification wires plus any claim-specific ones from signals the repo and ledger already emit; wire every frame assumption to its reopen consequence.",
+            "checklist": [
+              {
+                "id": "tripwires_armed",
+                "assert": "tripwires_armed",
+                "cmd": "${edd_tools}/plan-criterion dispatch tripwires_armed --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          },
+          {
+            "id": "frozen",
+            "macro": "dispatch",
+            "kind": "gate",
+            "title": "FROZEN gate",
+            "instructions": "plan-check --phase dispatch: packets self-contained, holdout separated and covering, hostile_read APPROVE, tripwires armed. Freezes the plan.",
+            "checklist": [
+              {
+                "id": "dispatch_phase_validates",
+                "assert": "dispatch_phase_validates",
+                "cmd": "${edd_tools}/plan-check --phase dispatch --plan-dir ${plan_dir} --repo-root ${repo_root}",
+                "origin": "pe-profile:planning@1.0.0"
+              }
+            ]
+          }
+        ]
+      },
+      "names": {
+        "intake": "Intake",
+        "bearings": "Bearings",
+        "terms": "Terms",
+        "framed": "FRAMED gate",
+        "carve": "Carve",
+        "size": "Size",
+        "carved": "CARVED gate",
+        "waits": "Waits",
+        "order": "Order",
+        "forecast": "Forecast",
+        "sequenced": "SEQUENCED gate",
+        "policy": "Policy",
+        "packets": "Packets",
+        "hostile_read": "Hostile read",
+        "tripwires": "Tripwires",
+        "frozen": "FROZEN gate"
+      }
+    }
+  }
+}

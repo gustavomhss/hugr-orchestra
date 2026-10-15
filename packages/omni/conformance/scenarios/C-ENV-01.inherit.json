@@ -1,0 +1,7 @@
+{
+  "id": "C-ENV-01.inherit",
+  "steps": [
+    {"run": ["${FIXTURE}", "env"], "options": {"env": {"OMNI_SET": "a=b c", "OMNI_U": "café ✓", "OMNI_KEY_Ü": "k"}}, "expect": {"exitCode": 0, "stdout": {"regex": "\"OMNI_KEY_\\\\u00dc\":\"k\".*\"OMNI_SET\":\"a=b c\".*\"OMNI_U\":\"caf\\\\u00e9 \\\\u2713\".*\"[Pp][Aa][Tt][Hh]\":\""}}},
+    {"run": ["${FIXTURE}", "getenv=PATH", "getenv=OMNI_SET"], "options": {"env": {"PATH": null, "OMNI_SET": "1"}}, "expect": {"exitCode": 0, "stdout": "PATH unset\nOMNI_SET=\"1\"\n"}}
+  ]
+}

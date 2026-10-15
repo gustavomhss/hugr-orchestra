@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "chain-exceeds-default-cap",
+      "severity": "warn",
+      "wp": null,
+      "detail": "this chain needs at least 15 hook blocks and the documented default cap is 8; set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0. This lint cannot see the live value — the hook's preflight reads it at run time"
+    }
+  ],
+  "exit": 0
+}

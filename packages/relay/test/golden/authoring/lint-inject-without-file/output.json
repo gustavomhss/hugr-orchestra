@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "inject-without-file",
+      "severity": "error",
+      "wp": "load",
+      "detail": "an inject state with neither `file` nor inline `text` delivers nothing, and the agent is then judged against rules it was never handed"
+    }
+  ],
+  "exit": 1
+}

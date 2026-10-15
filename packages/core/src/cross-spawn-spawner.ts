@@ -1,4 +1,3 @@
-import type * as Arr from "effect/Array"
 import { NodeFileSystem, NodeSink, NodeStream } from "@effect/platform-node"
 import * as NodePath from "@effect/platform-node/NodePath"
 import * as Deferred from "effect/Deferred"
@@ -24,79 +23,17 @@ import {
 import * as NodeChildProcess from "node:child_process"
 import { PassThrough } from "node:stream"
 import launch from "cross-spawn"
+import { toError, toPlatformError } from "./child-process-common"
+import { fds, pipeline, stdin, stdio } from "./cross-spawn-command"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem, path } from "./effect/app-node-platform"
-
-const toError = (err: unknown): Error => (err instanceof globalThis.Error ? err : new globalThis.Error(String(err)))
-
-const toTag = (err: NodeJS.ErrnoException): PlatformError.SystemErrorTag => {
-  switch (err.code) {
-    case "ENOENT":
-      return "NotFound"
-    case "EACCES":
-      return "PermissionDenied"
-    case "EEXIST":
-      return "AlreadyExists"
-    case "EISDIR":
-      return "BadResource"
-    case "ENOTDIR":
-      return "BadResource"
-    case "EBUSY":
-      return "Busy"
-    case "ELOOP":
-      return "BadResource"
-    default:
-      return "Unknown"
-  }
-}
-
-const flatten = (command: ChildProcess.Command) => {
-  const commands: Array<ChildProcess.StandardCommand> = []
-  const opts: Array<ChildProcess.PipeOptions> = []
-
-  const walk = (cmd: ChildProcess.Command): void => {
-    switch (cmd._tag) {
-      case "StandardCommand":
-        commands.push(cmd)
-        return
-      case "PipedCommand":
-        walk(cmd.left)
-        opts.push(cmd.options)
-        walk(cmd.right)
-        return
-    }
-  }
-
-  walk(command)
-  if (commands.length === 0) throw new Error("flatten produced empty commands array")
-  const [head, ...tail] = commands
-  return {
-    commands: [head, ...tail] as Arr.NonEmptyReadonlyArray<ChildProcess.StandardCommand>,
-    opts,
-  }
-}
-
-const toPlatformError = (
-  method: string,
-  err: NodeJS.ErrnoException,
-  command: ChildProcess.Command,
-): PlatformError.PlatformError => {
-  const cmd = flatten(command)
-    .commands.map((x) => `${x.command} ${x.args.join(" ")}`)
-    .join(" | ")
-  return PlatformError.systemError({
-    _tag: toTag(err),
-    module: "ChildProcess",
-    method,
-    pathOrDescriptor: cmd,
-    syscall: err.syscall,
-    cause: err,
-  })
-}
+import { Flag } from "./flag/flag"
+import { OmniSpawner } from "./omni-spawner"
 
 type ExitSignal = Deferred.Deferred<readonly [code: number | null, signal: NodeJS.Signals | null]>
 
-export const make = Effect.gen(function* () {
+/** The legacy spawn function (cross-spawn). Unchanged; omni wraps it to delegate what it does not support. */
+const legacy = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
 
@@ -114,36 +51,6 @@ export const make = Effect.gen(function* () {
 
   const output = (x: ChildProcess.CommandOutput | undefined): NodeChildProcess.IOType | undefined =>
     Sink.isSink(x) ? "pipe" : x
-
-  const stdin = (opts: ChildProcess.CommandOptions): ChildProcess.StdinConfig => {
-    const cfg: ChildProcess.StdinConfig = { stream: "pipe", encoding: "utf-8", endOnDone: true }
-    if (Predicate.isUndefined(opts.stdin)) return cfg
-    if (typeof opts.stdin === "string") return { ...cfg, stream: opts.stdin }
-    if (Stream.isStream(opts.stdin)) return { ...cfg, stream: opts.stdin }
-    return {
-      stream: opts.stdin.stream,
-      encoding: opts.stdin.encoding ?? cfg.encoding,
-      endOnDone: opts.stdin.endOnDone ?? cfg.endOnDone,
-    }
-  }
-
-  const stdio = (opts: ChildProcess.CommandOptions, key: "stdout" | "stderr"): ChildProcess.StdoutConfig => {
-    const cfg = opts[key]
-    if (Predicate.isUndefined(cfg)) return { stream: "pipe" }
-    if (typeof cfg === "string") return { stream: cfg }
-    if (Sink.isSink(cfg)) return { stream: cfg }
-    return { stream: cfg.stream }
-  }
-
-  const fds = (opts: ChildProcess.CommandOptions) => {
-    if (Predicate.isUndefined(opts.additionalFds)) return []
-    return Object.entries(opts.additionalFds)
-      .flatMap(([name, config]) => {
-        const fd = ChildProcess.parseFdName(name)
-        return Predicate.isUndefined(fd) ? [] : [{ fd, config }]
-      })
-      .toSorted((a, b) => a.fd - b.fd)
-  }
 
   const stdios = (
     sin: ChildProcess.StdinConfig,
@@ -342,22 +249,6 @@ export const make = Effect.gen(function* () {
       })
     }
 
-  const source = (handle: ChildProcessHandle, from: ChildProcess.PipeFromOption | undefined) => {
-    const opt = from ?? "stdout"
-    switch (opt) {
-      case "stdout":
-        return handle.stdout
-      case "stderr":
-        return handle.stderr
-      case "all":
-        return handle.all
-      default: {
-        const fd = ChildProcess.parseFdName(opt)
-        return Predicate.isNotUndefined(fd) ? handle.getOutputFd(fd) : handle.stdout
-      }
-    }
-  }
-
   const spawnCommand: (
     command: ChildProcess.Command,
   ) => Effect.Effect<ChildProcessHandle, PlatformError.PlatformError, Scope.Scope> = Effect.fnUntraced(
@@ -450,52 +341,27 @@ export const make = Effect.gen(function* () {
           })
         }
         case "PipedCommand": {
-          const flat = flatten(command)
-          const [head, ...tail] = flat.commands
-          let handle = spawnCommand(head)
-          for (let i = 0; i < tail.length; i++) {
-            const next = tail[i]
-            const opts = flat.opts[i] ?? {}
-            const sin = stdin(next.options)
-            const stream = Stream.unwrap(Effect.map(handle, (x) => source(x, opts.from)))
-            const to = opts.to ?? "stdin"
-            if (to === "stdin") {
-              handle = spawnCommand(
-                ChildProcess.make(next.command, next.args, {
-                  ...next.options,
-                  stdin: { ...sin, stream },
-                }),
-              )
-              continue
-            }
-            const fd = ChildProcess.parseFdName(to)
-            if (Predicate.isUndefined(fd)) {
-              handle = spawnCommand(
-                ChildProcess.make(next.command, next.args, {
-                  ...next.options,
-                  stdin: { ...sin, stream },
-                }),
-              )
-              continue
-            }
-            handle = spawnCommand(
-              ChildProcess.make(next.command, next.args, {
-                ...next.options,
-                additionalFds: {
-                  ...next.options.additionalFds,
-                  [ChildProcess.fdName(fd) as `fd${number}`]: { type: "input", stream },
-                },
-              }),
-            )
-          }
-          return yield* handle
+          return yield* pipeline(command, spawnCommand)
         }
       }
     },
   )
 
-  return makeSpawner(spawnCommand)
+  return { spawnCommand, cwd }
 })
+
+/**
+ * The spawner for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` is the legacy spawner exactly; `on` and
+ * `strict` spawn through omni, which delegates (on) or refuses (strict) what it does not support.
+ */
+export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) {
+  const base = yield* legacy
+  if (mode === "off") return makeSpawner(base.spawnCommand)
+  return makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
+})
+
+/** The flag is read once, when the layer is built. */
+export const make = Effect.suspend(() => makeWith(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER))
 
 const layer: Layer.Layer<ChildProcessSpawner, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
   ChildProcessSpawner,

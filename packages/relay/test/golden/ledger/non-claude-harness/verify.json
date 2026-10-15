@@ -1,0 +1,48 @@
+{
+  "ledger": "test/fixtures/non-claude-harness.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 14 chained entries [PLAIN (SHA-256)], chain head db6abfcdf898…\n  (4 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "c1-greet-exists",
+      "assert": "greet.py defines greet",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "c2-test-exists",
+      "assert": "test_greet.py defines test_greet",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "c3-suite-green",
+      "assert": "pytest exits 0",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "c4-readme",
+      "assert": "README.md starts with '# greet'",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 4,
+  "deterministic_passed": 4,
+  "advisory": 0,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "PASS",
+  "exit": 0
+}

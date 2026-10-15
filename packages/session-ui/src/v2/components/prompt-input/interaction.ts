@@ -1,6 +1,6 @@
 import { createEffect, on, type Accessor } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
-import { useFilteredList } from "@opencode-ai/ui/hooks"
+import { useFilteredList } from "@orchestra/ui/hooks"
 import { createPromptInputV2Attachments, type PromptInputV2AttachmentConfig } from "./attachments"
 import { createPromptInputV2Store, type PromptInputV2StoreInput } from "./store"
 import type {
@@ -31,7 +31,6 @@ export type PromptInputV2ViewConfig = {
   add?: {
     onAttach: () => void
   }
-  agent?: PromptInputV2SelectControl
   model?: PromptInputV2SelectControl
   variant?: PromptInputV2SelectControl
   submit: {

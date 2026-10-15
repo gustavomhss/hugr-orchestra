@@ -27,44 +27,45 @@ import {
   TextPart,
   ToolPart,
   UserMessage,
-  Todo,
   QuestionAnswer,
   QuestionInfo,
-} from "@opencode-ai/sdk/v2"
+} from "@orchestra/sdk/v2"
 import { useData } from "../context"
-import { useFileComponent } from "@opencode-ai/ui/context/file"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { type UiI18n, useI18n } from "@opencode-ai/ui/context/i18n"
+import { useFileComponent } from "@orchestra/ui/context/file"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { type UiI18n, useI18n } from "@orchestra/ui/context/i18n"
 import { BasicTool, GenericTool } from "./basic-tool"
-import { Accordion } from "@opencode-ai/ui/accordion"
-import { StickyAccordionHeader } from "@opencode-ai/ui/sticky-accordion-header"
-import { Collapsible } from "@opencode-ai/ui/collapsible"
-import { FileIcon } from "@opencode-ai/ui/file-icon"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Accordion } from "@orchestra/ui/accordion"
+import { StickyAccordionHeader } from "@orchestra/ui/sticky-accordion-header"
+import { Collapsible } from "@orchestra/ui/collapsible"
+import { FileIcon } from "@orchestra/ui/file-icon"
+import { Icon } from "@orchestra/ui/icon"
 import { ToolErrorCard } from "./tool-error-card"
-import { Checkbox } from "@opencode-ai/ui/checkbox"
-import { DiffChanges } from "@opencode-ai/ui/diff-changes"
+import { DiffChanges } from "@orchestra/ui/diff-changes"
 import { Markdown } from "./markdown"
-import { ImagePreview } from "@opencode-ai/ui/image-preview"
-import { getDirectory as _getDirectory, getFilename } from "@opencode-ai/core/util/path"
+import { ImagePreview } from "@orchestra/ui/image-preview"
+import { getDirectory as _getDirectory, getFilename } from "@orchestra/core/util/path"
 import { AttachmentCardV2 } from "../v2/components/attachment-card-v2"
 import { CommentCardV2 } from "../v2/components/comment-card-v2"
-import { checksum } from "@opencode-ai/core/util/encode"
-import { Tooltip } from "@opencode-ai/ui/tooltip"
-import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { TextShimmer } from "@opencode-ai/ui/text-shimmer"
+import { checksum } from "@orchestra/core/util/encode"
+import { Tooltip } from "@orchestra/ui/tooltip"
+import { IconButton } from "@orchestra/ui/icon-button"
+import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
+import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
+import { Spinner } from "@orchestra/ui/spinner"
+import { TextShimmer } from "@orchestra/ui/text-shimmer"
 import { AnimatedCountList } from "./tool-count-summary"
 import { ToolStatusTitle } from "./tool-status-title"
 import { patchFiles } from "./apply-patch-file"
 import { partDefaultOpen } from "./part-default-open"
+import { confirmedTodos } from "./confirmed-todos"
+import { TodoWrite } from "./todo-write"
 import { animate } from "motion"
 import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
+import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -364,7 +365,7 @@ function getDirectory(path: string | undefined) {
   return relativizeProjectPath(_getDirectory(path), data.directory)
 }
 
-import type { IconProps } from "@opencode-ai/ui/icon"
+import type { IconProps } from "@orchestra/ui/icon"
 import { normalize, resolveFileDiff } from "./session-diff"
 
 export type ToolInfo = {
@@ -434,13 +435,10 @@ function tone(name: string) {
   return agentPalette[hash % agentPalette.length]
 }
 
-function taskAgent(
-  raw: unknown,
-  list?: readonly { name: string; color?: string }[],
-): { name?: string; color?: string; v2Color?: string } {
+function taskAgent(raw: unknown, list?: readonly AgentEntry[]): { name?: string; color?: string; v2Color?: string } {
   if (typeof raw !== "string" || !raw) return {}
   const key = raw.toLowerCase()
-  const item = list?.find((entry) => entry.name === raw || entry.name.toLowerCase() === key)
+  const item = findTaskAgent(raw, list)
   const v2Tone = item?.color ? undefined : v2AgentTones[key]
   const color = agentColor(item?.color, agentThemeColors) ?? agentTones[key] ?? tone(key)
   const v2Color = agentColor(item?.color, v2AgentThemeColors) ?? v2Tone ?? color
@@ -592,7 +590,7 @@ function taskSession(
   input: Record<string, any>,
   parentID: string | undefined,
   sessions: Session[] | undefined,
-  agents?: readonly { name: string; color?: string }[],
+  agents?: readonly AgentEntry[],
 ) {
   if (!parentID) return undefined
   const description = typeof input.description === "string" ? input.description : ""
@@ -605,7 +603,6 @@ function taskSession(
 }
 
 const CONTEXT_GROUP_TOOLS = new Set(["read", "glob", "grep", "list"])
-const HIDDEN_TOOLS = new Set(["todowrite"])
 
 function list<T>(value: T[] | undefined | null, fallback: T[]) {
   if (Array.isArray(value)) return value
@@ -710,7 +707,7 @@ function index<T extends { id: string }>(items: readonly T[]) {
 
 export function renderable(part: PartType, showReasoningSummaries = true) {
   if (part.type === "tool") {
-    if (HIDDEN_TOOLS.has(part.tool)) return false
+    if (part.tool === "todowrite") return confirmedTodos(part.state) !== undefined
     if (part.tool === "question") return part.state.status !== "pending" && part.state.status !== "running"
     return true
   }
@@ -1535,7 +1532,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const data = useData()
   const i18n = useI18n()
   const part = () => props.part as ToolPart
-  if (part().tool === "todowrite") return null
+  const hideTodo = createMemo(() => part().tool === "todowrite" && confirmedTodos(part().state) === undefined)
 
   const hideQuestion = createMemo(
     () => part().tool === "question" && (part().state.status === "pending" || part().state.status === "running"),
@@ -1568,7 +1565,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const handleToolOpenChange = (open: boolean) => props.onToolOpenChange?.(open)
 
   return (
-    <Show when={!hideQuestion()}>
+    <Show when={!hideQuestion() && !hideTodo()}>
       <div data-component="tool-part-wrapper" data-timeline-part-id={part().id}>
         <Switch>
           <Match when={part().state.status === "error" && (part().state as any).error}>
@@ -2524,53 +2521,7 @@ ToolRegistry.register({
 
 ToolRegistry.register({
   name: "todowrite",
-  render(props) {
-    const i18n = useI18n()
-    const todos = createMemo(() => {
-      const meta = props.metadata?.todos
-      if (Array.isArray(meta)) return meta
-
-      const input = props.input.todos
-      if (Array.isArray(input)) return input
-
-      return []
-    })
-
-    const subtitle = createMemo(() => {
-      const list = todos()
-      if (list.length === 0) return ""
-      return `${list.filter((t: Todo) => t.status === "completed").length}/${list.length}`
-    })
-
-    return (
-      <BasicTool
-        {...props}
-        defaultOpen
-        icon="checklist"
-        trigger={{
-          title: i18n.t("ui.tool.todos"),
-          subtitle: subtitle(),
-        }}
-      >
-        <Show when={todos().length}>
-          <div data-component="todos">
-            <For each={todos()}>
-              {(todo: Todo) => (
-                <Checkbox readOnly checked={todo.status === "completed"}>
-                  <span
-                    data-slot="message-part-todo-content"
-                    data-completed={todo.status === "completed" ? "completed" : undefined}
-                  >
-                    {todo.content}
-                  </span>
-                </Checkbox>
-              )}
-            </For>
-          </div>
-        </Show>
-      </BasicTool>
-    )
-  },
+  render: TodoWrite,
 })
 
 ToolRegistry.register({

@@ -3,33 +3,35 @@ import { $ } from "bun"
 import { fileURLToPath } from "url"
 import path from "path"
 import { SqliteClient } from "@effect/sql-sqlite-bun"
-import { EffectDrizzleSqlite } from "@opencode-ai/effect-drizzle-sqlite"
+import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { Effect, Layer } from "effect"
 import { eq, inArray, sql } from "drizzle-orm"
-import { DatabaseMigration } from "@opencode-ai/core/database/migration"
-import { migrations } from "@opencode-ai/core/database/migration.gen"
-import workspaceNameMigration from "@opencode-ai/core/database/migration/20260410174513_workspace-name"
-import sessionUsageMigration from "@opencode-ai/core/database/migration/20260510033149_session_usage"
-import normalizeStoragePathsMigration from "@opencode-ai/core/database/migration/20260601010001_normalize_storage_paths"
-import sessionMessageProjectionOrderMigration from "@opencode-ai/core/database/migration/20260603040000_session_message_projection_order"
-import eventSourcedSessionInputMigration from "@opencode-ai/core/database/migration/20260604172448_event_sourced_session_input"
-import contextEpochAgentMigration from "@opencode-ai/core/database/migration/20260605042240_add_context_epoch_agent"
-import simplifyIntegrationCredentialsMigration from "@opencode-ai/core/database/migration/20260611192811_lush_chimera"
-import simplifySessionInputMigration from "@opencode-ai/core/database/migration/20260622202450_simplify_session_input"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { ProjectV2 } from "@opencode-ai/core/project"
-import { ProjectTable } from "@opencode-ai/core/project/sql"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SessionSchema } from "@opencode-ai/core/session/schema"
-import { SessionTable } from "@opencode-ai/core/session/sql"
-import sessionMetadataMigration from "@opencode-ai/core/database/migration/20260511173437_session-metadata"
+import { DatabaseMigration } from "@orchestra/core/database/migration"
+import { migrations } from "@orchestra/core/database/migration.gen"
+import workspaceNameMigration from "@orchestra/core/database/migration/20260410174513_workspace-name"
+import sessionUsageMigration from "@orchestra/core/database/migration/20260510033149_session_usage"
+import normalizeStoragePathsMigration from "@orchestra/core/database/migration/20260601010001_normalize_storage_paths"
+import sessionMessageProjectionOrderMigration from "@orchestra/core/database/migration/20260603040000_session_message_projection_order"
+import eventSourcedSessionInputMigration from "@orchestra/core/database/migration/20260604172448_event_sourced_session_input"
+import contextEpochAgentMigration from "@orchestra/core/database/migration/20260605042240_add_context_epoch_agent"
+import simplifyIntegrationCredentialsMigration from "@orchestra/core/database/migration/20260611192811_lush_chimera"
+import simplifySessionInputMigration from "@orchestra/core/database/migration/20260622202450_simplify_session_input"
+import promptContextMigration from "@orchestra/core/database/migration/20261008025417_prompt_context"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { ProjectV2 } from "@orchestra/core/project"
+import { ProjectTable } from "@orchestra/core/project/sql"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionSchema } from "@orchestra/core/session/schema"
+import { SessionTable } from "@orchestra/core/session/sql"
+import sessionMetadataMigration from "@orchestra/core/database/migration/20260511173437_session-metadata"
 import type { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient"
-import { Database } from "@opencode-ai/core/database/database"
-import { SessionProjector } from "@opencode-ai/core/session/projector"
-import { SessionV1 } from "@opencode-ai/core/v1/session"
+import { Database } from "@orchestra/core/database/database"
+import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionV1 } from "@orchestra/core/v1/session"
 import { tmpdir } from "./fixture/tmpdir"
+import { rethrow } from "./lib/rejection"
 
 const run = <A, E>(effect: Effect.Effect<A, E, SqlClientService>) =>
   Effect.runPromise(
@@ -39,6 +41,38 @@ const run = <A, E>(effect: Effect.Effect<A, E, SqlClientService>) =>
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
 
 describe("DatabaseMigration", () => {
+  test("adds nullable prompt context while preserving historical inbox rows", async () => {
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* db.run(
+          sql`CREATE TABLE session_input (id text PRIMARY KEY, session_id text NOT NULL, prompt text NOT NULL, delivery text NOT NULL, admitted_seq integer NOT NULL, promoted_seq integer, time_created integer NOT NULL)`,
+        )
+        yield* db.run(
+          sql`INSERT INTO session_input VALUES ('msg_old', 'ses_old', '{"text":"old"}', 'queue', 1, NULL, 2)`,
+        )
+        yield* DatabaseMigration.applyOnly(db, [promptContextMigration])
+        expect(yield* db.get(sql`SELECT * FROM session_input`)).toEqual({
+          id: "msg_old",
+          session_id: "ses_old",
+          prompt: '{"text":"old"}',
+          delivery: "queue",
+          admitted_seq: 1,
+          promoted_seq: null,
+          time_created: 2,
+          prompt_context: null,
+        })
+        yield* db.run(
+          sql`UPDATE session_input SET prompt_context = '{"reminders":["first","second"]}' WHERE id = 'msg_old'`,
+        )
+        yield* DatabaseMigration.applyOnly(db, [promptContextMigration])
+        expect(yield* db.get(sql`SELECT prompt_context FROM session_input`)).toEqual({
+          prompt_context: '{"reminders":["first","second"]}',
+        })
+      }),
+    )
+  })
+
   test("defaults missing workspace names while preserving legacy workspace data", async () => {
     await run(
       Effect.gen(function* () {
@@ -89,16 +123,20 @@ describe("DatabaseMigration", () => {
   })
 
   test("rejects unknown legacy Drizzle journal timestamps instead of guessing completed migrations", async () => {
-    await expect(
-      run(
-        Effect.gen(function* () {
-          const db = yield* makeDb
-          yield* db.run(sql`CREATE TABLE __drizzle_migrations (id integer PRIMARY KEY, hash text, created_at integer)`)
-          yield* db.run(sql`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('', 1234567890000)`)
-          yield* DatabaseMigration.applyOnly(db, [workspaceNameMigration])
-        }),
+    expect(
+      await rethrow(
+        run(
+          Effect.gen(function* () {
+            const db = yield* makeDb
+            yield* db.run(
+              sql`CREATE TABLE __drizzle_migrations (id integer PRIMARY KEY, hash text, created_at integer)`,
+            )
+            yield* db.run(sql`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('', 1234567890000)`)
+            yield* DatabaseMigration.applyOnly(db, [workspaceNameMigration])
+          }),
+        ),
       ),
-    ).rejects.toThrow("does not match any known migration")
+    ).toThrow("does not match any known migration")
   })
 
   test("serializes concurrent embedded initialization for one database path", async () => {
@@ -163,15 +201,17 @@ describe("DatabaseMigration", () => {
   })
 
   test("rejects a non-empty database without a session table", async () => {
-    await expect(
-      run(
-        Effect.gen(function* () {
-          const db = yield* makeDb
-          yield* db.run(sql`CREATE TABLE unrelated (id text PRIMARY KEY)`)
-          yield* DatabaseMigration.apply(db)
-        }),
+    expect(
+      await rethrow(
+        run(
+          Effect.gen(function* () {
+            const db = yield* makeDb
+            yield* db.run(sql`CREATE TABLE unrelated (id text PRIMARY KEY)`)
+            yield* DatabaseMigration.apply(db)
+          }),
+        ),
       ),
-    ).rejects.toThrow("Database is not empty and has no session table")
+    ).toThrow("Database is not empty and has no session table")
   })
 
   test("backfills existing Context Epoch rows to the build agent", async () => {

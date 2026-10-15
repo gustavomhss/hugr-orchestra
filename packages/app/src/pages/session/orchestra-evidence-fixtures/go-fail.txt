@@ -1,0 +1,10 @@
+--- FAIL: TestRejectsEmpty (0.00s)
+    a_test.go:4: expected one item
+--- FAIL: TestSub (0.00s)
+    --- FAIL: TestSub/inner (0.00s)
+        a_test.go:6: inner broke
+FAIL
+FAIL	example.com/approval/a	0.429s
+ok  	example.com/approval/b	0.860s
+?   	example.com/approval/c	[no test files]
+FAIL

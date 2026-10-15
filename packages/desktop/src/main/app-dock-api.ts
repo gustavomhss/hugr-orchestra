@@ -1,15 +1,28 @@
-import type { BrowserWindow } from "electron"
-import type { AppDockEvent, AppDockState, AppDockTab, AppDockFindResult, DockBounds, ProfileStorage } from "./app-dock"
+import type { BrowserWindow, WebContents } from "electron"
+import type { AppDockEvent, AppDockIdentity, AppDockState, AppDockTab, AppDockFindResult, DockBounds, ProfileStorage } from "./app-dock"
+import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
+
+export type NativeWorkspacePlacement = Readonly<{ runtimeID: string; runtimeEpoch: string; ready: boolean }>
 
 export interface AppDockAPI {
-  open(senderID: number, win: BrowserWindow, address: string, bounds: DockBounds, notify: (event: AppDockEvent) => void, profileStorage: ProfileStorage, replacement?: Readonly<{ tabID: string; selected: boolean }>): Promise<AppDockTab>
-  resize(senderID: number, bounds: DockBounds): void
-  hide(senderID: number, win: BrowserWindow): void
-  select(senderID: number, win: BrowserWindow, tabID: string, bounds: DockBounds): void
+  nativeWorkspace?(senderID: number, tabID: string): NativeWorkspacePlacement | undefined
+  onTabRemoved?(listener: (identity: Readonly<{ senderID: number; tabID: string; generation: number }>) => void): () => void
+  open(senderID: number, win: BrowserWindow, address: string, bounds: DockBounds, notify: (event: AppDockEvent) => void, profileStorage: ProfileStorage, placement?: Readonly<{ tabID: string; selected: boolean }>): Promise<AppDockTab>
+  resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds): void
+  hide(senderID: number, win: BrowserWindow, tab: AppDockIdentity): void
+  occlude(senderID: number, occluded: boolean): void
+  select(senderID: number, win: BrowserWindow, tab: AppDockIdentity, bounds: DockBounds): void
   activate(senderID: number, win: BrowserWindow, tabID: string): void
+  contents(senderID: number, tabID: string): WebContents
   navigate(senderID: number, tabID: string, address: string): Promise<{ ok: boolean; url: string }>
   execute(senderID: number, tabID: string, script: string): Promise<unknown>
-  read(senderID: number, tabID: string, budget: number, maxText: number): Promise<unknown>
+  read(
+    senderID: number,
+    tabID: string,
+    budget: number,
+    maxText: number,
+    shape?: { mode?: SnapshotMode; format?: SnapshotFormat; actionable?: boolean; visible?: boolean },
+  ): Promise<unknown>
   click(senderID: number, tabID: string, ref: number): Promise<unknown>
   type(senderID: number, tabID: string, ref: number, text: string): Promise<unknown>
   close(senderID: number, win: BrowserWindow, tabID?: string): void

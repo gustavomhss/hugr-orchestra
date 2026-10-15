@@ -1,0 +1,30 @@
+{
+  "brief": "Make the pytest suite at ${tests} pass in full, without modifying the tests. The tests encode the Definition of Done; your job is to make the implementation under test satisfy them.",
+  "retry_budget": 3,
+  "work_packages": [
+    {
+      "id": "wp1-collects",
+      "title": "Suite collects cleanly",
+      "instructions": "Ensure the test suite at ${tests} is importable and collects with no errors (no import errors, no collection errors). Run: ${runner} --collect-only -q ${tests}. Fix import paths, missing modules, and syntax errors in the code under test until collection is clean. Do NOT edit the tests.",
+      "checklist": [
+        {
+          "id": "C-COLLECTS",
+          "assert": "pytest collects ${tests} with no collection errors",
+          "cmd": "${runner} --collect-only -q ${tests}"
+        }
+      ]
+    },
+    {
+      "id": "wp2-green",
+      "title": "Suite passes in full",
+      "instructions": "Make every test under ${tests} pass. Run: ${runner} ${tests} -q. Edit the implementation under test only — never weaken, skip, or delete a test to make the gate pass. The suite must be fully green with zero failures.",
+      "checklist": [
+        {
+          "id": "C-SUITE-GREEN",
+          "assert": "every test in ${tests} passes",
+          "cmd": "${runner} ${tests} -q"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "ledger": "test/golden/audit/cost-partial/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "awaiting-human",
+      "wp": "d",
+      "cause": "retry budget spent at d; still failing: (unrecorded)"
+    }
+  ]
+}

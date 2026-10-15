@@ -1,0 +1,74 @@
+# Verified setup and integrations UI
+
+Baseline `bbdc4a7d68`; owner requested continuation. This wave delivers key-based identity verification for Slack/Discord, explicit account/target/current-actor binding UI, and the actual Orchestra host seam. Existing provider/model integrations retain their purpose. OAuth, refresh and further provider verifiers remain named F05/provider work; a successful MCP handshake or models listing does not prove account identity.
+
+## Frozen decisions
+
+- Public setup input is strict `{provider:"slack"|"discord", key, label?}`. No endpoint, subject, credential ID, agent or invocation fields. Input schema redacts decode issues. Key max4096, label max128. Label is user-owned display metadata, never verified identity. Public creation result is `{connection, verification:"verified"}` inside existing durable Receipt; reads expose optional label plus existing redacted fields only.
+- Operator action `connection.connect`, resource `{kind:"provider",id:provider}`, actual resolved placement. Before any network, reconcile an existing exact receipt under current private authority and SQL writer; changed key/provider/label/placement/idempotency reuse conflicts without network. No newest-account lookup or credential inheritance.
+- `CapabilityRequest.make` adds SQL-only `reconcile(target,payload,verify?)` returning existing receipt or undefined. Share its capture/identity/current-binding/ownership/receipt validation with commit. No callbacks on exact replay except verification; no receipt insertion/quota consumption on missing reconciliation. Honest SQL unions and full mixed Causes retained.
+- Fresh setup checks operator authority, performs fixed-route identity request outside writer, rechecks same current binding, then atomically inserts canonical CredentialTable key row and CapabilityConnectionTable row plus ledger receipt in one immediate writer. SQL-only callback; no nested Credential.create/Connections.create transaction, no remote reads under writer. Local rollback leaves no secret/connection/receipt orphan. Exact retry does not verify again, even if remote credential later expires; it replays historical creation fact, not current remote readiness.
+- Provider verifier uses actual bounded shared channel HTTP transport, fixed production origins only: Slack `POST https://slack.com/api/auth.test`, Discord `GET https://discord.com/api/v10/users/@me` with Bot authorization. Accept strict authenticated tenant/user/bot IDs; reject Slack ok:false, malformed/missing IDs, redirects, HTTP failures and input key whitespace/CRLF. Slack subject is unambiguous canonical tuple of returned team/user/bot identity; Discord subject is returned user ID. Integration IDs `capability.slack`/`capability.discord`. Endpoint/scoping fingerprint hashes fixed provider endpoint, verified subject and exact credential fingerprint; it does not claim operation entitlement. Trusted fixture options may replace origin with loopback only, never public input. Do not return arbitrary provider fields or secrets.
+- Binding inspection is read-only `binding.list` on `{kind:"target",id}`. Resolve actual stored parent placement before scope check; normalize pure missing/revoked/denied frames to constant unavailable. One SQL join/scan returns only bindings whose agent equals current nonempty persisted Session.agent and Session placement equals parent. Sort SessionID, limit default16/max32, fetch limit+1. Output `{sessionID,actions}` with coverage `current-actor`; stale actors excluded explicitly. Public unbind continues to derive current actor, never accepts agentID.
+- Review correction: SQL actor validity must match JavaScript trim, including the closed ECMAScript WhiteSpace/LineTerminator set, before LIMIT. Discord proof requires returned bot:true. Controller rejects non-progressing ID cursors and repeated opaque continuations with bounded history. Post-ACK refresh retains writing-controller ownership across every await; receipt observers may synchronously cancel/change selection.
+- Review correction: direct read `target.get` on target resource returns Target summary only, via GET `/api/capability/targets/:targetID` (`capability.target.get`, Client getTarget). Core bindings facade exposes get(id); App uses existing connection get plus getTarget to refresh selected refs independently of first pages. Not finding a selection in a page prefix is never proof of deletion. Current grant denial leaves explicit read error, not simulated empty/ready state.
+- New public endpoints join existing protected connection group: POST `/api/capability/connections/connect` (`capability.connection.connect`, setup Input/Receipt), GET `/api/capability/targets/:targetID/bindings` (`capability.binding.list`, BindingQuery/BindingPage). Existing middleware ordering applies. Client maps connect and bindings; regenerate only through package script.
+- Actual Orchestra host must provide owning ServerOperator and capabilityAuthorizationLayer at scoped assembly, using existing identical ServerAuth config identity. Optional trusted injected operator argument to HttpApiApp.createRoutes for deterministic host fixtures; defaults to scoped ServerOperator.layer. No anonymous minting, query/cookie/PTy auth bypass or new model executor. Existing Basic credentials deliver host authority. Auth-disabled browser needs an explicitly supplied host-issued bearer.
+- Add Integrations chapter using generated `@orchestra/client` Promise runtime. App runtime imports only Client/Schema for this feature. Server selection/profile owns instance; each remount aborts pending requests and discards secrets/tokens/results. Basic header derives from selected server; optional bearer only when Basic absent, ephemeral memory, never persisted or sent to another server. Display localized authorization/setup failures, never raw ClientError/provider payload.
+- UI loads actual connection pages, target pages and current-actor bindings, with explicit next-page controls. No simulated ready toggles or automatic mutation retry. Mutation intent snapshots exact inputs/ref+idempotency key; explicit retry keeps same snapshot/key. Editing intent creates a new key. Busy/error/unknown/reused states remain truthful; actions refetch current state after success. Setup secret cleared from visible field immediately, retained only in a private pending closure until resolution/cancel/profile disposal; never in persistence, toast or result state.
+- Review correction: public recovery state has retryable/readRetryable booleans only, never private request keys or payloads. Mutation retry requires a retained intent; retryRead replays only the failed current-owner read, including post-ACK refresh recovery, without re-running mutation. Idle dialog dismissal resets fields without fabricating request failure. Submit restores focus to an enabled current-page control while opener is busy. English source copy uses the existing shared chapter fallback; localization qualification is separate from this English-source wave.
+- Account label and opaque ID distinguish selected connections. Target create/retarget requires explicit environment and parsed JSON resource; existing secret resource contents are not disclosed/prefilled. Binding uses explicit SessionID and actions; server derives actor. Disconnect is local, not remote revoke; UI says so.
+- Solid createStore, semantic forms/dialogs, typed English i18n module and existing fallback mechanism, logical CSS, bdi for external strings/IDs. No session/timeline edits or app/server restart. Focused DOM/HTTP tests, real handlers/SQL/loopback identity fixtures; browser/platform qualification not inferred from happydom.
+
+## Ownership and cadence
+
+Lead owns Schema/SQL+migrations, contracts, Protocol/Server API wiring, generated clients, App manifest/navigation/copy aggregates and integration. Author slices are disjoint: ledger reconciliation; identity verifier; setup+binding services/shared input snapshot; actual Orchestra host seam; App controller/model; App screen/dialog/CSS/copy. Dependent slices consume frozen anchors, then merge approved dependencies for runtime checks. Cold slices <=400 changed LOC; measured mutation failures/restoration before landing. Up to10 agents, at most6 nontrivial authors concurrently. Push first compiling checkpoint and final; no intermediate PR/CI.
+
+Focused local tests explicitly authorized from package dirs; `bun typecheck` only package dirs. No paid/live calls, account/login mutations, vendor downloads, global guards/env changes, full suites or app restart. All credential operations in tests use temporary SQLite and loopback fixtures. Preserve original user checkout and untracked planning references.
+
+## Landing results
+
+The wave landed on `native-capabilities`. The production head is `bd78c022a3`. The test-only proof branches were merged after five independent cold reviews of at most 400 LOC each, and all five approved:
+
+| Branch | Head | Content |
+|---|---|---|
+| `setup-api-proof` | `bb41cdf431` | Server HTTP, bindings and implicit-local setup; sdk-next Effect and Promise clients; full Orchestra host. |
+| `integration-ui-proof` | `49da85da9e` | Integrations chapter end to end: generated Client, protected handler, verifier and SQL in a child process. |
+
+### Review fixes
+
+The reviewers raised checks that could not fail. Each one now has teeth, measured red then restored green:
+- Current-actor bindings had no guard on `workspace_id` or `project_id`. A foreign row now catches each filter if it regresses.
+- The denied body is now compared with the missing body.
+- The UI secret-scanner gained a real positive control.
+- The malformed-bearer check now counts wire calls.
+- Remount identity is now asserted through a mount counter.
+- The private read-error check now records the response and asserts it never reaches the DOM.
+- Fixture control helpers now throw when a response is not ok.
+- The fixture child now exits when stdin hits EOF, so a hard-killed runner does not orphan it.
+- Absence checks now wait for the held response to be delivered.
+
+### Lead integration fix
+
+The UI fixture imported `drizzle-orm`, which `packages/app` did not declare. It resolved only through a hand-made workspace symlink. It is now an app devDependency, and the lockfile change is that single line.
+
+### Verification
+
+This is a local focused run, not campaign CI:
+
+| Package | Result |
+|---|---|
+| server: setup HTTP, bindings, local | 4, 2 and 1 child cases pass |
+| sdk-next setup | 4 pass |
+| orchestra host setup | 3 pass |
+| app `integrations-native*` | 20 pass |
+
+Typecheck passes in app, server, sdk-next and orchestra.
+
+Under a load average above 100, the orchestra parent `test/preload.ts` `afterAll` (`AppRuntime.dispose`) timed out. It passes at normal load and fails the same way without these changes.
+
+### Product follow-ups
+
+- Malformed JSON and a poisoned Location on capability routes return HTTP 500. They should return 400. The tests pin the current behaviour with a comment.
+- A provider-rejected key (bad or expired) shows "Host authorization is required or no longer permits this request". Host authority is fine in that case, so the copy is misleading. It needs a distinct localized provider-credential-rejected error. The test pins the current copy.
+- `sdk-next` and `packages/orchestra` tests import Schema and Client through relative paths, because those packages are not declared dependencies there.

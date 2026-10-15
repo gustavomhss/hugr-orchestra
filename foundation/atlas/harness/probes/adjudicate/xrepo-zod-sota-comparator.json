@@ -1,0 +1,13 @@
+{
+  "what": "Deterministic SOTA comparator for the PROVEN dependency arm (#99 `depends-on`). Compares Atlas's proven file-to-file dependency edges against an independent, established code-intelligence tool (madge 6.1.0) on a third-party repo (zod v3.23.8). Both sides are MECHANICAL — zero LLM, zero tokens. Atlas edges: `atlas derive-relations` (proof = the derivation, #99). Reference: `madge --ts-config tsconfig.json --extensions ts --json src`.",
+  "target": { "repo": "colinhacks/zod", "tag": "v3.23.8", "head": "ca42965df46b2f7e2747db29c40a26bcb32a51d5" },
+  "counts": { "atlas_proven_edges": 231, "madge_edges": 129, "intersection": 129, "atlas_only": 102, "madge_only": 0 },
+  "headline": {
+    "recall_vs_madge": "129/129 = 100% — Atlas is a strict SUPERSET of madge's graph; it misses NOTHING madge finds.",
+    "atlas_only_are_NOT_false": "The 102 Atlas-only edges are REAL semantic dependencies, verified mechanically. madge builds a SYNTACTIC import-statement graph (it stops at the imported barrel); Atlas builds a SEMANTIC symbol->definition graph (it pierces the barrel to the definition site via SCIP witnessed references, #99). Example: safeparse.test.ts imports only `../index`, but uses `z.string()` whose definition lives in src/types.ts; index.ts `export * from ./external`, external.ts `export * from ./types`, so Atlas's test->types edge is a true transitive symbol dependency madge structurally cannot represent. All 102 targets (types 64, ZodError 21, external 9, index 5, errors/util/en 1 each) are exactly the definition sites reachable through the index->external re-export chain.",
+    "why_precision_55.8pct_is_the_WRONG_metric": "Scoring Atlas's 231 against madge's 129 as '55.8% precision' would PENALIZE Atlas for correctly resolving re-export barrels to true definition sites. The two tools define 'depends-on' differently (syntactic vs semantic); Atlas's extra edges are correct, not false."
+  },
+  "honesty": "This establishes Atlas's proven arm is a semantic superset of a well-known SOTA syntactic dependency extractor on a foreign repo, 0-false by the #99 witnessed-reference construction. Caveat: the barrel-piercing MECHANISM was verified (re-export chain + 3 sampled sources import the barrel + every #99 edge is a witnessed reference); not all 102 edges were individually hand-traced. A stronger import-graph tool (dependency-cruiser) would behave like madge here — edge-per-import-statement, no barrel collapse — so the semantic-vs-syntactic gap is the finding, not a madge weakness.",
+  "cost": "0 LLM tokens on both sides. Compute-only (SCIP index build ~6s, madge ~seconds).",
+  "artifacts": { "compare": "xrepo-zod-depgraph-compare.json (full atlas_only + madge_only edge lists)" }
+}

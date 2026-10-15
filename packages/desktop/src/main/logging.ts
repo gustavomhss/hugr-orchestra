@@ -1,6 +1,6 @@
 import { MainLogger } from "electron-log"
 import log from "electron-log/main.js"
-import { app, crashReporter, netLog, shell } from "electron"
+import { app, BrowserWindow, crashReporter, netLog, shell } from "electron"
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { ZipWriter, BlobWriter, BlobReader } from "@zip.js/zip.js"
 import { dirname, join } from "node:path"
@@ -27,7 +27,15 @@ export function initLogging() {
       run,
       `${safeLogName(message?.scope ?? (message?.variables?.processType === "renderer" ? "renderer" : "main"))}.log`,
     )
-  log.initialize({ preload: false, spyRendererConsole: true })
+  log.initialize({ preload: false })
+  app.on("web-contents-created", (_event, contents) => {
+    contents.on("console-message", (event) => {
+      const win = BrowserWindow.fromWebContents(contents)
+      // Remote views can log credentials. Only the owner renderer's main frame is trusted.
+      if (!win || win.webContents !== contents || event.frame !== contents.mainFrame) return
+      log.scope("renderer")[event.level === "warning" ? "warn" : event.level](event.message)
+    })
+  })
   initConsoleTransport()
   cleanup()
   return (logger = log)
@@ -54,7 +62,7 @@ export async function exportDebugLogs() {
     await netLog.stopLogging().catch((error) => write("network", "failed to stop net log", { error }))
   }
 
-  const output = join(app.getPath("downloads"), `opencode-debug-${stamp()}.zip`)
+  const output = join(app.getPath("downloads"), `orchestra-debug-${stamp()}.zip`)
   try {
     write("main", "exporting debug logs", { output })
     await writeZip(output, [
@@ -151,7 +159,7 @@ function manifest() {
 
 function serverLogRoots() {
   const xdgData = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share")
-  return [...new Set([join(xdgData, "opencode", "log"), join(app.getPath("userData"), "opencode", "log")])]
+  return [...new Set([join(xdgData, "orchestra", "log"), join(app.getPath("userData"), "orchestra", "log")])]
 }
 
 type Entry = { name: string; path?: string; data?: Buffer }

@@ -1,0 +1,139 @@
+{
+  "op": "hook",
+  "document": {
+    "name": "Actions",
+    "nodes": [
+      {
+        "id": "event",
+        "name": "Before edit",
+        "type": "relay.hookEventTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "operation": "command",
+          "timing": "before"
+        }
+      },
+      {
+        "id": "remind",
+        "name": "Remind",
+        "type": "relay.hookRemind",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "message": "Remember the contract."
+        }
+      },
+      {
+        "id": "verify",
+        "name": "Verify",
+        "type": "relay.hookVerify",
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "message": "Checks pass.",
+          "check": "bun typecheck"
+        }
+      },
+      {
+        "id": "repair",
+        "name": "Repair",
+        "type": "relay.hookRepair",
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "message": "Fix it."
+        }
+      },
+      {
+        "id": "approve",
+        "name": "Approve",
+        "type": "relay.hookApprove",
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "message": "Ask."
+        }
+      },
+      {
+        "id": "record",
+        "name": "Record",
+        "type": "relay.hookRecord",
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "message": "Recorded."
+        }
+      }
+    ],
+    "connections": {
+      "Before edit": {
+        "main": [
+          [
+            {
+              "node": "Remind",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remind": {
+        "main": [
+          [
+            {
+              "node": "Verify",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verify": {
+        "main": [
+          [
+            {
+              "node": "Repair",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Repair": {
+        "main": [
+          [
+            {
+              "node": "Approve",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Approve": {
+        "main": [
+          [
+            {
+              "node": "Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

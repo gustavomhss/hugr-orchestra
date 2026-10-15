@@ -1,0 +1,8 @@
+{
+  "id": "C-IO-01.merge",
+  "steps": [
+    {"run": ["${FIXTURE}", "out=1\\n", "err=2\\n", "out=3\\n", "err=4\\n", "out=5\\n", "err=6\\n", "out=7\\n", "err=8\\n"], "options": {"mergeStderr": true}, "expect": {"exitCode": 0, "stdout": "1\n2\n3\n4\n5\n6\n7\n8\n", "stderr": ""}},
+    {"spawn": ["${FIXTURE}", "out=1\\n", "err=2\\n", "out=3\\n", "err=4\\n", "out=5\\n", "err=6\\n", "out=7\\n", "err=8\\n"], "options": {"mergeStderr": true}, "as": "c"},
+    {"read": "c", "until": "end", "expect": {"stdout": "1\n2\n3\n4\n5\n6\n7\n8\n", "stderr": ""}}
+  ]
+}

@@ -1,6 +1,6 @@
 import type {
   Config,
-  OpencodeClient,
+  OrchestraClient,
   Path,
   PermissionRequest,
   Project,
@@ -8,7 +8,7 @@ import type {
   QuestionRequest,
   ReferenceInfo,
   Session,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import type {
   AgentListInput,
   AgentListOutput,
@@ -24,8 +24,8 @@ import type {
   SessionApi,
 } from "@opencode-ai/client/promise"
 import { showToast } from "@/utils/toast"
-import { getFilename } from "@opencode-ai/core/util/path"
-import { retry } from "@opencode-ai/core/util/retry"
+import { getFilename } from "@orchestra/core/util/path"
+import { retry } from "@orchestra/core/util/retry"
 import { batch } from "solid-js"
 import { produce, reconcile, type SetStoreFunction, type Store } from "solid-js/store"
 import type { State, VcsCache } from "./types"
@@ -40,7 +40,7 @@ import {
 import { formatServerError } from "@/utils/server-errors"
 import { QueryClient, queryOptions } from "@tanstack/solid-query"
 import { loadMcpQuery, loadMcpResourcesQuery } from "../server-sync"
-import { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
+import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { normalizeSessionInfo } from "@/utils/session"
 import type { ServerProtocol } from "@/utils/server-protocol"
@@ -105,7 +105,7 @@ function showErrors(input: {
   })
 }
 
-export const loadGlobalConfigQuery = (scope: ServerScope, sdk: OpencodeClient, protocol?: Promise<ServerProtocol>) =>
+export const loadGlobalConfigQuery = (scope: ServerScope, sdk: OrchestraClient, protocol?: Promise<ServerProtocol>) =>
   queryOptions({
     queryKey: [scope, "config"],
     queryFn: async () => {
@@ -132,7 +132,7 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
         api.list().then((projects) => {
           return projects
             .filter((p) => !!p?.id)
-            .filter((p) => !!p.worktree && !p.worktree.includes("opencode-test"))
+            .filter((p) => !!p.worktree && !p.worktree.includes("orchestra-test"))
             .map(normalizeProjectInfo)
             .slice()
             .sort((a, b) => cmp(a.id, b.id))
@@ -141,7 +141,7 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
   })
 
 export async function bootstrapGlobal(input: {
-  serverSDK: OpencodeClient
+  serverSDK: OrchestraClient
   serverAPI: CatalogApi & { readonly project: ProjectApi }
   protocol?: Promise<ServerProtocol>
   scope: ServerScope
@@ -222,7 +222,7 @@ export const loadProvidersQuery = (
   scope: ServerScope,
   directory: string | null,
   sdk: CatalogApi,
-  legacy?: OpencodeClient,
+  legacy?: OrchestraClient,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
@@ -259,7 +259,7 @@ export const loadAgentsQuery = (
   scope: ServerScope,
   directory: string,
   sdk: AgentListApi,
-  legacy?: OpencodeClient,
+  legacy?: OrchestraClient,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
@@ -274,7 +274,7 @@ export const loadAgentsQuery = (
 export const loadCommands = (
   directory: string,
   api: CommandListApi,
-  legacy?: OpencodeClient,
+  legacy?: OrchestraClient,
   protocol?: Promise<ServerProtocol>,
 ): Promise<CommandInfo[]> =>
   retry(async () => {
@@ -298,7 +298,7 @@ export const loadCommands = (
 export const loadPathQuery = (
   scope: ServerScope,
   directory: string | null,
-  sdk: OpencodeClient,
+  sdk: OrchestraClient,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions<Path>({
@@ -314,7 +314,7 @@ export const loadReferencesQuery = (
   scope: ServerScope,
   directory: string,
   api: ReferenceListApi,
-  legacy?: OpencodeClient,
+  legacy?: OrchestraClient,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions<ReferenceInfo[]>({
@@ -331,7 +331,7 @@ export async function bootstrapDirectory(input: {
   directory: string
   scope: ServerScope
   mcp: boolean
-  sdk: OpencodeClient
+  sdk: OrchestraClient
   api: CatalogApi & {
     readonly agent: AgentListApi
     readonly command: CommandListApi
@@ -347,6 +347,7 @@ export async function bootstrapDirectory(input: {
   setStore: SetStoreFunction<State>
   vcsCache: VcsCache
   loadSessions: (directory: string) => Promise<void> | void
+  loadActiveSessions: () => Promise<unknown>
   translate: (key: string, vars?: Record<string, string | number>) => string
   global: {
     config: Config
@@ -371,22 +372,37 @@ export async function bootstrapDirectory(input: {
   const revKey = ScopedKey.from(input.scope, input.directory)
   const rev = (providerRev.get(revKey) ?? 0) + 1
   providerRev.set(revKey, rev)
+  const latest = () => providerRev.get(revKey) === rev
   ;(async () => {
     const slow = [
       () => Promise.resolve(input.loadSessions(input.directory)),
       () =>
-        input.queryClient
-          .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
-          .then((data) => input.setStore("agent", data)),
+        settle(
+          input.setStore,
+          "agent",
+          input.queryClient
+            .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
+            .then((data) => input.setStore("agent", data)),
+          latest,
+        ),
       () =>
-        retry(async () => {
-          if ((await input.protocol) !== "v1") return
-          return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
-        }),
-      () =>
-        retry(() =>
-          (async () => {
+        settle(
+          input.setStore,
+          "config",
+          retry(async () => {
             if ((await input.protocol) !== "v1") return
+            return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
+          }),
+          latest,
+        ),
+      async () => {
+        // v2 statuses come from the server-wide active session seed, whose failure is not this directory's.
+        if ((await input.protocol) !== "v1")
+          return settle(input.setStore, "session_status", input.loadActiveSessions(), latest).catch(() => undefined)
+        return settle(
+          input.setStore,
+          "session_status",
+          retry(async () => {
             const x = await input.sdk.session.status()
             if (!input.session) {
               input.setStore("session_status", x.data!)
@@ -408,8 +424,10 @@ export async function bootstrapDirectory(input: {
             await Promise.all(
               Object.keys(statuses).map((sessionID) => input.session!.resolve(sessionID).catch(() => undefined)),
             )
-          })(),
-        ),
+          }),
+          latest,
+        )
+      },
       !seededProject &&
         (() =>
           retry(() => input.api.project.current({ location: { directory: input.directory } })).then((project) =>
@@ -551,4 +569,23 @@ export async function bootstrapDirectory(input: {
 
     if (loading && slowErrs.length === 0) input.setStore("status", "complete")
   })()
+}
+
+// Readers that need one resource must not wait for every other bootstrap read to succeed.
+// Runs of one directory overlap, and every successful read writes its data, which no failed read
+// removes. So any run's success records "ready", and only the latest run's failure records "failed",
+// never over a success: the flag must not deny data a successful read put in the store.
+function settle(
+  setStore: SetStoreFunction<State>,
+  resource: keyof State["load"],
+  read: Promise<unknown>,
+  latest: () => boolean,
+) {
+  return read.then(
+    () => setStore("load", resource, "ready"),
+    (error: unknown) => {
+      if (latest()) setStore("load", resource, (current) => (current === "ready" ? current : "failed"))
+      throw error
+    },
+  )
 }

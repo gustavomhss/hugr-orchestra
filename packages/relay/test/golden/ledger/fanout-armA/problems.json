@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/fanout-armA.ledger.jsonl",
+  "problems": []
+}

@@ -9,6 +9,7 @@ import { createPromptInputController, createPromptProjectControls } from "@/page
 import { createPromptModelSelection } from "@/pages/session/composer/prompt-model-selection"
 import { useSessionKey } from "@/pages/session/session-layout"
 import { useComposerCommands } from "@/pages/session/use-composer-commands"
+import { agentKey } from "@/context/agent-identity"
 
 export function createNewSessionDraftController(workspace: { worktree: () => string; resetWorktree: () => void }) {
   const prompt = usePrompt()

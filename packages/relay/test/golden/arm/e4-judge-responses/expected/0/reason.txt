@@ -1,0 +1,1 @@
+Relay gate 'A' is NOT satisfied. Still failing:; EXIT-BLOCKING; BROKEN; ADVISORY-VERDICT; TWO-OBJECTS; NUMERIC-BACKEND. Address these, then finish. Instructions: do A

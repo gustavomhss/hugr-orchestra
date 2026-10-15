@@ -1,0 +1,11 @@
+{
+  "id": "C-SPAWN-03.relative",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "copy-self=${TMP}/sub/omni-tool${EXE}"], "as": "copy"},
+    {"wait": "copy", "expect": {"exitCode": 0}},
+    {"run": ["sub/omni-tool${EXE}", "cwd"], "timeoutMs": 30000, "options": {"cwd": "${TMP}"}, "expect": {"exitCode": 0, "stdout": "${TMP}\n"}},
+    {"spawn": ["${FIXTURE}", "cwd"], "as": "host"},
+    {"read": "host", "until": "end", "capture": {"hostcwd": "^(.+)$"}},
+    {"run": ["${FIXTURE}", "cwd"], "options": {"cwd": "."}, "expect": {"exitCode": 0, "stdout": "${hostcwd}\n"}}
+  ]
+}

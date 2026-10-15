@@ -1,0 +1,11 @@
+{
+  "target": "test/golden/audit/sprint-invalid-unreadable/input/ledger.jsonl",
+  "verify": [
+    "--sprint",
+    "test/golden/audit/sprint-invalid-unreadable/input/bad-sprint.json"
+  ],
+  "key": null,
+  "chmod": {
+    "test/golden/audit/sprint-invalid-unreadable/input/bad-sprint.json": "000"
+  }
+}

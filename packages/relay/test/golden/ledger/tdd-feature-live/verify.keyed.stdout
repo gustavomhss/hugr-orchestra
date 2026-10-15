@@ -1,0 +1,1 @@
+REFUSED line 1: a key is set but this entry is sealed PLAIN (mac=sha256) — possible downgrade of a keyed chain. Refusing to accept it as intact.

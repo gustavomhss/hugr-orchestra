@@ -1,20 +1,23 @@
 {
-  "name": "@opencode-ai/desktop",
+  "name": "@orchestra/desktop",
   "private": true,
   "version": "1.18.27",
   "type": "module",
   "license": "MIT",
   "homepage": "https://opencode.ai",
   "author": {
-    "name": "OpenCode",
+    "name": "Orchestra",
     "email": "hello@opencode.ai"
   },
   "scripts": {
+    "linux": "bun scripts/linux-workspace.ts",
     "typecheck": "tsgo -b",
+    "test": "bun test && node --experimental-strip-types --test \"src/**/*.node.test.ts\"",
     "test:app-dock:e2e": "bun run src/main/app-dock-security.test.ts",
     "test:app-dock:tools": "bun run src/main/app-dock-tools.test.ts",
     "test:app-dock:rpc": "bun run src/main/app-dock-rpc.test.ts",
     "predev": "bun ./scripts/predev.ts",
+    "install-electron": "bun ./scripts/install-electron.ts",
     "dev": "electron-vite dev",
     "prebuild": "bun ./scripts/prebuild.ts",
     "build": "electron-vite build",
@@ -26,6 +29,8 @@
   },
   "main": "./out/main/index.js",
   "dependencies": {
+    "@orchestra/core": "workspace:*",
+    "hugr-omni": "workspace:*",
     "@zip.js/zip.js": "2.7.62",
     "effect": "catalog:",
     "electron-context-menu": "4.1.2",
@@ -38,8 +43,9 @@
   "devDependencies": {
     "@actions/artifact": "4.0.0",
     "@lydell/node-pty": "catalog:",
-    "@opencode-ai/app": "workspace:*",
-    "@opencode-ai/ui": "workspace:*",
+    "@orchestra/app": "workspace:*",
+    "@orchestra/script": "workspace:*",
+    "@orchestra/ui": "workspace:*",
     "@sentry/solid": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@solid-primitives/i18n": "2.2.1",

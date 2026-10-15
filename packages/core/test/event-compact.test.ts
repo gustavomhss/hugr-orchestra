@@ -1,16 +1,16 @@
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Database } from "@opencode-ai/core/database/database"
-import { EventSequenceTable, EventTable } from "@opencode-ai/core/event/sql"
-import { Location } from "@opencode-ai/core/location"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { WorkspaceV2 } from "@opencode-ai/core/workspace"
+import { EventV2 } from "@orchestra/core/event"
+import { Database } from "@orchestra/core/database/database"
+import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
+import { Location } from "@orchestra/core/location"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { WorkspaceV2 } from "@orchestra/core/workspace"
 import { eq } from "drizzle-orm"
 import { location } from "./fixture/location"
 import { testEffect } from "./lib/effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
 
 const locationLayer = Layer.succeed(
   Location.Service,
@@ -160,7 +160,11 @@ describe("EventV2.compactSnapshotEvents", () => {
   it.effect("detects a pre-existing sequence gap", () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service
-      yield* db.insert(EventSequenceTable).values([{ aggregate_id: "ses_c", seq: 2 }]).run().pipe(Effect.orDie)
+      yield* db
+        .insert(EventSequenceTable)
+        .values([{ aggregate_id: "ses_c", seq: 2 }])
+        .run()
+        .pipe(Effect.orDie)
       yield* insert(db)([
         { id: "e1", aggregateID: "ses_c", seq: 0, type: "session.created.1", data: { sessionID: "ses_c" } },
         { id: "e3", aggregateID: "ses_c", seq: 2, type: "session.updated.1", data: { sessionID: "ses_c" } },

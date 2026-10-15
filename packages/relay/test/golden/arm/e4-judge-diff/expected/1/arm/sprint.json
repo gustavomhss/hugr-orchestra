@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"DIFF-ALL","judge":"change ok","diff":true,"blocking":true},{"id":"DIFF-NARROW","judge":"seed only","diff":true,"blocking":true,"paths":["seed.txt"]}]}]}

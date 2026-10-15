@@ -2,13 +2,13 @@ import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SkillV2 } from "@opencode-ai/core/skill"
-import { SkillDiscovery } from "@opencode-ai/core/skill/discovery"
+import { AgentV2 } from "@orchestra/core/agent"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SkillV2 } from "@orchestra/core/skill"
+import { SkillDiscovery } from "@orchestra/core/skill/discovery"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -71,18 +71,22 @@ describe("SkillV2", () => {
             { type: "directory", path: AbsolutePath.make(first) },
             { type: "directory", path: AbsolutePath.make(second) },
           ])
-          expect(yield* skill.list()).toEqual([
+          const listed = yield* skill.list()
+          expect(listed.every((item) => typeof item.mtime === "number")).toBe(true)
+          expect(listed.map((item): SkillV2.Info => ({ ...item, mtime: 0 }))).toEqual([
             SkillV2.Info.make({
               name: "foo",
               slash: true,
               location: AbsolutePath.make(path.join(first, "foo.md")),
               content: "# foo",
+              mtime: 0,
             }),
             {
               name: "review",
               description: "Second",
               location: AbsolutePath.make(path.join(second, "review", "SKILL.md")),
               content: "# review",
+              mtime: 0,
             },
           ])
         }),

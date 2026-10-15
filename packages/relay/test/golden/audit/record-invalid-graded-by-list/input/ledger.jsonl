@@ -1,0 +1,2 @@
+{"wp":"wp1","i":0,"event":"checklist-item","item":"C1","assert":"real control","verdict":"pass","graded_by":[],"oracle":"b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b","origin":"sprint","gen":0,"prev":"GENESIS","seq":0,"mac":"sha256","h":"bc7a3b440c6b9dbc31024d8b246f4fefb3bc04f37a40ccd7f29613d8e3282299"}
+{"wp":"wp1","i":0,"event":"sprint-complete","retry":0,"fails":"","reg":"","gen":0,"prev":"bc7a3b440c6b9dbc31024d8b246f4fefb3bc04f37a40ccd7f29613d8e3282299","seq":1,"mac":"sha256","h":"137c162f9c8aad5e43c63292e2fa934c79328e11bee6bb83f87d9b901ddb7ffd"}

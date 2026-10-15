@@ -24,6 +24,32 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`project_checkpoint\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`fork_id\` text NOT NULL,
+          \`boundary\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`directory\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`digest\` text NOT NULL,
+          \`payload\` text NOT NULL,
+          CONSTRAINT \`fk_project_checkpoint_project_id_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT "project_checkpoint_attempt_check" CHECK("attempt" in (0, 1))
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`session_v1_prompt_admission\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`identity_version\` integer DEFAULT 1 NOT NULL,
+          \`identity\` text NOT NULL,
+          \`snapshot\` text NOT NULL,
+          CONSTRAINT \`fk_session_v1_prompt_admission_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`account_state\` (
           \`id\` integer PRIMARY KEY,
           \`active_account_id\` text,
@@ -57,6 +83,143 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`capability_artifact_pin\` (
+          \`artifact_id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`owner\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          CONSTRAINT \`capability_artifact_pin_pk\` PRIMARY KEY(\`artifact_id\`, \`revision\`, \`session_id\`),
+          CONSTRAINT \`fk_capability_artifact_pin_artifact_id_revision_capability_artifact_id_revision_fk\` FOREIGN KEY (\`artifact_id\`,\`revision\`) REFERENCES \`capability_artifact\`(\`id\`,\`revision\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_artifact_reference\` (
+          \`artifact_id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`pinned\` integer DEFAULT false NOT NULL,
+          \`time_created\` integer NOT NULL,
+          CONSTRAINT \`capability_artifact_reference_pk\` PRIMARY KEY(\`artifact_id\`, \`revision\`, \`session_id\`),
+          CONSTRAINT \`fk_capability_artifact_reference_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_capability_artifact_reference_artifact_id_revision_capability_artifact_id_revision_fk\` FOREIGN KEY (\`artifact_id\`,\`revision\`) REFERENCES \`capability_artifact\`(\`id\`,\`revision\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_artifact\` (
+          \`id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`owner\` text NOT NULL,
+          \`producer\` text NOT NULL,
+          \`mime\` text NOT NULL,
+          \`kind\` text NOT NULL,
+          \`hash\` text NOT NULL,
+          \`bytes\` integer NOT NULL,
+          \`verification\` text NOT NULL,
+          \`metadata\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          CONSTRAINT \`capability_artifact_pk\` PRIMARY KEY(\`id\`, \`revision\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_binding\` (
+          \`target_id\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`agent_id\` text NOT NULL,
+          \`actions\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`capability_binding_pk\` PRIMARY KEY(\`target_id\`, \`session_id\`, \`agent_id\`),
+          CONSTRAINT \`fk_capability_binding_target_id_capability_target_id_fk\` FOREIGN KEY (\`target_id\`) REFERENCES \`capability_target\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_capability_binding_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_child\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`agent_id\` text NOT NULL,
+          \`assistant_message_id\` text NOT NULL,
+          \`root_call_id\` text NOT NULL,
+          \`root_tool_name\` text NOT NULL,
+          \`parent_call_id\` text NOT NULL,
+          \`ordinal\` integer NOT NULL,
+          \`depth\` integer NOT NULL,
+          \`tool_name\` text NOT NULL,
+          \`request_hash\` text NOT NULL,
+          \`state\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_capability_child_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_connection\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`directory\` text NOT NULL,
+          \`workspace_id\` text,
+          \`provider\` text NOT NULL,
+          \`label\` text DEFAULT '' NOT NULL,
+          \`integration_id\` text NOT NULL,
+          \`credential_id\` text,
+          \`subject_id\` text NOT NULL,
+          \`endpoint\` text NOT NULL,
+          \`scope_hash\` text NOT NULL,
+          \`generation\` integer DEFAULT 0 NOT NULL,
+          \`state\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_capability_connection_project_id_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_capability_connection_credential_id_credential_id_fk\` FOREIGN KEY (\`credential_id\`) REFERENCES \`credential\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_job\` (
+          \`id\` text PRIMARY KEY,
+          \`owner\` text NOT NULL,
+          \`invocation\` text NOT NULL,
+          \`kind\` text NOT NULL,
+          \`operation\` text NOT NULL,
+          \`creation_key\` text UNIQUE,
+          \`request_hash\` text,
+          \`state\` text NOT NULL,
+          \`connection\` text,
+          \`target\` text,
+          \`provider_id\` text,
+          \`observation\` text NOT NULL,
+          \`generation\` integer DEFAULT 0 NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_request\` (
+          \`id\` text PRIMARY KEY,
+          \`idempotency_hash\` text NOT NULL UNIQUE,
+          \`principal\` text NOT NULL,
+          \`origin\` text NOT NULL,
+          \`scope_hash\` text NOT NULL,
+          \`action\` text NOT NULL,
+          \`target_hash\` text NOT NULL,
+          \`payload_hash\` text NOT NULL,
+          \`result\` text NOT NULL,
+          \`time_created\` integer NOT NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`capability_target\` (
+          \`id\` text PRIMARY KEY,
+          \`connection_id\` text NOT NULL,
+          \`environment\` text NOT NULL,
+          \`resource\` text NOT NULL,
+          \`generation\` integer DEFAULT 0 NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_capability_target_connection_id_capability_connection_id_fk\` FOREIGN KEY (\`connection_id\`) REFERENCES \`capability_connection\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`credential\` (
           \`id\` text PRIMARY KEY,
           \`integration_id\` text,
@@ -83,6 +246,9 @@ export default {
           \`seq\` integer NOT NULL,
           \`type\` text NOT NULL,
           \`data\` text NOT NULL,
+          \`seal_version\` integer,
+          \`seal_prev\` text,
+          \`seal_hash\` text,
           CONSTRAINT \`fk_event_aggregate_id_event_sequence_aggregate_id_fk\` FOREIGN KEY (\`aggregate_id\`) REFERENCES \`event_sequence\`(\`aggregate_id\`) ON DELETE CASCADE
         );
       `)
@@ -125,6 +291,50 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`scheduled_task_run\` (
+          \`id\` text PRIMARY KEY,
+          \`task_id\` text NOT NULL,
+          \`slot\` integer,
+          \`revision\` integer DEFAULT 0 NOT NULL,
+          \`manual_key\` text,
+          \`state\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`message_id\` text,
+          \`prompt\` text,
+          \`error\` text,
+          \`owner\` text,
+          \`time_claimed\` integer NOT NULL,
+          \`time_settled\` integer,
+          CONSTRAINT \`fk_scheduled_task_run_task_id_scheduled_task_id_fk\` FOREIGN KEY (\`task_id\`) REFERENCES \`scheduled_task\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`scheduled_task\` (
+          \`id\` text PRIMARY KEY,
+          \`directory\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`prompt\` text NOT NULL,
+          \`cadence\` text NOT NULL,
+          \`timezone\` text NOT NULL,
+          \`minute\` integer NOT NULL,
+          \`next\` integer NOT NULL,
+          \`enabled\` integer NOT NULL,
+          \`runs\` integer NOT NULL,
+          \`missed\` integer,
+          \`policy\` text DEFAULT 'legacy-browser' NOT NULL,
+          \`revision\` integer DEFAULT 0 NOT NULL,
+          \`owner\` text,
+          \`interval_minutes\` integer,
+          \`cron\` text,
+          \`catch_up\` text,
+          \`repeat_limit\` integer,
+          \`skipped\` integer DEFAULT 0 NOT NULL,
+          \`disabled_reason\` text,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`message\` (
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,
@@ -159,6 +369,7 @@ export default {
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,
           \`prompt\` text NOT NULL,
+          \`prompt_context\` text,
           \`delivery\` text NOT NULL,
           \`admitted_seq\` integer NOT NULL,
           \`promoted_seq\` integer,
@@ -236,11 +447,28 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(
+        `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
+      )
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`capability_child_parent_ordinal\` ON \`capability_child\` (\`session_id\`,\`assistant_message_id\`,\`parent_call_id\`,\`ordinal\`);`,
+      )
       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
       yield* tx.run(`CREATE INDEX \`event_aggregate_type_seq_idx\` ON \`event\` (\`aggregate_id\`,\`type\`,\`seq\`);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`permission_project_action_resource_idx\` ON \`permission\` (\`project_id\`,\`action\`,\`resource\`);`,
       )
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`scheduled_task_run_slot_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`revision\`,\`slot\`);`,
+      )
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`scheduled_task_run_manual_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`manual_key\`);`,
+      )
+      yield* tx.run(
+        `CREATE INDEX \`scheduled_task_run_state_idx\` ON \`scheduled_task_run\` (\`state\`,\`time_claimed\`);`,
+      )
+      yield* tx.run(`CREATE INDEX \`scheduled_task_directory_idx\` ON \`scheduled_task\` (\`directory\`);`)
+      yield* tx.run(`CREATE INDEX \`scheduled_task_due_idx\` ON \`scheduled_task\` (\`enabled\`,\`next\`);`)
       yield* tx.run(
         `CREATE INDEX \`message_session_time_created_id_idx\` ON \`message\` (\`session_id\`,\`time_created\`,\`id\`);`,
       )

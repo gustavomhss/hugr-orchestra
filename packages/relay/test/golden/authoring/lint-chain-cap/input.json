@@ -1,0 +1,141 @@
+{
+  "op": "lint",
+  "sprint": {
+    "brief": "x",
+    "work_packages": [
+      {
+        "id": "w0",
+        "instructions": "do w0",
+        "checklist": [
+          {
+            "id": "c0",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w1",
+        "instructions": "do w1",
+        "checklist": [
+          {
+            "id": "c1",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w2",
+        "instructions": "do w2",
+        "checklist": [
+          {
+            "id": "c2",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w3",
+        "instructions": "do w3",
+        "checklist": [
+          {
+            "id": "c3",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w4",
+        "instructions": "do w4",
+        "checklist": [
+          {
+            "id": "c4",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w5",
+        "instructions": "do w5",
+        "checklist": [
+          {
+            "id": "c5",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w6",
+        "instructions": "do w6",
+        "checklist": [
+          {
+            "id": "c6",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w7",
+        "instructions": "do w7",
+        "checklist": [
+          {
+            "id": "c7",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w8",
+        "instructions": "do w8",
+        "checklist": [
+          {
+            "id": "c8",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w9",
+        "instructions": "do w9",
+        "checklist": [
+          {
+            "id": "c9",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w10",
+        "instructions": "do w10",
+        "checklist": [
+          {
+            "id": "c10",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      },
+      {
+        "id": "w11",
+        "instructions": "do w11",
+        "checklist": [
+          {
+            "id": "c11",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      }
+    ]
+  },
+  "allowUngated": false
+}

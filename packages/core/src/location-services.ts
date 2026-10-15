@@ -1,6 +1,7 @@
-import { Effect, Layer, LayerMap } from "effect"
+import { Context, Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
 import { AISDK } from "./aisdk"
+import { BehaviorV2 } from "./behavior"
 import { Catalog } from "./catalog"
 import { CommandV2 } from "./command"
 import { Config } from "./config"
@@ -20,10 +21,13 @@ import { PluginV2 } from "./plugin"
 import { PluginInternal } from "./plugin/internal"
 import { Policy } from "./policy"
 import { ProjectCopy } from "./project/copy"
+import { PullRequest } from "./pull-request"
 import { Pty } from "./pty"
 import { QuestionV2 } from "./question"
 import { Reference } from "./reference"
 import { ReferenceGuidance } from "./reference/guidance"
+import { Relay } from "./relay"
+import { RelayHookRecovery } from "./relay-hook-recovery"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionTodo } from "./session/todo"
@@ -53,6 +57,7 @@ export const locationServices = LayerNode.group([
   PluginInternal.node,
   ProjectCopy.node,
   ProjectCopy.refreshNode,
+  PullRequest.node,
   FileSystemSearch.node,
   FileSystem.node,
   Watcher.node,
@@ -60,6 +65,7 @@ export const locationServices = LayerNode.group([
   SkillV2.node,
   SystemContextRegistry.node,
   SystemContextBuiltIns.node,
+  BehaviorV2.node,
   LocationMutation.node,
   FileMutation.node,
   PermissionV2.node,
@@ -75,6 +81,8 @@ export const locationServices = LayerNode.group([
   BuiltInTools.node,
   SessionRunnerModel.node,
   Snapshot.node,
+  Relay.node,
+  RelayHookRecovery.node,
   SessionRunnerLLM.node,
 ])
 
@@ -88,7 +96,12 @@ export function buildLocationServiceMap(
     LocationServiceMap.Service,
     LayerMap.make(
       (ref: Location.Ref) => {
-        const allReplacements = replacements.concat([[Location.node, Location.boundNode(ref)]])
+        const allReplacements: LayerNode.Replacements = [
+          [ToolRegistry.node, ToolRegistry.nativeNode],
+          [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+          ...replacements,
+          [Location.node, Location.boundNode(ref)],
+        ]
         // Apply replacements during hoist, not afterward: replacements can
         // introduce new tagged dependencies (Location.boundNode depends on
         // Project), and the hoist walk is the only pass that can still slice
@@ -97,10 +110,15 @@ export function buildLocationServiceMap(
 
         return LayerNode.compile(location.node).pipe(
           Layer.fresh,
-          Layer.tap(() =>
-            Effect.logInfo("booting location services", {
-              directory: ref.directory,
-              workspaceID: ref.workspaceID,
+          Layer.tap((context) =>
+            Effect.gen(function* () {
+              const recovery = Context.get(context, RelayHookRecovery.Service)
+              yield* Effect.logInfo("booting location services", {
+                directory: ref.directory,
+                workspaceID: ref.workspaceID,
+              })
+              // Start only after the entire graph succeeds; the Location scope owns this one pass.
+              yield* recovery.recover().pipe(Effect.forkScoped)
             }),
           ),
           Layer.provide(LayerNode.compile(location.hoisted)),
