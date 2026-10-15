@@ -17,7 +17,7 @@ test("workspace packages resolve to their sources and are rewritten; node_module
   expect(rewritten).toContain(`from ${compiled("ui", "src", "context", "dialog.tsx")}`)
   expect(rewritten).toContain(`from ${compiled("schema", "src", "lean-dashboard.ts")}`)
   expect(rewritten).toContain(`from ${compiled("session-ui", "src", "components", "message-part.tsx")}`)
-  expect(rewritten).toContain(`from ${compiled("app", "src", "context", "language.tsx")}`)
+  expect(rewritten).toContain(`from ${compiled("app-shell", "src", "context", "language.tsx")}`)
   expect(rewritten).not.toContain("node_modules")
   expect(rewritten).toContain(`import { createSignal } from "solid-js"`)
 })
