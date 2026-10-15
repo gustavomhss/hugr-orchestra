@@ -1,19 +1,21 @@
 import { join } from "node:path"
-import { model } from "./distribution-provider-openrouter"
+import { apiKey, model } from "./distribution-provider-openrouter"
 import { WireRequest, decodeCaptureRequest } from "./distribution-provider-wire"
 import { captureByteCap, readCaptureBytes, requireCaptureLength } from "./distribution-provider-bytes"
 export { WireCall, WireRequest, streamedCompletion } from "./distribution-provider-wire"
 
-// Every admitted response body comes from upstream Ollama. No replay, scripted
-// completion, tool-call injection or response rewriting. Headers are never logged.
+// Every admitted response body comes from the hosted upstream. No replay,
+// scripted completion, tool-call injection or response rewriting. The hosted
+// credential lives here and is injected per request; header values are never
+// captured, persisted or logged.
 export function captureInference(endpoint: string, evidence: string) {
   const records: Array<{ request: typeof WireRequest.Type; requestJSON: string; response: string; status: number }> = []
   const pending = new Set<Promise<void>>()
   const controllers = new Set<AbortController>()
   const failures: unknown[] = []
   const state = { stage: "unarmed", turns: 0 }
-  // CPU inference can pause SSE beyond Bun's 10-second idle default; the request
-  // retains its explicit 240-second deadline and owned teardown aborts it.
+  // Hosted inference can pause SSE beyond Bun's 10-second idle default; the
+  // request retains its explicit 240-second deadline and teardown aborts it.
   const server = Bun.serve({
     hostname: "127.0.0.1", port: 0, maxRequestBodySize: captureByteCap, idleTimeout: 0,
     async fetch(request) {
@@ -34,11 +36,12 @@ export function captureInference(endpoint: string, evidence: string) {
       }, null, 2) + "\n")
       const controller = new AbortController()
       controllers.add(controller)
-      // Forward provider credentials verbatim (for example Authorization to a
-      // hosted endpoint). Header values are never captured or logged.
-      const headers = new Headers()
+      // The installed service proves inference, tool execution and durable
+      // continuation; this harness owns the hosted credential so the key never
+      // reaches on-disk configuration, projections or uploaded evidence.
+      const headers = new Headers({ authorization: `Bearer ${apiKey()}` })
       request.headers.forEach((value, name) => {
-        if (["host", "connection", "content-length", "transfer-encoding"].includes(name.toLowerCase())) return
+        if (["authorization", "host", "connection", "content-length", "transfer-encoding"].includes(name.toLowerCase())) return
         headers.set(name, value)
       })
       if (!headers.has("content-type")) headers.set("content-type", "application/json")
@@ -65,13 +68,16 @@ export function captureInference(endpoint: string, evidence: string) {
         })).toString("utf8")
         await Bun.write(join(evidence, `${stage}-turn-${turn}.json`), JSON.stringify({
           upstream: endpoint, method: "POST", path: route.pathname, ...record,
+          // Upstream identity is visible evidence that the pinned model id was
+          // actually served, so an id-to-backend swap cannot pass unnoticed.
+          upstreamProvider: /"provider":"([^"]+)"/.exec(record.response)?.[1],
         }, null, 2) + "\n")
       })().catch((error: unknown) => { failures.push(error) }).finally(() => {
         controllers.delete(controller)
         pending.delete(task)
       })
       pending.add(task)
-      // Forward exact status, content type and bytes. No upstream auth required.
+      // Forward exact status, content type and bytes.
       return new Response(client, { status: upstream.status,
         headers: { "content-type": upstream.headers.get("content-type") ?? "application/octet-stream" } })
     },

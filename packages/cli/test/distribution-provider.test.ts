@@ -17,8 +17,10 @@ import { exportProviderEvidence, markProviderEvidence } from "./fixture/distribu
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 
 // Lead registers this file only on hosted Ubuntu x64. No local execution, skip,
-// emulation, credential-dependent provider, fake inference or source CLI fallback.
-// Runtime qualification remains pending until all actual controls execute in CI.
+// emulation, fake inference or source CLI fallback. Real inference goes to the
+// hosted OpenRouter endpoint and requires OPENROUTER_API_KEY; without it this
+// lane fails instead of downgrading. Qualification stays pending until every
+// actual control executes in CI.
 const state: { directory?: string; evidence?: string; built?: Built; compiler?: CompilerReceipts; remote?: OwnedOpenRouter; cleanup?: Promise<void>; controlsComplete?: string[] } = {}
 const owner = randomUUID()
 const interrupt = () => { void cleanup().then(() => process.exit(1), () => process.exit(1)) }
@@ -64,7 +66,7 @@ function cleanup() {
     const results = await Promise.allSettled([stopServices(), stopProviderDaemons(), state.remote?.stop()])
     const failed = results.filter((result) => result.status === "rejected")
     const failures: unknown[] = failed.map((result) => result.reason)
-    const stopped = results[0]?.status === "fulfilled" && results[1]?.status === "fulfilled" && (state.remote?.cleaned() ?? true)
+    const stopped = results[0]?.status === "fulfilled" && results[1]?.status === "fulfilled" && results[2]?.status === "fulfilled"
     await (async () => {
       if (!state.directory || !stopped) return
       const info = await lstat(state.directory)
@@ -78,12 +80,12 @@ function cleanup() {
       })
       expect(remaining).toBe(false)
       if (state.evidence) await Bun.write(join(state.evidence, "fixture-cleanup.json"), JSON.stringify({
-        owner, directory: state.directory, hostedEndpointOwnedNothingLocal: true, ownedDaemonsStopped: true,
+        owner, directory: state.directory, hostedEndpoint: state.remote?.endpoint(), ownedDaemonsStopped: true,
         fixtureRemoved: true, evidenceRetained: state.evidence,
       }, null, 2))
       if (!failures.length && state.controlsComplete && state.evidence) await Bun.write(join(state.evidence, "qualified.json"), JSON.stringify({
         status: "qualified", model, admitted: state.controlsComplete,
-        controls: ["real-inference", "hosted-tool-capable-model", "outside-cwd-nonce", "real-tool-result-continuation",
+        controls: ["real-inference", "hosted-native-tool-call", "outside-cwd-nonce", "real-tool-result-continuation",
           "exact-wire-bash-tool-result", "nonce-only-wire-oracle-mutation", "installed-platform-wrapper-preserved",
           "terminal-assistant", "durable-user-assistant-tool", "exact-installed-supervisor-chain", "fault-blocked", "restored",
           "installed-addon-maps-identity", "compiler-entry-dispatch-binary-binding", "owned-fixture-removed"],

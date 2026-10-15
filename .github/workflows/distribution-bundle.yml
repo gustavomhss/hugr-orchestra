@@ -143,6 +143,16 @@ jobs:
             "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
             printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
           fi
+      - name: Require hosted provider credential
+        if: matrix.lane == 'provider'
+        run: |
+          set -euo pipefail
+          # Fail closed and explicit: real hosted inference cannot degrade to a
+          # local, credential-free or scripted provider.
+          if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+            echo "BUNDLE_PROVIDER_CREDENTIAL_MISSING" >&2
+            exit 1
+          fi
       - name: Assert native CPU and exact files
         run: |
           set -euo pipefail

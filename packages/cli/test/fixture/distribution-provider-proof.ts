@@ -14,7 +14,7 @@ import { Agent } from "../../../schema/src/agent"
 import { Location } from "../../../schema/src/location"
 import { sandbox, sha256 } from "./distribution-native"
 import type { Sandbox } from "./distribution-native"
-import { apiKey, model } from "./distribution-provider-openrouter"
+import { model } from "./distribution-provider-openrouter"
 import type { OwnedOpenRouter } from "./distribution-provider-openrouter"
 import { captureInference, streamedCompletion } from "./distribution-provider-capture"
 import { observeInstalledTool } from "./distribution-provider-process"
@@ -74,10 +74,10 @@ export async function qualifyProvider(input: {
         permissions: [{ action: "*", resource: "*", effect: "deny" as const }],
         providers: { distribution: {
           name: "Hosted Nemotron",
-          // Omit env: an empty env Integration would hide this credential-free
-          // provider in Catalog.available. Native route resolves to Auth.none.
+          // Omit env: an empty env Integration would hide this provider in
+          // Catalog.available. The harness proxy injects the hosted credential
+          // so no key is written to config, projections or evidence.
           api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: proxy.url, settings: { generation: { temperature: 0 } } },
-          request: { headers: { Authorization: `Bearer ${apiKey()}` } },
           models: { [model]: { name: model, capabilities: { tools: true, input: ["text"], output: ["text"] },
             limit: { context: 8192, output: 1024 } } },
         } },
@@ -95,13 +95,7 @@ export async function qualifyProvider(input: {
       }
       Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })(config)
       await Bun.write(join(box.cwd, "orchestra.json"), JSON.stringify(config, null, 2))
-      // Evidence keeps the exact proven configuration except the disposable
-      // hosted credential, which must never reach an uploaded artifact.
-      await Bun.write(join(evidence, "location-config.json"), JSON.stringify({
-        ...config,
-        providers: { distribution: { ...config.providers.distribution,
-          request: { headers: { Authorization: "Bearer [redacted]" } } } },
-      }, null, 2))
+      await Bun.write(join(evidence, "location-config.json"), JSON.stringify(config, null, 2))
       const prompt = `Call bash exactly once with this JSON input, verbatim: ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}\nThe tool stdout defines x. What is the value of x? Answer with its value only, after the actual tool result. If the tool fails, report failure.`
       proxy.arm(kind)
       const daemon = providerDaemon(launcher, payload, input.version, { ...box, env }, evidence)
@@ -184,6 +178,9 @@ export async function qualifyProvider(input: {
         expect(first.request.messages.some((message) => message.role === "user" && JSON.stringify(message.content)?.includes(shell))).toBe(true)
         expect(JSON.stringify(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(first.requestJSON)).includes(nonce)).toBe(false)
         expect(first.request.tools?.map((item) => item.function.name)).toEqual(["bash"])
+        // Hosted identity plus a real native tool call is the proof that the
+        // pinned model actually executed the advertised bash tool.
+        expect(JSON.parse(await Bun.file(join(evidence, `${kind}-turn-1.json`)).text()).upstreamProvider?.length).toBeGreaterThan(0)
         const inferred = streamedCompletion(first.response)
         expect(inferred.calls).toHaveLength(1)
         expect(inferred.calls[0]).toMatchObject({ id: tool.id, name: "bash" })

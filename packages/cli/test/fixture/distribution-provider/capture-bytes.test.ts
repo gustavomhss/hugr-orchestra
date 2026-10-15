@@ -5,6 +5,60 @@ import { join } from "node:path"
 import { captureByteCap, readCaptureBytes, requireCaptureLength } from "../distribution-provider-bytes"
 import { decodeCaptureRequest, streamedCompletion } from "../distribution-provider-wire"
 
+test("hosted credential reaches upstream and never lands in captured evidence", async () => {
+  const { captureInference } = await import("../distribution-provider-capture")
+  const { apiKey, model } = await import("../distribution-provider-openrouter")
+  const directory = await mkdtemp(join(tmpdir(), "provider-credential-"))
+  const payload = JSON.stringify({ model, messages: [{ role: "user", content: "credential probe" }] })
+  const body = 'data: {"choices":[{"delta":{"content":"ok"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'
+  const seen: Array<string | null> = []
+  const upstream = Bun.serve({ hostname: "127.0.0.1", port: 0, idleTimeout: 0, fetch(request) {
+    seen.push(request.headers.get("authorization"))
+    return new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } })
+  } })
+  const previous = process.env.OPENROUTER_API_KEY
+  process.env.OPENROUTER_API_KEY = `sk-or-v1-${"a".repeat(64)}`
+  const capture = captureInference(upstream.url.origin, directory)
+  capture.arm("credential")
+  try {
+    const response = await fetch(`${capture.url}/chat/completions`, {
+      method: "POST", headers: { "content-type": "application/json", authorization: "Bearer client-supplied" }, body: payload,
+    })
+    expect(response.status).toBe(200)
+    await response.text()
+    await capture.drain()
+    expect(seen).toEqual([`Bearer ${apiKey()}`])
+    const evidence = await Promise.all(["credential-turn-1-request.json", "credential-turn-1.json"]
+      .map((file) => Bun.file(join(directory, file)).text()))
+    evidence.forEach((content) => {
+      expect(content.includes(apiKey())).toBe(false)
+      expect(content.includes("client-supplied")).toBe(false)
+    })
+  } finally {
+    if (previous === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = previous
+    await capture.stop()
+    await upstream.stop(true)
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test("hosted credential is mandatory and shape checked before any request", async () => {
+  const { apiKey } = await import("../distribution-provider-openrouter")
+  const previous = process.env.OPENROUTER_API_KEY
+  try {
+    delete process.env.OPENROUTER_API_KEY
+    expect(() => apiKey()).toThrow(new Error("PROVIDER_OPENROUTER_API_KEY_REQUIRED"))
+    process.env.OPENROUTER_API_KEY = "not-a-key"
+    expect(() => apiKey()).toThrow(new Error("PROVIDER_OPENROUTER_API_KEY_MALFORMED"))
+    process.env.OPENROUTER_API_KEY = `sk-or-v1-${"b".repeat(64)}`
+    expect(apiKey()).toBe(process.env.OPENROUTER_API_KEY)
+  } finally {
+    if (previous === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = previous
+  }
+})
+
 test("forwarding proxy survives slow SSE inference beyond Bun default idle timeout", async () => {
   const { captureInference } = await import("../distribution-provider-capture")
   const { model } = await import("../distribution-provider-openrouter")
@@ -27,6 +81,8 @@ test("forwarding proxy survives slow SSE inference beyond Bun default idle timeo
     }, cancel() { timers.forEach(clearTimeout); timers.clear() } }),
       { status: 200, headers: { "content-type": "text/event-stream" } })
   } })
+  const previous = process.env.OPENROUTER_API_KEY
+  process.env.OPENROUTER_API_KEY = `sk-or-v1-${"c".repeat(64)}`
   const capture = captureInference(upstream.url.origin, directory)
   capture.arm("prefill")
   try {
@@ -40,6 +96,8 @@ test("forwarding proxy survives slow SSE inference beyond Bun default idle timeo
     expect(records[0]).toMatchObject({ requestJSON: payload, response: body, status: 200 })
     expect(JSON.parse(await readFile(join(directory, "prefill-turn-1.json"), "utf8"))).toMatchObject({ requestJSON: payload, response: body, status: 200 })
   } finally {
+    if (previous === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = previous
     await capture.stop()
     timers.forEach(clearTimeout)
     await upstream.stop(true)
