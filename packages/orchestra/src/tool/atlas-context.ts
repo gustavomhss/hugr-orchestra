@@ -50,9 +50,10 @@ export const AtlasContextTool = Tool.define("atlas_context", Effect.gen(function
     execute: (input: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context): Effect.Effect<Tool.ExecuteResult<{ atlasContext: AtlasContextReceipt; researchSource?: Research.SourceReceipt }>> => Effect.gen(function* () {
       if (!ctx.agentID || !ctx.callID || !ctx.messageID) return unavailable("missing-native-call-identity")
       const agent = yield* agents.get(ctx.agentID)
-      if (ctx.agentID !== "jimmy" || AtlasMemory.owner(agent) !== "jimmy")
-        return unavailable("native-discovery-owner-required")
-      yield* ctx.ask({ permission: "atlas_context", patterns: ["jimmy"], always: ["jimmy"], metadata: {} })
+      if (!(ctx.agentID === "jimmy" && AtlasMemory.owner(agent) === "jimmy") &&
+        !(ctx.agentID === "archie" && agent?.native === true && agent.id === "archie"))
+        return unavailable("native-context-reader-required")
+      yield* ctx.ask({ permission: "atlas_context", patterns: [ctx.agentID], always: [ctx.agentID], metadata: {} })
       const placement = yield* sessions.get(ctx.sessionID).pipe(Effect.result)
       if (placement._tag === "Failure") return unavailable("session-placement-unavailable")
       const session = placement.success
