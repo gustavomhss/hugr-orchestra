@@ -3,6 +3,6 @@
   "compilerOptions": {
     "outDir": "node_modules/.ts-dist"
   },
-  "include": ["src", "package.json"],
+  "include": ["src", "package.json", "../../packages/app-shell/src/**/*.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

@@ -10,5 +10,6 @@ modules/atlas/.orchestra/skills/own/
 # hugr-omni keeps its own gate (native/omni/scripts/ci.mjs).
 packages/omni/**
 native/omni/**
-# Exact-byte palette stylesheets belong to packages/app/script/orchestra-palettes.ts.
+# Exact-byte palette stylesheets belong to packages/app-shell/script/orchestra-palettes.ts.
 packages/app/src/orchestra/palette/generated/
+packages/app-shell/src/orchestra/palette/generated/
