@@ -34,7 +34,7 @@ test("candidate preserves production package filters and app resources, appends 
   const resources = baseBuilder.extraResources ?? []
   expect(builder.extraResources).toEqual([
     ...(Array.isArray(resources) ? resources : [resources]),
-    { from: "../orchestra/dist/node/licenses", to: "licenses" },
+    { from: path.resolve(import.meta.dirname, "../orchestra/dist/node/licenses"), to: "licenses" },
   ])
   expect(builder.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
   expect(builder.extraResources).toContainEqual({ from: "resources/cli", to: "cli" })
@@ -85,7 +85,7 @@ for (const channel of ["dev", "beta", "prod"]) {
     expect(graph.channel).toBe(JSON.stringify(channel))
     expect(graph.candidate).toBe('"1"')
     expect(graph.normal).toBeNull()
-    expect(graph.resources).toEqual([...graph.baseResources, { from: "../orchestra/dist/node/licenses", to: "licenses" }])
+    expect(graph.resources).toEqual([...graph.baseResources, { from: path.resolve(import.meta.dirname, "../orchestra/dist/node/licenses"), to: "licenses" }])
     // Every channel ships the owned CLI from resources/cli; the base graph is the one evaluated for this channel.
     expect(graph.resources).toContainEqual({ from: "resources/cli", to: "cli" })
     expect(graph.baseRpm).toBe({ dev: "orchestra-dev", beta: "orchestra-beta", prod: "orchestra" }[channel])
@@ -159,7 +159,7 @@ test("real pinned notice archive passes; missing, changed, extra and stale mater
 
 test("candidate configuration and CLI compile with real dependency types", () => {
   const options: ts.CompilerOptions = {
-    noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true,
+    noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true, allowImportingTsExtensions: true,
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
     types: ["bun", "node"],
   }

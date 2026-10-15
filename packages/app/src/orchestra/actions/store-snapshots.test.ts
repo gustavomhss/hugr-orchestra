@@ -28,7 +28,7 @@ describe("Actions trusted DTO snapshots", () => {
   })
 
   test.each([null, undefined, false, 7, "release/雪", [], { ...base, ref: 7 },
-    { ...base, commit: "not-a-native-head" }, { ...base, extra: "untrusted" }])(
+    { ...base, commit: "not-a-native-head" }, { ...base, extra: "untrusted" }].map((value) => [value] as const))(
     "keeps SourceBase primitive and excess-shape validation strict: %j", (value) => {
       expect(() => decodeAction(Actions.SourceBase, value)).toThrow("invalid_input")
       expect(() => snapshotAction(Actions.SourceBase, value)).toThrow("invalid_input")

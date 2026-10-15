@@ -3,6 +3,7 @@ import { Actions } from "@orchestra/schema/actions"
 import { createActionsAPI, type ActionsScope } from "./api"
 import { initial } from "./contract"
 import { createActionsInspection } from "./inspection"
+import { rethrow } from "../../testing/rejection"
 
 const binding: Actions.Binding = { id: Actions.BindingID.make("ab_inspection"), revision: 7, remote: "origin", directory: "/repo/inspection",
   projectID: "42", projectPath: "org/repo", account: "account-a", provider: { kind: "github", hostname: "github.com", apiOrigin: "https://api.github.com" } }
@@ -65,8 +66,8 @@ describe("Actions dialog inspection", () => {
     const scopesReply = Promise.withResolvers<Actions.ResourcePage>()
     const scope = fixture({ graph: () => graphReply.promise, resources: () => scopesReply.promise })
     const abort = new AbortController()
-    const inspecting = scope.inspection.inspectWorkflow("11", "release", abort.signal)
-    const listing = scope.inspection.resourceScopes(abort.signal)
+    const inspecting = rethrow(scope.inspection.inspectWorkflow("11", "release", abort.signal))
+    const listing = rethrow(scope.inspection.resourceScopes(abort.signal))
     expect(scope.calls).toHaveLength(2)
     if (change === "binding") scope.state.binding = { ...binding, id: Actions.BindingID.make("ab_other"), account: "account-b" }
     if (change === "revision") scope.state.binding = { ...binding, revision: 8 }
@@ -75,8 +76,8 @@ describe("Actions dialog inspection", () => {
     const before = structuredClone(scope.state)
     graphReply.resolve(graph())
     scopesReply.resolve(page([environment("production")]))
-    await expect(inspecting).rejects.toThrow("binding_stale")
-    await expect(listing).rejects.toThrow("binding_stale")
+    expect(await inspecting).toThrow("binding_stale")
+    expect(await listing).toThrow("binding_stale")
     expect(scope.state).toEqual(before)
   })
 

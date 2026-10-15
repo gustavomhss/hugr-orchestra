@@ -37,9 +37,10 @@ test("GitLab configured participates in active filter without inventing dispatch
 test("filters expose observed states only, group known disabled states and retain unknown native states", () => {
   const state = fixture()
   const disabled = { ...workflow, id: "42", state: "disabled_manually", name: "Release", path: ".github/workflows/release.yml" }
+  const inactive = { ...disabled, id: "44", state: "disabled_inactivity" }
   const unknown = { ...workflow, id: "43", state: "disabled_future" }
-  state.workflows = { status: "ready", value: { capturedAt: 1, items: [workflow, disabled, { ...disabled, id: "44", state: "disabled_inactivity" }, unknown] } }
-  expect(libraryPresentation(state, { query: " RELEASE.YML ", status: "disabled" }).workflows).toEqual([disabled])
+  state.workflows = { status: "ready", value: { capturedAt: 1, items: [workflow, disabled, inactive, unknown] } }
+  expect(libraryPresentation(state, { query: " RELEASE.YML ", status: "disabled" }).workflows).toEqual([disabled, inactive])
   expect(libraryPresentation(state, { query: "no matches", status: "" }).statuses).toEqual(["active", "disabled", "disabled_future"])
   expect(workflowState(unknown.state).label).toBeUndefined()
   expect(libraryPresentation(fixture(), filters).statuses).toEqual(["active"])

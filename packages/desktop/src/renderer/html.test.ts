@@ -52,18 +52,16 @@ describe("electron renderer html", () => {
 
 /**
  * Vite resolves `publicDir` relative to `root`, not the config file.
- * This test reads the actual values from electron.vite.config.ts to catch
- * regressions where the publicDir path no longer resolves correctly
- * after the renderer root is accounted for.
+ * Read evaluated config so computed paths receive the same check as literal paths.
  */
 describe("electron vite publicDir", () => {
   test("configured publicDir resolves to a directory with oc-theme-preload.js", async () => {
-    const config = await Bun.file(join(root, "electron.vite.config.ts")).text()
-    const pub = config.match(/publicDir:\s*["']([^"']+)["']/)
-    const rendererRoot = config.match(/root:\s*["']([^"']+)["']/)
-    expect(pub).not.toBeNull()
-    expect(rendererRoot).not.toBeNull()
-    const resolved = resolve(root, rendererRoot![1], pub![1])
+    const config = await import("../../electron.vite.config")
+    const renderer = config.default.renderer
+    if (typeof renderer?.root !== "string") throw new Error("DESKTOP_RENDERER_ROOT_MISSING")
+    if (typeof renderer.publicDir !== "string" || !renderer.publicDir) throw new Error("DESKTOP_PUBLIC_DIR_MISSING")
+    const resolved = resolve(root, renderer.root, renderer.publicDir)
+    expect(resolved).toBe(resolve(root, "../app/public"))
     expect(existsSync(resolved)).toBe(true)
     expect(existsSync(join(resolved, "oc-theme-preload.js"))).toBe(true)
   })
