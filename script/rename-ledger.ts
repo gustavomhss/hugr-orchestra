@@ -17,7 +17,7 @@ export const keptPaths: Kept[] = [
   { path: /(?:^|\/)(?:LICENSE|NOTICE)(?:\.[a-z]+)?$/, reason: "license and notice texts keep their copyright lines" },
   { path: /^specs\/orchestra-visual\/(?:handoff|evidence)\//, reason: "hash-pinned evidence archives" },
   {
-    path: /^packages\/app\/src\/i18n\/branding\.test\.ts$/,
+    path: /^packages\/app(?:-shell)?\/src\/i18n\/branding\.test\.ts$/,
     reason: "branding detector and its planted old-product counterexamples must keep the name they reject",
   },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
@@ -90,7 +90,7 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /opencode\/legacy|`opencode\/\$\{directory/g,
-    paths: /^packages\/app\/e2e\/orchestra\/chapter-workspaces\.spec\.ts$/,
+    paths: /^packages\/app(?:-shell)?\/e2e\/orchestra\/chapter-workspaces\.spec\.ts$/,
     reason: "legacy branch name the worktree e2e test creates on purpose",
   },
 
@@ -99,12 +99,12 @@ export const protectedStrings: Protected[] = [
     // app and session-ui depend on upstream's published @opencode-ai/client 1.17.13, vendored as a tarball that cannot
     // be rebuilt from this tree. It keeps its published name and exports until it is replaced by the workspace client.
     pattern: /@opencode-ai\/client\b|opencode-ai-client-1\.17\.13-v2\.tgz/g,
-    paths: /^packages\/(?:app|session-ui)\/|^bun\.lock$/,
+    paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$/,
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {
     pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
-    paths: /^packages\/app\/src\//,
+    paths: /^packages\/app(?:-shell)?\/src\//,
     reason: "names exported by the vendored upstream @opencode-ai/client tarball",
   },
   {
@@ -135,12 +135,12 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /opencode:free-model/g,
-    paths: /^packages\/app\/e2e\/regression\/model-picker-virtual-list\.spec\.ts$/,
+    paths: /^packages\/app(?:-shell)?\/e2e\/regression\/model-picker-virtual-list\.spec\.ts$/,
     reason: "Zen provider id in the model picker's selected-row locator",
   },
   {
     pattern: /opencode\|OC-2/g,
-    paths: /^packages\/app\/e2e\/orchestra\/chapter-settings\.spec\.ts$/,
+    paths: /^packages\/app(?:-shell)?\/e2e\/orchestra\/chapter-settings\.spec\.ts$/,
     reason: "negative assertion against the inherited theme names, not against Orchestra",
   },
   {
@@ -187,7 +187,7 @@ export const protectedStrings: Protected[] = [
   {
     pattern: /"opencode"/g,
     paths:
-      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app\/src\/hooks\/use-providers\.ts$|^packages\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
+      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app(?:-shell)?\/src\/hooks\/use-providers\.ts$|^packages\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app(?:-shell)?\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
     reason: "the Zen provider id",
   },
   {

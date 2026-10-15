@@ -14,6 +14,7 @@ process.chdir(dir)
 const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { copyOmni, resolveOmni } from "@orchestra/script/omni"
 import { copyTreeSitter, resolveTreeSitter } from "@orchestra/script/tree-sitter-prebuilds"
 import pkg from "../package.json"
@@ -30,9 +31,9 @@ const skipEmbedWebUi = process.argv.includes("--skip-embed-web-ui")
 
 const createEmbeddedWebUIBundle = async () => {
   console.log(`Building Web UI to embed in the binary`)
-  const appDir = path.join(import.meta.dirname, "../../app")
-  await $`ORCHESTRA_CHANNEL=${Script.channel} bun run --cwd ${appDir} build`
-  return createEmbeddedFileMap(path.join(appDir, "dist"), (file) => !file.endsWith(".map"))
+  const webDir = WorkspacePaths.make(import.meta.dirname).module("web")
+  await $`ORCHESTRA_CHANNEL=${Script.channel} bun run --cwd ${webDir} build`
+  return createEmbeddedFileMap(path.join(webDir, "dist"), (file) => !file.endsWith(".map"))
 }
 
 // A module whose default export maps each file's path under `root` to its embedded file in the binary.
