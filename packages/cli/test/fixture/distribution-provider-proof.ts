@@ -82,7 +82,10 @@ export async function qualifyProvider(input: {
         } },
         agents: { "distribution-proof": {
           mode: "primary", model: `distribution/${model}`, steps: 3,
-          system: `Your first response must be a real tool call using the model's tool framing: <tool_call>${JSON.stringify({ name: "bash", arguments: { command: shell, workdir, timeout: 10000 } })}</tool_call>. Emit no other text before the tool result. Do not narrate or invent an invocation or its result. The tool stdout defines x with an assignment x=<value>. After the actual tool result, do not call another tool: answer with the value of x and nothing else. Do not choose or invent a value. If the tool failed, report failure instead.`,
+          // Describe only the native tool this request advertises. Naming a
+          // literal framing string teaches the model to narrate the call as
+          // text, which the runtime cannot execute and the oracle rejects.
+          system: `Your first response must be a tool call to the bash tool advertised in this request, with arguments exactly ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}. Emit no other text and no other tool call before the tool result. Do not narrate or invent an invocation or its result. The tool stdout defines x with an assignment x=<value>. After the actual tool result, do not call another tool: answer with the value of x and nothing else. Do not choose or invent a value. If the tool failed, report failure instead.`,
           permissions: [
             { action: "bash", resource: shell, effect: "allow" as const },
             { action: "external_directory", resource: `${workdir}/*`, effect: "allow" as const },
