@@ -11,7 +11,7 @@ import { model, modelDigest, image, ownedOllama } from "./fixture/distribution-p
 import type { OwnedOllama } from "./fixture/distribution-provider-ollama"
 import { qualifyProvider } from "./fixture/distribution-provider-proof"
 import { stopProviderDaemons } from "./fixture/distribution-provider-daemon"
-import { requireV2SourceGraph } from "./fixture/distribution-provider-sourcegraph"
+import { requireV2CompilerProvenance } from "./fixture/distribution-provider-sourcegraph"
 import type { CompilerReceipts } from "./fixture/distribution-provider-sourcegraph"
 import { exportProviderEvidence, markProviderEvidence } from "./fixture/distribution-provider-evidence"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
@@ -44,7 +44,7 @@ beforeAll(async () => {
     state.ollama = await ownedOllama(state.directory, evidence)
     await state.ollama.start()
     state.built = await buildVersions(state.directory)
-    state.compiler = await requireV2SourceGraph(state.built, evidence)
+    state.compiler = await requireV2CompilerProvenance(state.built, evidence)
     await Bun.write(join(evidence, "setup.json"), JSON.stringify({ owner, status: "ready", versions: state.compiler.map((entry) => entry.version) }))
   })().catch(async (error: unknown) => {
     await Bun.write(join(evidence, "setup.json"), JSON.stringify({ owner, status: "failed",

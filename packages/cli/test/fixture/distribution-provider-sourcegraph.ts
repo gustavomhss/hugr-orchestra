@@ -1,11 +1,9 @@
 import { Schema } from "effect"
-import ts from "typescript"
-import { builtinModules } from "node:module"
 import { lstat, readFile, realpath } from "node:fs/promises"
-import { dirname, extname, join, relative, resolve, sep } from "node:path"
+import { dirname, join, resolve, sep } from "node:path"
 import { cli, sha256, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
-import { calibrateCompilerEdge, compilerInputEdge } from "./distribution-provider-compiler-edge"
+import { requireCompilerProvenance } from "./distribution-provider-compiler-edge"
 
 const Edge = Schema.Struct({ path: Schema.String, kind: Schema.String, original: Schema.optional(Schema.String), external: Schema.optional(Schema.Boolean) })
 const CapturedFile = Schema.Struct({ path: Schema.String, sha256: Schema.String, gitBlob: Schema.String, bytes: Schema.Number })
@@ -60,21 +58,11 @@ const bindings = {
   "packages/core/src/session/runner/model.ts": "fcc56b6d0368e1e6e0392466a00e13b14f3ba961",
   "packages/core/src/tool/bash.ts": "8618850dc6a0c215902f278f1338170d2b1d745a",
 }
-const dynamicLedger = {
-  "packages/core/src/config/plugin/external.ts": {
-    gitBlob: "a9141f532da7b11bc4c68574e6a0513af18ec6f3", expressions: ["entrypoint"],
-    reason: "External plugin admission loader; isolated proof Location has plugins:[] and no plugin directories.",
-  },
-}
-const unselectedDispatch = [
-  "./commands/handlers/default", "./commands/handlers/debug/agents", "./commands/handlers/debug/symbols",
-  "./commands/handlers/migrate", "./commands/handlers/service/restart",
-]
 
-// Bun's own --compile metafile decides dependency resolution. AST below ONLY
-// inventories nonliteral import() sites against the closed reviewed ledger; it
-// never resolves imports or claims coverage of arbitrary runtime library code.
-export async function requireV2SourceGraph(built: Built, evidence: string) {
+// Bun 1.3.14 metafile imports retain original/erased records, not an authoritative
+// resolved dependency graph. Complete source capture and emitted golden pins
+// establish provenance; the installed public Session V2 proof establishes execution.
+export async function requireV2CompilerProvenance(built: Built, evidence: string) {
   const root = await realpath(resolve(cli, "../.."))
   const results = []
   for (const payload of built.payloads) {
@@ -84,25 +72,18 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
     const bytes = await readFile(file)
     await Bun.write(join(evidence, `compile-evidence-${payload.version}.json`), bytes)
     const receipt = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Receipt)))(bytes.toString("utf8"))
-    if (receipt.version !== payload.version || receipt.target !== target || receipt.entrypoints.join() !== "./src/omni-entry.ts")
-      throw new Error("PROVIDER_COMPILER_ENTRY_OR_VERSION_MISMATCH")
-    const binary = payload.manifest.files.find((entry) => entry.path === "bin/orchestra")
-    if (!binary || binary.sha256 !== receipt.binary.sha256 || sha256(await readFile(join(payload.payload, "bin/orchestra"))) !== receipt.binary.sha256)
-      throw new Error("PROVIDER_COMPILER_BINARY_SHA_MISMATCH")
-    const inputs = new Map(receipt.inputs.map((input) => [input.key, input]))
-    if (!inputs.size || inputs.size !== receipt.inputs.length || inputs.size !== Object.keys(receipt.metafile.inputs).length ||
-        Object.keys(receipt.metafile.inputs).some((key) => !inputs.has(key))) throw new Error("PROVIDER_COMPILER_INPUT_SET_INVALID")
-    if (inputs.size !== Object.keys(receipt.analysisMetafile.inputs).length || new Set(receipt.inputs.map((input) => input.analysisKey)).size !== inputs.size ||
-        receipt.inputs.some((input) => !receipt.analysisMetafile.inputs[input.analysisKey] ||
-          receipt.analysisMetafile.inputs[input.analysisKey].bytes !== input.analysisBytes || receipt.metafile.inputs[input.key].bytes !== input.compilerBytes ||
-          input.analysisBytes !== input.compilerBytes)) throw new Error("PROVIDER_COMPILER_ANALYSIS_INPUT_SET_DIFFERENT")
+    const provenance = requireCompilerProvenance(receipt, {
+      root, version: payload.version, target,
+      manifestSHA256: payload.manifest.files.find((entry) => entry.path === "bin/orchestra")?.sha256,
+      binarySHA256: sha256(await readFile(join(payload.payload, "bin/orchestra"))),
+    }, bindings)
     const toolchain = receipt.transformLedger.toolchain
     if (toolchain.plugin.gitBlob !== "28c0b12271d07444f36b81cb36f1f332b76bbe4b" ||
         toolchain.transform.gitBlob !== "6987446ee22b4fc9e6544e913524b1f243dc36db") throw new Error("PROVIDER_SOLID_PLUGIN_SOURCE_UNAUDITED")
     for (const captured of [toolchain.plugin, toolchain.transform, toolchain.packageFile, toolchain.lockfile]) await requireCapturedFile(captured)
     const pluginPackage = await Bun.file(toolchain.packageFile.path).json()
     if (pluginPackage.name !== toolchain.name || pluginPackage.version !== toolchain.version) throw new Error("PROVIDER_SOLID_PLUGIN_VERSION_MISMATCH")
-    for (const input of inputs.values()) {
+    for (const input of receipt.inputs) {
       await requireCapturedFile(input)
       const replacement = /[/\\]node_modules[/\\]solid-js[/\\]dist[/\\]server\.js$/.test(input.path) ? "solid.js"
         : /[/\\]node_modules[/\\]solid-js[/\\]store[/\\]dist[/\\]server\.js$/.test(input.path) ? "store.js" : undefined
@@ -124,103 +105,9 @@ export async function requireV2SourceGraph(built: Built, evidence: string) {
       const jsx = /\.[cm]?[jt]sx$/.test(input.path) && !input.path.includes(`${sep}node_modules${sep}`)
       if (input.transform !== (jsx ? "solid-jsx-babel" : "bun-native")) throw new Error(`PROVIDER_COMPILER_TRANSFORM_UNCLASSIFIED: ${input.key}`)
     }
-    const capturedPaths = new Map<string, string[]>()
-    receipt.inputs.forEach((input) => capturedPaths.set(input.path, [...(capturedPaths.get(input.path) ?? []), input.key]))
-    const byPath = new Map([...capturedPaths].map(([path, keys]) => {
-      if (keys.length !== 1) throw new Error(`PROVIDER_COMPILER_INPUT_PATH_AMBIGUOUS: ${path}`)
-      return [path, keys[0]] as const
-    }))
-    const omni = receipt.inputs.find((input) => input.path === join(root, "packages/core/src/omni.ts"))
-    const selfEdge = omni && receipt.metafile.inputs[omni.key].imports.find((edge) => edge.kind === "import-statement" && edge.path === "./omni.ts")
-    if (!omni || !selfEdge) throw new Error("PROVIDER_COMPILER_SELF_EDGE_CONTROL_MISSING")
-    await Bun.write(join(evidence, `compiler-edge-controls-${payload.version}.json`), JSON.stringify(
-      await calibrateCompilerEdge(omni, selfEdge.path, capturedPaths), null, 2,
-    ))
-    for (const [file, blob] of Object.entries(bindings)) {
-      const input = receipt.inputs.find((input) => input.path === join(root, file))
-      if (!input || input.gitBlob !== blob) throw new Error(`PROVIDER_DISPATCH_SOURCE_PIN_MISMATCH: ${file}`)
-      if (!Object.values(receipt.metafile.outputs).some((output) => (output.inputs[input.key]?.bytesInOutput ?? 0) > 0))
-        throw new Error(`PROVIDER_DISPATCH_SOURCE_NOT_EMITTED: ${file}`)
-    }
-    if (!Object.values(receipt.metafile.outputs).some((output) => output.entryPoint &&
-        byPath.get(resolve(receipt.cwd, output.entryPoint)) === byPath.get(join(root, "packages/cli/src/omni-entry.ts"))))
-      throw new Error("PROVIDER_COMPILER_ACTUAL_ENTRYPOINT_MISSING")
-    const selected = new Set<string>()
-    const external: Array<{ from: string; edge: typeof Edge.Type; reason: string }> = []
-    const dynamic: Array<{ path: string; expression: string; reason: string }> = []
-    const assets: string[] = []
-    const builtins = new Set([...builtinModules, ...builtinModules.map((name) => `node:${name}`), "bun", "bun:ffi", "bun:sqlite", "bun:jsc", "bun:bundle"])
-    const walk = (key: string) => {
-      if (selected.has(key)) return
-      const input = inputs.get(key)
-      const meta = receipt.metafile.inputs[key]
-      if (!input || !meta) throw new Error(`PROVIDER_COMPILER_EDGE_INPUT_MISSING: ${key}`)
-      if (input.path.startsWith(join(root, "packages/orchestra/src") + sep)) throw new Error(`PROVIDER_SELECTED_PATH_LEGACY_EDGE: ${input.path}`)
-      selected.add(key)
-      for (const edge of meta.imports) {
-        if (input.path === join(root, "packages/cli/src/index.ts") && edge.kind === "dynamic-import" &&
-            edge.original && unselectedDispatch.includes(edge.original)) {
-          external.push({ from: key, edge, reason: "Unselected lazy CLI branch in source-pinned real dispatch" })
-          continue
-        }
-        const direct = compilerInputEdge(input.path, edge.path, capturedPaths)
-        if (direct) { walk(direct); continue }
-        // Bun 1.3.14 --compile splitting marks a resolved dynamic chunk external.
-        // Use its compiler output entryPoint, never resolve the source specifier.
-        const chunks = Object.entries(receipt.metafile.outputs).filter(([name, output]) =>
-          output.entryPoint && resolve(receipt.cwd, name) === resolve(receipt.cwd, edge.path))
-        if (edge.kind === "dynamic-import" && chunks.length === 1) {
-          const entry = chunks[0][1].entryPoint
-          const destination = entry && (inputs.has(entry) ? entry : byPath.get(resolve(receipt.cwd, entry)))
-          if (!destination) throw new Error(`PROVIDER_COMPILER_CHUNK_ENTRY_MISSING: ${edge.path}`)
-          walk(destination)
-          continue
-        }
-        if (edge.external && builtins.has(edge.path)) { external.push({ from: key, edge, reason: "Bun/Node builtin module" }); continue }
-        if (edge.external && edge.path === "node-gyp") { external.push({ from: key, edge, reason: "Explicit build external; proof loads installed addon, never builds addons" }); continue }
-        throw new Error(`PROVIDER_COMPILER_EDGE_UNCLASSIFIED: ${key} -> ${edge.kind}:${edge.path}`)
-      }
-    }
-    // Frozen actual index/runtime pins bind these roots to real public dispatch.
-    // Unused TUI branch may legitimately contain legacy code in the full bundle.
-    for (const path of ["packages/cli/src/omni-entry.ts", "packages/cli/src/index.ts",
-      "packages/cli/src/commands/handlers/api.ts", "packages/cli/src/commands/handlers/serve.ts",
-      "packages/cli/src/commands/handlers/service/start.ts", "packages/cli/src/commands/handlers/service/password.ts",
-      "packages/cli/src/commands/handlers/service/stop.ts", "packages/cli/src/commands/handlers/service/status.ts"]) {
-      const key = byPath.get(join(root, path))
-      if (!key) throw new Error(`PROVIDER_COMPILER_SELECTED_ROOT_MISSING: ${path}`)
-      walk(key)
-    }
-    for (const key of selected) {
-      const input = inputs.get(key)
-      if (!input || !input.path.startsWith(root + sep) || input.path.includes(`${sep}node_modules${sep}`)) continue
-      const format = receipt.metafile.inputs[key].format
-      if (format === "json" || format === "css" || format === undefined &&
-          [".node", ".wasm", ".so", ".dll", ".dylib", ".txt", ".md", ".svg", ".png", ".ttf"].includes(extname(input.path))) {
-        assets.push(key)
-        continue
-      }
-      if (format !== "esm" && format !== "cjs") throw new Error(`PROVIDER_COMPILER_FORMAT_UNCLASSIFIED: ${key}:${format}`)
-      const source = ts.createSourceFile(input.path, await Bun.file(input.path).text(), ts.ScriptTarget.Latest, true)
-      const expressions: string[] = []
-      const visit = (node: ts.Node) => {
-        if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-          const argument = node.arguments[0]
-          if (!argument || !(ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))) expressions.push(argument?.getText(source) ?? "<missing>")
-        }
-        ts.forEachChild(node, visit)
-      }
-      visit(source)
-      if (!expressions.length) continue
-      const path = relative(root, input.path)
-      const ledger = Object.entries(dynamicLedger).find(([name]) => name === path)?.[1]
-      if (!ledger || ledger.gitBlob !== input.gitBlob || expressions.join() !== ledger.expressions.join())
-        throw new Error(`PROVIDER_DYNAMIC_IMPORT_UNCLASSIFIED: ${path}: ${expressions.join()}`)
-      dynamic.push(...expressions.map((expression) => ({ path, expression, reason: ledger.reason })))
-    }
-    await Bun.write(join(evidence, `compiler-selected-path-${payload.version}.json`), JSON.stringify({
-      version: payload.version, binarySHA256: receipt.binary.sha256, receiptSHA256: sha256(bytes), selected: [...selected], external, dynamic, assets,
-      bindings, unselectedDispatch, scope: "Compiler entry/api/service/serve closure with declared lazy-branch exclusions; live public Session V2 proof required",
+    await Bun.write(join(evidence, `compiler-provenance-${payload.version}.json`), JSON.stringify({
+      version: payload.version, binarySHA256: receipt.binary.sha256, receiptSHA256: sha256(bytes), ...provenance,
+      scope: "complete captured compiler inputs and exact emitted reviewed dispatchpins; no transitive graph/liveness inference",
     }, null, 2))
     results.push({ version: payload.version, binarySHA256: receipt.binary.sha256, receiptSHA256: sha256(bytes) })
   }
@@ -236,4 +123,4 @@ async function requireCapturedFile(input: typeof CapturedFile.Type) {
     throw new Error(`PROVIDER_COMPILER_SOURCE_SHA_MISMATCH: ${input.path}`)
 }
 
-export type CompilerReceipts = Awaited<ReturnType<typeof requireV2SourceGraph>>
+export type CompilerReceipts = Awaited<ReturnType<typeof requireV2CompilerProvenance>>
