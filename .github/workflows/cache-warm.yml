@@ -70,7 +70,7 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install chromium
 
       # The only writer of the Turbo cache that test.yml (unit-rest) and typecheck.yml restore.
