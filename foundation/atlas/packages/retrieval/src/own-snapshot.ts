@@ -109,13 +109,7 @@ function isPack(value: unknown): value is OwnPackPlus {
   const invariants = value.invariants as unknown[]
   const advisory = value.advisory as unknown[]
   const gotchas = value.gotchas as unknown[]
-  if (
-    invariants.length + advisory.length + gotchas.length === 0 ||
-    !invariants.every(isPackInvariant) ||
-    !advisory.every(isPackInvariant) ||
-    !gotchas.every(isFact)
-  )
-    return false
+  if (!invariants.every(isPackInvariant) || !advisory.every(isPackInvariant) || !gotchas.every(isFact)) return false
   return (
     Array.isArray(value.shape.contents) &&
     value.shape.contents.every((node) => typeof node === "string") &&
@@ -145,10 +139,29 @@ function isPack(value: unknown): value is OwnPackPlus {
 function isSnapshotUnit(value: unknown): value is OwnSnapshotUnit {
   if (!isRecord(value) || !isUnit(value.unit) || !isPack(value.pack) || !isRecord(value.sourceBlobs)) return false
   const blobs = Object.entries(value.sourceBlobs)
-  return blobs.length > 0 && blobs.every(([path, blob]) => isPath(path) && isBlob(blob))
+  if (blobs.length === 0 || !blobs.every(([path, blob]) => isPath(path) && isBlob(blob))) return false
+  if (value.pack.invariants.length + value.pack.advisory.length + value.pack.gotchas.length > 0) return true
+
+  // Auxiliary tree units may have no facts; symbol leaves also have no children. Their structural
+  // identity and source-file witnesses must still be present, not replaced with invented knowledge.
+  if (
+    !["crate", "module"].includes(value.unit.level) ||
+    value.pack.grounding.source !== "tree" ||
+    value.pack.unit.trim().length === 0 ||
+    !isBlob(value.unit.grounding)
+  )
+    return false
+  const sourceBound = (unit: string) => {
+    const path = unit.split("::")[0]!
+    if (path !== "." && !isPath(path)) return false
+    return blobs.some(
+      ([source]) => source === path || (!unit.includes("::") && (path === "." || source.startsWith(`${path}/`))),
+    )
+  }
+  return sourceBound(value.unit.id) && value.pack.shape.contents.every(sourceBound)
 }
 
-/** Parse persisted Genesis oracle. Empty or ambiguous coverage never becomes a valid snapshot. */
+/** Parse persisted Genesis oracle. Empty/ambiguous coverage or a fact-free snapshot is invalid. */
 export function parseOwnSnapshot(content: string): OwnSnapshot | undefined {
   try {
     const value = JSON.parse(content) as unknown
@@ -165,6 +178,10 @@ export function parseOwnSnapshot(content: string): OwnSnapshot | undefined {
       return undefined
     const ids = value.units.map((unit) => unit.unit.id)
     if (new Set(ids).size !== ids.length) return undefined
+    if (
+      !value.units.some((entry) => entry.pack.invariants.length + entry.pack.advisory.length + entry.pack.gotchas.length > 0)
+    )
+      return undefined
     return value as unknown as OwnSnapshot
   } catch {
     return undefined
