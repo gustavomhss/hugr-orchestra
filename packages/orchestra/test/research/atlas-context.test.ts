@@ -28,7 +28,7 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   Skill.node, Truncate.node, filesystem,
 ])))
 
-const fixture = Effect.fn("AtlasDiscoveryTest.fixture")(function* (count = 2) {
+const fixture = Effect.fn("AtlasDiscoveryTest.fixture")(function* (count = 2, agentID = "jimmy") {
   const fs = yield* FileSystem.FileSystem
   const git = yield* Git.Service
   const config = yield* Config.Service
@@ -81,11 +81,11 @@ const fixture = Effect.fn("AtlasDiscoveryTest.fixture")(function* (count = 2) {
   }))
   expect((yield* config.get()).maestro?.atlas?.projectID).toBe(instance.project.id)
   const sessions = yield* Session.Service
-  const session = yield* sessions.create({ agent: "jimmy" })
+  const session = yield* sessions.create({ agent: agentID })
   const asks: unknown[] = []
   const ctx: Tool.Context = {
     sessionID: session.id, messageID: MessageID.ascending(), callID: "call_context",
-    agent: "discovery-renamed", agentID: "jimmy", abort: AbortSignal.any([]), messages: [],
+    agent: agentID === "jimmy" ? "discovery-renamed" : "archie", agentID, abort: AbortSignal.any([]), messages: [],
     metadata: () => Effect.void,
     ask: (request) => Effect.sync(() => { asks.push(request) }),
   }
@@ -118,6 +118,25 @@ it.instance("ordinary native discovery loads exact verified bytes and host recei
     })))
     const missing = yield* tool.execute({ action: "unit", unit: "unit-0" }, data.ctx)
     expect(JSON.parse(missing.output)).toMatchObject({ status: "held", reason: "unit-missing-or-ambiguous" })
+  }), { git: true },
+)
+
+it.instance("native upstream reads the same verified context without memory or execution authority", () =>
+  Effect.gen(function* () {
+    const data = yield* fixture(2, "archie")
+    const tool = yield* Tool.init(yield* AtlasContextTool)
+    const listed = yield* tool.execute({ action: "catalog" }, data.ctx)
+    expect(listed.metadata.atlasContext.coverage).toMatchObject({ state: "complete", bodiesLoaded: false })
+    const loaded = yield* tool.execute({ action: "unit", unit: "packages/unit-1" }, data.ctx)
+    expect(loaded.metadata.atlasContext).toMatchObject({ projectID: data.session.projectID,
+      sourceIdentity: listed.metadata.atlasContext.sourceIdentity, unit: "packages/unit-1",
+      coverage: { state: "complete", freshness: "FRESH", currentBlobsChecked: true } })
+    expect(JSON.parse(loaded.output).content).toContain("Current source value is one.")
+    expect(data.asks).toEqual(Array.from({ length: 2 }, () => ({
+      permission: "atlas_context", patterns: ["archie"], always: ["archie"], metadata: {},
+    })))
+    const held = yield* tool.execute({ action: "unit", unit: "unit-1" }, data.ctx)
+    expect(JSON.parse(held.output)).toMatchObject({ status: "held", reason: "unit-missing-or-ambiguous" })
   }), { git: true },
 )
 
