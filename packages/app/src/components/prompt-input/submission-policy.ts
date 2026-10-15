@@ -99,7 +99,9 @@ export function createSubmissionPolicy(input: {
       wait: () => wait(signal),
       beforeWrite: () => wait(signal, failedWrite),
       write: async (policy) => {
-        if ((await waitForSubmission(input.protocol, signal)) === "v2") {
+        const protocol = await waitForSubmission(input.protocol, signal)
+        if (!input.current() || signal.aborted) return policy
+        if (protocol === "v2") {
           const write = input.management.setSubagentModels(input.sessionID, policy)
           const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
           const acknowledged = await write.catch((cause: unknown) => {
