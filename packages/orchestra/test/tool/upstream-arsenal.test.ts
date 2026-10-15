@@ -62,7 +62,11 @@ describe("V1 upstream Arsenal discovery and binding", () => {
       requireUpstreamGrants(upstream)
       const ids = (yield* registry.tools({ ...model, agent: upstream })).map((tool) => tool.id)
       expect(ids.filter((id) => id.startsWith("maestro_")).toSorted()).toEqual(arsenalIDs)
+      expect(ids).toContain("atlas_context")
       expect(ids.filter((id) => id.startsWith("atlas_memory_"))).toEqual([])
+      expect(ids).not.toContain("research_capture")
+      expect(ids).not.toContain("research_record")
+      expect(ids).not.toContain("research_view")
 
       // Positive controls show these tools exist and the registry can expose them to their existing owners.
       const maestro = yield* agents.get("maestro")
@@ -74,6 +78,22 @@ describe("V1 upstream Arsenal discovery and binding", () => {
       expect(memory).toContain("atlas_memory_recall")
       expect(memory).toContain("atlas_memory_emit")
       expect(memory.filter((id) => arsenalIDs.some((name) => name === id))).toEqual([])
+    }),
+  )
+
+  it.instance("native Atlas context preserves Session denial and native identity filtering", () =>
+    Effect.gen(function* () {
+      const agents = yield* Agent.Service
+      const registry = yield* ToolRegistry.Service
+      const upstream = yield* agents.get("archie")
+      const visible = yield* registry.tools({ ...model, agent: upstream })
+      expect(visible.map((tool) => tool.id)).toContain("atlas_context")
+      const denied = yield* registry.tools({ ...model, agent: upstream,
+        permission: Permission.fromConfig({ atlas_context: "deny" }) })
+      expect(denied.map((tool) => tool.id)).not.toContain("atlas_context")
+      const impostor = yield* registry.tools({ ...model, agent: { ...upstream, native: false },
+        permission: Permission.fromConfig({ "*": "allow" }) })
+      expect(impostor.map((tool) => tool.id)).not.toContain("atlas_context")
     }),
   )
 
