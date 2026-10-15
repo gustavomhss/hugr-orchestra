@@ -218,6 +218,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
   })
 
+  // Submits into an existing session are not registered in `admissions` (they own no draft key), so the composer's
+  // admitting marker counts them here.
+  let existing = 0
+
   const errorMessage = (err: unknown) => {
     if (err && typeof err === "object" && "message" in err && typeof err.message === "string") return err.message
     if (err && typeof err === "object" && "data" in err) {
@@ -615,13 +619,24 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
   return {
     abort,
+    // What the composer renders as admitting: an admission in flight on this draft, or one already handed off to a
+    // session. A draft submit holds busy for its whole admission, so the marker never clears mid-handoff.
+    submitting: () => {
+      if (existing > 0) return true
+      const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
+      return admissions.get(prompt.capture())?.get(key)?.busy ?? false
+    },
     handleSubmit(event: Event) {
       event.preventDefault()
       if (ownership.disposed()) return Promise.resolve(false)
       const target = prompt.capture()
       if (params.id) {
         const admission: Admission = { busy: false }
-        return submit(target, admission).finally(() => admission.cleanup?.())
+        existing++
+        return submit(target, admission).finally(() => {
+          existing--
+          admission.cleanup?.()
+        })
       }
       const key = input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId)
       const scoped = admissions.get(target) ?? new Map<string, Admission>()
