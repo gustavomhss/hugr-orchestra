@@ -511,7 +511,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # e2e drives the app package; its Turbo hash covers the app plus every workspace dependency.
+      # e2e drives the app shell package; its Turbo hash covers the shell plus every workspace dependency.
       - name: Check for a previous pass
         if: ${{ !inputs.cold }}
         id: previous
@@ -563,17 +563,17 @@ jobs:
 
       - name: Install Playwright system dependencies
         if: runner.os == 'Linux' && steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install-deps chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
         if: steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         # Specs are split by measured time (script/e2e-shard.ts), not file count; the assignment fails the step
         # if the script fails instead of falling back to every spec.
         run: |
@@ -594,8 +594,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
           path: |
-            packages/app/e2e/test-results
-            packages/app/e2e/playwright-report
+            packages/app-shell/e2e/test-results
+            packages/app-shell/e2e/playwright-report
 
       - name: Record the pass
         if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''

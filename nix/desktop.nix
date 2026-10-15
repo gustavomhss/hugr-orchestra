@@ -103,7 +103,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     cp -R ${finalAttrs.node_modules}/. .
     test -d node_modules
-    for directory in node_modules packages/*/node_modules packages/*/*/node_modules modules/*/node_modules modules/*/*/node_modules tooling/*/node_modules; do
+    for directory in node_modules packages/*/node_modules packages/*/*/node_modules apps/*/node_modules modules/*/node_modules modules/*/*/node_modules tooling/*/node_modules; do
       test -d "$directory" || continue
       chmod -R u+w "$directory"
       patchShebangs "$directory"

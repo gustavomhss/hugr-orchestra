@@ -109,7 +109,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ runner.temp }}/lean-candidate-bun-cache
-          key: lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'modules/**/package.json', 'tooling/*/package.json', 'patches/**') }}
+          key: lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'apps/*/package.json', 'modules/**/package.json', 'tooling/*/package.json', 'patches/**') }}
 
       - name: Install locked dependencies
         id: install

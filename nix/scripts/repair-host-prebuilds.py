@@ -36,7 +36,12 @@ def main():
     node = nodedir / "bin" / "node"
     require(node.is_file() and (nodedir / "include" / "node" / "node_api.h").is_file(), "NODE_HEADERS_MISSING")
     require(node_gyp.is_file(), "NODE_GYP_MISSING")
-    trees = [root / "node_modules"] + [path for path in (root / "packages").glob("*/node_modules") if path.is_dir()]
+    trees = [root / "node_modules"] + [
+        path
+        for directory in (root / "packages", root / "apps")
+        for path in directory.glob("*/node_modules")
+        if path.is_dir()
+    ]
     require(trees[0].is_dir(), "DEPENDENCY_SOURCE_MISSING")
     addons = host_prebuilds(trees, host)
     require(addons, "NO_HOST_PREBUILDS")
