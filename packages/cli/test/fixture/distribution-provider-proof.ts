@@ -59,11 +59,11 @@ export async function qualifyProvider(input: {
       await mkdir(box.cwd)
       const env = { ...box.env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }
       const nonce = randomBytes(24).toString("hex")
-      const file = join(box.directory, "outside", `${randomBytes(12).toString("hex")}.nonce`)
+      const file = join(box.directory, "outside", "result.nonce")
       const faultMarker = join(box.directory, "outside", "supervisor-fault-used")
       const workdir = join(box.directory, "outside")
       expect((await lstat(workdir)).isDirectory()).toBe(true)
-      const shell = join(workdir, `${randomBytes(12).toString("hex")}.sh`)
+      const shell = join(workdir, "run-nonce.sh")
       await writeFile(shell, `#!/bin/sh\nset -eu\nprintf '%s' '${nonce}' > '${file}'\nsleep 3\ncat '${file}'\n`)
       await chmod(shell, 0o700)
       const scriptDigest = sha256(await readFile(shell))
@@ -82,7 +82,7 @@ export async function qualifyProvider(input: {
         } },
         agents: { "distribution-proof": {
           mode: "primary", model: `distribution/${model}`, steps: 3,
-          system: `Your first response must be a real tool call using the model's tool framing: <tool_call>${JSON.stringify({ name: "bash", arguments: { command: shell, workdir, timeout: 10000 } })}</tool_call>. Emit no other text before the tool result. Do not narrate or invent an invocation or its result. After the actual tool result, do not call another tool: report the nonce from its output, or report failure if the tool failed.`,
+          system: `Your first response must be a real tool call using the model's tool framing: <tool_call>${JSON.stringify({ name: "bash", arguments: { command: shell, workdir, timeout: 10000 } })}</tool_call>. Emit no other text before the tool result. Do not narrate or invent an invocation or its result. After the actual tool result, do not call another tool: copy the first stdout line verbatim as your entire final answer, without changing, generating or transforming any character. If the tool failed, report failure instead.`,
           permissions: [
             { action: "bash", resource: shell, effect: "allow" as const },
             { action: "external_directory", resource: `${workdir}/*`, effect: "allow" as const },
@@ -92,7 +92,7 @@ export async function qualifyProvider(input: {
       Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })(config)
       await Bun.write(join(box.cwd, "orchestra.json"), JSON.stringify(config, null, 2))
       await Bun.write(join(evidence, "location-config.json"), JSON.stringify(config, null, 2))
-      const prompt = `Call bash exactly once with this JSON input, verbatim: ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}\nAfter the actual tool result, give a short final response containing the nonce from its output. If the tool fails, report failure. /no_think`
+      const prompt = `Call bash exactly once with this JSON input, verbatim: ${JSON.stringify({ command: shell, workdir, timeout: 10000 })}\nAfter the actual tool result, copy the first stdout line verbatim as your entire final answer. Do not invent, regenerate or transform it. If the tool fails, report failure.`
       proxy.arm(kind)
       const daemon = providerDaemon(launcher, payload, input.version, { ...box, env }, evidence)
       const state: { monitor?: Awaited<ReturnType<typeof observeInstalledTool>> } = {}
