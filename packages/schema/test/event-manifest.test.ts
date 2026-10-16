@@ -27,7 +27,7 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(107)
+    expect(EventManifest.Latest.size).toBe(108)
     expect(EventManifest.Durable.size).toBe(70)
   })
 
