@@ -3,6 +3,8 @@ import { Cause, Effect, Exit } from "effect"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { ClaudeCodeTools } from "@/claude-code/tools"
 import { asks } from "@/claude-code/permissions"
+import { ValidationRejectedError } from "@/maestro/validation-record"
+import { Question } from "@/question"
 import { MessageID, SessionID } from "@/session/schema"
 import type * as Tool from "@/tool/tool"
 
@@ -50,4 +52,11 @@ test("a rule denial shows the rule and lets the model continue; only a user reje
   expect(denied).toContain("rule which prevents")
   expect(denied).not.toContain("Stop and wait")
   expect(ClaudeCodeTools.failure(Cause.fail(new PermissionV1.RejectedError()))).toContain("Stop and wait")
+})
+
+// The live proof's Maestro read a validation refusal as the owner's rejection and stopped without its cause.
+test("a governance refusal keeps its cause; it is not the owner rejecting the call", () => {
+  const refused = ClaudeCodeTools.failure(Cause.fail(new ValidationRejectedError({ reason: "missing-section" })))
+  expect(refused).toBe("MaestroValidationRejected: missing-section")
+  expect(ClaudeCodeTools.failure(Cause.fail(new Question.RejectedError()))).toContain("Stop and wait")
 })
