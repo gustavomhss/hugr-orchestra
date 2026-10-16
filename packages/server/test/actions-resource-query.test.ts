@@ -7,11 +7,13 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Actions } from "@orchestra/schema/actions"
 import { Location } from "@orchestra/schema/location"
 import { Effect, Schema } from "effect"
+import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import { github, httpFixture, it, runID, workspaceID } from "./actions-http-fixture"
 
 const create = { remote: "origin", provider: github, projectPath: "acme/widgets" }
 const resourceFixture = Effect.fnUntraced(function* () {
   const capturedCalls: Parameters<Interface["resources"]>[] = []
+  expectSpawn(import.meta.path)
   const http = yield* httpFixture({
     resources: (service) => Effect.fnUntraced(function* (ref: Actions.BindingRef, input: Actions.ResourceListInput) {
       // Capture before validation; omitted keys must not be normalized away by the fixture.
