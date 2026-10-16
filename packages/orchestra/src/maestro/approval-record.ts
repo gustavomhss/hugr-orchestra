@@ -41,6 +41,15 @@ export class ApprovalConflictError extends Schema.TaggedErrorClass<ApprovalConfl
   }
 }
 
+export class ApprovalMethodReusedError extends Schema.TaggedErrorClass<ApprovalMethodReusedError>()(
+  "MaestroApprovalMethodReused",
+  { methodVersion: Schema.String, presentedMessageID: Schema.String },
+) {
+  override get message() {
+    return `${this._tag}: methodVersion ${this.methodVersion} was already presented in message ${this.presentedMessageID}, and the owner has written since, so this call did not present again and a new reply would still be checked against that earlier presentation. Present again with a new methodVersion, then end the turn and wait for the owner's exact reply.`
+  }
+}
+
 export class ApprovalRejectedError extends Schema.TaggedErrorClass<ApprovalRejectedError>()("MaestroApprovalRejected", {
   reason: Schema.String,
 }) {
@@ -210,6 +219,12 @@ export const presentApproval = Effect.fn("MaestroApproval.present")(function* (i
         { ...presentation, id: "", assistantMessageID: "", callID: "" },
       )
     ) {
+      // A retried tool call replays the earlier presentation; after an owner message it would be a silent no-op.
+      if (yield* ownerSpokeBetween(presentation.sessionID, recorded.assistantMessageID, presentation.assistantMessageID))
+        return yield* new ApprovalMethodReusedError({
+          methodVersion: presentation.methodVersion,
+          presentedMessageID: recorded.assistantMessageID,
+        })
       return presentationFromEvent(recorded)
     }
     return yield* new ApprovalConflictError(input)
@@ -219,6 +234,24 @@ export const presentApproval = Effect.fn("MaestroApproval.present")(function* (i
     id: presentationEventID(input),
   })
   return presentationFromEvent(recorded.data)
+})
+
+// Same ordering as recordApproval: a user message strictly between the presented message and the calling one.
+const ownerSpokeBetween = Effect.fn("MaestroApproval.ownerSpokeBetween")(function* (
+  sessionID: string,
+  presentedMessageID: string,
+  callingMessageID: string,
+) {
+  if (presentedMessageID === callingMessageID) return false
+  const ordered = (yield* MessageV2.stream(SessionID.make(sessionID)))
+    .filter((message) => message.info.role === "user" || message.info.role === "assistant")
+    .sort(
+      (left, right) => left.info.time.created - right.info.time.created || left.info.id.localeCompare(right.info.id),
+    )
+  const presented = ordered.findIndex((message) => message.info.id === presentedMessageID)
+  const calling = ordered.findIndex((message) => message.info.id === callingMessageID)
+  if (presented < 0 || calling < 0) return false
+  return ordered.slice(presented + 1, calling).some((message) => message.info.role === "user")
 })
 
 export const recordApproval = Effect.fn("MaestroApproval.record")(function* (sessionID: string) {

@@ -11,6 +11,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
+import { Event } from "@orchestra/schema/event"
 import { testEffect } from "../lib/effect"
 import { tmpdirScoped } from "../fixture/fixture"
 import { relayFor } from "./relay-fixture"
@@ -115,6 +116,24 @@ it.live("missing check binding and callback overflow HOLD before dispatch; absen
     const ordinary = yield* ArsenalCompletion.make
     expect(yield* ordinary.beforeDispatch(binding)).toBeUndefined()
     expect(yield* ordinary.verifiedCompletion(undefined, "child")).toBeUndefined()
+  }),
+)
+
+it.live("a workflow Task dispatched before its arm holds WORKFLOW_NATIVE_ARM_UNBOUND and names the order", () =>
+  Effect.gen(function* () {
+    const directory = yield* repository()
+    const relay = yield* relayFor({ directory, projectID: "project" })
+    const host: ArsenalCompletion.Host = { resolve: () => Effect.succeed(undefined), checks: new Map(),
+      relay: () => Effect.succeed(relay), observe: () => Effect.void }
+    const completion = yield* ArsenalCompletion.make.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host))
+    const held = yield* Effect.flip(completion.beforeDispatch({ sessionID: "parent", taskID: "child", callID: "call",
+      directory, projectID: "project", workflow: { selection: { documentID: "packet",
+        planRevisionID: Event.ID.make("evt_plan"), parameters: {} }, assistantMessageID: "msg_dispatch",
+      logicalTaskID: "logical", writePaths: ["src/money.ts"], subagentType: "backend", prompt: "Implement packet" } }))
+    expect(held.reason).toBe("WORKFLOW_NATIVE_ARM_UNBOUND")
+    expect(held.message).toStartWith("Tool safety HOLD: WORKFLOW_NATIVE_ARM_UNBOUND. ")
+    expect(held.message).toContain("Arm it first with relay-arm action arm")
+    expect(held.message).toContain("then dispatch the Task")
   }),
 )
 

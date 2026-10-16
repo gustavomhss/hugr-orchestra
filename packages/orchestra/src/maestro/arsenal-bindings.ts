@@ -640,7 +640,7 @@ export const make = Effect.gen(function* () {
         if (name !== "relay-arm") return
         if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database),
           Effect.mapError((error) => new ToolFailure({ message: error.reason }))))
-          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED" })
+          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED: a workflow Task is already bound in this Session, so its arm cannot change; arm before dispatching the workflow Task, never after." })
         const input = Schema.decodeUnknownOption(
           Schema.Struct({
             action: Schema.String,

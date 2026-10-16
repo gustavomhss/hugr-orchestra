@@ -9,6 +9,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
@@ -336,6 +337,34 @@ describe("Maestro native output bindings", () => {
         expect(
           Exit.isFailure(yield* Effect.exit(contextDef.execute({ planRevisionID: plan.planRevisionID }, data.caller))),
         ).toBe(true)
+      }),
+    { git: true },
+    300_000,
+  )
+
+  it.instance(
+    "a plan revision recorded outside the Session that dispatched archie names the dispatching Session",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* prepare()
+        const sessions = yield* Session.Service
+        const dispatcher = yield* sessions.create({ title: "dispatching Maestro", agent: "maestro" })
+        const author = yield* sessions.create({ title: "archie author", agent: "archie", parentID: dispatcher.id })
+        const planTool = yield* MaestroRecordPlanRevisionTool
+        const planDef = yield* planTool.init()
+        const upstream = {
+          parentMessageID: SessionMessage.ID.make(MessageID.ascending()),
+          parentCallID: "call_dispatch_archie",
+          authorSessionID: author.id,
+          authorMessageID: SessionMessage.ID.make(MessageID.ascending()),
+          logicalTaskID: "logical_archie",
+        }
+        const refused = yield* Effect.exit(planDef.execute({ ...data.input, upstream }, data.caller))
+        expect(Exit.isFailure(refused)).toBe(true)
+        if (Exit.isFailure(refused))
+          expect(Cause.pretty(refused.cause)).toContain(
+            `Tool safety HOLD: UPSTREAM_ATTRIBUTION_PARENT_MISMATCH. Author Session ${author.id} was dispatched by ${dispatcher.id}, not by this Session ${data.session.id}. Record the plan revision in the Session whose Maestro dispatched the archie Task.`,
+          )
       }),
     { git: true },
     300_000,
