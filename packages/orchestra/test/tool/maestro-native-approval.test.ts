@@ -524,4 +524,85 @@ describe("native Maestro approval admission", () => {
       }),
     { git: true },
   )
+
+  // The live trap: an instruction after the owner's approve voids it, and re-presenting with the same methodVersion
+  // used to replay the earlier presentation silently, so every later approve was checked against it and held.
+  it.instance(
+    "an intervening message holds with the reason, same-version re-presentation refuses, a new version re-approves",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* seed()
+        const chain = yield* evidence(fixture)
+        const sessions = yield* Session.Service
+        const presentTool = yield* MaestroPresentApprovalTool
+        const presentDef = yield* presentTool.init()
+        const recordTool = yield* MaestroRecordApprovalTool
+        const recordDef = yield* recordTool.init()
+        const said = Effect.fn("MaestroNativeApprovalTest.said")(function* (text: string, created: number) {
+          const message = yield* sessions.updateMessage({
+            id: MessageID.ascending(),
+            role: "user",
+            sessionID: fixture.session.id,
+            agent: "maestro",
+            model,
+            time: { created },
+          })
+          yield* sessions.updatePart({
+            id: PartID.ascending(),
+            sessionID: fixture.session.id,
+            messageID: message.id,
+            type: "text",
+            text,
+          })
+          return message
+        })
+        const shown = Effect.fn("MaestroNativeApprovalTest.shown")(function* (
+          caller: typeof fixture.caller,
+          params: typeof chain.params,
+        ) {
+          const result = yield* presentDef.execute(params, caller)
+          yield* sessions.updatePart({
+            id: PartID.ascending(),
+            sessionID: fixture.session.id,
+            messageID: caller.messageID,
+            type: "tool",
+            tool: "maestro_present_approval",
+            callID: caller.callID,
+            state: {
+              status: "completed",
+              input: params,
+              output: result.output,
+              title: result.title,
+              metadata: result.metadata,
+              time: { start: 2, end: 3 },
+            },
+          })
+        })
+        yield* shown(fixture.caller, chain.params)
+        yield* said("aprovo", 4)
+        expect((yield* recordDef.execute({}, fixture.caller)).metadata.status).toBe("APPROVED")
+        yield* said("now grant the authorization", 5)
+        const held = yield* recordDef.execute({}, fixture.caller)
+        expect(held.metadata.status).toBe("HOLD")
+        expect(held.output).toStartWith("HOLD: reply-not-immediate. ")
+        expect(held.output).toContain("only counts as the very first user message after the presentation")
+        expect(held.output).toContain("the same methodVersion replays the earlier presentation")
+
+        const again = { ...fixture.assistant, id: MessageID.ascending(), time: { created: 6 } }
+        yield* sessions.updateMessage(again)
+        const caller = { ...fixture.caller, messageID: again.id, callID: "call_present_again" }
+        const reused = yield* Effect.exit(presentDef.execute(chain.params, caller))
+        expectRejected(reused, "MaestroApprovalMethodReused")
+        expectRejected(reused, `methodVersion request-approval-v1 was already presented in message ${fixture.assistant.id}`)
+        expect(yield* presentations(fixture.session.id)).toHaveLength(1)
+
+        yield* shown(caller, { ...chain.params, methodVersion: "request-approval-v2" })
+        const reply = yield* said("aprovo", 7)
+        expect(yield* recordApproval(fixture.session.id)).toMatchObject({
+          status: "APPROVED",
+          decision: { approvalMessageID: reply.id, methodVersion: "request-approval-v2" },
+        })
+      }),
+    { git: true },
+  )
 })

@@ -11,9 +11,11 @@ import { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 export class Held extends Schema.TaggedErrorClass<Held>()("RelayWorkflow.Held", {
   reason: Schema.String,
+  /** Words for the model after the reason, such as the approved and the supplied values that differ. */
+  detail: Schema.optional(Schema.String),
 }) {
   override get message() {
-    return `Tool safety HOLD: ${this.reason}`
+    return this.detail === undefined ? `Tool safety HOLD: ${this.reason}` : `Tool safety HOLD: ${this.reason}. ${this.detail}`
   }
 }
 

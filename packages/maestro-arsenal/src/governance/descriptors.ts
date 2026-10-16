@@ -10,7 +10,7 @@ export const profileToolDescriptor: Descriptor = {
 }
 export const relayArmToolDescriptor: Descriptor = {
   name: "relay-arm",
-  description: "Arm a completion contract for the next native Task, read one, or ask the owner to release a parked arm. The native host evaluates it on its Relay arm; release succeeds only when the owner approves.",
+  description: "Arm a completion contract for the next native Task, read one, or ask the owner to release a parked arm. Order: arm first, then dispatch that Task; arm stores the contract and the dispatch binds it, so a workflow Task dispatched without an arm holds WORKFLOW_NATIVE_ARM_UNBOUND and arming after a workflow Task is bound in this Session is refused. The native host evaluates it on its Relay arm; release succeeds only when the owner approves.",
   effects: ["read", "write"],
   inputSchema: objectSchema({ sourceRoot: stringSchema, action: { enum: ["arm", "read", "release"] }, token: idSchema, contract: completionSchema, reason: stringSchema }, ["action"]),
 }

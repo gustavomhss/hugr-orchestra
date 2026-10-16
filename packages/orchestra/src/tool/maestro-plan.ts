@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Schema } from "effect"
+import { Effect, FileSystem, Option, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -7,6 +7,7 @@ import { readAtlasSource } from "@/maestro/atlas-source"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { Session } from "@/session/session"
+import { SessionID } from "@/session/schema"
 import { Tool } from "./tool"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
@@ -103,7 +104,7 @@ export const MaestroRecordPlanRevisionTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     return {
       description:
-        "Persist one immutable grounded PlanRevision using exact catalog territory names in scope and verified Own unit IDs in units. Maestro only.",
+        "Persist one immutable grounded PlanRevision using exact catalog territory names in scope and verified Own unit IDs in units. Maestro only. With upstream, call it in the Session that dispatched the archie Task: that calling Session is recorded as the dispatch parent.",
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>
         Effect.gen(function* () {
@@ -112,6 +113,13 @@ export const MaestroRecordPlanRevisionTool = Tool.define(
             return yield* Effect.fail(new Error("Plan revision requires Maestro"))
           const host = yield* WorkflowBinding.NativeHost
           if (params.workflow && !host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
+          // The dispatch parent is always this calling Session, never a payload field; name the Session that would pass.
+          const author = params.upstream
+            ? yield* sessions.get(SessionID.make(params.upstream.authorSessionID)).pipe(Effect.option)
+            : Option.none()
+          if (Option.isSome(author) && author.value.parentID !== ctx.sessionID)
+            return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH",
+              detail: `Author Session ${author.value.id} was dispatched by ${author.value.parentID ?? "no parent Session"}, not by this Session ${ctx.sessionID}. Record the plan revision in the Session whose Maestro dispatched the archie Task.` })
           const session = yield* sessions.get(ctx.sessionID)
           const port = params.workflow && host ? yield* host.publication({ directory: session.directory,
             projectID: ProjectID.make(session.projectID) }) : undefined
