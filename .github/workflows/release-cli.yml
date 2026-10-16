@@ -1,0 +1,239 @@
+name: release-cli
+
+# Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
+# only with publish=true, publishes the GitHub release, npm (@hugr/cli), the Homebrew tap and AUR (orchestra-bin).
+# A dry run (the default) uploads every assembled artifact and publishes nothing. musl targets are not released yet:
+# they build only inside the bundle's Alpine guests.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable X.Y.Z
+        required: true
+        type: string
+      publish:
+        description: Publish the GitHub release, npm, Homebrew tap and AUR
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require a stable, unreleased version
+        env:
+          PUBLISH: ${{ inputs.publish }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
+          if [ "$PUBLISH" = true ]; then
+            [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
+            if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: v$VERSION" >&2; exit 1; fi
+            if npm view "@hugr/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
+          fi
+
+  models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+      - name: Acquire one real models.dev snapshot for every target
+        run: |
+          bun -e '
+          const response = await fetch("https://models.dev/api.json", { signal: AbortSignal.timeout(60000) });
+          if (!response.ok) throw Error(`MODELS_SNAPSHOT_HTTP_FAILURE:${response.status}`);
+          const bytes = await response.arrayBuffer();
+          const data = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+          if (!data || typeof data !== "object" || Array.isArray(data) || Object.keys(data).length === 0) throw Error("MODELS_SNAPSHOT_EMPTY_OR_INVALID");
+          await Bun.write("models-api.json", bytes);'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: models-dev-snapshot
+          path: models-api.json
+          if-no-files-found: error
+
+  build:
+    name: build (${{ matrix.target }})
+    needs: [plan, models]
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { host: ubuntu-latest, target: linux-x64-baseline }
+          - { host: ubuntu-24.04-arm, target: linux-arm64 }
+          - { host: macos-14, target: darwin-arm64 }
+          - { host: macos-15-intel, target: darwin-x64-baseline }
+          - { host: windows-latest, target: windows-x64-baseline }
+          - { host: windows-11-arm, target: windows-arm64 }
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Prepare native Windows Rust
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          if ! command -v rustup >/dev/null; then
+            host=$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64-pc-windows-msvc || echo x86_64-pc-windows-msvc)
+            curl --fail --silent --show-error --location -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/$host/rustup-init.exe"
+            "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
+            printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
+          fi
+      - uses: ./.github/actions/ripgrep
+      - uses: ./.github/actions/omni-binaries
+      - name: Require the matching native host
+        working-directory: packages/cli
+        run: bun script/runtime-proof.ts --target "$TARGET" --host
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: models-dev-snapshot
+          path: ${{ runner.temp }}/models-dev
+      - name: Build the native CLI
+        working-directory: packages/cli
+        env:
+          ORCHESTRA_VERSION: ${{ inputs.version }}
+          ORCHESTRA_CHANNEL: latest
+          MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
+        run: bun script/build.ts --single --skip-install --target "$TARGET"
+      - name: Require the built version
+        run: |
+          set -euo pipefail
+          exe=orchestra
+          [[ "$TARGET" != windows-* ]] || exe=orchestra.exe
+          reported=$("packages/cli/dist/cli-$TARGET/bin/$exe" --version | tr -d '\r')
+          [ "$reported" = "$VERSION" ] || { echo "RELEASE_BUILT_VERSION_MISMATCH: $reported" >&2; exit 1; }
+      - name: Prepare the verified payload and archive
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = macOS ]; then
+            ORCHESTRA_ARTIFACT_DARWIN_SDK="$(xcrun --sdk macosx --show-sdk-path)"
+            export ORCHESTRA_ARTIFACT_DARWIN_SDK
+          fi
+          bun packages/cli/script/release.ts payload --version "$VERSION" --target "$TARGET" --out "$RUNNER_TEMP/release"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-archive-${{ matrix.target }}
+          path: ${{ runner.temp }}/release/archives/
+          if-no-files-found: error
+
+  assemble:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: release-archive-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/archives
+      - name: Extract the archives and assemble every channel
+        run: |
+          set -euo pipefail
+          for archive in "$RUNNER_TEMP"/archives/orchestra-"$VERSION"-*.tar.gz; do
+            target=$(basename "$archive" .tar.gz)
+            target=${target#orchestra-"$VERSION"-}
+            mkdir -p "$RUNNER_TEMP/payloads/$target"
+            tar -xzf "$archive" -C "$RUNNER_TEMP/payloads/$target"
+          done
+          bun packages/cli/script/release.ts assemble --version "$VERSION" \
+            --payloads "$RUNNER_TEMP/payloads" --archives "$RUNNER_TEMP/archives" \
+            --base-url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION" --out "$RUNNER_TEMP/assembled"
+          cp "$RUNNER_TEMP"/archives/*.tar.gz packages/cli/distribution/install.sh "$RUNNER_TEMP/assembled/"
+      - name: Generate the AUR .SRCINFO with real makepkg
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$RUNNER_TEMP/assembled/aur:/pkg" archlinux:base bash -c \
+            'useradd -m builder && chown -R builder /pkg && su builder -c "cd /pkg && makepkg --printsrcinfo > .SRCINFO" && chown -R '"$(id -u):$(id -g)"' /pkg'
+          grep -q "pkgver = $VERSION" "$RUNNER_TEMP/assembled/aur/.SRCINFO"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-assembled
+          path: ${{ runner.temp }}/assembled/
+          if-no-files-found: error
+          include-hidden-files: true
+
+  publish:
+    if: inputs.publish
+    needs: assemble
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-assembled
+          path: assembled
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
+            --notes "Install with \`npm install -g @hugr/cli\`, \`brew install gustavomhss/tap/orchestra\`, the AUR package \`orchestra-bin\`, or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. Binaries are not code-signed in this release." \
+            assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh
+      # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
+      - name: Publish npm packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
+          for package in assembled/npm/cli-*/; do npm publish "$package" --access public --provenance; done
+          npm publish assembled/npm/cli/ --access public --provenance
+      - name: Update the Homebrew tap
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ -n "${TAP_TOKEN:-}" ] || { echo "RELEASE_HOMEBREW_TAP_TOKEN_MISSING" >&2; exit 1; }
+          git clone "https://x-access-token:$TAP_TOKEN@github.com/gustavomhss/homebrew-tap.git" tap
+          mkdir -p tap/Formula
+          cp assembled/homebrew/Formula/orchestra.rb tap/Formula/orchestra.rb
+          git -C tap add Formula/orchestra.rb
+          git -C tap -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "orchestra $VERSION"
+          git -C tap push origin HEAD
+      - name: Update the AUR package
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          [ -n "${AUR_SSH_PRIVATE_KEY:-}" ] || { echo "RELEASE_AUR_SSH_KEY_MISSING" >&2; exit 1; }
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
+          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes"
+          git clone ssh://aur@aur.archlinux.org/orchestra-bin.git aur
+          cp assembled/aur/PKGBUILD assembled/aur/.SRCINFO aur/
+          git -C aur add PKGBUILD .SRCINFO
+          git -C aur -c user.name="gustavomhss" -c user.email="gustavomhss@users.noreply.github.com" commit -m "orchestra-bin $VERSION"
+          git -C aur push origin HEAD:master

@@ -30,11 +30,11 @@ function launch(input: {
     path: posix,
     os: { platform: () => platform, arch: () => arch },
     fs: {
-      realpathSync: () => "/work/node_modules/@orchestra/cli/bin/orchestra.cjs",
+      realpathSync: () => "/work/node_modules/@hugr/cli/bin/orchestra.cjs",
       readFileSync: () => input.avx2 ? "flags: avx avx2 sse" : "flags: avx sse",
       existsSync: (path: string) => {
         if (path === "/etc/alpine-release") return input.alpine ?? false
-        if (path === "/work/node_modules/@orchestra/cli/bin/.orchestra") return input.cached ?? false
+        if (path === "/work/node_modules/@hugr/cli/bin/.orchestra") return input.cached ?? false
         if (path === "/work/node_modules") return true
         const name = /^\/work\/node_modules\/@orchestra\/(cli-[^/]+)\/bin\/orchestra(?:\.exe)?$/.exec(path)?.[1]
         if (!name) return false
@@ -164,7 +164,7 @@ test("Node report positively selects glibc without invoking ldd (VM only)", () =
 
 test("Alpine marker positively selects musl without invoking ldd (VM only)", () => {
   const result = launch({ alpine: true, lddThrows: true, available: ["cli-linux-x64-baseline-musl", "cli-linux-x64-baseline"] })
-  expect(result.target).toBe("/work/node_modules/@orchestra/cli-linux-x64-baseline-musl/bin/orchestra")
+  expect(result.target).toBe("/work/node_modules/@hugr/cli-linux-x64-baseline-musl/bin/orchestra")
   expect(result.code).toBe(23)
   expect(result.probes).toEqual([])
 })
