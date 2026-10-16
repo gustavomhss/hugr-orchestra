@@ -100,7 +100,7 @@ function seatProfile(seat: Seat): NativeProfile {
   if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
   return Object.freeze({
     ...baseProfiles[seat.profile],
-    ...(seat.atlasMemory ? { atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
+    ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,
       maestro_arsenal_catalog: "allow" as const,

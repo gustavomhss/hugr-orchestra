@@ -8,6 +8,7 @@ import type { PromptContext } from "@orchestra/schema/prompt-context"
 import { PromptHost } from "./prompt-host"
 import { EventV2 } from "@orchestra/core/event"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
 import { InstanceStore } from "@/project/instance-store"
@@ -1620,6 +1621,7 @@ export const node = LayerNode.make({
     Git.node,
     // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
     LocationServiceMap.node,
+    AtlasKnowledge.node,
   ],
 })
 

@@ -57,6 +57,7 @@ import { ClaudeHostHooks } from "./hooks"
 import { ClaudeHostDelegation } from "./delegation"
 import { ClaudeHostJoin } from "./join"
 import { ClaudeHostResearch } from "./research"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -799,7 +800,7 @@ export const node = LayerNode.make({
   layer,
   deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionSubagentModels.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
-    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, filesystem],
+    AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, AtlasKnowledge.node, filesystem],
 })
 
 /** SDK aliases are not catalog ids. Missing/ambiguous mappings stay unknown to the canonical guard. */

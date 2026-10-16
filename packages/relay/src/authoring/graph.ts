@@ -3,6 +3,7 @@ export * as AuthoringGraph from "./graph"
 import { Effect, Option, Schema } from "effect"
 import { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { RelaySprint } from "@orchestra/schema/relay-sprint"
+import { AtlasKnowledge } from "@orchestra/schema/atlas-knowledge"
 
 // Workflow graphs (relay_authoring/graph.py; WP7): validate, compile to a flat sprint, project a sprint back.
 //
@@ -68,6 +69,7 @@ export const nodeTypes = (): ReadonlyArray<RelayAuthoring.NodeTypeDescriptor> =>
   const entry = [
     { name: "relayBrief", label: "Workflow objective", type: "text", default: "" },
     { name: "relayRetryBudget", label: "Fixes allowed per step", type: "number", default: 3, minimum: 0, maximum: 99 },
+    { name: "relayKnowledge", label: "Atlas knowledge references", type: "json", default: "[]" },
   ]
   const step = [
     { name: "instructions", label: "Instructions", type: "text", default: "" },
@@ -83,6 +85,7 @@ export const nodeTypes = (): ReadonlyArray<RelayAuthoring.NodeTypeDescriptor> =>
       ],
     },
     { name: "checklist", label: "Criteria to advance", type: "json", default: "[]" },
+    { name: "knowledge", label: "Atlas knowledge references", type: "json", default: "[]" },
   ]
   const context = [
     { name: "text", label: "Context", type: "text", default: "" },
@@ -132,6 +135,9 @@ export const compile = (
       if (typeof budget !== "number" || !Number.isInteger(budget) || budget < 0 || budget > 99)
         return refuse("The retry budget must be an integer from 0 to 99")
       sprint.retry_budget = budget
+      const globalKnowledge = knowledgeReferences(get(entry, "relayKnowledge", get(sprint, "knowledge", [])), true)
+      if (globalKnowledge.length) sprint.knowledge = globalKnowledge
+      if (!globalKnowledge.length) delete sprint.knowledge
       const previous = new Map(
         (get(sprint, "work_packages", []) as ReadonlyArray<Loose>).map((wp) => [wp.id as string, wp]),
       )
@@ -184,6 +190,9 @@ export const compile = (
           instructions: text(get(params, "instructions", ""), "Instructions"),
           checklist: structuredClone(checks),
         })
+        const knowledge = knowledgeReferences(get(params, "knowledge", get(wp, "knowledge", [])), true)
+        if (knowledge.length) wp.knowledge = knowledge
+        if (!knowledge.length) delete wp.knowledge
         const macro = phased ? (grouped.get(node.id) ?? "") : get(params, "macro", "")
         if (truthy(macro)) wp.macro = text(macro, "Phase")
         if (!truthy(macro) && (phased || Object.hasOwn(params, "macro"))) delete wp.macro
@@ -205,6 +214,7 @@ export const compile = (
         workPackages.push(wp)
       }
       sprint.work_packages = workPackages
+      validateKnowledge(sprint)
       // TS only (PARITY-EXCEPTIONS W7-3): the compiled plan is what the arm loads, so it must be a plan. Decoding is
       // the check only; the plan keeps Python's key order, which a decode would not.
       if (Option.isNone(Schema.decodeUnknownOption(RelaySprint.Sprint)(sprint)))
@@ -225,6 +235,7 @@ export const project = (
     Effect.sync(() => {
       const plan = sprint as unknown as Loose
       if (!isObject(plan) || !Array.isArray(plan.work_packages)) return refuse("Invalid sprint")
+      validateKnowledge(plan)
       const wps = plan.work_packages as ReadonlyArray<Loose>
       const phases = [...new Set(wps.map((wp) => (truthy(wp.macro) ? wp.macro : "")))]
       const counts = new Map<unknown, number>()
@@ -256,6 +267,7 @@ export const project = (
             skillMode: "combine",
             text: get(wp, "text", ""),
             file: get(wp, "file", ""),
+            ...(knowledgeReferences(get(wp, "knowledge", [])).length ? { knowledge: dumps(wp.knowledge) } : {}),
           },
         }
       })
@@ -299,7 +311,11 @@ export const project = (
         type: RelayAuthoring.StartType,
         typeVersion: 1,
         position: [first.position[0] - 224, first.position[1]] as [number, number],
-        parameters: { relayBrief: get(plan, "brief", ""), relayRetryBudget: get(plan, "retry_budget", 3) },
+        parameters: {
+          relayBrief: get(plan, "brief", ""),
+          relayRetryBudget: get(plan, "retry_budget", 3),
+          ...(knowledgeReferences(get(plan, "knowledge", [])).length ? { relayKnowledge: dumps(plan.knowledge) } : {}),
+        },
       }
       const projected = start
         ? {
@@ -352,6 +368,10 @@ function validated(document: unknown): Graph {
     taken.add(name)
     names.set(id, name)
     if (!isObject(get(node, "parameters", {}))) return refuse("Invalid node parameters")
+    const params = get(node, "parameters", {}) as Loose
+    ;["relayKnowledge", "knowledge"].forEach((selection) => {
+      if (Object.hasOwn(params, selection)) knowledgeReferences(params[selection], true)
+    })
     const position = get(node, "position")
     if (
       !Array.isArray(position) ||
@@ -395,13 +415,57 @@ function validated(document: unknown): Graph {
       seen.add(id)
     })
   })
+  knowledgeReferences(get(retained, "knowledge", []))
+  const previous = new Map(
+    (get(retained, "work_packages", []) as ReadonlyArray<Loose>).map((wp) => {
+      knowledgeReferences(get(wp, "knowledge", []))
+      return [wp.id as string, wp] as const
+    }),
+  )
   if (!isObject(get(relay, "names", {}))) return refuse("Retained names must be an object")
   const tags = get(document, "tags", [])
   if (!Array.isArray(tags)) return refuse("Scopes must be a list")
   tags.forEach((tag) => text(isObject(tag) ? get(tag, "id") : tag, "Scope ID", true))
   const graph = document as unknown as Graph
+  // Compile takes its entry from edges, not canvas order. Topology remains a compile-time check for drafts.
+  const incoming = new Set(
+    Object.values(graph.connections ?? {}).flatMap((outputs) =>
+      (outputs.main ?? []).flat().map((edge) => edge.node),
+    ),
+  )
+  const entry = graph.nodes?.find((node) => !incoming.has(node.name))
+  validateKnowledge({
+    knowledge: knowledgeReferences(get(entry?.parameters ?? {}, "relayKnowledge", get(retained, "knowledge", [])), true),
+    work_packages: (graph.nodes ?? [])
+      .filter((node) => node !== entry || node.type !== RelayAuthoring.StartType)
+      .map((node) => ({
+        knowledge: knowledgeReferences(
+          get(node.parameters ?? {}, "knowledge", get(previous.get(node.id) ?? {}, "knowledge", [])),
+          true,
+        ),
+      })),
+  })
   validateGroups(document, graph, ids, names)
   return graph
+}
+
+function knowledgeReferences(value: unknown, json = false) {
+  const decoded = Schema.decodeUnknownOption(
+    Schema.Array(AtlasKnowledge.Reference).check(Schema.isMaxLength(AtlasKnowledge.MAX_UNITS), Schema.isUnique()),
+  )(json && typeof value === "string" ? strictJson(value) : value)
+  if (Option.isNone(decoded)) return refuse("Knowledge must be a JSON list of at most 8 unique Atlas references")
+  return decoded.value
+}
+
+function validateKnowledge(plan: Loose) {
+  const references = new Set([
+    ...knowledgeReferences(get(plan, "knowledge", [])),
+    ...(get(plan, "work_packages", []) as ReadonlyArray<Loose>).flatMap((wp) =>
+      knowledgeReferences(get(wp, "knowledge", [])),
+    ),
+  ])
+  if (references.size > AtlasKnowledge.MAX_UNITS)
+    return refuse("A workflow may select at most 8 distinct Atlas references")
 }
 
 // Each phase must be one contiguous stretch of the chain; Relay macros are flat scopes.

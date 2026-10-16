@@ -17,11 +17,11 @@ import { Seats } from "./seats"
 // The host side of native seats' bound Atlas Memory: one binding per tool execution, the receipt every
 // recall/emit persists in its tool part, and the once-only resume admission a logical resume leaves in the Session.
 
-export type Owner = "backend" | "jimmy"
+export type Owner = "backend" | "jimmy" | "archie"
 
 // Stable executing identity and explicit seat capability are both required; labels never choose an owner.
 export function owner(agent: { id?: string; native?: boolean } | undefined): Owner | undefined {
-  if (agent?.native !== true || (agent.id !== "backend" && agent.id !== "jimmy")) return undefined
+  if (agent?.native !== true || (agent.id !== "backend" && agent.id !== "jimmy" && agent.id !== "archie")) return undefined
   return Seats.find(agent.id)?.atlasMemory === true ? agent.id : undefined
 }
 

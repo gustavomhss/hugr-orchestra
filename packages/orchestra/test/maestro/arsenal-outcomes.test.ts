@@ -1,6 +1,7 @@
 import { expect } from "bun:test"
 import { Effect, Layer, Schema } from "effect"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceStore } from "@/project/instance-store"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -73,5 +74,5 @@ it.live("one native owner persists one started/terminal pair; nonzero exits and 
       const v2 = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, session.id), eq(EventTable.type, EventV2.versionedType(SessionEvent.Tool.Progress.type, 1)))).all().pipe(Effect.orDie)
       expect(v2.map((row) => Schema.decodeUnknownSync(SessionEvent.Tool.Progress.data)(row.data)).filter((data) => data.callID === "actual-v2-bash").map((data) => Schema.decodeUnknownSync(Schema.Struct({ outcome: Schema.String }))(data.structured.toolSafety).outcome)).toEqual(["started", "failure"])
     }).pipe(Effect.provideService(InstanceRef, instance))
-  }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))))
+  }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node, AtlasKnowledge.node]))))))
 }), 90000)

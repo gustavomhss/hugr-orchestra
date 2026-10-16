@@ -1,11 +1,17 @@
 export * as RelaySprint from "./relay-sprint"
 
 import { Schema } from "effect"
+import { AtlasKnowledge } from "./atlas-knowledge"
+import { optional } from "./schema"
 
 // Relay plan files (sprint.json). Field names are the Python Relay's, byte for byte. Relay files are validated,
 // never re-encoded: the engine keeps the original bytes, so every struct here preserves unknown keys
 // (`type`, `model`, `rubric`, `output_contract`, … are ignored by the runtime but stay on disk).
 const preserve = { parseOptions: { onExcessProperty: "preserve" } } as const
+const knowledge = Schema.Array(AtlasKnowledge.Reference).check(
+  Schema.isMaxLength(AtlasKnowledge.MAX_UNITS),
+  Schema.isUnique(),
+)
 
 // SPEC §2: a WP ID or control ID is a nonempty string without NUL (bash cannot carry NUL).
 export const NonEmptyNulFree = Schema.String.check(Schema.isPattern(/^[^\u0000]+$/))
@@ -57,6 +63,7 @@ export const WorkPackage = Schema.Struct({
   kind: Schema.optionalKey(Kind),
   instructions: Schema.optionalKey(Schema.String),
   self_check: Schema.optionalKey(Schema.Array(Schema.String)),
+  knowledge: optional(knowledge),
   // Missing, null and [] all mean "no current controls" (SPEC §2).
   checklist: Schema.optionalKey(Schema.NullOr(Schema.Array(Control))),
   dod: Schema.optionalKey(Schema.NullOr(Schema.Array(Dod))),
@@ -83,6 +90,7 @@ export const Sprint = Schema.Struct({
   // Compared with bash `-ge`, so only integers ever ran.
   retry_budget: Schema.optionalKey(Schema.Int),
   macros: Schema.optionalKey(Schema.Array(Macro)),
+  knowledge: optional(knowledge),
   work_packages: Schema.Array(WorkPackage),
 }).annotate({ identifier: "RelaySprint.Sprint", ...preserve })
 export interface Sprint extends Schema.Schema.Type<typeof Sprint> {}

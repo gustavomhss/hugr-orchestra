@@ -73,6 +73,7 @@ including `{}`, `false`, and `""`, is a fatal extraction error before checklist-
 | WP `checklist` | Ordered controls described below. |
 | WP `dod` | Optional `[{"cmd":"..."}]` for the CLI/benchmark; ignored by ARM. These commands do not produce named checklist verdicts. |
 | WP `kind`, `file`, `text` | ARM kind declarations and injection payload. See §3. |
+| Sprint/WP `knowledge` | Native Orchestra only: optional arrays of Atlas anchor references; sprint scope is global, WP scope is local. See §7. Shell/benchmark drivers do not resolve them. |
 
 There is no implemented typed `file_exists`, `grep`, `grep_absent`, `min_count`, `shell`, `test`, or
 `llm` dispatcher. Write shell checks as `cmd` and semantic checks as `judge`. A `type` field does not
@@ -437,6 +438,23 @@ schedule anything. Hook export is `relay.hook.v1` with `installed:false`; explic
 pins the published version through `RelayHookInstall`, independently of later document edits.
 
 Public `POST /api/relay/document/:documentID/check` returns 403 `maestro-execution-required`.
+Native graphs select Atlas references through start parameter `relayKnowledge` and step parameter
+`knowledge` (JSON arrays of lowercase SHA-256 references). Each list is unique and at most eight;
+the workflow-wide union is at most eight. Projection preserves scope and order. Omitted parameters
+retain saved selections; explicit `[]` clears them. Empty selections compile without `knowledge`
+fields, preserving legacy no-selection plan bytes.
+
+Only native Archie anchors verified exact Atlas units with `atlas_context` action `anchor`, selecting
+an `assignment` or `work-package` target. A target is a proposed identity, not dispatch authority.
+The approved native publication binding resolves only selected references from the host-observed
+upstream author Session, retaining complete `AtlasKnowledge.Anchor` packets in optional
+`RelayArm.WorkflowDefinition.knowledge`. References require the trusted author and resolver;
+foreign invocation/project, missing binding, source/receipt/body drift, more than eight distinct
+references or combined bodies above 128 KiB produce a named HOLD. Revalidation reacquires sources.
+The read-only current-step view labels packets as untrusted source data and reveals only global
+and current-WP selections, never future-WP-only bodies. No selection invokes no resolver and adds
+no binding field. Approval, provenance and progression remain the existing native host's authority.
+
 Executable workflow checks belong to Maestro's approved native binding. The old Python `api/v1`
 authoring host and its daemon-backed execution receipts are regression references, not installed UI
 routes. Retained `lib/relay_authoring/` modules support Python tests and frozen parity evidence;

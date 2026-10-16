@@ -18,6 +18,7 @@ import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
 import { InstanceStore } from "@/project/instance-store"
@@ -261,7 +262,7 @@ it.live(
                 }),
               )
             }).pipe(Effect.provideService(InstanceRef, instance))
-          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([AppProcess.node, Global.node])))),
+          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([AppProcess.node, Global.node, AtlasKnowledge.node])))),
         ),
       )
     }),
@@ -574,7 +575,7 @@ it.live(
               )
               expect((yield* fs.readDirectory(tokenDirectory)).length).toBe(3)
             }).pipe(Effect.provideService(InstanceRef, instance))
-          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([filesystem, AppProcess.node, Global.node])))),
+          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([filesystem, AppProcess.node, Global.node, AtlasKnowledge.node])))),
         ),
       )
     }),

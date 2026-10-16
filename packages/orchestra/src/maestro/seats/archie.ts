@@ -27,6 +27,6 @@ export default define({
   workResult: "upstream-work-result-v1",
   writeRoots: true,
   strictResume: true,
-  atlasMemory: false,
+  atlasMemory: true,
   toolkit: false,
 })

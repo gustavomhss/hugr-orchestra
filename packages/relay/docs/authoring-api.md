@@ -62,6 +62,16 @@ Paths below use the native `/api/relay` prefix. Consult Protocol for payloads an
   `meta.relay.sprint`.
 - Incomplete drafts save with `meta.relay.diagnostics`; publish and evaluation refuse them.
   Malformed shapes are refused before they are stored.
+- Native Atlas selection uses start `relayKnowledge` and step `knowledge`: JSON arrays of unique
+  lowercase SHA-256 anchor references, at most eight per list and eight distinct across the workflow.
+  They compile to optional sprint-global and WP-local `knowledge` arrays. Projection preserves scope
+  and order; omission retains saved selections, `[]` clears them, and empty compiled fields are omitted
+  to preserve no-selection bytes. These are consumed context references, not arbitrary metadata.
+  Native execution resolves selected anchors from the host-observed upstream author Session and
+  stores optional `RelayArm.WorkflowDefinition.knowledge` packets (combined bodies at most 128 KiB).
+  Missing author/resolver, foreign or drifted source/receipt/body bindings HOLD. Current-step context
+  reveals global/current-WP packets as untrusted data; future-only packets stay hidden. Targets do not
+  authorize dispatch. Public publication alone does not resolve or approve execution.
 - A hook holds one `relay.hookEventTrigger` (`operation` read/edit/write/command, `timing`
   before/after), optional `relay.hookCondition` nodes (outputs Yes and No) and actions
   (`relay.hookRemind|Block|Approve|Verify|Repair|Record`). Block and Approve need a `before`
