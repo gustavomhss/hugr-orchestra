@@ -9,11 +9,24 @@ async function load(options: { version?: string; channel?: string; bump?: string
   const fixture = options.source === undefined ? undefined : await mkdtemp(path.join(import.meta.dir, "../.version-"))
   try {
     if (fixture) {
+      // index.ts resolves the workspace through WorkspacePaths, so the fixture carries its whole
+      // local import closure plus the identity files it validates: both registries, every
+      // declared module manifest and the toolchain root manifests.
+      const root = path.join(import.meta.dir, "../../..")
+      const registry: { modules: { path: string }[] } = await Bun.file(path.join(root, "script/module-registry.json")).json()
+      const copied = [
+        ...["index.ts", "workspace-paths.ts", "module-catalog.ts", "module-resolver.ts"].map((file) => `packages/script/src/${file}`),
+        "package.json",
+        ".github/TEAM_MEMBERS",
+        "script/module-registry.json",
+        "script/toolchain-registry.json",
+        "packages/omni/Cargo.toml",
+        "foundation/atlas/package.json",
+        ...registry.modules.map((entry) => `${entry.path}/package.json`).filter((file) => file !== "packages/orchestra/package.json"),
+      ]
       await mkdir(path.join(fixture, "packages/script/src"), { recursive: true })
-      await Bun.write(path.join(fixture, "packages/script/src/index.ts"), Bun.file(path.join(import.meta.dir, "index.ts")))
-      await Bun.write(path.join(fixture, "packages/orchestra/package.json"), JSON.stringify({ version: options.source }))
-      await Bun.write(path.join(fixture, "package.json"), Bun.file(path.join(import.meta.dir, "../../../package.json")))
-      await Bun.write(path.join(fixture, ".github/TEAM_MEMBERS"), Bun.file(path.join(import.meta.dir, "../../../.github/TEAM_MEMBERS")))
+      await Promise.all(copied.map((file) => Bun.write(path.join(fixture, file), Bun.file(path.join(root, file)))))
+      await Bun.write(path.join(fixture, "packages/orchestra/package.json"), JSON.stringify({ ...pkg, version: options.source }))
     }
     const child = Bun.spawn([process.execPath, "--eval", `
       // The import has no network seam; guard fetch in this child only, never in the test process.

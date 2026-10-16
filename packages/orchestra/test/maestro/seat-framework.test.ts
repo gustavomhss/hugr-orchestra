@@ -43,7 +43,7 @@ describe("native seat framework", () => {
 
   test("unsupported ownership and malformed definitions fail before registration", () => {
     const backend = Seats.all.backend
-    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend and jimmy owners: sample-seat")
+    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend, jimmy and archie owners: sample-seat")
     expect(() => define({ ...backend, id: "sample-seat", atlasMemory: false })).toThrow("The backend toolkit supports only the backend seat: sample-seat")
     expect(() => define({ ...backend, id: "../escape" })).toThrow("Invalid native seat id")
     expect(() => define({ ...backend, skills: ["foreign-work"] })).toThrow("Entry skills must be unique and seat-scoped")
@@ -52,7 +52,17 @@ describe("native seat framework", () => {
     expect(() => define({ ...backend, profileKey: "../escape" })).toThrow("Invalid native seat profile key")
   })
 
-  test("upstream identity preserves bounded authoring and backend-only capabilities", () => {
+  test("Atlas Memory remains closed to approved native owners", () => {
+    for (const id of ["backend", "jimmy", "archie"] as const) {
+      expect(define(Seats.all[id])).toBe(Seats.all[id])
+      expect(Seats.all[id].atlasMemory).toBe(true)
+    }
+    for (const seat of Object.values(Seats.all).filter((seat) => !["backend", "jimmy", "archie"].includes(seat.id))) {
+      expect(() => define({ ...seat, atlasMemory: true })).toThrow(`Atlas Memory supports only backend, jimmy and archie owners: ${seat.id}`)
+    }
+  })
+
+  test("upstream identity preserves bounded authoring and backend-only toolkit", () => {
     const upstream = Seats.all.archie
     expect(Seats.find("archie")).toBe(upstream)
     expect(upstream).toMatchObject({
@@ -65,12 +75,12 @@ describe("native seat framework", () => {
       workResult: "upstream-work-result-v1",
       writeRoots: true,
       strictResume: true,
-      atlasMemory: false,
+      atlasMemory: true,
       toolkit: false,
     })
     expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../archie-specialist/skills"))
     expect(upstream.prompt).toContain("Load archie-plan for authoring and archie-work-package")
-    expect(() => define({ ...upstream, atlasMemory: true })).toThrow("Atlas Memory supports only backend and jimmy owners: archie")
+    expect(define(upstream)).toBe(upstream)
     expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")
   })
 

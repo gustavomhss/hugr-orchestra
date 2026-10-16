@@ -11,8 +11,9 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(86)
-    expect(EventManifest.Definitions.length).toBe(116)
+    expect(EventManifest.ServerDefinitions.length).toBe(87)
+    expect(EventManifest.Definitions.length).toBe(117)
+    expect(EventManifest.ServerDefinitions).toContain(SessionEvent.SubagentModelsChanged)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -26,8 +27,8 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(107)
-    expect(EventManifest.Durable.size).toBe(70)
+    expect(EventManifest.Latest.size).toBe(108)
+    expect(EventManifest.Durable.size).toBe(71)
   })
 
   test("owns canonical research definitions only on the durable surface", () => {

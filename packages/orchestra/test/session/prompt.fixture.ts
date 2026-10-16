@@ -55,6 +55,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 
 const summary = Layer.succeed(
   SessionSummary.Service,
@@ -176,6 +177,7 @@ const promptRoot = LayerNode.group([
   LocationServiceMap.node,
   filesystem,
   ArsenalObservations.node,
+  AtlasKnowledge.node,
 ])
 
 function replacements(input?: { mcpInstructions?: MCP.ServerInstructions[]; realSummary?: boolean }) {

@@ -7,6 +7,7 @@ import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Permission } from "@/permission"
 import { Git } from "@/git"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import type { Tool } from "@/tool/tool"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -45,6 +46,7 @@ export const layer = AppNodeBuilder.build(
     Permission.node,
     Git.node,
     ArsenalObservations.node,
+    AtlasKnowledge.node,
     Database.node,
     EventV2Bridge.node,
     CrossSpawnSpawner.node,
