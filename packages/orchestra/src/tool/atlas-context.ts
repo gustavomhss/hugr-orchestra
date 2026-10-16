@@ -97,10 +97,14 @@ export const AtlasContextTool = Tool.define("atlas_context", Effect.gen(function
         } },
       }
       const value = result.success
-      const output = JSON.stringify(value)
       if ("reference" in value) return {
         title: `Atlas anchor: ${value.target.kind} ${value.target.id}`,
-        output,
+        // Bodies stay in host metadata, which resolution reads; the model gets the binding receipt only, so the
+        // generic tool output limit cannot hold a selection inside the 128KiB anchor budget.
+        output: JSON.stringify({ reference: value.reference, target: value.target, units: value.units.map((unit) => ({
+          unit: unit.unit, name: unit.name, sourceIdentity: unit.sourceIdentity, sourceRevision: unit.sourceRevision,
+          contentHash: unit.contentHash, receiptHash: unit.receiptHash, bodyHash: unit.bodyHash,
+        })) }),
         metadata: { truncated: false, atlasContext: {
           projectID: value.projectID, sourceIdentity: value.units[0].sourceIdentity, anchor: value,
           coverage: { state: "complete" as const, scope: "verified-own-unit" as const,
@@ -108,6 +112,7 @@ export const AtlasContextTool = Tool.define("atlas_context", Effect.gen(function
             truncated: false, note: "Exact selected Atlas Own bodies bound to this native Archie call." },
         } },
       }
+      const output = JSON.stringify(value)
       const capture = yield* ResearchSourceCapture.Current
       const source = capture ? yield* capture({
         origin: "unit" in value ? { kind: "atlas-own", uri: `atlas-own:${value.unit}`, revision: value.contentHash }

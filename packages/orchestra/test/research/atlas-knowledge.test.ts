@@ -17,7 +17,7 @@ import { Anchor } from "@orchestra/schema/atlas-knowledge"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { ProjectID } from "@orchestra/schema/project-id"
 import { eq } from "drizzle-orm"
-import { Effect, FileSystem, Schema } from "effect"
+import { Effect, FileSystem } from "effect"
 import { Git } from "@/git"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
@@ -118,7 +118,10 @@ const complete = Effect.fn("AtlasKnowledgeTest.complete")(function* () {
   const result = yield* data.tool.execute(data.input, data.ctx)
   const anchor = result.metadata.atlasContext.anchor
   if (!anchor) throw new Error(result.output)
-  expect(Schema.decodeUnknownSync(Anchor)(JSON.parse(result.output))).toEqual(anchor)
+  expect(JSON.parse(result.output)).toEqual({ reference: anchor.reference, target: anchor.target,
+    units: anchor.units.map((unit) => ({ unit: unit.unit, name: unit.name, sourceIdentity: unit.sourceIdentity,
+      sourceRevision: unit.sourceRevision, contentHash: unit.contentHash, receiptHash: unit.receiptHash, bodyHash: unit.bodyHash })) })
+  anchor.units.forEach((unit) => expect(result.output).not.toContain(JSON.stringify(unit.content).slice(1, -1)))
   yield* data.write(anchor)
   return { ...data, anchor, result, resolve: {
     projectID: data.session.projectID, authorSessionID: data.session.id, reference: anchor.reference,
@@ -318,6 +321,30 @@ it.instance("aggregate selected plain bodies enforce 128KiB UTF8 budget", () => 
   expect((yield* knowledge.anchor({ session: data.session, assistantMessageID: data.message.id,
     callID: data.part.callID, target: data.input.target, units }).pipe(Effect.flip)).reason)
     .toBe("knowledge-body-budget-exceeded")
+}), { git: true })
+
+it.instance("an anchor above the default tool output limit but inside 128KiB binds and resolves", () => Effect.gen(function* () {
+  const data = yield* seed({ count: 8, body: "é".repeat(5_500) })
+  const units = Array.from({ length: 8 }, (_, index) => `packages/unit-${index}`)
+  const input = { ...data.input, units }
+  const sessions = yield* Session.Service
+  const running = yield* sessions.updatePart({ ...data.part, state: { status: "running", input, time: { start: Date.now() } } })
+  const result = yield* data.tool.execute(input, data.ctx)
+  const anchor = result.metadata.atlasContext.anchor
+  if (!anchor) throw new Error(result.output)
+  const bytes = anchor.units.reduce((total, unit) => total + Buffer.byteLength(unit.content, "utf8"), 0)
+  expect(bytes).toBeGreaterThan(Truncate.MAX_BYTES)
+  expect(bytes).toBeLessThanOrEqual(128 * 1024)
+  expect(Buffer.byteLength(result.output, "utf8")).toBeLessThanOrEqual(Truncate.MAX_BYTES)
+  expect(JSON.parse(result.output).reference).toBe(anchor.reference)
+  expect(result.metadata.atlasContext.coverage.state).toBe("complete")
+  yield* sessions.updatePart({ ...running, state: {
+    status: "completed", input, output: result.output, title: result.title,
+    time: { start: Date.now(), end: Date.now() }, metadata: result.metadata,
+  } })
+  const knowledge = yield* AtlasKnowledge.Service
+  expect(yield* knowledge.resolve({ projectID: data.session.projectID, authorSessionID: data.session.id,
+    reference: anchor.reference })).toEqual(anchor)
 }), { git: true })
 
 it.instance("anchor output budget hold retains no anchor metadata", () => Effect.gen(function* () {
