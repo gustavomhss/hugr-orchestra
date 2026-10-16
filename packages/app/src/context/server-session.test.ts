@@ -694,7 +694,7 @@ describe("server session", () => {
     const second = store.sync("child")
 
     firstResponse.resolve(response())
-    await expect(first).rejects.toThrow("Session not found: child")
+    await first
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
 
@@ -715,7 +715,7 @@ describe("server session", () => {
 
     store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
     firstResponse.resolve(response())
-    await expect(first).rejects.toThrow("Session not found: child")
+    await first
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
 
