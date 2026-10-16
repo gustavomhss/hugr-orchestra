@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import path from "node:path"
 import { readFileSync, readdirSync, writeFileSync } from "node:fs"
-import { Effect, Layer, Option, Result, Schema } from "effect"
+import { Effect, Layer, Option, Result, Schema, Struct } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { AtlasKnowledge } from "@orchestra/schema/atlas-knowledge"
 import { Event } from "@orchestra/schema/event"
@@ -307,7 +307,9 @@ describe("Atlas current-step source isolation", () => {
         reason: "WORKFLOW_KNOWLEDGE_BODY_MISMATCH" },
     ]
     for (const change of changes) {
-      const binding = { ...f.binding, definition: { ...f.binding.definition, knowledge: change.knowledge } }
+      // A missing binding is an absent key, as it round-trips through meta.json, not a key holding undefined.
+      const binding = { ...f.binding, definition: change.knowledge
+        ? { ...f.binding.definition, knowledge: change.knowledge } : Struct.omit(f.binding.definition, ["knowledge"]) }
       yield* Effect.sync(() => {
         const file = path.join(f.arm, RelayArm.Files.meta)
         const meta = Schema.decodeUnknownSync(RelayArm.Meta)(JSON.parse(readFileSync(file, "utf8")))

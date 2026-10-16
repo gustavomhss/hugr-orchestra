@@ -810,23 +810,6 @@ const scenarios: Scenario[] = [
     }))
     .status(204, undefined, "none"),
   http.protected
-    .get("/api/session/{sessionID}/subagent-models", "v2.session.getSubagentModels")
-    .seeded((ctx) => ctx.session({ title: "Subagent models get" }))
-    .at((ctx) => ({
-      path: route("/api/session/{sessionID}/subagent-models", { sessionID: ctx.state.id }),
-      headers: ctx.headers(),
-    }))
-    .json(200, data(object)),
-  http.protected
-    .post("/api/session/{sessionID}/subagent-models", "v2.session.setSubagentModels")
-    .seeded((ctx) => ctx.session({ title: "Subagent models set" }))
-    .at((ctx) => ({
-      path: route("/api/session/{sessionID}/subagent-models", { sessionID: ctx.state.id }),
-      headers: { ...ctx.headers(), "content-type": "application/json" },
-      body: { policy: { mode: "allowlist", models: [] } },
-    }))
-    .json(200, data(object)),
-  http.protected
     .get("/api/session/{sessionID}/context", "v2.session.context")
     .at((ctx) => ({
       path: route("/api/session/{sessionID}/context", { sessionID: "ses_httpapi_missing" }),
