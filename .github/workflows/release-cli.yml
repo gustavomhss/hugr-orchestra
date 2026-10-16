@@ -2,8 +2,8 @@ name: release-cli
 
 # Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
 # only with publish=true, publishes the GitHub release, npm (@hugr/cli), the Homebrew tap and AUR (orchestra-bin).
-# A dry run (the default) uploads every assembled artifact and publishes nothing. musl targets are not released yet:
-# they build only inside the bundle's Alpine guests.
+# A dry run (the default) uploads every assembled artifact and publishes nothing. musl targets build inside the pinned
+# Alpine guests that distribution-bundle qualifies.
 on:
   workflow_dispatch:
     inputs:
@@ -135,8 +135,52 @@ jobs:
           path: ${{ runner.temp }}/release/archives/
           if-no-files-found: error
 
+  # musl targets build inside the pinned rust:1-alpine guests that distribution-bundle qualifies.
+  build-musl:
+    name: build (${{ matrix.target }})
+    needs: [plan, models]
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - host: ubuntu-latest
+            target: linux-x64-baseline-musl
+            cpu: x86_64
+            image: docker.io/library/rust@sha256:ddcfc394ea1f26b4363936ff59ee69c8eedb7b72146477c844d73b85031880ea
+          - host: ubuntu-24.04-arm
+            target: linux-arm64-musl
+            cpu: aarch64
+            image: docker.io/library/rust@sha256:484dce463db97ee3b9c3dbeb82ac48408091573ec2da1ce9ccd84c823642779a
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: models-dev-snapshot
+          path: ${{ runner.temp }}/models-dev
+      - name: Build the musl CLI in the native Alpine guest
+        env:
+          IMAGE: ${{ matrix.image }}
+          CPU: ${{ matrix.cpu }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release"
+          docker run --rm --mount "type=bind,source=$GITHUB_WORKSPACE,target=/source,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/release,target=/out" \
+            --mount "type=bind,source=$RUNNER_TEMP/models-dev,target=/models,readonly" \
+            "$IMAGE" sh /source/packages/cli/distribution/musl-release.sh "$CPU" "$VERSION" /source /out /models/models-api.json
+          sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/release"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-archive-${{ matrix.target }}
+          path: ${{ runner.temp }}/release/archives/
+          if-no-files-found: error
+
   assemble:
-    needs: build
+    needs: [build, build-musl]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -178,6 +222,14 @@ jobs:
             "$packs/hugr-cli-linux-x64-baseline-$VERSION.tgz" "$packs/hugr-cli-$VERSION.tgz"
           reported=$(HOME="$RUNNER_TEMP/npm-smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/orchestra" --version)
           [ "$reported" = "$VERSION" ] || { echo "RELEASE_PACKED_VERSION_MISMATCH: $reported" >&2; exit 1; }
+      - name: Run the packed musl CLI in Alpine
+        run: |
+          set -euo pipefail
+          docker run --rm --mount "type=bind,source=$RUNNER_TEMP/assembled/npm-packs,target=/packs,readonly" node:22-alpine sh -euc '
+            npm install --prefix /smoke --no-audit --no-fund --omit=optional \
+              "/packs/hugr-cli-linux-x64-baseline-musl-$0.tgz" "/packs/hugr-cli-$0.tgz" >/dev/null
+            reported=$(HOME=/tmp/home /smoke/node_modules/.bin/orchestra --version)
+            [ "$reported" = "$0" ] || { echo "RELEASE_PACKED_MUSL_VERSION_MISMATCH: $reported" >&2; exit 1; }' "$VERSION"
       - name: Generate the AUR .SRCINFO with real makepkg
         run: |
           set -euo pipefail
