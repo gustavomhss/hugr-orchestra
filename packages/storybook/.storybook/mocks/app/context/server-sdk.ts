@@ -46,6 +46,10 @@ export function useServerSDK() {
   return () => ({ client })
 }
 
+export function useServerProtocol() {
+  return () => "v2" as const
+}
+
 export function ServerSDKProvider(props: { children?: unknown }) {
   return props.children
 }
