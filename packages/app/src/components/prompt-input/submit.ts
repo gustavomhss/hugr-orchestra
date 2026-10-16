@@ -3,7 +3,7 @@ import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
-import { batch, onCleanup, startTransition, type Accessor } from "solid-js"
+import { batch, onCleanup, startTransition, untrack, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
@@ -184,7 +184,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const [activity, setActivity] = createStore({ existing: 0 })
   const admissionSource = () => sourceAdmission(prompt.capture(),
     input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId))
-  admissionSource()
+  // Create the store before the composer reads busy; untracked, or a route or server change would re-run the
+  // caller's scope and permanently dispose this submitter's owner.
+  untrack(admissionSource)
 
   const errorMessage = (err: unknown) => {
     if (err && typeof err === "object" && "message" in err && typeof err.message === "string") return err.message
