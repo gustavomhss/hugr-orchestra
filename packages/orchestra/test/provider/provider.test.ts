@@ -19,6 +19,8 @@ import { ProviderFixture } from "./fixture"
 import { testEffect } from "../lib/effect"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/schema/integration"
 
 const originalEnv = new Map<string, string | undefined>()
 
@@ -80,7 +82,7 @@ const paid = (providers: Record<string, { models: Record<string, { cost: { input
 
 const languageBaseURL = (language: unknown) => (language as { config: { baseURL: string } }).config.baseURL
 
-const it = testEffect(LayerNode.compile(LayerNode.group([Provider.node, Env.node, Plugin.node])))
+const it = testEffect(LayerNode.compile(LayerNode.group([Provider.node, Env.node, Plugin.node, Credential.node])))
 const experimentalModels = testEffect(providerLayer({ enableExperimentalModels: true }))
 
 const alphaProviderConfig = {
@@ -114,6 +116,22 @@ it.instance("provider loaded from env variable", () =>
     // merge additional options.
     expect(providers[ProviderV2.ID.anthropic].source).toBe("env")
     expect(providers[ProviderV2.ID.anthropic].options.headers["anthropic-beta"]).toBeDefined()
+  }),
+)
+
+it.instance("default integration key connects its base provider without reload", () =>
+  Effect.gen(function* () {
+    const credentials = yield* Credential.Service
+    const id = ProviderV2.ID.make("opencode-go")
+    // No auth is stored yet, so resolution fails even though models.dev lists the provider.
+    expect(yield* Provider.use.getProvider(id).pipe(Effect.flip)).toBeInstanceOf(Provider.NoProvidersError)
+    yield* credentials.create({
+      integrationID: Integration.ID.make("opencode-go"),
+      value: Credential.Key.make({ type: "key", key: "test-go-key" }),
+    })
+    // The dialog writes the credential after this InstanceState loaded; the
+    // runtime must still pick the key up when the provider is resolved.
+    expect((yield* Provider.use.getProvider(id)).key).toBe("test-go-key")
   }),
 )
 

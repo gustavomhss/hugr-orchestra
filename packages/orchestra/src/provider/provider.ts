@@ -1863,7 +1863,30 @@ const layer = Layer.effect(
 
     const ensureProvider = Effect.fn("Provider.ensureProvider")(function* (s: State, providerID: ProviderV2.ID) {
       const parsed = parseVirtualID(providerID)
-      if (!parsed) return s.providers[providerID]
+      if (!parsed) {
+        // Integration key credentials are written after this InstanceState loads, so merge a
+        // default-labeled key here; otherwise a provider connected from the dialog stays keyless.
+        // Fall back to the models.dev catalog: providers without any auth never enter `providers`.
+        let base = s.providers[providerID]
+        if (!base) {
+          const cfg = yield* config.get()
+          const disabled = new Set(cfg.disabled_providers ?? [])
+          const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
+          if (enabled && !enabled.has(providerID)) return undefined
+          if (disabled.has(providerID)) return undefined
+          base = s.catalog[providerID]
+        }
+        const credential = (yield* credentials.all()).find(
+          (item) =>
+            item.value.type === "key" &&
+            ProviderV2.ID.make(item.integrationID) === providerID &&
+            (!item.label || item.label === "default"),
+        )
+        if (base && credential?.value.type === "key" && base.key !== credential.value.key) {
+          s.providers[providerID] = { ...base, key: credential.value.key }
+        }
+        return s.providers[providerID]
+      }
       let base = s.providers[parsed.baseID]
       if (!base) {
         const cfg = yield* config.get()
