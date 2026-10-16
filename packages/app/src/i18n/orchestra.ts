@@ -15,6 +15,7 @@ import { WORKSPACES_COPY } from "./orchestra-chapters/workspaces"
 import { DOCK_COPY } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY } from "./orchestra-chapters/settings"
 import { CHAT_COPY } from "./orchestra-chapters/chat"
+import { ActionsCopy } from "./actions"
 
 // Preserve approved identity copy across locales; inherited product labels retain their translations.
 export const ORCHESTRA_COPY = {
@@ -378,4 +379,6 @@ export const ORCHESTRA_COPY = {
   ...DOCK_COPY,
   ...SETTINGS_COPY,
   ...CHAT_COPY,
+  // English-only Actions copy: other locales fall back to it until translated.
+  ...ActionsCopy.dict,
 }
