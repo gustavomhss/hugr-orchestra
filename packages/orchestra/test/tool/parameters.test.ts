@@ -10,6 +10,8 @@ import { ToolJsonSchema } from "../../src/tool/json-schema"
 // provider-compatible while tools use Effect Schema internally.
 
 import { Parameters as ApplyPatch } from "../../src/tool/apply_patch"
+import { Parameters as ContextRecall } from "../../src/tool/context-recall"
+import { AtlasKnowledge } from "../../src/maestro/atlas-knowledge"
 import { Parameters as Edit } from "../../src/tool/edit"
 import { Parameters as Glob } from "../../src/tool/glob"
 import { Parameters as Grep } from "../../src/tool/grep"
@@ -289,6 +291,37 @@ describe("tool parameters", () => {
     })
     test("rejects missing filePath", () => {
       expect(accepts(Write, { content: "hi" })).toBe(false)
+    })
+  })
+
+  // OpenRouter refused a request with "pattern must be a valid regex": its RE2-style check rejects lookaround and
+  // `\u` escapes. The advertised schema must avoid both while decoding keeps the original pattern.
+  describe("portable patterns", () => {
+    const schema = Schema.Struct({
+      id: Schema.String.check(Schema.isPattern(/^msg[A-Za-z0-9_-]+(?![\s\S])/)),
+      unit: Schema.String.check(Schema.isPattern(/^[^\u0000]+$/)),
+      token: Schema.String.check(Schema.isPattern(/^(?!\.$)[A-Za-z.]+$/)),
+    })
+    const properties = (toJsonSchema(schema) as { properties: Record<string, { pattern?: string }> }).properties
+
+    test("rewrites the end-of-input lookahead and NUL escape, and drops other lookaround", () => {
+      expect(properties.id.pattern).toBe("^msg[A-Za-z0-9_-]+$")
+      expect(properties.unit.pattern).toBe("^[^\\x00]+$")
+      expect(properties.token).not.toHaveProperty("pattern")
+    })
+
+    test("context_recall and the Atlas anchor advertise no lookaround or \\u escape", () => {
+      const patterns = [ContextRecall, AtlasKnowledge.Invocation].flatMap((item) =>
+        [...JSON.stringify(toJsonSchema(item)).matchAll(/"pattern":("(?:[^"\\]|\\.)*")/g)].map((match) => JSON.parse(match[1])))
+      expect(patterns.length).toBeGreaterThan(0)
+      expect(patterns.filter((pattern) => /\(\?<?[=!]|\\u/.test(pattern))).toEqual([])
+    })
+
+    test("decoding still enforces the original patterns", () => {
+      expect(accepts(schema, { id: "msg_a", unit: "a", token: "a.b" })).toBe(true)
+      expect(accepts(schema, { id: "msg_a\n", unit: "a", token: "a" })).toBe(false)
+      expect(accepts(schema, { id: "msg_a", unit: "a\u0000", token: "a" })).toBe(false)
+      expect(accepts(schema, { id: "msg_a", unit: "a", token: "." })).toBe(false)
     })
   })
 })
