@@ -222,14 +222,6 @@ const selectCall = Effect.fn("AtlasKnowledge.selectCall")(function* (
 
 export function digest(content: string) { return createHash("sha256").update(content, "utf8").digest("hex") }
 
-// Schema-order JSON, not incoming object insertion order. Arrays retain Archie's exact selection order.
 export function reference(anchor: Omit<AtlasKnowledge.Anchor, "reference">) {
-  return digest(JSON.stringify({
-    projectID: anchor.projectID, authorSessionID: anchor.authorSessionID, assistantMessageID: anchor.assistantMessageID,
-    callID: anchor.callID, memberID: anchor.memberID, target: { kind: anchor.target.kind, id: anchor.target.id },
-    units: anchor.units.map((unit) => ({
-      unit: unit.unit, name: unit.name, sourceIdentity: unit.sourceIdentity, sourceRevision: unit.sourceRevision,
-      contentHash: unit.contentHash, receiptHash: unit.receiptHash, bodyHash: unit.bodyHash, content: unit.content,
-    })),
-  }))
+  return digest(AtlasKnowledge.canonical(anchor))
 }

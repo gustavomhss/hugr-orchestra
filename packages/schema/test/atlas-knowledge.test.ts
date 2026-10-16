@@ -130,3 +130,18 @@ describe("Atlas knowledge contracts", () => {
     ).toEqual(selected)
   })
 })
+
+describe("AtlasKnowledge.canonical", () => {
+  test("serializes every field in schema order regardless of input order", () => {
+    const payload = { ...anchor, reference: undefined }
+    const reordered = Object.fromEntries(Object.entries({ ...payload,
+      target: Object.fromEntries(Object.entries(payload.target).reverse()),
+      units: payload.units.map((unit) => Object.fromEntries(Object.entries(unit).reverse())),
+    }).reverse()) as typeof payload
+    const expected = JSON.stringify({ projectID: anchor.projectID, authorSessionID: anchor.authorSessionID,
+      assistantMessageID: anchor.assistantMessageID, callID: anchor.callID, memberID: anchor.memberID,
+      target: anchor.target, units: [unit] })
+    expect(AtlasKnowledge.canonical(payload)).toBe(expected)
+    expect(AtlasKnowledge.canonical(reordered)).toBe(expected)
+  })
+})

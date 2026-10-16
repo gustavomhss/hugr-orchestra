@@ -53,7 +53,7 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
     )
     const compiled = yield* AuthoringGraph.compile(version, input.port.skills).pipe(
       // The compiler can reject the union before the defensive binding-level cap below.
-      Effect.mapError((error) => error.message === "A workflow may select at most 8 distinct Atlas references"
+      Effect.mapError((error) => error.code === "knowledge-reference-limit"
         ? new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_LIMIT" }) : error),
     )
     const sprint = Schema.decodeUnknownOption(RelaySprint.Sprint)(compiled.sprint)
@@ -130,20 +130,8 @@ export function knowledgeReferences(sprint: RelaySprint.Sprint) {
   return [...new Set([...(sprint.knowledge ?? []), ...sprint.work_packages.flatMap((wp) => wp.knowledge ?? [])])]
 }
 
-// Reconstruct schema-order fields: decoding preserves input property order, which must not choose the digest.
 export function knowledgeReference(anchor: Omit<AtlasKnowledge.Anchor, "reference">) {
-  return digest(Buffer.from(JSON.stringify({
-    projectID: anchor.projectID,
-    authorSessionID: anchor.authorSessionID,
-    assistantMessageID: anchor.assistantMessageID,
-    callID: anchor.callID,
-    memberID: anchor.memberID,
-    target: { kind: anchor.target.kind, id: anchor.target.id },
-    units: anchor.units.map((unit) => ({
-      unit: unit.unit, name: unit.name, sourceIdentity: unit.sourceIdentity, sourceRevision: unit.sourceRevision,
-      contentHash: unit.contentHash, receiptHash: unit.receiptHash, bodyHash: unit.bodyHash, content: unit.content,
-    })),
-  }), "utf8"))
+  return digest(Buffer.from(AtlasKnowledge.canonical(anchor), "utf8"))
 }
 
 // Pure binding validation is shared by acquisition and the read-only arm view. Target is a proposed identity;

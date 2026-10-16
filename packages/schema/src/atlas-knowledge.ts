@@ -51,3 +51,16 @@ export const Anchor = Schema.Struct({
   units: Schema.Array(Unit).check(Schema.isMinLength(1), Schema.isMaxLength(MAX_UNITS)),
 }).annotate({ identifier: "AtlasKnowledge.Anchor", ...closed })
 export interface Anchor extends Schema.Schema.Type<typeof Anchor> {}
+
+// The one canonical payload both the host anchor and Relay binding hash. Fields are rebuilt in schema order:
+// decoding preserves input property order, which must not choose the digest. Arrays keep Archie's selection order.
+export function canonical(anchor: Omit<Anchor, "reference">) {
+  return JSON.stringify({
+    projectID: anchor.projectID, authorSessionID: anchor.authorSessionID, assistantMessageID: anchor.assistantMessageID,
+    callID: anchor.callID, memberID: anchor.memberID, target: { kind: anchor.target.kind, id: anchor.target.id },
+    units: anchor.units.map((unit) => ({
+      unit: unit.unit, name: unit.name, sourceIdentity: unit.sourceIdentity, sourceRevision: unit.sourceRevision,
+      contentHash: unit.contentHash, receiptHash: unit.receiptHash, bodyHash: unit.bodyHash, content: unit.content,
+    })),
+  })
+}
