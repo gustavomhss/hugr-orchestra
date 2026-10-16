@@ -137,6 +137,11 @@ export const AtlasContextTool = Tool.define("atlas_context", Effect.gen(function
 }))
 
 // Also applied after registry retention: its provenance footer is part of the delivered output.
+export function boundRetained(id: string, result: Tool.ExecuteResult, truncate: Truncate.Interface) {
+  return id === AtlasContextTool.id ? truncate.limits().pipe(Effect.map((limits) => boundOutput(result, limits)))
+    : Effect.succeed(result)
+}
+
 export function boundOutput(
   result: Tool.ExecuteResult<{ truncated?: boolean; atlasContext: AtlasContextReceipt; researchSource?: Research.SourceReceipt }>,
   limits: { maxBytes: number; maxLines: number },

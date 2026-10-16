@@ -796,8 +796,7 @@ function answered(history: readonly SessionV1.WithParts[]) {
 }
 
 export const node = LayerNode.make({
-  service: Service,
-  layer,
+  service: Service, layer,
   deps: [ResearchExecution.node, ResearchAllowance.node, ResearchRecords.node, SessionSubagentModels.node, SessionLifecycle.node, SessionSummary.node, Agent.node, Session.node, Snapshot.node, Permission.node, Question.node, Todo.node, SessionStatus.node, ClaudeCodeSDK.node,
     ToolRegistry.node, Config.node, BackgroundProcess.node, FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Provider.node, ModelsDev.node,
     AppProcess.node, Database.node, LocationServiceMap.node, ArsenalObservations.node, EventV2Bridge.node, Git.node, InstanceStore.node, Archive.node, AtlasKnowledge.node, filesystem],

@@ -18,7 +18,7 @@ import { LeanRecallTool } from "./lean-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
-import { AtlasContextTool, boundOutput } from "./atlas-context"
+import { AtlasContextTool, boundRetained } from "./atlas-context"
 import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ResearchRegistry } from "./research-registry"
 import { Archive } from "@/continuity/archive"
@@ -48,7 +48,6 @@ import { Tool } from "./tool"
 import { Config } from "@/config/config"
 import { type ToolContext, type ToolDefinition } from "@orchestra/plugin"
 import type { JSONSchema7, JSONSchema7Definition } from "@ai-sdk/provider"
-import { Schema } from "effect"
 import z from "zod"
 import { Plugin } from "../plugin"
 import { Provider } from "@/provider/provider"
@@ -61,7 +60,7 @@ import { Glob } from "@orchestra/core/util/glob"
 import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
 import path from "path"
 import { pathToFileURL } from "url"
-import { Effect, Layer, Context } from "effect"
+import { Effect, Layer, Context, Schema } from "effect"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Format } from "../format"
@@ -471,12 +470,7 @@ const layer = Layer.effect(
                   () => context.abort.aborted,
                 )),
               )
-              .pipe(
-                Effect.flatMap((result) => definition.id === AtlasContextTool.id
-                  ? truncate.limits().pipe(Effect.map((limits) => boundOutput(result, limits)))
-                  : Effect.succeed(result)),
-                Effect.orDie,
-              ),
+              .pipe(Effect.flatMap((result) => boundRetained(definition.id, result, truncate)), Effect.orDie),
         })),
         ...s.custom.map((definition) => ({
           ...definition,
@@ -574,9 +568,7 @@ const layer = Layer.effect(
           "webfetch"].some((id) => !Permission.disabled([id], Permission.merge(input.agent.permission, input.permission ?? [])).has(id))
         if (
           // Builtins are listed first: a later index is a configured plugin tool.
-          (tool.id === AtlasContextTool.id && index < s.builtin.length
-            ? !AtlasMemory.supports(input.agent)
-            : ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length)) ||
+          ResearchRegistry.hidden(input.agent, tool.id, index >= s.builtin.length) ||
           Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
           Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
@@ -777,19 +769,8 @@ export const node = LayerNode.make({
     Git.node,
     httpClient,
     CrossSpawnSpawner.node,
-    Format.node,
-    Truncate.node,
-    AtlasKnowledge.node,
-    RuntimeFlags.node,
-    MCP.node,
-    Database.node,
-    Archive.node,
-    SessionContinuity.node,
-    ArsenalObservations.node,
-    AppProcess.node,
-    Global.node,
-    InstanceStore.node,
-    Permission.node,
+    Format.node, Truncate.node, AtlasKnowledge.node, RuntimeFlags.node, MCP.node, Database.node, Archive.node,
+    SessionContinuity.node, ArsenalObservations.node, AppProcess.node, Global.node, InstanceStore.node, Permission.node,
     Ripgrep.node,
     ...ResearchRegistry.nodes,
     // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
