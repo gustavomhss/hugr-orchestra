@@ -37,7 +37,7 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 ])))
 
 const seed = Effect.fn("AtlasKnowledgeTest.seed")(function* (options?: {
-  count?: number; body?: string; maxBytes?: number; partial?: boolean
+  count?: number; body?: string; maxBytes?: number; partial?: boolean; jsonText?: boolean
 }) {
   const fs = yield* FileSystem.FileSystem
   const git = yield* Git.Service
@@ -95,9 +95,13 @@ const seed = Effect.fn("AtlasKnowledgeTest.seed")(function* (options?: {
   })
   const input = { action: "anchor" as const, target: { kind: "work-package" as const, id: "wp-current" },
     units: ["packages/unit-1", "packages/unit-0"] }
+  // What the model sent, as the running part stores it.
+  const raw = options?.jsonText
+    ? { ...input, target: JSON.stringify(input.target), units: JSON.stringify(input.units) }
+    : input
   const part = yield* sessions.updatePart({
     id: PartID.ascending(), sessionID: session.id, messageID: message.id, type: "tool", tool: "atlas_context",
-    callID: "call_anchor", state: { status: "running", input, time: { start: Date.now() } },
+    callID: "call_anchor", state: { status: "running", input: raw, time: { start: Date.now() } },
   })
   const ctx: Tool.Context = {
     sessionID: session.id, messageID: message.id, callID: part.callID, agentID: "archie", agent: "Renamed planner",
@@ -106,11 +110,11 @@ const seed = Effect.fn("AtlasKnowledgeTest.seed")(function* (options?: {
   const tool = yield* Tool.init(yield* AtlasContextTool)
   const write = Effect.fnUntraced(function* (anchor: Anchor) {
     return yield* sessions.updatePart({ ...part, state: {
-      status: "completed", input, output: JSON.stringify(anchor), title: "Atlas anchor",
+      status: "completed", input: raw, output: JSON.stringify(anchor), title: "Atlas anchor",
       time: { start: Date.now(), end: Date.now() }, metadata: { atlasContext: { anchor } },
     } })
   })
-  return { directory, session, message, part, ctx, input, tool, write, snapshot, materialized }
+  return { directory, session, message, part, ctx, input, raw, tool, write, snapshot, materialized }
 })
 
 const complete = Effect.fn("AtlasKnowledgeTest.complete")(function* () {
@@ -154,6 +158,22 @@ it.instance("renamed native Archie anchors exact selected bytes and resolves onl
   expect(yield* knowledge.resolve(input)).toEqual(anchor)
   expect(yield* knowledge.resolve(input)).toEqual(anchor)
   expect(result.metadata).not.toHaveProperty("researchSource")
+}), { git: true })
+
+// Observed live: a free OpenRouter model sent target and units as JSON text, and every anchor call failed to decode.
+it.instance("an anchor whose target and units arrive as JSON text binds and resolves like the object form", () => Effect.gen(function* () {
+  const data = yield* seed({ jsonText: true })
+  const knowledge = yield* AtlasKnowledge.Service
+  expect(typeof data.raw.target).toBe("string")
+  // The tool wrapper decodes whatever the model sent; its static type is the decoded form.
+  const result = yield* data.tool.execute(data.raw as unknown as typeof data.input, data.ctx)
+  const anchor = result.metadata.atlasContext.anchor
+  if (!anchor) throw new Error(result.output)
+  expect(anchor.target).toEqual({ kind: "work-package", id: "wp-current" })
+  expect(anchor.units.map((unit) => unit.unit)).toEqual(["packages/unit-1", "packages/unit-0"])
+  yield* data.write(anchor)
+  expect(yield* knowledge.resolve({ projectID: data.session.projectID, authorSessionID: data.session.id,
+    reference: anchor.reference })).toEqual(anchor)
 }), { git: true })
 
 it.instance("resolver refuses target, body, digest, receipt, identity, and closed-schema forgery", () => Effect.gen(function* () {
