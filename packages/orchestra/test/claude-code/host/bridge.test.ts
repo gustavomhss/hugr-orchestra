@@ -3,6 +3,7 @@ import { Cause, Effect, Exit, Schema } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { WriteRoots } from "@/maestro/write-roots"
 import { InstanceState } from "@/effect/instance-state"
+import type { TaskPromptOps } from "@/tool/task"
 import { Tool } from "@/tool/tool"
 import { MaestroRecordReviewTool } from "@/tool/maestro-validation"
 import { ContextRecallTool } from "@/tool/context-recall"
@@ -269,13 +270,27 @@ it.instance("MCP request cancellation aborts only its execution and later calls 
   expect(result.isError).toBeUndefined()
 }), 60_000)
 
-it.instance("the loop-driven review request is absent and the main append explains the native workflow boundary", () => Effect.gen(function* () {
+// The governed review and the workflow Task start Orchestra child Sessions, so a served call carries the turn's executor.
+it.instance("served tools run with the latest turn's prompt executor, which the review and workflow task need", () => Effect.gen(function* () {
   const f = yield* BridgeFixture.make()
-  const client = yield* f.client()
-  expect((yield* Effect.promise(() => client.listTools())).tools.map((tool) => tool.name)).not.toContain("maestro_request_review")
-  const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "maestro_request_review", arguments: {} })))
-  expect(result.isError).toBe(true)
-  expect(result.content[0].text).toContain("not available in Claude mode")
-  expect(ClaudeHostMcp.servable("maestro_request_review")).toBe(false)
-  expect(ClaudeHostOptions.append("maestro", {})).toContain("requires Orchestra's prompt executor")
+  const ops: TaskPromptOps = { cancel: () => Effect.void, resolvePromptParts: () => Effect.succeed([]),
+    prompt: () => Effect.die(new Error("the probe never prompts")) }
+  const probe: Tool.Def = { id: "fixture_probe", description: "probe", parameters: Schema.Struct({}),
+    execute: (_args, ctx) => Effect.succeed({ title: "probe", output: String(ctx.extra?.promptOps === ops), metadata: {} }) }
+  const client = yield* f.client([probe])
+  const run = Effect.fnUntraced(function* (id: string) {
+    yield* f.call({ id, tool: probe.id, args: {} })
+    return Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: probe.id, arguments: f.arguments(id) })))
+      .content[0].text
+  })
+  expect(yield* run("before_turn")).toBe("false")
+  Object.assign(f.live, { promptOps: () => Effect.succeed(ops) })
+  expect(yield* run("after_turn")).toBe("true")
+  expect(ClaudeHostMcp.servable("maestro_request_review")).toBe(true)
+  expect(ClaudeHostMcp.servable(ClaudeHostMcp.WORKFLOW_TASK)).toBe(true)
+  expect(ClaudeHostMcp.servable("bash")).toBe(false)
+  const append = ClaudeHostOptions.append("maestro", {})
+  expect(append).toContain("`mcp__orchestra__maestro_request_review`")
+  expect(append).toContain("dispatched with `mcp__orchestra__task`, never `Agent`")
+  expect(append).not.toContain("requires Orchestra's prompt executor")
 }), 60_000)
