@@ -170,7 +170,7 @@ export function make(deps: Dependencies) {
       if (!isDeepStrictEqual(observed, revision.upstreamAttribution))
         return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_TASK_MISMATCH" })
     }).pipe(Effect.provide(deps.context), Effect.mapError((error) => error instanceof UpstreamProvenance.Denied
-      ? new RelayWorkflowBinding.Held({ reason: error.code }) : held(error))),
+      ? new RelayWorkflowBinding.Held({ reason: error.code, detail: error.message }) : held(error))),
 
     approve: (input, definition, phase) => deps.under(input.directory, Effect.gen(function* () {
       const revision = yield* readWorkflowRevision(input.workflow.planRevisionID)
@@ -198,7 +198,8 @@ export function make(deps: Dependencies) {
         const presentation = latest ? Schema.decodeUnknownSync(MaestroEvent.Approval.Presented.data)(latest.data) : undefined
         const selected = rows.find((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.Decided.type, 1) &&
           row.data.presentationID === presentation?.id)
-        if (!selected) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+        if (!selected) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING",
+          detail: "The newest approval presentation in this Session has no recorded owner decision, so the workflow Task cannot resume." })
         const decision = Schema.decodeUnknownSync(MaestroEvent.Approval.Decided.data)(selected.data)
         if (decision.outcome !== "APPROVED" || !presentation || presentation.planRevisionID !== revision.id ||
           presentation.taskHash !== decision.taskHash || presentation.revisionHash !== decision.revisionHash ||
@@ -225,7 +226,8 @@ export function make(deps: Dependencies) {
         }
       })
       if (approval.status !== "APPROVED")
-        return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+        return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING",
+          detail: `maestro_record_approval reports ${approval.status}: ${approval.status === "PENDING" ? approval.kind : approval.status === "HOLD" ? approval.reason : "the owner declined"}. Dispatch rechecks that the owner's approve is the latest user message, so record approval, grant authorization, arm and dispatch in the turn that answers it; otherwise present again with a new methodVersion.` })
       const authorization = intent.authorizationID ? yield* readAuthorization(intent.authorizationID) : undefined
       if (intent.governed ? intent.governed.approvalMessageID !== approval.decision.approvalMessageID ||
         intent.governed.planRevisionID !== revision.id || intent.governed.taskHash !== approval.decision.taskHash
@@ -273,10 +275,14 @@ export function make(deps: Dependencies) {
           ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", context.headSHA, "--", "."],
           ["ls-files", "--full-name", "--others", "--exclude-standard", "-z"],
         ], (args) => deps.git.run(args, { cwd: worktree, maxOutputBytes: 512 * 1024 }))
-        if (changes.some((result) => result.exitCode || result.truncated || result.stdout.length && !result.text().endsWith("\0")) ||
-          changes.flatMap((result) => result.text().split("\0").filter(Boolean)).some((file) =>
-            !definition.writePaths.some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file)))))
-          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
+        if (changes.some((result) => result.exitCode || result.truncated || result.stdout.length && !result.text().endsWith("\0")))
+          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH",
+            detail: "The changed files since the approved context could not be read, so the approved scope cannot be checked." })
+        const outside = changes.flatMap((result) => result.text().split("\0").filter(Boolean)).filter((file) =>
+          !definition.writePaths.some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file))))
+        if (outside.length)
+          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH",
+            detail: `Approved writePaths ${JSON.stringify(definition.writePaths)}; changed outside them: ${JSON.stringify(outside.slice(0, 10))}${outside.length > 10 ? ` and ${outside.length - 10} more` : ""}.` })
       }
       if (revision.grounding) {
         const session = yield* deps.sessions.get(SessionID.make(input.sessionID))
