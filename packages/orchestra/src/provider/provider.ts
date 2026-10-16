@@ -1090,6 +1090,19 @@ export const ConfigProvidersResult = Schema.Struct({
 })
 export type ConfigProvidersResult = Types.DeepMutable<Schema.Schema.Type<typeof ConfigProvidersResult>>
 
+// Anonymous access is a Zen-only contract, mirroring Catalog.isAnonymousZenModel:
+// a zero-cost active model needs no credential.
+export function hasAnonymousModel(provider: Pick<Info, "models">) {
+  return Object.values(provider.models).some(
+    (model) =>
+      model.status !== "deprecated" &&
+      model.cost?.input === 0 &&
+      model.cost?.output === 0 &&
+      model.cost?.cache?.read === 0 &&
+      model.cost?.cache?.write === 0,
+  )
+}
+
 export function toPublicInfo(provider: Info): Omit<Info, "key"> {
   // Keys authenticate the runtime; they must never reach clients or plugins.
   const { key: _, ...rest } = provider
@@ -1894,11 +1907,29 @@ const layer = Layer.effect(
             if (!s.credentialKeys.has(providerID)) s.credentialKeys.set(providerID, s.providers[providerID])
             s.providers[providerID] = { ...base, key: credential.value.key }
           }
-        } else if (s.credentialKeys.has(providerID)) {
-          const previous = s.credentialKeys.get(providerID)
-          s.credentialKeys.delete(providerID)
-          if (previous) s.providers[providerID] = previous
-          else delete s.providers[providerID]
+        } else {
+          if (s.credentialKeys.has(providerID)) {
+            const previous = s.credentialKeys.get(providerID)
+            s.credentialKeys.delete(providerID)
+            if (previous) s.providers[providerID] = previous
+            else delete s.providers[providerID]
+          }
+          // No credential: Zen anonymous models run under the public sentinel.
+          // The sentinel stays ephemeral (never cached), so the snapshot above
+          // never records it and revocation always falls back to anonymous.
+          // Anonymity is decided by the trusted catalog entry, never merged content.
+          const current: Info | undefined = s.providers[providerID]
+          if (current?.key) return current
+          const catalogEntry: Info | undefined = s.catalog[providerID]
+          if (providerID === ProviderV2.ID.opencode && catalogEntry && hasAnonymousModel(catalogEntry)) {
+            const cfg = yield* config.get()
+            const disabled = new Set(cfg.disabled_providers ?? [])
+            const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
+            if (enabled && !enabled.has(providerID)) return current
+            if (disabled.has(providerID)) return current
+            return { ...(current ?? catalogEntry), key: "public" }
+          }
+          return current
         }
         return s.providers[providerID]
       }
