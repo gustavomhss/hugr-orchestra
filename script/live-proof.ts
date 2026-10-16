@@ -250,7 +250,10 @@ async function turn(api: Api, text: string) {
     for (const ask of await api("GET", "/permission")) {
       if (ask.sessionID !== state.sessionID && !(await isChild(api, ask.sessionID))) continue
       console.log(`\nPERMISSION ${ask.permission} ${ask.patterns.join(" ")}`)
-      const reply = (prompt("allow once? [y/N] ") ?? "").trim().toLowerCase() === "y" ? "once" : "reject"
+      // LIVE_PROOF_PERMISSION=once answers unattended runs; every ask is still printed and saved in the transcript.
+      const answer = process.env.LIVE_PROOF_PERMISSION ?? (prompt("allow once? [y/N] ") ?? "").trim().toLowerCase()
+      const reply = answer === "y" || answer === "once" ? "once" : "reject"
+      console.log(`  → ${reply}`)
       await api("POST", `/permission/${ask.id}/reply`, { reply })
     }
     const status = await api("GET", "/session/status")
