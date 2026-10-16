@@ -316,7 +316,19 @@ Anchor the Atlas units each step needs with atlas_context action anchor (target 
 work package id; units used by both steps go in one anchor with target kind assignment). Put each step's returned
 reference in that relay.execute node's \`knowledge\` parameter and the shared one in the start node's
 \`relayKnowledge\` parameter, both as JSON arrays of reference strings, and list every receipt in the proposal.
-Include the native Relay authoring document as exactly one \`\`\`json code block with nodes and connections
-(a relay.startTrigger node plus the two relay.execute nodes), checklist items as objects with unique ids.
+Include the native Relay authoring document as exactly one \`\`\`json code block in exactly this shape, filling the
+<...> slots and keeping every key; parameter values that hold lists are JSON text, as shown:
+{"name": "<title>",
+ "nodes": [
+  {"id": "start", "name": "Workflow start", "type": "relay.startTrigger", "position": [0, 0],
+   "parameters": {"relayBrief": "<objective>", "relayRetryBudget": 2, "relayKnowledge": "[\\"<shared reference>\\"]"}},
+  {"id": "step-1", "name": "Money", "type": "relay.execute", "position": [224, 0],
+   "parameters": {"instructions": "<step 1 work>", "knowledge": "[\\"<step 1 reference>\\"]",
+    "checklist": "[{\\"id\\": \\"money-exact\\", \\"cmd\\": \\"<command proving step 1>\\"}]"}},
+  {"id": "step-2", "name": "Checkout", "type": "relay.execute", "position": [448, 0],
+   "parameters": {"instructions": "<step 2 work>", "knowledge": "[\\"<step 2 reference>\\"]",
+    "checklist": "[{\\"id\\": \\"checkout-exact\\", \\"cmd\\": \\"<command proving step 2>\\"}, {\\"id\\": \\"package\\", \\"host_check\\": \\"package-verification\\"}, {\\"id\\": \\"review\\", \\"host_check\\": \\"cold-review\\"}]"}}],
+ "connections": {"Workflow start": {"main": [[{"node": "Money", "type": "main", "index": 0}]]},
+                 "Money": {"main": [[{"node": "Checkout", "type": "main", "index": 0}]]}}}
 List every unknown; leave none for the owner to resolve silently.`
 }
