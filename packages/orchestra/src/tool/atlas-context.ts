@@ -15,15 +15,14 @@ import { Research } from "@orchestra/schema/research"
 import { Truncate } from "./truncate"
 
 const closed = { parseOptions: { onExcessProperty: "error" } } as const
-const Parameters = Schema.Union([
-  Schema.Struct({ action: Schema.Literal("catalog") }).annotate(closed),
-  Schema.Struct({
-    action: Schema.Literal("unit"),
-    unit: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
-  }).annotate(closed),
-  AtlasKnowledge.Invocation,
-])
-const jsonSchema = ToolJsonSchema.fromSchema(Parameters)
+const Catalog = Schema.Struct({ action: Schema.Literal("catalog") }).annotate(closed)
+const Unit = Schema.Struct({
+  action: Schema.Literal("unit"),
+  unit: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
+}).annotate(closed)
+const Parameters = Schema.Union([Catalog, Unit, AtlasKnowledge.InvocationInput])
+// Advertise only the object form; JSON-text target/units are accepted, not offered.
+const jsonSchema = ToolJsonSchema.fromSchema(Schema.Union([Catalog, Unit, AtlasKnowledge.Invocation]))
 
 export type AtlasContextReceipt = {
   projectID: string | null
